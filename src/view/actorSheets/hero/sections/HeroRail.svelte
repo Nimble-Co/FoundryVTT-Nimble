@@ -30,7 +30,15 @@ The rail stays dark in both themes.
 </script>
 
 <aside class="nimble-chrome rail" class:editing aria-label={localize(`${R}.label`)}>
-	<div class="portrait" style:background-image="url('{view.img}')">
+	<div class="portrait">
+		<div class="clip">
+			<div
+				class="art"
+				style:background-image="url('{view.img}')"
+				style:translate="{view.portrait.x}px {view.portrait.y}px"
+				style:scale={view.portrait.scale / 100}
+			></div>
+		</div>
 		<div class="fade"></div>
 		{#if editing}
 			<button
@@ -181,7 +189,18 @@ The rail stays dark in both themes.
 		position: relative;
 		flex-shrink: 0;
 		height: 84px;
-		background: var(--nimble-ui-chrome) center 14% / cover no-repeat;
+		background: var(--nimble-ui-chrome);
+	}
+	.clip {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+	}
+	.art {
+		position: absolute;
+		inset: 0;
+		background: center 14% / cover no-repeat;
+		transform-origin: top center;
 	}
 	.editing .portrait {
 		height: 112px;

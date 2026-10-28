@@ -105,6 +105,8 @@ export interface HeroTurnView {
 export interface HeroRailView {
 	name: string;
 	img: string;
+	/** offset in px and scale in percent, from the image settings */
+	portrait: { x: number; y: number; scale: number };
 	meta: string;
 	hp: {
 		value: number;
@@ -411,6 +413,11 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 	return {
 		name: actor.name,
 		img: actor.img,
+		portrait: {
+			x: actor.flags.actorImageXOffset ?? 0,
+			y: actor.flags.actorImageYOffset ?? 0,
+			scale: actor.flags.actorImageScale ?? 100,
+		},
 		meta: meta(actor, context),
 		hp: {
 			value: hp.value,

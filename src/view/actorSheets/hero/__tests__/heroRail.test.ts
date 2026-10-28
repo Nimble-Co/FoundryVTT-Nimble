@@ -30,6 +30,15 @@ describe('heroRail', () => {
 				`${RAIL}.metaSubclass {"class":"Berserker","subclass":"Path of the Red Mist","level":"1"}`,
 			);
 		});
+
+		it('moves and scales the portrait by the image settings', () => {
+			expect(heroRail(blankHero(), heroContext()).portrait).toEqual({ x: 0, y: 0, scale: 100 });
+
+			const hero = blankHero({
+				flags: { actorImageXOffset: -12, actorImageYOffset: 30, actorImageScale: 150 },
+			});
+			expect(heroRail(hero, heroContext()).portrait).toEqual({ x: -12, y: 30, scale: 150 });
+		});
 	});
 
 	describe('hit points', () => {

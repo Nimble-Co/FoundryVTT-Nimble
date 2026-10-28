@@ -132,7 +132,12 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 			levelUpHistory: [...(system.levelUpHistory ?? [])],
 			conditionImmunities: [...(system.conditionImmunities ?? [])],
 		},
-		flags: { showPassiveSkillScores: flags?.showPassiveSkillScores === true },
+		flags: {
+			showPassiveSkillScores: flags?.showPassiveSkillScores === true,
+			actorImageXOffset: Number(flags?.actorImageXOffset ?? 0),
+			actorImageYOffset: Number(flags?.actorImageYOffset ?? 0),
+			actorImageScale: Number(flags?.actorImageScale ?? 100),
+		},
 		items: source.items.map((item) => itemLike(item, actor)),
 		effects: source.effects.map(effectLike),
 	};

@@ -27,12 +27,15 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	const editing = $derived(ui.editing);
 </script>
 
-<header
-	class="nimble-chrome header"
-	class:editing
-	style:background-image="url('{view.img}')"
-	aria-label={localize(`${R}.label`)}
->
+<header class="nimble-chrome header" class:editing aria-label={localize(`${R}.label`)}>
+	<div class="clip">
+		<div
+			class="art"
+			style:background-image="url('{view.img}')"
+			style:translate="{view.portrait.x}px {view.portrait.y}px"
+			style:scale={view.portrait.scale / 100}
+		></div>
+	</div>
 	<div class="fade"></div>
 	<div class="column">
 		<div class="who">
@@ -166,8 +169,19 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		position: relative;
 		flex-shrink: 0;
 		padding: 9px 10px;
-		background: var(--nimble-ui-chrome) right 12% / 44% auto no-repeat;
+		background: var(--nimble-ui-chrome);
 		border-bottom: 1px solid var(--nimble-ui-line);
+	}
+	.clip {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+	}
+	.art {
+		position: absolute;
+		inset: 0;
+		background: right 12% / 44% auto no-repeat;
+		transform-origin: top right;
 	}
 	.fade {
 		position: absolute;

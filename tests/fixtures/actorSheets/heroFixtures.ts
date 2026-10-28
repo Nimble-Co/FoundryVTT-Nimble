@@ -88,7 +88,7 @@ export function blankHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike
 				damageImmunities: [],
 				damageVulnerabilities: [],
 			},
-			proficiencies: { languages: ['common'], armor: [], weapons: ['strength'] },
+			proficiencies: { languages: ['common'], armor: [], weapons: ['All STR Weapons'] },
 			resources: { mana: { current: 0, max: 0, baseMax: 0 } },
 			levelUpHistory: [],
 			conditionImmunities: [],

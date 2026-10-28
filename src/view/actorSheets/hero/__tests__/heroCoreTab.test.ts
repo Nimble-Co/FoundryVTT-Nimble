@@ -83,7 +83,7 @@ describe('heroCoreTab', () => {
 		]);
 		expect(view.proficiencies[1].value).toBe('Common');
 		expect(view.proficiencies[2].value).toBe('NIMBLE.actorSheet.hero.core.none');
-		expect(view.proficiencies[3].value).toBe('strength');
+		expect(view.proficiencies[3].value).toBe('All STR Weapons');
 		expect(view.proficiencies[4].value).toBe('NIMBLE.actorSheet.hero.core.none');
 	});
 

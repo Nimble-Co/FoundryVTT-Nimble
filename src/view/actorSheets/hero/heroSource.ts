@@ -40,7 +40,12 @@ export interface HeroActorLike {
 		levelUpHistory: unknown[];
 		conditionImmunities: string[];
 	};
-	flags: { showPassiveSkillScores?: boolean };
+	flags: {
+		showPassiveSkillScores?: boolean;
+		actorImageXOffset?: number;
+		actorImageYOffset?: number;
+		actorImageScale?: number;
+	};
 	items: ItemLike[];
 	effects: EffectLike[];
 }
