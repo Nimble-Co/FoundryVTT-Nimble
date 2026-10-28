@@ -20,6 +20,85 @@
 		}
 	},
 	"NIMBLE": {
+		"actorSheet": {
+			"parts": {
+				"abilityCard": {
+					"post": "Post {name} to chat",
+					"roll": "Roll {name}. This opens the roll window"
+				},
+				"confirmBar": {
+					"cancel": "Keep",
+					"confirm": "Delete"
+				},
+				"dicePool": {
+					"add": "Roll one more die",
+					"addLabel": "Roll one more {label} die",
+					"die": "d{die}",
+					"faces": "{label}: {faces}",
+					"none": "none",
+					"remove": "Remove the last die",
+					"removeLabel": "Remove the last {label} die"
+				},
+				"effectEntry": {
+					"duration": "How long it lasts",
+					"end": "End",
+					"endName": "{verb} {name}",
+					"endQuestion": "{verb} {name}?",
+					"hideText": "Hide the text of {name}",
+					"showText": "Show the text of {name}"
+				},
+				"expandAll": {
+					"collapse": "Collapse all",
+					"expand": "Expand all"
+				},
+				"inlineNumber": {
+					"hint": "{label}. Click and type a number."
+				},
+				"rollMode": {
+					"advantage": "Advantage × {count}",
+					"advantageButton": "Advantage",
+					"disadvantage": "Disadvantage × {count}",
+					"disadvantageButton": "Disadvantage",
+					"lessHint": "Add 1 disadvantage, or remove 1 advantage",
+					"moreHint": "Add 1 advantage, or remove 1 disadvantage",
+					"straight": "Straight Roll"
+				},
+				"row": {
+					"equip": "Equip",
+					"equipName": "Equip {name}",
+					"equipped": "Equipped",
+					"unequipName": "Put {name} away",
+					"use": "Use {name}"
+				},
+				"rowButton": {
+					"collapse": "Collapse description for {name}",
+					"configure": "Configure {name}",
+					"reveal": "Reveal description for {name}"
+				},
+				"rowCost": {
+					"action": "1 action",
+					"actions": "{count} actions",
+					"free": "Free",
+					"usesBack": "{left} of {max} left. It comes back each {per}.",
+					"usesLeft": "{left} of {max} left"
+				},
+				"saveTile": {
+					"advantage": "Saves with {count} Advantage",
+					"disadvantage": "Saves with {count} Disadvantage",
+					"roll": "Roll {ability} save. {mode}",
+					"straight": "Rolls 1d20"
+				},
+				"sheetTabs": {
+					"label": "Sheet tabs",
+					"withBadge": "{label}: {badge}"
+				},
+				"vitalPlate": {
+					"current": "Current {label}",
+					"hp": "HP",
+					"tempHp": "Temp HP"
+				}
+			}
+		},
 		"abilityScores": {
 			"strength": "Strength",
 			"dexterity": "Dexterity",
