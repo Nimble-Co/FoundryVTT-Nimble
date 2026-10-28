@@ -129,7 +129,8 @@ const config = defineConfig({
 		svelte({
 			configFile: path.resolve(__dirname, 'svelte.config.js'),
 			dynamicCompileOptions({ filename }) {
-				if (filename.includes('node_modules')) {
+				// The Storybook Svelte runtime is written in runes.
+				if (filename.includes('node_modules') && !filename.includes('@storybook')) {
 					return { runes: false };
 				}
 			},
@@ -141,6 +142,7 @@ const config = defineConfig({
 
 				// Suppress a11y warnings from third-party libraries in node_modules
 				if (warning.code?.startsWith('a11y') && warning.filename?.includes('node_modules')) return;
+				if (warning.filename?.includes('node_modules/@storybook')) return;
 
 				// eslint-disable-next-line no-console
 				console.log(warning);

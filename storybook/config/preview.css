@@ -1,0 +1,32 @@
+/* The Foundry v14 rules that the parts meet in Foundry, so Storybook shows the same result. */
+html {
+	font-size: 14px;
+}
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+button > * {
+	pointer-events: none;
+}
+
+body {
+	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* The tooltip of stubs/tooltip.ts; Foundry draws its own tooltip dark in both themes. */
+#tooltip {
+	position: fixed;
+	z-index: 1000;
+	max-width: 320px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	background: #181821;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+	font: 0.857rem/1.3 var(--nimble-primary-font);
+	color: hsl(36, 58%, 90%);
+	pointer-events: none;
+}

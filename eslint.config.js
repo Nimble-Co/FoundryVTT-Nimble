@@ -14,6 +14,7 @@ export default [
 			'types/**/*.{ts,js}',
 			'build/**/*.{ts,js}',
 			'tests/**/*.{ts,js}',
+			'storybook/**/*.{ts,js}',
 		],
 		languageOptions: {
 			parser: tsparser,
@@ -63,7 +64,7 @@ export default [
 		},
 	},
 	{
-		files: ['src/**/*.svelte', 'lib/**/*.svelte'],
+		files: ['src/**/*.svelte', 'lib/**/*.svelte', 'storybook/**/*.svelte'],
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
