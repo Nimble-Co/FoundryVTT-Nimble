@@ -1,0 +1,12 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks';
+import * as Pages from './Foundations.stories.svelte';
+
+<Meta title="Foundations/Colors" />
+
+# Colors
+
+Each colour token of the system, read from the stylesheets that Foundry also loads, so this page changes when the SCSS changes. Use the **Theme** button on the toolbar to see the page in both themes; the table always shows both.
+
+Use the tokens. Do not hard-code ink or surface colours. A part never picks a colour in TypeScript: it sets `--tone` and the CSS mixes it.
+
+<Story of={Pages.Colors} />
