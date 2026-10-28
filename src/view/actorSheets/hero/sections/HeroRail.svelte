@@ -13,6 +13,7 @@ The rail stays dark in both themes.
 	import type { HeroRailView } from '../heroRail.ts';
 	import HeroInitiative from './HeroInitiative.svelte';
 	import HeroMeter from './HeroMeter.svelte';
+	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
 	import localize from '#utils/localize.js';
@@ -25,20 +26,13 @@ The rail stays dark in both themes.
 
 	let { view, ui, perform }: Props = $props();
 
-	const R = 'NIMBLE.actorSheet.hero.rail';
+	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
 </script>
 
-<aside class="nimble-chrome rail" class:editing aria-label={localize(`${R}.label`)}>
+<aside class="nimble-chrome rail" class:editing aria-label={localize(`${RAIL}.label`)}>
 	<div class="portrait">
-		<div class="clip">
-			<div
-				class="art"
-				style:background-image="url('{view.img}')"
-				style:translate="{view.portrait.x}px {view.portrait.y}px"
-				style:scale={view.portrait.scale / 100}
-			></div>
-		</div>
+		<HeroPortrait {view} form="rail" />
 		<div class="fade"></div>
 		{#if editing}
 			<button
@@ -57,7 +51,7 @@ The rail stays dark in both themes.
 					class="name-field"
 					type="text"
 					value={view.name}
-					aria-label={localize(`${R}.name`)}
+					aria-label={localize(`${RAIL}.name`)}
 					onchange={(event) => perform({ kind: 'rename', name: event.currentTarget.value })}
 				/>
 			{:else}
@@ -68,8 +62,8 @@ The rail stays dark in both themes.
 				{#if editing}
 					<EditZone
 						inline
-						short={localize(`${R}.metaShort`)}
-						label={localize(`${R}.metaLabel`)}
+						short={localize(`${RAIL}.metaShort`)}
+						label={localize(`${RAIL}.metaLabel`)}
 						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
 					/>
 				{/if}
@@ -95,8 +89,8 @@ The rail stays dark in both themes.
 					/>
 					{#if editing}
 						<EditZone
-							short={localize(`${R}.hpShort`)}
-							label={localize(`${R}.configureHp`)}
+							short={localize(`${RAIL}.hpShort`)}
+							label={localize(`${RAIL}.configureHp`)}
 							onclick={() => perform({ kind: 'configure', target: 'hitPoints' })}
 						/>
 					{/if}
@@ -131,7 +125,7 @@ The rail stays dark in both themes.
 					{/each}
 					{#if editing}
 						<EditZone
-							short={localize(`${R}.movementShort`)}
+							short={localize(`${RAIL}.movementShort`)}
 							label={localize('NIMBLE.prompts.configureMovement')}
 							onclick={() => perform({ kind: 'configure', target: 'movement' })}
 						/>
@@ -191,17 +185,6 @@ The rail stays dark in both themes.
 		height: 84px;
 		background: var(--nimble-ui-chrome);
 	}
-	.clip {
-		position: absolute;
-		inset: 0;
-		overflow: hidden;
-	}
-	.art {
-		position: absolute;
-		inset: 0;
-		background: center 14% / cover no-repeat;
-		transform-origin: top center;
-	}
 	.editing .portrait {
 		height: 112px;
 	}
@@ -220,12 +203,12 @@ The rail stays dark in both themes.
 		width: 28px;
 		height: 28px;
 		border-radius: 4px;
-		background: rgb(0 0 0 / 60%);
+		background: var(--nimble-ui-scrim);
 		font-size: 0.857rem;
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 	}
 	.change:hover {
-		background: rgb(0 0 0 / 80%);
+		background: var(--nimble-ui-scrim-strong);
 	}
 	.who {
 		position: absolute;

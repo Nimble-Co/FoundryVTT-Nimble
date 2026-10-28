@@ -99,4 +99,55 @@ describe('HeroRail', () => {
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'correctLevels' });
 	});
+
+	it('rolls Initiative', async () => {
+		const { perform } = renderRail();
+
+		await fireEvent.click(screen.getByRole('button', { name: /prompts.rollInitiative/ }));
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'rollInitiative' });
+	});
+
+	it('spends an action from its cell and adds an extra action', async () => {
+		const { perform } = renderRail({ combat: heroTurn({ actions: { current: 2 } }) });
+
+		await fireEvent.click(screen.getByRole('button', { name: /spendAction {"number":"1"}/ }));
+		expect(perform).toHaveBeenCalledWith({ kind: 'setActions', value: 1 });
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Add 1 action' }));
+		expect(perform).toHaveBeenCalledWith({ kind: 'addAction' });
+	});
+
+	it('types a new temp HP value', async () => {
+		const { perform } = renderRail();
+		const temp = screen.getByRole('spinbutton', { name: 'Temp HP' });
+
+		await fireEvent.input(temp, { target: { value: '4' } });
+		await fireEvent.blur(temp);
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'setTempHp', value: 4 });
+	});
+
+	it('renames the hero and changes the portrait in edit mode', async () => {
+		const { perform } = renderRail({}, true);
+
+		await fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+			target: { value: 'Ash' },
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'Change Actor Image' }), {
+			shiftKey: true,
+		});
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'rename', name: 'Ash' });
+		expect(perform).toHaveBeenCalledWith({ kind: 'changePortrait', skipTokenizer: true });
+	});
+
+	it('shows the fallback portrait when the image does not load', async () => {
+		renderRail();
+		const portrait = screen.getByRole('img', { name: 'Blank Hero' });
+
+		await fireEvent.error(portrait);
+
+		expect(portrait.getAttribute('src')).toBe('icons/svg/mystery-man.svg');
+	});
 });

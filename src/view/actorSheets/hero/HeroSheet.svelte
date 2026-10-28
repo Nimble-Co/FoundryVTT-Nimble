@@ -29,7 +29,6 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 
 	const NARROW_BELOW = 560;
 	const RAIL_WIDTH = 236;
-	const FLASH_MS = 1200;
 
 	let root: HTMLElement | undefined = $state();
 	let width = $state(720);
@@ -55,15 +54,21 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	$effect(() => {
 		const flash = ui.flash;
 		if (!flash || !root) return;
-		let timer: ReturnType<typeof setTimeout> | undefined;
+		let row: HTMLElement | null | undefined;
+		const done = (event: AnimationEvent) => {
+			if (row && event.target === row) delete row.dataset.flash;
+		};
 		void tick().then(() => {
-			const row = root?.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(flash.rowId)}"]`);
+			row = root?.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(flash.rowId)}"]`);
 			if (!row) return;
 			row.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+			// a reflow between the two writes starts the animation again on a second reveal
+			delete row.dataset.flash;
+			void row.offsetWidth;
 			row.dataset.flash = String(flash.serial);
-			timer = setTimeout(() => delete row.dataset.flash, FLASH_MS);
+			row.addEventListener('animationend', done);
 		});
-		return () => clearTimeout(timer);
+		return () => row?.removeEventListener('animationend', done);
 	});
 </script>
 
@@ -188,7 +193,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		background: var(--nimble-crimson);
 		font-size: 0.857rem;
 		font-weight: 700;
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 	}
 	.done:hover {
 		filter: brightness(1.15);

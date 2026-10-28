@@ -11,6 +11,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	import type { HeroPerform } from '../heroIntent.ts';
 	import type { HeroRailView } from '../heroRail.ts';
 	import HeroInitiative from './HeroInitiative.svelte';
+	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
 	import localize from '#utils/localize.js';
@@ -23,19 +24,12 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 
 	let { view, ui, perform }: Props = $props();
 
-	const R = 'NIMBLE.actorSheet.hero.rail';
+	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
 </script>
 
-<header class="nimble-chrome header" class:editing aria-label={localize(`${R}.label`)}>
-	<div class="clip">
-		<div
-			class="art"
-			style:background-image="url('{view.img}')"
-			style:translate="{view.portrait.x}px {view.portrait.y}px"
-			style:scale={view.portrait.scale / 100}
-		></div>
-	</div>
+<header class="nimble-chrome header" class:editing aria-label={localize(`${RAIL}.label`)}>
+	<HeroPortrait {view} form="header" />
 	<div class="fade"></div>
 	<div class="column">
 		<div class="who">
@@ -53,7 +47,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 					class="name-field"
 					type="text"
 					value={view.name}
-					aria-label={localize(`${R}.name`)}
+					aria-label={localize(`${RAIL}.name`)}
 					onchange={(event) => perform({ kind: 'rename', name: event.currentTarget.value })}
 				/>
 			{:else}
@@ -64,8 +58,8 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				{#if editing}
 					<EditZone
 						inline
-						short={localize(`${R}.metaShort`)}
-						label={localize(`${R}.metaLabel`)}
+						short={localize(`${RAIL}.metaShort`)}
+						label={localize(`${RAIL}.metaLabel`)}
 						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
 					/>
 				{/if}
@@ -87,8 +81,8 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				/>
 				{#if editing}
 					<EditZone
-						short={localize(`${R}.hpShort`)}
-						label={localize(`${R}.configureHp`)}
+						short={localize(`${RAIL}.hpShort`)}
+						label={localize(`${RAIL}.configureHp`)}
 						onclick={() => perform({ kind: 'configure', target: 'hitPoints' })}
 					/>
 				{/if}
@@ -152,7 +146,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				{/each}
 				{#if editing}
 					<EditZone
-						short={localize(`${R}.movementShort`)}
+						short={localize(`${RAIL}.movementShort`)}
 						label={localize('NIMBLE.prompts.configureMovement')}
 						onclick={() => perform({ kind: 'configure', target: 'movement' })}
 					/>
@@ -171,17 +165,6 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		padding: 9px 10px;
 		background: var(--nimble-ui-chrome);
 		border-bottom: 1px solid var(--nimble-ui-line);
-	}
-	.clip {
-		position: absolute;
-		inset: 0;
-		overflow: hidden;
-	}
-	.art {
-		position: absolute;
-		inset: 0;
-		background: right 12% / 44% auto no-repeat;
-		transform-origin: top right;
 	}
 	.fade {
 		position: absolute;
