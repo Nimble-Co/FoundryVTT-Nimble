@@ -55,6 +55,7 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 			role="tab"
 			class="nimble-u-reset-button t"
 			aria-selected={t.id === value}
+			aria-label={fit === 'icon' ? tooltipOf(t) : undefined}
 			data-tooltip={tooltipOf(t)}
 			onclick={() => pick(t.id)}
 		>
