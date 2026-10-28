@@ -1,6 +1,6 @@
 import type { NimbleMonsterFeatureData } from '../../models/item/MonsterFeatureDataModel.js';
 
-import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
+import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleMonsterFeatureItem extends NimbleBaseItem<'monsterFeature'> {

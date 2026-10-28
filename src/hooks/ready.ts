@@ -12,12 +12,12 @@ import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
-import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
-import { registerGrantedActionOfferSocketListener } from '../utils/grantedActionOffers.js';
-import { registerIncomingReactionSocketListener } from '../utils/incomingAttackReactions.js';
-import { registerMarkTargetSocketListener } from '../utils/markTargetEffects.js';
-import { registerCombatantActionDeltaSocketListener } from '../utils/requestCombatantActionDelta.js';
-import { registerRerollRollingHook } from '../utils/rerollRolling.svelte.js';
+import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffects.js';
+import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
+import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
+import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
+import { registerIncomingReactionSocketListener } from '../utils/incomingReactions/incomingAttackReactions.js';
+import { registerRerollRollingHook } from '../utils/reroll/rerollRolling.svelte.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import registerAdjacencySync from './combatantHooks/adjacencySync.js';

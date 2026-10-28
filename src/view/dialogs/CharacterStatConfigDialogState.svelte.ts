@@ -2,8 +2,8 @@ import type {
 	StatArrayOption,
 	StatIncreaseEntry,
 } from '#types/components/CharacterStatConfigDialog.d.ts';
+import generateBlankAttributeSet from '#utils/actor/generateBlankAttributeSet.ts';
 import arraysAreEqual from '#utils/arraysAreEqual.ts';
-import generateBlankAttributeSet from '#utils/generateBlankAttributeSet.ts';
 import localize from '#utils/localize.ts';
 import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 

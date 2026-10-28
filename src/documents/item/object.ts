@@ -1,10 +1,10 @@
 import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
-import { getSpellScrollData } from '#utils/createScrollFromSpell.js';
-import enrichDocumentHTML from '#utils/enrichDocumentHTML.js';
-import knowsSpellSchool from '#utils/knowsSpellSchool.js';
+import enrichDocumentHTML from '#utils/documents/enrichDocumentHTML.js';
 import localize from '#utils/localize.js';
-import { getSpellSchoolLabel } from '#utils/spellLabels.js';
-import toMessageMode from '#utils/toMessageMode.js';
+import toMessageMode from '#utils/rolls/toMessageMode.js';
+import { getSpellScrollData } from '#utils/spell/createScrollFromSpell.js';
+import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
+import { getSpellSchoolLabel } from '#utils/spell/spellLabels.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';

@@ -2,11 +2,14 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
-import { requestSetActiveCombatTurn } from '#utils/combatTurnActions.js';
+import { requestSetActiveCombatTurn } from '#utils/combat/combatTurnActions.js';
+import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
+import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
-} from '#utils/getHeroicReactionUsageState.js';
+} from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
 	getAllHeroicReactionAvailabilityUpdate,
@@ -14,12 +17,9 @@ import {
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
-} from '#utils/heroicActions.js';
-import { initiativeRollLock } from '#utils/initiativeRollLock.js';
-import { isCombatantDead } from '#utils/isCombatantDead.js';
-import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import resolveHeroicReactionActionCost from '#utils/resolveHeroicReactionActionCost.js';
+} from '#utils/incomingReactions/heroicActions.js';
+import resolveHeroicReactionActionCost from '#utils/incomingReactions/resolveHeroicReactionActionCost.js';
+import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minions/minionGrouping.js';
 import {
 	isCombatConvenienceAutomationEnabled,
 	isMovementTrackingAutomationEnabled,

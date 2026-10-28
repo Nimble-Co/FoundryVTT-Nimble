@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { LevelUpSpellGrantsProps } from '#types/components/LevelUpSpellGrants.d.ts';
-	import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
+	import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.js';
 	import localize from '#utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import SchoolSelection from '../characterCreator/SchoolSelection.svelte';

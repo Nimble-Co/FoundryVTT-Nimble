@@ -5,7 +5,7 @@
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import type { ResolvedOptionSwapOffer } from '#types/optionSwap.d.ts';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
-	import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+	import { clampHitDiceBySize } from '#utils/actor/clampHitDiceBySize.ts';
 	import localize from '#utils/localize.ts';
 	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 

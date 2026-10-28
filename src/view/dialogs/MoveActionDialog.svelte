@@ -1,6 +1,6 @@
 <script>
 	import localize from '../../utils/localize.js';
-	import { getMovementSpeeds } from '../../utils/movementSpeeds.js';
+	import { getMovementSpeeds } from '../../utils/actor/movementSpeeds.js';
 
 	let { document, dialog, deductActionPip, inCombat = false } = $props();
 

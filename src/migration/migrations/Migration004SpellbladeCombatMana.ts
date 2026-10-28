@@ -4,7 +4,7 @@ import {
 	getCombatManaGrantMap,
 	getCombatManaGrantTotalForInitiative,
 	primeActorCombatManaSourceRules,
-} from '../../utils/combatManaRules.js';
+} from '../../utils/actor/combatManaRules.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 const SPELLBLADE_RULE_ID = 'spellblade-combat-mana';

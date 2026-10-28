@@ -5,10 +5,10 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
-import { attackDeliveryFromAttackType } from '#utils/attackDelivery.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import { getChargeConsumers, getFixedChargeCostsByPool } from '#utils/chargePool/helpers.js';
 import type { CharacterActorLike, RuleBackedItem } from '#utils/chargePool/types.js';
+import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 

@@ -82,3 +82,7 @@ Items and features can change how resting works through their rules: advantage o
 - [The Character Sheet](../characters/character-sheet.md)
 - [Conditions](conditions.md)
 - [Rules Reference: Bonuses](../reference/rules-bonuses.md)
+
+## Temporary uses
+
+Some features give uses of a feature that last only for the encounter, such as the Songweaver's Quick Wit when you roll Initiative. They show as a lighter part of the feature's bar on the sheet, with an hourglass and the number of temporary uses. Hover the hourglass to see which feature gave them. Temporary uses are spent first. When the encounter ends, the temporary uses you did not spend go away. A feature that gives uses when you roll Initiative gives them one time for each combat, also when you roll Initiative again.

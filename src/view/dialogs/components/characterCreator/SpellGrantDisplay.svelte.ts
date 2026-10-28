@@ -1,6 +1,6 @@
 import type { SpellGrantDisplayProps } from '#types/components/SpellGrantDisplay.d.ts';
-import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 
 export interface SpellGrantDisplayContext {
 	CHARACTER_CREATION_STAGES: Record<string, string | number>;

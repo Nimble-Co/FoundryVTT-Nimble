@@ -4,7 +4,7 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
-} from '#utils/incomingReactionEntry.js';
+} from '#utils/incomingReactions/incomingReactionEntry.js';
 import {
 	grantedActionOffers,
 	incomingReactions,
@@ -154,6 +154,10 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			woundsGained: 0,
 			kept: 'new',
 			keptTotal: 12,
+			dropped: 2,
+			changes: [],
+			grants: [],
+			automatic: true,
 		};
 		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
 		const die = (rerollFields().previous as { fields: Fields }).fields;

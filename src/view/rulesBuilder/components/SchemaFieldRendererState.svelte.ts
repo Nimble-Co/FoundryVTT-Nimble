@@ -1,3 +1,4 @@
+import localize from '#utils/localize.js';
 import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
 import { isFieldShown } from './isFieldShown.js';
 
@@ -10,6 +11,22 @@ interface FieldExtras {
 	documentTypes?: string[];
 }
 type FieldWithOptions = { options?: FieldExtras };
+
+/** The label of a field inside a list row or group: its `label`, else its name as words. */
+export function childFieldLabel(name: string, field: foundry.data.fields.DataField.Any): string {
+	const label = (field as { label?: string }).label;
+	if (label) return localize(label);
+	return name
+		.replace(/([A-Z])/g, ' $1')
+		.replace(/^./, (c) => c.toUpperCase())
+		.trim();
+}
+
+/** The hint of a field inside a list row or group, or an empty string. */
+export function childFieldHint(field: foundry.data.fields.DataField.Any): string {
+	const hint = (field as { hint?: string }).hint;
+	return hint ? localize(hint) : '';
+}
 
 export function createSchemaFieldRendererState(
 	getField: () => foundry.data.fields.DataField.Any,

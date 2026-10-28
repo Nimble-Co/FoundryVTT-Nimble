@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { GrantedActionOffer } from '#utils/grantedActionOffers.ts';
+	import type { GrantedActionOffer } from '#utils/combat/grantedActionOffers.ts';
 
 	import { getContext } from 'svelte';
-	import { requestGrantedActionOfferUse } from '#utils/grantedActionOffers.js';
+	import { requestGrantedActionOfferUse } from '#utils/combat/grantedActionOffers.js';
 	import localize from '../../../utils/localize.js';
 	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 

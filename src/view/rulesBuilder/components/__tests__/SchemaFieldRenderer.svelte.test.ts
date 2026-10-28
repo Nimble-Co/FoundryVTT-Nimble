@@ -209,6 +209,47 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('input[type="checkbox"]')).toBeTruthy();
 	});
 
+	it('ArrayField of SchemaField → each row shows the label and hint of its fields', () => {
+		const field = new fields.ArrayField(
+			new fields.SchemaField({
+				trigger: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: 'safeRest',
+					label: 'NIMBLE.rules.chargePool.recoveries.trigger.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.trigger.hint',
+				}),
+				temporary: new fields.BooleanField({
+					required: false,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.chargePool.recoveries.temporary.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.temporary.hint',
+				}),
+				refillAmount: new fields.StringField({ required: false, nullable: false, initial: '' }),
+			}),
+		);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: [{ trigger: 'safeRest', temporary: true, refillAmount: '' }],
+			parentData: {},
+			name: 'recoveries',
+			onChange: noop,
+		});
+		const texts = (selector: string) =>
+			[...container.querySelectorAll(selector)].map((el) => el.textContent?.trim());
+
+		expect(texts('.nimble-field-row__label')).toEqual([
+			'Trigger',
+			'Temporary uses',
+			'Refill Amount',
+		]);
+		expect(texts('.nimble-field-row__hint')).toEqual([
+			'Event that drives this recovery (rest type, encounter event, hit, etc.).',
+			'Only on a charge pool, with the "add" mode. These uses are spent first. They go away when the encounter ends.',
+		]);
+	});
+
 	it('NumberField → mounts a number input', () => {
 		const field = new fields.NumberField({ required: true, nullable: false, initial: 1 });
 		const { container } = render(SchemaFieldRenderer, {

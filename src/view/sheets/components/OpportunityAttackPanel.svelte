@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { OpportunityAttackPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
 	import { getContext } from 'svelte';
-	import getHeroicReactionCostLabel from '../../../utils/heroicReactionCostLabel.js';
+	import getHeroicReactionCostLabel from '../../../utils/incomingReactions/heroicReactionCostLabel.js';
 	import localize from '../../../utils/localize.js';
 	import { createOpportunityAttackPanelState } from './OpportunityAttackPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';

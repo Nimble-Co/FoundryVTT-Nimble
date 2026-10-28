@@ -6,7 +6,7 @@ import CheckRollDialog from '../CheckRollDialog.svelte';
 // Stands in for the real formula builder so the rendered formula is a direct
 // readout of the roll mode the dialog resolved. The builder itself is covered by
 // constructD20RollFormula's own tests.
-vi.mock('../../../utils/getRollFormula.js', () => ({
+vi.mock('../../../utils/rolls/getRollFormula.js', () => ({
 	default: (_actor: unknown, rollData: { rollMode: number }) => `d20 @ ${rollData.rollMode}`,
 }));
 

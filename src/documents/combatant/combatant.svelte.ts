@@ -1,5 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
-import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
+import { initiativeRollLock } from '../../utils/combat/initiativeRollLock.js';
 
 function getRequestedInitiativeRollLockData(
 	changes: Record<string, unknown>,

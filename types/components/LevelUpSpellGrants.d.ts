@@ -1,5 +1,5 @@
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 import type {
 	SchoolSelectionGroup,
 	SpellSelectionGroup,

@@ -2,9 +2,9 @@
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import getDamageTypeLabel from '#utils/getDamageTypeLabel.js';
+	import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.js';
 	import localize from '#utils/localize.js';
-	import sortItems from '#utils/sortItems.js';
+	import sortItems from '#utils/documents/sortItems.js';
 	import { SYSTEM_ID } from '#system';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import ArmorClass from '#view/sheets/components/ArmorClass.svelte';

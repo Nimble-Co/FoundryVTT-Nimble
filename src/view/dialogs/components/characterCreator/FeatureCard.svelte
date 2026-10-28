@@ -4,7 +4,7 @@
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import SourceTag from '#view/components/SourceTag.svelte';
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
-	import getItemSource from '#utils/getItemSource.ts';
+	import getItemSource from '#utils/documents/getItemSource.ts';
 	import localize from '#utils/localize.js';
 
 	let {

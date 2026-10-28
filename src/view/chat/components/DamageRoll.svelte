@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import { rerollJustLanded, rollingRerollOf } from '#utils/rerollRolling.svelte.ts';
+	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';

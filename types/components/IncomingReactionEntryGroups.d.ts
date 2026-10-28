@@ -1,5 +1,8 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
-import type { DieOutcome, IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type {
+	DieOutcome,
+	IncomingReactionEntry,
+} from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type {
 	IncomingReactionActorGroup,
 	IncomingReactionPicking,

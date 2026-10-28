@@ -1,6 +1,6 @@
 <script>
 	import { setContext, untrack } from 'svelte';
-	import { getItemSourceId } from '../../utils/itemSourceRules.js';
+	import { getItemSourceId } from '../../utils/documents/itemSourceRules.js';
 	import localize from '../../utils/localize.js';
 	import DocumentPicker from '../components/DocumentPicker.svelte';
 	import Hint from '../components/Hint.svelte';

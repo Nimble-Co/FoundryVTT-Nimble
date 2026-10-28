@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import {
 	applyRerollRecoveryChange,
 	rerollChargeConsumption,

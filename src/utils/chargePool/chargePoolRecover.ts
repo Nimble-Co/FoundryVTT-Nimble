@@ -9,7 +9,12 @@ import {
 	persistChargePoolMap,
 	toFiniteNonNegativeInteger,
 } from './helpers.js';
-import type { CharacterActorLike, ChargeRestType, ManualAdjustMode } from './types.js';
+import type {
+	CharacterActorLike,
+	ChargePoolMap,
+	ChargeRestType,
+	ManualAdjustMode,
+} from './types.js';
 
 /**
  * Shared eligibility gate for the automatic recovery entry points: recovery
@@ -89,6 +94,17 @@ async function applyRestRecovery(
 	}
 }
 
+/** The pools with their temporary uses gone, as at the end of an encounter. */
+function withoutTemporaryUses(pools: ChargePoolMap): ChargePoolMap {
+	const next = foundry.utils.deepClone(pools) as ChargePoolMap;
+	for (const pool of Object.values(next)) {
+		if (!pool.temporary) continue;
+		pool.current = Math.max(0, pool.current - pool.temporary);
+		pool.temporary = 0;
+	}
+	return next;
+}
+
 async function applyEncounterRecovery(
 	actor: Actor | null | undefined,
 	encounterTrigger: 'encounterStart' | 'encounterEnd',
@@ -96,7 +112,11 @@ async function applyEncounterRecovery(
 	if (!isEligibleForAutomaticRecovery(actor)) return;
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
-	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [encounterTrigger]);
+	const nextPools = applyRecoveryTriggersToPools(
+		actor,
+		encounterTrigger === 'encounterEnd' ? withoutTemporaryUses(currentPools) : currentPools,
+		[encounterTrigger],
+	);
 	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
 
 	await persistChargePoolMap(actor, nextPools);

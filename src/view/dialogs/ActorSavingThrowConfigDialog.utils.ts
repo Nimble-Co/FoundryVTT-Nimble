@@ -1,7 +1,7 @@
 import calculateSavingThrowRollModes, {
 	type ClassSavingThrowDefaults,
 	type SavingThrowRollModeRuleData,
-} from '#utils/calculateSavingThrowRollModes.js';
+} from '#utils/rolls/calculateSavingThrowRollModes.js';
 
 interface RuleBearingItem {
 	name?: string;

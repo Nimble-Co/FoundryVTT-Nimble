@@ -22,14 +22,19 @@ import { Predicate, type RawPredicate } from '../etc/Predicate.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
-import { type AttackDelivery, attackDeliveryFromAttackType } from '../utils/attackDelivery.js';
+import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
+import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
+import {
+	type AttackDelivery,
+	attackDeliveryFromAttackType,
+} from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	hasWeaponProficiency,
-} from '../utils/attackUtils.js';
-import { ChargePoolRuleConfig } from '../utils/chargePoolRuleConfig.js';
-import { buildTargetDomain } from '../utils/conditionalBonuses.js';
+} from '../utils/damage/attackUtils.js';
+import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
+import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -38,18 +43,16 @@ import {
 	setPoolFaces,
 } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
-import getRollFormula from '../utils/getRollFormula.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
 	type IncomingAttackPlan,
-} from '../utils/incomingAttackModifiers.js';
-import type { IncomingReactionEntry } from '../utils/incomingReactionEntry.js';
+} from '../utils/incomingReactions/incomingAttackModifiers.js';
+import type { IncomingReactionEntry } from '../utils/incomingReactions/incomingReactionEntry.js';
+import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '../utils/localize.js';
-import { DEFAULT_MISS_THRESHOLD } from '../utils/missThreshold.js';
-import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
-import type { OfferingActor } from '../utils/poolSpendCardOffers.js';
-import type { RerollHistory } from '../utils/rerollStep.js';
+import type { RerollHistory } from '../utils/reroll/rerollStep.js';
+import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,

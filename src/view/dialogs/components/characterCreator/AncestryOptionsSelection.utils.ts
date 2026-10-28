@@ -1,6 +1,6 @@
-import { effectiveVariants, variantIcon } from '#utils/ancestryVariants.js';
+import { effectiveSizes } from '#utils/actor/sizeSelection.js';
+import { effectiveVariants, variantIcon } from '#utils/classProgression/ancestryVariants.js';
 import localize from '#utils/localize.js';
-import { effectiveSizes } from '#utils/sizeSelection.js';
 import type {
 	AncestryChoiceOption,
 	AncestryStepCandidate,

@@ -1,5 +1,5 @@
-import { getActorDyingActionLimit, isActorDying } from '#utils/actorHealthState.js';
-import { getAllHeroicReactionAvailabilityUpdate } from '#utils/heroicActions.js';
+import { getActorDyingActionLimit, isActorDying } from '#utils/actor/actorHealthState.js';
+import { getAllHeroicReactionAvailabilityUpdate } from '#utils/incomingReactions/heroicActions.js';
 import type { CombatantBaseActions, NimbleCombatantSystem } from './combatTypes.js';
 
 function getCombatantSystem(combatant: Combatant.Implementation): NimbleCombatantSystem | null {

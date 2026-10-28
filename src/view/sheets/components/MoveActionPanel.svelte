@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MoveActionPanelProps } from '../../../../types/components/MoveActionPanel.d.ts';
 	import localize from '../../../utils/localize.js';
-	import { getMovementSpeeds } from '../../../utils/movementSpeeds.js';
+	import { getMovementSpeeds } from '../../../utils/actor/movementSpeeds.js';
 
 	let {
 		actor,

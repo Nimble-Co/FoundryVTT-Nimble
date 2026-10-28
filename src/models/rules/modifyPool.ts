@@ -1,4 +1,4 @@
-import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
@@ -115,6 +115,13 @@ function schema() {
 						widget: 'formula',
 					}),
 				),
+				temporary: new fields.BooleanField({
+					required: false,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.chargePool.recoveries.temporary.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.temporary.hint',
+				}),
 				// Cast: PredicateField extends ObjectField whose constructor typing
 				// doesn't accept label/hint. The renderer reads them off the instance.
 				predicate: new PredicateField({

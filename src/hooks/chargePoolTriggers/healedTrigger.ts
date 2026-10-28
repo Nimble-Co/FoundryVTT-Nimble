@@ -1,4 +1,4 @@
-import { hpGained } from '#utils/actorHpChangePaths.js';
+import { hpGained } from '#utils/actor/actorHpChangePaths.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
 

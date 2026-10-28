@@ -1,4 +1,4 @@
-import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+import { clampHitDiceBySize } from '#utils/actor/clampHitDiceBySize.ts';
 
 // Die size progression: d4 -> d6 -> d8 -> d10 -> d12 -> d20
 const DIE_SIZES = [4, 6, 8, 10, 12, 20];

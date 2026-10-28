@@ -1,8 +1,8 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { systemHookName } from '#system';
-import { addBankedDamageReduction } from '#utils/bankedDamageReduction.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { addBankedDamageReduction } from '#utils/damage/bankedDamageReduction.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';

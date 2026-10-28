@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 // @ts-expect-error - Svelte component default export is provided by the Svelte compiler
 import SchoolSelection from '../SchoolSelection.svelte';
 

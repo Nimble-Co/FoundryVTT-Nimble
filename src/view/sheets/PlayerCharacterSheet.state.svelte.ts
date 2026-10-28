@@ -3,15 +3,18 @@ import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { SYSTEM_ID } from '#system';
-import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
-import { getResourcePools } from '#utils/chargePool/chargePoolSync.js';
-import { clampHitDiceBySize } from '#utils/clampHitDiceBySize.ts';
+import { clampHitDiceBySize } from '#utils/actor/clampHitDiceBySize.ts';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,
-} from '#utils/combatManaRules.js';
-import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
-import type { MissingLevelSelection } from '#utils/findMissingLevelSelections.ts';
+} from '#utils/actor/combatManaRules.js';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { getResourcePools } from '#utils/chargePool/chargePoolSync.js';
+import type { MissingLevelSelection } from '#utils/classProgression/findMissingLevelSelections.ts';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '#utils/combat/combatState.js';
 
 type NavigationComponents = {
 	core: unknown;

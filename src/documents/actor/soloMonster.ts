@@ -1,5 +1,5 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
-import toMessageMode from '../../utils/toMessageMode.js';
+import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';

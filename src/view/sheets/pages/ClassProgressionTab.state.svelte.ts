@@ -4,13 +4,13 @@ import type {
 	ClassProgressionLevelData,
 	SubclassChoice,
 } from '#types/components/ClassProgressionTab.d.ts';
-import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.js';
+import buildSubclassFeatureIndex from '#utils/classProgression/buildSubclassFeatureIndex.js';
+import getClassProgressionData from '#utils/classProgression/getClassProgressionData.js';
+import getSubclassChoices from '#utils/classProgression/getSubclassChoices.js';
+import getSubclassFeaturesFromIndex from '#utils/classProgression/getSubclassFeatures.js';
+import type { ItemSource } from '#utils/documents/getItemSource.ts';
+import getItemSource from '#utils/documents/getItemSource.ts';
 import formatGroupName from '#utils/formatGroupName.js';
-import getClassProgressionData from '#utils/getClassProgressionData.js';
-import type { ItemSource } from '#utils/getItemSource.ts';
-import getItemSource from '#utils/getItemSource.ts';
-import getSubclassChoices from '#utils/getSubclassChoices.js';
-import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.js';
 import localize from '#utils/localize.js';
 import { SUBCLASS_LEVELS } from './ClassProgressionTabConstants.js';
 import {

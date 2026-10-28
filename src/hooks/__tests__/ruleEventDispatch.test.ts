@@ -36,11 +36,11 @@ vi.stubGlobal('foundry', {
 	},
 });
 
-vi.mock('../../utils/actorHealthState.js', () => ({
+vi.mock('../../utils/actor/actorHealthState.js', () => ({
 	getActorHealthState: vi.fn(() => 'normal'),
 }));
 
-import { getActorHealthState } from '../../utils/actorHealthState.js';
+import { getActorHealthState } from '../../utils/actor/actorHealthState.js';
 import registerRuleEventDispatch from '../ruleEventDispatch.js';
 
 interface RuleLike {

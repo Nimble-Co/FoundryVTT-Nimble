@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import { canvasDragPan } from '../utils/canvasInternal.js';
+import { canvasDragPan } from '../utils/tokens/canvasInternal.js';
 import { type AoETemplateConfig, buildAoERegionShape } from './buildAoERegionShape.js';
 
 interface PlaceAoEOptions {

@@ -1,15 +1,15 @@
-import { hasLastStandStatus } from '../../utils/actorHealthState.js';
+import { hasLastStandStatus } from '../../utils/actor/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
-} from '../../utils/actorHpChangePaths.js';
+} from '../../utils/actor/actorHpChangePaths.js';
 import {
 	getActorHpValue,
 	getActorLastStandHp,
 	getActorWoundsValueAndMax,
-} from '../../utils/actorResources.js';
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
+} from '../../utils/actor/actorResources.js';
+import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 
 let didRegisterCombatantDefeatSync = false;
 

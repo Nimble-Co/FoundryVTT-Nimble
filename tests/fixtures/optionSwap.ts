@@ -1,5 +1,5 @@
 import type { NimbleFeatureItem } from '../../src/documents/item/feature.js';
-import type { OptionSwapSource } from '../../src/utils/resolveOptionSwapOffer.ts';
+import type { OptionSwapSource } from '../../src/utils/optionSwap/resolveOptionSwapOffer.ts';
 import type {
 	ResolvedOptionSwapOffer,
 	ResolvedSwappableOptionPool,

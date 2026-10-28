@@ -270,9 +270,11 @@ describe('RuleCard without a form layout', () => {
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	it('covers every rule but reroll', () => {
-		expect(others.map(([type]) => type)).not.toContain('reroll');
-		expect(others.length).toBe(Object.keys(CONFIG.NIMBLE.ruleDataModels).length - 1);
+	it('covers every rule but reroll and modifyReroll', () => {
+		const types = others.map(([type]) => type);
+		expect(types).not.toContain('reroll');
+		expect(types).not.toContain('modifyReroll');
+		expect(others.length).toBe(Object.keys(CONFIG.NIMBLE.ruleDataModels).length - 2);
 	});
 
 	it.each(others)('%s keeps the flat field list and the condition in Advanced', (type) => {

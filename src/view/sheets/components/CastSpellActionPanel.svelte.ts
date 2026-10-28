@@ -1,10 +1,10 @@
 import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { flattenActivationEffects } from '../../../utils/activationEffects.js';
-import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
-import formatActivationCostLabel from '../../../utils/formatActivationCostLabel.js';
+import formatActivationCostLabel from '../../../utils/combat/formatActivationCostLabel.js';
+import sortItems from '../../../utils/documents/sortItems.js';
 import localize from '../../../utils/localize.js';
-import sortItems from '../../../utils/sortItems.js';
+import { evaluateFormula as evalFormula } from '../../../utils/rolls/evaluateFormula.js';
 import {
 	createSpellCostResolver,
 	formatSpellCostLabel,

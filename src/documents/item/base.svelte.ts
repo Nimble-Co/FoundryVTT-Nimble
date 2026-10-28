@@ -8,7 +8,10 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { applyCasterConcentration, type ConcentrationSource } from '../../utils/concentration.js';
+import {
+	applyCasterConcentration,
+	type ConcentrationSource,
+} from '../../utils/actor/concentration.js';
 
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
@@ -339,6 +342,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					image: this.img || 'icons/svg/item-bag.svg',
 					incomingReactions: incomingReactions ?? [],
 					rerolls: rerollHistory?.rerolls ?? [],
+					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 					isCritical,
 					isMiss,

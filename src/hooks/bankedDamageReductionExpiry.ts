@@ -1,4 +1,4 @@
-import { clearBankedDamageReduction } from '#utils/bankedDamageReduction.js';
+import { clearBankedDamageReduction } from '#utils/damage/bankedDamageReduction.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 
 let registered = false;

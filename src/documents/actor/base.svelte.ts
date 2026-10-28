@@ -8,21 +8,22 @@ import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
-import calculateRollMode from '../../utils/calculateRollMode.js';
+import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
+import localize from '../../utils/localize.js';
+import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
+import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
 import {
 	type CheckCardRerollData,
 	checkCardRerollData,
 	createCheckCard,
-} from '../../utils/checkCardRollTarget.js';
-import { type ConcentratingActor, heldConcentrations } from '../../utils/concentration.js';
-import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
-import getRollFormula from '../../utils/getRollFormula.js';
-import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
-import parseMonsterLevel from '../../utils/parseMonsterLevel.js';
-import type { RerollingActor } from '../../utils/rerollEntries.js';
-import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
-import toMessageMode from '../../utils/toMessageMode.js';
+} from '../../utils/reroll/checkCardRollTarget.js';
+import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
+import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
+import getRollFormula from '../../utils/rolls/getRollFormula.js';
+import toMessageMode from '../../utils/rolls/toMessageMode.js';
+import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
@@ -715,9 +716,13 @@ class NimbleBaseActor<
 
 		if (healingType === 'tempHealing') {
 			if (healingAmount <= temp) {
-				ui.notifications.warn('Temporary hit points were not granted to {this.name}. ', {
-					localize: true,
-				});
+				ui.notifications.warn(
+					localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+						name: this.name,
+						temp: String(temp),
+						amount: String(healingAmount),
+					}),
+				);
 				return;
 			}
 

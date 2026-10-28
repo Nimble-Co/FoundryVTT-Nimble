@@ -5,7 +5,7 @@
 
 	import { SYSTEM_ID } from '#system';
 	import Hint from '#view/components/Hint.svelte';
-	import getRollFormula from '../../utils/getRollFormula.js';
+	import getRollFormula from '../../utils/rolls/getRollFormula.js';
 	import localize from '../../utils/localize.js';
 	import {
 		getSituationalRollModeOptions,

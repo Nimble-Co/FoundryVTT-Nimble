@@ -1,5 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
+import type { ClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
 
 /**
  * Loads the selectable sub-item features offered by an option's selection groups.

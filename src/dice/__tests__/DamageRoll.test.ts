@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { PRIMARY_DIE_COLORSET } from '../../integrations/diceSoNice.js';
 import { ItemActivationManager, testDependencies } from '../../managers/ItemActivationManager.js';
-import { hasWeaponProficiency } from '../../utils/attackUtils.js';
+import { hasWeaponProficiency } from '../../utils/damage/attackUtils.js';
 import { DamageRoll } from '../DamageRoll.js';
 import {
 	getNimbleMods,

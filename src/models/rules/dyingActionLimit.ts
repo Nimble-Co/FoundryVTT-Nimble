@@ -1,4 +1,4 @@
-import { DYING_ACTION_LIMIT_PATH, DYING_MAX_ACTIONS } from '#utils/actorHealthState.js';
+import { DYING_ACTION_LIMIT_PATH, DYING_MAX_ACTIONS } from '#utils/actor/actorHealthState.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 

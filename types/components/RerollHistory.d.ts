@@ -1,4 +1,4 @@
-import type { PendingKeep } from '#utils/incomingReactionEntry.ts';
+import type { PendingKeep } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { rerollHistoryLines } from '../../src/view/chat/components/rerollHistoryLines.ts';
 import type { HeldIncomingReactions } from './IncomingReactionPrompts.d.ts';
 

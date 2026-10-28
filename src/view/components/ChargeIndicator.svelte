@@ -4,7 +4,7 @@
 		ChargeIndicatorProps,
 	} from '#types/components/ChargeIndicator.d.ts';
 	import { getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
-	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import ConfigureChargesDialog from '#view/dialogs/ConfigureChargesDialog.svelte';

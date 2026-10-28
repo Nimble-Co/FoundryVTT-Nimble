@@ -1,6 +1,6 @@
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { critTriggerOutcome } from '../firesCritTriggers.js';
-import type { AttackOutcomeView } from '../incomingReactionEntry.js';
+import type { AttackOutcomeView } from '../incomingReactions/incomingReactionEntry.js';
+import { critTriggerOutcome } from '../reroll/firesCritTriggers.js';
 import { emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,

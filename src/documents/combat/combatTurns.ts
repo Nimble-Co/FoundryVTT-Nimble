@@ -2,7 +2,7 @@ import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
 	getMinionGroupSummaries,
-} from '../../utils/minionGrouping.js';
+} from '../../utils/minions/minionGrouping.js';
 
 function collectAliveMinionLeaderIds(
 	groupedSummaries: ReturnType<typeof getMinionGroupSummaries>,

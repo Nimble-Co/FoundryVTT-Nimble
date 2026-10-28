@@ -41,7 +41,10 @@ import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
-import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
+import {
+	getCombatManaGrantForCombat,
+	getCombatManaGrantMap,
+} from '#utils/actor/combatManaRules.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
 async function clearCombatManaFromCombat(combat: Combat): Promise<void> {

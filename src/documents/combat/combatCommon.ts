@@ -1,6 +1,6 @@
-import { getCombatantImage } from '../../utils/combatantImage.js';
-import resolveMinionAttackActionCost from '../../utils/resolveMinionAttackActionCost.js';
-import { getTargetTokenUuid } from '../../utils/tokenTargetLookup.js';
+import { getCombatantImage } from '../../utils/combat/combatantImage.js';
+import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
+import { getTargetTokenUuid } from '../../utils/tokens/tokenTargetLookup.js';
 import {
 	getCombatantBaseActionCurrent,
 	getCombatantManualSortValue as readCombatantManualSortValue,

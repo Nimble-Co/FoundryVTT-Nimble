@@ -2,20 +2,20 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
-import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
-import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
-import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
+import generateBlankSkillSet from '#utils/actor/generateBlankSkillSet.ts';
+import buildSubclassFeatureIndex from '#utils/classProgression/buildSubclassFeatureIndex.ts';
 import getClassFeaturesFromIndex, {
 	buildClassFeatureIndex,
 	type ClassFeatureIndex,
-} from '#utils/getClassFeatures.ts';
-import getEpicBoons from '#utils/getEpicBoons.ts';
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
-import { buildSpellIndex } from '#utils/getSpells.ts';
-import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
-import getSubclassChoices from '#utils/getSubclassChoices.ts';
-import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
-import isLevelUpOptionApplicable from '#utils/isLevelUpOptionApplicable.ts';
+} from '#utils/classProgression/getClassFeatures.ts';
+import getEpicBoons from '#utils/classProgression/getEpicBoons.ts';
+import getSubclassChoices from '#utils/classProgression/getSubclassChoices.ts';
+import getSubclassFeaturesFromIndex from '#utils/classProgression/getSubclassFeatures.ts';
+import getChoicesFromCompendium from '#utils/documents/getChoicesFromCompendium.ts';
+import isLevelUpOptionApplicable from '#utils/optionSwap/isLevelUpOptionApplicable.ts';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
+import { buildSpellIndex } from '#utils/spell/getSpells.ts';
+import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';

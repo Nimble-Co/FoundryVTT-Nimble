@@ -1,5 +1,5 @@
 import type { NimbleAncestryBonusData } from '../../models/item/AncestryBonusDataModel.js';
-import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
+import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import { NimbleBaseItem } from './base.svelte.js';
 

@@ -2,7 +2,7 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
-import type { PoolSpendSelection } from '#utils/incomingAttackReactions.js';
+import type { PoolSpendSelection } from '#utils/incomingReactions/incomingAttackReactions.js';
 import PoolSpendOfferDialogComponent from '../../view/dialogs/PoolSpendOfferDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

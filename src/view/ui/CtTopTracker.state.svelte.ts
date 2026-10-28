@@ -1,7 +1,7 @@
 import { onDestroy, onMount, tick } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { canCurrentUserReorderCombatant } from '#utils/combatantOrdering.js';
+import { canCurrentUserReorderCombatant } from '#utils/combat/combatantOrdering.js';
 import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
 	canUserTakeCombatTurn,
@@ -11,13 +11,17 @@ import {
 	requestSetActiveCombatTurn,
 	requestSwapCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
-} from '#utils/combatTurnActions.js';
-import type { HeroicReactionKey } from '#utils/heroicActions.js';
-import { isCombatantDead } from '#utils/isCombatantDead.js';
-import { isCombatStarted } from '#utils/isCombatStarted.js';
+} from '#utils/combat/combatTurnActions.js';
+import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
+import { isCombatStarted } from '#utils/combat/isCombatStarted.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import type { HeroicReactionKey } from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import { tokenGroupHoverIn, tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
+import {
+	tokenGroupHoverIn,
+	tokenHoverIn,
+	tokenHoverOut,
+} from '#utils/tokens/tokenHoverHighlight.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import {

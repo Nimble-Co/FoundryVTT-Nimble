@@ -1,6 +1,6 @@
 const mocks = vi.hoisted(() => ({ requestIncomingAttackReaction: vi.fn() }));
 
-vi.mock('#utils/incomingAttackReactions.js', () => ({
+vi.mock('#utils/incomingReactions/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
 }));

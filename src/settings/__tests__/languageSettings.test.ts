@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import getLanguageName from '../../utils/getLanguageName.js';
+import getLanguageName from '../../utils/documents/getLanguageName.js';
 import { findLanguageNameConflicts, type LanguageCustomizations } from '../languageSettings.js';
 
 type LanguageSettingsModule = typeof import('../languageSettings.js');

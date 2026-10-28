@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import getClassFeaturesFromIndex, {
 	buildClassFeatureIndex as buildClassFeatureIndexReal,
 	type ClassFeatureIndex,
-} from '../../src/utils/getClassFeatures.ts';
+} from '../../src/utils/classProgression/getClassFeatures.ts';
 import type {
 	ClassMeta,
 	FeatureDoc,

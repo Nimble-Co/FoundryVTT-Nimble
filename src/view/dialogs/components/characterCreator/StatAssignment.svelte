@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import generateBlankAttributeSet from '../../../../utils/generateBlankAttributeSet.js';
+	import generateBlankAttributeSet from '../../../../utils/actor/generateBlankAttributeSet.js';
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 

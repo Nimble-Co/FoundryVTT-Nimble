@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import getLanguageName from '#utils/getLanguageName.js';
+	import getLanguageName from '#utils/documents/getLanguageName.js';
 	import Hint from '../../../components/Hint.svelte';
 	import TagGroup from '../../../components/TagGroup.svelte';
 	import { createBonusLanguageSelectionState } from './BonusLanguageSelection.svelte.js';

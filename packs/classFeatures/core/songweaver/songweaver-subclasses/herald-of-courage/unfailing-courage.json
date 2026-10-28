@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyReroll",
+				"disabled": false,
+				"id": "4YjGB75w2y11LUoO",
+				"identifier": "",
+				"label": "Unfailing Courage: the reroll has advantage",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"rerollIdentifier": "songweavers-inspiration",
+				"rollModeChange": 1,
+				"extraDamage": "",
+				"actionsForRoller": 0,
+				"tempHp": "",
+				"tempHpWithin": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

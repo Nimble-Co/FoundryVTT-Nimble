@@ -123,16 +123,21 @@ async function rollOneDieFace(faces: number): Promise<number> {
 /**
  * Reroll one die of an evaluated roll. The old roll is not changed: the new
  * roll is a copy with that die rolled again and its total, crit and miss
- * worked out again. `thrown` holds only the dice this reroll rolled.
+ * worked out again. `thrown` holds only the dice this reroll rolled. With a
+ * `rollModeChange` of 1 the die is rolled two times and the higher stays (-1:
+ * the lower); `dropped` is the other result. Dice its max explodes into are
+ * rolled once.
  */
 async function rerollOneDie<TRoll extends OneDieRoll>(
 	roll: TRoll,
 	ref: DieRef,
+	options: { rollModeChange?: number; draw?: (faces: number) => Promise<number> } = {},
 ): Promise<{
 	roll: TRoll;
 	faces: number;
 	previous: number;
 	next: number;
+	dropped: number | null;
 	thrown: foundry.dice.Roll;
 }> {
 	const copy = foundry.dice.Roll.fromData(
@@ -143,11 +148,24 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 
 	const style =
 		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
+	const draw = options.draw ?? rollOneDieFace;
+	const mode = Math.sign(Number(options.rollModeChange) || 0);
+	let dropped: number | null = null;
+	let first = true;
+	const drawWithMode = async (faces: number) => {
+		const value = await draw(faces);
+		if (!first || mode === 0) return value;
+		first = false;
+		const other = await draw(faces);
+		const stays = mode > 0 ? Math.max(value, other) : Math.min(value, other);
+		dropped = stays === value ? other : value;
+		return stays;
+	};
 	const changed = await rerollDieInTerm(
 		term,
 		ref.result,
 		style,
-		rollOneDieFace,
+		drawWithMode,
 		copy.primaryDieBonusOf?.(term) ?? null,
 	);
 	copy.primaryDieRerolled?.(term, changed.keptBase);
@@ -166,7 +184,8 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 		faces: term.faces,
 		previous: changed.previous,
 		next: changed.next,
-		thrown: thrownDice(term, changed.drawn),
+		dropped,
+		thrown: thrownDice(term, dropped === null ? changed.drawn : [...changed.drawn, dropped]),
 	};
 }
 

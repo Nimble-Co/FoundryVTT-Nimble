@@ -2,8 +2,8 @@
 	import type { CheckCardRollsProps } from '#types/components/CheckCardRolls.d.ts';
 
 	import { setContext, untrack } from 'svelte';
-	import { CHECK_ROLL_SLOT } from '#utils/checkCardRollTarget.ts';
-	import { rerollJustLanded, rollingRerollOf } from '#utils/rerollRolling.svelte.ts';
+	import { CHECK_ROLL_SLOT } from '#utils/reroll/checkCardRollTarget.ts';
+	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import { getRollModeSummary } from '../../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';

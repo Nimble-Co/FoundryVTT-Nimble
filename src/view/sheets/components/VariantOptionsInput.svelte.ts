@@ -1,5 +1,9 @@
 import type { VariantOptionsInputProps } from '#types/components/VariantOptionsInput.d.ts';
-import { addVariant, effectiveVariants, removeVariant } from '#utils/ancestryVariants.js';
+import {
+	addVariant,
+	effectiveVariants,
+	removeVariant,
+} from '#utils/classProgression/ancestryVariants.js';
 import localize from '#utils/localize.js';
 
 function formatVariants(variants: string[]): string {

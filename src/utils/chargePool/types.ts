@@ -1,4 +1,4 @@
-import type { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import type { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 
 type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
 type ChargePoolDieSize = (typeof ChargePoolRuleConfig.dieSizes)[number];
@@ -17,6 +17,10 @@ type ChargeRecoveryEntry = {
 	/** Optional predicate tested against the actor's domain when the trigger
 	 *  fires (e.g. { self: 'raging' }). Absent or empty = always applies. */
 	predicate?: Record<string, unknown>;
+	/** An `add` with this flag gives temporary uses: spent first, gone when the encounter ends. */
+	temporary?: boolean;
+	/** The feature that added this entry to another feature's pool. Absent for the pool's own. */
+	source?: string;
 };
 
 type ChargePoolState = {
@@ -28,6 +32,8 @@ type ChargePoolState = {
 	label: string;
 	current: number;
 	max: number;
+	/** How many of `current` are temporary uses. Absent means none. */
+	temporary?: number;
 	/**
 	 * Optional die size hint for charges that represent rollable dice (e.g.
 	 * Commander Combat Dice, Artificer Mana Dice). Consumers roll a die of
@@ -110,6 +116,7 @@ type ModifyPoolRuleLike = {
 	dieSize?: string | null;
 	maxDelta?: string | null;
 	addRefills?: unknown;
+	item?: { name?: string } | null;
 };
 
 type PoolMaxBonusRuleLike = {

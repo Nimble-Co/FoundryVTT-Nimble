@@ -8,7 +8,7 @@
 	import { getContext } from 'svelte';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
-	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
+	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 

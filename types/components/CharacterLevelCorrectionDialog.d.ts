@@ -1,6 +1,6 @@
 import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { MissingLevelSelection } from '#utils/findMissingLevelSelections.ts';
+import type { MissingLevelSelection } from '#utils/classProgression/findMissingLevelSelections.ts';
 
 /**
  * A gap reported by the audit with its remaining pool candidates resolved to documents, so the

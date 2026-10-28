@@ -1,8 +1,8 @@
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '#utils/localize.js';
-import { rerollCostCharges, rerollUsesLeft } from '#utils/rerollCost.js';
-import { findRerollRule } from '#utils/rerollEntries.js';
+import { rerollCostCharges, rerollUsesLeft } from '#utils/reroll/rerollCost.js';
+import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[] {

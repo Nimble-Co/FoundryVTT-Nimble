@@ -1,9 +1,9 @@
-import { matchesAttackDelivery } from '../../utils/attackDelivery.js';
+import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
-} from '../../utils/heroicActions.js';
+} from '../../utils/incomingReactions/heroicActions.js';
 import {
 	REROLL_DICE,
 	REROLL_KEEPS,
@@ -13,15 +13,15 @@ import {
 	type RerollKeep,
 	type RerollSide,
 	type RerollTrigger,
-} from '../../utils/incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost } from '../../utils/rerollCost.js';
-import type { RerollChanges } from '../../utils/rerollOptions.js';
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
+import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
 import {
 	type CheckRollKind,
 	REROLL_ROLL_KINDS,
 	type RerollRollKind,
 	type RollToReroll,
-} from '../../utils/rollToReroll.js';
+} from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -51,6 +51,13 @@ function rollsInclude(kind: RerollRollKind) {
 const forAttacks = rollsInclude('attack');
 
 // Roll changes apply to a new roll of the whole formula only.
+/** The roll mode change choices: none, advantage or disadvantage. */
+const ROLL_MODE_CHANGE_CHOICES = {
+	0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
+	1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
+	[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
+};
+
 const wholeRoll = (data: Record<string, unknown>) => (data.die ?? 'wholeRoll') === 'wholeRoll';
 const forWholeAttackRolls = (data: Record<string, unknown>) => forAttacks(data) && wholeRoll(data);
 
@@ -227,11 +234,7 @@ function schema() {
 				min: -1,
 				max: 1,
 				integer: true,
-				choices: {
-					0: 'NIMBLE.rules.reroll.rollModeChange.choices.none',
-					1: 'NIMBLE.rules.reroll.rollModeChange.choices.advantage',
-					[-1]: 'NIMBLE.rules.reroll.rollModeChange.choices.disadvantage',
-				},
+				choices: ROLL_MODE_CHANGE_CHOICES,
 				label: 'NIMBLE.rules.reroll.rollModeChange.label',
 				hint: 'NIMBLE.rules.reroll.rollModeChange.hint',
 				showWhen: wholeRoll,
@@ -436,6 +439,9 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	 * rule's actor. Only an attack gets the attack changes.
 	 */
 	rerollChanges(kind: RerollRollKind): RerollChanges {
+		if ((this.die ?? 'wholeRoll') !== 'wholeRoll') {
+			return { rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' };
+		}
 		const attackChanges = kind === 'attack' && this.rolls?.includes('attack') === true;
 		const formula = attackChanges ? (this.extraDamage ?? '').trim() : '';
 		const extraDamage = formula
@@ -449,4 +455,4 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export { RerollRule, type RerollOfferContext };
+export { RerollRule, ROLL_MODE_CHANGE_CHOICES, type RerollOfferContext };

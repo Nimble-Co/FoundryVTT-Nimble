@@ -19,15 +19,15 @@ import {
 	isMovementTrackingAutomationEnabled,
 	isRuleAutomationEnabled,
 } from '../settings/automationSettings.js';
-import { getActorHealthState } from '../utils/actorHealthState.js';
+import { getActorHealthState } from '../utils/actor/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
 	hpBeforeUpdate,
 	hpGained,
-} from '../utils/actorHpChangePaths.js';
-import { getActorWoundsValueAndMax } from '../utils/actorResources.js';
+} from '../utils/actor/actorHpChangePaths.js';
+import { getActorWoundsValueAndMax } from '../utils/actor/actorResources.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 

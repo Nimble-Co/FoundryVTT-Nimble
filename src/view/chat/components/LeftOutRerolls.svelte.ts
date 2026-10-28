@@ -1,5 +1,5 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type { IncomingReactionEntry } from '#utils/incomingReactionEntry.ts';
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import { leftOutRerollReason } from './leftOutRerollReason.ts';
 

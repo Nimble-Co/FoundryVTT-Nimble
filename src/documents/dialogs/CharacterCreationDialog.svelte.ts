@@ -3,15 +3,18 @@ import type { AncestryCreateOptions } from '#documents/item/ancestry.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-import { canonicalVariant } from '#utils/ancestryVariants.js';
+import { canonicalVariant } from '#utils/classProgression/ancestryVariants.js';
 import calculateSavingThrowRollModes, {
 	type SavingThrowRollModeRuleData,
-} from '#utils/calculateSavingThrowRollModes.js';
-import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
-import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
-import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
-import { buildClassFeatureIndex, type ClassFeatureIndex } from '../../utils/getClassFeatures.js';
-import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
+} from '#utils/rolls/calculateSavingThrowRollModes.js';
+import { buildSpellIndex, type SpellIndex } from '#utils/spell/getSpells.js';
+import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.js';
+import {
+	buildClassFeatureIndex,
+	type ClassFeatureIndex,
+} from '../../utils/classProgression/getClassFeatures.js';
+import getChoicesFromCompendium from '../../utils/documents/getChoicesFromCompendium.js';
+import sortDocumentsByName from '../../utils/documents/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

@@ -2,14 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 import CharacterCreationStateHarness from '../../../../../tests/harnesses/CharacterCreationStateHarness.svelte';
-import getClassFeaturesFromIndex from '../../../../utils/getClassFeatures.js';
+import getClassFeaturesFromIndex from '../../../../utils/classProgression/getClassFeatures.js';
 import scrollIntoView from '../../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES } from '../constants.js';
 import type { CharacterCreationResults } from '../types.js';
 
-vi.mock('../../../../utils/getClassFeatures.js', () => ({
+vi.mock('../../../../utils/classProgression/getClassFeatures.js', () => ({
 	default: vi.fn(),
 }));
 

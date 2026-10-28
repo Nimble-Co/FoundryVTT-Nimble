@@ -6,7 +6,7 @@ import type {
 	ClassFeatureResult,
 	SelectionGroup,
 } from '#types/components/ClassFeatureSelection.d.ts';
-import { DUPLICATE_SOURCE_GROUP_PREFIX } from '#utils/getClassFeatures.ts';
+import { DUPLICATE_SOURCE_GROUP_PREFIX } from '#utils/classProgression/getClassFeatures.ts';
 import ClassFeatureSelectionStateHarness from '../../../../../../tests/harnesses/ClassFeatureSelectionStateHarness.svelte';
 import { createClassFeatureSelectionState as createLevelUpState } from '../../levelUpHelper/LevelUpClassFeatureSelection.svelte.ts';
 import { createClassFeatureSelectionState as createCreatorState } from '../ClassFeatureSelection.svelte.ts';

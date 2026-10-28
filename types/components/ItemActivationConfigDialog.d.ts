@@ -1,4 +1,4 @@
-export type { AttackDelivery } from '#utils/attackDelivery.js';
+export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
 export interface SpendablePool {
 	id: string;

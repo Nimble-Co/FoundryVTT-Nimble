@@ -39,7 +39,7 @@
 		ancestryVariant?: string | null;
 		statArray?: import('#view/dialogs/characterCreation/types.js').StatArrayOption | null;
 		abilityScoreAssignment?: Record<string, number | null> | null;
-		spellIndex: import('#utils/getSpells.js').SpellIndex;
+		spellIndex: import('#utils/spell/getSpells.js').SpellIndex;
 		submitCharacterCreation?: (
 			results: import('#view/dialogs/characterCreation/types.js').CharacterCreationResults,
 		) => Promise<void>;

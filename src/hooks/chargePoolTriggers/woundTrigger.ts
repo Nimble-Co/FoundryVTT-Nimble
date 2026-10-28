@@ -1,4 +1,4 @@
-import { woundsGained } from '#utils/actorHpChangePaths.js';
+import { woundsGained } from '#utils/actor/actorHpChangePaths.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
 

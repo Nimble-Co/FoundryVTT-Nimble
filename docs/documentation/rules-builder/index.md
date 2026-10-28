@@ -59,6 +59,21 @@ Whatever the type, every rule shares a few fields:
 - **Disabled**: the on/off toggle described above.
 - **Suppress activation card**: found under **Advanced**. Controls whether using the item skips its descriptive chat card. **Automatic** (the default) lets the rule decide; most rules never suppress, but a manual dice spend does, because the spend flow posts its own card. Pick **Always** for a silent feature whose activation has nothing to say, or **Never** to keep the card even when the rule would normally suppress it. A card that carries rolls or effects is never skipped, whatever this is set to.
 
+## Rules that add to another rule
+
+Some rules change a rule on another feature of the same character. They find that rule by its **Identifier**, so give the first rule an identifier in the raw JSON view, and type the same identifier in the second rule.
+
+- **Modify Pool** adds to a Charge Pool or a Dice Pool: a higher maximum, a bigger die, or **Additional refills**.
+- **Modify Toggle** changes when a Toggle Effect turns off or on.
+- **Modify Reroll** adds to a Reroll rule. Its **Changes to the new roll** (advantage or disadvantage, extra damage) count one time per attack or check. What creatures gain (actions for the one who rolled, temp HP for the one who rolled and their allies) comes with each use of the reroll. The Songweaver's Heroic Ballad, Unfailing Courage, Fire in my Bones and Inspiring Presence are examples on Songweaver's Inspiration.
+
+Some fields of these rules need a word:
+
+- **Only while** on a charge pool refill is a condition on that one refill, tested when its trigger fires. It is not the rule's Condition box.
+- **Temporary uses** on a charge pool refill makes the uses it adds last for the encounter only. They are spent first and go away when the encounter ends.
+- **Reach** on a Reroll rule is how far the feature's token can be from the ally who rolled. On a Modify Reroll rule it is how far a creature can be from this character's token to gain temp HP.
+- **Which dice** and **Which result stands** on a Reroll rule decide whether the whole roll, the Primary Die or a die the player picks is rolled again, and who keeps the old or the new result.
+
 ## Worked example: Belt of Giant Strength
 
 Let's build a magic belt that gives its wearer +2 Strength.

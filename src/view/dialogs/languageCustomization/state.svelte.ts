@@ -8,7 +8,7 @@ import {
 	type LanguageSpeaker,
 	setLanguageCustomizations,
 } from '../../../settings/languageSettings.js';
-import getChoicesFromCompendium from '../../../utils/getChoicesFromCompendium.js';
+import getChoicesFromCompendium from '../../../utils/documents/getChoicesFromCompendium.js';
 
 /** Editable "spoken by" row: an ancestry and the name it uses for the language. */
 export interface SpeakerRow {

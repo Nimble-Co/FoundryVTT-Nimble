@@ -1,8 +1,8 @@
 import { HitDiceManager } from '#managers/HitDiceManager.js';
 import { systemHookName } from '#system';
 import type { OptionSwapSubmitData } from '#types/optionSwap.d.ts';
+import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/actor/manaRecovery.js';
 import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
-import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 

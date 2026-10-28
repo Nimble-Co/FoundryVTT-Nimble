@@ -1,6 +1,6 @@
-import type { SpellIndexEntry } from '#utils/getSpells.js';
 import localize from '#utils/localize.js';
-import enrichSpellText from '#utils/spellDescription.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
+import enrichSpellText from '#utils/spell/spellDescription.js';
 
 interface SpellDescriptionParts {
 	baseEffect?: string;

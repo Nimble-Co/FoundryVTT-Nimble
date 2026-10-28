@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import localize from '../../utils/localize.js';
-import { rollingRerollOf, stopRerollRolling } from '../../utils/rerollRolling.svelte.js';
+import { rollingRerollOf, stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 /**
@@ -57,6 +57,7 @@ function makeActor(uuid: string) {
 		rules: [] as unknown[],
 		system: { attributes: { wounds: { value: 0, max: 6 } } },
 		testUserPermission: vi.fn(() => true),
+		applyHealing: vi.fn(async () => undefined),
 		update: vi.fn(async (changes: Record<string, unknown>) => {
 			for (const [path, value] of Object.entries(changes)) {
 				foundry.utils.setProperty(actor, path, value);
@@ -684,6 +685,312 @@ describe('resolveRerollReaction', () => {
 		expect(message.rerollDiceToPick(rerollEntry() as never)).toBeNull();
 	});
 
+	describe('Modify Reroll rules of the reroll owner', () => {
+		function modifier(config: Record<string, unknown>, itemName: string) {
+			return {
+				id: `${itemName}-rule`,
+				type: 'modifyReroll',
+				disabled: false,
+				rerollIdentifier: 'inspiration',
+				rollModeChange: 0,
+				extraDamage: '',
+				actionsForRoller: 0,
+				tempHp: '',
+				tempHpWithin: 0,
+				appliesTo: () => true,
+				item: { name: itemName, uuid: `Item.${itemName}` },
+				...config,
+			};
+		}
+
+		function withModifiers(world: World, ...modifiers: ReturnType<typeof modifier>[]) {
+			const owner = Object.assign(world.target, {
+				getRollData: () => ({ will: 3 }),
+				items: { contents: modifiers.map((m) => ({ rules: new Map([[m.id, m]]) })) },
+			});
+			Object.assign(world.rule, { identifier: 'inspiration', actor: owner });
+		}
+
+		const advantage = () => modifier({ rollModeChange: 1 }, 'Unfailing Courage');
+
+		const rollGlobal = globalThis as unknown as { Roll: { replaceFormulaData?: unknown } };
+		let previousReplace: unknown;
+
+		beforeEach(() => {
+			previousReplace = rollGlobal.Roll.replaceFormulaData;
+			rollGlobal.Roll.replaceFormulaData = (formula: string, data: Record<string, number>) =>
+				formula.replace(/@(\w+)/g, (_match, key: string) => String(data[key] ?? 0));
+		});
+
+		afterEach(() => {
+			rollGlobal.Roll.replaceFormulaData = previousReplace;
+		});
+
+		it('rolls the reroll with the advantage, and the card keeps that it was applied', async () => {
+			const world = setupWorld();
+			withModifiers(world, advantage());
+			const message = createMessage();
+			const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			const rolled = evaluate.mock.contexts[0] as DamageRoll;
+			evaluate.mockRestore();
+			expect((rolled.options as { rollModeSources?: number[] }).rollModeSources).toEqual([0, 1]);
+			const change = {
+				key: 'Item.Unfailing Courage#Unfailing Courage-rule:rollMode',
+				kind: 'rollMode',
+				label: 'Unfailing Courage',
+				value: 1,
+			};
+			const system = updatePayload(message).system as Record<string, unknown>;
+			expect(system.rollChanges).toEqual([change]);
+			expect((system.rerolls as Array<Record<string, unknown>>)[0].changes).toEqual([change]);
+		});
+
+		const ballad = () => modifier({ extraDamage: '@will' }, 'Heroic Ballad');
+		const balladChange = {
+			key: 'Item.Heroic Ballad#Heroic Ballad-rule:extraDamage',
+			kind: 'extraDamage',
+			label: 'Heroic Ballad',
+			value: 3,
+		};
+
+		function foldedBonuses(serialized: string | Record<string, unknown>) {
+			const roll = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
+			return ((roll.terms ?? []) as Array<{ number?: number; options?: { flavor?: string } }>)
+				.filter((term) => term.options?.flavor === 'Heroic Ballad')
+				.map((term) => term.number);
+		}
+
+		it('adds extra damage to the new roll as a bonus named by its feature', async () => {
+			const world = setupWorld();
+			withModifiers(world, ballad());
+			const message = createMessage();
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			const payload = updatePayload(message);
+			expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
+			expect(foldedBonuses(payload.system.activation.effects[0].roll as never)).toEqual([3]);
+			expect((payload.system as Record<string, unknown>).rollChanges).toEqual([balladChange]);
+		});
+
+		it('carries extra damage the card applied onto a later reroll, once', async () => {
+			const world = setupWorld();
+			withModifiers(world, ballad());
+			const message = createMessage();
+			(message.system as Record<string, unknown>).rollChanges = [balladChange];
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(foldedBonuses(updatePayload(message).rolls[0])).toEqual([3]);
+		});
+
+		it.each(['old', 'new'] as const)(
+			'adds the extra damage to the %s result when a player keeps it',
+			async (choice) => {
+				const world = setupWorld();
+				withModifiers(world, ballad());
+				const message = createMessage({ entries: [rerollEntry({ used: true })] });
+				(message.system as Record<string, unknown>).pendingKeep = {
+					entryId: 'entry-1',
+					chooserUuid: 'Actor.target',
+					roll: { ...serializedRoll(), total: 11 },
+					reroll: {
+						entryId: 'entry-1',
+						itemUuid: 'Item.sand',
+						ruleId: 'reroll-1',
+						label: 'Pocket Sand',
+						actorUuid: 'Actor.target',
+						faces: 6,
+						previous: { value: 4, outcome: null },
+						next: { value: 6, outcome: null },
+						usesLeft: null,
+						woundsGained: 0,
+						changes: [balladChange],
+					},
+					old: { total: 11, outcome: 'hit' },
+					new: { total: 14, outcome: 'hit' },
+					discardedCritTriggers: false,
+				};
+
+				await message.resolveKeepChoice(choice, 'gm-user');
+
+				const payload = updatePayload(message);
+				expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
+				expect((payload.system as Record<string, unknown>).rollChanges).toEqual([balladChange]);
+			},
+		);
+
+		describe('what creatures gain at the click', () => {
+			const presence = () => modifier({ tempHp: '@will', tempHpWithin: 0 }, 'Inspiring Presence');
+			const bones = () => modifier({ actionsForRoller: 1 }, 'Fire in my Bones');
+
+			type Combatant = {
+				id: string;
+				type: string;
+				actor: unknown;
+				system: { actions: { base: { current: number; max: number } } };
+				update: ReturnType<typeof vi.fn>;
+			};
+
+			function placeOnScene(world: World, combat: 'started' | 'none' = 'started') {
+				const tokens: Array<Record<string, unknown>> = [];
+				const scene = { tokens };
+				for (const [actor, x] of [
+					[world.attacker, 0],
+					[world.target, 1],
+				] as const) {
+					Object.assign(actor, { hasPlayerOwner: true, isOwner: true });
+					const token = { uuid: `${actor.uuid}.Token`, x, disposition: 1, actor, parent: scene };
+					tokens.push(token);
+					Object.assign(actor, { getActiveTokens: () => [token] });
+					foundry.utils.setProperty(actor, 'system.attributes.hp.temp', 0);
+				}
+				const combatant: Combatant = {
+					id: 'kael-combatant',
+					type: 'character',
+					actor: world.attacker,
+					system: { actions: { base: { current: 1, max: 3 } } },
+					update: vi.fn(async () => undefined),
+				};
+				const all = [combatant];
+				(globals().game as Record<string, unknown>).combat =
+					combat === 'started'
+						? {
+								id: 'combat-1',
+								started: true,
+								combatants: {
+									get: (id: string) => all.find((c) => c.id === id) ?? null,
+									contents: all,
+								},
+								getCombatantsByActor: (actor: unknown) => all.filter((c) => c.actor === actor),
+							}
+						: null;
+				return combatant;
+			}
+
+			let previousCombat: unknown;
+			beforeEach(() => {
+				previousCombat = (globals().game as Record<string, unknown>).combat;
+			});
+			afterEach(() => {
+				(globals().game as Record<string, unknown>).combat = previousCombat;
+			});
+
+			it('gives temp HP to allies and an action to the one who rolled, and keeps the list', async () => {
+				const world = setupWorld();
+				withModifiers(world, presence(), bones());
+				const combatant = placeOnScene(world);
+				const message = createMessage();
+
+				await message.resolveRerollReaction('entry-1', 'gm-user');
+
+				expect(world.attacker.applyHealing).toHaveBeenCalledWith(3, 'tempHealing');
+				expect(world.target.applyHealing).not.toHaveBeenCalled();
+				expect(combatant.update).toHaveBeenCalledWith({ 'system.actions.base.current': 2 });
+				const rerolls = (updatePayload(message).system as Record<string, unknown>).rerolls as Array<
+					Record<string, unknown>
+				>;
+				expect(rerolls[0].grants).toEqual([
+					{
+						actorUuid: 'Actor.attacker',
+						name: 'Kael',
+						tempHp: { amount: 3, had: 0, keeps: null, source: 'Inspiring Presence' },
+						actions: { amount: 1, reason: null, source: 'Fire in my Bones' },
+						applied: true,
+					},
+				]);
+			});
+
+			it('gives no action out of combat, and says why', async () => {
+				const world = setupWorld();
+				withModifiers(world, bones());
+				placeOnScene(world, 'none');
+				const message = createMessage();
+
+				await message.resolveRerollReaction('entry-1', 'gm-user');
+
+				const rerolls = (updatePayload(message).system as Record<string, unknown>).rerolls as Array<
+					Record<string, unknown>
+				>;
+				expect(rerolls[0].grants).toEqual([
+					expect.objectContaining({
+						actions: { amount: 0, reason: 'notInCombat', source: 'Fire in my Bones' },
+					}),
+				]);
+			});
+
+			it('applies nothing with Feature Effects off, and marks the list not applied', async () => {
+				const world = setupWorld();
+				withModifiers(world, presence(), bones());
+				const combatant = placeOnScene(world);
+				const settings = globals().game as unknown as { settings?: unknown };
+				const previous = settings.settings;
+				settings.settings = {
+					get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+				};
+				const message = createMessage();
+
+				try {
+					await message.resolveRerollReaction('entry-1', 'gm-user');
+				} finally {
+					settings.settings = previous;
+				}
+
+				expect(world.attacker.applyHealing).not.toHaveBeenCalled();
+				expect(combatant.update).not.toHaveBeenCalled();
+				const rerolls = (updatePayload(message).system as Record<string, unknown>).rerolls as Array<
+					Record<string, unknown>
+				>;
+				expect((rerolls[0].grants as Array<{ applied: boolean }>)[0].applied).toBe(false);
+			});
+
+			it('gives nothing when the reroll fails', async () => {
+				const world = setupWorld();
+				withModifiers(world, presence(), bones());
+				const combatant = placeOnScene(world);
+				const message = createMessage();
+				message.update.mockRejectedValueOnce(new Error('write failed'));
+				const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+				try {
+					await message.resolveRerollReaction('entry-1', 'gm-user');
+				} finally {
+					error.mockRestore();
+				}
+
+				expect(world.attacker.applyHealing).not.toHaveBeenCalled();
+				expect(combatant.update).not.toHaveBeenCalled();
+			});
+		});
+
+		it('applies a roll change once per attack', async () => {
+			const world = setupWorld();
+			withModifiers(world, advantage());
+			const message = createMessage();
+			(message.system as Record<string, unknown>).rollChanges = [
+				{
+					key: 'Item.Unfailing Courage#Unfailing Courage-rule:rollMode',
+					kind: 'rollMode',
+					label: 'Unfailing Courage',
+					value: 1,
+				},
+			];
+			const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			const rolled = evaluate.mock.contexts[0] as DamageRoll;
+			evaluate.mockRestore();
+			expect((rolled.options as { rollModeSources?: number[] }).rollModeSources).toBeUndefined();
+			const system = updatePayload(message).system as Record<string, unknown>;
+			expect((system.rollChanges as unknown[]).length).toBe(1);
+			expect((system.rerolls as Array<Record<string, unknown>>)[0].changes).toEqual([]);
+		});
+	});
+
 	describe('a reroll whose result a player chooses', () => {
 		function pending(overrides: Record<string, unknown> = {}) {
 			return {
@@ -946,8 +1253,15 @@ describe('resolveRerollReaction', () => {
 			]);
 			expect(message.system.rerolls).toEqual([
 				expect.objectContaining({ itemUuid: 'Item.sand' }),
-				expect.objectContaining({ itemUuid: 'Item.ward', actorUuid: 'Actor.target' }),
+				expect.objectContaining({
+					itemUuid: 'Item.ward',
+					actorUuid: 'Actor.target',
+					automatic: true,
+				}),
 			]);
+			expect(
+				(message.system.rerolls as Array<{ automatic?: boolean }>)[0].automatic,
+			).toBeUndefined();
 		});
 
 		it('keeps the button reroll and its cost when it starts an automatic one', async () => {

@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { SpellIndexEntry } from '#utils/getSpells.js';
+import type { SpellIndexEntry } from '#utils/spell/getSpells.js';
 import LevelUpSpellCardStateHarness from '../../../../../../tests/harnesses/LevelUpSpellCardStateHarness.svelte';
 
 /** Back `fromUuid` with one in-memory spell document. */

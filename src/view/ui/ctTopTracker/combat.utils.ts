@@ -7,17 +7,17 @@ import {
 import {
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
-} from '../../../utils/combatTurnActions.js';
-import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgress.js';
-import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
-import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
-import { isCombatantDead } from '../../../utils/isCombatantDead.js';
-import { isCombatStarted } from '../../../utils/isCombatStarted.js';
+} from '../../../utils/combat/combatTurnActions.js';
+import { hasCombatantTurnEndedThisRound } from '../../../utils/combat/combatTurnProgress.js';
+import { initiativeRollLock } from '../../../utils/combat/initiativeRollLock.js';
+import { isCombatantDead } from '../../../utils/combat/isCombatantDead.js';
+import { isCombatStarted } from '../../../utils/combat/isCombatStarted.js';
+import { getHeroicReactionAvailability } from '../../../utils/incomingReactions/heroicActions.js';
 import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
 	getMinionGroupSummaries,
-} from '../../../utils/minionGrouping.js';
+} from '../../../utils/minions/minionGrouping.js';
 import type { ResolveActiveEntryKeyParams, SceneCombatantLists, TrackEntry } from './types.js';
 
 type CombatWithTurnIdentityHint = Combat & {

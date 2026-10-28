@@ -1,9 +1,9 @@
 import type { OfferCard } from '#types/movement.js';
-import { firesCritTriggers } from '#utils/firesCritTriggers.js';
 import localize from '#utils/localize.js';
 import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
+import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';

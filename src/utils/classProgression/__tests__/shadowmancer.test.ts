@@ -10,7 +10,7 @@ import type {
 	LevelSummary,
 	ReportLevel,
 } from '../../../../tests/fixtures/classProgression.types.ts';
-import type { ClassFeatureIndex } from '../../getClassFeatures.ts';
+import type { ClassFeatureIndex } from '../getClassFeatures.ts';
 import { report } from '../shadowmancer.expect.ts';
 
 /**

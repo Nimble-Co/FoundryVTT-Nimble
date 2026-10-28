@@ -1,16 +1,46 @@
 <script lang="ts">
 	import type { ResourceBarProps } from '#types/components/ResourceBar.d.ts';
+	import localize from '#utils/localize.js';
 
-	let { current, max, label, updateCurrent }: ResourceBarProps = $props();
+	let {
+		current,
+		max,
+		label,
+		temporary = 0,
+		temporarySource = '',
+		updateCurrent,
+	}: ResourceBarProps = $props();
+
+	const percent = (value: number) =>
+		max > 0 ? Math.clamp(Math.round((value / max) * 100), 0, 100) : 0;
+	const shownTemporary = $derived(Math.clamp(temporary, 0, current));
+	const temporaryTooltip = $derived(
+		temporarySource
+			? localize('NIMBLE.charges.temporaryUsesFrom', {
+					count: String(shownTemporary),
+					source: temporarySource,
+				})
+			: localize('NIMBLE.charges.temporaryUses', { count: String(shownTemporary) }),
+	);
 </script>
 
 <div
 	class="nimble-resource-bar"
-	style="--nimble-resource-bar-percentage: {max > 0
-		? Math.clamp(Math.round((current / max) * 100), 0, 100)
-		: 0}%"
+	style="--nimble-resource-bar-percentage: {percent(current - shownTemporary)}%"
 >
 	<div class="nimble-resource-bar__bar">
+		{#if shownTemporary > 0}
+			<div
+				class="nimble-resource-bar__temporary"
+				style="left: {percent(current - shownTemporary)}%; width: {percent(current) -
+					percent(current - shownTemporary)}%"
+			></div>
+			<span class="nimble-resource-bar__temporary-count" data-tooltip={temporaryTooltip}>
+				<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+				<span class="nimble-resource-bar__spoken">{temporaryTooltip}</span>
+				<span aria-hidden="true">{shownTemporary}</span>
+			</span>
+		{/if}
 		<div class="nimble-resource-bar__values">
 			<input
 				class="nimble-resource-bar__input nimble-resource-bar__input--current"
@@ -72,6 +102,45 @@
 				border-radius: 4px 0 0 4px;
 				transition: width 0.2s ease-in-out;
 			}
+		}
+
+		&__temporary {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			z-index: 1;
+			background: var(--nimble-resource-bar-fill);
+			opacity: 0.45;
+			transition:
+				left 0.2s ease-in-out,
+				width 0.2s ease-in-out;
+		}
+
+		&__temporary-count {
+			position: absolute;
+			top: 50%;
+			right: 0.375rem;
+			z-index: 6;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			translate: 0 -50%;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-resource-bar-text-color);
+
+			i {
+				font-size: 0.8em;
+			}
+		}
+
+		&__spoken {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
 		}
 
 		&__values {

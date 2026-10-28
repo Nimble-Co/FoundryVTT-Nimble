@@ -1,5 +1,7 @@
 import type { ConditionNode, EffectNode } from '#types/effectTree.js';
-import applyConditionToActor, { type ConditionTargetActor } from '#utils/applyConditionToActor.js';
+import applyConditionToActor, {
+	type ConditionTargetActor,
+} from '#utils/actor/applyConditionToActor.js';
 import {
 	type ActivationCardContext,
 	type ActorHealthContext,

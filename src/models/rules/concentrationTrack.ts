@@ -1,4 +1,4 @@
-import { CONCENTRATION_TRACKS_PATH } from '../../utils/concentration.js';
+import { CONCENTRATION_TRACKS_PATH } from '../../utils/actor/concentration.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {

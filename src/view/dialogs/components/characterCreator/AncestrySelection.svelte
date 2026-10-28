@@ -3,7 +3,7 @@
 	import Hint from '../../../components/Hint.svelte';
 	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
 	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
-	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
+	import getDocumentSourceLabel from '../../../../utils/documents/getDocumentSourceLabel.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	async function handleAncestrySelection(ancestry) {

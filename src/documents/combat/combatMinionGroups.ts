@@ -1,4 +1,4 @@
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
+import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
@@ -9,7 +9,7 @@ import {
 	MINION_GROUP_ID_PATH,
 	MINION_GROUP_ROLE_PATH,
 	MINION_GROUP_TEMPORARY_PATH,
-} from '../../utils/minionGrouping.js';
+} from '../../utils/minions/minionGrouping.js';
 import { getCombatantManualSortValue } from './combatantSystem.js';
 import { logMinionGroupingCombat, normalizeUniqueIds } from './combatCommon.js';
 import type { TurnIdentity } from './combatTypes.js';

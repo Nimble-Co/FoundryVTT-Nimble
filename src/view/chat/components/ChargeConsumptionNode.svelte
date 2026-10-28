@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
-	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 

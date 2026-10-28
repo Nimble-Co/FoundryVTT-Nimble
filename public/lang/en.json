@@ -217,6 +217,34 @@
 				"rerollWithCost": "{label} ({cost})",
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
+				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
+				"rerollTags": {
+					"automatic": "Automatic",
+					"automaticTooltip": "{feature} rerolled by itself. Nobody clicked.",
+					"advantage": "Advantage",
+					"disadvantage": "Disadvantage",
+					"rollModeDropped": "{source}. Rolled {first} and {second}, kept {kept}.",
+					"extraDamage": "+{amount} {source}",
+					"extraDamageTooltip": "{source}: +{amount} damage, in the total.",
+					"action": "{name} +{count} action",
+					"actions": "{name} +{count} actions",
+					"noActionNotInCombat": "No action: not in combat",
+					"noActionNotACharacter": "No action: not a hero",
+					"noActionTooltipNotInCombat": "{source} gives an action only in combat.",
+					"noActionTooltipNotACharacter": "{source} gives an action only to a hero.",
+					"tempHpOne": "{amount} temp HP to {name}",
+					"tempHpMany": "{amount} temp HP to {count} creatures",
+					"tempHpNobody": "{amount} temp HP: nobody gains it",
+					"tempHpToggle": "Show who gained temp HP",
+					"tempHpGain": "{names} gain {amount} temp HP.",
+					"tempHpGainOne": "{names} gains {amount} temp HP.",
+					"tempHpReplaced": "{name} had {had}, now has {amount}.",
+					"tempHpKeeps": "{name} keeps {had}, not {amount}.",
+					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
+					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
+					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
+					"offAction": "Feature Effects is off. Give the action by hand."
+				},
 				"keepResult": "Keep {total}",
 				"keepWaiting": "{name} keeps {old} or {new}.",
 				"keepFirst": "Keep a result first",
@@ -638,7 +666,8 @@
 		},
 		"healingTypes": {
 			"healing": "Healing",
-			"tempHealing": "Temporary Healing"
+			"tempHealing": "Temporary Healing",
+			"tempHealingNotGranted": "{name} keeps their own {temp} temp HP, which is not less than {amount}."
 		},
 		"languages": {
 			"common": "Common",
@@ -1027,6 +1056,7 @@
 			"modifyConsumer": "Modify Consumer",
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
+			"modifyReroll": "Modify Reroll",
 			"modifyToggle": "Modify Toggle",
 			"movementTrigger": "Movement Trigger",
 			"note": "Note",
@@ -1211,6 +1241,10 @@
 					"predicate": {
 						"label": "Only while",
 						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply."
+					},
+					"temporary": {
+						"label": "Temporary uses",
+						"hint": "Only on a charge pool, with the \"add\" mode. These uses are spent first. They go away when the encounter ends."
 					}
 				}
 			},
@@ -1643,6 +1677,43 @@
 					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
 				}
 			},
+			"modifyReroll": {
+				"description": "Adds to a Reroll rule on this character. It can change the new roll. It can also give actions and temp HP each time the reroll is used.",
+				"rerollIdentifier": {
+					"label": "Reroll identifier",
+					"hint": "Type the identifier of the Reroll rule to add to. That rule must be on this character."
+				},
+				"rollModeChange": {
+					"label": "Advantage or disadvantage",
+					"hint": "On the new roll. For a reroll of one die, that die is rolled two times."
+				},
+				"extraDamage": {
+					"label": "Extra damage",
+					"hint": "A formula, such as 1d6 or @will. It is added to the attack's damage when its result stands. Values such as @will come from this character."
+				},
+				"actionsForRoller": {
+					"label": "Actions for the one who rolled",
+					"hint": "The one who rolled gains this many actions immediately. This applies only in combat and only to a hero."
+				},
+				"tempHp": {
+					"label": "Temp HP for the one who rolled and allies",
+					"hint": "The one who rolled and their allies gain this temp HP. This character does not gain it. A creature with more temp HP keeps its own. Values such as @will come from this character."
+				},
+				"tempHpWithin": {
+					"label": "Reach",
+					"hint": "How many spaces a creature can be from this character's token. 0 is any distance. If this character has no token, no creature gains temp HP."
+				},
+				"form": {
+					"roll": {
+						"label": "Changes to the new roll",
+						"hint": "These count one time per attack or check. Using the reroll again does not add them again."
+					},
+					"creatures": {
+						"label": "What do creatures gain?",
+						"hint": "Creatures gain these each time the reroll is used."
+					}
+				}
+			},
 			"modifyToggle": {
 				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
 				"toggleIdentifier": {
@@ -2009,6 +2080,8 @@
 		},
 		"charges": {
 			"header": "Charges",
+			"temporaryUses": "{count} temporary: spent first, gone when the encounter ends.",
+			"temporaryUsesFrom": "{count} temporary from {source}: spent first, gone when the encounter ends.",
 			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",

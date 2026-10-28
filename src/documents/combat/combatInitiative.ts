@@ -1,4 +1,4 @@
-import toMessageMode from '../../utils/toMessageMode.js';
+import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { getCombatantPendingActionDelta } from './combatantSystem.js';
 import type { InitiativeRollOutcome } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';

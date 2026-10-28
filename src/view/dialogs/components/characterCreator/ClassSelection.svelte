@@ -3,7 +3,7 @@
 
 	import DocumentCard from './DocumentCard.svelte';
 	import Hint from '../../../components/Hint.svelte';
-	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
+	import getDocumentSourceLabel from '../../../../utils/documents/getDocumentSourceLabel.js';
 
 	let { active, classes, selectedClass = $bindable() } = $props();
 

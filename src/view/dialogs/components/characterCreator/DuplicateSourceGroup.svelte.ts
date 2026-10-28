@@ -1,7 +1,7 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { DuplicateSourceGroupProps } from '#types/components/DuplicateSourceGroup.d.ts';
-import getDocumentSourceLabel from '#utils/getDocumentSourceLabel.ts';
-import getItemSource from '#utils/getItemSource.ts';
+import getDocumentSourceLabel from '#utils/documents/getDocumentSourceLabel.ts';
+import getItemSource from '#utils/documents/getItemSource.ts';
 import localize from '#utils/localize.js';
 import type { DescriptionSegment } from '../../featureDiff.ts';
 import { compareFeatures, diffDescription, toPlainText } from '../../featureDiff.ts';

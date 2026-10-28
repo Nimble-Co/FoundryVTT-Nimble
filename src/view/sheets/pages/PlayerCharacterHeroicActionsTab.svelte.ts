@@ -2,14 +2,17 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
-import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
-import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '#utils/combat/combatState.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailabilityTitle,
 	type HeroicReactionKey,
-} from '#utils/heroicActions.js';
+} from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
-import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import filterItems from '#view/dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '#view/dialogs/HeroicActionsHelpDialog.svelte';
 import { isCustomReaction } from '#view/sheets/components/CustomReactionsPanel.svelte.js';

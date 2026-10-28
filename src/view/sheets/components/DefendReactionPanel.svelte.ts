@@ -1,7 +1,7 @@
 import type { ReactionPanelStateOptions } from '../../../../types/components/ReactionPanel.d.ts';
+import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
-import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
-import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
+import { getTargetedTokens, getTargetName } from '../../../utils/tokens/targeting.js';
 import handleInterposeAndDefend from './handleInterposeAndDefend.js';
 
 export function createDefendPanelState(options: ReactionPanelStateOptions) {

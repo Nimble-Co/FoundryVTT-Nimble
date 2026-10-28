@@ -6,7 +6,30 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "nskpz8ZTiVDUmFTE",
+				"identifier": "",
+				"label": "Quick Wit: regain 2 uses of Songweaver's Inspiration on Initiative",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "songweavers-inspiration",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "onInitiativeRolled",
+						"mode": "add",
+						"value": "2",
+						"temporary": true,
+						"predicate": {}
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

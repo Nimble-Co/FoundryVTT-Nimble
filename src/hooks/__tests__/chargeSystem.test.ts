@@ -93,9 +93,33 @@ describe('registerChargeSystemHooks encounter recovery hooks', () => {
 						: false) as unknown as typeof foundry.utils.hasProperty,
 			},
 		};
-		(globalThis as unknown as { game: { combat: Combat | null } }).game = {
+		(globalThis as unknown as { game: Record<string, unknown> }).game = {
 			combat: null,
+			user: { id: 'gm', isGM: true },
+			users: { activeGM: { id: 'gm' } },
 		};
+	});
+
+	it.each([
+		['a player', { id: 'player', isGM: false }],
+		['a second GM', { id: 'gm-2', isGM: true }],
+	])('applies no encounter recovery on the client of %s', async (_who, user) => {
+		(globalThis as unknown as { game: Record<string, unknown> }).game.user = user;
+		const hooks = captureHooks();
+		const registerChargeSystemHooks = (await import('../chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const actor = createActor('actor-5');
+		hooks.get('updateCombat')?.(createCombat('combat-5', actor, false), { started: false });
+		hooks.get('deleteCombat')?.(createCombat('combat-6', actor, false));
+		(globalThis as unknown as { game: { combat: Combat } }).game.combat = createCombat(
+			'combat-7',
+			actor,
+			true,
+		);
+		hooks.get('combatStart')?.();
+
+		expect(applyEncounterRecoveryMock).not.toHaveBeenCalled();
 	});
 
 	it('does not apply encounter-end recovery on pre-start combat updates', async () => {

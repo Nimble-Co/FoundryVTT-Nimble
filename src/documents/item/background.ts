@@ -1,6 +1,6 @@
 import type { NimbleBackgroundData } from '../../models/item/BackgroundDataModel.js';
 
-import enrichDocumentHTML from '../../utils/enrichDocumentHTML.js';
+import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleBackgroundItem extends NimbleBaseItem<'background'> {

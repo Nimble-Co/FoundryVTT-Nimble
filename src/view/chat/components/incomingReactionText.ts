@@ -1,5 +1,8 @@
 import type { IncomingReactionText } from '#types/components/IncomingReactionPrompts.d.ts';
-import type { IncomingReactionEntry, RerollRecord } from '#utils/incomingReactionEntry.ts';
+import type {
+	IncomingReactionEntry,
+	RerollRecord,
+} from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '../../../utils/localize.js';
 import { getIncomingReactionCost } from './incomingReactionCost.ts';

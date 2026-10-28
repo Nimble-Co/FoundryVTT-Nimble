@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { NimbleFeatureItem } from '#documents/item/feature.js';
-	import type { ClassFeatureIndex } from '#utils/getClassFeatures.ts';
+	import type { ClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
 
 	import { createFeatureOptionPickerState } from '../../src/view/dialogs/components/levelUpHelper/LevelUpFeatureOptionPicker.svelte.ts';
 
