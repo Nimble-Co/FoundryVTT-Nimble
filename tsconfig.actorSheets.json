@@ -1,0 +1,4 @@
+{
+	"extends": "./tsconfig.json",
+	"include": ["src/view/actorSheets/**/*", "storybook/**/*", "types/assumeHookRan.d.ts"]
+}

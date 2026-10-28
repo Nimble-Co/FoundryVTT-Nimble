@@ -79,6 +79,54 @@ jobs:
       - name: Check circular dependencies
         run: pnpm circular-deps
 
+  svelte-check-sheets:
+    name: Svelte Check (actor sheets and Storybook)
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node_version }}
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
+      - run: pnpm install --frozen-lockfile
+      - name: Check the actor sheets and Storybook
+        run: pnpm check:svelte-sheets
+
+  storybook:
+    name: Storybook Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node_version }}
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
+      - run: pnpm install --frozen-lockfile
+      - name: Build Storybook
+        run: pnpm storybook:build
+
   migration-version:
     name: Migration Version Check
     runs-on: ubuntu-latest

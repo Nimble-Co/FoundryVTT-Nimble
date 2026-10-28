@@ -21,6 +21,7 @@ docs/documentation/reference/*.md
 node_modules/
 .npm/
 dist/
+storybook-static/
 .husky/
 
 # Lock files from other package managers

@@ -18,6 +18,27 @@ module.exports = {
 				dependencyTypesNot: ["type-only"],
 			},
 		},
+		{
+			name: "actor-sheets-not-from-old-sheets",
+			severity: "error",
+			comment: "The new actor sheets import nothing from the old sheets in src/view/sheets/",
+			from: { path: "^src/view/actorSheets/" },
+			to: { path: "^src/view/sheets/" },
+		},
+		{
+			name: "actor-sheet-parts-are-leaves",
+			severity: "error",
+			comment: "A part imports only other parts, Svelte and the localize helper",
+			from: { path: "^src/view/actorSheets/parts/" },
+			to: {
+				pathNot: [
+					"^src/view/actorSheets/parts/",
+					"^src/utils/localize\\.ts$",
+					"^node_modules/svelte/",
+					"^node_modules/\\.pnpm/svelte@",
+				],
+			},
+		},
 	],
 	options: {
 		doNotFollow: {
