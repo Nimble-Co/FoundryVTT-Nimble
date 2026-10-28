@@ -100,18 +100,6 @@ declare global {
 		type ConfiguredInstance = ChatMessage.Implementation;
 	}
 
-	interface AssumeHookRan {
-		init: never;
-	}
-
-	interface AssumeHookRan {
-		setup: never;
-	}
-
-	interface AssumeHookRan {
-		ready: never;
-	}
-
 	interface CONFIG {
 		NIMBLE: typeof NIMBLE;
 	}
