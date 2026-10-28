@@ -167,6 +167,25 @@ describe('createHeroPerform', () => {
 			expect(actor.rollInitiativeToChat).toHaveBeenCalledOnce();
 		});
 
+		it('ignores a second click while the first roll is on its way', async () => {
+			vi.stubGlobal('canvas', { scene: { id: 'scene1' } });
+			let finish = () => {};
+			actor.rollInitiativeToChat.mockReturnValueOnce(
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+			);
+
+			const first = perform({ kind: 'rollInitiative' });
+			await perform({ kind: 'rollInitiative' });
+			finish();
+			await first;
+			await perform({ kind: 'rollInitiative' });
+			vi.unstubAllGlobals();
+
+			expect(actor.rollInitiativeToChat).toHaveBeenCalledTimes(2);
+		});
+
 		it('rolls in the viewed combat of this scene', async () => {
 			const combat = mockCombat({ id: 'c1', actorId: 'hero1', initiative: null });
 			vi.stubGlobal('canvas', { scene: { id: 'scene1' } });

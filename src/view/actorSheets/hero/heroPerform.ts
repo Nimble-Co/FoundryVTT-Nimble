@@ -73,6 +73,8 @@ async function mutateActions(
 	});
 }
 
+const initiativeRolling = new WeakSet<NimbleCharacter>();
+
 /** Roll in the viewed combat of this scene (with the auto-add setting), else roll to chat. */
 async function rollInitiative(actor: NimbleCharacter): Promise<void> {
 	const combat = game.combats?.viewed as CombatWithLateJoin | null | undefined;
@@ -196,7 +198,13 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await actor.triggerRest({ restType: intent.restType } as RestManager.Data);
 				return;
 			case 'rollInitiative':
-				await rollInitiative(actor);
+				if (initiativeRolling.has(actor)) return;
+				initiativeRolling.add(actor);
+				try {
+					await rollInitiative(actor);
+				} finally {
+					initiativeRolling.delete(actor);
+				}
 				return;
 			case 'setActions':
 				await mutateActions(actor, () => ({ 'system.actions.base.current': intent.value }));
