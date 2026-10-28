@@ -170,14 +170,13 @@ describe('createHeroPerform', () => {
 		it('rolls in the viewed combat of this scene', async () => {
 			const combat = mockCombat({ id: 'c1', actorId: 'hero1', initiative: null });
 			vi.stubGlobal('canvas', { scene: { id: 'scene1' } });
-			game.combats = { viewed: combat } as never;
+			vi.stubGlobal('game', { ...game, combats: { viewed: combat } });
 
 			await perform({ kind: 'rollInitiative' });
 
 			expect(combat.rollInitiative).toHaveBeenCalledWith(['c1'], { promptRollDialog: true });
 			expect(actor.rollInitiativeToChat).not.toHaveBeenCalled();
 			vi.unstubAllGlobals();
-			game.combats = undefined as never;
 		});
 	});
 

@@ -141,6 +141,7 @@ async function endTurn(actor: NimbleCharacter): Promise<void> {
 
 /** The one place where the character sheet acts on Foundry. */
 export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
+	const document = actor as unknown as Actor.Implementation;
 	return async (intent: HeroIntent): Promise<void> => {
 		switch (intent.kind) {
 			case 'setHp':
@@ -171,16 +172,16 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await actor.editCurrentHitDice();
 				return;
 			case 'setPoolCharges':
-				await adjustPool(actor, intent.poolId, 'set', intent.value);
+				await adjustPool(document, intent.poolId, 'set', intent.value);
 				return;
 			case 'rollPoolCharge':
-				await rollChargeDie(actor, intent.poolId, { flavor: intent.label });
+				await rollChargeDie(document, intent.poolId, { flavor: intent.label });
 				return;
 			case 'rollIntoDicePool':
-				await rollDieIntoPool(actor, intent.poolId, { flavor: intent.label });
+				await rollDieIntoPool(document, intent.poolId, { flavor: intent.label });
 				return;
 			case 'setDiceFaces':
-				await setPoolFaces(actor, intent.poolId, intent.faces);
+				await setPoolFaces(document, intent.poolId, intent.faces);
 				return;
 			case 'configure':
 				await configure(actor, intent.target);
@@ -189,7 +190,7 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await actor.update({ name: intent.name });
 				return;
 			case 'changePortrait':
-				await updateDocumentImage(actor, { shiftKey: intent.skipTokenizer });
+				await updateDocumentImage(document, { shiftKey: intent.skipTokenizer });
 				return;
 			case 'levelUp':
 				await actor.triggerLevelUp();
