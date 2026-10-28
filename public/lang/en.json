@@ -2676,6 +2676,9 @@
 					"assess": {
 						"label": "Assess",
 						"description": "Study your surroundings"
+					},
+					"unarmedStrike": {
+						"description": "Strike with your bare hands or feet"
 					}
 				},
 				"help": {
