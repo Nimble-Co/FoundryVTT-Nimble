@@ -1,3 +1,4 @@
+import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import type { PoolKind } from '../parts/types.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
@@ -140,17 +141,10 @@ const MOVEMENT_ICONS: Record<string, string> = {
 	swim: 'fa-solid fa-water',
 	burrow: 'fa-solid fa-circle-down',
 };
-const DIE_SIZES = [4, 6, 8, 10, 12, 20];
 
 const dieNumber = (dieSize: string | null) => (dieSize ? Number(dieSize.replace(/^d/, '')) : null);
 const firstOfType = (actor: HeroActorLike, type: string): ItemLike | undefined =>
 	actor.items.find((item) => item.type === type);
-
-function incrementDieSize(size: number, steps: number): number {
-	const index = DIE_SIZES.indexOf(size);
-	if (index === -1) return size;
-	return DIE_SIZES[Math.min(index + steps, DIE_SIZES.length - 1)];
-}
 
 function meta(actor: HeroActorLike, context: HeroSheetContext): string {
 	const { format, localize } = context;

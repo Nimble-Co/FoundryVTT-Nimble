@@ -21,14 +21,14 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 
 	let { view, editing, perform, skillColumns }: Props = $props();
 
-	const C = 'NIMBLE.actorSheet.hero.core';
+	const CORE = 'NIMBLE.actorSheet.hero.core';
 	const skillRows = $derived(Math.ceil(view.skills.length / skillColumns));
 </script>
 
 <div class="core" class:editing>
 	<section>
 		<GroupHeading
-			label={localize(`${C}.abilitiesAndSaves`)}
+			label={localize(`${CORE}.abilitiesAndSaves`)}
 			flush
 			{editing}
 			buttonGap={editing ? 'md' : 'sm'}
@@ -41,7 +41,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 					data-tooltip={localize('NIMBLE.prompts.configureAbilityScores')}
 					onclick={() => perform({ kind: 'configure', target: 'abilities' })}
 				>
-					<i class="fa-solid fa-gear"></i>{localize(`${C}.stats`)}
+					<i class="fa-solid fa-gear"></i>{localize(`${CORE}.stats`)}
 				</button>
 				<button
 					type="button"
@@ -50,7 +50,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 					data-tooltip={localize('NIMBLE.prompts.configureSavingThrows')}
 					onclick={() => perform({ kind: 'configure', target: 'saves' })}
 				>
-					<i class="fa-solid fa-gear"></i>{localize(`${C}.saves`)}
+					<i class="fa-solid fa-gear"></i>{localize(`${CORE}.saves`)}
 				</button>
 			{/if}
 		</GroupHeading>
@@ -82,7 +82,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 						disabled={editing}
 						onclick={() => perform(ability.save.intent)}
 					>
-						<span>{localize(`${C}.save`)}</span><b>{ability.save.mod}</b><RollModeMark
+						<span>{localize(`${CORE}.save`)}</span><b>{ability.save.mod}</b><RollModeMark
 							value={ability.save.rollMode}
 						/>
 					</button>
@@ -92,10 +92,10 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	</section>
 
 	<section class="zone-holder">
-		<GroupHeading label={localize(`${C}.skills`)} flush {editing} />
+		<GroupHeading label={localize(`${CORE}.skills`)} flush {editing} />
 		{#if editing}
 			<EditZone
-				short={localize(`${C}.skills`)}
+				short={localize(`${CORE}.skills`)}
 				label={localize('NIMBLE.prompts.configureSkills')}
 				onclick={() => perform({ kind: 'configure', target: 'skills' })}
 			/>
@@ -131,7 +131,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	</section>
 
 	<section>
-		<GroupHeading label={localize(`${C}.proficiencies`)} flush {editing} />
+		<GroupHeading label={localize(`${CORE}.proficiencies`)} flush {editing} />
 		<dl class="proficiencies">
 			{#each view.proficiencies as row (row.label)}
 				{@const configure = row.configure}

@@ -81,7 +81,7 @@ The parent must be positioned (`position: relative`). Every outline is 5 px from
 		border-radius: 3px;
 		background: var(--nimble-crimson);
 		font: 700 0.821rem/1 var(--nimble-primary-font);
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 		white-space: nowrap;
 	}
 	.tag i {

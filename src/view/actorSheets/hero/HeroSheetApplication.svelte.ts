@@ -102,6 +102,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
 				manaFromInitiative: () => {
+					// read only to recompute when the combat mana rules are primed
 					void this.#combatManaPrimed;
 					return getInitiativeCombatManaRules(actor as unknown as Actor).length > 0;
 				},

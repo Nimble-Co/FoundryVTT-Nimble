@@ -40,22 +40,23 @@ function registerPoolHooks(listener: () => void): () => void {
 
 type AnyRecord = Record<string, unknown>;
 
-function ruleLike(rule: AnyRecord & { appliesTo?: () => boolean; toObject?: () => AnyRecord }) {
-	return (actor: NimbleCharacter): RuleLike => {
-		const fields = rule.toObject?.() ?? {};
-		const value = fields.value;
-		let amount: number | undefined;
-		if (typeof value === 'number') amount = value;
-		else if (typeof value === 'string' && value.trim()) {
-			amount = getDeterministicBonus(value, actor.getRollData()) ?? undefined;
-		}
-		return {
-			id: String(rule.id ?? ''),
-			type: String(rule.type ?? ''),
-			active: rule.disabled !== true && (rule.appliesTo?.() ?? true),
-			amount,
-			fields,
-		};
+function ruleLike(
+	rule: AnyRecord & { appliesTo?: () => boolean; toObject?: () => AnyRecord },
+	actor: NimbleCharacter,
+): RuleLike {
+	const fields = rule.toObject?.() ?? {};
+	const value = fields.value;
+	let amount: number | undefined;
+	if (typeof value === 'number') amount = value;
+	else if (typeof value === 'string' && value.trim()) {
+		amount = getDeterministicBonus(value, actor.getRollData()) ?? undefined;
+	}
+	return {
+		id: String(rule.id ?? ''),
+		type: String(rule.type ?? ''),
+		active: rule.disabled !== true && (rule.appliesTo?.() ?? true),
+		amount,
+		fields,
 	};
 }
 
@@ -67,7 +68,7 @@ function itemLike(item: Item, actor: NimbleCharacter): ItemLike {
 		img: item.img ?? '',
 		type: item.type,
 		system: item.system as unknown as AnyRecord,
-		rules: rules ? [...rules.values()].map((rule) => ruleLike(rule)(actor)) : [],
+		rules: rules ? [...rules.values()].map((rule) => ruleLike(rule, actor)) : [],
 	};
 }
 

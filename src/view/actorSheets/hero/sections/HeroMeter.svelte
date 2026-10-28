@@ -21,7 +21,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 
 	let { meter, ui, perform }: Props = $props();
 
-	const M = 'NIMBLE.actorSheet.hero.meter';
+	const METER = 'NIMBLE.actorSheet.hero.meter';
 	const editing = $derived(ui.editing);
 	const confirmId = $derived(`discardAll:${meter.id}`);
 	let dieMenu: number | null = $state(null);
@@ -114,11 +114,11 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 			<button
 				type="button"
 				class="nimble-u-reset-button roll"
-				data-tooltip={localize(`${M}.rollHitDiceHint`)}
+				data-tooltip={localize(`${METER}.rollHitDiceHint`)}
 				disabled={editing}
 				onclick={() => perform(meter.roll)}
 			>
-				<i class="fa-solid fa-dice-d20"></i>{localize(`${M}.roll`)}
+				<i class="fa-solid fa-dice-d20"></i>{localize(`${METER}.roll`)}
 			</button>
 		</div>
 		{#if editing}
@@ -133,7 +133,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 			<span class="label">
 				<i class="fa-solid fa-droplet"></i>
 				{meter.label}
-				{#if meter.idle}<small>{localize(`${M}.fromInitiative`)}</small>{/if}
+				{#if meter.idle}<small>{localize(`${METER}.fromInitiative`)}</small>{/if}
 			</span>
 			{#if !meter.idle}
 				<span class="count">
@@ -153,7 +153,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		<div
 			class="bar"
 			class:idle={meter.idle}
-			data-tooltip={meter.idle ? localize(`${M}.idleHint`) : undefined}
+			data-tooltip={meter.idle ? localize(`${METER}.idleHint`) : undefined}
 		>
 			<div style:width="{meter.max ? Math.round((meter.value / meter.max) * 100) : 0}%"></div>
 		</div>
@@ -178,7 +178,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 							type="button"
 							class="nimble-u-reset-button die"
 							aria-expanded={dieMenu === index}
-							aria-label={localize(`${M}.dieLabel`, {
+							aria-label={localize(`${METER}.dieLabel`, {
 								label: pool.label,
 								number: String(index + 1),
 								face: String(pool.faces[index]),
@@ -210,8 +210,8 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 				<button
 					type="button"
 					class="nimble-u-reset-button step"
-					aria-label={localize(`${M}.discardAll`)}
-					data-tooltip={localize(`${M}.discardAll`)}
+					aria-label={localize(`${METER}.discardAll`)}
+					data-tooltip={localize(`${METER}.discardAll`)}
 					disabled={editing}
 					onclick={() => (ui.confirm = confirmId)}
 				>
@@ -221,11 +221,11 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		</div>
 		{#if dieMenu !== null && dieMenu < pool.faces.length}
 			{@const index = dieMenu}
-			<div class="menu" role="group" aria-label={localize(`${M}.dieMenu`)}>
-				<span>{localize(`${M}.setValue`)}</span>
+			<div class="menu" role="group" aria-label={localize(`${METER}.dieMenu`)}>
+				<span>{localize(`${METER}.setValue`)}</span>
 				<InlineNumber
 					value={pool.faces[index]}
-					label={localize(`${M}.setValue`)}
+					label={localize(`${METER}.setValue`)}
 					min={1}
 					max={pool.die}
 					width="34px"
@@ -237,15 +237,15 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					class="nimble-u-reset-button roll"
 					onclick={() => discard(pool.faces, index)}
 				>
-					<i class="fa-solid fa-xmark"></i>{localize(`${M}.discard`)}
+					<i class="fa-solid fa-xmark"></i>{localize(`${METER}.discard`)}
 				</button>
 			</div>
 		{/if}
 		{#if ui.confirm === confirmId}
 			<div class="ask">
 				<ConfirmBar
-					question={localize(`${M}.discardAllQuestion`, { label: pool.label })}
-					confirmLabel={localize(`${M}.discardAll`)}
+					question={localize(`${METER}.discardAllQuestion`, { label: pool.label })}
+					confirmLabel={localize(`${METER}.discardAll`)}
 					onconfirm={() => {
 						ui.confirm = null;
 						dieMenu = null;
@@ -263,7 +263,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 				{pool.label}
 				{#if pool.die}<small>d{pool.die}</small>{/if}
 				{#if pool.temporary}<small
-						>{localize(`${M}.temporary`, { count: String(pool.temporary) })}</small
+						>{localize(`${METER}.temporary`, { count: String(pool.temporary) })}</small
 					>{/if}
 			</span>
 			<span class="count">
@@ -286,8 +286,8 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					<button
 						type="button"
 						class="nimble-u-reset-button die"
-						aria-label={localize(`${M}.rollOne`, { label: pool.label })}
-						data-tooltip={localize(`${M}.rollOne`, { label: pool.label })}
+						aria-label={localize(`${METER}.rollOne`, { label: pool.label })}
+						data-tooltip={localize(`${METER}.rollOne`, { label: pool.label })}
 						disabled={editing}
 						onclick={() => perform(rollOne)}
 					>
@@ -353,7 +353,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		display: inline-flex;
 		align-items: baseline;
 		white-space: nowrap;
-		color: color-mix(in srgb, var(--tone) 65%, #fff);
+		color: color-mix(in srgb, var(--tone) 65%, var(--nimble-ui-fill-ink));
 	}
 	.count.dead {
 		color: var(--nimble-ui-vital);
@@ -413,7 +413,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		font-size: 0.857rem;
 		font-weight: 900;
 		line-height: 1;
-		color: #181821;
+		color: var(--nimble-ui-tone-ink);
 	}
 	.die.empty {
 		border: 1px solid var(--nimble-ui-ring);

@@ -20,7 +20,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 
 	let { turn, ui, perform, compact = false }: Props = $props();
 
-	const T = 'NIMBLE.actorSheet.hero.turn';
+	const TURN = 'NIMBLE.actorSheet.hero.turn';
 
 	function endTurn() {
 		if (!turn.endTurn) return;
@@ -34,7 +34,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 	class:off={!turn.isTurn}
 	class:compact
 	role="group"
-	aria-label={localize(`${T}.label`)}
+	aria-label={localize(`${TURN}.label`)}
 >
 	<div class="heading"><b>{turn.heading}</b></div>
 	<div class="line">
@@ -84,7 +84,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 			<ConfirmBar
 				question={end.question}
 				confirmLabel={localize('NIMBLE.ui.heroicActions.endTurn')}
-				cancelLabel={localize(`${T}.keepPlaying`)}
+				cancelLabel={localize(`${TURN}.keepPlaying`)}
 				onconfirm={() => {
 					ui.confirm = null;
 					void perform(end.intent);
@@ -178,8 +178,8 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nimble-ui-action) 70%, transparent);
 	}
 	.cell.available {
-		background: linear-gradient(hsl(139, 47%, 48%), hsl(139, 47%, 32%));
-		box-shadow: inset 0 0 0 1px hsl(139, 40%, 26%);
+		background: var(--nimble-ui-action-cell);
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-action-cell-edge);
 	}
 	.cell.add {
 		flex: none;
@@ -210,10 +210,10 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 		height: 30px;
 		padding: 0 10px;
 		border-radius: 4px;
-		background: hsl(139, 47%, 28%);
+		background: var(--nimble-ui-end-turn);
 		font-size: 0.893rem;
 		font-weight: 700;
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 	}
 	.end:hover {
 		filter: brightness(1.12);

@@ -39,7 +39,7 @@ and rolls to chat out of combat. It waits while a roll is on its way.
 		background: var(--nimble-crimson);
 		font-size: 0.929rem;
 		font-weight: 800;
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 	}
 	.initiative:hover {
 		filter: brightness(1.15);
@@ -50,7 +50,7 @@ and rolls to chat out of combat. It waits while a roll is on its way.
 		gap: 3px;
 		padding: 0 5px;
 		border-radius: 3px;
-		background: rgb(0 0 0 / 25%);
+		background: var(--nimble-ui-scrim-soft);
 	}
 	.initiative:disabled {
 		opacity: 0.4;

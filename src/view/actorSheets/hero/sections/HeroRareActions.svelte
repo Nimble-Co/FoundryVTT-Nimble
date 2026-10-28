@@ -19,11 +19,11 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 
 	let { view, ui, perform, compact = false }: Props = $props();
 
-	const R = 'NIMBLE.actorSheet.hero.rail';
+	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
 	const levelUpLabel = $derived(localize('NIMBLE.prompts.levelUp'));
-	const revertLabel = $derived(localize(`${R}.revertLevelUp`));
-	const editLabel = $derived(localize(`${R}.${editing ? 'stopEditing' : 'editHint'}`));
+	const revertLabel = $derived(localize(`${RAIL}.revertLevelUp`));
+	const editLabel = $derived(localize(`${RAIL}.${editing ? 'stopEditing' : 'editHint'}`));
 </script>
 
 <div class="rare" class:compact>
@@ -74,7 +74,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 			}}
 		>
 			{#if compact}<i class="fa-solid fa-pen"></i>{:else}<span class="track"></span>{localize(
-					`${R}.edit`,
+					`${RAIL}.edit`,
 				)}{/if}
 		</button>
 	</div>
@@ -173,7 +173,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 	}
 	.compact .edit[aria-pressed='true'] {
 		background: var(--nimble-crimson);
-		color: #fff;
+		color: var(--nimble-ui-fill-ink);
 	}
 	.track {
 		position: relative;
@@ -203,6 +203,6 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 	}
 	.edit[aria-pressed='true'] .track::after {
 		transform: translateX(12px);
-		background: #fff;
+		background: var(--nimble-ui-fill-ink);
 	}
 </style>
