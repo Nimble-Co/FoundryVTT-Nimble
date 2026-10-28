@@ -42,6 +42,7 @@ const preview: Preview = {
 		options: {
 			storySort: {
 				order: [
+					'Sheets',
 					'Parts',
 					['Lines', 'Rows', 'Rail', 'Sheet'],
 					'Foundations',
