@@ -1,0 +1,24 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Parts/Lines" />
+
+# Lines
+
+Lines separate. The labels and the space do most of the grouping, so a sheet has few lines.
+
+## The three rules
+
+1. **A line under each group heading.** The line goes the full width of the group and shows where the group starts: CANTRIPS, TIER 1, SKILLS, ACTIVE EFFECTS, ALL CONDITIONS. `GroupHeading` does this by default. The NPC column labels (`plain`) have no line.
+2. **A line between the entries of a table that you read across.** When the value is at the far end of the line, away from its name, a line between two entries takes the eye to the correct value. Example: the skills on Core ("Arcana ... +1"). There is no line over the first entry and no line under the last entry, because the heading line and the space do that.
+3. **No other lines.**
+   - No line between rows that have an image: items, spells, features, effects. The image and the hover fill show where a row starts and ends.
+   - No extra line in or around a box. The save boxes, the condition buttons and the NPC cards have their own border.
+   - No line between a name and a value that are near: the proficiencies on Core ("Speed   Speed 6 spaces").
+
+The lines that divide the parts of the sheet stay: the line under the tabs, the lines of the phone header and the phone strip, and the line in each save box.
+
+## Space
+
+- 16 px over a group heading, then the heading, 5 px, the line and 4 px. A heading goes with the rows under it.
+- A row is 44 px high, 52 px on a phone. Rows use `min-height`, so a larger font scale makes them taller, not cut.
+- The sections of Core have 16 px between them.
