@@ -178,6 +178,40 @@ describe('createHeroPerform', () => {
 			expect(actor.rollInitiativeToChat).not.toHaveBeenCalled();
 			vi.unstubAllGlobals();
 		});
+
+		it('adds the hero to the combat first when the auto-add setting is on', async () => {
+			const combat = {
+				...mockCombat({ id: 'other', actorId: 'someone', initiative: null }),
+				ensureCharacterCombatantForActorInCurrentScene: vi.fn(async () => ({
+					id: 'c2',
+					initiative: null,
+				})),
+			};
+			vi.stubGlobal('canvas', { scene: { id: 'scene1' } });
+			vi.stubGlobal('game', {
+				...game,
+				combats: { viewed: combat },
+				settings: { get: () => true },
+			});
+
+			await perform({ kind: 'rollInitiative' });
+			vi.unstubAllGlobals();
+
+			expect(combat.ensureCharacterCombatantForActorInCurrentScene).toHaveBeenCalledWith(actor);
+			expect(combat.rollInitiative).toHaveBeenCalledWith(['c2'], { promptRollDialog: true });
+		});
+
+		it('says so, and rolls nothing, when the hero has an initiative', async () => {
+			const combat = mockCombat({ id: 'c1', actorId: 'hero1', initiative: 14 });
+			vi.stubGlobal('canvas', { scene: { id: 'scene1' } });
+			vi.stubGlobal('game', { ...game, combats: { viewed: combat } });
+
+			await perform({ kind: 'rollInitiative' });
+			vi.unstubAllGlobals();
+
+			expect(combat.rollInitiative).not.toHaveBeenCalled();
+			expect(ui.notifications?.info).toHaveBeenCalledOnce();
+		});
 	});
 
 	describe('turn', () => {
