@@ -1,6 +1,7 @@
 import { signedNumber } from '../shared/signedNumber.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
+import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';
 
 export interface HeroRollView {
 	mod: string;
@@ -41,18 +42,12 @@ export interface HeroCoreView {
 }
 
 const CORE = 'NIMBLE.actorSheet.hero.core';
-const MOVEMENT_ORDER = ['walk', 'fly', 'climb', 'swim', 'burrow'];
-
 function speedBonusNote(actor: HeroActorLike, context: HeroSheetContext): string | null {
-	const notes = actor.items.flatMap((item) =>
-		item.rules
-			.filter((rule) => rule.type === 'speedBonus' && rule.active && rule.amount)
-			.map((rule) =>
-				context.format(`${CORE}.speedBonus`, {
-					amount: signedNumber(rule.amount ?? 0),
-					source: item.name,
-				}),
-			),
+	const notes = speedBonuses(actor).map((bonus) =>
+		context.format(`${CORE}.speedBonus`, {
+			amount: signedNumber(bonus.amount),
+			source: bonus.source,
+		}),
 	);
 	return notes.length ? notes.join(', ') : null;
 }
@@ -86,7 +81,7 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 	const { languages, armor, weapons } = actor.system.proficiencies;
 	const byName = (a: string, b: string) => a.localeCompare(b);
 
-	const speed = MOVEMENT_ORDER.filter((type) => type === 'walk' || (movement[type] ?? 0) > 0)
+	const speed = shownMovementTypes(actor)
 		.map((type) =>
 			format(`${CORE}.speedValue`, {
 				type: localize(`NIMBLE.movementTypes.${type}`),

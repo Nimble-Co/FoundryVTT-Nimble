@@ -115,7 +115,7 @@ export function heroTurn(overrides?: DeepPartial<HeroCombatState>): HeroCombatSt
 			initiativeRolled: true,
 			initiativePending: false,
 			isTurn: true,
-			actions: { current: 3, effectiveMax: 3, pendingDelta: 0 },
+			actions: { current: 3, effectiveMax: 3, pendingDelta: 0, mayAdd: true },
 		},
 		overrides,
 	);

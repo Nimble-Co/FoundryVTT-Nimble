@@ -243,6 +243,15 @@ describe('createHeroPerform', () => {
 			});
 		});
 
+		it('adds no action past 10 in a turn', async () => {
+			const c = combatant({ current: 3, max: 3, additional: 7 });
+			getActiveCombatForCurrentScene.mockReturnValue(mockCombat(c));
+
+			await perform({ kind: 'addAction' });
+
+			expect(c.update).not.toHaveBeenCalled();
+		});
+
 		it('ends the turn, and warns when Foundry does not allow it', async () => {
 			const combat = mockCombat(combatant({ current: 0, max: 3 }));
 			getActiveCombatForCurrentScene.mockReturnValue(combat);

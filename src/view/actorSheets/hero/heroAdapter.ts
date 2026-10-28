@@ -9,10 +9,7 @@ import {
 import { SYSTEM_ID, systemHookName } from '#system';
 import { getActorDyingActionLimit } from '#utils/actor/actorHealthState.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '#utils/combat/combatState.js';
+import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { getActiveCombatant } from '#utils/combat/combatTurnSync.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -20,6 +17,7 @@ import getLanguageName from '#utils/documents/getLanguageName.js';
 import localize from '#utils/localize.js';
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import type { EffectLike, ItemLike, RuleLike } from '../shared/sheetSource.ts';
+import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
 import type { HeroActorLike, HeroCombatState, HeroSheetContext, HeroSource } from './heroSource.ts';
 
 const POOL_HOOKS = [
@@ -144,22 +142,24 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 }
 
 function combatState(actor: NimbleCharacter): HeroCombatState | null {
-	const combat = getActiveCombatForCurrentScene();
-	const combatant = combat?.combatants.find((entry) => entry.actorId === actor.id);
-	if (!combat || !combatant) return null;
+	const found = combatantOf(actor.id);
+	if (!found) return null;
+	const { combat, combatant } = found;
 
 	const base = getCombatantBaseActions(combatant);
+	const additional = getCombatantAdditionalActions(combatant);
 	const max = isCombatantDying(combatant)
-		? Math.min(base.max || 3, getActorDyingActionLimit(combatant.actor))
-		: base.max || 3;
+		? Math.min(baseMaxActions(base), getActorDyingActionLimit(combatant.actor))
+		: baseMaxActions(base);
 	return {
 		initiativeRolled: combatant.initiative !== null,
 		initiativePending: initiativeRollLock.hasActiveLock(combatant),
 		isTurn: combat.started === true && getActiveCombatant(combat)?.actorId === actor.id,
 		actions: {
 			current: base.current,
-			effectiveMax: max + getCombatantAdditionalActions(combatant),
+			effectiveMax: max + additional,
 			pendingDelta: getCombatantPendingActionDelta(combatant),
+			mayAdd: mayAddAction(base, additional),
 		},
 	};
 }

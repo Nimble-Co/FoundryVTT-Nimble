@@ -4,6 +4,7 @@ import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
+import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';
 
 export interface WoundsMeterView {
 	kind: 'wounds';
@@ -132,9 +133,6 @@ export interface HeroRailView {
 
 const RAIL = 'NIMBLE.actorSheet.hero.rail';
 const MAX_LEVEL = 20;
-/** the most actions a turn can have, as the old action tracker */
-const MAX_ACTIONS = 10;
-const MOVEMENT_ORDER = ['walk', 'fly', 'climb', 'swim', 'burrow'];
 const MOVEMENT_ICONS: Record<string, string> = {
 	walk: 'fa-solid fa-person-walking',
 	fly: 'fa-solid fa-feather',
@@ -183,7 +181,7 @@ function meta(actor: HeroActorLike, context: HeroSheetContext): string {
 	return parts.join(' | ');
 }
 
-/** The current and total Hit Dice of each die size, as the old sheet sums them. */
+/** The current and total Hit Dice of each die size: class dice, bonus dice and the size bonus. */
 function hitDiceBySize(actor: HeroActorLike): Map<number, { current: number; total: number }> {
 	const { hitDice, bonusHitDice, hitDiceSizeBonus } = actor.system.attributes;
 	const current = (size: number) => hitDice[size]?.current ?? 0;
@@ -320,37 +318,29 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 
 function speeds(actor: HeroActorLike, context: HeroSheetContext): HeroSpeedView[] {
 	const { movement } = actor.system.attributes;
-	const bonusFor = (type: string) =>
-		actor.items.flatMap((item) =>
-			item.rules
-				.filter((rule) => rule.type === 'speedBonus' && rule.active && rule.amount)
-				.filter((rule) => ((rule.fields.movementType as string | null) ?? 'walk') === type)
-				.map((rule) => ({ amount: rule.amount ?? 0, source: item.name })),
-		);
-	return MOVEMENT_ORDER.filter((type) => type === 'walk' || (movement[type] ?? 0) > 0).map(
-		(type) => {
-			const bonuses = bonusFor(type);
-			const total = bonuses.reduce((sum, bonus) => sum + bonus.amount, 0);
-			const label = context.localize(`NIMBLE.movementTypes.${type}`);
-			const value = movement[type] ?? 0;
-			return {
-				type,
-				label: context.localize(`${RAIL}.speed.${type}`),
-				icon: MOVEMENT_ICONS[type],
-				value,
-				note: total ? signedNumber(total) : null,
-				tooltip: [
-					context.format(`${RAIL}.speedTooltip`, { type: label, value: String(value) }),
-					...bonuses.map((bonus) =>
-						context.format('NIMBLE.actorSheet.hero.core.speedBonus', {
-							amount: signedNumber(bonus.amount),
-							source: bonus.source,
-						}),
-					),
-				].join('. '),
-			};
-		},
-	);
+	const allBonuses = speedBonuses(actor);
+	return shownMovementTypes(actor).map((type) => {
+		const bonuses = allBonuses.filter((bonus) => bonus.type === type);
+		const total = bonuses.reduce((sum, bonus) => sum + bonus.amount, 0);
+		const label = context.localize(`NIMBLE.movementTypes.${type}`);
+		const value = movement[type] ?? 0;
+		return {
+			type,
+			label: context.localize(`${RAIL}.speed.${type}`),
+			icon: MOVEMENT_ICONS[type],
+			value,
+			note: total ? signedNumber(total) : null,
+			tooltip: [
+				context.format(`${RAIL}.speedTooltip`, { type: label, value: String(value) }),
+				...bonuses.map((bonus) =>
+					context.format('NIMBLE.actorSheet.hero.core.speedBonus', {
+						amount: signedNumber(bonus.amount),
+						source: bonus.source,
+					}),
+				),
+			].join('. '),
+		};
+	});
 }
 
 function turn(context: HeroSheetContext): HeroTurnView | null {
@@ -376,7 +366,7 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 				},
 			};
 		}),
-		addAction: effectiveMax < MAX_ACTIONS ? { kind: 'addAction' } : null,
+		addAction: combat.actions.mayAdd ? { kind: 'addAction' } : null,
 		pending: pendingDelta
 			? format(getPendingActionsLocalizationKey(pendingDelta), {
 					count: String(Math.abs(pendingDelta)),

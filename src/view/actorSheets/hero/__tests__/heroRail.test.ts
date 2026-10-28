@@ -232,6 +232,12 @@ describe('heroRail', () => {
 			expect(turn?.addAction).toEqual({ kind: 'addAction' });
 		});
 
+		it('has no extra action at the limit of a turn', () => {
+			const combat = heroTurn({ actions: { current: 2, effectiveMax: 2, mayAdd: false } });
+
+			expect(heroRail(blankHero(), heroContext({ combat })).turn?.addAction).toBeNull();
+		});
+
 		it('asks before End turn while actions are left', () => {
 			const left = heroRail(blankHero(), heroContext({ combat: heroTurn() })).turn;
 			expect(left?.endTurn).toEqual({

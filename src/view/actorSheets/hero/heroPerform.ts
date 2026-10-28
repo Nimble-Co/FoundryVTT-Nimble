@@ -8,7 +8,6 @@ import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
-import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
@@ -16,6 +15,7 @@ import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js
 import localize from '#utils/localize.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
+import { combatantOf, mayAddAction } from './heroActions.ts';
 import type { HeroConfigureTarget, HeroIntent, HeroPerform } from './heroIntent.ts';
 
 type CombatWithLateJoin = Combat & {
@@ -23,9 +23,6 @@ type CombatWithLateJoin = Combat & {
 		actor: Actor.Implementation,
 	) => Promise<Combatant | null>;
 };
-
-/** The most actions a turn can have, as the old action tracker. */
-const MAX_ACTIONS = 10;
 
 function configure(actor: NimbleCharacter, target: HeroConfigureTarget): Promise<unknown> {
 	switch (target) {
@@ -60,17 +57,11 @@ function configure(actor: NimbleCharacter, target: HeroConfigureTarget): Promise
 	}
 }
 
-function combatantOf(actor: NimbleCharacter): { combat: Combat; combatant: Combatant } | null {
-	const combat = getActiveCombatForCurrentScene();
-	const combatant = combat?.combatants.find((entry) => entry.actorId === actor.id);
-	return combat && combatant ? { combat, combatant } : null;
-}
-
 async function mutateActions(
 	actor: NimbleCharacter,
 	change: (combatant: Combatant.Implementation) => Record<string, unknown> | null,
 ): Promise<void> {
-	const found = combatantOf(actor);
+	const found = combatantOf(actor.id);
 	if (!found?.combatant.id) return;
 	await queueCombatantMutationWithFreshDocument({
 		combat: found.combat,
@@ -82,7 +73,7 @@ async function mutateActions(
 	});
 }
 
-/** As the Initiative button of the old Core tab: the viewed combat, the auto-add setting, else chat. */
+/** Roll in the viewed combat of this scene (with the auto-add setting), else roll to chat. */
 async function rollInitiative(actor: NimbleCharacter): Promise<void> {
 	const combat = game.combats?.viewed as CombatWithLateJoin | null | undefined;
 	const sceneId = canvas?.scene?.id;
@@ -128,7 +119,7 @@ async function rollInitiative(actor: NimbleCharacter): Promise<void> {
 }
 
 async function endTurn(actor: NimbleCharacter): Promise<void> {
-	const found = combatantOf(actor);
+	const found = combatantOf(actor.id);
 	if (!found) return;
 	try {
 		const advanced = await requestAdvanceCombatTurn({ combat: found.combat });
@@ -214,7 +205,7 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await mutateActions(actor, (combatant) => {
 					const base = getCombatantBaseActions(combatant);
 					const additional = getCombatantAdditionalActions(combatant);
-					if ((base.max || 3) + additional >= MAX_ACTIONS) return null;
+					if (!mayAddAction(base, additional)) return null;
 					return {
 						'system.actions.base.additional': additional + 1,
 						'system.actions.base.current': base.current + 1,

@@ -61,6 +61,8 @@ export interface HeroCombatState {
 		effectiveMax: number;
 		/** the next turn starts with this many more (or fewer) actions */
 		pendingDelta: number;
+		/** an extra action stays inside the limit of a turn */
+		mayAdd: boolean;
 	};
 }
 
