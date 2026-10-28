@@ -68,20 +68,20 @@ The borders, frames and code colours that a token page cannot show.
 	.stats .dotted {
 		border-right: 1px dotted var(--nimble-ui-ring);
 	}
-	/* the code colours of the rules editor: the same in both themes */
+	/* the code colours of the rules editor */
 	.formula {
 		display: block;
 		max-width: 700px;
 		padding: 8px 10px;
 		border-radius: 4px;
-		background: hsl(0, 0%, 24%);
+		background: var(--nimble-code-editor-background-color);
 		font: 1rem var(--nimble-mono-font);
-		color: hsl(217, 34%, 88%);
+		color: var(--nimble-code-text-color);
 	}
 	.op {
-		color: hsl(169, 56%, 68%);
+		color: var(--nimble-code-operator-color);
 	}
 	.paren {
-		color: hsl(51, 100%, 50%);
+		color: var(--nimble-code-wrapping-brace-color);
 	}
 </style>
