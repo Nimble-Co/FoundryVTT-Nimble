@@ -1,11 +1,11 @@
 /**
- * A one-die reroll on real Foundry dice: the keep, explode, crit and miss
- * modifiers run as Foundry runs them. The page's random source is replaced, so
- * every die is known.
+ * A one-die reroll and a one-die change on real Foundry dice: the keep,
+ * explode, crit and miss modifiers run as Foundry runs them. The page's random
+ * source is replaced, so every die is known.
  */
 
 import { afterEach, describe, expect, test } from 'vitest';
-import { primaryDieRef, rerollOneDie } from '../../src/dice/oneDieReroll.ts';
+import { changeOneDie, primaryDieRef, rerollOneDie } from '../../src/dice/oneDieReroll.ts';
 
 interface LiveResult {
 	result: number;
@@ -218,5 +218,88 @@ describe('rerollOneDie on live dice', () => {
 			await game.settings.set('core', settingKey as never, before as never);
 			delete methods.nimbleTest;
 		}
+	});
+});
+
+describe('changeOneDie on live dice', () => {
+	const primary = (roll: LiveRoll) => {
+		const ref = primaryDieRef(roll as never);
+		if (!ref) throw new Error('no Primary Die');
+		return ref;
+	};
+
+	test('a Primary Die set to its max explodes and crits, and only the new dice are thrown', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [3]);
+
+		nextDice(8, 5);
+		const done = await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 8 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([8, 5]);
+		expect([after.total, after.isCritical, after.isMiss]).toEqual([15, true, false]);
+		expect([done.previous, done.next, done.faces]).toEqual([3, 8, 8]);
+		expect(done.thrown).not.toBeNull();
+		expect(resultsOf(roll)).toEqual([3]);
+	});
+
+	test('a crit Primary Die set below its max loses its explosion and the crit, and throws nothing', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [8, 3]);
+
+		CONFIG.Dice.randomUniform = () => {
+			throw new Error('A die was rolled.');
+		};
+		const done = await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 4 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([4]);
+		expect([after.total, after.isCritical, after.isMiss]).toEqual([6, false, false]);
+		expect(done.thrown).toBeNull();
+	});
+
+	test('a Primary Die set to 1 is a miss', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [5]);
+
+		const after = (await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 1 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([1]);
+		expect(after.isMiss).toBe(true);
+	});
+
+	test('a set value is final: Add to Primary Die Result is not added, and a later reroll adds it again', async () => {
+		const options = { ...DAMAGE, primaryDieModifier: 1 };
+		const roll = await rolled('DamageRoll', '1d8 + 2', options, 8, [3]);
+		expect(resultsOf(roll)).toEqual([4]);
+
+		const done = await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 6 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([6]);
+		expect([after.total, done.bonusNotAdded]).toEqual([8, 1]);
+
+		nextDice(8, 2);
+		const again = (await rerollOneDie(after as never, primary(after))).roll as unknown as LiveRoll;
+		expect(resultsOf(again)).toEqual([3]);
+	});
+
+	test('an add change adds to the die, up to its max', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [3]);
+
+		const done = await changeOneDie(roll as never, primary(roll), { mode: 'add', value: 1 });
+		const after = done.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([4]);
+		expect([after.total, done.bonusNotAdded]).toEqual([6, 0]);
+	});
+
+	test('a kept d20 of a check set lower stays the kept one: the keep rule does not run again', async () => {
+		const roll = await rolled('NimbleRoll', '2d20khn + 3', {}, 20, [15, 4]);
+
+		const after = (
+			await changeOneDie(roll as never, { term: 0, result: 0 }, { mode: 'set', value: 2 })
+		).roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([2, '(4)']);
+		expect(after.total).toBe(5);
 	});
 });
