@@ -14,7 +14,7 @@ src/view/actorSheets/
   parts/     the parts: .svelte files and types.ts. Plain props only.
   shared/    view model code that both sheets use, and the sheet UI state
   hero/      the character sheet: Application, root component, view model, sections
-  monster/   the NPC sheet (comes later)
+  monster/   the NPC sheet: Application, root component, view model, sections
 ```
 
 The code names are `HeroSheet` (for `character`) and `MonsterSheet` (for `npc`, `soloMonster` and `minion`). Foundry stores the class name as the sheet id, so these names do not change. The words that users see stay "character sheet" and "NPC sheet".
@@ -82,7 +82,7 @@ To add an intent:
 3. Add a test in `hero/__tests__/heroPerform.test.ts` that checks the Foundry call or the dialog.
 4. Give the intent from the view function that has the control.
 
-UI state is not an intent. The tab, edit mode, the open rows, the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `toggleRow`, `setOpenRows`, `toggleChoice`, `closeChoice`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
+UI state is not an intent. The tab, edit mode, the open rows (`openRows`; on a tab where the text starts open, the closed rows in `closedRows`), the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `toggleRow`, `setOpenRows`, `toggleClosedRow`, `setClosedRows`, `toggleChoice`, `closeChoice`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
 
 ### `reveal()`
 
@@ -108,11 +108,24 @@ The file name is not `HeroSheet.svelte.ts`: TypeScript resolves `./HeroSheet.sve
 
 The character sheet opens at 720 x 850. Below 560 px it changes to the narrow form (a header, the tabs and a strip of meters). A ResizeObserver on the root measures the width.
 
+## The NPC sheet
+
+`monster/` has the same layers as `hero/`, for the `npc`, `soloMonster` and `minion` actor types. It imports from `parts/` and `shared/`, never from `hero/`.
+
+- `monsterAdapter.ts` (`createMonsterSource`) gives `MonsterActorLike` and `MonsterSheetContext` (`monsterSource.ts`): the condition, damage type and size names, the charge pools of each item, whether the user may change the monster, the enriched notes and descriptions, and the import credit line.
+- The view functions are `monsterRail` (portrait, HP or the minion rules, saves, armor and speeds, defenses), `monsterFrame` (four tabs: Abilities, Effects, Notes, Settings), `monsterAbilitiesTab`, `monsterEffectsTab`, `monsterNotesTab` and `monsterSettingsTab`.
+- The Abilities tab has the groups Features, Actions, Bloodied and Last Stand, in the order of the item `sort` field. An attack sequence is in Actions, with its actions nested under it. An item with no description and no effects is a heading line. The text of each card starts open, so the open state is in `closedRows`.
+- Hand sorting: `monsterReorder.ts` has `dropPlace()` (a line above or below the target, or nest below an attack sequence; a drop works only in the same group) and `reorderIntent()` (one `reorder` intent with the new `sort` of each ability in the group and the `parentItemId` of the dragged action). A drag that starts on the tab is a reorder: the row takes the drop and stops it. A drop from outside goes on to `MonsterSheet._onDrop`, which creates the item through `routeItemDrop` and then flashes the card.
+- `monsterIntent.ts` has the `MonsterIntent` union, and `monsterPerform.ts` has `createMonsterPerform(actor, sheet)`, with a test for each kind in `monster/__tests__/monsterPerform.test.ts`.
+- `MonsterSheetApplication.svelte.ts` has the `MonsterSheet` class. It opens at 660 x 650; below 560 px it changes to the narrow form (a header with the HP, the rail without the portrait, and a strip of tabs).
+
+Both sheets build the Effects tab from `shared/`: `effectLists.ts` (the lists, the count on the tab, the duration words), `effectsTab.ts` (the rows, their intents and the condition grid), `effectActions.ts` (End, Remove, a condition on or off) and `ConditionGrid.svelte`. `shared/documentLikes.ts` turns items, effects and conditions into their `*Like` types and registers the redraw hooks. `shared/textEnricher.svelte.ts` enriches the notes and the open descriptions. `shared/SheetPortrait.svelte` is the portrait with its image offsets and scale.
+
 ## Parts and sections
 
 A part (`parts/`) takes plain props only and never reads the actor. It may import other parts, its props type, Svelte and the `localize` helper, nothing else; a dependency-cruiser rule checks this. Each part has a story in `storybook/parts/`. A sheet does not style a part from its own files: a size or a state that one sheet needs is a named prop or variant on the part.
 
-A section (`hero/sections/`) takes a view, the UI state where it needs it, and `perform`. It sends the intents of its view. Where the user types a value, the view gives a function that makes the intent from it (for example a Settings number), or the section builds an intent that carries only that value (for example `setHp` with the number that you typed).
+A section (`hero/sections/`, `monster/sections/`) takes a view, the UI state where it needs it, and `perform`. It sends the intents of its view. Where the user types a value, the view gives a function that makes the intent from it (for example a Settings number), or the section builds an intent that carries only that value (for example `setHp` with the number that you typed).
 
 The props type of each part, section and root is in `types/components/actorSheets/<Name>.d.ts` as `<Name>Props`, as AGENTS.md asks for all components.
 
@@ -120,7 +133,7 @@ The props type of each part, section and root is in `types/components/actorSheet
 
 ## Tests
 
-- View functions: unit tests in `__tests__` beside the code, with the fixtures in `tests/fixtures/actorSheets/` (`blankHero()`, `heroContext()`, `heroTurn()`, and `containerHero()`, `featureHero()`, `effectsHero()` for the other tabs). The fixture context uses a localizer stub: it gives back the key (and the data for `format`), and it fails the test when the key is not in `public/lang/en.json`.
+- View functions: unit tests in `__tests__` beside the code, with the fixtures in `tests/fixtures/actorSheets/` (`blankHero()`, `heroContext()`, `heroTurn()`, and `containerHero()`, `featureHero()`, `effectsHero()` for the other tabs; `goblin()`, `soloMonster()`, `minion()`, `monsterContext()` and `effectsMonster()` for the NPC sheet). The fixture context uses a localizer stub: it gives back the key (and the data for `format`), and it fails the test when the key is not in `public/lang/en.json`.
 - `perform`: one test for each intent kind.
 - Sections and the root: component tests with `@testing-library/svelte`, a view object and a `perform` spy. Find elements by role and accessible name, or by `data-row-id`. No `data-testid`, and no part class names in selectors. Name a test file `*.svelte.test.ts` when it needs `$state` for the UI state.
 - Live: `tests/integration/heroSheet.test.ts` opens the sheet in Foundry v14 and uses its controls (tabs, rows, the EQUIP tag, HP, rest, drops, the window menu, Escape, the condition grid, the pools, a combat turn, the macro and the spend request). See `tests/integration/README.md` to run it.
