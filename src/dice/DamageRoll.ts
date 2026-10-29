@@ -8,7 +8,7 @@ import {
 	NIMBLE_MODS,
 	nimbleModsFromModifiers,
 } from './nimbleDieModifiers.js';
-import { type ExplosionStyle, hasExplodeModifier, type KeptDieBonus } from './oneDieReroll.js';
+import { type ExplosionStyle, type KeptDieBonus, modifierExplosionStyle } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -876,7 +876,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		) {
 			return 'vicious';
 		}
-		return hasExplodeModifier(term.modifiers) ? 'standard' : 'none';
+		return modifierExplosionStyle(term.modifiers);
 	}
 
 	/** "Add to Primary Die Result" of `term`, if it is the Primary Die and has one. */

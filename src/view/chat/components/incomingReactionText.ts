@@ -13,7 +13,8 @@ function reactingActor(entry: IncomingReactionEntry) {
 	return (fromUuidSync(entry.actorUuid) ?? null) as Actor.Implementation | null;
 }
 
-function documentName(uuid: string): string {
+export function documentName(uuid: string | null | undefined): string {
+	if (!uuid) return '';
 	return ((fromUuidSync(uuid) as { name?: string } | null)?.name ?? '').trim();
 }
 

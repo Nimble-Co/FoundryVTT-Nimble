@@ -101,6 +101,11 @@ function hasExplodeModifier(modifiers: readonly string[] = []): boolean {
 	return modifiers.some((modifier) => /^xo?(?![a-z])/i.test(modifier));
 }
 
+/** The explosion style a term's own modifiers give, with no roll to say more. */
+function modifierExplosionStyle(modifiers: readonly string[] = []): ExplosionStyle {
+	return hasExplodeModifier(modifiers) ? 'standard' : 'none';
+}
+
 /** A roll of only the dice a one-die reroll rolled, for the 3D dice to throw. */
 function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): foundry.dice.Roll {
 	return foundry.dice.Roll.fromData({
@@ -168,8 +173,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	const term = copy.terms[ref.term];
 	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
 
-	const style =
-		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
+	const style = copy.explosionStyleOf?.(term) ?? modifierExplosionStyle(term.modifiers);
 	const draw = options.draw ?? rollOneDieFace;
 	const mode = Math.sign(Number(options.rollModeChange) || 0);
 	let dropped: number | null = null;
@@ -234,8 +238,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	const result = term.results[ref.result];
 	if (!result) throw new Error(`The dice term has no result ${ref.result}.`);
 
-	const style =
-		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
+	const style = copy.explosionStyleOf?.(term) ?? modifierExplosionStyle(term.modifiers);
 	const wanted = change.mode === 'set' ? change.value : result.result + change.value;
 	const face = Math.min(term.faces, Math.max(1, Math.trunc(wanted)));
 	const kept = isActive(result);
@@ -274,7 +277,7 @@ export {
 	type OneDieRoll,
 	type PickableDie,
 	type PickableRole,
-	hasExplodeModifier,
+	modifierExplosionStyle,
 	pickableDice,
 	primaryDieRef,
 	rerollOneDie,
