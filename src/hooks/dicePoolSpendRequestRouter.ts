@@ -6,10 +6,11 @@ import localize from '#utils/localize.js';
 import { asRevealable, type RevealableSheet } from '#view/actorSheets/shared/revealable.js';
 
 interface ActorWithSheet {
+	items?: { get(id: string): { type?: string } | undefined };
 	sheet?: { rendered?: boolean; render?: (force: boolean) => unknown } | null;
 }
 
-/** The new character sheet opens the choice step of the feature row, on the Actions tab. */
+/** The new character sheet opens the choice step of the item row: a spell on Spells, else on Actions. */
 function revealSpend(
 	actor: ActorWithSheet,
 	sheet: RevealableSheet,
@@ -23,7 +24,8 @@ function revealSpend(
 		);
 		return;
 	}
-	sheet.reveal({ tab: 'actions', rowId: payload.itemId, step: 'choice' });
+	const isSpell = actor.items?.get(payload.itemId)?.type === 'spell';
+	sheet.reveal({ tab: isSpell ? 'spells' : 'actions', rowId: payload.itemId, step: 'choice' });
 }
 
 /**

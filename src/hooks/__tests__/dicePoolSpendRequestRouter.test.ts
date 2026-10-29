@@ -91,6 +91,17 @@ describe('dicePoolSpendRequestRouter', () => {
 			expect(pendingSpendRequests.take('Actor.test-actor')).toBeNull();
 		});
 
+		it('opens the spell row on the Spells tab, which lists every spell', () => {
+			const reveal = vi.fn();
+			const items = new Map([['item-tayg', { type: 'spell' }]]);
+			fromUuidSync.mockReturnValue({ items, sheet: { reveal, rendered: true, render: vi.fn() } });
+			findRequestedPool.mockReturnValueOnce({ label: 'Fury Dice', faces: [4] });
+
+			fireRequest(payload());
+
+			expect(reveal).toHaveBeenCalledWith({ tab: 'spells', rowId: 'item-tayg', step: 'choice' });
+		});
+
 		it('shows the empty pool note, and opens nothing', () => {
 			const reveal = vi.fn();
 			fromUuidSync.mockReturnValue({ sheet: { reveal, rendered: true, render: vi.fn() } });
