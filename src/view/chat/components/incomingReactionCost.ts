@@ -31,6 +31,9 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 				: 'NIMBLE.chat.incomingReactions.costWounds';
 		parts.push(localize(key, { count: String(cost.woundCost) }));
 	}
+	if ((cost.actionCost ?? 0) > 0) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.costAction'));
+	}
 	if (cost.heroicReaction) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costHeroicReaction'));
 	}

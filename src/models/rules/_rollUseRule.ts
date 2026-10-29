@@ -212,6 +212,20 @@ function costFields(namespace: RollUseNamespace) {
 			label: wordKey(namespace, 'heroicReaction', 'label'),
 			hint: wordKey(namespace, 'heroicReaction', 'hint'),
 		}),
+		actionCost: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			min: 0,
+			max: 1,
+			integer: true,
+			choices: {
+				0: 'NIMBLE.rules.reroll.actionCost.choices.none',
+				1: 'NIMBLE.rules.reroll.actionCost.choices.one',
+			},
+			label: wordKey(namespace, 'actionCost', 'label'),
+			hint: wordKey(namespace, 'actionCost', 'hint'),
+		}),
 		oncePerAttack: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -255,6 +269,7 @@ const COST_FIELDS = [
 	'manaCost',
 	'woundCost',
 	'heroicReaction',
+	'actionCost',
 	'oncePerAttack',
 ] as const;
 
@@ -280,6 +295,7 @@ abstract class RollUseRule<
 	declare manaCost: number;
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
+	declare actionCost: number;
 	declare oncePerAttack: boolean;
 
 	/**
@@ -335,6 +351,7 @@ abstract class RollUseRule<
 			['manaCost', 'number'],
 			['woundCost', 'number'],
 			['heroicReaction', 'string'],
+			['actionCost', 'number'],
 			['oncePerAttack', 'boolean'],
 			['reach', 'number'],
 		];
@@ -347,6 +364,7 @@ abstract class RollUseRule<
 			manaCost: Math.max(0, Number(this.manaCost) || 0),
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			heroicReaction: this.heroicReaction ?? '',
+			actionCost: Math.min(1, Math.max(0, Math.trunc(Number(this.actionCost) || 0))),
 		};
 	}
 

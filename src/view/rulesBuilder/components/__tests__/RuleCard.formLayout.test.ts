@@ -56,6 +56,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'manaCost',
 			'woundCost',
 			'heroicReaction',
+			'actionCost',
 			'oncePerAttack',
 			'rollModeChange',
 			'primaryDieBonus',
@@ -219,6 +220,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'manaCost',
 			'woundCost',
 			'heroicReaction',
+			'actionCost',
 			'rollModeChange',
 			'automatic',
 		]);

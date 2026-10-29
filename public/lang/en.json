@@ -592,6 +592,7 @@
 				"costWound": "{count} Wound",
 				"costWounds": "{count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
+				"costAction": "1 action",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
 				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
 				"rerollPickADie": "Pick the die to reroll.",
@@ -2407,6 +2408,14 @@
 					"hint": "Spent only in combat.",
 					"choices": {
 						"none": "None"
+					}
+				},
+				"actionCost": {
+					"label": "Action cost",
+					"hint": "Only for a hero in combat. On their own turn, they spend the action now. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction, so it has no 1/round limit.",
+					"choices": {
+						"none": "None",
+						"one": "1 action"
 					}
 				},
 				"oncePerAttack": {

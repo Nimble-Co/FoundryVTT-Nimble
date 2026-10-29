@@ -535,6 +535,7 @@ describe('RerollRule', () => {
 				manaCost: -1,
 				woundCost: 1,
 				heroicReaction: 'defend',
+				actionCost: 4,
 			});
 			expect(rule.rerollCost).toEqual({
 				chargePoolIdentifier: 'sand',
@@ -542,6 +543,7 @@ describe('RerollRule', () => {
 				manaCost: 0,
 				woundCost: 1,
 				heroicReaction: 'defend',
+				actionCost: 1,
 			});
 		});
 	});
