@@ -21,6 +21,7 @@ function featureName(entry: IncomingReactionEntry): string {
 }
 
 function icon(entry: IncomingReactionEntry): string {
+	if (entry.kind === 'reroll' && entry.use === 'change') return 'fa-solid fa-pen';
 	if (entry.kind === 'reroll') return 'fa-solid fa-rotate-left';
 	if (entry.kind === 'spendPoolForDamage') return 'fa-solid fa-dice-d6';
 	return 'fa-solid fa-shield-heart';
@@ -65,7 +66,8 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 			return localize('NIMBLE.chat.incomingReactions.rerollAgain');
 		}
 		if (entry.kind === 'reroll') {
-			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
+			const key = entry.use === 'change' ? 'changeWith' : 'rerollWith';
+			return localize(`NIMBLE.chat.incomingReactions.${key}`, {
 				feature: featureName(entry) || entry.label,
 			});
 		}

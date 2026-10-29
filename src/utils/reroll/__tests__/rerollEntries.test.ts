@@ -109,6 +109,18 @@ describe('collectRerollEntries', () => {
 		});
 	});
 
+	it('stamps a Change a Die rule as a change, next to the rerolls', () => {
+		const change = rerollRule({ id: 'change', type: 'changeDie', usedBy: 'roller' });
+		const again = rerollRule({ id: 'again', usedBy: 'roller' });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [change, again]) }),
+		);
+		expect(manual.map((entry) => [entry.ruleId, entry.kind, entry.use])).toEqual([
+			['change', 'reroll', 'change'],
+			['again', 'reroll', undefined],
+		]);
+	});
+
 	it('stamps the once-per-attack flag of the rule on its entry', () => {
 		const once = rerollRule({ id: 'once', usedBy: 'roller', oncePerAttack: true });
 		const again = rerollRule({ id: 'again', usedBy: 'roller' });
@@ -840,6 +852,12 @@ describe('findRerollRule', () => {
 
 	it('finds the live rule by item and rule id', () => {
 		const rule = rerollRule();
+		useItemRules([rule]);
+		expect(findRerollRule(entry)).toBe(rule);
+	});
+
+	it('finds a Change a Die rule too', () => {
+		const rule = rerollRule({ type: 'changeDie' });
 		useItemRules([rule]);
 		expect(findRerollRule(entry)).toBe(rule);
 	});

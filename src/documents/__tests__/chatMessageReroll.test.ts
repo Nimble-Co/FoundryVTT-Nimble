@@ -679,6 +679,40 @@ describe('resolveRerollReaction', () => {
 		);
 	});
 
+	describe('a Change a Die entry', () => {
+		const change = (mode: 'set' | 'add', die = 'primaryDie') => ({
+			type: 'changeDie',
+			die,
+			dieChange: { mode, amount: mode === 'add' ? 1 : 0 },
+			rerollChanges: undefined,
+		});
+
+		it('refuses a set change with no value picked, and spends nothing', async () => {
+			const { rule } = setupWorld(change('set'));
+			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(message.update).not.toHaveBeenCalled();
+			expect(rule.offersRerollOn).toHaveBeenCalled();
+			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+				localize('NIMBLE.chat.incomingReactions.changePickAValue'),
+			);
+		});
+
+		it('refuses a change of a picked die when no die was picked', async () => {
+			setupWorld(change('add', 'pickedDie'));
+			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(message.update).not.toHaveBeenCalled();
+			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+				localize('NIMBLE.chat.incomingReactions.changePickADie'),
+			);
+		});
+	});
+
 	it('gives no dice to pick for a rule that rerolls the whole roll', () => {
 		setupWorld();
 		const message = createMessage();

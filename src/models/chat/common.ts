@@ -5,6 +5,7 @@ import {
 	REROLL_LEFT_OUT_REASONS,
 	REROLL_SIDES,
 	REROLL_TRIGGERS,
+	ROLL_USES,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 
 const { fields } = foundry.data;
@@ -158,6 +159,13 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			// reroll only: a Change a Die rule's entry changes a die instead of rolling again.
+			use: new fields.StringField({
+				required: false,
+				nullable: false,
+				initial: 'reroll',
+				choices: [...ROLL_USES],
+			}),
 			leftOut: new fields.SchemaField(
 				{
 					reason: new fields.StringField({
@@ -255,6 +263,35 @@ const rerollRecord = () =>
 		changes: new fields.ArrayField(rollChange(), { required: false, nullable: false, initial: [] }),
 		automatic: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 		grants: new fields.ArrayField(rerollGrant(), { required: false, nullable: false, initial: [] }),
+		use: new fields.StringField({
+			required: false,
+			nullable: false,
+			initial: 'reroll',
+			choices: [...ROLL_USES],
+		}),
+		change: new fields.SchemaField(
+			{
+				mode: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: 'set',
+					choices: ['set', 'add'],
+				}),
+				amount: new fields.NumberField({
+					required: true,
+					nullable: false,
+					initial: 0,
+					integer: true,
+				}),
+			},
+			{ required: false, nullable: true, initial: null },
+		),
+		bonusNotAdded: new fields.NumberField({
+			required: false,
+			nullable: false,
+			initial: 0,
+			integer: true,
+		}),
 	});
 
 const rollChange = () =>

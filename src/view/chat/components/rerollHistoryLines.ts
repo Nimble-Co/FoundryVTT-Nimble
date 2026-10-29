@@ -52,7 +52,7 @@ interface RerollHistoryInput {
 
 /** A waiting reroll entry is a "Reroll again" when its rule already rerolled in this list. */
 export function isRerollAgain(entry: IncomingReactionEntry, records: RerollRecord[]): boolean {
-	if (entry.kind !== 'reroll') return false;
+	if (entry.kind !== 'reroll' || entry.use === 'change') return false;
 	const key = rerollRuleKey(entry);
 	return records.some((record) => rerollRuleKey(record) === key);
 }

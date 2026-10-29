@@ -14,6 +14,12 @@ import type { RerollChanges } from './rerollOptions.js';
 import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
+const CHANGE_DIE_RULE_TYPE = 'changeDie';
+
+/** The rule types whose entries go on a card as `reroll` entries. */
+function isRollUseRule(type: string | undefined): boolean {
+	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE;
+}
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
 interface RerollRuleLike {
@@ -39,6 +45,8 @@ interface RerollRuleLike {
 		other: RerollingActor | null;
 	}) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
+	/** A Change a Die rule: the change one use makes. */
+	dieChange?: { mode: 'set' | 'add'; amount: number };
 }
 
 interface RerollingActor {
@@ -181,7 +189,7 @@ function collectRerollEntries(context: RerollRollContext): {
 			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
 			for (const rule of actor.rules) {
-				if (rule?.type !== REROLL_RULE_TYPE) continue;
+				if (!isRollUseRule(rule?.type)) continue;
 				if (rule.offersRerollOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
 				if (!outcomeAllows(trigger, outcome)) continue;
@@ -200,6 +208,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					used: false,
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
+					...(rule.type === CHANGE_DIE_RULE_TYPE ? { use: 'change' as const } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
 
@@ -285,7 +294,7 @@ function nextAutomaticReroll(
 	);
 }
 
-/** The live `reroll` rule an entry came from, or null when it is gone or off. */
+/** The live Reroll or Change a Die rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	if (!entry.itemUuid) return null;
 	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
@@ -294,7 +303,7 @@ function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	const rule = item?.rules
 		? [...item.rules.values()].find((candidate) => candidate.id === entry.ruleId)
 		: null;
-	if (!rule || rule.type !== REROLL_RULE_TYPE || rule.disabled) return null;
+	if (!rule || !isRollUseRule(rule.type) || rule.disabled) return null;
 	return rule;
 }
 
@@ -339,6 +348,7 @@ function usableRerollEntry(
 }
 
 export {
+	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
 	nextAutomaticReroll,

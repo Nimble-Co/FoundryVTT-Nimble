@@ -296,6 +296,10 @@ describe('isRerollAgain', () => {
 	it('is false for an entry that is not a reroll', () => {
 		expect(isRerollAgain(entry({ kind: 'redirectToSelf' }), [record()])).toBe(false);
 	});
+
+	it('is false for a Change a Die entry, which keeps its own label', () => {
+		expect(isRerollAgain(entry({ use: 'change' }), [record()])).toBe(false);
+	});
 });
 
 describe('rerollAgainRecords', () => {

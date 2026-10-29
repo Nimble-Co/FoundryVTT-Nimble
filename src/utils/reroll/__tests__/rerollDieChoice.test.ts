@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type OneDieRoll, rerollOneDie } from '../../../dice/oneDieReroll.js';
-import { diceToPick, rerollableFor } from '../rerollDieChoice.js';
+import { changeableFor, diceToPick, rerollableFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
 const kept = (result: number) => ({ result, active: true });
@@ -185,5 +185,64 @@ describe('rerollableFor with a roll mode change on the reroll', () => {
 			],
 		});
 		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 6, dropped: 1 });
+	});
+});
+
+describe('changeableFor', () => {
+	const made = {
+		roll: 'changed' as never,
+		faces: 8,
+		previous: 6,
+		next: 8,
+		bonusNotAdded: 1,
+		thrown: null,
+	};
+
+	it('changes the kept Primary Die with the change, and reads the new face and bonus', async () => {
+		const changer = vi.fn(async () => made);
+		const current = damageRoll();
+		const one = changeableFor(
+			found(current),
+			'primaryDie',
+			null,
+			{ mode: 'set', value: 8 },
+			changer,
+		);
+		if (!one) throw new Error('expected a change');
+
+		expect(one.previousResult).toBe(6);
+		expect(await one.makeRoll('ignored', {})).toBe('changed');
+		expect(changer).toHaveBeenCalledWith(
+			current,
+			{ term: 0, result: 1 },
+			{ mode: 'set', value: 8 },
+		);
+		expect(one.readNewDie?.('changed')).toEqual({
+			faces: 8,
+			value: 8,
+			dropped: null,
+			bonusNotAdded: 1,
+		});
+		expect(one.diceToThrow?.('changed')).toBeNull();
+	});
+
+	it('needs a picked die when the roll has more than one', () => {
+		const changer = vi.fn(async () => made);
+		expect(
+			changeableFor(found(damageRoll()), 'pickedDie', null, { mode: 'add', value: 1 }, changer),
+		).toBeNull();
+		expect(
+			changeableFor(
+				found(damageRoll()),
+				'pickedDie',
+				{ term: 2, result: 0 },
+				{ mode: 'add', value: 1 },
+				changer,
+			)?.previousResult,
+		).toBe(4);
+	});
+
+	it('needs the roll as it stands on the card', () => {
+		expect(changeableFor(found(null), 'primaryDie', null, { mode: 'set', value: 2 })).toBeNull();
 	});
 });

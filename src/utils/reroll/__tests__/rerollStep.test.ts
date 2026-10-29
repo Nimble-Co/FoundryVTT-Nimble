@@ -239,6 +239,36 @@ describe('rerollWithRule', () => {
 		expect(result).toMatchObject({ reroll: { faces: 20, next: { value: 14, outcome: null } } });
 	});
 
+	it('records a change: how the die changed, its new face and the bonus it did not add', async () => {
+		const result = await rerollWithRule(
+			input({
+				rule: rule({ type: 'changeDie', rerollChanges: undefined }),
+				change: { mode: 'set', amount: 0 },
+				makeRoll: vi.fn(async () => ({ isCritical: true })),
+				readNewDie: () => ({ faces: 8, value: 8, bonusNotAdded: 1 }),
+			}),
+		);
+
+		expect(result).toMatchObject({
+			reroll: {
+				use: 'change',
+				change: { mode: 'set', amount: 0 },
+				bonusNotAdded: 1,
+				previous: { value: 7, outcome: null },
+				next: { value: 8, outcome: 'crit' },
+				changes: [],
+			},
+		});
+	});
+
+	it('records no use, change or bonus for a reroll', async () => {
+		const result = await rerollWithRule(input());
+		if (result.status !== 'done') throw new Error('expected a reroll');
+		expect(result.reroll).not.toHaveProperty('use');
+		expect(result.reroll).not.toHaveProperty('change');
+		expect(result.reroll).not.toHaveProperty('bonusNotAdded');
+	});
+
 	it('records no new die when the caller reads none', async () => {
 		const result = await rerollWithRule(input({ readNewDie: () => ({ faces: 20, value: null }) }));
 		expect(result).toMatchObject({ reroll: { faces: 20, next: null } });

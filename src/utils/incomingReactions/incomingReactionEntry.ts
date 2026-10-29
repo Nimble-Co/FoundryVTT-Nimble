@@ -13,6 +13,10 @@ export type RerollSide = (typeof REROLL_SIDES)[number];
 export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
 
+/** What a `reroll` entry does: roll again, or change a die (a Change a Die rule). */
+export const ROLL_USES = ['reroll', 'change'] as const;
+export type RollUse = (typeof ROLL_USES)[number];
+
 /** Which result stands after a reroll. */
 export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
 export type RerollKeep = (typeof REROLL_KEEPS)[number];
@@ -91,6 +95,8 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerAttack?: boolean;
+	/** reroll only: `change` for a Change a Die rule. Absent is `reroll`. */
+	use?: RollUse;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
 	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
@@ -151,6 +157,12 @@ export interface RerollRecord {
 	grants?: RerollGrant[];
 	/** The rule rerolled by itself, with no click. */
 	automatic?: boolean;
+	/** `change` for a die a Change a Die rule changed. Absent is `reroll`. */
+	use?: RollUse;
+	/** A change only: how the die changed. `amount` is 0 for a set value. */
+	change?: { mode: 'set' | 'add'; amount: number } | null;
+	/** A set value on the Primary Die: the "Add to Primary Die Result" bonus it did not add. */
+	bonusNotAdded?: number;
 }
 
 /**

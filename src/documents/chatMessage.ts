@@ -1560,13 +1560,14 @@ class NimbleChatMessage extends ChatMessage {
 		return this.#rerolls.rerollDiceToPick(entry);
 	}
 
-	/** Use a Reroll rule's entry on this card. Primary GM only. */
+	/** Use a Reroll or Change a Die rule's entry on this card. Primary GM only. */
 	resolveRerollReaction(
 		entryId: string,
 		requestingUserId: string,
 		viaSocket = false,
 		forceHeroicReaction = false,
 		die: DieRef | null = null,
+		value: number | null = null,
 	): Promise<void> {
 		return this.#rerolls.resolveRerollReaction(
 			entryId,
@@ -1574,6 +1575,7 @@ class NimbleChatMessage extends ChatMessage {
 			viaSocket,
 			forceHeroicReaction,
 			die,
+			value,
 		);
 	}
 
