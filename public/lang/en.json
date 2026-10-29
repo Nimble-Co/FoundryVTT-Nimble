@@ -2287,6 +2287,10 @@
 				"maxTargets": {
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
+				},
+				"endsAtEncounterEnd": {
+					"label": "Ends at the end of the encounter",
+					"hint": "The marks end when the encounter ends. Taking the marker off a creature ends its mark at any time."
 				}
 			},
 			"unarmedDamage": {

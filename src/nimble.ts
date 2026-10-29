@@ -39,6 +39,7 @@ import setup from './hooks/setup.js';
 import registerModuleIntegrations from './integrations/index.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
+import { registerMarkLifecycleHooks } from './utils/actor/markLifecycle.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
@@ -149,6 +150,7 @@ registerDiscardedCritTriggerHooks();
 registerDicePoolTurnTriggerHooks();
 registerPoolGainMessageHooks();
 registerEncounterEndTriggerHooks();
+registerMarkLifecycleHooks();
 registerBankedDamageReductionExpiryHooks();
 registerConditionExpiryHooks();
 registerMinionGroupTokenBadges();

@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { applyEncounterRefillMock } = vi.hoisted(() => ({
+const { applyEncounterRefillMock, endEncounterMarksMock, isActiveGMMock } = vi.hoisted(() => ({
 	applyEncounterRefillMock: vi.fn(async () => undefined),
+	endEncounterMarksMock: vi.fn(async () => undefined),
+	isActiveGMMock: vi.fn(() => true),
 }));
 
 vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
 	applyEncounterRefill: applyEncounterRefillMock,
 }));
+vi.mock('#utils/actor/markLifecycle.js', () => ({ endEncounterMarks: endEncounterMarksMock }));
+vi.mock('#utils/isActiveGM.js', () => ({ isActiveGM: isActiveGMMock }));
 
 type HookCallback = (...args: unknown[]) => unknown;
 type HookCallbackMap = Map<string, HookCallback>;
@@ -104,6 +108,21 @@ describe('registerEncounterEndTriggerHooks', () => {
 
 		expect(applyEncounterRefillMock).toHaveBeenCalledTimes(1);
 		expect(applyEncounterRefillMock).toHaveBeenCalledWith(actor, 'encounterEnd');
+	});
+
+	it('ends the marks that end with the encounter, on the active GM only', async () => {
+		const hooks = captureHooks();
+		const { registerEncounterEndTriggerHooks } = await import('../encounterEndTrigger.js');
+		registerEncounterEndTriggerHooks();
+		const actor = createCharacterActor('character-6');
+
+		hooks.get('deleteCombat')?.(createCombat('combat-6', actor));
+		expect(endEncounterMarksMock).toHaveBeenCalledWith(actor);
+
+		endEncounterMarksMock.mockClear();
+		isActiveGMMock.mockReturnValueOnce(false);
+		hooks.get('deleteCombat')?.(createCombat('combat-7', actor));
+		expect(endEncounterMarksMock).not.toHaveBeenCalled();
 	});
 
 	it('ignores updateCombat changes that are not end transitions', async () => {
