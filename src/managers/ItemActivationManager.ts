@@ -19,11 +19,11 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import type { OtherCreature } from '../models/rules/_otherCreatureMatches.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
-import type { OtherCreature } from '../utils/actor/otherCreatureMatches.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import {
 	type AttackDelivery,
@@ -36,10 +36,6 @@ import {
 } from '../utils/damage/attackUtils.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
-import {
-	collectPrimaryDieBonuses,
-	type PrimaryDieBonusLine,
-} from '../utils/damage/primaryDieBonuses.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -76,6 +72,45 @@ import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
 // Dependencies are grouped to allow tests to override them without relying on module mocking.
+/** One Primary Die Bonus on an attack, for its line on the card. */
+interface PrimaryDieBonusLine {
+	label: string;
+	value: number;
+	itemUuid: string;
+}
+
+/** Structural view of a `primaryDieBonus` rule, so this module needs no rule import. */
+interface PrimaryDieBonusRuleLike {
+	type?: string;
+	label?: string;
+	item?: { name?: string; uuid?: string } | null;
+	bonusFor?: (context: { delivery: AttackDelivery; other: OtherCreature | null }) => number;
+}
+
+/**
+ * The Primary Die Bonus rules of the attacker that add to this attack, each
+ * with what it adds. A rule that adds 0 is left out.
+ */
+function collectPrimaryDieBonuses(
+	attacker: { rules?: unknown[] } | null | undefined,
+	delivery: AttackDelivery,
+	target: OtherCreature | null,
+): PrimaryDieBonusLine[] {
+	if (!delivery) return [];
+	const lines: PrimaryDieBonusLine[] = [];
+	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
+		if (rule?.type !== 'primaryDieBonus') continue;
+		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
+		if (value === 0) continue;
+		lines.push({
+			label: rule.label || rule.item?.name || '',
+			value,
+			itemUuid: rule.item?.uuid ?? '',
+		});
+	}
+	return lines;
+}
+
 const dependencies = {
 	NimbleRoll,
 	DamageRoll,
@@ -501,11 +536,6 @@ class ItemActivationManager {
 						}
 					}
 
-					// Forward the optional rollMode source list so DamageRoll can
-					// compute the net rollMode itself (advantage and disadvantage
-					// cancel 1-for-1). Only attached when callers supplied the
-					// array, to preserve backwards compatibility with single-source
-					// callers (and existing constructor-call test expectations).
 					// An area roll has no Primary Die outcome, so it gets no Primary Die Bonus.
 					this.#primaryDieBonuses = isAoE
 						? []
@@ -523,6 +553,11 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					// Forward the optional rollMode source list so DamageRoll can
+					// compute the net rollMode itself (advantage and disadvantage
+					// cancel 1-for-1). Only attached when callers supplied the
+					// array, to preserve backwards compatibility with single-source
+					// callers (and existing constructor-call test expectations).
 					if (Array.isArray(this.#options.rollModeSources)) {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}

@@ -2276,7 +2276,7 @@
 				}
 			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark can also end at the end of the encounter, or when its marker effect is deleted from the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."

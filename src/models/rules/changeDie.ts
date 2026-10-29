@@ -108,4 +108,4 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	}
 }
 
-export { CHANGE_DICE, CHANGE_MODES, ChangeDieRule, type ChangeDie, type ChangeMode };
+export { ChangeDieRule };

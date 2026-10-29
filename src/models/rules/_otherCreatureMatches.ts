@@ -1,5 +1,5 @@
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
-import { buildTargetDomain } from './conditionalBonuses.js';
+import { buildTargetDomain } from '../../utils/actor/conditionalBonuses.js';
 
 /** The creature on the other side of a roll, as a rule tests it. */
 interface OtherCreature {

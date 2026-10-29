@@ -1,11 +1,8 @@
 import type { Predicate } from '../../etc/Predicate.js';
-import {
-	type OtherCreature,
-	otherCreatureMatches,
-} from '../../utils/actor/otherCreatureMatches.js';
 import { type AttackDelivery, matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
+import { type OtherCreature, otherCreatureMatches } from './_otherCreatureMatches.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
