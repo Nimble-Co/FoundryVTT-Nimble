@@ -109,7 +109,7 @@ function keepRule(modifiers: readonly string[] = []): { count: number; highest: 
 }
 
 /**
- * A number added to the die of a term that stays, up to the die's size. `base`
+ * A number added to the die of a term that stays, from 1 up to the die's size. `base`
  * is the result of that die before the number was added.
  */
 interface KeptDieBonus {
@@ -168,7 +168,7 @@ async function rerollDieInTerm(
 	const stays = roots.find((root) => isActive(root.result));
 	const keptBase = stays?.result.result ?? null;
 	if (bonus && stays && keptBase !== null) {
-		stays.result.result = Math.min(keptBase + bonus.add, term.faces);
+		stays.result.result = Math.max(1, Math.min(keptBase + bonus.add, term.faces));
 	}
 	const next = picked.result.result;
 

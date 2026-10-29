@@ -12,4 +12,6 @@ export interface RerollHistoryProps {
 	pendingKeep: PendingKeep | null;
 	pendingLine: RerollHistoryLine | null;
 	held: HeldIncomingReactions;
+	/** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
+	primaryDieBonuses?: { label: string; value: number }[];
 }

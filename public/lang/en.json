@@ -526,6 +526,10 @@
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
+			"primaryDieBonus": {
+				"tag": "{value} Primary Die",
+				"text": "{label}: {value} to the Primary Die"
+			},
 			"incomingReactions": {
 				"heading": "Options",
 				"interpose": "Interpose",
@@ -1397,6 +1401,7 @@
 			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
 			"poolMaxBonus": "Pool Max Bonus",
+			"primaryDieBonus": "Primary Die Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
@@ -2269,6 +2274,17 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"primaryDieBonus": {
+				"description": "Adds a number to the Primary Die of the owner's attack rolls, as \"Add to Primary Die Result\" in the attack dialog does. A reroll keeps it. Not on area attacks.",
+				"value": {
+					"label": "Add to the Primary Die",
+					"hint": "A whole number or a formula, such as 1 or @level. It can be negative. The die stops at its max and at 1."
+				},
+				"otherCreature": {
+					"label": "Only when the target is",
+					"hint": "Pick tags such as target:distracted. Empty means any target. With tags picked, an attack with no target gets nothing."
 				}
 			},
 			"reroll": {

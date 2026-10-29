@@ -41,6 +41,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
+import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -97,6 +98,7 @@ export default function registerRulesConfig() {
 		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
+		primaryDieBonus: 'NIMBLE.ruleTypes.primaryDieBonus',
 		reroll: 'NIMBLE.ruleTypes.reroll',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -153,6 +155,7 @@ export default function registerRulesConfig() {
 		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,
 		poolMaxBonus: PoolMaxBonusRule,
+		primaryDieBonus: PrimaryDieBonusRule,
 		reroll: RerollRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,

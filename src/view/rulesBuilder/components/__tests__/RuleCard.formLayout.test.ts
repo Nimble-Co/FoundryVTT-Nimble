@@ -269,16 +269,31 @@ describe('RuleCard with a form layout (reroll)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (primaryDieBonus)', () => {
+	it('asks for the number, the attack type, then the optional conditions', () => {
+		const { container } = render(RuleCard, { rule: initialRule('primaryDieBonus'), manager });
+		expect(shownFields(container)).toEqual([
+			'value',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+		]);
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	it('covers every rule but reroll and modifyReroll', () => {
+	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus'];
+
+	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);
-		expect(types).not.toContain('reroll');
-		expect(types).not.toContain('modifyReroll');
-		expect(others.length).toBe(Object.keys(CONFIG.NIMBLE.ruleDataModels).length - 2);
+		for (const type of withLayout) expect(types).not.toContain(type);
+		expect(others.length).toBe(
+			Object.keys(CONFIG.NIMBLE.ruleDataModels).length - withLayout.length,
+		);
 	});
 
 	it.each(others)('%s keeps the flat field list and the condition in Advanced', (type) => {

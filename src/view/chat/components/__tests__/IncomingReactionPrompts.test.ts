@@ -200,6 +200,22 @@ describe('IncomingReactionPrompts', () => {
 		expect(button.textContent).toContain('Heroic Reaction');
 	});
 
+	it('shows one line per Primary Die Bonus at the roll only', () => {
+		const message = createMessage([]);
+		Object.assign(message.system, {
+			primaryDieBonuses: [
+				{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.judgment' },
+				{ label: 'Clumsy Grip', value: -1, itemUuid: 'Item.grip' },
+			],
+		});
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('Unerring Judgment: +1 to the Primary Die')).toBeTruthy();
+		expect(rollPlace().getByText('Clumsy Grip: -1 to the Primary Die')).toBeTruthy();
+		expect(rollPlace().getByText('+1 Primary Die')).toBeTruthy();
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
 	it('tells a used legacy forceReroll entry at the roll, as old cards did', () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: {

@@ -311,6 +311,18 @@ const keepChoiceRoll = () =>
 		}),
 	});
 
+/** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
+export const primaryDieBonuses = () => ({
+	primaryDieBonuses: new fields.ArrayField(
+		new fields.SchemaField({
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			value: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
+			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		}),
+		{ required: false, nullable: false, initial: [] },
+	),
+});
+
 export const rerollHistory = () => ({
 	rerolls: new fields.ArrayField(rerollRecord(), { required: false, nullable: false, initial: [] }),
 	// Roll changes of Modify Reroll rules this card applied; each counts once per card.

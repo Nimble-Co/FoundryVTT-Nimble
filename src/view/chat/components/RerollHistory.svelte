@@ -17,13 +17,43 @@
 		tempHp: 'fa-shield-heart',
 	};
 
-	let { legacyLines, lines, pendingKeep, pendingLine, held }: RerollHistoryProps = $props();
+	let {
+		legacyLines,
+		lines,
+		pendingKeep,
+		pendingLine,
+		held,
+		primaryDieBonuses = [],
+	}: RerollHistoryProps = $props();
+
+	function signed(value: number): string {
+		return value > 0 ? `+${value}` : String(value);
+	}
 
 	const keepChoice = createRerollHistoryState(
 		getContext<NimbleChatMessage>('messageDocument'),
 		() => ({ pendingKeep, held }),
 	);
 </script>
+
+{#each primaryDieBonuses as bonus, index (index)}
+	{@const value = signed(bonus.value)}
+	{@const sentence = localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
+	<div
+		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
+		data-tooltip={sentence}
+	>
+		<i class="fa-solid {bonus.value > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}" aria-hidden="true"></i>
+		<p class="nimble-roll-changes__text">
+			<span aria-hidden="true">{bonus.label}</span>
+			<span class="nimble-roll-changes__spoken">{sentence}</span>
+		</p>
+		<span class="nimble-reroll-tag" aria-hidden="true">
+			<i class="fa-solid fa-dice-d6"></i>
+			<span>{localize('NIMBLE.chat.primaryDieBonus.tag', { value })}</span>
+		</span>
+	</div>
+{/each}
 
 {#each legacyLines as line (line.id)}
 	<div class="nimble-roll-changes__history">
@@ -228,6 +258,14 @@
 		&__detail {
 			font-size: var(--nimble-xs-text);
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__history--bonus {
+			align-items: center;
+
+			> i {
+				margin-top: 0;
+			}
 		}
 
 		&__history--waiting {

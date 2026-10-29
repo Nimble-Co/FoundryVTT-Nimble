@@ -101,6 +101,12 @@ export function createIncomingReactionPromptsState(
 			? storedEntries.filter((entry) => entry.kind === 'reroll' && !entry.used && !!entry.leftOut)
 			: [],
 	);
+	const primaryDieBonuses = $derived(
+		getPlace() === 'roll'
+			? ((message?.reactive?.system as { primaryDieBonuses?: { label: string; value: number }[] })
+					?.primaryDieBonuses ?? [])
+			: [],
+	);
 	const pendingKeep = $derived(
 		showsHistory
 			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
@@ -288,6 +294,9 @@ export function createIncomingReactionPromptsState(
 		},
 		get legacyRerollLines() {
 			return legacyRerollLines;
+		},
+		get primaryDieBonuses() {
+			return primaryDieBonuses;
 		},
 		get historyLines() {
 			return historyLines;

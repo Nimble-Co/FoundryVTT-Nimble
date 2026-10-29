@@ -191,6 +191,12 @@ describe('DamageRoll preprocessing', () => {
 				expect(roll.primaryDie?.results).toEqual([{ result: 5, active: true }]);
 			});
 
+			it('should stop a negative modifier at 1', () => {
+				const roll = presetRoll('1d6+1', { primaryDieValue: 1, primaryDieModifier: -1 });
+
+				expect(roll.primaryDie?.results).toEqual([{ result: 1, active: true }]);
+			});
+
 			it('should record the primary die roll before the modifier', () => {
 				mockDice(0.4);
 				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });

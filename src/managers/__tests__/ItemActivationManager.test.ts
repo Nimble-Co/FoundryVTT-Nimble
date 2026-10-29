@@ -23,6 +23,7 @@ interface MockActor {
 	// forcing every fixture to describe an inventory it does not have.
 	flags?: Record<string, unknown>;
 	items?: { contents: MockItem[]; get(id: string): MockItem | undefined };
+	rules?: unknown[];
 	system: {
 		savingThrows: {
 			strength: { mod: number };
@@ -47,6 +48,8 @@ interface MockItem {
 	system: {
 		activation: {
 			effects: EffectNode[];
+			acquireTargetsFromTemplate?: boolean;
+			template?: { shape: string };
 		};
 		tier?: number;
 		scaling?: { mode: string; deltas?: unknown[]; choices?: unknown[] };
@@ -1164,6 +1167,88 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			await manager.getData();
 
 			expect(DamageRoll).toHaveBeenCalledWith('1d8 + 5', expect.anything(), expect.anything());
+		});
+
+		describe('Primary Die Bonus rules', () => {
+			function bonusRule(value: number, label = 'Unerring Judgment') {
+				return {
+					type: 'primaryDieBonus',
+					label: '',
+					item: { name: label, uuid: `Item.${label}` },
+					bonusFor: vi.fn((context: { delivery: string | null }) =>
+						context.delivery === 'melee' ? value : 0,
+					),
+				};
+			}
+
+			async function rollAttack(attackType: string) {
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true },
+				);
+				const damageNode = {
+					id: 'damage-1',
+					type: 'damage',
+					damageType: 'slashing',
+					formula: '1d8',
+					canCrit: true,
+					canMiss: true,
+					parentContext: null,
+					parentNode: null,
+				} as EffectNode;
+				manager.activationData = { effects: [damageNode], targets: { attackType } };
+				mockReconstructEffectsTree.mockReturnValue([damageNode]);
+				vi.mocked(DamageRoll).mockImplementation(
+					createMockConstructorImplementation({
+						evaluate: vi.fn().mockResolvedValue(undefined),
+						toJSON: vi.fn().mockReturnValue({ total: 4 }),
+					}),
+				);
+				return manager.getData();
+			}
+
+			it('adds every matching bonus to the Primary Die and lists each one', async () => {
+				mockActor.rules = [bonusRule(1), bonusRule(2, 'Create an Opening'), bonusRule(0, 'Off')];
+				const result = await rollAttack('reach');
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d8',
+					expect.anything(),
+					expect.objectContaining({ primaryDieModifier: 3 }),
+				);
+				expect(result.primaryDieBonuses).toEqual([
+					{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.Unerring Judgment' },
+					{ label: 'Create an Opening', value: 2, itemUuid: 'Item.Create an Opening' },
+				]);
+			});
+
+			it('gives nothing to a ranged attack from a melee bonus', async () => {
+				mockActor.rules = [bonusRule(1)];
+				const result = await rollAttack('range');
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d8',
+					expect.anything(),
+					expect.objectContaining({ primaryDieModifier: 0 }),
+				);
+				expect(result.primaryDieBonuses).toEqual([]);
+			});
+
+			it('gives nothing to an area attack', async () => {
+				mockActor.rules = [bonusRule(1)];
+				mockItem.system = {
+					activation: {
+						effects: [],
+						acquireTargetsFromTemplate: true,
+						template: { shape: 'circle' },
+					},
+				};
+				const result = await rollAttack('reach');
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d8',
+					expect.anything(),
+					expect.objectContaining({ primaryDieModifier: 0 }),
+				);
+				expect(result.primaryDieBonuses).toEqual([]);
+			});
 		});
 
 		it('should not apply melee weapon bonus to ranged weapon attacks', async () => {

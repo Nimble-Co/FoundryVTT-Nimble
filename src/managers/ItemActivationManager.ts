@@ -23,6 +23,7 @@ import { isResourceSpendingAutomationEnabled } from '../settings/automationSetti
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
+import type { OtherCreature } from '../utils/actor/otherCreatureMatches.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import {
 	type AttackDelivery,
@@ -35,6 +36,10 @@ import {
 } from '../utils/damage/attackUtils.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
+import {
+	collectPrimaryDieBonuses,
+	type PrimaryDieBonusLine,
+} from '../utils/damage/primaryDieBonuses.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -134,6 +139,9 @@ class ItemActivationManager {
 
 	/** What an automatic reroll left for the chat card. */
 	#rerollHistory: RerollHistory | null = null;
+
+	/** The Primary Die Bonus rules that added to the attack roll, for the chat card. */
+	#primaryDieBonuses: PrimaryDieBonusLine[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
 
@@ -346,6 +354,7 @@ class ItemActivationManager {
 			rollHidden: dialogData.rollHidden ?? false,
 			incomingReactions: this.#appliedIncomingReactions,
 			rerollHistory: this.#rerollHistory,
+			primaryDieBonuses: this.#primaryDieBonuses,
 		};
 	}
 
@@ -497,12 +506,21 @@ class ItemActivationManager {
 					// cancel 1-for-1). Only attached when callers supplied the
 					// array, to preserve backwards compatibility with single-source
 					// callers (and existing constructor-call test expectations).
+					// An area roll has no Primary Die outcome, so it gets no Primary Die Bonus.
+					this.#primaryDieBonuses = isAoE
+						? []
+						: collectPrimaryDieBonuses(
+								this.actor as { rules?: unknown[] } | null,
+								delivery,
+								(this.#getFirstTargetToken()?.actor ?? null) as OtherCreature | null,
+							);
+					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
 						rollMode: node.rollMode ?? 0,
 						primaryDieValue: dialogData.primaryDieValue ?? 0,
-						primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
 					if (Array.isArray(this.#options.rollModeSources)) {

@@ -268,7 +268,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			this as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 			options,
 		);
-		const { activation, rolls, rollHidden, incomingReactions, rerollHistory } =
+		const { activation, rolls, rollHidden, incomingReactions, rerollHistory, primaryDieBonuses } =
 			await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
@@ -344,6 +344,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					rerolls: rerollHistory?.rerolls ?? [],
 					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+					primaryDieBonuses: primaryDieBonuses ?? [],
 					isCritical,
 					isMiss,
 					permissions: this.permission,

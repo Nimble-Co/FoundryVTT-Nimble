@@ -1,5 +1,8 @@
-import { Predicate } from '../../etc/Predicate.js';
-import { buildTargetDomain } from '../../utils/actor/conditionalBonuses.js';
+import type { Predicate } from '../../etc/Predicate.js';
+import {
+	type OtherCreature,
+	otherCreatureMatches,
+} from '../../utils/actor/otherCreatureMatches.js';
 import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
@@ -248,12 +251,6 @@ declare namespace RollUseRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof rollUseSchema>;
 }
 
-/** The creature on the other side of the roll, as a rule tests it. */
-interface OtherCreature {
-	uuid?: string;
-	getTargetDomain?(): Set<string>;
-}
-
 /**
  * Which side of the roll is asking, which roll it is, and the other creature:
  * the target for the one who rolled and an ally, the one who rolled for the
@@ -380,7 +377,10 @@ abstract class RollUseRule<
 		const { side, roll } = context;
 		if (!this.rolls?.includes(roll.kind)) return false;
 		if (this.usedBy !== side) return false;
-		if (!this.otherCreatureMatches(context.other)) return false;
+		const owner = this.actor as unknown as Parameters<typeof otherCreatureMatches>[1];
+		if (!otherCreatureMatches(this.otherCreature, owner, this.item.getDomain(), context.other)) {
+			return false;
+		}
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
 		} else {
@@ -390,25 +390,6 @@ abstract class RollUseRule<
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
 		return canPayRerollCost(this.actor, this.rerollCost);
-	}
-
-	/**
-	 * Whether the other creature is what the rule asks for. The test sees the
-	 * other creature's `target:` tags with the marks the owner put on it, and
-	 * the owner's own tags without the owner's `target:` tags. A rule that asks
-	 * fails when there is no other creature.
-	 */
-	private otherCreatureMatches(other: OtherCreature | null | undefined): boolean {
-		const raw = this.otherCreature;
-		const predicate = raw instanceof Predicate ? raw : new Predicate((raw ?? {}) as never);
-		if (predicate.size === 0) return true;
-		if (!other) return false;
-		const owner = this.actor as unknown as Parameters<typeof buildTargetDomain>[0];
-		const domain = buildTargetDomain(owner, other);
-		for (const tag of [...(this.actor?.getDomain() ?? []), ...(this.item.getDomain() ?? [])]) {
-			if (!tag.startsWith('target:')) domain.add(tag);
-		}
-		return predicate.test(domain);
 	}
 
 	private checkKeys(kind: CheckRollKind): string[] {

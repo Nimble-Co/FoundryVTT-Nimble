@@ -202,6 +202,14 @@ describe('rerollDieInTerm', () => {
 			expect(die.results[1].active).toBe(true);
 		});
 
+		it('stops a negative bonus at 1', async () => {
+			const die = term(6, 1, [kept(1)]);
+
+			await rerollDieInTerm(die, 0, 'none', draws(1), { add: -1, base: 2 });
+
+			expect(values(die)).toEqual([1]);
+		});
+
 		it('gives the bonus again to a die that stays and was not rerolled', async () => {
 			const die = term(6, 2, [kept(6), dropped(1)], ['khn']);
 

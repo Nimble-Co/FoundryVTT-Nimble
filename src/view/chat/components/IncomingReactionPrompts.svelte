@@ -32,6 +32,7 @@
 		lines={prompts.historyLines}
 		pendingKeep={prompts.pendingKeep}
 		pendingLine={prompts.pendingLine}
+		primaryDieBonuses={prompts.primaryDieBonuses}
 		{held}
 	/>
 {/snippet}
@@ -78,7 +79,7 @@
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
+	{#if prompts.primaryDieBonuses.length > 0 || prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 

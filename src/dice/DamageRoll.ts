@@ -425,7 +425,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (primaryDieModifier) {
 			this.options.primaryDieBaseResult = kept.result;
 			const modifiedResult = kept.result + primaryDieModifier;
-			kept.result = Math.min(modifiedResult, faces);
+			kept.result = Math.max(1, Math.min(modifiedResult, faces));
 			if (modifiedResult > faces) {
 				const excessTerm = new Terms.NumericTerm({ number: modifiedResult - faces });
 				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
