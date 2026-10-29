@@ -59,6 +59,7 @@ export default defineConfig({
 					items: [
 						{ text: 'Creating a Character', link: '/documentation/characters/creation' },
 						{ text: 'The Character Sheet', link: '/documentation/characters/character-sheet' },
+						{ text: 'The New Sheets (Preview)', link: '/documentation/new-sheets' },
 						{ text: 'Leveling Up', link: '/documentation/characters/advancement' },
 						{ text: 'Dice Rolls & Chat Cards', link: '/documentation/playing/dice-and-chat' },
 						{ text: 'Conditions', link: '/documentation/playing/conditions' },
