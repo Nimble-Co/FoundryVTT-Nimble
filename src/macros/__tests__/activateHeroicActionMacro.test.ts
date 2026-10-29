@@ -188,6 +188,38 @@ describe('activateHeroicActionMacro', () => {
 		};
 	});
 
+	describe('the new character sheet', () => {
+		function withRevealSheet() {
+			const actor = createCharacterActor();
+			const reveal = vi.fn();
+			(actor as unknown as { sheet: unknown }).sheet = { reveal, render: vi.fn() };
+			setSpeakerActor(actor);
+			return reveal;
+		}
+
+		it.each([
+			['assess', 'action', { tab: 'actions', rowId: 'heroic-assess', step: 'choice' }],
+			['opportunity', 'reaction', { tab: 'actions', rowId: 'heroic-opportunity', step: 'choice' }],
+			['attack', 'action', { tab: 'actions' }],
+			['spell', 'action', { tab: 'spells' }],
+		] as const)('%s opens the sheet through reveal()', async (actionId, actionType, request) => {
+			const reveal = withRevealSheet();
+
+			await activateHeroicActionMacro(actionId, actionType);
+
+			expect(reveal).toHaveBeenCalledWith(request);
+			expect(globals().foundry.applications.api.DialogV2.confirm).not.toHaveBeenCalled();
+		});
+
+		it('still moves at once, with no sheet', async () => {
+			const reveal = withRevealSheet();
+
+			await activateHeroicActionMacro('move', 'action');
+
+			expect(reveal).not.toHaveBeenCalled();
+		});
+	});
+
 	it('warns when the current speaker does not resolve to a character actor', async () => {
 		setSpeakerActor({
 			id: 'npc-actor',

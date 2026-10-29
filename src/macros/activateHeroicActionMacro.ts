@@ -9,6 +9,17 @@ import {
 } from '../utils/heroicActions/reactions.js';
 import { rollUnarmedStrike } from '../utils/heroicActions/unarmedStrike.js';
 import localize from '../utils/localize.js';
+import { heroicRowId } from '../view/actorSheets/hero/heroicRows.js';
+import { asRevealable } from '../view/actorSheets/shared/revealable.js';
+import type { RevealRequest } from '../view/actorSheets/shared/sheetUiState.js';
+
+/** Spec 6.6: the deep link opens Actions and the choice step of the row. A spell opens the Spells tab. */
+function heroicDeepLink(actionId: string): RevealRequest {
+	if (actionId === 'assess' || actionId === 'opportunity') {
+		return { tab: 'actions', rowId: heroicRowId(actionId), step: 'choice' };
+	}
+	return { tab: actionId === 'spell' ? 'spells' : 'actions' };
+}
 
 /**
  * The function called by macros created by dragging a heroic action/reaction to the macro hot bar.
@@ -46,6 +57,13 @@ export async function activateHeroicActionMacro(
 	// Handle chat-based reactions (defend, interpose, interposeAndDefend, help)
 	if (actionType === 'reaction' && isChatReactionId(actionId)) {
 		await useChatReaction(actor as NimbleCharacter, actionId);
+		return;
+	}
+
+	// The new character sheet: the pick in the choice step asks when the reaction is soft-blocked
+	const revealable = asRevealable(actor.sheet);
+	if (revealable) {
+		revealable.reveal(heroicDeepLink(actionId));
 		return;
 	}
 
