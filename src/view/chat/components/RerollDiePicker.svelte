@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import {
 		createRerollDiePickerState,
 		dieCaption,
@@ -42,10 +43,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="nimble-reroll-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
 	<div class="nimble-reroll-picker__head">
-		<i
-			class="nimble-reroll-picker__icon fa-solid {use === 'change' ? 'fa-pen' : 'fa-rotate-left'}"
-			aria-hidden="true"
-		></i>
+		<i class="nimble-reroll-picker__icon {REACTION_VERB_ICONS[use]}" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-picker__title">{title}</span>
 		{#if !rolling}
 			<button

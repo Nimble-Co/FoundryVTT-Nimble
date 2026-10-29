@@ -28,7 +28,7 @@
 		dice={picking.dice}
 		{feature}
 		{primaryOutcome}
-		use={picking.entry.use === 'change' ? 'change' : 'reroll'}
+		use={picking.entry.use ?? 'reroll'}
 		rolling={picking.rolling}
 		{onpick}
 		{oncancel}

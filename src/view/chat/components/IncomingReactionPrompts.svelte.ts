@@ -11,6 +11,7 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
+	RollUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
@@ -127,11 +128,11 @@ export function createIncomingReactionPromptsState(
 	const rollMenu = $derived.by<ChoiceMenuSection[]>(() => {
 		if (getPlace() !== 'rollButton') return [];
 		const pending = pendingGroups.flatMap((group) => group.entries);
-		const section = (id: 'reroll' | 'change', heading: string) => ({
+		const section = (id: RollUse, heading: string) => ({
 			id,
 			heading: localize(heading),
 			items: pending
-				.filter((entry) => (entry.use === 'change' ? 'change' : 'reroll') === id)
+				.filter((entry) => (entry.use ?? 'reroll') === id)
 				.map((entry) => ({ ...text.menuItem(entry), icon: text.icon(entry) })),
 		});
 		return [

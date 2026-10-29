@@ -25,7 +25,7 @@ export const REACTION_VERB_WORDS: Record<ReactionVerb, string> = {
 };
 
 export function reactionVerb(entry: IncomingReactionEntry): ReactionVerb {
-	if (entry.kind === 'reroll') return entry.use === 'change' ? 'change' : 'reroll';
+	if (entry.kind === 'reroll') return entry.use ?? 'reroll';
 	if (entry.kind === 'spendPoolForDamage') return 'addDamage';
 	return 'interpose';
 }

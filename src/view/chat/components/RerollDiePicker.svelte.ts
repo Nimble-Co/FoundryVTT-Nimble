@@ -1,5 +1,6 @@
 import { tick } from 'svelte';
 import type { RerollDiePickerProps } from '#types/components/RerollDiePicker.d.ts';
+import type { RollUse } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import type { PickableDie } from '../../../dice/oneDieReroll.js';
 
@@ -17,7 +18,7 @@ export function dieCaption(die: PickableDie, dice: readonly PickableDie[]): stri
 	return '';
 }
 
-export function pickDieWords(use: 'reroll' | 'change' = 'reroll'): string {
+export function pickDieWords(use: RollUse = 'reroll'): string {
 	return use === 'change'
 		? 'NIMBLE.chat.incomingReactions.pickDie.change'
 		: 'NIMBLE.chat.incomingReactions.pickDie';
@@ -26,7 +27,7 @@ export function pickDieWords(use: 'reroll' | 'change' = 'reroll'): string {
 export function dieLabel(
 	die: PickableDie,
 	dice: readonly PickableDie[],
-	use: 'reroll' | 'change' = 'reroll',
+	use: RollUse = 'reroll',
 ): string {
 	const role = dieCaption(die, dice);
 	const value = String(die.value);

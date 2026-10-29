@@ -2,6 +2,7 @@
 	import type { RollRerollButtonProps } from '#types/components/RollRerollButton.d.ts';
 
 	import ChoiceMenu from './ChoiceMenu.svelte';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRollRerollButtonState } from './RollRerollButton.svelte.ts';
 
 	let { sections, disabled = false, onChoose }: RollRerollButtonProps = $props();
@@ -13,7 +14,7 @@
 	let single = $derived(rerollButton.single);
 	let menuOpen = $derived(rerollButton.menuOpen);
 	let triggerLabel = $derived(rerollButton.triggerLabel);
-	let icon = $derived(rerollButton.changesOnly ? 'fa-pen' : 'fa-rotate-left');
+	let icon = $derived(REACTION_VERB_ICONS[rerollButton.changesOnly ? 'change' : 'reroll']);
 
 	export function focus() {
 		elements.trigger?.focus();
@@ -32,7 +33,7 @@
 	data-tooltip={triggerLabel}
 	onclick={onTriggerClick}
 >
-	<i class="fa-solid {icon}" aria-hidden="true"></i>
+	<i class={icon} aria-hidden="true"></i>
 </button>
 
 {#if menuOpen}

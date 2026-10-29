@@ -5,6 +5,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
 
@@ -71,7 +72,7 @@
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
 			data-tooltip={line.text}
 		>
-			<i class="fa-solid {line.change ? 'fa-pen' : 'fa-rotate-left'}" aria-hidden="true"></i>
+			<i class={REACTION_VERB_ICONS[line.change ? 'change' : 'reroll']} aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
 					<span aria-hidden="true">{line.title}</span>
