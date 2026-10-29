@@ -6,6 +6,7 @@ import {
 	heroTurn,
 	itemState,
 	manaCaster,
+	spellItem,
 } from '../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { itemRow, spendIntent } from '../heroRows.ts';
 import type { HeroActorLike } from '../heroSource.ts';
@@ -48,6 +49,15 @@ describe('itemRow', () => {
 		expect(itemRow(hero, item(hero, 'flameDart'), heroContext()).cost).toMatchObject({
 			actions: 1,
 		});
+	});
+
+	it('says Concentration on the line of a concentration spell', () => {
+		const hero = manaCaster();
+		hero.items.push(spellItem('wall', 'Wall of Fire', { selected: ['range', 'concentration'] }));
+
+		expect(itemRow(hero, item(hero, 'wall'), heroContext()).summary).toBe(
+			`${SHARED}.range {"distance":"8"}, ${SHARED}.concentration`,
+		);
 	});
 
 	it('starts the line of a spell with its tier when asked', () => {
