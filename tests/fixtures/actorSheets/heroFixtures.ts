@@ -1,6 +1,7 @@
 import type {
 	HeroActorLike,
 	HeroCombatState,
+	HeroItemState,
 	HeroSheetContext,
 } from '../../../src/view/actorSheets/hero/heroSource.ts';
 import type { ItemLike } from '../../../src/view/actorSheets/shared/sheetSource.ts';
@@ -30,8 +31,10 @@ function merge<T>(base: T, overrides: DeepPartial<T> | undefined): T {
 const rolled = (mod: number, defaultRollMode = 0) => ({ mod, defaultRollMode });
 
 export function heroItem(overrides: Partial<ItemLike> & Pick<ItemLike, 'type'>): ItemLike {
+	const id = overrides.id ?? `${overrides.type}0000000001`;
 	return {
-		id: `${overrides.type}0000000001`,
+		id,
+		uuid: `Actor.blankHero00000001.Item.${id}`,
 		name: overrides.type,
 		img: 'icons/svg/item-bag.svg',
 		system: {},
@@ -116,6 +119,7 @@ export function heroTurn(overrides?: DeepPartial<HeroCombatState>): HeroCombatSt
 			initiativePending: false,
 			isTurn: true,
 			actions: { current: 3, effectiveMax: 3, pendingDelta: 0, mayAdd: true },
+			reactionsSpent: [],
 		},
 		overrides,
 	);
@@ -133,6 +137,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			damageTypes: { fire: 'Fire', cold: 'Cold', poison: 'Poison' },
 			languages: { common: 'Common' },
 			armorTypes: { leather: 'Leather', mail: 'Mail', shield: 'Shields' },
+			spellSchools: { fire: 'Fire', ice: 'Ice', lightning: 'Lightning', radiant: 'Radiant' },
 		},
 		skillAbilities: {
 			arcana: 'intelligence',
@@ -148,6 +153,211 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 		},
 		dicePools: [],
 		chargePools: [],
+		itemState: {},
+		targets: [],
+		unarmedDamage: '1+STR',
 		...overrides,
 	};
+}
+
+const rule = (id: string, type: string, fields: Record<string, unknown> = {}) => ({
+	id,
+	type,
+	active: true,
+	fields: { type, ...fields },
+});
+
+interface CostOptions {
+	type?: string;
+	quantity?: number;
+	isReaction?: boolean;
+	details?: string;
+}
+
+const activation = (cost: CostOptions = {}, effects: unknown[] = [], targets = {}) => ({
+	cost: { type: 'action', quantity: 1, isReaction: false, details: '', ...cost },
+	effects,
+	targets: { count: 1, restrictions: '', ...targets },
+});
+
+const damage = (formula: string, damageType: string) => ({ type: 'damage', formula, damageType });
+
+export function weaponItem(
+	id: string,
+	name: string,
+	options: {
+		equipped?: boolean;
+		properties?: string[];
+		formula?: string;
+		attackType?: string;
+	} = {},
+): ItemLike {
+	return heroItem({
+		id,
+		type: 'object',
+		name,
+		system: {
+			objectType: 'weapon',
+			equipped: options.equipped ?? true,
+			description: { public: '' },
+			properties: {
+				selected: options.properties ?? [],
+				range: { min: 2, max: 8 },
+				reach: { min: 1, max: null },
+			},
+			activation: activation({}, [damage(options.formula ?? '1d8+@strength', 'slashing')], {
+				attackType: options.attackType ?? 'reach',
+			}),
+		},
+	});
+}
+
+export function spellItem(
+	id: string,
+	name: string,
+	options: {
+		tier?: number;
+		school?: string;
+		selected?: string[];
+		damage?: [string, string];
+		cost?: CostOptions;
+		description?: string;
+	} = {},
+): ItemLike {
+	return heroItem({
+		id,
+		type: 'spell',
+		name,
+		system: {
+			tier: options.tier ?? 0,
+			school: options.school ?? 'fire',
+			description: { baseEffect: options.description ?? '', higherLevelEffect: '' },
+			properties: {
+				selected: options.selected ?? ['range'],
+				range: { min: 2, max: 8 },
+				reach: { min: 1, max: null },
+			},
+			activation: activation(options.cost, options.damage ? [damage(...options.damage)] : []),
+		},
+	});
+}
+
+export function featureItem(
+	id: string,
+	name: string,
+	options: { cost?: CostOptions; rules?: ItemLike['rules']; description?: string } = {},
+): ItemLike {
+	return heroItem({
+		id,
+		type: 'feature',
+		name,
+		system: {
+			featureType: 'class',
+			description: options.description ?? '',
+			activation: activation({ type: 'none', ...options.cost }),
+		},
+		rules: options.rules ?? [],
+	});
+}
+
+/** A level 1 Mage with 3 mana, a staff and the spells of two schools. */
+export function manaCaster(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({
+		id: 'manaCaster0000001',
+		name: 'Mana Caster',
+		system: { resources: { mana: { current: 3, max: 3, baseMax: 3 } } },
+	});
+	hero.items = [
+		heroItem({
+			id: 'classMage0000001',
+			type: 'class',
+			name: 'Mage',
+			system: { identifier: 'mage', classLevel: 1, hitDieSize: 6, mana: { formula: '@int' } },
+		}),
+		heroItem({ id: 'ancestryElf0001', type: 'ancestry', name: 'Elf' }),
+		weaponItem('staff', 'Staff', { formula: '1d6+@strength' }),
+		spellItem('flameDart', 'Flame Dart', {
+			damage: ['1d10', 'fire'],
+			description: '<p>Deal fire damage to a creature in range.</p>',
+		}),
+		spellItem('ignite', 'Ignite', { tier: 1, damage: ['4d10', 'fire'], cost: { quantity: 2 } }),
+		spellItem('iceLance', 'Ice Lance', { school: 'ice', damage: ['1d6', 'cold'] }),
+		spellItem('frostShield', 'Frost Shield', {
+			tier: 1,
+			school: 'ice',
+			selected: [],
+			cost: { isReaction: true, details: 'When attacked' },
+		}),
+		spellItem('chillcraft', 'Chillcraft', { tier: 1, school: 'ice', selected: ['utilitySpell'] }),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}
+
+/** A level 3 Berserker with Fury Dice: Rage turns on, Bloodlust spends dice, Blood Frenzy raises one die. */
+export function dicePoolHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({ id: 'dicePoolHero00001', name: 'Dice Pool Hero' });
+	hero.items = [
+		...hero.items,
+		weaponItem('greataxe', 'Greataxe', { formula: '2d6+@strength', properties: ['twoHanded'] }),
+		weaponItem('javelin', 'Javelin', {
+			equipped: false,
+			properties: ['range'],
+			attackType: 'range',
+		}),
+		featureItem('rage', 'Rage', {
+			cost: { type: 'action', quantity: 1 },
+			rules: [rule('rageToggle', 'toggleEffect')],
+			description: '<p>Enter a rage.</p>',
+		}),
+		featureItem('bloodlust', 'Bloodlust', {
+			rules: [rule('bloodlustDice', 'diceConsumer', { mode: 'manual', poolIdentifier: 'fury' })],
+		}),
+		featureItem('bloodFrenzy', 'Blood Frenzy', {
+			rules: [
+				rule('frenzyDice', 'diceConsumer', {
+					mode: 'manual',
+					poolIdentifier: 'fury',
+					selectionOutcome: 'maximize',
+				}),
+			],
+		}),
+		featureItem('thatAllYouGot', 'That all you got?!', {
+			cost: { type: 'action', isReaction: true, details: 'when you are attacked' },
+		}),
+		featureItem('passiveFeature', 'Unstoppable'),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}
+
+/** The pools and states of `dicePoolHero` that the system works out. */
+export function dicePoolContext(overrides?: Partial<HeroSheetContext>): HeroSheetContext {
+	return heroContext({
+		dicePools: [{ id: 'fury', label: 'Fury Dice', dieSize: 'd6', max: 3, faces: [5, 6] }],
+		itemState: {
+			greataxe: itemState({ actionCost: 1 }),
+			rage: itemState({ actionCost: 1, toggle: { ruleId: 'rageToggle', on: false } }),
+			bloodlust: itemState({
+				diceConsumers: [
+					{
+						ruleId: 'bloodlustDice',
+						poolId: 'fury',
+						label: 'Bloodlust',
+						cap: null,
+						maximize: false,
+					},
+				],
+			}),
+			bloodFrenzy: itemState({
+				diceConsumers: [
+					{ ruleId: 'frenzyDice', poolId: 'fury', label: 'Blood Frenzy', cap: 1, maximize: true },
+				],
+			}),
+			thatAllYouGot: itemState({ actionCost: 1 }),
+		},
+		...overrides,
+	});
+}
+
+export function itemState(overrides: Partial<HeroItemState> = {}): HeroItemState {
+	return { actionCost: 0, pools: [], gate: null, toggle: null, diceConsumers: [], ...overrides };
 }

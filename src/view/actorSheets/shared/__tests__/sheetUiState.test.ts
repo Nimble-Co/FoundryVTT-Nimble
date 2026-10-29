@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
 	askConfirm,
+	closeChoice,
 	closeConfirm,
 	createSheetUiState,
 	revealIn,
 	setEditing,
+	setOpenRows,
 	showTab,
+	toggleChoice,
+	toggleRow,
 } from '../sheetUiState.ts';
 
 describe('revealIn', () => {
@@ -68,5 +72,51 @@ describe('the UI state changes', () => {
 		closeConfirm(ui);
 
 		expect(ui.confirm).toBeNull();
+	});
+});
+
+describe('rows and choice steps', () => {
+	it('opens and closes the text of one row', () => {
+		const ui = createSheetUiState('actions');
+		toggleRow(ui, 'rage');
+		toggleRow(ui, 'move');
+		toggleRow(ui, 'rage');
+
+		expect(ui.openRows).toEqual(['move']);
+	});
+
+	it('opens all the rows of a tab, or closes them', () => {
+		const ui = createSheetUiState('actions');
+		setOpenRows(ui, ['a', 'b']);
+
+		expect(ui.openRows).toEqual(['a', 'b']);
+
+		setOpenRows(ui, []);
+
+		expect(ui.openRows).toEqual([]);
+	});
+
+	it('opens one choice step at a time, and a second click closes it', () => {
+		const ui = createSheetUiState('actions');
+		askConfirm(ui, 'endTurn');
+		toggleChoice(ui, 'heroic-assess');
+
+		expect(ui).toMatchObject({ choiceStep: 'heroic-assess', confirm: null });
+
+		toggleChoice(ui, 'heroic-defend');
+
+		expect(ui.choiceStep).toBe('heroic-defend');
+
+		toggleChoice(ui, 'heroic-defend');
+
+		expect(ui.choiceStep).toBeNull();
+	});
+
+	it('closes the choice step', () => {
+		const ui = createSheetUiState('actions');
+		toggleChoice(ui, 'bloodlust');
+		closeChoice(ui);
+
+		expect(ui.choiceStep).toBeNull();
 	});
 });

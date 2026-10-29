@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	createCombatActorFixture,
 	createCombatantsCollectionFixture,
 } from '../../../../tests/fixtures/combat.js';
 import { createMockCombatant, getTestGlobals } from '../../../../tests/mocks/combat.js';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import { getHeroicReactionUsageState } from '../getHeroicReactionUsageState.js';
 
 type HeroicReactionUsageStateTestGlobals = {
@@ -238,5 +239,57 @@ describe('getHeroicReactionUsageState', () => {
 		expect(usageState.requiredActions).toBe(0);
 		expect(usageState.canUse).toBe(false);
 		expect(usageState.blockedReason).toBe('spent');
+	});
+
+	describe('with action tracking off', () => {
+		const holder = globalThis as unknown as { game: { settings?: unknown } };
+		let previousSettings: unknown;
+
+		beforeEach(() => {
+			previousSettings = holder.game.settings;
+			holder.game.settings = {
+				get: vi.fn((_namespace: string, key: string) =>
+					key === AUTOMATION_SETTING_KEYS.actionTracking ? false : undefined,
+				),
+			};
+		});
+
+		afterEach(() => {
+			holder.game.settings = previousSettings;
+		});
+
+		it('does not block a reaction for noActions', () => {
+			const combatant = createMockCombatant({
+				id: 'reacting-character',
+				type: 'character',
+				actionsCurrent: 0,
+				actionsMax: 3,
+				actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6, isOwner: true }),
+				combatId: 'combat-heroic-tracking-off',
+			});
+			const activeCombatant = createMockCombatant({
+				id: 'active-character',
+				type: 'character',
+				actionsCurrent: 3,
+				actionsMax: 3,
+				actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+				combatId: 'combat-heroic-tracking-off',
+			});
+			const combat = {
+				round: 1,
+				combatant: activeCombatant,
+				combatants: createCombatantsCollectionFixture([activeCombatant, combatant]),
+			} as unknown as Combat;
+
+			const usageState = getHeroicReactionUsageState({
+				combat,
+				combatant,
+				reactionKeys: ['interpose', 'defend'],
+			});
+
+			expect(usageState.requiredActions).toBe(2);
+			expect(usageState.blockedReason).toBeNull();
+			expect(usageState.canUse).toBe(true);
+		});
 	});
 });

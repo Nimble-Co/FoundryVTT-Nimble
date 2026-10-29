@@ -2,7 +2,7 @@
 @component
 The character sheet in a window box for the stories: fixture actors, the real view model, its own UI state,
 and a `perform` that only logs. It keeps the actions left, so a click on an action cell spends it.
-A `nimble-story:reveal` event on `window` calls `revealIn`, as outside code calls `sheet.reveal()`.
+`tab` is the tab at the start. A `nimble-story:reveal` event on `window` calls `revealIn`, as outside code calls `sheet.reveal()`.
 -->
 <script lang="ts">
 	import type { HeroSheetStoryProps } from '#types/components/actorSheets/HeroSheetStory.d.ts';
@@ -15,7 +15,15 @@ A `nimble-story:reveal` event on `window` calls `revealIn`, as outside code call
 		revealIn,
 	} from '#view/actorSheets/shared/sheetUiState.ts';
 
-	let { source, perform, width, height, editing, theme = '' }: HeroSheetStoryProps = $props();
+	let {
+		source,
+		perform,
+		width,
+		height,
+		editing,
+		tab = 'core',
+		theme = '',
+	}: HeroSheetStoryProps = $props();
 
 	const ui = $state(createSheetUiState('core'));
 	let actionsLeft: number | null = $state(null);
@@ -40,6 +48,10 @@ A `nimble-story:reveal` event on `window` calls `revealIn`, as outside code call
 
 	$effect.pre(() => {
 		ui.editing = editing;
+	});
+
+	$effect.pre(() => {
+		ui.tab = tab;
 	});
 
 	$effect(() => {

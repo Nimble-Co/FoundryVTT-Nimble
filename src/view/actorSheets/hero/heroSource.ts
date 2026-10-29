@@ -1,6 +1,7 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
+import type { HeroicReactionKey } from '#utils/incomingReactions/heroicActions.js';
 import type {
 	ChargePoolLike,
 	DicePoolLike,
@@ -48,6 +49,8 @@ export interface HeroActorLike {
 		actorImageXOffset?: number;
 		actorImageYOffset?: number;
 		actorImageScale?: number;
+		/** the groups of the Spells tab; none = by tier */
+		spellsBy?: SpellsBy;
 	};
 	items: ItemLike[];
 	effects: EffectLike[];
@@ -67,6 +70,57 @@ export interface HeroCombatState {
 		/** an extra action stays inside the limit of a turn */
 		mayAdd: boolean;
 	};
+	/** the heroic reactions that the hero used this round */
+	reactionsSpent: HeroicReactionKey[];
+}
+
+/** When the uses of a pool come back. Turn start and turn end both read "round". */
+/** How the Spells tab groups the spells. */
+export type SpellsBy = 'tier' | 'school';
+
+export type PoolRecovery = 'round' | 'safeRest' | 'fieldRest' | 'encounter';
+
+/** A charge pool that an item has or spends from (`getPoolsForItem`, hidden pools left out). */
+export interface ItemPoolLike {
+	id: string;
+	label: string;
+	current: number;
+	max: number;
+	/** the charges that one use of the item spends */
+	need: number;
+	per: PoolRecovery | null;
+}
+
+/** Why the charge gate (`validateItemChargeConsumption`) stops a use. */
+export interface ChargeGateLike {
+	code: 'poolMissing' | 'insufficientCharges' | 'conflictingConsumers' | 'unofferableSpend';
+	poolLabel: string;
+	poolMax: number;
+	per: PoolRecovery | null;
+}
+
+/** A `diceConsumer` rule in manual mode: you pick dice from its pool to spend. */
+export interface DiceConsumerLike {
+	ruleId: string;
+	poolId: string;
+	/** the rule label, or the item name */
+	label: string;
+	/** the most dice that one spend takes; null for no limit */
+	cap: number | null;
+	/** the outcome raises a die to its top face, so a die already at the top cannot be picked */
+	maximize: boolean;
+}
+
+/** What the system works out for one item, beyond its own fields. */
+export interface HeroItemState {
+	/** actions that one use spends, with the action cost rules; 0 for no action cost */
+	actionCost: number;
+	pools: ItemPoolLike[];
+	/** null: the gate lets the use go, or resource spending is off */
+	gate: ChargeGateLike | null;
+	/** the item has a toggle effect rule; on = its effect is on the hero */
+	toggle: { ruleId: string; on: boolean } | null;
+	diceConsumers: DiceConsumerLike[];
 }
 
 export interface HeroSheetContext {
@@ -84,11 +138,18 @@ export interface HeroSheetContext {
 		damageTypes: Record<string, string>;
 		languages: Record<string, string>;
 		armorTypes: Record<string, string>;
+		spellSchools: Record<string, string>;
 	};
 	/** skill key to the key of its ability */
 	skillAbilities: Partial<Record<SkillKeyType, AbilityKeyType>>;
 	dicePools: DicePoolLike[];
 	chargePools: ChargePoolLike[];
+	/** by item id; an item with no entry has no cost, pools, gate, toggle or consumers */
+	itemState: Record<string, HeroItemState>;
+	/** the names of the tokens that the user targets, not the hero */
+	targets: string[];
+	/** the damage formula of an Unarmed Strike, with its bonuses */
+	unarmedDamage: string;
 }
 
 export interface HeroSource {

@@ -44,6 +44,31 @@ describe('HeroSheet', () => {
 		expect(screen.getByText('NIMBLE.actorSheet.hero.core.abilitiesAndSaves')).toBeInTheDocument();
 	});
 
+	it('opens the Actions tab and the Spells tab', async () => {
+		stubWidth(960);
+		const { ui } = renderSheet();
+
+		await fireEvent.click(screen.getByRole('tab', { name: /tabs.actions/ }));
+		expect(ui.tab).toBe('actions');
+		expect(document.querySelector('[data-row-id="heroic-defend"]')).not.toBeNull();
+		expect(screen.getByRole('heading', { name: /groups.reactions/ })).toBeInTheDocument();
+
+		await fireEvent.click(screen.getByRole('tab', { name: /tabs.spells/ }));
+		expect(ui.tab).toBe('spells');
+		expect(screen.getByText('NIMBLE.actorSheet.hero.spells.none')).toBeInTheDocument();
+	});
+
+	it('opens the choice step of a row that reveal() asks for', async () => {
+		stubWidth(720);
+		const { ui } = renderSheet();
+
+		revealIn(ui, { tab: 'actions', rowId: 'heroic-assess', step: 'choice' });
+
+		expect(
+			await screen.findByRole('group', { name: 'NIMBLE.actorSheet.hero.actions.chooseOne' }),
+		).toBeInTheDocument();
+	});
+
 	it('shows the narrow form below 560 px', () => {
 		stubWidth(390);
 		renderSheet();

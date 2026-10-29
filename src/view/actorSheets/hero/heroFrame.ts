@@ -12,7 +12,11 @@ export type HeroTabId =
 	| 'bio'
 	| 'settings';
 
-const BUILT: { id: HeroTabId; icon: string }[] = [{ id: 'core', icon: 'fa-solid fa-home' }];
+const BUILT: { id: HeroTabId; icon: string }[] = [
+	{ id: 'core', icon: 'fa-solid fa-home' },
+	{ id: 'actions', icon: 'fa-solid fa-bolt' },
+	{ id: 'spells', icon: 'fa-solid fa-wand-sparkles' },
+];
 const FRAME = 'NIMBLE.actorSheet.hero.frame';
 
 export interface HeroFrameView {

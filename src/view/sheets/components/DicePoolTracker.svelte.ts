@@ -7,7 +7,8 @@ import type { ChargePoolState } from '#utils/chargePool/types.js';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { dieSizeToMaxFace, normalizeIdentifier } from '#utils/dicePool/helpers.js';
+import { findRequestedPool } from '#utils/dicePool/findRequestedPool.js';
+import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
 import type { DicePoolSpendRequestPayload, DicePoolState, DieSize } from '#utils/dicePool/types.js';
 import localize from '#utils/localize.ts';
 
@@ -205,15 +206,7 @@ export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
 	function handleSpendRequest(payload: DicePoolSpendRequestPayload): void {
 		if (!payload || payload.actorUuid !== getActor().uuid) return;
 
-		const poolIdentifier = normalizeIdentifier(payload.poolIdentifier);
-		if (poolIdentifier.length < 1) return;
-
-		// Same matching as getDicePoolConsumers: identifier + scope. The consumer
-		// rule may live on a different item than the pool (e.g. "That all you
-		// got?!" spending the Rage item's Fury Dice).
-		const pool = getDicePools(getActor()).find(
-			(p) => normalizeIdentifier(p.identifier) === poolIdentifier && p.scope === payload.poolScope,
-		);
+		const pool = findRequestedPool(getActor(), payload);
 		if (!pool) return;
 
 		if (pool.faces.length < 1) {

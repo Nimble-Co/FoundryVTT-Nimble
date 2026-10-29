@@ -9,6 +9,16 @@ const setPoolFaces = vi.fn();
 const updateDocumentImage = vi.fn();
 const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
+const toggleEffectAE = vi.fn();
+const findToggleEffectRuleById = vi.fn();
+const getDicePools = vi.fn();
+const getDicePoolConsumers = vi.fn();
+const spendDicePool = vi.fn();
+const runAssess = vi.fn();
+const runMoveAction = vi.fn();
+const useChatReaction = vi.fn();
+const useOpportunityAttack = vi.fn();
+const strikeUnarmed = vi.fn();
 
 let createHeroPerform: typeof import('../heroPerform.ts').createHeroPerform;
 
@@ -18,7 +28,20 @@ beforeAll(async () => {
 	vi.doMock('#utils/chargePool/chargePoolRoll.js', () => ({ rollChargeDie }));
 	vi.doMock('#utils/dicePool/dicePoolRefill.js', () => ({ rollDieIntoPool, setPoolFaces }));
 	vi.doMock('#view/handlers/updateDocumentImage.js', () => ({ default: updateDocumentImage }));
-	vi.doMock('#utils/combat/combatTurnActions.js', () => ({ requestAdvanceCombatTurn }));
+	vi.doMock('#utils/combat/combatTurnActions.js', () => ({
+		requestAdvanceCombatTurn,
+	}));
+	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
+		toggleEffectAE,
+		findToggleEffectRuleById,
+	}));
+	vi.doMock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: getDicePools }));
+	vi.doMock('#utils/dicePool/dicePoolConsumers.js', () => ({ getDicePoolConsumers }));
+	vi.doMock('#utils/dicePool/spendDicePool.js', () => ({ spendDicePool }));
+	vi.doMock('#utils/heroicActions/assess.js', () => ({ runAssess }));
+	vi.doMock('#utils/heroicActions/move.js', () => ({ runMoveAction }));
+	vi.doMock('#utils/heroicActions/reactions.js', () => ({ useChatReaction, useOpportunityAttack }));
+	vi.doMock('#utils/heroicActions/unarmedStrike.js', () => ({ strikeUnarmed }));
 	vi.doMock('#utils/combat/combatState.js', () => ({ getActiveCombatForCurrentScene }));
 	vi.doMock('#utils/combat/queueCombatantMutationWithFreshDocument.js', () => ({
 		queueCombatantMutationWithFreshDocument: async (params: {
@@ -57,10 +80,18 @@ const ACTOR_METHODS = [
 	'rollAbilityCheckToChat',
 	'rollSavingThrowToChat',
 	'rollSkillCheckToChat',
+	'activateItem',
+	'createItem',
+	'setFlag',
 ] as const;
 
+const item = { id: 'rage', sheet: { render: vi.fn() } };
+
 function mockActor() {
-	const actor: Record<string, unknown> = { id: 'hero1' };
+	const actor: Record<string, unknown> = {
+		id: 'hero1',
+		items: { get: (id: string) => (id === item.id ? item : undefined) },
+	};
 	for (const method of ACTOR_METHODS) actor[method] = vi.fn();
 	return actor as Record<(typeof ACTOR_METHODS)[number], ReturnType<typeof vi.fn>> & {
 		id: string;
@@ -280,6 +311,91 @@ describe('createHeroPerform', () => {
 
 			expect(requestAdvanceCombatTurn).toHaveBeenCalledWith({ combat });
 			expect(ui.notifications?.warn).toHaveBeenCalledOnce();
+		});
+	});
+
+	describe('items', () => {
+		it('uses an item through activateItem', async () => {
+			await perform({ kind: 'activate', itemId: 'rage' });
+
+			expect(actor.activateItem).toHaveBeenCalledWith('rage');
+		});
+
+		it('ends a toggle through toggleEffectAE', async () => {
+			const rule = { id: 'rageToggle' };
+			findToggleEffectRuleById.mockReturnValueOnce(rule);
+
+			await perform({ kind: 'endToggle', itemId: 'rage', ruleId: 'rageToggle' });
+
+			expect(findToggleEffectRuleById).toHaveBeenCalledWith(item, 'rageToggle');
+			expect(toggleEffectAE).toHaveBeenCalledWith(actor, item, rule);
+		});
+
+		it('opens the window of an item', async () => {
+			await perform({ kind: 'openItem', itemId: 'rage' });
+
+			expect(item.sheet.render).toHaveBeenCalledWith(true);
+		});
+
+		it('creates a spell', async () => {
+			await perform({ kind: 'createItem', itemType: 'spell' });
+
+			expect(actor.createItem).toHaveBeenCalledWith({
+				name: 'New Spell',
+				type: 'spell',
+			});
+		});
+
+		it('saves how the Spells tab groups the spells', async () => {
+			await perform({ kind: 'setSpellsBy', value: 'school' });
+
+			expect(actor.setFlag).toHaveBeenCalledWith('nimble', 'spellsBy', 'school');
+		});
+
+		it('spends the picked dice through the consumer of the row', async () => {
+			const pool = { id: 'fury', label: 'Fury Dice', faces: [5, 2] };
+			const consumer = { itemId: 'bloodlust', ruleId: 'bloodlustDice' };
+			getDicePools.mockReturnValueOnce([pool]);
+			getDicePoolConsumers.mockReturnValueOnce([{ itemId: 'other', ruleId: 'x' }, consumer]);
+
+			await perform({
+				kind: 'spendDice',
+				itemId: 'bloodlust',
+				ruleId: 'bloodlustDice',
+				poolId: 'fury',
+				indices: [1],
+			});
+
+			expect(spendDicePool).toHaveBeenCalledWith({
+				actor,
+				pool,
+				consumer,
+				selectedIndices: [1],
+			});
+		});
+	});
+
+	describe('heroic actions', () => {
+		it('strikes unarmed through strikeUnarmed', async () => {
+			await perform({ kind: 'unarmedStrike' });
+
+			expect(strikeUnarmed).toHaveBeenCalledWith(actor);
+		});
+
+		it.each([
+			[{ kind: 'move' }, runMoveAction, []],
+			[
+				{ kind: 'assess', option: 'create-opening', skill: 'perception' },
+				runAssess,
+				[{ optionId: 'create-opening', skillKey: 'perception' }],
+			],
+			[{ kind: 'reaction', reaction: 'help' }, useChatReaction, ['help']],
+			[{ kind: 'opportunityAttack', weaponId: 'greataxe' }, useOpportunityAttack, ['greataxe']],
+			[{ kind: 'opportunityAttack', weaponId: null }, useOpportunityAttack, [null]],
+		] as const)('%o runs the shared heroic action code', async (intent, run, args) => {
+			await perform(intent as HeroIntent);
+
+			expect(run).toHaveBeenCalledWith(actor, ...args);
 		});
 	});
 });

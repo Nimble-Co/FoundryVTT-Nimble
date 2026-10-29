@@ -206,7 +206,7 @@
 	{/if}
 
 	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'assess'}
-		<AssessActionPanel {actor} onDeductAction={() => heroicState.deductActionPips(1)} />
+		<AssessActionPanel {actor} />
 	{/if}
 
 	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'defend'}

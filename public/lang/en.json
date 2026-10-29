@@ -176,12 +176,86 @@
 				},
 				"tabs": {
 					"core": "Core",
+					"actions": "Actions",
+					"spells": "Spells",
 					"label": "Sheet tabs"
 				},
 				"frame": {
 					"done": "Done",
 					"editing": "Editing.",
 					"editingHint": "Click an outlined part to configure it."
+				},
+				"actions": {
+					"groups": {
+						"weapons": "Weapons",
+						"features": "Features",
+						"spells": "Spells",
+						"heroic": "Heroic actions",
+						"reactions": "Reactions"
+					},
+					"reactionsNote": {
+						"outOfCombat": "1 action each, when it is not your turn",
+						"yourTurn": "when it is not your turn, 1 action each",
+						"notYourTurn": "it is not your turn now"
+					},
+					"equipHint": "Equip a weapon in the Inventory to attack with it.",
+					"cast": "Cast {name}",
+					"chooseUse": "{name}. You choose first",
+					"chooseOne": "Choose one",
+					"chooseSkill": "Choose a skill",
+					"assessSummary": "DC {dc} skill check",
+					"speed": "Speed {speed}",
+					"target": "Target: {name}",
+					"targets": "Targets: {names}",
+					"noTarget": "No target",
+					"pickDice": "Pick the dice to spend",
+					"diceStep": "{label}: {pool}",
+					"spend": "Spend",
+					"cancel": "Cancel",
+					"back": "Back"
+				},
+				"spells": {
+					"groupBy": "Group the spells",
+					"byTier": "By tier",
+					"bySchool": "By school",
+					"create": "Create Spell",
+					"newSpell": "New Spell",
+					"none": "No spells",
+					"noSchool": "No school"
+				}
+			},
+			"shared": {
+				"active": "ACTIVE",
+				"used": "USED",
+				"free": "Free",
+				"endName": "End {name}",
+				"mana": "{cost} mana",
+				"range": "Range {distance}",
+				"reach": "Reach {distance}",
+				"damageType": "{type} damage",
+				"concentration": "Concentration",
+				"usesLeft": "{left} of {max} left.",
+				"usesBack": "{left} of {max} left. They come back each {per}.",
+				"usesOf": "{pool} of {name}",
+				"per": {
+					"round": "round",
+					"encounter": "encounter",
+					"fieldRest": "Field Rest",
+					"safeRest": "Safe Rest"
+				},
+				"reason": {
+					"usedThis": "Used this {per}",
+					"noUsesUntil": "No uses left until the next {per}",
+					"notEnough": "Not enough {pool}",
+					"poolMissing": "Needs {pool}, and the hero has none",
+					"cannotPay": "{pool} cannot pay for this use"
+				},
+				"facts": {
+					"cost": "Cost",
+					"when": "When",
+					"range": "Range",
+					"damage": "Damage",
+					"uses": "Uses"
 				}
 			}
 		},

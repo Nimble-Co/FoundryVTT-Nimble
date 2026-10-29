@@ -4,6 +4,9 @@ import { pendingSpendRequests } from '#utils/dicePool/pendingSpendRequests.js';
 import type { DicePoolSpendRequestPayload } from '#utils/dicePool/types.js';
 import registerDicePoolSpendRequestRouter from '../dicePoolSpendRequestRouter.js';
 
+const findRequestedPool = vi.hoisted(() => vi.fn());
+vi.mock('#utils/dicePool/findRequestedPool.js', () => ({ findRequestedPool }));
+
 const listeners = new Map<string, (payload: unknown) => void>();
 
 vi.stubGlobal('Hooks', {
@@ -74,5 +77,42 @@ describe('dicePoolSpendRequestRouter', () => {
 
 		expect(pendingSpendRequests.take('Actor.test-actor')).not.toBeNull();
 		expect(pendingSpendRequests.take('Actor.test-actor')).toBeNull();
+	});
+
+	describe('the new character sheet', () => {
+		it('opens the choice step of the feature row on the Actions tab', () => {
+			const reveal = vi.fn();
+			fromUuidSync.mockReturnValue({ sheet: { reveal, rendered: false, render: vi.fn() } });
+			findRequestedPool.mockReturnValueOnce({ label: 'Fury Dice', faces: [4] });
+
+			fireRequest(payload());
+
+			expect(reveal).toHaveBeenCalledWith({ tab: 'actions', rowId: 'item-tayg', step: 'choice' });
+			expect(pendingSpendRequests.take('Actor.test-actor')).toBeNull();
+		});
+
+		it('opens the spell row on the Spells tab, which lists every spell', () => {
+			const reveal = vi.fn();
+			const items = new Map([['item-tayg', { type: 'spell' }]]);
+			fromUuidSync.mockReturnValue({ items, sheet: { reveal, rendered: true, render: vi.fn() } });
+			findRequestedPool.mockReturnValueOnce({ label: 'Fury Dice', faces: [4] });
+
+			fireRequest(payload());
+
+			expect(reveal).toHaveBeenCalledWith({ tab: 'spells', rowId: 'item-tayg', step: 'choice' });
+		});
+
+		it('shows the empty pool note, and opens nothing', () => {
+			const reveal = vi.fn();
+			fromUuidSync.mockReturnValue({ sheet: { reveal, rendered: true, render: vi.fn() } });
+			findRequestedPool.mockReturnValueOnce({ label: 'Fury Dice', faces: [] });
+
+			fireRequest(payload());
+
+			expect(reveal).not.toHaveBeenCalled();
+			expect(ui.notifications?.info).toHaveBeenCalledWith(
+				game.i18n.format('NIMBLE.dicePoolTracker.spendRequestEmptyPool', { label: 'Fury Dice' }),
+			);
+		});
 	});
 });

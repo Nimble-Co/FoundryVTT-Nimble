@@ -21,6 +21,7 @@ import {
 import resolveHeroicReactionActionCost from '#utils/incomingReactions/resolveHeroicReactionActionCost.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minions/minionGrouping.js';
 import {
+	isActionTrackingAutomationEnabled,
 	isCombatConvenienceAutomationEnabled,
 	isMovementTrackingAutomationEnabled,
 } from '../../settings/automationSettings.js';
@@ -941,13 +942,13 @@ class NimbleCombat extends Combat {
 						return false;
 					}
 
-					const reactionAvailabilityUpdate = {
-						_id: combatantId,
-						'system.actions.base.current': Math.max(
+					const reactionAvailabilityUpdate: Record<string, unknown> = { _id: combatantId };
+					if (isActionTrackingAutomationEnabled()) {
+						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
 							0,
 							usageState.currentActions - usageState.requiredActions,
-						),
-					} as Record<string, unknown>;
+						);
+					}
 
 					for (const reactionKey of usageState.reactionKeys) {
 						Object.assign(
@@ -996,6 +997,7 @@ class NimbleCombat extends Combat {
 					}
 
 					if (!canSpendAvailableReaction) return false;
+					const trackActions = isActionTrackingAutomationEnabled();
 					const currentActions = getCombatantCurrentActions(combatant);
 					const reactionCost = resolveHeroicReactionActionCost(
 						combatant.actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
@@ -1004,14 +1006,14 @@ class NimbleCombat extends Combat {
 					if (!game.user?.isGM) {
 						if ((this.round ?? 0) < 1) return false;
 						if ((this.combatant?.id ?? null) === combatantId) return false;
-						if (currentActions < reactionCost) return false;
+						if (trackActions && currentActions < reactionCost) return false;
 					}
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,
 						...getHeroicReactionAvailabilityUpdate(reactionKey, false),
 					} as Record<string, unknown>;
-					if (!game.user?.isGM) {
+					if (!game.user?.isGM && trackActions) {
 						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
 							0,
 							currentActions - reactionCost,
