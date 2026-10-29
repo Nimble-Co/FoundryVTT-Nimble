@@ -25,7 +25,7 @@ The code names are `HeroSheet` (for `character`) and `MonsterSheet` (for `npc`, 
 actor.reactive ──adapter──▶ { actor: ActorLike, context: SheetContext }
                                    │
                                    ▼
-                   view functions (pure): heroRail(), heroCoreTab(), heroFrame()
+                   view functions (pure): heroRail(), heroCoreTab(), heroActionsTab(), heroSpellsTab(), heroFrame()
                                    │  typed views with intents
                                    ▼
                     sections ──▶ parts (plain props)
@@ -39,19 +39,30 @@ actor.reactive ──adapter──▶ { actor: ActorLike, context: SheetContext 
 `hero/heroAdapter.ts` builds the input of the view model from `actor.reactive`, the combat of this scene and the pools. The input is plain data:
 
 - `HeroActorLike`, `ItemLike`, `EffectLike` and `RuleLike` hold only the fields that the views read.
-- `HeroSheetContext` holds the facts from Foundry globals: the combat state, the missed level choices, the names of conditions, damage types, languages and armor types, the dice pools and charge pools, and the `localize` and `format` functions.
+- `HeroSheetContext` holds the facts from Foundry globals: the combat state (with the reactions used this round), the missed level choices, the names of conditions, damage types, languages, armor types and spell schools, the dice pools and charge pools, the names of the targets, and the `localize` and `format` functions.
+- `context.itemState` holds what the system works out for each item (`hero/heroItemState.ts`): the action cost with the action cost rules, the charge pools of the item (`getPoolsForItem`, hidden pools left out), the charge gate (`validateItemChargeConsumption`, only with resource spending on), the toggle effect and whether it is on, and the dice consumers in manual mode.
 
 The adapter is the only view model code that reads Foundry. Keep Foundry calls out of the view functions.
 
 ### View functions
 
-Each tab has one pure function, the rail has one, and the frame (tabs and edit band) has one: `heroRail(actor, context)`, `heroCoreTab(actor, context)`, `heroFrame(context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
+Each tab has one pure function, the rail has one, and the frame (tabs and edit band) has one: `heroRail(actor, context)`, `heroCoreTab(actor, context)`, `heroActionsTab(actor, context)`, `heroSpellsTab(actor, context)`, `heroFrame(context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
 
 - The view gives every string that a section shows: headings, button labels, tooltips and the labels for screen readers. A section never calls `localize`. So the localizer stub of the tests checks every key. A part can still localize its own fixed labels.
 - Language keys for the views are under `NIMBLE.actorSheet.{parts,shared,hero,monster}`. Use a key that exists when its words are correct for the place.
 - A place with no data is empty: the function gives back an empty list or `null`, and the section shows the empty state.
 - No code for one class. A place is for a kind of data, and each class item lands in the place of its kind.
 - No TypeScript picks a colour. A view gives a key (an ability key, a pool kind). The part or section sets `--tone` from a token, and CSS mixes it. Use a token that each theme class sets (for example `--nimble-ui-tone-mix`), not a `.theme-dark` ancestor selector: a sheet can have its own theme inside a page of the other theme.
+
+### Rows
+
+The list tabs are groups of rows (`HeroRowGroup`, `HeroRowView` in `hero/heroRows.ts`). `itemRow()` builds the row of an item, and `hero/heroicRows.ts` builds the rows of the built-in heroic actions (id `heroic-<actionId>`). A row view has:
+
+- `use`: what a click does. `act` sends its intent at once; `choose` opens the choice step of the row; `blocked` does nothing and gives the reason (for example "Used this round" from the charge gate).
+- `choice`: the choice step under the row, or `null`. `options` (a list of buttons, with lines such as the target name), `twoStep` (Assess: an option, then a skill) or `dice` (the dice pool spend: pick dice, then Spend). The picks while the step is open are local state of the section; `spendIntent()` makes the intent from them.
+- `edit`: the intent of the pen, `drag`: what a drag gives (`shared/drag.ts`), `fields`: the numbers that you type in edit mode.
+
+`shared/placeOf.ts` decides where a feature goes (Actions, Reactions or only Features), and `shared/rowOrder.ts` has the order of a group (A to Z, spells by tier or by school).
 
 The root component calls each view function in a `$derived`. A `$derived` runs only when something reads it, so only the place that shows recomputes.
 
@@ -68,7 +79,7 @@ To add an intent:
 3. Add a test in `hero/__tests__/heroPerform.test.ts` that checks the Foundry call or the dialog.
 4. Give the intent from the view function that has the control.
 
-UI state is not an intent. The tab, edit mode, the open rows, the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
+UI state is not an intent. The tab, edit mode, the open rows, the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `toggleRow`, `setOpenRows`, `toggleChoice`, `closeChoice`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
 
 ### `reveal()`
 
@@ -78,7 +89,9 @@ Outside code (the heroic action macro, the dice pool spend request, drop feedbac
 - `rowId` with `step: 'choice'` opens the choice step of that row.
 - `rowId` with `flash: true` scrolls to the row and flashes it.
 
-The UI state is on the Application, so it exists before the sheet renders. When the sheet is closed, `reveal()` renders it. Each row has a `data-row-id` attribute; `reveal()` and the tests find rows by it.
+The UI state is on the Application, so it exists before the sheet renders. When the sheet is closed, `reveal()` renders it.
+
+Two callers use it now. The heroic action macro opens the choice step of Assess or Opportunity Attack, or the Actions or Spells tab. The `dicePool.requestSpend` router opens the dice spend step of the feature row. Both find the new sheet with `asRevealable()` (`shared/revealable.ts`) and keep the old sheet path until the old sheets are deleted. Each row has a `data-row-id` attribute; `reveal()` and the tests find rows by it.
 
 ### The Application
 
