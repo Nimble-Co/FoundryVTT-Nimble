@@ -127,6 +127,16 @@ describe('itemRow', () => {
 			]);
 		});
 
+		it('shows the spell limit counter from the charge pool of a spell', () => {
+			const hero = manaCaster();
+			const limit = { ...pool, label: 'Casts', current: 2, max: 3, per: 'safeRest' as const };
+			const context = heroContext({ itemState: { flameDart: itemState({ pools: [limit] }) } });
+
+			expect(itemRow(hero, item(hero, 'flameDart'), context).cost.uses).toEqual([
+				{ left: 2, max: 3, per: `${SHARED}.per.safeRest`, need: 1 },
+			]);
+		});
+
 		it('turns a row off with its reason when the gate blocks: Used this round', () => {
 			const hero = dicePoolHero();
 			const gate = {
