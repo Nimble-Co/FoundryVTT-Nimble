@@ -33,7 +33,12 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { changeableFor, diceToPick, rerollableFor } from '#utils/reroll/rerollDieChoice.js';
+import {
+	changeableFor,
+	diceForRule,
+	diceToPick,
+	rerollableFor,
+} from '#utils/reroll/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
 	CHANGE_DIE_RULE_TYPE,
@@ -546,6 +551,24 @@ export class CardRerolls {
 		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
 		if (!usable.ok || usable.rule.die !== 'pickedDie') return null;
 		return diceToPick(found);
+	}
+
+	/**
+	 * What a player picks for a `change` entry before it is sent: the die, and
+	 * a value when the rule sets one. Null for a reroll entry, or one the card
+	 * cannot use.
+	 */
+	changeToPick(entry: IncomingReactionEntry): { setsValue: boolean; dice: PickableDie[] } | null {
+		if (entry.use !== 'change') return null;
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		if (!usable.ok) return null;
+		return {
+			setsValue: (usable.rule.dieChange?.mode ?? 'set') === 'set',
+			dice: diceForRule(found, usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie'),
+		};
 	}
 
 	/**

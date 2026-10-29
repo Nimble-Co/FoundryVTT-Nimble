@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type OneDieRoll, rerollOneDie } from '../../../dice/oneDieReroll.js';
-import { changeableFor, diceToPick, rerollableFor } from '../rerollDieChoice.js';
+import { changeableFor, diceForRule, diceToPick, rerollableFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
 const kept = (result: number) => ({ result, active: true });
@@ -98,6 +98,28 @@ describe('diceToPick', () => {
 			'dropped',
 		]);
 		expect(diceToPick(found(null))).toEqual([]);
+	});
+});
+
+describe('diceForRule', () => {
+	it('gives only the Primary Die to a rule that uses the Primary Die', () => {
+		expect(diceForRule(found(damageRoll()), 'primaryDie')).toEqual([
+			{ term: 0, result: 1, faces: 8, value: 6, role: 'primary' },
+		]);
+	});
+
+	it('gives every die a player can pick to a rule that uses a picked die', () => {
+		expect(diceForRule(found(damageRoll()), 'pickedDie').map((d) => d.value)).toEqual([6, 4]);
+	});
+
+	it('gives the kept d20 of a check as its Primary Die', () => {
+		expect(diceForRule(found(checkRoll(), { pickDropped: true }), 'primaryDie')).toEqual([
+			{ term: 0, result: 0, faces: 20, value: 15, role: 'kept' },
+		]);
+	});
+
+	it('gives nothing for a roll it cannot rebuild', () => {
+		expect(diceForRule(found(null), 'primaryDie')).toEqual([]);
 	});
 });
 

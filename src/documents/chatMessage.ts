@@ -1560,6 +1560,11 @@ class NimbleChatMessage extends ChatMessage {
 		return this.#rerolls.rerollDiceToPick(entry);
 	}
 
+	/** The die, and whether a value is picked, for a `change` entry; null for a reroll entry. */
+	changeToPick(entry: IncomingReactionEntry): { setsValue: boolean; dice: PickableDie[] } | null {
+		return this.#rerolls.changeToPick(entry);
+	}
+
 	/** Use a Reroll or Change a Die rule's entry on this card. Primary GM only. */
 	resolveRerollReaction(
 		entryId: string,

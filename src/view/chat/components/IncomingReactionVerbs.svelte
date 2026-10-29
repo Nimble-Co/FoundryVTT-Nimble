@@ -13,7 +13,7 @@
 		type ReactionVerbGroup,
 		reactionVerb,
 	} from './reactionVerbs.ts';
-	import RerollDiePicker from './RerollDiePicker.svelte';
+	import RollUsePicker from './RollUsePicker.svelte';
 
 	let {
 		groups,
@@ -23,6 +23,7 @@
 		text,
 		onuse,
 		onpick,
+		onvalue,
 		oncancel,
 	}: IncomingReactionVerbsProps = $props();
 
@@ -82,7 +83,10 @@
 
 	function choose(entryId: string): void {
 		const entry = open?.groups.flatMap((group) => group.entries).find(({ id }) => id === entryId);
-		closeMenu(true);
+		const verb = openVerb;
+		openVerb = null;
+		// Now, not after a tick: a picker that opens takes the focus from here.
+		if (verb) verbButtons[verb]?.focus();
 		if (entry) onuse(entry);
 	}
 
@@ -118,12 +122,12 @@
 </div>
 
 {#if picking}
-	<RerollDiePicker
-		dice={picking.dice}
+	<RollUsePicker
+		{picking}
 		feature={text.featureName(picking.entry) || picking.entry.label}
 		{primaryOutcome}
-		rolling={picking.rolling}
 		{onpick}
+		{onvalue}
 		oncancel={cancelPick}
 	/>
 {:else if open}

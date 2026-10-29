@@ -21,13 +21,17 @@ export interface IncomingReactionActorGroup {
 	entries: IncomingReactionEntry[];
 }
 
-/** A reroll whose die the player is picking, or whose picked die is rolling. */
+/** A reroll or change whose die or value the player is picking, or whose request is out. */
 export interface IncomingReactionPicking {
 	entry: IncomingReactionEntry;
 	dice: PickableDie[];
 	rolling: PickableDie | null;
 	/** The request for the picked die is out. */
 	sent: boolean;
+	/** A change that sets a value: the die step leads to the value step. */
+	setsValue?: boolean;
+	/** The die whose new value the player picks. */
+	valueDie?: PickableDie | null;
 }
 
 /** Entries whose request is out, so their buttons stay hidden until it comes back. */

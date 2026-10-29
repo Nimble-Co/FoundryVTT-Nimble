@@ -956,6 +956,171 @@ describe('IncomingReactionPrompts', () => {
 			});
 		});
 
+		describe('a Change a Die entry', () => {
+			const primary = { term: 0, result: 0, faces: 8, value: 3, role: 'primary' };
+			const pool = { term: 2, result: 0, faces: 6, value: 5, role: 'kept' };
+
+			function changeMessage(setsValue: boolean, dice: unknown[]) {
+				const message = createMessage([rerollEntry({ use: 'change' })]);
+				return Object.assign(message, { changeToPick: vi.fn(() => ({ setsValue, dice })) });
+			}
+
+			async function settle() {
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+			}
+
+			const openChange = () => useFeature(rollPlace(), 'Change die', /Change the die/);
+			const valueInput = () =>
+				rollPlace().getByRole('spinbutton', { name: 'New value, 1 to 8' }) as HTMLInputElement;
+
+			it('asks for the value of the Primary Die, at the die it has, and sends the value set', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(true, [primary]) },
+				});
+
+				await openChange();
+				await settle();
+
+				expect(rollPlace().getByText('Pick a value')).toBeTruthy();
+				expect(rollPlace().getByRole('img', { name: 'Was 3' })).toBeTruthy();
+				expect(valueInput().value).toBe('3');
+				expect(document.activeElement).toBe(valueInput());
+				const confirm = () => rollPlace().getByRole('button', { name: /^Set to/ });
+				expect((confirm() as HTMLButtonElement).disabled).toBe(true);
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Higher' }));
+				expect(valueInput().value).toBe('4');
+				await fireEvent.click(rollPlace().getByRole('button', { name: '8 (highest)' }));
+				expect(confirm().textContent?.trim()).toBe('Set to 8');
+				await fireEvent.click(confirm());
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'reroll-entry',
+					forceHeroicReaction: false,
+					die: { term: 0, result: 0 },
+					value: 8,
+				});
+			});
+
+			it('steps the value with the buttons and the arrow keys, from 1 to the max', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(true, [primary]) },
+				});
+				await openChange();
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: '1 (lowest)' }));
+				expect(
+					(rollPlace().getByRole('button', { name: 'Lower' }) as HTMLButtonElement).disabled,
+				).toBe(true);
+				await fireEvent.keyDown(valueInput(), { key: 'ArrowDown' });
+				expect(valueInput().value).toBe('1');
+				await fireEvent.keyDown(valueInput(), { key: 'ArrowUp' });
+				expect(valueInput().value).toBe('2');
+				await fireEvent.keyDown(valueInput(), { key: 'End' });
+				expect(valueInput().value).toBe('8');
+				expect(
+					(rollPlace().getByRole('button', { name: 'Higher' }) as HTMLButtonElement).disabled,
+				).toBe(true);
+			});
+
+			it('keeps a typed value from 1 to the max, and sends it on Enter', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(true, [primary]) },
+				});
+				await openChange();
+
+				await fireEvent.input(valueInput(), { target: { value: '12' } });
+				await fireEvent.blur(valueInput());
+				expect(valueInput().value).toBe('8');
+				await fireEvent.input(valueInput(), { target: { value: '0' } });
+				await fireEvent.blur(valueInput());
+				expect(valueInput().value).toBe('1');
+
+				await fireEvent.input(valueInput(), { target: { value: '6' } });
+				await fireEvent.keyDown(valueInput(), { key: 'Enter' });
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ die: { term: 0, result: 0 }, value: 6 }),
+				);
+			});
+
+			it('picks the die first for a rule that changes a picked die', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(true, [primary, pool]) },
+				});
+				await openChange();
+
+				expect(rollPlace().getByText('Pick a die to change')).toBeTruthy();
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Change the 5' }));
+				await settle();
+
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+				const input = rollPlace().getByRole('spinbutton', { name: 'New value, 1 to 6' });
+				expect((input as HTMLInputElement).value).toBe('5');
+				expect(rollPlace().getByRole('button', { name: '6 (highest)' })).toBeTruthy();
+			});
+
+			it('sends an add change at once, with the die and no value', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(false, [primary]) },
+				});
+
+				await openChange();
+				await settle();
+
+				expect(rollPlace().queryByText('Pick a value')).toBeNull();
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'reroll-entry',
+					forceHeroicReaction: false,
+					die: { term: 0, result: 0 },
+				});
+			});
+
+			it('sends an add change of a picked die after the die step only', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(false, [primary, pool]) },
+				});
+				await openChange();
+
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Change the 5' }));
+				await settle();
+
+				expect(rollPlace().queryByText('Pick a value')).toBeNull();
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.not.objectContaining({ value: expect.anything() }),
+				);
+			});
+
+			it('closes on Cancel or Escape, sends nothing, and gives the focus back', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: changeMessage(true, [primary]) },
+				});
+				const onWindowKeydown = vi.fn();
+				window.addEventListener('keydown', onWindowKeydown);
+				const opener = () => rollPlace().getByRole('button', { name: 'Change die' });
+
+				await openChange();
+				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
+				await settle();
+				expect(rollPlace().queryByText('Pick a value')).toBeNull();
+				expect(document.activeElement).toBe(opener());
+
+				await openChange();
+				await fireEvent.keyDown(valueInput(), { key: 'Escape' });
+				await settle();
+				window.removeEventListener('keydown', onWindowKeydown);
+
+				expect(rollPlace().queryByText('Pick a value')).toBeNull();
+				expect(onWindowKeydown).not.toHaveBeenCalled();
+				expect(document.activeElement).toBe(opener());
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			});
+		});
+
 		describe('a result a player keeps', () => {
 			function waiting(chooserUuid = 'Actor.wren') {
 				const message = createMessage([rerollEntry({ used: true })]);

@@ -17,12 +17,22 @@ export function dieCaption(die: PickableDie, dice: readonly PickableDie[]): stri
 	return '';
 }
 
-export function dieLabel(die: PickableDie, dice: readonly PickableDie[]): string {
+export function pickDieWords(use: 'reroll' | 'change' = 'reroll'): string {
+	return use === 'change'
+		? 'NIMBLE.chat.incomingReactions.pickDie.change'
+		: 'NIMBLE.chat.incomingReactions.pickDie';
+}
+
+export function dieLabel(
+	die: PickableDie,
+	dice: readonly PickableDie[],
+	use: 'reroll' | 'change' = 'reroll',
+): string {
 	const role = dieCaption(die, dice);
 	const value = String(die.value);
 	return role
-		? localize('NIMBLE.chat.incomingReactions.pickDie.dieWithRole', { value, role })
-		: localize('NIMBLE.chat.incomingReactions.pickDie.die', { value });
+		? localize(`${pickDieWords(use)}.dieWithRole`, { value, role })
+		: localize(`${pickDieWords(use)}.die`, { value });
 }
 
 export function createRerollDiePickerState(

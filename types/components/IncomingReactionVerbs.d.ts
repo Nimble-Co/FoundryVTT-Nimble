@@ -19,6 +19,7 @@ export interface IncomingReactionVerbsProps {
 	text: IncomingReactionText;
 	onuse: (entry: IncomingReactionEntry) => void;
 	onpick: (die: PickableDie) => void;
+	onvalue: (value: number) => void;
 	/** Closes the die picker; returns the id of the entry it was open for. */
 	oncancel: () => string | null;
 }

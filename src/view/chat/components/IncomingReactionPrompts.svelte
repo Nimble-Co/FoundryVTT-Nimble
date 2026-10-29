@@ -7,7 +7,7 @@
 	import IncomingReactionVerbs from './IncomingReactionVerbs.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import LeftOutRerolls from './LeftOutRerolls.svelte';
-	import RerollDiePicker from './RerollDiePicker.svelte';
+	import RollUsePicker from './RollUsePicker.svelte';
 	import RerollHistory from './RerollHistory.svelte';
 	import RollRerollButton from './RollRerollButton.svelte';
 
@@ -46,6 +46,7 @@
 		{text}
 		onuse={prompts.useEntry}
 		onpick={prompts.pickDie}
+		onvalue={prompts.pickValue}
 		oncancel={prompts.cancelPick}
 	/>
 {/snippet}
@@ -60,12 +61,11 @@
 		/>
 	{/if}
 	{#if prompts.picking}
-		<RerollDiePicker
-			dice={prompts.picking.dice}
+		<RollUsePicker
+			picking={prompts.picking}
 			feature={text.featureName(prompts.picking.entry) || prompts.picking.entry.label}
-			primaryOutcome={null}
-			rolling={prompts.picking.rolling}
 			onpick={prompts.pickDie}
+			onvalue={prompts.pickValue}
 			oncancel={cancelPickAtRollButton}
 		/>
 	{/if}

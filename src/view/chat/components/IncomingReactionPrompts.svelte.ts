@@ -198,10 +198,29 @@ export function createIncomingReactionPromptsState(
 		await sendReroll(entry, dice?.[0] ?? null);
 	}
 
-	/** Ask for the reroll. False when the player said no to the heroic reaction. */
+	/** A change picks its die, then its value when the rule sets one; an add with one die goes at once. */
+	async function useChange(entry: IncomingReactionEntry): Promise<void> {
+		const pick = message?.changeToPick?.(entry) ?? null;
+		const dice = pick?.dice ?? [];
+		if (pick && (dice.length > 1 || (pick.setsValue && dice.length === 1))) {
+			picking = {
+				entry,
+				dice,
+				rolling: null,
+				sent: false,
+				setsValue: pick.setsValue,
+				valueDie: dice.length === 1 ? dice[0] : null,
+			};
+			return;
+		}
+		await sendReroll(entry, dice[0] ?? null);
+	}
+
+	/** Ask for the reroll or change. False when the player said no to the heroic reaction. */
 	async function sendReroll(
 		entry: IncomingReactionEntry,
 		die: PickableDie | null,
+		value: number | null = null,
 	): Promise<boolean> {
 		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
 		if (forceHeroicReaction === null) return false;
@@ -212,17 +231,18 @@ export function createIncomingReactionPromptsState(
 			entryId: entry.id,
 			forceHeroicReaction,
 			...(die ? { die: { term: die.term, result: die.result } } : {}),
+			...(value === null ? {} : { value }),
 		});
 		return true;
 	}
 
-	async function pickDie(die: PickableDie): Promise<void> {
+	async function sendPicked(die: PickableDie, value: number | null): Promise<void> {
 		const current = picking;
 		if (!current || current.rolling || busy) return;
 		busy = true;
 		try {
 			picking = { ...current, rolling: die };
-			const sent = await sendReroll(current.entry, die);
+			const sent = await sendReroll(current.entry, die, value);
 			picking = sent && picking ? { ...picking, sent: true } : null;
 		} catch (error) {
 			picking = null;
@@ -231,6 +251,20 @@ export function createIncomingReactionPromptsState(
 		} finally {
 			busy = false;
 		}
+	}
+
+	async function pickDie(die: PickableDie): Promise<void> {
+		const current = picking;
+		if (current?.setsValue && !current.rolling) {
+			picking = { ...current, valueDie: die };
+			return;
+		}
+		await sendPicked(die, null);
+	}
+
+	async function pickValue(value: number): Promise<void> {
+		const die = picking?.valueDie;
+		if (die) await sendPicked(die, value);
 	}
 
 	/** Closes the die picker. Returns the id of the entry it was open for. */
@@ -251,7 +285,7 @@ export function createIncomingReactionPromptsState(
 			}
 
 			if (entry.kind === 'reroll') {
-				await useReroll(entry);
+				await (entry.use === 'change' ? useChange(entry) : useReroll(entry));
 				return;
 			}
 
@@ -319,6 +353,7 @@ export function createIncomingReactionPromptsState(
 		useEntry,
 		useEntryById,
 		pickDie,
+		pickValue,
 		cancelPick,
 	};
 }

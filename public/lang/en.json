@@ -638,7 +638,23 @@
 						"primary": "Primary",
 						"kept": "Kept",
 						"dropped": "Dropped"
+					},
+					"change": {
+						"title": "Pick a die to change",
+						"rolling": "Changing with {feature}",
+						"die": "Change the {value}",
+						"dieWithRole": "Change the {value} ({role})"
 					}
+				},
+				"pickValue": {
+					"title": "Pick a value",
+					"sending": "Changing with {feature}",
+					"input": "New value, 1 to {max}",
+					"lower": "Lower",
+					"higher": "Higher",
+					"lowest": "{value} (lowest)",
+					"highest": "{value} (highest)",
+					"confirm": "Set to {value}"
 				}
 			}
 		},

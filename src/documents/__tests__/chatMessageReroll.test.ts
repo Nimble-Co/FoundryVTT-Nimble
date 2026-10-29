@@ -700,6 +700,31 @@ describe('resolveRerollReaction', () => {
 			);
 		});
 
+		it('tells the player to pick a value for a set change', () => {
+			setupWorld(change('set'));
+			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
+
+			// The test roll has no dice; diceForRule has its own tests.
+			expect(message.changeToPick(rerollEntry({ use: 'change' }) as never)).toEqual({
+				setsValue: true,
+				dice: [],
+			});
+		});
+
+		it('tells the player to pick no value for an add change', () => {
+			setupWorld(change('add'));
+			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
+
+			expect(message.changeToPick(rerollEntry({ use: 'change' }) as never)?.setsValue).toBe(false);
+		});
+
+		it('gives no change to pick for a reroll entry', () => {
+			setupWorld();
+			const message = createMessage();
+
+			expect(message.changeToPick(rerollEntry() as never)).toBeNull();
+		});
+
 		it('refuses a change of a picked die when no die was picked', async () => {
 			setupWorld(change('add', 'pickedDie'));
 			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });

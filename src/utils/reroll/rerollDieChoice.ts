@@ -23,6 +23,18 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 	return current ? pickableDice(current, pickOptions(found, current)) : [];
 }
 
+/** The dice a player picks from for a rule: every pickable die, or only the Primary Die. */
+function diceForRule(
+	found: RerollableRoll<unknown>,
+	die: 'primaryDie' | 'pickedDie',
+): PickableDie[] {
+	const dice = diceToPick(found);
+	if (die === 'pickedDie') return dice;
+	const current = found.current?.();
+	const ref = current ? primaryDieRef(current) : null;
+	return dice.filter((d) => d.term === ref?.term && d.result === ref.result);
+}
+
 /**
  * The die of the card's roll a rule uses: its Primary Die, or the die the
  * player picked (the only one when the roll has one die). Null when that die
@@ -121,4 +133,4 @@ function changeableFor<TRoll>(
 	};
 }
 
-export { changeableFor, diceToPick, rerollableFor };
+export { changeableFor, diceForRule, diceToPick, rerollableFor };
