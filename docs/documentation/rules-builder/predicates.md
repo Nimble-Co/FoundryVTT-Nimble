@@ -4,7 +4,7 @@ title: "The Condition Box"
 
 # The Condition Box
 
-Every rule has a Condition box, found under **Advanced** on the rule card, labelled **Applies when**. The Reroll rule shows it in the form instead, labelled **Only while**. It answers one question: *when should this rule apply?*
+Every rule has a Condition box, found under **Advanced** on the rule card, labelled **Applies when**. The Reroll, Change a Die and Primary Die Bonus rules show it in the form instead, labelled **Only while**. It answers one question: *when should this rule apply?*
 
 An empty Condition box means **always**. Fill it in and the rule only applies while the character matches every requirement you list. That's how you build things like "+2 Armor, but only while unarmored" or "this feature only kicks in from level 5".
 
@@ -31,6 +31,8 @@ These are the tag families that exist:
 | `proficiency:armor:...`, `proficiency:weapon:...`, `proficiency:language:...` | Each proficiency the character has. |
 | `self:emberChargePool:2` | How many charges a charge pool currently holds, one tag per pool, named after the pool's identifier. |
 | `self:noEmberCharges` / `self:emberChargesMax` | Whether that pool is empty, and whether it is full. |
+| `self:pool:ember` | The charge pool or dice pool with the identifier `ember` has at least 1 charge or die. |
+| `feature:sneak-attack` | Each feature the character has, by its identifier. A feature with no identifier uses its name in lowercase with dashes. |
 
 **All characters, NPCs, and monsters:**
 
@@ -42,6 +44,7 @@ These are the tag families that exist:
 | `self:dying` | Has the Dying condition. |
 | `self:lastStand` | A solo or legendary monster at 0 HP (Last Stand). |
 | `self:concentrating` | Has the Concentration condition. |
+| `self:prone`, `self:distracted`, ... | Has this condition, by the condition's id. There is one tag for each condition on the creature, except Bloodied and Concentration, which have the tags above. A condition that includes other conditions also gives their tags. |
 | `self:fullHp` | Currently at maximum hit points. |
 | `minion` / `solo-monster` | Present on minions and solo monsters respectively. |
 | `enemiesAdjacent:2` / `enemiesAdjacent:most` | How many enemies are adjacent to the token, and whether this token has the most adjacent enemies. Only present when the adjacency tracking setting is enabled. |
@@ -50,7 +53,7 @@ These are the tag families that exist:
 **The item itself:** a rule also sees the tags of the item it sits on, such as `type:object`, `identifier:belt-of-giant-strength`, and for gear `objectType:armor` and each `property:...`. This mostly matters when you copy one rule between several items and want it to behave differently on some of them.
 
 ::: info
-Most game conditions (Prone, Frightened, and so on) are *not* available as tags. Only the health and concentration states listed above are. To make a rule react to other conditions, look at the trigger-based rule types in the [Triggers reference](../reference/rules-triggers.md) instead.
+A condition tag is there only while the creature has the condition on its token or sheet. The system does not know states that the table decides, such as "it cannot see you", unless someone gives the creature the condition.
 :::
 
 ## Building requirements
@@ -101,7 +104,9 @@ Add several rows to combine requirements: a row for `level` is at least `5` *and
 
 ## Conditions about the target
 
-Everything above tests the character *carrying* the item. One rule type can also test the character being *attacked*: the **Damage Bonus** rule has a separate **Target condition** box, checked against the target when the attack lands. The target tags available are `target:bloodied` and `target:concentrating`.
+Everything above tests the character *carrying* the item. Some rule types can also test the other creature of an attack: the **Damage Bonus** rule has a separate **Target condition** box, checked against the target when the attack lands. The **Primary Die Bonus** rule has **Only when the target is**. The **Reroll** and **Change a Die** rules have **Only when the other creature is**: the target, or the one who rolled when the target uses the rule. They also have **Show the note only when**, for their note on the card.
+
+The target tags are `target:bloodied`, `target:concentrating`, and one tag for each other condition, such as `target:distracted`. A creature that the owner marked with a **Mark Target** rule also has `target:<flag key>`, such as `target:quarry`, but only for the owner who marked it. **Only when the other creature is**, **Only when the target is** and **Show the note only when** also see the owner's own tags, such as `feature:supreme-execution`, so one test can say "the target is Distracted, or I have this feature". Write such an "or" with `$or` in the raw JSON view, for example `{ "$or": ["target:distracted", "feature:supreme-execution"] }`.
 
 For example, a *Goblin Cleaver* axe that deals +2 damage to wounded enemies: add a Damage Bonus rule with **Bonus** `2`, and in **Target condition** a row with key `target` · **is** · `bloodied`.
 
