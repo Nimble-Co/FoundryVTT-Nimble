@@ -262,8 +262,14 @@ async function setCondition(
 	}
 }
 
+/** What `perform` asks of the sheet that it acts for. */
+export interface HeroPerformSheet {
+	/** an Item drop: on the Inventory into a container (empty = loose); null = anywhere else */
+	dropItem(data: Record<string, unknown>, containerId: string | null): Promise<void>;
+}
+
 /** The one place where the character sheet acts on Foundry. */
-export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
+export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformSheet): HeroPerform {
 	const document = actor as unknown as Actor.Implementation;
 	return async (intent: HeroIntent): Promise<void> => {
 		switch (intent.kind) {
@@ -415,6 +421,9 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 					string,
 					unknown
 				>);
+				return;
+			case 'dropItem':
+				await sheet.dropItem(intent.data, intent.containerId);
 				return;
 			case 'exportPdf':
 				openPdfExportDialog(actor);

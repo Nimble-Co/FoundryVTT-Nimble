@@ -2,12 +2,14 @@
 @component
 The Inventory tab: the coins, the inventory slots and Expand all in one line, then the objects by type.
 You type a coin value in all modes. Create Object shows in all modes. The slots warn when you carry too much.
-A stored object shows indented under its container.
+A stored object shows indented under its container. An Item dropped on the list, not on a row, goes in loose:
+a stored object comes out of its container.
 -->
 <script lang="ts">
 	import type { HeroInventoryTabProps } from '#types/components/actorSheets/HeroInventoryTab.d.ts';
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
 	import InlineNumber from '../../parts/InlineNumber.svelte';
+	import { droppedItemData } from '../../shared/drag.ts';
 	import { setOpenRows } from '../../shared/sheetUiState.ts';
 	import HeroRowGroupList from './HeroRowGroupList.svelte';
 
@@ -15,6 +17,14 @@ A stored object shows indented under its container.
 
 	const rowIds = $derived(view.groups.flatMap((group) => group.rows.map((row) => row.id)));
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
+
+	function ondrop(event: DragEvent) {
+		const data = droppedItemData(event.dataTransfer);
+		if (!data) return;
+		event.preventDefault();
+		event.stopPropagation();
+		void perform({ kind: 'dropItem', data, containerId: '' });
+	}
 </script>
 
 <div class="bar">
@@ -52,11 +62,13 @@ A stored object shows indented under its container.
 	{/if}
 	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
 </div>
-{#if view.empty}
-	<p class="empty">{view.empty}</p>
-{:else}
-	<HeroRowGroupList groups={view.groups} {ui} {perform} flow />
-{/if}
+<div class="list" role="presentation" ondragover={(event) => event.preventDefault()} {ondrop}>
+	{#if view.empty}
+		<p class="empty">{view.empty}</p>
+	{:else}
+		<HeroRowGroupList groups={view.groups} {ui} {perform} flow />
+	{/if}
+</div>
 
 <style>
 	.bar {
@@ -125,6 +137,9 @@ A stored object shows indented under its container.
 	.slots.over {
 		border-color: var(--nimble-ui-warn);
 		color: var(--nimble-ui-warn);
+	}
+	.list {
+		min-height: 120px;
 	}
 	.empty {
 		margin: 6px 4px;

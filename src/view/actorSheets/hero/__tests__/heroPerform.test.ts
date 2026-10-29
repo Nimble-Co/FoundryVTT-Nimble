@@ -139,8 +139,9 @@ function mockCombat(combatant: Record<string, unknown>) {
 }
 
 let actor: ReturnType<typeof mockActor>;
+const sheet = { dropItem: vi.fn() };
 const perform = (intent: HeroIntent) =>
-	createHeroPerform(actor as unknown as NimbleCharacter)(intent);
+	createHeroPerform(actor as unknown as NimbleCharacter, sheet)(intent);
 
 beforeEach(() => {
 	actor = mockActor();
@@ -489,6 +490,14 @@ describe('createHeroPerform', () => {
 
 			expect(exportCharacterToJson).toHaveBeenCalledWith(actor);
 			expect(ui.notifications?.info).toHaveBeenCalledWith('Character exported successfully');
+		});
+
+		it('hands an Item drop to the sheet, with the place of the drop', async () => {
+			const data = { type: 'Item', uuid: 'Compendium.x.Item.y' };
+
+			await perform({ kind: 'dropItem', data, containerId: 'backpack' });
+
+			expect(sheet.dropItem).toHaveBeenCalledWith(data, 'backpack');
 		});
 
 		it('saves how the Spells tab groups the spells', async () => {

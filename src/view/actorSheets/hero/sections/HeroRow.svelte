@@ -7,13 +7,15 @@ A row that asks first (Remove an effect) shows a ConfirmBar under it.
 In edit mode the row does not act: its numbers are fields, an object gets a "Store in" select, and the trash button
 asks in a ConfirmBar before Delete. A stored object is indented under its container.
 You can drag the row out of the sheet (on a touch screen only in edit mode).
+An Inventory row takes an Item drop: a container row stores it, a stored row puts it in the same container,
+and a loose row leaves it loose. The container shows a ring while you drag over it.
 -->
 <script lang="ts">
 	import type { HeroRowProps } from '#types/components/actorSheets/HeroRow.d.ts';
 	import ConfirmBar from '../../parts/ConfirmBar.svelte';
 	import InlineNumber from '../../parts/InlineNumber.svelte';
 	import Row from '../../parts/Row.svelte';
-	import { dragDataOf, mayDrag } from '../../shared/drag.ts';
+	import { dragDataOf, droppedItemData, mayDrag } from '../../shared/drag.ts';
 	import {
 		askConfirm,
 		closeChoice,
@@ -27,6 +29,7 @@ You can drag the row out of the sheet (on a touch screen only in edit mode).
 
 	const uid = $props.id();
 	let pointerType: string | null = null;
+	let dropOver = $state(false);
 
 	const editing = $derived(ui.editing);
 	const use = $derived(row.use);
@@ -52,6 +55,27 @@ You can drag the row out of the sheet (on a touch screen only in edit mode).
 		const intent = asking?.intent;
 		closeConfirm(ui);
 		if (intent) void perform(intent);
+	}
+
+	function ondragenter() {
+		if (row.dropInto && row.dropInto === row.id) dropOver = true;
+	}
+
+	// crossing onto a child of the row is not leaving it
+	function ondragleave(event: DragEvent) {
+		const to = event.relatedTarget;
+		if (to instanceof Node && (event.currentTarget as Node).contains(to)) return;
+		dropOver = false;
+	}
+
+	function ondrop(event: DragEvent) {
+		dropOver = false;
+		if (row.dropInto === undefined) return;
+		const data = droppedItemData(event.dataTransfer);
+		if (!data) return;
+		event.preventDefault();
+		event.stopPropagation();
+		void perform({ kind: 'dropItem', data, containerId: row.dropInto });
 	}
 
 	function ondragstart(event: DragEvent) {
@@ -124,11 +148,16 @@ You can drag the row out of the sheet (on a touch screen only in edit mode).
 <div
 	class="hero-row"
 	class:indent={row.indent}
+	class:drop-over={dropOver}
 	data-row-id={row.id}
 	draggable={row.drag ? 'true' : undefined}
 	role="presentation"
 	onpointerdown={(event) => (pointerType = event.pointerType)}
 	{ondragstart}
+	{ondragenter}
+	{ondragleave}
+	ondragend={() => (dropOver = false)}
+	{ondrop}
 >
 	<Row
 		id="{uid}-row"
@@ -178,6 +207,10 @@ You can drag the row out of the sheet (on a touch screen only in edit mode).
 	}
 	.indent {
 		margin-left: 24px;
+	}
+	.drop-over {
+		box-shadow: inset 0 0 0 2px var(--nimble-ui-own);
+		background: var(--nimble-ui-own-background);
 	}
 	.ask {
 		padding: 4px 8px 8px 34px;

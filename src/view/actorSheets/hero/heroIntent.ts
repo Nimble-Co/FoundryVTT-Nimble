@@ -85,6 +85,7 @@ export type HeroIntent =
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
 	| { kind: 'setFlag'; flag: HeroSettingsFlag; value: boolean | number }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
+	| { kind: 'dropItem'; data: Record<string, unknown>; containerId: string | null }
 	| { kind: 'exportPdf' }
 	| { kind: 'exportJson' }
 	| { kind: 'setSpellsBy'; value: SpellsBy }

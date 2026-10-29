@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dragDataOf, mayDrag } from '../drag.ts';
+import { dragDataOf, droppedItemData, mayDrag } from '../drag.ts';
 
 describe('mayDrag', () => {
 	it('lets a mouse or a pen drag in all modes', () => {
@@ -31,5 +31,24 @@ describe('dragDataOf', () => {
 		expect(
 			dragDataOf({ kind: 'heroicAction', actionId: 'move', actionType: 'action', name: 'Move' }),
 		).toEqual({ type: 'HeroicAction', actionId: 'move', actionType: 'action', name: 'Move' });
+	});
+});
+
+describe('droppedItemData', () => {
+	const transfer = (text: string) => ({
+		getData: (type: string) => (type === 'text/plain' ? text : ''),
+	});
+
+	it('reads the Foundry drag data of an item', () => {
+		expect(droppedItemData(transfer('{"type":"Item","uuid":"Compendium.x.Item.y"}'))).toEqual({
+			type: 'Item',
+			uuid: 'Compendium.x.Item.y',
+		});
+	});
+
+	it('gives null for other drag data, text that is not JSON, or no data', () => {
+		expect(droppedItemData(transfer('{"type":"ActiveEffect","uuid":"a"}'))).toBeNull();
+		expect(droppedItemData(transfer('Longsword'))).toBeNull();
+		expect(droppedItemData(null)).toBeNull();
 	});
 });

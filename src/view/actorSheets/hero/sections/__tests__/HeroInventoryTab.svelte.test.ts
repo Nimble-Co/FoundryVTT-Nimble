@@ -134,4 +134,69 @@ describe('HeroInventoryTab', () => {
 		expect(screen.queryByRole('button', { name: new RegExp(`${SHARED}.deleteName`) })).toBeNull();
 		expect(screen.queryByRole('combobox')).toBeNull();
 	});
+
+	describe('drops', () => {
+		const dropOf = (data: unknown) => ({
+			dataTransfer: { getData: () => JSON.stringify(data), types: ['text/plain'] },
+		});
+		const item = { type: 'Item', uuid: 'Compendium.x.Item.lantern' };
+
+		it('stores an Item dropped on a container row in it, and stops the drop there', async () => {
+			const { perform } = renderTab();
+			const outer = vi.fn();
+			document.body.addEventListener('drop', outer);
+
+			await fireEvent.drop(rowEl('backpack')!, dropOf(item));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'dropItem',
+				data: item,
+				containerId: 'backpack',
+			});
+			expect(perform).toHaveBeenCalledOnce();
+			expect(outer).not.toHaveBeenCalled();
+			document.body.removeEventListener('drop', outer);
+		});
+
+		it('puts an Item dropped on a stored row in the same container', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.drop(rowEl('rope')!, dropOf(item));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'dropItem',
+				data: item,
+				containerId: 'backpack',
+			});
+		});
+
+		it('drops an Item on the list loose', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.drop(screen.getByText('NIMBLE.objectTypeHeadings.misc'), dropOf(item));
+
+			expect(perform).toHaveBeenCalledWith({ kind: 'dropItem', data: item, containerId: '' });
+		});
+
+		it('lets a drop of anything else go on to the sheet', async () => {
+			const { perform } = renderTab();
+			const outer = vi.fn();
+			document.body.addEventListener('drop', outer);
+
+			await fireEvent.drop(rowEl('backpack')!, dropOf({ type: 'ActiveEffect', uuid: 'a' }));
+
+			expect(perform).not.toHaveBeenCalled();
+			expect(outer).toHaveBeenCalledOnce();
+			document.body.removeEventListener('drop', outer);
+		});
+
+		it('rings a container row while an Item is dragged over it', async () => {
+			renderTab();
+
+			await fireEvent.dragEnter(rowEl('backpack')!);
+			expect(rowEl('backpack')?.classList.contains('drop-over')).toBe(true);
+			await fireEvent.dragEnter(rowEl('torch')!);
+			expect(rowEl('torch')?.classList.contains('drop-over')).toBe(false);
+		});
+	});
 });
