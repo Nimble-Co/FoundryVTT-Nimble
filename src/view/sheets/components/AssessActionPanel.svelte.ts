@@ -1,17 +1,14 @@
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
-import localize from '../../../utils/localize.js';
+import { assessOptions } from '../../../utils/assessOptions.js';
+import { runAssess } from '../../../utils/heroicActions/assess.js';
 import {
 	getInvalidTargets,
 	getTargetedTokens,
 	getTargetName,
 } from '../../../utils/tokens/targeting.js';
 
-export function createAssessPanelState(
-	getActor: () => NimbleCharacter,
-	getOnDeductAction: () => () => Promise<void>,
-) {
+export function createAssessPanelState(getActor: () => NimbleCharacter) {
 	const { skills: skillNames } = CONFIG.NIMBLE;
 	let selectedOption = $state<string | null>(null);
 	let selectedSkill = $state<string | null>(null);
@@ -70,49 +67,12 @@ export function createAssessPanelState(
 	// ============================================================================
 
 	async function handleRoll(): Promise<void> {
-		if (isSubmitDisabled || !selectedSkill) return;
+		if (isSubmitDisabled || !selectedOption || !selectedSkill) return;
 
-		const option = assessOptions.find((o) => o.id === selectedOption);
-		if (!option) return;
-
-		// Roll the skill check (show the roll dialog)
-		const { roll } = await getActor().rollSkillCheck(selectedSkill as SkillKeyType);
-
-		if (!roll) return;
-
-		// Deduct action pip only after roll is confirmed (not cancelled)
-		await getOnDeductAction()();
-
-		// Determine success/failure based on DC 12
-		const isSuccess = (roll.total ?? 0) >= ASSESS_DC;
-		const resultKey = isSuccess ? option.successKey : option.failureKey;
-
-		// Include target name in the message if there's a target
-		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
-		const resultMessage = localize(resultKey, { name: getActor().name, target: targetName ?? '' });
-
-		// Create chat message
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await ChatMessage.create({
-			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor: getActor() }),
-			sound: CONFIG.sounds.dice,
-			rolls: [roll],
-			type: 'assessAction',
-			system: {
-				actorName: getActor().name,
-				actorType: getActor().type,
-				permissions: getActor().permission,
-				rollMode: 0,
-				skillKey: selectedSkill,
-				dc: ASSESS_DC,
-				isSuccess,
-				optionTitle: localize(option.chatTitleKey),
-				resultMessage,
-				target: selectedTarget ? selectedTarget.document.uuid : null,
-				targetName,
-			},
-		} as any);
+		await runAssess(getActor(), {
+			optionId: selectedOption,
+			skillKey: selectedSkill as SkillKeyType,
+		});
 	}
 
 	return {
