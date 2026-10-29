@@ -13,7 +13,7 @@ export type DropAction =
 	| { kind: 'create'; containerId: string }
 	| { kind: 'store'; itemId: string; containerId: string }
 	| { kind: 'takeOut'; itemId: string }
-	/** a carried item dropped outside the Inventory: show its row */
+	/** a carried item dropped outside the Inventory, or one that is not an object: show its row */
 	| { kind: 'reveal'; itemId: string; itemType: string }
 	| { kind: 'none' };
 
@@ -28,10 +28,10 @@ export function dropAction(
 ): DropAction {
 	const item = carried.find((entry) => entry.uuid === data.uuid);
 	if (!item) return { kind: 'create', containerId: containerId ?? '' };
-	if (containerId === null) return { kind: 'reveal', itemId: item.id, itemType: item.type };
-	if (item.type !== 'object' || item.id === containerId || item.containerId === containerId) {
-		return { kind: 'none' };
+	if (containerId === null || item.type !== 'object') {
+		return { kind: 'reveal', itemId: item.id, itemType: item.type };
 	}
+	if (item.id === containerId || item.containerId === containerId) return { kind: 'none' };
 	return containerId
 		? { kind: 'store', itemId: item.id, containerId }
 		: { kind: 'takeOut', itemId: item.id };

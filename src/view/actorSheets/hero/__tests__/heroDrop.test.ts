@@ -41,13 +41,11 @@ describe('dropAction', () => {
 		});
 	});
 
-	it('shows a carried item dropped outside the Inventory, as there is no hand sorting', () => {
-		expect(dropAction(carried, drop('Actor.h.Item.ignite'), null)).toEqual({
-			kind: 'reveal',
-			itemId: 'ignite',
-			itemType: 'spell',
-		});
-		expect(dropAction(carried, drop('Actor.h.Item.ignite'), 'backpack')).toEqual({ kind: 'none' });
+	it('shows a carried item that is not an object on its own tab, wherever it is dropped', () => {
+		const reveal = { kind: 'reveal', itemId: 'ignite', itemType: 'spell' };
+		expect(dropAction(carried, drop('Actor.h.Item.ignite'), null)).toEqual(reveal);
+		expect(dropAction(carried, drop('Actor.h.Item.ignite'), 'backpack')).toEqual(reveal);
+		expect(dropAction(carried, drop('Actor.h.Item.ignite'), '')).toEqual(reveal);
 	});
 });
 
