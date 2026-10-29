@@ -1,37 +1,18 @@
-import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
-import {
-	getHeroicReactionLabelKey,
-	HEROIC_REACTIONS,
-	type HeroicReactionKey,
-} from '../../utils/incomingReactions/heroicActions.js';
 import {
 	REROLL_DICE,
 	REROLL_KEEPS,
-	REROLL_SIDES,
-	REROLL_TRIGGERS,
 	type RerollDie,
 	type RerollKeep,
-	type RerollSide,
-	type RerollTrigger,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
-import {
-	type CheckRollKind,
-	REROLL_ROLL_KINDS,
-	type RerollRollKind,
-	type RollToReroll,
-} from '../../utils/reroll/rollToReroll.js';
+import type { RerollRollKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
+import { RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const REROLL_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
-
 // Outcomes whose first roll can be a crit.
 const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
-
-type RerollAttackDelivery = (typeof REROLL_ATTACK_DELIVERIES)[number];
 
 // A reroll that needs a choice from someone can never happen by itself.
 function nobodyChooses(data: Record<string, unknown>): boolean {
@@ -44,11 +25,8 @@ function choiceLabels(field: string, values: readonly string[]): Record<string, 
 	);
 }
 
-function rollsInclude(kind: RerollRollKind) {
-	return (data: Record<string, unknown>) => Array.isArray(data.rolls) && data.rolls.includes(kind);
-}
-
-const forAttacks = rollsInclude('attack');
+const forAttacks = (data: Record<string, unknown>) =>
+	Array.isArray(data.rolls) && data.rolls.includes('attack');
 
 // Roll changes apply to a new roll of the whole formula only.
 /** The roll mode change choices: none, advantage or disadvantage. */
@@ -61,69 +39,13 @@ const ROLL_MODE_CHANGE_CHOICES = {
 const wholeRoll = (data: Record<string, unknown>) => (data.die ?? 'wholeRoll') === 'wholeRoll';
 const forWholeAttackRolls = (data: Record<string, unknown>) => forAttacks(data) && wholeRoll(data);
 
-/** The save, skill or ability keys a check reroll is limited to. Empty is any. */
-function checkKeysField(
-	name: 'saves' | 'skills' | 'abilities',
-	kind: CheckRollKind,
-	choices: () => Record<string, string>,
-) {
-	const { fields } = foundry.data;
-	return new fields.ArrayField(
-		new fields.StringField({ required: true, nullable: false, choices }),
-		withWidget({
-			required: true,
-			nullable: false,
-			initial: [] as string[],
-			label: `NIMBLE.rules.reroll.${name}.label`,
-			hint: 'NIMBLE.rules.reroll.noneMeansAny',
-			showWhen: rollsInclude(kind),
-		}),
-	);
-}
-
 function schema() {
 	const { fields } = foundry.data;
 
+	const shared = RollUseRule.rollUseSchema('reroll');
+
 	return {
-		rolls: new fields.ArrayField(
-			new fields.StringField({
-				required: true,
-				nullable: false,
-				choices: choiceLabels('rolls', REROLL_ROLL_KINDS),
-			}),
-			{
-				required: true,
-				nullable: false,
-				initial: ['attack'],
-				label: 'NIMBLE.rules.reroll.rolls.label',
-			},
-		),
-		saves: checkKeysField('saves', 'save', () => CONFIG.NIMBLE.savingThrows),
-		skills: checkKeysField('skills', 'skillCheck', () => CONFIG.NIMBLE.skills),
-		abilities: checkKeysField('abilities', 'abilityCheck', () => CONFIG.NIMBLE.abilityScores),
-		usedBy: new fields.StringField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 'roller',
-				choices: choiceLabels('usedBy', REROLL_SIDES),
-				label: 'NIMBLE.rules.reroll.usedBy.label',
-				hint: 'NIMBLE.rules.reroll.usedBy.hint',
-				widget: 'chips',
-			}),
-		),
-		reach: new fields.NumberField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 0,
-				min: 0,
-				integer: true,
-				label: 'NIMBLE.rules.reroll.reach.label',
-				hint: 'NIMBLE.rules.reroll.reach.hint',
-				showWhen: (data: Record<string, unknown>) => data.usedBy === 'ally',
-			}),
-		),
+		...shared.roll,
 		die: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -140,92 +62,8 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.keep.label',
 			hint: 'NIMBLE.rules.reroll.keep.hint',
 		}),
-		outcome: new fields.StringField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 'always',
-				choices: choiceLabels('outcome', REROLL_TRIGGERS),
-				label: 'NIMBLE.rules.reroll.outcome.label',
-				hint: 'NIMBLE.rules.reroll.outcome.hint',
-				showWhen: forAttacks,
-			}),
-		),
-		attackDelivery: new fields.StringField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 'any',
-				choices: choiceLabels('attackDelivery', REROLL_ATTACK_DELIVERIES),
-				label: 'NIMBLE.rules.reroll.attackDelivery.label',
-				hint: 'NIMBLE.rules.reroll.attackDelivery.hint',
-				showWhen: forAttacks,
-			}),
-		),
-		chargePoolIdentifier: new fields.StringField(
-			withWidget({
-				// Not required, so the picker lists an empty choice for no pool.
-				required: false,
-				nullable: false,
-				initial: '',
-				label: 'NIMBLE.rules.reroll.chargePoolIdentifier.label',
-				hint: 'NIMBLE.rules.reroll.chargePoolIdentifier.hint',
-				widget: 'chargePoolPicker',
-			}),
-		),
-		chargeCost: new fields.NumberField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: 1,
-				min: 1,
-				integer: true,
-				label: 'NIMBLE.rules.reroll.chargeCost.label',
-				hint: 'NIMBLE.rules.reroll.chargeCost.hint',
-				showWhen: (data: Record<string, unknown>) =>
-					typeof data.chargePoolIdentifier === 'string' && data.chargePoolIdentifier.trim() !== '',
-			}),
-		),
-		manaCost: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			min: 0,
-			integer: true,
-			label: 'NIMBLE.rules.reroll.manaCost.label',
-			hint: 'NIMBLE.rules.reroll.manaCost.hint',
-		}),
-		woundCost: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			min: 0,
-			integer: true,
-			label: 'NIMBLE.rules.reroll.woundCost.label',
-			hint: 'NIMBLE.rules.reroll.woundCost.hint',
-		}),
-		heroicReaction: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			choices: {
-				'': 'NIMBLE.rules.reroll.heroicReaction.choices.none',
-				...Object.fromEntries(HEROIC_REACTIONS.map((key) => [key, getHeroicReactionLabelKey(key)])),
-			} as Record<HeroicReactionKey | '', string>,
-			label: 'NIMBLE.rules.reroll.heroicReaction.label',
-			hint: 'NIMBLE.rules.reroll.heroicReaction.hint',
-		}),
-		oncePerAttack: new fields.BooleanField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: false,
-				label: 'NIMBLE.rules.reroll.oncePerAttack.label',
-				hint: 'NIMBLE.rules.reroll.oncePerAttack.hint',
-				showWhen: forAttacks,
-			}),
-		),
+		...shared.when,
+		...shared.cost,
 		rollModeChange: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -291,43 +129,18 @@ declare namespace RerollRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** Which side of the roll is asking, and which roll it is. */
-interface RerollOfferContext {
-	side: RerollSide;
-	roll: RollToReroll;
-}
-
 /**
  * Lets the one who rolled, or the target, discard a roll and roll it again.
  * The second result stands. Read by the attack pipeline when a card is posted
  * and again on the GM client when the reroll is used, never during data
  * preparation.
  */
-class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
+class RerollRule extends RollUseRule<RerollRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['rolls', 'saves', 'skills', 'abilities'] },
-		{ fields: ['usedBy', 'reach'] },
-		{ fields: ['die', 'keep'] },
-		{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
-		{
-			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
-			hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
-			fields: ['predicate'],
-		},
-		{
-			label: 'NIMBLE.rules.reroll.form.cost.label',
-			hint: 'NIMBLE.rules.reroll.form.cost.hint',
-			fields: [
-				'chargePoolIdentifier',
-				'chargeCost',
-				'manaCost',
-				'woundCost',
-				'heroicReaction',
-				'oncePerAttack',
-			],
-		},
+		RollUseRule.rollFormGroup(),
+		...RollUseRule.useFormGroups([{ fields: ['die', 'keep'] }]),
 		{
 			label: 'NIMBLE.rules.reroll.form.changes.label',
 			hint: 'NIMBLE.rules.reroll.form.changes.hint',
@@ -336,25 +149,11 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 		{ fields: ['automatic', 'discardedCritTriggers'] },
 	];
 
-	declare rolls: RerollRollKind[];
-	declare saves: string[];
-	declare skills: string[];
-	declare abilities: string[];
-	declare usedBy: RerollSide;
-	declare outcome: RerollTrigger;
-	declare attackDelivery: RerollAttackDelivery;
 	declare automatic: boolean;
 	declare discardedCritTriggers: boolean;
 	declare rollModeChange: number;
 	declare primaryDieBonus: number;
 	declare extraDamage: string;
-	declare chargePoolIdentifier: string;
-	declare chargeCost: number;
-	declare manaCost: number;
-	declare woundCost: number;
-	declare heroicReaction: HeroicReactionKey | '';
-	declare oncePerAttack: boolean;
-	declare reach: number;
 	declare die: RerollDie;
 	declare keep: RerollKeep;
 
@@ -368,25 +167,12 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
-				['rolls', 'string[]'],
-				['saves', 'string[]'],
-				['skills', 'string[]'],
-				['abilities', 'string[]'],
-				['usedBy', 'string'],
-				['outcome', 'string'],
-				['attackDelivery', 'string'],
+				...RollUseRule.rollUseTooltipTypes(),
 				['automatic', 'boolean'],
 				['discardedCritTriggers', 'boolean'],
 				['rollModeChange', 'number'],
 				['primaryDieBonus', 'number'],
 				['extraDamage', 'string'],
-				['chargePoolIdentifier', 'string'],
-				['chargeCost', 'number'],
-				['manaCost', 'number'],
-				['woundCost', 'number'],
-				['heroicReaction', 'string'],
-				['oncePerAttack', 'boolean'],
-				['reach', 'number'],
 				['die', 'string'],
 				['keep', 'string'],
 			]),
@@ -396,42 +182,6 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	/** Whether the rule rerolls with no button. Never when someone has a choice to make. */
 	get rerollsByItself(): boolean {
 		return this.automatic === true && nobodyChooses(this as unknown as Record<string, unknown>);
-	}
-
-	get rerollCost(): RerollCost {
-		return {
-			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
-			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
-			manaCost: Math.max(0, Number(this.manaCost) || 0),
-			woundCost: Math.max(0, Number(this.woundCost) || 0),
-			heroicReaction: this.heroicReaction ?? '',
-		};
-	}
-
-	/**
-	 * Whether this rule lets `context.side` reroll this roll now. The outcome
-	 * of an attack is checked by the caller against the roll.
-	 */
-	offersRerollOn(context: RerollOfferContext): boolean {
-		if (!this.item.isEmbedded) return false;
-		if (!this.test()) return false;
-		const { side, roll } = context;
-		if (!this.rolls?.includes(roll.kind)) return false;
-		if (this.usedBy !== side) return false;
-		if (roll.kind === 'attack') {
-			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
-		} else {
-			// A check has no target side.
-			if (side === 'target') return false;
-			const keys = this.checkKeys(roll.kind);
-			if (keys.length > 0 && !keys.includes(roll.key)) return false;
-		}
-		return canPayRerollCost(this.actor, this.rerollCost);
-	}
-
-	private checkKeys(kind: CheckRollKind): string[] {
-		const keys = { save: this.saves, skillCheck: this.skills, abilityCheck: this.abilities }[kind];
-		return Array.isArray(keys) ? keys : [];
 	}
 
 	/**
@@ -455,4 +205,4 @@ class RerollRule extends NimbleBaseRule<RerollRule.Schema> {
 	}
 }
 
-export { RerollRule, ROLL_MODE_CHANGE_CHOICES, type RerollOfferContext };
+export { RerollRule, ROLL_MODE_CHANGE_CHOICES };
