@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createSheetUiState, revealIn } from '../sheetUiState.ts';
+import {
+	askConfirm,
+	closeConfirm,
+	createSheetUiState,
+	revealIn,
+	setEditing,
+	showTab,
+} from '../sheetUiState.ts';
 
 describe('revealIn', () => {
 	it('goes to the tab', () => {
@@ -33,6 +40,32 @@ describe('revealIn', () => {
 		const ui = createSheetUiState('core');
 		ui.confirm = 'endTurn';
 		revealIn(ui, { tab: 'spells' });
+
+		expect(ui.confirm).toBeNull();
+	});
+});
+
+describe('the UI state changes', () => {
+	it('closes the ConfirmBar when the tab or the edit mode changes', () => {
+		const ui = createSheetUiState('core');
+		askConfirm(ui, 'endTurn');
+		showTab(ui, 'actions');
+
+		expect(ui).toMatchObject({ tab: 'actions', confirm: null });
+
+		askConfirm(ui, 'endTurn');
+		setEditing(ui, true);
+
+		expect(ui).toMatchObject({ editing: true, confirm: null });
+	});
+
+	it('opens and closes a ConfirmBar', () => {
+		const ui = createSheetUiState('core');
+		askConfirm(ui, 'discardAll:fury');
+
+		expect(ui.confirm).toBe('discardAll:fury');
+
+		closeConfirm(ui);
 
 		expect(ui.confirm).toBeNull();
 	});

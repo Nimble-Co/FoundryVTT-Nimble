@@ -78,6 +78,27 @@ describe('HeroRail', () => {
 		expect(perform).toHaveBeenCalledWith({ kind: 'endTurn' });
 	});
 
+	it('changes the UI state from a nested section with no Svelte ownership warning', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		renderRail({
+			combat: heroTurn(),
+			dicePools: [{ id: 'fury', label: 'Fury Dice', dieSize: 'd6', max: 3, faces: [4, 2] }],
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.ui.heroicActions.endTurn' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.ui.heroicActions.endTurn' }));
+		await fireEvent.click(
+			screen.getByRole('button', { name: 'NIMBLE.actorSheet.hero.meter.discardAll' }),
+		);
+		await fireEvent.click(
+			screen.getAllByRole('button', { name: 'NIMBLE.actorSheet.hero.meter.discardAll' }).at(-1)!,
+		);
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.edit`, pressed: false }));
+
+		expect(warn.mock.calls.flat().join('\n')).not.toMatch(/ownership_invalid_mutation/);
+		warn.mockRestore();
+	});
+
 	it('shows what the next turn gains', () => {
 		renderRail({ combat: heroTurn({ actions: { pendingDelta: 2 } }) });
 

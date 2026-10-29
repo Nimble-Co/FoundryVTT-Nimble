@@ -68,7 +68,7 @@ To add an intent:
 3. Add a test in `hero/__tests__/heroPerform.test.ts` that checks the Foundry call or the dialog.
 4. Give the intent from the view function that has the control.
 
-UI state is not an intent. The tab, edit mode, the open rows, the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state directly.
+UI state is not an intent. The tab, edit mode, the open rows, the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
 
 ### `reveal()`
 

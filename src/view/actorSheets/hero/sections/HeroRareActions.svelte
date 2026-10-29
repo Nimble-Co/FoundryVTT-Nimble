@@ -5,6 +5,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 `compact` gives icon buttons for the narrow header.
 -->
 <script lang="ts">
+	import { setEditing } from '../../shared/sheetUiState.ts';
 	import type { HeroRareActionsProps } from '#types/components/actorSheets/HeroRareActions.d.ts';
 
 	let { view, ui, perform, compact = false }: HeroRareActionsProps = $props();
@@ -55,10 +56,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 			aria-pressed={editing}
 			aria-label={compact ? editHint : undefined}
 			data-tooltip={editHint}
-			onclick={() => {
-				ui.editing = !ui.editing;
-				ui.confirm = null;
-			}}
+			onclick={() => setEditing(ui, !ui.editing)}
 		>
 			{#if compact}<i class="fa-solid fa-pen"></i>{:else}<span class="track"></span>{view.edit
 					.label}{/if}

@@ -31,3 +31,23 @@ export function revealIn(ui: SheetUiState, request: RevealRequest): void {
 	if (request.step === 'choice') ui.choiceStep = request.rowId;
 	if (request.flash) ui.flash = { rowId: request.rowId, serial: (ui.flash?.serial ?? 0) + 1 };
 }
+
+/** Components change the UI state only here: a nested component that writes to an unbound prop gets a Svelte ownership warning. */
+
+export function showTab(ui: SheetUiState, tab: string): void {
+	ui.tab = tab;
+	ui.confirm = null;
+}
+
+export function setEditing(ui: SheetUiState, editing: boolean): void {
+	ui.editing = editing;
+	ui.confirm = null;
+}
+
+export function askConfirm(ui: SheetUiState, confirmId: string): void {
+	ui.confirm = confirmId;
+}
+
+export function closeConfirm(ui: SheetUiState): void {
+	ui.confirm = null;
+}

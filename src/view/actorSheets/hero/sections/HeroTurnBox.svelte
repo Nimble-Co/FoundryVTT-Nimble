@@ -6,6 +6,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 When the actions left go down, from the sheet or from anywhere else, the cells just spent pulse once.
 -->
 <script lang="ts">
+	import { askConfirm, closeConfirm } from '../../shared/sheetUiState.ts';
 	import type { HeroTurnBoxProps } from '#types/components/actorSheets/HeroTurnBox.d.ts';
 	import { untrack } from 'svelte';
 	import ConfirmBar from '../../parts/ConfirmBar.svelte';
@@ -25,7 +26,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 
 	function endTurn() {
 		if (!turn.endTurn) return;
-		if (turn.endTurn.question) ui.confirm = 'endTurn';
+		if (turn.endTurn.question) askConfirm(ui, 'endTurn');
 		else void perform(turn.endTurn.intent);
 	}
 </script>
@@ -83,10 +84,10 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 				confirmLabel={end.label}
 				cancelLabel={end.cancelLabel}
 				onconfirm={() => {
-					ui.confirm = null;
+					closeConfirm(ui);
 					void perform(end.intent);
 				}}
-				oncancel={() => (ui.confirm = null)}
+				oncancel={() => closeConfirm(ui)}
 			/>
 		{:else if !compact}
 			<button

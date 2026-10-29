@@ -5,6 +5,7 @@ a dice pool (a menu on each die, Discard all) and a charge pool (a number; a die
 In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their configure window.
 -->
 <script lang="ts">
+	import { askConfirm, closeConfirm } from '../../shared/sheetUiState.ts';
 	import type { HeroMeterProps } from '#types/components/actorSheets/HeroMeter.d.ts';
 	import ConfirmBar from '../../parts/ConfirmBar.svelte';
 	import EditZone from '../../parts/EditZone.svelte';
@@ -195,7 +196,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					aria-label={pool.text.discardAll}
 					data-tooltip={pool.text.discardAll}
 					disabled={editing}
-					onclick={() => (ui.confirm = confirmId)}
+					onclick={() => askConfirm(ui, confirmId)}
 				>
 					<i class="fa-solid fa-trash"></i>
 				</button>
@@ -229,11 +230,11 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					question={pool.text.discardAllQuestion}
 					confirmLabel={pool.text.discardAll}
 					onconfirm={() => {
-						ui.confirm = null;
+						closeConfirm(ui);
 						dieMenu = null;
 						void perform({ kind: 'setDiceFaces', poolId: pool.id, faces: [] });
 					}}
-					oncancel={() => (ui.confirm = null)}
+					oncancel={() => closeConfirm(ui)}
 				/>
 			</div>
 		{/if}

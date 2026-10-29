@@ -5,6 +5,7 @@ Wide (560 px or more): the rail at the left and the tabs at the right. Narrow: a
 In Foundry the Application gives the adapter, its `$state` and the Foundry dispatcher; a story gives fixtures and a logging `perform`.
 -->
 <script lang="ts">
+	import { setEditing, showTab } from '../shared/sheetUiState.ts';
 	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
@@ -51,10 +52,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 				value={ui.tab}
 				fit={tabFit}
 				label={frame.tabsLabel}
-				onchange={(id) => {
-					ui.tab = id;
-					ui.confirm = null;
-				}}
+				onchange={(id) => showTab(ui, id)}
 			/>
 		</nav>
 		{#if !wide}<HeroStrip meters={rail.meters} {ui} {perform} />{/if}
@@ -69,10 +67,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 					<button
 						type="button"
 						class="nimble-u-reset-button done"
-						onclick={() => {
-							ui.editing = false;
-							ui.confirm = null;
-						}}
+						onclick={() => setEditing(ui, false)}
 					>
 						{frame.editBand.done}
 					</button>
