@@ -17,6 +17,11 @@ import {
 	revealIn,
 	type SheetUiState,
 } from '../shared/sheetUiState.ts';
+import {
+	createDescriptionEnricher,
+	type EnrichActor,
+	enrichText,
+} from '../shared/textEnricher.svelte.ts';
 import HeroSheetComponent from './HeroSheet.svelte';
 import { createHeroSource } from './heroAdapter.ts';
 import { dropAction, tabOfItemType } from './heroDrop.ts';
@@ -59,10 +64,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 
 	#enrichedNotes = $state('');
 
-	#enrichedDescriptions: Record<string, string> = $state({});
-
-	/** by item id, the raw description that `#enrichedDescriptions` holds or waits for */
-	#descriptionSources = new Map<string, string>();
+	#descriptions: ReturnType<typeof createDescriptionEnricher>;
 
 	#stopEffects: (() => void) | null = null;
 
@@ -82,6 +84,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			? ((actor.document.parent as TokenDocument | undefined)?.actor as NimbleCharacter | undefined)
 			: actor.document;
 		this.#actor = resolved ?? actor.document;
+		this.#descriptions = createDescriptionEnricher(this.#actor as unknown as EnrichActor);
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -171,7 +174,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
 				enrichedNotes: () => this.#enrichedNotes,
-				enrichedDescriptions: () => this.#enrichedDescriptions,
+				enrichedDescriptions: () => this.#descriptions.enriched,
 				manaFromInitiative: () => {
 					// read only to recompute when the combat mana rules are primed
 					void this.#combatManaPrimed;
@@ -218,7 +221,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 					.filter((item) => open.has(item.id ?? ''))
 					.map((item) => [item.id ?? '', rawDescriptionOf(item)] as const)
 					.filter(([, raw]) => raw);
-				untrack(() => this.#enrichDescriptions(wanted));
+				untrack(() => this.#descriptions.want(wanted));
 			});
 		});
 	}
@@ -232,39 +235,9 @@ export default class HeroSheet extends SvelteApplicationMixin(
 	}
 
 	#enrichNotes(notes: string): void {
-		const actor = this.#actor;
-		void foundry.applications.ux.TextEditor.implementation
-			.enrichHTML(notes, {
-				secrets: actor.isOwner,
-				rollData: actor.getRollData(),
-				relativeTo: actor as unknown as foundry.abstract.Document.Any,
-			})
-			.then((html: string) => {
-				this.#enrichedNotes = html;
-			});
-	}
-
-	/** Only open rows show the text, so only they wait for the async enrichment. */
-	#enrichDescriptions(wanted: (readonly [string, string])[]): void {
-		for (const [id, raw] of wanted) {
-			if (this.#descriptionSources.get(id) === raw) continue;
-			this.#descriptionSources.set(id, raw);
-			if (id in this.#enrichedDescriptions) {
-				const { [id]: _stale, ...rest } = this.#enrichedDescriptions;
-				this.#enrichedDescriptions = rest;
-			}
-			const item = this.#actor.items.get(id);
-			void foundry.applications.ux.TextEditor.implementation
-				.enrichHTML(raw, {
-					secrets: this.#actor.isOwner,
-					rollData: item?.getRollData() ?? this.#actor.getRollData(),
-					relativeTo: (item ?? this.#actor) as unknown as foundry.abstract.Document.Any,
-				})
-				.then((html: string) => {
-					if (this.#descriptionSources.get(id) !== raw) return;
-					this.#enrichedDescriptions = { ...this.#enrichedDescriptions, [id]: html };
-				});
-		}
+		void enrichText(notes, this.#actor as unknown as EnrichActor).then((html) => {
+			this.#enrichedNotes = html;
+		});
 	}
 
 	#audit(key: string): void {
