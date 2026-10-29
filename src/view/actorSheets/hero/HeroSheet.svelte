@@ -9,12 +9,16 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
+	import { heroActionsTab } from './heroActionsTab.ts';
 	import { heroCoreTab } from './heroCoreTab.ts';
 	import { heroFrame } from './heroFrame.ts';
 	import { heroRail } from './heroRail.ts';
+	import { heroSpellsTab } from './heroSpellsTab.ts';
+	import HeroActionsTab from './sections/HeroActionsTab.svelte';
 	import HeroCoreTab from './sections/HeroCoreTab.svelte';
 	import HeroHeader from './sections/HeroHeader.svelte';
 	import HeroRail from './sections/HeroRail.svelte';
+	import HeroSpellsTab from './sections/HeroSpellsTab.svelte';
 	import HeroStrip from './sections/HeroStrip.svelte';
 
 	let { source, ui, perform }: HeroSheetProps = $props();
@@ -35,6 +39,9 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	const rail = $derived(heroRail(current.actor, current.context));
 	const frame = $derived(heroFrame(current.context));
 	const core = $derived(heroCoreTab(current.actor, current.context));
+	const actions = $derived(heroActionsTab(current.actor, current.context));
+	const spells = $derived(heroSpellsTab(current.actor, current.context));
+	const wideMain = $derived(mainWidth >= 620);
 	const slot = $derived(mainWidth / 8);
 	const tabFit = $derived(slot >= 78 ? 'inline' : slot >= 50 ? 'stacked' : 'icon');
 </script>
@@ -74,12 +81,11 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 				</div>
 			{/if}
 			{#if ui.tab === 'core'}
-				<HeroCoreTab
-					view={core}
-					editing={ui.editing}
-					{perform}
-					skillColumns={mainWidth >= 620 ? 3 : 2}
-				/>
+				<HeroCoreTab view={core} editing={ui.editing} {perform} skillColumns={wideMain ? 3 : 2} />
+			{:else if ui.tab === 'actions'}
+				<HeroActionsTab view={actions} {ui} {perform} columns={wideMain ? 2 : 1} />
+			{:else if ui.tab === 'spells'}
+				<HeroSpellsTab view={spells} {ui} {perform} />
 			{/if}
 		</div>
 	</main>

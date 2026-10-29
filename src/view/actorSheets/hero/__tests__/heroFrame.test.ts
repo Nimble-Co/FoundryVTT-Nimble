@@ -6,7 +6,15 @@ describe('heroFrame', () => {
 	it('gives the tabs that are built, each with its icon and label', () => {
 		expect(heroFrame(heroContext())).toMatchObject({
 			tabsLabel: 'NIMBLE.actorSheet.hero.tabs.label',
-			tabs: [{ id: 'core', icon: 'fa-solid fa-home', label: 'NIMBLE.actorSheet.hero.tabs.core' }],
+			tabs: [
+				{ id: 'core', icon: 'fa-solid fa-home', label: 'NIMBLE.actorSheet.hero.tabs.core' },
+				{ id: 'actions', icon: 'fa-solid fa-bolt', label: 'NIMBLE.actorSheet.hero.tabs.actions' },
+				{
+					id: 'spells',
+					icon: 'fa-solid fa-wand-sparkles',
+					label: 'NIMBLE.actorSheet.hero.tabs.spells',
+				},
+			],
 		});
 	});
 
