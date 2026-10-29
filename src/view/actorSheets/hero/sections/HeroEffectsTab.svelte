@@ -8,13 +8,11 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 	import type { HeroEffectsTabProps } from '#types/components/actorSheets/HeroEffectsTab.d.ts';
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
-	import { moveGridFocus } from '../../shared/gridKeys.ts';
+	import ConditionGrid from '../../shared/ConditionGrid.svelte';
 	import { setOpenRows } from '../../shared/sheetUiState.ts';
 	import HeroRowGroupList from './HeroRowGroupList.svelte';
 
 	let { view, ui, perform }: HeroEffectsTabProps = $props();
-
-	let grid: HTMLElement | undefined = $state();
 
 	const rowIds = $derived(view.groups.flatMap((group) => group.rows.map((row) => row.id)));
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
@@ -25,20 +23,11 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 </div>
 <HeroRowGroupList groups={view.groups} {ui} {perform} none={view.none} />
 <GroupHeading label={view.conditions.label} />
-<div class="conditions" role="group" aria-label={view.conditions.label} bind:this={grid}>
-	{#each view.conditions.options as condition (condition.id)}
-		<button
-			type="button"
-			class="nimble-u-reset-button condition"
-			class:on={condition.on}
-			aria-pressed={condition.on}
-			onclick={() => perform(condition.intent)}
-			onkeydown={(event) => moveGridFocus(grid, event)}
-		>
-			<img src={condition.img} alt="" />{condition.name}
-		</button>
-	{/each}
-</div>
+<ConditionGrid
+	label={view.conditions.label}
+	options={view.conditions.options}
+	onpick={(condition) => perform(condition.intent)}
+/>
 
 <style>
 	.bar {
@@ -47,37 +36,5 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 		align-items: center;
 		gap: 8px;
 		margin: 0 0 6px;
-	}
-	.conditions {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-		gap: 5px;
-		margin-top: 6px;
-	}
-	.condition {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		height: 32px;
-		padding: 0 9px;
-		border: 1px solid var(--nimble-ui-ring);
-		border-radius: 4px;
-		font-size: 0.929rem;
-		font-weight: 600;
-		color: var(--nimble-ui-ink);
-	}
-	.condition:hover,
-	.condition:focus-visible {
-		border-color: var(--nimble-ui-highlight);
-		outline: none;
-	}
-	.condition.on {
-		border-color: var(--nimble-ui-highlight);
-		background: var(--nimble-ui-well);
-	}
-	.condition img {
-		width: 18px;
-		height: 18px;
-		border: 0;
 	}
 </style>

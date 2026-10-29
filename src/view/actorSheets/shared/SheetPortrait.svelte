@@ -1,13 +1,13 @@
 <!--
 @component
-The portrait behind the rail or the narrow header. It moves and scales by the image settings,
+The portrait behind the rail or the narrow header of both sheets. It moves and scales by the image settings,
 and shows the fallback portrait when the image does not load.
 -->
 <script lang="ts">
-	import type { HeroPortraitProps } from '#types/components/actorSheets/HeroPortrait.d.ts';
+	import type { SheetPortraitProps } from '#types/components/actorSheets/SheetPortrait.d.ts';
 	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
 
-	let { view, form }: HeroPortraitProps = $props();
+	let { view, form }: SheetPortraitProps = $props();
 
 	let failedFor: string | null = $state(null);
 	const src = $derived(failedFor === view.img ? PORTRAIT_FALLBACK_IMAGE : view.img);
