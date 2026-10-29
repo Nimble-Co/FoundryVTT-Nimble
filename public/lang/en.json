@@ -404,6 +404,30 @@
 						"lastStand": "Last Stand"
 					},
 					"empty": "No abilities yet."
+				},
+				"effects": {
+					"conditionsOn": "Conditions"
+				},
+				"notes": {
+					"label": "Notes",
+					"none": "No notes yet."
+				},
+				"settings": {
+					"groups": {
+						"monster": "Monster",
+						"image": "Actor Image Settings",
+						"items": "Embedded Document Settings",
+						"coins": "Coins"
+					},
+					"monsterType": "Monster type",
+					"level": "Level",
+					"size": "Size",
+					"creatureType": "Creature type",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"imageScale": "Scale (%)",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"coin": "{coin} coins"
 				}
 			}
 		},
