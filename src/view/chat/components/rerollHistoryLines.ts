@@ -16,7 +16,16 @@ interface RerollHistoryDie {
 
 /** One thing a use of a reroll changed on the roll or gave a creature. */
 interface RerollTag {
-	kind: 'automatic' | 'rollMode' | 'extraDamage' | 'action' | 'noAction' | 'tempHp';
+	kind:
+		| 'automatic'
+		| 'rollMode'
+		| 'extraDamage'
+		| 'action'
+		| 'noAction'
+		| 'tempHp'
+		| 'crit'
+		| 'miss'
+		| 'bonusNotAdded';
 	label: string;
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
@@ -38,6 +47,8 @@ interface RerollHistoryLine {
 	dice: { previous: RerollHistoryDie; next: RerollHistoryDie } | null;
 	/** A player kept the old roll, so the old die stands and the new one does not. */
 	keptOld: boolean;
+	/** A change of the die, not a reroll: the label on its arrow ("set", "+1"). */
+	change?: { arrow: string };
 }
 
 interface RerollHistoryInput {
@@ -206,8 +217,52 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	return { tags: [...tags, ...notGiven], tempHpNote, offNote };
 }
 
+function signed(value: number): string {
+	return value > 0 ? `+${value}` : String(value);
+}
+
+/** The tags of a change: the outcome it made, and a Primary Die bonus it did not add. */
+function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
+	const tags: RerollTag[] = [];
+	const outcome = record.next?.outcome;
+	if (outcome) {
+		tags.push({
+			kind: outcome,
+			label: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}`),
+			tooltip: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}Tooltip`, { feature }),
+			off: false,
+		});
+	}
+	const bonus = record.bonusNotAdded ?? 0;
+	if (bonus !== 0) {
+		const values = { feature, amount: signed(bonus), value: String(record.next?.value ?? '') };
+		tags.push({
+			kind: 'bonusNotAdded',
+			label: localize('NIMBLE.chat.incomingReactions.rerollTags.bonusNotAdded', values),
+			tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.bonusNotAddedTooltip', values),
+			off: false,
+		});
+	}
+	return tags;
+}
+
+function changeText(record: RerollRecord, feature: string): string {
+	const outcome = record.next?.outcome;
+	const key =
+		outcome === 'crit'
+			? 'changeHistoryCrit'
+			: outcome === 'miss'
+				? 'changeHistoryMiss'
+				: 'changeHistory';
+	return localize(`NIMBLE.chat.incomingReactions.${key}`, {
+		feature,
+		previous: String(record.previous?.value ?? ''),
+		next: String(record.next?.value ?? ''),
+	});
+}
+
 /**
- * The card's reroll history, one line per reroll: the feature, then who used
+ * The card's reroll history, one line per reroll or change: the feature, then who used
  * it and what it cost. The name and the uses left are left out when the card
  * header or a "Reroll again" button already show them.
  */
@@ -234,6 +289,26 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 					count: String(record.woundsGained),
 				}),
 			);
+		}
+
+		if (record.use === 'change') {
+			const mode = record.change?.mode ?? 'set';
+			return {
+				title: feature,
+				tags: buildChangeTags(record, feature),
+				tempHpNote: null,
+				offNote: null,
+				text: changeText(record, feature),
+				detail: details.length > 0 ? details.join(' - ') : null,
+				dice: dice(record),
+				keptOld: false,
+				change: {
+					arrow:
+						mode === 'add'
+							? signed(record.change?.amount ?? 0)
+							: localize('NIMBLE.chat.incomingReactions.changeArrowSet'),
+				},
+			};
 		}
 
 		const kept = record.kept && typeof record.keptTotal === 'number';

@@ -200,6 +200,36 @@ describe('IncomingReactionPrompts', () => {
 		expect(button.textContent).toContain('Heroic Reaction');
 	});
 
+	it('tells a change of the die at the roll: set on the arrow, the crit and the bonus tags', () => {
+		const message = createMessage(
+			[],
+			[
+				{
+					entryId: 'vo-entry',
+					itemUuid: 'Item.vo',
+					ruleId: 'vo',
+					label: 'Vicious Opportunist',
+					actorUuid: 'Actor.cheat',
+					faces: 8,
+					previous: { value: 3, outcome: null },
+					next: { value: 8, outcome: 'crit' },
+					usesLeft: null,
+					woundsGained: 0,
+					use: 'change',
+					change: { mode: 'set', amount: 0 },
+					bonusNotAdded: 1,
+				},
+			],
+			'Actor.cheat',
+		);
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('Changed with Sir Brannon: 3 became 8, a crit')).toBeTruthy();
+		expect(rollPlace().getByText('set')).toBeTruthy();
+		expect(rollPlace().getByText('Crit')).toBeTruthy();
+		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
+	});
+
 	it('shows one line per Primary Die Bonus at the roll only', () => {
 		const message = createMessage([]);
 		Object.assign(message.system, {

@@ -15,6 +15,9 @@
 		action: 'fa-bolt',
 		noAction: 'fa-ban',
 		tempHp: 'fa-shield-heart',
+		crit: 'fa-burst',
+		miss: 'fa-xmark',
+		bonusNotAdded: 'fa-ban',
 	};
 
 	let {
@@ -68,7 +71,7 @@
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
 			data-tooltip={line.text}
 		>
-			<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+			<i class="fa-solid {line.change ? 'fa-pen' : 'fa-rotate-left'}" aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
 					<span aria-hidden="true">{line.title}</span>
@@ -81,7 +84,14 @@
 			{#if line.dice}
 				<span class="nimble-roll-changes__dice">
 					<DieFace {...line.dice.previous} discarded={!keptOld} />
-					<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+					{#if line.change}
+						<span class="nimble-roll-changes__change" aria-hidden="true">
+							<span class="nimble-roll-changes__change-label">{line.change.arrow}</span>
+							<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right"></i>
+						</span>
+					{:else}
+						<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+					{/if}
 					<DieFace {...line.dice.next} discarded={keptOld} />
 				</span>
 			{/if}
@@ -252,6 +262,19 @@
 
 		&__arrow {
 			font-size: 0.625rem;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__change {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			line-height: 1;
+		}
+
+		&__change-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
 			color: var(--nimble-medium-text-color);
 		}
 

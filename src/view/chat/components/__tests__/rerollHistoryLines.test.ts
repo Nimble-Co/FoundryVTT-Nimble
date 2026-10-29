@@ -345,3 +345,72 @@ describe('"Reroll again" for a once-per-attack rule', () => {
 		expect([...rerollAgainRecords([sand], pending)]).toEqual([sand]);
 	});
 });
+
+describe('rerollHistoryLines for a change', () => {
+	const NAMES_WITH_CHANGE = { ...NAMES, 'Item.vo': 'Vicious Opportunist' };
+	const changeLines = (records: RerollRecord[]) =>
+		rerollHistoryLines({
+			records,
+			speakerUuid: 'Actor.wren',
+			rerollAgain: new Set(),
+			documentName: (uuid) => NAMES_WITH_CHANGE[uuid as keyof typeof NAMES_WITH_CHANGE],
+		});
+	const changed = (overrides: Partial<RerollRecord> = {}) =>
+		record({
+			itemUuid: 'Item.vo',
+			use: 'change',
+			change: { mode: 'set', amount: 0 },
+			previous: { value: 3, outcome: null },
+			next: { value: 8, outcome: 'crit' },
+			...overrides,
+		});
+
+	it('says "set" on the arrow, tags a crit, and tells it as a sentence', () => {
+		const [line] = changeLines([changed()]);
+		expect(line).toMatchObject({
+			title: 'Vicious Opportunist',
+			text: 'Changed with Vicious Opportunist: 3 became 8, a crit',
+			change: { arrow: 'set' },
+			dice: { previous: { value: 3 }, next: { value: 8, outcome: 'crit' } },
+		});
+		expect(line.tags.map((tag) => [tag.kind, tag.label])).toEqual([['crit', 'Crit']]);
+	});
+
+	it('puts the number on the arrow for an add, with no tag for a plain result', () => {
+		const [line] = changeLines([
+			changed({
+				change: { mode: 'add', amount: -1 },
+				previous: { value: 4, outcome: null },
+				next: { value: 3, outcome: null },
+			}),
+		]);
+		expect(line.change).toEqual({ arrow: '-1' });
+		expect(line.text).toBe('Changed with Vicious Opportunist: 4 became 3');
+		expect(line.tags).toEqual([]);
+		expect(changeLines([changed({ change: { mode: 'add', amount: 2 } })])[0].change).toEqual({
+			arrow: '+2',
+		});
+	});
+
+	it('tags a miss', () => {
+		const [line] = changeLines([changed({ next: { value: 1, outcome: 'miss' } })]);
+		expect(line.text).toBe('Changed with Vicious Opportunist: 3 became 1, a miss');
+		expect(line.tags.map((tag) => tag.label)).toEqual(['Miss']);
+	});
+
+	it('tags a Primary Die bonus a set value did not add', () => {
+		const [line] = changeLines([changed({ bonusNotAdded: 1 })]);
+		expect(line.tags.at(-1)).toEqual({
+			kind: 'bonusNotAdded',
+			label: '+1 bonus not added',
+			tooltip:
+				'Vicious Opportunist set the die to 8. A set value is final, so the +1 Primary Die bonus is not added.',
+			off: false,
+		});
+	});
+
+	it('keeps the uses left and who used it', () => {
+		const [line] = changeLines([changed({ actorUuid: 'Actor.bram', usesLeft: 0 })]);
+		expect(line.detail).toBe('Used by Bram - Uses left: 0');
+	});
+});
