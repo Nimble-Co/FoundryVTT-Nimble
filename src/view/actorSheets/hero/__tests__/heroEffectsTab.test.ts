@@ -7,7 +7,7 @@ import {
 } from '../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { effectsOnHero, heroEffectsTab } from '../heroEffectsTab.ts';
 
-const FX = 'NIMBLE.actorSheet.hero.effects';
+const FX = 'NIMBLE.actorSheet.shared.effects';
 
 const layout = (view: ReturnType<typeof heroEffectsTab>) =>
 	view.groups.map((group) => [group.label, group.note, group.rows.map((row) => row.name)]);
@@ -24,7 +24,7 @@ describe('heroEffectsTab', () => {
 
 		expect(layout(view)).toEqual([
 			[`${FX}.active`, '2', ['Bless', 'Rage']],
-			[`${FX}.conditionsOn`, '1', ['Dazed']],
+			['NIMBLE.actorSheet.hero.effects.conditionsOn', '1', ['Dazed']],
 			[`${FX}.passive`, '2', ['Armor', 'Old Blessing']],
 		]);
 	});
@@ -34,7 +34,7 @@ describe('heroEffectsTab', () => {
 
 		expect(layout(view)).toEqual([
 			[`${FX}.active`, '', []],
-			[`${FX}.conditionsOn`, '', []],
+			['NIMBLE.actorSheet.hero.effects.conditionsOn', '', []],
 			[`${FX}.passive`, '', []],
 		]);
 		expect(view.none).toBe(`${FX}.none`);

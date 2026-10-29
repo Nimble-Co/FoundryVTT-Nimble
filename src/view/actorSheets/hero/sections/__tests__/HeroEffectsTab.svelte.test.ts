@@ -10,7 +10,7 @@ import { createSheetUiState } from '../../../shared/sheetUiState.ts';
 import { heroEffectsTab } from '../../heroEffectsTab.ts';
 import HeroEffectsTab from '../HeroEffectsTab.svelte';
 
-const FX = 'NIMBLE.actorSheet.hero.effects';
+const FX = 'NIMBLE.actorSheet.shared.effects';
 
 function renderTab(view = heroEffectsTab(effectsHero(), effectsContext())) {
 	const ui = $state(createSheetUiState('effects'));

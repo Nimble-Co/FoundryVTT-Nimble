@@ -242,22 +242,7 @@
 					}
 				},
 				"effects": {
-					"active": "Active effects",
-					"conditionsOn": "Conditions on you",
-					"passive": "Passive effects",
-					"allConditions": "All conditions",
-					"none": "None",
-					"fromItem": "From {name}",
-					"inactiveRound": "Ends after 1 round with no attack and no new use",
-					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
-					"untilItEnds": "Until it ends",
-					"remove": "Remove",
-					"removeName": "Remove {name}",
-					"removeQuestion": "Remove {name}?",
-					"facts": {
-						"from": "From",
-						"lasts": "Lasts"
-					}
+					"conditionsOn": "Conditions on you"
 				},
 				"bio": {
 					"age": "Age",
@@ -350,6 +335,23 @@
 					"range": "Range",
 					"damage": "Damage",
 					"uses": "Uses"
+				},
+				"effects": {
+					"active": "Active effects",
+					"passive": "Passive effects",
+					"allConditions": "All conditions",
+					"none": "None",
+					"fromItem": "From {name}",
+					"inactiveRound": "Ends after 1 round with no attack and no new use",
+					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
+					"untilItEnds": "Until it ends",
+					"remove": "Remove",
+					"removeName": "Remove {name}",
+					"removeQuestion": "Remove {name}?",
+					"facts": {
+						"from": "From",
+						"lasts": "Lasts"
+					}
 				}
 			}
 		},

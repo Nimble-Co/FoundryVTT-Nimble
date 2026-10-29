@@ -1,11 +1,10 @@
-import { activationOf } from '../shared/itemFields.ts';
-import { byName } from '../shared/rowOrder.ts';
-import type { ConditionLike, EffectLike, ItemLike } from '../shared/sheetSource.ts';
+import { effectDuration, effectLists, effectsOnCount, sourceItem } from '../shared/effectLists.ts';
+import type { ConditionLike, EffectLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type { HeroRowAsk, HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 
-const FX = 'NIMBLE.actorSheet.hero.effects';
+const FX = 'NIMBLE.actorSheet.shared.effects';
 
 export interface HeroConditionToggle {
 	id: string;
@@ -23,60 +22,9 @@ export interface HeroEffectsTabView {
 	conditions: { label: string; options: HeroConditionToggle[] };
 }
 
-/** A status of a condition puts the effect in "Conditions on you", not in the effect lists. */
-function effectLists(actor: HeroActorLike, context: HeroSheetContext) {
-	const conditionIds = new Set(Object.keys(context.labels.conditions));
-	const effects = actor.effects.filter(
-		(effect) => !effect.statuses.some((status) => conditionIds.has(status)),
-	);
-	const active = effects.filter((effect) => effect.toggle || effect.temporary);
-	return {
-		active: byName(active),
-		passive: byName(effects.filter((effect) => !active.includes(effect))),
-		conditions: context.conditions.filter((condition) => condition.active),
-	};
-}
-
 /** The count on the Effects tab: what is on the hero now, not the passive effects. */
 export function effectsOnHero(actor: HeroActorLike, context: HeroSheetContext): number {
-	const lists = effectLists(actor, context);
-	return lists.active.length + lists.conditions.length;
-}
-
-/** "10 minutes" from `activation.duration`; nothing for no duration. */
-function activationDuration(item: ItemLike, context: HeroSheetContext): string {
-	const duration = (activationOf(item).duration ?? {}) as {
-		type?: string;
-		quantity?: number;
-		details?: string;
-	};
-	if (!duration.type || duration.type === 'none') return '';
-	if (duration.type === 'special') return duration.details ?? '';
-	const quantity = duration.quantity ?? 1;
-	const unit = context.localize(
-		`NIMBLE.${quantity === 1 ? 'durations' : 'durationsPlural'}.${duration.type}`,
-	);
-	return `${quantity} ${unit}`;
-}
-
-/** A toggle state: the inactivity end of its rule, else the activation duration of its item. */
-function toggleDuration(
-	effect: EffectLike,
-	item: ItemLike | undefined,
-	context: HeroSheetContext,
-): string {
-	if (!item || !effect.toggle) return effect.duration;
-	const rule = item.rules.find((entry) => entry.id === effect.toggle?.ruleId);
-	const rounds = Number(rule?.fields.endAfterInactiveRounds ?? 0);
-	if (rounds === 1) return context.localize(`${FX}.inactiveRound`);
-	if (rounds > 1) return context.format(`${FX}.inactiveRounds`, { rounds: String(rounds) });
-	return activationDuration(item, context) || effect.duration;
-}
-
-/** The item that made the effect: its holder, its toggle, or the item in its origin uuid. */
-function sourceItem(actor: HeroActorLike, effect: EffectLike): ItemLike | undefined {
-	const id = effect.itemId ?? effect.toggle?.itemId ?? effect.origin?.match(/Item\.([^.]+)$/)?.[1];
-	return id ? actor.items.find((item) => item.id === id) : undefined;
+	return effectsOnCount(effectLists(actor.effects, context.conditions, context.labels.conditions));
 }
 
 function askRemove(name: string, intent: HeroIntent, context: HeroSheetContext): HeroRowAsk {
@@ -125,14 +73,14 @@ function effectRow(
 	passive: boolean,
 ): HeroRowView {
 	const { localize, format } = context;
-	const item = sourceItem(actor, effect);
+	const item = sourceItem(actor.items, effect);
 	const id = `effect-${effect.id}`;
 	const base = { id, name: effect.name, img: effect.img, description: effect.description };
 	if (effect.toggle) {
 		return stateRow(
 			{
 				...base,
-				duration: toggleDuration(effect, item, context),
+				duration: effectDuration(effect, item, context),
 				from: item ? format(`${FX}.fromItem`, { name: item.name }) : '',
 				use: {
 					kind: 'act',
@@ -206,10 +154,12 @@ export function heroEffectsTab(
 	context: HeroSheetContext,
 ): HeroEffectsTabView {
 	const { localize } = context;
-	const lists = effectLists(actor, context);
+	const lists = effectLists(actor.effects, context.conditions, context.labels.conditions);
 	const group = (id: string, rows: HeroRowView[]): HeroRowGroup => ({
 		id,
-		label: localize(`${FX}.${id}`),
+		label: localize(
+			id === 'conditionsOn' ? 'NIMBLE.actorSheet.hero.effects.conditionsOn' : `${FX}.${id}`,
+		),
 		note: rows.length ? String(rows.length) : '',
 		rows,
 	});
