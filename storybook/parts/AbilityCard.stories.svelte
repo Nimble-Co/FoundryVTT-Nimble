@@ -24,6 +24,18 @@
 />
 
 <Story
+	name="Enriched text"
+	args={{
+		name: 'Stab',
+		kind: 'roll',
+		icon: 'fa-solid fa-khanda',
+		description: '1d6+2.',
+		descriptionHtml:
+			'<p><a class="inline-roll roll" data-tooltip="1d6 + 2"><i class="fas fa-dice-d20"></i>1d6+2</a>. On a crit: <strong>Prone</strong>.</p>',
+	}}
+/>
+
+<Story
 	name="Rolls, with range"
 	args={{
 		name: 'Terrible Maw',

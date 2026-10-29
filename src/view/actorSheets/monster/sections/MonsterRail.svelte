@@ -125,6 +125,7 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 		padding: 7px 9px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
+		background: var(--nimble-ui-chrome);
 		font-size: 0.893rem;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink);
