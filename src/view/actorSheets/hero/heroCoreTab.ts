@@ -42,8 +42,9 @@ export interface HeroProficiencyView {
 export interface HeroCoreView {
 	text: {
 		abilitiesAndSaves: string;
-		/** the short name on the button, and its long label */
+		/** the short name on the button */
 		stats: string;
+		/** the long label of that button */
 		configureStats: string;
 		saves: string;
 		configureSaves: string;
@@ -70,14 +71,14 @@ function speedBonusNote(actor: HeroActorLike, context: HeroSheetContext): string
 	return notes.length ? notes.join(', ') : null;
 }
 
-function configure(
+function configureButton(
 	target: HeroConfigureTarget,
-	prompt: string,
+	labelKey: string,
 	context: HeroSheetContext,
 ): HeroProficiencyView['configure'] {
 	return {
 		intent: { kind: 'configure', target },
-		label: context.localize(`NIMBLE.prompts.${prompt}`),
+		label: context.localize(labelKey),
 	};
 }
 
@@ -124,31 +125,47 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 			label: localize(`${CORE}.speed`),
 			value: speed,
 			note: speedBonusNote(actor, context),
-			configure: configure('movement', 'configureMovement', context),
+			configure: configureButton('movement', 'NIMBLE.prompts.configureMovement', context),
 		},
 		{
 			label: localize(`${CORE}.languages`),
 			value: listOrNone(languages.map((key) => labels.languages[key] ?? key).sort(byName), context),
 			note: null,
-			configure: configure('languages', 'configureLanguageProficiencies', context),
+			configure: configureButton(
+				'languages',
+				'NIMBLE.prompts.configureLanguageProficiencies',
+				context,
+			),
 		},
 		{
 			label: localize(`${CORE}.armor`),
 			value: listOrNone(armor.map((key) => labels.armorTypes[key] ?? key).sort(byName), context),
 			note: null,
-			configure: configure('armorProficiencies', 'configureArmorProficiencies', context),
+			configure: configureButton(
+				'armorProficiencies',
+				'NIMBLE.prompts.configureArmorProficiencies',
+				context,
+			),
 		},
 		{
 			label: localize(`${CORE}.weapons`),
 			value: listOrNone([...weapons], context),
 			note: null,
-			configure: configure('weaponProficiencies', 'configureWeaponProficiencies', context),
+			configure: configureButton(
+				'weaponProficiencies',
+				'NIMBLE.prompts.configureWeaponProficiencies',
+				context,
+			),
 		},
 		{
 			label: localize(`${CORE}.damage`),
 			value: damageDefenses(actor, context),
 			note: null,
-			configure: configure('damageDefenses', 'configureDamageDefenses', context),
+			configure: configureButton(
+				'damageDefenses',
+				'NIMBLE.prompts.configureDamageDefenses',
+				context,
+			),
 		},
 	];
 
