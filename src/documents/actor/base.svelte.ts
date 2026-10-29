@@ -9,6 +9,7 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
+import { conditionTags } from '../../utils/actor/conditionTags.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
@@ -463,6 +464,10 @@ class NimbleBaseActor<
 			if (statuses.has(STATUS_EFFECT_IDS.concentration)) {
 				this.tags.add('self:concentrating');
 				this.tags.add('target:concentrating');
+			}
+			for (const condition of conditionTags(statuses)) {
+				this.tags.add(`self:${condition}`);
+				this.tags.add(`target:${condition}`);
 			}
 		}
 

@@ -371,6 +371,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			this.tags.add(`subclass:${item.identifier}`);
 		}
 
+		// A rule can then ask whether the character has a feature.
+		for (const item of this.items) {
+			if (item.isType('feature')) this.tags.add(`feature:${item.identifier}`);
+		}
+
 		// Adds ancestry tags
 		if (this.ancestry) {
 			this.tags.add(`ancestry:${this.ancestry.identifier}`);
