@@ -558,6 +558,10 @@
 					"change": "Change die"
 				},
 				"verbCount": "{verb}: {count} features",
+				"rollMenu": {
+					"change": "Change a die",
+					"choose": "Choose a feature to reroll or change the die"
+				},
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
 				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",

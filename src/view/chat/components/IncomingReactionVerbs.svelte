@@ -50,18 +50,7 @@
 		return verbGroups.map((group) => ({
 			id: group.actorUuid,
 			heading: group.name,
-			items: group.entries.map((entry) => {
-				const label = text.label(entry);
-				const cost = text.cost(entry);
-				return {
-					id: entry.id,
-					label: text.menuName(entry),
-					cost,
-					text: cost
-						? localize('NIMBLE.chat.incomingReactions.rerollWithCost', { label, cost })
-						: label,
-				};
-			}),
+			items: group.entries.map(text.menuItem),
 		}));
 	}
 

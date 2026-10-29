@@ -52,10 +52,10 @@
 {/snippet}
 
 {#if place === 'rollButton'}
-	{#if prompts.rerollChoices.length > 0}
+	{#if prompts.rollMenu.length > 0}
 		<RollRerollButton
 			bind:this={rollRerollButton}
-			choices={prompts.rerollChoices}
+			sections={prompts.rollMenu}
 			disabled={prompts.busy}
 			onChoose={prompts.useEntryById}
 		/>

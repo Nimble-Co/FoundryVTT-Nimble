@@ -1,4 +1,5 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
+import type { ChoiceMenuItem } from './ChoiceMenu.d.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 /**
@@ -50,6 +51,8 @@ export interface IncomingReactionText {
 	label(entry: IncomingReactionEntry): string;
 	/** The short name in a verb's menu: "Lucky". */
 	menuName(entry: IncomingReactionEntry): string;
+	/** The entry in a menu: its short name, cost and full sentence. */
+	menuItem(entry: IncomingReactionEntry): ChoiceMenuItem;
 	icon(entry: IncomingReactionEntry): string;
 	cost(entry: IncomingReactionEntry): string;
 	usedAttribution(entry: IncomingReactionEntry): string;

@@ -1,10 +1,10 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import type { ChoiceMenuSection } from '#types/components/ChoiceMenu.d.ts';
 import type {
 	IncomingReactionActorGroup,
 	IncomingReactionPicking,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
-import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
 import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	DieOutcome,
@@ -123,17 +123,22 @@ export function createIncomingReactionPromptsState(
 				})[0]
 			: null,
 	);
-	const rerollChoices = $derived<RollRerollChoice[]>(
-		getPlace() === 'rollButton'
-			? pendingGroups
-					.flatMap((group) => group.entries)
-					.map((entry) => ({
-						id: entry.id,
-						label: text.label(entry),
-						cost: text.cost(entry),
-					}))
-			: [],
-	);
+	// The roll row's icon menu: the rerolls, then the changes, each under its heading.
+	const rollMenu = $derived.by<ChoiceMenuSection[]>(() => {
+		if (getPlace() !== 'rollButton') return [];
+		const pending = pendingGroups.flatMap((group) => group.entries);
+		const section = (id: 'reroll' | 'change', heading: string) => ({
+			id,
+			heading: localize(heading),
+			items: pending
+				.filter((entry) => (entry.use === 'change' ? 'change' : 'reroll') === id)
+				.map((entry) => ({ ...text.menuItem(entry), icon: text.icon(entry) })),
+		});
+		return [
+			section('reroll', 'NIMBLE.chat.incomingReactions.verbs.reroll'),
+			section('change', 'NIMBLE.chat.incomingReactions.rollMenu.change'),
+		].filter((menuSection) => menuSection.items.length > 0);
+	});
 	const primaryOutcome = $derived.by<DieOutcome>(() => {
 		const system = message?.reactive?.system as
 			| { isCritical?: boolean; isMiss?: boolean }
@@ -344,8 +349,8 @@ export function createIncomingReactionPromptsState(
 		get pendingLine() {
 			return pendingLine;
 		},
-		get rerollChoices() {
-			return rerollChoices;
+		get rollMenu() {
+			return rollMenu;
 		},
 		get primaryOutcome() {
 			return primaryOutcome;

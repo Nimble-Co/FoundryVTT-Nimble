@@ -81,12 +81,29 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 		return entry.source === 'rule' && entry.label ? `${heading}: ${entry.label}` : heading;
 	}
 
+	function menuItem(entry: IncomingReactionEntry) {
+		const sentence = label(entry);
+		const entryCost = cost(entry);
+		return {
+			id: entry.id,
+			label: menuName(entry),
+			cost: entryCost,
+			text: entryCost
+				? localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
+						label: sentence,
+						cost: entryCost,
+					})
+				: sentence,
+		};
+	}
+
 	return {
 		reactingActor,
 		documentName,
 		featureName,
 		label,
 		menuName,
+		menuItem,
 		icon,
 		cost,
 		usedAttribution,

@@ -1,83 +1,48 @@
-import { tick } from 'svelte';
-import type {
-	RollRerollButtonProps,
-	RollRerollChoice,
-} from '#types/components/RollRerollButton.d.ts';
+import type { RollRerollButtonProps } from '#types/components/RollRerollButton.d.ts';
 import localize from '#utils/localize.js';
 
 export function createRollRerollButtonState(
-	getProps: () => Pick<RollRerollButtonProps, 'choices' | 'onChoose'>,
+	getProps: () => Pick<RollRerollButtonProps, 'sections' | 'onChoose'>,
 ) {
 	let open = $state(false);
-	const elements = $state<{
-		trigger?: HTMLButtonElement;
-		menu?: HTMLUListElement;
-		items: HTMLButtonElement[];
-	}>({ items: [] });
+	const elements = $state<{ trigger?: HTMLButtonElement }>({});
 
-	const single = $derived(getProps().choices.length === 1 ? getProps().choices[0] : null);
+	const items = $derived(getProps().sections.flatMap((section) => section.items));
+	const single = $derived(items.length === 1 ? items[0] : null);
 	const menuOpen = $derived(open && !single);
-	const triggerLabel = $derived(
-		single ? choiceText(single) : localize('NIMBLE.chat.incomingReactions.rerollChoose'),
+	const changesOnly = $derived(
+		getProps().sections.every((section) => section.id === 'change' || section.items.length === 0),
 	);
+	const triggerLabel = $derived.by(() => {
+		if (single) return single.text;
+		const changes = getProps().sections.some(
+			(section) => section.id === 'change' && section.items.length > 0,
+		);
+		return localize(
+			changes
+				? 'NIMBLE.chat.incomingReactions.rollMenu.choose'
+				: 'NIMBLE.chat.incomingReactions.rerollChoose',
+		);
+	});
 
-	function choiceText(choice: RollRerollChoice): string {
-		if (!choice.cost) return choice.label;
-		return localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
-			label: choice.label,
-			cost: choice.cost,
-		});
-	}
-
-	async function onTriggerClick() {
+	function onTriggerClick() {
 		if (single) {
 			getProps().onChoose(single.id);
 			return;
 		}
 		open = !open;
-		await tick();
-		if (!open) return;
-		elements.menu?.scrollIntoView?.({ block: 'nearest' });
-		elements.items[0]?.focus({ preventScroll: true });
 	}
 
 	function choose(id: string) {
-		closeMenu();
+		open = false;
+		// Now, not after a tick: a picker that opens takes the focus from here.
+		elements.trigger?.focus();
 		getProps().onChoose(id);
 	}
 
-	function closeMenu(returnFocus = false) {
+	function closeMenu(returnFocus: boolean) {
 		open = false;
 		if (returnFocus) elements.trigger?.focus();
-	}
-
-	function onMenuKeydown(event: KeyboardEvent) {
-		const current = elements.items.indexOf(event.target as HTMLButtonElement);
-		const last = getProps().choices.length - 1;
-		const next = {
-			ArrowDown: current >= last ? 0 : current + 1,
-			ArrowUp: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
-
-		if (next !== undefined) {
-			event.preventDefault();
-			elements.items[next]?.focus();
-		} else if (event.key === 'Escape') {
-			// Foundry opens its main menu on an Escape that reaches the window.
-			event.preventDefault();
-			event.stopPropagation();
-			closeMenu(true);
-		} else if (event.key === 'Tab') {
-			closeMenu();
-		}
-	}
-
-	function onWindowPointerDown(event: PointerEvent) {
-		const target = event.target as Node | null;
-		if (!menuOpen || elements.trigger?.contains(target) || elements.menu?.contains(target)) return;
-		closeMenu();
 	}
 
 	return {
@@ -91,10 +56,11 @@ export function createRollRerollButtonState(
 		get triggerLabel() {
 			return triggerLabel;
 		},
-		choiceText,
+		get changesOnly() {
+			return changesOnly;
+		},
 		onTriggerClick,
 		choose,
-		onMenuKeydown,
-		onWindowPointerDown,
+		closeMenu,
 	};
 }

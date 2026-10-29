@@ -5,6 +5,7 @@ export interface ChoiceMenuItem {
 	cost: string;
 	/** The full sentence, for the tooltip and the screen reader. */
 	text: string;
+	icon?: string;
 }
 
 /** Items under a heading. An empty heading shows no heading. */

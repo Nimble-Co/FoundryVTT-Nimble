@@ -89,6 +89,9 @@
 					{disabled}
 					onclick={() => onchoose(item.id)}
 				>
+					{#if item.icon}
+						<i class="nimble-choice-menu__icon {item.icon}" aria-hidden="true"></i>
+					{/if}
 					<span class="nimble-choice-menu__label">{item.label}</span>
 					{#if item.cost}
 						<span class="nimble-choice-menu__cost">{item.cost}</span>
@@ -162,6 +165,13 @@
 				cursor: default;
 				opacity: 0.6;
 			}
+		}
+
+		&__icon {
+			flex: none;
+			width: 1em;
+			font-size: 0.875em;
+			text-align: center;
 		}
 
 		&__label {
