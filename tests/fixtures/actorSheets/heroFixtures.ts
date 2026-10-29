@@ -11,7 +11,7 @@ import type {
 } from '../../../src/view/actorSheets/shared/sheetSource.ts';
 import { createLocalizerStub } from './localizerStub.ts';
 
-type DeepPartial<T> = T extends unknown[]
+export type DeepPartial<T> = T extends unknown[]
 	? T
 	: T extends object
 		? { [K in keyof T]?: DeepPartial<T[K]> }
@@ -22,7 +22,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /** Objects merge key by key; arrays and other values replace. */
-function merge<T>(base: T, overrides: DeepPartial<T> | undefined): T {
+export function merge<T>(base: T, overrides: DeepPartial<T> | undefined): T {
 	if (!overrides) return base;
 	const out = { ...base } as Record<string, unknown>;
 	for (const [key, value] of Object.entries(overrides)) {
