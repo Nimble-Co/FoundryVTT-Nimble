@@ -3528,6 +3528,8 @@
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
 			"removeTarget": "Remove Target",
+			"marked": "Marked",
+			"endMark": "End the mark of {feature}",
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {
