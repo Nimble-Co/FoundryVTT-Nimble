@@ -25,7 +25,7 @@ The code names are `HeroSheet` (for `character`) and `MonsterSheet` (for `npc`, 
 actor.reactive ──adapter──▶ { actor: ActorLike, context: SheetContext }
                                    │
                                    ▼
-                   view functions (pure): heroRail(), heroCoreTab(), heroTabs()
+                   view functions (pure): heroRail(), heroCoreTab(), heroFrame()
                                    │  typed views with intents
                                    ▼
                     sections ──▶ parts (plain props)
@@ -45,8 +45,9 @@ The adapter is the only view model code that reads Foundry. Keep Foundry calls o
 
 ### View functions
 
-Each tab has one pure function, and the rail has one: `heroRail(actor, context)`, `heroCoreTab(actor, context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
+Each tab has one pure function, the rail has one, and the frame (tabs and edit band) has one: `heroRail(actor, context)`, `heroCoreTab(actor, context)`, `heroFrame(context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
 
+- The view gives every string that a section shows: headings, button labels, tooltips and the labels for screen readers. A section never calls `localize`. So the localizer stub of the tests checks every key. A part can still localize its own fixed labels.
 - Language keys for the views are under `NIMBLE.actorSheet.{parts,shared,hero,monster}`. Use a key that exists when its words are correct for the place.
 - A place with no data is empty: the function gives back an empty list or `null`, and the section shows the empty state.
 - No code for one class. A place is for a kind of data, and each class item lands in the place of its kind.
@@ -89,9 +90,13 @@ The character sheet opens at 720 x 850. Below 560 px it changes to the narrow fo
 
 ## Parts and sections
 
-A part (`parts/`) takes plain props only and never reads the actor. It may import other parts, Svelte and the `localize` helper, nothing else; a dependency-cruiser rule checks this. Each part has a story in `storybook/parts/`. A sheet does not style a part from its own files: a size or a state that one sheet needs is a named prop or variant on the part.
+A part (`parts/`) takes plain props only and never reads the actor. It may import other parts, its props type, Svelte and the `localize` helper, nothing else; a dependency-cruiser rule checks this. Each part has a story in `storybook/parts/`. A sheet does not style a part from its own files: a size or a state that one sheet needs is a named prop or variant on the part.
 
 A section (`hero/sections/`) takes a view, the UI state where it needs it, and `perform`. It sends the intents of its view and builds the intents that carry a typed value (for example `setHp` with the number that you typed).
+
+The props type of each part, section and root is in `types/components/actorSheets/<Name>.d.ts` as `<Name>Props`, as AGENTS.md asks for all components.
+
+`shared/sheetFrame.svelte.ts` has the code that both sheet roots use: `trackWidth()` (the ResizeObserver) and `flashRows()` (the flash of `reveal()`).
 
 ## Tests
 
@@ -108,7 +113,7 @@ pnpm storybook        # dev server on port 6006
 pnpm storybook:build  # what CI builds
 ```
 
-`storybook/sheets/` has the sheet stories over the same fixtures as the tests, with a `perform` that only logs. `storybook/parts/` has one story for each part. Use the theme switch in the toolbar to see both themes; every change must work in light and dark.
+`storybook/sheets/` has the sheet stories over the same fixtures as the tests, with a `perform` that only logs. The story harness keeps the actions left, so you can spend an action, and a `nimble-story:reveal` event on `window` calls `revealIn` the way outside code calls `sheet.reveal()`. `storybook/parts/` has one story for each part. Use the theme switch in the toolbar to see both themes; every change must work in light and dark.
 
 ## Checks
 
