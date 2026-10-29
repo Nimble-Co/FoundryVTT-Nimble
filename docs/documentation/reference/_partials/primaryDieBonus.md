@@ -1,4 +1,4 @@
-The Primary Die Bonus rule adds a number to the Primary Die of the owner's own attack rolls. It works as "Add to Primary Die Result" in the attack roll window, and it adds to the number the player types there. The die stops at its max and at 1. When the sum goes past the max, the die counts as its max (a crit, if the attack can crit), and the remainder is added to the damage. A reroll keeps the bonus. An area attack does not get it.
+The Primary Die Bonus rule adds a number to the Primary Die of the owner's own attack rolls. It works as "Add to Primary Die Result" in the attack roll window, and it adds to the number the player types there. The number changes the face of the die itself, from 1 up to its max, so the die can become a crit (and explode) or stop being a miss. The part past the max is lost: a d6 that rolls 6 with +1 stays 6. A reroll keeps the number, and a value that a Change a Die rule sets gets it too. An area attack does not get it.
 
 **Example: Unerring Judgment.** Increase your Primary Die rolls on melee attacks by 1 whenever you have Judgment Dice.
 
@@ -11,4 +11,4 @@ The `self:pool:judgment` tag is there while the Judgment Dice pool has at least 
 
 **Only when the target is** tests the first target of the attack, with the same `target:` tags as on the Reroll rule, for example `target:distracted`. Empty means any target. With tags picked, an attack with no target gets no bonus.
 
-The card shows one line at the roll for each bonus, with the rule's **Label** (or the item name when the label is empty) and a tag such as **+1 Primary Die**. Several bonuses add up. A Change a Die rule that sets the die drops the bonus, and the card says so.
+The card shows one line at the roll for each bonus, with the rule's **Label** (or the item name when the label is empty) and a tag such as **+1 Primary Die**. Several bonuses add up.
