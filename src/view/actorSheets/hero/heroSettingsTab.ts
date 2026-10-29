@@ -3,12 +3,11 @@ import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 
 const SET = 'NIMBLE.actorSheet.hero.settings';
 
-export type HeroSettingTarget =
-	| { kind: 'flag'; flag: HeroSettingsFlag }
-	| { kind: 'field'; field: HeroSettingsField };
+/** The intent that saves a new value of a setting. */
+type SetIntent<T> = (value: T) => HeroIntent;
 
 export type HeroSetting =
-	| { kind: 'check'; id: string; label: string; on: boolean; target: HeroSettingTarget }
+	| { kind: 'check'; id: string; label: string; on: boolean; intent: SetIntent<boolean> }
 	| {
 			kind: 'number';
 			id: string;
@@ -16,9 +15,9 @@ export type HeroSetting =
 			hint?: string;
 			value: number;
 			min?: number;
-			target: HeroSettingTarget;
+			intent: SetIntent<number>;
 	  }
-	| { kind: 'text'; id: string; label: string; value: string; target: HeroSettingTarget }
+	| { kind: 'text'; id: string; label: string; value: string; intent: SetIntent<string> }
 	| {
 			kind: 'button';
 			id: string;
@@ -42,8 +41,12 @@ export interface HeroSettingsTabView {
 	needsAPlace: HeroSettingsGroup;
 }
 
-const flag = (name: HeroSettingsFlag): HeroSettingTarget => ({ kind: 'flag', flag: name });
-const field = (name: HeroSettingsField): HeroSettingTarget => ({ kind: 'field', field: name });
+const flag =
+	(name: HeroSettingsFlag) =>
+	(value: boolean | number): HeroIntent => ({ kind: 'setFlag', flag: name, value });
+const field =
+	(name: HeroSettingsField) =>
+	(value: boolean | number | string): HeroIntent => ({ kind: 'setField', field: name, value });
 
 /** The Settings tab: you change a setting only in edit mode. Export works in all modes. */
 export function heroSettingsTab(
@@ -68,21 +71,21 @@ export function heroSettingsTab(
 					id: 'imageX',
 					label: label('imageX'),
 					value: flags.actorImageXOffset ?? 0,
-					target: flag('actorImageXOffset'),
+					intent: flag('actorImageXOffset'),
 				},
 				{
 					kind: 'number',
 					id: 'imageY',
 					label: label('imageY'),
 					value: flags.actorImageYOffset ?? 0,
-					target: flag('actorImageYOffset'),
+					intent: flag('actorImageYOffset'),
 				},
 				{
 					kind: 'number',
 					id: 'imageScale',
 					label: label('imageScale'),
 					value: flags.actorImageScale ?? 100,
-					target: flag('actorImageScale'),
+					intent: flag('actorImageScale'),
 				},
 			]),
 			group('items', [
@@ -91,7 +94,7 @@ export function heroSettingsTab(
 					id: 'runMacros',
 					label: label('runMacros'),
 					on: flags.automaticallyExecuteAvailableMacros !== false,
-					target: flag('automaticallyExecuteAvailableMacros'),
+					intent: flag('automaticallyExecuteAvailableMacros'),
 				},
 			]),
 			group('inventory', [
@@ -100,7 +103,7 @@ export function heroSettingsTab(
 					id: 'trackSlots',
 					label: label('trackSlots'),
 					on: tracking,
-					target: flag('trackInventorySlots'),
+					intent: flag('trackInventorySlots'),
 				},
 				...(tracking
 					? ([
@@ -109,7 +112,7 @@ export function heroSettingsTab(
 								id: 'currencyBulk',
 								label: label('currencyBulk'),
 								on: flags.includeCurrencyBulk !== false,
-								target: flag('includeCurrencyBulk'),
+								intent: flag('includeCurrencyBulk'),
 							},
 							{
 								kind: 'number',
@@ -117,7 +120,7 @@ export function heroSettingsTab(
 								label: label('bonusSlots'),
 								value: system.inventory.bonusSlots,
 								min: 0,
-								target: field('bonusSlots'),
+								intent: field('bonusSlots'),
 							},
 						] satisfies HeroSetting[])
 					: []),
@@ -129,14 +132,14 @@ export function heroSettingsTab(
 					label: label('woundsBonus'),
 					hint: format(`${SET}.maxWounds`, { max: String(system.attributes.wounds.max) }),
 					value: system.attributes.wounds.bonus,
-					target: field('woundsBonus'),
+					intent: field('woundsBonus'),
 				},
 				{
 					kind: 'text',
 					id: 'initiativeBonus',
 					label: label('initiativeBonus'),
 					value: system.attributes.initiative.bonuses,
-					target: field('initiativeBonuses'),
+					intent: field('initiativeBonuses'),
 				},
 			]),
 			group('skills', [
@@ -145,7 +148,7 @@ export function heroSettingsTab(
 					id: 'passiveSkills',
 					label: label('passiveSkills'),
 					on: flags.showPassiveSkillScores === true,
-					target: flag('showPassiveSkillScores'),
+					intent: flag('showPassiveSkillScores'),
 				},
 			]),
 			group('spells', [
@@ -155,7 +158,7 @@ export function heroSettingsTab(
 					label: label('spellTier'),
 					value: system.resources.highestUnlockedSpellTier ?? 0,
 					min: 0,
-					target: field('highestUnlockedSpellTier'),
+					intent: field('highestUnlockedSpellTier'),
 				},
 				{
 					kind: 'button',
@@ -198,7 +201,7 @@ export function heroSettingsTab(
 					id: 'inspiration',
 					label: label('inspiration'),
 					on: system.resources.inspiration,
-					target: field('inspiration'),
+					intent: field('inspiration'),
 				},
 			],
 		},

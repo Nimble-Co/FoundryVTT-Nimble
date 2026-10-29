@@ -7,23 +7,15 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 	import type { HeroSettingsTabProps } from '#types/components/actorSheets/HeroSettingsTab.d.ts';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
 	import type { HeroIntent } from '../heroIntent.ts';
-	import type { HeroSettingTarget } from '../heroSettingsTab.ts';
 
 	let { view, ui, perform }: HeroSettingsTabProps = $props();
 
 	const groups = $derived([...view.groups, view.needsAPlace]);
 
-	function intentFor(target: HeroSettingTarget, value: boolean | number | string): HeroIntent {
-		if (target.kind === 'flag') {
-			return { kind: 'setFlag', flag: target.flag, value: value as boolean | number };
-		}
-		return { kind: 'setField', field: target.field, value };
-	}
-
-	function setNumber(target: HeroSettingTarget, text: string, min?: number) {
+	function setNumber(intent: (value: number) => HeroIntent, text: string, min?: number) {
 		const value = Number(text);
 		if (!Number.isFinite(value) || (min !== undefined && value < min)) return;
-		void perform(intentFor(target, value));
+		void perform(intent(value));
 	}
 </script>
 
@@ -40,8 +32,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 								type="checkbox"
 								checked={setting.on}
 								disabled={!ui.editing}
-								onchange={(event) =>
-									perform(intentFor(setting.target, event.currentTarget.checked))}
+								onchange={(event) => perform(setting.intent(event.currentTarget.checked))}
 							/>
 							<span>{setting.label}</span>
 						</label>
@@ -59,7 +50,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 								step="1"
 								disabled={!ui.editing}
 								onchange={(event) =>
-									setNumber(setting.target, event.currentTarget.value, setting.min)}
+									setNumber(setting.intent, event.currentTarget.value, setting.min)}
 							/>
 						</label>
 					{:else if setting.kind === 'text'}
@@ -70,7 +61,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 								class="value"
 								value={setting.value}
 								disabled={!ui.editing}
-								onchange={(event) => perform(intentFor(setting.target, event.currentTarget.value))}
+								onchange={(event) => perform(setting.intent(event.currentTarget.value))}
 							/>
 						</label>
 					{:else}

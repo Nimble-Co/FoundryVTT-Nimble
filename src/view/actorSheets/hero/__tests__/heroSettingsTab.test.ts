@@ -12,6 +12,17 @@ const settingOf = (view: ReturnType<typeof heroSettingsTab>, id: string) => {
 	return setting;
 };
 
+/** The intent that a setting gives for a new value. */
+const intentOf = (
+	view: ReturnType<typeof heroSettingsTab>,
+	id: string,
+	value: boolean | number | string,
+) => {
+	const setting = settingOf(view, id);
+	if (setting.kind === 'button') throw new Error(`${id} is a button`);
+	return (setting.intent as (next: typeof value) => unknown)(value);
+};
+
 describe('heroSettingsTab', () => {
 	it('keeps the groups of today, with the bonuses and the passive skill scores', () => {
 		const view = heroSettingsTab(blankHero(), heroContext());
@@ -33,15 +44,18 @@ describe('heroSettingsTab', () => {
 		const view = heroSettingsTab(blankHero(), heroContext());
 
 		expect(settingOf(view, 'imageScale')).toMatchObject({ kind: 'number', value: 100 });
-		expect(settingOf(view, 'runMacros')).toMatchObject({
-			kind: 'check',
-			on: true,
-			target: { kind: 'flag', flag: 'automaticallyExecuteAvailableMacros' },
+		expect(settingOf(view, 'runMacros')).toMatchObject({ kind: 'check', on: true });
+		expect(intentOf(view, 'runMacros', false)).toEqual({
+			kind: 'setFlag',
+			flag: 'automaticallyExecuteAvailableMacros',
+			value: false,
 		});
 		expect(settingOf(view, 'trackSlots')).toMatchObject({ on: true });
-		expect(settingOf(view, 'passiveSkills')).toMatchObject({
-			on: false,
-			target: { kind: 'flag', flag: 'showPassiveSkillScores' },
+		expect(settingOf(view, 'passiveSkills')).toMatchObject({ on: false });
+		expect(intentOf(view, 'passiveSkills', true)).toEqual({
+			kind: 'setFlag',
+			flag: 'showPassiveSkillScores',
+			value: true,
 		});
 	});
 
@@ -66,12 +80,18 @@ describe('heroSettingsTab', () => {
 			label: `${SET}.woundsBonus`,
 			hint: `${SET}.maxWounds {"max":"6"}`,
 			value: 1,
-			target: { kind: 'field', field: 'woundsBonus' },
+			intent: expect.any(Function),
 		});
-		expect(settingOf(view, 'initiativeBonus')).toMatchObject({
-			kind: 'text',
-			value: '1d4',
-			target: { kind: 'field', field: 'initiativeBonuses' },
+		expect(intentOf(view, 'woundsBonus', 2)).toEqual({
+			kind: 'setField',
+			field: 'woundsBonus',
+			value: 2,
+		});
+		expect(settingOf(view, 'initiativeBonus')).toMatchObject({ kind: 'text', value: '1d4' });
+		expect(intentOf(view, 'initiativeBonus', '2')).toEqual({
+			kind: 'setField',
+			field: 'initiativeBonuses',
+			value: '2',
 		});
 	});
 
@@ -114,9 +134,14 @@ describe('heroSettingsTab', () => {
 					id: 'inspiration',
 					label: `${SET}.inspiration`,
 					on: true,
-					target: { kind: 'field', field: 'inspiration' },
+					intent: expect.any(Function),
 				},
 			],
+		});
+		expect(intentOf(view, 'inspiration', false)).toEqual({
+			kind: 'setField',
+			field: 'inspiration',
+			value: false,
 		});
 	});
 });
