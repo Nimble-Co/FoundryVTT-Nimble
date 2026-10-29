@@ -41,13 +41,6 @@ a stored object comes out of its container.
 			<span class="cl" aria-hidden="true">{coin.label}</span>
 		</span>
 	{/each}
-	<button
-		type="button"
-		class="nimble-u-reset-button create"
-		onclick={() => perform(view.createObject.intent)}
-	>
-		<i class="fa-solid fa-plus"></i>{view.createObject.label}
-	</button>
 	{#if view.slots}
 		<span
 			class="pill slots"
@@ -60,6 +53,15 @@ a stored object comes out of its container.
 			{view.slots.text}
 		</span>
 	{/if}
+</div>
+<div class="bar">
+	<button
+		type="button"
+		class="nimble-u-reset-button create"
+		onclick={() => perform(view.createObject.intent)}
+	>
+		<i class="fa-solid fa-plus"></i>{view.createObject.label}
+	</button>
 	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
 </div>
 <div class="list" role="presentation" ondragover={(event) => event.preventDefault()} {ondrop}>
@@ -114,6 +116,7 @@ a stored object comes out of its container.
 		align-items: center;
 		gap: 6px;
 		height: 28px;
+		margin-right: auto;
 		padding: 0 10px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;

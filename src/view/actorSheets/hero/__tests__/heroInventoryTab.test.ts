@@ -57,7 +57,14 @@ describe('heroInventoryTab', () => {
 	it('shows the quantity of a stack, and not a quantity of 1', () => {
 		const view = heroInventoryTab(containerHero(), heroContext());
 
-		expect(rowOf(view, 'torch').cost.text).toBe(`${INV}.quantity {"count":"3"}`);
+		expect(rowOf(view, 'torch').cost).toEqual({
+			text: `${INV}.quantity {"count":"3"}`,
+			uses: [],
+			free: undefined,
+			actionsSpent: undefined,
+			actions: undefined,
+			pool: undefined,
+		});
 		expect(rowOf(view, 'rope').cost.text).toBeUndefined();
 		expect(rowOf(view, 'torch').fields[0]).toEqual({
 			kind: 'quantity',

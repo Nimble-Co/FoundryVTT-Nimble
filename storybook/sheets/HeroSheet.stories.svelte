@@ -3,10 +3,15 @@
 	import { fn } from 'storybook/test';
 	import localize from '#utils/localize.js';
 	import type { HeroActorLike, HeroSheetContext } from '#view/actorSheets/hero/heroSource.ts';
+	import type { HeroTabId } from '#view/actorSheets/hero/heroFrame.ts';
 	import {
 		blankHero,
+		containerHero,
 		dicePoolContext,
 		dicePoolHero,
+		effectsContext,
+		effectsHero,
+		featureHero,
 		heroContext,
 		heroTurn,
 		manaCaster,
@@ -20,9 +25,12 @@
 		combat: 'out' | 'yourTurn' | 'notYourTurn';
 		pools: boolean;
 		/** the tab at the start */
-		tab: 'core' | 'actions' | 'spells';
-		/** blank: the hero of the Core stories (with pools: a caster); dicePool: Fury Dice; mana: a Mage */
-		actor: 'blank' | 'dicePool' | 'mana';
+		tab: HeroTabId;
+		/**
+		 * blank: the hero of the Core stories (with pools: a caster); dicePool: Fury Dice; mana: a Mage;
+		 * containers: a backpack and gear; features: a level 3 Berserker; effects: Rage, Bless, Dazed
+		 */
+		actor: 'blank' | 'dicePool' | 'mana' | 'containers' | 'features' | 'effects';
 		/** both themes side by side */
 		both: boolean;
 	}
@@ -43,8 +51,23 @@
 			width: { control: { type: 'select' }, options: [390, 460, 600, 720, 960] },
 			height: { control: { type: 'select' }, options: [650, 850] },
 			combat: { control: { type: 'inline-radio' }, options: ['out', 'yourTurn', 'notYourTurn'] },
-			tab: { control: { type: 'inline-radio' }, options: ['core', 'actions', 'spells'] },
-			actor: { control: { type: 'inline-radio' }, options: ['blank', 'dicePool', 'mana'] },
+			tab: {
+				control: { type: 'select' },
+				options: [
+					'core',
+					'actions',
+					'features',
+					'inventory',
+					'spells',
+					'effects',
+					'bio',
+					'settings',
+				],
+			},
+			actor: {
+				control: { type: 'select' },
+				options: ['blank', 'dicePool', 'mana', 'containers', 'features', 'effects'],
+			},
 		},
 		parameters: { layout: 'fullscreen' },
 	});
@@ -78,6 +101,7 @@
 				},
 			];
 		}
+		if (args.actor === 'effects') return effectsContext(overrides);
 		return args.actor === 'dicePool' ? dicePoolContext(overrides) : heroContext(overrides);
 	}
 
@@ -91,10 +115,21 @@
 	});
 	const furyHero = dicePoolHero({ img: 'assets/classImages/berserker.webp' });
 	const mage = manaCaster({ img: 'assets/classImages/mage.webp' });
+	const packer = containerHero({
+		img: 'assets/classImages/berserker.webp',
+		system: {
+			details: { age: '31', height: '6 ft', notes: '<p>Left the hold after the mine fell.</p>' },
+		},
+	});
+	const veteran = featureHero({ img: 'assets/classImages/berserker.webp' });
+	const raging = effectsHero({ img: 'assets/classImages/berserker.webp' });
 
 	function actorOf(args: Args): HeroActorLike {
 		if (args.actor === 'dicePool') return furyHero;
 		if (args.actor === 'mana') return mage;
+		if (args.actor === 'containers') return packer;
+		if (args.actor === 'features') return veteran;
+		if (args.actor === 'effects') return raging;
 		return args.pools ? caster : hero;
 	}
 </script>
@@ -160,5 +195,32 @@
 <Story
 	name="Actions and Spells: both themes"
 	args={{ tab: 'actions', actor: 'dicePool', combat: 'yourTurn', both: true, width: 720 }}
+	{template}
+/>
+<Story name="Features" args={{ tab: 'features', actor: 'features' }} {template} />
+<Story
+	name="Features: edit mode, narrow"
+	args={{ tab: 'features', actor: 'features', editing: true, width: 390 }}
+	{template}
+/>
+<Story name="Inventory" args={{ tab: 'inventory', actor: 'containers' }} {template} />
+<Story
+	name="Inventory: edit mode"
+	args={{ tab: 'inventory', actor: 'containers', editing: true }}
+	{template}
+/>
+<Story
+	name="Inventory: narrow"
+	args={{ tab: 'inventory', actor: 'containers', width: 390 }}
+	{template}
+/>
+<Story name="Effects" args={{ tab: 'effects', actor: 'effects' }} {template} />
+<Story name="Effects: narrow" args={{ tab: 'effects', actor: 'effects', width: 390 }} {template} />
+<Story name="Bio" args={{ tab: 'bio', actor: 'containers' }} {template} />
+<Story name="Settings" args={{ tab: 'settings' }} {template} />
+<Story name="Settings: edit mode" args={{ tab: 'settings', editing: true }} {template} />
+<Story
+	name="Inventory and Effects: both themes"
+	args={{ tab: 'inventory', actor: 'containers', both: true, width: 720 }}
 	{template}
 />

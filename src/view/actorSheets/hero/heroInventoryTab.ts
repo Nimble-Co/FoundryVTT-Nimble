@@ -102,12 +102,15 @@ function objectRow(
 	const others = isContainer(item)
 		? []
 		: options.containers.filter((entry) => entry.id !== item.id);
+	// an object that you use with no action is not "Free": it has no cost, as on the old sheet
+	const free = row.cost.free === true;
+	const costLabel = localize('NIMBLE.actorSheet.shared.facts.cost');
 	return {
 		...row,
 		summary,
 		summaryTone,
-		cost: { ...row.cost, text },
-		facts,
+		cost: { ...row.cost, free: undefined, text },
+		facts: free ? facts.filter(([label]) => label !== costLabel) : facts,
 		indent: options.indent || undefined,
 		equip: canEquip(item)
 			? { on: item.system.equipped === true, intent: { kind: 'toggleEquip', itemId: item.id } }
