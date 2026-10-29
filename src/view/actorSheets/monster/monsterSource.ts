@@ -1,5 +1,6 @@
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { PoolRecovery } from '../shared/poolRecovery.ts';
+import type { PortraitFlags } from '../shared/portrait.ts';
 import type {
 	ConditionLike,
 	EffectLike,
@@ -46,10 +47,7 @@ export interface MonsterActorLike {
 		description: string;
 		currency: Record<string, number>;
 	};
-	flags: {
-		actorImageXOffset?: number;
-		actorImageYOffset?: number;
-		actorImageScale?: number;
+	flags: PortraitFlags & {
 		/** absent = on */
 		automaticallyExecuteAvailableMacros?: boolean;
 	};

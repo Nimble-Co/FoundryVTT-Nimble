@@ -22,6 +22,7 @@ import {
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import prepareActorConditions from '#view/dataPreparationHelpers/prepareActorConditions.js';
+import { localizeAll } from '../shared/configLabels.ts';
 import {
 	conditionLike,
 	EFFECT_HOOKS,
@@ -30,6 +31,7 @@ import {
 	itemLike,
 	registerRedrawHooks,
 } from '../shared/documentLikes.ts';
+import { portraitFlags } from '../shared/portrait.ts';
 import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
 import { heroItemStates } from './heroItemState.ts';
 import type {
@@ -128,9 +130,7 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 		},
 		flags: {
 			showPassiveSkillScores: flags?.showPassiveSkillScores === true,
-			actorImageXOffset: Number(flags?.actorImageXOffset ?? 0),
-			actorImageYOffset: Number(flags?.actorImageYOffset ?? 0),
-			actorImageScale: Number(flags?.actorImageScale ?? 100),
+			...portraitFlags(flags),
 			spellsBy: flags?.spellsBy === 'school' ? 'school' : 'tier',
 			trackInventorySlots: flags?.trackInventorySlots !== false,
 			includeCurrencyBulk: flags?.includeCurrencyBulk !== false,
@@ -168,10 +168,6 @@ function combatState(actor: NimbleCharacter): HeroCombatState | null {
 			(key) => !getHeroicReactionAvailability(combatant as Combatant.Implementation, key),
 		),
 	};
-}
-
-function localizeAll(keys: Record<string, string>): Record<string, string> {
-	return Object.fromEntries(Object.entries(keys).map(([key, name]) => [key, localize(name)]));
 }
 
 function labels(actor: HeroActorLike, ancestryIdentifier: string | null) {

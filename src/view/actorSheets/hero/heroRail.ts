@@ -2,6 +2,7 @@ import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import type { PoolKind } from '../parts/types.ts';
 import { MOVEMENT_ICONS } from '../shared/movement.ts';
+import { portraitOf } from '../shared/portrait.ts';
 import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
@@ -530,11 +531,7 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 		},
 		name: actor.name,
 		img: actor.img,
-		portrait: {
-			x: actor.flags.actorImageXOffset ?? 0,
-			y: actor.flags.actorImageYOffset ?? 0,
-			scale: actor.flags.actorImageScale ?? 100,
-		},
+		portrait: portraitOf(actor.flags),
 		meta: meta(actor, context),
 		hp: {
 			value: hp.value,

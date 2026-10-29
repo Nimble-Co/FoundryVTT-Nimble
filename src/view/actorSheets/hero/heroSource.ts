@@ -3,6 +3,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { HeroicReactionKey } from '#utils/incomingReactions/heroicActions.js';
 import type { PoolRecovery } from '../shared/poolRecovery.ts';
+import type { PortraitFlags } from '../shared/portrait.ts';
 import type {
 	ChargePoolLike,
 	ConditionLike,
@@ -60,11 +61,8 @@ export interface HeroActorLike {
 		};
 		details: { age: string; height: string; weight: string; gender: string; notes: string };
 	};
-	flags: {
+	flags: PortraitFlags & {
 		showPassiveSkillScores?: boolean;
-		actorImageXOffset?: number;
-		actorImageYOffset?: number;
-		actorImageScale?: number;
 		/** the groups of the Spells tab; none = by tier */
 		spellsBy?: SpellsBy;
 		/** absent = on */

@@ -1,23 +1,14 @@
 import { effectLists, effectsOnCount } from '../shared/effectLists.ts';
-import { type EffectRowView, effectsTab } from '../shared/effectsTab.ts';
-import type { HeroIntent } from './heroIntent.ts';
+import { type EffectRowView, type EffectsTabView, effectsTab } from '../shared/effectsTab.ts';
 import type { HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
-
-export interface HeroConditionToggle {
-	id: string;
-	name: string;
-	img: string;
-	on: boolean;
-	intent: HeroIntent;
-}
 
 export interface HeroEffectsTabView {
 	/** Active effects, Conditions on you, Passive effects: always all three */
 	groups: HeroRowGroup[];
 	/** the line in an empty group */
 	none: string;
-	conditions: { label: string; options: HeroConditionToggle[] };
+	conditions: EffectsTabView['conditions'];
 }
 
 /** The count on the Effects tab: what is on the hero now, not the passive effects. */

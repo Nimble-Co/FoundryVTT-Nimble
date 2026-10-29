@@ -12,7 +12,8 @@ The new sheets are in `src/view/actorSheets/`. They do not import from `src/view
 ```
 src/view/actorSheets/
   parts/     the parts: .svelte files and types.ts. Plain props only.
-  shared/    view model code that both sheets use, and the sheet UI state
+  shared/    code that both sheets use: view model, sheet UI state, adapter helpers, and the
+             components that need shared/ code (ConditionGrid, SheetPortrait)
   hero/      the character sheet: Application, root component, view model, sections
   monster/   the NPC sheet: Application, root component, view model, sections
 ```

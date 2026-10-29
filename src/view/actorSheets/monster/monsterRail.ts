@@ -1,5 +1,6 @@
 import type { SaveKeyType } from '#types/saveKey.js';
 import { MOVEMENT_ICONS, MOVEMENT_ORDER } from '../shared/movement.ts';
+import { portraitOf } from '../shared/portrait.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
 import type { MonsterIntent } from './monsterIntent.ts';
 import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
@@ -130,11 +131,7 @@ export function monsterRail(
 		name: actor.name,
 		meta: meta(actor, context),
 		img: actor.img,
-		portrait: {
-			x: actor.flags.actorImageXOffset ?? 0,
-			y: actor.flags.actorImageYOffset ?? 0,
-			scale: actor.flags.actorImageScale ?? 100,
-		},
+		portrait: portraitOf(actor.flags),
 		hp: minion
 			? null
 			: {
