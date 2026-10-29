@@ -1,3 +1,4 @@
+import type { RollDieChange } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -102,7 +103,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	}
 
 	/** The change one use makes. An add of 0 is an add of 1. */
-	get dieChange(): { mode: ChangeMode; amount: number } {
+	get dieChange(): RollDieChange {
 		if (this.change !== 'add') return { mode: 'set', amount: 0 };
 		return { mode: 'add', amount: Math.trunc(Number(this.amount)) || 1 };
 	}

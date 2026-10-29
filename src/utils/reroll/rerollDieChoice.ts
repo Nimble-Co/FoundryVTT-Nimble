@@ -8,7 +8,7 @@ import {
 	primaryDieRef,
 	rerollOneDie,
 } from '../../dice/oneDieReroll.js';
-import type { RerollDie } from '../incomingReactions/incomingReactionEntry.js';
+import type { ChangeableDie, RerollDie } from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollableRoll } from './rerollRollTarget.js';
 
 function pickOptions(found: RerollableRoll<unknown>, current: OneDieRoll) {
@@ -24,10 +24,7 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 }
 
 /** The dice a player picks from for a rule: every pickable die, or only the Primary Die. */
-function diceForRule(
-	found: RerollableRoll<unknown>,
-	die: 'primaryDie' | 'pickedDie',
-): PickableDie[] {
+function diceForRule(found: RerollableRoll<unknown>, die: ChangeableDie): PickableDie[] {
 	const dice = diceToPick(found);
 	if (die === 'pickedDie') return dice;
 	const current = found.current?.();
@@ -43,7 +40,7 @@ function diceForRule(
 function dieToUse(
 	found: RerollableRoll<unknown>,
 	current: OneDieRoll,
-	die: 'primaryDie' | 'pickedDie',
+	die: ChangeableDie,
 	picked: DieRef | null,
 ): DieRef | null {
 	if (die === 'primaryDie') return primaryDieRef(current);
@@ -105,7 +102,7 @@ function rerollableFor<TRoll>(
  */
 function changeableFor<TRoll>(
 	found: RerollableRoll<TRoll>,
-	die: 'primaryDie' | 'pickedDie',
+	die: ChangeableDie,
 	picked: DieRef | null,
 	change: DieChange,
 	changer: typeof changeOneDie = changeOneDie,

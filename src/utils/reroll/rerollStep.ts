@@ -3,6 +3,7 @@ import type {
 	RerollDieResult,
 	RerollRecord,
 	RollChange,
+	RollDieChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
@@ -65,7 +66,7 @@ interface RerollStepInput<TRoll> {
 	/** The rule rerolls by itself, with no click. */
 	automatic?: boolean;
 	/** A Change a Die rule's use: the change it makes. Absent for a reroll. */
-	change?: { mode: 'set' | 'add'; amount: number };
+	change?: RollDieChange;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }

@@ -7,6 +7,7 @@ import {
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type RollDieChange,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
@@ -46,7 +47,7 @@ interface RerollRuleLike {
 	}) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
-	dieChange?: { mode: 'set' | 'add'; amount: number };
+	dieChange?: RollDieChange;
 	cardHintFor?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;

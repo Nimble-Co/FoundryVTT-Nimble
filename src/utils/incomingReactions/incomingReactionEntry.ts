@@ -17,6 +17,15 @@ export type RerollDie = (typeof REROLL_DICE)[number];
 export const ROLL_USES = ['reroll', 'change'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
 
+/** The dice a Change a Die rule can change. */
+export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
+
+/** How one use of a Change a Die rule changes the die. `amount` is 0 for a set value. */
+export interface RollDieChange {
+	mode: 'set' | 'add';
+	amount: number;
+}
+
 /** Which result stands after a reroll. */
 export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
 export type RerollKeep = (typeof REROLL_KEEPS)[number];
@@ -162,7 +171,7 @@ export interface RerollRecord {
 	/** `change` for a die a Change a Die rule changed. Absent is `reroll`. */
 	use?: RollUse;
 	/** A change only: how the die changed. `amount` is 0 for a set value. */
-	change?: { mode: 'set' | 'add'; amount: number } | null;
+	change?: RollDieChange | null;
 	/** A set value on the Primary Die: the "Add to Primary Die Result" bonus it did not add. */
 	bonusNotAdded?: number;
 }
