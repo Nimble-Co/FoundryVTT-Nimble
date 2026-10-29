@@ -4,31 +4,20 @@ The Core tab: the things that you roll (abilities, saves, skills) and the profic
 A roll mode from rules shows its mark next to the number. In edit mode the rolls rest and the outlines open the configure windows.
 -->
 <script lang="ts">
+	import type { HeroCoreTabProps } from '#types/components/actorSheets/HeroCoreTab.d.ts';
 	import EditZone from '../../parts/EditZone.svelte';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
-	import type { HeroCoreView } from '../heroCoreTab.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
 	import RollModeMark from './RollModeMark.svelte';
-	import localize from '#utils/localize.js';
 
-	interface Props {
-		view: HeroCoreView;
-		editing: boolean;
-		perform: HeroPerform;
-		/** 2 or 3 columns of skills: the width of the tab decides */
-		skillColumns: number;
-	}
+	let { view, editing, perform, skillColumns }: HeroCoreTabProps = $props();
 
-	let { view, editing, perform, skillColumns }: Props = $props();
-
-	const CORE = 'NIMBLE.actorSheet.hero.core';
 	const skillRows = $derived(Math.ceil(view.skills.length / skillColumns));
 </script>
 
 <div class="core" class:editing>
 	<section>
 		<GroupHeading
-			label={localize(`${CORE}.abilitiesAndSaves`)}
+			label={view.text.abilitiesAndSaves}
 			flush
 			{editing}
 			buttonGap={editing ? 'md' : 'sm'}
@@ -37,53 +26,47 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 				<button
 					type="button"
 					class="nimble-u-reset-button configure"
-					aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
-					data-tooltip={localize('NIMBLE.prompts.configureAbilityScores')}
+					aria-label={view.text.configureStats}
+					data-tooltip={view.text.configureStats}
 					onclick={() => perform({ kind: 'configure', target: 'abilities' })}
 				>
-					<i class="fa-solid fa-gear"></i>{localize(`${CORE}.stats`)}
+					<i class="fa-solid fa-gear"></i>{view.text.stats}
 				</button>
 				<button
 					type="button"
 					class="nimble-u-reset-button configure"
-					aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
-					data-tooltip={localize('NIMBLE.prompts.configureSavingThrows')}
+					aria-label={view.text.configureSaves}
+					data-tooltip={view.text.configureSaves}
 					onclick={() => perform({ kind: 'configure', target: 'saves' })}
 				>
-					<i class="fa-solid fa-gear"></i>{localize(`${CORE}.saves`)}
+					<i class="fa-solid fa-gear"></i>{view.text.saves}
 				</button>
 			{/if}
 		</GroupHeading>
 		<div class="abilities">
 			{#each view.abilities as ability (ability.key)}
-				{@const checkLabel = localize('NIMBLE.prompts.rollAbilityCheckSpecific', {
-					ability: ability.name,
-				})}
-				{@const saveLabel = localize('NIMBLE.prompts.rollSavingThrowSpecific', {
-					save: ability.name,
-				})}
 				<div class="ability" style:--tone="var(--nimble-ability-{ability.key}-color)">
 					<span class="tab">{ability.abbreviation}</span>
 					<button
 						type="button"
 						class="nimble-u-reset-button check"
-						aria-label={checkLabel}
-						data-tooltip={checkLabel}
+						aria-label={ability.check.label}
+						data-tooltip={ability.check.label}
 						disabled={editing}
 						onclick={() => perform(ability.check.intent)}
 					>
-						{ability.check.mod}<RollModeMark value={ability.check.rollMode} />
+						{ability.check.mod}<RollModeMark mode={ability.check.rollMode} />
 					</button>
 					<button
 						type="button"
 						class="nimble-u-reset-button save"
-						aria-label={saveLabel}
-						data-tooltip={saveLabel}
+						aria-label={ability.save.label}
+						data-tooltip={ability.save.label}
 						disabled={editing}
 						onclick={() => perform(ability.save.intent)}
 					>
-						<span>{localize(`${CORE}.save`)}</span><b>{ability.save.mod}</b><RollModeMark
-							value={ability.save.rollMode}
+						<span>{view.text.save}</span><b>{ability.save.mod}</b><RollModeMark
+							mode={ability.save.rollMode}
 						/>
 					</button>
 				</div>
@@ -92,11 +75,11 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	</section>
 
 	<section class="zone-holder">
-		<GroupHeading label={localize(`${CORE}.skills`)} flush {editing} />
+		<GroupHeading label={view.text.skills} flush {editing} />
 		{#if editing}
 			<EditZone
-				short={localize(`${CORE}.skills`)}
-				label={localize('NIMBLE.prompts.configureSkills')}
+				short={view.text.skills}
+				label={view.text.configureSkills}
 				onclick={() => perform({ kind: 'configure', target: 'skills' })}
 			/>
 		{/if}
@@ -106,14 +89,13 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 			style:grid-template-rows="repeat({skillRows}, auto)"
 		>
 			{#each view.skills as skill, index (skill.key)}
-				{@const label = localize('NIMBLE.prompts.rollSkillCheckSpecific', { skill: skill.name })}
 				<button
 					type="button"
 					class="nimble-u-reset-button skill"
 					class:line={index % skillRows !== 0}
-					style:--tone="var(--nimble-ability-{skill.ability}-color)"
-					aria-label={label}
-					data-tooltip={label}
+					style:--tone={skill.ability ? `var(--nimble-ability-${skill.ability}-color)` : undefined}
+					aria-label={skill.label}
+					data-tooltip={skill.label}
 					data-row-id="skill-{skill.key}"
 					disabled={editing}
 					onclick={() => perform(skill.intent)}
@@ -121,7 +103,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 					<span class="ability-label">{skill.abilityAbbreviation}</span>
 					<span class="name">{skill.name}</span>
 					<span class="value">
-						<RollModeMark value={skill.rollMode} />
+						<RollModeMark mode={skill.rollMode} />
 						<b>{skill.mod}</b>
 						{#if skill.passive}<small>({skill.passive})</small>{/if}
 					</span>
@@ -131,7 +113,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	</section>
 
 	<section>
-		<GroupHeading label={localize(`${CORE}.proficiencies`)} flush {editing} />
+		<GroupHeading label={view.text.proficiencies} flush {editing} />
 		<dl class="proficiencies">
 			{#each view.proficiencies as row (row.label)}
 				{@const configure = row.configure}
@@ -146,8 +128,8 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 							inline
 							row
 							short={row.label}
-							label={localize('NIMBLE.prompts.configureItem', { name: row.label })}
-							onclick={() => perform(configure)}
+							label={configure.label}
+							onclick={() => perform(configure.intent)}
 						/>
 					{/if}
 				</div>

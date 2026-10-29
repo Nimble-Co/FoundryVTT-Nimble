@@ -84,7 +84,8 @@ describe('heroRail', () => {
 				max: 1,
 				sizes: 'd12',
 				typeable: true,
-				roll: { kind: 'rollHitDice' },
+				summary: '1/1',
+				roll: { intent: { kind: 'rollHitDice' }, label: 'NIMBLE.actorSheet.hero.meter.roll' },
 				edit: null,
 			});
 		});
@@ -105,7 +106,10 @@ describe('heroRail', () => {
 				max: 3,
 				sizes: 'd12 + d6',
 				typeable: false,
-				edit: { kind: 'editHitDice' },
+				edit: {
+					intent: { kind: 'editHitDice' },
+					label: 'NIMBLE.hitDice.editCurrentHitDice',
+				},
 			});
 		});
 
@@ -118,16 +122,23 @@ describe('heroRail', () => {
 			expect(heroRail(caster, heroContext()).meters.find((m) => m.kind === 'mana')).toMatchObject({
 				value: 3,
 				max: 5,
-				idle: false,
+				idle: null,
+				summary: '3/5',
 			});
 
 			const fromInitiative = heroRail(caster, heroContext({ manaFromInitiative: true }));
-			expect(fromInitiative.meters.find((m) => m.kind === 'mana')).toMatchObject({ idle: true });
+			expect(fromInitiative.meters.find((m) => m.kind === 'mana')).toMatchObject({
+				idle: {
+					note: 'NIMBLE.actorSheet.hero.meter.fromInitiative',
+					hint: 'NIMBLE.actorSheet.hero.meter.idleHint',
+				},
+				summary: '',
+			});
 			const rolled = heroRail(
 				caster,
 				heroContext({ manaFromInitiative: true, combat: heroTurn() }),
 			);
-			expect(rolled.meters.find((m) => m.kind === 'mana')).toMatchObject({ idle: false });
+			expect(rolled.meters.find((m) => m.kind === 'mana')).toMatchObject({ idle: null });
 		});
 
 		it('gives a dice pool its faces and a roll of one more die', () => {
@@ -141,8 +152,13 @@ describe('heroRail', () => {
 				poolKind: 'dice',
 				die: 6,
 				faces: [4, 2],
+				faceLabels: [
+					'NIMBLE.actorSheet.hero.meter.dieLabel {"label":"Fury Dice","number":"1","face":"4"}',
+					'NIMBLE.actorSheet.hero.meter.dieLabel {"label":"Fury Dice","number":"2","face":"2"}',
+				],
 				max: 3,
-				add: { kind: 'rollIntoDicePool', poolId: 'fury', label: 'Fury Dice' },
+				summary: '4 2',
+				add: { intent: { kind: 'rollIntoDicePool', poolId: 'fury', label: 'Fury Dice' } },
 			});
 			const full = heroContext({
 				dicePools: [{ id: 'fury', label: 'Fury Dice', dieSize: 'd6', max: 2, faces: [4, 2] }],
@@ -177,7 +193,11 @@ describe('heroRail', () => {
 			expect(meters[0]).toMatchObject({
 				poolKind: 'charges',
 				die: 8,
-				rollOne: { kind: 'rollPoolCharge', poolId: 'combatDice', label: 'combatDice' },
+				summary: '2/4',
+				rollOne: {
+					intent: { kind: 'rollPoolCharge', poolId: 'combatDice', label: 'combatDice' },
+					label: 'NIMBLE.actorSheet.hero.meter.rollOne {"label":"combatDice"}',
+				},
 			});
 			expect(meters[1]).toMatchObject({ poolKind: 'uses', die: null, rollOne: null });
 		});
@@ -186,8 +206,8 @@ describe('heroRail', () => {
 	describe('rests and initiative', () => {
 		it('shows the rests out of combat only', () => {
 			expect(heroRail(blankHero(), heroContext()).rests).toEqual({
-				field: { kind: 'rest', restType: 'field' },
-				safe: { kind: 'rest', restType: 'safe' },
+				field: { label: 'NIMBLE.prompts.fieldRest', intent: { kind: 'rest', restType: 'field' } },
+				safe: { label: 'NIMBLE.prompts.safeRest', intent: { kind: 'rest', restType: 'safe' } },
 			});
 			expect(heroRail(blankHero(), heroContext({ combat: heroTurn() })).rests).toBeNull();
 		});
@@ -200,7 +220,7 @@ describe('heroRail', () => {
 			for (const combat of [null, heroTurn()]) {
 				expect(heroRail(hero, heroContext({ combat })).initiative).toMatchObject({
 					mod: '+3',
-					rollMode: 1,
+					rollMode: { value: 1 },
 					intent: { kind: 'rollInitiative' },
 				});
 			}
@@ -229,7 +249,10 @@ describe('heroRail', () => {
 				[true, { kind: 'setActions', value: 1 }],
 				[false, { kind: 'setActions', value: 3 }],
 			]);
-			expect(turn?.addAction).toEqual({ kind: 'addAction' });
+			expect(turn?.addAction).toEqual({
+				intent: { kind: 'addAction' },
+				label: 'NIMBLE.ui.heroicActions.addAdditionalAction',
+			});
 		});
 
 		it('has no extra action at the limit of a turn', () => {
@@ -242,11 +265,13 @@ describe('heroRail', () => {
 			const left = heroRail(blankHero(), heroContext({ combat: heroTurn() })).turn;
 			expect(left?.endTurn).toEqual({
 				intent: { kind: 'endTurn' },
+				label: 'NIMBLE.ui.heroicActions.endTurn',
 				question: `${RAIL}.endTurnQuestion`,
+				cancelLabel: 'NIMBLE.actorSheet.hero.turn.keepPlaying',
 			});
 
 			const none = heroContext({ combat: heroTurn({ actions: { current: 0 } }) });
-			expect(heroRail(blankHero(), none).turn?.endTurn).toEqual({
+			expect(heroRail(blankHero(), none).turn?.endTurn).toMatchObject({
 				intent: { kind: 'endTurn' },
 				question: null,
 			});
@@ -273,6 +298,7 @@ describe('heroRail', () => {
 	describe('rare actions', () => {
 		it('lets a hero with a class below level 20 level up', () => {
 			expect(heroRail(blankHero(), heroContext()).levelUp).toEqual({
+				label: 'NIMBLE.prompts.levelUp',
 				intent: { kind: 'levelUp' },
 				tooltip: `${RAIL}.levelUpHint`,
 			});
@@ -282,6 +308,7 @@ describe('heroRail', () => {
 			const max = blankHero();
 			max.items[0].system.classLevel = 20;
 			expect(heroRail(max, heroContext()).levelUp).toEqual({
+				label: 'NIMBLE.prompts.levelUp',
 				intent: null,
 				tooltip: `${RAIL}.levelUpMax`,
 			});
@@ -294,7 +321,10 @@ describe('heroRail', () => {
 		it('lets you revert a level up only with a history', () => {
 			expect(heroRail(blankHero(), heroContext()).revertLevelUp).toBeNull();
 			const leveled = blankHero({ system: { levelUpHistory: [{ level: 2 }] } });
-			expect(heroRail(leveled, heroContext()).revertLevelUp).toEqual({ kind: 'revertLevelUp' });
+			expect(heroRail(leveled, heroContext()).revertLevelUp).toEqual({
+				label: `${RAIL}.revertLevelUp`,
+				intent: { kind: 'revertLevelUp' },
+			});
 		});
 
 		it('warns about a missed level choice and opens the correction', () => {

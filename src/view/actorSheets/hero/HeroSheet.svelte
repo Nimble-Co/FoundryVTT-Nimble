@@ -5,71 +5,37 @@ Wide (560 px or more): the rail at the left and the tabs at the right. Narrow: a
 In Foundry the Application gives the adapter, its `$state` and the Foundry dispatcher; a story gives fixtures and a logging `perform`.
 -->
 <script lang="ts">
-	import { tick } from 'svelte';
+	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
-	import type { SheetUiState } from '../shared/sheetUiState.ts';
+	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
 	import { heroCoreTab } from './heroCoreTab.ts';
-	import type { HeroPerform } from './heroIntent.ts';
+	import { heroFrame } from './heroFrame.ts';
 	import { heroRail } from './heroRail.ts';
-	import type { HeroSource } from './heroSource.ts';
-	import { heroTabs } from './heroTabs.ts';
 	import HeroCoreTab from './sections/HeroCoreTab.svelte';
 	import HeroHeader from './sections/HeroHeader.svelte';
 	import HeroRail from './sections/HeroRail.svelte';
 	import HeroStrip from './sections/HeroStrip.svelte';
-	import localize from '#utils/localize.js';
 
-	interface Props {
-		source: () => HeroSource;
-		ui: SheetUiState;
-		perform: HeroPerform;
-	}
-
-	let { source, ui, perform }: Props = $props();
+	let { source, ui, perform }: HeroSheetProps = $props();
 
 	const NARROW_BELOW = 560;
 	const RAIL_WIDTH = 236;
 
 	let root: HTMLElement | undefined = $state();
-	let width = $state(720);
+	const size = trackWidth(() => root, 720);
+	flashRows(
+		() => root,
+		() => ui.flash,
+	);
 
 	const current = $derived(source());
-	const wide = $derived(width >= NARROW_BELOW);
-	const mainWidth = $derived(wide ? width - RAIL_WIDTH : width);
+	const wide = $derived(size.width >= NARROW_BELOW);
+	const mainWidth = $derived(wide ? size.width - RAIL_WIDTH : size.width);
 	const rail = $derived(heroRail(current.actor, current.context));
-	const tabs = $derived(heroTabs(current.context));
+	const frame = $derived(heroFrame(current.context));
 	const core = $derived(heroCoreTab(current.actor, current.context));
 	const slot = $derived(mainWidth / 8);
 	const tabFit = $derived(slot >= 78 ? 'inline' : slot >= 50 ? 'stacked' : 'icon');
-
-	$effect(() => {
-		if (!root || typeof ResizeObserver === 'undefined') return;
-		const observer = new ResizeObserver(([entry]) => {
-			width = entry.contentRect.width;
-		});
-		observer.observe(root);
-		return () => observer.disconnect();
-	});
-
-	$effect(() => {
-		const flash = ui.flash;
-		if (!flash || !root) return;
-		let row: HTMLElement | null | undefined;
-		const done = (event: AnimationEvent) => {
-			if (row && event.target === row) delete row.dataset.flash;
-		};
-		void tick().then(() => {
-			row = root?.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(flash.rowId)}"]`);
-			if (!row) return;
-			row.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
-			// a reflow between the two writes starts the animation again on a second reveal
-			delete row.dataset.flash;
-			void row.offsetWidth;
-			row.dataset.flash = String(flash.serial);
-			row.addEventListener('animationend', done);
-		});
-		return () => row?.removeEventListener('animationend', done);
-	});
 </script>
 
 <div class="hero" class:wide class:narrow={!wide} bind:this={root}>
@@ -81,10 +47,10 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	<main>
 		<nav class="tabs">
 			<SheetTabs
-				{tabs}
+				tabs={frame.tabs}
 				value={ui.tab}
 				fit={tabFit}
-				label={localize('NIMBLE.actorSheet.hero.tabs.label')}
+				label={frame.tabsLabel}
 				onchange={(id) => {
 					ui.tab = id;
 					ui.confirm = null;
@@ -97,8 +63,8 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 				<div class="band" role="status">
 					<i class="fa-solid fa-pen"></i>
 					<span>
-						<b>{localize('NIMBLE.actorSheet.hero.frame.editing')}</b>
-						{localize('NIMBLE.actorSheet.hero.frame.editingHint')}
+						<b>{frame.editBand.title}</b>
+						{frame.editBand.hint}
 					</span>
 					<button
 						type="button"
@@ -108,7 +74,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 							ui.confirm = null;
 						}}
 					>
-						{localize('NIMBLE.actorSheet.hero.frame.done')}
+						{frame.editBand.done}
 					</button>
 				</div>
 			{/if}

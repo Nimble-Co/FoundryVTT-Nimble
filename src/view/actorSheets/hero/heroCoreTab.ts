@@ -1,17 +1,21 @@
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
+import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
-import type { HeroIntent } from './heroIntent.ts';
-import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
+import type { HeroConfigureTarget, HeroIntent } from './heroIntent.ts';
+import type { HeroActorLike, HeroSheetContext, RolledValue } from './heroSource.ts';
 import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';
 
 export interface HeroRollView {
 	mod: string;
-	/** stacked advantage (positive) or disadvantage (negative) */
-	rollMode: number;
+	rollMode: RollModeView | null;
+	/** what the roll button says to a screen reader and in its tooltip */
+	label: string;
 	intent: HeroIntent;
 }
 
 export interface HeroAbilityView {
-	key: string;
+	key: AbilityKeyType;
 	abbreviation: string;
 	name: string;
 	check: HeroRollView;
@@ -19,9 +23,9 @@ export interface HeroAbilityView {
 }
 
 export interface HeroSkillView extends HeroRollView {
-	key: string;
+	key: SkillKeyType;
 	name: string;
-	ability: string;
+	ability: AbilityKeyType | null;
 	abilityAbbreviation: string;
 	/** 10 + the modifier, behind the passive scores flag */
 	passive: string | null;
@@ -32,16 +36,30 @@ export interface HeroProficiencyView {
 	value: string;
 	/** a short note after the value: where a bonus comes from */
 	note: string | null;
-	configure: HeroIntent | null;
+	configure: { intent: HeroIntent; label: string } | null;
 }
 
 export interface HeroCoreView {
+	text: {
+		abilitiesAndSaves: string;
+		/** the short name on the button, and its long label */
+		stats: string;
+		configureStats: string;
+		saves: string;
+		configureSaves: string;
+		/** the word before a save modifier */
+		save: string;
+		skills: string;
+		configureSkills: string;
+		proficiencies: string;
+	};
 	abilities: HeroAbilityView[];
 	skills: HeroSkillView[];
 	proficiencies: HeroProficiencyView[];
 }
 
 const CORE = 'NIMBLE.actorSheet.hero.core';
+
 function speedBonusNote(actor: HeroActorLike, context: HeroSheetContext): string | null {
 	const notes = speedBonuses(actor).map((bonus) =>
 		context.format(`${CORE}.speedBonus`, {
@@ -50,6 +68,17 @@ function speedBonusNote(actor: HeroActorLike, context: HeroSheetContext): string
 		}),
 	);
 	return notes.length ? notes.join(', ') : null;
+}
+
+function configure(
+	target: HeroConfigureTarget,
+	prompt: string,
+	context: HeroSheetContext,
+): HeroProficiencyView['configure'] {
+	return {
+		intent: { kind: 'configure', target },
+		label: context.localize(`NIMBLE.prompts.${prompt}`),
+	};
 }
 
 function listOrNone(names: string[], context: HeroSheetContext): string {
@@ -95,31 +124,31 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 			label: localize(`${CORE}.speed`),
 			value: speed,
 			note: speedBonusNote(actor, context),
-			configure: { kind: 'configure', target: 'movement' },
+			configure: configure('movement', 'configureMovement', context),
 		},
 		{
 			label: localize(`${CORE}.languages`),
 			value: listOrNone(languages.map((key) => labels.languages[key] ?? key).sort(byName), context),
 			note: null,
-			configure: { kind: 'configure', target: 'languages' },
+			configure: configure('languages', 'configureLanguageProficiencies', context),
 		},
 		{
 			label: localize(`${CORE}.armor`),
 			value: listOrNone(armor.map((key) => labels.armorTypes[key] ?? key).sort(byName), context),
 			note: null,
-			configure: { kind: 'configure', target: 'armorProficiencies' },
+			configure: configure('armorProficiencies', 'configureArmorProficiencies', context),
 		},
 		{
 			label: localize(`${CORE}.weapons`),
 			value: listOrNone([...weapons], context),
 			note: null,
-			configure: { kind: 'configure', target: 'weaponProficiencies' },
+			configure: configure('weaponProficiencies', 'configureWeaponProficiencies', context),
 		},
 		{
 			label: localize(`${CORE}.damage`),
 			value: damageDefenses(actor, context),
 			note: null,
-			configure: { kind: 'configure', target: 'damageDefenses' },
+			configure: configure('damageDefenses', 'configureDamageDefenses', context),
 		},
 	];
 
@@ -140,43 +169,61 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 
 /** The Core tab: abilities and saves, skills, and the proficiencies and defenses. */
 export function heroCoreTab(actor: HeroActorLike, context: HeroSheetContext): HeroCoreView {
-	const { localize } = context;
+	const { localize, format } = context;
 	const { abilities, savingThrows, skills } = actor.system;
 	const showPassive = actor.flags.showPassiveSkillScores === true;
 
 	return {
-		abilities: Object.entries(abilities).map(([key, ability]) => {
-			const save = savingThrows[key] ?? { mod: 0, defaultRollMode: 0 };
-			return {
-				key,
-				abbreviation: localize(`NIMBLE.abilityScoreAbbreviations.${key}`),
-				name: localize(`NIMBLE.abilityScores.${key}`),
-				check: {
-					mod: signedNumber(ability.mod),
-					rollMode: ability.defaultRollMode,
-					intent: { kind: 'rollAbilityCheck', ability: key },
-				},
-				save: {
-					mod: signedNumber(save.mod),
-					rollMode: save.defaultRollMode,
-					intent: { kind: 'rollSave', save: key },
-				},
-			};
-		}),
-		skills: Object.entries(skills)
-			.map(([key, skill]) => {
-				const ability = context.skillAbilities[key] ?? '';
+		text: {
+			abilitiesAndSaves: localize(`${CORE}.abilitiesAndSaves`),
+			stats: localize(`${CORE}.stats`),
+			configureStats: localize('NIMBLE.prompts.configureAbilityScores'),
+			saves: localize(`${CORE}.saves`),
+			configureSaves: localize('NIMBLE.prompts.configureSavingThrows'),
+			save: localize(`${CORE}.save`),
+			skills: localize(`${CORE}.skills`),
+			configureSkills: localize('NIMBLE.prompts.configureSkills'),
+			proficiencies: localize(`${CORE}.proficiencies`),
+		},
+		abilities: (Object.entries(abilities) as [AbilityKeyType, RolledValue][]).map(
+			([key, ability]) => {
+				const save = savingThrows[key] ?? { mod: 0, defaultRollMode: 0 };
+				const name = localize(`NIMBLE.abilityScores.${key}`);
 				return {
 					key,
-					name: localize(`NIMBLE.skills.${key}`),
+					abbreviation: localize(`NIMBLE.abilityScoreAbbreviations.${key}`),
+					name,
+					check: {
+						mod: signedNumber(ability.mod),
+						rollMode: rollModeView(ability.defaultRollMode, format),
+						label: format('NIMBLE.prompts.rollAbilityCheckSpecific', { ability: name }),
+						intent: { kind: 'rollAbilityCheck', ability: key },
+					},
+					save: {
+						mod: signedNumber(save.mod),
+						rollMode: rollModeView(save.defaultRollMode, format),
+						label: format('NIMBLE.prompts.rollSavingThrowSpecific', { save: name }),
+						intent: { kind: 'rollSave', save: key },
+					},
+				};
+			},
+		),
+		skills: (Object.entries(skills) as [SkillKeyType, RolledValue][])
+			.map(([key, skill]): HeroSkillView => {
+				const ability = context.skillAbilities[key] ?? null;
+				const name = localize(`NIMBLE.skills.${key}`);
+				return {
+					key,
+					name,
 					ability,
 					abilityAbbreviation: ability
 						? localize(`NIMBLE.abilityScoreAbbreviations.${ability}`)
 						: '',
 					mod: signedNumber(skill.mod),
-					rollMode: skill.defaultRollMode,
+					rollMode: rollModeView(skill.defaultRollMode, format),
+					label: format('NIMBLE.prompts.rollSkillCheckSpecific', { skill: name }),
 					passive: showPassive ? String(10 + skill.mod) : null,
-					intent: { kind: 'rollSkill', skill: key } as HeroIntent,
+					intent: { kind: 'rollSkill', skill: key },
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name)),

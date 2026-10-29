@@ -1,3 +1,6 @@
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SaveKeyType } from '#types/saveKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
 import type {
 	ChargePoolLike,
 	DicePoolLike,
@@ -18,9 +21,9 @@ export interface HeroActorLike {
 	name: string;
 	img: string;
 	system: {
-		abilities: Record<string, RolledValue>;
-		savingThrows: Record<string, RolledValue>;
-		skills: Record<string, RolledValue>;
+		abilities: Record<AbilityKeyType, RolledValue>;
+		savingThrows: Partial<Record<SaveKeyType, RolledValue>>;
+		skills: Record<SkillKeyType, RolledValue>;
 		attributes: {
 			hp: { value: number; max: number; temp: number };
 			wounds: { value: number; max: number };
@@ -83,7 +86,7 @@ export interface HeroSheetContext {
 		armorTypes: Record<string, string>;
 	};
 	/** skill key to the key of its ability */
-	skillAbilities: Record<string, string>;
+	skillAbilities: Partial<Record<SkillKeyType, AbilityKeyType>>;
 	dicePools: DicePoolLike[];
 	chargePools: ChargePoolLike[];
 }

@@ -1,6 +1,7 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import type { PoolKind } from '../parts/types.ts';
+import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
 import type { HeroIntent } from './heroIntent.ts';
@@ -15,6 +16,8 @@ export interface WoundsMeterView {
 	max: number;
 	/** the last wound: the hero is dead */
 	dead: boolean;
+	/** `value/max`, or the dead word */
+	summary: string;
 	segments: { on: boolean; label: string; intent: HeroIntent }[];
 }
 
@@ -28,8 +31,11 @@ export interface HitDiceMeterView {
 	max: number;
 	/** one die size: you type the current number; more sizes: the edit window */
 	typeable: boolean;
-	roll: HeroIntent;
-	edit: HeroIntent | null;
+	summary: string;
+	currentLabel: string;
+	roll: { intent: HeroIntent; label: string; hint: string };
+	edit: { intent: HeroIntent; label: string } | null;
+	configureLabel: string;
 }
 
 export interface ManaMeterView {
@@ -39,7 +45,11 @@ export interface ManaMeterView {
 	value: number;
 	max: number;
 	/** you get the mana when you roll Initiative */
-	idle: boolean;
+	idle: { note: string; hint: string } | null;
+	/** empty while idle */
+	summary: string;
+	currentLabel: string;
+	configureLabel: string;
 }
 
 export interface DicePoolMeterView {
@@ -50,9 +60,20 @@ export interface DicePoolMeterView {
 	icon: string;
 	die: number;
 	faces: number[];
+	/** one label for each face */
+	faceLabels: string[];
 	max: number;
+	/** the faces, or `0/max` when the pool is empty */
+	summary: string;
 	/** roll one more die into the pool; null when it is full */
-	add: HeroIntent | null;
+	add: { intent: HeroIntent; label: string; hint: string } | null;
+	text: {
+		menu: string;
+		setValue: string;
+		discard: string;
+		discardAll: string;
+		discardAllQuestion: string;
+	};
 }
 
 export interface ChargesMeterView {
@@ -65,10 +86,12 @@ export interface ChargesMeterView {
 	die: number | null;
 	value: number;
 	max: number;
-	/** the temporary uses in `value` */
-	temporary: number;
+	/** the temporary uses in `value`, in words; null with none */
+	temporary: string | null;
+	summary: string;
+	currentLabel: string;
 	/** roll and spend one die; null with no die or no charge */
-	rollOne: HeroIntent | null;
+	rollOne: { intent: HeroIntent; label: string } | null;
 }
 
 export type HeroMeterView =
@@ -90,21 +113,41 @@ export interface HeroSpeedView {
 
 export interface HeroTurnView {
 	isTurn: boolean;
+	label: string;
 	heading: string;
 	current: number;
 	max: number;
 	cells: { available: boolean; label: string; intent: HeroIntent }[];
 	/** null at the most actions a turn can have */
-	addAction: HeroIntent | null;
+	addAction: { intent: HeroIntent; label: string } | null;
 	/** what the next turn gains or loses */
 	pending: string | null;
 	/** only on your turn; `question` is asked first while actions are left */
-	endTurn: { intent: HeroIntent; question: string | null } | null;
+	endTurn: {
+		intent: HeroIntent;
+		label: string;
+		question: string | null;
+		cancelLabel: string;
+	} | null;
 	/** off your turn: what a reaction costs */
 	hint: string | null;
 }
 
 export interface HeroRailView {
+	text: {
+		/** the label of the rail and the narrow header */
+		label: string;
+		changePortrait: string;
+		name: string;
+		metaShort: string;
+		metaLabel: string;
+		hp: string;
+		tempHp: string;
+		hpShort: string;
+		configureHp: string;
+		movementShort: string;
+		configureMovement: string;
+	};
 	name: string;
 	img: string;
 	/** offset in px and scale in percent, from the image settings */
@@ -122,17 +165,31 @@ export interface HeroRailView {
 	armor: { label: string; value: number; tooltip: string };
 	speeds: HeroSpeedView[];
 	meters: HeroMeterView[];
-	initiative: { label: string; mod: string; rollMode: number; intent: HeroIntent | null };
+	initiative: {
+		label: string;
+		mod: string;
+		rollMode: RollModeView | null;
+		intent: HeroIntent | null;
+	};
 	/** null in combat */
-	rests: { field: HeroIntent; safe: HeroIntent } | null;
+	rests: { field: HeroAction; safe: HeroAction } | null;
 	/** null out of combat, and before you roll Initiative */
 	turn: HeroTurnView | null;
-	levelUp: { intent: HeroIntent | null; tooltip: string };
-	revertLevelUp: HeroIntent | null;
+	levelUp: { label: string; intent: HeroIntent | null; tooltip: string };
+	revertLevelUp: HeroAction | null;
 	levelCorrection: { label: string; tooltip: string; intent: HeroIntent } | null;
+	/** the Edit switch: its words, and the hint for each state */
+	edit: { label: string; startHint: string; stopHint: string };
+}
+
+export interface HeroAction {
+	label: string;
+	intent: HeroIntent;
 }
 
 const RAIL = 'NIMBLE.actorSheet.hero.rail';
+const METER = 'NIMBLE.actorSheet.hero.meter';
+const TURN = 'NIMBLE.actorSheet.hero.turn';
 const MAX_LEVEL = 20;
 const MOVEMENT_ICONS: Record<string, string> = {
 	walk: 'fa-solid fa-person-walking',
@@ -217,16 +274,29 @@ function hitDiceBySize(actor: HeroActorLike): Map<number, { current: number; tot
 
 function hitDiceMeter(actor: HeroActorLike, context: HeroSheetContext): HitDiceMeterView {
 	const bySize = [...hitDiceBySize(actor).entries()].sort(([a], [b]) => b - a);
+	const { localize } = context;
+	const value = bySize.reduce((sum, [, data]) => sum + data.current, 0);
+	const max = bySize.reduce((sum, [, data]) => sum + data.total, 0);
 	return {
 		kind: 'hitDice',
 		id: 'hitDice',
-		label: context.localize('NIMBLE.hitDice.heading'),
+		label: localize('NIMBLE.hitDice.heading'),
 		sizes: bySize.map(([size]) => `d${size}`).join(' + '),
-		value: bySize.reduce((sum, [, data]) => sum + data.current, 0),
-		max: bySize.reduce((sum, [, data]) => sum + data.total, 0),
+		value,
+		max,
 		typeable: bySize.length <= 1,
-		roll: { kind: 'rollHitDice' },
-		edit: bySize.length > 1 ? { kind: 'editHitDice' } : null,
+		summary: `${value}/${max}`,
+		currentLabel: localize('NIMBLE.hitDice.currentHitDice'),
+		roll: {
+			intent: { kind: 'rollHitDice' },
+			label: localize(`${METER}.roll`),
+			hint: localize(`${METER}.rollHitDiceHint`),
+		},
+		edit:
+			bySize.length > 1
+				? { intent: { kind: 'editHitDice' }, label: localize('NIMBLE.hitDice.editCurrentHitDice') }
+				: null,
+		configureLabel: localize('NIMBLE.hitDice.configureHitDice'),
 	};
 }
 
@@ -240,6 +310,7 @@ function woundsMeter(actor: HeroActorLike, context: HeroSheetContext): WoundsMet
 		value,
 		max,
 		dead: value >= max,
+		summary: value >= max ? context.localize('NIMBLE.conditions.dead') : `${value}/${max}`,
 		segments: Array.from({ length: max }, (_, index) => {
 			const level = index + 1;
 			return {
@@ -259,18 +330,28 @@ function manaMeter(actor: HeroActorLike, context: HeroSheetContext): ManaMeterVi
 	});
 	const hasMana = context.manaFromInitiative || mana.max > 0 || mana.baseMax > 0 || classFormula;
 	if (!hasMana) return null;
+	const { localize, format } = context;
 	const idle = context.manaFromInitiative && !context.combat?.initiativeRolled;
+	const label = localize('NIMBLE.ui.combatTracker.mana');
+	const value = idle ? 0 : mana.current;
+	const max = mana.max || mana.baseMax;
 	return {
 		kind: 'mana',
 		id: 'mana',
-		label: context.localize('NIMBLE.ui.combatTracker.mana'),
-		value: idle ? 0 : mana.current,
-		max: mana.max || mana.baseMax,
-		idle,
+		label,
+		value,
+		max,
+		idle: idle
+			? { note: localize(`${METER}.fromInitiative`), hint: localize(`${METER}.idleHint`) }
+			: null,
+		summary: idle ? '' : `${value}/${max}`,
+		currentLabel: format('NIMBLE.actorSheet.parts.vitalPlate.current', { label }),
+		configureLabel: localize('NIMBLE.manaConfig.configureMana'),
 	};
 }
 
 function poolMeters(context: HeroSheetContext): HeroMeterView[] {
+	const { localize, format } = context;
 	const dice: HeroMeterView[] = context.dicePools
 		.filter((pool) => pool.max > 0)
 		.map((pool) => ({
@@ -281,11 +362,30 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 			icon: pool.icon || 'fa-solid fa-dice',
 			die: dieNumber(pool.dieSize) ?? 6,
 			faces: [...pool.faces],
+			faceLabels: pool.faces.map((face, index) =>
+				format(`${METER}.dieLabel`, {
+					label: pool.label,
+					number: String(index + 1),
+					face: String(face),
+				}),
+			),
 			max: pool.max,
+			summary: pool.faces.length ? pool.faces.join(' ') : `0/${pool.max}`,
 			add:
 				pool.faces.length < pool.max
-					? { kind: 'rollIntoDicePool', poolId: pool.id, label: pool.label }
+					? {
+							intent: { kind: 'rollIntoDicePool', poolId: pool.id, label: pool.label },
+							label: format('NIMBLE.actorSheet.parts.dicePool.addLabel', { label: pool.label }),
+							hint: localize('NIMBLE.actorSheet.parts.dicePool.add'),
+						}
 					: null,
+			text: {
+				menu: localize(`${METER}.dieMenu`),
+				setValue: localize(`${METER}.setValue`),
+				discard: localize(`${METER}.discard`),
+				discardAll: localize(`${METER}.discardAll`),
+				discardAllQuestion: format(`${METER}.discardAllQuestion`, { label: pool.label }),
+			},
 		}));
 	const charges: HeroMeterView[] = context.chargePools
 		.filter((pool) => !pool.hidden && (pool.showAsResource || pool.dieSize !== null))
@@ -300,10 +400,17 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 				die,
 				value: pool.current,
 				max: pool.max,
-				temporary: pool.temporary ?? 0,
+				temporary: pool.temporary
+					? format(`${METER}.temporary`, { count: String(pool.temporary) })
+					: null,
+				summary: `${pool.current}/${pool.max}`,
+				currentLabel: format('NIMBLE.actorSheet.parts.vitalPlate.current', { label: pool.label }),
 				rollOne:
 					die && pool.current > 0
-						? { kind: 'rollPoolCharge', poolId: pool.id, label: pool.label }
+						? {
+								intent: { kind: 'rollPoolCharge', poolId: pool.id, label: pool.label },
+								label: format(`${METER}.rollOne`, { label: pool.label }),
+							}
 						: null,
 			};
 		});
@@ -342,8 +449,10 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 	if (!combat?.initiativeRolled) return null;
 	const { current, effectiveMax, pendingDelta } = combat.actions;
 	const count = Math.max(effectiveMax, current);
+	const endTurnLabel = localize('NIMBLE.ui.heroicActions.endTurn');
 	return {
 		isTurn: combat.isTurn,
+		label: localize(`${TURN}.label`),
 		heading: localize(`${RAIL}.${combat.isTurn ? 'yourTurn' : 'notYourTurn'}`),
 		current,
 		max: effectiveMax,
@@ -360,7 +469,12 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 				},
 			};
 		}),
-		addAction: combat.actions.mayAdd ? { kind: 'addAction' } : null,
+		addAction: combat.actions.mayAdd
+			? {
+					intent: { kind: 'addAction' },
+					label: localize('NIMBLE.ui.heroicActions.addAdditionalAction'),
+				}
+			: null,
 		pending: pendingDelta
 			? format(getPendingActionsLocalizationKey(pendingDelta), {
 					count: String(Math.abs(pendingDelta)),
@@ -369,7 +483,9 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 		endTurn: combat.isTurn
 			? {
 					intent: { kind: 'endTurn' },
+					label: endTurnLabel,
 					question: current > 0 ? localize(`${RAIL}.endTurnQuestion`) : null,
+					cancelLabel: localize(`${TURN}.keepPlaying`),
 				}
 			: null,
 		hint: combat.isTurn ? null : localize(`${RAIL}.offTurnHint`),
@@ -377,12 +493,19 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 }
 
 function levelUp(actor: HeroActorLike, context: HeroSheetContext): HeroRailView['levelUp'] {
+	const label = context.localize('NIMBLE.prompts.levelUp');
 	const characterClass = firstOfType(actor, 'class');
-	if (!characterClass) return { intent: null, tooltip: context.localize(`${RAIL}.levelUpNoClass`) };
-	if (Number(characterClass.system.classLevel ?? 1) >= MAX_LEVEL) {
-		return { intent: null, tooltip: context.localize(`${RAIL}.levelUpMax`) };
+	if (!characterClass) {
+		return { label, intent: null, tooltip: context.localize(`${RAIL}.levelUpNoClass`) };
 	}
-	return { intent: { kind: 'levelUp' }, tooltip: context.localize(`${RAIL}.levelUpHint`) };
+	if (Number(characterClass.system.classLevel ?? 1) >= MAX_LEVEL) {
+		return { label, intent: null, tooltip: context.localize(`${RAIL}.levelUpMax`) };
+	}
+	return {
+		label,
+		intent: { kind: 'levelUp' },
+		tooltip: context.localize(`${RAIL}.levelUpHint`),
+	};
 }
 
 /** The rail of the character sheet (the header of the narrow form): who, vitals, turn, meters. */
@@ -395,6 +518,19 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 	const missing = context.missingLevelSelections;
 
 	return {
+		text: {
+			label: localize(`${RAIL}.label`),
+			changePortrait: localize('NIMBLE.prompts.changeActorImage'),
+			name: localize(`${RAIL}.name`),
+			metaShort: localize(`${RAIL}.metaShort`),
+			metaLabel: localize(`${RAIL}.metaLabel`),
+			hp: localize('NIMBLE.actorSheet.parts.vitalPlate.hp'),
+			tempHp: localize('NIMBLE.actorSheet.parts.vitalPlate.tempHp'),
+			hpShort: localize(`${RAIL}.hpShort`),
+			configureHp: localize(`${RAIL}.configureHp`),
+			movementShort: localize(`${RAIL}.movementShort`),
+			configureMovement: localize('NIMBLE.prompts.configureMovement'),
+		},
 		name: actor.name,
 		img: actor.img,
 		portrait: {
@@ -426,15 +562,26 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 		initiative: {
 			label: localize('NIMBLE.prompts.rollInitiative'),
 			mod: signedNumber(initiative.mod),
-			rollMode: initiative.defaultRollMode,
+			rollMode: rollModeView(initiative.defaultRollMode, format),
 			intent: context.combat?.initiativePending ? null : { kind: 'rollInitiative' },
 		},
 		rests: context.combat
 			? null
-			: { field: { kind: 'rest', restType: 'field' }, safe: { kind: 'rest', restType: 'safe' } },
+			: {
+					field: {
+						label: localize('NIMBLE.prompts.fieldRest'),
+						intent: { kind: 'rest', restType: 'field' },
+					},
+					safe: {
+						label: localize('NIMBLE.prompts.safeRest'),
+						intent: { kind: 'rest', restType: 'safe' },
+					},
+				},
 		turn: turn(context),
 		levelUp: levelUp(actor, context),
-		revertLevelUp: actor.system.levelUpHistory.length ? { kind: 'revertLevelUp' } : null,
+		revertLevelUp: actor.system.levelUpHistory.length
+			? { label: localize(`${RAIL}.revertLevelUp`), intent: { kind: 'revertLevelUp' } }
+			: null,
 		levelCorrection: missing.length
 			? {
 					label: localize('NIMBLE.levelCorrectionDialog.sheetWarning'),
@@ -444,5 +591,10 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 					intent: { kind: 'correctLevels' },
 				}
 			: null,
+		edit: {
+			label: localize(`${RAIL}.edit`),
+			startHint: localize(`${RAIL}.editHint`),
+			stopHint: localize(`${RAIL}.stopEditing`),
+		},
 	};
 }

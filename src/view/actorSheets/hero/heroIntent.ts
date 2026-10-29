@@ -1,3 +1,6 @@
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SaveKeyType } from '#types/saveKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
 /** The configure windows that the character sheet opens. */
 export type HeroConfigureTarget =
 	| 'hitPoints'
@@ -40,8 +43,8 @@ export type HeroIntent =
 	| { kind: 'setActions'; value: number }
 	| { kind: 'addAction' }
 	| { kind: 'endTurn' }
-	| { kind: 'rollAbilityCheck'; ability: string }
-	| { kind: 'rollSave'; save: string }
-	| { kind: 'rollSkill'; skill: string };
+	| { kind: 'rollAbilityCheck'; ability: AbilityKeyType }
+	| { kind: 'rollSave'; save: SaveKeyType }
+	| { kind: 'rollSkill'; skill: SkillKeyType };
 
 export type HeroPerform = (intent: HeroIntent) => void | Promise<void>;

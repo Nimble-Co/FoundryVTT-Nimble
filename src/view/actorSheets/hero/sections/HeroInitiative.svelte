@@ -4,17 +4,10 @@ Roll Initiative, in all states: it rolls in combat, adds the hero first when the
 and rolls to chat out of combat. It waits while a roll is on its way.
 -->
 <script lang="ts">
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroRailView } from '../heroRail.ts';
+	import type { HeroInitiativeProps } from '#types/components/actorSheets/HeroInitiative.d.ts';
 	import RollModeMark from './RollModeMark.svelte';
 
-	interface Props {
-		initiative: HeroRailView['initiative'];
-		editing: boolean;
-		perform: HeroPerform;
-	}
-
-	let { initiative, editing, perform }: Props = $props();
+	let { initiative, editing, perform }: HeroInitiativeProps = $props();
 </script>
 
 <button
@@ -25,7 +18,7 @@ and rolls to chat out of combat. It waits while a roll is on its way.
 	onclick={() => initiative.intent && perform(initiative.intent)}
 >
 	<i class="fa-solid fa-dice-d20"></i>{initiative.label}
-	<span class="mod">{initiative.mod}<RollModeMark value={initiative.rollMode} /></span>
+	<span class="mod">{initiative.mod}<RollModeMark mode={initiative.rollMode} /></span>
 </button>
 
 <style>

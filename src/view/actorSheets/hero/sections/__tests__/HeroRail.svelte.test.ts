@@ -10,6 +10,8 @@ import { heroRail } from '../../heroRail.ts';
 import type { HeroSheetContext } from '../../heroSource.ts';
 import HeroRail from '../HeroRail.svelte';
 
+const RAIL = 'NIMBLE.actorSheet.hero.rail';
+
 function renderRail(context: Partial<HeroSheetContext> = {}, editing = false) {
 	const ui = $state({ ...createSheetUiState('core'), editing });
 	const perform = vi.fn();
@@ -29,7 +31,7 @@ describe('HeroRail', () => {
 
 	it('types a new HP value', async () => {
 		const { perform } = renderRail();
-		const hp = screen.getByRole('spinbutton', { name: 'Current HP' });
+		const hp = screen.getByRole('spinbutton', { name: /vitalPlate\.hp$/ });
 
 		await fireEvent.input(hp, { target: { value: '12' } });
 		await fireEvent.blur(hp);
@@ -39,40 +41,40 @@ describe('HeroRail', () => {
 
 	it('shows the rests out of combat, and not in combat', async () => {
 		const { perform } = renderRail();
-		await fireEvent.click(screen.getByRole('button', { name: /Field Rest/ }));
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.prompts.fieldRest' }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'rest', restType: 'field' });
 	});
 
 	it('hides the rests in combat and keeps Roll Initiative', () => {
 		renderRail({ combat: heroTurn() });
 
-		expect(screen.queryByRole('button', { name: /Field Rest/ })).toBeNull();
-		expect(screen.queryByRole('button', { name: /Safe Rest/ })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'NIMBLE.prompts.fieldRest' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'NIMBLE.prompts.safeRest' })).toBeNull();
 		expect(screen.getByRole('button', { name: /prompts.rollInitiative/ })).toBeInTheDocument();
 	});
 
 	it('shows Level Up in play, and Revert Last Level Up only in edit mode', async () => {
 		const { ui, perform } = renderRail();
 
-		expect(screen.getByRole('button', { name: /Level Up/ })).toBeEnabled();
-		expect(screen.queryByRole('button', { name: 'Revert Last Level Up' })).toBeNull();
-		await fireEvent.click(screen.getByRole('button', { name: /Level Up/ }));
+		expect(screen.getByRole('button', { name: 'NIMBLE.prompts.levelUp' })).toBeEnabled();
+		expect(screen.queryByRole('button', { name: `${RAIL}.revertLevelUp` })).toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.prompts.levelUp' }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'levelUp' });
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Edit', pressed: false }));
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.edit`, pressed: false }));
 		expect(ui.editing).toBe(true);
-		await fireEvent.click(screen.getByRole('button', { name: 'Revert Last Level Up' }));
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.revertLevelUp` }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'revertLevelUp' });
 	});
 
 	it('asks before End turn while actions are left, and sends nothing until you confirm', async () => {
 		const { perform } = renderRail({ combat: heroTurn() });
 
-		await fireEvent.click(screen.getByRole('button', { name: /End Turn/ }));
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.ui.heroicActions.endTurn' }));
 		expect(perform).not.toHaveBeenCalled();
 		expect(screen.getByRole('alertdialog')).toBeInTheDocument();
 
-		await fireEvent.click(screen.getByRole('button', { name: 'End Turn' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.ui.heroicActions.endTurn' }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'endTurn' });
 	});
 
@@ -85,7 +87,7 @@ describe('HeroRail', () => {
 	it('opens a configure window from an outline in edit mode', async () => {
 		const { perform } = renderRail({}, true);
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Configure Hit Points' }));
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.configureHp` }));
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'configure', target: 'hitPoints' });
 	});
@@ -114,7 +116,9 @@ describe('HeroRail', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /spendAction {"number":"1"}/ }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'setActions', value: 1 });
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Add 1 action' }));
+		await fireEvent.click(
+			screen.getByRole('button', { name: 'NIMBLE.ui.heroicActions.addAdditionalAction' }),
+		);
 		expect(perform).toHaveBeenCalledWith({ kind: 'addAction' });
 	});
 
@@ -131,10 +135,10 @@ describe('HeroRail', () => {
 	it('renames the hero and changes the portrait in edit mode', async () => {
 		const { perform } = renderRail({}, true);
 
-		await fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+		await fireEvent.change(screen.getByRole('textbox', { name: `${RAIL}.name` }), {
 			target: { value: 'Ash' },
 		});
-		await fireEvent.click(screen.getByRole('button', { name: 'Change Actor Image' }), {
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.prompts.changeActorImage' }), {
 			shiftKey: true,
 		});
 

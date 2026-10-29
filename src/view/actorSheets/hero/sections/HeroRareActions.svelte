@@ -5,25 +5,12 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 `compact` gives icon buttons for the narrow header.
 -->
 <script lang="ts">
-	import type { SheetUiState } from '../../shared/sheetUiState.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroRailView } from '../heroRail.ts';
-	import localize from '#utils/localize.js';
+	import type { HeroRareActionsProps } from '#types/components/actorSheets/HeroRareActions.d.ts';
 
-	interface Props {
-		view: HeroRailView;
-		ui: SheetUiState;
-		perform: HeroPerform;
-		compact?: boolean;
-	}
+	let { view, ui, perform, compact = false }: HeroRareActionsProps = $props();
 
-	let { view, ui, perform, compact = false }: Props = $props();
-
-	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
-	const levelUpLabel = $derived(localize('NIMBLE.prompts.levelUp'));
-	const revertLabel = $derived(localize(`${RAIL}.revertLevelUp`));
-	const editLabel = $derived(localize(`${RAIL}.${editing ? 'stopEditing' : 'editHint'}`));
+	const editHint = $derived(editing ? view.edit.stopHint : view.edit.startHint);
 </script>
 
 <div class="rare" class:compact>
@@ -43,21 +30,21 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 		<button
 			type="button"
 			class="nimble-u-reset-button secondary"
-			aria-label={compact ? levelUpLabel : undefined}
+			aria-label={compact ? view.levelUp.label : undefined}
 			data-tooltip={view.levelUp.tooltip}
 			disabled={!view.levelUp.intent}
 			onclick={() => view.levelUp.intent && perform(view.levelUp.intent)}
 		>
-			<i class="fa-solid fa-arrow-up-right-dots"></i>{#if !compact}{levelUpLabel}{/if}
+			<i class="fa-solid fa-arrow-up-right-dots"></i>{#if !compact}{view.levelUp.label}{/if}
 		</button>
 		{#if editing && view.revertLevelUp}
 			{@const revert = view.revertLevelUp}
 			<button
 				type="button"
 				class="nimble-u-reset-button icon"
-				aria-label={revertLabel}
-				data-tooltip={revertLabel}
-				onclick={() => perform(revert)}
+				aria-label={revert.label}
+				data-tooltip={revert.label}
+				onclick={() => perform(revert.intent)}
 			>
 				<i class="fa-solid fa-rotate-left"></i>
 			</button>
@@ -66,16 +53,15 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 			type="button"
 			class="nimble-u-reset-button edit"
 			aria-pressed={editing}
-			aria-label={compact ? editLabel : undefined}
-			data-tooltip={editLabel}
+			aria-label={compact ? editHint : undefined}
+			data-tooltip={editHint}
 			onclick={() => {
 				ui.editing = !ui.editing;
 				ui.confirm = null;
 			}}
 		>
-			{#if compact}<i class="fa-solid fa-pen"></i>{:else}<span class="track"></span>{localize(
-					`${RAIL}.edit`,
-				)}{/if}
+			{#if compact}<i class="fa-solid fa-pen"></i>{:else}<span class="track"></span>{view.edit
+					.label}{/if}
 		</button>
 	</div>
 </div>

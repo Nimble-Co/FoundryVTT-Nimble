@@ -224,13 +224,13 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await endTurn(actor);
 				return;
 			case 'rollAbilityCheck':
-				await actor.rollAbilityCheckToChat(intent.ability as never);
+				await actor.rollAbilityCheckToChat(intent.ability);
 				return;
 			case 'rollSave':
-				await actor.rollSavingThrowToChat(intent.save as never);
+				await actor.rollSavingThrowToChat(intent.save);
 				return;
 			case 'rollSkill':
-				await actor.rollSkillCheckToChat(intent.skill as never);
+				await actor.rollSkillCheckToChat(intent.skill);
 				return;
 			default: {
 				const unknown: never = intent;

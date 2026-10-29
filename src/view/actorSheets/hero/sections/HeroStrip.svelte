@@ -4,34 +4,13 @@ The strip under the tabs of the narrow character sheet: one chip for each track 
 under the chips, where you change it.
 -->
 <script lang="ts">
-	import type { SheetUiState } from '../../shared/sheetUiState.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroMeterView } from '../heroRail.ts';
+	import type { HeroStripProps } from '#types/components/actorSheets/HeroStrip.d.ts';
 	import HeroMeter from './HeroMeter.svelte';
 
-	interface Props {
-		meters: HeroMeterView[];
-		ui: SheetUiState;
-		perform: HeroPerform;
-	}
-
-	let { meters, ui, perform }: Props = $props();
+	let { meters, ui, perform }: HeroStripProps = $props();
 
 	let openId: string | null = $state(null);
 	const open = $derived(meters.find((meter) => meter.id === openId) ?? null);
-
-	function amount(meter: HeroMeterView): string {
-		switch (meter.kind) {
-			case 'wounds':
-			case 'hitDice':
-			case 'charges':
-				return `${meter.value}/${meter.max}`;
-			case 'mana':
-				return meter.idle ? '' : `${meter.value}/${meter.max}`;
-			case 'dicePool':
-				return meter.faces.length ? meter.faces.join(' ') : `0/${meter.max}`;
-		}
-	}
 </script>
 
 <section class="strip">
@@ -44,7 +23,7 @@ under the chips, where you change it.
 				onclick={() => (openId = openId === meter.id ? null : meter.id)}
 			>
 				<span>{meter.label}</span>
-				<b>{amount(meter)}</b>
+				<b>{meter.summary}</b>
 			</button>
 		{/each}
 	</div>

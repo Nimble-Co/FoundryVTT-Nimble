@@ -19,6 +19,9 @@ describe('heroCoreTab', () => {
 			kind: 'rollAbilityCheck',
 			ability: 'intelligence',
 		});
+		expect(intelligence.check.label).toBe(
+			'NIMBLE.prompts.rollAbilityCheckSpecific {"ability":"NIMBLE.abilityScores.intelligence"}',
+		);
 		expect(intelligence.save.mod).toBe('−1');
 		expect(intelligence.save.intent).toEqual({ kind: 'rollSave', save: 'intelligence' });
 	});
@@ -29,10 +32,20 @@ describe('heroCoreTab', () => {
 		});
 		const view = heroCoreTab(hero, heroContext());
 
-		expect(view.abilities[0].save.rollMode).toBe(1);
-		expect(view.abilities[2].save.rollMode).toBe(-1);
-		expect(view.abilities[3].check.rollMode).toBe(2);
-		expect(view.abilities[1].check.rollMode).toBe(0);
+		const PARTS = 'NIMBLE.actorSheet.parts.rollMode';
+		expect(view.abilities[0].save.rollMode).toEqual({
+			value: 1,
+			label: `${PARTS}.advantage {"count":"1"}`,
+		});
+		expect(view.abilities[2].save.rollMode).toEqual({
+			value: -1,
+			label: `${PARTS}.disadvantage {"count":"1"}`,
+		});
+		expect(view.abilities[3].check.rollMode).toEqual({
+			value: 2,
+			label: `${PARTS}.advantage {"count":"2"}`,
+		});
+		expect(view.abilities[1].check.rollMode).toBeNull();
 	});
 
 	it('lists the skills A to Z with their ability, roll mode and intent', () => {
@@ -59,7 +72,8 @@ describe('heroCoreTab', () => {
 			ability: 'dexterity',
 			abilityAbbreviation: 'NIMBLE.abilityScoreAbbreviations.dexterity',
 			mod: '+2',
-			rollMode: -1,
+			rollMode: { value: -1 },
+			label: 'NIMBLE.prompts.rollSkillCheckSpecific {"skill":"NIMBLE.skills.stealth"}',
 			passive: null,
 			intent: { kind: 'rollSkill', skill: 'stealth' },
 		});
@@ -74,12 +88,17 @@ describe('heroCoreTab', () => {
 	it('lists speed, languages, proficiencies and damage defenses, each with its window', () => {
 		const view = heroCoreTab(blankHero(), heroContext());
 
+		const CORE = 'NIMBLE.actorSheet.hero.core';
+		const row = (label: string, target: string, prompt: string) => [
+			`${CORE}.${label}`,
+			{ intent: { kind: 'configure', target }, label: `NIMBLE.prompts.${prompt}` },
+		];
 		expect(view.proficiencies.map((p) => [p.label, p.configure])).toEqual([
-			['NIMBLE.actorSheet.hero.core.speed', { kind: 'configure', target: 'movement' }],
-			['NIMBLE.actorSheet.hero.core.languages', { kind: 'configure', target: 'languages' }],
-			['NIMBLE.actorSheet.hero.core.armor', { kind: 'configure', target: 'armorProficiencies' }],
-			['NIMBLE.actorSheet.hero.core.weapons', { kind: 'configure', target: 'weaponProficiencies' }],
-			['NIMBLE.actorSheet.hero.core.damage', { kind: 'configure', target: 'damageDefenses' }],
+			row('speed', 'movement', 'configureMovement'),
+			row('languages', 'languages', 'configureLanguageProficiencies'),
+			row('armor', 'armorProficiencies', 'configureArmorProficiencies'),
+			row('weapons', 'weaponProficiencies', 'configureWeaponProficiencies'),
+			row('damage', 'damageDefenses', 'configureDamageDefenses'),
 		]);
 		expect(view.proficiencies[1].value).toBe('Common');
 		expect(view.proficiencies[2].value).toBe('NIMBLE.actorSheet.hero.core.none');

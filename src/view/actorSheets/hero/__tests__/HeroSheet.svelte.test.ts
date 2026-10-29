@@ -29,6 +29,8 @@ function stubWidth(width: number) {
 	);
 }
 
+const RAIL_LABEL = 'NIMBLE.actorSheet.hero.rail.label';
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('HeroSheet', () => {
@@ -36,18 +38,18 @@ describe('HeroSheet', () => {
 		stubWidth(720);
 		const { ui } = renderSheet();
 
-		expect(screen.getByRole('complementary', { name: 'Hero' })).toBeInTheDocument();
+		expect(screen.getByRole('complementary', { name: RAIL_LABEL })).toBeInTheDocument();
 		await fireEvent.click(screen.getByRole('tab', { name: /tabs.core/ }));
 		expect(ui.tab).toBe('core');
-		expect(screen.getByText('Abilities and saves')).toBeInTheDocument();
+		expect(screen.getByText('NIMBLE.actorSheet.hero.core.abilitiesAndSaves')).toBeInTheDocument();
 	});
 
 	it('shows the narrow form below 560 px', () => {
 		stubWidth(390);
 		renderSheet();
 
-		expect(screen.queryByRole('complementary', { name: 'Hero' })).toBeNull();
-		expect(screen.getByRole('banner', { name: 'Hero' })).toBeInTheDocument();
+		expect(screen.queryByRole('complementary', { name: RAIL_LABEL })).toBeNull();
+		expect(screen.getByRole('banner', { name: RAIL_LABEL })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /NIMBLE.hitDice.heading/ })).toBeInTheDocument();
 	});
 
@@ -56,7 +58,9 @@ describe('HeroSheet', () => {
 		const { ui } = renderSheet();
 		ui.editing = true;
 
-		await fireEvent.click(await screen.findByRole('button', { name: 'Done' }));
+		await fireEvent.click(
+			await screen.findByRole('button', { name: 'NIMBLE.actorSheet.hero.frame.done' }),
+		);
 
 		expect(ui.editing).toBe(false);
 	});

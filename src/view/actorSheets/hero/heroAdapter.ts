@@ -18,7 +18,13 @@ import localize from '#utils/localize.js';
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import type { EffectLike, ItemLike, RuleLike } from '../shared/sheetSource.ts';
 import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
-import type { HeroActorLike, HeroCombatState, HeroSheetContext, HeroSource } from './heroSource.ts';
+import type {
+	HeroActorLike,
+	HeroCombatState,
+	HeroSheetContext,
+	HeroSource,
+	RolledValue,
+} from './heroSource.ts';
 
 const POOL_HOOKS = [
 	systemHookName('dicePool.changed'),
@@ -83,13 +89,17 @@ function effectLike(effect: ActiveEffect): EffectLike {
 	};
 }
 
-function rolled(entries: Record<string, { mod?: number; defaultRollMode?: number }>) {
+function rolled<K extends string>(
+	entries: Partial<Record<K, { mod?: number; defaultRollMode?: number }>>,
+): Record<K, RolledValue> {
 	return Object.fromEntries(
-		Object.entries(entries ?? {}).map(([key, value]) => [
-			key,
-			{ mod: value.mod ?? 0, defaultRollMode: value.defaultRollMode ?? 0 },
-		]),
-	);
+		Object.entries<{ mod?: number; defaultRollMode?: number } | undefined>(entries ?? {}).map(
+			([key, value]) => [
+				key,
+				{ mod: value?.mod ?? 0, defaultRollMode: value?.defaultRollMode ?? 0 },
+			],
+		),
+	) as Record<K, RolledValue>;
 }
 
 function actorLike(actor: NimbleCharacter): HeroActorLike {
@@ -207,7 +217,9 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			manaFromInitiative: extras.manaFromInitiative(),
 			missingLevelSelections: extras.missingLevelSelections(),
 			labels: labels(hero, actor.ancestry?.identifier ?? null),
-			skillAbilities: { ...(CONFIG.NIMBLE.defaultSkillAbilities as Record<string, string>) },
+			skillAbilities: {
+				...(CONFIG.NIMBLE.defaultSkillAbilities as HeroSheetContext['skillAbilities']),
+			},
 			dicePools: getDicePools(actor as unknown as Actor.Implementation).map((pool) => ({
 				...pool,
 				faces: [...pool.faces],

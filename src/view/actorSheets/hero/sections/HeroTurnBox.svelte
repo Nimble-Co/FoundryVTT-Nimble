@@ -3,24 +3,25 @@
 The turn economy in combat: the actions left as a number and as cells, an extra action, what the next turn gains or loses,
 and End turn. A cell click spends or restores one action. End turn with actions left asks first, in the box.
 When it is not your turn the box is quiet and says what a reaction costs. `compact` is the one-line form of the narrow header.
+When the actions left go down, from the sheet or from anywhere else, the cells just spent pulse once.
 -->
 <script lang="ts">
+	import type { HeroTurnBoxProps } from '#types/components/actorSheets/HeroTurnBox.d.ts';
+	import { untrack } from 'svelte';
 	import ConfirmBar from '../../parts/ConfirmBar.svelte';
-	import type { SheetUiState } from '../../shared/sheetUiState.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroTurnView } from '../heroRail.ts';
-	import localize from '#utils/localize.js';
 
-	interface Props {
-		turn: HeroTurnView;
-		ui: SheetUiState;
-		perform: HeroPerform;
-		compact?: boolean;
-	}
+	let { turn, ui, perform, compact = false }: HeroTurnBoxProps = $props();
 
-	let { turn, ui, perform, compact = false }: Props = $props();
+	let previous = untrack(() => turn.current);
+	let justSpent: number[] = $state([]);
 
-	const TURN = 'NIMBLE.actorSheet.hero.turn';
+	$effect(() => {
+		const current = turn.current;
+		if (current < previous) {
+			justSpent = Array.from({ length: previous - current }, (_, offset) => current + offset);
+		}
+		previous = current;
+	});
 
 	function endTurn() {
 		if (!turn.endTurn) return;
@@ -29,13 +30,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 	}
 </script>
 
-<div
-	class="box"
-	class:off={!turn.isTurn}
-	class:compact
-	role="group"
-	aria-label={localize(`${TURN}.label`)}
->
+<div class="box" class:off={!turn.isTurn} class:compact role="group" aria-label={turn.label}>
 	<div class="heading"><b>{turn.heading}</b></div>
 	<div class="line">
 		<span class="now">{turn.current}<span>/{turn.max}</span></span>
@@ -47,8 +42,10 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 					class:available={cell.available}
 					aria-label={cell.label}
 					data-tooltip={cell.label}
+					data-just-spent={justSpent.includes(index) || undefined}
 					disabled={ui.editing}
 					onclick={() => perform(cell.intent)}
+					onanimationend={() => (justSpent = justSpent.filter((spent) => spent !== index))}
 				></button>
 			{/each}
 			{#if turn.addAction}
@@ -56,10 +53,10 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 				<button
 					type="button"
 					class="nimble-u-reset-button cell add"
-					aria-label={localize('NIMBLE.ui.heroicActions.addAdditionalAction')}
-					data-tooltip={localize('NIMBLE.ui.heroicActions.addAdditionalAction')}
+					aria-label={addAction.label}
+					data-tooltip={addAction.label}
 					disabled={ui.editing}
-					onclick={() => perform(addAction)}
+					onclick={() => perform(addAction.intent)}
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
@@ -72,7 +69,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 				disabled={ui.editing}
 				onclick={endTurn}
 			>
-				{localize('NIMBLE.ui.heroicActions.endTurn')}
+				{turn.endTurn.label}
 			</button>
 		{/if}
 	</div>
@@ -83,8 +80,8 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 		{#if ui.confirm === 'endTurn' && end.question}
 			<ConfirmBar
 				question={end.question}
-				confirmLabel={localize('NIMBLE.ui.heroicActions.endTurn')}
-				cancelLabel={localize(`${TURN}.keepPlaying`)}
+				confirmLabel={end.label}
+				cancelLabel={end.cancelLabel}
 				onconfirm={() => {
 					ui.confirm = null;
 					void perform(end.intent);
@@ -98,7 +95,7 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 				disabled={ui.editing}
 				onclick={endTurn}
 			>
-				{localize('NIMBLE.ui.heroicActions.endTurn')}<i class="fa-solid fa-forward-step"></i>
+				{end.label}<i class="fa-solid fa-forward-step"></i>
 			</button>
 		{/if}
 	{/if}
@@ -190,6 +187,20 @@ When it is not your turn the box is quiet and says what a reaction costs. `compa
 		box-shadow: none;
 		font-size: 0.643rem;
 		color: var(--nimble-ui-ink-muted);
+	}
+	.cell[data-just-spent] {
+		animation: just-spent 0.6s ease-out;
+	}
+	@keyframes just-spent {
+		30% {
+			scale: 1.15;
+			box-shadow: inset 0 0 0 2px var(--nimble-ui-highlight);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.cell[data-just-spent] {
+			animation: none;
+		}
 	}
 	.cell:hover {
 		outline: 1px solid var(--nimble-ui-highlight);

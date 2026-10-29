@@ -3,26 +3,16 @@
 The mark of a stacked roll mode that rules give: one plus for each advantage, one minus for each disadvantage.
 -->
 <script lang="ts">
-	import localize from '#utils/localize.js';
+	import type { RollModeMarkProps } from '#types/components/actorSheets/RollModeMark.d.ts';
 
-	interface Props {
-		/** positive = advantage, negative = disadvantage */
-		value: number;
-	}
+	let { mode }: RollModeMarkProps = $props();
 
-	let { value }: Props = $props();
-
-	const count = $derived(Math.abs(value));
-	const advantage = $derived(value > 0);
-	const label = $derived(
-		localize(`NIMBLE.actorSheet.parts.rollMode.${advantage ? 'advantage' : 'disadvantage'}`, {
-			count: String(count),
-		}),
-	);
+	const count = $derived(Math.abs(mode?.value ?? 0));
+	const advantage = $derived((mode?.value ?? 0) > 0);
 </script>
 
-{#if count}
-	<span class="mark" class:advantage role="img" aria-label={label} data-tooltip={label}>
+{#if mode && count}
+	<span class="mark" class:advantage role="img" aria-label={mode.label} data-tooltip={mode.label}>
 		{#each { length: count }}<i class="fa-solid {advantage ? 'fa-circle-plus' : 'fa-circle-minus'}"
 			></i>{/each}
 	</span>

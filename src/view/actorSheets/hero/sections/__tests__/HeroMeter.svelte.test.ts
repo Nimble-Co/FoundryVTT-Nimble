@@ -21,6 +21,8 @@ function renderMeter(meter: HeroMeterView, editing = false) {
 	return { ui, perform };
 }
 
+const METER = 'NIMBLE.actorSheet.hero.meter';
+
 const furyContext = () =>
 	heroContext({
 		dicePools: [{ id: 'fury', label: 'Fury Dice', dieSize: 'd6', max: 3, faces: [4, 2] }],
@@ -30,22 +32,22 @@ describe('HeroMeter', () => {
 	it('opens the menu of a die: Set value and Discard', async () => {
 		const { perform } = renderMeter(meterOf('dicePool', furyContext()));
 
-		await fireEvent.click(screen.getByRole('button', { name: /die 2: 2/ }));
-		const value = screen.getByRole('spinbutton', { name: 'Set value' });
+		await fireEvent.click(screen.getByRole('button', { name: /"number":"2","face":"2"/ }));
+		const value = screen.getByRole('spinbutton', { name: `${METER}.setValue` });
 		await fireEvent.input(value, { target: { value: '5' } });
 		await fireEvent.blur(value);
 		expect(perform).toHaveBeenCalledWith({ kind: 'setDiceFaces', poolId: 'fury', faces: [4, 5] });
 
-		await fireEvent.click(screen.getByRole('button', { name: /Discard$/ }));
+		await fireEvent.click(screen.getByRole('button', { name: `${METER}.discard` }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'setDiceFaces', poolId: 'fury', faces: [4] });
 	});
 
 	it('asks before Discard all, and empties the pool on yes', async () => {
 		const { perform } = renderMeter(meterOf('dicePool', furyContext()));
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Discard all' }));
+		await fireEvent.click(screen.getByRole('button', { name: `${METER}.discardAll` }));
 		expect(perform).not.toHaveBeenCalled();
-		await fireEvent.click(screen.getAllByRole('button', { name: 'Discard all' }).at(-1)!);
+		await fireEvent.click(screen.getAllByRole('button', { name: `${METER}.discardAll` }).at(-1)!);
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'setDiceFaces', poolId: 'fury', faces: [] });
 	});
@@ -53,7 +55,7 @@ describe('HeroMeter', () => {
 	it('rolls one more die into the pool', async () => {
 		const { perform } = renderMeter(meterOf('dicePool', furyContext()));
 
-		await fireEvent.click(screen.getByRole('button', { name: /Roll one more Fury Dice die/ }));
+		await fireEvent.click(screen.getByRole('button', { name: /dicePool\.addLabel/ }));
 
 		expect(perform).toHaveBeenCalledWith({
 			kind: 'rollIntoDicePool',
@@ -78,7 +80,7 @@ describe('HeroMeter', () => {
 		});
 		const { perform } = renderMeter(meterOf('charges', context));
 
-		await fireEvent.click(screen.getAllByRole('button', { name: /Roll and spend one/ })[0]);
+		await fireEvent.click(screen.getAllByRole('button', { name: /meter\.rollOne/ })[0]);
 
 		expect(perform).toHaveBeenCalledWith({
 			kind: 'rollPoolCharge',
@@ -89,15 +91,15 @@ describe('HeroMeter', () => {
 
 	it('gives Hit Dice a Roll in play and the configure outline in edit mode', async () => {
 		const play = renderMeter(meterOf('hitDice'));
-		await fireEvent.click(screen.getByRole('button', { name: /Roll$/ }));
+		await fireEvent.click(screen.getByRole('button', { name: `${METER}.roll` }));
 		expect(play.perform).toHaveBeenCalledWith({ kind: 'rollHitDice' });
 	});
 
 	it('opens Configure Hit Dice from its outline in edit mode', async () => {
 		const { perform } = renderMeter(meterOf('hitDice'), true);
 
-		expect(screen.getByRole('button', { name: /Roll$/ })).toBeDisabled();
-		await fireEvent.click(screen.getByRole('button', { name: 'Configure Hit Dice' }));
+		expect(screen.getByRole('button', { name: `${METER}.roll` })).toBeDisabled();
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.hitDice.configureHitDice' }));
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'configure', target: 'hitDice' });
 	});

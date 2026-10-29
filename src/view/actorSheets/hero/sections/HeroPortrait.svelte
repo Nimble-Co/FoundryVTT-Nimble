@@ -4,16 +4,10 @@ The portrait behind the rail or the narrow header. It moves and scales by the im
 and shows the fallback portrait when the image does not load.
 -->
 <script lang="ts">
+	import type { HeroPortraitProps } from '#types/components/actorSheets/HeroPortrait.d.ts';
 	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
-	import type { HeroRailView } from '../heroRail.ts';
 
-	interface Props {
-		view: HeroRailView;
-		/** `rail`: fills the box; `header`: the right part of the narrow header */
-		form: 'rail' | 'header';
-	}
-
-	let { view, form }: Props = $props();
+	let { view, form }: HeroPortraitProps = $props();
 
 	let failedFor: string | null = $state(null);
 	const src = $derived(failedFor === view.img ? PORTRAIT_FALLBACK_IMAGE : view.img);

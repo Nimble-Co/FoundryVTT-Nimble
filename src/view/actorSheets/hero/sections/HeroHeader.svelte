@@ -4,31 +4,21 @@ The header of the narrow character sheet (below 560 px): who the hero is, the vi
 as icons, armor and speed, Initiative and the turn. It stays dark in both themes.
 -->
 <script lang="ts">
+	import type { HeroHeaderProps } from '#types/components/actorSheets/HeroHeader.d.ts';
 	import EditZone from '../../parts/EditZone.svelte';
-	import StatBox from '../../parts/StatBox.svelte';
-	import VitalPlate from '../../parts/VitalPlate.svelte';
-	import type { SheetUiState } from '../../shared/sheetUiState.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroRailView } from '../heroRail.ts';
+	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
 	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
+	import HeroStats from './HeroStats.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
-	import localize from '#utils/localize.js';
 
-	interface Props {
-		view: HeroRailView;
-		ui: SheetUiState;
-		perform: HeroPerform;
-	}
+	let { view, ui, perform }: HeroHeaderProps = $props();
 
-	let { view, ui, perform }: Props = $props();
-
-	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
 </script>
 
-<header class="nimble-chrome header" class:editing aria-label={localize(`${RAIL}.label`)}>
+<header class="nimble-chrome header" class:editing aria-label={view.text.label}>
 	<HeroPortrait {view} form="header" />
 	<div class="fade"></div>
 	<div class="column">
@@ -37,8 +27,8 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				<button
 					type="button"
 					class="nimble-u-reset-button icon"
-					aria-label={localize('NIMBLE.prompts.changeActorImage')}
-					data-tooltip={localize('NIMBLE.prompts.changeActorImage')}
+					aria-label={view.text.changePortrait}
+					data-tooltip={view.text.changePortrait}
 					onclick={(event) => perform({ kind: 'changePortrait', skipTokenizer: event.shiftKey })}
 				>
 					<i class="fa-solid fa-image"></i>
@@ -47,7 +37,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 					class="name-field"
 					type="text"
 					value={view.name}
-					aria-label={localize(`${RAIL}.name`)}
+					aria-label={view.text.name}
 					onchange={(event) => perform({ kind: 'rename', name: event.currentTarget.value })}
 				/>
 			{:else}
@@ -58,101 +48,34 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				{#if editing}
 					<EditZone
 						inline
-						short={localize(`${RAIL}.metaShort`)}
-						label={localize(`${RAIL}.metaLabel`)}
+						short={view.text.metaShort}
+						label={view.text.metaLabel}
 						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
 					/>
 				{/if}
 			</span>
 		</div>
 		<div class="plates">
-			<div class="zone-holder hp">
-				<VitalPlate
-					variant="block"
-					compact
-					label={localize('NIMBLE.actorSheet.parts.vitalPlate.hp')}
-					value={view.hp.value}
-					max={view.hp.max}
-					state={view.hp.state ?? undefined}
-					dying={view.hp.dying}
-					tooltip={view.hp.tooltip}
-					rest={editing}
-					onchange={(value) => perform({ kind: 'setHp', value })}
-				/>
-				{#if editing}
-					<EditZone
-						short={localize(`${RAIL}.hpShort`)}
-						label={localize(`${RAIL}.configureHp`)}
-						onclick={() => perform({ kind: 'configure', target: 'hitPoints' })}
-					/>
-				{/if}
-			</div>
-			<div class="temp">
-				<VitalPlate
-					variant="block"
-					compact
-					temp
-					label={localize('NIMBLE.actorSheet.parts.vitalPlate.tempHp')}
-					value={view.hp.temp}
-					rest={editing}
-					onchange={(value) => perform({ kind: 'setTempHp', value })}
-				/>
-			</div>
+			<HeroHitPoints {view} {editing} {perform} compact />
 			<span class="buttons">
 				{#if view.rests}
-					{@const rests = view.rests}
-					<button
-						type="button"
-						class="nimble-u-reset-button icon"
-						aria-label={localize('NIMBLE.prompts.fieldRest')}
-						data-tooltip={localize('NIMBLE.prompts.fieldRest')}
-						disabled={editing}
-						onclick={() => perform(rests.field)}
-					>
-						<i class="fa-regular fa-hourglass-half"></i>
-					</button>
-					<button
-						type="button"
-						class="nimble-u-reset-button icon"
-						aria-label={localize('NIMBLE.prompts.safeRest')}
-						data-tooltip={localize('NIMBLE.prompts.safeRest')}
-						disabled={editing}
-						onclick={() => perform(rests.safe)}
-					>
-						<i class="fa-solid fa-moon"></i>
-					</button>
+					{#each [view.rests.field, view.rests.safe] as rest, index (index)}
+						<button
+							type="button"
+							class="nimble-u-reset-button icon"
+							aria-label={rest.label}
+							data-tooltip={rest.label}
+							disabled={editing}
+							onclick={() => perform(rest.intent)}
+						>
+							<i class={index === 0 ? 'fa-regular fa-hourglass-half' : 'fa-solid fa-moon'}></i>
+						</button>
+					{/each}
 				{/if}
 				<HeroRareActions {view} {ui} {perform} compact />
 			</span>
 		</div>
-		<div class="stats">
-			<StatBox
-				variant="inline"
-				icon="fa-solid fa-shield-halved"
-				label={view.armor.label}
-				value={view.armor.value}
-				tooltip={view.armor.tooltip}
-			/>
-			<span class="zone-holder speeds">
-				{#each view.speeds as speed (speed.type)}
-					<StatBox
-						variant="inline"
-						icon={speed.icon}
-						label={speed.label}
-						value={speed.value}
-						note={speed.note ?? undefined}
-						tooltip={speed.tooltip}
-					/>
-				{/each}
-				{#if editing}
-					<EditZone
-						short={localize(`${RAIL}.movementShort`)}
-						label={localize('NIMBLE.prompts.configureMovement')}
-						onclick={() => perform({ kind: 'configure', target: 'movement' })}
-					/>
-				{/if}
-			</span>
-		</div>
+		<HeroStats {view} {editing} {perform} />
 		<HeroInitiative initiative={view.initiative} {editing} {perform} />
 		{#if view.turn}<HeroTurnBox turn={view.turn} {ui} {perform} compact />{/if}
 	</div>
@@ -227,15 +150,6 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	.editing .plates {
 		gap: 13px;
 	}
-	.zone-holder {
-		position: relative;
-	}
-	.hp {
-		min-width: 88px;
-	}
-	.temp {
-		min-width: 60px;
-	}
 	.buttons {
 		margin-left: auto;
 		display: flex;
@@ -258,17 +172,5 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	.icon:disabled {
 		opacity: 0.4;
 		pointer-events: none;
-	}
-	.stats {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 4px 14px;
-	}
-	.speeds {
-		display: inline-flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 2px 14px;
 	}
 </style>

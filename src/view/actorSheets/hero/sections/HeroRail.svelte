@@ -5,32 +5,22 @@ the tracks and pools, and at the bottom the rare actions (Level Up, the level co
 The rail stays dark in both themes.
 -->
 <script lang="ts">
+	import type { HeroRailProps } from '#types/components/actorSheets/HeroRail.d.ts';
 	import EditZone from '../../parts/EditZone.svelte';
-	import StatBox from '../../parts/StatBox.svelte';
-	import VitalPlate from '../../parts/VitalPlate.svelte';
-	import type { SheetUiState } from '../../shared/sheetUiState.ts';
-	import type { HeroPerform } from '../heroIntent.ts';
-	import type { HeroRailView } from '../heroRail.ts';
+	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
 	import HeroMeter from './HeroMeter.svelte';
 	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
+	import HeroStats from './HeroStats.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
-	import localize from '#utils/localize.js';
 
-	interface Props {
-		view: HeroRailView;
-		ui: SheetUiState;
-		perform: HeroPerform;
-	}
+	let { view, ui, perform }: HeroRailProps = $props();
 
-	let { view, ui, perform }: Props = $props();
-
-	const RAIL = 'NIMBLE.actorSheet.hero.rail';
 	const editing = $derived(ui.editing);
 </script>
 
-<aside class="nimble-chrome rail" class:editing aria-label={localize(`${RAIL}.label`)}>
+<aside class="nimble-chrome rail" class:editing aria-label={view.text.label}>
 	<div class="portrait">
 		<HeroPortrait {view} form="rail" />
 		<div class="fade"></div>
@@ -38,8 +28,8 @@ The rail stays dark in both themes.
 			<button
 				type="button"
 				class="nimble-u-reset-button change"
-				aria-label={localize('NIMBLE.prompts.changeActorImage')}
-				data-tooltip={localize('NIMBLE.prompts.changeActorImage')}
+				aria-label={view.text.changePortrait}
+				data-tooltip={view.text.changePortrait}
 				onclick={(event) => perform({ kind: 'changePortrait', skipTokenizer: event.shiftKey })}
 			>
 				<i class="fa-solid fa-image"></i>
@@ -51,7 +41,7 @@ The rail stays dark in both themes.
 					class="name-field"
 					type="text"
 					value={view.name}
-					aria-label={localize(`${RAIL}.name`)}
+					aria-label={view.text.name}
 					onchange={(event) => perform({ kind: 'rename', name: event.currentTarget.value })}
 				/>
 			{:else}
@@ -62,8 +52,8 @@ The rail stays dark in both themes.
 				{#if editing}
 					<EditZone
 						inline
-						short={localize(`${RAIL}.metaShort`)}
-						label={localize(`${RAIL}.metaLabel`)}
+						short={view.text.metaShort}
+						label={view.text.metaLabel}
 						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
 					/>
 				{/if}
@@ -73,88 +63,25 @@ The rail stays dark in both themes.
 
 	<div class="scroll">
 		<div class="vitals">
-			<div class="plates">
-				<div class="zone-holder">
-					<VitalPlate
-						variant="block"
-						label={localize('NIMBLE.actorSheet.parts.vitalPlate.hp')}
-						value={view.hp.value}
-						max={view.hp.max}
-						state={view.hp.state ?? undefined}
-						dying={view.hp.dying}
-						icon="fa-solid fa-heart"
-						tooltip={view.hp.tooltip}
-						rest={editing}
-						onchange={(value) => perform({ kind: 'setHp', value })}
-					/>
-					{#if editing}
-						<EditZone
-							short={localize(`${RAIL}.hpShort`)}
-							label={localize(`${RAIL}.configureHp`)}
-							onclick={() => perform({ kind: 'configure', target: 'hitPoints' })}
-						/>
-					{/if}
-				</div>
-				<VitalPlate
-					variant="block"
-					temp
-					label={localize('NIMBLE.actorSheet.parts.vitalPlate.tempHp')}
-					value={view.hp.temp}
-					rest={editing}
-					onchange={(value) => perform({ kind: 'setTempHp', value })}
-				/>
-			</div>
-			<div class="stats">
-				<StatBox
-					variant="inline"
-					icon="fa-solid fa-shield-halved"
-					label={view.armor.label}
-					value={view.armor.value}
-					tooltip={view.armor.tooltip}
-				/>
-				<span class="zone-holder speeds">
-					{#each view.speeds as speed (speed.type)}
-						<StatBox
-							variant="inline"
-							icon={speed.icon}
-							label={speed.label}
-							value={speed.value}
-							note={speed.note ?? undefined}
-							tooltip={speed.tooltip}
-						/>
-					{/each}
-					{#if editing}
-						<EditZone
-							short={localize(`${RAIL}.movementShort`)}
-							label={localize('NIMBLE.prompts.configureMovement')}
-							onclick={() => perform({ kind: 'configure', target: 'movement' })}
-						/>
-					{/if}
-				</span>
-			</div>
+			<HeroHitPoints {view} {editing} {perform} />
+			<HeroStats {view} {editing} {perform} centered />
 		</div>
 
 		<div class="economy">
 			<HeroInitiative initiative={view.initiative} {editing} {perform} />
 			{#if view.rests}
-				{@const rests = view.rests}
 				<div class="rests">
-					<button
-						type="button"
-						class="nimble-u-reset-button secondary"
-						disabled={editing}
-						onclick={() => perform(rests.field)}
-					>
-						<i class="fa-regular fa-hourglass-half"></i>{localize('NIMBLE.prompts.fieldRest')}
-					</button>
-					<button
-						type="button"
-						class="nimble-u-reset-button secondary"
-						disabled={editing}
-						onclick={() => perform(rests.safe)}
-					>
-						<i class="fa-solid fa-moon"></i>{localize('NIMBLE.prompts.safeRest')}
-					</button>
+					{#each [view.rests.field, view.rests.safe] as rest, index (index)}
+						<button
+							type="button"
+							class="nimble-u-reset-button secondary"
+							disabled={editing}
+							onclick={() => perform(rest.intent)}
+						>
+							<i class={index === 0 ? 'fa-regular fa-hourglass-half' : 'fa-solid fa-moon'}
+							></i>{rest.label}
+						</button>
+					{/each}
 				</div>
 			{/if}
 			{#if view.turn}
@@ -274,30 +201,6 @@ The rail stays dark in both themes.
 	}
 	.editing .vitals {
 		gap: 18px;
-	}
-	.plates {
-		display: grid;
-		grid-template-columns: 1.6fr 1fr;
-		gap: 5px;
-	}
-	.editing .plates {
-		gap: 13px;
-	}
-	.zone-holder {
-		position: relative;
-	}
-	.stats {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		align-items: center;
-		gap: 4px 14px;
-	}
-	.speeds {
-		display: inline-flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 2px 14px;
 	}
 	.economy {
 		flex-shrink: 0;
