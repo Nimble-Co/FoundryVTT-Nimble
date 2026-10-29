@@ -26,9 +26,11 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		label,
 	}: SheetTabsProps = $props();
 
-	function pick(id: string) {
+	// a focused button in the sheet form stops Foundry's Escape, so a pointer click lets go of it
+	function pick(id: string, event: MouseEvent & { currentTarget: HTMLButtonElement }) {
 		value = id;
 		onchange?.(id);
+		if (event.detail > 0) event.currentTarget.blur();
 	}
 
 	const tooltipOf = (t: SheetTab) =>
@@ -53,7 +55,7 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 			aria-selected={t.id === value}
 			aria-label={fit === 'icon' ? tooltipOf(t) : undefined}
 			data-tooltip={tooltipOf(t)}
-			onclick={() => pick(t.id)}
+			onclick={(event) => pick(t.id, event)}
 		>
 			<i class={t.icon}></i><span class="tl">{t.label}</span>
 			{#if t.badge}<span class="bd">{t.badge}</span>{/if}
