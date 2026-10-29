@@ -1,4 +1,5 @@
 import {
+	changeDieInTerm,
 	type DieTermLike,
 	type ExplosionStyle,
 	isActive,
@@ -86,6 +87,14 @@ interface OneDieRoll {
 	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
 	/** The Primary Die `term` was rolled again; `keptBase` is its new result before the bonus. */
 	primaryDieRerolled?(term: unknown, keptBase: number | null): void;
+	/** The kept Primary Die `term` got a final face; gives the bonus a set value dropped. */
+	primaryDieChanged?(term: unknown, value: number, mode: DieChange['mode']): number;
+}
+
+/** A change to one die: set it to a face, or add a number (which may be negative) to it. */
+interface DieChange {
+	mode: 'set' | 'add';
+	value: number;
 }
 
 function hasExplodeModifier(modifiers: readonly string[] = []): boolean {
@@ -111,6 +120,19 @@ function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): 
 		total: drawn.reduce((sum, value) => sum + value, 0),
 		evaluated: true,
 	} as never) as foundry.dice.Roll;
+}
+
+/** Work out the copy's total, crit and miss again after one of its dice changed. */
+function refreshTotals(copy: OneDieRoll): void {
+	if (copy.refreshOutcome) {
+		copy.refreshOutcome();
+		return;
+	}
+	const internals = copy as unknown as {
+		_total: number;
+		_evaluateASTSync(node: unknown): number;
+	};
+	internals._total = internals._evaluateASTSync(CONFIG.Dice.parser.toAST(copy.terms as never));
 }
 
 /** One die rolled as a Foundry roll, so manual dice entry and dice modules can give its result. */
@@ -170,14 +192,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	);
 	copy.primaryDieRerolled?.(term, changed.keptBase);
 
-	if (copy.refreshOutcome) copy.refreshOutcome();
-	else {
-		const internals = copy as unknown as {
-			_total: number;
-			_evaluateASTSync(node: unknown): number;
-		};
-		internals._total = internals._evaluateASTSync(CONFIG.Dice.parser.toAST(copy.terms as never));
-	}
+	refreshTotals(copy);
 
 	return {
 		roll: copy,
@@ -189,7 +204,68 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	};
 }
 
+/**
+ * Change one die of an evaluated roll to a new face, from 1 to the die's max.
+ * The old roll is not changed: the new roll is a copy with the die changed and
+ * its total, crit and miss worked out again. The die keeps its place (the
+ * keep is not worked out again). Dice a new max explodes into are rolled;
+ * `thrown` holds only those, or is null when none were rolled. On the kept
+ * Primary Die, a set value drops the "Add to Primary Die Result" bonus, and
+ * `bonusNotAdded` says how much.
+ */
+async function changeOneDie<TRoll extends OneDieRoll>(
+	roll: TRoll,
+	ref: DieRef,
+	change: DieChange,
+	options: { draw?: (faces: number) => Promise<number> } = {},
+): Promise<{
+	roll: TRoll;
+	faces: number;
+	previous: number;
+	next: number;
+	bonusNotAdded: number;
+	thrown: foundry.dice.Roll | null;
+}> {
+	const copy = foundry.dice.Roll.fromData(
+		foundry.utils.deepClone(roll.toJSON()) as never,
+	) as unknown as TRoll;
+	const term = copy.terms[ref.term];
+	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
+	const result = term.results[ref.result];
+	if (!result) throw new Error(`The dice term has no result ${ref.result}.`);
+
+	const style =
+		copy.explosionStyleOf?.(term) ?? (hasExplodeModifier(term.modifiers) ? 'standard' : 'none');
+	const wanted = change.mode === 'set' ? change.value : result.result + change.value;
+	const face = Math.min(term.faces, Math.max(1, Math.trunc(wanted)));
+	const kept = isActive(result);
+	const changed = await changeDieInTerm(
+		term,
+		ref.result,
+		style,
+		face,
+		options.draw ?? rollOneDieFace,
+	);
+	const bonusNotAdded =
+		kept && changed.next !== changed.previous
+			? (copy.primaryDieChanged?.(term, changed.next, change.mode) ?? 0)
+			: 0;
+
+	refreshTotals(copy);
+
+	return {
+		roll: copy,
+		faces: term.faces,
+		previous: changed.previous,
+		next: changed.next,
+		bonusNotAdded,
+		thrown: changed.drawn.length > 0 ? thrownDice(term, changed.drawn) : null,
+	};
+}
+
 export {
+	changeOneDie,
+	type DieChange,
 	type DieRef,
 	type DieTermLike,
 	type ExplosionStyle,

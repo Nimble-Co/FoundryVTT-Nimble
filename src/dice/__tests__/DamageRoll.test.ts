@@ -197,6 +197,31 @@ describe('DamageRoll preprocessing', () => {
 				expect(roll.primaryDie?.results).toEqual([{ result: 1, active: true }]);
 			});
 
+			describe('primaryDieChanged', () => {
+				it('drops the bonus of a set value: no excess term, and it says how much', () => {
+					mockDice(0.6);
+					const roll = presetRoll('1d6+1', { primaryDieModifier: 100 });
+
+					expect(roll.primaryDieChanged(roll.primaryDie, 3, 'set')).toBe(100);
+					expect(roll.formula).toBe('1d6x + 1');
+					expect(roll.options.primaryDieBaseResult).toBe(-97);
+				});
+
+				it('keeps the bonus in the face an added number starts from', () => {
+					const roll = presetRoll('1d6+1', { primaryDieValue: 3, primaryDieModifier: 1 });
+
+					expect(roll.primaryDieChanged(roll.primaryDie, 5, 'add')).toBe(0);
+					expect(roll.options.primaryDieBaseResult).toBe(4);
+				});
+
+				it('does nothing for a roll with no bonus', () => {
+					const roll = presetRoll('1d6+1', { primaryDieValue: 3 });
+
+					expect(roll.primaryDieChanged(roll.primaryDie, 5, 'set')).toBe(0);
+					expect(roll.options.primaryDieValue).toBeUndefined();
+				});
+			});
+
 			it('should record the primary die roll before the modifier', () => {
 				mockDice(0.4);
 				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });

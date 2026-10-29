@@ -901,19 +901,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const oldBase = this.options.primaryDieBaseResult;
 		if (!add || typeof oldBase !== 'number') return;
 
-		const at = this.terms.indexOf(term) + 1;
-		const oldExcess = oldBase + add - term.faces;
-		const [operator, excess] = this.terms.slice(at, at + 2);
-		if (
-			oldExcess > 0 &&
-			operator instanceof Terms.OperatorTerm &&
-			operator.operator === '+' &&
-			excess instanceof Terms.NumericTerm &&
-			excess.number === oldExcess
-		) {
-			this.terms.splice(at, 2);
-		}
-
+		const at = this._removePrimaryDieExcess(term, oldBase, add);
 		const newExcess = keptBase + add - term.faces;
 		if (newExcess > 0) {
 			this.terms.splice(
@@ -925,6 +913,46 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 		this.options.primaryDieBaseResult = keptBase;
 		this.resetFormula();
+	}
+
+	/**
+	 * The kept Primary Die got a new face, `value`, that is final. A set value
+	 * drops the "Add to Primary Die Result" bonus; an added number started from
+	 * the face with the bonus in it. Either way nothing goes past the die's max
+	 * any more, and a later reroll of the die adds the bonus again. Gives the
+	 * bonus a set value dropped, else 0.
+	 */
+	primaryDieChanged(term: unknown, value: number, mode: 'set' | 'add'): number {
+		if (!this._isPresetPrimaryDie(term)) return 0;
+		if (this.options.primaryDieValue && this.options.primaryDieValue !== value) {
+			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
+		}
+
+		const add = Number(this.options.primaryDieModifier) || 0;
+		const oldBase = this.options.primaryDieBaseResult;
+		if (!add || typeof oldBase !== 'number') return 0;
+
+		this._removePrimaryDieExcess(term, oldBase, add);
+		this.options.primaryDieBaseResult = value - add;
+		this.resetFormula();
+		return mode === 'set' ? add : 0;
+	}
+
+	/** Take out the damage past the Primary Die's max; gives where it was. */
+	private _removePrimaryDieExcess(term: PrimaryDie & { faces: number }, base: number, add: number) {
+		const at = this.terms.indexOf(term) + 1;
+		const oldExcess = base + add - term.faces;
+		const [operator, excess] = this.terms.slice(at, at + 2);
+		if (
+			oldExcess > 0 &&
+			operator instanceof Terms.OperatorTerm &&
+			operator.operator === '+' &&
+			excess instanceof Terms.NumericTerm &&
+			excess.number === oldExcess
+		) {
+			this.terms.splice(at, 2);
+		}
+		return at;
 	}
 
 	private _isPresetPrimaryDie(term: unknown): term is PrimaryDie & { faces: number } {

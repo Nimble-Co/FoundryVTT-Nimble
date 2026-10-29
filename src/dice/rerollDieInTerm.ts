@@ -172,39 +172,90 @@ async function rerollDieInTerm(
 	}
 	const next = picked.result.result;
 
-	const canExplode = (node: DieNode) =>
-		style !== 'none' &&
-		isActive(node.result) &&
-		node.result.result === term.faces &&
-		node.result.provenance !== 'viciousBonus';
 	const newlyKept = roots.filter(
 		(root) => root !== picked && !keptBefore.has(root) && isActive(root.result),
 	);
-	for (const node of [picked, ...newlyKept]) {
-		if (!canExplode(node)) continue;
-		let parent = node;
-		for (let i = 0; i < MAX_EXPLOSIONS && canExplode(parent); i++) {
-			parent.result.exploded = true;
-			if (style === 'vicious') {
-				const chain = {
-					result: { result: await roll(), active: true, provenance: 'viciousChain' },
-				};
-				const extra = {
-					result: { result: await roll(), active: true, provenance: 'viciousBonus' },
-				};
-				parent.children = [
-					{ ...chain, children: [] },
-					{ ...extra, children: [] },
-				];
-			} else {
-				parent.children = [{ result: { result: await roll(), active: true }, children: [] }];
-			}
-			parent = parent.children[0];
-		}
-	}
+	for (const node of [picked, ...newlyKept]) await explodeAtMax(node, term.faces, style, roll);
 
 	term.results = flattenDieTree(roots, style);
 	return { previous, next, drawn, keptBase };
 }
 
-export { type DieTermLike, type ExplosionStyle, type KeptDieBonus, isActive, rerollDieInTerm };
+/** Roll the dice a die at its max explodes into, in the term's style. */
+async function explodeAtMax(
+	node: DieNode,
+	faces: number,
+	style: ExplosionStyle,
+	roll: () => Promise<number>,
+): Promise<void> {
+	const canExplode = (candidate: DieNode) =>
+		style !== 'none' &&
+		isActive(candidate.result) &&
+		candidate.result.result === faces &&
+		candidate.result.provenance !== 'viciousBonus';
+	let parent = node;
+	for (let i = 0; i < MAX_EXPLOSIONS && canExplode(parent); i++) {
+		parent.result.exploded = true;
+		if (style === 'vicious') {
+			const chain = {
+				result: { result: await roll(), active: true, provenance: 'viciousChain' },
+			};
+			const extra = {
+				result: { result: await roll(), active: true, provenance: 'viciousBonus' },
+			};
+			parent.children = [
+				{ ...chain, children: [] },
+				{ ...extra, children: [] },
+			];
+		} else {
+			parent.children = [{ result: { result: await roll(), active: true }, children: [] }];
+		}
+		parent = parent.children[0];
+	}
+}
+
+/**
+ * Give one die of an evaluated term a new face in place. The die keeps its
+ * place: the keep is not worked out again, so a kept die stays kept and a
+ * dropped one stays dropped. The dice its old face exploded into are dropped,
+ * and a kept die that is now at its max explodes in the term's style, with
+ * dice from `draw`.
+ */
+async function changeDieInTerm(
+	term: DieTermLike,
+	index: number,
+	style: ExplosionStyle,
+	value: number,
+	draw: (faces: number) => Promise<number>,
+): Promise<{ previous: number; next: number; drawn: number[] }> {
+	const baseCount =
+		style === 'none' ? term.results.length : Math.min(term.number, term.results.length);
+	const roots = dieTree(term.results, baseCount, style);
+	const target = term.results[index];
+	const picked = target ? findNode(roots, target) : null;
+	if (!picked) throw new Error(`The dice term has no result ${index}.`);
+
+	const previous = picked.result.result;
+	const drawn: number[] = [];
+	if (value === previous) return { previous, next: previous, drawn };
+
+	picked.result.result = value;
+	cutExplosion(picked);
+	await explodeAtMax(picked, term.faces, style, async () => {
+		const face = await draw(term.faces);
+		drawn.push(face);
+		return face;
+	});
+
+	term.results = flattenDieTree(roots, style);
+	return { previous, next: value, drawn };
+}
+
+export {
+	changeDieInTerm,
+	type DieTermLike,
+	type ExplosionStyle,
+	type KeptDieBonus,
+	isActive,
+	rerollDieInTerm,
+};
