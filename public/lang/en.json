@@ -550,9 +550,14 @@
 				"useFailed": "That reaction could not be completed.",
 				"rerollWith": "Reroll with {feature}",
 				"changeWith": "Change the die with {feature}",
-				"rerollAgain": "Reroll again",
+				"rerollAgain": "Reroll again with {feature}",
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
+				"verbs": {
+					"reroll": "Reroll",
+					"change": "Change die"
+				},
+				"verbCount": "{verb}: {count} features",
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
 				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",

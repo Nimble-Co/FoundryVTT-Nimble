@@ -166,28 +166,44 @@ function messageNode(messageId: string): HTMLElement | null {
 }
 
 /**
- * Click an incoming-reaction button on a chat card as a real DOM interaction
- * (the button's Svelte onclick handler runs). Returns after a settle so the
- * un-awaited reaction chain has time to start; callers still poll the
- * resulting document state.
+ * Use an incoming reaction on a chat card as a real DOM interaction: open each
+ * verb button's menu until one holds the feature, then click the feature.
+ * Returns after a settle so the un-awaited reaction chain has time to start;
+ * callers still poll the resulting document state.
  */
 async function clickReactionButton(messageId: string, labelIncludes?: string): Promise<void> {
-	let button: HTMLButtonElement | null = null;
-	await waitFor(
-		() => {
-			const buttons =
-				messageNode(messageId)?.querySelectorAll<HTMLButtonElement>(
-					'.nimble-incoming-reaction-button',
-				) ?? [];
-			button =
-				[...buttons].find(
-					(candidate) => !labelIncludes || (candidate.textContent ?? '').includes(labelIncludes),
-				) ?? null;
-			return button !== null;
-		},
-		`reaction button${labelIncludes ? ` "${labelIncludes}"` : ''} on message ${messageId}`,
-	);
-	button!.click();
+	const menuItem = () =>
+		[
+			...(messageNode(messageId)?.querySelectorAll<HTMLButtonElement>(
+				'.nimble-choice-menu__item',
+			) ?? []),
+		].find(
+			(candidate) =>
+				!labelIncludes || (candidate.getAttribute('aria-label') ?? '').includes(labelIncludes),
+		) ?? null;
+
+	let verbs: HTMLButtonElement[] = [];
+	await waitFor(() => {
+		verbs = [
+			...(messageNode(messageId)?.querySelectorAll<HTMLButtonElement>('.nimble-reaction-verb') ??
+				[]),
+		];
+		return verbs.length > 0;
+	}, `reaction buttons on message ${messageId}`);
+
+	let item: HTMLButtonElement | null = null;
+	for (const verb of verbs) {
+		if (verb.getAttribute('aria-expanded') !== 'true') verb.click();
+		await settle(100);
+		item = menuItem();
+		if (item) break;
+	}
+	if (!item) {
+		throw new Error(
+			`No reaction${labelIncludes ? ` "${labelIncludes}"` : ''} on message ${messageId}`,
+		);
+	}
+	item.click();
 	await settle(800);
 }
 

@@ -6,6 +6,7 @@ import type {
 
 import localize from '../../../utils/localize.js';
 import { getIncomingReactionCost } from './incomingReactionCost.ts';
+import { REACTION_VERB_ICONS, REACTION_VERB_WORDS, reactionVerb } from './reactionVerbs.ts';
 import { isRerollAgain } from './rerollHistoryLines.ts';
 
 function reactingActor(entry: IncomingReactionEntry) {
@@ -21,16 +22,12 @@ function featureName(entry: IncomingReactionEntry): string {
 }
 
 function icon(entry: IncomingReactionEntry): string {
-	if (entry.kind === 'reroll' && entry.use === 'change') return 'fa-solid fa-pen';
-	if (entry.kind === 'reroll') return 'fa-solid fa-rotate-left';
-	if (entry.kind === 'spendPoolForDamage') return 'fa-solid fa-dice-d6';
-	return 'fa-solid fa-shield-heart';
+	return REACTION_VERB_ICONS[reactionVerb(entry)];
 }
 
-function tooltip(entry: IncomingReactionEntry): string | null {
-	if (entry.source !== 'rule' || !entry.itemUuid) return null;
-	const item = fromUuidSync(entry.itemUuid) as { name?: string } | null;
-	return item?.name ?? null;
+/** The short name in a verb's menu, which already says the verb. */
+function menuName(entry: IncomingReactionEntry): string {
+	return featureName(entry) || entry.label || localize(REACTION_VERB_WORDS[reactionVerb(entry)]);
 }
 
 function cost(entry: IncomingReactionEntry): string {
@@ -63,7 +60,9 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 export function createIncomingReactionText(getRerolls: () => RerollRecord[]): IncomingReactionText {
 	function label(entry: IncomingReactionEntry): string {
 		if (isRerollAgain(entry, getRerolls())) {
-			return localize('NIMBLE.chat.incomingReactions.rerollAgain');
+			return localize('NIMBLE.chat.incomingReactions.rerollAgain', {
+				feature: featureName(entry) || entry.label,
+			});
 		}
 		if (entry.kind === 'reroll') {
 			const key = entry.use === 'change' ? 'changeWith' : 'rerollWith';
@@ -87,8 +86,8 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 		documentName,
 		featureName,
 		label,
+		menuName,
 		icon,
-		tooltip,
 		cost,
 		usedAttribution,
 	};

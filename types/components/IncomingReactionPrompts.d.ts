@@ -42,9 +42,11 @@ export interface IncomingReactionText {
 	reactingActor(entry: IncomingReactionEntry): Actor.Implementation | null;
 	documentName(uuid: string): string;
 	featureName(entry: IncomingReactionEntry): string;
+	/** The full sentence: "Reroll with Lucky". */
 	label(entry: IncomingReactionEntry): string;
+	/** The short name in a verb's menu: "Lucky". */
+	menuName(entry: IncomingReactionEntry): string;
 	icon(entry: IncomingReactionEntry): string;
-	tooltip(entry: IncomingReactionEntry): string | null;
 	cost(entry: IncomingReactionEntry): string;
 	usedAttribution(entry: IncomingReactionEntry): string;
 }

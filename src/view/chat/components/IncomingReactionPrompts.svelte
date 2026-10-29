@@ -4,7 +4,7 @@
 
 	import { getContext, tick } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
+	import IncomingReactionVerbs from './IncomingReactionVerbs.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import LeftOutRerolls from './LeftOutRerolls.svelte';
 	import RerollDiePicker from './RerollDiePicker.svelte';
@@ -38,7 +38,7 @@
 {/snippet}
 
 {#snippet entryGroups()}
-	<IncomingReactionEntryGroups
+	<IncomingReactionVerbs
 		groups={prompts.pendingGroups}
 		picking={prompts.picking}
 		busy={prompts.busy}

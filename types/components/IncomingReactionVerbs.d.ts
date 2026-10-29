@@ -9,9 +9,9 @@ import type {
 	IncomingReactionText,
 } from './IncomingReactionPrompts.d.ts';
 
-export interface IncomingReactionEntryGroupsProps {
+export interface IncomingReactionVerbsProps {
 	groups: IncomingReactionActorGroup[];
-	/** The reroll whose die picker shows in place of its button. */
+	/** The reroll whose die picker shows under the buttons. */
 	picking: IncomingReactionPicking | null;
 	busy: boolean;
 	/** The card outcome, shown on the Primary Die in the die picker. */
