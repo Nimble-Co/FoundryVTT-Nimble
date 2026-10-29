@@ -1,13 +1,12 @@
 import type { NimbleCharacter } from '../documents/actor/character.js';
 import { getActiveCombatForCurrentScene } from '../utils/combat/combatState.js';
-import { consumeCombatantAction } from '../utils/combat/combatTurnActions.js';
 import { runMoveAction } from '../utils/heroicActions/move.js';
 import {
 	checkReactionConfirmation,
 	isChatReactionId,
 	useChatReaction,
 } from '../utils/heroicActions/reactions.js';
-import { rollUnarmedStrike } from '../utils/heroicActions/unarmedStrike.js';
+import { strikeUnarmed } from '../utils/heroicActions/unarmedStrike.js';
 import localize from '../utils/localize.js';
 import { heroicRowId } from '../view/actorSheets/hero/heroicRows.js';
 import { asRevealable } from '../view/actorSheets/shared/revealable.js';
@@ -50,7 +49,7 @@ export async function activateHeroicActionMacro(
 
 	// Handle unarmed strike directly
 	if (actionId === 'unarmedStrike' && actionType === 'action') {
-		await executeUnarmedStrike(actor as NimbleCharacter);
+		await strikeUnarmed(actor as NimbleCharacter);
 		return;
 	}
 
@@ -119,16 +118,4 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 		actionType: 'reaction',
 		force,
 	};
-}
-
-async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene();
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const inCombat = !!combatant && combatant.initiative !== null;
-
-	if (!(await rollUnarmedStrike(actor))) return;
-
-	if (inCombat && combat && combatant?.id) {
-		await consumeCombatantAction({ combat, combatantId: combatant.id });
-	}
 }

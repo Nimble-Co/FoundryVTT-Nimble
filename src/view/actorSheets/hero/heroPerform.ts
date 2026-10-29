@@ -9,10 +9,7 @@ import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
-import {
-	consumeCombatantAction,
-	requestAdvanceCombatTurn,
-} from '#utils/combat/combatTurnActions.js';
+import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
@@ -22,7 +19,7 @@ import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
-import { rollUnarmedStrike } from '#utils/heroicActions/unarmedStrike.js';
+import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
@@ -160,15 +157,6 @@ async function endToggle(actor: NimbleCharacter, itemId: string, ruleId: string)
 	);
 }
 
-/** Spec 6.6: an Unarmed Strike spends its action through the same path as `activateItem`. */
-async function unarmedStrike(actor: NimbleCharacter): Promise<void> {
-	if (!(await rollUnarmedStrike(actor))) return;
-	const found = combatantOf(actor.id);
-	if (found?.combatant.id) {
-		await consumeCombatantAction({ combat: found.combat, combatantId: found.combatant.id });
-	}
-}
-
 async function endTurn(actor: NimbleCharacter): Promise<void> {
 	const found = combatantOf(actor.id);
 	if (!found) return;
@@ -303,7 +291,7 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				await spendDice(actor, intent);
 				return;
 			case 'unarmedStrike':
-				await unarmedStrike(actor);
+				await strikeUnarmed(actor);
 				return;
 			case 'move':
 				await runMoveAction(actor);

@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
@@ -193,4 +194,14 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	return true;
+}
+
+/** Rolls an Unarmed Strike, then spends 1 action by the same rule as `activateItem`. */
+export async function strikeUnarmed(actor: NimbleCharacter): Promise<void> {
+	if (!(await rollUnarmedStrike(actor))) return;
+	const combat = game.combat;
+	const combatant = combat?.combatants.find((entry) => entry.actorId === actor.id);
+	if (combat?.started && combatant?.id) {
+		await consumeCombatantAction({ combat, combatantId: combatant.id });
+	}
 }

@@ -9,7 +9,6 @@ const setPoolFaces = vi.fn();
 const updateDocumentImage = vi.fn();
 const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
-const consumeCombatantAction = vi.fn();
 const toggleEffectAE = vi.fn();
 const findToggleEffectRuleById = vi.fn();
 const getDicePools = vi.fn();
@@ -19,7 +18,7 @@ const runAssess = vi.fn();
 const runMoveAction = vi.fn();
 const useChatReaction = vi.fn();
 const useOpportunityAttack = vi.fn();
-const rollUnarmedStrike = vi.fn();
+const strikeUnarmed = vi.fn();
 
 let createHeroPerform: typeof import('../heroPerform.ts').createHeroPerform;
 
@@ -31,7 +30,6 @@ beforeAll(async () => {
 	vi.doMock('#view/handlers/updateDocumentImage.js', () => ({ default: updateDocumentImage }));
 	vi.doMock('#utils/combat/combatTurnActions.js', () => ({
 		requestAdvanceCombatTurn,
-		consumeCombatantAction,
 	}));
 	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
 		toggleEffectAE,
@@ -43,7 +41,7 @@ beforeAll(async () => {
 	vi.doMock('#utils/heroicActions/assess.js', () => ({ runAssess }));
 	vi.doMock('#utils/heroicActions/move.js', () => ({ runMoveAction }));
 	vi.doMock('#utils/heroicActions/reactions.js', () => ({ useChatReaction, useOpportunityAttack }));
-	vi.doMock('#utils/heroicActions/unarmedStrike.js', () => ({ rollUnarmedStrike }));
+	vi.doMock('#utils/heroicActions/unarmedStrike.js', () => ({ strikeUnarmed }));
 	vi.doMock('#utils/combat/combatState.js', () => ({ getActiveCombatForCurrentScene }));
 	vi.doMock('#utils/combat/queueCombatantMutationWithFreshDocument.js', () => ({
 		queueCombatantMutationWithFreshDocument: async (params: {
@@ -378,28 +376,10 @@ describe('createHeroPerform', () => {
 	});
 
 	describe('heroic actions', () => {
-		it('strikes unarmed, then spends 1 action through consumeCombatantAction', async () => {
-			const combatant = { id: 'c1', actorId: 'hero1' };
-			const combat = mockCombat(combatant);
-			getActiveCombatForCurrentScene.mockReturnValue(combat);
-			rollUnarmedStrike.mockResolvedValueOnce(true);
-
+		it('strikes unarmed through strikeUnarmed', async () => {
 			await perform({ kind: 'unarmedStrike' });
 
-			expect(rollUnarmedStrike).toHaveBeenCalledWith(actor);
-			expect(consumeCombatantAction).toHaveBeenCalledWith({ combat, combatantId: 'c1' });
-		});
-
-		it('spends no action when the Unarmed Strike roll is cancelled, or out of combat', async () => {
-			getActiveCombatForCurrentScene.mockReturnValue(mockCombat({ id: 'c1', actorId: 'hero1' }));
-			rollUnarmedStrike.mockResolvedValueOnce(false);
-			await perform({ kind: 'unarmedStrike' });
-
-			getActiveCombatForCurrentScene.mockReturnValue(null);
-			rollUnarmedStrike.mockResolvedValueOnce(true);
-			await perform({ kind: 'unarmedStrike' });
-
-			expect(consumeCombatantAction).not.toHaveBeenCalled();
+			expect(strikeUnarmed).toHaveBeenCalledWith(actor);
 		});
 
 		it.each([

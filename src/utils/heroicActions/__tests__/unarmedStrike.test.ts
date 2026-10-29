@@ -1,7 +1,9 @@
 import {
 	createHeroicCharacter,
+	createHeroicCombatant,
 	heroicGlobals,
 	resetHeroicGlobals,
+	setHeroicCombat,
 	targetToken,
 } from '../../../../tests/fixtures/heroicActions.js';
 
@@ -10,6 +12,7 @@ const dialogMock = vi.fn();
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let rollUnarmedStrike: typeof import('../unarmedStrike.ts').rollUnarmedStrike;
+let strikeUnarmed: typeof import('../unarmedStrike.ts').strikeUnarmed;
 
 beforeAll(async () => {
 	vi.resetModules();
@@ -23,7 +26,7 @@ beforeAll(async () => {
 		getUnarmedDamageFormula: () => '1',
 		hasUnarmedProficiency: () => false,
 	}));
-	({ rollUnarmedStrike } = await import('../unarmedStrike.ts'));
+	({ rollUnarmedStrike, strikeUnarmed } = await import('../unarmedStrike.ts'));
 });
 
 function dialogResult(result: unknown) {
@@ -32,20 +35,20 @@ function dialogResult(result: unknown) {
 	});
 }
 
-describe('rollUnarmedStrike', () => {
-	let restore: () => void;
+let restore: () => void;
 
-	beforeEach(() => {
-		restore = resetHeroicGlobals();
-		dialogMock.mockReset();
-		damageRollMock.mockReset();
-		damageRollMock.mockImplementation(function roll() {
-			return { evaluate: vi.fn(), toJSON: () => ({}), isCritical: false, isMiss: false };
-		});
+beforeEach(() => {
+	restore = resetHeroicGlobals();
+	dialogMock.mockReset();
+	damageRollMock.mockReset();
+	damageRollMock.mockImplementation(function roll() {
+		return { evaluate: vi.fn(), toJSON: () => ({}), isCritical: false, isMiss: false };
 	});
+});
 
-	afterEach(() => restore());
+afterEach(() => restore());
 
+describe('rollUnarmedStrike', () => {
 	it('posts the unarmed strike card with the damage bonuses', async () => {
 		dialogResult({ rollMode: 0 });
 		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
@@ -98,5 +101,42 @@ describe('rollUnarmedStrike', () => {
 
 		expect(damageRollMock).not.toHaveBeenCalled();
 		expect(ChatMessage.create).not.toHaveBeenCalled();
+	});
+});
+
+describe('strikeUnarmed', () => {
+	it('rolls, then spends 1 action in a started combat, as activateItem does', async () => {
+		dialogResult({});
+		const actor = createHeroicCharacter();
+		const combatant = createHeroicCombatant(actor, { currentActions: 2 });
+		setHeroicCombat(combatant);
+
+		await strikeUnarmed(actor);
+
+		expect(ChatMessage.create).toHaveBeenCalled();
+		expect(combatant.update).toHaveBeenCalledWith({ 'system.actions.base.current': 1 });
+	});
+
+	it('spends no action when the combat has not started', async () => {
+		dialogResult({});
+		const actor = createHeroicCharacter();
+		const combatant = createHeroicCombatant(actor);
+		setHeroicCombat(combatant, { started: false });
+
+		await strikeUnarmed(actor);
+
+		expect(ChatMessage.create).toHaveBeenCalled();
+		expect(combatant.update).not.toHaveBeenCalled();
+	});
+
+	it('spends no action when the roll is cancelled', async () => {
+		dialogResult(null);
+		const actor = createHeroicCharacter();
+		const combatant = createHeroicCombatant(actor);
+		setHeroicCombat(combatant);
+
+		await strikeUnarmed(actor);
+
+		expect(combatant.update).not.toHaveBeenCalled();
 	});
 });
