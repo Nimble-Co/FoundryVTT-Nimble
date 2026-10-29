@@ -9,6 +9,7 @@ import {
 } from '../shared/itemFields.ts';
 import { placeOf } from '../shared/placeOf.ts';
 import { plainText } from '../shared/plainText.ts';
+import type { PoolRecovery } from '../shared/poolRecovery.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type {
@@ -16,7 +17,6 @@ import type {
 	HeroActorLike,
 	HeroItemState,
 	HeroSheetContext,
-	PoolRecovery,
 } from './heroSource.ts';
 
 const SHARED = 'NIMBLE.actorSheet.shared';

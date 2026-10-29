@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { recoveryOf } from '../heroItemState.ts';
+import { recoveryOf } from '../poolRecovery.ts';
 
 describe('recoveryOf', () => {
 	it('reads a turn start or a turn end recovery as once a round', () => {

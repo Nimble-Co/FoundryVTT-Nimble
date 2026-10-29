@@ -11,27 +11,13 @@ import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
+import { recoveryOf } from '../shared/poolRecovery.ts';
 import type {
 	ChargeGateLike,
 	DiceConsumerLike,
 	HeroItemState,
 	ItemPoolLike,
-	PoolRecovery,
 } from './heroSource.ts';
-
-const RECOVERY_ORDER: [PoolRecovery, string[]][] = [
-	['round', ['onTurnStart', 'onTurnEnd']],
-	['encounter', ['encounterStart', 'encounterEnd']],
-	['fieldRest', ['fieldRest']],
-	['safeRest', ['safeRest']],
-];
-
-/** The most frequent recovery of the pool, in the words of the row. */
-export function recoveryOf(triggers: string[]): PoolRecovery | null {
-	return (
-		RECOVERY_ORDER.find(([, names]) => names.some((name) => triggers.includes(name)))?.[0] ?? null
-	);
-}
 
 const triggersOf = (pool: ChargePoolState) => (pool.recoveries ?? []).map((entry) => entry.trigger);
 
