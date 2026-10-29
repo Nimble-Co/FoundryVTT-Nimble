@@ -4,20 +4,11 @@ Asks once before something that you cannot take back (Delete, end an effect), in
 It is a bar, not a second window. Foundry has no undo, so the question comes before the act.
 -->
 <script lang="ts">
+	import type { ConfirmBarProps } from '#types/components/actorSheets/ConfirmBar.d.ts';
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
 
-	interface Props {
-		question: string;
-		/** default "Delete" */
-		confirmLabel?: string;
-		/** default "Keep" */
-		cancelLabel?: string;
-		onconfirm?: () => void;
-		oncancel?: () => void;
-	}
-
-	let { question, confirmLabel, cancelLabel, onconfirm, oncancel }: Props = $props();
+	let { question, confirmLabel, cancelLabel, onconfirm, oncancel }: ConfirmBarProps = $props();
 
 	let cancelButton: HTMLButtonElement | undefined;
 

@@ -5,24 +5,9 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 `own` marks an effect that your own feature put on you; only then is there a control to end it, and the bar asks first.
 -->
 <script lang="ts">
+	import type { EffectEntryProps } from '#types/components/actorSheets/EffectEntry.d.ts';
 	import localize from '#utils/localize.js';
 	import ConfirmBar from './ConfirmBar.svelte';
-
-	interface Props {
-		name: string;
-		icon?: string;
-		/** where it comes from, or what it is attached to */
-		source?: string;
-		duration?: string;
-		text?: string;
-		/** your own effect: it can end, and it gets the own colour */
-		own?: boolean;
-		/** the text is open */
-		open?: boolean;
-		/** the word for the end button and its question; default "End" */
-		endLabel?: string;
-		onend?: () => void;
-	}
 
 	let {
 		name,
@@ -34,7 +19,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 		open = $bindable(false),
 		endLabel,
 		onend,
-	}: Props = $props();
+	}: EffectEntryProps = $props();
 
 	let asking = $state(false);
 	const verb = $derived(endLabel ?? localize('NIMBLE.actorSheet.parts.effectEntry.end'));

@@ -5,21 +5,8 @@ The two buttons on each row and card. `expand` shows or hides the text in the ro
 so the arrows and the costs stay in one column. The buttons are always visible and quiet at rest.
 -->
 <script lang="ts">
+	import type { RowButtonProps } from '#types/components/actorSheets/RowButton.d.ts';
 	import localize from '#utils/localize.js';
-
-	interface Props {
-		kind?: 'expand' | 'edit' | 'spacer';
-		open?: boolean;
-		/** the name of the thing, for the label: "Configure {name}" */
-		name?: string;
-		/** md = character row, sm = NPC card */
-		size?: 'md' | 'sm';
-		/** 40 x 44 px targets for a phone */
-		touch?: boolean;
-		/** id of the text that the arrow opens */
-		controls?: string;
-		onclick?: () => void;
-	}
 
 	let {
 		kind = 'expand',
@@ -29,7 +16,7 @@ so the arrows and the costs stay in one column. The buttons are always visible a
 		touch = false,
 		controls,
 		onclick,
-	}: Props = $props();
+	}: RowButtonProps = $props();
 
 	const label = $derived(
 		kind === 'edit'

@@ -4,19 +4,9 @@ Edit mode: a quiet dashed outline over a part that you configure. Point at it or
 The parent must be positioned (`position: relative`). Every outline is 5 px from its content, with an 8 px radius.
 -->
 <script lang="ts">
-	interface Props {
-		/** the words on the tag: Hit Points, Movement, Skills */
-		short: string;
-		/** the name of the window: Configure Hit Points */
-		label: string;
-		/** the tag sits in the middle of the line, not over the top edge */
-		inline?: boolean;
-		/** a row of a list: no outline space above and below */
-		row?: boolean;
-		onclick?: () => void;
-	}
+	import type { EditZoneProps } from '#types/components/actorSheets/EditZone.d.ts';
 
-	let { short, label, inline = false, row = false, onclick }: Props = $props();
+	let { short, label, inline = false, row = false, onclick }: EditZoneProps = $props();
 </script>
 
 <button

@@ -5,22 +5,17 @@ the icons are `fa-expand` and `fa-compress`. After Expand all, the arrow of a ro
 `compact` is the icon only, for the phone header; it keeps the words as its label. `size="sm"` is the 26 px button of the NPC sheet header.
 -->
 <script lang="ts">
+	import type { ExpandAllButtonProps } from '#types/components/actorSheets/ExpandAllButton.d.ts';
 	import localize from '#utils/localize.js';
 	import Button from './Button.svelte';
 
-	interface Props {
-		/** true when every row is open: the button then says Collapse all */
-		allOpen?: boolean;
-		/** icon only (phone header) */
-		compact?: boolean;
-		/** md = 28 px (character list tabs), sm = 26 px (NPC sheet header) */
-		size?: 'md' | 'sm';
-		/** the tooltip; default: the words of the button */
-		tooltip?: string;
-		onclick?: () => void;
-	}
-
-	let { allOpen = false, compact = false, size = 'md', tooltip, onclick }: Props = $props();
+	let {
+		allOpen = false,
+		compact = false,
+		size = 'md',
+		tooltip,
+		onclick,
+	}: ExpandAllButtonProps = $props();
 
 	const label = $derived(
 		localize(

@@ -5,20 +5,16 @@ above 0 tints the strip green, below 0 red, and the tooltip says how many. With 
 Put it inside `nimble-chrome` on the rail. `stripTone="card"` is the NPC rail: with no advantage the strip has the card border colour, not bronze.
 -->
 <script lang="ts">
+	import type { SaveTileProps } from '#types/components/actorSheets/SaveTile.d.ts';
 	import localize from '#utils/localize.js';
 
-	interface Props {
-		ability: string;
-		/** signed modifier with a true minus sign: +3, +0, −1 */
-		mod?: string;
-		/** stacked advantage (positive) or disadvantage (negative) */
-		advantage?: number;
-		/** the strip with no advantage: bronze (default) or card (NPC rail) */
-		stripTone?: 'bronze' | 'card';
-		onclick?: () => void;
-	}
-
-	let { ability, mod = '+0', advantage = 0, stripTone = 'bronze', onclick }: Props = $props();
+	let {
+		ability,
+		mod = '+0',
+		advantage = 0,
+		stripTone = 'bronze',
+		onclick,
+	}: SaveTileProps = $props();
 
 	const mode = $derived(
 		advantage > 0

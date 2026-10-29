@@ -4,16 +4,9 @@ The square image at the start of a row. The document art (`img`) fills the squar
 The image of a row is the image of the thing; each image has one meaning on the sheet.
 -->
 <script lang="ts">
-	interface Props {
-		/** path to the document art */
-		img?: string;
-		/** Font Awesome class, when there is no image */
-		icon?: string;
-		/** md = 32 px (character row), sm = 24 px (NPC card), win = 28 px (the head of a small window) */
-		size?: 'md' | 'sm' | 'win';
-	}
+	import type { RowTileProps } from '#types/components/actorSheets/RowTile.d.ts';
 
-	let { img, icon, size = 'md' }: Props = $props();
+	let { img, icon, size = 'md' }: RowTileProps = $props();
 </script>
 
 <span

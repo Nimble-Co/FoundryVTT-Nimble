@@ -5,19 +5,8 @@ from -6 to 6, as RollModeConfig in the system: "Advantage × 2", "Straight Roll"
 Never draw a three-way Disadvantage / Normal / Advantage switch.
 -->
 <script lang="ts">
+	import type { RollModeStepperProps } from '#types/components/actorSheets/RollModeStepper.d.ts';
 	import localize from '#utils/localize.js';
-
-	interface Props {
-		/** positive = advantage, negative = disadvantage */
-		value?: number;
-		onchange?: (value: number) => void;
-		min?: number;
-		max?: number;
-		/** the colour of a disadvantage: vital (default) or warn */
-		disTone?: 'vital' | 'warn';
-		/** fixed button widths */
-		fixed?: boolean;
-	}
 
 	let {
 		value = $bindable(0),
@@ -26,7 +15,7 @@ Never draw a three-way Disadvantage / Normal / Advantage switch.
 		max = 6,
 		disTone = 'vital',
 		fixed = false,
-	}: Props = $props();
+	}: RollModeStepperProps = $props();
 
 	const label = $derived(
 		value > 0

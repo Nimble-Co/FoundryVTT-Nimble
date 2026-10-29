@@ -7,7 +7,8 @@ The pool kind picks the colour of the pool cost.
 -->
 <script lang="ts">
 	import localize from '#utils/localize.js';
-	import type { RowCostProps, RowUses } from './types.ts';
+	import type { RowCostProps } from '#types/components/actorSheets/RowCost.d.ts';
+	import type { RowUses } from './types.ts';
 
 	let {
 		text,

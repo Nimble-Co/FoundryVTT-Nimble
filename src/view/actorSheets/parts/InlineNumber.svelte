@@ -8,24 +8,8 @@ A maximum is never typed on the sheet face: it changes in the configure window.
 (a meter, the phone strip), and `cost` is a use count in a row in edit mode. `rest` is edit mode: the pointer cannot change the number.
 -->
 <script lang="ts">
+	import type { InlineNumberProps } from '#types/components/actorSheets/InlineNumber.d.ts';
 	import localize from '#utils/localize.js';
-
-	interface Props {
-		value: number;
-		/** aria-label, for example "Current HP" */
-		label: string;
-		onchange?: (value: number) => void;
-		align?: 'right' | 'center';
-		/** a faint dotted line under the number, for edit mode */
-		dotted?: boolean;
-		width?: string;
-		min?: number;
-		max?: number;
-		/** plain (default), label (rail meter label line), field (26 px, meter and phone strip), cost (row uses in edit mode) */
-		variant?: 'plain' | 'label' | 'field' | 'cost';
-		/** edit mode: the number ignores the pointer */
-		rest?: boolean;
-	}
 
 	let {
 		value,
@@ -38,7 +22,7 @@ A maximum is never typed on the sheet face: it changes in the configure window.
 		max,
 		variant = 'plain',
 		rest = false,
-	}: Props = $props();
+	}: InlineNumberProps = $props();
 
 	let draft: string | null = $state(null);
 	const shown = $derived(draft ?? String(value ?? ''));
