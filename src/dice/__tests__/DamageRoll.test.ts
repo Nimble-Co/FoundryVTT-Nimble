@@ -272,6 +272,18 @@ describe('DamageRoll preprocessing', () => {
 
 				expect(restored.options.primaryDieBaseResult).toBe(3);
 			});
+
+			it('should not roll a Primary Die while a roll is rebuilt', () => {
+				mockDice(0.4);
+				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
+				const json = { ...roll.toJSON(), options: { ...roll.options } };
+				const randomFace = vi.spyOn(foundry.dice.terms.Die.prototype, 'randomFace');
+
+				DamageRoll.fromData(json as any);
+				DamageRoll.fromRoll(roll);
+
+				expect(randomFace).not.toHaveBeenCalled();
+			});
 		});
 
 		it('should extract primary die from multi-die formula', () => {

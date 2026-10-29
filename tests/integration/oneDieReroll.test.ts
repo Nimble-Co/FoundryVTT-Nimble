@@ -122,7 +122,8 @@ describe('rerollOneDie on live dice', () => {
 
 	test('a Primary Die rerolled gets Add to Primary Die Result again, and the damage past its max is worked out again', async () => {
 		const options = { ...DAMAGE, primaryDieValue: 4, primaryDieModifier: 5 };
-		const roll = await rolled('DamageRoll', '1d6 + 2', options, 6, [2]);
+		// The first die is the one the set value replaces.
+		const roll = await rolled('DamageRoll', '1d6 + 2', options, 6, [1, 2]);
 		expect(resultsOf(roll)).toEqual([6, 2]);
 		expect([roll.total, roll.isCritical]).toEqual([13, true]);
 

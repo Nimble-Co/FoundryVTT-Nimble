@@ -405,12 +405,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
 		const { primaryDieValue, primaryDieModifier } = options;
 		const faces = primaryTerm.faces;
-		if (typeof faces !== 'number' || (!primaryDieValue && !primaryDieModifier)) return;
+		if (DamageRoll.rebuilding || typeof faces !== 'number') return;
+		if (!primaryDieValue && !primaryDieModifier) return;
 
 		// The preset applies to the die that stays, so the pool is rolled and dropped here.
 		const poolSize = Math.max(1, Number(primaryTerm.number) || 1);
 		const results: foundry.dice.terms.DiceTerm.Result[] = Array.from({ length: poolSize }, () => ({
-			result: Math.ceil(Math.random() * faces),
+			result: primaryTerm.randomFace(),
 			active: true,
 		}));
 		if (poolSize > 1) {
@@ -1073,6 +1074,22 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param roll - The DamageRoll to mark as evaluated.
 	 * @param total - The total value to set.
 	 */
+	/** Set while a roll is rebuilt, so its constructor does not roll a Primary Die that is replaced. */
+	private static rebuilding = false;
+
+	private static _rebuild(
+		formula: string,
+		data: DamageRoll.Data,
+		options: DamageRoll.Options | undefined,
+	): DamageRoll {
+		DamageRoll.rebuilding = true;
+		try {
+			return new DamageRoll(formula, data, options);
+		} finally {
+			DamageRoll.rebuilding = false;
+		}
+	}
+
 	private static _setEvaluatedState(roll: DamageRoll, total: number): void {
 		const internals = roll as object as { _evaluated: boolean; _total: number };
 		internals._evaluated = true;
@@ -1103,7 +1120,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @returns A new DamageRoll with the same formula, data, options, and evaluated state.
 	 */
 	static fromRoll(roll) {
-		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
+		const newRoll = DamageRoll._rebuild(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
@@ -1132,13 +1149,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
 		const options = (data.options ?? baseRoll.options) as DamageRoll.Options;
 		const damageData = data.data ?? {};
-		const primaryDieBaseResult = options?.primaryDieBaseResult;
 
-		const roll = new DamageRoll(formula, damageData, options);
-
-		// The constructor rolls a new base result; keep the recorded one.
-		if (primaryDieBaseResult === undefined) delete roll.options.primaryDieBaseResult;
-		else roll.options.primaryDieBaseResult = primaryDieBaseResult;
+		const roll = DamageRoll._rebuild(formula, damageData, options);
 
 		if (baseRoll.terms && baseRoll.terms.length > 0) {
 			// Restore terms from baseRoll (which has properly reconstructed term instances)
