@@ -306,6 +306,8 @@ export interface HeroSourceExtras {
 	manaFromInitiative: () => boolean;
 	/** the Bio notes, enriched by the Application (enrichment is async) */
 	enrichedNotes: () => string;
+	/** the descriptions of the open item rows, enriched by the Application */
+	enrichedDescriptions: () => Record<string, string>;
 }
 
 /** Builds the plain view-model input of the character sheet from `actor.reactive`. */
@@ -324,6 +326,7 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			manaFromInitiative: extras.manaFromInitiative(),
 			missingLevelSelections: extras.missingLevelSelections(),
 			enrichedNotes: extras.enrichedNotes(),
+			enrichedDescriptions: extras.enrichedDescriptions(),
 			labels: labels(hero, actor.ancestry?.identifier ?? null),
 			conditions: prepareActorConditions(actor as unknown as Actor.Implementation, {
 				includeInactive: true,

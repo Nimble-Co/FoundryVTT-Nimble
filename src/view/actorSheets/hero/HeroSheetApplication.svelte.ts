@@ -22,6 +22,7 @@ import { createHeroSource } from './heroAdapter.ts';
 import { dropAction, tabOfItemType } from './heroDrop.ts';
 import type { HeroPerform } from './heroIntent.ts';
 import { createHeroPerform } from './heroPerform.ts';
+import { rawDescriptionOf } from './heroRows.ts';
 import type { HeroSource } from './heroSource.ts';
 
 /** What the level choice audit depends on: the class, its level, and the feature sources. */
@@ -57,6 +58,11 @@ export default class HeroSheet extends SvelteApplicationMixin(
 	#combatManaPrimed = $state(0);
 
 	#enrichedNotes = $state('');
+
+	#enrichedDescriptions: Record<string, string> = $state({});
+
+	/** by item id, the raw description that `#enrichedDescriptions` holds or waits for */
+	#descriptionSources = new Map<string, string>();
 
 	#stopEffects: (() => void) | null = null;
 
@@ -165,6 +171,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
 				enrichedNotes: () => this.#enrichedNotes,
+				enrichedDescriptions: () => this.#enrichedDescriptions,
 				manaFromInitiative: () => {
 					// read only to recompute when the combat mana rules are primed
 					void this.#combatManaPrimed;
@@ -205,6 +212,14 @@ export default class HeroSheet extends SvelteApplicationMixin(
 				);
 				untrack(() => this.#enrichNotes(notes));
 			});
+			$effect(() => {
+				const open = new Set(this.#ui.openRows);
+				const wanted = actor.reactive.items
+					.filter((item) => open.has(item.id ?? ''))
+					.map((item) => [item.id ?? '', rawDescriptionOf(item)] as const)
+					.filter(([, raw]) => raw);
+				untrack(() => this.#enrichDescriptions(wanted));
+			});
 		});
 	}
 
@@ -227,6 +242,29 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			.then((html: string) => {
 				this.#enrichedNotes = html;
 			});
+	}
+
+	/** Only open rows show the text, so only they wait for the async enrichment. */
+	#enrichDescriptions(wanted: (readonly [string, string])[]): void {
+		for (const [id, raw] of wanted) {
+			if (this.#descriptionSources.get(id) === raw) continue;
+			this.#descriptionSources.set(id, raw);
+			if (id in this.#enrichedDescriptions) {
+				const { [id]: _stale, ...rest } = this.#enrichedDescriptions;
+				this.#enrichedDescriptions = rest;
+			}
+			const item = this.#actor.items.get(id);
+			void foundry.applications.ux.TextEditor.implementation
+				.enrichHTML(raw, {
+					secrets: this.#actor.isOwner,
+					rollData: item?.getRollData() ?? this.#actor.getRollData(),
+					relativeTo: (item ?? this.#actor) as unknown as foundry.abstract.Document.Any,
+				})
+				.then((html: string) => {
+					if (this.#descriptionSources.get(id) !== raw) return;
+					this.#enrichedDescriptions = { ...this.#enrichedDescriptions, [id]: html };
+				});
+		}
 	}
 
 	#audit(key: string): void {

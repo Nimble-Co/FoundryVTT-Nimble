@@ -177,6 +177,8 @@ export interface HeroSheetContext {
 	unarmedDamage: string;
 	/** the Bio notes as Foundry enriches them, for the editor while it is closed */
 	enrichedNotes: string;
+	/** by item id, the description as Foundry enriches it; only rows that are open have one */
+	enrichedDescriptions: Record<string, string>;
 }
 
 export interface HeroSource {

@@ -101,6 +101,8 @@ export interface HeroRowView {
 	summaryTone?: 'act' | 'warn';
 	cost: RowCostProps;
 	description?: string;
+	/** the description as Foundry enriches it (inline rolls, links), in place of the plain text */
+	descriptionHtml?: string;
 	facts: [string, string][];
 	state?: 'active' | 'used' | 'out';
 	use: HeroRowUse | null;
@@ -255,11 +257,12 @@ export function rangeWords(item: ItemLike, context: HeroSheetContext): string {
 	return '';
 }
 
-function descriptionOf(item: ItemLike): string {
-	const { description } = item.system;
-	if (typeof description === 'string') return plainText(description);
+/** The description HTML that a row shows: a spell shows its base effect. */
+export function rawDescriptionOf(item: { system: object }): string {
+	const { description } = item.system as { description?: unknown };
+	if (typeof description === 'string') return description;
 	const parts = (description ?? {}) as Record<string, unknown>;
-	return plainText(parts.baseEffect ?? parts.public ?? '');
+	return String(parts.baseEffect ?? parts.public ?? '');
 }
 
 /** The trigger of a reaction ("When an ally is hit"), from the cost details. */
@@ -364,7 +367,7 @@ export function itemRow(
 	const name = item.name;
 	const tier = spellTier(item);
 	const manaCost = spell && hasMana(actor, context) ? tier : 0;
-	const description = descriptionOf(item);
+	const description = plainText(rawDescriptionOf(item));
 	const range = rangeWords(item, context);
 	const when = whenWords(item);
 	const formula = damageFormula(item);
@@ -447,6 +450,7 @@ export function itemRow(
 				: undefined,
 		},
 		description: description || undefined,
+		descriptionHtml: context.enrichedDescriptions[item.id],
 		facts,
 		state: toggle?.on ? 'active' : gate ? 'out' : undefined,
 		use,

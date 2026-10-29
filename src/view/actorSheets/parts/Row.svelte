@@ -3,8 +3,8 @@
 One thing in a list on the character sheet: an item, a spell, a feature, a reaction or an effect (a "row", CONTEXT.md).
 
 - A click on the row uses the thing. An attack or a spell opens the roll window first; it never spends at once.
-- The arrow at the start shows the full text and the facts: cost, when, range, damage, uses, quantity, source. The first line stays, so the name and the cost do not move.
-- The pen at the end opens the window of the thing, with Delete. A row with no window keeps an empty place (`hasWindow={false}`).
+- The arrow at the start shows the full text and the facts: cost, when, range, damage, uses, quantity, source. The first line stays, so the name and the cost do not move. `descriptionHtml` (the text that Foundry enriched, with inline rolls and links) replaces the plain `description`.
+- The pen at the end opens the window of the thing. Delete is not in that window: the sheet puts it in `fields`. A row with no window keeps an empty place (`hasWindow={false}`).
 - A row is 44 px high (52 px with `touch`). No lines between rows: the line under each group heading separates the groups.
 
 An item that you can equip gets `onequip`: the tag after the name is then a toggle, EQUIPPED or EQUIP.
@@ -31,6 +31,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		summaryTone,
 		cost = {},
 		description,
+		descriptionHtml,
 		facts = [],
 		state: rowState,
 		open = $bindable(false),
@@ -129,7 +130,9 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 	</div>
 	{#if open}
 		<div class="xpn" id={pid}>
-			{#if description}<p>{description}</p>{/if}
+			{#if descriptionHtml}
+				<div class="text">{@html descriptionHtml}</div>
+			{:else if description}<p>{description}</p>{/if}
 			{#if facts.length}
 				<dl>
 					{#each facts as [k, v]}<div>
@@ -351,13 +354,20 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 	.touch .xpn {
 		padding-left: 82px;
 	}
-	.xpn p {
+	.xpn p,
+	.text {
 		margin: 0;
 		max-width: 68ch;
 		font-size: 0.929rem;
 		line-height: 1.45;
 		color: var(--nimble-ui-ink);
 		text-wrap: pretty;
+	}
+	.text :global(p) {
+		margin: 0 0 6px;
+	}
+	.text :global(p:last-child) {
+		margin-bottom: 0;
 	}
 	dl {
 		display: grid;

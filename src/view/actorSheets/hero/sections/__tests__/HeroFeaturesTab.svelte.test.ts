@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import {
 	blankHero,
@@ -12,10 +12,10 @@ import HeroFeaturesTab from '../HeroFeaturesTab.svelte';
 
 const FEAT = 'NIMBLE.actorSheet.hero.features';
 
-function renderTab(actor: HeroActorLike = featureHero(), editing = false) {
+function renderTab(actor: HeroActorLike = featureHero(), editing = false, context = heroContext()) {
 	const ui = $state({ ...createSheetUiState('features'), editing });
 	const perform = vi.fn();
-	render(HeroFeaturesTab, { view: heroFeaturesTab(actor, heroContext()), ui, perform });
+	render(HeroFeaturesTab, { view: heroFeaturesTab(actor, context), ui, perform });
 	return { ui, perform };
 }
 
@@ -41,6 +41,19 @@ describe('HeroFeaturesTab', () => {
 		);
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'activate', itemId: 'quickTempered' });
+	});
+
+	it('shows the enriched description of an open row, with its inline roll', async () => {
+		const enriched = '<p>Roll <a class="inline-roll" data-formula="1d6">1d6</a> once.</p>';
+		const { ui } = renderTab(
+			featureHero(),
+			false,
+			heroContext({ enrichedDescriptions: { quickTempered: enriched } }),
+		);
+
+		ui.openRows = ['quickTempered'];
+
+		await waitFor(() => expect(document.querySelector('a.inline-roll')).toHaveTextContent('1d6'));
 	});
 
 	it('shows Create Feature only in edit mode', async () => {

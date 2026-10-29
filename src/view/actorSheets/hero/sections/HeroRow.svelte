@@ -172,6 +172,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		summaryTone={row.summaryTone}
 		cost={row.cost}
 		description={row.description}
+		descriptionHtml={row.descriptionHtml}
 		facts={row.facts}
 		state={row.state}
 		open={ui.openRows.includes(row.id)}
