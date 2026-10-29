@@ -44,6 +44,7 @@ interface HeroActor {
 	name: string;
 	sheet: HeroSheetApp;
 	items: { get(id: string): Item | undefined; contents: Item[] };
+	effects: { get(id: string): ActiveEffect | undefined; contents: ActiveEffect[] };
 	system: { attributes: { hp: { value: number } } };
 	createEmbeddedDocuments(type: 'Item', data: object[]): Promise<Item[]>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -142,6 +143,8 @@ describe('the new character sheet', () => {
 	let rageItem: Item;
 	let taygItem: Item;
 	let macro: Macro | undefined;
+	let scene: Scene;
+	let combat: Combat | undefined;
 	let originalAutoApply: boolean;
 
 	beforeAll(async () => {
@@ -206,6 +209,7 @@ describe('the new character sheet', () => {
 		await hero?.sheet.close().catch(() => {});
 		await plain?.sheet.close().catch(() => {});
 		await macro?.delete().catch(() => {});
+		await combat?.delete().catch(() => {});
 		await worldTorch?.delete().catch(() => {});
 		await worldLantern?.delete().catch(() => {});
 		if (getRuleAutomationEnabled() !== originalAutoApply) {
@@ -451,6 +455,128 @@ describe('the new character sheet', () => {
 		await settle(300);
 	}, 30_000);
 
+	test('the window menu configures the sheet, and the frame closes it', async () => {
+		const sheet = await openHeroSheet(hero);
+		sheet.querySelector<HTMLButtonElement>('[data-action="toggleControls"]')!.click();
+		await waitFor(() => !!document.querySelector('#context-menu li'), 'the window menu');
+		const configure = [...document.querySelectorAll<HTMLElement>('#context-menu li')].find(
+			(item) => item.textContent?.trim() === t('SHEETS.ConfigureSheet'),
+		);
+		configure!.click();
+		await waitFor(
+			() => !!document.querySelector('.sheet-config select, #document-sheet-config select'),
+			'the sheet config window',
+		);
+		await settle(300);
+		const select = document.querySelector<HTMLSelectElement>(
+			'.sheet-config select, #document-sheet-config select',
+		)!;
+		expect(select.selectedOptions[0]?.textContent?.trim()).toBe('Character sheet (Hero)');
+		for (const app of foundry.applications.instances.values()) {
+			if ((app as { constructor: { name: string } }).constructor.name === 'DocumentSheetConfig') {
+				await app.close();
+			}
+		}
+
+		sheet.querySelector<HTMLButtonElement>('[data-action="close"]')!.click();
+		await waitFor(() => !hero.sheet.rendered && !sheet.isConnected, 'the sheet to close');
+		const again = await openHeroSheet(hero);
+		expect(rowOf(again, backpackId) ?? again.querySelector('[role="tab"]')).toBeTruthy();
+	}, 60_000);
+
+	test('after a tab click, Escape closes the sheet', async () => {
+		const sheet = await openHeroSheet(hero);
+		const tab = tabButton(sheet, t('NIMBLE.actorSheet.hero.tabs.bio'))!;
+		tab.focus();
+		tab.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
+		await waitFor(
+			() => selectedTab(sheet).startsWith(t('NIMBLE.actorSheet.hero.tabs.bio')),
+			'the Bio tab',
+		);
+		expect(document.activeElement).not.toBe(tab);
+		for (const type of ['keydown', 'keyup']) {
+			window.dispatchEvent(
+				new KeyboardEvent(type, { key: 'Escape', code: 'Escape', bubbles: true }),
+			);
+		}
+		await waitFor(() => !hero.sheet.rendered, 'Escape to close the sheet');
+	}, 30_000);
+
+	test('a condition from the grid shows on you, and Remove takes it off after a question', async () => {
+		const sheet = await openHeroSheet(hero);
+		await openTab(sheet, 'effects');
+		const grid = sheet.querySelector<HTMLElement>(
+			`[role="group"][aria-label="${CSS.escape(t('NIMBLE.actorSheet.hero.effects.allConditions'))}"]`,
+		)!;
+		const toggle = grid.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!;
+		const name = toggle.textContent!.trim();
+		toggle.click();
+		await waitFor(
+			() => grid.querySelector(`button[aria-pressed="true"]`)?.textContent?.trim() === name,
+			'the grid to show the condition on',
+		);
+		const conditionRow = () =>
+			[...sheet.querySelectorAll<HTMLElement>('[data-row-id^="condition-"]')].find((row) =>
+				row.textContent?.includes(name),
+			);
+		await waitFor(() => !!conditionRow(), 'the condition under Conditions on you');
+		const statusCount = () => hero.effects.contents.filter((e) => e.statuses.size > 0).length;
+		const before = statusCount();
+
+		useButtonOf(conditionRow()!)!.click();
+		await settle(200);
+		expect(statusCount(), 'one click does not remove').toBe(before);
+		buttonNamed(conditionRow()!, t('NIMBLE.actorSheet.hero.effects.remove'))!.click();
+		await waitFor(() => !conditionRow(), 'the condition to come off');
+	}, 30_000);
+
+	test('a timed effect shows under Active effects, and Remove deletes it', async () => {
+		const [effect] = await (
+			hero as unknown as {
+				createEmbeddedDocuments(type: 'ActiveEffect', data: object[]): Promise<ActiveEffect[]>;
+			}
+		).createEmbeddedDocuments('ActiveEffect', [
+			{ name: `${TEST_PREFIX} Blessing`, duration: { rounds: 3 } },
+		]);
+		const sheet = await openHeroSheet(hero);
+		await openTab(sheet, 'effects');
+		const row = () => rowOf(sheet, `effect-${effect!.id}`);
+		await waitFor(() => !!row(), 'the effect row');
+		useButtonOf(row()!)!.click();
+		await settle(200);
+		buttonNamed(row()!, t('NIMBLE.actorSheet.hero.effects.remove'))!.click();
+		await waitFor(() => !hero.effects.get(effect!.id!), 'the effect to be deleted');
+		await waitFor(() => !row(), 'the effect row to go');
+	}, 30_000);
+
+	test('the roll button of a dice pool adds a die, and the meter shows it', async () => {
+		const sheet = await openHeroSheet(hero);
+		const fury = () =>
+			Object.values(
+				(foundry.utils.getProperty(
+					hero.items.get(rageItem.id!)!,
+					`flags.${game.system.id}.dicePools`,
+				) ?? {}) as Record<string, { identifier: string; faces: number[]; label: string }>,
+			).find((pool) => pool.identifier === 'fury')!;
+		const before = fury().faces.length;
+		const roll = buttonNamed(
+			sheet,
+			t('NIMBLE.actorSheet.parts.dicePool.addLabel', { label: fury().label }),
+		);
+		expect(roll, 'a roll button on the Fury meter').toBeTruthy();
+		roll!.click();
+		await waitFor(() => fury().faces.length === before + 1, 'a die in the pool');
+		const dieLabel = t('NIMBLE.actorSheet.hero.meter.dieLabel', {
+			label: fury().label,
+			number: String(fury().faces.length),
+			face: String(fury().faces.at(-1)),
+		});
+		await waitFor(
+			() => !!sheet.querySelector(`[aria-label="${CSS.escape(dieLabel)}"]`),
+			`the meter to show ${dieLabel}`,
+		);
+	}, 30_000);
+
 	test('narrow, the rail becomes a header; wide, it is a rail again', async () => {
 		const sheet = await openHeroSheet(hero);
 		expect(sheet.querySelector('aside.rail')).toBeTruthy();
@@ -464,7 +590,7 @@ describe('the new character sheet', () => {
 	test('the heroic action macro opens the Assess choice on Actions', async () => {
 		await hero.sheet.close();
 		await settle(300);
-		const scene = await createViewedTestScene(`${TEST_PREFIX} Scene`);
+		scene = await createViewedTestScene(`${TEST_PREFIX} Scene`);
 		const token = await placeToken(scene, {
 			name: hero.name,
 			actor: hero as unknown as Actor,
@@ -492,6 +618,38 @@ describe('the new character sheet', () => {
 			'the Assess choice step',
 		);
 	}, 60_000);
+
+	test('in a combat the rail shows the turn, and it goes when the combat ends', async () => {
+		const sheet = await openHeroSheet(hero);
+		const tokenId = canvas.tokens!.placeables.find((token) => token.actor?.id === hero.id)!.id;
+		combat = (await Combat.create({ active: true, scene: scene.id } as Combat.CreateData))!;
+		await combat.createEmbeddedDocuments('Combatant', [
+			{ actorId: hero.id, tokenId, sceneId: scene.id, type: 'character' },
+		] as Combatant.CreateData[]);
+		await combat.startCombat();
+		const endTurn = () => buttonNamed(sheet, t('NIMBLE.ui.heroicActions.endTurn'));
+		await waitFor(() => !!endTurn(), 'End Turn on the rail');
+		await combat.delete();
+		combat = undefined;
+		await waitFor(() => !endTurn(), 'the turn to leave the rail');
+	}, 60_000);
+
+	test('the sheet of an unlinked token opens for the token actor', async () => {
+		const token = await placeToken(scene, {
+			name: `${TEST_PREFIX} Copy`,
+			actor: hero as unknown as Actor,
+			gx: 6,
+			gy: 3,
+			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+		});
+		const copy = token.actor as unknown as HeroActor;
+		await copy.sheet.render({ force: true });
+		await waitFor(() => copy.sheet.rendered, 'the token sheet to render');
+		await settle(600);
+		expect(copy.sheet.constructor).toBe(heroEntry().cls);
+		expect(copy.sheet.element.querySelector('[role="tab"]')).toBeTruthy();
+		await copy.sheet.close();
+	}, 30_000);
 
 	test('a dice pool spend request opens the choice step of its item', async () => {
 		await hero.sheet.close();
