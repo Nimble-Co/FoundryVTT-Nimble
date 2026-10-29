@@ -114,6 +114,7 @@ export function assessRow(actor: HeroActorLike, context: HeroSheetContext): Hero
 		choice: {
 			kind: 'twoStep',
 			label: localize(`${ACTIONS}.chooseOne`),
+			backLabel: localize(`${ACTIONS}.back`),
 			options: assessOptions.map((option) => ({
 				id: option.id,
 				label: localize(option.titleKey),

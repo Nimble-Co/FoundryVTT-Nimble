@@ -137,6 +137,7 @@ describe('heroActionsTab', () => {
 
 			expect(assess?.use?.kind).toBe('choose');
 			if (assess?.choice?.kind !== 'twoStep') throw new Error('no two-step choice');
+			expect(assess.choice.backLabel).toBe('NIMBLE.actorSheet.hero.actions.back');
 			expect(assess.choice.options.map((option) => option.id)).toEqual([
 				'ask-question',
 				'create-opening',

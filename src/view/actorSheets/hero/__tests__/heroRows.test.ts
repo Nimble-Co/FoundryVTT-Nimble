@@ -42,6 +42,14 @@ describe('itemRow', () => {
 		expect(view.facts).toContainEqual([`${SHARED}.facts.damage`, '1d10']);
 	});
 
+	it('reads the action cost from the item when the system gives no item state', () => {
+		const hero = manaCaster();
+
+		expect(itemRow(hero, item(hero, 'flameDart'), heroContext()).cost).toMatchObject({
+			actions: 1,
+		});
+	});
+
 	it('starts the line of a spell with its tier when asked', () => {
 		const hero = manaCaster();
 		const context = heroContext();

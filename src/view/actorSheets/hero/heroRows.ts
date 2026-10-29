@@ -53,6 +53,7 @@ export type HeroChoiceStep =
 	| {
 			kind: 'twoStep';
 			label: string;
+			backLabel: string;
 			options: {
 				id: string;
 				label: string;
@@ -103,16 +104,17 @@ export interface HeroRowGroup {
 	rows: HeroRowView[];
 }
 
-const NO_STATE: HeroItemState = {
-	actionCost: 0,
-	pools: [],
-	gate: null,
-	toggle: null,
-	diceConsumers: [],
-};
-
 export function itemStateOf(context: HeroSheetContext, item: ItemLike): HeroItemState {
-	return context.itemState[item.id] ?? NO_STATE;
+	const state = context.itemState[item.id];
+	if (state) return state;
+	const cost = activationCost(item);
+	return {
+		actionCost: cost.type === 'action' ? cost.quantity : 0,
+		pools: [],
+		gate: null,
+		toggle: null,
+		diceConsumers: [],
+	};
 }
 
 export function isWeapon(item: ItemLike): boolean {
