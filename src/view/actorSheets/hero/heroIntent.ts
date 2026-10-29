@@ -60,6 +60,9 @@ export type HeroIntent =
 	| { kind: 'setQuantity'; itemId: string; value: number }
 	| { kind: 'storeIn'; itemId: string; containerId: string }
 	| { kind: 'setCurrency'; coin: string; value: number }
+	| { kind: 'endEffect'; effectId: string }
+	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
+	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'setSpellsBy'; value: SpellsBy }
 	| { kind: 'unarmedStrike' }
 	| { kind: 'move' }

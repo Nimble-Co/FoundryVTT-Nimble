@@ -4,7 +4,11 @@ import type {
 	HeroItemState,
 	HeroSheetContext,
 } from '../../../src/view/actorSheets/hero/heroSource.ts';
-import type { ItemLike } from '../../../src/view/actorSheets/shared/sheetSource.ts';
+import type {
+	ConditionLike,
+	EffectLike,
+	ItemLike,
+} from '../../../src/view/actorSheets/shared/sheetSource.ts';
 import { createLocalizerStub } from './localizerStub.ts';
 
 type DeepPartial<T> = T extends unknown[]
@@ -477,6 +481,76 @@ export function featureHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLi
 		heroItem({ id: 'bonusBreath', type: 'ancestryBonus', name: 'Draconic Breath' }),
 		heroItem({ id: 'backgroundSoldier', type: 'background', name: 'Soldier' }),
 		heroItem({ id: 'boonLuck', type: 'boon', name: 'Boon of Luck', system: { boonType: 'major' } }),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}
+
+export function effectLike(
+	overrides: Partial<EffectLike> & Pick<EffectLike, 'id' | 'name'>,
+): EffectLike {
+	return {
+		img: 'icons/svg/aura.svg',
+		disabled: false,
+		statuses: [],
+		origin: null,
+		itemId: null,
+		toggle: null,
+		temporary: true,
+		duration: '',
+		description: '',
+		...overrides,
+	};
+}
+
+export function conditionLike(
+	overrides: Partial<ConditionLike> & Pick<ConditionLike, 'id' | 'name'>,
+): ConditionLike {
+	return {
+		img: `icons/conditions/${overrides.id}.svg`,
+		active: false,
+		description: '',
+		duration: '',
+		source: '',
+		...overrides,
+	};
+}
+
+/**
+ * The Effects tab of `dicePoolHero` with Rage on (it ends after 1 round with no attack), a timed
+ * Bless, an armor effect from equipped Leather Armor, a hand-made passive effect, and Dazed on.
+ */
+export function effectsContext(overrides?: Partial<HeroSheetContext>): HeroSheetContext {
+	return dicePoolContext({
+		labels: { ...heroContext().labels, conditions: { dazed: 'Dazed', prone: 'Prone' } },
+		conditions: [
+			conditionLike({
+				id: 'dazed',
+				name: 'Dazed',
+				active: true,
+				source: 'Dazed',
+				description: 'You lose 1 action.',
+			}),
+			conditionLike({ id: 'prone', name: 'Prone' }),
+		],
+		...overrides,
+	});
+}
+
+export function effectsHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = dicePoolHero();
+	const rage = hero.items.find((item) => item.id === 'rage')!;
+	rage.rules = [rule('rageToggle', 'toggleEffect', { endAfterInactiveRounds: 1 })];
+	hero.items.push(objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }));
+	hero.effects = [
+		effectLike({
+			id: 'rageEffect',
+			name: 'Rage',
+			toggle: { itemId: 'rage', ruleId: 'rageToggle' },
+		}),
+		effectLike({ id: 'bless', name: 'Bless', duration: '3 rounds', description: 'Add 1d4.' }),
+		effectLike({ id: 'armorEffect', name: 'Armor', itemId: 'leather', temporary: false }),
+		effectLike({ id: 'blessing', name: 'Old Blessing', temporary: false }),
+		effectLike({ id: 'dazedEffect', name: 'Dazed', statuses: ['dazed'] }),
 	];
 	return merge<HeroActorLike>(hero, overrides);
 }

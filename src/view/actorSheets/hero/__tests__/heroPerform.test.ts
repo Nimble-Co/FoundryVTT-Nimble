@@ -11,6 +11,7 @@ const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
 const toggleEffectAE = vi.fn();
 const findToggleEffectRuleById = vi.fn();
+const endToggleEffectFromAE = vi.fn();
 const getDicePools = vi.fn();
 const getDicePoolConsumers = vi.fn();
 const spendDicePool = vi.fn();
@@ -34,6 +35,7 @@ beforeAll(async () => {
 	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
 		toggleEffectAE,
 		findToggleEffectRuleById,
+		endToggleEffectFromAE,
 	}));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: getDicePools }));
 	vi.doMock('#utils/dicePool/dicePoolConsumers.js', () => ({ getDicePoolConsumers }));
@@ -88,9 +90,22 @@ const ACTOR_METHODS = [
 	'updateStoredObjectQuantity',
 	'storeItemInContainer',
 	'removeItemFromContainer',
+	'toggleStatusEffect',
+	'deleteEmbeddedDocuments',
 ] as const;
 
-const item = { id: 'rage', sheet: { render: vi.fn() } };
+const armorEffect = { id: 'armorEffect', delete: vi.fn() };
+const item = {
+	id: 'rage',
+	sheet: { render: vi.fn() },
+	effects: new Map([[armorEffect.id, armorEffect]]),
+};
+const rageEffect = { id: 'rageEffect', statuses: new Set<string>(), delete: vi.fn() };
+const customEffect = { id: 'customEffect', statuses: new Set(['homebrewHex']), delete: vi.fn() };
+const actorEffects = new Map([
+	[rageEffect.id, rageEffect],
+	[customEffect.id, customEffect],
+]);
 const torch = { id: 'torch', system: { containerId: '' }, toggleEquipment: vi.fn() };
 const rope = { id: 'rope', system: { containerId: 'backpack' } };
 const items = [item, torch, rope];
@@ -99,6 +114,10 @@ function mockActor() {
 	const actor: Record<string, unknown> = {
 		id: 'hero1',
 		items: { get: (id: string) => items.find((entry) => entry.id === id) },
+		effects: Object.assign([...actorEffects.values()], {
+			get: (id: string) => actorEffects.get(id),
+		}),
+		allApplicableEffects: () => [...actorEffects.values(), armorEffect],
 	};
 	for (const method of ACTOR_METHODS) actor[method] = vi.fn();
 	return actor as Record<(typeof ACTOR_METHODS)[number], ReturnType<typeof vi.fn>> & {
@@ -400,6 +419,35 @@ describe('createHeroPerform', () => {
 			await perform({ kind: 'setCurrency', coin: 'gp', value: 15 });
 
 			expect(actor.update).toHaveBeenCalledWith({ 'system.currency.gp': 15 });
+		});
+
+		it('ends a toggle effect through the toggle lifecycle', async () => {
+			await perform({ kind: 'endEffect', effectId: 'rageEffect' });
+
+			expect(endToggleEffectFromAE).toHaveBeenCalledWith(actor, rageEffect);
+		});
+
+		it('removes an effect of the hero, and an effect that an item holds', async () => {
+			await perform({ kind: 'removeEffect', effectId: 'rageEffect', itemId: null });
+			await perform({ kind: 'removeEffect', effectId: 'armorEffect', itemId: 'rage' });
+
+			expect(rageEffect.delete).toHaveBeenCalledOnce();
+			expect(armorEffect.delete).toHaveBeenCalledOnce();
+		});
+
+		it('turns a condition on and off through toggleStatusEffect', async () => {
+			await perform({ kind: 'setCondition', conditionId: 'dazed', active: true });
+			await perform({ kind: 'setCondition', conditionId: 'dazed', active: false });
+
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'dazed', { active: true });
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'dazed', { active: false });
+		});
+
+		it('removes a custom status with the effects that carry it', async () => {
+			await perform({ kind: 'setCondition', conditionId: 'homebrewHex', active: false });
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['customEffect']);
+			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 		});
 
 		it('saves how the Spells tab groups the spells', async () => {

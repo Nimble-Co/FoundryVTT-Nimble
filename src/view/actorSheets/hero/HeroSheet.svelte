@@ -37,7 +37,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	const wide = $derived(size.width >= NARROW_BELOW);
 	const mainWidth = $derived(wide ? size.width - RAIL_WIDTH : size.width);
 	const rail = $derived(heroRail(current.actor, current.context));
-	const frame = $derived(heroFrame(current.context));
+	const frame = $derived(heroFrame(current.actor, current.context));
 	const core = $derived(heroCoreTab(current.actor, current.context));
 	const actions = $derived(heroActionsTab(current.actor, current.context));
 	const spells = $derived(heroSpellsTab(current.actor, current.context));

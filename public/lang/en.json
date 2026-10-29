@@ -177,8 +177,14 @@
 				"tabs": {
 					"core": "Core",
 					"actions": "Actions",
+					"features": "Features",
+					"inventory": "Inventory",
 					"spells": "Spells",
-					"label": "Sheet tabs"
+					"effects": "Effects",
+					"bio": "Bio",
+					"settings": "Settings",
+					"label": "Sheet tabs",
+					"effectsBadge": "{count} conditions and effects on you now"
 				},
 				"frame": {
 					"done": "Done",
@@ -233,6 +239,24 @@
 					"facts": {
 						"level": "Level",
 						"boonType": "Type"
+					}
+				},
+				"effects": {
+					"active": "Active effects",
+					"conditionsOn": "Conditions on you",
+					"passive": "Passive effects",
+					"allConditions": "All conditions",
+					"none": "None",
+					"fromItem": "From {name}",
+					"inactiveRound": "Ends after 1 round with no attack",
+					"inactiveRounds": "Ends after {rounds} rounds with no attack",
+					"untilItEnds": "Until it ends",
+					"remove": "Remove",
+					"removeName": "Remove {name}",
+					"removeQuestion": "Remove {name}?",
+					"facts": {
+						"from": "From",
+						"lasts": "Lasts"
 					}
 				},
 				"inventory": {
