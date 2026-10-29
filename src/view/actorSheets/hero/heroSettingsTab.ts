@@ -45,7 +45,7 @@ export interface HeroSettingsTabView {
 const flag = (name: HeroSettingsFlag): HeroSettingTarget => ({ kind: 'flag', flag: name });
 const field = (name: HeroSettingsField): HeroSettingTarget => ({ kind: 'field', field: name });
 
-/** The Settings tab as today (you change a setting only in edit mode), with the max wounds bonus, the Initiative bonus and "Needs a place". */
+/** The Settings tab: you change a setting only in edit mode. Export works in all modes. */
 export function heroSettingsTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,

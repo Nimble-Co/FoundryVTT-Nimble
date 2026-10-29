@@ -60,7 +60,7 @@ function featureRow(actor: HeroActorLike, item: ItemLike, context: HeroSheetCont
 }
 
 /**
- * The groups of today's Features tab (#570): a class holds its class features, its subclass and
+ * The Features groups: a class holds its class features, its subclass and
  * each selection group under a subheading; an ancestry holds its bonuses. With no card to nest
  * under, those stand as groups of their own. In each group: by level, then A to Z.
  */

@@ -1,6 +1,6 @@
 <!--
 @component
-The Settings tab, as today: you change a setting only in edit mode, and the export buttons work in all modes.
+The Settings tab: you change a setting only in edit mode, and the export buttons work in all modes.
 At the bottom, "Needs a place" holds system data that has no place on the sheet yet, with its control.
 -->
 <script lang="ts">

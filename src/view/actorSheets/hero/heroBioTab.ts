@@ -1,3 +1,4 @@
+import { plainText } from '../shared/plainText.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 
 const BIO = 'NIMBLE.actorSheet.hero.bio';
@@ -12,9 +13,7 @@ export interface HeroBioTabView {
 	notes: { label: string; field: string; value: string; enriched: string; empty: string | null };
 }
 
-const hasText = (html: string) => html.replace(/<[^>]*>/g, '').trim().length > 0;
-
-/** The Bio tab as today: four details and the notes. */
+/** The Bio tab: four details and the notes. */
 export function heroBioTab(actor: HeroActorLike, context: HeroSheetContext): HeroBioTabView {
 	const { localize } = context;
 	const { details } = actor.system;
@@ -29,7 +28,7 @@ export function heroBioTab(actor: HeroActorLike, context: HeroSheetContext): Her
 			field: 'system.details.notes',
 			value: details.notes,
 			enriched: context.enrichedNotes,
-			empty: hasText(details.notes) ? null : localize(`${BIO}.noNotes`),
+			empty: plainText(details.notes) ? null : localize(`${BIO}.noNotes`),
 		},
 	};
 }

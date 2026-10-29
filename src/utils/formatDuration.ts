@@ -26,6 +26,9 @@ export function compactSecondsLabel(seconds: number): string {
 	return `${Math.ceil(boundedSeconds / 3600)}h`;
 }
 
+/** The label of an effect with no end (no duration set). */
+export const NO_END_LABEL = '∞';
+
 /**
  * Derives a display label and sort key (in milliseconds) from an active-effect duration object.
  *
@@ -50,7 +53,7 @@ export function deriveDurationDetails(
 		| undefined,
 ): EffectDurationDetails {
 	if (!duration) {
-		return { label: '∞', sortMs: null };
+		return { label: NO_END_LABEL, sortMs: null };
 	}
 
 	if (typeof duration.remaining === 'number' && Number.isFinite(duration.remaining)) {
@@ -78,7 +81,7 @@ export function deriveDurationDetails(
 		return { label: compactSecondsLabel(duration.seconds), sortMs: secondsMs };
 	}
 
-	return { label: '∞', sortMs: null };
+	return { label: NO_END_LABEL, sortMs: null };
 }
 
 /**

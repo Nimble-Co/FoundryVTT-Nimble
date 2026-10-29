@@ -274,7 +274,7 @@
 						"inventory": "Inventory Settings",
 						"bonuses": "Bonuses",
 						"skills": "Skill Settings",
-						"spells": "Spell settings",
+						"spells": "Spell Settings",
 						"needsAPlace": "Needs a place"
 					},
 					"needsAPlaceHint": "These have no place on the new character sheet yet.",

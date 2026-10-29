@@ -15,7 +15,7 @@ import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { getUnarmedDamageFormula } from '#utils/damage/attackUtils.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import getLanguageName from '#utils/documents/getLanguageName.js';
-import { deriveDurationDetails, expandDurationLabel } from '#utils/formatDuration.js';
+import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import {
 	getHeroicReactionAvailability,
 	HEROIC_REACTIONS,
@@ -122,7 +122,7 @@ function isTemporary(effect: EffectDocument, fromItem: boolean): boolean {
 }
 
 function durationWords(label: string): string {
-	return label === '∞' ? '' : expandDurationLabel(label, (key) => localize(key));
+	return label === NO_END_LABEL ? '' : expandDurationLabel(label, (key) => localize(key));
 }
 
 function effectLike(effect: EffectDocument): EffectLike {

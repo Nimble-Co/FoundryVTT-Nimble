@@ -1,6 +1,6 @@
 <!--
 @component
-The Bio tab, as today: age, height, weight and gender, then the notes. You change them only in edit mode.
+The Bio tab: age, height, weight and gender, then the notes. You change them only in edit mode.
 The notes are the Foundry `prose-mirror` editor; the sheet form saves it.
 -->
 <script lang="ts">

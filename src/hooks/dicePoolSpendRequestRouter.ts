@@ -5,13 +5,19 @@ import type { DicePoolSpendRequestPayload } from '#utils/dicePool/types.js';
 import localize from '#utils/localize.js';
 import { asRevealable, type RevealableSheet } from '#view/actorSheets/shared/revealable.js';
 
+type SpendItem = { type?: string; system?: { objectType?: string; equipped?: boolean } };
+
 interface ActorWithSheet {
-	items?: {
-		get(
-			id: string,
-		): { type?: string; system?: { objectType?: string; equipped?: boolean } } | undefined;
-	};
+	items?: { get(id: string): SpendItem | undefined };
 	sheet?: { rendered?: boolean; render?: (force: boolean) => unknown } | null;
+}
+
+/** Spells are on Spells; equipped weapons and the features that act are on Actions; other objects are on the Inventory. */
+function tabOfSpend(item: SpendItem | undefined): 'spells' | 'actions' | 'inventory' {
+	if (item?.type === 'spell') return 'spells';
+	if (item?.type !== 'object') return 'actions';
+	if (item.system?.objectType === 'weapon' && item.system.equipped) return 'actions';
+	return 'inventory';
 }
 
 /**
@@ -31,11 +37,11 @@ function revealSpend(
 		);
 		return;
 	}
-	const item = actor.items?.get(payload.itemId);
-	const onActions =
-		item?.type !== 'object' || (item.system?.objectType === 'weapon' && item.system.equipped);
-	const tab = item?.type === 'spell' ? 'spells' : onActions ? 'actions' : 'inventory';
-	sheet.reveal({ tab, rowId: payload.itemId, step: 'choice' });
+	sheet.reveal({
+		tab: tabOfSpend(actor.items?.get(payload.itemId)),
+		rowId: payload.itemId,
+		step: 'choice',
+	});
 }
 
 /**
