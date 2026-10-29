@@ -166,6 +166,7 @@ describe('a reroll on a save card', () => {
 		expect(rule.offersRerollOn).toHaveBeenCalledWith({
 			side: 'roller',
 			roll: { kind: 'save', key: 'will' },
+			other: null,
 		});
 		expect(rule.rerollChanges).toHaveBeenCalledWith('save');
 		expect(roller.system.attributes.wounds.value).toBe(1);

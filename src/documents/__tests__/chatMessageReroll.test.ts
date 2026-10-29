@@ -220,6 +220,7 @@ describe('resolveRerollReaction', () => {
 		expect(rule.offersRerollOn).toHaveBeenCalledWith({
 			side: 'target',
 			roll: { kind: 'attack', delivery: 'melee' },
+			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
 		});
 		const payload = updatePayload(message);
 		expect(payload.system.activation.effects[0].discardedRoll).toEqual(serializedRoll());

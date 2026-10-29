@@ -1,3 +1,4 @@
+import { Predicate } from '../../etc/Predicate.js';
 import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
@@ -17,6 +18,7 @@ import {
 	type RerollRollKind,
 	type RollToReroll,
 } from '../../utils/reroll/rollToReroll.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -116,10 +118,17 @@ function rollFields(namespace: RollUseNamespace) {
 	};
 }
 
-/** The attack outcome and delivery a rule can be used on. */
+/** The attack outcome and delivery a rule can be used on, and the other creature. */
 function whenFields(namespace: RollUseNamespace) {
 	const { fields } = foundry.data;
 	return {
+		otherCreature: new PredicateField(
+			withWidget({
+				label: wordKey(namespace, 'otherCreature', 'label'),
+				hint: wordKey(namespace, 'otherCreature', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
 		outcome: new fields.StringField(
 			withWidget({
 				required: true,
@@ -224,10 +233,20 @@ declare namespace RollUseRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof rollUseSchema>;
 }
 
-/** Which side of the roll is asking, and which roll it is. */
+/** The creature on the other side of the roll, as a rule tests it. */
+interface OtherCreature {
+	getTargetDomain?(): Set<string>;
+}
+
+/**
+ * Which side of the roll is asking, which roll it is, and the other creature:
+ * the target for the one who rolled and an ally, the one who rolled for the
+ * target. Null or absent when the roll has none.
+ */
 interface RollUseContext {
 	side: RerollSide;
 	roll: RollToReroll;
+	other?: OtherCreature | null;
 }
 
 const COST_FIELDS = [
@@ -255,6 +274,7 @@ abstract class RollUseRule<
 	declare reach: number;
 	declare outcome: RerollTrigger;
 	declare attackDelivery: RollUseAttackDelivery;
+	declare otherCreature: Predicate;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
 	declare manaCost: number;
@@ -290,6 +310,7 @@ abstract class RollUseRule<
 				hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
 				fields: ['predicate'],
 			},
+			{ fields: ['otherCreature'] },
 			{
 				label: 'NIMBLE.rules.reroll.form.cost.label',
 				hint: 'NIMBLE.rules.reroll.form.cost.hint',
@@ -308,6 +329,7 @@ abstract class RollUseRule<
 			['usedBy', 'string'],
 			['outcome', 'string'],
 			['attackDelivery', 'string'],
+			['otherCreature', 'object'],
 			['chargePoolIdentifier', 'string'],
 			['chargeCost', 'number'],
 			['manaCost', 'number'],
@@ -338,6 +360,7 @@ abstract class RollUseRule<
 		const { side, roll } = context;
 		if (!this.rolls?.includes(roll.kind)) return false;
 		if (this.usedBy !== side) return false;
+		if (!this.otherCreatureMatches(context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
 		} else {
@@ -349,10 +372,27 @@ abstract class RollUseRule<
 		return canPayRerollCost(this.actor, this.rerollCost);
 	}
 
+	/**
+	 * Whether the other creature is what the rule asks for. The test sees the
+	 * other creature's `target:` tags and the owner's own tags, without the
+	 * owner's `target:` tags. A rule that asks fails when there is no other creature.
+	 */
+	private otherCreatureMatches(other: OtherCreature | null | undefined): boolean {
+		const raw = this.otherCreature;
+		const predicate = raw instanceof Predicate ? raw : new Predicate((raw ?? {}) as never);
+		if (predicate.size === 0) return true;
+		if (!other) return false;
+		const domain = new Set<string>(other.getTargetDomain?.() ?? []);
+		for (const tag of [...(this.actor?.getDomain() ?? []), ...(this.item.getDomain() ?? [])]) {
+			if (!tag.startsWith('target:')) domain.add(tag);
+		}
+		return predicate.test(domain);
+	}
+
 	private checkKeys(kind: CheckRollKind): string[] {
 		const keys = { save: this.saves, skillCheck: this.skills, abilityCheck: this.abilities }[kind];
 		return Array.isArray(keys) ? keys : [];
 	}
 }
 
-export { RollUseRule, type RollUseContext };
+export { RollUseRule, type OtherCreature, type RollUseContext };

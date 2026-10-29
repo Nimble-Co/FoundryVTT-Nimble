@@ -102,7 +102,11 @@ describe('collectRerollEntries', () => {
 				outcomeTrigger: 'miss',
 			}),
 		]);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: MELEE });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
 	});
 
 	it('stamps the once-per-attack flag of the rule on its entry', () => {
@@ -124,7 +128,11 @@ describe('collectRerollEntries', () => {
 			targetTokenUuid: TOKEN,
 			actorUuid: 'Actor.t',
 		});
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'target',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
+		});
 	});
 
 	type Case = [string, Partial<RerollRollContext>, RerollTrigger, string[]];
@@ -206,7 +214,11 @@ describe('collectRerollEntries', () => {
 		collectRerollEntries(
 			context({ attacker: actor('Actor.hero', [rule]), targets: [], roll: WILL_SAVE }),
 		);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: WILL_SAVE,
+			other: null,
+		});
 	});
 
 	it('ignores the outcome and once per attack of a rule on a check', () => {
@@ -375,7 +387,11 @@ describe('collectRerollEntries for an ally', () => {
 		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: MISS }).manual).toHaveLength(1);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'ally', roll: MELEE });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'ally',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
 	});
 });
 
@@ -582,7 +598,11 @@ describe('usableRerollEntry', () => {
 
 	it('gives the live rule and actor for an entry that can be used', () => {
 		expect(usableRerollEntry(entry(), card(), [])).toEqual({ ok: true, rule, actor: target });
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
+		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			side: 'target',
+			roll: MELEE,
+			other: attacker,
+		});
 	});
 
 	it('lets the attacker use a roller entry', () => {
@@ -741,7 +761,11 @@ describe('usableRerollEntry', () => {
 
 		it('gives the rule the check roll and ignores its outcome', () => {
 			expect(usableRerollEntry(entry(roller), check(), [])).toMatchObject({ ok: true });
-			expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+			expect(rule.offersRerollOn).toHaveBeenCalledWith({
+				side: 'roller',
+				roll: WILL_SAVE,
+				other: null,
+			});
 		});
 
 		it('ignores once per attack', () => {

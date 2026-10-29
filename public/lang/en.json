@@ -2357,6 +2357,10 @@
 						"ranged": "Ranged"
 					}
 				},
+				"otherCreature": {
+					"label": "Only when the other creature is",
+					"hint": "The other creature is the target of the attack, or the one who rolled when the target uses this. Pick tags such as target:distracted. Empty means any creature. It cannot be used on a roll with no other creature."
+				},
 				"automatic": {
 					"label": "Rerolls by itself",
 					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead. Not for an ally, a picked die, or a choice of result."

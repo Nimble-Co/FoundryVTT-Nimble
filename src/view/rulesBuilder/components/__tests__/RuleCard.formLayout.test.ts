@@ -51,6 +51,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'outcome',
 			'attackDelivery',
 			'predicate',
+			'otherCreature',
 			'chargePoolIdentifier',
 			'manaCost',
 			'woundCost',
@@ -75,6 +76,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'Which dice does it reroll?',
 			'When?',
 			'Only while',
+			'Only when the other creature is',
 			'Cost (optional)',
 			'Changes to the new roll (optional)',
 		]);

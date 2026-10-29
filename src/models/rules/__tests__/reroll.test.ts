@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Predicate } from '../../../etc/Predicate.js';
 import { RerollRule } from '../reroll.js';
 
 type Toggles = Record<string, boolean>;
@@ -343,6 +344,43 @@ describe('RerollRule', () => {
 			expect(
 				rule.offersRerollOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } }),
 			).toBe(true);
+		});
+
+		describe('only when the other creature is', () => {
+			const creature = (...tags: string[]) => ({ getTargetDomain: () => new Set(tags) });
+			const otherCreature = (raw: Record<string, unknown>) => ({
+				otherCreature: new Predicate(raw as never),
+			});
+
+			it('offers with no other creature when the field is empty', () => {
+				const { rule } = makeRule();
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: null })).toBe(true);
+			});
+
+			it("tests the other creature's target tags", () => {
+				const { rule } = makeRule(otherCreature({ target: 'distracted' }));
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature('target:distracted') })).toBe(
+					true,
+				);
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature('target:prone') })).toBe(
+					false,
+				);
+			});
+
+			it('does not offer on a roll with no other creature', () => {
+				const { rule } = makeRule(otherCreature({ target: 'distracted' }));
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: null })).toBe(false);
+				expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			});
+
+			it("also sees the owner's own tags, but not the owner's target tags", () => {
+				const { rule, actor } = makeRule(
+					otherCreature({ $or: ['target:distracted', 'self:raging'] }),
+				);
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature() })).toBe(true);
+				actor.getDomain = () => new Set(['target:distracted']);
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature() })).toBe(false);
+			});
 		});
 
 		it('filters on how the attack is delivered', () => {

@@ -871,10 +871,12 @@ describe('Reroll rules on the attack', () => {
 			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({
 				side: 'roller',
 				roll: { kind: 'attack', delivery: 'melee' },
+				other: expect.objectContaining({ uuid: 'Actor.target' }),
 			});
 			expect(targetRule.offersRerollOn).toHaveBeenCalledWith({
 				side: 'target',
 				roll: { kind: 'attack', delivery: 'melee' },
+				other: expect.objectContaining({ uuid: 'Actor.attacker' }),
 			});
 		});
 
