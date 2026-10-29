@@ -1,5 +1,5 @@
 import type { SkillKeyType } from '#types/skillKey.js';
-import { assessOptions } from '#utils/assessOptions.js';
+import { ASSESS_DC, assessOptions } from '#utils/assessOptions.js';
 import {
 	BUILT_IN_HEROIC_ACTIONS,
 	BUILT_IN_HEROIC_REACTIONS,
@@ -9,6 +9,7 @@ import { plainText } from '../shared/plainText.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
+import type { SheetReactionId } from './heroIntent.ts';
 import {
 	actionCost,
 	actionWords,
@@ -108,7 +109,7 @@ export function assessRow(actor: HeroActorLike, context: HeroSheetContext): Hero
 	return heroicRow('assess', 'action', context, {
 		name,
 		icon: definition.icon,
-		summary: format(`${ACTIONS}.assessSummary`, { dc: '12' }),
+		summary: format(`${ACTIONS}.assessSummary`, { dc: String(ASSESS_DC) }),
 		description: localize(definition.descriptionKey),
 		use: { kind: 'choose', label: format(`${ACTIONS}.chooseUse`, { name }) },
 		choice: {
@@ -163,7 +164,7 @@ function reactionOptions(
 			},
 		];
 	}
-	const reaction = definition.reactionKey as 'defend' | 'interpose' | 'help';
+	const reaction = definition.reactionKey as SheetReactionId;
 	return [
 		{
 			label: localize(`${HEROIC}.reactions.${definition.actionId}.confirm`),

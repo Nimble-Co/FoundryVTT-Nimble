@@ -4,7 +4,7 @@ import type { DicePoolSpendRequestPayload, DicePoolState } from './types.js';
 
 /**
  * The pool of a spend request: the same match as `getDicePoolConsumers`, by identifier and scope.
- * The consumer can be on another item than the pool ("That all you got?!" spends the Rage dice).
+ * The consumer can be on another item than the pool.
  */
 export function findRequestedPool(
 	actor: Actor | null | undefined,

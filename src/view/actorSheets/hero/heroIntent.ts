@@ -1,6 +1,8 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
+import type { ChatReactionId } from '#utils/heroicActions/reactions.js';
+import type { SpellsBy } from './heroSource.ts';
 /** The configure windows that the character sheet opens. */
 export type HeroConfigureTarget =
 	| 'hitPoints'
@@ -20,6 +22,9 @@ export type HeroConfigureTarget =
  * Something that the character sheet asks Foundry to do. The views hold these as plain data;
  * `perform` is the only place that acts on them.
  */
+/** The sheet has no row for the combined Interpose and Defend. */
+export type SheetReactionId = Exclude<ChatReactionId, 'interposeAndDefend'>;
+
 export type HeroIntent =
 	| { kind: 'setHp'; value: number }
 	| { kind: 'setTempHp'; value: number }
@@ -50,11 +55,11 @@ export type HeroIntent =
 	| { kind: 'endToggle'; itemId: string; ruleId: string }
 	| { kind: 'openItem'; itemId: string }
 	| { kind: 'createItem'; itemType: 'spell' }
-	| { kind: 'setSpellsBy'; value: 'tier' | 'school' }
+	| { kind: 'setSpellsBy'; value: SpellsBy }
 	| { kind: 'unarmedStrike' }
 	| { kind: 'move' }
 	| { kind: 'assess'; option: string; skill: SkillKeyType }
-	| { kind: 'reaction'; reaction: 'defend' | 'interpose' | 'help' }
+	| { kind: 'reaction'; reaction: SheetReactionId }
 	| { kind: 'opportunityAttack'; weaponId: string | null }
 	| { kind: 'spendDice'; itemId: string; ruleId: string; poolId: string; indices: number[] };
 

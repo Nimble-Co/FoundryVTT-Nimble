@@ -12,7 +12,7 @@ import { heroicRowId } from '../view/actorSheets/hero/heroicRows.js';
 import { asRevealable } from '../view/actorSheets/shared/revealable.js';
 import type { RevealRequest } from '../view/actorSheets/shared/sheetUiState.js';
 
-/** Spec 6.6: the deep link opens Actions and the choice step of the row. A spell opens the Spells tab. */
+/** The deep link opens Actions and the choice step of the row. A spell opens the Spells tab. */
 function heroicDeepLink(actionId: string): RevealRequest {
 	if (actionId === 'assess' || actionId === 'opportunity') {
 		return { tab: 'actions', rowId: heroicRowId(actionId), step: 'choice' };

@@ -3,7 +3,7 @@ import type { ItemLike } from './sheetSource.ts';
 
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
-/** A to Z by name. Spec 6.2: the order of Inventory, Actions, Reactions and Effects. */
+/** A to Z by name: the order of Inventory, Actions, Reactions and Effects. */
 export function byName<T extends { name: string }>(entries: T[]): T[] {
 	return [...entries].sort((a, b) => collator.compare(a.name, b.name));
 }

@@ -7,6 +7,7 @@ import {
 	selectedProperties,
 	spellTier,
 } from '../shared/itemFields.ts';
+import { placeOf } from '../shared/placeOf.ts';
 import { plainText } from '../shared/plainText.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
@@ -234,11 +235,8 @@ function descriptionOf(item: ItemLike): string {
 
 /** The trigger of a reaction ("When an ally is hit"), from the cost details. */
 function whenWords(item: ItemLike): string {
-	const cost = activationCost(item);
 	const details = (activationOf(item).cost as { details?: unknown } | undefined)?.details;
-	return (cost.isReaction || cost.type === 'reaction') && typeof details === 'string'
-		? details
-		: '';
+	return placeOf(item) === 'reaction' && typeof details === 'string' ? details : '';
 }
 
 function usesOf(state: HeroItemState, context: HeroSheetContext): RowUses[] {
@@ -269,7 +267,7 @@ function hasMana(actor: HeroActorLike, context: HeroSheetContext): boolean {
 	return context.manaFromInitiative || mana.max > 0 || mana.baseMax > 0;
 }
 
-/** Spec 6.4: the dice pool consumer step of a row. */
+/** The dice pool consumer step of a row. */
 function diceStep(
 	item: ItemLike,
 	state: HeroItemState,

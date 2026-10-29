@@ -2,11 +2,9 @@ import type { ViewOption } from '../parts/types.ts';
 import { spellsBySchool, spellsByTier } from '../shared/rowOrder.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import { type HeroRowGroup, itemRow } from './heroRows.ts';
-import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
+import type { HeroActorLike, HeroSheetContext, SpellsBy } from './heroSource.ts';
 
 const SPELLS = 'NIMBLE.actorSheet.hero.spells';
-
-export type SpellsBy = 'tier' | 'school';
 
 export interface HeroSpellsTabView {
 	by: SpellsBy;
@@ -18,7 +16,7 @@ export interface HeroSpellsTabView {
 	empty: string | null;
 }
 
-/** Spec 6.2: by tier (A to Z in each tier) or by school (cantrips, then each tier, then A to Z). */
+/** By tier (A to Z in each tier) or by school (cantrips, then each tier, then A to Z). */
 export function heroSpellsTab(actor: HeroActorLike, context: HeroSheetContext): HeroSpellsTabView {
 	const { localize } = context;
 	const by: SpellsBy = actor.flags.spellsBy === 'school' ? 'school' : 'tier';

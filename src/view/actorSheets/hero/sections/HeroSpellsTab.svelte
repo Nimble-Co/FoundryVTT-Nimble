@@ -8,7 +8,7 @@ In edit mode the bar has Create Spell. The switch saves its choice on the charac
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
 	import ViewSwitch from '../../parts/ViewSwitch.svelte';
 	import { setOpenRows } from '../../shared/sheetUiState.ts';
-	import type { SpellsBy } from '../heroSpellsTab.ts';
+	import type { SpellsBy } from '../heroSource.ts';
 	import HeroRowGroupList from './HeroRowGroupList.svelte';
 
 	let { view, ui, perform }: HeroSpellsTabProps = $props();

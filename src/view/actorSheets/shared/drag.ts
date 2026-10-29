@@ -3,7 +3,7 @@ export type DragDescriptor =
 	| { kind: 'item'; uuid: string }
 	| { kind: 'heroicAction'; actionId: string; actionType: 'action' | 'reaction'; name: string };
 
-/** Spec 5.8: a finger drags a row only in edit mode, so a scroll does not start a drag. */
+/** A finger drags a row only in edit mode, so a scroll does not start a drag. */
 export function mayDrag(pointerType: string | null, editing: boolean): boolean {
 	return pointerType !== 'touch' || editing;
 }

@@ -1,4 +1,3 @@
-import { activationCost } from '../shared/itemFields.ts';
 import { placeOf } from '../shared/placeOf.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
@@ -17,10 +16,7 @@ export interface HeroActionsTabView {
 	reactionsFirst: boolean;
 }
 
-const isReactionSpell = (spell: ItemLike) => {
-	const cost = activationCost(spell);
-	return cost.isReaction || cost.type === 'reaction';
-};
+const isReactionSpell = (spell: ItemLike) => placeOf(spell) === 'reaction';
 
 function reactionsNote(context: HeroSheetContext): string {
 	const { combat, localize } = context;
@@ -28,7 +24,7 @@ function reactionsNote(context: HeroSheetContext): string {
 	return localize(`${ACTIONS}.reactionsNote.${combat.isTurn ? 'yourTurn' : 'notYourTurn'}`);
 }
 
-/** Spec 7.3: equipped weapons, Unarmed Strike, the features that act, spells in combat, the heroic actions and the reactions. */
+/** Equipped weapons, Unarmed Strike, the features that act, spells in combat, the heroic actions and the reactions. */
 export function heroActionsTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,

@@ -7,7 +7,7 @@ export type ItemPlace = 'action' | 'reaction' | 'passive';
 const ACT_RULES = new Set(['chargeConsumer', 'toggleEffect', 'markTarget']);
 
 /**
- * Spec 7.3. A reaction cost puts the item in Reactions. An action cost, a consumer that you spend
+ * A reaction cost puts the item in Reactions. An action cost, a consumer that you spend
  * by hand, or a rule that you turn on or aim puts it on Actions. All else is passive.
  */
 export function placeOf(item: ItemLike): ItemPlace {

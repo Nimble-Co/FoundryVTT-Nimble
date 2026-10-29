@@ -50,7 +50,7 @@ export interface HeroActorLike {
 		actorImageYOffset?: number;
 		actorImageScale?: number;
 		/** the groups of the Spells tab; none = by tier */
-		spellsBy?: 'tier' | 'school';
+		spellsBy?: SpellsBy;
 	};
 	items: ItemLike[];
 	effects: EffectLike[];
@@ -75,6 +75,9 @@ export interface HeroCombatState {
 }
 
 /** When the uses of a pool come back. Turn start and turn end both read "round". */
+/** How the Spells tab groups the spells. */
+export type SpellsBy = 'tier' | 'school';
+
 export type PoolRecovery = 'round' | 'safeRest' | 'fieldRest' | 'encounter';
 
 /** A charge pool that an item has or spends from (`getPoolsForItem`, hidden pools left out). */
