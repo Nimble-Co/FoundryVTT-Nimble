@@ -9,6 +9,16 @@ import type {
 	IncomingReactionText,
 } from './IncomingReactionPrompts.d.ts';
 
+/** The kinds of use the card gives one button each. */
+export type ReactionVerb = 'reroll' | 'change' | 'addDamage' | 'interpose';
+
+export interface ReactionVerbGroup {
+	verb: ReactionVerb;
+	/** The actors that give this verb, each with only its entries for it. */
+	groups: IncomingReactionActorGroup[];
+	count: number;
+}
+
 export interface IncomingReactionVerbsProps {
 	groups: IncomingReactionActorGroup[];
 	/** The reroll whose die picker shows under the buttons. */

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { DieValuePickerProps } from '#types/components/DieValuePicker.d.ts';
 
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { createDieValuePickerState } from './DieValuePicker.svelte.ts';
 
 	let {
 		die,
@@ -15,61 +16,17 @@
 	}: DieValuePickerProps = $props();
 
 	const titleId = $props.id();
-	let input = $state<HTMLInputElement>();
-	// Starts at the die's own value, so the player always picks one.
-	let typed = $state<number | null>(untrack(() => die.value));
+	const picker = createDieValuePickerState(() => ({ die, feature, sending, onpick, oncancel }));
+	const { elements, set, confirm, onInputKeydown, onKeydown, onInputBlur, focusInput } = picker;
 
-	const clamp = (next: number) => Math.min(die.faces, Math.max(1, Math.trunc(next)));
-	let value = $derived(typed === null || Number.isNaN(typed) ? null : clamp(typed));
-	let canSet = $derived(!sending && value !== null && value !== die.value);
-	let title = $derived(
-		sending
-			? localize('NIMBLE.chat.incomingReactions.pickValue.sending', { feature })
-			: localize('NIMBLE.chat.incomingReactions.pickValue.title'),
-	);
-
-	function set(next: number) {
-		typed = clamp(next);
-	}
-
-	function confirm() {
-		if (canSet && value !== null) onpick(value);
-	}
-
-	function onInputKeydown(event: KeyboardEvent) {
-		const current = value ?? die.value;
-		const next = { ArrowUp: current + 1, ArrowDown: current - 1, Home: 1, End: die.faces }[
-			event.key
-		];
-		if (next !== undefined) {
-			event.preventDefault();
-			set(next);
-		} else if (event.key === 'Enter') {
-			event.preventDefault();
-			confirm();
-		}
-	}
-
-	function onKeydown(event: KeyboardEvent) {
-		if (event.key !== 'Escape' || sending) return;
-		// Foundry opens its main menu on an Escape that reaches the window.
-		event.preventDefault();
-		event.stopPropagation();
-		oncancel();
-	}
-
-	onMount(() => {
-		input?.scrollIntoView?.({ block: 'nearest' });
-		input?.focus({ preventScroll: true });
-		input?.select();
-	});
+	onMount(focusInput);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="nimble-value-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
 	<div class="nimble-value-picker__head">
 		<i class="nimble-value-picker__icon fa-solid fa-pen" aria-hidden="true"></i>
-		<span id={titleId} class="nimble-value-picker__title">{title}</span>
+		<span id={titleId} class="nimble-value-picker__title" aria-live="polite">{picker.title}</span>
 		{#if !sending}
 			<button
 				class="nimble-value-picker__cancel nimble-u-unstyled-button"
@@ -94,8 +51,8 @@
 				class="nimble-button nimble-value-picker__step"
 				type="button"
 				aria-label={localize('NIMBLE.chat.incomingReactions.pickValue.lower')}
-				disabled={sending || (value ?? die.value) <= 1}
-				onclick={() => set((value ?? die.value) - 1)}
+				disabled={sending || picker.shown <= 1}
+				onclick={() => set(picker.shown - 1)}
 			>
 				<i class="fa-solid fa-minus" aria-hidden="true"></i>
 			</button>
@@ -104,8 +61,8 @@
 					<DieFace faces={die.faces} />
 				</span>
 				<input
-					bind:this={input}
-					bind:value={typed}
+					bind:this={elements.input}
+					bind:value={picker.typed}
 					class="nimble-value-picker__input"
 					type="number"
 					min="1"
@@ -116,15 +73,15 @@
 					})}
 					disabled={sending}
 					onkeydown={onInputKeydown}
-					onblur={() => (typed = value ?? die.value)}
+					onblur={onInputBlur}
 				/>
 			</span>
 			<button
 				class="nimble-button nimble-value-picker__step"
 				type="button"
 				aria-label={localize('NIMBLE.chat.incomingReactions.pickValue.higher')}
-				disabled={sending || (value ?? die.value) >= die.faces}
-				onclick={() => set((value ?? die.value) + 1)}
+				disabled={sending || picker.shown >= die.faces}
+				onclick={() => set(picker.shown + 1)}
 			>
 				<i class="fa-solid fa-plus" aria-hidden="true"></i>
 			</button>
@@ -157,11 +114,11 @@
 	<button
 		class="nimble-button nimble-value-picker__confirm"
 		type="button"
-		disabled={!canSet}
+		disabled={!picker.canSet}
 		onclick={confirm}
 	>
 		{localize('NIMBLE.chat.incomingReactions.pickValue.confirm', {
-			value: String(value ?? die.value),
+			value: String(picker.shown),
 		})}
 	</button>
 </div>

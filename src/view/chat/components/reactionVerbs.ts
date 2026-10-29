@@ -1,10 +1,14 @@
 import type { IncomingReactionActorGroup } from '#types/components/IncomingReactionPrompts.d.ts';
+import type { ReactionVerb, ReactionVerbGroup } from '#types/components/IncomingReactionVerbs.d.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 /** The card shows one button per verb, in this order. */
-export const REACTION_VERBS = ['reroll', 'change', 'addDamage', 'interpose'] as const;
-
-export type ReactionVerb = (typeof REACTION_VERBS)[number];
+export const REACTION_VERBS: readonly ReactionVerb[] = [
+	'reroll',
+	'change',
+	'addDamage',
+	'interpose',
+];
 
 export const REACTION_VERB_ICONS: Record<ReactionVerb, string> = {
 	reroll: 'fa-solid fa-rotate-left',
@@ -19,13 +23,6 @@ export const REACTION_VERB_WORDS: Record<ReactionVerb, string> = {
 	addDamage: 'NIMBLE.chat.incomingReactions.spendPoolForDamage',
 	interpose: 'NIMBLE.chat.incomingReactions.interpose',
 };
-
-export interface ReactionVerbGroup {
-	verb: ReactionVerb;
-	/** The actors that give this verb, each with only its entries for it. */
-	groups: IncomingReactionActorGroup[];
-	count: number;
-}
 
 export function reactionVerb(entry: IncomingReactionEntry): ReactionVerb {
 	if (entry.kind === 'reroll') return entry.use === 'change' ? 'change' : 'reroll';

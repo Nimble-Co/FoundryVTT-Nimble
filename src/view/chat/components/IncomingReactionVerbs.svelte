@@ -1,18 +1,9 @@
 <script lang="ts">
-	import type { ChoiceMenuSection } from '#types/components/ChoiceMenu.d.ts';
 	import type { IncomingReactionVerbsProps } from '#types/components/IncomingReactionVerbs.d.ts';
 
-	import { tick } from 'svelte';
-	import localize from '#utils/localize.js';
 	import ChoiceMenu from './ChoiceMenu.svelte';
-	import {
-		groupByVerb,
-		REACTION_VERB_ICONS,
-		REACTION_VERB_WORDS,
-		type ReactionVerb,
-		type ReactionVerbGroup,
-		reactionVerb,
-	} from './reactionVerbs.ts';
+	import { createIncomingReactionVerbsState } from './IncomingReactionVerbs.svelte.ts';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import RollUsePicker from './RollUsePicker.svelte';
 
 	let {
@@ -28,62 +19,17 @@
 	}: IncomingReactionVerbsProps = $props();
 
 	const menuId = $props.id();
-	const verbButtons = $state<Partial<Record<ReactionVerb, HTMLButtonElement>>>({});
-	let openVerb = $state<ReactionVerb | null>(null);
-
-	let verbs = $derived(groupByVerb(groups));
-	// A menu whose last entry went away closes with it.
-	let open = $derived(verbs.find((verb) => verb.verb === openVerb) ?? null);
-	let menuSections = $derived(open ? sections(open) : []);
-
-	const verbLabel = (verb: ReactionVerb) => localize(REACTION_VERB_WORDS[verb]);
-
-	function buttonLabel({ verb, count }: ReactionVerbGroup): string {
-		if (count < 2) return verbLabel(verb);
-		return localize('NIMBLE.chat.incomingReactions.verbCount', {
-			verb: verbLabel(verb),
-			count: String(count),
-		});
-	}
-
-	function sections({ groups: verbGroups }: ReactionVerbGroup): ChoiceMenuSection[] {
-		return verbGroups.map((group) => ({
-			id: group.actorUuid,
-			heading: group.name,
-			items: group.entries.map(text.menuItem),
-		}));
-	}
-
-	async function focusVerb(verb: ReactionVerb | null): Promise<void> {
-		await tick();
-		if (verb) verbButtons[verb]?.focus();
-	}
-
-	function toggle(verb: ReactionVerb): void {
-		if (picking) oncancel();
-		openVerb = openVerb === verb ? null : verb;
-	}
-
-	function closeMenu(returnFocus: boolean): void {
-		const verb = openVerb;
-		openVerb = null;
-		if (returnFocus) void focusVerb(verb);
-	}
-
-	function choose(entryId: string): void {
-		const entry = open?.groups.flatMap((group) => group.entries).find(({ id }) => id === entryId);
-		const verb = openVerb;
-		openVerb = null;
-		// Now, not after a tick: a picker that opens takes the focus from here.
-		if (verb) verbButtons[verb]?.focus();
-		if (entry) onuse(entry);
-	}
-
-	function cancelPick(): void {
-		const verb = picking ? reactionVerb(picking.entry) : null;
-		oncancel();
-		void focusVerb(verb);
-	}
+	const verbsState = createIncomingReactionVerbsState(() => ({
+		groups,
+		picking,
+		text,
+		onuse,
+		oncancel,
+	}));
+	const { verbButtons, verbLabel, buttonLabel, toggle, closeMenu, choose, cancelPick } = verbsState;
+	let verbs = $derived(verbsState.verbs);
+	let open = $derived(verbsState.open);
+	let menuSections = $derived(verbsState.menuSections);
 </script>
 
 <div class="nimble-reaction-verbs">
@@ -120,12 +66,13 @@
 		oncancel={cancelPick}
 	/>
 {:else if open}
+	<!-- The menu reads its props one more time while it closes, after `open` is null. -->
 	<ChoiceMenu
 		id={menuId}
-		label={verbLabel(open.verb)}
+		label={open ? verbLabel(open.verb) : ''}
 		sections={menuSections}
 		disabled={busy}
-		trigger={verbButtons[open.verb]}
+		trigger={open ? verbButtons[open.verb] : undefined}
 		onchoose={choose}
 		onclose={closeMenu}
 	/>
