@@ -439,3 +439,44 @@ export function containerHero(overrides?: DeepPartial<HeroActorLike>): HeroActor
 	];
 	return merge<HeroActorLike>(hero, overrides);
 }
+
+/**
+ * A level 3 Berserker with class features of levels 1 to 3, a subclass, a selection group,
+ * an exotic ancestry with a bonus, a background and a boon.
+ */
+export function featureHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({ id: 'featureHero000001', name: 'Feature Hero' });
+	const feature = (
+		id: string,
+		name: string,
+		system: Record<string, unknown>,
+		options: Parameters<typeof featureItem>[2] = {},
+	) => {
+		const item = featureItem(id, name, options);
+		item.system = { ...item.system, ...system };
+		return item;
+	};
+	hero.items = [
+		heroItem({ id: 'classBerserker01', type: 'class', name: 'Berserker' }),
+		heroItem({ id: 'subclassRedMist', type: 'subclass', name: 'Path of the Red Mist' }),
+		feature('rage', 'Rage', { group: 'berserker-progression', gainedAtLevel: 1 }),
+		feature('intensifyingFury', 'Intensifying Fury', { group: 'ungrouped', gainedAtLevel: 1 }),
+		feature('quickTempered', 'Quick Tempered', { group: 'ungrouped', gainedAtLevel: 2 }),
+		feature('bloodlust', 'Bloodlust', { subclass: true, gainedAtLevel: 3 }),
+		feature('mightyEndurance', 'Mighty Endurance', {
+			group: 'savage-arsenal',
+			gainedAtLevels: [2, 4],
+		}),
+		feature('deathlessRage', 'Deathless Rage', { group: 'savage-arsenal', gainedAtLevel: 2 }),
+		heroItem({
+			id: 'ancestryDragonborn',
+			type: 'ancestry',
+			name: 'Dragonborn',
+			system: { exotic: true },
+		}),
+		heroItem({ id: 'bonusBreath', type: 'ancestryBonus', name: 'Draconic Breath' }),
+		heroItem({ id: 'backgroundSoldier', type: 'background', name: 'Soldier' }),
+		heroItem({ id: 'boonLuck', type: 'boon', name: 'Boon of Luck', system: { boonType: 'major' } }),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}

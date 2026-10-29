@@ -225,7 +225,15 @@
 				},
 				"features": {
 					"create": "Create Feature",
-					"newFeature": "New Feature"
+					"newFeature": "New Feature",
+					"none": "No features",
+					"post": "Post {name} to chat",
+					"subclass": "Subclass",
+					"exotic": "Exotic",
+					"facts": {
+						"level": "Level",
+						"boonType": "Type"
+					}
 				},
 				"inventory": {
 					"create": "Create Object",
