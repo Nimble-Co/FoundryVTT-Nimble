@@ -53,6 +53,8 @@ export default class HeroSheet extends SvelteApplicationMixin(
 
 	#combatManaPrimed = $state(0);
 
+	#enrichedNotes = $state('');
+
 	#stopEffects: (() => void) | null = null;
 
 	#props: { source: () => HeroSource; ui: SheetUiState; perform: HeroPerform } | null = null;
@@ -101,6 +103,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		this.#props ??= {
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
+				enrichedNotes: () => this.#enrichedNotes,
 				manaFromInitiative: () => {
 					// read only to recompute when the combat mana rules are primed
 					void this.#combatManaPrimed;
@@ -133,6 +136,12 @@ export default class HeroSheet extends SvelteApplicationMixin(
 				lastKey = key;
 				untrack(() => this.#audit(key));
 			});
+			$effect(() => {
+				const notes = String(
+					(actor.reactive.system as { details?: { notes?: string } }).details?.notes ?? '',
+				);
+				untrack(() => this.#enrichNotes(notes));
+			});
 		});
 	}
 
@@ -142,6 +151,19 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		super._onClose(options);
 		this.#stopEffects?.();
 		this.#stopEffects = null;
+	}
+
+	#enrichNotes(notes: string): void {
+		const actor = this.#actor;
+		void foundry.applications.ux.TextEditor.implementation
+			.enrichHTML(notes, {
+				secrets: actor.isOwner,
+				rollData: actor.getRollData(),
+				relativeTo: actor as unknown as foundry.abstract.Document.Any,
+			})
+			.then((html: string) => {
+				this.#enrichedNotes = html;
+			});
 	}
 
 	#audit(key: string): void {

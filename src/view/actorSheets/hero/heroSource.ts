@@ -175,6 +175,8 @@ export interface HeroSheetContext {
 	targets: string[];
 	/** the damage formula of an Unarmed Strike, with its bonuses */
 	unarmedDamage: string;
+	/** the Bio notes as Foundry enriches them, for the editor while it is closed */
+	enrichedNotes: string;
 }
 
 export interface HeroSource {

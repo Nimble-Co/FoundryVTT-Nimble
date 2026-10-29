@@ -304,6 +304,8 @@ export interface HeroSourceExtras {
 	missingLevelSelections: () => number[];
 	/** the actor has a rule that gives mana only when you roll Initiative */
 	manaFromInitiative: () => boolean;
+	/** the Bio notes, enriched by the Application (enrichment is async) */
+	enrichedNotes: () => string;
 }
 
 /** Builds the plain view-model input of the character sheet from `actor.reactive`. */
@@ -321,6 +323,7 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			combat: combatState(actor),
 			manaFromInitiative: extras.manaFromInitiative(),
 			missingLevelSelections: extras.missingLevelSelections(),
+			enrichedNotes: extras.enrichedNotes(),
 			labels: labels(hero, actor.ancestry?.identifier ?? null),
 			conditions: prepareActorConditions(actor as unknown as Actor.Implementation, {
 				includeInactive: true,

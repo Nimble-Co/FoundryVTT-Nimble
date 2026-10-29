@@ -12,6 +12,8 @@ const getActiveCombatForCurrentScene = vi.fn();
 const toggleEffectAE = vi.fn();
 const findToggleEffectRuleById = vi.fn();
 const endToggleEffectFromAE = vi.fn();
+const openPdfExportDialog = vi.fn();
+const exportCharacterToJson = vi.fn();
 const getDicePools = vi.fn();
 const getDicePoolConsumers = vi.fn();
 const spendDicePool = vi.fn();
@@ -37,6 +39,8 @@ beforeAll(async () => {
 		findToggleEffectRuleById,
 		endToggleEffectFromAE,
 	}));
+	vi.doMock('#view/dialogs/openPdfExportDialog.ts', () => ({ openPdfExportDialog }));
+	vi.doMock('#utils/documents/exportCharacterToJson.ts', () => ({ exportCharacterToJson }));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: getDicePools }));
 	vi.doMock('#utils/dicePool/dicePoolConsumers.js', () => ({ getDicePoolConsumers }));
 	vi.doMock('#utils/dicePool/spendDicePool.js', () => ({ spendDicePool }));
@@ -448,6 +452,43 @@ describe('createHeroPerform', () => {
 
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['customEffect']);
 			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+
+		it('sets a detail of the Bio tab', async () => {
+			await perform({ kind: 'setDetail', detail: 'age', value: '112' });
+
+			expect(actor.update).toHaveBeenCalledWith({ 'system.details.age': '112' });
+		});
+
+		it('sets a flag of the Settings tab', async () => {
+			await perform({ kind: 'setFlag', flag: 'showPassiveSkillScores', value: true });
+
+			expect(actor.setFlag).toHaveBeenCalledWith('nimble', 'showPassiveSkillScores', true);
+		});
+
+		it.each([
+			['bonusSlots', 2, 'system.inventory.bonusSlots'],
+			['woundsBonus', 1, 'system.attributes.wounds.bonus'],
+			['highestUnlockedSpellTier', null, 'system.resources.highestUnlockedSpellTier'],
+			['initiativeBonuses', '1d4', 'system.attributes.initiative.bonuses'],
+			['inspiration', true, 'system.resources.inspiration'],
+		] as const)('sets the field %s', async (field, value, path) => {
+			await perform({ kind: 'setField', field, value });
+
+			expect(actor.update).toHaveBeenCalledWith({ [path]: value });
+		});
+
+		it('opens the PDF export window', async () => {
+			await perform({ kind: 'exportPdf' });
+
+			expect(openPdfExportDialog).toHaveBeenCalledWith(actor);
+		});
+
+		it('exports the character to JSON and says so', async () => {
+			await perform({ kind: 'exportJson' });
+
+			expect(exportCharacterToJson).toHaveBeenCalledWith(actor);
+			expect(ui.notifications?.info).toHaveBeenCalledWith('Character exported successfully');
 		});
 
 		it('saves how the Spells tab groups the spells', async () => {

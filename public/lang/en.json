@@ -259,6 +259,40 @@
 						"lasts": "Lasts"
 					}
 				},
+				"bio": {
+					"age": "Age",
+					"height": "Height",
+					"weight": "Weight",
+					"gender": "Gender",
+					"notes": "Notes",
+					"noNotes": "No notes"
+				},
+				"settings": {
+					"groups": {
+						"image": "Actor Image Settings",
+						"items": "Embedded Document Settings",
+						"inventory": "Inventory Settings",
+						"bonuses": "Bonuses",
+						"skills": "Skill Settings",
+						"spells": "Spell settings",
+						"needsAPlace": "Needs a place"
+					},
+					"needsAPlaceHint": "These have no place on the new character sheet yet.",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"imageScale": "Scale (%)",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"trackSlots": "Track Inventory Slots",
+					"currencyBulk": "Automatically Include Currency Bulk",
+					"bonusSlots": "Bonus Inventory Slots",
+					"woundsBonus": "Max wounds bonus",
+					"maxWounds": "Max wounds: {max}",
+					"initiativeBonus": "Initiative bonus",
+					"passiveSkills": "Show Passive Skill Scores",
+					"spellTier": "Highest Unlocked Spell Tier",
+					"resetSpellTier": "Reset spell tier",
+					"inspiration": "Inspiration"
+				},
 				"inventory": {
 					"create": "Create Object",
 					"newObject": "New Object",

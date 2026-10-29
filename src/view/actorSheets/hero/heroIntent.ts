@@ -2,7 +2,26 @@ import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { ChatReactionId } from '#utils/heroicActions/reactions.js';
+import type { HeroDetail } from './heroBioTab.ts';
 import type { SpellsBy } from './heroSource.ts';
+/** The flags of the character that the Settings tab sets. */
+export type HeroSettingsFlag =
+	| 'actorImageXOffset'
+	| 'actorImageYOffset'
+	| 'actorImageScale'
+	| 'automaticallyExecuteAvailableMacros'
+	| 'trackInventorySlots'
+	| 'includeCurrencyBulk'
+	| 'showPassiveSkillScores';
+
+/** The system fields that the Settings tab sets. */
+export type HeroSettingsField =
+	| 'bonusSlots'
+	| 'woundsBonus'
+	| 'highestUnlockedSpellTier'
+	| 'initiativeBonuses'
+	| 'inspiration';
+
 /** The configure windows that the character sheet opens. */
 export type HeroConfigureTarget =
 	| 'hitPoints'
@@ -63,6 +82,11 @@ export type HeroIntent =
 	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
+	| { kind: 'setDetail'; detail: HeroDetail; value: string }
+	| { kind: 'setFlag'; flag: HeroSettingsFlag; value: boolean | number }
+	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
+	| { kind: 'exportPdf' }
+	| { kind: 'exportJson' }
 	| { kind: 'setSpellsBy'; value: SpellsBy }
 	| { kind: 'unarmedStrike' }
 	| { kind: 'move' }

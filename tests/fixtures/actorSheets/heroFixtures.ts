@@ -169,6 +169,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 		itemState: {},
 		targets: [],
 		unarmedDamage: '1+STR',
+		enrichedNotes: '',
 		...overrides,
 	};
 }

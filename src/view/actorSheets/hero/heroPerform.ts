@@ -20,15 +20,22 @@ import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
+import { exportCharacterToJson } from '#utils/documents/exportCharacterToJson.ts';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
+import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { combatantOf, mayAddAction } from './heroActions.ts';
-import type { HeroConfigureTarget, HeroIntent, HeroPerform } from './heroIntent.ts';
+import type {
+	HeroConfigureTarget,
+	HeroIntent,
+	HeroPerform,
+	HeroSettingsField,
+} from './heroIntent.ts';
 
 type CombatWithLateJoin = Combat & {
 	ensureCharacterCombatantForActorInCurrentScene?: (
@@ -172,6 +179,14 @@ async function endTurn(actor: NimbleCharacter): Promise<void> {
 	}
 	ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 }
+
+const SETTINGS_FIELDS: Record<HeroSettingsField, string> = {
+	bonusSlots: 'system.inventory.bonusSlots',
+	woundsBonus: 'system.attributes.wounds.bonus',
+	highestUnlockedSpellTier: 'system.resources.highestUnlockedSpellTier',
+	initiativeBonuses: 'system.attributes.initiative.bonuses',
+	inspiration: 'system.resources.inspiration',
+};
 
 const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemType'], string> = {
 	spell: 'NIMBLE.actorSheet.hero.spells.newSpell',
@@ -385,6 +400,33 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				return;
 			case 'setCondition':
 				await setCondition(actor, intent.conditionId, intent.active);
+				return;
+			case 'setDetail':
+				await actor.update({ [`system.details.${intent.detail}`]: intent.value } as Record<
+					string,
+					unknown
+				>);
+				return;
+			case 'setFlag':
+				await actor.setFlag(SYSTEM_ID as 'core', intent.flag as never, intent.value as never);
+				return;
+			case 'setField':
+				await actor.update({ [SETTINGS_FIELDS[intent.field]]: intent.value } as Record<
+					string,
+					unknown
+				>);
+				return;
+			case 'exportPdf':
+				openPdfExportDialog(actor);
+				return;
+			case 'exportJson':
+				try {
+					exportCharacterToJson(actor);
+					ui.notifications?.info(localize('NIMBLE.jsonExport.success'));
+				} catch (error) {
+					console.error('Character JSON export failed:', error);
+					ui.notifications?.error(localize('NIMBLE.jsonExport.error'));
+				}
 				return;
 			case 'setCurrency':
 				await actor.update({ [`system.currency.${intent.coin}`]: intent.value } as Record<
