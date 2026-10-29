@@ -32,7 +32,7 @@ const ROLL_USE_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
 type RollUseAttackDelivery = (typeof ROLL_USE_ATTACK_DELIVERIES)[number];
 
 /** The lang namespace a rule's own words are under, as `NIMBLE.rules.<namespace>`. */
-type RollUseNamespace = 'reroll';
+type RollUseNamespace = 'reroll' | 'changeDie';
 
 // Words that say what the rule does. The other words are the same for every
 // rule that uses a roll, so they stay under the Reroll rule's keys.

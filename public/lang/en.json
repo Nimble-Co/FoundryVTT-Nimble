@@ -1364,6 +1364,7 @@
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
+			"changeDie": "Change a Die",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
 			"concentrationTrack": "Concentration Track",
@@ -2274,6 +2275,42 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"changeDie": {
+				"description": "Lets the one who rolled, the target of an attack, or an ally change one die of an attack, a save or a check after it is made: set it to a value the player picks, or add a number to it. Crit and miss are worked out again.",
+				"rolls": {
+					"label": "Which roll can it change?"
+				},
+				"die": {
+					"label": "Which die does it change?",
+					"hint": "On a save or a check, the Primary Die is the d20. The player picks the die when they use it.",
+					"choices": {
+						"primaryDie": "The Primary Die",
+						"pickedDie": "One die the player picks"
+					}
+				},
+				"change": {
+					"label": "How does it change the die?",
+					"hint": "A set value is final: an \"Add to Primary Die Result\" bonus is not added to it. The die stays between 1 and its max.",
+					"choices": {
+						"set": "Set it to a value the player picks",
+						"add": "Add a number"
+					}
+				},
+				"amount": {
+					"label": "Number to add",
+					"hint": "Added to the face the die shows. Use a negative number to take away."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"oncePerAttack": {
+					"label": "Only once per attack",
+					"hint": "The feature can change a die of the same attack only once, even with uses left."
 				}
 			},
 			"primaryDieBonus": {

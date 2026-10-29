@@ -269,6 +269,37 @@ describe('RuleCard with a form layout (reroll)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (changeDie)', () => {
+	it('asks which roll, who, which die and how, then when and the cost', () => {
+		const { container } = render(RuleCard, { rule: initialRule('changeDie'), manager });
+		expect(shownFields(container)).toEqual([
+			'rolls',
+			'usedBy',
+			'die',
+			'change',
+			'outcome',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+			'manaCost',
+			'woundCost',
+			'heroicReaction',
+			'actionCost',
+			'oncePerAttack',
+		]);
+	});
+
+	it('asks for the number to add only for an add', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('changeDie', { change: 'add' }),
+			manager,
+		});
+		const fields = shownFields(container);
+		expect(fields.indexOf('amount')).toBe(fields.indexOf('change') + 1);
+	});
+});
+
 describe('RuleCard with a form layout (primaryDieBonus)', () => {
 	it('asks for the number, the attack type, then the optional conditions', () => {
 		const { container } = render(RuleCard, { rule: initialRule('primaryDieBonus'), manager });
@@ -286,7 +317,7 @@ describe('RuleCard without a form layout', () => {
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus'];
+	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie'];
 
 	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);
