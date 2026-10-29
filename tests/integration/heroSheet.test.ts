@@ -138,6 +138,8 @@ describe('the new character sheet', () => {
 	let backpackId: string;
 	let shieldId: string;
 	let noteId: string;
+	let omenId: string;
+	let worldArrows: Item;
 	let worldTorch: Item;
 	let worldLantern: Item;
 	let rageItem: Item;
@@ -182,12 +184,21 @@ describe('the new character sheet', () => {
 			objectData('Shield', { objectType: 'shield', equipped: false }),
 			objectData('Potion', { objectType: 'consumable', quantity: 2 }),
 			{ name: `${TEST_PREFIX} Note`, type: 'feature', system: {} },
+			{
+				name: `${TEST_PREFIX} Omen`,
+				type: 'feature',
+				system: { description: '<p>Roll [[/r 1d6]] for luck.</p>' },
+			},
 		]);
 		shieldId = created.find((item) => item.name.endsWith('Shield'))!.id!;
 		noteId = created.find((item) => item.name.endsWith('Note'))!.id!;
+		omenId = created.find((item) => item.name.endsWith('Omen'))!.id!;
 
 		worldTorch = (await Item.create(objectData('Torch') as Item.CreateData)) as Item;
 		worldLantern = (await Item.create(objectData('Lantern') as Item.CreateData)) as Item;
+		worldArrows = (await Item.create(
+			objectData('Arrows', { objectSizeType: 'stackable' }) as Item.CreateData,
+		)) as Item;
 
 		rageItem = await importPackItem(
 			hero as unknown as Actor,
@@ -212,6 +223,7 @@ describe('the new character sheet', () => {
 		await combat?.delete().catch(() => {});
 		await worldTorch?.delete().catch(() => {});
 		await worldLantern?.delete().catch(() => {});
+		await worldArrows?.delete().catch(() => {});
 		if (getRuleAutomationEnabled() !== originalAutoApply) {
 			await setRuleAutomationEnabled(originalAutoApply);
 		}
@@ -293,6 +305,17 @@ describe('the new character sheet', () => {
 		);
 	}, 30_000);
 
+	test('an open feature row shows its enriched text, with the inline roll', async () => {
+		const sheet = await openHeroSheet(hero);
+		await openTab(sheet, 'features');
+		const row = rowOf(sheet, omenId)!;
+		row.querySelector<HTMLButtonElement>('button[aria-expanded]')!.click();
+		await waitFor(
+			() => !!rowOf(sheet, omenId)?.querySelector('a.inline-roll'),
+			'the inline roll in the open row',
+		);
+	}, 30_000);
+
 	test('the EQUIP tag equips the shield', async () => {
 		const sheet = await openHeroSheet(hero);
 		await openTab(sheet, 'inventory');
@@ -362,6 +385,26 @@ describe('the new character sheet', () => {
 		);
 		record.stop();
 		expect((torch.system as { containerId?: string }).containerId ?? '').toBe('');
+	}, 30_000);
+
+	test('a drop that stacks into a carried object flashes the old row', async () => {
+		const sheet = await openHeroSheet(hero);
+		await openTab(sheet, 'inventory');
+		dropOn(sheet.querySelector('.list')!, { type: 'Item', uuid: worldArrows.uuid });
+		const arrows = () => hero.items.contents.filter((item) => item.name === worldArrows.name);
+		await waitFor(() => arrows().length === 1, 'the arrows on the hero');
+		const id = arrows()[0]!.id!;
+		await waitFor(() => !!rowOf(sheet, id), 'the arrows row');
+
+		const record = recordFlashes(sheet);
+		dropOn(sheet.querySelector('.list')!, { type: 'Item', uuid: worldArrows.uuid });
+		await waitFor(
+			() => (arrows()[0]!.system as { quantity?: number }).quantity === 2,
+			'the stack to grow',
+		);
+		await waitFor(() => record.flashes.some((flash) => flash.rowId === id), 'the old row to flash');
+		record.stop();
+		expect(arrows()).toHaveLength(1);
 	}, 30_000);
 
 	test('a drop on a container row stores the object in it', async () => {
