@@ -5,10 +5,12 @@ import {
 	closeConfirm,
 	createSheetUiState,
 	revealIn,
+	setClosedRows,
 	setEditing,
 	setOpenRows,
 	showTab,
 	toggleChoice,
+	toggleClosedRow,
 	toggleRow,
 } from '../sheetUiState.ts';
 
@@ -94,6 +96,27 @@ describe('rows and choice steps', () => {
 		setOpenRows(ui, []);
 
 		expect(ui.openRows).toEqual([]);
+	});
+
+	it('closes and opens the text of one row on a sheet where the text starts open', () => {
+		const ui = createSheetUiState('abilities');
+		toggleClosedRow(ui, 'bite');
+		toggleClosedRow(ui, 'claw');
+		toggleClosedRow(ui, 'bite');
+
+		expect(ui.closedRows).toEqual(['claw']);
+		expect(ui.openRows).toEqual([]);
+	});
+
+	it('closes all the rows of a tab where the text starts open, or opens them', () => {
+		const ui = createSheetUiState('abilities');
+		setClosedRows(ui, ['bite', 'claw']);
+
+		expect(ui.closedRows).toEqual(['bite', 'claw']);
+
+		setClosedRows(ui, []);
+
+		expect(ui.closedRows).toEqual([]);
 	});
 
 	it('opens one choice step at a time, and a second click closes it', () => {
