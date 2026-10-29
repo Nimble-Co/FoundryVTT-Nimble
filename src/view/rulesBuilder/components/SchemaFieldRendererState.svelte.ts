@@ -80,16 +80,21 @@ export function createSchemaFieldRendererState(
 	function emitNumber(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const raw = target.value;
-		const field = getField();
-		const onChange = getOnChange();
-		if (raw === '') {
-			onChange((field as unknown as { nullable?: boolean }).nullable ? null : 0);
+		const field = getField() as unknown as {
+			nullable?: boolean;
+			integer?: boolean;
+			validate?: (value: unknown) => unknown;
+		};
+		let next: number | null;
+		if (raw === '') next = field.nullable ? null : 0;
+		else next = field.integer ? parseInt(raw, 10) : parseFloat(raw);
+		if (Number.isNaN(next)) return;
+		if (field.validate?.(next)) {
+			const old = getParentData()[getName()];
+			target.value = old === null || old === undefined ? '' : String(old);
 			return;
 		}
-		const num = (field as unknown as { integer?: boolean }).integer
-			? parseInt(raw, 10)
-			: parseFloat(raw);
-		if (!Number.isNaN(num)) onChange(num);
+		getOnChange()(next);
 	}
 
 	function emitString(event: Event) {

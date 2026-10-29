@@ -7,7 +7,11 @@ type FieldLike = {
 	label?: string;
 	hint?: string;
 	choices?: Record<string, string>;
-	options?: { label?: string; showWhen?: (data: Record<string, unknown>) => boolean };
+	options?: {
+		label?: string;
+		showWhen?: (data: Record<string, unknown>) => boolean;
+		validate?: (value: unknown) => boolean;
+	};
 };
 
 const schema = ChangeDieRule.defineSchema() as unknown as Record<string, FieldLike>;
@@ -98,6 +102,11 @@ describe('ChangeDieRule', () => {
 		const showWhen = schema.amount?.options?.showWhen;
 		expect(showWhen?.({ change: 'add' })).toBe(true);
 		expect(showWhen?.({ change: 'set' })).toBe(false);
+	});
+
+	it('refuses 0 as the number to add', () => {
+		const validate = schema.amount?.options?.validate;
+		expect([validate?.(0), validate?.(1), validate?.(-2)]).toEqual([false, true, true]);
 	});
 
 	it('says what one use changes', () => {

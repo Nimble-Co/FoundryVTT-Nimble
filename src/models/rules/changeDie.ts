@@ -49,6 +49,8 @@ function schema() {
 				nullable: false,
 				initial: 1,
 				integer: true,
+				validate: (value: unknown) => value !== 0,
+				validationError: 'cannot be 0',
 				label: 'NIMBLE.rules.changeDie.amount.label',
 				hint: 'NIMBLE.rules.changeDie.amount.hint',
 				showWhen: (data: Record<string, unknown>) => data.change === 'add',

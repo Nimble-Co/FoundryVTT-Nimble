@@ -1,4 +1,4 @@
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PredicateField } from '../../../../models/fields/PredicateField.js';
@@ -260,6 +260,29 @@ describe('SchemaFieldRenderer dispatch table', () => {
 			onChange: noop,
 		});
 		expect(container.querySelector('input[type="number"]')).toBeTruthy();
+	});
+
+	it('NumberField → keeps the old number when the field refuses the new one', async () => {
+		const field = Object.assign(
+			new fields.NumberField({ required: true, nullable: false, initial: 1, integer: true }),
+			{ validate: (value: unknown) => (value === 0 ? new Error('cannot be 0') : undefined) },
+		);
+		const onChange = vi.fn();
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 2,
+			parentData: { amount: 2 },
+			name: 'amount',
+			onChange,
+		});
+		const input = container.querySelector('input[type="number"]') as HTMLInputElement;
+
+		await fireEvent.change(input, { target: { value: '0' } });
+		expect(onChange).not.toHaveBeenCalled();
+		expect(input.value).toBe('2');
+
+		await fireEvent.change(input, { target: { value: '-1' } });
+		expect(onChange).toHaveBeenCalledWith(-1);
 	});
 
 	it('StringField with choices → mounts a <select>', () => {
