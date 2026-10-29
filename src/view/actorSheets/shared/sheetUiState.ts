@@ -51,3 +51,23 @@ export function askConfirm(ui: SheetUiState, confirmId: string): void {
 export function closeConfirm(ui: SheetUiState): void {
 	ui.confirm = null;
 }
+
+export function toggleRow(ui: SheetUiState, rowId: string): void {
+	ui.openRows = ui.openRows.includes(rowId)
+		? ui.openRows.filter((id) => id !== rowId)
+		: [...ui.openRows, rowId];
+}
+
+/** Expand all gives every row id of the tab; Collapse all gives none. */
+export function setOpenRows(ui: SheetUiState, rowIds: string[]): void {
+	ui.openRows = [...rowIds];
+}
+
+export function toggleChoice(ui: SheetUiState, rowId: string): void {
+	ui.choiceStep = ui.choiceStep === rowId ? null : rowId;
+	ui.confirm = null;
+}
+
+export function closeChoice(ui: SheetUiState): void {
+	ui.choiceStep = null;
+}
