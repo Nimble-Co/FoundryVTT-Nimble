@@ -8,6 +8,7 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 	import type { HeroEffectsTabProps } from '#types/components/actorSheets/HeroEffectsTab.d.ts';
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
+	import { moveGridFocus } from '../../shared/gridKeys.ts';
 	import { setOpenRows } from '../../shared/sheetUiState.ts';
 	import HeroRowGroupList from './HeroRowGroupList.svelte';
 
@@ -17,31 +18,6 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 
 	const rowIds = $derived(view.groups.flatMap((group) => group.rows.map((row) => row.id)));
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
-
-	/** The grid fills its width, so the columns are the buttons on the first line. */
-	function columnsOf(buttons: HTMLElement[]): number {
-		const top = buttons[0]?.offsetTop ?? 0;
-		return Math.max(1, buttons.filter((button) => button.offsetTop === top).length);
-	}
-
-	function onkeydown(event: KeyboardEvent) {
-		const buttons = [...(grid?.querySelectorAll<HTMLElement>('button') ?? [])];
-		const index = buttons.indexOf(event.target as HTMLElement);
-		if (index < 0) return;
-		const columns = columnsOf(buttons);
-		const last = buttons.length - 1;
-		const next: Record<string, number> = {
-			ArrowRight: Math.min(index + 1, last),
-			ArrowLeft: Math.max(index - 1, 0),
-			ArrowDown: Math.min(index + columns, last),
-			ArrowUp: Math.max(index - columns, 0),
-			Home: 0,
-			End: last,
-		};
-		if (!(event.key in next)) return;
-		event.preventDefault();
-		buttons[next[event.key]]?.focus();
-	}
 </script>
 
 <div class="bar">
@@ -57,7 +33,7 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 			class:on={condition.on}
 			aria-pressed={condition.on}
 			onclick={() => perform(condition.intent)}
-			{onkeydown}
+			onkeydown={(event) => moveGridFocus(grid, event)}
 		>
 			<img src={condition.img} alt="" />{condition.name}
 		</button>

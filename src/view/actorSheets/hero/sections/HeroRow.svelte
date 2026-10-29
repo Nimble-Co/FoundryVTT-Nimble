@@ -15,76 +15,14 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	import ConfirmBar from '../../parts/ConfirmBar.svelte';
 	import InlineNumber from '../../parts/InlineNumber.svelte';
 	import Row from '../../parts/Row.svelte';
-	import { dragDataOf, droppedItemData, mayDrag } from '../../shared/drag.ts';
-	import {
-		askConfirm,
-		closeChoice,
-		closeConfirm,
-		toggleChoice,
-		toggleRow,
-	} from '../../shared/sheetUiState.ts';
+	import { closeChoice, closeConfirm, toggleRow } from '../../shared/sheetUiState.ts';
+	import { heroRowControls } from './HeroRow.svelte.ts';
 	import HeroRowChoice from './HeroRowChoice.svelte';
 
 	let { row, ui, perform }: HeroRowProps = $props();
 
 	const uid = $props.id();
-	let pointerType: string | null = null;
-	let dropOver = $state(false);
-
-	const editing = $derived(ui.editing);
-	const use = $derived(row.use);
-	const stepOpen = $derived(!editing && !!row.choice && ui.choiceStep === row.id);
-	const askId = $derived(`ask:${row.id}`);
-	const removeId = $derived(`remove:${row.id}`);
-	const asking = $derived.by(() => {
-		if (!editing && use?.kind === 'ask' && ui.confirm === askId) return use.ask;
-		if (editing && row.remove && ui.confirm === removeId) return row.remove;
-		return null;
-	});
-	const hasFields = $derived(row.fields.length > 0 || !!row.storeIn || !!row.remove);
-	const useLabel = $derived(use?.kind === 'ask' ? use.ask.label : use?.label);
-
-	function onuse() {
-		if (!use) return;
-		if (use.kind === 'act') void perform(use.intent);
-		else if (use.kind === 'choose') toggleChoice(ui, row.id);
-		else if (use.kind === 'ask') askConfirm(ui, askId);
-	}
-
-	function confirm() {
-		const intent = asking?.intent;
-		closeConfirm(ui);
-		if (intent) void perform(intent);
-	}
-
-	function ondragenter() {
-		if (row.dropInto && row.dropInto === row.id) dropOver = true;
-	}
-
-	// crossing onto a child of the row is not leaving it
-	function ondragleave(event: DragEvent) {
-		const to = event.relatedTarget;
-		if (to instanceof Node && (event.currentTarget as Node).contains(to)) return;
-		dropOver = false;
-	}
-
-	function ondrop(event: DragEvent) {
-		dropOver = false;
-		if (row.dropInto === undefined) return;
-		const data = droppedItemData(event.dataTransfer);
-		if (!data) return;
-		event.preventDefault();
-		event.stopPropagation();
-		void perform({ kind: 'dropItem', data, containerId: row.dropInto });
-	}
-
-	function ondragstart(event: DragEvent) {
-		if (!row.drag || !mayDrag(pointerType, editing)) {
-			event.preventDefault();
-			return;
-		}
-		event.dataTransfer?.setData('text/plain', JSON.stringify(dragDataOf(row.drag)));
-	}
+	const c = heroRowControls(() => ({ row, ui, perform }));
 </script>
 
 {#snippet fields()}
@@ -138,7 +76,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 			class="nimble-u-reset-button trash"
 			aria-label={row.remove.label}
 			data-tooltip={row.remove.label}
-			onclick={() => askConfirm(ui, removeId)}
+			onclick={c.askRemove}
 		>
 			<i class="fa-solid fa-trash"></i>
 		</button>
@@ -148,16 +86,16 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 <div
 	class="hero-row"
 	class:indent={row.indent}
-	class:drop-over={dropOver}
+	class:drop-over={c.dropOver}
 	data-row-id={row.id}
 	draggable={row.drag ? 'true' : undefined}
 	role="presentation"
-	onpointerdown={(event) => (pointerType = event.pointerType)}
-	{ondragstart}
-	{ondragenter}
-	{ondragleave}
-	ondragend={() => (dropOver = false)}
-	{ondrop}
+	onpointerdown={c.onpointerdown}
+	ondragstart={c.ondragstart}
+	ondragenter={c.ondragenter}
+	ondragleave={c.ondragleave}
+	ondragend={c.ondragend}
+	ondrop={c.ondrop}
 >
 	<Row
 		id="{uid}-row"
@@ -177,24 +115,24 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		state={row.state}
 		open={ui.openRows.includes(row.id)}
 		ontoggle={() => toggleRow(ui, row.id)}
-		onuse={!editing && use ? onuse : undefined}
-		{useLabel}
-		useExpanded={use?.kind === 'choose' ? stepOpen : use?.kind === 'ask' ? !!asking : undefined}
-		disabled={use?.kind === 'blocked' || undefined}
+		onuse={!c.editing && row.use ? c.onuse : undefined}
+		useLabel={c.useLabel}
+		useExpanded={c.useExpanded}
+		disabled={row.use?.kind === 'blocked' || undefined}
 		onedit={row.edit ? () => row.edit && perform(row.edit) : undefined}
 		hasWindow={!!row.edit}
-		fields={editing && hasFields ? fields : undefined}
-		dim={editing && !hasFields && !row.edit}
+		fields={c.editing && c.hasFields ? fields : undefined}
+		dim={c.editing && !c.hasFields && !row.edit}
 	>
-		{#if stepOpen && row.choice}
+		{#if c.stepOpen && row.choice}
 			<HeroRowChoice step={row.choice} {perform} onclose={() => closeChoice(ui)} />
 		{/if}
-		{#if asking}
+		{#if c.asking}
 			<div class="ask">
 				<ConfirmBar
-					question={asking.question}
-					confirmLabel={asking.confirmLabel}
-					onconfirm={confirm}
+					question={c.asking.question}
+					confirmLabel={c.asking.confirmLabel}
+					onconfirm={c.confirm}
 					oncancel={() => closeConfirm(ui)}
 				/>
 			</div>
