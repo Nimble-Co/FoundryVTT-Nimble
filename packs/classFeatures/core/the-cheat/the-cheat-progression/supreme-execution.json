@@ -5,7 +5,7 @@
 	"img": "icons/weapons/daggers/dagger-crooked-ice-blue.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "supreme-execution",
 		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
