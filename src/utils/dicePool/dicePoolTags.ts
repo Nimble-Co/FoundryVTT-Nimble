@@ -48,6 +48,8 @@ function emitFromFlagBag(flags: unknown, tags: Set<string>): void {
 
 		if (count === 0) {
 			tags.add(`self:no${capitalize(identifier)}Dice`);
+		} else {
+			tags.add(`self:pool:${identifier}`);
 		}
 
 		if (Number.isFinite(max) && count >= max && max > 0) {

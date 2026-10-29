@@ -62,6 +62,8 @@ function emitFromFlagBag(flags: unknown, tags: Set<string>): void {
 
 		if (current === 0) {
 			tags.add(`self:no${capitalize(identifier)}Charges`);
+		} else {
+			tags.add(`self:pool:${identifier}`);
 		}
 
 		if (Number.isFinite(max) && current >= max && max > 0) {
