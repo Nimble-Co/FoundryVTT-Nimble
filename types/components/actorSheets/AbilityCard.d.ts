@@ -11,6 +11,8 @@ export interface AbilityCardProps {
 	range?: string;
 	uses?: RowUses;
 	description?: string;
+	/** the text as Foundry enriched it (inline rolls, links); shown in place of `description` */
+	descriptionHtml?: string;
 	/** indent under an attack sequence */
 	nested?: boolean;
 	/** the text is open; it starts open */

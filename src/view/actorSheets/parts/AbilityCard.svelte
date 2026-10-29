@@ -5,6 +5,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 - A click on the name or the image does what the system does: kind `roll` (d20 icon) opens the roll window, kind `chat` (speech bubble) posts to chat.
 - When you point at the name, the whole card gets the accent border and a light tint. There is no box inside the card.
 - The arrow (at the start) and the pen are the same `RowButton`s as on a character row. Delete is in the window and asks first.
+- `descriptionHtml` (the text that Foundry enriched) replaces the plain `description`.
 - The range and the uses show on the right, with `RowCost`. `nested` indents the abilities of an attack sequence.
 -->
 <script lang="ts">
@@ -22,6 +23,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		range,
 		uses,
 		description,
+		descriptionHtml,
 		nested = false,
 		open = $bindable(true),
 		onuse,
@@ -67,7 +69,9 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 			/>{/if}
 		<RowButton kind="edit" size="sm" {name} {touch} onclick={onedit} />
 	</div>
-	{#if open && description}<p class="ds" id={pid}>{description}</p>{/if}
+	{#if open && descriptionHtml}
+		<div class="ds html" id={pid}>{@html descriptionHtml}</div>
+	{:else if open && description}<p class="ds" id={pid}>{description}</p>{/if}
 </div>
 
 <style>
@@ -145,6 +149,12 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		color: var(--nimble-ui-ink-muted);
 		text-wrap: pretty;
 		animation: reveal 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.html :global(p) {
+		margin: 0 0 4px;
+	}
+	.html :global(p:last-child) {
+		margin-bottom: 0;
 	}
 	.touch .act {
 		min-height: 44px;
