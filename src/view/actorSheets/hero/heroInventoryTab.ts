@@ -19,6 +19,8 @@ const EQUIPPABLE = new Set(['weapon', 'armor', 'shield']);
 export interface HeroCoinView {
 	coin: string;
 	label: string;
+	/** the label of the number field */
+	name: string;
 	value: number;
 }
 
@@ -173,11 +175,15 @@ export function heroInventoryTab(
 	const { usedSlots, totalSlots } = actor.system.inventory;
 	const slotData = { used: String(usedSlots), total: String(totalSlots) };
 	return {
-		coins: COINS.map((coin) => ({
-			coin,
-			label: localize(`NIMBLE.currencyAbbreviations.${coin}`),
-			value: Number(actor.system.currency[coin] ?? 0),
-		})),
+		coins: COINS.map((coin) => {
+			const label = localize(`NIMBLE.currencyAbbreviations.${coin}`);
+			return {
+				coin,
+				label,
+				name: format(`${INV}.coin`, { coin: label }),
+				value: Number(actor.system.currency[coin] ?? 0),
+			};
+		}),
 		slots:
 			actor.flags.trackInventorySlots === false
 				? null

@@ -19,7 +19,15 @@ export type HeroSetting =
 			target: HeroSettingTarget;
 	  }
 	| { kind: 'text'; id: string; label: string; value: string; target: HeroSettingTarget }
-	| { kind: 'button'; id: string; label: string; icon: string; intent: HeroIntent };
+	| {
+			kind: 'button';
+			id: string;
+			label: string;
+			icon: string;
+			intent: HeroIntent;
+			/** works out of edit mode too */
+			always?: boolean;
+	  };
 
 export interface HeroSettingsGroup {
 	id: string;
@@ -37,7 +45,7 @@ export interface HeroSettingsTabView {
 const flag = (name: HeroSettingsFlag): HeroSettingTarget => ({ kind: 'flag', flag: name });
 const field = (name: HeroSettingsField): HeroSettingTarget => ({ kind: 'field', field: name });
 
-/** The Settings tab as today, with the max wounds bonus, the Initiative bonus and "Needs a place". */
+/** The Settings tab as today (you change a setting only in edit mode), with the max wounds bonus, the Initiative bonus and "Needs a place". */
 export function heroSettingsTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
@@ -167,6 +175,7 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.pdfExport.exportButton'),
 						icon: 'fa-solid fa-file-pdf',
 						intent: { kind: 'exportPdf' },
+						always: true,
 					},
 					{
 						kind: 'button',
@@ -174,6 +183,7 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.jsonExport.exportButton'),
 						icon: 'fa-solid fa-file-export',
 						intent: { kind: 'exportJson' },
+						always: true,
 					},
 				],
 			},

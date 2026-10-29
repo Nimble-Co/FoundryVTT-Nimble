@@ -131,9 +131,24 @@ describe('heroInventoryTab', () => {
 	it('gives the coins, gold first, and the slots with a warning when over the limit', () => {
 		const view = heroInventoryTab(containerHero(), heroContext());
 		expect(view.coins).toEqual([
-			{ coin: 'gp', label: 'NIMBLE.currencyAbbreviations.gp', value: 12 },
-			{ coin: 'sp', label: 'NIMBLE.currencyAbbreviations.sp', value: 4 },
-			{ coin: 'cp', label: 'NIMBLE.currencyAbbreviations.cp', value: 30 },
+			{
+				coin: 'gp',
+				label: 'NIMBLE.currencyAbbreviations.gp',
+				name: `${INV}.coin {"coin":"NIMBLE.currencyAbbreviations.gp"}`,
+				value: 12,
+			},
+			{
+				coin: 'sp',
+				label: 'NIMBLE.currencyAbbreviations.sp',
+				name: `${INV}.coin {"coin":"NIMBLE.currencyAbbreviations.sp"}`,
+				value: 4,
+			},
+			{
+				coin: 'cp',
+				label: 'NIMBLE.currencyAbbreviations.cp',
+				name: `${INV}.coin {"coin":"NIMBLE.currencyAbbreviations.cp"}`,
+				value: 30,
+			},
 		]);
 		expect(view.slots).toEqual({
 			text: `${INV}.slots {"used":"9","total":"13"}`,

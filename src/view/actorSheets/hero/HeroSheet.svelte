@@ -10,14 +10,24 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	import SheetTabs from '../parts/SheetTabs.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
 	import { heroActionsTab } from './heroActionsTab.ts';
+	import { heroBioTab } from './heroBioTab.ts';
 	import { heroCoreTab } from './heroCoreTab.ts';
+	import { heroEffectsTab } from './heroEffectsTab.ts';
+	import { heroFeaturesTab } from './heroFeaturesTab.ts';
 	import { heroFrame } from './heroFrame.ts';
+	import { heroInventoryTab } from './heroInventoryTab.ts';
 	import { heroRail } from './heroRail.ts';
+	import { heroSettingsTab } from './heroSettingsTab.ts';
 	import { heroSpellsTab } from './heroSpellsTab.ts';
 	import HeroActionsTab from './sections/HeroActionsTab.svelte';
+	import HeroBioTab from './sections/HeroBioTab.svelte';
 	import HeroCoreTab from './sections/HeroCoreTab.svelte';
+	import HeroEffectsTab from './sections/HeroEffectsTab.svelte';
+	import HeroFeaturesTab from './sections/HeroFeaturesTab.svelte';
 	import HeroHeader from './sections/HeroHeader.svelte';
+	import HeroInventoryTab from './sections/HeroInventoryTab.svelte';
 	import HeroRail from './sections/HeroRail.svelte';
+	import HeroSettingsTab from './sections/HeroSettingsTab.svelte';
 	import HeroSpellsTab from './sections/HeroSpellsTab.svelte';
 	import HeroStrip from './sections/HeroStrip.svelte';
 
@@ -38,9 +48,27 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	const mainWidth = $derived(wide ? size.width - RAIL_WIDTH : size.width);
 	const rail = $derived(heroRail(current.actor, current.context));
 	const frame = $derived(heroFrame(current.actor, current.context));
-	const core = $derived(heroCoreTab(current.actor, current.context));
-	const actions = $derived(heroActionsTab(current.actor, current.context));
-	const spells = $derived(heroSpellsTab(current.actor, current.context));
+	// each tab view is worked out only while its tab shows
+	const core = $derived(ui.tab === 'core' ? heroCoreTab(current.actor, current.context) : null);
+	const actions = $derived(
+		ui.tab === 'actions' ? heroActionsTab(current.actor, current.context) : null,
+	);
+	const features = $derived(
+		ui.tab === 'features' ? heroFeaturesTab(current.actor, current.context) : null,
+	);
+	const inventory = $derived(
+		ui.tab === 'inventory' ? heroInventoryTab(current.actor, current.context) : null,
+	);
+	const spells = $derived(
+		ui.tab === 'spells' ? heroSpellsTab(current.actor, current.context) : null,
+	);
+	const effects = $derived(
+		ui.tab === 'effects' ? heroEffectsTab(current.actor, current.context) : null,
+	);
+	const bio = $derived(ui.tab === 'bio' ? heroBioTab(current.actor, current.context) : null);
+	const settings = $derived(
+		ui.tab === 'settings' ? heroSettingsTab(current.actor, current.context) : null,
+	);
 	const wideMain = $derived(mainWidth >= 620);
 	const slot = $derived(mainWidth / 8);
 	const tabFit = $derived(slot >= 78 ? 'inline' : slot >= 50 ? 'stacked' : 'icon');
@@ -80,12 +108,22 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 					</button>
 				</div>
 			{/if}
-			{#if ui.tab === 'core'}
+			{#if core}
 				<HeroCoreTab view={core} editing={ui.editing} {perform} skillColumns={wideMain ? 3 : 2} />
-			{:else if ui.tab === 'actions'}
+			{:else if actions}
 				<HeroActionsTab view={actions} {ui} {perform} columns={wideMain ? 2 : 1} />
-			{:else if ui.tab === 'spells'}
+			{:else if features}
+				<HeroFeaturesTab view={features} {ui} {perform} />
+			{:else if inventory}
+				<HeroInventoryTab view={inventory} {ui} {perform} />
+			{:else if spells}
 				<HeroSpellsTab view={spells} {ui} {perform} />
+			{:else if effects}
+				<HeroEffectsTab view={effects} {ui} {perform} />
+			{:else if bio}
+				<HeroBioTab view={bio} {ui} {perform} />
+			{:else if settings}
+				<HeroSettingsTab view={settings} {ui} {perform} />
 			{/if}
 		</div>
 	</main>
