@@ -172,7 +172,7 @@ export interface HeroRailView {
 		intent: HeroIntent | null;
 	};
 	/** null in combat */
-	rests: { field: HeroAction; safe: HeroAction } | null;
+	rests: HeroRest[] | null;
 	/** null out of combat, and before you roll Initiative */
 	turn: HeroTurnView | null;
 	levelUp: { label: string; intent: HeroIntent | null; tooltip: string };
@@ -185,6 +185,10 @@ export interface HeroRailView {
 export interface HeroAction {
 	label: string;
 	intent: HeroIntent;
+}
+
+export interface HeroRest extends HeroAction {
+	icon: string;
 }
 
 const RAIL = 'NIMBLE.actorSheet.hero.rail';
@@ -567,16 +571,18 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 		},
 		rests: context.combat
 			? null
-			: {
-					field: {
+			: [
+					{
 						label: localize('NIMBLE.prompts.fieldRest'),
+						icon: 'fa-regular fa-hourglass-half',
 						intent: { kind: 'rest', restType: 'field' },
 					},
-					safe: {
+					{
 						label: localize('NIMBLE.prompts.safeRest'),
+						icon: 'fa-solid fa-moon',
 						intent: { kind: 'rest', restType: 'safe' },
 					},
-				},
+				],
 		turn: turn(context),
 		levelUp: levelUp(actor, context),
 		revertLevelUp: actor.system.levelUpHistory.length

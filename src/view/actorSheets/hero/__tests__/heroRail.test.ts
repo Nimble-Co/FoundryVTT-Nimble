@@ -205,10 +205,18 @@ describe('heroRail', () => {
 
 	describe('rests and initiative', () => {
 		it('shows the rests out of combat only', () => {
-			expect(heroRail(blankHero(), heroContext()).rests).toEqual({
-				field: { label: 'NIMBLE.prompts.fieldRest', intent: { kind: 'rest', restType: 'field' } },
-				safe: { label: 'NIMBLE.prompts.safeRest', intent: { kind: 'rest', restType: 'safe' } },
-			});
+			expect(heroRail(blankHero(), heroContext()).rests).toEqual([
+				{
+					label: 'NIMBLE.prompts.fieldRest',
+					icon: 'fa-regular fa-hourglass-half',
+					intent: { kind: 'rest', restType: 'field' },
+				},
+				{
+					label: 'NIMBLE.prompts.safeRest',
+					icon: 'fa-solid fa-moon',
+					intent: { kind: 'rest', restType: 'safe' },
+				},
+			]);
 			expect(heroRail(blankHero(), heroContext({ combat: heroTurn() })).rests).toBeNull();
 		});
 

@@ -71,15 +71,14 @@ The rail stays dark in both themes.
 			<HeroInitiative initiative={view.initiative} {editing} {perform} />
 			{#if view.rests}
 				<div class="rests">
-					{#each [view.rests.field, view.rests.safe] as rest, index (index)}
+					{#each view.rests as rest (rest.label)}
 						<button
 							type="button"
 							class="nimble-u-reset-button secondary"
 							disabled={editing}
 							onclick={() => perform(rest.intent)}
 						>
-							<i class={index === 0 ? 'fa-regular fa-hourglass-half' : 'fa-solid fa-moon'}
-							></i>{rest.label}
+							<i class={rest.icon}></i>{rest.label}
 						</button>
 					{/each}
 				</div>

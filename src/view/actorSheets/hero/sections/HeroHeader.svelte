@@ -59,7 +59,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 			<HeroHitPoints {view} {editing} {perform} compact />
 			<span class="buttons">
 				{#if view.rests}
-					{#each [view.rests.field, view.rests.safe] as rest, index (index)}
+					{#each view.rests as rest (rest.label)}
 						<button
 							type="button"
 							class="nimble-u-reset-button icon"
@@ -68,7 +68,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 							disabled={editing}
 							onclick={() => perform(rest.intent)}
 						>
-							<i class={index === 0 ? 'fa-regular fa-hourglass-half' : 'fa-solid fa-moon'}></i>
+							<i class={rest.icon}></i>
 						</button>
 					{/each}
 				{/if}
