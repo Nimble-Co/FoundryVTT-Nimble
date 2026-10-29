@@ -82,18 +82,22 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 	}
 
 	function menuItem(entry: IncomingReactionEntry) {
-		const sentence = label(entry);
 		const entryCost = cost(entry);
+		const note = (entry.hint ?? '').trim();
+		const sentence = entryCost
+			? localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
+					label: label(entry),
+					cost: entryCost,
+				})
+			: label(entry);
 		return {
 			id: entry.id,
 			label: menuName(entry),
 			cost: entryCost,
-			text: entryCost
-				? localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
-						label: sentence,
-						cost: entryCost,
-					})
+			text: note
+				? localize('NIMBLE.chat.incomingReactions.withNote', { text: sentence, note })
 				: sentence,
+			...(note ? { note } : {}),
 		};
 	}
 

@@ -63,6 +63,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'extraDamage',
 			'automatic',
 			'discardedCritTriggers',
+			'cardHint',
 		]);
 	});
 
@@ -80,6 +81,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'Only when the other creature is',
 			'Cost (optional)',
 			'Changes to the new roll (optional)',
+			'Note on the card',
 		]);
 	});
 
@@ -223,6 +225,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'actionCost',
 			'rollModeChange',
 			'automatic',
+			'cardHint',
 		]);
 		const questions = [...container.querySelectorAll('.nimble-rule-form__question')].map((el) =>
 			el.textContent?.trim(),
@@ -287,7 +290,17 @@ describe('RuleCard with a form layout (changeDie)', () => {
 			'heroicReaction',
 			'actionCost',
 			'oncePerAttack',
+			'cardHint',
 		]);
+	});
+
+	it('asks when to show the note only once the rule has a note', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('changeDie', { cardHint: 'With a blade' }),
+			manager,
+		});
+		const fields = shownFields(container);
+		expect(fields.indexOf('cardHintWhen')).toBe(fields.indexOf('cardHint') + 1);
 	});
 
 	it('asks for the number to add only for an add', () => {

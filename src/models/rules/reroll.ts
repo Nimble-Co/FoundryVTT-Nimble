@@ -121,6 +121,7 @@ function schema() {
 					forAttacks(data) && CRIT_OUTCOMES.has(String(data.outcome)),
 			}),
 		),
+		...shared.note,
 		type: new fields.StringField({ required: true, nullable: false, initial: 'reroll' }),
 	};
 }
@@ -147,6 +148,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 			fields: ['rollModeChange', 'primaryDieBonus', 'extraDamage'],
 		},
 		{ fields: ['automatic', 'discardedCritTriggers'] },
+		RollUseRule.noteFormGroup(),
 	];
 
 	declare automatic: boolean;

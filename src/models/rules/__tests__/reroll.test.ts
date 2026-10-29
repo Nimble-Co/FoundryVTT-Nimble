@@ -396,6 +396,30 @@ describe('RerollRule', () => {
 			});
 		});
 
+		describe('the note on the card', () => {
+			const creature = (...tags: string[]) => ({ getTargetDomain: () => new Set(tags) });
+
+			it('gives no note when the rule has none', () => {
+				const { rule } = makeRule();
+				expect(rule.cardHintFor({ ...TARGET_MELEE, other: creature() })).toBe('');
+			});
+
+			it('gives the note on every roll when nothing limits it', () => {
+				const { rule } = makeRule({ cardHint: 'Your 2nd miss this round' });
+				expect(rule.cardHintFor({ ...TARGET_MELEE, other: null })).toBe('Your 2nd miss this round');
+			});
+
+			it('gives the note only when its tags match, as the other creature test sees them', () => {
+				const { rule, actor } = makeRule({
+					cardHint: 'With a blade',
+					cardHintWhen: new Predicate({ $and: ['feature:supreme-execution'] } as never),
+				});
+				expect(rule.cardHintFor({ ...TARGET_MELEE, other: creature() })).toBe('');
+				actor.getDomain = () => new Set(['feature:supreme-execution']);
+				expect(rule.cardHintFor({ ...TARGET_MELEE, other: creature() })).toBe('With a blade');
+			});
+		});
+
 		it('filters on how the attack is delivered', () => {
 			const { rule } = makeRule({ attackDelivery: 'ranged' });
 			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);

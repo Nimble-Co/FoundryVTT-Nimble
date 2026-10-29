@@ -121,6 +121,25 @@ describe('collectRerollEntries', () => {
 		]);
 	});
 
+	it("stamps the rule's note for this roll on its entry, and none when it has none", () => {
+		const noted = rerollRule({
+			id: 'noted',
+			usedBy: 'roller',
+			cardHintFor: vi.fn(() => 'Your 2nd miss this round'),
+		});
+		const plain = rerollRule({ id: 'plain', usedBy: 'roller', cardHintFor: vi.fn(() => '') });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [noted, plain]) }),
+		);
+
+		expect(manual.map((entry) => entry.hint)).toEqual(['Your 2nd miss this round', undefined]);
+		expect(noted.cardHintFor).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
+	});
+
 	it('stamps the once-per-attack flag of the rule on its entry', () => {
 		const once = rerollRule({ id: 'once', usedBy: 'roller', oncePerAttack: true });
 		const again = rerollRule({ id: 'again', usedBy: 'roller' });

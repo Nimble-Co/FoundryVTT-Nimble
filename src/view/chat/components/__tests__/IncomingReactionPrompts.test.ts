@@ -644,6 +644,23 @@ describe('IncomingReactionPrompts', () => {
 			expect(item.dataset.tooltip).toBe(item.getAttribute('aria-label'));
 		});
 
+		it('shows the note of the entry under the feature, and in its sentence', async () => {
+			const entry = { ...rerollEntry(), hint: 'Your 2nd miss this round' };
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([entry]) },
+			});
+
+			await openVerb(rollPlace(), 'Reroll');
+
+			const item = rollPlace().getByRole('menuitem');
+			expect(item.querySelector('.nimble-choice-menu__note')?.textContent).toBe(
+				'Your 2nd miss this round',
+			);
+			expect(item.getAttribute('aria-label')).toBe(
+				'Reroll with Pocket Sand. Your 2nd miss this round',
+			);
+		});
+
 		describe('the verb buttons', () => {
 			function verbMessage() {
 				return createMessage([

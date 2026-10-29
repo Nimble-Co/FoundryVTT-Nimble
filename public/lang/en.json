@@ -558,6 +558,7 @@
 					"change": "Change die"
 				},
 				"verbCount": "{verb}: {count} features",
+				"withNote": "{text}. {note}",
 				"rollMenu": {
 					"change": "Change a die",
 					"choose": "Choose a feature to reroll or change the die"
@@ -2452,6 +2453,14 @@
 						"melee": "Melee",
 						"ranged": "Ranged"
 					}
+				},
+				"cardHint": {
+					"label": "Note on the card",
+					"hint": "A short note under the feature on the card, such as a limit the table checks. Empty means no note."
+				},
+				"cardHintWhen": {
+					"label": "Show the note only when",
+					"hint": "Pick tags, as for \"Only when the other creature is\". Empty means on every roll."
 				},
 				"otherCreature": {
 					"label": "Only when the other creature is",

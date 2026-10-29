@@ -6,6 +6,8 @@ export interface ChoiceMenuItem {
 	/** The full sentence, for the tooltip and the screen reader. */
 	text: string;
 	icon?: string;
+	/** A short note under the label. */
+	note?: string;
 }
 
 /** Items under a heading. An empty heading shows no heading. */

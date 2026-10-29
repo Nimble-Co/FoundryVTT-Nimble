@@ -123,6 +123,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			side: 'target',
 			oncePerAttack: false,
 			use: 'change',
+			hint: 'Your 2nd miss this round',
 			rerollTrigger: 'always',
 			rerollWithDisadvantage: false,
 			outcomeTrigger: 'always',

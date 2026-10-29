@@ -92,7 +92,12 @@
 					{#if item.icon}
 						<i class="nimble-choice-menu__icon {item.icon}" aria-hidden="true"></i>
 					{/if}
-					<span class="nimble-choice-menu__label">{item.label}</span>
+					<span class="nimble-choice-menu__label">
+						{item.label}
+						{#if item.note}
+							<span class="nimble-choice-menu__note">{item.note}</span>
+						{/if}
+					</span>
 					{#if item.cost}
 						<span class="nimble-choice-menu__cost">{item.cost}</span>
 					{/if}
@@ -177,6 +182,14 @@
 		&__label {
 			flex: 1;
 			min-width: 0;
+		}
+
+		&__note {
+			display: block;
+			margin-top: 0.125rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 400;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__cost {

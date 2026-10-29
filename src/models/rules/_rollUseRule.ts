@@ -243,8 +243,36 @@ function costFields(namespace: RollUseNamespace) {
 	};
 }
 
+/** A short note under the feature on the card, and when it shows. */
+function noteFields(namespace: RollUseNamespace) {
+	const { fields } = foundry.data;
+	return {
+		cardHint: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			label: wordKey(namespace, 'cardHint', 'label'),
+			hint: wordKey(namespace, 'cardHint', 'hint'),
+		}),
+		cardHintWhen: new PredicateField(
+			withWidget({
+				label: wordKey(namespace, 'cardHintWhen', 'label'),
+				hint: wordKey(namespace, 'cardHintWhen', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					typeof data.cardHint === 'string' && data.cardHint.trim() !== '',
+			}),
+		),
+	};
+}
+
 function rollUseSchema(namespace: RollUseNamespace) {
-	return { ...rollFields(namespace), ...whenFields(namespace), ...costFields(namespace) };
+	return {
+		...rollFields(namespace),
+		...whenFields(namespace),
+		...costFields(namespace),
+		...noteFields(namespace),
+	};
 }
 
 declare namespace RollUseRule {
@@ -296,6 +324,8 @@ abstract class RollUseRule<
 	declare heroicReaction: HeroicReactionKey | '';
 	declare actionCost: number;
 	declare oncePerAttack: boolean;
+	declare cardHint: string;
+	declare cardHintWhen: Predicate;
 
 	/**
 	 * The fields every rule that uses a roll has, with the rule's own words, in
@@ -306,7 +336,13 @@ abstract class RollUseRule<
 			roll: rollFields(namespace),
 			when: whenFields(namespace),
 			cost: costFields(namespace),
+			note: noteFields(namespace),
 		};
+	}
+
+	/** The form group of the note on the card, which goes last. */
+	static noteFormGroup(): RuleFormGroup {
+		return { fields: ['cardHint', 'cardHintWhen'] };
 	}
 
 	/** The form groups of the fields that pick the rolls. */
@@ -353,6 +389,8 @@ abstract class RollUseRule<
 			['actionCost', 'number'],
 			['oncePerAttack', 'boolean'],
 			['reach', 'number'],
+			['cardHint', 'string'],
+			['cardHintWhen', 'object'],
 		];
 	}
 
@@ -390,6 +428,16 @@ abstract class RollUseRule<
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
 		return canPayRerollCost(this.actor, this.rerollCost);
+	}
+
+	/** The note this rule puts under its feature on the card for this roll. Empty for none. */
+	cardHintFor(context: RollUseContext): string {
+		const note = (this.cardHint ?? '').trim();
+		if (!note) return '';
+		const owner = this.actor as unknown as Parameters<typeof otherCreatureMatches>[1];
+		return otherCreatureMatches(this.cardHintWhen, owner, this.item.getDomain(), context.other)
+			? note
+			: '';
 	}
 
 	private checkKeys(kind: CheckRollKind): string[] {

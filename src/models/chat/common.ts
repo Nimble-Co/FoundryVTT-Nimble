@@ -166,6 +166,7 @@ export const incomingReactions = () => ({
 				initial: 'reroll',
 				choices: [...ROLL_USES],
 			}),
+			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			leftOut: new fields.SchemaField(
 				{
 					reason: new fields.StringField({

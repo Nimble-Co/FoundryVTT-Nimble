@@ -97,6 +97,8 @@ export interface IncomingReactionEntry {
 	oncePerAttack?: boolean;
 	/** reroll only: `change` for a Change a Die rule. Absent is `reroll`. */
 	use?: RollUse;
+	/** reroll only: the rule's note under the feature on the card. */
+	hint?: string;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
 	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */

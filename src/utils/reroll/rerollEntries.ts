@@ -47,6 +47,11 @@ interface RerollRuleLike {
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: { mode: 'set' | 'add'; amount: number };
+	cardHintFor?: (context: {
+		side: RerollSide;
+		roll: RollToReroll;
+		other: RerollingActor | null;
+	}) => string;
 }
 
 interface RerollingActor {
@@ -193,6 +198,7 @@ function collectRerollEntries(context: RerollRollContext): {
 				if (rule.offersRerollOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
 				if (!outcomeAllows(trigger, outcome)) continue;
+				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
 				const entry: IncomingReactionEntry = {
 					id: foundry.utils.randomID(),
@@ -209,6 +215,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
 					...(rule.type === CHANGE_DIE_RULE_TYPE ? { use: 'change' as const } : {}),
+					...(hint ? { hint } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
 

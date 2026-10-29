@@ -55,6 +55,7 @@ function schema() {
 		),
 		...shared.when,
 		...shared.cost,
+		...shared.note,
 		type: new fields.StringField({ required: true, nullable: false, initial: 'changeDie' }),
 	};
 }
@@ -75,6 +76,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(),
 		...RollUseRule.useFormGroups([{ fields: ['die', 'change', 'amount'] }]),
+		RollUseRule.noteFormGroup(),
 	];
 
 	declare die: ChangeDie;
