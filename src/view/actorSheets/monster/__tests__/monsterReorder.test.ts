@@ -18,6 +18,13 @@ const entries = [
 	entry('sight', { group: 'feature' }),
 ];
 
+/** The same, with a second sequence and its action Wing after Tail. */
+const twoSequences = [
+	...entries.slice(0, 4),
+	entry('second', { sequence: true }),
+	entry('wing', { parentId: 'second' }),
+];
+
 const sorts = (intent: ReturnType<typeof reorderIntent>) =>
 	intent.kind === 'reorder' ? intent.updates : [];
 
@@ -44,11 +51,19 @@ describe('dropPlace', () => {
 		});
 	});
 
-	it('never puts an attack sequence under another one', () => {
-		expect(dropPlace(entries, 'sequence', 'claw', true)).toBeNull();
-		expect(dropPlace(entries, 'sequence', 'bite', true)).toEqual({
+	it('drops an attack sequence only on another one, never in one or among the loose actions', () => {
+		expect(dropPlace(twoSequences, 'second', 'claw', true)).toBeNull();
+		expect(dropPlace(twoSequences, 'second', 'bite', false)).toBeNull();
+		expect(dropPlace(twoSequences, 'second', 'sequence', true)).toEqual({
 			position: 'above',
 			parentId: null,
+		});
+	});
+
+	it('nests an action dropped above a later sequence in the sequence before it, where the line is', () => {
+		expect(dropPlace(twoSequences, 'bite', 'second', true)).toEqual({
+			position: 'above',
+			parentId: 'sequence',
 		});
 	});
 
@@ -94,11 +109,11 @@ describe('reorderIntent', () => {
 	});
 
 	it('gives an attack sequence no parent', () => {
-		const place = dropPlace(entries, 'sequence', 'bite', true)!;
+		const place = dropPlace(twoSequences, 'second', 'sequence', true)!;
 
-		expect(sorts(reorderIntent(entries, 'sequence', 'bite', place))[0]).toEqual({
-			itemId: 'sequence',
-			sort: 0,
+		expect(sorts(reorderIntent(twoSequences, 'second', 'sequence', place))[1]).toEqual({
+			itemId: 'second',
+			sort: 10000,
 		});
 	});
 

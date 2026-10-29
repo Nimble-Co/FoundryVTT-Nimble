@@ -26,7 +26,6 @@ export type MonsterIntent =
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'openItem'; itemId: string }
 	| { kind: 'reorder'; updates: MonsterSortUpdate[] }
-	| { kind: 'dropItem'; data: Record<string, unknown> }
 	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }

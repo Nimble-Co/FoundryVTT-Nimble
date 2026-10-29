@@ -20,7 +20,8 @@ export interface DropPlace {
 
 /**
  * Where a drop on `targetId` puts the dragged ability, or null when it cannot go there.
- * Below an attack sequence an action nests in it; an attack sequence never goes under one.
+ * Loose actions show first, so a drop goes only where the ability then shows:
+ * an attack sequence drops only on another one, and an action below a sequence nests in it.
  */
 export function dropPlace(
 	entries: ReorderEntry[],
@@ -34,12 +35,16 @@ export function dropPlace(
 		return null;
 	}
 	if (dragged.sequence) {
-		return target.parentId ? null : { position: above ? 'above' : 'below', parentId: null };
+		return target.sequence ? { position: above ? 'above' : 'below', parentId: null } : null;
 	}
 	if (target.sequence) {
-		return above
-			? { position: 'above', parentId: null }
-			: { position: 'nest', parentId: target.id };
+		if (!above) return { position: 'nest', parentId: target.id };
+		// above a later sequence is the end of the sequence before it
+		const before = entries
+			.slice(0, entries.indexOf(target))
+			.filter((entry) => entry.group === target.group && entry.sequence)
+			.at(-1);
+		return { position: 'above', parentId: before?.id ?? null };
 	}
 	return { position: above ? 'above' : 'below', parentId: target.parentId };
 }

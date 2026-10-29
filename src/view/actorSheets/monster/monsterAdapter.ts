@@ -9,6 +9,7 @@ import {
 	IMPORT_CREDIT_FLAG,
 	type ImportCredit,
 } from '../../../import/importCredit.js';
+import { localizeAll } from '../shared/configLabels.ts';
 import {
 	conditionLike,
 	EFFECT_HOOKS,
@@ -18,6 +19,7 @@ import {
 	registerRedrawHooks,
 } from '../shared/documentLikes.ts';
 import { recoveryOf } from '../shared/poolRecovery.ts';
+import { portraitFlags } from '../shared/portrait.ts';
 import type {
 	MonsterActorLike,
 	MonsterItemPool,
@@ -41,7 +43,8 @@ function strings(values: unknown): string[] {
 	return [...((values as Iterable<string> | undefined) ?? [])];
 }
 
-function actorLike(actor: MonsterDocument): MonsterActorLike {
+/** The plain copy of the monster that the view functions read. */
+export function monsterActorLike(actor: MonsterDocument): MonsterActorLike {
 	const source = actor.reactive;
 	const system = source.system as unknown as AnyRecord & {
 		savingThrows: Record<string, { mod?: number; defaultRollMode?: number }>;
@@ -81,9 +84,7 @@ function actorLike(actor: MonsterDocument): MonsterActorLike {
 			currency: { ...(system.currency as Record<string, number>) },
 		},
 		flags: {
-			actorImageXOffset: Number(flags?.actorImageXOffset ?? 0),
-			actorImageYOffset: Number(flags?.actorImageYOffset ?? 0),
-			actorImageScale: Number(flags?.actorImageScale ?? 100),
+			...portraitFlags(flags),
 			automaticallyExecuteAvailableMacros: flags?.automaticallyExecuteAvailableMacros !== false,
 		},
 		items: source.items.map((item) => ({
@@ -112,10 +113,6 @@ function itemPools(actor: MonsterDocument): Record<string, MonsterItemPool[]> {
 	return byItem;
 }
 
-function localizeAll(keys: Record<string, string> | undefined): Record<string, string> {
-	return Object.fromEntries(Object.entries(keys ?? {}).map(([key, name]) => [key, localize(name)]));
-}
-
 function isEditable(actor: MonsterDocument): boolean {
 	if ((actor as unknown as { pack?: string | null }).pack) return false;
 	return actor.canUserModify?.(game.user as User.Implementation, 'update') ?? true;
@@ -135,7 +132,7 @@ export function createMonsterSource(actor: MonsterDocument, extras: MonsterSourc
 
 	return (): MonsterSource => {
 		subscribe();
-		const monster = actorLike(actor);
+		const monster = monsterActorLike(actor);
 		const flags = (actor.reactive.flags as AnyRecord)[SYSTEM_ID] as AnyRecord | undefined;
 		const context: MonsterSheetContext = {
 			localize: (key) => localize(key),

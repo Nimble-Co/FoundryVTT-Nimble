@@ -47,9 +47,8 @@ function mockActor() {
 }
 
 let actor: ReturnType<typeof mockActor>;
-const sheet = { dropItem: vi.fn() };
 const perform = (intent: MonsterIntent) =>
-	createMonsterPerform(actor as unknown as MonsterDocument, sheet)(intent);
+	createMonsterPerform(actor as unknown as MonsterDocument)(intent);
 
 beforeEach(() => {
 	actor = mockActor();
@@ -115,13 +114,6 @@ describe('createMonsterPerform', () => {
 		expect(actor.updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
 			{ _id: 'stab', sort: 0, 'system.parentItemId': null },
 		]);
-	});
-
-	it('sends a dropped item to the drop route of the sheet', async () => {
-		const data = { type: 'Item', uuid: 'Compendium.nimble.monsterFeatures.Item.bite' };
-		await perform({ kind: 'dropItem', data });
-
-		expect(sheet.dropItem).toHaveBeenCalledWith(data);
 	});
 
 	it('ends a toggle effect through the toggle lifecycle', async () => {

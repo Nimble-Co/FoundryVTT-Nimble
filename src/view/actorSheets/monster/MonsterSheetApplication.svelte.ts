@@ -94,8 +94,11 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 			sheet: this as unknown as foundry.applications.sheets.ActorSheetV2.Any,
 			data,
 		});
+		// only an ability has a card; other items land on the monster without one
 		const show = (rowId: string | null | undefined) => {
-			if (rowId) this.reveal({ tab: 'abilities', rowId, flash: true });
+			if (rowId && this.#actor.items.get(rowId)?.type === 'monsterFeature') {
+				this.reveal({ tab: 'abilities', rowId, flash: true });
+			}
 		};
 		switch (outcome.kind) {
 			case 'refused':
@@ -126,9 +129,7 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 				enrichedDescriptions: () => this.#descriptions.enriched,
 			}),
 			ui: this.#ui,
-			perform: createMonsterPerform(this.#actor, {
-				dropItem: (data) => this.#dropItem(data),
-			}),
+			perform: createMonsterPerform(this.#actor),
 		};
 		return { ...context, ...this.#props } as object as Awaited<
 			ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>
