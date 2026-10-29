@@ -13,16 +13,23 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 
 	let { turn, ui, perform, compact = false }: HeroTurnBoxProps = $props();
 
+	const PULSE_MS = 600;
+
 	let previous = untrack(() => turn.current);
 	let justSpent: number[] = $state([]);
+	let pulseTimer: ReturnType<typeof setTimeout> | undefined;
 
 	$effect(() => {
 		const current = turn.current;
 		if (current < previous) {
 			justSpent = Array.from({ length: previous - current }, (_, offset) => current + offset);
+			clearTimeout(pulseTimer);
+			pulseTimer = setTimeout(() => (justSpent = []), PULSE_MS);
 		}
 		previous = current;
 	});
+
+	$effect(() => () => clearTimeout(pulseTimer));
 
 	function endTurn() {
 		if (!turn.endTurn) return;
@@ -46,7 +53,6 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 					data-just-spent={justSpent.includes(index) || undefined}
 					disabled={ui.editing}
 					onclick={() => perform(cell.intent)}
-					onanimationend={() => (justSpent = justSpent.filter((spent) => spent !== index))}
 				></button>
 			{/each}
 			{#if turn.addAction}
