@@ -45,6 +45,17 @@ export type HeroIntent =
 	| { kind: 'endTurn' }
 	| { kind: 'rollAbilityCheck'; ability: AbilityKeyType }
 	| { kind: 'rollSave'; save: SaveKeyType }
-	| { kind: 'rollSkill'; skill: SkillKeyType };
+	| { kind: 'rollSkill'; skill: SkillKeyType }
+	| { kind: 'activate'; itemId: string }
+	| { kind: 'endToggle'; itemId: string; ruleId: string }
+	| { kind: 'openItem'; itemId: string }
+	| { kind: 'createItem'; itemType: 'spell' }
+	| { kind: 'setSpellsBy'; value: 'tier' | 'school' }
+	| { kind: 'unarmedStrike' }
+	| { kind: 'move' }
+	| { kind: 'assess'; option: string; skill: SkillKeyType }
+	| { kind: 'reaction'; reaction: 'defend' | 'interpose' | 'help' }
+	| { kind: 'opportunityAttack'; weaponId: string | null }
+	| { kind: 'spendDice'; itemId: string; ruleId: string; poolId: string; indices: number[] };
 
 export type HeroPerform = (intent: HeroIntent) => void | Promise<void>;

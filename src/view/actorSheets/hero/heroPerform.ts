@@ -6,12 +6,23 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
+import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
-import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
+import {
+	consumeCombatantAction,
+	requestAdvanceCombatTurn,
+} from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
+import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
+import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
+import { runAssess } from '#utils/heroicActions/assess.js';
+import { runMoveAction } from '#utils/heroicActions/move.js';
+import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
+import { rollUnarmedStrike } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
@@ -117,6 +128,44 @@ async function rollInitiative(actor: NimbleCharacter): Promise<void> {
 		} as PromptedInitiativeOptions);
 	} catch (_error) {
 		ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
+	}
+}
+
+async function spendDice(
+	actor: NimbleCharacter,
+	intent: Extract<HeroIntent, { kind: 'spendDice' }>,
+): Promise<void> {
+	const document = actor as unknown as Actor.Implementation;
+	const pool = getDicePools(document).find((entry) => entry.id === intent.poolId);
+	if (!pool) return;
+	const consumer = getDicePoolConsumers(document, pool).find(
+		(entry) => entry.itemId === intent.itemId && entry.ruleId === intent.ruleId,
+	);
+	if (!consumer) return;
+	await spendDicePool({ actor, pool, consumer, selectedIndices: intent.indices });
+}
+
+async function endToggle(actor: NimbleCharacter, itemId: string, ruleId: string): Promise<void> {
+	const item = actor.items.get(itemId);
+	if (!item) return;
+	const rule = findToggleEffectRuleById(
+		item as unknown as Parameters<typeof findToggleEffectRuleById>[0],
+		ruleId,
+	);
+	if (!rule) return;
+	await toggleEffectAE(
+		actor as unknown as Parameters<typeof toggleEffectAE>[0],
+		item as unknown as Parameters<typeof toggleEffectAE>[1],
+		rule,
+	);
+}
+
+/** Spec 6.6: an Unarmed Strike spends its action through the same path as `activateItem`. */
+async function unarmedStrike(actor: NimbleCharacter): Promise<void> {
+	if (!(await rollUnarmedStrike(actor))) return;
+	const found = combatantOf(actor.id);
+	if (found?.combatant.id) {
+		await consumeCombatantAction({ combat: found.combat, combatantId: found.combatant.id });
 	}
 }
 
@@ -231,6 +280,42 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				return;
 			case 'rollSkill':
 				await actor.rollSkillCheckToChat(intent.skill);
+				return;
+			case 'activate':
+				await actor.activateItem(intent.itemId);
+				return;
+			case 'endToggle':
+				await endToggle(actor, intent.itemId, intent.ruleId);
+				return;
+			case 'openItem':
+				await actor.items.get(intent.itemId)?.sheet?.render(true);
+				return;
+			case 'createItem':
+				await actor.createItem({
+					name: localize('NIMBLE.actorSheet.hero.spells.newSpell'),
+					type: intent.itemType,
+				} as Item.CreateData);
+				return;
+			case 'setSpellsBy':
+				await actor.setFlag(SYSTEM_ID as 'core', 'spellsBy' as never, intent.value as never);
+				return;
+			case 'spendDice':
+				await spendDice(actor, intent);
+				return;
+			case 'unarmedStrike':
+				await unarmedStrike(actor);
+				return;
+			case 'move':
+				await runMoveAction(actor);
+				return;
+			case 'assess':
+				await runAssess(actor, { optionId: intent.option, skillKey: intent.skill });
+				return;
+			case 'reaction':
+				await useChatReaction(actor, intent.reaction);
+				return;
+			case 'opportunityAttack':
+				await useOpportunityAttack(actor, intent.weaponId);
 				return;
 			default: {
 				const unknown: never = intent;

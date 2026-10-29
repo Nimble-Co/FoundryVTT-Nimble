@@ -126,6 +126,7 @@ describe('heroCoreTab', () => {
 			items: [
 				{
 					id: 'boots',
+					uuid: 'Actor.blankHero00000001.Item.boots',
 					name: 'Swift Boots',
 					img: '',
 					type: 'object',

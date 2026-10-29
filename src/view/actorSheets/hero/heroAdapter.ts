@@ -12,12 +12,19 @@ import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js'
 import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { getActiveCombatant } from '#utils/combat/combatTurnSync.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
+import { getUnarmedDamageFormula } from '#utils/damage/attackUtils.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import getLanguageName from '#utils/documents/getLanguageName.js';
+import {
+	getHeroicReactionAvailability,
+	HEROIC_REACTIONS,
+} from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
+import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import type { EffectLike, ItemLike, RuleLike } from '../shared/sheetSource.ts';
 import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
+import { heroItemStates } from './heroItemState.ts';
 import type {
 	HeroActorLike,
 	HeroCombatState,
@@ -38,7 +45,9 @@ function registerPoolHooks(listener: () => void): () => void {
 		on: (hook: string, listener: () => void) => number;
 		off: (hook: string, id: number) => void;
 	};
-	const ids = POOL_HOOKS.map((name) => [name, hooks.on(name, listener)] as const);
+	const ids = [...POOL_HOOKS, 'targetToken'].map(
+		(name) => [name, hooks.on(name, listener)] as const,
+	);
 	return () => {
 		for (const [name, id] of ids) hooks.off(name, id);
 	};
@@ -70,6 +79,7 @@ function itemLike(item: Item, actor: NimbleCharacter): ItemLike {
 	const rules = (item as unknown as { rules?: Map<string, AnyRecord> }).rules;
 	return {
 		id: item.id ?? '',
+		uuid: item.uuid ?? '',
 		name: item.name ?? '',
 		img: item.img ?? '',
 		type: item.type,
@@ -146,6 +156,7 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 			actorImageXOffset: Number(flags?.actorImageXOffset ?? 0),
 			actorImageYOffset: Number(flags?.actorImageYOffset ?? 0),
 			actorImageScale: Number(flags?.actorImageScale ?? 100),
+			spellsBy: flags?.spellsBy === 'school' ? 'school' : 'tier',
 		},
 		items: source.items.map((item) => itemLike(item, actor)),
 		effects: source.effects.map(effectLike),
@@ -172,6 +183,9 @@ function combatState(actor: NimbleCharacter): HeroCombatState | null {
 			pendingDelta: getCombatantPendingActionDelta(combatant),
 			mayAdd: mayAddAction(base, additional),
 		},
+		reactionsSpent: HEROIC_REACTIONS.filter(
+			(key) => !getHeroicReactionAvailability(combatant as Combatant.Implementation, key),
+		),
 	};
 }
 
@@ -185,6 +199,7 @@ function labels(actor: HeroActorLike, ancestryIdentifier: string | null) {
 		conditions: localizeAll(config.conditions ?? {}),
 		damageTypes: localizeAll(config.damageTypes ?? {}),
 		armorTypes: localizeAll(config.armorTypesPlural ?? {}),
+		spellSchools: localizeAll(config.spellSchools ?? {}),
 		languages: Object.fromEntries(
 			actor.system.proficiencies.languages.map((key) => [
 				key,
@@ -227,6 +242,11 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			chargePools: getChargePools(actor as unknown as Actor.Implementation).map((pool) => ({
 				...pool,
 			})),
+			itemState: heroItemStates(actor),
+			targets: getTargetedTokens(actor.id ?? '').map((token) => getTargetName(token)),
+			unarmedDamage: getUnarmedDamageFormula(
+				actor as unknown as Parameters<typeof getUnarmedDamageFormula>[0],
+			),
 		};
 		return { actor: hero, context };
 	};

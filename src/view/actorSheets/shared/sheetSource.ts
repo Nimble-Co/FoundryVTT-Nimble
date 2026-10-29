@@ -22,6 +22,7 @@ export interface RuleLike {
 
 export interface ItemLike {
 	id: string;
+	uuid: string;
 	name: string;
 	img: string;
 	type: string;
