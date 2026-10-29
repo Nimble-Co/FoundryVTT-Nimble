@@ -71,7 +71,6 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
-// Dependencies are grouped to allow tests to override them without relying on module mocking.
 /** One Primary Die Bonus on an attack, for its line on the card. */
 interface PrimaryDieBonusLine {
 	label: string;
@@ -111,6 +110,7 @@ function collectPrimaryDieBonuses(
 	return lines;
 }
 
+// Dependencies are grouped to allow tests to override them without relying on module mocking.
 const dependencies = {
 	NimbleRoll,
 	DamageRoll,
