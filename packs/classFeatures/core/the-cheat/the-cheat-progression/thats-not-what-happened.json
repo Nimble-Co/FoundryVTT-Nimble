@@ -6,7 +6,67 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "kDkMrmZLXxa3TTuJ",
+				"identifier": "thats-not-what-happened",
+				"label": "THAT'S Not What Happened! (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "changeDie",
+				"disabled": false,
+				"id": "PDi96dVPqpzRW3ty",
+				"identifier": "",
+				"label": "THAT'S Not What Happened!",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "target",
+				"reach": 0,
+				"die": "primaryDie",
+				"change": "set",
+				"amount": 1,
+				"otherCreature": {
+					"$and": [
+						"target:distracted"
+					]
+				},
+				"outcome": "hit",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "thats-not-what-happened",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 1,
+				"oncePerAttack": false,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
