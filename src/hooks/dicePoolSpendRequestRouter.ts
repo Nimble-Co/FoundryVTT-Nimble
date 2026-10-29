@@ -6,11 +6,18 @@ import localize from '#utils/localize.js';
 import { asRevealable, type RevealableSheet } from '#view/actorSheets/shared/revealable.js';
 
 interface ActorWithSheet {
-	items?: { get(id: string): { type?: string } | undefined };
+	items?: {
+		get(
+			id: string,
+		): { type?: string; system?: { objectType?: string; equipped?: boolean } } | undefined;
+	};
 	sheet?: { rendered?: boolean; render?: (force: boolean) => unknown } | null;
 }
 
-/** The new character sheet opens the choice step of the item row: a spell on Spells, else on Actions. */
+/**
+ * The new character sheet opens the choice step of the item row: a spell on Spells, an object
+ * other than an equipped weapon on the Inventory, else on Actions.
+ */
 function revealSpend(
 	actor: ActorWithSheet,
 	sheet: RevealableSheet,
@@ -24,8 +31,11 @@ function revealSpend(
 		);
 		return;
 	}
-	const isSpell = actor.items?.get(payload.itemId)?.type === 'spell';
-	sheet.reveal({ tab: isSpell ? 'spells' : 'actions', rowId: payload.itemId, step: 'choice' });
+	const item = actor.items?.get(payload.itemId);
+	const onActions =
+		item?.type !== 'object' || (item.system?.objectType === 'weapon' && item.system.equipped);
+	const tab = item?.type === 'spell' ? 'spells' : onActions ? 'actions' : 'inventory';
+	sheet.reveal({ tab, rowId: payload.itemId, step: 'choice' });
 }
 
 /**

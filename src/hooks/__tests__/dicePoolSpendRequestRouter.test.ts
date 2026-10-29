@@ -102,6 +102,21 @@ describe('dicePoolSpendRequestRouter', () => {
 			expect(reveal).toHaveBeenCalledWith({ tab: 'spells', rowId: 'item-tayg', step: 'choice' });
 		});
 
+		it.each([
+			[{ type: 'object', system: { objectType: 'misc' } }, 'inventory'],
+			[{ type: 'object', system: { objectType: 'weapon', equipped: false } }, 'inventory'],
+			[{ type: 'object', system: { objectType: 'weapon', equipped: true } }, 'actions'],
+		])('opens the row of %o on the tab that lists it: %s', (item, tab) => {
+			const reveal = vi.fn();
+			const items = new Map([['item-tayg', item]]);
+			fromUuidSync.mockReturnValue({ items, sheet: { reveal, rendered: true, render: vi.fn() } });
+			findRequestedPool.mockReturnValueOnce({ label: 'Fury Dice', faces: [4] });
+
+			fireRequest(payload());
+
+			expect(reveal).toHaveBeenCalledWith({ tab, rowId: 'item-tayg', step: 'choice' });
+		});
+
 		it('shows the empty pool note, and opens nothing', () => {
 			const reveal = vi.fn();
 			fromUuidSync.mockReturnValue({ sheet: { reveal, rendered: true, render: vi.fn() } });
