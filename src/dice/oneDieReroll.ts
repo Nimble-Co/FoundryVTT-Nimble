@@ -246,8 +246,9 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 		face,
 		options.draw ?? rollOneDieFace,
 	);
+	// A set value is final even on the face the die shows, so a bonus on it is not added.
 	const bonusNotAdded =
-		kept && changed.next !== changed.previous
+		kept && (change.mode === 'set' || changed.next !== changed.previous)
 			? (copy.primaryDieChanged?.(term, changed.next, change.mode) ?? 0)
 			: 0;
 

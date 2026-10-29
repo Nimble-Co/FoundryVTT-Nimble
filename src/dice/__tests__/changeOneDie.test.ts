@@ -111,7 +111,7 @@ describe('changeOneDie', () => {
 		expect(changed.thrown).toMatchObject({ formula: '1d8' });
 	});
 
-	it('leaves the bonus alone for a dropped die or a face that stays the same', async () => {
+	it('leaves the bonus alone for a dropped die', async () => {
 		const dropped = await changeOneDie(
 			fakeRoll(
 				[
@@ -126,7 +126,9 @@ describe('changeOneDie', () => {
 		);
 		expect(dropped.bonusNotAdded).toBe(0);
 		expect(copies[0].primaryDieChanged).not.toHaveBeenCalled();
+	});
 
+	it('makes a set value final also when the die already shows that face', async () => {
 		const same = await changeOneDie(
 			fakeRoll([{ result: 4 }]),
 			{ term: 0, result: 0 },
@@ -135,6 +137,20 @@ describe('changeOneDie', () => {
 				value: 4,
 			},
 		);
+		expect(same.bonusNotAdded).toBe(1);
+		expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 4, 'set');
+	});
+
+	it('changes nothing for an add that leaves the face the same', async () => {
+		const same = await changeOneDie(
+			fakeRoll([{ result: 8 }]),
+			{ term: 0, result: 0 },
+			{
+				mode: 'add',
+				value: 1,
+			},
+		);
 		expect(same.bonusNotAdded).toBe(0);
+		expect(copies[0].primaryDieChanged).not.toHaveBeenCalled();
 	});
 });
