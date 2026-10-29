@@ -26,7 +26,7 @@
 		"lint": "pnpm lint:svelte && biome lint ./src/ ./types/ ./lib/ ./storybook/",
 		"lint-fix": "pnpm lint:svelte-fix && biome lint --write ./src/ ./types/ ./lib/ ./storybook/",
 		"check:svelte": "svelte-check --tsconfig ./tsconfig.json",
-		"check:svelte-sheets": "svelte-check --tsconfig ./tsconfig.actorSheets.json",
+		"check:svelte-sheets": "node ./build/checkSvelteSheets.mjs",
 		"circular-deps": "depcruise --config .dependency-cruiser.cjs ./src/",
 		"type-check": "tsc --noEmit",
 		"check": "pnpm format && pnpm lint && pnpm circular-deps && pnpm type-check && pnpm test",

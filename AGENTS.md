@@ -40,6 +40,7 @@ System internals (read before touching the area):
 - [docs/system/rules.md](docs/system/rules.md) — Rules system architecture, lifecycle hooks, and the requirements a new rule type must meet to render in the Rules Builder
 - [docs/system/dice-engine.md](docs/system/dice-engine.md) — Dice engine, primary-die mechanics, and extension points
 - [docs/system/compendium-translation.md](docs/system/compendium-translation.md) — Babele integration, where compendium translation skeletons live, and how to regenerate them
+- [docs/system/actor-sheets.md](docs/system/actor-sheets.md): the new actor sheets (`src/view/actorSheets/`): view model, intents and `perform`, `reveal()`, parts and Storybook
 
 ## Quick Reference
 

@@ -26,3 +26,4 @@ User-facing documentation (how to play, run games, and homebrew content with the
 
 - [Dice Engine](./dice-engine.md) — how `DamageRoll` and the primary-die rules work, plus the extension points for new content
 - [Rules System](./rules.md) — how data-driven rules attached to items modify actors during data prep, and what's required to make a new rule type work in the Rules Builder UI
+- [Actor Sheets](./actor-sheets.md): how the new character and NPC sheets are built: the view model for each tab, intents and `perform`, `sheet.reveal()`, parts with plain props, and Storybook

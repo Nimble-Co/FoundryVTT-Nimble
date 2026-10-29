@@ -13,22 +13,18 @@ A tab can show a count badge. The Effects tab counts the conditions and active e
 The rail and the strip sit on the dark chrome (`nimble-chrome`).
 -->
 <script lang="ts">
+	import type { SheetTabsProps } from '#types/components/actorSheets/SheetTabs.d.ts';
 	import localize from '#utils/localize.js';
 	import type { SheetTab } from './types.ts';
 
-	interface Props {
-		tabs: SheetTab[];
-		/** the id of the selected tab */
-		value?: string;
-		onchange?: (id: string) => void;
-		layout?: 'top' | 'rail' | 'strip';
-		/** top: the layout for the width of a slot */
-		fit?: 'inline' | 'stacked' | 'icon';
-		/** default "Sheet tabs" */
-		label?: string;
-	}
-
-	let { tabs, value = $bindable(), onchange, layout = 'top', fit, label }: Props = $props();
+	let {
+		tabs,
+		value = $bindable(),
+		onchange,
+		layout = 'top',
+		fit,
+		label,
+	}: SheetTabsProps = $props();
 
 	function pick(id: string) {
 		value = id;

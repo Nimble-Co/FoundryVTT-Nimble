@@ -21,3 +21,9 @@
 		}
 	}
 }
+
+// The sheet fills the window: the rail reaches the edges.
+.nimble-actor-sheet > .window-content {
+	padding: 0;
+	overflow: hidden;
+}

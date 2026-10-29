@@ -5,23 +5,7 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 `size="sm"` is 26 px high. `iconOnly` is a 32 px square: give it `ariaLabel`.
 -->
 <script lang="ts">
-	interface Props {
-		variant?: 'secondary' | 'primary';
-		/** Font Awesome class before the label */
-		icon?: string;
-		label?: string;
-		size?: 'md' | 'sm';
-		iconOnly?: boolean;
-		ariaLabel?: string;
-		/** a toggle: true or false; leave it out for a plain button */
-		pressed?: boolean;
-		tooltip?: string;
-		/** the button stays visible but does nothing */
-		disabled?: boolean;
-		/** the window gives this button the focus when it opens */
-		autofocus?: boolean;
-		onclick?: () => void;
-	}
+	import type { ButtonProps } from '#types/components/actorSheets/Button.d.ts';
 
 	let {
 		variant = 'secondary',
@@ -35,7 +19,7 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 		disabled = false,
 		autofocus = false,
 		onclick,
-	}: Props = $props();
+	}: ButtonProps = $props();
 </script>
 
 <button

@@ -5,19 +5,9 @@ A secondary number that is always visible: armor, speed, and each other movement
 `warn` says the cause in words (for example "Slowed: halved"); the sheet does not change the number.
 -->
 <script lang="ts">
-	interface Props {
-		icon?: string;
-		label: string;
-		value: string | number;
-		variant?: 'box' | 'inline';
-		/** the cause of a change, in words */
-		warn?: string;
-		/** a bonus from an active effect, for example "+2" */
-		note?: string;
-		tooltip?: string;
-	}
+	import type { StatBoxProps } from '#types/components/actorSheets/StatBox.d.ts';
 
-	let { icon, label, value, variant = 'box', warn, note, tooltip }: Props = $props();
+	let { icon, label, value, variant = 'box', warn, note, tooltip }: StatBoxProps = $props();
 </script>
 
 <span class="stat" class:inline={variant === 'inline'} data-tooltip={tooltip}>

@@ -383,5 +383,18 @@
 	--nimble-pool-uses-color: hsl(300, 45%, 76%);
 	/** the share of a tone in a toned label; the rest is black **/
 	--nimble-ui-tone-mix: 45%;
+	/** the ability tab on the Core tab: the tone mixed into a base, and the ink on it **/
+	--nimble-ability-tab-tone-mix: 78%;
+	--nimble-ability-tab-base: #000;
+	--nimble-ability-tab-ink: #fff;
 	--nimble-mana-fill: linear-gradient(to right, hsl(207deg 47% 20%) 0%, hsl(212deg 47% 44%) 100%);
+	/** the same in both themes: ink on a solid fill, ink on a light tone, scrims over art, the action cells **/
+	--nimble-ui-fill-ink: #fff;
+	--nimble-ui-tone-ink: #181821;
+	--nimble-ui-scrim-soft: rgb(0 0 0 / 25%);
+	--nimble-ui-scrim: rgb(0 0 0 / 60%);
+	--nimble-ui-scrim-strong: rgb(0 0 0 / 80%);
+	--nimble-ui-action-cell: linear-gradient(hsl(139, 47%, 48%), hsl(139, 47%, 32%));
+	--nimble-ui-action-cell-edge: hsl(139, 40%, 26%);
+	--nimble-ui-end-turn: hsl(139, 47%, 28%);
 }

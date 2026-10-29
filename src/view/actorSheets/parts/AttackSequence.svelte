@@ -4,13 +4,9 @@ The note above the abilities that a monster uses in a set order: the attack sequ
 Bold names the abilities; a die chip marks a random roll. The abilities under it are `nested` AbilityCards.
 -->
 <script lang="ts">
-	import type { SequencePart } from './types.ts';
+	import type { AttackSequenceProps } from '#types/components/actorSheets/AttackSequence.d.ts';
 
-	interface Props {
-		parts?: SequencePart[];
-	}
-
-	let { parts = [] }: Props = $props();
+	let { parts = [] }: AttackSequenceProps = $props();
 </script>
 
 <div class="seq">

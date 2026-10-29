@@ -8,34 +8,11 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 - The range and the uses show on the right, with `RowCost`. `nested` indents the abilities of an attack sequence.
 -->
 <script lang="ts">
+	import type { AbilityCardProps } from '#types/components/actorSheets/AbilityCard.d.ts';
 	import localize from '#utils/localize.js';
 	import RowButton from './RowButton.svelte';
 	import RowCost from './RowCost.svelte';
 	import RowTile from './RowTile.svelte';
-	import type { RowUses } from './types.ts';
-
-	interface Props {
-		name: string;
-		/** the document art */
-		img?: string;
-		/** Font Awesome class, when there is no image */
-		icon?: string;
-		/** roll = d20, opens the roll window; chat = speech bubble, posts to chat */
-		kind?: 'roll' | 'chat';
-		range?: string;
-		uses?: RowUses;
-		description?: string;
-		/** indent under an attack sequence */
-		nested?: boolean;
-		/** the text is open; it starts open */
-		open?: boolean;
-		onuse?: () => void;
-		onedit?: () => void;
-		touch?: boolean;
-		/** just = you just used it; out = no uses left; both after the last use */
-		state?: 'just' | 'out' | 'just out';
-		id?: string;
-	}
 
 	let {
 		name,
@@ -52,7 +29,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		touch = false,
 		state,
 		id,
-	}: Props = $props();
+	}: AbilityCardProps = $props();
 
 	const roll = $derived(kind === 'roll');
 	const pid = $derived(id ? `${id}-text` : undefined);

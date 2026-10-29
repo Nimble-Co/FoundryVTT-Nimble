@@ -4,18 +4,9 @@ Two or three ways to show one list: one is on. It sits in the bar of a list tab,
 The Spells tab uses it: "By tier" and "By school". The choice changes only the groups, not the rows.
 -->
 <script lang="ts">
-	import type { ViewOption } from './types.ts';
+	import type { ViewSwitchProps } from '#types/components/actorSheets/ViewSwitch.d.ts';
 
-	interface Props {
-		options: ViewOption[];
-		/** the value of the option that is on */
-		value?: string;
-		/** what the switch changes, for a screen reader: "Group the spells" */
-		label: string;
-		onchange?: (value: string) => void;
-	}
-
-	let { options, value = $bindable(), label, onchange }: Props = $props();
+	let { options, value = $bindable(), label, onchange }: ViewSwitchProps = $props();
 	const on = $derived(value ?? options[0]?.value);
 
 	function pick(v: string) {
