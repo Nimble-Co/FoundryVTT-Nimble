@@ -4,6 +4,7 @@ import type { SkillKeyType } from '#types/skillKey.js';
 import type { HeroicReactionKey } from '#utils/incomingReactions/heroicActions.js';
 import type {
 	ChargePoolLike,
+	ConditionLike,
 	DicePoolLike,
 	EffectLike,
 	Format,
@@ -27,9 +28,9 @@ export interface HeroActorLike {
 		skills: Record<SkillKeyType, RolledValue>;
 		attributes: {
 			hp: { value: number; max: number; temp: number };
-			wounds: { value: number; max: number };
+			wounds: { value: number; max: number; bonus: number };
 			armor: { value: number };
-			initiative: RolledValue;
+			initiative: RolledValue & { bonuses: string };
 			movement: Record<string, number>;
 			sizeCategory: string;
 			hitDice: Record<string, { current: number; bonus?: number }>;
@@ -40,9 +41,23 @@ export interface HeroActorLike {
 			damageVulnerabilities: string[];
 		};
 		proficiencies: { languages: string[]; armor: string[]; weapons: string[] };
-		resources: { mana: { current: number; max: number; baseMax: number } };
+		resources: {
+			mana: { current: number; max: number; baseMax: number };
+			/** null: the tier comes from the spells that the hero has */
+			highestUnlockedSpellTier: number | null;
+			inspiration: boolean;
+		};
 		levelUpHistory: unknown[];
 		conditionImmunities: string[];
+		currency: Record<string, number>;
+		inventory: {
+			totalSlots: number;
+			usedSlots: number;
+			bonusSlots: number;
+			/** by container id, in the units of its capacity */
+			containerCapacityUsage: Record<string, number>;
+		};
+		details: { age: string; height: string; weight: string; gender: string; notes: string };
 	};
 	flags: {
 		showPassiveSkillScores?: boolean;
@@ -51,6 +66,12 @@ export interface HeroActorLike {
 		actorImageScale?: number;
 		/** the groups of the Spells tab; none = by tier */
 		spellsBy?: SpellsBy;
+		/** absent = on */
+		trackInventorySlots?: boolean;
+		/** absent = on */
+		includeCurrencyBulk?: boolean;
+		/** absent = on */
+		automaticallyExecuteAvailableMacros?: boolean;
 	};
 	items: ItemLike[];
 	effects: EffectLike[];
@@ -139,7 +160,11 @@ export interface HeroSheetContext {
 		languages: Record<string, string>;
 		armorTypes: Record<string, string>;
 		spellSchools: Record<string, string>;
+		/** the headings of the selection groups of a class; a group with no entry gets its key in Title Case */
+		featureGroups: Record<string, string>;
 	};
+	/** every condition of the system, A to Z, with the ones on the hero marked */
+	conditions: ConditionLike[];
 	/** skill key to the key of its ability */
 	skillAbilities: Partial<Record<SkillKeyType, AbilityKeyType>>;
 	dicePools: DicePoolLike[];

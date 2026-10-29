@@ -118,6 +118,7 @@ describe('itemRow', () => {
 			expect(view.cost.uses).toEqual([{ left: 0, max: 1, per: `${SHARED}.per.round`, need: 1 }]);
 			expect(view.fields).toEqual([
 				{
+					kind: 'uses',
 					poolId: 'p',
 					label: `${SHARED}.usesOf {"name":"Rage","pool":"Charges"}`,
 					value: 0,

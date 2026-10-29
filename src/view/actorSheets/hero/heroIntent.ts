@@ -54,7 +54,12 @@ export type HeroIntent =
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'endToggle'; itemId: string; ruleId: string }
 	| { kind: 'openItem'; itemId: string }
-	| { kind: 'createItem'; itemType: 'spell' }
+	| { kind: 'createItem'; itemType: 'spell' | 'object' | 'feature' }
+	| { kind: 'deleteItem'; itemId: string }
+	| { kind: 'toggleEquip'; itemId: string }
+	| { kind: 'setQuantity'; itemId: string; value: number }
+	| { kind: 'storeIn'; itemId: string; containerId: string }
+	| { kind: 'setCurrency'; coin: string; value: number }
 	| { kind: 'setSpellsBy'; value: SpellsBy }
 	| { kind: 'unarmedStrike' }
 	| { kind: 'move' }

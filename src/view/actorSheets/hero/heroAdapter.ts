@@ -15,14 +15,24 @@ import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { getUnarmedDamageFormula } from '#utils/damage/attackUtils.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import getLanguageName from '#utils/documents/getLanguageName.js';
+import { deriveDurationDetails, expandDurationLabel } from '#utils/formatDuration.js';
 import {
 	getHeroicReactionAvailability,
 	HEROIC_REACTIONS,
 } from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
+import prepareActorConditions, {
+	type ActorCondition,
+} from '#view/dataPreparationHelpers/prepareActorConditions.js';
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
-import type { EffectLike, ItemLike, RuleLike } from '../shared/sheetSource.ts';
+import {
+	TOGGLE_EFFECT_ITEM_ID_FLAG,
+	TOGGLE_EFFECT_RULE_ID_FLAG,
+} from '../../../models/rules/toggleEffect.js';
+import { CONDITIONS_CHANGED_HOOK } from '../../../settings/customConditionSettings.js';
+import { plainText } from '../shared/plainText.ts';
+import type { ConditionLike, EffectLike, ItemLike, RuleLike } from '../shared/sheetSource.ts';
 import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
 import { heroItemStates } from './heroItemState.ts';
 import type {
@@ -33,11 +43,16 @@ import type {
 	RolledValue,
 } from './heroSource.ts';
 
+/** Item effects and the condition list are not on `actor.reactive`, so these hooks redraw them. */
 const POOL_HOOKS = [
 	systemHookName('dicePool.changed'),
 	systemHookName('dicePool.refilled'),
 	systemHookName('chargePool.changed'),
 	systemHookName('chargePool.recovered'),
+	'createActiveEffect',
+	'updateActiveEffect',
+	'deleteActiveEffect',
+	CONDITIONS_CHANGED_HOOK,
 ];
 
 function registerPoolHooks(listener: () => void): () => void {
@@ -88,7 +103,32 @@ function itemLike(item: Item, actor: NimbleCharacter): ItemLike {
 	};
 }
 
-function effectLike(effect: ActiveEffect): EffectLike {
+type EffectDocument = ActiveEffect & {
+	parent?: { documentName?: string; id?: string | null } | null;
+	isTemporary?: boolean;
+	description?: string;
+	duration?: Parameters<typeof deriveDurationDetails>[0];
+};
+
+/** Same split as the old Conditions tab: an effect that no item keeps on is temporary. */
+function isTemporary(effect: EffectDocument, fromItem: boolean): boolean {
+	if (!fromItem) return true;
+	if (typeof effect.isTemporary === 'boolean') return effect.isTemporary;
+	const duration = effect.duration as { remaining?: number; rounds?: number } | undefined;
+	return (
+		typeof duration?.remaining === 'number' ||
+		(typeof duration?.rounds === 'number' && duration.rounds > 0)
+	);
+}
+
+function durationWords(label: string): string {
+	return label === '∞' ? '' : expandDurationLabel(label, (key) => localize(key));
+}
+
+function effectLike(effect: EffectDocument): EffectLike {
+	const itemId = effect.parent?.documentName === 'Item' ? (effect.parent.id ?? null) : null;
+	const ruleId = effect.getFlag?.(SYSTEM_ID as 'core', TOGGLE_EFFECT_RULE_ID_FLAG as never);
+	const toggleItemId = effect.getFlag?.(SYSTEM_ID as 'core', TOGGLE_EFFECT_ITEM_ID_FLAG as never);
 	return {
 		id: effect.id ?? '',
 		name: effect.name ?? '',
@@ -96,6 +136,26 @@ function effectLike(effect: ActiveEffect): EffectLike {
 		disabled: effect.disabled === true,
 		statuses: [...(effect.statuses ?? [])],
 		origin: (effect.origin as string | null) ?? null,
+		itemId,
+		toggle:
+			typeof ruleId === 'string'
+				? { itemId: typeof toggleItemId === 'string' ? toggleItemId : '', ruleId }
+				: null,
+		temporary: isTemporary(effect, !!itemId || !!effect.origin),
+		duration: durationWords(deriveDurationDetails(effect.duration).label),
+		description: plainText(effect.description ?? ''),
+	};
+}
+
+function conditionLike(condition: ActorCondition): ConditionLike {
+	return {
+		id: condition.id,
+		name: condition.name,
+		img: condition.img,
+		active: condition.active,
+		description: plainText(condition.descriptionHtml),
+		duration: durationWords(condition.durationLabel),
+		source: condition.active ? condition.sourceLabel : '',
 	};
 }
 
@@ -127,11 +187,16 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 			skills: rolled(system.skills),
 			attributes: {
 				hp: { ...attributes.hp },
-				wounds: { ...attributes.wounds },
+				wounds: {
+					value: attributes.wounds.value,
+					max: attributes.wounds.max,
+					bonus: attributes.wounds.bonus ?? 0,
+				},
 				armor: { value: attributes.armor.value },
 				initiative: {
 					mod: attributes.initiative.mod ?? 0,
 					defaultRollMode: attributes.initiative.defaultRollMode ?? 0,
+					bonuses: attributes.initiative.bonuses ?? '',
 				},
 				movement: { ...attributes.movement },
 				sizeCategory: attributes.sizeCategory,
@@ -147,9 +212,27 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 				armor: [...(system.proficiencies.armor ?? [])],
 				weapons: [...(system.proficiencies.weapons ?? [])],
 			},
-			resources: { mana: { ...system.resources.mana } },
+			resources: {
+				mana: { ...system.resources.mana },
+				highestUnlockedSpellTier: system.resources.highestUnlockedSpellTier ?? null,
+				inspiration: system.resources.inspiration === true,
+			},
 			levelUpHistory: [...(system.levelUpHistory ?? [])],
 			conditionImmunities: [...(system.conditionImmunities ?? [])],
+			currency: { ...system.currency },
+			inventory: {
+				totalSlots: system.inventory.totalSlots ?? 0,
+				usedSlots: system.inventory.usedSlots ?? 0,
+				bonusSlots: system.inventory.bonusSlots ?? 0,
+				containerCapacityUsage: { ...(system.inventory.containerCapacityUsage ?? {}) },
+			},
+			details: {
+				age: system.details.age ?? '',
+				height: system.details.height ?? '',
+				weight: system.details.weight ?? '',
+				gender: system.details.gender ?? '',
+				notes: system.details.notes ?? '',
+			},
 		},
 		flags: {
 			showPassiveSkillScores: flags?.showPassiveSkillScores === true,
@@ -157,9 +240,15 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 			actorImageYOffset: Number(flags?.actorImageYOffset ?? 0),
 			actorImageScale: Number(flags?.actorImageScale ?? 100),
 			spellsBy: flags?.spellsBy === 'school' ? 'school' : 'tier',
+			trackInventorySlots: flags?.trackInventorySlots !== false,
+			includeCurrencyBulk: flags?.includeCurrencyBulk !== false,
+			automaticallyExecuteAvailableMacros: flags?.automaticallyExecuteAvailableMacros !== false,
 		},
 		items: source.items.map((item) => itemLike(item, actor)),
-		effects: source.effects.map(effectLike),
+		// item effects live on their item, so `actor.effects` alone would leave them out
+		effects: [...actor.allApplicableEffects()].map((effect) =>
+			effectLike(effect as EffectDocument),
+		),
 	};
 }
 
@@ -200,6 +289,7 @@ function labels(actor: HeroActorLike, ancestryIdentifier: string | null) {
 		damageTypes: localizeAll(config.damageTypes ?? {}),
 		armorTypes: localizeAll(config.armorTypesPlural ?? {}),
 		spellSchools: localizeAll(config.spellSchools ?? {}),
+		featureGroups: localizeAll(config.featureGroupHeadings ?? {}),
 		languages: Object.fromEntries(
 			actor.system.proficiencies.languages.map((key) => [
 				key,
@@ -232,6 +322,9 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			manaFromInitiative: extras.manaFromInitiative(),
 			missingLevelSelections: extras.missingLevelSelections(),
 			labels: labels(hero, actor.ancestry?.identifier ?? null),
+			conditions: prepareActorConditions(actor as unknown as Actor.Implementation, {
+				includeInactive: true,
+			}).map(conditionLike),
 			skillAbilities: {
 				...(CONFIG.NIMBLE.defaultSkillAbilities as HeroSheetContext['skillAbilities']),
 			},

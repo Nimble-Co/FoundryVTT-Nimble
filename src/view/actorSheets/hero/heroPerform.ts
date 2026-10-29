@@ -169,6 +169,23 @@ async function endTurn(actor: NimbleCharacter): Promise<void> {
 	ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 }
 
+const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemType'], string> = {
+	spell: 'NIMBLE.actorSheet.hero.spells.newSpell',
+	object: 'NIMBLE.actorSheet.hero.inventory.newObject',
+	feature: 'NIMBLE.actorSheet.hero.features.newFeature',
+};
+
+/** A stored stack that grows must still fit in its container. */
+async function setQuantity(actor: NimbleCharacter, itemId: string, value: number): Promise<void> {
+	const item = actor.items.get(itemId);
+	if (!item) return;
+	if ((item.system as { containerId?: string }).containerId) {
+		await actor.updateStoredObjectQuantity(itemId, value);
+		return;
+	}
+	await actor.updateItem(itemId, { 'system.quantity': value });
+}
+
 /** The one place where the character sheet acts on Foundry. */
 export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 	const document = actor as unknown as Actor.Implementation;
@@ -280,9 +297,30 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				return;
 			case 'createItem':
 				await actor.createItem({
-					name: localize('NIMBLE.actorSheet.hero.spells.newSpell'),
+					name: localize(NEW_ITEM_NAMES[intent.itemType]),
 					type: intent.itemType,
 				} as Item.CreateData);
+				return;
+			case 'deleteItem':
+				await actor.deleteItem(intent.itemId);
+				return;
+			case 'toggleEquip':
+				await (
+					actor.items.get(intent.itemId) as { toggleEquipment?: () => Promise<unknown> } | undefined
+				)?.toggleEquipment?.();
+				return;
+			case 'setQuantity':
+				await setQuantity(actor, intent.itemId, intent.value);
+				return;
+			case 'storeIn':
+				if (intent.containerId) await actor.storeItemInContainer(intent.itemId, intent.containerId);
+				else await actor.removeItemFromContainer(intent.itemId);
+				return;
+			case 'setCurrency':
+				await actor.update({ [`system.currency.${intent.coin}`]: intent.value } as Record<
+					string,
+					unknown
+				>);
 				return;
 			case 'setSpellsBy':
 				await actor.setFlag(SYSTEM_ID as 'core', 'spellsBy' as never, intent.value as never);

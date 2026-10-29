@@ -79,9 +79,9 @@ export function blankHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike
 			},
 			attributes: {
 				hp: { value: 20, max: 20, temp: 0 },
-				wounds: { value: 0, max: 6 },
+				wounds: { value: 0, max: 6, bonus: 0 },
 				armor: { value: 2 },
-				initiative: rolled(2),
+				initiative: { ...rolled(2), bonuses: '' },
 				movement: { walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 },
 				sizeCategory: 'medium',
 				hitDice: { '12': { current: 1 } },
@@ -92,9 +92,16 @@ export function blankHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike
 				damageVulnerabilities: [],
 			},
 			proficiencies: { languages: ['common'], armor: [], weapons: ['All STR Weapons'] },
-			resources: { mana: { current: 0, max: 0, baseMax: 0 } },
+			resources: {
+				mana: { current: 0, max: 0, baseMax: 0 },
+				highestUnlockedSpellTier: null,
+				inspiration: false,
+			},
 			levelUpHistory: [],
 			conditionImmunities: [],
+			currency: { cp: 0, sp: 0, gp: 0 },
+			inventory: { totalSlots: 10, usedSlots: 0, bonusSlots: 0, containerCapacityUsage: {} },
+			details: { age: '', height: '', weight: '', gender: '', notes: '' },
 		},
 		flags: {},
 		items: [
@@ -138,6 +145,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			languages: { common: 'Common' },
 			armorTypes: { leather: 'Leather', mail: 'Mail', shield: 'Shields' },
 			spellSchools: { fire: 'Fire', ice: 'Ice', lightning: 'Lightning', radiant: 'Radiant' },
+			featureGroups: { 'savage-arsenal': 'Savage Arsenal' },
 		},
 		skillAbilities: {
 			arcana: 'intelligence',
@@ -151,6 +159,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			perception: 'will',
 			stealth: 'dexterity',
 		},
+		conditions: [],
 		dicePools: [],
 		chargePools: [],
 		itemState: {},
@@ -360,4 +369,73 @@ export function dicePoolContext(overrides?: Partial<HeroSheetContext>): HeroShee
 
 export function itemState(overrides: Partial<HeroItemState> = {}): HeroItemState {
 	return { actionCost: 0, pools: [], gate: null, toggle: null, diceConsumers: [], ...overrides };
+}
+
+export function objectItem(
+	id: string,
+	name: string,
+	options: {
+		objectType?: string;
+		quantity?: number;
+		containerId?: string;
+		equipped?: boolean;
+		capacity?: number | null;
+		rules?: ItemLike['rules'];
+		description?: string;
+	} = {},
+): ItemLike {
+	return heroItem({
+		id,
+		type: 'object',
+		name,
+		system: {
+			objectType: options.objectType ?? 'misc',
+			quantity: options.quantity ?? 1,
+			containerId: options.containerId ?? '',
+			equipped: options.equipped ?? false,
+			description: { public: options.description ?? '' },
+			container:
+				options.capacity === undefined
+					? { enabled: false, capacity: null, requiresEquipped: false }
+					: { enabled: true, capacity: options.capacity, requiresEquipped: false },
+			activation: activation({ type: 'none' }),
+		},
+		rules: options.rules ?? [],
+	});
+}
+
+/**
+ * A level 1 Berserker with a backpack (rope and rations in it, 6 of 10 used), an empty pouch,
+ * a sword, armor, a shield, potions and torches, and coins.
+ */
+export function containerHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({
+		id: 'containerHero0001',
+		name: 'Container Hero',
+		system: {
+			currency: { cp: 30, sp: 4, gp: 12 },
+			inventory: {
+				totalSlots: 13,
+				usedSlots: 9,
+				containerCapacityUsage: { backpack: 6, pouch: 0 },
+			},
+		},
+	});
+	hero.items = [
+		...hero.items,
+		weaponItem('longsword', 'Longsword'),
+		objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }),
+		objectItem('shield', 'Wooden Shield', { objectType: 'shield' }),
+		objectItem('potion', 'Healing Potion', { objectType: 'consumable', quantity: 2 }),
+		objectItem('torch', 'Torch', { quantity: 3 }),
+		objectItem('backpack', 'Backpack', { capacity: 10 }),
+		objectItem('pouch', 'Pouch', { capacity: 2 }),
+		objectItem('rope', 'Rope', { containerId: 'backpack' }),
+		objectItem('rations', 'Rations', {
+			objectType: 'consumable',
+			quantity: 5,
+			containerId: 'backpack',
+		}),
+	];
+	return merge<HeroActorLike>(hero, overrides);
 }

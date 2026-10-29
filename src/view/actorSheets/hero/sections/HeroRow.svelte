@@ -39,18 +39,30 @@ In edit mode the row does not act: the numbers of its pools are fields. You can 
 </script>
 
 {#snippet fields()}
-	{#each row.fields as field (field.poolId)}
+	{#each row.fields as field (field.kind === 'uses' ? field.poolId : 'quantity')}
 		<span class="us">
-			<InlineNumber
-				value={field.value}
-				label={field.label}
-				min={0}
-				max={field.max}
-				dotted
-				width="22px"
-				variant="cost"
-				onchange={(value) => perform({ kind: 'setPoolCharges', poolId: field.poolId, value })}
-			/><span class="mx">/{field.max}</span>{#if field.per}<small>{field.per}</small>{/if}
+			{#if field.kind === 'quantity'}
+				<span class="mx">x</span><InlineNumber
+					value={field.value}
+					label={field.label}
+					min={0}
+					dotted
+					width="22px"
+					variant="cost"
+					onchange={(value) => perform({ kind: 'setQuantity', itemId: field.itemId, value })}
+				/>
+			{:else}
+				<InlineNumber
+					value={field.value}
+					label={field.label}
+					min={0}
+					max={field.max}
+					dotted
+					width="22px"
+					variant="cost"
+					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: field.poolId, value })}
+				/><span class="mx">/{field.max}</span>{#if field.per}<small>{field.per}</small>{/if}
+			{/if}
 		</span>
 	{/each}
 {/snippet}

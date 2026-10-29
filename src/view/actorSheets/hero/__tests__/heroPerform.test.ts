@@ -83,14 +83,22 @@ const ACTOR_METHODS = [
 	'activateItem',
 	'createItem',
 	'setFlag',
+	'deleteItem',
+	'updateItem',
+	'updateStoredObjectQuantity',
+	'storeItemInContainer',
+	'removeItemFromContainer',
 ] as const;
 
 const item = { id: 'rage', sheet: { render: vi.fn() } };
+const torch = { id: 'torch', system: { containerId: '' }, toggleEquipment: vi.fn() };
+const rope = { id: 'rope', system: { containerId: 'backpack' } };
+const items = [item, torch, rope];
 
 function mockActor() {
 	const actor: Record<string, unknown> = {
 		id: 'hero1',
-		items: { get: (id: string) => (id === item.id ? item : undefined) },
+		items: { get: (id: string) => items.find((entry) => entry.id === id) },
 	};
 	for (const method of ACTOR_METHODS) actor[method] = vi.fn();
 	return actor as Record<(typeof ACTOR_METHODS)[number], ReturnType<typeof vi.fn>> & {
@@ -344,6 +352,54 @@ describe('createHeroPerform', () => {
 				name: 'New Spell',
 				type: 'spell',
 			});
+		});
+
+		it.each([
+			['object', 'New Object'],
+			['feature', 'New Feature'],
+		] as const)('creates an item of type %s', async (itemType, name) => {
+			await perform({ kind: 'createItem', itemType });
+
+			expect(actor.createItem).toHaveBeenCalledWith({ name, type: itemType });
+		});
+
+		it('deletes an item', async () => {
+			await perform({ kind: 'deleteItem', itemId: 'torch' });
+
+			expect(actor.deleteItem).toHaveBeenCalledWith('torch');
+		});
+
+		it('equips an object or puts it away through toggleEquipment', async () => {
+			await perform({ kind: 'toggleEquip', itemId: 'torch' });
+
+			expect(torch.toggleEquipment).toHaveBeenCalledOnce();
+		});
+
+		it('sets the quantity of a loose object', async () => {
+			await perform({ kind: 'setQuantity', itemId: 'torch', value: 4 });
+
+			expect(actor.updateItem).toHaveBeenCalledWith('torch', { 'system.quantity': 4 });
+		});
+
+		it('sets the quantity of a stored object through the capacity check', async () => {
+			await perform({ kind: 'setQuantity', itemId: 'rope', value: 4 });
+
+			expect(actor.updateStoredObjectQuantity).toHaveBeenCalledWith('rope', 4);
+			expect(actor.updateItem).not.toHaveBeenCalled();
+		});
+
+		it('stores an object in a container, and takes it out with Loose', async () => {
+			await perform({ kind: 'storeIn', itemId: 'torch', containerId: 'backpack' });
+			await perform({ kind: 'storeIn', itemId: 'rope', containerId: '' });
+
+			expect(actor.storeItemInContainer).toHaveBeenCalledWith('torch', 'backpack');
+			expect(actor.removeItemFromContainer).toHaveBeenCalledWith('rope');
+		});
+
+		it('sets a coin value', async () => {
+			await perform({ kind: 'setCurrency', coin: 'gp', value: 15 });
+
+			expect(actor.update).toHaveBeenCalledWith({ 'system.currency.gp': 15 });
 		});
 
 		it('saves how the Spells tab groups the spells', async () => {

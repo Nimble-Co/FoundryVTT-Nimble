@@ -222,6 +222,31 @@
 					"newSpell": "New Spell",
 					"none": "No spells",
 					"noSchool": "No school"
+				},
+				"features": {
+					"create": "Create Feature",
+					"newFeature": "New Feature"
+				},
+				"inventory": {
+					"create": "Create Object",
+					"newObject": "New Object",
+					"none": "No objects",
+					"empty": "Empty",
+					"capacity": "{used} / {capacity}",
+					"overCapacity": "Over its capacity: {used} / {capacity}",
+					"quantity": "x{count}",
+					"quantityOf": "Quantity of {name}",
+					"storeIn": "Store {name} in",
+					"loose": "Loose",
+					"slots": "SLOTS {used} / {total}",
+					"slotsLabel": "Inventory slots",
+					"overSlots": "You are over your inventory slot limit: {used} / {total}.",
+					"coinsLabel": "Coins",
+					"coin": "{coin} coins",
+					"facts": {
+						"quantity": "Quantity",
+						"storedIn": "Stored in"
+					}
 				}
 			},
 			"shared": {
@@ -237,6 +262,9 @@
 				"usesLeft": "{left} of {max} left.",
 				"usesBack": "{left} of {max} left. They come back each {per}.",
 				"usesOf": "{pool} of {name}",
+				"delete": "Delete",
+				"deleteName": "Delete {name}",
+				"deleteQuestion": "Delete {name}? It leaves the sheet.",
 				"per": {
 					"round": "round",
 					"encounter": "encounter",
