@@ -1,18 +1,28 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-const { removeMarkEffect } = vi.hoisted(() => ({
-	removeMarkEffect: vi.fn(async () => undefined),
-}));
-
-vi.mock('../markTargetEffects.js', async (importOriginal) => ({
-	...(await importOriginal<typeof import('../markTargetEffects.js')>()),
-	removeMarkEffect,
-}));
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SYSTEM_ID } from '#system';
-import { endEncounterMarks, endMarkOfRemovedMarker } from '../markLifecycle.js';
 import { MARK_TARGET_ITEM_FLAG } from '../markTargetEffects.js';
 import { TOGGLED_EFFECTS_FLAG_KEY, type ToggledEffectsFlag } from '../toggledEffects.js';
+
+const removeMarkEffect = vi.fn(async () => undefined);
+
+type Lifecycle = typeof import('../markLifecycle.js');
+let endEncounterMarks: Lifecycle['endEncounterMarks'];
+let endMark: Lifecycle['endMark'];
+let endMarkOfRemovedMarker: Lifecycle['endMarkOfRemovedMarker'];
+let markerEffectIds: Lifecycle['markerEffectIds'];
+let marksOfItem: Lifecycle['marksOfItem'];
+
+// The actor document imports markLifecycle, so test setup has it cached with the real relay.
+beforeAll(async () => {
+	vi.resetModules();
+	vi.doMock('../markTargetEffects.js', async (importOriginal) => ({
+		...(await importOriginal<typeof import('../markTargetEffects.js')>()),
+		removeMarkEffect,
+	}));
+	({ endEncounterMarks, endMark, endMarkOfRemovedMarker, markerEffectIds, marksOfItem } =
+		await import('../markLifecycle.js'));
+});
 
 const goblin = { actorUuid: 'Actor.goblin', tokenUuid: 'Scene.s.Token.goblin', name: 'Goblin' };
 const ogre = { actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre' };
@@ -149,5 +159,57 @@ describe('endMarkOfRemovedMarker', () => {
 		await endMarkOfRemovedMarker(marker('Item.mark') as never);
 
 		expect(owner.setFlag).not.toHaveBeenCalled();
+	});
+});
+
+describe('endMark', () => {
+	function markingItem(owner: ReturnType<typeof createOwner>) {
+		return {
+			uuid: 'Item.exploit',
+			actor: owner,
+			rules: new Map([['r1', markRule('exploit-weakness', 'Item.exploit', true)]]),
+		};
+	}
+
+	it("ends one mark of the item: the owner's record and the marker on the creature", async () => {
+		const owner = createOwner({ 'exploit-weakness': [goblin, ogre], quarry: [goblin] });
+		const goblinActor = { uuid: 'Actor.goblin' };
+		documents['Scene.s.Token.goblin'] = { actor: goblinActor };
+
+		await endMark(markingItem(owner) as never, goblin);
+
+		expect(owner.stored).toEqual({ 'exploit-weakness': [ogre], quarry: [goblin] });
+		expect(removeMarkEffect).toHaveBeenCalledWith({
+			target: goblinActor,
+			sourceItemUuid: 'Item.exploit',
+		});
+	});
+
+	it('lists the marks the item holds now', () => {
+		const owner = createOwner({ 'exploit-weakness': [goblin, ogre], quarry: [goblin] });
+		expect(marksOfItem(markingItem(owner) as never)).toEqual([goblin, ogre]);
+	});
+});
+
+describe('markerEffectIds', () => {
+	function effect(id: string, statuses: string[], itemUuid?: string) {
+		return {
+			id,
+			statuses: new Set(statuses),
+			getFlag: (scope: string, key: string) =>
+				scope === SYSTEM_ID && key === MARK_TARGET_ITEM_FLAG ? itemUuid : undefined,
+		};
+	}
+
+	it('gives the marker effects that show the status, and no other effect', () => {
+		const actor = {
+			effects: [
+				effect('a', ['marked'], 'Item.exploit'),
+				effect('b', ['marked'], 'Item.mark'),
+				effect('c', ['marked']),
+				effect('d', ['dazed'], 'Item.other'),
+			],
+		};
+		expect(markerEffectIds(actor, 'marked')).toEqual(['a', 'b']);
 	});
 });

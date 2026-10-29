@@ -65,22 +65,16 @@ export async function endEncounterMarks(owner: MarkOwner): Promise<void> {
 	}
 }
 
-/**
- * Ends the mark a marker effect stands for, when someone takes the marker off
- * the creature by hand. A mark that is already gone changes nothing.
- */
-export async function endMarkOfRemovedMarker(effect: MarkerEffect): Promise<void> {
-	const itemUuid = effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG);
-	const markedUuid = effect.parent?.uuid;
-	if (typeof itemUuid !== 'string' || !markedUuid) return;
+interface MarkingItem {
+	uuid: string;
+	actor?: MarkOwner | null;
+	rules?: Map<string, MarkRuleLike>;
+}
 
-	const item = fromUuidSync(itemUuid as Parameters<typeof fromUuidSync>[0]) as {
-		actor?: MarkOwner | null;
-		rules?: Map<string, MarkRuleLike>;
-	} | null;
-	const owner = item?.actor;
+/** Takes the marked creature out of the item's marks on its owner. */
+async function dropMark(item: MarkingItem, markedUuid: string): Promise<void> {
+	const owner = item.actor;
 	if (!owner) return;
-
 	const flag: ToggledEffectsFlag = { ...readToggledEffects(owner) };
 	let changed = false;
 	for (const rule of markRules(item.rules?.values())) {
@@ -92,6 +86,58 @@ export async function endMarkOfRemovedMarker(effect: MarkerEffect): Promise<void
 		changed = true;
 	}
 	if (changed) await owner.setFlag(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, flag);
+}
+
+/** The creatures the item's Mark Target rules mark now, each one time. */
+export function marksOfItem(item: MarkingItem): ToggledTargetEntry[] {
+	const owner = item.actor;
+	if (!owner) return [];
+	const flag = readToggledEffects(owner);
+	const marks = new Map<string, ToggledTargetEntry>();
+	for (const rule of markRules(item.rules?.values())) {
+		for (const entry of (rule.flagKey && flag[rule.flagKey]) || []) {
+			if (!marks.has(entry.actorUuid)) marks.set(entry.actorUuid, entry);
+		}
+	}
+	return [...marks.values()];
+}
+
+/**
+ * Ends one mark of the item: the owner's record of it, and the marker on the
+ * creature. The owner of the marking actor can do this; the GM takes the
+ * marker off when the player does not own the creature.
+ */
+export async function endMark(item: MarkingItem, entry: ToggledTargetEntry): Promise<void> {
+	await dropMark(item, entry.actorUuid);
+	const target = await markedActor(entry);
+	if (target) await removeMarkEffect({ target, sourceItemUuid: item.uuid });
+}
+
+export interface MarkedActor {
+	effects: Iterable<MarkerEffect & { id: string; statuses?: Set<string> }>;
+}
+
+/** Ids of the marker effects on the actor that show the status. */
+export function markerEffectIds(actor: MarkedActor, statusId: string): string[] {
+	const ids: string[] = [];
+	for (const effect of actor.effects) {
+		if (!effect.statuses?.has(statusId)) continue;
+		if (typeof effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG) === 'string') ids.push(effect.id);
+	}
+	return ids;
+}
+
+/**
+ * Ends the mark a marker effect stands for, when someone takes the marker off
+ * the creature by hand. A mark that is already gone changes nothing.
+ */
+export async function endMarkOfRemovedMarker(effect: MarkerEffect): Promise<void> {
+	const itemUuid = effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG);
+	const markedUuid = effect.parent?.uuid;
+	if (typeof itemUuid !== 'string' || !markedUuid) return;
+
+	const item = fromUuidSync(itemUuid as Parameters<typeof fromUuidSync>[0]) as MarkingItem | null;
+	if (item) await dropMark(item, markedUuid);
 }
 
 let registered = false;

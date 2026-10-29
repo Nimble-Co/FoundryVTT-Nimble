@@ -9,6 +9,7 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
+import { type MarkedActor, markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
@@ -1228,11 +1229,22 @@ class NimbleBaseActor<
 	 * Concentration is the one condition an actor can hold more than one of, and
 	 * core's toggle deletes every unlinked match in a single call. Turning it off
 	 * while two tracks are held asks which to end instead of ending both.
+	 *
+	 * Mark Target markers show their status but core looks only for the
+	 * status's own effect, so turning the status off takes the markers off too.
 	 */
 	override async toggleStatusEffect(
 		statusId: string,
 		options: Actor.ToggleStatusEffectOptions = {},
 	): Promise<ActiveEffect.Implementation | boolean | undefined> {
+		const markers = markerEffectIds(this as object as MarkedActor, statusId);
+		if (markers.length > 0) {
+			if (options.active === true) return true;
+			await this.deleteEmbeddedDocuments('ActiveEffect', markers);
+			await super.toggleStatusEffect(statusId, { ...options, active: false });
+			return false;
+		}
+
 		if (statusId !== STATUS_EFFECT_IDS.concentration) {
 			return super.toggleStatusEffect(statusId, options);
 		}

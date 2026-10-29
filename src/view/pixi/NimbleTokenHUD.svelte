@@ -1,5 +1,6 @@
 <script>
 	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
+	import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 	import localize from '../../utils/localize.js';
 
 	const { HUD } = $props();
@@ -31,9 +32,10 @@
 			}, []);
 
 			if (existing.length) removals.push(...existing);
+			removals.push(...markerEffectIds(HUD.actor, condition.id));
 		}
 
-		await HUD.actor.deleteEmbeddedDocuments('ActiveEffect', removals);
+		await HUD.actor.deleteEmbeddedDocuments('ActiveEffect', [...new Set(removals)]);
 	}
 
 	// configureStatusEffects() rebuilds CONFIG.statusEffects in place, so the array identity never
