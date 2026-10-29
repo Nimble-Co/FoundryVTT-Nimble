@@ -42,7 +42,7 @@ function levelAuditKey(actor: NimbleCharacter): string {
 	return `${characterClass.identifier}:${characterClass.system.classLevel}:${sources}`;
 }
 
-/** The new character sheet. Not registered yet: Storybook and the tests show it. */
+/** The new character sheet. It is a second choice in the sheet selector until the switch. */
 export default class HeroSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
