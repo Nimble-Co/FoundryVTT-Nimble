@@ -353,6 +353,49 @@
 						"lasts": "Lasts"
 					}
 				}
+			},
+			"monster": {
+				"rail": {
+					"label": "Monster",
+					"meta": {
+						"npc": "Level {level} {size} {type}",
+						"flunky": "Level {level} {size} {type} Flunky",
+						"soloMonster": "Level {level} Solo {size} {type}",
+						"minion": "Level {level} {size} {type} Minion"
+					},
+					"hp": {
+						"healthy": "Hit Points",
+						"bloodied": "Bloodied: at half HP or less."
+					},
+					"minion": {
+						"label": "Minion",
+						"noHp": "No HP. Any damage kills a minion.",
+						"noCrit": "Cannot crit. Misses on a roll of 1."
+					},
+					"armor": "Armor",
+					"armorTooltip": "Armor: {armor}",
+					"speed": {
+						"walk": "Speed",
+						"fly": "Fly",
+						"climb": "Climb",
+						"swim": "Swim",
+						"burrow": "Burrow"
+					},
+					"speedTooltip": "{type} {value} spaces",
+					"defenses": {
+						"resist": "Resist",
+						"immune": "Immune",
+						"vulnerable": "Vulnerable"
+					}
+				},
+				"tabs": {
+					"label": "NPC sheet tabs",
+					"abilities": "Abilities",
+					"effects": "Effects",
+					"notes": "Notes",
+					"settings": "Settings",
+					"effectsBadge": "{count} conditions and effects on the monster now"
+				}
 			}
 		},
 		"abilityScores": {
