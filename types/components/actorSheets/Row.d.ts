@@ -21,6 +21,8 @@ export interface RowProps {
 	cost?: RowCostProps;
 	/** the full text, shown when the row is open */
 	description?: string;
+	/** the full text as Foundry enriched it; shown in place of `description` */
+	descriptionHtml?: string;
 	/** facts shown when the row is open: [label, value] */
 	facts?: [string, string][];
 	/** active = an effect of yours is on; just = you just used it; used and out = no uses left */

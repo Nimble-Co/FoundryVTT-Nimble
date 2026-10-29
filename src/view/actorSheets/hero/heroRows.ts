@@ -1,5 +1,5 @@
 import type { RowCostProps } from '#types/components/actorSheets/RowCost.d.ts';
-import type { RowUses } from '../parts/types.ts';
+import type { RowUses, ViewOption } from '../parts/types.ts';
 import type { DragDescriptor } from '../shared/drag.ts';
 import {
 	activationCost,
@@ -22,10 +22,20 @@ import type {
 const SHARED = 'NIMBLE.actorSheet.shared';
 const ACTIONS = 'NIMBLE.actorSheet.hero.actions';
 
-/** What a click on the row does: act at once, open its choice step, or nothing, with the reason. */
+/** A question in a ConfirmBar under the row; Yes sends the intent. */
+export interface HeroRowAsk {
+	/** the label of the control that asks */
+	label: string;
+	question: string;
+	confirmLabel: string;
+	intent: HeroIntent;
+}
+
+/** What a click on the row does: act at once, open its choice step, ask first, or nothing, with the reason. */
 export type HeroRowUse =
 	| { kind: 'act'; label: string; intent: HeroIntent }
 	| { kind: 'choose'; label: string }
+	| { kind: 'ask'; ask: HeroRowAsk }
 	| { kind: 'blocked'; label: string; reason: string };
 
 export interface HeroChoiceOption {
@@ -64,13 +74,18 @@ export type HeroChoiceStep =
 	  }
 	| { kind: 'dice'; label: string; cancelLabel: string; spends: HeroDiceSpend[] };
 
-/** A number that you type in edit mode: the charges left in a pool of the item. */
-export interface HeroRowField {
-	poolId: string;
+/** A number that you type in edit mode: the charges left in a pool of the item, or its quantity. */
+export type HeroRowField =
+	| { kind: 'uses'; poolId: string; label: string; value: number; max: number; per: string }
+	| { kind: 'quantity'; itemId: string; label: string; value: number };
+
+/** The edit-mode select that moves an object in or out of a container. */
+export interface HeroStoreIn {
+	itemId: string;
 	label: string;
-	value: number;
-	max: number;
-	per: string;
+	/** the id of the container that holds the object; empty for loose */
+	value: string;
+	options: ViewOption[];
 }
 
 export interface HeroRowView {
@@ -82,8 +97,12 @@ export interface HeroRowView {
 	tag?: string;
 	tagOn?: boolean;
 	summary?: string;
+	/** warn: a risk, for example a container over its capacity */
+	summaryTone?: 'act' | 'warn';
 	cost: RowCostProps;
 	description?: string;
+	/** the description as Foundry enriches it (inline rolls, links), in place of the plain text */
+	descriptionHtml?: string;
 	facts: [string, string][];
 	state?: 'active' | 'used' | 'out';
 	use: HeroRowUse | null;
@@ -92,6 +111,16 @@ export interface HeroRowView {
 	edit: HeroIntent | null;
 	drag: DragDescriptor | null;
 	fields: HeroRowField[];
+	/** an item that you can equip: the tag is the toggle */
+	equip?: { on: boolean; intent: HeroIntent };
+	/** a stored object, under its container */
+	indent?: boolean;
+	/** edit mode: where the object is */
+	storeIn?: HeroStoreIn;
+	/** a drop of an item on the row stores it in this container; empty = loose */
+	dropInto?: string;
+	/** edit mode: the trash button, which asks first */
+	remove?: HeroRowAsk;
 }
 
 export interface HeroRowGroup {
@@ -103,6 +132,8 @@ export interface HeroRowGroup {
 	/** a line under the rows */
 	hint?: string;
 	rows: HeroRowView[];
+	/** groups under the rows, each with a subheading (the class features of a class) */
+	subgroups?: { id: string; label: string; rows: HeroRowView[] }[];
 }
 
 export function itemStateOf(context: HeroSheetContext, item: ItemLike): HeroItemState {
@@ -226,11 +257,12 @@ export function rangeWords(item: ItemLike, context: HeroSheetContext): string {
 	return '';
 }
 
-function descriptionOf(item: ItemLike): string {
-	const { description } = item.system;
-	if (typeof description === 'string') return plainText(description);
+/** The description HTML that a row shows: a spell shows its base effect. */
+export function rawDescriptionOf(item: { system: object }): string {
+	const { description } = item.system as { description?: unknown };
+	if (typeof description === 'string') return description;
 	const parts = (description ?? {}) as Record<string, unknown>;
-	return plainText(parts.baseEffect ?? parts.public ?? '');
+	return String(parts.baseEffect ?? parts.public ?? '');
 }
 
 /** The trigger of a reaction ("When an ally is hit"), from the cost details. */
@@ -335,7 +367,7 @@ export function itemRow(
 	const name = item.name;
 	const tier = spellTier(item);
 	const manaCost = spell && hasMana(actor, context) ? tier : 0;
-	const description = descriptionOf(item);
+	const description = plainText(rawDescriptionOf(item));
 	const range = rangeWords(item, context);
 	const when = whenWords(item);
 	const formula = damageFormula(item);
@@ -418,13 +450,21 @@ export function itemRow(
 				: undefined,
 		},
 		description: description || undefined,
+		descriptionHtml: context.enrichedDescriptions[item.id],
 		facts,
 		state: toggle?.on ? 'active' : gate ? 'out' : undefined,
 		use,
 		choice: diceStep(item, state, context),
 		edit: { kind: 'openItem', itemId: item.id },
 		drag: { kind: 'item', uuid: item.uuid },
+		remove: {
+			label: format(`${SHARED}.deleteName`, { name }),
+			question: format(`${SHARED}.deleteQuestion`, { name }),
+			confirmLabel: localize(`${SHARED}.delete`),
+			intent: { kind: 'deleteItem', itemId: item.id },
+		},
 		fields: state.pools.map((pool) => ({
+			kind: 'uses' as const,
 			poolId: pool.id,
 			label: format(`${SHARED}.usesOf`, { name, pool: pool.label }),
 			value: pool.current,

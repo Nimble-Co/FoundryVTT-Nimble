@@ -4,6 +4,10 @@ title: "Monsters, Minions & Solo Monsters"
 
 # Monsters, Minions & Solo Monsters
 
+::: tip Try the new character sheet
+A preview of the new character sheet is in the system. See [The New Sheets (Preview)](../new-sheets.md) to select it for your players' characters and to give feedback.
+:::
+
 The system gives you three kinds of monster actor, each matching one of the roles monsters play in Nimble. Pick the right type when you create the actor and the combat tracker, sheets, and automation all behave correctly on their own.
 
 ## Which type do I use?

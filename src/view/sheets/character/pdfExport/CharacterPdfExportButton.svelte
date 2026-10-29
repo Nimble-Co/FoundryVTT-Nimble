@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { CharacterPdfExportButtonProps } from '#types/components/CharacterPdfExportButton.js';
 	import localize from '#utils/localize.ts';
-	import PdfExportDialog from '../../../dialogs/PdfExportDialog.svelte';
-	import { createCharacterPdfExportButtonState } from './CharacterPdfExportButtonState.svelte.ts';
+	import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 
 	const { actor }: CharacterPdfExportButtonProps = $props();
 
-	const { handleExport } = createCharacterPdfExportButtonState(() => actor, PdfExportDialog);
+	const handleExport = () => openPdfExportDialog(actor);
 </script>
 
 <button class="nimble-button" data-button-variant="full-width" type="button" onclick={handleExport}>

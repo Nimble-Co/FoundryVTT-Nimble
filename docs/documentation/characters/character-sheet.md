@@ -4,6 +4,10 @@ title: "The Character Sheet"
 
 # The Character Sheet
 
+::: tip Try the new character sheet
+A preview of the new character sheet is in the system. See [The New Sheets (Preview)](../new-sheets.md) to select it and to give feedback.
+:::
+
 The player character sheet puts everything you touch during play (HP, hit dice, mana, rolls, items, spells) one click away. This page tours the sheet from top to bottom.
 
 ![The full character sheet with the header, tab bar, and sidebar buttons visible](/images/documentation/full-character-sheet.png)

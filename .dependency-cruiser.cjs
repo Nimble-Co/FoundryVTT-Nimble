@@ -29,7 +29,7 @@ module.exports = {
 			name: "actor-sheet-parts-are-leaves",
 			severity: "error",
 			comment: "A part imports only other parts, its props types, Svelte and the localize helper",
-			from: { path: "^src/view/actorSheets/parts/" },
+			from: { path: "^src/view/actorSheets/parts/", pathNot: "/__tests__/" },
 			to: {
 				pathNot: [
 					"^src/view/actorSheets/parts/",

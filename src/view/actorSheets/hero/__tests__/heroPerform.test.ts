@@ -11,6 +11,9 @@ const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
 const toggleEffectAE = vi.fn();
 const findToggleEffectRuleById = vi.fn();
+const endToggleEffectFromAE = vi.fn();
+const openPdfExportDialog = vi.fn();
+const exportCharacterToJson = vi.fn();
 const getDicePools = vi.fn();
 const getDicePoolConsumers = vi.fn();
 const spendDicePool = vi.fn();
@@ -34,7 +37,10 @@ beforeAll(async () => {
 	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
 		toggleEffectAE,
 		findToggleEffectRuleById,
+		endToggleEffectFromAE,
 	}));
+	vi.doMock('#view/dialogs/openPdfExportDialog.ts', () => ({ openPdfExportDialog }));
+	vi.doMock('#utils/documents/exportCharacterToJson.ts', () => ({ exportCharacterToJson }));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', () => ({ getPools: getDicePools }));
 	vi.doMock('#utils/dicePool/dicePoolConsumers.js', () => ({ getDicePoolConsumers }));
 	vi.doMock('#utils/dicePool/spendDicePool.js', () => ({ spendDicePool }));
@@ -83,14 +89,39 @@ const ACTOR_METHODS = [
 	'activateItem',
 	'createItem',
 	'setFlag',
+	'deleteItem',
+	'updateItem',
+	'updateStoredObjectQuantity',
+	'storeItemInContainer',
+	'removeItemFromContainer',
+	'toggleStatusEffect',
+	'deleteEmbeddedDocuments',
 ] as const;
 
-const item = { id: 'rage', sheet: { render: vi.fn() } };
+const armorEffect = { id: 'armorEffect', delete: vi.fn() };
+const item = {
+	id: 'rage',
+	sheet: { render: vi.fn() },
+	effects: new Map([[armorEffect.id, armorEffect]]),
+};
+const rageEffect = { id: 'rageEffect', statuses: new Set<string>(), delete: vi.fn() };
+const customEffect = { id: 'customEffect', statuses: new Set(['homebrewHex']), delete: vi.fn() };
+const actorEffects = new Map([
+	[rageEffect.id, rageEffect],
+	[customEffect.id, customEffect],
+]);
+const torch = { id: 'torch', system: { containerId: '' }, toggleEquipment: vi.fn() };
+const rope = { id: 'rope', system: { containerId: 'backpack' } };
+const items = [item, torch, rope];
 
 function mockActor() {
 	const actor: Record<string, unknown> = {
 		id: 'hero1',
-		items: { get: (id: string) => (id === item.id ? item : undefined) },
+		items: { get: (id: string) => items.find((entry) => entry.id === id) },
+		effects: Object.assign([...actorEffects.values()], {
+			get: (id: string) => actorEffects.get(id),
+		}),
+		allApplicableEffects: () => [...actorEffects.values(), armorEffect],
 	};
 	for (const method of ACTOR_METHODS) actor[method] = vi.fn();
 	return actor as Record<(typeof ACTOR_METHODS)[number], ReturnType<typeof vi.fn>> & {
@@ -108,8 +139,9 @@ function mockCombat(combatant: Record<string, unknown>) {
 }
 
 let actor: ReturnType<typeof mockActor>;
+const sheet = { dropItem: vi.fn() };
 const perform = (intent: HeroIntent) =>
-	createHeroPerform(actor as unknown as NimbleCharacter)(intent);
+	createHeroPerform(actor as unknown as NimbleCharacter, sheet)(intent);
 
 beforeEach(() => {
 	actor = mockActor();
@@ -344,6 +376,128 @@ describe('createHeroPerform', () => {
 				name: 'New Spell',
 				type: 'spell',
 			});
+		});
+
+		it.each([
+			['object', 'New Object'],
+			['feature', 'New Feature'],
+		] as const)('creates an item of type %s', async (itemType, name) => {
+			await perform({ kind: 'createItem', itemType });
+
+			expect(actor.createItem).toHaveBeenCalledWith({ name, type: itemType });
+		});
+
+		it('deletes an item', async () => {
+			await perform({ kind: 'deleteItem', itemId: 'torch' });
+
+			expect(actor.deleteItem).toHaveBeenCalledWith('torch');
+		});
+
+		it('equips an object or puts it away through toggleEquipment', async () => {
+			await perform({ kind: 'toggleEquip', itemId: 'torch' });
+
+			expect(torch.toggleEquipment).toHaveBeenCalledOnce();
+		});
+
+		it('sets the quantity of a loose object', async () => {
+			await perform({ kind: 'setQuantity', itemId: 'torch', value: 4 });
+
+			expect(actor.updateItem).toHaveBeenCalledWith('torch', { 'system.quantity': 4 });
+		});
+
+		it('sets the quantity of a stored object through the capacity check', async () => {
+			await perform({ kind: 'setQuantity', itemId: 'rope', value: 4 });
+
+			expect(actor.updateStoredObjectQuantity).toHaveBeenCalledWith('rope', 4);
+			expect(actor.updateItem).not.toHaveBeenCalled();
+		});
+
+		it('stores an object in a container, and takes it out with Loose', async () => {
+			await perform({ kind: 'storeIn', itemId: 'torch', containerId: 'backpack' });
+			await perform({ kind: 'storeIn', itemId: 'rope', containerId: '' });
+
+			expect(actor.storeItemInContainer).toHaveBeenCalledWith('torch', 'backpack');
+			expect(actor.removeItemFromContainer).toHaveBeenCalledWith('rope');
+		});
+
+		it('sets a coin value', async () => {
+			await perform({ kind: 'setCurrency', coin: 'gp', value: 15 });
+
+			expect(actor.update).toHaveBeenCalledWith({ 'system.currency.gp': 15 });
+		});
+
+		it('ends a toggle effect through the toggle lifecycle', async () => {
+			await perform({ kind: 'endEffect', effectId: 'rageEffect' });
+
+			expect(endToggleEffectFromAE).toHaveBeenCalledWith(actor, rageEffect);
+		});
+
+		it('removes an effect of the hero, and an effect that an item holds', async () => {
+			await perform({ kind: 'removeEffect', effectId: 'rageEffect', itemId: null });
+			await perform({ kind: 'removeEffect', effectId: 'armorEffect', itemId: 'rage' });
+
+			expect(rageEffect.delete).toHaveBeenCalledOnce();
+			expect(armorEffect.delete).toHaveBeenCalledOnce();
+		});
+
+		it('turns a condition on and off through toggleStatusEffect', async () => {
+			await perform({ kind: 'setCondition', conditionId: 'dazed', active: true });
+			await perform({ kind: 'setCondition', conditionId: 'dazed', active: false });
+
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'dazed', { active: true });
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'dazed', { active: false });
+		});
+
+		it('removes a custom status with the effects that carry it', async () => {
+			await perform({ kind: 'setCondition', conditionId: 'homebrewHex', active: false });
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['customEffect']);
+			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+
+		it('sets a detail of the Bio tab', async () => {
+			await perform({ kind: 'setDetail', detail: 'age', value: '112' });
+
+			expect(actor.update).toHaveBeenCalledWith({ 'system.details.age': '112' });
+		});
+
+		it('sets a flag of the Settings tab', async () => {
+			await perform({ kind: 'setFlag', flag: 'showPassiveSkillScores', value: true });
+
+			expect(actor.setFlag).toHaveBeenCalledWith('nimble', 'showPassiveSkillScores', true);
+		});
+
+		it.each([
+			['bonusSlots', 2, 'system.inventory.bonusSlots'],
+			['woundsBonus', 1, 'system.attributes.wounds.bonus'],
+			['highestUnlockedSpellTier', null, 'system.resources.highestUnlockedSpellTier'],
+			['initiativeBonuses', '1d4', 'system.attributes.initiative.bonuses'],
+			['inspiration', true, 'system.resources.inspiration'],
+		] as const)('sets the field %s', async (field, value, path) => {
+			await perform({ kind: 'setField', field, value });
+
+			expect(actor.update).toHaveBeenCalledWith({ [path]: value });
+		});
+
+		it('opens the PDF export window', async () => {
+			await perform({ kind: 'exportPdf' });
+
+			expect(openPdfExportDialog).toHaveBeenCalledWith(actor);
+		});
+
+		it('exports the character to JSON and says so', async () => {
+			await perform({ kind: 'exportJson' });
+
+			expect(exportCharacterToJson).toHaveBeenCalledWith(actor);
+			expect(ui.notifications?.info).toHaveBeenCalledWith('Character exported successfully');
+		});
+
+		it('hands an Item drop to the sheet, with the place of the drop', async () => {
+			const data = { type: 'Item', uuid: 'Compendium.x.Item.y' };
+
+			await perform({ kind: 'dropItem', data, containerId: 'backpack' });
+
+			expect(sheet.dropItem).toHaveBeenCalledWith(data, 'backpack');
 		});
 
 		it('saves how the Spells tab groups the spells', async () => {

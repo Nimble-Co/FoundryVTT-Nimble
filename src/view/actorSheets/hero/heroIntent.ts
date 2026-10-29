@@ -2,7 +2,26 @@ import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { ChatReactionId } from '#utils/heroicActions/reactions.js';
+import type { HeroDetail } from './heroBioTab.ts';
 import type { SpellsBy } from './heroSource.ts';
+/** The flags of the character that the Settings tab sets. */
+export type HeroSettingsFlag =
+	| 'actorImageXOffset'
+	| 'actorImageYOffset'
+	| 'actorImageScale'
+	| 'automaticallyExecuteAvailableMacros'
+	| 'trackInventorySlots'
+	| 'includeCurrencyBulk'
+	| 'showPassiveSkillScores';
+
+/** The system fields that the Settings tab sets. */
+export type HeroSettingsField =
+	| 'bonusSlots'
+	| 'woundsBonus'
+	| 'highestUnlockedSpellTier'
+	| 'initiativeBonuses'
+	| 'inspiration';
+
 /** The configure windows that the character sheet opens. */
 export type HeroConfigureTarget =
 	| 'hitPoints'
@@ -54,7 +73,21 @@ export type HeroIntent =
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'endToggle'; itemId: string; ruleId: string }
 	| { kind: 'openItem'; itemId: string }
-	| { kind: 'createItem'; itemType: 'spell' }
+	| { kind: 'createItem'; itemType: 'spell' | 'object' | 'feature' }
+	| { kind: 'deleteItem'; itemId: string }
+	| { kind: 'toggleEquip'; itemId: string }
+	| { kind: 'setQuantity'; itemId: string; value: number }
+	| { kind: 'storeIn'; itemId: string; containerId: string }
+	| { kind: 'setCurrency'; coin: string; value: number }
+	| { kind: 'endEffect'; effectId: string }
+	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
+	| { kind: 'setCondition'; conditionId: string; active: boolean }
+	| { kind: 'setDetail'; detail: HeroDetail; value: string }
+	| { kind: 'setFlag'; flag: HeroSettingsFlag; value: boolean | number }
+	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
+	| { kind: 'dropItem'; data: Record<string, unknown>; containerId: string | null }
+	| { kind: 'exportPdf' }
+	| { kind: 'exportJson' }
 	| { kind: 'setSpellsBy'; value: SpellsBy }
 	| { kind: 'unarmedStrike' }
 	| { kind: 'move' }

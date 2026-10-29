@@ -4,7 +4,11 @@ import type {
 	HeroItemState,
 	HeroSheetContext,
 } from '../../../src/view/actorSheets/hero/heroSource.ts';
-import type { ItemLike } from '../../../src/view/actorSheets/shared/sheetSource.ts';
+import type {
+	ConditionLike,
+	EffectLike,
+	ItemLike,
+} from '../../../src/view/actorSheets/shared/sheetSource.ts';
 import { createLocalizerStub } from './localizerStub.ts';
 
 type DeepPartial<T> = T extends unknown[]
@@ -79,9 +83,9 @@ export function blankHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike
 			},
 			attributes: {
 				hp: { value: 20, max: 20, temp: 0 },
-				wounds: { value: 0, max: 6 },
+				wounds: { value: 0, max: 6, bonus: 0 },
 				armor: { value: 2 },
-				initiative: rolled(2),
+				initiative: { ...rolled(2), bonuses: '' },
 				movement: { walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 },
 				sizeCategory: 'medium',
 				hitDice: { '12': { current: 1 } },
@@ -92,9 +96,16 @@ export function blankHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike
 				damageVulnerabilities: [],
 			},
 			proficiencies: { languages: ['common'], armor: [], weapons: ['All STR Weapons'] },
-			resources: { mana: { current: 0, max: 0, baseMax: 0 } },
+			resources: {
+				mana: { current: 0, max: 0, baseMax: 0 },
+				highestUnlockedSpellTier: null,
+				inspiration: false,
+			},
 			levelUpHistory: [],
 			conditionImmunities: [],
+			currency: { cp: 0, sp: 0, gp: 0 },
+			inventory: { totalSlots: 10, usedSlots: 0, bonusSlots: 0, containerCapacityUsage: {} },
+			details: { age: '', height: '', weight: '', gender: '', notes: '' },
 		},
 		flags: {},
 		items: [
@@ -138,6 +149,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			languages: { common: 'Common' },
 			armorTypes: { leather: 'Leather', mail: 'Mail', shield: 'Shields' },
 			spellSchools: { fire: 'Fire', ice: 'Ice', lightning: 'Lightning', radiant: 'Radiant' },
+			featureGroups: { 'savage-arsenal': 'Savage Arsenal' },
 		},
 		skillAbilities: {
 			arcana: 'intelligence',
@@ -151,11 +163,14 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			perception: 'will',
 			stealth: 'dexterity',
 		},
+		conditions: [],
 		dicePools: [],
 		chargePools: [],
 		itemState: {},
 		targets: [],
 		unarmedDamage: '1+STR',
+		enrichedNotes: '',
+		enrichedDescriptions: {},
 		...overrides,
 	};
 }
@@ -360,4 +375,184 @@ export function dicePoolContext(overrides?: Partial<HeroSheetContext>): HeroShee
 
 export function itemState(overrides: Partial<HeroItemState> = {}): HeroItemState {
 	return { actionCost: 0, pools: [], gate: null, toggle: null, diceConsumers: [], ...overrides };
+}
+
+export function objectItem(
+	id: string,
+	name: string,
+	options: {
+		objectType?: string;
+		quantity?: number;
+		containerId?: string;
+		equipped?: boolean;
+		capacity?: number | null;
+		rules?: ItemLike['rules'];
+		description?: string;
+	} = {},
+): ItemLike {
+	return heroItem({
+		id,
+		type: 'object',
+		name,
+		system: {
+			objectType: options.objectType ?? 'misc',
+			quantity: options.quantity ?? 1,
+			containerId: options.containerId ?? '',
+			equipped: options.equipped ?? false,
+			description: { public: options.description ?? '' },
+			container:
+				options.capacity === undefined
+					? { enabled: false, capacity: null, requiresEquipped: false }
+					: { enabled: true, capacity: options.capacity, requiresEquipped: false },
+			activation: activation({ type: 'none' }),
+		},
+		rules: options.rules ?? [],
+	});
+}
+
+/**
+ * A level 1 Berserker with a backpack (rope and rations in it, 6 of 10 used), an empty pouch,
+ * a sword, armor, a shield, potions and torches, and coins.
+ */
+export function containerHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({
+		id: 'containerHero0001',
+		name: 'Container Hero',
+		system: {
+			currency: { cp: 30, sp: 4, gp: 12 },
+			inventory: {
+				totalSlots: 13,
+				usedSlots: 9,
+				containerCapacityUsage: { backpack: 6, pouch: 0 },
+			},
+		},
+	});
+	hero.items = [
+		...hero.items,
+		weaponItem('longsword', 'Longsword'),
+		objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }),
+		objectItem('shield', 'Wooden Shield', { objectType: 'shield' }),
+		objectItem('potion', 'Healing Potion', { objectType: 'consumable', quantity: 2 }),
+		objectItem('torch', 'Torch', { quantity: 3 }),
+		objectItem('backpack', 'Backpack', { capacity: 10 }),
+		objectItem('pouch', 'Pouch', { capacity: 2 }),
+		objectItem('rope', 'Rope', { containerId: 'backpack' }),
+		objectItem('rations', 'Rations', {
+			objectType: 'consumable',
+			quantity: 5,
+			containerId: 'backpack',
+		}),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}
+
+/**
+ * A level 3 Berserker with class features of levels 1 to 3, a subclass, a selection group,
+ * an exotic ancestry with a bonus, a background and a boon.
+ */
+export function featureHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = blankHero({ id: 'featureHero000001', name: 'Feature Hero' });
+	const feature = (
+		id: string,
+		name: string,
+		system: Record<string, unknown>,
+		options: Parameters<typeof featureItem>[2] = {},
+	) => {
+		const item = featureItem(id, name, options);
+		item.system = { ...item.system, ...system };
+		return item;
+	};
+	hero.items = [
+		heroItem({ id: 'classBerserker01', type: 'class', name: 'Berserker' }),
+		heroItem({ id: 'subclassRedMist', type: 'subclass', name: 'Path of the Red Mist' }),
+		feature('rage', 'Rage', { group: 'berserker-progression', gainedAtLevel: 1 }),
+		feature('intensifyingFury', 'Intensifying Fury', { group: 'ungrouped', gainedAtLevel: 1 }),
+		feature('quickTempered', 'Quick Tempered', { group: 'ungrouped', gainedAtLevel: 2 }),
+		feature('bloodlust', 'Bloodlust', { subclass: true, gainedAtLevel: 3 }),
+		feature('mightyEndurance', 'Mighty Endurance', {
+			group: 'savage-arsenal',
+			gainedAtLevels: [2, 4],
+		}),
+		feature('deathlessRage', 'Deathless Rage', { group: 'savage-arsenal', gainedAtLevel: 2 }),
+		heroItem({
+			id: 'ancestryDragonborn',
+			type: 'ancestry',
+			name: 'Dragonborn',
+			system: { exotic: true },
+		}),
+		heroItem({ id: 'bonusBreath', type: 'ancestryBonus', name: 'Draconic Breath' }),
+		heroItem({ id: 'backgroundSoldier', type: 'background', name: 'Soldier' }),
+		heroItem({ id: 'boonLuck', type: 'boon', name: 'Boon of Luck', system: { boonType: 'major' } }),
+	];
+	return merge<HeroActorLike>(hero, overrides);
+}
+
+export function effectLike(
+	overrides: Partial<EffectLike> & Pick<EffectLike, 'id' | 'name'>,
+): EffectLike {
+	return {
+		img: 'icons/svg/aura.svg',
+		disabled: false,
+		statuses: [],
+		origin: null,
+		itemId: null,
+		toggle: null,
+		temporary: true,
+		duration: '',
+		description: '',
+		...overrides,
+	};
+}
+
+export function conditionLike(
+	overrides: Partial<ConditionLike> & Pick<ConditionLike, 'id' | 'name'>,
+): ConditionLike {
+	return {
+		img: `icons/conditions/${overrides.id}.svg`,
+		active: false,
+		description: '',
+		duration: '',
+		source: '',
+		...overrides,
+	};
+}
+
+/**
+ * The Effects tab of `dicePoolHero` with Rage on (it ends after 1 round with no attack), a timed
+ * Bless, an armor effect from equipped Leather Armor, a hand-made passive effect, and Dazed on.
+ */
+export function effectsContext(overrides?: Partial<HeroSheetContext>): HeroSheetContext {
+	return dicePoolContext({
+		labels: { ...heroContext().labels, conditions: { dazed: 'Dazed', prone: 'Prone' } },
+		conditions: [
+			conditionLike({
+				id: 'dazed',
+				name: 'Dazed',
+				active: true,
+				source: 'Dazed',
+				description: 'You lose 1 action.',
+			}),
+			conditionLike({ id: 'prone', name: 'Prone' }),
+		],
+		...overrides,
+	});
+}
+
+export function effectsHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
+	const hero = dicePoolHero();
+	const rage = hero.items.find((item) => item.id === 'rage')!;
+	rage.rules = [rule('rageToggle', 'toggleEffect', { endAfterInactiveRounds: 1 })];
+	hero.items.push(objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }));
+	hero.effects = [
+		effectLike({
+			id: 'rageEffect',
+			name: 'Rage',
+			toggle: { itemId: 'rage', ruleId: 'rageToggle' },
+		}),
+		effectLike({ id: 'bless', name: 'Bless', duration: '3 rounds', description: 'Add 1d4.' }),
+		effectLike({ id: 'armorEffect', name: 'Armor', itemId: 'leather', temporary: false }),
+		effectLike({ id: 'blessing', name: 'Old Blessing', temporary: false }),
+		effectLike({ id: 'dazedEffect', name: 'Dazed', statuses: ['dazed'] }),
+	];
+	return merge<HeroActorLike>(hero, overrides);
 }

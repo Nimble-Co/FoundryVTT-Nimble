@@ -6,7 +6,11 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
+import {
+	endToggleEffectFromAE,
+	findToggleEffectRuleById,
+	toggleEffectAE,
+} from '#utils/actor/toggleEffectControl.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
@@ -16,15 +20,22 @@ import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { rollDieIntoPool, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
+import { exportCharacterToJson } from '#utils/documents/exportCharacterToJson.ts';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
+import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { combatantOf, mayAddAction } from './heroActions.ts';
-import type { HeroConfigureTarget, HeroIntent, HeroPerform } from './heroIntent.ts';
+import type {
+	HeroConfigureTarget,
+	HeroIntent,
+	HeroPerform,
+	HeroSettingsField,
+} from './heroIntent.ts';
 
 type CombatWithLateJoin = Combat & {
 	ensureCharacterCombatantForActorInCurrentScene?: (
@@ -169,8 +180,96 @@ async function endTurn(actor: NimbleCharacter): Promise<void> {
 	ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 }
 
+const SETTINGS_FIELDS: Record<HeroSettingsField, string> = {
+	bonusSlots: 'system.inventory.bonusSlots',
+	woundsBonus: 'system.attributes.wounds.bonus',
+	highestUnlockedSpellTier: 'system.resources.highestUnlockedSpellTier',
+	initiativeBonuses: 'system.attributes.initiative.bonuses',
+	inspiration: 'system.resources.inspiration',
+};
+
+const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemType'], string> = {
+	spell: 'NIMBLE.actorSheet.hero.spells.newSpell',
+	object: 'NIMBLE.actorSheet.hero.inventory.newObject',
+	feature: 'NIMBLE.actorSheet.hero.features.newFeature',
+};
+
+/** A stored stack that grows must still fit in its container. */
+async function setQuantity(actor: NimbleCharacter, itemId: string, value: number): Promise<void> {
+	const item = actor.items.get(itemId);
+	if (!item) return;
+	if ((item.system as { containerId?: string }).containerId) {
+		await actor.updateStoredObjectQuantity(itemId, value);
+		return;
+	}
+	await actor.updateItem(itemId, { 'system.quantity': value });
+}
+
+type EffectHolder = { effects?: { get(id: string): ActiveEffect | undefined } };
+
+function effectOf(actor: NimbleCharacter, effectId: string, itemId: string | null) {
+	const holder = (itemId ? actor.items.get(itemId) : actor) as EffectHolder | undefined;
+	return holder?.effects?.get(effectId);
+}
+
+/** The toggle lifecycle ends it: its confirm prompt and pool clearing run. */
+async function endEffect(actor: NimbleCharacter, effectId: string): Promise<void> {
+	const effect = [...actor.allApplicableEffects()].find((entry) => entry.id === effectId);
+	if (!effect) return;
+	try {
+		await endToggleEffectFromAE(
+			actor as unknown as Parameters<typeof endToggleEffectFromAE>[0],
+			effect as unknown as Parameters<typeof endToggleEffectFromAE>[1],
+		);
+	} catch (_error) {
+		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
+	}
+}
+
+async function removeEffect(
+	actor: NimbleCharacter,
+	effectId: string,
+	itemId: string | null,
+): Promise<void> {
+	try {
+		await effectOf(actor, effectId, itemId)?.delete();
+	} catch (_error) {
+		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
+	}
+}
+
+/** A custom status that `toggleStatusEffect` does not know goes with the effects that carry it. */
+async function setCondition(
+	actor: NimbleCharacter,
+	conditionId: string,
+	active: boolean,
+): Promise<void> {
+	try {
+		const standard = conditionId in (CONFIG.NIMBLE.conditions ?? {});
+		const carriers = [...actor.effects]
+			.filter((effect) => effect.statuses?.has(conditionId))
+			.map((effect) => effect.id)
+			.filter((id): id is string => Boolean(id));
+		if (!active && !standard && carriers.length) {
+			await actor.deleteEmbeddedDocuments('ActiveEffect', carriers);
+			return;
+		}
+		await actor.toggleStatusEffect(conditionId, { active });
+	} catch (_error) {
+		ui.notifications?.error(
+			localize(active ? 'NIMBLE.ui.failedToUpdateCondition' : 'NIMBLE.ui.failedToRemoveCondition'),
+		);
+	}
+}
+
+/** What `perform` asks of the sheet that it acts for. */
+export interface HeroPerformSheet {
+	/** an Item drop: on the Inventory into a container (empty = loose); null = anywhere else */
+	dropItem(data: Record<string, unknown>, containerId: string | null): Promise<void>;
+}
+
 /** The one place where the character sheet acts on Foundry. */
-export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
+export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformSheet): HeroPerform {
 	const document = actor as unknown as Actor.Implementation;
 	return async (intent: HeroIntent): Promise<void> => {
 		switch (intent.kind) {
@@ -280,9 +379,69 @@ export function createHeroPerform(actor: NimbleCharacter): HeroPerform {
 				return;
 			case 'createItem':
 				await actor.createItem({
-					name: localize('NIMBLE.actorSheet.hero.spells.newSpell'),
+					name: localize(NEW_ITEM_NAMES[intent.itemType]),
 					type: intent.itemType,
 				} as Item.CreateData);
+				return;
+			case 'deleteItem':
+				await actor.deleteItem(intent.itemId);
+				return;
+			case 'toggleEquip':
+				await (
+					actor.items.get(intent.itemId) as { toggleEquipment?: () => Promise<unknown> } | undefined
+				)?.toggleEquipment?.();
+				return;
+			case 'setQuantity':
+				await setQuantity(actor, intent.itemId, intent.value);
+				return;
+			case 'storeIn':
+				if (intent.containerId) await actor.storeItemInContainer(intent.itemId, intent.containerId);
+				else await actor.removeItemFromContainer(intent.itemId);
+				return;
+			case 'endEffect':
+				await endEffect(actor, intent.effectId);
+				return;
+			case 'removeEffect':
+				await removeEffect(actor, intent.effectId, intent.itemId);
+				return;
+			case 'setCondition':
+				await setCondition(actor, intent.conditionId, intent.active);
+				return;
+			case 'setDetail':
+				await actor.update({ [`system.details.${intent.detail}`]: intent.value } as Record<
+					string,
+					unknown
+				>);
+				return;
+			case 'setFlag':
+				await actor.setFlag(SYSTEM_ID as 'core', intent.flag as never, intent.value as never);
+				return;
+			case 'setField':
+				await actor.update({ [SETTINGS_FIELDS[intent.field]]: intent.value } as Record<
+					string,
+					unknown
+				>);
+				return;
+			case 'dropItem':
+				await sheet.dropItem(intent.data, intent.containerId);
+				return;
+			case 'exportPdf':
+				openPdfExportDialog(actor);
+				return;
+			case 'exportJson':
+				try {
+					exportCharacterToJson(actor);
+					ui.notifications?.info(localize('NIMBLE.jsonExport.success'));
+				} catch (error) {
+					console.error('Character JSON export failed:', error);
+					ui.notifications?.error(localize('NIMBLE.jsonExport.error'));
+				}
+				return;
+			case 'setCurrency':
+				await actor.update({ [`system.currency.${intent.coin}`]: intent.value } as Record<
+					string,
+					unknown
+				>);
 				return;
 			case 'setSpellsBy':
 				await actor.setFlag(SYSTEM_ID as 'core', 'spellsBy' as never, intent.value as never);

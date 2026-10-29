@@ -37,6 +37,7 @@ import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
 import { registerMovementActions } from '../utils/movement/movementActions.js';
+import HeroSheet from '../view/actorSheets/hero/HeroSheetApplication.svelte.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -140,6 +141,17 @@ export default function init() {
 			types: ['character'],
 			makeDefault: true,
 			label: 'NIMBLE.sheets.playerCharacter',
+		},
+	);
+
+	// the new character sheet: a second choice in the sheet selector until the switch
+	foundry.documents.collections.Actors.registerSheet(
+		SYSTEM_ID,
+		HeroSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['character'],
+			makeDefault: false,
+			label: 'NIMBLE.sheets.hero',
 		},
 	);
 

@@ -17,3 +17,16 @@ export function dragDataOf(drag: DragDescriptor): Record<string, string> {
 		name: drag.name,
 	};
 }
+
+/** The drag data of a dropped Item, or null: a drop of anything else goes on to the sheet. */
+export function droppedItemData(
+	transfer: Pick<DataTransfer, 'getData'> | null | undefined,
+): Record<string, unknown> | null {
+	try {
+		const data = JSON.parse(transfer?.getData('text/plain') ?? '') as unknown;
+		if (typeof data !== 'object' || data === null) return null;
+		return (data as { type?: unknown }).type === 'Item' ? (data as Record<string, unknown>) : null;
+	} catch {
+		return null;
+	}
+}

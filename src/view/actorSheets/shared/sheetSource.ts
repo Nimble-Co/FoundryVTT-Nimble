@@ -38,6 +38,29 @@ export interface EffectLike {
 	statuses: string[];
 	/** the uuid of the document that made the effect */
 	origin: string | null;
+	/** the item that holds the effect; null for an effect on the actor */
+	itemId: string | null;
+	/** the effect is on because a toggle effect rule of this item is on */
+	toggle: { itemId: string; ruleId: string } | null;
+	/** a timed or one-off effect, not one that an item keeps on */
+	temporary: boolean;
+	/** how long it lasts, in words; empty for no end */
+	duration: string;
+	description: string;
+}
+
+/** A condition of the system, on the actor or not. */
+export interface ConditionLike {
+	id: string;
+	name: string;
+	img: string;
+	active: boolean;
+	/** plain text */
+	description: string;
+	/** how long it lasts, in words; empty for no end */
+	duration: string;
+	/** the name of the effect that gives it, if any */
+	source: string;
 }
 
 export interface DicePoolLike {

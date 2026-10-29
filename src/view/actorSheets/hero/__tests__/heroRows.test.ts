@@ -94,6 +94,18 @@ describe('itemRow', () => {
 		});
 	});
 
+	it('shows the description that Foundry enriched, once the sheet has it', () => {
+		const hero = dicePoolHero();
+		const axe = item(hero, 'greataxe');
+		const enriched = '<p>Roll <a class="inline-roll">1d6</a></p>';
+
+		expect(itemRow(hero, axe, dicePoolContext()).descriptionHtml).toBeUndefined();
+		expect(
+			itemRow(hero, axe, dicePoolContext({ enrichedDescriptions: { greataxe: enriched } }))
+				.descriptionHtml,
+		).toBe(enriched);
+	});
+
 	it('ends a toggle that is on, and tags the row ACTIVE', () => {
 		const hero = dicePoolHero();
 		const context = dicePoolContext({
@@ -118,6 +130,7 @@ describe('itemRow', () => {
 			expect(view.cost.uses).toEqual([{ left: 0, max: 1, per: `${SHARED}.per.round`, need: 1 }]);
 			expect(view.fields).toEqual([
 				{
+					kind: 'uses',
 					poolId: 'p',
 					label: `${SHARED}.usesOf {"name":"Rage","pool":"Charges"}`,
 					value: 0,

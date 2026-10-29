@@ -8,4 +8,6 @@ export interface HeroRowGroupListProps {
 	perform: HeroPerform;
 	/** the groups flow in columns about 300 px wide */
 	flow?: boolean;
+	/** the line in an empty group; leave it out to hide nothing and show nothing */
+	none?: string;
 }

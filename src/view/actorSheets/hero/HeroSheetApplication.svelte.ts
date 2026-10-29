@@ -1,5 +1,6 @@
 import { untrack } from 'svelte';
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { routeItemDrop } from '#documents/actor/routeItemDrop.js';
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
@@ -9,6 +10,7 @@ import {
 	primeActorCombatManaSourceRules,
 } from '#utils/actor/combatManaRules.js';
 import type { MissingLevelSelection } from '#utils/classProgression/findMissingLevelSelections.ts';
+import { droppedItemData } from '../shared/drag.ts';
 import {
 	createSheetUiState,
 	type RevealRequest,
@@ -17,8 +19,10 @@ import {
 } from '../shared/sheetUiState.ts';
 import HeroSheetComponent from './HeroSheet.svelte';
 import { createHeroSource } from './heroAdapter.ts';
+import { dropAction, tabOfItemType } from './heroDrop.ts';
 import type { HeroPerform } from './heroIntent.ts';
 import { createHeroPerform } from './heroPerform.ts';
+import { rawDescriptionOf } from './heroRows.ts';
 import type { HeroSource } from './heroSource.ts';
 
 /** What the level choice audit depends on: the class, its level, and the feature sources. */
@@ -39,7 +43,7 @@ function levelAuditKey(actor: NimbleCharacter): string {
 	return `${characterClass.identifier}:${characterClass.system.classLevel}:${sources}`;
 }
 
-/** The new character sheet. Not registered yet: Storybook and the tests show it. */
+/** The new character sheet. It is a second choice in the sheet selector until the switch. */
 export default class HeroSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
@@ -52,6 +56,13 @@ export default class HeroSheet extends SvelteApplicationMixin(
 	#missingLevelSelections: number[] = $state([]);
 
 	#combatManaPrimed = $state(0);
+
+	#enrichedNotes = $state('');
+
+	#enrichedDescriptions: Record<string, string> = $state({});
+
+	/** by item id, the raw description that `#enrichedDescriptions` holds or waits for */
+	#descriptionSources = new Map<string, string>();
 
 	#stopEffects: (() => void) | null = null;
 
@@ -93,6 +104,64 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		else this.bringToFront();
 	}
 
+	/** Item drops on any tab go through the shared drop route; a drop of anything else is the core one. */
+	protected override async _onDrop(event: DragEvent): Promise<void> {
+		const data = droppedItemData(event.dataTransfer);
+		if (!data) {
+			await super._onDrop(event);
+			return;
+		}
+		await this.#dropItem(data, null);
+	}
+
+	/** Places the drop, then shows the row on its tab and flashes it. */
+	async #dropItem(data: Record<string, unknown>, containerId: string | null): Promise<void> {
+		const actor = this.#actor;
+		const carried = actor.items.map((item) => ({
+			id: item.id ?? '',
+			uuid: item.uuid,
+			type: item.type,
+			containerId: String((item.system as { containerId?: string }).containerId ?? ''),
+		}));
+		const action = dropAction(carried, data, containerId);
+		const show = (type: unknown, rowId: string | undefined) => {
+			if (rowId) this.reveal({ tab: tabOfItemType(type), rowId, flash: true });
+		};
+		switch (action.kind) {
+			case 'none':
+				return;
+			case 'reveal':
+				show(action.itemType, action.itemId);
+				return;
+			case 'store':
+				if (await actor.storeItemInContainer(action.itemId, action.containerId)) {
+					show('object', action.itemId);
+				}
+				return;
+			case 'takeOut':
+				await actor.removeItemFromContainer(action.itemId);
+				show('object', action.itemId);
+				return;
+			case 'create': {
+				const outcome = await routeItemDrop({
+					actor: actor as unknown as Actor.Implementation,
+					sheet: this as unknown as foundry.applications.sheets.ActorSheetV2.Any,
+					data,
+					containerId: action.containerId || undefined,
+				});
+				if (outcome.kind === 'sort') show(outcome.itemData.type, outcome.itemId);
+				else if (outcome.kind === 'created') {
+					show(outcome.documents[0]?.type, outcome.documents[0]?.id ?? undefined);
+				} else if (outcome.kind === 'stacked') show(outcome.itemType, outcome.itemIds[0]);
+				return;
+			}
+			default: {
+				const unknown: never = action;
+				throw new Error(`No drop for ${JSON.stringify(unknown)}`);
+			}
+		}
+	}
+
 	protected override async _prepareContext(
 		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
 	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
@@ -101,6 +170,8 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		this.#props ??= {
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
+				enrichedNotes: () => this.#enrichedNotes,
+				enrichedDescriptions: () => this.#enrichedDescriptions,
 				manaFromInitiative: () => {
 					// read only to recompute when the combat mana rules are primed
 					void this.#combatManaPrimed;
@@ -108,7 +179,9 @@ export default class HeroSheet extends SvelteApplicationMixin(
 				},
 			}),
 			ui: this.#ui,
-			perform: createHeroPerform(actor),
+			perform: createHeroPerform(actor, {
+				dropItem: (data, containerId) => this.#dropItem(data, containerId),
+			}),
 		};
 		return { ...context, ...this.#props } as object as Awaited<
 			ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>
@@ -133,6 +206,20 @@ export default class HeroSheet extends SvelteApplicationMixin(
 				lastKey = key;
 				untrack(() => this.#audit(key));
 			});
+			$effect(() => {
+				const notes = String(
+					(actor.reactive.system as { details?: { notes?: string } }).details?.notes ?? '',
+				);
+				untrack(() => this.#enrichNotes(notes));
+			});
+			$effect(() => {
+				const open = new Set(this.#ui.openRows);
+				const wanted = actor.reactive.items
+					.filter((item) => open.has(item.id ?? ''))
+					.map((item) => [item.id ?? '', rawDescriptionOf(item)] as const)
+					.filter(([, raw]) => raw);
+				untrack(() => this.#enrichDescriptions(wanted));
+			});
 		});
 	}
 
@@ -142,6 +229,42 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		super._onClose(options);
 		this.#stopEffects?.();
 		this.#stopEffects = null;
+	}
+
+	#enrichNotes(notes: string): void {
+		const actor = this.#actor;
+		void foundry.applications.ux.TextEditor.implementation
+			.enrichHTML(notes, {
+				secrets: actor.isOwner,
+				rollData: actor.getRollData(),
+				relativeTo: actor as unknown as foundry.abstract.Document.Any,
+			})
+			.then((html: string) => {
+				this.#enrichedNotes = html;
+			});
+	}
+
+	/** Only open rows show the text, so only they wait for the async enrichment. */
+	#enrichDescriptions(wanted: (readonly [string, string])[]): void {
+		for (const [id, raw] of wanted) {
+			if (this.#descriptionSources.get(id) === raw) continue;
+			this.#descriptionSources.set(id, raw);
+			if (id in this.#enrichedDescriptions) {
+				const { [id]: _stale, ...rest } = this.#enrichedDescriptions;
+				this.#enrichedDescriptions = rest;
+			}
+			const item = this.#actor.items.get(id);
+			void foundry.applications.ux.TextEditor.implementation
+				.enrichHTML(raw, {
+					secrets: this.#actor.isOwner,
+					rollData: item?.getRollData() ?? this.#actor.getRollData(),
+					relativeTo: (item ?? this.#actor) as unknown as foundry.abstract.Document.Any,
+				})
+				.then((html: string) => {
+					if (this.#descriptionSources.get(id) !== raw) return;
+					this.#enrichedDescriptions = { ...this.#enrichedDescriptions, [id]: html };
+				});
+		}
 	}
 
 	#audit(key: string): void {

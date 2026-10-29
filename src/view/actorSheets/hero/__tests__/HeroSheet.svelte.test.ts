@@ -58,6 +58,22 @@ describe('HeroSheet', () => {
 		expect(screen.getByText('NIMBLE.actorSheet.hero.spells.none')).toBeInTheDocument();
 	});
 
+	it.each([
+		['features', 'NIMBLE.featureTypes.class'],
+		['inventory', 'NIMBLE.actorSheet.hero.inventory.none'],
+		['effects', 'NIMBLE.actorSheet.hero.effects.allConditions'],
+		['bio', 'NIMBLE.actorSheet.hero.bio.notes'],
+		['settings', 'NIMBLE.actorSheet.hero.settings.groups.needsAPlace'],
+	])('opens the %s tab', async (tab, text) => {
+		stubWidth(720);
+		const { ui } = renderSheet();
+
+		await fireEvent.click(screen.getByRole('tab', { name: new RegExp(`tabs.${tab}`) }));
+
+		expect(ui.tab).toBe(tab);
+		expect(screen.getAllByText(text).length).toBeGreaterThan(0);
+	});
+
 	it('opens the choice step of a row that reveal() asks for', async () => {
 		stubWidth(720);
 		const { ui } = renderSheet();

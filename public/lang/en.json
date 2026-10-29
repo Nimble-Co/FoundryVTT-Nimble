@@ -177,8 +177,14 @@
 				"tabs": {
 					"core": "Core",
 					"actions": "Actions",
+					"features": "Features",
+					"inventory": "Inventory",
 					"spells": "Spells",
-					"label": "Sheet tabs"
+					"effects": "Effects",
+					"bio": "Bio",
+					"settings": "Settings",
+					"label": "Sheet tabs",
+					"effectsBadge": "{count} conditions and effects on you now"
 				},
 				"frame": {
 					"done": "Done",
@@ -222,6 +228,91 @@
 					"newSpell": "New Spell",
 					"none": "No spells",
 					"noSchool": "No school"
+				},
+				"features": {
+					"create": "Create Feature",
+					"newFeature": "New Feature",
+					"none": "No features",
+					"post": "Post {name} to chat",
+					"subclass": "Subclass",
+					"exotic": "Exotic",
+					"facts": {
+						"level": "Level",
+						"boonType": "Type"
+					}
+				},
+				"effects": {
+					"active": "Active effects",
+					"conditionsOn": "Conditions on you",
+					"passive": "Passive effects",
+					"allConditions": "All conditions",
+					"none": "None",
+					"fromItem": "From {name}",
+					"inactiveRound": "Ends after 1 round with no attack and no new use",
+					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
+					"untilItEnds": "Until it ends",
+					"remove": "Remove",
+					"removeName": "Remove {name}",
+					"removeQuestion": "Remove {name}?",
+					"facts": {
+						"from": "From",
+						"lasts": "Lasts"
+					}
+				},
+				"bio": {
+					"age": "Age",
+					"height": "Height",
+					"weight": "Weight",
+					"gender": "Gender",
+					"notes": "Notes",
+					"noNotes": "No notes"
+				},
+				"settings": {
+					"groups": {
+						"image": "Actor Image Settings",
+						"items": "Embedded Document Settings",
+						"inventory": "Inventory Settings",
+						"bonuses": "Bonuses",
+						"skills": "Skill Settings",
+						"spells": "Spell Settings",
+						"needsAPlace": "Needs a place"
+					},
+					"needsAPlaceHint": "These have no place on the new character sheet yet.",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"imageScale": "Scale (%)",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"trackSlots": "Track Inventory Slots",
+					"currencyBulk": "Automatically Include Currency Bulk",
+					"bonusSlots": "Bonus Inventory Slots",
+					"woundsBonus": "Max wounds bonus",
+					"maxWounds": "Max wounds: {max}",
+					"initiativeBonus": "Initiative bonus",
+					"passiveSkills": "Show Passive Skill Scores",
+					"spellTier": "Highest Unlocked Spell Tier",
+					"resetSpellTier": "Reset spell tier",
+					"inspiration": "Inspiration"
+				},
+				"inventory": {
+					"create": "Create Object",
+					"newObject": "New Object",
+					"none": "No objects",
+					"empty": "Empty",
+					"capacity": "{used} / {capacity}",
+					"overCapacity": "Over its capacity: {used} / {capacity}",
+					"quantity": "x{count}",
+					"quantityOf": "Quantity of {name}",
+					"storeIn": "Store {name} in",
+					"loose": "Loose",
+					"slots": "SLOTS {used} / {total}",
+					"slotsLabel": "Inventory slots",
+					"overSlots": "You are over your inventory slot limit: {used} / {total}.",
+					"coinsLabel": "Coins",
+					"coin": "{coin} coins",
+					"facts": {
+						"quantity": "Quantity",
+						"storedIn": "Stored in"
+					}
 				}
 			},
 			"shared": {
@@ -237,6 +328,9 @@
 				"usesLeft": "{left} of {max} left.",
 				"usesBack": "{left} of {max} left. They come back each {per}.",
 				"usesOf": "{pool} of {name}",
+				"delete": "Delete",
+				"deleteName": "Delete {name}",
+				"deleteQuestion": "Delete {name}? It leaves the sheet.",
 				"per": {
 					"round": "round",
 					"encounter": "encounter",
@@ -2562,6 +2656,7 @@
 			"npc": "Nimble NPC Sheet",
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
+			"hero": "Character sheet (Hero)",
 			"ancestry": "Nimble Ancestry Sheet",
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
