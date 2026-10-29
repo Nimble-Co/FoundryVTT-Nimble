@@ -1,3 +1,4 @@
+import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { isCombatantDead } from '../combat/isCombatantDead.js';
 import { isCombatStarted } from '../combat/isCombatStarted.js';
 import {
@@ -94,7 +95,7 @@ export function getHeroicReactionUsageState({
 		blockedReason = 'notOwner';
 	} else if (isActiveTurn) {
 		blockedReason = 'activeTurn';
-	} else if (currentActions < requiredActions) {
+	} else if (isActionTrackingAutomationEnabled() && currentActions < requiredActions) {
 		blockedReason = 'noActions';
 	}
 

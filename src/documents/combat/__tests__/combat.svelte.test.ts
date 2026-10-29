@@ -2950,6 +2950,76 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it.each(['useHeroicReactions', 'toggleHeroicReactionAvailability'] as const)(
+		'with action tracking off, %s marks the reaction spent with no actions left and keeps the actions',
+		async (method) => {
+			globals().game.user.isGM = false;
+			globals().game.user.role = 1;
+			(
+				globals().game as unknown as {
+					settings: { get: ReturnType<typeof vi.fn> };
+				}
+			).settings.get.mockImplementation((namespace: string, key: string) => {
+				if (namespace === 'core' && key === 'rollMode') return 'publicroll';
+				if (key === AUTOMATION_SETTING_KEYS.actionTracking) return false;
+				return undefined;
+			});
+			const combatId = `combat-tracking-off-${method}`;
+			const activeCharacter = createMockCombatant({
+				id: 'active-character',
+				type: 'character',
+				sort: 1,
+				isOwner: false,
+				initiative: 15,
+				actionsCurrent: 3,
+				actionsMax: 3,
+				actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+				combatId,
+			});
+			const defendingCharacter = createMockCombatant({
+				id: 'defending-character',
+				type: 'character',
+				sort: 2,
+				isOwner: true,
+				initiative: 12,
+				actionsCurrent: 0,
+				actionsMax: 3,
+				actor: createCombatActorFixture({
+					hp: 8,
+					woundsValue: 0,
+					woundsMax: 6,
+					isOwner: true,
+				}),
+				combatId,
+			});
+			const combat = new NimbleCombat({
+				id: combatId,
+				round: 1,
+				combatants: createCombatantsCollectionFixture([activeCharacter, defendingCharacter]),
+				turns: [activeCharacter, defendingCharacter],
+				turn: 0,
+				combatant: activeCharacter,
+			} as unknown as Combat.CreateData) as NimbleCombat & {
+				updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			};
+
+			combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+			const changed =
+				method === 'useHeroicReactions'
+					? await combat.useHeroicReactions('defending-character', ['defend'])
+					: await combat.toggleHeroicReactionAvailability('defending-character', 'defend');
+
+			expect(changed).toBe(true);
+			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+				{
+					_id: 'defending-character',
+					'system.actions.heroic.defendAvailable': false,
+				},
+			]);
+		},
+	);
+
 	it('uses combined heroic reactions for sheet workflows and spends two actions', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
