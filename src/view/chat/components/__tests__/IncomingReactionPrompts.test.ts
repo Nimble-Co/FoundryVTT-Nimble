@@ -251,9 +251,15 @@ describe('IncomingReactionPrompts', () => {
 			],
 			'Actor.cheat',
 		);
+		const names = (globalThis as Record<string, any>).fromUuidSync;
+		(globalThis as Record<string, any>).fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Item.vo' ? { name: 'Vicious Opportunist' } : names(uuid),
+		);
 		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
-		expect(rollPlace().getByText('Changed with Sir Brannon: 3 became 8, a crit')).toBeTruthy();
+		expect(
+			rollPlace().getByText('Changed with Vicious Opportunist: 3 became 8, a crit'),
+		).toBeTruthy();
 		expect(rollPlace().getByText('set')).toBeTruthy();
 		expect(rollPlace().getByText('Crit')).toBeTruthy();
 		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();

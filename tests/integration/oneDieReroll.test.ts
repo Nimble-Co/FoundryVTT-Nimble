@@ -258,11 +258,24 @@ describe('changeOneDie on live dice', () => {
 
 	test('a Primary Die set to 1 is a miss', async () => {
 		const roll = await rolled('DamageRoll', '1d8 + 2', DAMAGE, 8, [5]);
+		CONFIG.Dice.randomUniform = () => {
+			throw new Error('A die was rolled.');
+		};
 
 		const after = (await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 1 }))
 			.roll as unknown as LiveRoll;
 
 		expect(resultsOf(after)).toEqual([1]);
+		expect(after.isMiss).toBe(true);
+	});
+
+	test('a Primary Die set to the miss threshold of the attack is a miss', async () => {
+		const roll = await rolled('DamageRoll', '1d8 + 2', { ...DAMAGE, missThreshold: 2 }, 8, [6]);
+
+		const after = (await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 2 }))
+			.roll as unknown as LiveRoll;
+
+		expect(resultsOf(after)).toEqual([2]);
 		expect(after.isMiss).toBe(true);
 	});
 

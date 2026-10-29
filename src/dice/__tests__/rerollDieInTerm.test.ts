@@ -245,6 +245,14 @@ describe('changeDieInTerm', () => {
 		expect(die.results).toEqual([dropped(3), kept(2)]);
 	});
 
+	it('does not keep the lowest again under disadvantage', async () => {
+		const die = term(20, 2, [kept(4), dropped(15)], ['kln']);
+
+		await changeDieInTerm(die, 0, 'none', 18, draws());
+
+		expect(die.results).toEqual([kept(18), dropped(15)]);
+	});
+
 	it('leaves a changed dropped die dropped', async () => {
 		const die = term(20, 2, [kept(15), dropped(4)], ['khn']);
 

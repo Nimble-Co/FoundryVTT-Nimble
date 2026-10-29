@@ -119,9 +119,22 @@ describe('ChangeDieRule', () => {
 		).toBe(false);
 	});
 
-	it('is a choice, never automatic', () => {
-		expect(
-			(makeRule() as unknown as { rerollsByItself?: boolean }).rerollsByItself,
-		).toBeUndefined();
+	describe('does not offer', () => {
+		const MELEE = { side: 'roller', roll: { kind: 'attack', delivery: 'melee' } } as const;
+
+		it('while it is disabled', () => {
+			expect(makeRule({ disabled: true }).offersRerollOn(MELEE)).toBe(false);
+		});
+
+		it('from an item that is not on an actor', () => {
+			const rule = makeRule();
+			(rule.item as unknown as { isEmbedded: boolean }).isEmbedded = false;
+			expect(rule.offersRerollOn(MELEE)).toBe(false);
+		});
+
+		it('while its predicate fails', () => {
+			const rule = makeRule({ predicate: new Predicate({ self: 'raging' } as never) });
+			expect(rule.offersRerollOn(MELEE)).toBe(false);
+		});
 	});
 });
