@@ -25,7 +25,7 @@ The code names are `HeroSheet` (for `character`) and `MonsterSheet` (for `npc`, 
 actor.reactive ──adapter──▶ { actor: ActorLike, context: SheetContext }
                                    │
                                    ▼
-                   view functions (pure): heroRail(), heroCoreTab(), heroActionsTab(), heroSpellsTab(), heroFrame()
+                   view functions (pure): heroRail(), heroFrame(), hero<Tab>Tab() for each of the 8 tabs
                                    │  typed views with intents
                                    ▼
                     sections ──▶ parts (plain props)
@@ -46,7 +46,7 @@ The adapter is the only view model code that reads Foundry. Keep Foundry calls o
 
 ### View functions
 
-Each tab has one pure function, the rail has one, and the frame (tabs and edit band) has one: `heroRail(actor, context)`, `heroCoreTab(actor, context)`, `heroActionsTab(actor, context)`, `heroSpellsTab(actor, context)`, `heroFrame(context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
+Each tab has one pure function, the rail has one, and the frame (tabs, the Effects count and edit band) has one: `heroRail`, `heroFrame`, `heroCoreTab`, `heroActionsTab`, `heroFeaturesTab`, `heroInventoryTab`, `heroSpellsTab`, `heroEffectsTab`, `heroBioTab` and `heroSettingsTab`. Each takes `(actor, context)`. A view function gives back a typed view: final strings (through the injected `localize` and `format`), numbers, and intents. It does not read Foundry, so its unit tests need no Foundry mocks.
 
 - The view gives every string that a section shows: headings, button labels, tooltips and the labels for screen readers. A section never calls `localize`. So the localizer stub of the tests checks every key. A part can still localize its own fixed labels.
 - Language keys for the views are under `NIMBLE.actorSheet.{parts,shared,hero,monster}`. Use a key that exists when its words are correct for the place.
@@ -61,6 +61,9 @@ The list tabs are groups of rows (`HeroRowGroup`, `HeroRowView` in `hero/heroRow
 - `use`: what a click does. `act` sends its intent at once; `choose` opens the choice step of the row; `blocked` does nothing and gives the reason (for example "Used this round" from the charge gate).
 - `choice`: the choice step under the row, or `null`. `options` (a list of buttons, with lines such as the target name), `twoStep` (Assess: an option, then a skill) or `dice` (the dice pool spend: pick dice, then Spend). The picks while the step is open are local state of the section; `spendIntent()` makes the intent from them.
 - `edit`: the intent of the pen, `drag`: what a drag gives (`shared/drag.ts`), `fields`: the numbers that you type in edit mode.
+- `remove`: Delete in edit mode. Foundry v14 item windows have no Delete, so the row has a trash button that asks in a ConfirmBar first.
+- `descriptionHtml`: the description as Foundry enriches it (inline rolls, links). The Application enriches only the open item rows; until then the row shows the plain `description`.
+- Inventory rows also have `equip` (the EQUIP tag), `storeIn` (the "Store in" select in edit mode), `indent` (a stored object) and `dropInto` (the container that a drop on the row goes in).
 
 `shared/placeOf.ts` decides where a feature goes (Actions, Reactions or only Features), and `shared/rowOrder.ts` has the order of a group (A to Z, spells by tier or by school).
 
@@ -91,11 +94,15 @@ Outside code (the heroic action macro, the dice pool spend request, drop feedbac
 
 The UI state is on the Application, so it exists before the sheet renders. When the sheet is closed, `reveal()` renders it.
 
-Two callers use it now. The heroic action macro opens the choice step of Assess or Opportunity Attack, or the Actions or Spells tab. The `dicePool.requestSpend` router opens the dice spend step of the feature row. Both find the new sheet with `asRevealable()` (`shared/revealable.ts`) and keep the old sheet path until the old sheets are deleted. Each row has a `data-row-id` attribute; `reveal()` and the tests find rows by it.
+Three callers use it now. The heroic action macro opens the choice step of Assess or Opportunity Attack, or the Actions or Spells tab. The `dicePool.requestSpend` router opens the dice spend step of the item row (Spells for a spell, the Inventory for an object other than an equipped weapon, else Actions). A drop shows and flashes the row on its tab. Both find the new sheet with `asRevealable()` (`shared/revealable.ts`) and keep the old sheet path until the old sheets are deleted. Each row has a `data-row-id` attribute; `reveal()` and the tests find rows by it.
 
 ### The Application
 
-`hero/HeroSheetApplication.svelte.ts` has the `HeroSheet` class (`ActorSheetV2` with `SvelteApplicationMixin`). It gives the root component three props: `source` (the adapter), `ui` (its `$state`) and `perform` (the Foundry dispatcher). It also runs the level choice audit and primes the combat mana rules.
+`hero/HeroSheetApplication.svelte.ts` has the `HeroSheet` class (`ActorSheetV2` with `SvelteApplicationMixin`). It gives the root component three props: `source` (the adapter), `ui` (its `$state`) and `perform` (the Foundry dispatcher). It also runs the level choice audit, primes the combat mana rules, and enriches the Bio notes and the open row descriptions (enrichment is async, so the adapter gets the results through its extras).
+
+### Drops
+
+`HeroSheet._onDrop` takes every Item drop on the sheet; other drops go to the core handler. An Inventory row and the Inventory list take their own drop and stop it, with the place of the drop (a container id, or empty for loose). `hero/heroDrop.ts` (`dropAction`) decides what the drop does: create the item through the shared drop route (`routeItemDrop`), store a carried object in a container, take it out, or show the row of a carried item. After the drop, `reveal({ tab, rowId, flash: true })` shows the row. There is no hand sorting.
 
 The file name is not `HeroSheet.svelte.ts`: TypeScript resolves `./HeroSheet.svelte` to a `.svelte.ts` file with the same name first, and then the root component import gets the class type.
 
@@ -105,17 +112,18 @@ The character sheet opens at 720 x 850. Below 560 px it changes to the narrow fo
 
 A part (`parts/`) takes plain props only and never reads the actor. It may import other parts, its props type, Svelte and the `localize` helper, nothing else; a dependency-cruiser rule checks this. Each part has a story in `storybook/parts/`. A sheet does not style a part from its own files: a size or a state that one sheet needs is a named prop or variant on the part.
 
-A section (`hero/sections/`) takes a view, the UI state where it needs it, and `perform`. It sends the intents of its view and builds the intents that carry a typed value (for example `setHp` with the number that you typed).
+A section (`hero/sections/`) takes a view, the UI state where it needs it, and `perform`. It sends the intents of its view. Where the user types a value, the view gives a function that makes the intent from it (for example a Settings number), or the section builds an intent that carries only that value (for example `setHp` with the number that you typed).
 
 The props type of each part, section and root is in `types/components/actorSheets/<Name>.d.ts` as `<Name>Props`, as AGENTS.md asks for all components.
 
-`shared/sheetFrame.svelte.ts` has the code that both sheet roots use: `trackWidth()` (the ResizeObserver) and `flashRows()` (the flash of `reveal()`).
+`shared/sheetFrame.svelte.ts` has the code that both sheet roots use: `trackWidth()` (the ResizeObserver) and `flashRows()` (the flash of `reveal()`). `shared/gridKeys.ts` moves the focus in a grid of buttons with the arrow keys (the condition grid). When the script of a section is longer than 30 lines, its logic goes in a co-located `.svelte.ts` file, as `HeroRow.svelte.ts`.
 
 ## Tests
 
-- View functions: unit tests in `__tests__` beside the code, with the fixtures in `tests/fixtures/actorSheets/` (`blankHero()`, `heroContext()`, `heroTurn()`). The fixture context uses a localizer stub: it gives back the key (and the data for `format`), and it fails the test when the key is not in `public/lang/en.json`.
+- View functions: unit tests in `__tests__` beside the code, with the fixtures in `tests/fixtures/actorSheets/` (`blankHero()`, `heroContext()`, `heroTurn()`, and `containerHero()`, `featureHero()`, `effectsHero()` for the other tabs). The fixture context uses a localizer stub: it gives back the key (and the data for `format`), and it fails the test when the key is not in `public/lang/en.json`.
 - `perform`: one test for each intent kind.
 - Sections and the root: component tests with `@testing-library/svelte`, a view object and a `perform` spy. Find elements by role and accessible name, or by `data-row-id`. No `data-testid`, and no part class names in selectors. Name a test file `*.svelte.test.ts` when it needs `$state` for the UI state.
+- Live: `tests/integration/heroSheet.test.ts` opens the sheet in Foundry v14 and uses its controls (tabs, rows, the EQUIP tag, HP, rest, drops, the window menu, Escape, the condition grid, the pools, a combat turn, the macro and the spend request). See `tests/integration/README.md` to run it.
 
 ## Storybook
 
