@@ -3,7 +3,7 @@
 
 	import localize from '#utils/localize.ts';
 
-	import { exportCharacterToJson } from './CharacterJsonExportButton.utils.ts';
+	import { exportCharacterToJson } from '#utils/documents/exportCharacterToJson.ts';
 
 	const { actor }: CharacterJsonExportButtonProps = $props();
 
