@@ -7,6 +7,8 @@ export interface HeroSheetStoryProps {
 	width: number;
 	height: number;
 	editing: boolean;
+	/** the tab at the start; default core */
+	tab?: string;
 	/** theme-light or theme-dark; leave it out to follow the toolbar */
 	theme?: string;
 }
