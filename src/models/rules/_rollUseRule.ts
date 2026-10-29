@@ -1,4 +1,5 @@
 import { Predicate } from '../../etc/Predicate.js';
+import { buildTargetDomain } from '../../utils/actor/conditionalBonuses.js';
 import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
@@ -249,6 +250,7 @@ declare namespace RollUseRule {
 
 /** The creature on the other side of the roll, as a rule tests it. */
 interface OtherCreature {
+	uuid?: string;
 	getTargetDomain?(): Set<string>;
 }
 
@@ -392,15 +394,17 @@ abstract class RollUseRule<
 
 	/**
 	 * Whether the other creature is what the rule asks for. The test sees the
-	 * other creature's `target:` tags and the owner's own tags, without the
-	 * owner's `target:` tags. A rule that asks fails when there is no other creature.
+	 * other creature's `target:` tags with the marks the owner put on it, and
+	 * the owner's own tags without the owner's `target:` tags. A rule that asks
+	 * fails when there is no other creature.
 	 */
 	private otherCreatureMatches(other: OtherCreature | null | undefined): boolean {
 		const raw = this.otherCreature;
 		const predicate = raw instanceof Predicate ? raw : new Predicate((raw ?? {}) as never);
 		if (predicate.size === 0) return true;
 		if (!other) return false;
-		const domain = new Set<string>(other.getTargetDomain?.() ?? []);
+		const owner = this.actor as unknown as Parameters<typeof buildTargetDomain>[0];
+		const domain = buildTargetDomain(owner, other);
 		for (const tag of [...(this.actor?.getDomain() ?? []), ...(this.item.getDomain() ?? [])]) {
 			if (!tag.startsWith('target:')) domain.add(tag);
 		}

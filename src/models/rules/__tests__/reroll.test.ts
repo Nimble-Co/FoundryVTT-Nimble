@@ -373,6 +373,19 @@ describe('RerollRule', () => {
 				expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
 			});
 
+			it('sees the marks the owner put on the other creature', () => {
+				const { rule, actor } = makeRule(otherCreature({ target: 'exploit-weakness' }));
+				const marked = { uuid: 'Actor.ogre', getTargetDomain: () => new Set<string>() };
+				const unmarked = { uuid: 'Actor.goblin', getTargetDomain: () => new Set<string>() };
+				Object.assign(actor, {
+					getFlag: () => ({
+						'exploit-weakness': [{ actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre' }],
+					}),
+				});
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: marked })).toBe(true);
+				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: unmarked })).toBe(false);
+			});
+
 			it("also sees the owner's own tags, but not the owner's target tags", () => {
 				const { rule, actor } = makeRule(
 					otherCreature({ $or: ['target:distracted', 'self:raging'] }),
