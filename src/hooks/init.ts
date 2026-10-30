@@ -38,6 +38,7 @@ import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
 import { registerMovementActions } from '../utils/movement/movementActions.js';
 import HeroSheet from '../view/actorSheets/hero/HeroSheetApplication.svelte.js';
+import MonsterSheet from '../view/actorSheets/monster/MonsterSheetApplication.svelte.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -172,6 +173,17 @@ export default function init() {
 			types: ['minion'],
 			makeDefault: true,
 			label: 'NIMBLE.sheets.npc',
+		},
+	);
+
+	// the new NPC sheet: a second choice in the sheet selector until the switch
+	foundry.documents.collections.Actors.registerSheet(
+		SYSTEM_ID,
+		MonsterSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['npc', 'soloMonster', 'minion'],
+			makeDefault: false,
+			label: 'NIMBLE.sheets.monster',
 		},
 	);
 

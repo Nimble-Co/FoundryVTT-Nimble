@@ -2752,6 +2752,7 @@
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
 			"hero": "Character sheet (Hero)",
+			"monster": "NPC sheet (Monster)",
 			"ancestry": "Nimble Ancestry Sheet",
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
