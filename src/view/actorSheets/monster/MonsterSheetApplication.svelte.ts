@@ -13,8 +13,8 @@ import {
 } from '../shared/sheetUiState.ts';
 import {
 	createDescriptionEnricher,
+	createNotesEnricher,
 	type EnrichActor,
-	enrichText,
 } from '../shared/textEnricher.svelte.ts';
 import MonsterSheetComponent from './MonsterSheet.svelte';
 import { createMonsterSource, type MonsterDocument } from './monsterAdapter.ts';
@@ -32,7 +32,7 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 
 	#ui: SheetUiState = $state(createSheetUiState('abilities'));
 
-	#enrichedNotes = $state('');
+	#notes: ReturnType<typeof createNotesEnricher>;
 
 	#descriptions: ReturnType<typeof createDescriptionEnricher>;
 
@@ -55,6 +55,7 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 			: actor.document;
 		this.#actor = resolved ?? actor.document;
 		this.#descriptions = createDescriptionEnricher(this.#actor as unknown as EnrichActor);
+		this.#notes = createNotesEnricher(this.#actor as unknown as EnrichActor);
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -125,7 +126,7 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 		const context = await super._prepareContext(options);
 		this.#props ??= {
 			source: createMonsterSource(this.#actor, {
-				enrichedNotes: () => this.#enrichedNotes,
+				enrichedNotes: () => this.#notes.html,
 				enrichedDescriptions: () => this.#descriptions.enriched,
 			}),
 			ui: this.#ui,
@@ -145,7 +146,7 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 		this.#stopEffects = $effect.root(() => {
 			$effect(() => {
 				const notes = String((actor.reactive.system as { description?: string }).description ?? '');
-				untrack(() => this.#enrichNotes(notes));
+				untrack(() => this.#notes.want(notes));
 			});
 			// the text of a card starts open, so each ability waits for its enriched text unless it is closed
 			$effect(() => {
@@ -171,11 +172,5 @@ export default class MonsterSheet extends SvelteApplicationMixin(
 		super._onClose(options);
 		this.#stopEffects?.();
 		this.#stopEffects = null;
-	}
-
-	#enrichNotes(notes: string): void {
-		void enrichText(notes, this.#actor as unknown as EnrichActor).then((html) => {
-			this.#enrichedNotes = html;
-		});
 	}
 }

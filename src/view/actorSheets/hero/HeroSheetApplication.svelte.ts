@@ -19,8 +19,8 @@ import {
 } from '../shared/sheetUiState.ts';
 import {
 	createDescriptionEnricher,
+	createNotesEnricher,
 	type EnrichActor,
-	enrichText,
 } from '../shared/textEnricher.svelte.ts';
 import HeroSheetComponent from './HeroSheet.svelte';
 import { createHeroSource } from './heroAdapter.ts';
@@ -62,7 +62,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 
 	#combatManaPrimed = $state(0);
 
-	#enrichedNotes = $state('');
+	#notes: ReturnType<typeof createNotesEnricher>;
 
 	#descriptions: ReturnType<typeof createDescriptionEnricher>;
 
@@ -85,6 +85,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 			: actor.document;
 		this.#actor = resolved ?? actor.document;
 		this.#descriptions = createDescriptionEnricher(this.#actor as unknown as EnrichActor);
+		this.#notes = createNotesEnricher(this.#actor as unknown as EnrichActor);
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -173,7 +174,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		this.#props ??= {
 			source: createHeroSource(actor, {
 				missingLevelSelections: () => this.#missingLevelSelections,
-				enrichedNotes: () => this.#enrichedNotes,
+				enrichedNotes: () => this.#notes.html,
 				enrichedDescriptions: () => this.#descriptions.enriched,
 				manaFromInitiative: () => {
 					// read only to recompute when the combat mana rules are primed
@@ -213,7 +214,7 @@ export default class HeroSheet extends SvelteApplicationMixin(
 				const notes = String(
 					(actor.reactive.system as { details?: { notes?: string } }).details?.notes ?? '',
 				);
-				untrack(() => this.#enrichNotes(notes));
+				untrack(() => this.#notes.want(notes));
 			});
 			$effect(() => {
 				const open = new Set(this.#ui.openRows);
@@ -232,12 +233,6 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		super._onClose(options);
 		this.#stopEffects?.();
 		this.#stopEffects = null;
-	}
-
-	#enrichNotes(notes: string): void {
-		void enrichText(notes, this.#actor as unknown as EnrichActor).then((html) => {
-			this.#enrichedNotes = html;
-		});
 	}
 
 	#audit(key: string): void {

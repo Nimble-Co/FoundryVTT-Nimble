@@ -22,6 +22,24 @@ export function enrichText(
 	});
 }
 
+/** The enriched notes of the actor. Only the newest change sets the html. */
+export function createNotesEnricher(actor: EnrichActor) {
+	let html = $state('');
+	let latest: string | null = null;
+
+	return {
+		get html() {
+			return html;
+		},
+		want(raw: string): void {
+			latest = raw;
+			void enrichText(raw, actor).then((enriched) => {
+				if (latest === raw) html = enriched;
+			});
+		},
+	};
+}
+
 /**
  * The enriched descriptions of the item rows that show their text. Enrichment is async, so a
  * row shows its plain text until its entry comes; a changed description drops the old entry.
