@@ -6,11 +6,7 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import {
-	endToggleEffectFromAE,
-	findToggleEffectRuleById,
-	toggleEffectAE,
-} from '#utils/actor/toggleEffectControl.js';
+import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
@@ -29,6 +25,7 @@ import localize from '#utils/localize.js';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
+import { endEffect, removeEffect, setCondition } from '../shared/effectActions.ts';
 import { combatantOf, mayAddAction } from './heroActions.ts';
 import type {
 	HeroConfigureTarget,
@@ -205,63 +202,6 @@ async function setQuantity(actor: NimbleCharacter, itemId: string, value: number
 	await actor.updateItem(itemId, { 'system.quantity': value });
 }
 
-type EffectHolder = { effects?: { get(id: string): ActiveEffect | undefined } };
-
-function effectOf(actor: NimbleCharacter, effectId: string, itemId: string | null) {
-	const holder = (itemId ? actor.items.get(itemId) : actor) as EffectHolder | undefined;
-	return holder?.effects?.get(effectId);
-}
-
-/** The toggle lifecycle ends it: its confirm prompt and pool clearing run. */
-async function endEffect(actor: NimbleCharacter, effectId: string): Promise<void> {
-	const effect = [...actor.allApplicableEffects()].find((entry) => entry.id === effectId);
-	if (!effect) return;
-	try {
-		await endToggleEffectFromAE(
-			actor as unknown as Parameters<typeof endToggleEffectFromAE>[0],
-			effect as unknown as Parameters<typeof endToggleEffectFromAE>[1],
-		);
-	} catch (_error) {
-		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
-	}
-}
-
-async function removeEffect(
-	actor: NimbleCharacter,
-	effectId: string,
-	itemId: string | null,
-): Promise<void> {
-	try {
-		await effectOf(actor, effectId, itemId)?.delete();
-	} catch (_error) {
-		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
-	}
-}
-
-/** A custom status that `toggleStatusEffect` does not know goes with the effects that carry it. */
-async function setCondition(
-	actor: NimbleCharacter,
-	conditionId: string,
-	active: boolean,
-): Promise<void> {
-	try {
-		const standard = conditionId in (CONFIG.NIMBLE.conditions ?? {});
-		const carriers = [...actor.effects]
-			.filter((effect) => effect.statuses?.has(conditionId))
-			.map((effect) => effect.id)
-			.filter((id): id is string => Boolean(id));
-		if (!active && !standard && carriers.length) {
-			await actor.deleteEmbeddedDocuments('ActiveEffect', carriers);
-			return;
-		}
-		await actor.toggleStatusEffect(conditionId, { active });
-	} catch (_error) {
-		ui.notifications?.error(
-			localize(active ? 'NIMBLE.ui.failedToUpdateCondition' : 'NIMBLE.ui.failedToRemoveCondition'),
-		);
-	}
-}
-
 /** What `perform` asks of the sheet that it acts for. */
 export interface HeroPerformSheet {
 	/** an Item drop: on the Inventory into a container (empty = loose); null = anywhere else */
@@ -399,13 +339,13 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				else await actor.removeItemFromContainer(intent.itemId);
 				return;
 			case 'endEffect':
-				await endEffect(actor, intent.effectId);
+				await endEffect(document, intent.effectId);
 				return;
 			case 'removeEffect':
-				await removeEffect(actor, intent.effectId, intent.itemId);
+				await removeEffect(document, intent.effectId, intent.itemId);
 				return;
 			case 'setCondition':
-				await setCondition(actor, intent.conditionId, intent.active);
+				await setCondition(document, intent.conditionId, intent.active);
 				return;
 			case 'setDetail':
 				await actor.update({ [`system.details.${intent.detail}`]: intent.value } as Record<

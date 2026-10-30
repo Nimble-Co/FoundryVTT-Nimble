@@ -1,5 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
+	import { fn } from 'storybook/test';
 	import AttackSequence from '#view/actorSheets/parts/AttackSequence.svelte';
 
 	const { Story } = defineMeta({
@@ -26,4 +27,12 @@
 <Story
 	name="One or the other"
 	args={{ parts: [['Crush', 'b'], ' OR ', ['Bite/Swallow', 'b'], '.'] }}
+/>
+<Story
+	name="From the sequence item, with a pen"
+	args={{
+		html: '<p>After each hero’s turn, choose one: <strong>Move &amp; Smack</strong> OR <strong>Grab &amp; Throw</strong>.</p>',
+		name: 'Actions',
+		onedit: fn(),
+	}}
 />

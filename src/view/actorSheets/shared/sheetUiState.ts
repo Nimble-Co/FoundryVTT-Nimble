@@ -12,6 +12,8 @@ export interface SheetUiState {
 	editing: boolean;
 	/** ids of the rows that show their text */
 	openRows: string[];
+	/** ids of the rows that hide their text, on a sheet where the text starts open */
+	closedRows: string[];
 	/** id of the row whose choice step is open */
 	choiceStep: string | null;
 	/** id of the ConfirmBar that asks now */
@@ -21,7 +23,15 @@ export interface SheetUiState {
 }
 
 export function createSheetUiState(tab: string): SheetUiState {
-	return { tab, editing: false, openRows: [], choiceStep: null, confirm: null, flash: null };
+	return {
+		tab,
+		editing: false,
+		openRows: [],
+		closedRows: [],
+		choiceStep: null,
+		confirm: null,
+		flash: null,
+	};
 }
 
 export function revealIn(ui: SheetUiState, request: RevealRequest): void {
@@ -61,6 +71,17 @@ export function toggleRow(ui: SheetUiState, rowId: string): void {
 /** Expand all gives every row id of the tab; Collapse all gives none. */
 export function setOpenRows(ui: SheetUiState, rowIds: string[]): void {
 	ui.openRows = [...rowIds];
+}
+
+export function toggleClosedRow(ui: SheetUiState, rowId: string): void {
+	ui.closedRows = ui.closedRows.includes(rowId)
+		? ui.closedRows.filter((id) => id !== rowId)
+		: [...ui.closedRows, rowId];
+}
+
+/** Expand all gives none; Collapse all gives every row id of the tab. */
+export function setClosedRows(ui: SheetUiState, rowIds: string[]): void {
+	ui.closedRows = [...rowIds];
 }
 
 export function toggleChoice(ui: SheetUiState, rowId: string): void {

@@ -2,7 +2,7 @@
 @component
 A number that looks like plain text: no border and no field background. Click it and type.
 Enter or leaving the field keeps the number, Escape undoes it. Use it for HP, Temp HP, mana, uses left and quantity.
-A maximum is never typed on the sheet face: it changes in the configure window.
+A maximum changes in the configure window. The one exception is the max HP of a monster in edit mode (VitalPlate `onmaxchange`).
 
 `variant` fits the number to its place: `label` sits in the label line of a rail meter, `field` is a 26 px number of its own
 (a meter, the phone strip), and `cost` is a use count in a row in edit mode. `rest` is edit mode: the pointer cannot change the number.

@@ -1,6 +1,5 @@
+import { MOVEMENT_ORDER } from '../shared/movement.ts';
 import type { HeroActorLike } from './heroSource.ts';
-
-const MOVEMENT_ORDER = ['walk', 'fly', 'climb', 'swim', 'burrow'];
 
 export interface SpeedBonus {
 	type: string;

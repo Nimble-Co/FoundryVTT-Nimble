@@ -1,5 +1,6 @@
+// Foundry marks the chat log and the chat popout light in both themes. They take the theme of the UI around them.
 :root,
-.theme-light {
+.theme-light:not(.chat-log, .chat-popout) {
 	/** FONTS **/
 	--nimble-primary-font: "Roboto Condensed", sans-serif;
 	--nimble-mono-font: "Source Code Pro", monospace;

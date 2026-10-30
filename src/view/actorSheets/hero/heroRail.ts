@@ -1,6 +1,8 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import type { PoolKind } from '../parts/types.ts';
+import { MOVEMENT_ICONS } from '../shared/movement.ts';
+import { portraitOf } from '../shared/portrait.ts';
 import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
@@ -195,14 +197,6 @@ const RAIL = 'NIMBLE.actorSheet.hero.rail';
 const METER = 'NIMBLE.actorSheet.hero.meter';
 const TURN = 'NIMBLE.actorSheet.hero.turn';
 const MAX_LEVEL = 20;
-const MOVEMENT_ICONS: Record<string, string> = {
-	walk: 'fa-solid fa-person-walking',
-	fly: 'fa-solid fa-feather',
-	climb: 'fa-solid fa-mountain',
-	swim: 'fa-solid fa-water',
-	burrow: 'fa-solid fa-circle-down',
-};
-
 const dieNumber = (dieSize: string | null) => (dieSize ? Number(dieSize.replace(/^d/, '')) : null);
 const firstOfType = (actor: HeroActorLike, type: string): ItemLike | undefined =>
 	actor.items.find((item) => item.type === type);
@@ -537,11 +531,7 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 		},
 		name: actor.name,
 		img: actor.img,
-		portrait: {
-			x: actor.flags.actorImageXOffset ?? 0,
-			y: actor.flags.actorImageYOffset ?? 0,
-			scale: actor.flags.actorImageScale ?? 100,
-		},
+		portrait: portraitOf(actor.flags),
 		meta: meta(actor, context),
 		hp: {
 			value: hp.value,

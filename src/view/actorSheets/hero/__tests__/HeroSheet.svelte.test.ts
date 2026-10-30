@@ -61,7 +61,7 @@ describe('HeroSheet', () => {
 	it.each([
 		['features', 'NIMBLE.featureTypes.class'],
 		['inventory', 'NIMBLE.actorSheet.hero.inventory.none'],
-		['effects', 'NIMBLE.actorSheet.hero.effects.allConditions'],
+		['effects', 'NIMBLE.actorSheet.shared.effects.allConditions'],
 		['bio', 'NIMBLE.actorSheet.hero.bio.notes'],
 		['settings', 'NIMBLE.actorSheet.hero.settings.groups.needsAPlace'],
 	])('opens the %s tab', async (tab, text) => {

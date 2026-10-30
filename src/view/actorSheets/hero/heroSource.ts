@@ -2,6 +2,8 @@ import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { HeroicReactionKey } from '#utils/incomingReactions/heroicActions.js';
+import type { PoolRecovery } from '../shared/poolRecovery.ts';
+import type { PortraitFlags } from '../shared/portrait.ts';
 import type {
 	ChargePoolLike,
 	ConditionLike,
@@ -59,11 +61,8 @@ export interface HeroActorLike {
 		};
 		details: { age: string; height: string; weight: string; gender: string; notes: string };
 	};
-	flags: {
+	flags: PortraitFlags & {
 		showPassiveSkillScores?: boolean;
-		actorImageXOffset?: number;
-		actorImageYOffset?: number;
-		actorImageScale?: number;
 		/** the groups of the Spells tab; none = by tier */
 		spellsBy?: SpellsBy;
 		/** absent = on */
@@ -95,11 +94,8 @@ export interface HeroCombatState {
 	reactionsSpent: HeroicReactionKey[];
 }
 
-/** When the uses of a pool come back. Turn start and turn end both read "round". */
 /** How the Spells tab groups the spells. */
 export type SpellsBy = 'tier' | 'school';
-
-export type PoolRecovery = 'round' | 'safeRest' | 'fieldRest' | 'encounter';
 
 /** A charge pool that an item has or spends from (`getPoolsForItem`, hidden pools left out). */
 export interface ItemPoolLike {

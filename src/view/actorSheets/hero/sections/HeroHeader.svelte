@@ -6,9 +6,9 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 <script lang="ts">
 	import type { HeroHeaderProps } from '#types/components/actorSheets/HeroHeader.d.ts';
 	import EditZone from '../../parts/EditZone.svelte';
+	import SheetPortrait from '../../shared/SheetPortrait.svelte';
 	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
-	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroStats from './HeroStats.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
@@ -19,7 +19,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 </script>
 
 <header class="nimble-chrome header" class:editing aria-label={view.text.label}>
-	<HeroPortrait {view} form="header" />
+	<SheetPortrait {view} form="header" />
 	<div class="fade"></div>
 	<div class="column">
 		<div class="who">

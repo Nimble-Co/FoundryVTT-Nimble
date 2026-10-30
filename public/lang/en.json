@@ -94,6 +94,7 @@
 				},
 				"vitalPlate": {
 					"current": "Current {label}",
+					"maximum": "Maximum {label}",
 					"hp": "HP",
 					"tempHp": "Temp HP"
 				}
@@ -242,22 +243,7 @@
 					}
 				},
 				"effects": {
-					"active": "Active effects",
-					"conditionsOn": "Conditions on you",
-					"passive": "Passive effects",
-					"allConditions": "All conditions",
-					"none": "None",
-					"fromItem": "From {name}",
-					"inactiveRound": "Ends after 1 round with no attack and no new use",
-					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
-					"untilItEnds": "Until it ends",
-					"remove": "Remove",
-					"removeName": "Remove {name}",
-					"removeQuestion": "Remove {name}?",
-					"facts": {
-						"from": "From",
-						"lasts": "Lasts"
-					}
+					"conditionsOn": "Conditions on you"
 				},
 				"bio": {
 					"age": "Age",
@@ -350,6 +336,115 @@
 					"range": "Range",
 					"damage": "Damage",
 					"uses": "Uses"
+				},
+				"effects": {
+					"active": "Active effects",
+					"passive": "Passive effects",
+					"allConditions": "All conditions",
+					"none": "None",
+					"fromItem": "From {name}",
+					"inactiveRound": "Ends after 1 round with no attack and no new use",
+					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
+					"untilItEnds": "Until it ends",
+					"remove": "Remove",
+					"removeName": "Remove {name}",
+					"removeQuestion": "Remove {name}?",
+					"facts": {
+						"from": "From",
+						"lasts": "Lasts"
+					}
+				}
+			},
+			"monster": {
+				"rail": {
+					"label": "Monster",
+					"meta": {
+						"npc": "Level {level} {size} {type}",
+						"flunky": "Level {level} {size} {type} Flunky",
+						"soloMonster": "Level {level} Solo {size} {type}",
+						"minion": "Level {level} {size} {type} Minion"
+					},
+					"hp": {
+						"healthy": "Hit Points",
+						"bloodied": "Bloodied: at half HP or less."
+					},
+					"minion": {
+						"label": "Minion",
+						"noHp": "No HP. Any damage kills a minion.",
+						"noCrit": "Cannot crit. Misses on a roll of 1."
+					},
+					"armor": "Armor",
+					"armorTooltip": "Armor: {armor}",
+					"speed": {
+						"walk": "Speed",
+						"fly": "Fly",
+						"climb": "Climb",
+						"swim": "Swim",
+						"burrow": "Burrow"
+					},
+					"speedTooltip": "{type} {value} spaces",
+					"defenses": {
+						"resist": "Resist",
+						"immune": "Immune",
+						"vulnerable": "Vulnerable"
+					},
+					"edit": "Edit",
+					"editHint": "Edit the sheet: show where you configure the monster",
+					"stopEditing": "Stop editing",
+					"name": "Name",
+					"metaShort": "Monster",
+					"metaLabel": "Configure the monster: level, type, size, defenses",
+					"savesShort": "Saves",
+					"movementShort": "Movement",
+					"defensesShort": "Defenses",
+					"noDefenses": "No damage defenses"
+				},
+				"tabs": {
+					"label": "NPC sheet tabs",
+					"abilities": "Abilities",
+					"effects": "Effects",
+					"notes": "Notes",
+					"settings": "Settings",
+					"effectsBadge": "{count} conditions and effects on the monster now"
+				},
+				"frame": {
+					"editing": "Editing.",
+					"editingHint": "Click an outlined part to configure it.",
+					"done": "Done"
+				},
+				"abilities": {
+					"groups": {
+						"feature": "Features",
+						"action": "Actions",
+						"bloodied": "Bloodied",
+						"lastStand": "Last Stand"
+					},
+					"empty": "No abilities yet.",
+					"newFeature": "New Feature"
+				},
+				"effects": {
+					"conditionsOn": "Conditions"
+				},
+				"notes": {
+					"label": "Notes",
+					"none": "No notes yet."
+				},
+				"settings": {
+					"groups": {
+						"monster": "Monster",
+						"image": "Actor Image Settings",
+						"items": "Embedded Document Settings",
+						"coins": "Coins"
+					},
+					"monsterType": "Monster type",
+					"level": "Level",
+					"size": "Size",
+					"creatureType": "Creature type",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"imageScale": "Scale (%)",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"coin": "{coin} coins"
 				}
 			}
 		},
@@ -2777,6 +2872,7 @@
 			"object": "Nimble Object Sheet",
 			"playerCharacter": "Nimble Player Character Sheet",
 			"hero": "Character sheet (Hero)",
+			"monster": "NPC sheet (Monster)",
 			"ancestry": "Nimble Ancestry Sheet",
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
@@ -4210,6 +4306,10 @@
 			"includeSpellDescriptionOnScrolls": {
 				"name": "Include Spell Description On Scrolls",
 				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
+			},
+			"openNpcSheetsNarrow": {
+				"name": "Open NPC sheets narrow",
+				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again."
 			}
 		},
 		"diceTestbench": {

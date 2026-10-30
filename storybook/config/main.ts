@@ -34,6 +34,7 @@ const config: StorybookConfig = {
 		{ from: '../../public/fonts', to: '/fonts' },
 		{ from: '../../public/assets/magicItems', to: '/assets/magicItems' },
 		{ from: '../../public/assets/classImages', to: '/assets/classImages' },
+		{ from: '../../public/assets/monsterImages', to: '/assets/monsterImages' },
 	],
 	core: { disableTelemetry: true },
 	viteFinal: (config) => ({

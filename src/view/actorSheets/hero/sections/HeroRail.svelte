@@ -7,10 +7,10 @@ The rail stays dark in both themes.
 <script lang="ts">
 	import type { HeroRailProps } from '#types/components/actorSheets/HeroRail.d.ts';
 	import EditZone from '../../parts/EditZone.svelte';
+	import SheetPortrait from '../../shared/SheetPortrait.svelte';
 	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
 	import HeroMeter from './HeroMeter.svelte';
-	import HeroPortrait from './HeroPortrait.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroStats from './HeroStats.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
@@ -22,7 +22,7 @@ The rail stays dark in both themes.
 
 <aside class="nimble-chrome rail" class:editing aria-label={view.text.label}>
 	<div class="portrait">
-		<HeroPortrait {view} form="rail" />
+		<SheetPortrait {view} form="rail" />
 		<div class="fade"></div>
 		{#if editing}
 			<button

@@ -1,6 +1,7 @@
 <!--
 @component
-A vital number on the rail. You type the current value (`InlineNumber`). The maximum shows after a slash and changes only in the configure window.
+A vital number on the rail. You type the current value (`InlineNumber`). The maximum shows after a slash. It changes in the configure window,
+or, with `onmaxchange` (the NPC sheet in edit mode), it is a number that you type too.
 A vital state shows in words on the plate, at the place that it changes: pass `state="Bloodied"` or `state="Dying"`
 and the label and the number turn to the vital colour. A minion has no HP, so it has no plate.
 The plate sits on the rail, which stays dark in both themes: put it inside `nimble-chrome`.
@@ -27,6 +28,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 		icon,
 		tooltip,
 		rest = false,
+		onmaxchange,
 	}: VitalPlateProps = $props();
 
 	const shownLabel = $derived(label ?? localize('NIMBLE.actorSheet.parts.vitalPlate.hp'));
@@ -35,7 +37,22 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 			? localize('NIMBLE.actorSheet.parts.vitalPlate.tempHp')
 			: localize('NIMBLE.actorSheet.parts.vitalPlate.current', { label: shownLabel }),
 	);
+	const maxLabel = $derived(
+		localize('NIMBLE.actorSheet.parts.vitalPlate.maximum', { label: shownLabel }),
+	);
 </script>
+
+{#snippet maximum(top: number)}
+	{#if onmaxchange}<InlineNumber
+			value={top}
+			onchange={onmaxchange}
+			label={maxLabel}
+			align="center"
+			min={1}
+			dotted
+			width="2.2em"
+		/>{:else}{top}{/if}
+{/snippet}
 
 {#if variant === 'block'}
 	<div class="blk" class:compact class:pb={state && !dying} class:pd={dying} data-tooltip={tooltip}>
@@ -49,7 +66,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 				{max}
 				width={compact ? '40px' : '46px'}
 				{rest}
-			/>{#if max !== undefined}{' '}<small>/ {max}</small>{/if}</b
+			/>{#if max !== undefined}{' '}<small>/ {@render maximum(max)}</small>{/if}</b
 		>
 		<span
 			>{state ?? shownLabel}{#if icon}{' '}<i class={icon}></i>{/if}</span
@@ -67,7 +84,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 				width={temp ? '1.6em' : undefined}
 				{rest}
 			/>
-			{#if max !== undefined}<small>/ {max}</small>{/if}
+			{#if max !== undefined}<small>/ {@render maximum(max)}</small>{/if}
 		</div>
 		<div class="pt">{state ?? shownLabel}</div>
 	</div>
@@ -101,6 +118,9 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 	}
 	.pv small {
 		font-size: 1rem;
+		color: var(--nimble-bronze);
+	}
+	.pv small :global(.num) {
 		color: var(--nimble-bronze);
 	}
 	.pt {

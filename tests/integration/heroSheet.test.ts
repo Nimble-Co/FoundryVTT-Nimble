@@ -283,7 +283,7 @@ describe('the new character sheet', () => {
 			['spells', () => true],
 			[
 				'effects',
-				() => sheet.textContent!.includes(t('NIMBLE.actorSheet.hero.effects.allConditions')),
+				() => sheet.textContent!.includes(t('NIMBLE.actorSheet.shared.effects.allConditions')),
 			],
 			['bio', () => !!sheet.querySelector('prose-mirror')?.textContent?.includes('the mine fell')],
 			['settings', () => sheet.textContent!.includes(t('NIMBLE.jsonExport.exportButton'))],
@@ -549,7 +549,7 @@ describe('the new character sheet', () => {
 		const sheet = await openHeroSheet(hero);
 		await openTab(sheet, 'effects');
 		const grid = sheet.querySelector<HTMLElement>(
-			`[role="group"][aria-label="${CSS.escape(t('NIMBLE.actorSheet.hero.effects.allConditions'))}"]`,
+			`[role="group"][aria-label="${CSS.escape(t('NIMBLE.actorSheet.shared.effects.allConditions'))}"]`,
 		)!;
 		const toggle = grid.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!;
 		const name = toggle.textContent!.trim();
@@ -569,7 +569,7 @@ describe('the new character sheet', () => {
 		useButtonOf(conditionRow()!)!.click();
 		await settle(200);
 		expect(statusCount(), 'one click does not remove').toBe(before);
-		buttonNamed(conditionRow()!, t('NIMBLE.actorSheet.hero.effects.remove'))!.click();
+		buttonNamed(conditionRow()!, t('NIMBLE.actorSheet.shared.effects.remove'))!.click();
 		await waitFor(() => !conditionRow(), 'the condition to come off');
 	}, 30_000);
 
@@ -587,7 +587,7 @@ describe('the new character sheet', () => {
 		await waitFor(() => !!row(), 'the effect row');
 		useButtonOf(row()!)!.click();
 		await settle(200);
-		buttonNamed(row()!, t('NIMBLE.actorSheet.hero.effects.remove'))!.click();
+		buttonNamed(row()!, t('NIMBLE.actorSheet.shared.effects.remove'))!.click();
 		await waitFor(() => !hero.effects.get(effect!.id!), 'the effect to be deleted');
 		await waitFor(() => !row(), 'the effect row to go');
 	}, 30_000);
