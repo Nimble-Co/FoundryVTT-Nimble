@@ -95,8 +95,8 @@ export abstract class ActorSheetApplication<
 	/** The raw notes of the actor, read in an effect, so a change enriches them again. */
 	protected abstract notesOf(): string;
 
-	/** More effects of the sheet, made in the root that stops on close. */
-	protected watch(): void {}
+	/** The effects of the sheet, made in the root that stops on close. */
+	protected abstract watch(): void;
 
 	protected override async _onDrop(event: DragEvent): Promise<void> {
 		const data = droppedItemData(event.dataTransfer);

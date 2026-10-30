@@ -4,7 +4,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 
 - A click on the name or the image does what the system does: kind `roll` (d20 icon) opens the roll window, kind `chat` (speech bubble) posts to chat.
 - When you point at the name, the whole card gets the accent border and a light tint. There is no box inside the card.
-- The arrow (at the start) and the pen are the same `RowButton`s as on a character row. Delete is in the window and asks first.
+- The arrow (at the start) and the pen are the same `RowButton`s as on a character row.
 - `descriptionHtml` (the text that Foundry enriched) replaces the plain `description`.
 - The range and the uses show on the right, with `RowCost`. `nested` indents the abilities of an attack sequence.
 - In edit mode, `fields` replaces the range and the uses with the numbers that you type, and with no `onuse` the name does not act.

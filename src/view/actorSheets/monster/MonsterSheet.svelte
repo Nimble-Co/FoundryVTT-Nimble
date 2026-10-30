@@ -63,7 +63,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		{/if}
 		<div class="body">
 			{#if ui.editing}
-				<EditBand {...sheet.frame.editBand} ondone={() => setEditing(ui, false)} />
+				<EditBand {...sheet.frame.editBand} tight ondone={() => setEditing(ui, false)} />
 			{/if}
 			{#if sheet.abilities}
 				<MonsterAbilitiesTab view={sheet.abilities} {ui} {perform} />
@@ -113,8 +113,6 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding: 8px 12px 12px;
-		--edit-band-top: -8px;
-		--edit-band-margin: -8px -12px 10px;
 		scrollbar-width: thin;
 		scrollbar-color: var(--nimble-ui-ring) transparent;
 	}

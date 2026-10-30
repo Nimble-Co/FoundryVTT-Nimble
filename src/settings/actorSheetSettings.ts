@@ -2,7 +2,6 @@ import { SYSTEM_ID } from '#system';
 
 export const OPEN_NPC_SHEETS_NARROW_SETTING_KEY = 'openNpcSheetsNarrow';
 
-/** Client-scoped: each user sets it for their own screen. */
 export function registerActorSheetSettings(): void {
 	game.settings.register(
 		SYSTEM_ID as 'core',
