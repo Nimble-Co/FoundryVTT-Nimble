@@ -1,5 +1,6 @@
 import { effectLists, effectsOnCount } from '../shared/effectLists.ts';
 import { type EffectRowView, type EffectsTabView, effectsTab } from '../shared/effectsTab.ts';
+import { byName } from '../shared/rowOrder.ts';
 import type { HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 
@@ -67,9 +68,8 @@ export function heroEffectsTab(
 	const groups = view.groups.map((group): HeroRowGroup => {
 		const rows = group.rows.map(heroRow);
 		if (group.id !== 'active' || !actor.system.resources.inspiration) return { ...group, rows };
-		rows.push(inspirationRow(context));
-		rows.sort((a, b) => a.name.localeCompare(b.name));
-		return { ...group, note: String(rows.length), rows };
+		const withInspiration = byName([...rows, inspirationRow(context)]);
+		return { ...group, note: String(withInspiration.length), rows: withInspiration };
 	});
 	return { ...view, groups };
 }
