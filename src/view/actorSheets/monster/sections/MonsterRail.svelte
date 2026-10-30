@@ -161,7 +161,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 	}
 	.narrow {
 		width: auto;
-		flex-shrink: 1;
+		flex-shrink: 0;
 		border-right: 0;
 		border-bottom: 1px solid var(--nimble-ui-line);
 	}
