@@ -26,12 +26,13 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		{/if}
 		<span class="meta">
 			{view.meta}
-			{#if editing}
+			{#if editing && view.configure.metadata}
+				{@const outline = view.configure.metadata}
 				<EditZone
 					inline
-					short={view.text.metaShort}
-					label={view.text.metaLabel}
-					onclick={() => perform({ kind: 'configure', target: 'metadata' })}
+					short={outline.short}
+					label={outline.label}
+					onclick={() => perform(outline.intent)}
 				/>
 			{/if}
 		</span>

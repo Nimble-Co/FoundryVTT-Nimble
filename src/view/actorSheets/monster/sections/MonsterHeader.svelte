@@ -46,12 +46,13 @@ the monster window. It stays dark in both themes.
 			{/if}
 			<span class="meta">
 				{view.meta}
-				{#if editing}
+				{#if editing && view.configure.metadata}
+					{@const outline = view.configure.metadata}
 					<EditZone
 						inline
-						short={view.text.metaShort}
-						label={view.text.metaLabel}
-						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
+						short={outline.short}
+						label={outline.label}
+						onclick={() => perform(outline.intent)}
 					/>
 				{/if}
 			</span>
@@ -73,14 +74,7 @@ the monster window. It stays dark in both themes.
 				{#if expandAll}
 					<ExpandAllButton compact allOpen={expandAll.allOpen} onclick={expandAll.onclick} />
 				{/if}
-				<EditSwitch
-					compact
-					{editing}
-					label={view.edit.label}
-					startHint={view.edit.startHint}
-					stopHint={view.edit.stopHint}
-					onclick={() => setEditing(ui, !ui.editing)}
-				/>
+				<EditSwitch compact {editing} {...view.edit} onclick={() => setEditing(ui, !ui.editing)} />
 			</span>
 		</div>
 	</div>

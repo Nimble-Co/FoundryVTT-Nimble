@@ -2,7 +2,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import { MOVEMENT_ICONS, MOVEMENT_ORDER } from '../shared/movement.ts';
 import { portraitOf } from '../shared/portrait.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
-import type { MonsterArmor, MonsterIntent } from './monsterIntent.ts';
+import type { MonsterArmor, MonsterConfigureTarget, MonsterIntent } from './monsterIntent.ts';
 import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
 
 const RAIL = 'NIMBLE.actorSheet.monster.rail';
@@ -32,6 +32,13 @@ export interface MonsterDefenseView {
 	value: string;
 }
 
+/** Edit mode: a quiet outline that opens a configure window. */
+export interface MonsterOutline {
+	short: string;
+	label: string;
+	intent: MonsterIntent;
+}
+
 export interface MonsterRailView {
 	text: {
 		label: string;
@@ -40,19 +47,13 @@ export interface MonsterRailView {
 		minion: string;
 		changePortrait: string;
 		name: string;
-		metaShort: string;
-		metaLabel: string;
-		savesShort: string;
-		configureSaves: string;
-		movementShort: string;
-		configureMovement: string;
-		defensesShort: string;
-		configureDefenses: string;
 		/** edit mode shows the defenses box when it is empty, so you can configure it */
 		noDefenses: string;
 	};
 	/** the Edit switch */
 	edit: { label: string; startHint: string; stopHint: string };
+	/** the outlines of edit mode; null: the user cannot change the monster */
+	configure: Record<'metadata' | 'saves' | 'movement' | 'defenses', MonsterOutline | null>;
 	name: string;
 	/** "Level 1/3 Small Goblins", "Level 2 Solo Large Ogre" */
 	meta: string;
@@ -132,6 +133,25 @@ function defenses(actor: MonsterActorLike, context: MonsterSheetContext): Monste
 		}));
 }
 
+function outlines(context: MonsterSheetContext): MonsterRailView['configure'] {
+	const { localize, editable } = context;
+	const outline = (short: string, label: string, target: MonsterConfigureTarget) =>
+		editable
+			? {
+					short: localize(`${RAIL}.${short}`),
+					label: localize(label),
+					intent: { kind: 'configure', target } as const,
+				}
+			: null;
+	return {
+		metadata: outline('metaShort', `${RAIL}.metaLabel`, 'metadata'),
+		saves: outline('savesShort', 'NIMBLE.prompts.configureSavingThrows', 'saves'),
+		movement: outline('movementShort', 'NIMBLE.prompts.configureMovement', 'movement'),
+		// the monster window holds the damage defenses, as on the old sheet
+		defenses: outline('defensesShort', 'NIMBLE.npcSheet.editDamageDefenses', 'metadata'),
+	};
+}
+
 /** The rail of the NPC sheet (the header of the narrow form): who, HP, saves, armor, speed, defenses. */
 export function monsterRail(
 	actor: MonsterActorLike,
@@ -154,14 +174,6 @@ export function monsterRail(
 			minion: localize(`${RAIL}.minion.label`),
 			changePortrait: localize('NIMBLE.prompts.changeActorImage'),
 			name: localize(`${RAIL}.name`),
-			metaShort: localize(`${RAIL}.metaShort`),
-			metaLabel: localize(`${RAIL}.metaLabel`),
-			savesShort: localize(`${RAIL}.savesShort`),
-			configureSaves: localize('NIMBLE.prompts.configureSavingThrows'),
-			movementShort: localize(`${RAIL}.movementShort`),
-			configureMovement: localize('NIMBLE.prompts.configureMovement'),
-			defensesShort: localize(`${RAIL}.defensesShort`),
-			configureDefenses: localize('NIMBLE.npcSheet.editDamageDefenses'),
 			noDefenses: localize(`${RAIL}.noDefenses`),
 		},
 		edit: {
@@ -169,6 +181,7 @@ export function monsterRail(
 			startHint: localize(`${RAIL}.editHint`),
 			stopHint: localize(`${RAIL}.stopEditing`),
 		},
+		configure: outlines(context),
 		name: actor.name,
 		meta: meta(actor, context),
 		img: actor.img,

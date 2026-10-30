@@ -86,7 +86,7 @@ describe('monsterRail', () => {
 		).toBe('none');
 	});
 
-	it('gives the words of the Edit switch and of each configure outline', () => {
+	it('gives the words of the Edit switch and of edit mode', () => {
 		const rail = monsterRail(goblin(), monsterContext());
 
 		expect(rail.edit).toEqual({
@@ -97,15 +97,40 @@ describe('monsterRail', () => {
 		expect(rail.text).toMatchObject({
 			changePortrait: 'NIMBLE.prompts.changeActorImage',
 			name: `${RAIL}.name`,
-			metaShort: `${RAIL}.metaShort`,
-			metaLabel: `${RAIL}.metaLabel`,
-			savesShort: `${RAIL}.savesShort`,
-			configureSaves: 'NIMBLE.prompts.configureSavingThrows',
-			movementShort: `${RAIL}.movementShort`,
-			configureMovement: 'NIMBLE.prompts.configureMovement',
-			defensesShort: `${RAIL}.defensesShort`,
-			configureDefenses: 'NIMBLE.npcSheet.editDamageDefenses',
 			noDefenses: `${RAIL}.noDefenses`,
+		});
+	});
+
+	it('gives each configure outline its window, and none to a user who cannot change the monster', () => {
+		const { configure } = monsterRail(goblin(), monsterContext());
+
+		expect(configure).toEqual({
+			metadata: {
+				short: `${RAIL}.metaShort`,
+				label: `${RAIL}.metaLabel`,
+				intent: { kind: 'configure', target: 'metadata' },
+			},
+			saves: {
+				short: `${RAIL}.savesShort`,
+				label: 'NIMBLE.prompts.configureSavingThrows',
+				intent: { kind: 'configure', target: 'saves' },
+			},
+			movement: {
+				short: `${RAIL}.movementShort`,
+				label: 'NIMBLE.prompts.configureMovement',
+				intent: { kind: 'configure', target: 'movement' },
+			},
+			defenses: {
+				short: `${RAIL}.defensesShort`,
+				label: 'NIMBLE.npcSheet.editDamageDefenses',
+				intent: { kind: 'configure', target: 'metadata' },
+			},
+		});
+		expect(monsterRail(goblin(), monsterContext({ editable: false })).configure).toEqual({
+			metadata: null,
+			saves: null,
+			movement: null,
+			defenses: null,
 		});
 	});
 

@@ -59,11 +59,12 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 					onclick={editing ? undefined : () => perform(save.intent)}
 				/>
 			{/each}
-			{#if editing}
+			{#if editing && view.configure.saves}
+				{@const outline = view.configure.saves}
 				<EditZone
-					short={view.text.savesShort}
-					label={view.text.configureSaves}
-					onclick={() => perform({ kind: 'configure', target: 'saves' })}
+					short={outline.short}
+					label={outline.label}
+					onclick={() => perform(outline.intent)}
 				/>
 			{/if}
 		</div>
@@ -96,11 +97,12 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 				{#each speeds as stat (stat.id)}
 					<StatBox icon={stat.icon} label={stat.label} value={stat.value} tooltip={stat.tooltip} />
 				{/each}
-				{#if editing}
+				{#if editing && view.configure.movement}
+					{@const outline = view.configure.movement}
 					<EditZone
-						short={view.text.movementShort}
-						label={view.text.configureMovement}
-						onclick={() => perform({ kind: 'configure', target: 'movement' })}
+						short={outline.short}
+						label={outline.label}
+						onclick={() => perform(outline.intent)}
 					/>
 				{/if}
 			</div>
@@ -117,11 +119,12 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 						<dd class="none">{view.text.noDefenses}</dd>
 					{/each}
 				</dl>
-				{#if editing}
+				{#if editing && view.configure.defenses}
+					{@const outline = view.configure.defenses}
 					<EditZone
-						short={view.text.defensesShort}
-						label={view.text.configureDefenses}
-						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
+						short={outline.short}
+						label={outline.label}
+						onclick={() => perform(outline.intent)}
 					/>
 				{/if}
 			</div>
@@ -137,13 +140,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 				/>
 			</nav>
 			<div class="switch">
-				<EditSwitch
-					{editing}
-					label={view.edit.label}
-					startHint={view.edit.startHint}
-					stopHint={view.edit.stopHint}
-					onclick={() => setEditing(ui, !ui.editing)}
-				/>
+				<EditSwitch {editing} {...view.edit} onclick={() => setEditing(ui, !ui.editing)} />
 			</div>
 		{/if}
 	</div>
