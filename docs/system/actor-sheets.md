@@ -99,7 +99,9 @@ Three callers use it now. The heroic action macro opens the choice step of Asses
 
 ### The Application
 
-`hero/HeroSheetApplication.svelte.ts` has the `HeroSheet` class (`ActorSheetV2` with `SvelteApplicationMixin`). It gives the root component three props: `source` (the adapter), `ui` (its `$state`) and `perform` (the Foundry dispatcher). It also runs the level choice audit, primes the combat mana rules, and enriches the Bio notes and the open row descriptions (enrichment is async, so the adapter gets the results through its extras).
+Both Applications extend `shared/ActorSheetApplication.svelte.ts` (`ActorSheetV2` with `SvelteApplicationMixin`). The base finds the actor of a token, holds the `SheetUiState` (`$state`), has `reveal()`, sends an Item drop to `dropItem()`, enriches the notes, and stops its effects on close. It gives the root component three props: `source` (the adapter), `ui` and `perform` (the Foundry dispatcher). A sheet gives `createProps()`, `dropItem()`, `notesOf()` and, for more effects, `watch()`.
+
+`hero/HeroSheetApplication.svelte.ts` has the `HeroSheet` class. It also runs the level choice audit, primes the combat mana rules, and enriches the open row descriptions (enrichment is async, so the adapter gets the results through its extras).
 
 ### Drops
 
@@ -118,7 +120,9 @@ The character sheet opens at 720 x 850. Below 560 px it changes to the narrow fo
 - The Abilities tab has the groups Features, Actions, Bloodied and Last Stand, in the order of the item `sort` field. An attack sequence is in Actions, with its actions nested under it. An item with no description and no effects is a heading line. The text of each card starts open, so the open state is in `closedRows`.
 - Hand sorting: `monsterReorder.ts` has `dropPlace()` (a line above or below the target, or nest below an attack sequence; a drop works only in the same group) and `reorderIntent()` (one `reorder` intent with the new `sort` of each ability in the group and the `parentItemId` of the dragged action). A drag that starts on the tab is a reorder: the row takes the drop and stops it. A drop from outside goes on to `MonsterSheet._onDrop`, which creates the item through `routeItemDrop` and then flashes the card.
 - `monsterIntent.ts` has the `MonsterIntent` union, and `monsterPerform.ts` has `createMonsterPerform(actor)`, with a test for each kind in `monster/__tests__/monsterPerform.test.ts`.
-- `MonsterSheetApplication.svelte.ts` has the `MonsterSheet` class. It opens at 660 x 650; below 560 px it changes to the narrow form (a header with the HP, the rail without the portrait, and a strip of tabs).
+- Edit mode: the Edit switch is last in the rail (a pen in the narrow header), and the edit band goes on top of the tab; both are in `shared/` (`EditSwitch.svelte`, `EditBand.svelte`) and the character sheet uses them too. In edit mode a card and a save do not act, the HP rests and you type the max HP, ARMOR is a select, and EditZones open `NPCMetaConfigDialog` (the line under the name and the defenses), `ActorSavingThrowConfigDialog` and `CharacterMovementConfigDialog`. Each card, attack sequence and heading line has a trash button that asks first; a heading line gets its pen. The title bar (`MonsterTitle.svelte`) has the name field and Create Feature.
+- `MonsterSheetApplication.svelte.ts` has the `MonsterSheet` class. It opens at 660 x 650; below 560 px it changes to the narrow form (a header with the HP, the rail without the portrait, and a strip of tabs). With the client setting "Open NPC sheets narrow" (`src/settings/actorSheetSettings.ts`) on, it opens 390 px wide.
+- The root logic (the width, the views of the tab that shows, Expand all) is in `monsterSheetState.svelte.ts`, not `MonsterSheet.svelte.ts`, for the reason in "Drops" above.
 
 Both sheets build the Effects tab from `shared/`: `effectLists.ts` (the lists, the count on the tab, the duration words), `effectsTab.ts` (the rows, their intents and the condition grid), `effectActions.ts` (End, Remove, a condition on or off) and `ConditionGrid.svelte`. `shared/documentLikes.ts` turns items, effects and conditions into their `*Like` types and registers the redraw hooks. `shared/textEnricher.svelte.ts` enriches the notes and the open descriptions. `shared/SheetPortrait.svelte` is the portrait with its image offsets and scale.
 
