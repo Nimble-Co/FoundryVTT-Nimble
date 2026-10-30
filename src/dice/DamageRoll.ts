@@ -1082,22 +1082,39 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/**
 	 * Recalculates the roll total from all terms. Works in both legacy and
-	 * modifier-mode by summing active results from all Die/PrimaryDie terms
-	 * and totals from other terms.
+	 * modifier-mode by adding or taking away the active results of each
+	 * Die/PrimaryDie term and the value of each other term, as the operator
+	 * before it says. A formula with another operator is left to Foundry.
 	 */
 	private _recalculateTotal(): void {
+		const internals = this as object as { _total: number; _evaluateTotal?(): number };
 		let total = 0;
+		let sign = 1;
 		for (const term of this.terms) {
-			if (term instanceof Terms.Die) {
-				total += term.results
-					.filter((r) => r.active && !r.discarded)
-					.reduce((sum, r) => sum + r.result, 0);
-			} else if ('total' in term && typeof term.total === 'number') {
-				total += term.total;
+			if (term instanceof Terms.OperatorTerm) {
+				if (term.operator !== '+' && term.operator !== '-') {
+					if (typeof internals._evaluateTotal === 'function') {
+						internals._total = internals._evaluateTotal();
+					}
+					return;
+				}
+				sign = term.operator === '-' ? -1 : 1;
+				continue;
 			}
+			if (term instanceof Terms.Die) {
+				total +=
+					sign *
+					term.results
+						.filter((r) => r.active && !r.discarded)
+						.reduce((sum, r) => sum + r.result, 0);
+			} else if (term instanceof Terms.NumericTerm) {
+				total += sign * term.number;
+			} else if ('total' in term && typeof term.total === 'number') {
+				total += sign * term.total;
+			}
+			sign = 1;
 		}
 
-		const internals = this as object as { _total: number };
 		internals._total = total;
 	}
 

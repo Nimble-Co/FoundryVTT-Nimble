@@ -31,8 +31,8 @@ function crittingDice(...rolls: Result[][]) {
 }
 
 /** An attack whose kept Primary Die rolled `face`, evaluated with `options`. */
-async function attack(face: number, options: Partial<DamageRoll.Options> = {}) {
-	const roll = new DamageRoll('1d6', {}, {
+async function attack(face: number, options: Partial<DamageRoll.Options> = {}, formula = '1d6') {
+	const roll = new DamageRoll(formula, {}, {
 		canCrit: true,
 		canMiss: true,
 		rollMode: 0,
@@ -128,6 +128,20 @@ describe('a Forced Crit', () => {
 
 		expect(roll.isCritical).toBe(true);
 		expect(faces(roll)).toEqual([3, 2, 4]);
+	});
+
+	it('takes a number after a minus away from the total with the crit dice', async () => {
+		crittingDice([kept(4)]);
+		const roll = await attack(3, { forcedCrit: 'always' }, '1d6 - 1');
+
+		expect(roll.total).toBe(6);
+	});
+
+	it('takes a number after a minus away from a vicious crit total', async () => {
+		crittingDice([kept(3), kept(2)]);
+		const roll = await attack(6, { explosionStyle: 'vicious' }, '1d6 - 1');
+
+		expect(roll.total).toBe(10);
 	});
 
 	it('does nothing on a roll that cannot crit', async () => {
