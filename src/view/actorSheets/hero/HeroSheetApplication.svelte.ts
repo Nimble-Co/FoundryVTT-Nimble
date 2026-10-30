@@ -1,27 +1,13 @@
 import { untrack } from 'svelte';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { routeItemDrop } from '#documents/actor/routeItemDrop.js';
-import {
-	SvelteApplicationMixin,
-	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+import type { SvelteApplicationRenderContext } from '#lib/SvelteApplicationMixin.svelte.js';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,
 } from '#utils/actor/combatManaRules.js';
 import type { MissingLevelSelection } from '#utils/classProgression/findMissingLevelSelections.ts';
-import { droppedItemData } from '../shared/drag.ts';
-import {
-	createSheetUiState,
-	type RevealRequest,
-	revealIn,
-	type SheetUiState,
-} from '../shared/sheetUiState.ts';
-import {
-	createDescriptionEnricher,
-	createNotesEnricher,
-	type EnrichActor,
-} from '../shared/textEnricher.svelte.ts';
+import { ActorSheetApplication } from '../shared/ActorSheetApplication.svelte.ts';
 import HeroSheetComponent from './HeroSheet.svelte';
 import { createHeroSource } from './heroAdapter.ts';
 import { dropAction, tabOfItemType } from './heroDrop.ts';
@@ -49,43 +35,20 @@ function levelAuditKey(actor: NimbleCharacter): string {
 }
 
 /** The new character sheet. It is a second choice in the sheet selector until the switch. */
-export default class HeroSheet extends SvelteApplicationMixin(
-	foundry.applications.sheets.ActorSheetV2,
-) {
-	protected root;
-
-	#actor: NimbleCharacter;
-
-	#ui: SheetUiState = $state(createSheetUiState('core'));
-
+export default class HeroSheet extends ActorSheetApplication<
+	NimbleCharacter,
+	HeroSource,
+	HeroPerform
+> {
 	#missingLevelSelections: number[] = $state([]);
 
 	#combatManaPrimed = $state(0);
-
-	#notes: ReturnType<typeof createNotesEnricher>;
-
-	#descriptions: ReturnType<typeof createDescriptionEnricher>;
-
-	#stopEffects: (() => void) | null = null;
-
-	#props: { source: () => HeroSource; ui: SheetUiState; perform: HeroPerform } | null = null;
 
 	constructor(
 		actor: { document: NimbleCharacter },
 		options = {} as SvelteApplicationRenderContext,
 	) {
-		super(
-			foundry.utils.mergeObject(options, {
-				document: actor.document,
-			}) as object as ConstructorParameters<typeof foundry.applications.sheets.ActorSheetV2>[0],
-		);
-		this.root = HeroSheetComponent;
-		const resolved = actor.document.isToken
-			? ((actor.document.parent as TokenDocument | undefined)?.actor as NimbleCharacter | undefined)
-			: actor.document;
-		this.#actor = resolved ?? actor.document;
-		this.#descriptions = createDescriptionEnricher(this.#actor as unknown as EnrichActor);
-		this.#notes = createNotesEnricher(this.#actor as unknown as EnrichActor);
+		super(actor, options, HeroSheetComponent, 'core');
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -97,30 +60,61 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		position: { width: 720, height: 850 },
 	};
 
-	override get actor(): Actor {
-		return this.#actor as unknown as Actor;
+	protected override createProps() {
+		const actor = this.sheetActor;
+		return {
+			source: createHeroSource(actor, {
+				missingLevelSelections: () => this.#missingLevelSelections,
+				enrichedNotes: () => this.enrichedNotes,
+				enrichedDescriptions: () => this.descriptions.enriched,
+				manaFromInitiative: () => {
+					// read only to recompute when the combat mana rules are primed
+					void this.#combatManaPrimed;
+					return getInitiativeCombatManaRules(actor as unknown as Actor).length > 0;
+				},
+			}),
+			perform: createHeroPerform(actor, {
+				dropItem: (data, containerId) => this.#dropItemInto(data, containerId),
+			}),
+		};
 	}
 
-	/** The only entry for outside code: go to a tab, open a choice step, flash a row. */
-	reveal(request: RevealRequest): void {
-		revealIn(this.#ui, request);
-		if (!this.rendered) void this.render({ force: true });
-		else this.bringToFront();
+	protected override notesOf(): string {
+		return String(
+			(this.sheetActor.reactive.system as { details?: { notes?: string } }).details?.notes ?? '',
+		);
 	}
 
-	/** Item drops on any tab go through the shared drop route; a drop of anything else is the core one. */
-	protected override async _onDrop(event: DragEvent): Promise<void> {
-		const data = droppedItemData(event.dataTransfer);
-		if (!data) {
-			await super._onDrop(event);
-			return;
-		}
-		await this.#dropItem(data, null);
+	protected override watch(): void {
+		const actor = this.sheetActor;
+		void primeActorCombatManaSourceRules(actor as unknown as Actor).then(() => {
+			this.#combatManaPrimed += 1;
+		});
+		let lastKey: string | null = null;
+		$effect(() => {
+			const key = levelAuditKey(actor);
+			if (key === lastKey) return;
+			lastKey = key;
+			untrack(() => this.#audit(key));
+		});
+		$effect(() => {
+			const open = new Set(this.ui.openRows);
+			const wanted = actor.reactive.items
+				.filter((item) => open.has(item.id ?? ''))
+				.map((item) => [item.id ?? '', rawDescriptionOf(item)] as const)
+				.filter(([, raw]) => raw);
+			untrack(() => this.descriptions.want(wanted));
+		});
+	}
+
+	/** Item drops on any tab go through the shared drop route. */
+	protected override dropItem(data: Record<string, unknown>): Promise<void> {
+		return this.#dropItemInto(data, null);
 	}
 
 	/** Places the drop, then shows the row on its tab and flashes it. */
-	async #dropItem(data: Record<string, unknown>, containerId: string | null): Promise<void> {
-		const actor = this.#actor;
+	async #dropItemInto(data: Record<string, unknown>, containerId: string | null): Promise<void> {
+		const actor = this.sheetActor;
 		const carried = actor.items.map((item) => ({
 			id: item.id ?? '',
 			uuid: item.uuid,
@@ -166,81 +160,12 @@ export default class HeroSheet extends SvelteApplicationMixin(
 		}
 	}
 
-	protected override async _prepareContext(
-		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
-	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
-		const context = await super._prepareContext(options);
-		const actor = this.#actor;
-		this.#props ??= {
-			source: createHeroSource(actor, {
-				missingLevelSelections: () => this.#missingLevelSelections,
-				enrichedNotes: () => this.#notes.html,
-				enrichedDescriptions: () => this.#descriptions.enriched,
-				manaFromInitiative: () => {
-					// read only to recompute when the combat mana rules are primed
-					void this.#combatManaPrimed;
-					return getInitiativeCombatManaRules(actor as unknown as Actor).length > 0;
-				},
-			}),
-			ui: this.#ui,
-			perform: createHeroPerform(actor, {
-				dropItem: (data, containerId) => this.#dropItem(data, containerId),
-			}),
-		};
-		return { ...context, ...this.#props } as object as Awaited<
-			ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>
-		>;
-	}
-
-	protected override async _onFirstRender(
-		context: Parameters<foundry.applications.sheets.ActorSheetV2['_onFirstRender']>[0],
-		options: Parameters<foundry.applications.sheets.ActorSheetV2['_onFirstRender']>[1],
-	): Promise<void> {
-		await super._onFirstRender(context, options);
-		const actor = this.#actor;
-		void primeActorCombatManaSourceRules(actor as unknown as Actor).then(() => {
-			this.#combatManaPrimed += 1;
-		});
-
-		let lastKey: string | null = null;
-		this.#stopEffects = $effect.root(() => {
-			$effect(() => {
-				const key = levelAuditKey(actor);
-				if (key === lastKey) return;
-				lastKey = key;
-				untrack(() => this.#audit(key));
-			});
-			$effect(() => {
-				const notes = String(
-					(actor.reactive.system as { details?: { notes?: string } }).details?.notes ?? '',
-				);
-				untrack(() => this.#notes.want(notes));
-			});
-			$effect(() => {
-				const open = new Set(this.#ui.openRows);
-				const wanted = actor.reactive.items
-					.filter((item) => open.has(item.id ?? ''))
-					.map((item) => [item.id ?? '', rawDescriptionOf(item)] as const)
-					.filter(([, raw]) => raw);
-				untrack(() => this.#descriptions.want(wanted));
-			});
-		});
-	}
-
-	protected override _onClose(
-		options: Parameters<foundry.applications.sheets.ActorSheetV2['_onClose']>[0],
-	): void {
-		super._onClose(options);
-		this.#stopEffects?.();
-		this.#stopEffects = null;
-	}
-
 	#audit(key: string): void {
 		if (!key) {
 			this.#missingLevelSelections = [];
 			return;
 		}
-		void this.#actor
+		void this.sheetActor
 			.getMissingLevelSelections()
 			.then((gaps: MissingLevelSelection[]) => {
 				this.#missingLevelSelections = gaps.map((gap) => gap.level);
