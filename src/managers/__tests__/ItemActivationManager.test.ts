@@ -11,6 +11,7 @@ import { ItemActivationManager, testDependencies } from '../ItemActivationManage
 interface MockRollInstance {
 	evaluate: ReturnType<typeof vi.fn>;
 	toJSON: ReturnType<typeof vi.fn>;
+	primaryDie?: unknown;
 }
 
 /** Mock actor interface for testing */
@@ -1170,18 +1171,18 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		describe('Primary Die Bonus rules', () => {
-			function bonusRule(value: number, label = 'Unerring Judgment') {
+			function bonusRule(value: number, label = 'Unerring Judgment', delivery = 'melee') {
 				return {
 					type: 'primaryDieBonus',
 					label: '',
 					item: { name: label, uuid: `Item.${label}` },
 					bonusFor: vi.fn((context: { delivery: string | null }) =>
-						context.delivery === 'melee' ? value : 0,
+						delivery === 'any' || context.delivery === delivery ? value : 0,
 					),
 				};
 			}
 
-			async function rollAttack(attackType: string) {
+			async function rollAttack(attackType: string, primaryDie: unknown = { faces: 8 }) {
 				manager = new ItemActivationManager(
 					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 					{ fastForward: true },
@@ -1202,6 +1203,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					createMockConstructorImplementation({
 						evaluate: vi.fn().mockResolvedValue(undefined),
 						toJSON: vi.fn().mockReturnValue({ total: 4 }),
+						primaryDie,
 					}),
 				);
 				return manager.getData();
@@ -1229,6 +1231,25 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					expect.anything(),
 					expect.objectContaining({ primaryDieModifier: 0 }),
 				);
+				expect(result.primaryDieBonuses).toEqual([]);
+			});
+
+			it('gives a bonus for any attack to an attack with no attack type', async () => {
+				mockActor.rules = [bonusRule(2, 'Any Attack', 'any'), bonusRule(1)];
+				const result = await rollAttack('');
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d8',
+					expect.anything(),
+					expect.objectContaining({ primaryDieModifier: 2 }),
+				);
+				expect(result.primaryDieBonuses).toEqual([
+					{ label: 'Any Attack', value: 2, itemUuid: 'Item.Any Attack' },
+				]);
+			});
+
+			it('lists no bonus when the roll has no Primary Die', async () => {
+				mockActor.rules = [bonusRule(2, 'Any Attack', 'any')];
+				const result = await rollAttack('', null);
 				expect(result.primaryDieBonuses).toEqual([]);
 			});
 

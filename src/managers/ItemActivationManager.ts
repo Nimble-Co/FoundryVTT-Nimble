@@ -94,7 +94,6 @@ function collectPrimaryDieBonuses(
 	delivery: AttackDelivery,
 	target: OtherCreature | null,
 ): PrimaryDieBonusRecord[] {
-	if (!delivery) return [];
 	const lines: PrimaryDieBonusRecord[] = [];
 	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
 		if (rule?.type !== 'primaryDieBonus') continue;
@@ -592,6 +591,8 @@ class ItemActivationManager {
 						activationRollData as DamageRoll.Data,
 						damageOptions,
 					);
+					// A formula with no die has no Primary Die to add to.
+					if (!(roll as DamageRoll).primaryDie) this.#primaryDieBonuses = [];
 
 					foundDamageRoll = true;
 				} else {

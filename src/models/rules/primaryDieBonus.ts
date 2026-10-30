@@ -95,7 +95,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 
 	/** The number this rule adds to the Primary Die of this attack. 0 when it does not apply. */
 	bonusFor(context: PrimaryDieBonusContext): number {
-		if (!this.item.isEmbedded || !context.delivery) return 0;
+		if (!this.item.isEmbedded) return 0;
 		if (!this.test()) return 0;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return 0;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return 0;

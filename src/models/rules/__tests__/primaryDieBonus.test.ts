@@ -55,8 +55,14 @@ describe('PrimaryDieBonusRule', () => {
 		expect(rule.bonusFor({ delivery: 'ranged', other: ogre() })).toBe(0);
 	});
 
-	it('gives nothing on a roll that is not an attack', () => {
-		expect(makeRule().bonusFor({ delivery: null, other: null })).toBe(0);
+	it('gives its value to an attack with no attack type only when it is for any attack', () => {
+		expect(makeRule({ value: '2' }).bonusFor({ delivery: null, other: null })).toBe(2);
+		expect(
+			makeRule({ value: '2', attackDelivery: 'melee' }).bonusFor({ delivery: null, other: null }),
+		).toBe(0);
+		expect(
+			makeRule({ value: '2', attackDelivery: 'ranged' }).bonusFor({ delivery: null, other: null }),
+		).toBe(0);
 	});
 
 	it('resolves a formula against the owner, as a whole number, and may be negative', () => {

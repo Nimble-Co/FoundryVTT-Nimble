@@ -2446,7 +2446,7 @@
 				},
 				"attackDelivery": {
 					"label": "Attack type",
-					"hint": "Any is melee and ranged.",
+					"hint": "Any is every attack, also an attack with no attack type, such as most spells.",
 					"choices": {
 						"any": "Any",
 						"melee": "Melee",
