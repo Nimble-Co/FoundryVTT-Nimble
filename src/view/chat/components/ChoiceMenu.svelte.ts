@@ -1,4 +1,5 @@
 import type { ChoiceMenuProps } from '#types/components/ChoiceMenu.d.ts';
+import { claimEscape } from './claimEscape.ts';
 
 export function createChoiceMenuState(
 	getProps: () => Pick<ChoiceMenuProps, 'sections' | 'trigger' | 'onclose'>,
@@ -30,10 +31,7 @@ export function createChoiceMenuState(
 		if (next !== undefined) {
 			event.preventDefault();
 			items[next]?.focus();
-		} else if (event.key === 'Escape') {
-			// Foundry opens its main menu on an Escape that reaches the window.
-			event.preventDefault();
-			event.stopPropagation();
+		} else if (claimEscape(event)) {
 			getProps().onclose(true);
 		} else if (event.key === 'Tab') {
 			getProps().onclose(false);

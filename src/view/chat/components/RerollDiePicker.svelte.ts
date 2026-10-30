@@ -3,6 +3,7 @@ import type { RerollDiePickerProps } from '#types/components/RerollDiePicker.d.t
 import type { RollUse } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import type { PickableDie } from '../../../dice/oneDieReroll.js';
+import { claimEscape } from './claimEscape.ts';
 
 /**
  * The word under a die: the Primary Die and a dropped die always say what
@@ -67,10 +68,7 @@ export function createRerollDiePickerState(
 		if (next !== undefined && current !== -1) {
 			event.preventDefault();
 			elements.dice[next]?.focus();
-		} else if (event.key === 'Escape') {
-			// Foundry opens its main menu on an Escape that reaches the window.
-			event.preventDefault();
-			event.stopPropagation();
+		} else if (claimEscape(event)) {
 			getProps().oncancel();
 		}
 	}

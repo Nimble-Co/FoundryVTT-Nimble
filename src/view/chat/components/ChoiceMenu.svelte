@@ -77,8 +77,7 @@
 		background: var(--nimble-card-background-color, transparent);
 		border: 1px solid var(--nimble-input-border-color);
 		border-radius: 4px;
-		// Clears the chat log's bottom fade and its jump-to-bottom button.
-		scroll-margin-block-end: 3rem;
+		scroll-margin-block-end: var(--nimble-chat-scroll-clearance);
 
 		&:focus-visible {
 			outline: none;

@@ -272,6 +272,8 @@
 	--nimble-spell-healing-color: hsl(139, 50%, 40%);
 
 	/** CHAT CARD COLORS **/
+	/** room that clears the chat log's bottom fade and its jump-to-bottom button **/
+	--nimble-chat-scroll-clearance: 3rem;
 	--nimble-chat-hit-dice-value-color: hsl(45, 70%, 40%);
 	--nimble-chat-mana-value-color: hsl(220, 70%, 50%);
 	--nimble-chat-maximize-background: hsla(120, 45%, 45%, 0.15);

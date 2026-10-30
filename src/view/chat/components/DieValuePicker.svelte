@@ -3,7 +3,7 @@
 
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
-	import DieBonusBadge from '../../components/DieBonusBadge.svelte';
+	import DieBonusBadge from './DieBonusBadge.svelte';
 	import DieFace from '../../components/DieFace.svelte';
 	import { createDieValuePickerState } from './DieValuePicker.svelte.ts';
 	import { primaryDieBonusText } from './primaryDieBonusText.ts';
@@ -141,8 +141,7 @@
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-input-border-color);
 		border-radius: 4px;
-		// Clears the chat log's bottom fade and its jump-to-bottom button.
-		scroll-margin-block-end: 3rem;
+		scroll-margin-block-end: var(--nimble-chat-scroll-clearance);
 
 		&__head {
 			display: flex;

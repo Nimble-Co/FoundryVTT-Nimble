@@ -1,5 +1,6 @@
 import type { DieValuePickerProps } from '#types/components/DieValuePicker.d.ts';
 import localize from '#utils/localize.js';
+import { claimEscape } from './claimEscape.ts';
 
 export function createDieValuePickerState(
 	getProps: () => Pick<DieValuePickerProps, 'die' | 'feature' | 'sending' | 'onpick' | 'oncancel'>,
@@ -41,11 +42,8 @@ export function createDieValuePickerState(
 	}
 
 	function onKeydown(event: KeyboardEvent) {
-		if (event.key !== 'Escape' || getProps().sending) return;
-		// Foundry opens its main menu on an Escape that reaches the window.
-		event.preventDefault();
-		event.stopPropagation();
-		getProps().oncancel();
+		if (getProps().sending) return;
+		if (claimEscape(event)) getProps().oncancel();
 	}
 
 	/** A typed value out of range goes back to the nearest face when the input loses focus. */
