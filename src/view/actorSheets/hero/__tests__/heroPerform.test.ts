@@ -472,11 +472,16 @@ describe('createHeroPerform', () => {
 			['woundsBonus', 1, 'system.attributes.wounds.bonus'],
 			['highestUnlockedSpellTier', null, 'system.resources.highestUnlockedSpellTier'],
 			['initiativeBonuses', '1d4', 'system.attributes.initiative.bonuses'],
-			['inspiration', true, 'system.resources.inspiration'],
 		] as const)('sets the field %s', async (field, value, path) => {
 			await perform({ kind: 'setField', field, value });
 
 			expect(actor.update).toHaveBeenCalledWith({ [path]: value });
+		});
+
+		it.each([true, false])('sets Inspiration to %s', async (value) => {
+			await perform({ kind: 'setInspiration', value });
+
+			expect(actor.update).toHaveBeenCalledWith({ 'system.resources.inspiration': value });
 		});
 
 		it('opens the PDF export window', async () => {

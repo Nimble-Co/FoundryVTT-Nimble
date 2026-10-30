@@ -10,7 +10,9 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 
 	let { view, ui, perform }: HeroSettingsTabProps = $props();
 
-	const groups = $derived([...view.groups, view.needsAPlace]);
+	const groups = $derived(
+		view.needsAPlace.settings.length ? [...view.groups, view.needsAPlace] : view.groups,
+	);
 
 	function setNumber(intent: (value: number) => HeroIntent, text: string, min?: number) {
 		const value = Number(text);

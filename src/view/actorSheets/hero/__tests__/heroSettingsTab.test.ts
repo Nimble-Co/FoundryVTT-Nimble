@@ -118,30 +118,20 @@ describe('heroSettingsTab', () => {
 		});
 	});
 
-	it('puts Inspiration in Needs a place, with a check box', () => {
-		const view = heroSettingsTab(
-			blankHero({ system: { resources: { inspiration: true } } }),
-			heroContext(),
-		);
+	it.each([true, false])(
+		'has no entry in Needs a place (Inspiration %s has its own place)',
+		(inspiration) => {
+			const view = heroSettingsTab(
+				blankHero({ system: { resources: { inspiration } } }),
+				heroContext(),
+			);
 
-		expect(view.needsAPlace).toEqual({
-			id: 'needsAPlace',
-			label: `${SET}.groups.needsAPlace`,
-			hint: `${SET}.needsAPlaceHint`,
-			settings: [
-				{
-					kind: 'check',
-					id: 'inspiration',
-					label: `${SET}.inspiration`,
-					on: true,
-					intent: expect.any(Function),
-				},
-			],
-		});
-		expect(intentOf(view, 'inspiration', false)).toEqual({
-			kind: 'setField',
-			field: 'inspiration',
-			value: false,
-		});
-	});
+			expect(view.needsAPlace).toEqual({
+				id: 'needsAPlace',
+				label: `${SET}.groups.needsAPlace`,
+				hint: `${SET}.needsAPlaceHint`,
+				settings: [],
+			});
+		},
+	);
 });

@@ -63,12 +63,11 @@ describe('HeroSettingsTab', () => {
 		});
 	});
 
-	it('puts Inspiration in Needs a place at the bottom', async () => {
-		const { perform } = renderTab(true);
+	it('shows no Needs a place group when it has no entry', () => {
+		renderTab(true);
 		const headings = screen.getAllByRole('heading').map((heading) => heading.textContent);
 
-		expect(headings.at(-1)).toBe(`${SET}.groups.needsAPlace`);
-		await fireEvent.click(screen.getByRole('checkbox', { name: `${SET}.inspiration` }));
-		expect(perform).toHaveBeenCalledWith({ kind: 'setField', field: 'inspiration', value: true });
+		expect(headings).not.toContain(`${SET}.groups.needsAPlace`);
+		expect(screen.queryByRole('checkbox', { name: `${SET}.inspiration` })).toBeNull();
 	});
 });

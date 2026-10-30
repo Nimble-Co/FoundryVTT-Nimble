@@ -276,8 +276,7 @@
 					"initiativeBonus": "Initiative bonus",
 					"passiveSkills": "Show Passive Skill Scores",
 					"spellTier": "Highest Unlocked Spell Tier",
-					"resetSpellTier": "Reset spell tier",
-					"inspiration": "Inspiration"
+					"resetSpellTier": "Reset spell tier"
 				},
 				"inventory": {
 					"create": "Create Object",

@@ -19,8 +19,7 @@ export type HeroSettingsField =
 	| 'bonusSlots'
 	| 'woundsBonus'
 	| 'highestUnlockedSpellTier'
-	| 'initiativeBonuses'
-	| 'inspiration';
+	| 'initiativeBonuses';
 
 /** The configure windows that the character sheet opens. */
 export type HeroConfigureTarget =
@@ -85,6 +84,7 @@ export type HeroIntent =
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
 	| { kind: 'setFlag'; flag: HeroSettingsFlag; value: boolean | number }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
+	| { kind: 'setInspiration'; value: boolean }
 	| { kind: 'dropItem'; data: Record<string, unknown>; containerId: string | null }
 	| { kind: 'exportPdf' }
 	| { kind: 'exportJson' }

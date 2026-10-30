@@ -63,7 +63,7 @@ describe('HeroSheet', () => {
 		['inventory', 'NIMBLE.actorSheet.hero.inventory.none'],
 		['effects', 'NIMBLE.actorSheet.shared.effects.allConditions'],
 		['bio', 'NIMBLE.actorSheet.hero.bio.notes'],
-		['settings', 'NIMBLE.actorSheet.hero.settings.groups.needsAPlace'],
+		['settings', 'NIMBLE.actorSheet.hero.settings.groups.image'],
 	])('opens the %s tab', async (tab, text) => {
 		stubWidth(720);
 		const { ui } = renderSheet();
