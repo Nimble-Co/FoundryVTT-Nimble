@@ -15,9 +15,13 @@ const TABS: { id: MonsterTabId; icon: string }[] = [
 export interface MonsterFrameView {
 	tabsLabel: string;
 	tabs: SheetTab[];
+	/** the band at the top of the tab in edit mode */
+	editBand: { title: string; hint: string; done: string };
 }
 
-/** The tabs, with the count of what is on the monster on Effects. */
+const FRAME = 'NIMBLE.actorSheet.monster.frame';
+
+/** The tabs, with the count of what is on the monster on Effects, and the edit band. */
 export function monsterFrame(
 	actor: MonsterActorLike,
 	context: MonsterSheetContext,
@@ -41,5 +45,10 @@ export function monsterFrame(
 					}
 				: {}),
 		})),
+		editBand: {
+			title: localize(`${FRAME}.editing`),
+			hint: localize(`${FRAME}.editingHint`),
+			done: localize(`${FRAME}.done`),
+		},
 	};
 }

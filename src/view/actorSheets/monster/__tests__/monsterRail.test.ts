@@ -67,6 +67,49 @@ describe('monsterRail', () => {
 		expect(armorOf('none').value).toBe('-');
 	});
 
+	it('offers the three armor choices for edit mode, with the armor of the monster', () => {
+		const armor = monsterRail(
+			goblin({ system: { attributes: { armor: 'medium' } } }),
+			monsterContext(),
+		).armor;
+
+		expect(armor.value).toBe('medium');
+		expect(armor.label).toBe(`${RAIL}.armor`);
+		expect(armor.options).toEqual([
+			{ value: 'none', label: 'NIMBLE.armorTypes.none' },
+			{ value: 'medium', label: 'NIMBLE.armorTypes.medium' },
+			{ value: 'heavy', label: 'NIMBLE.armorTypes.heavy' },
+		]);
+		expect(
+			monsterRail(goblin({ system: { attributes: { armor: 'plate' } } }), monsterContext()).armor
+				.value,
+		).toBe('none');
+	});
+
+	it('gives the words of the Edit switch and of each configure outline', () => {
+		const rail = monsterRail(goblin(), monsterContext());
+
+		expect(rail.edit).toEqual({
+			label: `${RAIL}.edit`,
+			startHint: `${RAIL}.editHint`,
+			stopHint: `${RAIL}.stopEditing`,
+		});
+		expect(rail.text).toMatchObject({
+			changePortrait: 'NIMBLE.prompts.changeActorImage',
+			name: `${RAIL}.name`,
+			maxHp: `${RAIL}.maxHp`,
+			metaShort: `${RAIL}.metaShort`,
+			metaLabel: `${RAIL}.metaLabel`,
+			savesShort: `${RAIL}.savesShort`,
+			configureSaves: 'NIMBLE.prompts.configureSavingThrows',
+			movementShort: `${RAIL}.movementShort`,
+			configureMovement: 'NIMBLE.prompts.configureMovement',
+			defensesShort: `${RAIL}.defensesShort`,
+			configureDefenses: 'NIMBLE.npcSheet.editDamageDefenses',
+			noDefenses: `${RAIL}.noDefenses`,
+		});
+	});
+
 	it('shows each speed that the monster has, and walking when it has none', () => {
 		const statsOf = (movement: Record<string, number>) =>
 			monsterRail(goblin({ system: { attributes: { movement } } }), monsterContext())
@@ -118,5 +161,13 @@ describe('monsterFrame', () => {
 		expect(frame.tabs.map((tab) => tab.id)).toEqual(['abilities', 'effects', 'notes', 'settings']);
 		expect(frame.tabs[1]).toMatchObject({ badge: 2 });
 		expect(monsterFrame(goblin(), monsterContext()).tabs[1].badge).toBe(0);
+	});
+
+	it('gives the band of edit mode', () => {
+		expect(monsterFrame(goblin(), monsterContext()).editBand).toEqual({
+			title: 'NIMBLE.actorSheet.monster.frame.editing',
+			hint: 'NIMBLE.actorSheet.monster.frame.editingHint',
+			done: 'NIMBLE.actorSheet.monster.frame.done',
+		});
 	});
 });

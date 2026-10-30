@@ -1,7 +1,30 @@
 import { SYSTEM_ID } from '#system';
+import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import localize from '#utils/localize.js';
+import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { endEffect, removeEffect, setCondition } from '../shared/effectActions.ts';
 import type { MonsterDocument } from './monsterAdapter.ts';
-import type { MonsterIntent, MonsterPerform, MonsterSortUpdate } from './monsterIntent.ts';
+import type {
+	MonsterConfigureTarget,
+	MonsterIntent,
+	MonsterPerform,
+	MonsterSortUpdate,
+} from './monsterIntent.ts';
+
+function configure(actor: MonsterDocument, target: MonsterConfigureTarget): Promise<unknown> {
+	switch (target) {
+		case 'metadata':
+			return actor.editMetadata();
+		case 'saves':
+			return actor.configureSavingThrows();
+		case 'movement':
+			return actor.configureMovement();
+		default: {
+			const unknown: never = target;
+			throw new Error(`No configure window for ${String(unknown)}`);
+		}
+	}
+}
 
 function sortUpdate(update: MonsterSortUpdate): Record<string, unknown> {
 	const data: Record<string, unknown> = { _id: update.itemId, sort: update.sort };
@@ -19,6 +42,33 @@ export function createMonsterPerform(actor: MonsterDocument): MonsterPerform {
 				return;
 			case 'setTempHp':
 				await actor.setTempHP(intent.value);
+				return;
+			case 'setMaxHp':
+				await actor.setMaxHP(intent.value);
+				return;
+			case 'rename':
+				await actor.update({ name: intent.name });
+				return;
+			case 'changePortrait':
+				await updateDocumentImage(document, { shiftKey: intent.skipTokenizer });
+				return;
+			case 'setArmor':
+				await actor.update({ 'system.attributes.armor': intent.armor } as Record<string, unknown>);
+				return;
+			case 'configure':
+				await configure(actor, intent.target);
+				return;
+			case 'createFeature':
+				await actor.createItem({
+					name: localize('NIMBLE.actorSheet.monster.abilities.newFeature'),
+					type: 'monsterFeature',
+				} as Item.CreateData);
+				return;
+			case 'deleteItem':
+				await actor.deleteItem(intent.itemId);
+				return;
+			case 'setPoolCharges':
+				await adjustPool(document, intent.poolId, 'set', intent.value);
 				return;
 			case 'rollSave':
 				await actor.rollSavingThrowToChat(intent.save);

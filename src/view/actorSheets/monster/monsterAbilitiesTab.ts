@@ -13,11 +13,31 @@ const SHARED = 'NIMBLE.actorSheet.shared';
 export type MonsterAbilityGroupId = 'feature' | 'action' | 'bloodied' | 'lastStand';
 const GROUPS: MonsterAbilityGroupId[] = ['feature', 'action', 'bloodied', 'lastStand'];
 
+/** A question in a ConfirmBar under the entry; Yes sends the intent. */
+export interface MonsterAsk {
+	/** the label of the control that asks */
+	label: string;
+	question: string;
+	confirmLabel: string;
+	intent: MonsterIntent;
+}
+
+/** Edit mode: the uses left of a charge pool, as a number that you type. */
+export interface MonsterUsesField {
+	poolId: string;
+	label: string;
+	value: number;
+	max: number;
+	per: string;
+}
+
 interface EntryBase {
 	id: string;
 	name: string;
 	/** the pen: open the item window */
 	edit: { label: string; intent: MonsterIntent };
+	/** edit mode: the trash button, which asks first; null: the user cannot change the monster */
+	remove: MonsterAsk | null;
 	/** null: the user cannot change the monster */
 	drag: DragDescriptor | null;
 	reorder: ReorderEntry;
@@ -31,6 +51,7 @@ export interface MonsterCardView extends EntryBase {
 	roll: boolean;
 	range?: string;
 	uses?: RowUses;
+	fields: MonsterUsesField[];
 	/** plain text */
 	description: string;
 	/** the description as Foundry enriched it, once the sheet has it */
@@ -68,6 +89,8 @@ export interface MonsterAbilitiesTabView {
 	empty: string;
 	/** the ids of the cards with text, for Expand all */
 	cardIds: string[];
+	/** edit mode; null: the user cannot change the monster */
+	createFeature: { label: string; intent: MonsterIntent } | null;
 }
 
 const subtypeOf = (item: MonsterItemLike) => String(item.system.subtype || 'feature');
@@ -107,13 +130,37 @@ function rangeOf(item: MonsterItemLike, context: MonsterSheetContext): string | 
 	});
 }
 
+const perOf = (per: string | null, context: MonsterSheetContext) =>
+	per ? context.localize(`${SHARED}.per.${per}`) : undefined;
+
 function usesOf(item: MonsterItemLike, context: MonsterSheetContext): RowUses | undefined {
 	const pool = context.itemPools[item.id]?.[0];
 	if (!pool) return undefined;
 	return {
 		left: pool.current,
 		max: pool.max,
-		per: pool.per ? context.localize(`${SHARED}.per.${pool.per}`) : undefined,
+		per: perOf(pool.per, context),
+	};
+}
+
+function fieldsOf(item: MonsterItemLike, context: MonsterSheetContext): MonsterUsesField[] {
+	return (context.itemPools[item.id] ?? []).map((pool) => ({
+		poolId: pool.id,
+		label: context.format(`${SHARED}.usesOf`, { name: item.name, pool: pool.label }),
+		value: pool.current,
+		max: pool.max,
+		per: perOf(pool.per, context) ?? '',
+	}));
+}
+
+function removeOf(item: MonsterItemLike, context: MonsterSheetContext): MonsterAsk | null {
+	if (!context.editable) return null;
+	const { localize, format } = context;
+	return {
+		label: format(`${SHARED}.deleteName`, { name: item.name }),
+		question: format(`${SHARED}.deleteQuestion`, { name: item.name }),
+		confirmLabel: localize(`${SHARED}.delete`),
+		intent: { kind: 'deleteItem', itemId: item.id },
 	};
 }
 
@@ -134,6 +181,7 @@ function entryOf(
 			label: format('NIMBLE.prompts.configureItem', { name: item.name }),
 			intent: { kind: 'openItem', itemId: item.id },
 		},
+		remove: removeOf(item, context),
 		drag: context.editable ? { kind: 'item', uuid: item.uuid } : null,
 		reorder: { id: item.id, group, sequence, parentId },
 	};
@@ -155,6 +203,7 @@ function entryOf(
 		roll,
 		range: rangeOf(item, context),
 		uses: usesOf(item, context),
+		fields: fieldsOf(item, context),
 		description,
 		descriptionHtml: context.enrichedDescriptions[item.id],
 		nested: parentId !== null,
@@ -196,5 +245,11 @@ export function monsterAbilitiesTab(
 				.filter((entry) => entry.kind === 'card' && entry.description)
 				.map((entry) => entry.id),
 		),
+		createFeature: context.editable
+			? {
+					label: context.localize('NIMBLE.npcSheet.createFeature'),
+					intent: { kind: 'createFeature' },
+				}
+			: null,
 	};
 }

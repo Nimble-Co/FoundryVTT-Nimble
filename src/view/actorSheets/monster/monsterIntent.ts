@@ -7,6 +7,12 @@ export type MonsterSettingsFlag =
 	| 'actorImageScale'
 	| 'automaticallyExecuteAvailableMacros';
 
+/** The armor of a monster: none, medium or heavy. */
+export type MonsterArmor = 'none' | 'medium' | 'heavy';
+
+/** The configure windows that the NPC sheet opens. The damage defenses are in the metadata window. */
+export type MonsterConfigureTarget = 'metadata' | 'saves' | 'movement';
+
 /** The new place of one ability after a drag: its hand-sorted order, and its attack sequence. */
 export interface MonsterSortUpdate {
 	itemId: string;
@@ -22,6 +28,14 @@ export interface MonsterSortUpdate {
 export type MonsterIntent =
 	| { kind: 'setHp'; value: number }
 	| { kind: 'setTempHp'; value: number }
+	| { kind: 'setMaxHp'; value: number }
+	| { kind: 'rename'; name: string }
+	| { kind: 'changePortrait'; skipTokenizer: boolean }
+	| { kind: 'setArmor'; armor: MonsterArmor }
+	| { kind: 'configure'; target: MonsterConfigureTarget }
+	| { kind: 'createFeature' }
+	| { kind: 'deleteItem'; itemId: string }
+	| { kind: 'setPoolCharges'; poolId: string; value: number }
 	| { kind: 'rollSave'; save: SaveKeyType }
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'openItem'; itemId: string }

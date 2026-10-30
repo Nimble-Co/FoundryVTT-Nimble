@@ -386,7 +386,18 @@
 						"resist": "Resist",
 						"immune": "Immune",
 						"vulnerable": "Vulnerable"
-					}
+					},
+					"edit": "Edit",
+					"editHint": "Edit the sheet: show where you configure the monster",
+					"stopEditing": "Stop editing",
+					"name": "Name",
+					"maxHp": "Maximum HP",
+					"metaShort": "Monster",
+					"metaLabel": "Configure the monster: level, type, size, defenses",
+					"savesShort": "Saves",
+					"movementShort": "Movement",
+					"defensesShort": "Defenses",
+					"noDefenses": "No damage defenses"
 				},
 				"tabs": {
 					"label": "NPC sheet tabs",
@@ -396,6 +407,11 @@
 					"settings": "Settings",
 					"effectsBadge": "{count} conditions and effects on the monster now"
 				},
+				"frame": {
+					"editing": "Editing.",
+					"editingHint": "Click an outlined part to configure it.",
+					"done": "Done"
+				},
 				"abilities": {
 					"groups": {
 						"feature": "Features",
@@ -403,7 +419,8 @@
 						"bloodied": "Bloodied",
 						"lastStand": "Last Stand"
 					},
-					"empty": "No abilities yet."
+					"empty": "No abilities yet.",
+					"newFeature": "New Feature"
 				},
 				"effects": {
 					"conditionsOn": "Conditions"

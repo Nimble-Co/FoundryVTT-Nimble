@@ -113,7 +113,9 @@ describe('monsterAbilitiesTab', () => {
 
 	it('shows the uses of the charge pool of the ability, and nothing with no pool', () => {
 		const context = monsterContext({
-			itemPools: { shoot00000000001: [{ current: 1, max: 1, per: 'encounter' }] },
+			itemPools: {
+				shoot00000000001: [{ id: 'traps', label: 'Traps', current: 1, max: 1, per: 'encounter' }],
+			},
 		});
 
 		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'shoot00000000001').uses).toEqual({
@@ -122,6 +124,58 @@ describe('monsterAbilitiesTab', () => {
 			per: 'NIMBLE.actorSheet.shared.per.encounter',
 		});
 		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'stab000000000001').uses).toBeUndefined();
+	});
+
+	it('gives the uses as a number that you type in edit mode', () => {
+		const context = monsterContext({
+			itemPools: {
+				shoot00000000001: [{ id: 'traps', label: 'Traps', current: 0, max: 2, per: null }],
+			},
+		});
+
+		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'shoot00000000001').fields).toEqual([
+			{
+				poolId: 'traps',
+				label: 'NIMBLE.actorSheet.shared.usesOf {"name":"Shoot","pool":"Traps"}',
+				value: 0,
+				max: 2,
+				per: '',
+			},
+		]);
+		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'stab000000000001').fields).toEqual([]);
+	});
+
+	it('asks before it deletes a card, an attack sequence or a heading line, only for a user who may change the monster', () => {
+		const monster = soloMonster();
+		monster.items.push(monsterAbility(monster.id, 'tactics', 'Tactics', 'feature', 50000));
+		const entries = (editable: boolean) =>
+			monsterAbilitiesTab(monster, monsterContext({ editable })).groups.flatMap(
+				(group) => group.entries,
+			);
+
+		const [heading] = entries(true);
+		expect(heading).toMatchObject({ kind: 'heading', name: 'Tactics' });
+		expect(heading.remove).toEqual({
+			label: 'NIMBLE.actorSheet.shared.deleteName {"name":"Tactics"}',
+			question: 'NIMBLE.actorSheet.shared.deleteQuestion {"name":"Tactics"}',
+			confirmLabel: 'NIMBLE.actorSheet.shared.delete',
+			intent: { kind: 'deleteItem', itemId: 'tactics' },
+		});
+		expect(entries(true).map((entry) => entry.kind)).toEqual(
+			expect.arrayContaining(['heading', 'sequence', 'card']),
+		);
+		expect(entries(true).every((entry) => entry.remove)).toBe(true);
+		expect(entries(false).every((entry) => entry.remove === null)).toBe(true);
+	});
+
+	it('offers Create Feature only to a user who may change the monster', () => {
+		expect(monsterAbilitiesTab(goblin(), monsterContext()).createFeature).toEqual({
+			label: 'NIMBLE.npcSheet.createFeature',
+			intent: { kind: 'createFeature' },
+		});
+		expect(
+			monsterAbilitiesTab(goblin(), monsterContext({ editable: false })).createFeature,
+		).toBeNull();
 	});
 
 	it('shows an item with no description and no effects as a heading line', () => {

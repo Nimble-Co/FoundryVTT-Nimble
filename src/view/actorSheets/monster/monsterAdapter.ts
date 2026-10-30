@@ -37,7 +37,11 @@ const REDRAW_HOOKS = [
 type AnyRecord = Record<string, unknown>;
 
 /** The NPC, solo monster or minion document that the sheet shows. */
-export type MonsterDocument = NimbleBaseActor & { type: MonsterType };
+export type MonsterDocument = NimbleBaseActor & {
+	type: MonsterType;
+	editMetadata(): Promise<void>;
+	configureMovement(): Promise<void>;
+};
 
 function strings(values: unknown): string[] {
 	return [...((values as Iterable<string> | undefined) ?? [])];
@@ -104,6 +108,8 @@ function itemPools(actor: MonsterDocument): Record<string, MonsterItemPool[]> {
 	const byItem: Record<string, MonsterItemPool[]> = {};
 	for (const item of actor.items) {
 		const pools = getPoolsForItem(document, item.id ?? '', all).map((pool) => ({
+			id: pool.id,
+			label: pool.label,
 			current: pool.current,
 			max: pool.max,
 			per: recoveryOf((pool.recoveries ?? []).map((entry) => entry.trigger)),

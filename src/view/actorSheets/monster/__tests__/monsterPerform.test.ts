@@ -3,12 +3,16 @@ import type { MonsterDocument } from '../monsterAdapter.ts';
 import type { MonsterIntent } from '../monsterIntent.ts';
 
 const endToggleEffectFromAE = vi.fn();
+const adjustPool = vi.fn();
+const updateDocumentImage = vi.fn();
 
 let createMonsterPerform: typeof import('../monsterPerform.ts').createMonsterPerform;
 
 beforeAll(async () => {
 	vi.resetModules();
 	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({ endToggleEffectFromAE }));
+	vi.doMock('#utils/chargePool/chargePoolRecover.js', () => ({ adjustPool }));
+	vi.doMock('#view/handlers/updateDocumentImage.js', () => ({ default: updateDocumentImage }));
 	({ createMonsterPerform } = await import('../monsterPerform.ts'));
 });
 
@@ -22,6 +26,12 @@ const ACTOR_METHODS = [
 	'toggleStatusEffect',
 	'deleteEmbeddedDocuments',
 	'updateEmbeddedDocuments',
+	'setMaxHP',
+	'editMetadata',
+	'configureSavingThrows',
+	'configureMovement',
+	'createItem',
+	'deleteItem',
 ] as const;
 
 const featureEffect = { id: 'featureEffect', delete: vi.fn() };
@@ -59,6 +69,14 @@ describe('createMonsterPerform', () => {
 	it.each([
 		[{ kind: 'setHp', value: 7 }, 'setCurrentHP', [7]],
 		[{ kind: 'setTempHp', value: 3 }, 'setTempHP', [3]],
+		[{ kind: 'setMaxHp', value: 30 }, 'setMaxHP', [30]],
+		[{ kind: 'rename', name: 'Goblin Boss' }, 'update', [{ name: 'Goblin Boss' }]],
+		[{ kind: 'setArmor', armor: 'heavy' }, 'update', [{ 'system.attributes.armor': 'heavy' }]],
+		[{ kind: 'configure', target: 'metadata' }, 'editMetadata', []],
+		[{ kind: 'configure', target: 'saves' }, 'configureSavingThrows', []],
+		[{ kind: 'configure', target: 'movement' }, 'configureMovement', []],
+		[{ kind: 'createFeature' }, 'createItem', [{ name: 'New Feature', type: 'monsterFeature' }]],
+		[{ kind: 'deleteItem', itemId: 'stab' }, 'deleteItem', ['stab']],
 		[{ kind: 'rollSave', save: 'dexterity' }, 'rollSavingThrowToChat', ['dexterity']],
 		[{ kind: 'activate', itemId: 'stab' }, 'activateItem', ['stab']],
 		[{ kind: 'setCurrency', coin: 'gp', value: 15 }, 'update', [{ 'system.currency.gp': 15 }]],
@@ -80,6 +98,18 @@ describe('createMonsterPerform', () => {
 			expect(actor[method]).toHaveBeenCalledWith(...args);
 		},
 	);
+
+	it('changes the portrait, and Shift skips the Tokenizer', async () => {
+		await perform({ kind: 'changePortrait', skipTokenizer: true });
+
+		expect(updateDocumentImage).toHaveBeenCalledWith(actor, { shiftKey: true });
+	});
+
+	it('sets the uses left of a charge pool', async () => {
+		await perform({ kind: 'setPoolCharges', poolId: 'traps', value: 0 });
+
+		expect(adjustPool).toHaveBeenCalledWith(actor, 'traps', 'set', 0);
+	});
 
 	it('opens the window of an item', async () => {
 		await perform({ kind: 'openItem', itemId: 'stab' });

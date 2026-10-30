@@ -2,12 +2,13 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import { MOVEMENT_ICONS, MOVEMENT_ORDER } from '../shared/movement.ts';
 import { portraitOf } from '../shared/portrait.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
-import type { MonsterIntent } from './monsterIntent.ts';
+import type { MonsterArmor, MonsterIntent } from './monsterIntent.ts';
 import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
 
 const RAIL = 'NIMBLE.actorSheet.monster.rail';
 const SAVES: SaveKeyType[] = ['strength', 'dexterity', 'intelligence', 'will'];
-const ARMOR_SHORT: Record<string, string> = { none: '-', medium: 'M', heavy: 'H' };
+const ARMOR_SHORT: Record<MonsterArmor, string> = { none: '-', medium: 'M', heavy: 'H' };
+const ARMORS = Object.keys(ARMOR_SHORT) as MonsterArmor[];
 
 export interface MonsterSaveView {
 	key: SaveKeyType;
@@ -32,7 +33,27 @@ export interface MonsterDefenseView {
 }
 
 export interface MonsterRailView {
-	text: { label: string; hp: string; tempHp: string; minion: string };
+	text: {
+		label: string;
+		hp: string;
+		tempHp: string;
+		minion: string;
+		changePortrait: string;
+		name: string;
+		maxHp: string;
+		metaShort: string;
+		metaLabel: string;
+		savesShort: string;
+		configureSaves: string;
+		movementShort: string;
+		configureMovement: string;
+		defensesShort: string;
+		configureDefenses: string;
+		/** edit mode shows the defenses box when it is empty, so you can configure it */
+		noDefenses: string;
+	};
+	/** the Edit switch */
+	edit: { label: string; startHint: string; stopHint: string };
 	name: string;
 	/** "Level 1/3 Small Goblins", "Level 2 Solo Large Ogre" */
 	meta: string;
@@ -52,6 +73,8 @@ export interface MonsterRailView {
 	saves: MonsterSaveView[];
 	/** armor, then each speed */
 	stats: MonsterStatView[];
+	/** the armor select of edit mode */
+	armor: { value: MonsterArmor; label: string; options: { value: MonsterArmor; label: string }[] };
 	/** only the defenses that the monster has */
 	defenses: MonsterDefenseView[];
 }
@@ -119,7 +142,10 @@ export function monsterRail(
 	const { hp, armor } = actor.system.attributes;
 	const minion = actor.type === 'minion';
 	const bloodied = !minion && hp.value > 0 && hp.value <= hp.max / 2;
-	const armorName = localize(`NIMBLE.armorTypes.${ARMOR_SHORT[armor] ? armor : 'none'}`);
+	const armorKey: MonsterArmor = ARMORS.includes(armor as MonsterArmor)
+		? (armor as MonsterArmor)
+		: 'none';
+	const armorName = localize(`NIMBLE.armorTypes.${armorKey}`);
 
 	return {
 		text: {
@@ -127,6 +153,23 @@ export function monsterRail(
 			hp: localize('NIMBLE.actorSheet.parts.vitalPlate.hp'),
 			tempHp: localize('NIMBLE.actorSheet.parts.vitalPlate.tempHp'),
 			minion: localize(`${RAIL}.minion.label`),
+			changePortrait: localize('NIMBLE.prompts.changeActorImage'),
+			name: localize(`${RAIL}.name`),
+			maxHp: localize(`${RAIL}.maxHp`),
+			metaShort: localize(`${RAIL}.metaShort`),
+			metaLabel: localize(`${RAIL}.metaLabel`),
+			savesShort: localize(`${RAIL}.savesShort`),
+			configureSaves: localize('NIMBLE.prompts.configureSavingThrows'),
+			movementShort: localize(`${RAIL}.movementShort`),
+			configureMovement: localize('NIMBLE.prompts.configureMovement'),
+			defensesShort: localize(`${RAIL}.defensesShort`),
+			configureDefenses: localize('NIMBLE.npcSheet.editDamageDefenses'),
+			noDefenses: localize(`${RAIL}.noDefenses`),
+		},
+		edit: {
+			label: localize(`${RAIL}.edit`),
+			startHint: localize(`${RAIL}.editHint`),
+			stopHint: localize(`${RAIL}.stopEditing`),
 		},
 		name: actor.name,
 		meta: meta(actor, context),
@@ -159,11 +202,16 @@ export function monsterRail(
 				id: 'armor',
 				label: localize(`${RAIL}.armor`),
 				icon: 'fa-solid fa-shield-halved',
-				value: ARMOR_SHORT[armor] ?? ARMOR_SHORT.none,
+				value: ARMOR_SHORT[armorKey],
 				tooltip: format(`${RAIL}.armorTooltip`, { armor: armorName }),
 			},
 			...speeds(actor, context),
 		],
+		armor: {
+			value: armorKey,
+			label: localize(`${RAIL}.armor`),
+			options: ARMORS.map((value) => ({ value, label: localize(`NIMBLE.armorTypes.${value}`) })),
+		},
 		defenses: defenses(actor, context),
 	};
 }
