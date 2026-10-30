@@ -6,6 +6,8 @@ export interface RollSummaryOptions {
 		primaryDieValue?: string | number;
 		primaryDieModifier?: string | number;
 		primaryDieBaseResult?: number;
+		/** The kept Primary Die face holds no primaryDieModifier. */
+		primaryDieBonusOff?: boolean;
 		[key: string]: unknown;
 	};
 	roll?: { terms?: { faces?: number }[] } | null;

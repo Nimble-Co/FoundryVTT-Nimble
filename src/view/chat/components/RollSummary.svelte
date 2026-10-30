@@ -23,7 +23,9 @@
 
 	const rollOptions = $derived(options?.rollOptions ?? {});
 	const primaryDieValue = $derived(Number(rollOptions.primaryDieValue) || 0);
-	const primaryDieModifier = $derived(Number(rollOptions.primaryDieModifier) || 0);
+	const primaryDieModifier = $derived(
+		rollOptions.primaryDieBonusOff ? 0 : Number(rollOptions.primaryDieModifier) || 0,
+	);
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 

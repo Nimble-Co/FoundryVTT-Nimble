@@ -41,9 +41,8 @@
 	function hasPrimaryDieDetails(rollOptions) {
 		if (rollOptions?.canCrit === false && rollOptions?.canMiss === false) return false;
 
-		return [rollOptions?.primaryDieValue, rollOptions?.primaryDieModifier].some(
-			(value) => value != null && value != 0,
-		);
+		const modifier = rollOptions?.primaryDieBonusOff ? null : rollOptions?.primaryDieModifier;
+		return [rollOptions?.primaryDieValue, modifier].some((value) => value != null && value != 0);
 	}
 
 	const { damageTypes } = CONFIG.NIMBLE;

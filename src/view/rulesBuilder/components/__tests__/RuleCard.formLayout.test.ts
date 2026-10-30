@@ -280,6 +280,7 @@ describe('RuleCard with a form layout (changeDie)', () => {
 			'usedBy',
 			'die',
 			'change',
+			'addsBonusOnSet',
 			'outcome',
 			'attackDelivery',
 			'predicate',
@@ -310,6 +311,7 @@ describe('RuleCard with a form layout (changeDie)', () => {
 		});
 		const fields = shownFields(container);
 		expect(fields.indexOf('amount')).toBe(fields.indexOf('change') + 1);
+		expect(fields).not.toContain('addsBonusOnSet');
 	});
 });
 

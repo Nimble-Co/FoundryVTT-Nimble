@@ -1,4 +1,9 @@
-const RESULT_OPTIONS = new Set(['netRollMode', 'primaryDieValue', 'primaryDieBaseResult']);
+const RESULT_OPTIONS = new Set([
+	'netRollMode',
+	'primaryDieValue',
+	'primaryDieBaseResult',
+	'primaryDieBonusOff',
+]);
 
 /**
  * Roll options for a reroll of a roll with `options`. A reroll keeps the

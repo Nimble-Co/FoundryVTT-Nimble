@@ -566,9 +566,14 @@ export class CardRerolls {
 		if (!target || !found) return null;
 		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
 		if (!usable.ok) return null;
+		const change: DieChange = usable.rule.dieChange ?? { mode: 'set', value: 0 };
 		return {
-			setsValue: (usable.rule.dieChange?.mode ?? 'set') === 'set',
-			dice: diceForRule(found, usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie'),
+			setsValue: change.mode === 'set',
+			dice: diceForRule(
+				found,
+				usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
+				change,
+			),
 		};
 	}
 
@@ -734,7 +739,7 @@ export class CardRerolls {
 			return void reject('NIMBLE.chat.incomingReactions.changePickAValue');
 		}
 		const change: DieChange =
-			dieChange.mode === 'set' ? { mode: 'set', value: value ?? 0 } : dieChange;
+			dieChange.mode === 'set' ? { ...dieChange, value: value ?? 0 } : dieChange;
 		const target = changeableFor(
 			found,
 			rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',

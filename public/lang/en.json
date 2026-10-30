@@ -2334,7 +2334,7 @@
 				},
 				"change": {
 					"label": "How does it change the die?",
-					"hint": "The die stays between 1 and its max. A Primary Die bonus goes on a set value too.",
+					"hint": "The die stays between 1 and its max.",
 					"choices": {
 						"set": "Set it to a value the player picks",
 						"add": "Add a number"
@@ -2343,6 +2343,10 @@
 				"amount": {
 					"label": "Number to add",
 					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0."
+				},
+				"addsBonusOnSet": {
+					"label": "Add the Primary Die bonus to the set value",
+					"hint": "Off: the set value is the final face, so the max is a crit and 1 is a miss. On: a Primary Die bonus is added to the set value, up to the max."
 				},
 				"chargePoolIdentifier": {
 					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."

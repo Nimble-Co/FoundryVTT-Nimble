@@ -23,13 +23,22 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 	return current ? pickableDice(current, pickOptions(found, current)) : [];
 }
 
-/** The dice a player picks from for a rule: every pickable die, or only the Primary Die. */
-function diceForRule(found: RerollableRoll<unknown>, die: ChangeableDie): PickableDie[] {
-	const dice = diceToPick(found);
-	if (die === 'pickedDie') return dice;
+/**
+ * The dice a player picks from for a Change a Die rule: every pickable die, or
+ * only the Primary Die. A die has a bonus only when `change` puts it on the new face.
+ */
+function diceForRule(
+	found: RerollableRoll<unknown>,
+	die: ChangeableDie,
+	change: DieChange,
+): PickableDie[] {
+	const all = diceToPick(found);
 	const current = found.current?.();
-	const ref = current ? primaryDieRef(current) : null;
-	return dice.filter((d) => d.term === ref?.term && d.result === ref.result);
+	const ref = die === 'primaryDie' && current ? primaryDieRef(current) : null;
+	const dice =
+		die === 'pickedDie' ? all : all.filter((d) => d.term === ref?.term && d.result === ref.result);
+	if (change.mode !== 'set' || change.addsBonus) return dice;
+	return dice.map(({ bonus: _bonus, ...rest }) => rest);
 }
 
 /**

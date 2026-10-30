@@ -28,6 +28,13 @@ The use limit is a Charge Pool rule with **Max charges** `1` and recoveries on `
 
 For the target, the other creature is the one who rolled. The test still uses `target:` tags, so `target:distracted` means "the attacker is Distracted".
 
-**Set to a value** lets the player pick the value from 1 to the die's max. **Add a number** uses **Number to add**: the number is added to the face that the die shows, and a negative number takes away. **Number to add** cannot be 0. The die stays between 1 and its max. A number from "Add to Primary Die Result" or from a Primary Die Bonus rule is added to a set value too, up to the max. An added number moves the face that the die shows, which already holds that bonus.
+**Set to a value** lets the player pick the value from 1 to the die's max. **Add a number** uses **Number to add**: the number is added to the face that the die shows, and a negative number takes away. **Number to add** cannot be 0. The die stays between 1 and its max.
+
+**Add the Primary Die bonus to the set value** shows only for a set. It decides what a set does with a number from "Add to Primary Die Result" or from a Primary Die Bonus rule:
+
+- **Off** (the default): the set value is the final face. The bonus is not added, so a set to the max is a crit and a set to 1 is a miss. Use this for a feature that says "change the die to whatever you like".
+- **On:** the bonus is added to the set value, up to the max. With +1, a d8 set to 5 shows 6.
+
+An added number moves the face that the die shows, as it is. A later reroll of the die gets the bonus again.
 
 **What the change does to the roll.** A kept die stays kept and a dropped die stays dropped: advantage and disadvantage are not worked out again. The crit, the miss and the total are worked out again. A Primary Die at its max explodes, and the new explosion dice are rolled. A max that goes away loses its explosion dice. The card then follows the new result as after a reroll. Modify Reroll rules do not apply to a change.

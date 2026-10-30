@@ -53,6 +53,7 @@ function makeRule(config: Record<string, unknown> = {}) {
 		die: 'primaryDie',
 		change: 'set',
 		amount: 1,
+		addsBonusOnSet: false,
 		...config,
 	});
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
@@ -104,6 +105,14 @@ describe('ChangeDieRule', () => {
 		expect(showWhen?.({ change: 'set' })).toBe(false);
 	});
 
+	it('asks whether a set value gets the Primary Die bonus only for a set, off by default', () => {
+		const field = schema.addsBonusOnSet;
+		expect(field?.initial).toBe(false);
+		expect(field?.options?.showWhen?.({ change: 'set' })).toBe(true);
+		expect(field?.options?.showWhen?.({ change: 'add' })).toBe(false);
+		expect(ChangeDieRule.formLayout.flatMap((group) => group.fields)).toContain('addsBonusOnSet');
+	});
+
 	it('refuses 0 as the number to add', () => {
 		const validate = schema.amount?.options?.validate;
 		expect([validate?.(0), validate?.(1), validate?.(-2)]).toEqual([false, true, true]);
@@ -113,6 +122,18 @@ describe('ChangeDieRule', () => {
 		expect(makeRule().dieChange).toEqual({ mode: 'set', value: 0 });
 		expect(makeRule({ change: 'add', amount: -2 }).dieChange).toEqual({ mode: 'add', value: -2 });
 		expect(makeRule({ change: 'add', amount: 0 }).dieChange).toEqual({ mode: 'add', value: 1 });
+	});
+
+	it('says when a set value gets the Primary Die bonus', () => {
+		expect(makeRule({ addsBonusOnSet: true }).dieChange).toEqual({
+			mode: 'set',
+			value: 0,
+			addsBonus: true,
+		});
+		expect(makeRule({ change: 'add', addsBonusOnSet: true }).dieChange).toEqual({
+			mode: 'add',
+			value: 1,
+		});
 	});
 
 	it('offers on the rolls and side it names, through the shared part', () => {

@@ -57,6 +57,12 @@ declare namespace DamageRoll {
 		/** The primary die roll before primaryDieModifier was added (computed; do not set manually). */
 		primaryDieBaseResult?: number;
 		/**
+		 * The kept Primary Die face holds no primaryDieModifier, as a change set
+		 * it as the final face (computed; do not set manually). A new roll of the
+		 * die gets the modifier again.
+		 */
+		primaryDieBonusOff?: boolean;
+		/**
 		 * Whether the primary die's base result contributes to damage.
 		 * When false, the primary die is used only for hit/miss/crit detection,
 		 * and its base value is excluded from damage (explosions still count).
@@ -874,7 +880,11 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		return modifierExplosionStyle(term.modifiers);
 	}
 
-	/** "Add to Primary Die Result" of `term`, if it is the Primary Die and has one. */
+	/**
+	 * "Add to Primary Die Result" of `term`, if it is the Primary Die and has
+	 * one. `base` is the kept face before the bonus: the face itself while
+	 * `primaryDieBonusOff` is set.
+	 */
 	primaryDieBonusOf(term: unknown): KeptDieBonus | null {
 		const add = Number(this.options.primaryDieModifier) || 0;
 		const base = this.options.primaryDieBaseResult;
@@ -896,21 +906,26 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/**
 	 * The kept Primary Die got a new face; `base` is that face before the bonus.
-	 * A set value it no longer matches goes away.
+	 * A set value it no longer matches goes away. With `bonusOnFace` false, the
+	 * new face holds no bonus.
 	 */
-	primaryDieChanged(term: unknown, base: number): void {
+	primaryDieChanged(term: unknown, base: number, bonusOnFace = true): void {
 		if (!this._isPresetPrimaryDie(term)) return;
 		if (this.options.primaryDieValue && this.options.primaryDieValue !== base) {
 			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
 		}
-		this._setPrimaryDieBase(term, base);
+		this._setPrimaryDieBase(term, base, bonusOnFace);
 	}
 
 	/**
 	 * Records the face before the bonus. A card from before the bonus stopped at
 	 * the max has the damage past the max as a "+ N" term; it goes, and no new one comes.
 	 */
-	private _setPrimaryDieBase(term: PrimaryDie & { faces: number }, base: number): void {
+	private _setPrimaryDieBase(
+		term: PrimaryDie & { faces: number },
+		base: number,
+		bonusOnFace = true,
+	): void {
 		const add = Number(this.options.primaryDieModifier) || 0;
 		const oldBase = this.options.primaryDieBaseResult;
 		if (!add || typeof oldBase !== 'number') return;
@@ -918,6 +933,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (typeof term.options.rolledFace === 'number') term.options.rolledFace = base;
 		else this._removePrimaryDieExcess(term, oldBase, add);
 		this.options.primaryDieBaseResult = base;
+		if (bonusOnFace) delete (this.options as Partial<DamageRoll.Options>).primaryDieBonusOff;
+		else this.options.primaryDieBonusOff = true;
 		this.resetFormula();
 	}
 

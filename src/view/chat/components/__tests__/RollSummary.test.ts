@@ -30,6 +30,14 @@ describe('getPrimaryDieBreakdown', () => {
 		).toEqual({ text: 'Primary Die: 5 + 1 = 6', tooltip: 'Unerring Judgment +1' });
 	});
 
+	it('returns null when the face holds no number, as a change set it as the final face', () => {
+		expect(
+			getPrimaryDieBreakdown(
+				options({ primaryDieModifier: 1, primaryDieBaseResult: 1, primaryDieBonusOff: true }),
+			),
+		).toBeNull();
+	});
+
 	it('names the part no feature added as the attack dialog', () => {
 		expect(
 			getPrimaryDieBreakdown(options({ primaryDieModifier: 1, primaryDieBaseResult: 2 }))?.tooltip,

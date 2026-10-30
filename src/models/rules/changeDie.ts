@@ -50,6 +50,16 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.change === 'add',
 			}),
 		),
+		addsBonusOnSet: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.changeDie.addsBonusOnSet.label',
+				hint: 'NIMBLE.rules.changeDie.addsBonusOnSet.hint',
+				showWhen: (data: Record<string, unknown>) => data.change === 'set',
+			}),
+		),
 		...shared.when,
 		...shared.cost,
 		...shared.note,
@@ -72,13 +82,14 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	static override description = 'NIMBLE.rules.changeDie.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(),
-		...RollUseRule.useFormGroups([{ fields: ['die', 'change', 'amount'] }]),
+		...RollUseRule.useFormGroups([{ fields: ['die', 'change', 'amount', 'addsBonusOnSet'] }]),
 		RollUseRule.noteFormGroup(),
 	];
 
 	declare die: ChangeDie;
 	declare change: DieChangeMode;
 	declare amount: number;
+	declare addsBonusOnSet: boolean;
 
 	static override defineSchema(): ChangeDieRule.Schema {
 		return {
@@ -94,13 +105,16 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 				['die', 'string'],
 				['change', 'string'],
 				['amount', 'number'],
+				['addsBonusOnSet', 'boolean'],
 			]),
 		);
 	}
 
 	/** The change one use makes. An add of 0 is an add of 1. */
 	get dieChange(): DieChange {
-		if (this.change !== 'add') return { mode: 'set', value: 0 };
+		if (this.change !== 'add') {
+			return { mode: 'set', value: 0, ...(this.addsBonusOnSet ? { addsBonus: true } : {}) };
+		}
 		return { mode: 'add', value: Math.trunc(Number(this.amount)) || 1 };
 	}
 }

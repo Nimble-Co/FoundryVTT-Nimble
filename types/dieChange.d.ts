@@ -8,4 +8,6 @@ import type { DieChangeMode } from '#utils/incomingReactions/incomingReactionEnt
 export interface DieChange {
 	mode: DieChangeMode;
 	value: number;
+	/** A set only: a Primary Die bonus goes on the set value. Absent: the set value is the final face. */
+	addsBonus?: boolean;
 }

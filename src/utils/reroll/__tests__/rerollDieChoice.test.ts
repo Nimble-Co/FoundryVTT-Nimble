@@ -102,24 +102,38 @@ describe('diceToPick', () => {
 });
 
 describe('diceForRule', () => {
+	const SET = { mode: 'set', value: 0 } as const;
+
 	it('gives only the Primary Die to a rule that uses the Primary Die', () => {
-		expect(diceForRule(found(damageRoll()), 'primaryDie')).toEqual([
+		expect(diceForRule(found(damageRoll()), 'primaryDie', SET)).toEqual([
 			{ term: 0, result: 1, faces: 8, value: 6, role: 'primary' },
 		]);
 	});
 
 	it('gives every die a player can pick to a rule that uses a picked die', () => {
-		expect(diceForRule(found(damageRoll()), 'pickedDie').map((d) => d.value)).toEqual([6, 4]);
+		expect(diceForRule(found(damageRoll()), 'pickedDie', SET).map((d) => d.value)).toEqual([6, 4]);
 	});
 
 	it('gives the kept d20 of a check as its Primary Die', () => {
-		expect(diceForRule(found(checkRoll(), { pickDropped: true }), 'primaryDie')).toEqual([
+		expect(diceForRule(found(checkRoll(), { pickDropped: true }), 'primaryDie', SET)).toEqual([
 			{ term: 0, result: 0, faces: 20, value: 15, role: 'kept' },
 		]);
 	});
 
 	it('gives nothing for a roll it cannot rebuild', () => {
-		expect(diceForRule(found(null), 'primaryDie')).toEqual([]);
+		expect(diceForRule(found(null), 'primaryDie', SET)).toEqual([]);
+	});
+
+	describe('on a Primary Die with a bonus of +1', () => {
+		const withBonus = () => ({ ...damageRoll(), options: { primaryDieModifier: 1 } });
+
+		it('shows the bonus on the die only for a set that adds it', () => {
+			const bonusOf = (change: Parameters<typeof diceForRule>[2]) =>
+				diceForRule(found(withBonus()), 'primaryDie', change)[0]?.bonus;
+
+			expect(bonusOf({ ...SET, addsBonus: true })).toBe(1);
+			expect(bonusOf(SET)).toBeUndefined();
+		});
 	});
 });
 

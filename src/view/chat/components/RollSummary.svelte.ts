@@ -7,15 +7,17 @@ import { primaryDieBonusText } from './primaryDieBonusText.ts';
 /**
  * The Primary Die face before the number added to it, the number, and the
  * result, such as "Primary Die: 5 + 1 = 6". The die stops at its max and at 1.
- * The tooltip names who added the number. Null when no number was added, or
- * the face before it is not known.
+ * The tooltip names who added the number. Null when no number was added, the
+ * face before it is not known, or the face holds no number.
  */
 export function getPrimaryDieBreakdown(
 	options: RollSummaryOptions | undefined,
 ): { text: string; tooltip: string } | null {
 	const modifier = Math.trunc(Number(options?.rollOptions?.primaryDieModifier) || 0);
 	const base = options?.rollOptions?.primaryDieBaseResult;
-	if (!modifier || typeof base !== 'number') return null;
+	if (!modifier || typeof base !== 'number' || options?.rollOptions?.primaryDieBonusOff) {
+		return null;
+	}
 
 	const faces = options?.roll?.terms?.find((term) => term?.faces)?.faces;
 	const sum = base + modifier;

@@ -52,7 +52,7 @@ When an ability rerolls the attack, the new roll does not keep **Set Primary Die
 
 Some features add to the Primary Die of your attacks without the roll window. Such a feature adds its number in the same way as **Add to Primary Die Result**, and it adds to the number you type there. It can apply only to melee or only to ranged attacks, or only while a condition is true. A reroll keeps it. An area attack does not get it. The card shows one line at the roll for each of these features, with the feature's name and a tag such as **+1 Primary Die**. Hover the line to read it as a sentence, for example "Unerring Judgment: +1 to the Primary Die".
 
-The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the face before it and the result, for example "Primary Die: 5 + 1 = 6". When the die stops at its maximum, the line says so, for example "Primary Die: 6 + 1 = 6, the max". Hover it to see who added the number, for example "Unerring Judgment +1". The die on the card always shows the result. In the value picker, the new value of the Primary Die has a small badge with the number on its corner, such as **+1**: the value you set gets it too. Hover the badge to see who added it.
+The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the face before it and the result, for example "Primary Die: 5 + 1 = 6". When the die stops at its maximum, the line says so, for example "Primary Die: 6 + 1 = 6, the max". Hover it to see who added the number, for example "Unerring Judgment +1". The die on the card always shows the result. When a feature sets the Primary Die and adds the number to the set value, the value picker shows a small badge with the number on the corner of the new value, such as **+1**. Hover the badge to see who added it.
 
 ## Anatomy of a chat card
 
@@ -123,7 +123,12 @@ Some features put a new value on one die that was already rolled. No die is roll
 - A later reroll of that die discards the changed value.
 - Features that add to a reroll do not add to a change.
 
-**A number added to the Primary Die goes on a set value too.** A number from **Add to Primary Die Result** or from a feature that adds to the Primary Die is added to the value that you set, up to the max. For example, with +1, a d8 set to 5 shows 6, and a d8 set to 8 stays 8. The value picker shows the number as a badge on the new value. An added change moves the face that the die shows, which already holds the number.
+**A number added to the Primary Die.** A number from **Add to Primary Die Result** or from a feature that adds to the Primary Die changes the face of the die. The feature decides what a set value does with that number:
+
+- **Most features:** the value that you set is the final face. The number is not added. So a set to the max is a crit, and a set to 1 is a miss. The card then shows no "Primary Die: 5 + 1 = 6" line for the die.
+- **A feature that adds the number:** the number is added to the value that you set, up to the max. For example, with +1, a d8 set to 5 shows 6, and a d8 set to 8 stays 8. The value picker shows the number as a badge on the new value.
+
+An added change moves the face that the die shows, as it is. A later reroll of the die is a new roll, so it gets the number again.
 
 **The line on the card.** After a change, the roll shows a line, as after a reroll. The line names the feature and shows the old die, paler, with an arrow to the new one. Above the arrow is a small label: "set" for a set value, or the number for an added one, such as "+1". When the new die is a crit or a miss, the line has a **Crit** or **Miss** tag. Hover the line to read it as a sentence, for example "Changed with Vicious Opportunist: 3 became 8, a crit".
 
