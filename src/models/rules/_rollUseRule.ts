@@ -44,7 +44,7 @@ function wordKey(namespace: RollUseNamespace, field: string, part: 'label' | 'hi
 
 /** The lang keys of a field's choices, as `NIMBLE.rules.<namespace>.<field>.choices.<value>`. */
 function choiceLabels(
-	namespace: RollUseNamespace,
+	namespace: string,
 	field: string,
 	values: readonly string[],
 ): Record<string, string> {

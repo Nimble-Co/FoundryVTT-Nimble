@@ -14,6 +14,8 @@ declare namespace PrimaryDie {
 		missThreshold?: number;
 		/** Lowest kept face that is a crit. Defaults to the max. */
 		criticalThreshold?: number;
+		/** Crit on this many faces less than the max. */
+		critRange?: number;
 		/** A crit without the max: on any face, or on any face that is not a miss. */
 		forcedCrit?: 'always' | 'onHit';
 		/** Per-term appearance override read by Dice So Nice when active. */

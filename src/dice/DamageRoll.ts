@@ -1,4 +1,5 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
+import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
@@ -37,6 +38,12 @@ declare namespace DamageRoll {
 		 * and the crit rolls the Primary Die again.
 		 */
 		forcedCrit?: 'always' | 'onHit';
+		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
+		critRange?: number;
+		/** Any die of the roll at its max makes the roll a crit on a hit. */
+		anyDieCrits?: boolean;
+		/** The features that changed how the roll is read, for the card's tags. */
+		outcomeSources?: Partial<AttackOutcomeSources>;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
 		/**
@@ -423,9 +430,31 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** The options that lower the crit face. A roll that cannot crit keeps the max. */
 	private _critFaceOptions(
 		options: DamageRoll.Options,
-	): Pick<DamageRoll.Options, 'criticalThreshold' | 'forcedCrit'> {
+	): Pick<DamageRoll.Options, 'criticalThreshold' | 'critRange' | 'forcedCrit'> {
 		if (!options.canCrit) return {};
-		return { criticalThreshold: options.criticalThreshold, forcedCrit: options.forcedCrit };
+		return {
+			criticalThreshold: options.criticalThreshold,
+			critRange: options.critRange,
+			forcedCrit: options.forcedCrit,
+		};
+	}
+
+	/**
+	 * With `anyDieCrits`, a die other than the kept Primary Die at its max makes
+	 * the roll a crit on a hit, as a Forced Crit that applies on a hit.
+	 */
+	private _applyAnyDieCrits(): void {
+		if (!this.options.canCrit || !this.options.anyDieCrits) return;
+		if (this.options.forcedCrit === 'always') return;
+		const atMax = this.terms.some(
+			(term) =>
+				term instanceof Terms.Die &&
+				term.results.some((r) => r.active && !r.discarded && r.result === term.faces),
+		);
+		if (!atMax) return;
+		this.options.forcedCrit = 'onHit';
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (primary) primary.options.forcedCrit = 'onHit';
 	}
 
 	/**
@@ -569,6 +598,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		await super._evaluate(options);
 
 		this._applyPostRollMutations();
+		this._applyAnyDieCrits();
 
 		if (this.modifierMode) {
 			// ── Count crits BEFORE vicious explosions to avoid counting chain dice ──

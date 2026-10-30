@@ -9,6 +9,7 @@ import {
 
 const damageRollMock = vi.fn();
 const dialogMock = vi.fn();
+const spendRuleChargeMock = vi.fn(async () => true);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let rollUnarmedStrike: typeof import('../unarmedStrike.ts').rollUnarmedStrike;
@@ -19,6 +20,9 @@ beforeAll(async () => {
 	vi.doMock('../../../dice/DamageRoll.js', () => ({ DamageRoll: damageRollMock }));
 	vi.doMock('../../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 		default: dialogMock,
+	}));
+	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
+		spendRuleCharge: spendRuleChargeMock,
 	}));
 	vi.doMock('../../damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => ['1d4'],
@@ -92,6 +96,37 @@ describe('rollUnarmedStrike', () => {
 			{},
 			expect.objectContaining({ canCrit: false, canMiss: false, multiTarget: true }),
 		);
+	});
+
+	it("reads the striker's Attack Outcome rules, and spends their charge after the card", async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
+		const actor = createHeroicCharacter();
+		Object.assign(actor, {
+			rules: [
+				{
+					type: 'attackOutcome',
+					changeFor: () => ({
+						label: 'Heads I Win',
+						cannotMiss: true,
+						critRange: 0,
+						forcedCrit: null,
+						anyDieCrits: false,
+						chargePoolIdentifier: 'heads',
+					}),
+				},
+			],
+		});
+		spendRuleChargeMock.mockClear();
+
+		await rollUnarmedStrike(actor);
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canMiss: false, outcomeSources: { cannotMiss: ['Heads I Win'] } }),
+		);
+		expect(spendRuleChargeMock).toHaveBeenCalledWith(actor, 'heads');
 	});
 
 	it('starts the dialog at the given roll mode', async () => {

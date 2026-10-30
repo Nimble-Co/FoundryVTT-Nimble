@@ -327,12 +327,39 @@ describe('RuleCard with a form layout (primaryDieBonus)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (attackOutcome)', () => {
+	it('asks which attacks, what changes, the attack type, then the optional conditions', () => {
+		const { container } = render(RuleCard, { rule: initialRule('attackOutcome'), manager });
+		expect(shownFields(container)).toEqual([
+			'side',
+			'cannotMiss',
+			'critRange',
+			'forceCrit',
+			'anyDieCrits',
+			'attackDelivery',
+			'thisItemOnly',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+		]);
+	});
+
+	it('hides the item and charge pool fields for attacks against you', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('attackOutcome', { side: 'attacksAgainstYou' }),
+			manager,
+		});
+		expect(shownFields(container)).not.toContain('thisItemOnly');
+		expect(shownFields(container)).not.toContain('chargePoolIdentifier');
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie'];
+	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie', 'attackOutcome'];
 
 	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);

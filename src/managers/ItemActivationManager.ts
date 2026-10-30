@@ -26,6 +26,7 @@ import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
+import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
 import {
 	type AttackDelivery,
 	attackDeliveryFromAttackType,
@@ -35,6 +36,7 @@ import {
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
+import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -178,6 +180,9 @@ class ItemActivationManager {
 	#primaryDieBonuses: PrimaryDieBonusRecord[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	/** Charge pools the Attack Outcome rules of this attack spend by themselves. */
+	#attackOutcomeCharges: string[] = [];
 
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
@@ -548,9 +553,18 @@ class ItemActivationManager {
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
-					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
+					const attackOutcome = collectAttackOutcome({
+						attacker: this.actor as { rules?: unknown } | null,
+						target: (this.#getSoleTargetToken()?.actor ?? null) as { rules?: unknown } | null,
+						delivery,
+						itemUuid: this.#item.uuid,
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
+					});
+					this.#attackOutcomeCharges = attackOutcome.charges;
+					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
+						canCrit: resolvedCanCrit,
+						...attackOutcome.options,
 						...(multiTarget ? { multiTarget } : {}),
 						rollMode: node.rollMode ?? 0,
 						primaryDieValue: dialogData.primaryDieValue ?? 0,
@@ -938,6 +952,9 @@ class ItemActivationManager {
 		}
 		await this.#consumePoolDice();
 		await this.#consumeChargePools();
+		const outcomeCharges = this.#attackOutcomeCharges;
+		this.#attackOutcomeCharges = [];
+		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
 	}
 
 	/**

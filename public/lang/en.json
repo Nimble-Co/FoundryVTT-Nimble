@@ -1526,6 +1526,7 @@
 			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
+			"attackOutcome": "Attack Outcome",
 			"chargeConsumer": "Charge Consumer",
 			"changeDie": "Change a Die",
 			"chargePool": "Charge Pool",
@@ -2442,6 +2443,50 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"attackOutcome": {
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make.",
+				"side": {
+					"label": "Which attacks does it change?",
+					"hint": "Your attacks, or the attacks other creatures make against you.",
+					"choices": {
+						"yourAttacks": "Your attacks",
+						"attacksAgainstYou": "Attacks against you"
+					}
+				},
+				"cannotMiss": {
+					"label": "The attack cannot miss",
+					"hint": "A 1 on the Primary Die is a hit."
+				},
+				"critRange": {
+					"label": "Crit on this many less than the max",
+					"hint": "1 makes a d8 crit on a 7 or 8. Only the face the Primary Die keeps counts. The extra dice of a crit still roll again only on the max."
+				},
+				"forceCrit": {
+					"label": "Make the attack a crit",
+					"hint": "The Primary Die keeps its face, and the crit rolls it again. On a hit: a miss stays a miss.",
+					"choices": {
+						"none": "No",
+						"always": "Always, also on a 1",
+						"onHit": "On a hit"
+					}
+				},
+				"anyDieCrits": {
+					"label": "Any die at its max is a crit",
+					"hint": "Any die of the roll on its max makes the attack a crit on a hit. The crit rolls the Primary Die again."
+				},
+				"thisItemOnly": {
+					"label": "Only attacks with this item",
+					"hint": "Only attacks made with the item that has this rule."
+				},
+				"otherCreature": {
+					"label": "Only when the other creature is",
+					"hint": "For your attacks, the target. For attacks against you, the one who attacks. With two or more targets, a rule with this set does not run."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool it spends 1 charge from each time it changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
 				}
 			},
 			"changeDie": {

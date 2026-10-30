@@ -1766,7 +1766,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 	});
 
 	describe('a Multi-target Attack (Core:1403)', () => {
-		async function rollWithTargets(count: number) {
+		async function rollWithTargets(count: number, rules: unknown[] = []) {
 			const MockDamageRoll = makeMockDamageRollClass();
 			const originalDR = testDependencies.DamageRoll;
 			const originalRecon = testDependencies.reconstructEffectsTree;
@@ -1785,6 +1785,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 					uuid: 'a1',
 					token: null,
 					type: 'character',
+					rules,
 					getRollData: () => ({}),
 					system: { proficiencies: { weapons: [] } },
 				};
@@ -1828,6 +1829,44 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 			expect(opts.canCrit).toBe(false);
 			expect(opts.canMiss).toBe(false);
 			expect(opts.multiTarget).toBe(true);
+		});
+
+		it("gives the roll the attacker's Attack Outcome rules", async () => {
+			const rule = {
+				type: 'attackOutcome',
+				changeFor: () => ({
+					label: "Deathbringer's Touch",
+					cannotMiss: false,
+					critRange: 0,
+					forcedCrit: 'always',
+					anyDieCrits: false,
+					chargePoolIdentifier: '',
+				}),
+			};
+
+			const opts = await rollWithTargets(1, [rule]);
+
+			expect(opts.forcedCrit).toBe('always');
+			expect(opts.outcomeSources).toEqual({ forcedCrit: ["Deathbringer's Touch"] });
+		});
+
+		it('gives a Multi-target Attack no crit from an Attack Outcome rule', async () => {
+			const rule = {
+				type: 'attackOutcome',
+				changeFor: () => ({
+					label: 'Feature',
+					cannotMiss: false,
+					critRange: 1,
+					forcedCrit: 'always',
+					anyDieCrits: false,
+					chargePoolIdentifier: '',
+				}),
+			};
+
+			const opts = await rollWithTargets(2, [rule]);
+
+			expect(opts.forcedCrit).toBeUndefined();
+			expect(opts.critRange).toBeUndefined();
 		});
 
 		it('is a normal attack with one target', async () => {

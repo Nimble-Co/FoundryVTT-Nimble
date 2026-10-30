@@ -31,7 +31,12 @@ function crittingDice(...rolls: Result[][]) {
 }
 
 /** An attack whose kept Primary Die rolled `face`, evaluated with `options`. */
-async function attack(face: number, options: Partial<DamageRoll.Options> = {}, formula = '1d6') {
+async function attack(
+	face: number,
+	options: Partial<DamageRoll.Options> = {},
+	formula = '1d6',
+	otherDice: Result[][] = [],
+) {
 	const roll = new DamageRoll(formula, {}, {
 		canCrit: true,
 		canMiss: true,
@@ -43,6 +48,10 @@ async function attack(face: number, options: Partial<DamageRoll.Options> = {}, f
 	const die = roll.primaryDie as foundry.dice.terms.Die;
 	die.results = [kept(face)];
 	Object.assign(die, { _evaluated: true });
+	const others = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die && t !== die);
+	others.forEach((term, index) => {
+		(term as foundry.dice.terms.Die).results = otherDice[index] ?? [];
+	});
 	const base = Object.getPrototypeOf(DamageRoll.prototype);
 	const own = Object.getOwnPropertyDescriptor(base, '_evaluate');
 	Object.defineProperty(base, '_evaluate', {
@@ -142,6 +151,45 @@ describe('a Forced Crit', () => {
 		const roll = await attack(6, { explosionStyle: 'vicious' }, '1d6 - 1');
 
 		expect(roll.total).toBe(10);
+	});
+
+	it('crits on the crit range below the max, and rolls the Primary Die again', async () => {
+		crittingDice([kept(3)]);
+		const roll = await attack(5, { critRange: 1 });
+
+		expect(roll.isCritical).toBe(true);
+		expect(faces(roll)).toEqual([5, 3]);
+	});
+
+	it('does not crit below the crit range', async () => {
+		crittingDice([kept(3)]);
+		const roll = await attack(4, { critRange: 1 });
+
+		expect(roll.isCritical).toBe(false);
+		expect(faces(roll)).toEqual([4]);
+	});
+
+	it('crits on a hit when another die of the roll is at its max', async () => {
+		crittingDice([kept(2)]);
+		const roll = await attack(3, { anyDieCrits: true }, '2d6', [[kept(6)]]);
+
+		expect(roll.isCritical).toBe(true);
+		expect(faces(roll)).toEqual([3, 2]);
+	});
+
+	it('leaves a miss a miss when another die is at its max', async () => {
+		crittingDice([kept(2)]);
+		const roll = await attack(1, { anyDieCrits: true }, '2d6', [[kept(6)]]);
+
+		expect(roll.isCritical).toBe(false);
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('does not crit when no die is at its max', async () => {
+		crittingDice([kept(2)]);
+		const roll = await attack(3, { anyDieCrits: true }, '2d6', [[kept(5)]]);
+
+		expect(roll.isCritical).toBe(false);
 	});
 
 	it('does nothing on a roll that cannot crit', async () => {

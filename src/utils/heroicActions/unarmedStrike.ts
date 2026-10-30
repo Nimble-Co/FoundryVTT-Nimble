@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
@@ -9,6 +10,7 @@ import {
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
 } from '#utils/damage/attackUtils.js';
+import { collectAttackOutcome } from '#utils/damage/collectAttackOutcome.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
 	applyPostRollIncomingBehavior,
@@ -100,17 +102,23 @@ export async function rollUnarmedStrike(
 	const rollMode = result.rollMode ?? startRollMode;
 	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
 	const multiTarget = targets.length > 1;
-	const incomingAttackPlan = computeIncomingAttackPlan(
-		soleTarget(targets),
-		actor as OfferingActor,
-		{
-			delivery: attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE),
-		},
-	);
+	const target = soleTarget(targets);
+	const delivery = attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE);
+	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
+		delivery,
+	});
+	const attackOutcome = collectAttackOutcome({
+		attacker: actor as { rules?: unknown },
+		target: (target?.actor ?? null) as { rules?: unknown } | null,
+		delivery,
+		itemUuid: null,
+		canCrit: canCrit && !multiTarget,
+		canMiss: !multiTarget,
+	});
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 		canCrit: canCrit && !multiTarget,
-		canMiss: !multiTarget,
+		...attackOutcome.options,
 		multiTarget,
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
@@ -211,6 +219,7 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
+	for (const identifier of attackOutcome.charges) await spendRuleCharge(actor, identifier);
 	return true;
 }
 
