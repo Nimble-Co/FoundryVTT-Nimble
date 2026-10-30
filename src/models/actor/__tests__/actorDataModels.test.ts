@@ -15,3 +15,13 @@ describe('actor currency schema', () => {
 		}
 	});
 });
+
+describe('character Inspiration', () => {
+	it('starts off: the GM grants it', () => {
+		const schema = actorDataModels.character.defineSchema() as unknown as Record<string, FieldLike>;
+		const inspiration = schema.resources.fields?.inspiration;
+
+		expect(inspiration).toBeInstanceOf(foundry.data.fields.BooleanField);
+		expect(inspiration).toMatchObject({ initial: false, nullable: false });
+	});
+});

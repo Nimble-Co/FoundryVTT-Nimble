@@ -315,7 +315,7 @@ const characterSchema = () => ({
 	}),
 	resources: new fields.SchemaField({
 		inspiration: new fields.BooleanField({
-			initial: true,
+			initial: false,
 			nullable: false,
 			required: true,
 		}),
