@@ -527,7 +527,7 @@
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
 			"primaryDieBonus": {
-				"tag": "{value} Primary Die",
+				"tag": "{value} to Primary Die",
 				"text": "{label}: {value} to the Primary Die",
 				"dialog": "Add to Primary Die Result {value}"
 			},

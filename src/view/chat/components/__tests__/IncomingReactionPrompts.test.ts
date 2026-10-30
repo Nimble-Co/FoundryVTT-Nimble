@@ -275,7 +275,7 @@ describe('IncomingReactionPrompts', () => {
 
 		expect(rollPlace().getByText('Unerring Judgment: +1 to the Primary Die')).toBeTruthy();
 		expect(rollPlace().getByText('Clumsy Grip: -1 to the Primary Die')).toBeTruthy();
-		expect(rollPlace().getByText('+1 Primary Die')).toBeTruthy();
+		expect(rollPlace().getByText('+1 to Primary Die')).toBeTruthy();
 		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 	});
 

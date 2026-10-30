@@ -11,4 +11,4 @@ The `self:pool:judgment` tag is there while the Judgment Dice pool has at least 
 
 **Only when the target is** tests the first target of the attack, with the same `target:` tags as on the Reroll rule, for example `target:distracted`. Empty means any target. With tags picked, an attack with no target gets no bonus.
 
-The card shows one line at the roll for each bonus, with the rule's **Label** (or the item name when the label is empty) and a tag such as **+1 Primary Die**. Several bonuses add up.
+The card shows one line at the roll for each bonus, with the rule's **Label** (or the item name when the label is empty) and a tag such as **+1 to Primary Die**. Several bonuses add up.
