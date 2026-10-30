@@ -9,8 +9,7 @@
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
-	import { endMark } from '#utils/actor/markLifecycle.ts';
-	import { cardMarkingItem, liveMarksOf, markOnToken } from './cardMarks.ts';
+	import { createTargetMarksState } from './Targets.svelte.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 
@@ -120,19 +119,7 @@
 	// Foundry mounts a new card on each message update, so one read is enough.
 	const tracking = isMovementOffersAutomationEnabled();
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
-	const markingItem = cardMarkingItem(messageDocument as never);
-	let marks = $derived(markingItem ? liveMarksOf(markingItem) : []);
-	let ending = $state(false);
-
-	async function endMarkOn(mark: Parameters<typeof endMark>[1]) {
-		if (!markingItem || ending) return;
-		ending = true;
-		try {
-			await endMark(markingItem, mark);
-		} finally {
-			ending = false;
-		}
-	}
+	const targetMarks = createTargetMarksState(messageDocument as never);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
@@ -173,7 +160,7 @@
 						: null}
 				{@const damageBadges = getDamageBadges(breakdown)}
 				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
-				{@const mark = markOnToken(marks, token as Parameters<typeof markOnToken>[1])}
+				{@const mark = targetMarks.markOn(token as never)}
 				<li
 					class="nimble-card"
 					class:nimble-target--moves={movementChips.length > 0 || !!mark}
@@ -219,16 +206,13 @@
 								<MovementStatusChip {chip} />
 							{/each}
 							{#if mark}
-								{@const endLabel = localize('NIMBLE.chatTargets.endMark', {
-									feature: (markingItem as { name?: string } | null)?.name ?? '',
-								})}
 								<button
 									class="nimble-target-mark nimble-u-unstyled-button"
 									type="button"
-									aria-label={endLabel}
-									data-tooltip={endLabel}
-									disabled={ending}
-									onclick={() => endMarkOn(mark)}
+									aria-label={targetMarks.endLabel}
+									data-tooltip={targetMarks.endLabel}
+									disabled={targetMarks.ending}
+									onclick={() => targetMarks.endMarkOn(mark)}
 								>
 									<i class="fa-solid fa-bullseye" aria-hidden="true"></i>
 									<span>{localize('NIMBLE.chatTargets.marked')}</span>
