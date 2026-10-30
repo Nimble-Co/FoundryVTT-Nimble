@@ -592,7 +592,7 @@ describe('the new character sheet', () => {
 		await waitFor(() => !row(), 'the effect row to go');
 	}, 30_000);
 
-	test('the seal gives Inspiration, it is an active effect, and a click on its row ends it', async () => {
+	test('the seal grants Inspiration, it is an active effect, and a click on its row ends it', async () => {
 		await hero.update({ 'system.resources.inspiration': false });
 		const sheet = await openHeroSheet(hero);
 		const seal = () =>

@@ -12,7 +12,7 @@ The new character sheet has a rail with your Hit Points, mana, wounds and Hit Di
 
 ### Inspiration
 
-Inspiration is an optional rule: the GM grants it, and you can spend it to reroll any single die. It ends after a Safe Rest. The star seal in the top-right corner of the portrait shows it. A crimson seal means that you have Inspiration, and a ghost ring means that you do not. Click the seal to give Inspiration or to end it. While you have it, it is also in **Active effects** on the Effects tab, and the tab count includes it. Click its row to end it when you spend it. Reroll the die by hand: the chat cards do not have an Inspiration reroll yet.
+Inspiration is an optional rule: the GM grants it, and you can spend it to reroll any single die. It ends after a Safe Rest. The star seal in the top-right corner of the portrait shows it. A crimson seal means that you have Inspiration, and a ghost ring means that you do not. Click the seal to grant Inspiration or to end it. While you have it, it is also in **Active effects** on the Effects tab, and the tab count includes it. Click its row to end it when you spend it. Reroll the die by hand: the chat cards do not have an Inspiration reroll yet.
 
 ## The new NPC sheet
 

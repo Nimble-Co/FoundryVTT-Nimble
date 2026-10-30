@@ -25,7 +25,7 @@ describe('heroRail', () => {
 			});
 		});
 
-		it('shows the seal off, and a click gives it', () => {
+		it('shows the seal off, and a click grants it', () => {
 			const view = heroRail(
 				blankHero({ system: { resources: { inspiration: false } } }),
 				heroContext(),

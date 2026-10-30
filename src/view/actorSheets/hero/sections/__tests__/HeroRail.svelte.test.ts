@@ -21,7 +21,7 @@ function renderRail(context: Partial<HeroSheetContext> = {}, editing = false) {
 }
 
 describe('HeroRail', () => {
-	it('gives Inspiration from the seal on the portrait, also in edit mode', async () => {
+	it('grants Inspiration from the seal on the portrait, also in edit mode', async () => {
 		const { perform } = renderRail({}, true);
 		const seal = screen.getByRole('button', { name: `${RAIL}.inspiration.label` });
 
