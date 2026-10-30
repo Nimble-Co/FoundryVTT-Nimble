@@ -5,13 +5,13 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 `compact` gives icon buttons for the narrow header.
 -->
 <script lang="ts">
-	import { setEditing } from '../../shared/sheetUiState.ts';
 	import type { HeroRareActionsProps } from '#types/components/actorSheets/HeroRareActions.d.ts';
+	import EditSwitch from '../../shared/EditSwitch.svelte';
+	import { setEditing } from '../../shared/sheetUiState.ts';
 
 	let { view, ui, perform, compact = false }: HeroRareActionsProps = $props();
 
 	const editing = $derived(ui.editing);
-	const editHint = $derived(editing ? view.edit.stopHint : view.edit.startHint);
 </script>
 
 <div class="rare" class:compact>
@@ -50,17 +50,14 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 				<i class="fa-solid fa-rotate-left"></i>
 			</button>
 		{/if}
-		<button
-			type="button"
-			class="nimble-u-reset-button edit"
-			aria-pressed={editing}
-			aria-label={compact ? editHint : undefined}
-			data-tooltip={editHint}
+		<EditSwitch
+			{editing}
+			{compact}
+			label={view.edit.label}
+			startHint={view.edit.startHint}
+			stopHint={view.edit.stopHint}
 			onclick={() => setEditing(ui, !ui.editing)}
-		>
-			{#if compact}<i class="fa-solid fa-pen"></i>{:else}<span class="track"></span>{view.edit
-					.label}{/if}
-		</button>
+		/>
 	</div>
 </div>
 
@@ -119,8 +116,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 		color: var(--nimble-ui-ink);
 	}
 	.compact .secondary,
-	.compact .warning,
-	.compact .edit {
+	.compact .warning {
 		flex: none;
 		width: 28px;
 		height: 28px;
@@ -129,64 +125,12 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 	}
 	.secondary:hover,
 	.warning:hover,
-	.icon:hover,
-	.edit:hover {
+	.icon:hover {
 		border-color: var(--nimble-ui-highlight);
 		background: var(--nimble-ui-hover);
 	}
 	.secondary:disabled {
 		opacity: 0.4;
 		pointer-events: none;
-	}
-	.edit {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		height: 30px;
-		padding: 0 10px 0 8px;
-		border: 1px solid var(--nimble-ui-ring);
-		border-radius: 4px;
-		font-size: 0.857rem;
-		font-weight: 700;
-		color: var(--nimble-ui-ink);
-	}
-	.edit[aria-pressed='true'] {
-		border-color: var(--nimble-crimson);
-		background: var(--nimble-ui-own-background);
-	}
-	.compact .edit[aria-pressed='true'] {
-		background: var(--nimble-crimson);
-		color: var(--nimble-ui-fill-ink);
-	}
-	.track {
-		position: relative;
-		flex: none;
-		width: 26px;
-		height: 14px;
-		border-radius: 7px;
-		background: var(--nimble-ui-well);
-		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
-	}
-	.track::after {
-		content: '';
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		background: var(--nimble-ui-ink-dim);
-		transition:
-			transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1),
-			background 0.16s;
-	}
-	.edit[aria-pressed='true'] .track {
-		background: var(--nimble-crimson);
-		box-shadow: none;
-	}
-	.edit[aria-pressed='true'] .track::after {
-		transform: translateX(12px);
-		background: var(--nimble-ui-fill-ink);
 	}
 </style>

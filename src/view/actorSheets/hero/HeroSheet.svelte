@@ -8,6 +8,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 	import { setEditing, showTab } from '../shared/sheetUiState.ts';
 	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
+	import EditBand from '../shared/EditBand.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
 	import { heroActionsTab } from './heroActionsTab.ts';
 	import { heroBioTab } from './heroBioTab.ts';
@@ -93,20 +94,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		{#if !wide}<HeroStrip meters={rail.meters} {ui} {perform} />{/if}
 		<div class="body">
 			{#if ui.editing}
-				<div class="band" role="status">
-					<i class="fa-solid fa-pen"></i>
-					<span>
-						<b>{frame.editBand.title}</b>
-						{frame.editBand.hint}
-					</span>
-					<button
-						type="button"
-						class="nimble-u-reset-button done"
-						onclick={() => setEditing(ui, false)}
-					>
-						{frame.editBand.done}
-					</button>
-				</div>
+				<EditBand {...frame.editBand} ondone={() => setEditing(ui, false)} />
 			{/if}
 			{#if core}
 				<HeroCoreTab view={core} editing={ui.editing} {perform} skillColumns={wideMain ? 3 : 2} />
@@ -164,44 +152,6 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		padding: 10px 14px 14px;
 		scrollbar-width: thin;
 		scrollbar-color: var(--nimble-ui-ring) transparent;
-	}
-	.band {
-		position: sticky;
-		top: -10px;
-		z-index: 4;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin: -10px -14px 12px;
-		padding: 6px 10px 6px 14px;
-		border-bottom: 1px solid var(--nimble-ui-own);
-		background:
-			linear-gradient(var(--nimble-ui-own-background), var(--nimble-ui-own-background)),
-			var(--nimble-sheet-background);
-		font-size: 0.893rem;
-		line-height: 1.3;
-	}
-	.band > i {
-		font-size: 0.786rem;
-		color: var(--nimble-ui-own);
-	}
-	.band b {
-		font-weight: 800;
-		color: var(--nimble-ui-own);
-	}
-	.done {
-		flex: none;
-		margin-left: auto;
-		height: 26px;
-		padding: 0 12px;
-		border-radius: 4px;
-		background: var(--nimble-crimson);
-		font-size: 0.857rem;
-		font-weight: 700;
-		color: var(--nimble-ui-fill-ink);
-	}
-	.done:hover {
-		filter: brightness(1.15);
 	}
 	.hero :global([data-row-id][data-flash]) {
 		animation: hero-flash 1.2s ease-out;
