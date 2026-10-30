@@ -148,6 +148,7 @@ describe('the new NPC sheet', () => {
 	let stabId: string;
 	let shootId: string;
 	let tacticsId: string;
+	let biteId: string;
 	let worldClaw: Item;
 	let scene: Scene;
 	let narrowBefore: boolean;
@@ -191,12 +192,35 @@ describe('the new NPC sheet', () => {
 			ability('Stab', 'action', 100000, '<p>1d6+2.</p>'),
 			ability('Shoot', 'action', 200000, '<p>1d6+2, Range 8.</p>'),
 			ability('Tactics', 'feature', 300000),
+			{
+				...ability('Bite', 'action', 400000, '<p>1d6 piercing.</p>'),
+				system: {
+					subtype: 'action',
+					description: '<p>1d6 piercing.</p>',
+					activation: {
+						targets: { attackType: 'reach', distance: 1, count: 1 },
+						effects: [
+							{
+								id: 'bite',
+								type: 'damage',
+								formula: '1d6',
+								damageType: 'piercing',
+								canCrit: true,
+								canMiss: true,
+								parentNode: null,
+								parentContext: null,
+							},
+						],
+					},
+				},
+			},
 		]);
 		const idOf = (name: string) => created.find((item) => item.name.endsWith(name))!.id!;
 		tauntId = idOf('Taunt');
 		stabId = idOf('Stab');
 		shootId = idOf('Shoot');
 		tacticsId = idOf('Tactics');
+		biteId = idOf('Bite');
 
 		worldClaw = (await Item.create(
 			ability('Claw', 'action', 0, '<p>2 damage.</p>') as Item.CreateData,
@@ -257,6 +281,25 @@ describe('the new NPC sheet', () => {
 		await waitFor(
 			() => game.messages.contents.some((message) => !before.has(message.id)),
 			'the ability card',
+		);
+	}, 30_000);
+
+	test('a click on the name of an attack opens the roll window, and Roll posts the attack', async () => {
+		const sheet = await openMonsterSheet(goblin);
+		const before = new Set(game.messages.contents.map((message) => message.id));
+		buttonNamed(rowOf(sheet, biteId)!, `${TEST_PREFIX} Bite`)!.click();
+		const title = `Activate ${TEST_PREFIX} Bite`;
+		await waitFor(
+			() => !!windowTitled(title)?.element?.isConnected,
+			'the roll window of the attack',
+		);
+		windowTitled(title)!.element.querySelector<HTMLButtonElement>('footer button')!.click();
+		await waitFor(
+			() =>
+				game.messages.contents.some(
+					(message) => !before.has(message.id) && (message.rolls?.length ?? 0) > 0,
+				),
+			'the attack card with its roll',
 		);
 	}, 30_000);
 
