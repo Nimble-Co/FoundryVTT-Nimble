@@ -3,28 +3,46 @@
 The rail of the NPC sheet: the faded portrait, the HP and Temp plates (or the minion rules), the saves, armor and speed,
 the damage and condition defenses, and the tabs at the bottom. A click on a save rolls it. The rail stays dark in both themes.
 In the narrow form it has no portrait, no plates and no tabs: the header and the tab strip hold them.
+The Edit switch is last. In edit mode the plays rest (a save does not roll), you type the max HP, ARMOR is a select,
+and quiet outlines on the saves, the speeds and the defenses open their configure windows.
 -->
 <script lang="ts">
 	import type { MonsterRailProps } from '#types/components/actorSheets/MonsterRail.d.ts';
+	import EditZone from '../../parts/EditZone.svelte';
 	import SaveTile from '../../parts/SaveTile.svelte';
 	import SheetTabs from '../../parts/SheetTabs.svelte';
 	import StatBox from '../../parts/StatBox.svelte';
+	import EditSwitch from '../../shared/EditSwitch.svelte';
 	import SheetPortrait from '../../shared/SheetPortrait.svelte';
-	import { showTab } from '../../shared/sheetUiState.ts';
+	import { setEditing, showTab } from '../../shared/sheetUiState.ts';
 	import MonsterHitPoints from './MonsterHitPoints.svelte';
 
 	let { view, frame, ui, perform, narrow = false }: MonsterRailProps = $props();
+
+	const editing = $derived(ui.editing);
+	const [armor, ...speeds] = $derived(view.stats);
 </script>
 
-<aside class="nimble-chrome rail" class:narrow aria-label={view.text.label}>
+<aside class="nimble-chrome rail" class:narrow class:editing aria-label={view.text.label}>
 	{#if !narrow}
 		<div class="portrait">
 			<SheetPortrait {view} form="rail" />
 			<div class="fade"></div>
+			{#if editing}
+				<button
+					type="button"
+					class="nimble-u-reset-button change"
+					aria-label={view.text.changePortrait}
+					data-tooltip={view.text.changePortrait}
+					onclick={(event) => perform({ kind: 'changePortrait', skipTokenizer: event.shiftKey })}
+				>
+					<i class="fa-solid fa-image"></i>
+				</button>
+			{/if}
 		</div>
 	{/if}
 	<div class="scroll">
-		{#if !narrow}<MonsterHitPoints {view} {perform} />{/if}
+		{#if !narrow}<MonsterHitPoints {view} {perform} {editing} />{/if}
 		{#if view.minionRules}
 			<div class="box minion">
 				<span class="label"><i class="fa-solid fa-users"></i>{view.text.minion}</span>
@@ -38,24 +56,75 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 					mod={save.mod}
 					advantage={save.advantage}
 					stripTone="card"
-					onclick={() => perform(save.intent)}
+					onclick={editing ? undefined : () => perform(save.intent)}
 				/>
 			{/each}
+			{#if editing}
+				<EditZone
+					short={view.text.savesShort}
+					label={view.text.configureSaves}
+					onclick={() => perform({ kind: 'configure', target: 'saves' })}
+				/>
+			{/if}
 		</div>
 		<div class="stats">
-			{#each view.stats as stat (stat.id)}
-				<StatBox icon={stat.icon} label={stat.label} value={stat.value} tooltip={stat.tooltip} />
-			{/each}
-		</div>
-		{#if view.defenses.length}
-			<dl class="box defenses">
-				{#each view.defenses as defense (defense.id)}
-					<div class="defense {defense.id}">
-						<dt class="label">{defense.label}</dt>
-						<dd>{defense.value}</dd>
-					</div>
+			{#if editing}
+				<label class="armor">
+					<span class="label"><i class={armor.icon}></i>{view.armor.label}</span>
+					<select
+						value={view.armor.value}
+						onchange={(event) =>
+							perform({
+								kind: 'setArmor',
+								armor: event.currentTarget.value as typeof view.armor.value,
+							})}
+					>
+						{#each view.armor.options as option (option.value)}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</label>
+			{:else}
+				<StatBox
+					icon={armor.icon}
+					label={armor.label}
+					value={armor.value}
+					tooltip={armor.tooltip}
+				/>
+			{/if}
+			<div class="speeds">
+				{#each speeds as stat (stat.id)}
+					<StatBox icon={stat.icon} label={stat.label} value={stat.value} tooltip={stat.tooltip} />
 				{/each}
-			</dl>
+				{#if editing}
+					<EditZone
+						short={view.text.movementShort}
+						label={view.text.configureMovement}
+						onclick={() => perform({ kind: 'configure', target: 'movement' })}
+					/>
+				{/if}
+			</div>
+		</div>
+		{#if view.defenses.length || editing}
+			<div class="defenses-zone">
+				<dl class="box defenses">
+					{#each view.defenses as defense (defense.id)}
+						<div class="defense {defense.id}">
+							<dt class="label">{defense.label}</dt>
+							<dd>{defense.value}</dd>
+						</div>
+					{:else}
+						<dd class="none">{view.text.noDefenses}</dd>
+					{/each}
+				</dl>
+				{#if editing}
+					<EditZone
+						short={view.text.defensesShort}
+						label={view.text.configureDefenses}
+						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
+					/>
+				{/if}
+			</div>
 		{/if}
 		{#if !narrow}
 			<nav class="tabs">
@@ -67,6 +136,15 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 					onchange={(id) => showTab(ui, id)}
 				/>
 			</nav>
+			<div class="switch">
+				<EditSwitch
+					{editing}
+					label={view.edit.label}
+					startHint={view.edit.startHint}
+					stopHint={view.edit.stopHint}
+					onclick={() => setEditing(ui, !ui.editing)}
+				/>
+			</div>
 		{/if}
 	</div>
 </aside>
@@ -98,6 +176,23 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 		position: absolute;
 		inset: 0;
 		background: linear-gradient(to bottom, transparent 40%, var(--nimble-ui-chrome) 98%);
+	}
+	.change {
+		position: absolute;
+		top: 7px;
+		left: 8px;
+		z-index: 1;
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 4px;
+		background: var(--nimble-ui-scrim);
+		font-size: 0.857rem;
+		color: var(--nimble-ui-fill-ink);
+	}
+	.change:hover {
+		background: var(--nimble-ui-scrim-strong);
 	}
 	.scroll {
 		position: relative;
@@ -141,6 +236,14 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 		text-transform: uppercase;
 		color: var(--nimble-bronze);
 	}
+	.editing .scroll {
+		gap: 18px;
+	}
+	.saves,
+	.speeds,
+	.defenses-zone {
+		position: relative;
+	}
 	.saves {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
@@ -151,8 +254,44 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 		grid-template-columns: 1fr 1fr;
 		gap: 5px;
 	}
-	.narrow .stats {
+	.speeds {
+		display: contents;
+	}
+	.editing .stats {
+		gap: 18px 5px;
+	}
+	.editing .speeds {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: inherit;
+		gap: 5px;
+	}
+	.narrow .stats,
+	.narrow.editing .speeds {
 		grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+	}
+	.armor {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 2px 3px 2px 8px;
+		border: 1px dashed var(--nimble-ui-edge);
+		border-radius: 4px;
+	}
+	.armor select {
+		width: auto;
+		height: 26px;
+		border: none;
+		background: var(--nimble-ui-well);
+		font: 700 0.857rem/1 var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
+	}
+	.none {
+		margin: 0;
+		font-size: 0.857rem;
+		color: var(--nimble-ui-ink-muted);
 	}
 	.defense {
 		display: grid;
@@ -182,5 +321,9 @@ In the narrow form it has no portrait, no plates and no tabs: the header and the
 		margin-top: auto;
 		padding-top: 8px;
 		border-top: 1px solid var(--nimble-ui-line);
+	}
+	.switch {
+		display: flex;
+		justify-content: flex-end;
 	}
 </style>

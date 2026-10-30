@@ -1,12 +1,13 @@
 <!--
 @component
-The HP and Temp HP plates of a monster. You type the numbers. `compact` is the form of the narrow header.
+The HP and Temp HP plates of a monster. You type the numbers. In edit mode they rest and you type the max HP.
+`compact` is the form of the narrow header.
 -->
 <script lang="ts">
 	import type { MonsterHitPointsProps } from '#types/components/actorSheets/MonsterHitPoints.d.ts';
 	import VitalPlate from '../../parts/VitalPlate.svelte';
 
-	let { view, perform, compact = false }: MonsterHitPointsProps = $props();
+	let { view, perform, editing = false, compact = false }: MonsterHitPointsProps = $props();
 </script>
 
 {#if view.hp}
@@ -20,7 +21,9 @@ The HP and Temp HP plates of a monster. You type the numbers. `compact` is the f
 			max={hp.max}
 			state={hp.state ?? undefined}
 			tooltip={hp.tooltip}
+			rest={editing}
 			onchange={(value) => perform({ kind: 'setHp', value })}
+			onmaxchange={editing ? (value) => perform({ kind: 'setMaxHp', value }) : undefined}
 		/>
 		<VitalPlate
 			variant={compact ? 'block' : 'badge'}
@@ -28,6 +31,7 @@ The HP and Temp HP plates of a monster. You type the numbers. `compact` is the f
 			temp
 			label={view.text.tempHp}
 			value={hp.temp}
+			rest={editing}
 			onchange={(value) => perform({ kind: 'setTempHp', value })}
 		/>
 	</div>

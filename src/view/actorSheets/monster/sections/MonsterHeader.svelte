@@ -1,32 +1,87 @@
 <!--
 @component
 The header of the narrow NPC sheet (below 560 px): the portrait at the right, the name and the line under it,
-the HP and Temp plates, and Expand all as an icon on the Abilities tab. It stays dark in both themes.
+the HP and Temp plates, and icon buttons: Create Feature (edit mode) and Expand all on the Abilities tab, and the Edit switch.
+In edit mode the name is a field, the portrait has a change button, and an outline on the line under the name opens
+the monster window. It stays dark in both themes.
 -->
 <script lang="ts">
 	import type { MonsterHeaderProps } from '#types/components/actorSheets/MonsterHeader.d.ts';
+	import EditZone from '../../parts/EditZone.svelte';
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
+	import EditSwitch from '../../shared/EditSwitch.svelte';
 	import SheetPortrait from '../../shared/SheetPortrait.svelte';
+	import { setEditing } from '../../shared/sheetUiState.ts';
 	import MonsterHitPoints from './MonsterHitPoints.svelte';
 
-	let { view, perform, expandAll }: MonsterHeaderProps = $props();
+	let { view, ui, perform, expandAll, createFeature }: MonsterHeaderProps = $props();
+
+	const editing = $derived(ui.editing);
 </script>
 
-<header class="nimble-chrome header" aria-label={view.text.label}>
+<header class="nimble-chrome header" class:editing aria-label={view.text.label}>
 	<SheetPortrait {view} form="header" />
 	<div class="fade"></div>
 	<div class="column">
 		<div class="who">
-			<h2>{view.name}</h2>
-			<span class="meta">{view.meta}</span>
+			{#if editing}
+				<button
+					type="button"
+					class="nimble-u-reset-button icon"
+					aria-label={view.text.changePortrait}
+					data-tooltip={view.text.changePortrait}
+					onclick={(event) => perform({ kind: 'changePortrait', skipTokenizer: event.shiftKey })}
+				>
+					<i class="fa-solid fa-image"></i>
+				</button>
+				<input
+					class="name-field"
+					type="text"
+					value={view.name}
+					aria-label={view.text.name}
+					onchange={(event) => perform({ kind: 'rename', name: event.currentTarget.value })}
+				/>
+			{:else}
+				<h2>{view.name}</h2>
+			{/if}
+			<span class="meta">
+				{view.meta}
+				{#if editing}
+					<EditZone
+						inline
+						short={view.text.metaShort}
+						label={view.text.metaLabel}
+						onclick={() => perform({ kind: 'configure', target: 'metadata' })}
+					/>
+				{/if}
+			</span>
 		</div>
 		<div class="plates">
-			<MonsterHitPoints {view} {perform} compact />
-			{#if expandAll}
-				<span class="buttons">
+			<MonsterHitPoints {view} {perform} {editing} compact />
+			<span class="buttons">
+				{#if editing && createFeature}
+					<button
+						type="button"
+						class="nimble-u-reset-button icon"
+						aria-label={createFeature.label}
+						data-tooltip={createFeature.label}
+						onclick={() => perform(createFeature.intent)}
+					>
+						<i class="fa-solid fa-plus"></i>
+					</button>
+				{/if}
+				{#if expandAll}
 					<ExpandAllButton compact allOpen={expandAll.allOpen} onclick={expandAll.onclick} />
-				</span>
-			{/if}
+				{/if}
+				<EditSwitch
+					compact
+					{editing}
+					label={view.edit.label}
+					startHint={view.edit.startHint}
+					stopHint={view.edit.stopHint}
+					onclick={() => setEditing(ui, !ui.editing)}
+				/>
+			</span>
 		</div>
 	</div>
 </header>
@@ -66,8 +121,47 @@ the HP and Temp plates, and Expand all as an icon on the Abilities tab. It stays
 		color: var(--nimble-ui-highlight);
 	}
 	.meta {
+		position: relative;
 		font-size: 0.833rem;
 		color: var(--nimble-ui-ink-muted);
+	}
+	.editing .who {
+		align-items: center;
+		gap: 12px 8px;
+	}
+	.editing .meta {
+		padding-right: 4px;
+	}
+	.name-field {
+		all: unset;
+		box-sizing: border-box;
+		min-width: 0;
+		flex: 1 1 120px;
+		padding: 0 3px;
+		border-bottom: 1px dashed var(--nimble-ui-ring);
+		font-size: 1.214rem;
+		font-weight: 900;
+		line-height: 1.25;
+		color: var(--nimble-ui-highlight);
+		cursor: text;
+	}
+	.name-field:focus {
+		background: var(--nimble-ui-well);
+	}
+	.icon {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 28px;
+		height: 28px;
+		border: 1px solid var(--nimble-ui-ring);
+		border-radius: 4px;
+		font-size: 0.786rem;
+		color: var(--nimble-ui-ink);
+	}
+	.icon:hover {
+		border-color: var(--nimble-ui-highlight);
+		background: var(--nimble-ui-hover);
 	}
 	.plates {
 		display: flex;
@@ -76,5 +170,7 @@ the HP and Temp plates, and Expand all as an icon on the Abilities tab. It stays
 	}
 	.buttons {
 		margin-left: auto;
+		display: flex;
+		gap: 5px;
 	}
 </style>

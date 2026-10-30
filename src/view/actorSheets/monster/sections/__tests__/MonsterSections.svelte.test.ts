@@ -18,6 +18,7 @@ import MonsterEffectsTab from '../MonsterEffectsTab.svelte';
 import MonsterNotesTab from '../MonsterNotesTab.svelte';
 import MonsterRail from '../MonsterRail.svelte';
 import MonsterSettingsTab from '../MonsterSettingsTab.svelte';
+import MonsterTitle from '../MonsterTitle.svelte';
 
 const FX = 'NIMBLE.actorSheet.shared.effects';
 const RAIL = 'NIMBLE.actorSheet.monster.rail';
@@ -80,6 +81,143 @@ describe('MonsterRail', () => {
 		await fireEvent.click(screen.getByRole('tab', { name: /tabs\.effects/ }));
 
 		expect(ui.tab).toBe('effects');
+	});
+});
+
+describe('MonsterRail in edit mode', () => {
+	const renderEditing = (actor = soloMonster(), context = monsterContext()) => {
+		const { ui, perform } = setup('abilities');
+		ui.editing = true;
+		render(MonsterRail, {
+			view: monsterRail(actor, context),
+			frame: monsterFrame(actor, context),
+			ui,
+			perform,
+		});
+		return { ui, perform };
+	};
+
+	it('turns edit mode on and off with the Edit switch', async () => {
+		const { ui } = setup('abilities');
+		const actor = goblin();
+		render(MonsterRail, {
+			view: monsterRail(actor, monsterContext()),
+			frame: monsterFrame(actor, monsterContext()),
+			ui,
+			perform: vi.fn(),
+		});
+		const toggle = screen.getByRole('button', { name: `${RAIL}.edit` });
+
+		await fireEvent.click(toggle);
+		expect(ui.editing).toBe(true);
+		expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+		await fireEvent.click(toggle);
+		expect(ui.editing).toBe(false);
+	});
+
+	it('changes the portrait, and Shift skips the Tokenizer', async () => {
+		const { perform } = renderEditing();
+
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.prompts.changeActorImage' }), {
+			shiftKey: true,
+		});
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'changePortrait', skipTokenizer: true });
+	});
+
+	it.each([
+		['NIMBLE.prompts.configureSavingThrows', 'saves'],
+		['NIMBLE.prompts.configureMovement', 'movement'],
+		['NIMBLE.npcSheet.editDamageDefenses', 'metadata'],
+	])('opens a configure window from the outline %s', async (name, target) => {
+		const { perform } = renderEditing();
+
+		await fireEvent.click(screen.getByRole('button', { name }));
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'configure', target });
+	});
+
+	it('types the max HP, and the current HP rests', async () => {
+		const { perform } = renderEditing();
+		const max = screen.getByRole('spinbutton', { name: /^Maximum .*vitalPlate\.hp$/ });
+
+		await fireEvent.input(max, { target: { value: '80' } });
+		await fireEvent.blur(max);
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'setMaxHp', value: 80 });
+		expect(screen.getByRole('spinbutton', { name: /^Current .*vitalPlate\.hp$/ })).toHaveClass(
+			'rest',
+		);
+	});
+
+	it('sets the armor from a select', async () => {
+		const { perform } = renderEditing();
+		const armor = screen.getByRole('combobox', { name: `${RAIL}.armor` });
+
+		expect(armor).toHaveValue('medium');
+		await fireEvent.change(armor, { target: { value: 'heavy' } });
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'setArmor', armor: 'heavy' });
+	});
+
+	it('does not roll a save', async () => {
+		const { perform } = renderEditing();
+
+		expect(
+			screen
+				.getAllByRole('button')
+				.filter((button) => button.textContent?.includes('NIMBLE.savingThrowAbbreviations')),
+		).toHaveLength(0);
+		expect(perform).not.toHaveBeenCalled();
+	});
+
+	it('shows the defenses box with no defenses, so you can configure them', () => {
+		renderEditing(goblin());
+
+		expect(screen.getByText(`${RAIL}.noDefenses`)).toBeInTheDocument();
+	});
+});
+
+describe('MonsterTitle', () => {
+	const createFeature = {
+		label: 'NIMBLE.npcSheet.createFeature',
+		intent: { kind: 'createFeature' },
+	} as const;
+	const renderTitle = (editing: boolean) => {
+		const perform = vi.fn();
+		render(MonsterTitle, {
+			view: monsterRail(goblin(), monsterContext()),
+			editing,
+			perform,
+			expandAll: null,
+			createFeature,
+		});
+		return perform;
+	};
+
+	it('shows the name and the line under it, with no edit controls out of edit mode', () => {
+		renderTitle(false);
+
+		expect(screen.getByRole('heading', { name: 'Goblin' })).toBeInTheDocument();
+		expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /createFeature/ })).not.toBeInTheDocument();
+	});
+
+	it('renames the monster, opens the monster window from the line under the name, and creates a feature', async () => {
+		const perform = renderTitle(true);
+
+		await fireEvent.change(screen.getByRole('textbox', { name: `${RAIL}.name` }), {
+			target: { value: 'Goblin Boss' },
+		});
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.metaLabel` }));
+		await fireEvent.click(screen.getByRole('button', { name: /createFeature/ }));
+
+		expect(perform.mock.calls).toEqual([
+			[{ kind: 'rename', name: 'Goblin Boss' }],
+			[{ kind: 'configure', target: 'metadata' }],
+			[{ kind: 'createFeature' }],
+		]);
 	});
 });
 

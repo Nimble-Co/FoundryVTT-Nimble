@@ -34,7 +34,9 @@ function stubWidth(width: number) {
 	);
 }
 
-const RAIL_LABEL = 'NIMBLE.actorSheet.monster.rail.label';
+const RAIL = 'NIMBLE.actorSheet.monster.rail';
+const RAIL_LABEL = `${RAIL}.label`;
+const FRAME = 'NIMBLE.actorSheet.monster.frame';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -84,6 +86,47 @@ describe('MonsterSheet', () => {
 		expect(screen.getByRole('spinbutton', { name: /vitalPlate\.hp$/ })).toBeInTheDocument();
 		await fireEvent.click(screen.getByRole('tab', { name: /tabs.notes/ }));
 		expect(ui.tab).toBe('notes');
+	});
+
+	it('starts edit mode from the Edit switch: a band at the top, Create Feature in the title bar, and Done ends it', async () => {
+		stubWidth(660);
+		const { ui, perform } = renderSheet();
+
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.edit` }));
+
+		expect(ui.editing).toBe(true);
+		expect(screen.getByRole('status')).toHaveTextContent(`${FRAME}.editing`);
+		await fireEvent.click(screen.getByRole('button', { name: /createFeature/ }));
+		expect(perform).toHaveBeenCalledWith({ kind: 'createFeature' });
+
+		await fireEvent.click(screen.getByRole('button', { name: `${FRAME}.done` }));
+		expect(ui.editing).toBe(false);
+		expect(screen.queryByRole('status')).toBeNull();
+	});
+
+	it('in the narrow form, the header has the Edit switch, and in edit mode the name, portrait and Create Feature', async () => {
+		stubWidth(390);
+		const { ui, perform } = renderSheet();
+
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.editHint` }));
+		expect(ui.editing).toBe(true);
+
+		await fireEvent.change(screen.getByRole('textbox', { name: `${RAIL}.name` }), {
+			target: { value: 'Pudge' },
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.prompts.changeActorImage' }));
+		await fireEvent.click(screen.getByRole('button', { name: `${RAIL}.metaLabel` }));
+		await fireEvent.click(screen.getByRole('button', { name: /createFeature/ }));
+
+		expect(perform.mock.calls).toEqual([
+			[{ kind: 'rename', name: 'Pudge' }],
+			[{ kind: 'changePortrait', skipTokenizer: false }],
+			[{ kind: 'configure', target: 'metadata' }],
+			[{ kind: 'createFeature' }],
+		]);
+		expect(
+			screen.getByRole('spinbutton', { name: /^Maximum .*vitalPlate\.hp$/ }),
+		).toBeInTheDocument();
 	});
 
 	it('shows a minion with no HP', () => {
