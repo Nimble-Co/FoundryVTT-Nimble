@@ -127,6 +127,11 @@
 						"dying": "Dying: at 0 HP. Taking damage while Dying causes 2 Wounds, a crit causes 3 instead.",
 						"healthy": "Hit Points"
 					},
+					"inspiration": {
+						"label": "Inspiration",
+						"on": "Inspired: you can reroll any single die. It ends after a Safe Rest. Click to end it.",
+						"off": "Give Inspiration: the ability to reroll any single die, until a Safe Rest."
+					},
 					"levelUpHint": "Level Up. This opens the Level Up window",
 					"levelUpMax": "You are at the highest level",
 					"levelUpNoClass": "Add a class to level up",

@@ -165,6 +165,8 @@ export interface HeroRailView {
 		tooltip: string;
 	};
 	armor: { label: string; value: number; tooltip: string };
+	/** the seal on the portrait: a click gives or ends it */
+	inspiration: { on: boolean; label: string; tooltip: string; intent: HeroIntent };
 	speeds: HeroSpeedView[];
 	meters: HeroMeterView[];
 	initiative: {
@@ -514,6 +516,7 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 	const bloodied = !dying && hp.value <= hp.max / 2;
 	const state = dying ? 'dying' : bloodied ? 'bloodied' : null;
 	const missing = context.missingLevelSelections;
+	const inspired = actor.system.resources.inspiration;
 
 	return {
 		text: {
@@ -545,6 +548,12 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 			label: localize(`${RAIL}.armor`),
 			value: armor.value,
 			tooltip: format(`${RAIL}.armorTooltip`, { value: String(armor.value) }),
+		},
+		inspiration: {
+			on: inspired,
+			label: localize(`${RAIL}.inspiration.label`),
+			tooltip: localize(`${RAIL}.inspiration.${inspired ? 'on' : 'off'}`),
+			intent: { kind: 'setInspiration', value: !inspired },
 		},
 		speeds: speeds(actor, context),
 		meters: [
