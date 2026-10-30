@@ -97,7 +97,6 @@ describe('monsterRail', () => {
 		expect(rail.text).toMatchObject({
 			changePortrait: 'NIMBLE.prompts.changeActorImage',
 			name: `${RAIL}.name`,
-			maxHp: `${RAIL}.maxHp`,
 			metaShort: `${RAIL}.metaShort`,
 			metaLabel: `${RAIL}.metaLabel`,
 			savesShort: `${RAIL}.savesShort`,

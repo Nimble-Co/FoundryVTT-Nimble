@@ -1,3 +1,4 @@
+import type { Snippet } from 'svelte';
 import type { SequencePart } from '#view/actorSheets/parts/types.ts';
 
 export interface AttackSequenceProps {
@@ -9,4 +10,8 @@ export interface AttackSequenceProps {
 	/** the pen: open the window of the sequence */
 	onedit?: () => void;
 	touch?: boolean;
+	/** edit mode: the trash button, before the pen */
+	fields?: Snippet;
+	/** under the note: a ConfirmBar */
+	children?: Snippet;
 }

@@ -20,4 +20,6 @@ export interface VitalPlateProps {
 	tooltip?: string;
 	/** edit mode: the number ignores the pointer */
 	rest?: boolean;
+	/** the maximum is a number that you type (the NPC sheet in edit mode) */
+	onmaxchange?: (value: number) => void;
 }

@@ -7,6 +7,8 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 - The arrow (at the start) and the pen are the same `RowButton`s as on a character row. Delete is in the window and asks first.
 - `descriptionHtml` (the text that Foundry enriched) replaces the plain `description`.
 - The range and the uses show on the right, with `RowCost`. `nested` indents the abilities of an attack sequence.
+- In edit mode, `fields` replaces the range and the uses with the numbers that you type, and with no `onuse` the name does not act.
+  `children` (a ConfirmBar) shows under the text.
 -->
 <script lang="ts">
 	import type { AbilityCardProps } from '#types/components/actorSheets/AbilityCard.d.ts';
@@ -31,6 +33,8 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		touch = false,
 		state,
 		id,
+		fields,
+		children,
 	}: AbilityCardProps = $props();
 
 	const roll = $derived(kind === 'roll');
@@ -45,6 +49,11 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 	);
 </script>
 
+{#snippet face()}
+	<RowTile {img} {icon} size="sm" />
+	<span class="nm"><i class="fa-solid {roll ? 'fa-dice-d20' : 'fa-comment'}"></i>{name}</span>
+{/snippet}
+
 <div class="card {state ?? ''}" class:nested class:touch>
 	<div class="cr">
 		<RowButton
@@ -56,11 +65,19 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 			{touch}
 			onclick={() => (open = !open)}
 		/>
-		<button type="button" class="nimble-u-reset-button act" data-tooltip={useText} onclick={onuse}>
-			<RowTile {img} {icon} size="sm" />
-			<span class="nm"><i class="fa-solid {roll ? 'fa-dice-d20' : 'fa-comment'}"></i>{name}</span>
-		</button>
-		{#if uses || range}<RowCost
+		{#if onuse}
+			<button
+				type="button"
+				class="nimble-u-reset-button act"
+				data-tooltip={useText}
+				onclick={onuse}
+			>
+				{@render face()}
+			</button>
+		{:else}
+			<span class="act">{@render face()}</span>
+		{/if}
+		{#if fields}<span class="fz">{@render fields()}</span>{:else if uses || range}<RowCost
 				uses={uses ? [uses] : []}
 				{range}
 				compact
@@ -72,6 +89,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 	{#if open && descriptionHtml}
 		<div class="ds html" id={pid}>{@html descriptionHtml}</div>
 	{:else if open && description}<p class="ds" id={pid}>{description}</p>{/if}
+	{@render children?.()}
 </div>
 
 <style>
@@ -86,7 +104,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 			border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
 			background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
-	.card:has(.act:hover) {
+	.card:has(button.act:hover) {
 		border-color: var(--nimble-accent-color);
 		background: color-mix(
 			in srgb,
@@ -119,6 +137,12 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		min-height: 30px;
 		padding: 2px 4px 2px 1px;
 		border-radius: 3px;
+	}
+	.fz {
+		flex: none;
+		display: flex;
+		align-items: center;
+		gap: 6px;
 	}
 	.nm {
 		display: flex;

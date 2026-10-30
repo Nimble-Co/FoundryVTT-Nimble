@@ -3,12 +3,21 @@
 The note above the abilities that a monster uses in a set order: the attack sequence of the system.
 Bold names the abilities; a die chip marks a random roll. The abilities under it are `nested` AbilityCards.
 `html` is the text of the sequence item as Foundry enriched it. With `onedit` the note has a pen, as a card.
+In edit mode `fields` (the trash button) goes before the pen, and `children` (a ConfirmBar) under the note.
 -->
 <script lang="ts">
 	import type { AttackSequenceProps } from '#types/components/actorSheets/AttackSequence.d.ts';
 	import RowButton from './RowButton.svelte';
 
-	let { parts = [], html, name, onedit, touch = false }: AttackSequenceProps = $props();
+	let {
+		parts = [],
+		html,
+		name,
+		onedit,
+		touch = false,
+		fields,
+		children,
+	}: AttackSequenceProps = $props();
 </script>
 
 <div class="seq" class:edit={!!onedit}>
@@ -18,8 +27,10 @@ Bold names the abilities; a die chip marks a random roll. The abilities under it
 					>{:else}<span class="die"><i class="fa-solid fa-dice-d20"></i>{p[0]}</span
 					>{/if}{/each}{/if}
 	</div>
+	{#if fields}<span class="fz">{@render fields()}</span>{/if}
 	{#if onedit}<RowButton kind="edit" size="sm" {name} {touch} onclick={onedit} />{/if}
 </div>
+{@render children?.()}
 
 <style>
 	.seq {
@@ -42,6 +53,12 @@ Bold names the abilities; a die chip marks a random roll. The abilities under it
 	}
 	.edit .text {
 		padding: 3px 0;
+	}
+	.fz {
+		flex: none;
+		display: flex;
+		align-items: center;
+		font-style: normal;
 	}
 	.text {
 		flex: 1;

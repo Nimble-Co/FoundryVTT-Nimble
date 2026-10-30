@@ -94,6 +94,7 @@
 				},
 				"vitalPlate": {
 					"current": "Current {label}",
+					"maximum": "Maximum {label}",
 					"hp": "HP",
 					"tempHp": "Temp HP"
 				}
@@ -391,7 +392,6 @@
 					"editHint": "Edit the sheet: show where you configure the monster",
 					"stopEditing": "Stop editing",
 					"name": "Name",
-					"maxHp": "Maximum HP",
 					"metaShort": "Monster",
 					"metaLabel": "Configure the monster: level, type, size, defenses",
 					"savesShort": "Saves",

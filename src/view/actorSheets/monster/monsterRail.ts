@@ -40,7 +40,6 @@ export interface MonsterRailView {
 		minion: string;
 		changePortrait: string;
 		name: string;
-		maxHp: string;
 		metaShort: string;
 		metaLabel: string;
 		savesShort: string;
@@ -155,7 +154,6 @@ export function monsterRail(
 			minion: localize(`${RAIL}.minion.label`),
 			changePortrait: localize('NIMBLE.prompts.changeActorImage'),
 			name: localize(`${RAIL}.name`),
-			maxHp: localize(`${RAIL}.maxHp`),
 			metaShort: localize(`${RAIL}.metaShort`),
 			metaLabel: localize(`${RAIL}.metaLabel`),
 			savesShort: localize(`${RAIL}.savesShort`),
