@@ -12,6 +12,7 @@ import {
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
@@ -58,17 +59,13 @@ export function createItemActivationConfigDialogState(
 	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
 	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
-	// advantage and bonus damage. Snapshot what applies against the current first
-	// target at dialog-open time. Two known limitations, acceptable while these rules
-	// are single-target in practice (e.g. Hunter's Mark): a quarry that is only the
-	// *second* target of a multi-target attack is never offered the bonus, and if the
-	// player retargets while the dialog is open the choice is not re-validated at submit.
-	const firstTargetActor = (() => {
-		const targets = game.user?.targets;
-		if (!targets || targets.size === 0) return undefined;
-		const firstTarget = targets.values().next().value as Token | undefined;
-		return firstTarget?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
-	})();
+	// advantage and bonus damage. Snapshot what applies against the target at
+	// dialog-open time; with two or more targets, a bonus that tests the target is
+	// not offered. If the player retargets while the dialog is open, the choice is
+	// not checked again at submit.
+	const firstTargetActor = (soleTarget(game.user?.targets) as Token | null)?.actor as
+		| { uuid?: string; getTargetDomain?: () => Set<string> }
+		| undefined;
 	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
 		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
 		item as unknown as {

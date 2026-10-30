@@ -166,6 +166,31 @@ describe('collectRerollEntries', () => {
 		});
 	});
 
+	describe('on a card with two targets', () => {
+		const two = (rules: { roller?: RerollRuleLike[]; target?: RerollRuleLike[] }) =>
+			context({
+				attacker: actor('Actor.attacker', rules.roller ?? []),
+				targets: [
+					{ tokenUuid: TOKEN, actor: actor('Actor.first', rules.target ?? []) },
+					{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.second', rules.target ?? []) },
+				],
+			});
+
+		it('gives the targets no entries', () => {
+			const rule = rerollRule();
+
+			expect(collectRerollEntries(two({ target: [rule] })).manual).toEqual([]);
+			expect(rule.offersUseOn).not.toHaveBeenCalled();
+		});
+
+		it('keeps the entry of the one who rolled, with no other creature to test', () => {
+			const rule = rerollRule({ usedBy: 'roller' });
+
+			expect(collectRerollEntries(two({ roller: [rule] })).manual).toHaveLength(1);
+			expect(rule.offersUseOn).toHaveBeenCalledWith({ side: 'roller', roll: MELEE, other: null });
+		});
+	});
+
 	type Case = [string, Partial<RerollRollContext>, RerollTrigger, string[]];
 	const rollerRule = rerollRule({ id: 'roller', usedBy: 'roller' });
 	const targetRule = rerollRule({ id: 'target' });

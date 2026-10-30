@@ -78,6 +78,22 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('cannot crit or miss with two targets (Core:1403)', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([
+			targetToken('Scene.s.Token.goblin'),
+			targetToken('Scene.s.Token.kobold'),
+		]);
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canCrit: false, canMiss: false, multiTarget: true }),
+		);
+	});
+
 	it('starts the dialog at the given roll mode', async () => {
 		dialogResult({});
 

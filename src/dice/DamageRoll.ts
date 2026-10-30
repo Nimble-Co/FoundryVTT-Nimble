@@ -24,6 +24,11 @@ declare namespace DamageRoll {
 		canCrit: boolean;
 		/** Whether this roll can miss based on the primary die. */
 		canMiss: boolean;
+		/**
+		 * A Multi-target Attack (Core:1403): one roll for two or more targets. It
+		 * cannot crit or miss, but keeps a Primary Die for rerolls and changes.
+		 */
+		multiTarget?: boolean;
 		/** The lowest kept Primary Die face that is a crit. Defaults to the max. */
 		criticalThreshold?: number;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
@@ -482,7 +487,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		// ── Legacy path: no Nimble modifiers in formula ──
 		const { rollMode = 0 } = options;
-		const needsPrimaryDie = options.canCrit || options.canMiss;
+		const needsPrimaryDie = options.canCrit || options.canMiss || options.multiTarget === true;
 
 		if (!needsPrimaryDie && !rollMode) return;
 

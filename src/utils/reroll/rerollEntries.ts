@@ -10,6 +10,7 @@ import {
 	type RerollTrigger,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
+import { soleTarget } from '../tokens/soleTarget.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
@@ -82,7 +83,7 @@ interface RerollAlly {
 /** One roll as the reroll gate sees it. The caller builds it once per roll. */
 interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
-	/** The roll's targets in card order. Only the first one's rules give entries. */
+	/** The roll's targets in card order. With two or more, no target's rules give entries. */
 	targets: RerollTarget[];
 	/** Creatures that may use an ally-side reroll. Absent means none. */
 	allies?: RerollAlly[];
@@ -144,12 +145,13 @@ interface RerollUser {
 }
 
 /**
- * The creature on the other side of the roll from `side`: the first target
- * for the one who rolled and an ally, the one who rolled for the target.
+ * The creature on the other side of the roll from `side`: the target for the
+ * one who rolled and an ally, the one who rolled for the target. With two or
+ * more targets there is none, so a rule that tests it does not run.
  */
 function otherCreature(side: RerollSide, context: RerollRollContext): RerollingActor | null {
 	if (side === 'target') return context.attacker ?? null;
-	return context.targets[0]?.actor ?? null;
+	return soleTarget(context.targets)?.actor ?? null;
 }
 
 /** Who can use a rule on each side of this roll. */
@@ -157,6 +159,7 @@ function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[]
 	if (side === 'roller')
 		return [{ actor: context.attacker, tokenUuid: null, targetTokenUuid: null }];
 	if (side === 'target') {
+		if (context.targets.length > 1) return [];
 		const target = context.targets[0];
 		return [{ actor: target?.actor, tokenUuid: null, targetTokenUuid: target?.tokenUuid ?? null }];
 	}

@@ -68,6 +68,7 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
+import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
@@ -367,9 +368,9 @@ class ItemActivationManager {
 
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
-		const targetDomain = this.#getFirstTargetDomain();
+		const targetDomain = this.#getSoleTargetDomain();
 		const incomingAttackPlan = computeIncomingAttackPlan(
-			this.#getFirstTargetToken(),
+			this.#getSoleTargetToken(),
 			this.actor as OfferingActor,
 			{ delivery: this.#getAttackDelivery() },
 		);
@@ -484,26 +485,28 @@ class ItemActivationManager {
 						?.details;
 					const isFlunky = actorDetails?.isFlunky ?? false;
 
-					// AoE attacks share a single roll applied to all targets,
-					// so they cannot crit and cannot miss. Detect AoE from a
-					// defined activation template shape.
-					// Multi-target abilities WITHOUT a template (e.g. Magic Missile,
-					// "make two attacks") roll separately per target and crit/miss
-					// normally — targets.count alone is NOT a signal here.
+					// Multi-target and AoE attacks share a single roll applied to all
+					// targets, so they cannot crit and cannot miss (Core:1403). AoE comes
+					// from a defined activation template shape; a Multi-target Attack has
+					// two or more targets and no area. The item's target count alone is
+					// not a signal.
 					const activation = (this.#item.system as any)?.activation;
 					const templateShape: string = activation?.template?.shape ?? '';
 					// The acquireTargetsFromTemplate flag marks intentional AoE items;
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
+					const multiTarget = !isAoE && Array.from(game.user?.targets ?? []).length > 1;
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
 
 					const resolvedCanCrit =
-						isAoE || isMinion || isFlunky || lacksProficiency ? false : (canCrit ?? true);
+						isAoE || multiTarget || isMinion || isFlunky || lacksProficiency
+							? false
+							: (canCrit ?? true);
 					// Minions cannot crit but can still miss — the asymmetry with
 					// resolvedCanCrit above is intentional.
-					const resolvedCanMiss = isAoE ? false : isMinion || (canMiss ?? true);
+					const resolvedCanMiss = isAoE || multiTarget ? false : isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Check if item has vicious property
@@ -542,12 +545,13 @@ class ItemActivationManager {
 						: collectPrimaryDieBonuses(
 								this.actor as { rules?: unknown[] } | null,
 								delivery,
-								(this.#getFirstTargetToken()?.actor ?? null) as OtherCreature | null,
+								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
+						...(multiTarget ? { multiTarget } : {}),
 						rollMode: node.rollMode ?? 0,
 						primaryDieValue: dialogData.primaryDieValue ?? 0,
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
@@ -1329,16 +1333,13 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Resolves the first targeted token's target-namespace domain for targetCondition
+	 * Resolves the target's target-namespace domain for targetCondition
 	 * evaluation. Returns only `target:*` tags to prevent `self:*` tags from leaking
-	 * into target predicate evaluation.
-	 *
-	 * Note: multi-target / AoE bonuses gated by targetCondition are not supported —
-	 * insertion-order first target is used. Single-target features (Hunter's Mark,
-	 * Hexbinder) are the intended use case per #579.
+	 * into target predicate evaluation. With two or more targets there is none, so
+	 * a bonus gated by targetCondition does not apply.
 	 */
-	#getFirstTargetDomain(): Set<string> | undefined {
-		const targetActor = this.#getFirstTargetToken()?.actor as
+	#getSoleTargetDomain(): Set<string> | undefined {
+		const targetActor = this.#getSoleTargetToken()?.actor as
 			| ({ getTargetDomain?: () => Set<string> } & { uuid?: string })
 			| null
 			| undefined;
@@ -1355,12 +1356,9 @@ class ItemActivationManager {
 		return buildTargetDomain(attacker, targetActor);
 	}
 
-	/** Insertion-order first targeted token, matching #getFirstTargetDomain semantics. */
-	#getFirstTargetToken(): Token.Implementation | null {
-		const targets = game.user?.targets;
-		if (!targets || targets.size === 0) return null;
-
-		return (targets.values().next().value as Token.Implementation | undefined) ?? null;
+	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */
+	#getSoleTargetToken(): Token.Implementation | null {
+		return soleTarget(game.user?.targets) as Token.Implementation | null;
 	}
 
 	/**

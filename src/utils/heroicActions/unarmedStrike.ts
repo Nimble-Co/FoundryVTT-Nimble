@@ -16,6 +16,7 @@ import {
 } from '#utils/incomingReactions/incomingAttackModifiers.js';
 import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '#utils/localize.js';
+import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 
@@ -97,15 +98,20 @@ export async function rollUnarmedStrike(
 	if (!result) return false;
 
 	const rollMode = result.rollMode ?? startRollMode;
-	const firstTargetToken =
-		(game.user?.targets?.values().next().value as Token.Implementation | undefined) ?? null;
-	const incomingAttackPlan = computeIncomingAttackPlan(firstTargetToken, actor as OfferingActor, {
-		delivery: attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE),
-	});
+	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
+	const multiTarget = targets.length > 1;
+	const incomingAttackPlan = computeIncomingAttackPlan(
+		soleTarget(targets),
+		actor as OfferingActor,
+		{
+			delivery: attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE),
+		},
+	);
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
-		canCrit,
-		canMiss: true,
+		canCrit: canCrit && !multiTarget,
+		canMiss: !multiTarget,
+		multiTarget,
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
 		primaryDieModifier: Number(result.primaryDieModifier) || 0,
