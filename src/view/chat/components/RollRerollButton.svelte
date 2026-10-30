@@ -11,7 +11,6 @@
 
 	const rerollButton = createRollRerollButtonState(() => ({ sections, onChoose }));
 	const { elements, onTriggerClick, choose, closeMenu } = rerollButton;
-	let single = $derived(rerollButton.single);
 	let menuOpen = $derived(rerollButton.menuOpen);
 	let triggerLabel = $derived(rerollButton.triggerLabel);
 	let icon = $derived(REACTION_VERB_ICONS[rerollButton.changesOnly ? 'change' : 'reroll']);
@@ -27,8 +26,8 @@
 	type="button"
 	{disabled}
 	aria-label={triggerLabel}
-	aria-haspopup={single ? undefined : 'menu'}
-	aria-expanded={single ? undefined : menuOpen}
+	aria-haspopup="menu"
+	aria-expanded={menuOpen}
 	aria-controls={menuOpen ? menuId : undefined}
 	data-tooltip={triggerLabel}
 	onclick={onTriggerClick}

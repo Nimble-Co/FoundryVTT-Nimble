@@ -9,7 +9,6 @@ export function createRollRerollButtonState(
 
 	const items = $derived(getProps().sections.flatMap((section) => section.items));
 	const single = $derived(items.length === 1 ? items[0] : null);
-	const menuOpen = $derived(open && !single);
 	const changesOnly = $derived(
 		getProps().sections.every((section) => section.id === 'change' || section.items.length === 0),
 	);
@@ -25,11 +24,8 @@ export function createRollRerollButtonState(
 		);
 	});
 
+	// A click always opens the menu, also for one entry: a use can cost something.
 	function onTriggerClick() {
-		if (single) {
-			getProps().onChoose(single.id);
-			return;
-		}
 		open = !open;
 	}
 
@@ -47,11 +43,8 @@ export function createRollRerollButtonState(
 
 	return {
 		elements,
-		get single() {
-			return single;
-		},
 		get menuOpen() {
-			return menuOpen;
+			return open;
 		},
 		get triggerLabel() {
 			return triggerLabel;

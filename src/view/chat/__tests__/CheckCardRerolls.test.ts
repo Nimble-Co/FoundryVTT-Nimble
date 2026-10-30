@@ -210,10 +210,12 @@ describe('rerolls on check cards', () => {
 		expect(rerollButton()).toBeNull();
 	});
 
-	it('rerolls with one click through the reaction path', async () => {
+	it('opens the menu for one feature too, and rerolls through the reaction path on a pick', async () => {
 		renderSave();
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 
 		expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
@@ -233,12 +235,14 @@ describe('rerolls on check cards', () => {
 		renderSave(message);
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 		await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 		await settle();
 		expect(document.activeElement).toBe(rerollButton());
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 		await fireEvent.keyDown(screen.getByRole('button', { name: 'Cancel' }), { key: 'Escape' });
 		await settle();
@@ -376,6 +380,7 @@ describe('rerolls on check cards', () => {
 			});
 			expect(button.querySelector('.fa-pen')).toBeTruthy();
 			await fireEvent.click(button);
+			await fireEvent.click(screen.getByRole('menuitem'));
 			await settle();
 
 			expect(screen.getByText('Pick a value')).toBeTruthy();
@@ -399,6 +404,7 @@ describe('rerolls on check cards', () => {
 				screen.getByRole('button', { name: 'Change the die with Soothsayer (1 Wound)' });
 
 			await fireEvent.click(button());
+			await fireEvent.click(screen.getByRole('menuitem'));
 			await settle();
 			await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 			await settle();

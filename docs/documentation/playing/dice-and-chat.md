@@ -75,8 +75,7 @@ A player sees only the features of the characters they own. The GM sees all of t
 
 A save, skill check or ability check card is one line, so its rerolls and changes use a small button at the right end of the roll. Only the owner of the one who rolled, the owner of an ally with such a feature, and the GM see it.
 
-- **One feature:** hover the button to see the feature and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)". Click it to use the feature at once.
-- **Two or more features:** the button opens a short menu. The features are under the headings **Reroll** and **Change a die**, each with its cost at the right. Click one to use it. The arrow keys move through the menu, and Escape closes it.
+A click on the button always opens a short menu, also when only one feature gives it, so you see the feature and its cost before you spend a use. The features are under the headings **Reroll** and **Change a die**, each with its cost at the right. Click one to use it. The arrow keys move through the menu, and Escape closes it. With one feature, hover the button to see it and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)".
 
 A change that sets a value opens the value picker in place, on the line of the roll. See [Changing a die](#changing-a-die).
 
