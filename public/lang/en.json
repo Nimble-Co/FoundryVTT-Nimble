@@ -4182,6 +4182,10 @@
 			"includeSpellDescriptionOnScrolls": {
 				"name": "Include Spell Description On Scrolls",
 				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
+			},
+			"openNpcSheetsNarrow": {
+				"name": "Open NPC sheets narrow",
+				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again."
 			}
 		},
 		"diceTestbench": {

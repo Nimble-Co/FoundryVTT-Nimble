@@ -1,6 +1,7 @@
 import { untrack } from 'svelte';
 import { routeItemDrop } from '#documents/actor/routeItemDrop.js';
 import type { SvelteApplicationRenderContext } from '#lib/SvelteApplicationMixin.svelte.js';
+import { openNpcSheetsNarrow } from '../../../settings/actorSheetSettings.js';
 import { ActorSheetApplication } from '../shared/ActorSheetApplication.svelte.ts';
 import MonsterSheetComponent from './MonsterSheet.svelte';
 import { createMonsterSource, type MonsterDocument } from './monsterAdapter.ts';
@@ -8,7 +9,10 @@ import type { MonsterPerform } from './monsterIntent.ts';
 import { createMonsterPerform } from './monsterPerform.ts';
 import type { MonsterSource } from './monsterSource.ts';
 
-/** The new NPC sheet, for `npc`, `soloMonster` and `minion`. Not in the sheet selector yet. */
+/** The width of a new NPC sheet with "Open NPC sheets narrow" on: the narrow form. */
+const NARROW_WIDTH = 390;
+
+/** The new NPC sheet, for `npc`, `soloMonster` and `minion`. A second choice in the sheet selector until the switch. */
 export default class MonsterSheet extends ActorSheetApplication<
 	MonsterDocument,
 	MonsterSource,
@@ -18,7 +22,10 @@ export default class MonsterSheet extends ActorSheetApplication<
 		actor: { document: MonsterDocument },
 		options = {} as SvelteApplicationRenderContext,
 	) {
-		super(actor, options, MonsterSheetComponent, 'abilities');
+		const narrow = openNpcSheetsNarrow()
+			? foundry.utils.mergeObject(options, { position: { width: NARROW_WIDTH } })
+			: options;
+		super(actor, narrow, MonsterSheetComponent, 'abilities');
 	}
 
 	static override DEFAULT_OPTIONS = {
