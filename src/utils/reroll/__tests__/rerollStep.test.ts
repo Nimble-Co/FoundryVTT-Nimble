@@ -89,7 +89,7 @@ function rule(overrides: Partial<RerollRuleLike> = {}): RerollRuleLike {
 		type: 'reroll',
 		id: 'rule-1',
 		discardedCritTriggers: false,
-		rerollCost: cost(),
+		rollUseCost: cost(),
 		rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
 		...overrides,
 	};
@@ -184,7 +184,7 @@ describe('rerollWithRule', () => {
 		const result = await rerollWithRule(
 			input({
 				payer: payer as unknown as Actor,
-				rule: rule({ rerollCost: cost({ chargePoolIdentifier: 'sand', woundCost: 1 }) }),
+				rule: rule({ rollUseCost: cost({ chargePoolIdentifier: 'sand', woundCost: 1 }) }),
 				replaced: { ...REPLACED, isCritical: true },
 			}),
 		);
@@ -243,7 +243,7 @@ describe('rerollWithRule', () => {
 		const result = await rerollWithRule(
 			input({
 				rule: rule({ type: 'changeDie', rerollChanges: undefined }),
-				change: { mode: 'set', amount: 0 },
+				change: { mode: 'set', value: 0 },
 				makeRoll: vi.fn(async () => ({ isCritical: true })),
 				readNewDie: () => ({ faces: 8, value: 8 }),
 			}),
@@ -252,7 +252,7 @@ describe('rerollWithRule', () => {
 		expect(result).toMatchObject({
 			reroll: {
 				use: 'change',
-				change: { mode: 'set', amount: 0 },
+				change: { mode: 'set', value: 0 },
 				previous: { value: 7, outcome: null },
 				next: { value: 8, outcome: 'crit' },
 				changes: [],
@@ -298,7 +298,7 @@ describe('rerollWithRule', () => {
 		await rerollWithRule(
 			input({
 				payer: payer as unknown as Actor,
-				rule: rule({ rerollCost: cost({ heroicReaction: 'defend' }) }),
+				rule: rule({ rollUseCost: cost({ heroicReaction: 'defend' }) }),
 				payOptions: { forceHeroicReaction: true },
 			}),
 		);
@@ -309,7 +309,7 @@ describe('rerollWithRule', () => {
 	it('makes no roll when the cost cannot be paid', async () => {
 		const makeRoll = vi.fn(async () => ({}));
 		const result = await rerollWithRule(
-			input({ rule: rule({ rerollCost: cost({ manaCost: 2 }) }), makeRoll }),
+			input({ rule: rule({ rollUseCost: cost({ manaCost: 2 }) }), makeRoll }),
 		);
 		expect(result).toEqual({ status: 'unpaid' });
 		expect(makeRoll).not.toHaveBeenCalled();
@@ -321,7 +321,7 @@ describe('rerollWithRule', () => {
 		const result = await rerollWithRule(
 			input({
 				payer: payer as unknown as Actor,
-				rule: rule({ rerollCost: cost({ manaCost: 2 }) }),
+				rule: rule({ rollUseCost: cost({ manaCost: 2 }) }),
 				makeRoll: vi.fn(async () => {
 					throw error;
 				}),
@@ -336,7 +336,7 @@ describe('rerollWithRule', () => {
 		const result = await rerollWithRule(
 			input({
 				payer: payer as unknown as Actor,
-				rule: rule({ rerollCost: cost({ manaCost: 2, woundCost: 1 }) }),
+				rule: rule({ rollUseCost: cost({ manaCost: 2, woundCost: 1 }) }),
 			}),
 		);
 		if (result.status !== 'done') throw new Error('expected a reroll');
@@ -352,7 +352,7 @@ describe('rerollWithRule', () => {
 	it('has nothing to give back for a reroll with no cost', async () => {
 		const payer = makeActor();
 		const result = await rerollWithRule(
-			input({ payer: payer as unknown as Actor, rule: rule({ rerollCost: undefined }) }),
+			input({ payer: payer as unknown as Actor, rule: rule({ rollUseCost: undefined }) }),
 		);
 		if (result.status !== 'done') throw new Error('expected a reroll');
 		await result.refund();
@@ -367,7 +367,7 @@ describe('rerollWithRule', () => {
 		const result = await rerollWithRule(
 			input({
 				payer: payer as unknown as Actor,
-				rule: rule({ rerollCost: cost({ manaCost: 2 }) }),
+				rule: rule({ rollUseCost: cost({ manaCost: 2 }) }),
 				place,
 			}),
 		);

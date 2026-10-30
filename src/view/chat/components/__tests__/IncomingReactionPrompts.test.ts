@@ -245,7 +245,7 @@ describe('IncomingReactionPrompts', () => {
 					usesLeft: null,
 					woundsGained: 0,
 					use: 'change',
-					change: { mode: 'set', amount: 0 },
+					change: { mode: 'set', value: 0 },
 				},
 			],
 			'Actor.cheat',
@@ -529,7 +529,10 @@ describe('IncomingReactionPrompts', () => {
 					return {
 						name: 'Pocket Sand',
 						rules: new Map([
-							['reroll-1', { type: 'reroll', id: 'reroll-1', disabled: false, rerollCost }],
+							[
+								'reroll-1',
+								{ type: 'reroll', id: 'reroll-1', disabled: false, rollUseCost: rerollCost },
+							],
 						]),
 					};
 				}

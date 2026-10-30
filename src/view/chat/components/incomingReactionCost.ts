@@ -6,7 +6,7 @@ import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[] {
-	const cost = findRerollRule(entry)?.rerollCost;
+	const cost = findRerollRule(entry)?.rollUseCost;
 	if (!cost || !rerollCostCharges(cost)) return [];
 	if (!isResourceSpendingAutomationEnabled()) {
 		return cost.heroicReaction

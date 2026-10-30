@@ -42,8 +42,8 @@ function rerollRule(overrides: Record<string, unknown> = {}) {
 		label: '',
 		outcome: 'always',
 		discardedCritTriggers: false,
-		rerollCost: FREE,
-		offersRerollOn: vi.fn((context: { side: string }) => context.side === 'target'),
+		rollUseCost: FREE,
+		offersUseOn: vi.fn((context: { side: string }) => context.side === 'target'),
 		rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
 		...overrides,
 	};
@@ -217,7 +217,7 @@ describe('resolveRerollReaction', () => {
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
 
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'target',
 			roll: { kind: 'attack', delivery: 'melee' },
 			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
@@ -372,7 +372,7 @@ describe('resolveRerollReaction', () => {
 	});
 
 	it('gives the cost back when the reroll cannot be written', async () => {
-		const { target } = setupWorld({ rerollCost: { ...FREE, woundCost: 1 } });
+		const { target } = setupWorld({ rollUseCost: { ...FREE, woundCost: 1 } });
 		const message = createMessage();
 		message.update.mockRejectedValueOnce(new Error('write failed'));
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -385,7 +385,7 @@ describe('resolveRerollReaction', () => {
 	});
 
 	it('sends a warning, and makes no roll, when the cost cannot be paid', async () => {
-		setupWorld({ rerollCost: { ...FREE, manaCost: 1 } });
+		setupWorld({ rollUseCost: { ...FREE, manaCost: 1 } });
 		const message = createMessage();
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
@@ -399,7 +399,7 @@ describe('resolveRerollReaction', () => {
 	it('refuses, and charges nothing, when the card outcome no longer matches', async () => {
 		const { target } = setupWorld({
 			outcome: 'criticalHit',
-			rerollCost: { ...FREE, woundCost: 1 },
+			rollUseCost: { ...FREE, woundCost: 1 },
 		});
 		const message = createMessage({ isCritical: false });
 
@@ -413,7 +413,7 @@ describe('resolveRerollReaction', () => {
 	});
 
 	it('refuses a waiting entry of a once per attack rule that was already used', async () => {
-		const { target } = setupWorld({ oncePerAttack: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const { target } = setupWorld({ oncePerAttack: true, rollUseCost: { ...FREE, woundCost: 1 } });
 		const message = createMessage({
 			entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
 		});
@@ -440,7 +440,7 @@ describe('resolveRerollReaction', () => {
 	});
 
 	it('lets the attacker use a roller entry', async () => {
-		setupWorld({ offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller') });
+		setupWorld({ offersUseOn: vi.fn((context: { side: string }) => context.side === 'roller') });
 		const message = createMessage({
 			entries: [
 				rerollEntry({ actorUuid: 'Actor.attacker', targetTokenUuid: null, side: 'roller' }),
@@ -683,7 +683,7 @@ describe('resolveRerollReaction', () => {
 		const change = (mode: 'set' | 'add', die = 'primaryDie') => ({
 			type: 'changeDie',
 			die,
-			dieChange: { mode, amount: mode === 'add' ? 1 : 0 },
+			dieChange: { mode, value: mode === 'add' ? 1 : 0 },
 			rerollChanges: undefined,
 		});
 
@@ -694,7 +694,7 @@ describe('resolveRerollReaction', () => {
 			await message.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
-			expect(rule.offersRerollOn).toHaveBeenCalled();
+			expect(rule.offersUseOn).toHaveBeenCalled();
 			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
 				localize('NIMBLE.chat.incomingReactions.changePickAValue'),
 			);
@@ -1325,7 +1325,7 @@ describe('resolveRerollReaction', () => {
 		});
 
 		it('keeps the button reroll and its cost when it starts an automatic one', async () => {
-			const world = setupWorld({ rerollCost: { ...FREE, woundCost: 1 } });
+			const world = setupWorld({ rollUseCost: { ...FREE, woundCost: 1 } });
 			withAutomaticCritReroll(world);
 			const message = createMessage();
 			(message.system as Record<string, unknown>).rerolls = [
@@ -1466,7 +1466,7 @@ describe('resolveRerollReaction', () => {
 		});
 
 		it('is false when the rule no longer offers the reroll', () => {
-			setupWorld({ offersRerollOn: vi.fn(() => false) });
+			setupWorld({ offersUseOn: vi.fn(() => false) });
 			const message = createMessage();
 
 			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);

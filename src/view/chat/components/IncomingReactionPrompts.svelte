@@ -66,7 +66,7 @@
 			feature={text.featureName(prompts.picking.entry) || prompts.picking.entry.label}
 			onpick={prompts.pickDie}
 			onvalue={prompts.pickValue}
-			bonusLines={prompts.primaryDieBonuses}
+			primaryDieBonuses={prompts.primaryDieBonuses}
 			oncancel={cancelPickAtRollButton}
 		/>
 	{/if}

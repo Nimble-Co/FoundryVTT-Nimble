@@ -110,40 +110,40 @@ describe('ChangeDieRule', () => {
 	});
 
 	it('says what one use changes', () => {
-		expect(makeRule().dieChange).toEqual({ mode: 'set', amount: 0 });
-		expect(makeRule({ change: 'add', amount: -2 }).dieChange).toEqual({ mode: 'add', amount: -2 });
-		expect(makeRule({ change: 'add', amount: 0 }).dieChange).toEqual({ mode: 'add', amount: 1 });
+		expect(makeRule().dieChange).toEqual({ mode: 'set', value: 0 });
+		expect(makeRule({ change: 'add', amount: -2 }).dieChange).toEqual({ mode: 'add', value: -2 });
+		expect(makeRule({ change: 'add', amount: 0 }).dieChange).toEqual({ mode: 'add', value: 1 });
 	});
 
 	it('offers on the rolls and side it names, through the shared part', () => {
 		const rule = makeRule();
-		expect(
-			rule.offersRerollOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } }),
-		).toBe(true);
-		expect(
-			rule.offersRerollOn({ side: 'roller', roll: { kind: 'attack', delivery: 'ranged' } }),
-		).toBe(false);
-		expect(
-			rule.offersRerollOn({ side: 'target', roll: { kind: 'attack', delivery: 'melee' } }),
-		).toBe(false);
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } })).toBe(
+			true,
+		);
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'attack', delivery: 'ranged' } })).toBe(
+			false,
+		);
+		expect(rule.offersUseOn({ side: 'target', roll: { kind: 'attack', delivery: 'melee' } })).toBe(
+			false,
+		);
 	});
 
 	describe('does not offer', () => {
 		const MELEE = { side: 'roller', roll: { kind: 'attack', delivery: 'melee' } } as const;
 
 		it('while it is disabled', () => {
-			expect(makeRule({ disabled: true }).offersRerollOn(MELEE)).toBe(false);
+			expect(makeRule({ disabled: true }).offersUseOn(MELEE)).toBe(false);
 		});
 
 		it('from an item that is not on an actor', () => {
 			const rule = makeRule();
 			(rule.item as unknown as { isEmbedded: boolean }).isEmbedded = false;
-			expect(rule.offersRerollOn(MELEE)).toBe(false);
+			expect(rule.offersUseOn(MELEE)).toBe(false);
 		});
 
 		it('while its predicate fails', () => {
 			const rule = makeRule({ predicate: new Predicate({ self: 'raging' } as never) });
-			expect(rule.offersRerollOn(MELEE)).toBe(false);
+			expect(rule.offersUseOn(MELEE)).toBe(false);
 		});
 	});
 });

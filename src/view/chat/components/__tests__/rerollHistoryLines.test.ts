@@ -359,7 +359,7 @@ describe('rerollHistoryLines for a change', () => {
 		record({
 			itemUuid: 'Item.vo',
 			use: 'change',
-			change: { mode: 'set', amount: 0 },
+			change: { mode: 'set', value: 0 },
 			previous: { value: 3, outcome: null },
 			next: { value: 8, outcome: 'crit' },
 			...overrides,
@@ -379,7 +379,7 @@ describe('rerollHistoryLines for a change', () => {
 	it('puts the number on the arrow for an add, with no tag for a plain result', () => {
 		const [line] = changeLines([
 			changed({
-				change: { mode: 'add', amount: -1 },
+				change: { mode: 'add', value: -1 },
 				previous: { value: 4, outcome: null },
 				next: { value: 3, outcome: null },
 			}),
@@ -387,7 +387,7 @@ describe('rerollHistoryLines for a change', () => {
 		expect(line.change).toEqual({ arrow: '-1' });
 		expect(line.text).toBe('Changed with Vicious Opportunist: 4 became 3');
 		expect(line.tags).toEqual([]);
-		expect(changeLines([changed({ change: { mode: 'add', amount: 2 } })])[0].change).toEqual({
+		expect(changeLines([changed({ change: { mode: 'add', value: 2 } })])[0].change).toEqual({
 			arrow: '+2',
 		});
 	});

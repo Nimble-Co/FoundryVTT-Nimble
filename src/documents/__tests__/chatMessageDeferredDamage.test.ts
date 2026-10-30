@@ -445,14 +445,14 @@ describe('rollDeferredDamage', () => {
 				item: { name: 'Second Chance', uuid: 'Item.chance' },
 				outcome: 'always',
 				automatic: false,
-				rerollCost: {
+				rollUseCost: {
 					chargePoolIdentifier: '',
 					chargeCost: 1,
 					manaCost: 0,
 					woundCost: 0,
 					heroicReaction: '',
 				},
-				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller'),
+				offersUseOn: vi.fn((context: { side: string }) => context.side === 'roller'),
 			};
 			(globals.game as { actors: unknown }).actors = {
 				get: vi.fn(() => ({
@@ -653,14 +653,14 @@ describe('rollDeferredDamage', () => {
 				outcome: 'always',
 				automatic: false,
 				discardedCritTriggers: false,
-				rerollCost: {
+				rollUseCost: {
 					chargePoolIdentifier: '',
 					chargeCost: 1,
 					manaCost: 0,
 					woundCost: 0,
 					heroicReaction: '',
 				},
-				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller'),
+				offersUseOn: vi.fn((context: { side: string }) => context.side === 'roller'),
 				rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
 			};
 			const pool = casterWithHitPool(reroll);

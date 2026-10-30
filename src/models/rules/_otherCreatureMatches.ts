@@ -1,11 +1,6 @@
+import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { buildTargetDomain } from '../../utils/actor/conditionalBonuses.js';
-
-/** The creature on the other side of a roll, as a rule tests it. */
-interface OtherCreature {
-	uuid?: string;
-	getTargetDomain?(): Set<string>;
-}
 
 interface RuleOwner {
 	getDomain(): Set<string>;
@@ -19,7 +14,7 @@ interface RuleOwner {
  * item's own tags without their `target:` tags. An empty predicate always
  * passes; a set one fails when there is no other creature.
  */
-export function otherCreatureMatches(
+function otherCreatureMatches(
 	raw: Predicate | RawPredicate | null | undefined,
 	owner: RuleOwner | null | undefined,
 	itemDomain: Iterable<string>,
@@ -35,4 +30,11 @@ export function otherCreatureMatches(
 	return predicate.test(domain);
 }
 
-export type { OtherCreature };
+/** `otherCreatureMatches` for a rule: its actor is the owner, its item gives the item tags. */
+export function ruleOtherCreatureMatches(
+	rule: { actor: unknown; item: { getDomain(): Set<string> } },
+	raw: Predicate | RawPredicate | null | undefined,
+	other: OtherCreature | null | undefined,
+): boolean {
+	return otherCreatureMatches(raw, rule.actor as RuleOwner, rule.item.getDomain(), other);
+}

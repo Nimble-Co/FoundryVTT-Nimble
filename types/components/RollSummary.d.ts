@@ -1,5 +1,5 @@
 import type { Snippet } from 'svelte';
-import type { PrimaryDieBonusLine } from '../../src/view/chat/components/primaryDieBonusText.ts';
+import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 
 export interface RollSummaryOptions {
 	rollOptions?: {

@@ -1,3 +1,4 @@
+import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	changeDieInTerm,
 	type DieTermLike,
@@ -106,12 +107,6 @@ interface OneDieRoll extends PrimaryDieBonusRoll {
 	primaryDieRerolled?(term: unknown, keptBase: number | null): void;
 	/** The kept Primary Die `term` got a new face; `base` is that face before the bonus. */
 	primaryDieChanged?(term: unknown, base: number): void;
-}
-
-/** A change to one die: set it to a face, or add a number (which may be negative) to it. */
-interface DieChange {
-	mode: 'set' | 'add';
-	value: number;
 }
 
 function hasExplodeModifier(modifiers: readonly string[] = []): boolean {
@@ -286,7 +281,6 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 
 export {
 	changeOneDie,
-	type DieChange,
 	type DieRef,
 	type DieTermLike,
 	type ExplosionStyle,

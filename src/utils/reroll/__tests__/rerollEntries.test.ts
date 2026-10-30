@@ -53,8 +53,8 @@ function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide }
 		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always' as RerollTrigger,
 		rerollsByItself: false,
-		rerollCost: FREE,
-		offersRerollOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
+		rollUseCost: FREE,
+		offersUseOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
 		...rest,
 	} satisfies RerollRuleLike;
 }
@@ -102,7 +102,7 @@ describe('collectRerollEntries', () => {
 				outcomeTrigger: 'miss',
 			}),
 		]);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'roller',
 			roll: MELEE,
 			other: expect.objectContaining({ uuid: 'Actor.target' }),
@@ -159,7 +159,7 @@ describe('collectRerollEntries', () => {
 			targetTokenUuid: TOKEN,
 			actorUuid: 'Actor.t',
 		});
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'target',
 			roll: MELEE,
 			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
@@ -245,7 +245,7 @@ describe('collectRerollEntries', () => {
 		collectRerollEntries(
 			context({ attacker: actor('Actor.hero', [rule]), targets: [], roll: WILL_SAVE }),
 		);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'roller',
 			roll: WILL_SAVE,
 			other: null,
@@ -274,7 +274,7 @@ describe('collectRerollEntries', () => {
 		const { manual } = collectRerollEntries(
 			context({
 				attacker: actor('Actor.hero', [
-					rerollRule({ usedBy: 'roller', offersRerollOn: () => false }),
+					rerollRule({ usedBy: 'roller', offersUseOn: () => false }),
 					{ type: 'modifyIncomingAttack' },
 				]),
 			}),
@@ -325,7 +325,7 @@ describe('collectRerollEntries', () => {
 	it('shows an automatic rule with a cost as a button for a client that cannot pay it', () => {
 		const rule = rerollRule({
 			rerollsByItself: true,
-			rerollCost: { ...FREE, chargePoolIdentifier: 'sand' },
+			rollUseCost: { ...FREE, chargePoolIdentifier: 'sand' },
 		});
 		const notOwner = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		const owner = collectRerollEntries(targetOnly(rule, { isOwner: true }));
@@ -336,7 +336,7 @@ describe('collectRerollEntries', () => {
 
 	it('lets any client roll an automatic rule whose cost charges nothing', () => {
 		setToggles({ 'automation.resourceSpending': false });
-		const rule = rerollRule({ rerollsByItself: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const rule = rerollRule({ rerollsByItself: true, rollUseCost: { ...FREE, woundCost: 1 } });
 		const { automatic } = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		expect(automatic).toHaveLength(1);
 	});
@@ -418,7 +418,7 @@ describe('collectRerollEntries for an ally', () => {
 		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: MISS }).manual).toHaveLength(1);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'ally',
 			roll: MELEE,
 			other: expect.objectContaining({ uuid: 'Actor.target' }),
@@ -629,7 +629,7 @@ describe('usableRerollEntry', () => {
 
 	it('gives the live rule and actor for an entry that can be used', () => {
 		expect(usableRerollEntry(entry(), card(), [])).toEqual({ ok: true, rule, actor: target });
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'target',
 			roll: MELEE,
 			other: attacker,
@@ -677,7 +677,7 @@ describe('usableRerollEntry', () => {
 		[
 			'an entry the rule no longer offers, such as an empty pool',
 			() => {
-				vi.mocked(rule.offersRerollOn).mockReturnValue(false);
+				vi.mocked(rule.offersUseOn).mockReturnValue(false);
 				return entry();
 			},
 			() => card(),
@@ -792,7 +792,7 @@ describe('usableRerollEntry', () => {
 
 		it('gives the rule the check roll and ignores its outcome', () => {
 			expect(usableRerollEntry(entry(roller), check(), [])).toMatchObject({ ok: true });
-			expect(rule.offersRerollOn).toHaveBeenCalledWith({
+			expect(rule.offersUseOn).toHaveBeenCalledWith({
 				side: 'roller',
 				roll: WILL_SAVE,
 				other: null,

@@ -8,7 +8,7 @@
 		picking,
 		feature,
 		primaryOutcome = null,
-		bonusLines = [],
+		primaryDieBonuses = [],
 		onpick,
 		onvalue,
 		oncancel,
@@ -20,7 +20,7 @@
 		die={picking.valueDie}
 		{feature}
 		{primaryOutcome}
-		{bonusLines}
+		{primaryDieBonuses}
 		sending={!!picking.rolling}
 		onpick={onvalue}
 		{oncancel}

@@ -1,6 +1,6 @@
+import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	changeOneDie,
-	type DieChange,
 	type DieRef,
 	type OneDieRoll,
 	type PickableDie,

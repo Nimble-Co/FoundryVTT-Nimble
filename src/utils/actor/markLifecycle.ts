@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { MarkedActor, MarkerEffect } from '#types/marks.d.ts';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import {
 	MARK_TARGET_ITEM_FLAG,
@@ -24,11 +25,6 @@ interface MarkOwner {
 	rules?: Iterable<MarkRuleLike>;
 	getFlag(scope: string, key: string): unknown;
 	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
-}
-
-interface MarkerEffect {
-	parent?: { uuid?: string } | null;
-	getFlag(scope: string, key: string): unknown;
 }
 
 function markRules(rules: Iterable<MarkRuleLike> | undefined): MarkRuleLike[] {
@@ -111,10 +107,6 @@ export async function endMark(item: MarkingItem, entry: ToggledTargetEntry): Pro
 	await dropMark(item, entry.actorUuid);
 	const target = await markedActor(entry);
 	if (target) await removeMarkEffect({ target, sourceItemUuid: item.uuid });
-}
-
-export interface MarkedActor {
-	effects: Iterable<MarkerEffect & { id: string; statuses?: Set<string> }>;
 }
 
 /** Ids of the marker effects on the actor that show the status. */

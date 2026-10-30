@@ -530,7 +530,7 @@ describe('resolveRerollReaction with a folded card-side spend', () => {
 			type: 'reroll',
 			id: 'pocket-sand',
 			disabled: false,
-			offersRerollOn: () => true,
+			offersUseOn: () => true,
 		};
 		const byUuid: Record<string, unknown> = {
 			'Actor.cheat': cheat,

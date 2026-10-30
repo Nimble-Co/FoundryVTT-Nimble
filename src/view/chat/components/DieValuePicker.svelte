@@ -12,7 +12,7 @@
 		die,
 		feature,
 		primaryOutcome = null,
-		bonusLines = [],
+		primaryDieBonuses = [],
 		sending = false,
 		onpick,
 		oncancel,
@@ -22,7 +22,7 @@
 	const picker = createDieValuePickerState(() => ({ die, feature, sending, onpick, oncancel }));
 	const { elements, set, confirm, onInputKeydown, onKeydown, onInputBlur, focusInput } = picker;
 
-	const bonus = $derived(primaryDieBonusText(die.bonus ?? 0, bonusLines));
+	const bonus = $derived(primaryDieBonusText(die.bonus ?? 0, primaryDieBonuses));
 
 	onMount(focusInput);
 </script>

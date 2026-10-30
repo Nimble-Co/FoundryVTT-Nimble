@@ -1,5 +1,10 @@
+import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
-import { matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
+import {
+	ATTACK_DELIVERY_FILTERS,
+	type AttackDeliveryFilter,
+	matchesAttackDelivery,
+} from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
 	HEROIC_REACTIONS,
@@ -20,13 +25,9 @@ import {
 } from '../../utils/reroll/rollToReroll.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { type OtherCreature, otherCreatureMatches } from './_otherCreatureMatches.js';
+import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
-
-const ROLL_USE_ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
-
-type RollUseAttackDelivery = (typeof ROLL_USE_ATTACK_DELIVERIES)[number];
 
 /** The lang namespace a rule's own words are under, as `NIMBLE.rules.<namespace>`. */
 type RollUseNamespace = 'reroll' | 'changeDie';
@@ -41,9 +42,14 @@ function wordKey(namespace: RollUseNamespace, field: string, part: 'label' | 'hi
 	return `NIMBLE.rules.${own ? namespace : 'reroll'}.${field}.${part}`;
 }
 
-function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
+/** The lang keys of a field's choices, as `NIMBLE.rules.<namespace>.<field>.choices.<value>`. */
+function choiceLabels(
+	namespace: RollUseNamespace,
+	field: string,
+	values: readonly string[],
+): Record<string, string> {
 	return Object.fromEntries(
-		values.map((value) => [value, `NIMBLE.rules.reroll.${field}.choices.${value}`]),
+		values.map((value) => [value, `NIMBLE.rules.${namespace}.${field}.choices.${value}`]),
 	);
 }
 
@@ -81,7 +87,7 @@ function rollFields(namespace: RollUseNamespace) {
 			new fields.StringField({
 				required: true,
 				nullable: false,
-				choices: choiceLabels('rolls', REROLL_ROLL_KINDS),
+				choices: choiceLabels('reroll', 'rolls', REROLL_ROLL_KINDS),
 			}),
 			{
 				required: true,
@@ -98,7 +104,7 @@ function rollFields(namespace: RollUseNamespace) {
 				required: true,
 				nullable: false,
 				initial: 'roller',
-				choices: choiceLabels('usedBy', REROLL_SIDES),
+				choices: choiceLabels('reroll', 'usedBy', REROLL_SIDES),
 				label: wordKey(namespace, 'usedBy', 'label'),
 				hint: wordKey(namespace, 'usedBy', 'hint'),
 				widget: 'chips',
@@ -135,7 +141,7 @@ function whenFields(namespace: RollUseNamespace) {
 				required: true,
 				nullable: false,
 				initial: 'always',
-				choices: choiceLabels('outcome', REROLL_TRIGGERS),
+				choices: choiceLabels('reroll', 'outcome', REROLL_TRIGGERS),
 				label: wordKey(namespace, 'outcome', 'label'),
 				hint: wordKey(namespace, 'outcome', 'hint'),
 				showWhen: forAttacks,
@@ -146,7 +152,7 @@ function whenFields(namespace: RollUseNamespace) {
 				required: true,
 				nullable: false,
 				initial: 'any',
-				choices: choiceLabels('attackDelivery', ROLL_USE_ATTACK_DELIVERIES),
+				choices: choiceLabels('reroll', 'attackDelivery', ATTACK_DELIVERY_FILTERS),
 				label: wordKey(namespace, 'attackDelivery', 'label'),
 				hint: wordKey(namespace, 'attackDelivery', 'hint'),
 				showWhen: forAttacks,
@@ -263,7 +269,7 @@ function noteFields(namespace: RollUseNamespace) {
 	};
 }
 
-function rollUseSchema(namespace: RollUseNamespace) {
+function rollUseFields(namespace: RollUseNamespace) {
 	return {
 		...rollFields(namespace),
 		...whenFields(namespace),
@@ -273,7 +279,7 @@ function rollUseSchema(namespace: RollUseNamespace) {
 }
 
 declare namespace RollUseRule {
-	type Schema = NimbleBaseRule.Schema & ReturnType<typeof rollUseSchema>;
+	type Schema = NimbleBaseRule.Schema & ReturnType<typeof rollUseFields>;
 }
 
 /**
@@ -312,7 +318,7 @@ abstract class RollUseRule<
 	declare usedBy: RerollSide;
 	declare reach: number;
 	declare outcome: RerollTrigger;
-	declare attackDelivery: RollUseAttackDelivery;
+	declare attackDelivery: AttackDeliveryFilter;
 	declare otherCreature: Predicate;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
@@ -326,9 +332,9 @@ abstract class RollUseRule<
 
 	/**
 	 * The fields every rule that uses a roll has, with the rule's own words, in
-	 * three parts so a rule can put its own fields between them.
+	 * four parts (roll, when, cost, note) so a rule can put its own fields between them.
 	 */
-	static rollUseSchema(namespace: RollUseNamespace) {
+	static rollUseSchemaParts(namespace: RollUseNamespace) {
 		return {
 			roll: rollFields(namespace),
 			when: whenFields(namespace),
@@ -391,7 +397,7 @@ abstract class RollUseRule<
 		];
 	}
 
-	get rerollCost(): RerollCost {
+	get rollUseCost(): RerollCost {
 		return {
 			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
 			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
@@ -406,16 +412,13 @@ abstract class RollUseRule<
 	 * Whether this rule lets `context.side` use it on this roll now. The outcome
 	 * of an attack is checked by the caller against the roll.
 	 */
-	offersRerollOn(context: RollUseContext): boolean {
+	offersUseOn(context: RollUseContext): boolean {
 		if (!this.item.isEmbedded) return false;
 		if (!this.test()) return false;
 		const { side, roll } = context;
 		if (!this.rolls?.includes(roll.kind)) return false;
 		if (this.usedBy !== side) return false;
-		const owner = this.actor as unknown as Parameters<typeof otherCreatureMatches>[1];
-		if (!otherCreatureMatches(this.otherCreature, owner, this.item.getDomain(), context.other)) {
-			return false;
-		}
+		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
 		} else {
@@ -424,17 +427,14 @@ abstract class RollUseRule<
 			const keys = this.checkKeys(roll.kind);
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
-		return canPayRerollCost(this.actor, this.rerollCost);
+		return canPayRerollCost(this.actor, this.rollUseCost);
 	}
 
 	/** The note this rule puts under its feature on the card for this roll. Empty for none. */
 	cardHintFor(context: RollUseContext): string {
 		const note = (this.cardHint ?? '').trim();
 		if (!note) return '';
-		const owner = this.actor as unknown as Parameters<typeof otherCreatureMatches>[1];
-		return otherCreatureMatches(this.cardHintWhen, owner, this.item.getDomain(), context.other)
-			? note
-			: '';
+		return ruleOtherCreatureMatches(this, this.cardHintWhen, context.other) ? note : '';
 	}
 
 	private checkKeys(kind: CheckRollKind): string[] {
@@ -443,4 +443,4 @@ abstract class RollUseRule<
 	}
 }
 
-export { RollUseRule, type RollUseContext };
+export { choiceLabels, RollUseRule, type RollUseContext };

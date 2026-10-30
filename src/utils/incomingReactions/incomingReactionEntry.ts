@@ -1,3 +1,5 @@
+import type { DieChange } from '#types/dieChange.d.ts';
+
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
  * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
@@ -20,11 +22,9 @@ export type RollUse = (typeof ROLL_USES)[number];
 /** The dice a Change a Die rule can change. */
 export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
 
-/** How one use of a Change a Die rule changes the die. `amount` is 0 for a set value. */
-export interface RollDieChange {
-	mode: 'set' | 'add';
-	amount: number;
-}
+/** How a Change a Die rule changes the die: set it to a face, or add a number. */
+export const DIE_CHANGE_MODES = ['set', 'add'] as const;
+export type DieChangeMode = (typeof DIE_CHANGE_MODES)[number];
 
 /** Which result stands after a reroll. */
 export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
@@ -170,8 +170,8 @@ export interface RerollRecord {
 	automatic?: boolean;
 	/** `change` for a die a Change a Die rule changed. Absent is `reroll`. */
 	use?: RollUse;
-	/** A change only: how the die changed. `amount` is 0 for a set value. */
-	change?: RollDieChange | null;
+	/** A change only: how the die changed. `value` is 0 for a set value. */
+	change?: DieChange | null;
 }
 
 /**

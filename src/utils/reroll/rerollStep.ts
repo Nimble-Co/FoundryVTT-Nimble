@@ -1,9 +1,9 @@
+import type { DieChange } from '#types/dieChange.d.ts';
 import type {
 	IncomingReactionEntry,
 	RerollDieResult,
 	RerollRecord,
 	RollChange,
-	RollDieChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
@@ -66,7 +66,7 @@ interface RerollStepInput<TRoll> {
 	/** The rule rerolls by itself, with no click. */
 	automatic?: boolean;
 	/** A Change a Die rule's use: the change it makes. Absent for a reroll. */
-	change?: RollDieChange;
+	change?: DieChange;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
@@ -108,7 +108,7 @@ async function rerollWithRule<TRoll>(
 	input: RerollStepInput<TRoll>,
 ): Promise<RerollStepOutcome<TRoll>> {
 	const { rule, entry, payer, replaced } = input;
-	const cost = rule.rerollCost;
+	const cost = rule.rollUseCost;
 	const paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
 	const refund = async () => {

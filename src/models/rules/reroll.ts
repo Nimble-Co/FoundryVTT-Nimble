@@ -7,7 +7,7 @@ import {
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
 import type { RerollRollKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { RollUseRule } from './_rollUseRule.js';
+import { choiceLabels, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -17,12 +17,6 @@ const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 // A reroll that needs a choice from someone can never happen by itself.
 function nobodyChooses(data: Record<string, unknown>): boolean {
 	return data.usedBy !== 'ally' && data.die !== 'pickedDie' && (data.keep ?? 'new') === 'new';
-}
-
-function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
-	return Object.fromEntries(
-		values.map((value) => [value, `NIMBLE.rules.reroll.${field}.choices.${value}`]),
-	);
 }
 
 const forAttacks = (data: Record<string, unknown>) =>
@@ -42,7 +36,7 @@ const forWholeAttackRolls = (data: Record<string, unknown>) => forAttacks(data) 
 function schema() {
 	const { fields } = foundry.data;
 
-	const shared = RollUseRule.rollUseSchema('reroll');
+	const shared = RollUseRule.rollUseSchemaParts('reroll');
 
 	return {
 		...shared.roll,
@@ -50,7 +44,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'wholeRoll',
-			choices: choiceLabels('die', REROLL_DICE),
+			choices: choiceLabels('reroll', 'die', REROLL_DICE),
 			label: 'NIMBLE.rules.reroll.die.label',
 			hint: 'NIMBLE.rules.reroll.die.hint',
 		}),
@@ -58,7 +52,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'new',
-			choices: choiceLabels('keep', REROLL_KEEPS),
+			choices: choiceLabels('reroll', 'keep', REROLL_KEEPS),
 			label: 'NIMBLE.rules.reroll.keep.label',
 			hint: 'NIMBLE.rules.reroll.keep.hint',
 		}),

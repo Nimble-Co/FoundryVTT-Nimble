@@ -1,9 +1,5 @@
+import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import localize from '#utils/localize.js';
-
-interface PrimaryDieBonusLine {
-	label: string;
-	value: number;
-}
 
 /** A number beside the Primary Die face, such as "+3": its text and who added it. */
 interface PrimaryDieBonusText {
@@ -34,4 +30,4 @@ function primaryDieBonusText(
 	return { label: signed(total), tooltip: parts.join(', ') };
 }
 
-export { primaryDieBonusText, signed, type PrimaryDieBonusLine, type PrimaryDieBonusText };
+export { primaryDieBonusText, signed, type PrimaryDieBonusText };

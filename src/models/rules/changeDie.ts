@@ -1,6 +1,10 @@
-import type { RollDieChange } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type { DieChange } from '#types/dieChange.d.ts';
+import {
+	DIE_CHANGE_MODES,
+	type DieChangeMode,
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { RollUseRule } from './_rollUseRule.js';
+import { choiceLabels, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -8,19 +12,9 @@ import { NimbleBaseRule } from './base.js';
 const CHANGE_DICE = ['primaryDie', 'pickedDie'] as const;
 type ChangeDie = (typeof CHANGE_DICE)[number];
 
-/** How it changes the die: set it to a face the player picks, or add a number. */
-const CHANGE_MODES = ['set', 'add'] as const;
-type ChangeMode = (typeof CHANGE_MODES)[number];
-
-function choiceLabels(field: string, values: readonly string[]): Record<string, string> {
-	return Object.fromEntries(
-		values.map((value) => [value, `NIMBLE.rules.changeDie.${field}.choices.${value}`]),
-	);
-}
-
 function schema() {
 	const { fields } = foundry.data;
-	const shared = RollUseRule.rollUseSchema('changeDie');
+	const shared = RollUseRule.rollUseSchemaParts('changeDie');
 
 	return {
 		...shared.roll,
@@ -28,7 +22,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'primaryDie',
-			choices: choiceLabels('die', CHANGE_DICE),
+			choices: choiceLabels('changeDie', 'die', CHANGE_DICE),
 			label: 'NIMBLE.rules.changeDie.die.label',
 			hint: 'NIMBLE.rules.changeDie.die.hint',
 		}),
@@ -37,7 +31,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'set',
-				choices: choiceLabels('change', CHANGE_MODES),
+				choices: choiceLabels('changeDie', 'change', DIE_CHANGE_MODES),
 				label: 'NIMBLE.rules.changeDie.change.label',
 				hint: 'NIMBLE.rules.changeDie.change.hint',
 				widget: 'chips',
@@ -83,7 +77,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	];
 
 	declare die: ChangeDie;
-	declare change: ChangeMode;
+	declare change: DieChangeMode;
 	declare amount: number;
 
 	static override defineSchema(): ChangeDieRule.Schema {
@@ -105,9 +99,9 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	}
 
 	/** The change one use makes. An add of 0 is an add of 1. */
-	get dieChange(): RollDieChange {
-		if (this.change !== 'add') return { mode: 'set', amount: 0 };
-		return { mode: 'add', amount: Math.trunc(Number(this.amount)) || 1 };
+	get dieChange(): DieChange {
+		if (this.change !== 'add') return { mode: 'set', value: 0 };
+		return { mode: 'add', value: Math.trunc(Number(this.amount)) || 1 };
 	}
 }
 

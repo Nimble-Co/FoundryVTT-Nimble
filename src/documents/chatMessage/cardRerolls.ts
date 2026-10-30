@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_GIVEN_FLAG,
@@ -57,7 +58,7 @@ import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
 import type { RerollRollKind } from '#utils/reroll/rollToReroll.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
-import type { DieChange, DieRef, PickableDie } from '../../dice/oneDieReroll.js';
+import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
 /**
@@ -728,14 +729,12 @@ export class CardRerolls {
 		reject: (reasonKey: string) => unknown,
 	): Promise<void> {
 		const { rule } = usable;
-		const dieChange = rule.dieChange ?? { mode: 'set', amount: 0 };
+		const dieChange: DieChange = rule.dieChange ?? { mode: 'set', value: 0 };
 		if (dieChange.mode === 'set' && !value) {
 			return void reject('NIMBLE.chat.incomingReactions.changePickAValue');
 		}
 		const change: DieChange =
-			dieChange.mode === 'set'
-				? { mode: 'set', value: value ?? 0 }
-				: { mode: 'add', value: dieChange.amount };
+			dieChange.mode === 'set' ? { mode: 'set', value: value ?? 0 } : dieChange;
 		const target = changeableFor(
 			found,
 			rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
@@ -749,7 +748,7 @@ export class CardRerolls {
 			rule,
 			entry,
 			rollKind: rollTarget.context().roll.kind,
-			change: { mode: dieChange.mode, amount: dieChange.mode === 'add' ? dieChange.amount : 0 },
+			change: dieChange,
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,

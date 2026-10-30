@@ -2,6 +2,7 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
+import type { MarkedActor } from '#types/marks.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -9,7 +10,7 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
-import { type MarkedActor, markerEffectIds } from '../../utils/actor/markLifecycle.js';
+import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';

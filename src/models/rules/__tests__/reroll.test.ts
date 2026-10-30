@@ -315,34 +315,34 @@ describe('RerollRule', () => {
 		});
 	});
 
-	describe('offersRerollOn', () => {
+	describe('offersUseOn', () => {
 		it('offers to the side and delivery it names', () => {
 			const { rule } = makeRule({ attackDelivery: 'melee' });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(true);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(true);
 		});
 
 		it('does not offer from an item that is not on an actor', () => {
 			const { rule } = makeRule({}, { isEmbedded: false });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
 		it('does not offer while disabled', () => {
 			const { rule } = makeRule({ disabled: true });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
 		it('offers only while the predicate passes', () => {
 			const passing = makeRule({}, { predicate: (domain) => domain.has('self:raging') });
 			const failing = makeRule({}, { predicate: (domain) => domain.has('self:dying') });
-			expect(passing.rule.offersRerollOn(TARGET_MELEE)).toBe(true);
-			expect(failing.rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(passing.rule.offersUseOn(TARGET_MELEE)).toBe(true);
+			expect(failing.rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
 		it('does not offer to the other side', () => {
 			const { rule } = makeRule({ usedBy: 'roller' });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 			expect(
-				rule.offersRerollOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } }),
+				rule.offersUseOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } }),
 			).toBe(true);
 		});
 
@@ -354,23 +354,21 @@ describe('RerollRule', () => {
 
 			it('offers with no other creature when the field is empty', () => {
 				const { rule } = makeRule();
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: null })).toBe(true);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: null })).toBe(true);
 			});
 
 			it("tests the other creature's target tags", () => {
 				const { rule } = makeRule(otherCreature({ target: 'distracted' }));
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature('target:distracted') })).toBe(
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: creature('target:distracted') })).toBe(
 					true,
 				);
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature('target:prone') })).toBe(
-					false,
-				);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: creature('target:prone') })).toBe(false);
 			});
 
 			it('does not offer on a roll with no other creature', () => {
 				const { rule } = makeRule(otherCreature({ target: 'distracted' }));
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: null })).toBe(false);
-				expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: null })).toBe(false);
+				expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 			});
 
 			it('sees the marks the owner put on the other creature', () => {
@@ -382,17 +380,17 @@ describe('RerollRule', () => {
 						'exploit-weakness': [{ actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre' }],
 					}),
 				});
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: marked })).toBe(true);
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: unmarked })).toBe(false);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: marked })).toBe(true);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: unmarked })).toBe(false);
 			});
 
 			it("also sees the owner's own tags, but not the owner's target tags", () => {
 				const { rule, actor } = makeRule(
 					otherCreature({ $or: ['target:distracted', 'self:raging'] }),
 				);
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature() })).toBe(true);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: creature() })).toBe(true);
 				actor.getDomain = () => new Set(['target:distracted']);
-				expect(rule.offersRerollOn({ ...TARGET_MELEE, other: creature() })).toBe(false);
+				expect(rule.offersUseOn({ ...TARGET_MELEE, other: creature() })).toBe(false);
 			});
 		});
 
@@ -422,25 +420,23 @@ describe('RerollRule', () => {
 
 		it('filters on how the attack is delivered', () => {
 			const { rule } = makeRule({ attackDelivery: 'ranged' });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 			expect(
-				rule.offersRerollOn({ side: 'target', roll: { kind: 'attack', delivery: 'ranged' } }),
+				rule.offersUseOn({ side: 'target', roll: { kind: 'attack', delivery: 'ranged' } }),
 			).toBe(true);
-			expect(
-				rule.offersRerollOn({ side: 'target', roll: { kind: 'attack', delivery: null } }),
-			).toBe(false);
+			expect(rule.offersUseOn({ side: 'target', roll: { kind: 'attack', delivery: null } })).toBe(
+				false,
+			);
 		});
 
 		it('does not offer when attacks are not among its rolls', () => {
 			const { rule } = makeRule({ rolls: [] });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(false);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
 		it('does not offer on a check while only attacks are among its rolls', () => {
 			const { rule } = makeRule({ usedBy: 'roller' });
-			expect(rule.offersRerollOn({ side: 'roller', roll: { kind: 'save', key: 'will' } })).toBe(
-				false,
-			);
+			expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'save', key: 'will' } })).toBe(false);
 		});
 
 		describe('on a check', () => {
@@ -451,8 +447,8 @@ describe('RerollRule', () => {
 
 			it('offers any save when no save is picked', () => {
 				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'] });
-				expect(rule.offersRerollOn(save('will'))).toBe(true);
-				expect(rule.offersRerollOn(save('strength'))).toBe(true);
+				expect(rule.offersUseOn(save('will'))).toBe(true);
+				expect(rule.offersUseOn(save('strength'))).toBe(true);
 			});
 
 			it.each([
@@ -461,8 +457,8 @@ describe('RerollRule', () => {
 				['abilityCheck', 'abilities', 'dexterity', 'strength'],
 			] as const)('offers a %s only on the %s picked', (kind, list, picked, other) => {
 				const { rule } = makeRule({ usedBy: 'roller', rolls: [kind], [list]: [picked, 'lore'] });
-				expect(rule.offersRerollOn({ side: 'roller', roll: { kind, key: picked } })).toBe(true);
-				expect(rule.offersRerollOn({ side: 'roller', roll: { kind, key: other } })).toBe(false);
+				expect(rule.offersUseOn({ side: 'roller', roll: { kind, key: picked } })).toBe(true);
+				expect(rule.offersUseOn({ side: 'roller', roll: { kind, key: other } })).toBe(false);
 			});
 
 			it('filters each check kind with its own list only', () => {
@@ -471,38 +467,36 @@ describe('RerollRule', () => {
 					rolls: ['save', 'skillCheck'],
 					skills: ['arcana'],
 				});
-				expect(rule.offersRerollOn(save('will'))).toBe(true);
+				expect(rule.offersUseOn(save('will'))).toBe(true);
 			});
 
 			it('does not offer a check kind that is not among its rolls', () => {
 				const { rule } = makeRule({ usedBy: 'roller', rolls: ['attack', 'save'] });
 				const skill = { side: 'roller', roll: { kind: 'skillCheck', key: 'arcana' } } as const;
-				expect(rule.offersRerollOn(skill)).toBe(false);
+				expect(rule.offersUseOn(skill)).toBe(false);
 			});
 
 			it('offers a check to an ally', () => {
 				const { rule } = makeRule({ usedBy: 'ally', rolls: ['save'] });
-				expect(rule.offersRerollOn({ side: 'ally', roll: { kind: 'save', key: 'will' } })).toBe(
-					true,
-				);
+				expect(rule.offersUseOn({ side: 'ally', roll: { kind: 'save', key: 'will' } })).toBe(true);
 			});
 
 			it('never offers a check to the target side', () => {
 				const { rule } = makeRule({ usedBy: 'target', rolls: ['save'] });
-				expect(rule.offersRerollOn({ side: 'target', roll: { kind: 'save', key: 'will' } })).toBe(
+				expect(rule.offersUseOn({ side: 'target', roll: { kind: 'save', key: 'will' } })).toBe(
 					false,
 				);
 			});
 
 			it('ignores the attack type on a check', () => {
 				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'], attackDelivery: 'ranged' });
-				expect(rule.offersRerollOn(save('dexterity'))).toBe(true);
+				expect(rule.offersUseOn(save('dexterity'))).toBe(true);
 			});
 
 			it('does not offer on an attack when attack is not among its rolls', () => {
 				const { rule } = makeRule({ usedBy: 'roller', rolls: ['save'] });
 				const attack = { side: 'roller', roll: { kind: 'attack', delivery: 'melee' } } as const;
-				expect(rule.offersRerollOn(attack)).toBe(false);
+				expect(rule.offersUseOn(attack)).toBe(false);
 			});
 
 			it('still needs the cost to be payable', () => {
@@ -510,33 +504,33 @@ describe('RerollRule', () => {
 					{ usedBy: 'roller', rolls: ['save'], chargePoolIdentifier: 'sand' },
 					{ pool: 0 },
 				);
-				expect(rule.offersRerollOn(save('will'))).toBe(false);
+				expect(rule.offersUseOn(save('will'))).toBe(false);
 			});
 		});
 
 		it('is hidden while its charge pool is empty, and shown with charges left', () => {
 			expect(
-				makeRule({ chargePoolIdentifier: 'sand' }, { pool: 0 }).rule.offersRerollOn(TARGET_MELEE),
+				makeRule({ chargePoolIdentifier: 'sand' }, { pool: 0 }).rule.offersUseOn(TARGET_MELEE),
 			).toBe(false);
 			expect(
-				makeRule({ chargePoolIdentifier: 'sand' }, { pool: 1 }).rule.offersRerollOn(TARGET_MELEE),
+				makeRule({ chargePoolIdentifier: 'sand' }, { pool: 1 }).rule.offersUseOn(TARGET_MELEE),
 			).toBe(true);
 			expect(
-				makeRule({ chargePoolIdentifier: 'sand', chargeCost: 2 }, { pool: 1 }).rule.offersRerollOn(
+				makeRule({ chargePoolIdentifier: 'sand', chargeCost: 2 }, { pool: 1 }).rule.offersUseOn(
 					TARGET_MELEE,
 				),
 			).toBe(false);
 		});
 
 		it('is hidden without the mana it costs', () => {
-			expect(makeRule({ manaCost: 2 }, { mana: 1 }).rule.offersRerollOn(TARGET_MELEE)).toBe(false);
-			expect(makeRule({ manaCost: 2 }, { mana: 2 }).rule.offersRerollOn(TARGET_MELEE)).toBe(true);
+			expect(makeRule({ manaCost: 2 }, { mana: 1 }).rule.offersUseOn(TARGET_MELEE)).toBe(false);
+			expect(makeRule({ manaCost: 2 }, { mana: 2 }).rule.offersUseOn(TARGET_MELEE)).toBe(true);
 		});
 
 		it('shows at zero charges while resource spending automation is off', () => {
 			setToggles({ 'automation.resourceSpending': false });
 			const { rule } = makeRule({ chargePoolIdentifier: 'sand', manaCost: 3 }, { pool: 0 });
-			expect(rule.offersRerollOn(TARGET_MELEE)).toBe(true);
+			expect(rule.offersUseOn(TARGET_MELEE)).toBe(true);
 		});
 
 		it('lets two rules on one actor offer side by side', () => {
@@ -546,7 +540,7 @@ describe('RerollRule', () => {
 				get: () => ({ ...first.item, actor }),
 				configurable: true,
 			});
-			expect([first, second].filter((r) => r.offersRerollOn(TARGET_MELEE))).toHaveLength(2);
+			expect([first, second].filter((r) => r.offersUseOn(TARGET_MELEE))).toHaveLength(2);
 		});
 	});
 
@@ -564,7 +558,7 @@ describe('RerollRule', () => {
 		});
 	});
 
-	describe('rerollCost', () => {
+	describe('rollUseCost', () => {
 		it('collects the cost fields with safe numbers', () => {
 			const { rule } = makeRule({
 				chargePoolIdentifier: 'sand',
@@ -574,7 +568,7 @@ describe('RerollRule', () => {
 				heroicReaction: 'defend',
 				actionCost: 4,
 			});
-			expect(rule.rerollCost).toEqual({
+			expect(rule.rollUseCost).toEqual({
 				chargePoolIdentifier: 'sand',
 				chargeCost: 1,
 				manaCost: 0,

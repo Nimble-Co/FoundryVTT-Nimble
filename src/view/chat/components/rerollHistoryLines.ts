@@ -291,7 +291,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 				change: {
 					arrow:
 						mode === 'add'
-							? signed(record.change?.amount ?? 0)
+							? signed(record.change?.value ?? 0)
 							: localize('NIMBLE.chat.incomingReactions.changeArrowSet'),
 				},
 			};

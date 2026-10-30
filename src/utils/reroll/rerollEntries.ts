@@ -1,3 +1,4 @@
+import type { DieChange } from '#types/dieChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type AttackOutcomeView,
@@ -7,7 +8,6 @@ import {
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
-	type RollDieChange,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
@@ -39,15 +39,15 @@ interface RerollRuleLike {
 	reach?: number;
 	die?: RerollDie;
 	keep?: RerollKeep;
-	rerollCost?: RerollCost;
-	offersRerollOn?: (context: {
+	rollUseCost?: RerollCost;
+	offersUseOn?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;
 		other: RerollingActor | null;
 	}) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
-	dieChange?: RollDieChange;
+	dieChange?: DieChange;
 	cardHintFor?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;
@@ -132,7 +132,7 @@ function outcomeAllows(
  */
 function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
 	if (rule.rerollsByItself !== true || !isRuleAutomationEnabled()) return false;
-	if (!rule.rerollCost || !rerollCostCharges(rule.rerollCost)) return true;
+	if (!rule.rollUseCost || !rerollCostCharges(rule.rollUseCost)) return true;
 	return actor.isOwner === true;
 }
 
@@ -196,7 +196,7 @@ function collectRerollEntries(context: RerollRollContext): {
 
 			for (const rule of actor.rules) {
 				if (!isRollUseRule(rule?.type)) continue;
-				if (rule.offersRerollOn?.({ side, roll: context.roll, other }) !== true) continue;
+				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
 				if (!outcomeAllows(trigger, outcome)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
@@ -346,7 +346,7 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const other = otherCreature(entry.side, context);
-	if (rule.offersRerollOn?.({ side: entry.side, roll: context.roll, other }) !== true) {
+	if (rule.offersUseOn?.({ side: entry.side, roll: context.roll, other }) !== true) {
 		return UNAVAILABLE;
 	}
 	const { outcome, forcedMiss } = attackOutcome(context);

@@ -24,7 +24,7 @@ let rerollCost: Record<string, unknown>;
 let rollerIsOwner: boolean;
 
 function rule(id: string) {
-	return { type: 'reroll', id, disabled: false, rerollCost };
+	return { type: 'reroll', id, disabled: false, rollUseCost: rerollCost };
 }
 
 const DOCUMENTS: Record<string, () => unknown> = {

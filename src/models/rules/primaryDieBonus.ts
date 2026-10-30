@@ -1,14 +1,17 @@
+import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
-import { type AttackDelivery, matchesAttackDelivery } from '../../utils/damage/attackDelivery.js';
+import {
+	ATTACK_DELIVERY_FILTERS,
+	type AttackDelivery,
+	type AttackDeliveryFilter,
+	matchesAttackDelivery,
+} from '../../utils/damage/attackDelivery.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { type OtherCreature, otherCreatureMatches } from './_otherCreatureMatches.js';
+import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
+import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
-
-const ATTACK_DELIVERIES = ['any', 'melee', 'ranged'] as const;
-
-type PrimaryDieBonusDelivery = (typeof ATTACK_DELIVERIES)[number];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -28,12 +31,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'any',
-			choices: Object.fromEntries(
-				ATTACK_DELIVERIES.map((value) => [
-					value,
-					`NIMBLE.rules.reroll.attackDelivery.choices.${value}`,
-				]),
-			),
+			choices: choiceLabels('reroll', 'attackDelivery', ATTACK_DELIVERY_FILTERS),
 			label: 'NIMBLE.rules.reroll.attackDelivery.label',
 			hint: 'NIMBLE.rules.reroll.attackDelivery.hint',
 		}),
@@ -75,7 +73,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 	];
 
 	declare value: string;
-	declare attackDelivery: PrimaryDieBonusDelivery;
+	declare attackDelivery: AttackDeliveryFilter;
 	declare otherCreature: Predicate;
 
 	static override defineSchema(): PrimaryDieBonusRule.Schema {
@@ -100,10 +98,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 		if (!this.item.isEmbedded || !context.delivery) return 0;
 		if (!this.test()) return 0;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return 0;
-		const owner = this.actor as unknown as Parameters<typeof otherCreatureMatches>[1];
-		if (!otherCreatureMatches(this.otherCreature, owner, this.item.getDomain(), context.other)) {
-			return 0;
-		}
+		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return 0;
 		return Math.trunc(Number(this.resolveFormula(this.value ?? '')) || 0);
 	}
 }

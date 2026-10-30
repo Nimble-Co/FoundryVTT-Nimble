@@ -12,7 +12,7 @@ function useRule(actionCost: number) {
 		type: 'reroll',
 		id: 'rule-1',
 		disabled: false,
-		rerollCost: {
+		rollUseCost: {
 			chargePoolIdentifier: '',
 			chargeCost: 1,
 			manaCost: 0,

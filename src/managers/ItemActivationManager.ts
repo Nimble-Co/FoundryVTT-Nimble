@@ -1,4 +1,6 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
@@ -19,7 +21,6 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
-import type { OtherCreature } from '../models/rules/_otherCreatureMatches.js';
 import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
@@ -71,10 +72,8 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
-/** One Primary Die Bonus on an attack, for its line on the card. */
-interface PrimaryDieBonusLine {
-	label: string;
-	value: number;
+/** One Primary Die Bonus as the card stores it, with the item of its rule. */
+interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
 	itemUuid: string;
 }
 
@@ -94,9 +93,9 @@ function collectPrimaryDieBonuses(
 	attacker: { rules?: unknown[] } | null | undefined,
 	delivery: AttackDelivery,
 	target: OtherCreature | null,
-): PrimaryDieBonusLine[] {
+): PrimaryDieBonusRecord[] {
 	if (!delivery) return [];
-	const lines: PrimaryDieBonusLine[] = [];
+	const lines: PrimaryDieBonusRecord[] = [];
 	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
 		if (rule?.type !== 'primaryDieBonus') continue;
 		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
@@ -176,7 +175,7 @@ class ItemActivationManager {
 	#rerollHistory: RerollHistory | null = null;
 
 	/** The Primary Die Bonus rules that added to the attack roll, for the chat card. */
-	#primaryDieBonuses: PrimaryDieBonusLine[] = [];
+	#primaryDieBonuses: PrimaryDieBonusRecord[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
 

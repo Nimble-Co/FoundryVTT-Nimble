@@ -1,4 +1,5 @@
 import {
+	DIE_CHANGE_MODES,
 	DIE_OUTCOMES,
 	KEEP_OUTCOMES,
 	REROLL_KEPT,
@@ -276,9 +277,9 @@ const rerollRecord = () =>
 					required: true,
 					nullable: false,
 					initial: 'set',
-					choices: ['set', 'add'],
+					choices: [...DIE_CHANGE_MODES],
 				}),
-				amount: new fields.NumberField({
+				value: new fields.NumberField({
 					required: true,
 					nullable: false,
 					initial: 0,

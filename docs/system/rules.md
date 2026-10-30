@@ -221,12 +221,12 @@ The `damageBonus` rule has an optional `targetCondition` field — a predicate e
 When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
 
 ::: tip
-`targetCondition` is only available on `damageBonus`. The rule types that use a roll (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `otherCreatureMatches`](#the-other-creature-othercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+`targetCondition` is only available on `damageBonus`. The rule types that use a roll (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
 
-### The other creature: `otherCreatureMatches`
+### The other creature: `ruleOtherCreatureMatches`
 
-`otherCreatureMatches(raw, owner, itemDomain, other)` (`src/models/rules/_otherCreatureMatches.ts`) is the one test for every "only when the other creature is" field. It is used by `RollUseRule#offersRerollOn` (`otherCreature`), `RollUseRule#cardHintFor` (`cardHintWhen`) and `PrimaryDieBonusRule#bonusFor` (`otherCreature`).
+`ruleOtherCreatureMatches(rule, raw, other)` (`src/models/rules/_otherCreatureMatches.ts`) is the one test for every "only when the other creature is" field. The rule's actor is the owner, and its item gives the item tags. It is used by `RollUseRule#offersUseOn` (`otherCreature`), `RollUseRule#cardHintFor` (`cardHintWhen`) and `PrimaryDieBonusRule#bonusFor` (`otherCreature`).
 
 - An empty predicate passes. A set predicate fails when `other` is null or absent, for example an attack with no target.
 - The domain is `buildTargetDomain(owner, other)`: the other creature's `target:*` tags (`getTargetDomain()`) plus the marks the owner put on it (`target:<flagKey>`).
@@ -666,7 +666,7 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 
 ### The shared roll-use part: `RollUseRule`
 
-`reroll` and `changeDie` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchema(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
+`reroll` and `changeDie` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
 
 - `roll`: `rolls`, `saves`, `skills`, `abilities`, `usedBy`, `reach`.
 - `when`: `otherCreature`, `outcome`, `attackDelivery` (attacks only, through `showWhen`).
@@ -675,7 +675,7 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 
 The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the rule does (`rolls.label`, `chargePoolIdentifier.hint`, `chargeCost.hint` and the `oncePerAttack` field), which go under `NIMBLE.rules.<namespace>.*`. `rollFormGroup()`, `useFormGroups(between)` and `noteFormGroup()` give the form groups, and `rollUseTooltipTypes()` the tooltip types.
 
-`offersRerollOn({ side, roll, other })` is the one gate: an embedded item, the predicate, the roll kind, the side, `otherCreatureMatches`, then the attack delivery or the check keys (a check has no target side), then `canPayRerollCost`. `cardHintFor()` gives the note when `cardHintWhen` passes. Like the Reroll rule, the class is read when a card is posted and again when the rule is used, never during data preparation.
+`offersUseOn({ side, roll, other })` is the one gate: an embedded item, the predicate, the roll kind, the side, `ruleOtherCreatureMatches`, then the attack delivery or the check keys (a check has no target side), then `canPayRerollCost`. `cardHintFor()` gives the note when `cardHintWhen` passes. Like the Reroll rule, the class is read when a card is posted and again when the rule is used, never during data preparation.
 
 `rerollEntries.ts` treats both types as one (`isRollUseRule`): a `changeDie` rule stamps a `kind: 'reroll'` entry with `use: 'change'`, and a rule with a note stamps `hint`. The side, outcome, delivery, Reach and cost checks are the same. A target-side entry is for the first target, as for a reroll.
 
@@ -683,7 +683,7 @@ The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the r
 
 ### Change a Die: one die to a fixed face
 
-A `changeDie` entry goes through `CardRerolls#changeToPick` on the client (the dice from `diceForRule`, and `setsValue` for a set rule) and then the same `incomingAttackReaction` socket request as a reroll (`requestIncomingAttackReaction`), with the picked die and, for a set rule, the `value` (`faceFrom` accepts a whole number above 0 only). On the primary GM, `#applyChange` builds the target with `changeableFor` (`src/utils/reroll/rerollDieChoice.ts`) and runs `rerollWithRule` with a `change`, so the step is the same as for a reroll: pay, change, record, place, and give the cost back on a throw. Modify Reroll rules do not apply to a change. The record has `use: 'change'`, `change: { mode, amount }` and `bonusNotAdded`; `previous` and `next` are the faces of the die.
+A `changeDie` entry goes through `CardRerolls#changeToPick` on the client (the dice from `diceForRule`, and `setsValue` for a set rule) and then the same `incomingAttackReaction` socket request as a reroll (`requestIncomingAttackReaction`), with the picked die and, for a set rule, the `value` (`faceFrom` accepts a whole number above 0 only). On the primary GM, `#applyChange` builds the target with `changeableFor` (`src/utils/reroll/rerollDieChoice.ts`) and runs `rerollWithRule` with a `change`, so the step is the same as for a reroll: pay, change, record, place, and give the cost back on a throw. Modify Reroll rules do not apply to a change. The record has `use: 'change'`, `change: { mode, value }` (a `DieChange`, `value` 0 for a set) and `bonusNotAdded`; `previous` and `next` are the faces of the die.
 
 `changeOneDie(roll, ref, change)` (`src/dice/oneDieReroll.ts`) copies the evaluated roll and changes one die of the copy:
 
@@ -697,7 +697,7 @@ A negative Primary Die bonus now stops at 1, in `DamageRoll` and in `rerollDieIn
 
 ### Primary Die Bonus
 
-`primaryDieBonus` (`src/models/rules/primaryDieBonus.ts`, group `bonuses`) is read when the attack roll is built, never during data preparation. `collectPrimaryDieBonuses(attacker, delivery, target)` (`src/managers/ItemActivationManager.ts`) asks each rule's `bonusFor({ delivery, other })`: an embedded item, the predicate, `matchesAttackDelivery`, `otherCreatureMatches` against the first target, then the resolved `value`. `ItemActivationManager` adds the sum to the dialog's `primaryDieModifier`, so the rest is the normal "Add to Primary Die Result" path, and a reroll keeps it. An AoE attack gets none. The lines (`label`, `value`, `itemUuid`) are stored on the card in `system.primaryDieBonuses` (the shared `common.ts` field of the feature, object and spell cards) and drawn by `RerollHistory` at the roll.
+`primaryDieBonus` (`src/models/rules/primaryDieBonus.ts`, group `bonuses`) is read when the attack roll is built, never during data preparation. `collectPrimaryDieBonuses(attacker, delivery, target)` (`src/managers/ItemActivationManager.ts`) asks each rule's `bonusFor({ delivery, other })`: an embedded item, the predicate, `matchesAttackDelivery`, `ruleOtherCreatureMatches` against the first target, then the resolved `value`. `ItemActivationManager` adds the sum to the dialog's `primaryDieModifier`, so the rest is the normal "Add to Primary Die Result" path, and a reroll keeps it. An AoE attack gets none. The lines (`label`, `value`, `itemUuid`) are stored on the card in `system.primaryDieBonuses` (the shared `common.ts` field of the feature, object and spell cards) and drawn by `RerollHistory` at the roll.
 
 ### Legacy `forceReroll`
 

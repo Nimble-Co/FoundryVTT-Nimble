@@ -5,6 +5,7 @@ import type {
 	IncomingReactionPicking,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
+import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	DieOutcome,
@@ -18,7 +19,6 @@ import localize from '../../../utils/localize.js';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 import { createHeldIncomingReactions } from './heldIncomingReactions.svelte.ts';
 import { createIncomingReactionText } from './incomingReactionText.ts';
-import type { PrimaryDieBonusLine } from './primaryDieBonusText.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 import { spendBaselineInterpose } from './spendBaselineInterpose.ts';

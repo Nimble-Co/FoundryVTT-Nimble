@@ -25,7 +25,7 @@ function setup(options: {
 	const rule = {
 		type: 'reroll',
 		id: 'rule-1',
-		rerollCost: { heroicReaction: options.heroicReaction ?? 'defend' },
+		rollUseCost: { heroicReaction: options.heroicReaction ?? 'defend' },
 	};
 	testGlobals.fromUuidSync = vi.fn((uuid: string) => {
 		if (uuid === 'Actor.hero') return actor;
