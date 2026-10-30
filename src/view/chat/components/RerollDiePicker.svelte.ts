@@ -1,7 +1,9 @@
 import { tick } from 'svelte';
 import type { RerollDiePickerProps } from '#types/components/RerollDiePicker.d.ts';
+import type { RollUse } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import type { PickableDie } from '../../../dice/oneDieReroll.js';
+import { claimEscape } from './claimEscape.ts';
 
 /**
  * The word under a die: the Primary Die and a dropped die always say what
@@ -17,12 +19,22 @@ export function dieCaption(die: PickableDie, dice: readonly PickableDie[]): stri
 	return '';
 }
 
-export function dieLabel(die: PickableDie, dice: readonly PickableDie[]): string {
+export function pickDieWords(use: RollUse = 'reroll'): string {
+	return use === 'change'
+		? 'NIMBLE.chat.incomingReactions.pickDie.change'
+		: 'NIMBLE.chat.incomingReactions.pickDie';
+}
+
+export function dieLabel(
+	die: PickableDie,
+	dice: readonly PickableDie[],
+	use: RollUse = 'reroll',
+): string {
 	const role = dieCaption(die, dice);
 	const value = String(die.value);
 	return role
-		? localize('NIMBLE.chat.incomingReactions.pickDie.dieWithRole', { value, role })
-		: localize('NIMBLE.chat.incomingReactions.pickDie.die', { value });
+		? localize(`${pickDieWords(use)}.dieWithRole`, { value, role })
+		: localize(`${pickDieWords(use)}.die`, { value });
 }
 
 export function createRerollDiePickerState(
@@ -56,10 +68,7 @@ export function createRerollDiePickerState(
 		if (next !== undefined && current !== -1) {
 			event.preventDefault();
 			elements.dice[next]?.focus();
-		} else if (event.key === 'Escape') {
-			// Foundry opens its main menu on an Escape that reaches the window.
-			event.preventDefault();
-			event.stopPropagation();
+		} else if (claimEscape(event)) {
 			getProps().oncancel();
 		}
 	}

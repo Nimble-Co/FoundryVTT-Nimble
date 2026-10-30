@@ -30,6 +30,17 @@ describe('populateChargePoolTags', () => {
 		expect(tags.has('self:focusChargesMax')).toBe(false);
 	});
 
+	it('emits self:pool:<identifier> only while the pool has a charge', () => {
+		const full = collect({
+			flags: flagBag({ 'actor:focus': { identifier: 'focus', current: 1 } }),
+		});
+		const empty = collect({
+			flags: flagBag({ 'actor:focus': { identifier: 'focus', current: 0 } }),
+		});
+		expect(full.has('self:pool:focus')).toBe(true);
+		expect(empty.has('self:pool:focus')).toBe(false);
+	});
+
 	it('emits tags for an item-scoped pool on item flags', () => {
 		const tags = collect({
 			flags: {},

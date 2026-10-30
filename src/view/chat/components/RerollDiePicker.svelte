@@ -4,12 +4,19 @@
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
-	import { createRerollDiePickerState, dieCaption, dieLabel } from './RerollDiePicker.svelte.ts';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
+	import {
+		createRerollDiePickerState,
+		dieCaption,
+		dieLabel,
+		pickDieWords,
+	} from './RerollDiePicker.svelte.ts';
 
 	let {
 		dice,
 		feature,
 		primaryOutcome = null,
+		use = 'reroll',
 		rolling = null,
 		onpick,
 		oncancel,
@@ -21,8 +28,8 @@
 
 	let title = $derived(
 		rolling
-			? localize('NIMBLE.chat.incomingReactions.pickDie.rolling', { feature })
-			: localize('NIMBLE.chat.incomingReactions.pickDie.title'),
+			? localize(`${pickDieWords(use)}.rolling`, { feature })
+			: localize(`${pickDieWords(use)}.title`),
 	);
 
 	const isRolling = (die: (typeof dice)[number]) =>
@@ -36,7 +43,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="nimble-reroll-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
 	<div class="nimble-reroll-picker__head">
-		<i class="nimble-reroll-picker__icon fa-solid fa-rotate-left" aria-hidden="true"></i>
+		<i class="nimble-reroll-picker__icon {REACTION_VERB_ICONS[use]}" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-picker__title">{title}</span>
 		{#if !rolling}
 			<button
@@ -57,7 +64,7 @@
 					bind:this={elements.dice[index]}
 					class="nimble-reroll-picker__die nimble-u-unstyled-button"
 					type="button"
-					aria-label={dieLabel(die, dice)}
+					aria-label={dieLabel(die, dice, use)}
 					disabled={!!rolling}
 					onclick={() => onpick(die)}
 				>
@@ -85,8 +92,7 @@
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-input-border-color);
 		border-radius: 4px;
-		// Clears the chat log's bottom fade and its jump-to-bottom button.
-		scroll-margin-block-end: 3rem;
+		scroll-margin-block-end: var(--nimble-chat-scroll-clearance);
 
 		&__head {
 			display: flex;

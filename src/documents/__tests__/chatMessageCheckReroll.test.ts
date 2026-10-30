@@ -56,8 +56,8 @@ function setupWorld() {
 		label: '',
 		item: { name: 'Clear Head', uuid: 'Item.head' },
 		actor: roller,
-		rerollCost: COST,
-		offersRerollOn: vi.fn(
+		rollUseCost: COST,
+		offersUseOn: vi.fn(
 			(context: { side: string; roll: { kind: string; key?: string } }) =>
 				context.side === 'roller' && context.roll.kind === 'save',
 		),
@@ -163,9 +163,10 @@ describe('a reroll on a save card', () => {
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');
 
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'roller',
 			roll: { kind: 'save', key: 'will' },
+			other: null,
 		});
 		expect(rule.rerollChanges).toHaveBeenCalledWith('save');
 		expect(roller.system.attributes.wounds.value).toBe(1);
@@ -259,7 +260,7 @@ describe('a reroll on a save card', () => {
 
 	it('refuses, and charges nothing, when the rule no longer fits the check', async () => {
 		const { roller, rule } = setupWorld();
-		rule.offersRerollOn.mockReturnValue(false);
+		rule.offersUseOn.mockReturnValue(false);
 		const message = createSaveCard();
 
 		await message.resolveRerollReaction('entry-1', 'gm-user');

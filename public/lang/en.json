@@ -526,6 +526,11 @@
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
+			"primaryDieBonus": {
+				"tag": "{value} to Primary Die",
+				"text": "{label}: {value} to the Primary Die",
+				"dialog": "Add to Primary Die Result {value}"
+			},
 			"incomingReactions": {
 				"heading": "Options",
 				"interpose": "Interpose",
@@ -545,13 +550,32 @@
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed.",
 				"rerollWith": "Reroll with {feature}",
-				"rerollAgain": "Reroll again",
+				"changeWith": "Change the die with {feature}",
+				"rerollAgain": "Reroll again with {feature}",
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
+				"verbs": {
+					"reroll": "Reroll",
+					"change": "Change die"
+				},
+				"verbCount": "{verb}: {count} features",
+				"withNote": "{text}. {note}",
+				"rollMenu": {
+					"change": "Change a die",
+					"choose": "Choose a feature to reroll or change the die"
+				},
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
 				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
+				"changeHistory": "Changed with {feature}: {previous} became {next}",
+				"changeHistoryCrit": "Changed with {feature}: {previous} became {next}, a crit",
+				"changeHistoryMiss": "Changed with {feature}: {previous} became {next}, a miss",
+				"changeArrowSet": "set",
 				"rerollTags": {
+					"crit": "Crit",
+					"critTooltip": "{feature} made the die a crit.",
+					"miss": "Miss",
+					"missTooltip": "{feature} made the die a miss.",
 					"automatic": "Automatic",
 					"automaticTooltip": "{feature} rerolled by itself. Nobody clicked.",
 					"advantage": "Advantage",
@@ -592,9 +616,12 @@
 				"costWound": "{count} Wound",
 				"costWounds": "{count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
+				"costAction": "1 action",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
 				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
 				"rerollPickADie": "Pick the die to reroll.",
+				"changePickADie": "Pick the die to change.",
+				"changePickAValue": "Pick the value to set the die to.",
 				"leftOut": {
 					"one": "1 ally reroll left out",
 					"many": "{count} ally rerolls left out",
@@ -615,7 +642,23 @@
 						"primary": "Primary",
 						"kept": "Kept",
 						"dropped": "Dropped"
+					},
+					"change": {
+						"title": "Pick a die to change",
+						"rolling": "Changing with {feature}",
+						"die": "Change the {value}",
+						"dieWithRole": "Change the {value} ({role})"
 					}
+				},
+				"pickValue": {
+					"title": "Pick a value",
+					"sending": "Changing with {feature}",
+					"input": "New value, 1 to {max}",
+					"lower": "Lower",
+					"higher": "Higher",
+					"lowest": "{value} (lowest)",
+					"highest": "{value} (highest)",
+					"confirm": "Set to {value}"
 				}
 			}
 		},
@@ -1359,6 +1402,7 @@
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",
+			"changeDie": "Change a Die",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
 			"concentrationTrack": "Concentration Track",
@@ -1396,6 +1440,7 @@
 			"optionSwap": "Option Swap",
 			"poolGainMessage": "Pool Gain Message",
 			"poolMaxBonus": "Pool Max Bonus",
+			"primaryDieBonus": "Primary Die Bonus",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"situationalRollMode": "Situational Roll Mode",
@@ -2230,7 +2275,7 @@
 				}
 			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark can also end at the end of the encounter, or when its marker effect is deleted from the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -2242,6 +2287,10 @@
 				"maxTargets": {
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
+				},
+				"endsAtEncounterEnd": {
+					"label": "Ends at the end of the encounter",
+					"hint": "The marks end when the encounter ends. Taking the marker off a creature ends its mark at any time."
 				}
 			},
 			"unarmedDamage": {
@@ -2268,6 +2317,57 @@
 				"skills": {
 					"label": "Apply to skills",
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
+				}
+			},
+			"changeDie": {
+				"description": "Lets the one who rolled, the target of an attack, or an ally change one die of an attack, a save or a check after it is made: set it to a value the player picks, or add a number to it. Crit and miss are worked out again.",
+				"rolls": {
+					"label": "Which roll can it change?"
+				},
+				"die": {
+					"label": "Which die does it change?",
+					"hint": "On a save or a check, the Primary Die is the d20. The player picks the die when they use it.",
+					"choices": {
+						"primaryDie": "The Primary Die",
+						"pickedDie": "One die the player picks"
+					}
+				},
+				"change": {
+					"label": "How does it change the die?",
+					"hint": "The die stays between 1 and its max.",
+					"choices": {
+						"set": "Set it to a value the player picks",
+						"add": "Add a number"
+					}
+				},
+				"amount": {
+					"label": "Number to add",
+					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0."
+				},
+				"addsBonusOnSet": {
+					"label": "Add the Primary Die bonus to the set value",
+					"hint": "Off: the set value is the final face, so the max is a crit and 1 is a miss. On: a Primary Die bonus is added to the set value, up to the max."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"oncePerAttack": {
+					"label": "Only once per attack",
+					"hint": "The feature can change a die of the same attack only once, even with uses left."
+				}
+			},
+			"primaryDieBonus": {
+				"description": "Adds a number to the Primary Die of the owner's attack rolls, as \"Add to Primary Die Result\" in the attack dialog does. The die can become a crit or stop being a miss. A reroll keeps the number. Not on area attacks.",
+				"value": {
+					"label": "Add to the Primary Die",
+					"hint": "A whole number or a formula, such as 1 or @level. It can be negative. The die stops at its max and at 1: the rest is lost."
+				},
+				"otherCreature": {
+					"label": "Only when the target is",
+					"hint": "Pick tags such as target:distracted. Empty means any target. With tags picked, an attack with no target gets nothing."
 				}
 			},
 			"reroll": {
@@ -2350,12 +2450,24 @@
 				},
 				"attackDelivery": {
 					"label": "Attack type",
-					"hint": "Any is melee and ranged.",
+					"hint": "Any is every attack, also an attack with no attack type, such as most spells.",
 					"choices": {
 						"any": "Any",
 						"melee": "Melee",
 						"ranged": "Ranged"
 					}
+				},
+				"cardHint": {
+					"label": "Note on the card",
+					"hint": "A short note under the feature on the card, such as a limit the table checks. Empty means no note."
+				},
+				"cardHintWhen": {
+					"label": "Show the note only when",
+					"hint": "Pick tags, as for \"Only when the other creature is\". Empty means on every roll."
+				},
+				"otherCreature": {
+					"label": "Only when the other creature is",
+					"hint": "The other creature is the target of the attack, or the one who rolled when the target uses this. Pick tags such as target:distracted. Empty means any creature. It cannot be used on a roll with no other creature."
 				},
 				"automatic": {
 					"label": "Rerolls by itself",
@@ -2403,6 +2515,14 @@
 					"hint": "Spent only in combat.",
 					"choices": {
 						"none": "None"
+					}
+				},
+				"actionCost": {
+					"label": "Action cost",
+					"hint": "Only for a hero in combat. On their own turn, they spend the action now. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction, so it has no 1/round limit.",
+					"choices": {
+						"none": "None",
+						"one": "1 action"
 					}
 				},
 				"oncePerAttack": {
@@ -3095,8 +3215,9 @@
 			"configureHitDice": "Configure Hit Dice",
 			"primaryDieValue": "Primary Die Set To",
 			"primaryDieModifier": "Added to Primary Die",
-			"primaryDieModifierBreakdown": "Primary Die: rolled {base}, modifier {modifier}, result {result}",
-			"primaryDieModifierBreakdownCapped": "Primary Die: rolled {base}, modifier {modifier}, result {result} (maximum), {excess} added to damage",
+			"primaryDieModifierBreakdown": "Primary Die: {sum} = {result}",
+			"primaryDieModifierBreakdownMax": "Primary Die: {sum} = {result}, the max",
+			"primaryDieModifierBreakdownLowest": "Primary Die: {sum} = {result}, the lowest",
 			"setPrimaryDie": "Set Primary Die Result",
 			"setPrimaryDieModifier": "Add to Primary Die Result",
 			"situationalModifiers": "Add to Roll (number or dice)",
@@ -3411,6 +3532,8 @@
 			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
 			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
 			"removeTarget": "Remove Target",
+			"marked": "Marked",
+			"endMark": "End the mark of {feature}",
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {

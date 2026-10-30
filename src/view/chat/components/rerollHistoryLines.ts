@@ -7,6 +7,7 @@ import type {
 
 import localize from '#utils/localize.js';
 import { rerollRuleKey } from '#utils/reroll/rerollEntries.ts';
+import { signed } from './primaryDieBonusText.ts';
 
 interface RerollHistoryDie {
 	faces: number;
@@ -16,7 +17,15 @@ interface RerollHistoryDie {
 
 /** One thing a use of a reroll changed on the roll or gave a creature. */
 interface RerollTag {
-	kind: 'automatic' | 'rollMode' | 'extraDamage' | 'action' | 'noAction' | 'tempHp';
+	kind:
+		| 'automatic'
+		| 'rollMode'
+		| 'extraDamage'
+		| 'action'
+		| 'noAction'
+		| 'tempHp'
+		| 'crit'
+		| 'miss';
 	label: string;
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
@@ -34,10 +43,12 @@ interface RerollHistoryLine {
 	/** What to give by hand when Feature Effects is off. */
 	offNote: string | null;
 	detail: string | null;
-	/** The old and the new Primary Die; null when either cannot be read */
+	/** The old and the new die; null when either cannot be read */
 	dice: { previous: RerollHistoryDie; next: RerollHistoryDie } | null;
 	/** A player kept the old roll, so the old die stands and the new one does not. */
 	keptOld: boolean;
+	/** A change of the die, not a reroll: the label on its arrow ("set", "+1"). */
+	change?: { arrow: string };
 }
 
 interface RerollHistoryInput {
@@ -52,7 +63,7 @@ interface RerollHistoryInput {
 
 /** A waiting reroll entry is a "Reroll again" when its rule already rerolled in this list. */
 export function isRerollAgain(entry: IncomingReactionEntry, records: RerollRecord[]): boolean {
-	if (entry.kind !== 'reroll') return false;
+	if (entry.kind !== 'reroll' || entry.use === 'change') return false;
 	const key = rerollRuleKey(entry);
 	return records.some((record) => rerollRuleKey(record) === key);
 }
@@ -206,8 +217,38 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	return { tags: [...tags, ...notGiven], tempHpNote, offNote };
 }
 
+/** The tags of a change: the outcome it made. */
+function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
+	const tags: RerollTag[] = [];
+	const outcome = record.next?.outcome;
+	if (outcome) {
+		tags.push({
+			kind: outcome,
+			label: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}`),
+			tooltip: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}Tooltip`, { feature }),
+			off: false,
+		});
+	}
+	return tags;
+}
+
+function changeText(record: RerollRecord, feature: string): string {
+	const outcome = record.next?.outcome;
+	const key =
+		outcome === 'crit'
+			? 'changeHistoryCrit'
+			: outcome === 'miss'
+				? 'changeHistoryMiss'
+				: 'changeHistory';
+	return localize(`NIMBLE.chat.incomingReactions.${key}`, {
+		feature,
+		previous: String(record.previous?.value ?? ''),
+		next: String(record.next?.value ?? ''),
+	});
+}
+
 /**
- * The card's reroll history, one line per reroll: the feature, then who used
+ * The card's reroll history, one line per reroll or change: the feature, then who used
  * it and what it cost. The name and the uses left are left out when the card
  * header or a "Reroll again" button already show them.
  */
@@ -234,6 +275,26 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 					count: String(record.woundsGained),
 				}),
 			);
+		}
+
+		if (record.use === 'change') {
+			const mode = record.change?.mode ?? 'set';
+			return {
+				title: feature,
+				tags: buildChangeTags(record, feature),
+				tempHpNote: null,
+				offNote: null,
+				text: changeText(record, feature),
+				detail: details.length > 0 ? details.join(' - ') : null,
+				dice: dice(record),
+				keptOld: false,
+				change: {
+					arrow:
+						mode === 'add'
+							? signed(record.change?.value ?? 0)
+							: localize('NIMBLE.chat.incomingReactions.changeArrowSet'),
+				},
+			};
 		}
 
 		const kept = record.kept && typeof record.keptTotal === 'number';

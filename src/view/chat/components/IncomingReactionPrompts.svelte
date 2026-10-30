@@ -4,10 +4,10 @@
 
 	import { getContext, tick } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import IncomingReactionEntryGroups from './IncomingReactionEntryGroups.svelte';
+	import IncomingReactionVerbs from './IncomingReactionVerbs.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import LeftOutRerolls from './LeftOutRerolls.svelte';
-	import RerollDiePicker from './RerollDiePicker.svelte';
+	import RollUsePicker from './RollUsePicker.svelte';
 	import RerollHistory from './RerollHistory.svelte';
 	import RollRerollButton from './RollRerollButton.svelte';
 
@@ -32,12 +32,13 @@
 		lines={prompts.historyLines}
 		pendingKeep={prompts.pendingKeep}
 		pendingLine={prompts.pendingLine}
+		primaryDieBonuses={prompts.primaryDieBonuses}
 		{held}
 	/>
 {/snippet}
 
 {#snippet entryGroups()}
-	<IncomingReactionEntryGroups
+	<IncomingReactionVerbs
 		groups={prompts.pendingGroups}
 		picking={prompts.picking}
 		busy={prompts.busy}
@@ -45,26 +46,27 @@
 		{text}
 		onuse={prompts.useEntry}
 		onpick={prompts.pickDie}
+		onvalue={prompts.pickValue}
 		oncancel={prompts.cancelPick}
 	/>
 {/snippet}
 
 {#if place === 'rollButton'}
-	{#if prompts.rerollChoices.length > 0}
+	{#if prompts.rollMenu.length > 0}
 		<RollRerollButton
 			bind:this={rollRerollButton}
-			choices={prompts.rerollChoices}
+			sections={prompts.rollMenu}
 			disabled={prompts.busy}
 			onChoose={prompts.useEntryById}
 		/>
 	{/if}
 	{#if prompts.picking}
-		<RerollDiePicker
-			dice={prompts.picking.dice}
+		<RollUsePicker
+			picking={prompts.picking}
 			feature={text.featureName(prompts.picking.entry) || prompts.picking.entry.label}
-			primaryOutcome={null}
-			rolling={prompts.picking.rolling}
 			onpick={prompts.pickDie}
+			onvalue={prompts.pickValue}
+			primaryDieBonuses={prompts.primaryDieBonuses}
 			oncancel={cancelPickAtRollButton}
 		/>
 	{/if}
@@ -78,7 +80,7 @@
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
+	{#if prompts.primaryDieBonuses.length > 0 || prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 

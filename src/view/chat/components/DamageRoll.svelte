@@ -41,15 +41,15 @@
 	function hasPrimaryDieDetails(rollOptions) {
 		if (rollOptions?.canCrit === false && rollOptions?.canMiss === false) return false;
 
-		return [rollOptions?.primaryDieValue, rollOptions?.primaryDieModifier].some(
-			(value) => value != null && value != 0,
-		);
+		const modifier = rollOptions?.primaryDieBonusOff ? null : rollOptions?.primaryDieModifier;
+		return [rollOptions?.primaryDieValue, modifier].some((value) => value != null && value != 0);
 	}
 
 	const { damageTypes } = CONFIG.NIMBLE;
 
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;
+	let primaryDieBonuses = $derived(messageDocument.reactive?.system?.primaryDieBonuses ?? []);
 
 	let { damageType, ignoreArmor = false, outcome, roll, nodeId = null } = $props();
 	let rolling = $derived.by(() => {
@@ -69,7 +69,15 @@
 		tooltip={prepareRollTooltip(actorType, permissions, Roll.fromData(roll))}
 		subheading={secondaryInfo}
 		total={Math.ceil(roll.total * multiplier)}
-		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
+		options={{
+			damageType,
+			ignoreArmor,
+			outcome,
+			rollOptions,
+			roll,
+			isCritical: roll?.isCritical,
+			primaryDieBonuses,
+		}}
 		showRollDetails={hasPrimaryDieDetails(rollOptions)}
 		{rolling}
 		{landed}
@@ -80,7 +88,15 @@
 		tooltip={null}
 		subheading={secondaryInfo}
 		total={Math.ceil((roll?.total ?? 0) * multiplier)}
-		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
+		options={{
+			damageType,
+			ignoreArmor,
+			outcome,
+			rollOptions,
+			roll,
+			isCritical: roll?.isCritical,
+			primaryDieBonuses,
+		}}
 		showRollDetails={false}
 	/>
 {/if}

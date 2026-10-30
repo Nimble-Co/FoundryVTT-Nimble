@@ -280,6 +280,11 @@ describe('MarkTargetRule', () => {
 		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
+	it('keeps a mark past the end of the encounter unless the rule says so', () => {
+		const fields = MarkTargetRule.defineSchema() as Record<string, { initial?: unknown }>;
+		expect(fields.endsAtEncounterEnd?.initial).toBe(false);
+	});
+
 	it('exposes the picker group and description key', () => {
 		expect(MarkTargetRule.group).toBe('triggers');
 		expect(MarkTargetRule.description).toBe('NIMBLE.rules.markTarget.description');

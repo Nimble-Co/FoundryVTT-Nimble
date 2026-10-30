@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type DieTermLike, rerollDieInTerm } from '../rerollDieInTerm.js';
+import { changeDieInTerm, type DieTermLike, rerollDieInTerm } from '../rerollDieInTerm.js';
 
 type Result = DieTermLike['results'][number];
 
@@ -202,6 +202,14 @@ describe('rerollDieInTerm', () => {
 			expect(die.results[1].active).toBe(true);
 		});
 
+		it('stops a negative bonus at 1', async () => {
+			const die = term(6, 1, [kept(1)]);
+
+			await rerollDieInTerm(die, 0, 'none', draws(1), { add: -1, base: 2 });
+
+			expect(values(die)).toEqual([1]);
+		});
+
 		it('gives the bonus again to a die that stays and was not rerolled', async () => {
 			const die = term(6, 2, [kept(6), dropped(1)], ['khn']);
 
@@ -216,5 +224,90 @@ describe('rerollDieInTerm', () => {
 		await expect(rerollDieInTerm(term(6, 1, [kept(2)]), 3, 'none', draws(1))).rejects.toThrow(
 			'no result 3',
 		);
+	});
+});
+
+describe('changeDieInTerm', () => {
+	it('gives the picked die the new face and draws nothing', async () => {
+		const die = term(6, 3, [kept(2), kept(5), kept(1)]);
+
+		const changed = await changeDieInTerm(die, 1, 'none', 3, draws());
+
+		expect(changed).toEqual({ previous: 5, next: 3, drawn: [] });
+		expect(values(die)).toEqual([2, 3, 1]);
+	});
+
+	it('does not keep the highest again: the changed die keeps its place', async () => {
+		const die = term(8, 2, [dropped(3), kept(7)], ['khn']);
+
+		await changeDieInTerm(die, 1, 'standard', 2, draws());
+
+		expect(die.results).toEqual([dropped(3), kept(2)]);
+	});
+
+	it('does not keep the lowest again under disadvantage', async () => {
+		const die = term(20, 2, [kept(4), dropped(15)], ['kln']);
+
+		await changeDieInTerm(die, 0, 'none', 18, draws());
+
+		expect(die.results).toEqual([kept(18), dropped(15)]);
+	});
+
+	it('leaves a changed dropped die dropped', async () => {
+		const die = term(20, 2, [kept(15), dropped(4)], ['khn']);
+
+		await changeDieInTerm(die, 1, 'none', 19, draws());
+
+		expect(die.results).toEqual([kept(15), dropped(19)]);
+	});
+
+	it('explodes a new max with dice it draws', async () => {
+		const die = term(8, 1, [kept(3)], ['x']);
+
+		const changed = await changeDieInTerm(die, 0, 'standard', 8, draws(8, 2));
+
+		expect(changed.drawn).toEqual([8, 2]);
+		expect(die.results).toEqual([
+			kept(8, { exploded: true }),
+			kept(8, { exploded: true }),
+			kept(2),
+		]);
+	});
+
+	it('cuts the explosion dice of a max it changes', async () => {
+		const die = term(8, 1, [kept(8, { exploded: true }), kept(5)], ['x']);
+
+		await changeDieInTerm(die, 0, 'standard', 4, draws());
+
+		expect(die.results).toEqual([kept(4)]);
+	});
+
+	it('does not explode a dropped die set to its max', async () => {
+		const die = term(8, 2, [kept(5), dropped(2)], ['khn', 'x']);
+
+		await changeDieInTerm(die, 1, 'standard', 8, draws());
+
+		expect(die.results).toEqual([kept(5), dropped(8)]);
+	});
+
+	it('rolls a vicious pair for a new max', async () => {
+		const die = term(8, 1, [kept(3)]);
+
+		await changeDieInTerm(die, 0, 'vicious', 8, draws(6, 2));
+
+		expect(die.results).toEqual([
+			kept(8, { exploded: true }),
+			kept(6, { provenance: 'viciousChain' }),
+			kept(2, { provenance: 'viciousBonus' }),
+		]);
+	});
+
+	it('changes nothing when the face stays the same', async () => {
+		const die = term(8, 1, [kept(8, { exploded: true }), kept(5)], ['x']);
+
+		const changed = await changeDieInTerm(die, 0, 'standard', 8, draws());
+
+		expect(changed).toEqual({ previous: 8, next: 8, drawn: [] });
+		expect(die.results).toEqual([kept(8, { exploded: true }), kept(5)]);
 	});
 });

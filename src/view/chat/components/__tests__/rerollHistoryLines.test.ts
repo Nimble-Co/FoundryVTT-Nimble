@@ -296,6 +296,10 @@ describe('isRerollAgain', () => {
 	it('is false for an entry that is not a reroll', () => {
 		expect(isRerollAgain(entry({ kind: 'redirectToSelf' }), [record()])).toBe(false);
 	});
+
+	it('is false for a Change a Die entry, which keeps its own label', () => {
+		expect(isRerollAgain(entry({ use: 'change' }), [record()])).toBe(false);
+	});
 });
 
 describe('rerollAgainRecords', () => {
@@ -339,5 +343,63 @@ describe('"Reroll again" for a once-per-attack rule', () => {
 
 		expect(pending.map((candidate) => isRerollAgain(candidate, [sand]))).toEqual([true]);
 		expect([...rerollAgainRecords([sand], pending)]).toEqual([sand]);
+	});
+});
+
+describe('rerollHistoryLines for a change', () => {
+	const NAMES_WITH_CHANGE = { ...NAMES, 'Item.vo': 'Vicious Opportunist' };
+	const changeLines = (records: RerollRecord[]) =>
+		rerollHistoryLines({
+			records,
+			speakerUuid: 'Actor.wren',
+			rerollAgain: new Set(),
+			documentName: (uuid) => NAMES_WITH_CHANGE[uuid as keyof typeof NAMES_WITH_CHANGE],
+		});
+	const changed = (overrides: Partial<RerollRecord> = {}) =>
+		record({
+			itemUuid: 'Item.vo',
+			use: 'change',
+			change: { mode: 'set', value: 0 },
+			previous: { value: 3, outcome: null },
+			next: { value: 8, outcome: 'crit' },
+			...overrides,
+		});
+
+	it('says "set" on the arrow, tags a crit, and tells it as a sentence', () => {
+		const [line] = changeLines([changed()]);
+		expect(line).toMatchObject({
+			title: 'Vicious Opportunist',
+			text: 'Changed with Vicious Opportunist: 3 became 8, a crit',
+			change: { arrow: 'set' },
+			dice: { previous: { value: 3 }, next: { value: 8, outcome: 'crit' } },
+		});
+		expect(line.tags.map((tag) => [tag.kind, tag.label])).toEqual([['crit', 'Crit']]);
+	});
+
+	it('puts the number on the arrow for an add, with no tag for a plain result', () => {
+		const [line] = changeLines([
+			changed({
+				change: { mode: 'add', value: -1 },
+				previous: { value: 4, outcome: null },
+				next: { value: 3, outcome: null },
+			}),
+		]);
+		expect(line.change).toEqual({ arrow: '-1' });
+		expect(line.text).toBe('Changed with Vicious Opportunist: 4 became 3');
+		expect(line.tags).toEqual([]);
+		expect(changeLines([changed({ change: { mode: 'add', value: 2 } })])[0].change).toEqual({
+			arrow: '+2',
+		});
+	});
+
+	it('tags a miss', () => {
+		const [line] = changeLines([changed({ next: { value: 1, outcome: 'miss' } })]);
+		expect(line.text).toBe('Changed with Vicious Opportunist: 3 became 1, a miss');
+		expect(line.tags.map((tag) => tag.label)).toEqual(['Miss']);
+	});
+
+	it('keeps the uses left and who used it', () => {
+		const [line] = changeLines([changed({ actorUuid: 'Actor.bram', usesLeft: 0 })]);
+		expect(line.detail).toBe('Used by Bram - Uses left: 0');
 	});
 });

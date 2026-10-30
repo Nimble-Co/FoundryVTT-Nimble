@@ -6,13 +6,15 @@ import type {
 
 import localize from '../../../utils/localize.js';
 import { getIncomingReactionCost } from './incomingReactionCost.ts';
+import { REACTION_VERB_ICONS, REACTION_VERB_WORDS, reactionVerb } from './reactionVerbs.ts';
 import { isRerollAgain } from './rerollHistoryLines.ts';
 
 function reactingActor(entry: IncomingReactionEntry) {
 	return (fromUuidSync(entry.actorUuid) ?? null) as Actor.Implementation | null;
 }
 
-function documentName(uuid: string): string {
+export function documentName(uuid: string | null | undefined): string {
+	if (!uuid) return '';
 	return ((fromUuidSync(uuid) as { name?: string } | null)?.name ?? '').trim();
 }
 
@@ -21,15 +23,12 @@ function featureName(entry: IncomingReactionEntry): string {
 }
 
 function icon(entry: IncomingReactionEntry): string {
-	if (entry.kind === 'reroll') return 'fa-solid fa-rotate-left';
-	if (entry.kind === 'spendPoolForDamage') return 'fa-solid fa-dice-d6';
-	return 'fa-solid fa-shield-heart';
+	return REACTION_VERB_ICONS[reactionVerb(entry)];
 }
 
-function tooltip(entry: IncomingReactionEntry): string | null {
-	if (entry.source !== 'rule' || !entry.itemUuid) return null;
-	const item = fromUuidSync(entry.itemUuid) as { name?: string } | null;
-	return item?.name ?? null;
+/** The short name in a verb's menu, which already says the verb. */
+function menuName(entry: IncomingReactionEntry): string {
+	return featureName(entry) || entry.label || localize(REACTION_VERB_WORDS[reactionVerb(entry)]);
 }
 
 function cost(entry: IncomingReactionEntry): string {
@@ -62,10 +61,13 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 export function createIncomingReactionText(getRerolls: () => RerollRecord[]): IncomingReactionText {
 	function label(entry: IncomingReactionEntry): string {
 		if (isRerollAgain(entry, getRerolls())) {
-			return localize('NIMBLE.chat.incomingReactions.rerollAgain');
+			return localize('NIMBLE.chat.incomingReactions.rerollAgain', {
+				feature: featureName(entry) || entry.label,
+			});
 		}
 		if (entry.kind === 'reroll') {
-			return localize('NIMBLE.chat.incomingReactions.rerollWith', {
+			const key = entry.use === 'change' ? 'changeWith' : 'rerollWith';
+			return localize(`NIMBLE.chat.incomingReactions.${key}`, {
 				feature: featureName(entry) || entry.label,
 			});
 		}
@@ -80,13 +82,34 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 		return entry.source === 'rule' && entry.label ? `${heading}: ${entry.label}` : heading;
 	}
 
+	function menuItem(entry: IncomingReactionEntry) {
+		const entryCost = cost(entry);
+		const note = (entry.hint ?? '').trim();
+		const sentence = entryCost
+			? localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
+					label: label(entry),
+					cost: entryCost,
+				})
+			: label(entry);
+		return {
+			id: entry.id,
+			label: menuName(entry),
+			cost: entryCost,
+			text: note
+				? localize('NIMBLE.chat.incomingReactions.withNote', { text: sentence, note })
+				: sentence,
+			...(note ? { note } : {}),
+		};
+	}
+
 	return {
 		reactingActor,
 		documentName,
 		featureName,
 		label,
+		menuName,
+		menuItem,
 		icon,
-		tooltip,
 		cost,
 		usedAttribution,
 	};

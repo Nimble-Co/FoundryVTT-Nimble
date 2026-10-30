@@ -7,7 +7,9 @@ import {
 	ruleChargesLeft,
 	spendRuleCharge,
 } from '../chargePool/ruleChargeGate.js';
+import { getCombatantCurrentActions } from '../combat/combatTurnActions.js';
 import { isCombatStarted } from '../combat/isCombatStarted.js';
+import { requestCombatantActionDelta } from '../combat/requestCombatantActionDelta.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	type HeroicReactionKey,
@@ -22,6 +24,8 @@ interface RerollCost {
 	manaCost: number;
 	woundCost: number;
 	heroicReaction: HeroicReactionKey | '';
+	/** Actions a hero spends in combat. Absent is none. */
+	actionCost?: number;
 }
 
 /** What was actually charged, so a failed reroll can give it back. */
@@ -35,6 +39,8 @@ interface PaidRerollCost {
 		key: HeroicReactionKey;
 		previousActions: number;
 	} | null;
+	/** Actions spent: now on the hero's own turn, else from their next turn. */
+	action: { combatId: string; combatantId: string; amount: number; now: boolean } | null;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -50,7 +56,7 @@ interface HeroicReactionCombat {
 }
 
 function nothingPaid(): PaidRerollCost {
-	return { charges: 0, mana: 0, wounds: 0, heroicReaction: null };
+	return { charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null };
 }
 
 function asSpellCostActor(actor: RerollPayer): SpellCostActorLike {
@@ -73,6 +79,20 @@ function findActorCombatant(
 function canGainWounds(actor: RerollPayer, amount: number): boolean {
 	const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
 	return !!wounds && wounds.value + amount <= wounds.max;
+}
+
+function actionCostOf(cost: RerollCost): number {
+	return Math.max(0, Math.trunc(Number(cost.actionCost) || 0));
+}
+
+/** The hero's combatant and whether it is their turn, or null when no actions can be spent. */
+function actionPayer(
+	actor: RerollPayer,
+): { combat: Combat; combatant: Combatant; now: boolean } | null {
+	const found = findActorCombatant(actor);
+	if (!found || found.combatant.type !== 'character') return null;
+	const now = (found.combat.combatant?.id ?? null) === found.combatant.id;
+	return { ...found, now };
 }
 
 /** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
@@ -101,14 +121,28 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 	) {
 		return false;
 	}
-	return cost.woundCost <= 0 || canGainWounds(actor, cost.woundCost);
+	if (cost.woundCost > 0 && !canGainWounds(actor, cost.woundCost)) return false;
+	return canSpendActions(actor, actionCostOf(cost));
+}
+
+/** On the hero's own turn the actions must be there; off it, the next turn has fewer. */
+function canSpendActions(actor: RerollPayer, amount: number): boolean {
+	if (amount <= 0) return true;
+	const payer = actionPayer(actor);
+	if (!payer?.now) return true;
+	return getCombatantCurrentActions(payer.combatant as Combatant.Implementation) >= amount;
 }
 
 /** Whether paying the cost would change anything on the actor or combat. */
 function rerollCostCharges(cost: RerollCost): boolean {
 	if (cost.heroicReaction !== '') return true;
 	if (!isResourceSpendingAutomationEnabled()) return false;
-	return cost.chargePoolIdentifier.trim() !== '' || cost.manaCost > 0 || cost.woundCost > 0;
+	return (
+		cost.chargePoolIdentifier.trim() !== '' ||
+		cost.manaCost > 0 ||
+		cost.woundCost > 0 ||
+		actionCostOf(cost) > 0
+	);
 }
 
 async function spendHeroicReaction(
@@ -131,6 +165,36 @@ async function spendHeroicReaction(
 		key,
 		previousActions,
 	};
+}
+
+async function spendActions(
+	actor: RerollPayer,
+	amount: number,
+): Promise<PaidRerollCost['action'] | false> {
+	const payer = actionPayer(actor);
+	if (!payer?.combatant.id) return null;
+	if (!canSpendActions(actor, amount)) return false;
+	const paid = {
+		combatId: payer.combat.id ?? '',
+		combatantId: payer.combatant.id,
+		amount,
+		now: payer.now,
+	};
+	const done = await changeActions(paid, -amount);
+	return done ? paid : false;
+}
+
+function changeActions(paid: NonNullable<PaidRerollCost['action']>, delta: number) {
+	const combat = game.combat ?? null;
+	if (!combat || (combat.id ?? '') !== paid.combatId) return Promise.resolve(false);
+	return requestCombatantActionDelta({
+		combat,
+		combatantId: paid.combatantId,
+		sourceItemUuid: '',
+		deltas: paid.now
+			? { currentDelta: delta, pendingDelta: 0 }
+			: { currentDelta: 0, pendingDelta: delta },
+	});
 }
 
 async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReaction']>) {
@@ -168,12 +232,13 @@ async function refundRerollCost(
 		} as Record<string, unknown>);
 	}
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
+	if (paid.action) await changeActions(paid.action, paid.action.amount);
 	if (paid.heroicReaction) await refundHeroicReaction(paid.heroicReaction);
 }
 
 /**
  * Charge the cost of a reroll: the heroic reaction first, as the part most
- * likely to be refused, then charges, mana and Wounds. When a part fails,
+ * likely to be refused, then actions, charges, mana and Wounds. When a part fails,
  * the parts already charged are given back and null is returned. With
  * resource spending automation off, only the heroic reaction is spent, as
  * for every other heroic reaction.
@@ -199,6 +264,13 @@ async function payRerollCost(
 		paid.heroicReaction = spent;
 	}
 	if (!isResourceSpendingAutomationEnabled()) return paid;
+
+	const actions = actionCostOf(cost);
+	if (actions > 0) {
+		const spent = await spendActions(actor, actions);
+		if (spent === false) return fail();
+		paid.action = spent;
+	}
 
 	if (cost.chargePoolIdentifier.trim()) {
 		const amount = Math.max(1, cost.chargeCost);

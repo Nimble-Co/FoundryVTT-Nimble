@@ -8,7 +8,7 @@ import {
 	NIMBLE_MODS,
 	nimbleModsFromModifiers,
 } from './nimbleDieModifiers.js';
-import { type ExplosionStyle, hasExplodeModifier, type KeptDieBonus } from './oneDieReroll.js';
+import { type ExplosionStyle, type KeptDieBonus, modifierExplosionStyle } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -56,6 +56,12 @@ declare namespace DamageRoll {
 		primaryDieModifier: number;
 		/** The primary die roll before primaryDieModifier was added (computed; do not set manually). */
 		primaryDieBaseResult?: number;
+		/**
+		 * The kept Primary Die face holds no primaryDieModifier, as a change set
+		 * it as the final face (computed; do not set manually). A new roll of the
+		 * die gets the modifier again.
+		 */
+		primaryDieBonusOff?: boolean;
 		/**
 		 * Whether the primary die's base result contributes to damage.
 		 * When false, the primary die is used only for hit/miss/crit detection,
@@ -398,19 +404,24 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/**
 	 * Apply primaryDieValue / primaryDieModifier presets to the primary die.
+	 * The modifier goes on the face the die keeps (see `PrimaryDie`), so it can
+	 * make a crit or lift a miss. Foundry still rolls the die unless a value is set.
 	 *
 	 * @param primaryTerm - The primary die to configure.
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
 	 */
 	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
-		const { primaryDieValue, primaryDieModifier } = options;
-		const faces = primaryTerm.faces;
-		if (typeof faces !== 'number' || (!primaryDieValue && !primaryDieModifier)) return;
+		const { primaryDieValue } = options;
+		const primaryDieModifier = Math.trunc(Number(options.primaryDieModifier) || 0);
+		if (DamageRoll.rebuilding || typeof primaryTerm.faces !== 'number') return;
 
-		// The preset applies to the die that stays, so the pool is rolled and dropped here.
+		if (primaryDieModifier) primaryTerm.options.faceBonus = primaryDieModifier;
+		if (!primaryDieValue) return;
+
+		// The set value applies to the die that stays, so the pool is rolled and dropped here.
 		const poolSize = Math.max(1, Number(primaryTerm.number) || 1);
 		const results: foundry.dice.terms.DiceTerm.Result[] = Array.from({ length: poolSize }, () => ({
-			result: Math.ceil(Math.random() * faces),
+			result: primaryTerm.randomFace(),
 			active: true,
 		}));
 		if (poolSize > 1) {
@@ -420,19 +431,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 
 		const kept = results.find((result) => result.active) ?? results[0];
-		if (primaryDieValue) kept.result = primaryDieValue;
-
-		if (primaryDieModifier) {
-			this.options.primaryDieBaseResult = kept.result;
-			const modifiedResult = kept.result + primaryDieModifier;
-			kept.result = Math.min(modifiedResult, faces);
-			if (modifiedResult > faces) {
-				const excessTerm = new Terms.NumericTerm({ number: modifiedResult - faces });
-				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-				this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
-			}
-		}
-
+		kept.result = primaryDieValue;
 		primaryTerm.results = results;
 	}
 
@@ -562,6 +561,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// ── Legacy path ──
 			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
 			if (primaryTerm) {
+				const rolledFace = primaryTerm.options.rolledFace;
+				if (typeof rolledFace === 'number') this.options.primaryDieBaseResult = rolledFace;
 				if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
 					await this._evaluateViciousExplosion(primaryTerm);
 				}
@@ -876,10 +877,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		) {
 			return 'vicious';
 		}
-		return hasExplodeModifier(term.modifiers) ? 'standard' : 'none';
+		return modifierExplosionStyle(term.modifiers);
 	}
 
-	/** "Add to Primary Die Result" of `term`, if it is the Primary Die and has one. */
+	/**
+	 * "Add to Primary Die Result" of `term`, if it is the Primary Die and has
+	 * one. `base` is the kept face before the bonus: the face itself while
+	 * `primaryDieBonusOff` is set.
+	 */
 	primaryDieBonusOf(term: unknown): KeptDieBonus | null {
 		const add = Number(this.options.primaryDieModifier) || 0;
 		const base = this.options.primaryDieBaseResult;
@@ -888,21 +893,55 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * The Primary Die was rolled again. A set result no longer holds, and the
-	 * damage past the die's max is worked out again from the new result.
+	 * The Primary Die was rolled again; `keptBase` is its new face before the
+	 * bonus. A set result no longer holds.
 	 */
 	primaryDieRerolled(term: unknown, keptBase: number | null): void {
 		if (!this._isPresetPrimaryDie(term) || keptBase === null) return;
 		if (this.options.primaryDieValue && this.options.primaryDieValue !== keptBase) {
 			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
 		}
+		this._setPrimaryDieBase(term, keptBase);
+	}
 
+	/**
+	 * The kept Primary Die got a new face; `base` is that face before the bonus.
+	 * A set value it no longer matches goes away. With `bonusOnFace` false, the
+	 * new face holds no bonus.
+	 */
+	primaryDieChanged(term: unknown, base: number, bonusOnFace = true): void {
+		if (!this._isPresetPrimaryDie(term)) return;
+		if (this.options.primaryDieValue && this.options.primaryDieValue !== base) {
+			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
+		}
+		this._setPrimaryDieBase(term, base, bonusOnFace);
+	}
+
+	/**
+	 * Records the face before the bonus. A card from before the bonus stopped at
+	 * the max has the damage past the max as a "+ N" term; it goes, and no new one comes.
+	 */
+	private _setPrimaryDieBase(
+		term: PrimaryDie & { faces: number },
+		base: number,
+		bonusOnFace = true,
+	): void {
 		const add = Number(this.options.primaryDieModifier) || 0;
 		const oldBase = this.options.primaryDieBaseResult;
 		if (!add || typeof oldBase !== 'number') return;
 
+		if (typeof term.options.rolledFace === 'number') term.options.rolledFace = base;
+		else this._removePrimaryDieExcess(term, oldBase, add);
+		this.options.primaryDieBaseResult = base;
+		if (bonusOnFace) delete (this.options as Partial<DamageRoll.Options>).primaryDieBonusOff;
+		else this.options.primaryDieBonusOff = true;
+		this.resetFormula();
+	}
+
+	/** Take out the damage past the Primary Die's max on an old card. */
+	private _removePrimaryDieExcess(term: PrimaryDie & { faces: number }, base: number, add: number) {
 		const at = this.terms.indexOf(term) + 1;
-		const oldExcess = oldBase + add - term.faces;
+		const oldExcess = base + add - term.faces;
 		const [operator, excess] = this.terms.slice(at, at + 2);
 		if (
 			oldExcess > 0 &&
@@ -913,18 +952,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		) {
 			this.terms.splice(at, 2);
 		}
-
-		const newExcess = keptBase + add - term.faces;
-		if (newExcess > 0) {
-			this.terms.splice(
-				at,
-				0,
-				Terms.OperatorTerm.fromData({ class: 'OperatorTerm', operator: '+', evaluated: true }),
-				Terms.NumericTerm.fromData({ class: 'NumericTerm', number: newExcess, evaluated: true }),
-			);
-		}
-		this.options.primaryDieBaseResult = keptBase;
-		this.resetFormula();
+		return at;
 	}
 
 	private _isPresetPrimaryDie(term: unknown): term is PrimaryDie & { faces: number } {
@@ -1045,6 +1073,22 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param roll - The DamageRoll to mark as evaluated.
 	 * @param total - The total value to set.
 	 */
+	/** Set while a roll is rebuilt, so its constructor does not roll a Primary Die that is replaced. */
+	private static rebuilding = false;
+
+	private static _rebuild(
+		formula: string,
+		data: DamageRoll.Data,
+		options: DamageRoll.Options | undefined,
+	): DamageRoll {
+		DamageRoll.rebuilding = true;
+		try {
+			return new DamageRoll(formula, data, options);
+		} finally {
+			DamageRoll.rebuilding = false;
+		}
+	}
+
 	private static _setEvaluatedState(roll: DamageRoll, total: number): void {
 		const internals = roll as object as { _evaluated: boolean; _total: number };
 		internals._evaluated = true;
@@ -1075,7 +1119,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @returns A new DamageRoll with the same formula, data, options, and evaluated state.
 	 */
 	static fromRoll(roll) {
-		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
+		const newRoll = DamageRoll._rebuild(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
@@ -1104,13 +1148,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
 		const options = (data.options ?? baseRoll.options) as DamageRoll.Options;
 		const damageData = data.data ?? {};
-		const primaryDieBaseResult = options?.primaryDieBaseResult;
 
-		const roll = new DamageRoll(formula, damageData, options);
-
-		// The constructor rolls a new base result; keep the recorded one.
-		if (primaryDieBaseResult === undefined) delete roll.options.primaryDieBaseResult;
-		else roll.options.primaryDieBaseResult = primaryDieBaseResult;
+		const roll = DamageRoll._rebuild(formula, damageData, options);
 
 		if (baseRoll.terms && baseRoll.terms.length > 0) {
 			// Restore terms from baseRoll (which has properly reconstructed term instances)

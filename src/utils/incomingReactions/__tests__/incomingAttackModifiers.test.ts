@@ -79,7 +79,7 @@ function createTargetRerollRule(id: string) {
 		label: '',
 		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always',
-		offersRerollOn: (context: { side: string }) => context.side === 'target',
+		offersUseOn: (context: { side: string }) => context.side === 'target',
 	};
 }
 
@@ -816,8 +816,8 @@ describe('Reroll rules on the attack', () => {
 			outcome: 'always',
 			automatic: false,
 			discardedCritTriggers: false,
-			rerollCost: FREE,
-			offersRerollOn: vi.fn((context: { side: string }) => context.side === 'target'),
+			rollUseCost: FREE,
+			offersUseOn: vi.fn((context: { side: string }) => context.side === 'target'),
 			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
 			...overrides,
 		};
@@ -839,7 +839,7 @@ describe('Reroll rules on the attack', () => {
 		it('stamps the attacker rules for the roller and the target rules for the target', () => {
 			const rollerRule = rerollRule({
 				id: 'roller-rule',
-				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'roller'),
+				offersUseOn: vi.fn((context: { side: string }) => context.side === 'roller'),
 			});
 			const targetRule = rerollRule({ id: 'target-rule' });
 			const target = createToken({
@@ -868,13 +868,15 @@ describe('Reroll rules on the attack', () => {
 					side: 'target',
 				}),
 			]);
-			expect(rollerRule.offersRerollOn).toHaveBeenCalledWith({
+			expect(rollerRule.offersUseOn).toHaveBeenCalledWith({
 				side: 'roller',
 				roll: { kind: 'attack', delivery: 'melee' },
+				other: expect.objectContaining({ uuid: 'Actor.target' }),
 			});
-			expect(targetRule.offersRerollOn).toHaveBeenCalledWith({
+			expect(targetRule.offersUseOn).toHaveBeenCalledWith({
 				side: 'target',
 				roll: { kind: 'attack', delivery: 'melee' },
+				other: expect.objectContaining({ uuid: 'Actor.attacker' }),
 			});
 		});
 
@@ -882,7 +884,7 @@ describe('Reroll rules on the attack', () => {
 			const allyRule = rerollRule({
 				id: 'ally-rule',
 				usedBy: 'ally',
-				offersRerollOn: vi.fn((context: { side: string }) => context.side === 'ally'),
+				offersUseOn: vi.fn((context: { side: string }) => context.side === 'ally'),
 			});
 			const target = createToken({ actor: createActor({ uuid: 'Actor.target' }) });
 			setCanvasTokens([target]);
@@ -1158,7 +1160,7 @@ describe('Reroll rules on the attack', () => {
 				automatic: true,
 				rerollsByItself: true,
 				actor,
-				rerollCost: { ...FREE, manaCost: 1 },
+				rollUseCost: { ...FREE, manaCost: 1 },
 			});
 			const first = makeRoll(false);
 			const rebuildRoll = vi.fn();

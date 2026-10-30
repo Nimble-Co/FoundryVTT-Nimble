@@ -5,7 +5,78 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "rx3oOrQaWNVWae4a",
+				"identifier": "vicious-opportunist",
+				"label": "Vicious Opportunist (1/turn)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "changeDie",
+				"disabled": false,
+				"id": "fSZR3ZQdBfmyLG3n",
+				"identifier": "",
+				"label": "Vicious Opportunist",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"die": "primaryDie",
+				"change": "set",
+				"amount": 1,
+				"otherCreature": {
+					"$or": [
+						"target:distracted",
+						"target:exploit-weakness",
+						"feature:supreme-execution"
+					]
+				},
+				"outcome": "hit",
+				"attackDelivery": "melee",
+				"chargePoolIdentifier": "vicious-opportunist",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"oncePerAttack": false,
+				"cardHint": "If the target is not Distracted, attack with a blade (Supreme Execution)",
+				"cardHintWhen": {
+					"$and": [
+						"feature:supreme-execution"
+					]
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

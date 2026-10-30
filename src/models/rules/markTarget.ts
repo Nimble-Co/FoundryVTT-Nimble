@@ -43,6 +43,13 @@ function schema() {
 			label: 'NIMBLE.rules.markTarget.maxTargets.label',
 			hint: 'NIMBLE.rules.markTarget.maxTargets.hint',
 		}),
+		endsAtEncounterEnd: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.markTarget.endsAtEncounterEnd.label',
+			hint: 'NIMBLE.rules.markTarget.endsAtEncounterEnd.hint',
+		}),
 	};
 }
 
@@ -86,6 +93,8 @@ interface FlaggedActor {
  * feature raise the cap (e.g. the Hunter's level-20 Nemesis) without the primary rule
  * knowing about it. Marking beyond capacity evicts the oldest mark. There is no time-based
  * expiry: "until you mark another creature" is exactly the capacity-eviction behaviour.
+ * A rule can end its marks at the end of the encounter, and taking a marker effect off a
+ * creature ends that mark (see `markLifecycle.ts`).
  */
 class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	static override group = 'triggers';
@@ -109,6 +118,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 				['flagKey', 'string'],
 				['statusCondition', 'string'],
 				['maxTargets', 'number'],
+				['endsAtEncounterEnd', 'boolean'],
 			]),
 		);
 	}

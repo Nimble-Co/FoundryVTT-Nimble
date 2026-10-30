@@ -1,4 +1,6 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
@@ -70,6 +72,42 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
+/** One Primary Die Bonus as the card stores it, with the item of its rule. */
+interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
+	itemUuid: string;
+}
+
+/** Structural view of a `primaryDieBonus` rule, so this module needs no rule import. */
+interface PrimaryDieBonusRuleLike {
+	type?: string;
+	label?: string;
+	item?: { name?: string; uuid?: string } | null;
+	bonusFor?: (context: { delivery: AttackDelivery; other: OtherCreature | null }) => number;
+}
+
+/**
+ * The Primary Die Bonus rules of the attacker that add to this attack, each
+ * with what it adds. A rule that adds 0 is left out.
+ */
+function collectPrimaryDieBonuses(
+	attacker: { rules?: unknown[] } | null | undefined,
+	delivery: AttackDelivery,
+	target: OtherCreature | null,
+): PrimaryDieBonusRecord[] {
+	const lines: PrimaryDieBonusRecord[] = [];
+	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
+		if (rule?.type !== 'primaryDieBonus') continue;
+		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
+		if (value === 0) continue;
+		lines.push({
+			label: rule.label || rule.item?.name || '',
+			value,
+			itemUuid: rule.item?.uuid ?? '',
+		});
+	}
+	return lines;
+}
+
 // Dependencies are grouped to allow tests to override them without relying on module mocking.
 const dependencies = {
 	NimbleRoll,
@@ -134,6 +172,9 @@ class ItemActivationManager {
 
 	/** What an automatic reroll left for the chat card. */
 	#rerollHistory: RerollHistory | null = null;
+
+	/** The Primary Die Bonus rules that added to the attack roll, for the chat card. */
+	#primaryDieBonuses: PrimaryDieBonusRecord[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
 
@@ -346,6 +387,7 @@ class ItemActivationManager {
 			rollHidden: dialogData.rollHidden ?? false,
 			incomingReactions: this.#appliedIncomingReactions,
 			rerollHistory: this.#rerollHistory,
+			primaryDieBonuses: this.#primaryDieBonuses,
 		};
 	}
 
@@ -492,19 +534,28 @@ class ItemActivationManager {
 						}
 					}
 
-					// Forward the optional rollMode source list so DamageRoll can
-					// compute the net rollMode itself (advantage and disadvantage
-					// cancel 1-for-1). Only attached when callers supplied the
-					// array, to preserve backwards compatibility with single-source
-					// callers (and existing constructor-call test expectations).
+					// An area roll has no Primary Die outcome, so it gets no Primary Die Bonus.
+					this.#primaryDieBonuses = isAoE
+						? []
+						: collectPrimaryDieBonuses(
+								this.actor as { rules?: unknown[] } | null,
+								delivery,
+								(this.#getFirstTargetToken()?.actor ?? null) as OtherCreature | null,
+							);
+					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
 						rollMode: node.rollMode ?? 0,
 						primaryDieValue: dialogData.primaryDieValue ?? 0,
-						primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					// Forward the optional rollMode source list so DamageRoll can
+					// compute the net rollMode itself (advantage and disadvantage
+					// cancel 1-for-1). Only attached when callers supplied the
+					// array, to preserve backwards compatibility with single-source
+					// callers (and existing constructor-call test expectations).
 					if (Array.isArray(this.#options.rollModeSources)) {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
@@ -540,6 +591,8 @@ class ItemActivationManager {
 						activationRollData as DamageRoll.Data,
 						damageOptions,
 					);
+					// A formula with no die has no Primary Die to add to.
+					if (!(roll as DamageRoll).primaryDie) this.#primaryDieBonuses = [];
 
 					foundDamageRoll = true;
 				} else {

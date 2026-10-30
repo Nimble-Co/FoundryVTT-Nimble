@@ -1,4 +1,6 @@
+import { endEncounterMarks } from '#utils/actor/markLifecycle.js';
 import { applyEncounterRefill } from '#utils/dicePool/dicePoolRefill.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
 
 let registered = false;
 const handledCombatIds = new Set<string>();
@@ -14,6 +16,8 @@ function applyEncounterEndToCombatants(combat: Combat): void {
 		const actor = combatant.actor;
 		if (!actor || actor.type !== 'character') continue;
 		void applyEncounterRefill(actor as Actor.Implementation, 'encounterEnd');
+		if (isActiveGM())
+			void endEncounterMarks(actor as unknown as Parameters<typeof endEncounterMarks>[0]);
 	}
 }
 

@@ -9,6 +9,7 @@
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
+	import { createTargetMarksState } from './Targets.svelte.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 
@@ -118,6 +119,7 @@
 	// Foundry mounts a new card on each message update, so one read is enough.
 	const tracking = isMovementOffersAutomationEnabled();
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
+	const targetMarks = createTargetMarksState(messageDocument as never);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
@@ -158,9 +160,10 @@
 						: null}
 				{@const damageBadges = getDamageBadges(breakdown)}
 				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
+				{@const mark = targetMarks.markOn(token as never)}
 				<li
 					class="nimble-card"
-					class:nimble-target--moves={movementChips.length > 0}
+					class:nimble-target--moves={movementChips.length > 0 || !!mark}
 					onmouseenter={() => tokenHoverIn(token.object)}
 					onmouseleave={() => tokenHoverOut(token.object)}
 				>
@@ -197,11 +200,25 @@
 						</span>
 					{/if}
 
-					{#if movementChips.length > 0}
+					{#if movementChips.length > 0 || mark}
 						<span class="nimble-target-movement">
 							{#each movementChips as chip (chip.key)}
 								<MovementStatusChip {chip} />
 							{/each}
+							{#if mark}
+								<button
+									class="nimble-target-mark nimble-u-unstyled-button"
+									type="button"
+									aria-label={targetMarks.endLabel}
+									data-tooltip={targetMarks.endLabel}
+									disabled={targetMarks.ending}
+									onclick={() => targetMarks.endMarkOn(mark)}
+								>
+									<i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+									<span>{localize('NIMBLE.chatTargets.marked')}</span>
+									<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+								</button>
+							{/if}
 						</span>
 					{/if}
 
@@ -284,6 +301,31 @@
 		grid-area: move;
 		align-self: center;
 		gap: 0.125rem;
+	}
+
+	.nimble-target-mark {
+		display: inline-flex;
+		flex: 0 0 auto;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.0625rem 0.3125rem;
+		font-size: var(--nimble-xs-text);
+		font-weight: 700;
+		line-height: 1.2;
+		white-space: nowrap;
+		color: var(--nimble-dark-text-color);
+		background: var(--nimble-movement-chip-background-color);
+		border-radius: 3px;
+		cursor: pointer;
+
+		i {
+			font-size: 0.625rem;
+		}
+
+		&:hover:not(:disabled),
+		&:focus-visible {
+			outline: 1px solid var(--nimble-card-border-color);
+		}
 	}
 
 	.nimble-target-badge {

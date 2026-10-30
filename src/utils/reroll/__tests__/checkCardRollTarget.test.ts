@@ -264,7 +264,7 @@ describe('createCheckCard', () => {
 			rules: [] as RerollRuleLike[],
 		};
 		roller.rules.push(
-			rerollRule({ rerollsByItself: true, actor: roller, rerollCost: { ...FREE, woundCost: 1 } }),
+			rerollRule({ rerollsByItself: true, actor: roller, rollUseCost: { ...FREE, woundCost: 1 } }),
 		);
 		const rerolls = await checkCardRerollData(roller, postedRoll(), WILL_SAVE, 0);
 		expect(roller.system.attributes.wounds.value).toBe(1);
@@ -324,8 +324,8 @@ function rerollRule(overrides: Partial<RerollRuleLike> = {}) {
 		label: '',
 		item: { name: 'Clear Head', uuid: 'Item.head' },
 		rerollsByItself: false,
-		rerollCost: FREE,
-		offersRerollOn: vi.fn(
+		rollUseCost: FREE,
+		offersUseOn: vi.fn(
 			(context: { side: string; roll: { kind: string; key?: string } }) =>
 				context.side === 'roller' && context.roll.kind === 'save' && context.roll.key === 'will',
 		),
@@ -438,13 +438,13 @@ describe('the rerolls of a posted check', () => {
 	});
 
 	it("stamps the ally entries of creatures on the roller's scene, and keeps one that is not an ally as left out", async () => {
-		const offersRerollOn = vi.fn(
+		const offersUseOn = vi.fn(
 			(context: { side: string; roll: { kind: string } }) =>
 				context.side === 'ally' && context.roll.kind === 'save',
 		);
 		const allyActor = (uuid: string) => ({
 			uuid,
-			rules: [{ ...rerollRule({ offersRerollOn }), usedBy: 'ally' }],
+			rules: [{ ...rerollRule({ offersUseOn }), usedBy: 'ally' }],
 		});
 		const grid = { isGridless: true, size: 100 };
 		const placed = (id: string, actor: unknown, disposition: number) => ({

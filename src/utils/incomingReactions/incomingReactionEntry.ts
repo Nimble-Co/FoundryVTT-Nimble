@@ -1,3 +1,5 @@
+import type { DieChange } from '#types/dieChange.d.ts';
+
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
  * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
@@ -12,6 +14,17 @@ export type RerollSide = (typeof REROLL_SIDES)[number];
 /** Which dice a reroll rolls again. */
 export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
+
+/** What a `reroll` entry does: roll again, or change a die (a Change a Die rule). */
+export const ROLL_USES = ['reroll', 'change'] as const;
+export type RollUse = (typeof ROLL_USES)[number];
+
+/** The dice a Change a Die rule can change. */
+export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
+
+/** How a Change a Die rule changes the die: set it to a face, or add a number. */
+export const DIE_CHANGE_MODES = ['set', 'add'] as const;
+export type DieChangeMode = (typeof DIE_CHANGE_MODES)[number];
 
 /** Which result stands after a reroll. */
 export const REROLL_KEEPS = ['new', 'rollerChooses', 'ownerChooses'] as const;
@@ -91,6 +104,10 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerAttack?: boolean;
+	/** reroll only: `change` for a Change a Die rule. Absent is `reroll`. */
+	use?: RollUse;
+	/** reroll only: the rule's note under the feature on the card. */
+	hint?: string;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
 	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
@@ -151,6 +168,10 @@ export interface RerollRecord {
 	grants?: RerollGrant[];
 	/** The rule rerolled by itself, with no click. */
 	automatic?: boolean;
+	/** `change` for a die a Change a Die rule changed. Absent is `reroll`. */
+	use?: RollUse;
+	/** A change only: how the die changed. `value` is 0 for a set value. */
+	change?: DieChange | null;
 }
 
 /**

@@ -5,6 +5,8 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { signed } from './primaryDieBonusText.ts';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
 
@@ -15,15 +17,43 @@
 		action: 'fa-bolt',
 		noAction: 'fa-ban',
 		tempHp: 'fa-shield-heart',
+		crit: 'fa-burst',
+		miss: 'fa-xmark',
 	};
 
-	let { legacyLines, lines, pendingKeep, pendingLine, held }: RerollHistoryProps = $props();
+	let {
+		legacyLines,
+		lines,
+		pendingKeep,
+		pendingLine,
+		held,
+		primaryDieBonuses = [],
+	}: RerollHistoryProps = $props();
 
 	const keepChoice = createRerollHistoryState(
 		getContext<NimbleChatMessage>('messageDocument'),
 		() => ({ pendingKeep, held }),
 	);
 </script>
+
+{#each primaryDieBonuses as bonus, index (index)}
+	{@const value = signed(bonus.value)}
+	{@const sentence = localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
+	<div
+		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
+		data-tooltip={sentence}
+	>
+		<i class="fa-solid {bonus.value > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}" aria-hidden="true"></i>
+		<p class="nimble-roll-changes__text">
+			<span aria-hidden="true">{bonus.label}</span>
+			<span class="nimble-roll-changes__spoken">{sentence}</span>
+		</p>
+		<span class="nimble-reroll-tag" aria-hidden="true">
+			<i class="fa-solid fa-dice-d6"></i>
+			<span>{localize('NIMBLE.chat.primaryDieBonus.tag', { value })}</span>
+		</span>
+	</div>
+{/each}
 
 {#each legacyLines as line (line.id)}
 	<div class="nimble-roll-changes__history">
@@ -38,7 +68,7 @@
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
 			data-tooltip={line.text}
 		>
-			<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+			<i class={REACTION_VERB_ICONS[line.change ? 'change' : 'reroll']} aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
 					<span aria-hidden="true">{line.title}</span>
@@ -51,7 +81,14 @@
 			{#if line.dice}
 				<span class="nimble-roll-changes__dice">
 					<DieFace {...line.dice.previous} discarded={!keptOld} />
-					<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+					{#if line.change}
+						<span class="nimble-roll-changes__change" aria-hidden="true">
+							<span class="nimble-roll-changes__change-label">{line.change.arrow}</span>
+							<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right"></i>
+						</span>
+					{:else}
+						<i class="nimble-roll-changes__arrow fa-solid fa-arrow-right" aria-hidden="true"></i>
+					{/if}
 					<DieFace {...line.dice.next} discarded={keptOld} />
 				</span>
 			{/if}
@@ -225,9 +262,30 @@
 			color: var(--nimble-medium-text-color);
 		}
 
+		&__change {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			line-height: 1;
+		}
+
+		&__change-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+		}
+
 		&__detail {
 			font-size: var(--nimble-xs-text);
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__history--bonus {
+			align-items: center;
+
+			> i {
+				margin-top: 0;
+			}
 		}
 
 		&__history--waiting {

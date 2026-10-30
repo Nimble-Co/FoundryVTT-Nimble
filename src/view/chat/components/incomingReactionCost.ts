@@ -6,7 +6,7 @@ import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[] {
-	const cost = findRerollRule(entry)?.rerollCost;
+	const cost = findRerollRule(entry)?.rollUseCost;
 	if (!cost || !rerollCostCharges(cost)) return [];
 	if (!isResourceSpendingAutomationEnabled()) {
 		return cost.heroicReaction
@@ -30,6 +30,9 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 				? 'NIMBLE.chat.incomingReactions.costWound'
 				: 'NIMBLE.chat.incomingReactions.costWounds';
 		parts.push(localize(key, { count: String(cost.woundCost) }));
+	}
+	if ((cost.actionCost ?? 0) > 0) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.costAction'));
 	}
 	if (cost.heroicReaction) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costHeroicReaction'));

@@ -129,7 +129,7 @@ Tags are populated during `_populateDerivedTags()` in actor data prep, before ru
 Not every tag exists at every lifecycle phase. Three populating points, in order:
 
 1. **`prepareBaseData()` → `_populateBaseTags()`** — emits `size:*` and `disposition:*`. Available everywhere downstream.
-2. **`prepareDerivedData()` start → `_populateDerivedTags()`** — emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `enemiesAdjacent:*`, `spacesMovedThisTurn:*` (combatants in a started combat with Movement Tracking on), character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:*`, and pool state (`self:*ChargePool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there, folding in their `maxHpBonus` rules — see [Rules read outside the hook sweep](#rules-read-outside-the-hook-sweep)) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire — so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
+2. **`prepareDerivedData()` start → `_populateDerivedTags()`**: emits the bulk of the vocabulary: `self:bloodied | dying | lastStand | concentrating`, `self:fullHp`, `target:bloodied | concentrating`, `self:<condition>` / `target:<condition>` for every other condition, `enemiesAdjacent:*`, `spacesMovedThisTurn:*` (combatants in a started combat with Movement Tracking on), character `class:* / ancestry:* / background:* / level:* / armor:* / self:shield | noShield / proficiency:* / feature:*`, and pool state (`self:*ChargePool:*`, `self:pool:*` and the dice equivalents, see [Charge pool state tags](#charge-pool-state-tags)). The base actor runs `_prepareEarlyDerivedData()` first (characters compute `hp.max` there, folding in their `maxHpBonus` rules, see [Rules read outside the hook sweep](#rules-read-outside-the-hook-sweep)) so HP-derived tags are fresh, then populates tags *just before* `prePrepareData` hooks fire, so these tags are visible in **both** `prePrepareData` and `afterPrepareData`.
 3. **Late in `prepareDerivedData()`** (after ability mods are finalized) — emits the character `<ability>:<mod>` tags. Ability mods can't exist earlier: `abilityBonus` rules contribute to them *during* `prePrepareData`, so these tags are visible **only in `afterPrepareData` and later hooks**.
 
 A rule whose effect runs in `prePrepareData` therefore cannot gate on an `<ability>:<mod>` tag — the predicate would never match. This is enforced by guardrails rather than left silent: the Rules Builder's predicate editor shows a warning banner (instead of the match preview) when an early-phase rule references a key in `CONFIG.NIMBLE.LATE_PREDICATE_KEYS`, and rule construction emits a once-per-rule `console.warn` for the same condition. Whether a rule class is early-phase is introspected automatically via `NimbleBaseRule.appliesInPrePrepareData` (true when the class implements a `prePrepareData` method) — never add a no-op `prePrepareData` for documentation purposes, as it would falsely mark the rule early. A rule read outside the hook sweep overrides the getter instead (see below).
@@ -162,6 +162,8 @@ Two consequences for a rule in this position:
 | `self:concentrating` | `actor.statuses` | Concentration status active |
 | `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
 | `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
+| `self:<condition>` / `target:<condition>` | `actor.statuses` through `conditionTags()` (`src/documents/actor/base.svelte.ts`) | Each status that is a key of `CONFIG.NIMBLE.conditions`, plus the conditions `conditionAliasedConditions` lists for it. Bloodied and Concentration are left out: they keep the tags above |
+| `self:pool:<id>` | Charge and dice pool flags | The pool has at least 1 charge or die |
 
 #### Character-only tags
 
@@ -180,6 +182,7 @@ Two consequences for a rule in this position:
 | `self:<id>ChargePool:<n>` | Charge pool flags | Per charge pool; `<n>` is the current count |
 | `self:no<Id>Charges` | Charge pool flags | Charge pool is empty |
 | `self:<id>ChargesMax` | Charge pool flags | Charge pool is at its max |
+| `feature:<identifier>` | Feature items | Per feature item; `item.identifier` falls back to the strict slug of the name |
 | `<ability>:<mod>` | Ability scores | After ability mods computed (visible in `afterPrepareData` only) |
 
 #### Actor type tags
@@ -218,8 +221,27 @@ The `damageBonus` rule has an optional `targetCondition` field — a predicate e
 When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
 
 ::: tip
-`targetCondition` is only available on `damageBonus`. Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+`targetCondition` is only available on `damageBonus`. The rule types that use a roll (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
+
+### The other creature: `ruleOtherCreatureMatches`
+
+`ruleOtherCreatureMatches(rule, raw, other)` (`src/models/rules/_otherCreatureMatches.ts`) is the one test for every "only when the other creature is" field. The rule's actor is the owner, and its item gives the item tags. It is used by `RollUseRule#offersUseOn` (`otherCreature`), `RollUseRule#cardHintFor` (`cardHintWhen`) and `PrimaryDieBonusRule#bonusFor` (`otherCreature`).
+
+- An empty predicate passes. A set predicate fails when `other` is null or absent, for example an attack with no target.
+- The domain is `buildTargetDomain(owner, other)`: the other creature's `target:*` tags (`getTargetDomain()`) plus the marks the owner put on it (`target:<flagKey>`).
+- The owner's domain and the item's domain are added without their `target:*` tags, so the owner's own target tags can not leak in. This is what lets one predicate mix the two sides, for example `{ "$or": ["target:distracted", "feature:supreme-execution"] }`.
+
+Who the other creature is depends on the side (`otherCreature()` in `src/utils/reroll/rerollEntries.ts`): the first target for `roller` and `ally`, and the attacker for `target`. So a `target`-side rule still tests `target:` tags, here of the one who rolled. `primaryDieBonus` passes the first target of the attack.
+
+## Ending marks (`markTarget`)
+
+A mark is an entry in the marking actor's toggled effects flag (`src/utils/actor/toggledEffects.ts`), with an optional marker ActiveEffect on the marked creature that carries `MARK_TARGET_ITEM_FLAG`. `src/utils/actor/markLifecycle.ts` ends marks in two ways:
+
+- **`endEncounterMarks(owner)`.** `encounterEndTrigger.ts` calls it on the active GM for each character combatant when the encounter ends. For each enabled `markTarget` rule with `endsAtEncounterEnd`, it clears the rule's flag list in one `setFlag`, then removes the marker effects of the rule's item from each marked creature (`removeMarkEffect`).
+- **`endMarkOfRemovedMarker(effect)`.** `registerMarkLifecycleHooks()` (called from `src/nimble.ts`) listens on `deleteActiveEffect`, on the active GM only. When the deleted effect has `MARK_TARGET_ITEM_FLAG`, it finds the marking item and its actor, and takes the marked creature's `actorUuid` out of the flag list of each `markTarget` rule on that item. A mark that is already gone changes nothing.
+
+Only a GM or the owner of the marked creature can delete the marker effect. The token HUD status toggle uses the static status `_id`, so it does not delete the marker effects and does not end the mark.
 
 ## `toggleEffect` (player-controlled tag pushes)
 
@@ -505,6 +527,7 @@ The `onInitiativeRolled` trigger runs once per actor per combat: `initiativeTrig
 | `self:<id>ChargePool:<n>` | Always; `<n>` is the current count |
 | `self:no<Id>Charges` | Current count is zero (`<Id>` is the identifier with its first character upper-cased, so a hyphenated identifier keeps its hyphens) |
 | `self:<id>ChargesMax` | Current count equals the pool max (max above zero) |
+| `self:pool:<id>` | Current count is 1 or more. The dice pool tags emit the same tag for a pool with 1 or more dice |
 
 State is read straight out of flag storage, so actor-scoped and item-scoped pools are both covered; the `actor:` prefix on an actor-scoped storage key is stripped from the tag name. A predicate tests the count with a binary op on the full tag key, e.g. `{ "self:<id>ChargePool": { "min": 1 } }` for "the pool still holds a charge".
 
@@ -627,7 +650,7 @@ These rules are not consulted during data preparation. The attacker's activation
 
 Interactive offers are stamped onto the attack card at creation (`incomingReactions` in `src/models/chat/common.ts`) and rendered as buttons visible to the acting actor's owner and the GM. Clicks route through a GM proxy socket (`src/utils/incomingReactions/incomingAttackReactions.ts`, same pattern as `combatTurnActions.ts`); the primary active GM's client mutates the message. That routing is not optional for any kind: a chat message is updatable only by its author or a GM, and a single writer is what stops two concurrent reactions from clobbering the `incomingReactions` array.
 
-`redirectToSelf` is a defender-side reaction to the attack, sourced from the protector's `modifyIncomingAttack` rules. `reroll` comes from a `reroll` rule of the attacker, the first target, or an ally of the attacker (see [Ally rerolls, one die, and a choice of result](#ally-rerolls-one-die-and-a-choice-of-result)). `spendPoolForDamage` is attacker-side: it comes from the attacker's own `diceConsumer` rules (see [Card-side pool spends](#card-side-pool-spends)). A forced miss makes the defender's offers moot, so none are stamped alongside it; attacker-side offers are filtered against the resolved outcome, so an outcome-gated one drops out on a miss regardless.
+`redirectToSelf` is a defender-side reaction to the attack, sourced from the protector's `modifyIncomingAttack` rules. `reroll` comes from a `reroll` or `changeDie` rule of the attacker, the first target, or an ally of the attacker (see [Ally rerolls, one die, and a choice of result](#ally-rerolls-one-die-and-a-choice-of-result)). `spendPoolForDamage` is attacker-side: it comes from the attacker's own `diceConsumer` rules (see [Card-side pool spends](#card-side-pool-spends)). A forced miss makes the defender's offers moot, so none are stamped alongside it; attacker-side offers are filtered against the resolved outcome, so an outcome-gated one drops out on a miss regardless.
 
 Interpose offers come from two sources. Every living allied character within 2 spaces of the target gets the baseline heroic Interpose offer without needing any rule; using it spends the standard combined reaction through the combat tracker (with the usual already-spent confirmation). A `redirectToSelf` rule adds feature-granted offers that can bend the baseline rules (longer range, non-character protectors such as a Beastmaster companion); those do not auto-spend a reaction, since the granting feature governs the cost. When the same token qualifies both ways, the rule-granted offer wins.
 
@@ -640,6 +663,41 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 **One die.** A rule with `die: 'primaryDie'` or `'pickedDie'` goes through `rerollableFor` (`src/utils/reroll/rerollDieChoice.ts`), which swaps the target's `makeRoll` for `rerollOneDie` (`src/dice/oneDieReroll.ts`). That copies the evaluated roll, gives the die a new result, keeps the highest or lowest again, drops the dice the old result made explode, rolls new explosion dice at a new max (in the term's own style, standard or vicious), and calls `DamageRoll#refreshOutcome` for the total, crit and miss. The roll changes of the rule are ignored for one die. The GM checks a picked die against `pickableDice` before it rolls. A damage roll is rebuilt without its folded spends (`removeFlavoredBonusesFromRoll`), because the place step folds them in again. Dice So Nice throws only `diceToThrow`, the dice the reroll drew.
 
 **A choice of result.** A rule with `keep: 'rollerChooses'` or `'ownerChooses'` pays, rolls and throws, then writes `system.pendingKeep` (the new roll, its history record, both totals and outcomes, the chooser's actor) and stamps the entry used; `rolls` keep the old roll. A Keep click is the `rerollKeep` socket request; `resolveKeepChoice` runs on the primary GM, checks the user is a GM or owns the chooser, and either runs the normal place step with the kept roll (`thrown: true`, so no second throw) or writes only the history. Every place step writes `pendingKeep: null`. While it is set, `canStillUseReroll`, `canApplyDamage`, `canApplyAllDamage` and both apply methods refuse.
+
+### The shared roll-use part: `RollUseRule`
+
+`reroll` and `changeDie` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
+
+- `roll`: `rolls`, `saves`, `skills`, `abilities`, `usedBy`, `reach`.
+- `when`: `otherCreature`, `outcome`, `attackDelivery` (attacks only, through `showWhen`).
+- `cost`: `chargePoolIdentifier`, `chargeCost`, `manaCost`, `woundCost`, `heroicReaction`, `actionCost`, `oncePerAttack`.
+- `note`: `cardHint`, `cardHintWhen`.
+
+The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the rule does (`rolls.label`, `chargePoolIdentifier.hint`, `chargeCost.hint` and the `oncePerAttack` field), which go under `NIMBLE.rules.<namespace>.*`. `rollFormGroup()`, `useFormGroups(between)` and `noteFormGroup()` give the form groups, and `rollUseTooltipTypes()` the tooltip types.
+
+`offersUseOn({ side, roll, other })` is the one gate: an embedded item, the predicate, the roll kind, the side, `ruleOtherCreatureMatches`, then the attack delivery or the check keys (a check has no target side), then `canPayRerollCost`. `cardHintFor()` gives the note when `cardHintWhen` passes. Like the Reroll rule, the class is read when a card is posted and again when the rule is used, never during data preparation.
+
+`rerollEntries.ts` treats both types as one (`isRollUseRule`): a `changeDie` rule stamps a `kind: 'reroll'` entry with `use: 'change'`, and a rule with a note stamps `hint`. The side, outcome, delivery, Reach and cost checks are the same. A target-side entry is for the first target, as for a reroll.
+
+**Action cost.** `actionCost` (0 or 1) is part of `RerollCost` (`src/utils/reroll/rerollCost.ts`). Only a character combatant in the started combat pays it (`actionPayer`). On its own turn, `canSpendActions` needs the actions, and the pay step lowers the current actions. Off its turn, it lowers the pending actions, so the next turn starts with fewer. Both go through `requestCombatantActionDelta`, and the refund adds the same delta back. It is not a heroic reaction and has no per-round limit. Like charges, mana and Wounds, it is not checked or spent with resource spending automation off.
+
+### Change a Die: one die to a fixed face
+
+A `changeDie` entry goes through `CardRerolls#changeToPick` on the client (the dice from `diceForRule`, which drops the dice's `bonus` for a set that does not add it, and `setsValue` for a set rule) and then the same `incomingAttackReaction` socket request as a reroll (`requestIncomingAttackReaction`), with the picked die and, for a set rule, the `value` (`faceFrom` accepts a whole number above 0 only). On the primary GM, `#applyChange` builds the target with `changeableFor` (`src/utils/reroll/rerollDieChoice.ts`) and runs `rerollWithRule` with a `change`, so the step is the same as for a reroll: pay, change, record, place, and give the cost back on a throw. Modify Reroll rules do not apply to a change. The rule's `dieChange` is a `DieChange` (`types/dieChange.d.ts`): `{ mode, value }`, plus `addsBonus: true` for a set when the rule's `addsBonusOnSet` is on. `#applyChange` puts the picked value into it and keeps `addsBonus`. The record has `use: 'change'` and `change: { mode, value }` (`value` 0 for a set); `previous` and `next` are the faces of the die.
+
+`changeOneDie(roll, ref, change)` (`src/dice/oneDieReroll.ts`) copies the evaluated roll and changes one die of the copy:
+
+- **Clamp.** The new face is the set value, or the shown face plus the amount, kept between 1 and the die's faces.
+- **No keep rule run again.** `changeDieInTerm` (`src/dice/rerollDieInTerm.ts`) writes the face in place. A kept die stays kept and a dropped die stays dropped. A face that does not change does nothing.
+- **Explosion cut or added.** The dice the old face exploded into are cut (`cutExplosion`). A kept die at its new max explodes in the term's style, standard or vicious, through `explodeAtMax`, which `rerollDieInTerm` also uses. A dropped die at its max does not explode. The explosion dice are drawn with `rollOneDieFace`, so manual dice entry and dice modules work, and `thrown` holds only those dice (null when none).
+- **Primary Die bonus.** Only the kept base die of the Primary Die can hold the bonus; an explosion die never does. A set with no `addsBonus` is the final face: no bonus. A set with `addsBonus` gets the bonus, up to the max. An add moves the face as it is. `DamageRoll#primaryDieChanged(term, base, bonusOnFace)` takes out the damage past the max (`_removePrimaryDieExcess`), drops `primaryDieValue` when the face is different, and sets `primaryDieBaseResult` to the face before the bonus. With `bonusOnFace` false it sets the roll option `primaryDieBonusOff`, and `primaryDieBaseResult` is the face itself. While it is set, an add keeps it, the "Primary Die: 5 + 1 = 6" line (`getPrimaryDieBreakdown`) is not shown, and `primaryDieBonusOf` gives a `base` equal to the face, so a reroll of the die gets the bonus again. `primaryDieRerolled` and a set with `addsBonus` clear it, and a reroll of the whole roll drops it (`rerollOptions`).
+- **Outcome.** `refreshOutcome` works out the total, crit and miss again. The place step then does what a reroll does: stale offers dropped, new entries added, charge recovery, crit triggers and Movement Offers.
+
+A negative Primary Die bonus now stops at 1, in `DamageRoll` and in `rerollDieInTerm`, so a change by add and a reroll agree.
+
+### Primary Die Bonus
+
+`primaryDieBonus` (`src/models/rules/primaryDieBonus.ts`, group `bonuses`) is read when the attack roll is built, never during data preparation. `collectPrimaryDieBonuses(attacker, delivery, target)` (`src/managers/ItemActivationManager.ts`) asks each rule's `bonusFor({ delivery, other })`: an embedded item, the predicate, `matchesAttackDelivery` (an attack with no attack type matches only `any`), `ruleOtherCreatureMatches` against the first target, then the resolved `value`. `ItemActivationManager` adds the sum to the dialog's `primaryDieModifier`, so the rest is the normal "Add to Primary Die Result" path, and a reroll keeps it. An AoE attack, and a roll with no Primary Die, get none. The lines (`label`, `value`, `itemUuid`) are stored on the card in `system.primaryDieBonuses` (the shared `common.ts` field of the feature, object and spell cards) and drawn by `RerollHistory` at the roll.
 
 ### Legacy `forceReroll`
 

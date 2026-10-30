@@ -54,7 +54,7 @@ Whatever the type, every rule shares a few fields:
 
 - **Label**: your note to yourself. It names the rule in lists, and a few rule types display it to players as the source of the effect (an Armor Class rule's label shows up in the armor breakdown; a Charge Pool's label names the pool). Write something you will recognize later.
 - **Identifier**: a name other rules can refer to. For example, a Charge Consumer on one feature can spend from an actor-wide Charge Pool that another feature defined, by matching its identifier. It is only editable in the raw JSON view, and most rules can leave it empty.
-- **The Condition box**: found under **Advanced** as "Applies when". It controls *when* the rule applies; leave it empty and the rule always applies. The Reroll rule shows it in the form instead, as **Only while**. See [The Condition Box](predicates.md).
+- **The Condition box**: found under **Advanced** as "Applies when". It controls *when* the rule applies; leave it empty and the rule always applies. The Reroll, Change a Die and Primary Die Bonus rules show it in the form instead, as **Only while**. See [The Condition Box](predicates.md).
 - **Priority**: the application order. Lower numbers apply first. Leave it at the default (1) unless two rules interact and you need one to win. For example, an Armor Class rule set to "override" should have a higher priority number than the rules it is meant to replace.
 - **Disabled**: the on/off toggle described above.
 - **Suppress activation card**: found under **Advanced**. Controls whether using the item skips its descriptive chat card. **Automatic** (the default) lets the rule decide; most rules never suppress, but a manual dice spend does, because the spend flow posts its own card. Pick **Always** for a silent feature whose activation has nothing to say, or **Never** to keep the card even when the rule would normally suppress it. A card that carries rolls or effects is never skipped, whatever this is set to.
@@ -65,7 +65,7 @@ Some rules change a rule on another feature of the same character. They find tha
 
 - **Modify Pool** adds to a Charge Pool or a Dice Pool: a higher maximum, a bigger die, or **Additional refills**.
 - **Modify Toggle** changes when a Toggle Effect turns off or on.
-- **Modify Reroll** adds to a Reroll rule. Its **Changes to the new roll** (advantage or disadvantage, extra damage) count one time per attack or check. What creatures gain (actions for the one who rolled, temp HP for the one who rolled and their allies) comes with each use of the reroll. The Songweaver's Heroic Ballad, Unfailing Courage, Fire in my Bones and Inspiring Presence are examples on Songweaver's Inspiration.
+- **Modify Reroll** adds to a Reroll rule. Its **Changes to the new roll** (advantage or disadvantage, extra damage) count one time per attack or check. What creatures gain (actions for the one who rolled, temp HP for the one who rolled and their allies) comes with each use of the reroll. The Songweaver's Heroic Ballad, Unfailing Courage, Fire in my Bones and Inspiring Presence are examples on Songweaver's Inspiration. It does not add to a Change a Die rule.
 
 Some fields of these rules need a word:
 
@@ -73,6 +73,11 @@ Some fields of these rules need a word:
 - **Temporary uses** on a charge pool refill makes the uses it adds last for the encounter only. They are spent first and go away when the encounter ends.
 - **Reach** on a Reroll rule is how far the feature's token can be from the ally who rolled. On a Modify Reroll rule it is how far a creature can be from this character's token to gain temp HP.
 - **Which dice** and **Which result stands** on a Reroll rule decide whether the whole roll, the Primary Die or a die the player picks is rolled again, and who keeps the old or the new result.
+- **Which die does it change?** and **How does it change the die?** on a Change a Die rule decide whether the Primary Die or a die the player picks gets a new value, and whether the player sets the value or the rule adds a number. **Add the Primary Die bonus to the set value** shows for a set. Off (the default), the set value is the final face, so the max is a crit and 1 is a miss. On, a Primary Die bonus is added to the set value, up to the max.
+- **Only when the other creature is** on a Reroll or Change a Die rule tests the other creature of an attack: the target, or the one who rolled when the target uses the rule. It uses `target:` tags, such as `target:distracted`. **Only while** still tests the owner. See [Conditions about the target](predicates.md#conditions-about-the-target).
+- **Action cost** on a Reroll or Change a Die rule makes a use cost 1 action, for a hero in combat. On their own turn they spend it at once. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction.
+- **Note on the card** on a Reroll or Change a Die rule is a short note under the feature in the card's menu, such as a limit that the table checks. **Show the note only when** limits it to rolls where its tags match.
+- **Ends at the end of the encounter** on a Mark Target rule ends its marks when the encounter ends. A mark can also end at any time. The owner of the marking character clicks **Marked** beside the creature in the Targets list of the card that made the mark. A GM can also delete the marker effect (from **Status condition**) from the marked creature, or turn the condition off on the token HUD. That ends every mark the condition shows on that creature.
 
 ## Worked example: Belt of Giant Strength
 

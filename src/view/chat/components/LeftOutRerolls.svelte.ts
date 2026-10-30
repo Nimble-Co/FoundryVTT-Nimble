@@ -1,15 +1,11 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
+import { documentName } from './incomingReactionText.ts';
 import { leftOutRerollReason } from './leftOutRerollReason.ts';
 
 /** Lists the GM opened, by message id: a card renders again on every update. */
 const openLists = new Set<string>();
-
-function nameOf(uuid: string | null | undefined): string {
-	if (!uuid) return '';
-	return ((fromUuidSync(uuid) as { name?: string } | null)?.name ?? '').trim();
-}
 
 function dispositionOf(tokenUuid: string | null | undefined): number | null {
 	if (!tokenUuid) return null;
@@ -31,7 +27,10 @@ export function createLeftOutRerollsState(message: NimbleChatMessage | undefined
 	let adding = $state(false);
 
 	function names(entry: IncomingReactionEntry) {
-		return { feature: nameOf(entry.itemUuid) || entry.label, name: nameOf(entry.actorUuid) };
+		return {
+			feature: documentName(entry.itemUuid) || entry.label,
+			name: documentName(entry.actorUuid),
+		};
 	}
 
 	function onToggle(event: Event) {
@@ -42,7 +41,7 @@ export function createLeftOutRerollsState(message: NimbleChatMessage | undefined
 
 	function reason(entry: IncomingReactionEntry): string {
 		return leftOutRerollReason(entry, {
-			allyName: nameOf(entry.actorUuid),
+			allyName: documentName(entry.actorUuid),
 			allyDisposition: dispositionOf(entry.tokenUuid),
 			rollerDisposition: dispositionOf(rollerTokenUuid(message)),
 		});

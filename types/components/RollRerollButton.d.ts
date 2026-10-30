@@ -1,13 +1,8 @@
-/** One reroll the icon can make, with the same words as the card buttons. */
-export interface RollRerollChoice {
-	id: string;
-	label: string;
-	/** Empty when the reroll costs nothing the card knows about. */
-	cost: string;
-}
+import type { ChoiceMenuSection } from './ChoiceMenu.d.ts';
 
 export interface RollRerollButtonProps {
-	choices: RollRerollChoice[];
+	/** The rerolls and changes the icon can use, under the heading of each. */
+	sections: ChoiceMenuSection[];
 	disabled?: boolean;
 	onChoose: (id: string) => void;
 }

@@ -2,6 +2,7 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
+import type { MarkedActor } from '#types/marks.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -9,6 +10,7 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
+import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
@@ -108,6 +110,30 @@ function toSignedIntegerString(value: number): string {
 	const integerValue = Math.trunc(value);
 	if (integerValue >= 0) return `+${integerValue}`;
 	return `${integerValue}`;
+}
+
+// These conditions have tags of their own, with rules of their own.
+const OWN_TAGS = new Set<string>([STATUS_EFFECT_IDS.bloodied, STATUS_EFFECT_IDS.concentration]);
+
+/**
+ * The conditions a creature with these statuses has, for its `self:` and
+ * `target:` tags: each condition among the statuses, and the conditions an
+ * alias stands for.
+ */
+function conditionTags(statuses: ReadonlySet<string>): Set<string> {
+	const conditions = (CONFIG.NIMBLE?.conditions ?? {}) as Record<string, string>;
+	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
+		string,
+		readonly string[] | undefined
+	>;
+	const found = new Set<string>();
+	for (const status of statuses) {
+		if (!(status in conditions)) continue;
+		found.add(status);
+		for (const alias of aliases[status] ?? []) found.add(alias);
+	}
+	for (const own of OWN_TAGS) found.delete(own);
+	return found;
 }
 
 // @ts-expect-error TS2321: comparing the generic subclass `NimbleBaseActor<ActorType>` against
@@ -463,6 +489,10 @@ class NimbleBaseActor<
 			if (statuses.has(STATUS_EFFECT_IDS.concentration)) {
 				this.tags.add('self:concentrating');
 				this.tags.add('target:concentrating');
+			}
+			for (const condition of conditionTags(statuses)) {
+				this.tags.add(`self:${condition}`);
+				this.tags.add(`target:${condition}`);
 			}
 		}
 
@@ -1200,11 +1230,22 @@ class NimbleBaseActor<
 	 * Concentration is the one condition an actor can hold more than one of, and
 	 * core's toggle deletes every unlinked match in a single call. Turning it off
 	 * while two tracks are held asks which to end instead of ending both.
+	 *
+	 * Mark Target markers show their status but core looks only for the
+	 * status's own effect, so turning the status off takes the markers off too.
 	 */
 	override async toggleStatusEffect(
 		statusId: string,
 		options: Actor.ToggleStatusEffectOptions = {},
 	): Promise<ActiveEffect.Implementation | boolean | undefined> {
+		const markers = markerEffectIds(this as object as MarkedActor, statusId);
+		if (markers.length > 0) {
+			if (options.active === true) return true;
+			await this.deleteEmbeddedDocuments('ActiveEffect', markers);
+			await super.toggleStatusEffect(statusId, { ...options, active: false });
+			return false;
+		}
+
 		if (statusId !== STATUS_EFFECT_IDS.concentration) {
 			return super.toggleStatusEffect(statusId, options);
 		}

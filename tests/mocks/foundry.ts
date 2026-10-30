@@ -167,6 +167,10 @@ class SharedMockDie {
 		if (termData?.modifiers) this.modifiers = [...termData.modifiers];
 		if (termData?.options) this.options = termData.options;
 	}
+
+	randomFace(): number {
+		return Math.ceil(Math.random() * this.faces);
+	}
 }
 
 class SharedMockOperatorTerm {

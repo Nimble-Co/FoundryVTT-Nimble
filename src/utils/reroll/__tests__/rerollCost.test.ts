@@ -96,6 +96,38 @@ function makeCombat(actor: unknown, used = true) {
 	return combat;
 }
 
+/** A started combat with one character combatant and the turn on it or on someone else. */
+function makeActionCombat(actor: unknown, options: { ownTurn: boolean; actions?: number }) {
+	const combatant = {
+		id: 'combatant-1',
+		type: 'character',
+		actor,
+		system: { actions: { base: { current: options.actions ?? 3, max: 3 }, pendingDelta: 0 } },
+		update: vi.fn(async (changes: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(changes)) {
+				foundry.utils.setProperty(combatant, path, value);
+			}
+		}),
+	};
+	const other = { id: 'combatant-2', type: 'npc' };
+	const list = [combatant, other];
+	const combat = {
+		id: 'combat-1',
+		started: true,
+		round: 1,
+		combatant: options.ownTurn ? combatant : other,
+		combatants: {
+			find: (predicate: (c: unknown) => boolean) => list.find(predicate),
+			get: (id: string) => list.find((c) => c.id === id),
+		},
+		useHeroicReactions: vi.fn(async () => true),
+		updateEmbeddedDocuments: vi.fn(async () => undefined),
+	};
+	testGlobals.game.combat = combat;
+	testGlobals.game.user = { isGM: true };
+	return combatant;
+}
+
 describe('rerollCost', () => {
 	beforeEach(() => setToggles({}));
 	afterEach(() => {
@@ -180,7 +212,7 @@ describe('rerollCost', () => {
 				cost({ chargePoolIdentifier: 'sand', manaCost: 2, woundCost: 1 }),
 			);
 
-			expect(paid).toEqual({ charges: 1, mana: 2, wounds: 1, heroicReaction: null });
+			expect(paid).toEqual({ charges: 1, mana: 2, wounds: 1, heroicReaction: null, action: null });
 			expect(item.flags.nimble.chargePools.sand.current).toBe(1);
 			expect(actor.system.resources.mana.current).toBe(1);
 			expect(actor.system.attributes.wounds.value).toBe(2);
@@ -224,7 +256,7 @@ describe('rerollCost', () => {
 				cost({ chargePoolIdentifier: 'sand', woundCost: 1 }),
 			);
 
-			expect(paid).toEqual({ charges: 0, mana: 0, wounds: 0, heroicReaction: null });
+			expect(paid).toEqual({ charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null });
 			expect(item.update).not.toHaveBeenCalled();
 			expect(actor.update).not.toHaveBeenCalled();
 		});
@@ -275,6 +307,7 @@ describe('rerollCost', () => {
 				mana: 0,
 				wounds: 0,
 				heroicReaction: null,
+				action: null,
 			});
 		});
 	});
@@ -304,6 +337,66 @@ describe('rerollCost', () => {
 					'system.actions.heroic.defendAvailable': true,
 				},
 			]);
+		});
+	});
+
+	describe('action cost', () => {
+		const action = cost({ actionCost: 1 });
+
+		it("needs an action left on the owner's own turn", () => {
+			const { asActor } = makeActor();
+			makeActionCombat(asActor, { ownTurn: true, actions: 0 });
+			expect(canPayRerollCost(asActor, action)).toBe(false);
+			makeActionCombat(asActor, { ownTurn: true, actions: 1 });
+			expect(canPayRerollCost(asActor, action)).toBe(true);
+		});
+
+		it("can always be paid off the owner's turn, out of combat and with spending off", () => {
+			const { asActor } = makeActor();
+			makeActionCombat(asActor, { ownTurn: false, actions: 0 });
+			expect(canPayRerollCost(asActor, action)).toBe(true);
+			testGlobals.game.combat = null;
+			expect(canPayRerollCost(asActor, action)).toBe(true);
+			makeActionCombat(asActor, { ownTurn: true, actions: 0 });
+			setToggles({ 'automation.resourceSpending': false });
+			expect(canPayRerollCost(asActor, action)).toBe(true);
+		});
+
+		it('charges something only while resource spending automation is on', () => {
+			expect(rerollCostCharges(action)).toBe(true);
+			setToggles({ 'automation.resourceSpending': false });
+			expect(rerollCostCharges(action)).toBe(false);
+		});
+
+		it("spends an action now on the owner's own turn, and gives it back", async () => {
+			const { asActor } = makeActor();
+			const combatant = makeActionCombat(asActor, { ownTurn: true, actions: 2 });
+			const paid = await payRerollCost(asActor, action);
+			expect(combatant.system.actions.base.current).toBe(1);
+			expect(combatant.system.actions.pendingDelta).toBe(0);
+			if (!paid) throw new Error('expected the cost to be paid');
+			await refundRerollCost(asActor, action, paid);
+			expect(combatant.system.actions.base.current).toBe(2);
+		});
+
+		it("takes an action from the next turn off the owner's turn, and gives it back", async () => {
+			const { asActor } = makeActor();
+			const combatant = makeActionCombat(asActor, { ownTurn: false, actions: 3 });
+			const paid = await payRerollCost(asActor, action);
+			expect(combatant.system.actions.base.current).toBe(3);
+			expect(combatant.system.actions.pendingDelta).toBe(-1);
+			if (!paid) throw new Error('expected the cost to be paid');
+			await refundRerollCost(asActor, action, paid);
+			expect(combatant.system.actions.pendingDelta).toBe(0);
+		});
+
+		it('spends nothing out of combat or with spending off', async () => {
+			const { asActor } = makeActor();
+			expect(await payRerollCost(asActor, action)).toMatchObject({ action: null });
+			const combatant = makeActionCombat(asActor, { ownTurn: true, actions: 2 });
+			setToggles({ 'automation.resourceSpending': false });
+			await payRerollCost(asActor, action);
+			expect(combatant.update).not.toHaveBeenCalled();
 		});
 	});
 

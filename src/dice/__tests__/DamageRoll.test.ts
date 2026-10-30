@@ -170,46 +170,94 @@ describe('DamageRoll preprocessing', () => {
 				vi.restoreAllMocks();
 			});
 
-			it('should put the modifier excess after the primary die in a single die formula', () => {
-				mockDice(0.6);
-				const roll = presetRoll('1d6+1', { primaryDieModifier: 100 });
+			const faceBonus = (roll: DamageRoll) =>
+				(roll.primaryDie?.options as { faceBonus?: number } | undefined)?.faceBonus;
 
-				expect(roll.formula).toBe('1d6x + 98 + 1');
-			});
-
-			it('should keep the modifier excess after the primary die in a multi-die formula', () => {
-				mockDice(0.6);
-				const roll = presetRoll('2d6+1', { primaryDieModifier: 100 });
-
-				expect(roll.formula).toBe('1d6x + 98 + 1d6 + 1');
-			});
-
-			it('should add the modifier to the set primary die value', () => {
-				const roll = presetRoll('1d6+1', { primaryDieValue: 4, primaryDieModifier: 1 });
-
-				expect(roll.options.primaryDieBaseResult).toBe(4);
-				expect(roll.primaryDie?.results).toEqual([{ result: 5, active: true }]);
-			});
-
-			it('should record the primary die roll before the modifier', () => {
-				mockDice(0.4);
+			it('should give the bonus to the Primary Die, with no term for it', () => {
 				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
 
-				expect(roll.options.primaryDieBaseResult).toBe(3);
-				expect(roll.primaryDie?.results).toEqual([{ result: 5, active: true }]);
+				expect(roll.formula).toBe('1d6x + 1');
+				expect(faceBonus(roll)).toBe(2);
+				expect(roll.primaryDie?.results).toEqual([]);
 			});
 
-			it('should add the modifier to the die that stays with advantage', () => {
-				mockDice(0.8, 0.4);
+			it('should give the bonus to the Primary Die in a multi-die formula', () => {
+				const roll = presetRoll('2d6+1', { primaryDieModifier: 3 });
+
+				expect(roll.formula).toBe('1d6x + 1d6 + 1');
+				expect(faceBonus(roll)).toBe(3);
+			});
+
+			it('should give a negative bonus as it is', () => {
+				expect(faceBonus(presetRoll('1d6+1', { primaryDieModifier: -2 }))).toBe(-2);
+			});
+
+			it('should set a primary die value; the bonus goes on it when the roll is evaluated', () => {
+				const roll = presetRoll('1d6+1', { primaryDieValue: 4, primaryDieModifier: 1 });
+
+				expect(roll.primaryDie?.results).toEqual([{ result: 4, active: true }]);
+				expect(roll.formula).toBe('1d6x + 1');
+				expect(faceBonus(roll)).toBe(1);
+			});
+
+			it('should not record a base result before the roll', () => {
+				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
+
+				expect(roll.options.primaryDieBaseResult).toBeUndefined();
+			});
+
+			it('should leave advantage to the dice when only a bonus is set', () => {
 				const roll = presetRoll('1d6+1', { rollMode: 1, primaryDieModifier: 2 });
 
-				expect(roll.options.primaryDieBaseResult).toBe(5);
-				expect(roll.primaryDie?.results).toEqual([
-					{ result: 6, active: true, discarded: false },
-					{ result: 3, active: false, discarded: true },
-				]);
-				expect(keepResolved(roll)).toBe(true);
-				expect(roll.formula).toBe('2d6khnx + 1 + 1');
+				expect(roll.primaryDie?.results).toEqual([]);
+				expect(keepResolved(roll)).toBeUndefined();
+				expect(roll.formula).toBe('2d6khnx + 1');
+			});
+
+			describe('primaryDieChanged', () => {
+				function rolledWith(formula: string, base: number, newCard: boolean) {
+					const roll = presetRoll(formula, { primaryDieModifier: 2 });
+					roll.options.primaryDieBaseResult = base;
+					if (newCard && roll.primaryDie) {
+						(roll.primaryDie.options as { rolledFace?: number }).rolledFace = base;
+					}
+					return roll;
+				}
+
+				it('records the face before the bonus', () => {
+					const roll = rolledWith('1d6+1', 3, true);
+
+					roll.primaryDieChanged(roll.primaryDie, 5);
+
+					expect(roll.options.primaryDieBaseResult).toBe(5);
+					expect((roll.primaryDie?.options as { rolledFace?: number }).rolledFace).toBe(5);
+					expect(roll.formula).toBe('1d6x + 1');
+				});
+
+				it("takes out an old card's damage past the max, and adds none", () => {
+					const roll = rolledWith('1d6+1+1', 5, false);
+
+					roll.primaryDieChanged(roll.primaryDie, 3);
+
+					expect(roll.formula).toBe('1d6x + 1');
+					expect(roll.options.primaryDieBaseResult).toBe(3);
+				});
+
+				it("keeps the weapon's own number on a new card that looks the same", () => {
+					const roll = rolledWith('1d6+1+1', 5, true);
+
+					roll.primaryDieChanged(roll.primaryDie, 3);
+
+					expect(roll.formula).toBe('1d6x + 1 + 1');
+				});
+
+				it('drops a set value it no longer matches', () => {
+					const roll = presetRoll('1d6+1', { primaryDieValue: 3 });
+
+					roll.primaryDieChanged(roll.primaryDie, 5);
+
+					expect(roll.options.primaryDieValue).toBeUndefined();
+				});
 			});
 
 			it('should set the die that stays with disadvantage', () => {
@@ -230,16 +278,23 @@ describe('DamageRoll preprocessing', () => {
 				expect(keepResolved(roll)).toBeUndefined();
 			});
 
-			it('should keep the recorded roll through toJSON and fromData', () => {
-				mockDice(0.4);
+			it('should keep the recorded roll of an old card through fromData', () => {
 				const roll = presetRoll('1d6+1', { primaryDieModifier: 2 });
-
-				mockDice(0.8);
-				// The Roll mock leaves `options` out of toJSON; Foundry serializes it.
-				const json = { ...roll.toJSON(), options: { ...roll.options } };
+				const json = { ...roll.toJSON(), options: { ...roll.options, primaryDieBaseResult: 3 } };
 				const restored = DamageRoll.fromData(json as any);
 
 				expect(restored.options.primaryDieBaseResult).toBe(3);
+			});
+
+			it('should not roll a Primary Die while a roll is rebuilt', () => {
+				const roll = presetRoll('1d6+1', { primaryDieValue: 2 });
+				const json = { ...roll.toJSON(), options: { ...roll.options } };
+				const randomFace = vi.spyOn(foundry.dice.terms.Die.prototype, 'randomFace');
+
+				DamageRoll.fromData(json as any);
+				DamageRoll.fromRoll(roll);
+
+				expect(randomFace).not.toHaveBeenCalled();
 			});
 		});
 
@@ -464,35 +519,6 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			expect(roll.isMiss).toBe(false);
-		});
-
-		it('primaryDieModifier overflow caps the die at faces and adds the excess as a NumericTerm', () => {
-			// Force baseResult inside _applyPrimaryDiePresets to roll the max face.
-			// On a d6, Math.random() = 0.9999 → ceil(0.9999 * 6) = 6.
-			// With primaryDieModifier = 5, modifiedResult = 11, overflow excess = 5.
-			const randSpy = vi.spyOn(Math, 'random').mockReturnValue(0.9999);
-			try {
-				const roll = new DamageRoll(
-					'1d6',
-					{},
-					{
-						canCrit: true,
-						canMiss: true,
-						rollMode: 0,
-						primaryDieValue: 0,
-						primaryDieModifier: 5,
-					},
-				);
-				// Primary die was capped at its max face value.
-				expect(roll.primaryDie?.results[0].result).toBe(6);
-				// A NumericTerm carrying the overflow (11 - 6 = 5) was spliced in.
-				const numericTerms = roll.terms.filter(
-					(t) => t instanceof foundry.dice.terms.NumericTerm,
-				) as Array<{ number: number }>;
-				expect(numericTerms.some((t) => t.number === 5)).toBe(true);
-			} finally {
-				randSpy.mockRestore();
-			}
 		});
 	});
 });

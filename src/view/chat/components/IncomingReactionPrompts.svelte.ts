@@ -1,16 +1,18 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import type { ChoiceMenuSection } from '#types/components/ChoiceMenu.d.ts';
 import type {
 	IncomingReactionActorGroup,
 	IncomingReactionPicking,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
-import type { RollRerollChoice } from '#types/components/RollRerollButton.d.ts';
+import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
+	RollUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
@@ -51,6 +53,10 @@ export function createIncomingReactionPromptsState(
 		(message?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
 	);
 	const text = createIncomingReactionText(() => rerolls);
+	const cardPrimaryDieBonuses = $derived(
+		(message?.reactive?.system as { primaryDieBonuses?: PrimaryDieBonusLine[] })
+			?.primaryDieBonuses ?? [],
+	);
 
 	// Old cards can still hold the legacy `forceReroll` kind. Nothing resolves a
 	// waiting one, and a used one wrote no reroll record, so it keeps its old line.
@@ -101,6 +107,7 @@ export function createIncomingReactionPromptsState(
 			? storedEntries.filter((entry) => entry.kind === 'reroll' && !entry.used && !!entry.leftOut)
 			: [],
 	);
+	const primaryDieBonuses = $derived(getPlace() === 'roll' ? cardPrimaryDieBonuses : []);
 	const pendingKeep = $derived(
 		showsHistory
 			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
@@ -117,17 +124,22 @@ export function createIncomingReactionPromptsState(
 				})[0]
 			: null,
 	);
-	const rerollChoices = $derived<RollRerollChoice[]>(
-		getPlace() === 'rollButton'
-			? pendingGroups
-					.flatMap((group) => group.entries)
-					.map((entry) => ({
-						id: entry.id,
-						label: text.label(entry),
-						cost: text.cost(entry),
-					}))
-			: [],
-	);
+	// The roll row's icon menu: the rerolls, then the changes, each under its heading.
+	const rollMenu = $derived.by<ChoiceMenuSection[]>(() => {
+		if (getPlace() !== 'rollButton') return [];
+		const pending = pendingGroups.flatMap((group) => group.entries);
+		const section = (id: RollUse, heading: string) => ({
+			id,
+			heading: localize(heading),
+			items: pending
+				.filter((entry) => (entry.use ?? 'reroll') === id)
+				.map((entry) => ({ ...text.menuItem(entry), icon: text.icon(entry) })),
+		});
+		return [
+			section('reroll', 'NIMBLE.chat.incomingReactions.verbs.reroll'),
+			section('change', 'NIMBLE.chat.incomingReactions.rollMenu.change'),
+		].filter((menuSection) => menuSection.items.length > 0);
+	});
 	const primaryOutcome = $derived.by<DieOutcome>(() => {
 		const system = message?.reactive?.system as
 			| { isCritical?: boolean; isMiss?: boolean }
@@ -192,10 +204,29 @@ export function createIncomingReactionPromptsState(
 		await sendReroll(entry, dice?.[0] ?? null);
 	}
 
-	/** Ask for the reroll. False when the player said no to the heroic reaction. */
+	/** A change picks its die, then its value when the rule sets one; an add with one die goes at once. */
+	async function useChange(entry: IncomingReactionEntry): Promise<void> {
+		const pick = message?.changeToPick?.(entry) ?? null;
+		const dice = pick?.dice ?? [];
+		if (pick && (dice.length > 1 || (pick.setsValue && dice.length === 1))) {
+			picking = {
+				entry,
+				dice,
+				rolling: null,
+				sent: false,
+				setsValue: pick.setsValue,
+				valueDie: dice.length === 1 ? dice[0] : null,
+			};
+			return;
+		}
+		await sendReroll(entry, dice[0] ?? null);
+	}
+
+	/** Ask for the reroll or change. False when the player said no to the heroic reaction. */
 	async function sendReroll(
 		entry: IncomingReactionEntry,
 		die: PickableDie | null,
+		value: number | null = null,
 	): Promise<boolean> {
 		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
 		if (forceHeroicReaction === null) return false;
@@ -206,17 +237,18 @@ export function createIncomingReactionPromptsState(
 			entryId: entry.id,
 			forceHeroicReaction,
 			...(die ? { die: { term: die.term, result: die.result } } : {}),
+			...(value === null ? {} : { value }),
 		});
 		return true;
 	}
 
-	async function pickDie(die: PickableDie): Promise<void> {
+	async function sendPicked(die: PickableDie, value: number | null): Promise<void> {
 		const current = picking;
 		if (!current || current.rolling || busy) return;
 		busy = true;
 		try {
 			picking = { ...current, rolling: die };
-			const sent = await sendReroll(current.entry, die);
+			const sent = await sendReroll(current.entry, die, value);
 			picking = sent && picking ? { ...picking, sent: true } : null;
 		} catch (error) {
 			picking = null;
@@ -225,6 +257,20 @@ export function createIncomingReactionPromptsState(
 		} finally {
 			busy = false;
 		}
+	}
+
+	async function pickDie(die: PickableDie): Promise<void> {
+		const current = picking;
+		if (current?.setsValue && !current.rolling) {
+			picking = { ...current, valueDie: die };
+			return;
+		}
+		await sendPicked(die, null);
+	}
+
+	async function pickValue(value: number): Promise<void> {
+		const die = picking?.valueDie;
+		if (die) await sendPicked(die, value);
 	}
 
 	/** Closes the die picker. Returns the id of the entry it was open for. */
@@ -245,7 +291,7 @@ export function createIncomingReactionPromptsState(
 			}
 
 			if (entry.kind === 'reroll') {
-				await useReroll(entry);
+				await (entry.use === 'change' ? useChange(entry) : useReroll(entry));
 				return;
 			}
 
@@ -289,6 +335,9 @@ export function createIncomingReactionPromptsState(
 		get legacyRerollLines() {
 			return legacyRerollLines;
 		},
+		get primaryDieBonuses() {
+			return primaryDieBonuses;
+		},
 		get historyLines() {
 			return historyLines;
 		},
@@ -301,8 +350,8 @@ export function createIncomingReactionPromptsState(
 		get pendingLine() {
 			return pendingLine;
 		},
-		get rerollChoices() {
-			return rerollChoices;
+		get rollMenu() {
+			return rollMenu;
 		},
 		get primaryOutcome() {
 			return primaryOutcome;
@@ -310,6 +359,7 @@ export function createIncomingReactionPromptsState(
 		useEntry,
 		useEntryById,
 		pickDie,
+		pickValue,
 		cancelPick,
 	};
 }

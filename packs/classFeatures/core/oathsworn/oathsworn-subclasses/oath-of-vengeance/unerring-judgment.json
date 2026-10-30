@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "primaryDieBonus",
+				"disabled": false,
+				"id": "c9Vx64ablxbBlJzU",
+				"identifier": "",
+				"label": "Unerring Judgment",
+				"predicate": {
+					"$and": [
+						"self:pool:judgment"
+					]
+				},
+				"priority": 1,
+				"value": "1",
+				"attackDelivery": "melee",
+				"otherCreature": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

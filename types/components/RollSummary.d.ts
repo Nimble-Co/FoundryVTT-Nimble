@@ -1,13 +1,18 @@
 import type { Snippet } from 'svelte';
+import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 
 export interface RollSummaryOptions {
 	rollOptions?: {
 		primaryDieValue?: string | number;
 		primaryDieModifier?: string | number;
 		primaryDieBaseResult?: number;
+		/** The kept Primary Die face holds no primaryDieModifier. */
+		primaryDieBonusOff?: boolean;
 		[key: string]: unknown;
 	};
 	roll?: { terms?: { faces?: number }[] } | null;
+	/** The card's Primary Die Bonus lines, to name who added the Primary Die bonus. */
+	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
 	[key: string]: unknown;
 }
 

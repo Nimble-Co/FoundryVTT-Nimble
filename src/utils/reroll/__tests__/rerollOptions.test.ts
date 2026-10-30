@@ -10,6 +10,7 @@ describe('prepareReroll', () => {
 			primaryDieValue: 3,
 			primaryDieModifier: 2,
 			primaryDieBaseResult: 4,
+			primaryDieBonusOff: true,
 			canCrit: true,
 		});
 

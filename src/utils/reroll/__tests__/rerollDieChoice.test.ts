@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type OneDieRoll, rerollOneDie } from '../../../dice/oneDieReroll.js';
-import { diceToPick, rerollableFor } from '../rerollDieChoice.js';
+import { changeableFor, diceForRule, diceToPick, rerollableFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
 const kept = (result: number) => ({ result, active: true });
@@ -101,6 +101,42 @@ describe('diceToPick', () => {
 	});
 });
 
+describe('diceForRule', () => {
+	const SET = { mode: 'set', value: 0 } as const;
+
+	it('gives only the Primary Die to a rule that uses the Primary Die', () => {
+		expect(diceForRule(found(damageRoll()), 'primaryDie', SET)).toEqual([
+			{ term: 0, result: 1, faces: 8, value: 6, role: 'primary' },
+		]);
+	});
+
+	it('gives every die a player can pick to a rule that uses a picked die', () => {
+		expect(diceForRule(found(damageRoll()), 'pickedDie', SET).map((d) => d.value)).toEqual([6, 4]);
+	});
+
+	it('gives the kept d20 of a check as its Primary Die', () => {
+		expect(diceForRule(found(checkRoll(), { pickDropped: true }), 'primaryDie', SET)).toEqual([
+			{ term: 0, result: 0, faces: 20, value: 15, role: 'kept' },
+		]);
+	});
+
+	it('gives nothing for a roll it cannot rebuild', () => {
+		expect(diceForRule(found(null), 'primaryDie', SET)).toEqual([]);
+	});
+
+	describe('on a Primary Die with a bonus of +1', () => {
+		const withBonus = () => ({ ...damageRoll(), options: { primaryDieModifier: 1 } });
+
+		it('shows the bonus on the die only for a set that adds it', () => {
+			const bonusOf = (change: Parameters<typeof diceForRule>[2]) =>
+				diceForRule(found(withBonus()), 'primaryDie', change)[0]?.bonus;
+
+			expect(bonusOf({ ...SET, addsBonus: true })).toBe(1);
+			expect(bonusOf(SET)).toBeUndefined();
+		});
+	});
+});
+
 describe('rerollableFor with a roll mode change on the reroll', () => {
 	afterEach(() => vi.restoreAllMocks());
 
@@ -185,5 +221,62 @@ describe('rerollableFor with a roll mode change on the reroll', () => {
 			],
 		});
 		expect(one.readNewDie?.(roll)).toEqual({ faces: 6, value: 6, dropped: 1 });
+	});
+});
+
+describe('changeableFor', () => {
+	const made = {
+		roll: 'changed' as never,
+		faces: 8,
+		previous: 6,
+		next: 8,
+		thrown: null,
+	};
+
+	it('changes the kept Primary Die with the change, and reads the new face', async () => {
+		const changer = vi.fn(async () => made);
+		const current = damageRoll();
+		const one = changeableFor(
+			found(current),
+			'primaryDie',
+			null,
+			{ mode: 'set', value: 8 },
+			changer,
+		);
+		if (!one) throw new Error('expected a change');
+
+		expect(one.previousResult).toBe(6);
+		expect(await one.makeRoll('ignored', {})).toBe('changed');
+		expect(changer).toHaveBeenCalledWith(
+			current,
+			{ term: 0, result: 1 },
+			{ mode: 'set', value: 8 },
+		);
+		expect(one.readNewDie?.('changed')).toEqual({
+			faces: 8,
+			value: 8,
+			dropped: null,
+		});
+		expect(one.diceToThrow?.('changed')).toBeNull();
+	});
+
+	it('needs a picked die when the roll has more than one', () => {
+		const changer = vi.fn(async () => made);
+		expect(
+			changeableFor(found(damageRoll()), 'pickedDie', null, { mode: 'add', value: 1 }, changer),
+		).toBeNull();
+		expect(
+			changeableFor(
+				found(damageRoll()),
+				'pickedDie',
+				{ term: 2, result: 0 },
+				{ mode: 'add', value: 1 },
+				changer,
+			)?.previousResult,
+		).toBe(4);
+	});
+
+	it('needs the roll as it stands on the card', () => {
+		expect(changeableFor(found(null), 'primaryDie', null, { mode: 'set', value: 2 })).toBeNull();
 	});
 });

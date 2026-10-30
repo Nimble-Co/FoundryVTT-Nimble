@@ -51,16 +51,19 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'outcome',
 			'attackDelivery',
 			'predicate',
+			'otherCreature',
 			'chargePoolIdentifier',
 			'manaCost',
 			'woundCost',
 			'heroicReaction',
+			'actionCost',
 			'oncePerAttack',
 			'rollModeChange',
 			'primaryDieBonus',
 			'extraDamage',
 			'automatic',
 			'discardedCritTriggers',
+			'cardHint',
 		]);
 	});
 
@@ -75,8 +78,10 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'Which dice does it reroll?',
 			'When?',
 			'Only while',
+			'Only when the other creature is',
 			'Cost (optional)',
 			'Changes to the new roll (optional)',
+			'Note on the card',
 		]);
 	});
 
@@ -217,8 +222,10 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'manaCost',
 			'woundCost',
 			'heroicReaction',
+			'actionCost',
 			'rollModeChange',
 			'automatic',
+			'cardHint',
 		]);
 		const questions = [...container.querySelectorAll('.nimble-rule-form__question')].map((el) =>
 			el.textContent?.trim(),
@@ -265,16 +272,74 @@ describe('RuleCard with a form layout (reroll)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (changeDie)', () => {
+	it('asks which roll, who, which die and how, then when and the cost', () => {
+		const { container } = render(RuleCard, { rule: initialRule('changeDie'), manager });
+		expect(shownFields(container)).toEqual([
+			'rolls',
+			'usedBy',
+			'die',
+			'change',
+			'addsBonusOnSet',
+			'outcome',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+			'manaCost',
+			'woundCost',
+			'heroicReaction',
+			'actionCost',
+			'oncePerAttack',
+			'cardHint',
+		]);
+	});
+
+	it('asks when to show the note only once the rule has a note', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('changeDie', { cardHint: 'With a blade' }),
+			manager,
+		});
+		const fields = shownFields(container);
+		expect(fields.indexOf('cardHintWhen')).toBe(fields.indexOf('cardHint') + 1);
+	});
+
+	it('asks for the number to add only for an add', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('changeDie', { change: 'add' }),
+			manager,
+		});
+		const fields = shownFields(container);
+		expect(fields.indexOf('amount')).toBe(fields.indexOf('change') + 1);
+		expect(fields).not.toContain('addsBonusOnSet');
+	});
+});
+
+describe('RuleCard with a form layout (primaryDieBonus)', () => {
+	it('asks for the number, the attack type, then the optional conditions', () => {
+		const { container } = render(RuleCard, { rule: initialRule('primaryDieBonus'), manager });
+		expect(shownFields(container)).toEqual([
+			'value',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+		]);
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	it('covers every rule but reroll and modifyReroll', () => {
+	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie'];
+
+	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);
-		expect(types).not.toContain('reroll');
-		expect(types).not.toContain('modifyReroll');
-		expect(others.length).toBe(Object.keys(CONFIG.NIMBLE.ruleDataModels).length - 2);
+		for (const type of withLayout) expect(types).not.toContain(type);
+		expect(others.length).toBe(
+			Object.keys(CONFIG.NIMBLE.ruleDataModels).length - withLayout.length,
+		);
 	});
 
 	it.each(others)('%s keeps the flat field list and the condition in Advanced', (type) => {

@@ -36,6 +36,26 @@ describe('pickableDice', () => {
 		]);
 	});
 
+	it('gives the Primary Die the number added after it, and no other die', () => {
+		const primary = term(6, 1, [kept(4)]);
+		const pool = term(6, 1, [kept(2)]);
+		const options = { primaryDieModifier: 3 };
+
+		expect(pickableDice({ terms: [primary, op, pool], primaryDie: primary, options })).toEqual([
+			{ term: 0, result: 0, faces: 6, value: 4, role: 'primary', bonus: 3 },
+			{ term: 2, result: 0, faces: 6, value: 2, role: 'kept' },
+		]);
+	});
+
+	it('gives no bonus to a roll in modifier mode', () => {
+		const primary = term(6, 1, [kept(5)]);
+		const options = { primaryDieModifier: 3 };
+
+		expect(
+			pickableDice({ terms: [primary], primaryDie: primary, modifierMode: true, options })[0].bonus,
+		).toBeUndefined();
+	});
+
 	it('lists the dropped dice of the term it is told to', () => {
 		const d20 = term(20, 2, [kept(15), dropped(4)], ['khn']);
 

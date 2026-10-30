@@ -1,3 +1,4 @@
+import type { DieChange } from '#types/dieChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type AttackOutcomeView,
@@ -14,6 +15,12 @@ import type { RerollChanges } from './rerollOptions.js';
 import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
+const CHANGE_DIE_RULE_TYPE = 'changeDie';
+
+/** The rule types whose entries go on a card as `reroll` entries. */
+function isRollUseRule(type: string | undefined): boolean {
+	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE;
+}
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
 interface RerollRuleLike {
@@ -32,15 +39,27 @@ interface RerollRuleLike {
 	reach?: number;
 	die?: RerollDie;
 	keep?: RerollKeep;
-	rerollCost?: RerollCost;
-	offersRerollOn?: (context: { side: RerollSide; roll: RollToReroll }) => boolean;
+	rollUseCost?: RerollCost;
+	offersUseOn?: (context: {
+		side: RerollSide;
+		roll: RollToReroll;
+		other: RerollingActor | null;
+	}) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
+	/** A Change a Die rule: the change one use makes. */
+	dieChange?: DieChange;
+	cardHintFor?: (context: {
+		side: RerollSide;
+		roll: RollToReroll;
+		other: RerollingActor | null;
+	}) => string;
 }
 
 interface RerollingActor {
 	uuid?: string;
 	isOwner?: boolean;
 	rules?: RerollRuleLike[];
+	getTargetDomain?(): Set<string>;
 }
 
 interface RerollTarget {
@@ -113,7 +132,7 @@ function outcomeAllows(
  */
 function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
 	if (rule.rerollsByItself !== true || !isRuleAutomationEnabled()) return false;
-	if (!rule.rerollCost || !rerollCostCharges(rule.rerollCost)) return true;
+	if (!rule.rollUseCost || !rerollCostCharges(rule.rollUseCost)) return true;
 	return actor.isOwner === true;
 }
 
@@ -122,6 +141,15 @@ interface RerollUser {
 	tokenUuid: string | null;
 	targetTokenUuid: string | null;
 	ally?: RerollAlly;
+}
+
+/**
+ * The creature on the other side of the roll from `side`: the first target
+ * for the one who rolled and an ally, the one who rolled for the target.
+ */
+function otherCreature(side: RerollSide, context: RerollRollContext): RerollingActor | null {
+	if (side === 'target') return context.attacker ?? null;
+	return context.targets[0]?.actor ?? null;
 }
 
 /** Who can use a rule on each side of this roll. */
@@ -161,15 +189,17 @@ function collectRerollEntries(context: RerollRollContext): {
 	const isAttack = context.roll.kind === 'attack';
 
 	for (const side of ['roller', 'target', 'ally'] as const) {
+		const other = otherCreature(side, context);
 		for (const { actor, tokenUuid, targetTokenUuid, ally } of rerollUsers(side, context)) {
 			const actorUuid = actor?.uuid ?? '';
 			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
 			for (const rule of actor.rules) {
-				if (rule?.type !== REROLL_RULE_TYPE) continue;
-				if (rule.offersRerollOn?.({ side, roll: context.roll }) !== true) continue;
+				if (!isRollUseRule(rule?.type)) continue;
+				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
 				if (!outcomeAllows(trigger, outcome)) continue;
+				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
 				const entry: IncomingReactionEntry = {
 					id: foundry.utils.randomID(),
@@ -185,6 +215,8 @@ function collectRerollEntries(context: RerollRollContext): {
 					used: false,
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
+					...(rule.type === CHANGE_DIE_RULE_TYPE ? { use: 'change' as const } : {}),
+					...(hint ? { hint } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
 
@@ -270,7 +302,7 @@ function nextAutomaticReroll(
 	);
 }
 
-/** The live `reroll` rule an entry came from, or null when it is gone or off. */
+/** The live Reroll or Change a Die rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	if (!entry.itemUuid) return null;
 	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
@@ -279,7 +311,7 @@ function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	const rule = item?.rules
 		? [...item.rules.values()].find((candidate) => candidate.id === entry.ruleId)
 		: null;
-	if (!rule || rule.type !== REROLL_RULE_TYPE || rule.disabled) return null;
+	if (!rule || !isRollUseRule(rule.type) || rule.disabled) return null;
 	return rule;
 }
 
@@ -313,7 +345,10 @@ function usableRerollEntry(
 	if (isAttack && rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) {
 		return UNAVAILABLE;
 	}
-	if (rule.offersRerollOn?.({ side: entry.side, roll: context.roll }) !== true) return UNAVAILABLE;
+	const other = otherCreature(entry.side, context);
+	if (rule.offersUseOn?.({ side: entry.side, roll: context.roll, other }) !== true) {
+		return UNAVAILABLE;
+	}
 	const { outcome, forcedMiss } = attackOutcome(context);
 	if (outcome && !rerollTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
@@ -321,6 +356,7 @@ function usableRerollEntry(
 }
 
 export {
+	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
 	nextAutomaticReroll,

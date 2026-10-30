@@ -17,7 +17,7 @@ import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 export async function confirmRerollHeroicReaction(
 	entry: IncomingReactionEntry,
 ): Promise<boolean | null> {
-	const key = findRerollRule(entry)?.rerollCost?.heroicReaction;
+	const key = findRerollRule(entry)?.rollUseCost?.heroicReaction;
 	if (!key) return false;
 
 	const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor | null;

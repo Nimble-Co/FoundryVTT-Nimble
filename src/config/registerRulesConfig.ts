@@ -3,6 +3,7 @@ import { ActionCostRule } from '../models/rules/actionCost.js';
 import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
+import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
@@ -41,6 +42,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
+import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -60,6 +62,7 @@ export default function registerRulesConfig() {
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
+		changeDie: 'NIMBLE.ruleTypes.changeDie',
 		chargePool: 'NIMBLE.ruleTypes.chargePool',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		concentrationTrack: 'NIMBLE.ruleTypes.concentrationTrack',
@@ -97,6 +100,7 @@ export default function registerRulesConfig() {
 		optionSwap: 'NIMBLE.ruleTypes.optionSwap',
 		poolGainMessage: 'NIMBLE.ruleTypes.poolGainMessage',
 		poolMaxBonus: 'NIMBLE.ruleTypes.poolMaxBonus',
+		primaryDieBonus: 'NIMBLE.ruleTypes.primaryDieBonus',
 		reroll: 'NIMBLE.ruleTypes.reroll',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -116,6 +120,7 @@ export default function registerRulesConfig() {
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		chargeConsumer: ChargeConsumerRule,
+		changeDie: ChangeDieRule,
 		chargePool: ChargePoolRule,
 		combatMana: CombatManaRule,
 		concentrationTrack: ConcentrationTrackRule,
@@ -153,6 +158,7 @@ export default function registerRulesConfig() {
 		optionSwap: OptionSwapRule,
 		poolGainMessage: PoolGainMessageRule,
 		poolMaxBonus: PoolMaxBonusRule,
+		primaryDieBonus: PrimaryDieBonusRule,
 		reroll: RerollRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,

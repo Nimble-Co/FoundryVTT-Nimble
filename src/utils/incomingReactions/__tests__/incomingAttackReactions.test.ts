@@ -86,6 +86,7 @@ describe('requestIncomingAttackReaction', () => {
 			false,
 			false,
 			null,
+			null,
 		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
@@ -134,6 +135,7 @@ describe('requestIncomingAttackReaction', () => {
 			false,
 			true,
 			null,
+			null,
 		);
 	});
 
@@ -150,6 +152,18 @@ describe('requestIncomingAttackReaction', () => {
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			'system.nimble',
 			expect.objectContaining({ die: { term: 0, result: 1 } }),
+		);
+	});
+
+	it('sends the face a player set a die to to the GM', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+
+		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1', value: 8 });
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith(
+			'system.nimble',
+			expect.objectContaining({ value: 8 }),
 		);
 	});
 
@@ -267,6 +281,7 @@ describe('registerIncomingReactionSocketListener', () => {
 			true,
 			false,
 			null,
+			null,
 		);
 	});
 
@@ -290,6 +305,29 @@ describe('registerIncomingReactionSocketListener', () => {
 
 		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4]);
 		expect(dice).toEqual([{ term: 2, result: 0 }, null, null]);
+	});
+
+	it('gives the GM the face a player set a die to, and drops one that is not a face', async () => {
+		setUser({ id: 'gm-user', isGM: true });
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		const listener = await registerAndGetListener();
+		const request = (value: unknown) => ({
+			type: 'incomingAttackReaction',
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			userId: 'player-1',
+			value,
+		});
+
+		listener(request(7));
+		listener(request(0));
+		listener(request(2.5));
+		listener(request('7'));
+		await flushAsync();
+
+		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[5]);
+		expect(faces).toEqual([7, null, null, null]);
 	});
 
 	it('routes redirectToSelf entries to resolveRedirectReaction', async () => {

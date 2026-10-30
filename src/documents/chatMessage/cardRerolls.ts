@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_GIVEN_FLAG,
@@ -33,9 +34,15 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { diceToPick, rerollableFor } from '#utils/reroll/rerollDieChoice.js';
+import {
+	changeableFor,
+	diceForRule,
+	diceToPick,
+	rerollableFor,
+} from '#utils/reroll/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
+	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
 	nextAutomaticReroll,
 	offerStands,
@@ -193,14 +200,15 @@ export class CardRerolls {
 			rerolls.manual,
 		);
 		const messageId = this.#host.id();
+		const thrown = options.thrown ? null : this.#diceToThrow(target, newRoll);
 		const rolling =
-			messageId && !options.thrown && canShowDiceAnimation()
+			messageId && thrown && canShowDiceAnimation()
 				? { slot: target.slot, faces: history.reroll.faces ?? 6 }
 				: null;
 		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
 		try {
 			// The card shows the new result only after the dice land.
-			if (!options.thrown) await this.#throwRerollDice(target, newRoll);
+			if (thrown) await this.#throwDice(thrown);
 			await prepared.write({
 				incomingReactions: entries,
 				rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
@@ -219,8 +227,12 @@ export class CardRerolls {
 		);
 	}
 
-	async #throwRerollDice(target: RerollableRoll, newRoll: unknown): Promise<void> {
-		const thrown = target.diceToThrow?.(newRoll) ?? newRoll;
+	/** The dice the 3D dice throw for a new roll: all of it, some of it, or none (null). */
+	#diceToThrow(target: RerollableRoll, newRoll: unknown): unknown {
+		return target.diceToThrow ? target.diceToThrow(newRoll) : newRoll;
+	}
+
+	async #throwDice(thrown: unknown): Promise<void> {
 		await showDiceAnimation(thrown as foundry.dice.Roll.Any, this.#host.id() ?? undefined);
 	}
 
@@ -246,7 +258,8 @@ export class CardRerolls {
 				: null;
 		if (rolling && messageId) broadcastRerollRolling(messageId, rolling);
 		try {
-			await this.#throwRerollDice(target, done.roll);
+			const thrown = this.#diceToThrow(target, done.roll);
+			if (thrown) await this.#throwDice(thrown);
 			const pendingKeep: PendingKeep = {
 				entryId: entry.id,
 				chooserUuid,
@@ -542,6 +555,29 @@ export class CardRerolls {
 	}
 
 	/**
+	 * What a player picks for a `change` entry before it is sent: the die, and
+	 * a value when the rule sets one. Null for a reroll entry, or one the card
+	 * cannot use.
+	 */
+	changeToPick(entry: IncomingReactionEntry): { setsValue: boolean; dice: PickableDie[] } | null {
+		if (entry.use !== 'change') return null;
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		if (!usable.ok) return null;
+		const change: DieChange = usable.rule.dieChange ?? { mode: 'set', value: 0 };
+		return {
+			setsValue: change.mode === 'set',
+			dice: diceForRule(
+				found,
+				usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
+				change,
+			),
+		};
+	}
+
+	/**
 	 * Drop offers the card's new outcome no longer satisfies. Pending offers are
 	 * filtered against the outcome once, when the card is posted; a reroll
 	 * resolved afterwards can turn a crit into an ordinary hit and strand a
@@ -567,6 +603,7 @@ export class CardRerolls {
 		viaSocket = false,
 		forceHeroicReaction = false,
 		die: DieRef | null = null,
+		value: number | null = null,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
 		const target = this.#rerollTarget();
@@ -585,6 +622,7 @@ export class CardRerolls {
 					viaSocket,
 					forceHeroicReaction,
 					die,
+					value,
 				),
 			);
 		} finally {
@@ -599,6 +637,7 @@ export class CardRerolls {
 		viaSocket: boolean,
 		forceHeroicReaction: boolean,
 		die: DieRef | null,
+		value: number | null,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
@@ -629,6 +668,18 @@ export class CardRerolls {
 		}
 		const found = rollTarget.findRoll();
 		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		if (usable.rule.type === CHANGE_DIE_RULE_TYPE) {
+			return this.#applyChange(
+				rollTarget,
+				found,
+				entry,
+				usable,
+				die,
+				value,
+				forceHeroicReaction,
+				reject,
+			);
+		}
 		const target = rerollableFor(found, usable.rule.die, die);
 		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const chooserUuid = this.#keepChooser(usable.rule.keep, entry, rollTarget);
@@ -663,6 +714,66 @@ export class CardRerolls {
 		if (result.status === 'failed') {
 			console.error('Nimble | A reroll failed; its cost is given back.', result.error);
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Use a Change a Die rule's entry: pay its cost, then change the die and
+	 * put the changed roll on the card as a reroll is put there. A set value
+	 * needs the face the player picked. Modify Reroll rules do not apply to a
+	 * change. The cost is given back when the change cannot be made.
+	 */
+	async #applyChange(
+		rollTarget: RerollRollTarget,
+		found: RerollableRoll,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		die: DieRef | null,
+		value: number | null,
+		forceHeroicReaction: boolean,
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule } = usable;
+		const dieChange: DieChange = rule.dieChange ?? { mode: 'set', value: 0 };
+		if (dieChange.mode === 'set' && !value) {
+			return void reject('NIMBLE.chat.incomingReactions.changePickAValue');
+		}
+		const change: DieChange =
+			dieChange.mode === 'set' ? { ...dieChange, value: value ?? 0 } : dieChange;
+		const target = changeableFor(
+			found,
+			rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
+			die,
+			change,
+		);
+		if (!target) return void reject('NIMBLE.chat.incomingReactions.changePickADie');
+
+		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
+		const result = await rerollWithRule({
+			rule,
+			entry,
+			rollKind: rollTarget.context().roll.kind,
+			change: dieChange,
+			payer: usable.actor,
+			replaced: target.replaced,
+			previousResult: target.previousResult,
+			makeRoll: (formula, options) => target.makeRoll(formula, options),
+			readNewDie: target.readNewDie?.bind(target),
+			earlierCritTriggers: systemData.discardedCritTriggers === true,
+			payOptions: { forceHeroicReaction },
+			place: (done) =>
+				this.#placeReroll(entry, target, done.roll, {
+					reroll: done.reroll,
+					discardedCritTriggers: done.discardedCritTriggers,
+					list: 'new',
+				}),
+		});
+		if (result.status === 'unpaid') {
+			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		}
+		if (result.status === 'failed') {
+			console.error('Nimble | A die change failed; its cost is given back.', result.error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}
 }

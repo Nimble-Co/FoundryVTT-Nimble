@@ -329,6 +329,52 @@ describe('_populateDerivedTags — self / target state tags', () => {
 		});
 	});
 
+	describe('condition tags', () => {
+		it('adds self: and target: tags for every condition on the creature', () => {
+			const tags = runPopulate(makeStub({ statuses: ['distracted', 'prone'] }));
+			expect(tags.has('self:distracted')).toBe(true);
+			expect(tags.has('target:distracted')).toBe(true);
+			expect(tags.has('self:prone')).toBe(true);
+			expect(tags.has('target:prone')).toBe(true);
+		});
+
+		it('adds the tags of the condition an alias stands for', () => {
+			const tags = runPopulate(makeStub({ statuses: ['stunned'] }));
+			expect(tags.has('target:stunned')).toBe(true);
+			expect(tags.has('target:incapacitated')).toBe(true);
+			expect(tags.has('self:incapacitated')).toBe(true);
+		});
+
+		it('adds tags for a condition the GM added', () => {
+			const conditions = CONFIG.NIMBLE.conditions as Record<string, string>;
+			conditions.soaked = 'Soaked';
+			try {
+				const tags = runPopulate(makeStub({ statuses: ['soaked'] }));
+				expect(tags.has('target:soaked')).toBe(true);
+			} finally {
+				delete conditions.soaked;
+			}
+		});
+
+		it('adds no tags for a status that is not a condition', () => {
+			const tags = runPopulate(makeStub({ statuses: ['someModuleStatus'] }));
+			expect(tags.has('self:someModuleStatus')).toBe(false);
+			expect(tags.has('target:someModuleStatus')).toBe(false);
+		});
+
+		it('keeps bloodied off a dying creature', () => {
+			const tags = runPopulate(makeStub({ statuses: ['dying', 'bloodied'], hp: 0 }));
+			expect(tags.has('target:bloodied')).toBe(false);
+			expect(tags.has('target:dying')).toBe(true);
+		});
+
+		it('keeps the concentrating tags and adds no concentration tags', () => {
+			const tags = runPopulate(makeStub({ statuses: ['concentration'] }));
+			expect(tags.has('target:concentrating')).toBe(true);
+			expect(tags.has('target:concentration')).toBe(false);
+		});
+	});
+
 	describe('character subclass tags', () => {
 		interface ItemStub {
 			isType(type: string): boolean;
@@ -361,6 +407,15 @@ describe('_populateDerivedTags — self / target state tags', () => {
 			]);
 			expect(tags.has('subclass:path-of-the-mountainheart')).toBe(true);
 			expect(tags.has('subclass:circle-of-sky-and-storm')).toBe(true);
+		});
+
+		it('adds feature:<identifier> for each feature item', () => {
+			const tags = runCharacterPopulate([
+				makeItemStub('feature', 'supreme-execution'),
+				makeItemStub('subclass', 'tools-of-the-trade'),
+			]);
+			expect(tags.has('feature:supreme-execution')).toBe(true);
+			expect(tags.has('feature:tools-of-the-trade')).toBe(false);
 		});
 
 		it('does not add subclass tags for items of other types', () => {

@@ -53,8 +53,8 @@ function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide }
 		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always' as RerollTrigger,
 		rerollsByItself: false,
-		rerollCost: FREE,
-		offersRerollOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
+		rollUseCost: FREE,
+		offersUseOn: vi.fn((context: { side: RerollSide }) => context.side === usedBy),
 		...rest,
 	} satisfies RerollRuleLike;
 }
@@ -102,7 +102,42 @@ describe('collectRerollEntries', () => {
 				outcomeTrigger: 'miss',
 			}),
 		]);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: MELEE });
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
+	});
+
+	it('stamps a Change a Die rule as a change, next to the rerolls', () => {
+		const change = rerollRule({ id: 'change', type: 'changeDie', usedBy: 'roller' });
+		const again = rerollRule({ id: 'again', usedBy: 'roller' });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [change, again]) }),
+		);
+		expect(manual.map((entry) => [entry.ruleId, entry.kind, entry.use])).toEqual([
+			['change', 'reroll', 'change'],
+			['again', 'reroll', undefined],
+		]);
+	});
+
+	it("stamps the rule's note for this roll on its entry, and none when it has none", () => {
+		const noted = rerollRule({
+			id: 'noted',
+			usedBy: 'roller',
+			cardHintFor: vi.fn(() => 'Your 2nd miss this round'),
+		});
+		const plain = rerollRule({ id: 'plain', usedBy: 'roller', cardHintFor: vi.fn(() => '') });
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.hero', [noted, plain]) }),
+		);
+
+		expect(manual.map((entry) => entry.hint)).toEqual(['Your 2nd miss this round', undefined]);
+		expect(noted.cardHintFor).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
 	});
 
 	it('stamps the once-per-attack flag of the rule on its entry', () => {
@@ -124,7 +159,11 @@ describe('collectRerollEntries', () => {
 			targetTokenUuid: TOKEN,
 			actorUuid: 'Actor.t',
 		});
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
+			side: 'target',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
+		});
 	});
 
 	type Case = [string, Partial<RerollRollContext>, RerollTrigger, string[]];
@@ -206,7 +245,11 @@ describe('collectRerollEntries', () => {
 		collectRerollEntries(
 			context({ attacker: actor('Actor.hero', [rule]), targets: [], roll: WILL_SAVE }),
 		);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
+			side: 'roller',
+			roll: WILL_SAVE,
+			other: null,
+		});
 	});
 
 	it('ignores the outcome and once per attack of a rule on a check', () => {
@@ -231,7 +274,7 @@ describe('collectRerollEntries', () => {
 		const { manual } = collectRerollEntries(
 			context({
 				attacker: actor('Actor.hero', [
-					rerollRule({ usedBy: 'roller', offersRerollOn: () => false }),
+					rerollRule({ usedBy: 'roller', offersUseOn: () => false }),
 					{ type: 'modifyIncomingAttack' },
 				]),
 			}),
@@ -282,7 +325,7 @@ describe('collectRerollEntries', () => {
 	it('shows an automatic rule with a cost as a button for a client that cannot pay it', () => {
 		const rule = rerollRule({
 			rerollsByItself: true,
-			rerollCost: { ...FREE, chargePoolIdentifier: 'sand' },
+			rollUseCost: { ...FREE, chargePoolIdentifier: 'sand' },
 		});
 		const notOwner = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		const owner = collectRerollEntries(targetOnly(rule, { isOwner: true }));
@@ -293,7 +336,7 @@ describe('collectRerollEntries', () => {
 
 	it('lets any client roll an automatic rule whose cost charges nothing', () => {
 		setToggles({ 'automation.resourceSpending': false });
-		const rule = rerollRule({ rerollsByItself: true, rerollCost: { ...FREE, woundCost: 1 } });
+		const rule = rerollRule({ rerollsByItself: true, rollUseCost: { ...FREE, woundCost: 1 } });
 		const { automatic } = collectRerollEntries(targetOnly(rule, { isOwner: false }));
 		expect(automatic).toHaveLength(1);
 	});
@@ -375,7 +418,11 @@ describe('collectRerollEntries for an ally', () => {
 		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: MISS }).manual).toHaveLength(1);
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'ally', roll: MELEE });
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
+			side: 'ally',
+			roll: MELEE,
+			other: expect.objectContaining({ uuid: 'Actor.target' }),
+		});
 	});
 });
 
@@ -582,7 +629,11 @@ describe('usableRerollEntry', () => {
 
 	it('gives the live rule and actor for an entry that can be used', () => {
 		expect(usableRerollEntry(entry(), card(), [])).toEqual({ ok: true, rule, actor: target });
-		expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'target', roll: MELEE });
+		expect(rule.offersUseOn).toHaveBeenCalledWith({
+			side: 'target',
+			roll: MELEE,
+			other: attacker,
+		});
 	});
 
 	it('lets the attacker use a roller entry', () => {
@@ -626,7 +677,7 @@ describe('usableRerollEntry', () => {
 		[
 			'an entry the rule no longer offers, such as an empty pool',
 			() => {
-				vi.mocked(rule.offersRerollOn).mockReturnValue(false);
+				vi.mocked(rule.offersUseOn).mockReturnValue(false);
 				return entry();
 			},
 			() => card(),
@@ -741,7 +792,11 @@ describe('usableRerollEntry', () => {
 
 		it('gives the rule the check roll and ignores its outcome', () => {
 			expect(usableRerollEntry(entry(roller), check(), [])).toMatchObject({ ok: true });
-			expect(rule.offersRerollOn).toHaveBeenCalledWith({ side: 'roller', roll: WILL_SAVE });
+			expect(rule.offersUseOn).toHaveBeenCalledWith({
+				side: 'roller',
+				roll: WILL_SAVE,
+				other: null,
+			});
 		});
 
 		it('ignores once per attack', () => {
@@ -816,6 +871,12 @@ describe('findRerollRule', () => {
 
 	it('finds the live rule by item and rule id', () => {
 		const rule = rerollRule();
+		useItemRules([rule]);
+		expect(findRerollRule(entry)).toBe(rule);
+	});
+
+	it('finds a Change a Die rule too', () => {
+		const rule = rerollRule({ type: 'changeDie' });
 		useItemRules([rule]);
 		expect(findRerollRule(entry)).toBe(rule);
 	});

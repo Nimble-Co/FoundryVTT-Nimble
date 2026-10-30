@@ -1,25 +1,24 @@
 <script lang="ts">
 	import type { RollRerollButtonProps } from '#types/components/RollRerollButton.d.ts';
 
+	import ChoiceMenu from './ChoiceMenu.svelte';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRollRerollButtonState } from './RollRerollButton.svelte.ts';
 
-	let { choices, disabled = false, onChoose }: RollRerollButtonProps = $props();
+	let { sections, disabled = false, onChoose }: RollRerollButtonProps = $props();
 
 	const menuId = $props.id();
 
-	const rerollButton = createRollRerollButtonState(() => ({ choices, onChoose }));
-	const { elements, choiceText, onTriggerClick, choose, onMenuKeydown, onWindowPointerDown } =
-		rerollButton;
-	let single = $derived(rerollButton.single);
+	const rerollButton = createRollRerollButtonState(() => ({ sections, onChoose }));
+	const { elements, onTriggerClick, choose, closeMenu } = rerollButton;
 	let menuOpen = $derived(rerollButton.menuOpen);
 	let triggerLabel = $derived(rerollButton.triggerLabel);
+	let icon = $derived(REACTION_VERB_ICONS[rerollButton.changesOnly ? 'change' : 'reroll']);
 
 	export function focus() {
 		elements.trigger?.focus();
 	}
 </script>
-
-<svelte:window onpointerdown={onWindowPointerDown} />
 
 <button
 	bind:this={elements.trigger}
@@ -27,45 +26,26 @@
 	type="button"
 	{disabled}
 	aria-label={triggerLabel}
-	aria-haspopup={single ? undefined : 'menu'}
-	aria-expanded={single ? undefined : menuOpen}
+	aria-haspopup="menu"
+	aria-expanded={menuOpen}
 	aria-controls={menuOpen ? menuId : undefined}
 	data-tooltip={triggerLabel}
 	onclick={onTriggerClick}
 >
-	<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+	<i class={icon} aria-hidden="true"></i>
 </button>
 
 {#if menuOpen}
-	<ul
-		bind:this={elements.menu}
+	<ChoiceMenu
 		id={menuId}
 		class="nimble-roll-reroll-menu"
-		role="menu"
-		aria-label={triggerLabel}
-		tabindex="-1"
-		onkeydown={onMenuKeydown}
-	>
-		{#each choices as choice, index (choice.id)}
-			<li role="none">
-				<button
-					bind:this={elements.items[index]}
-					class="nimble-button nimble-roll-reroll-menu__item"
-					type="button"
-					role="menuitem"
-					tabindex="-1"
-					aria-label={choiceText(choice)}
-					{disabled}
-					onclick={() => choose(choice.id)}
-				>
-					<span class="nimble-roll-reroll-menu__label">{choice.label}</span>
-					{#if choice.cost}
-						<span class="nimble-roll-reroll-menu__cost">{choice.cost}</span>
-					{/if}
-				</button>
-			</li>
-		{/each}
-	</ul>
+		label={triggerLabel}
+		{sections}
+		{disabled}
+		trigger={elements.trigger}
+		onchoose={choose}
+		onclose={closeMenu}
+	/>
 {/if}
 
 <style lang="scss">
@@ -102,44 +82,8 @@
 		}
 	}
 
-	.nimble-roll-reroll-menu {
+	:global(.nimble-choice-menu.nimble-roll-reroll-menu) {
 		grid-column: 1 / -1;
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		margin: 0.375rem 0 0;
-		padding: 0;
-		list-style: none;
-		// Clears the chat log's bottom fade and its jump-to-bottom button.
-		scroll-margin-block-end: 3rem;
-
-		&__item {
-			display: flex;
-			align-items: center;
-			gap: 0.375rem;
-			width: 100%;
-			padding: 0.25rem 0.5rem;
-			font-size: var(--nimble-sm-text);
-			text-align: left;
-
-			&:focus-visible {
-				outline: 2px solid var(--nimble-dark-text-color);
-				outline-offset: -2px;
-			}
-		}
-
-		&__label {
-			flex: 1;
-			min-width: 0;
-		}
-
-		&__cost {
-			flex: none;
-			margin-left: auto;
-			font-size: var(--nimble-xs-text);
-			font-weight: 400;
-			color: var(--nimble-medium-text-color);
-			white-space: nowrap;
-		}
+		margin-top: 0.375rem;
 	}
 </style>

@@ -54,6 +54,8 @@ type IncomingReactionRequest = {
 	forceHeroicReaction?: boolean;
 	/** reroll only: the die the player picked */
 	die?: DieRef;
+	/** change only: the face the player set the die to */
+	value?: number;
 };
 
 type KeepChoiceRequest = {
@@ -100,6 +102,7 @@ interface ReactionCapableMessage {
 		viaSocket?: boolean,
 		forceHeroicReaction?: boolean,
 		die?: DieRef | null,
+		value?: number | null,
 	) => Promise<void>;
 	resolveKeepChoice?: (
 		choice: RerollKept,
@@ -122,6 +125,7 @@ async function executeIncomingReaction(
 	selection?: PoolSpendSelection,
 	forceHeroicReaction?: boolean,
 	die?: DieRef | null,
+	value?: number | null,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -144,8 +148,14 @@ async function executeIncomingReaction(
 			viaSocket,
 			forceHeroicReaction === true,
 			die ?? null,
+			value ?? null,
 		);
 	}
+}
+
+/** A face from a socket payload, or null when it is not a whole number above 0. */
+function faceFrom(value: unknown): number | null {
+	return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 /** A die reference from a socket payload, or null when it is not one. */
@@ -174,6 +184,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		request.selection,
 		request.forceHeroicReaction === true,
 		dieRefFrom(request.die),
+		faceFrom(request.value),
 	);
 }
 
@@ -288,6 +299,7 @@ export async function requestIncomingAttackReaction(params: {
 	selection?: PoolSpendSelection;
 	forceHeroicReaction?: boolean;
 	die?: DieRef;
+	value?: number;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
@@ -300,6 +312,7 @@ export async function requestIncomingAttackReaction(params: {
 			params.selection,
 			params.forceHeroicReaction,
 			params.die ?? null,
+			params.value ?? null,
 		);
 		return true;
 	}
@@ -321,6 +334,7 @@ export async function requestIncomingAttackReaction(params: {
 		...(params.selection ? { selection: params.selection } : {}),
 		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
 		...(params.die ? { die: params.die } : {}),
+		...(params.value ? { value: params.value } : {}),
 	});
 	return true;
 }

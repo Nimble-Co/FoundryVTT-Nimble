@@ -37,7 +37,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		}
 
 		const manager = new ItemActivationManager(this as any, options);
-		const { activation, rolls, rollHidden, incomingReactions, rerollHistory } =
+		const { activation, rolls, rollHidden, incomingReactions, rerollHistory, primaryDieBonuses } =
 			await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
@@ -136,6 +136,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					rerolls: rerollHistory?.rerolls ?? [],
 					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+					primaryDieBonuses: primaryDieBonuses ?? [],
 					isCritical,
 					isMiss,
 					permissions: this.permission,

@@ -9,9 +9,19 @@ import type {
 	IncomingReactionText,
 } from './IncomingReactionPrompts.d.ts';
 
-export interface IncomingReactionEntryGroupsProps {
+/** The kinds of use the card gives one button each. */
+export type ReactionVerb = 'reroll' | 'change' | 'addDamage' | 'interpose';
+
+export interface ReactionVerbGroup {
+	verb: ReactionVerb;
+	/** The actors that give this verb, each with only its entries for it. */
 	groups: IncomingReactionActorGroup[];
-	/** The reroll whose die picker shows in place of its button. */
+	count: number;
+}
+
+export interface IncomingReactionVerbsProps {
+	groups: IncomingReactionActorGroup[];
+	/** The reroll whose die picker shows under the buttons. */
 	picking: IncomingReactionPicking | null;
 	busy: boolean;
 	/** The card outcome, shown on the Primary Die in the die picker. */
@@ -19,6 +29,7 @@ export interface IncomingReactionEntryGroupsProps {
 	text: IncomingReactionText;
 	onuse: (entry: IncomingReactionEntry) => void;
 	onpick: (die: PickableDie) => void;
+	onvalue: (value: number) => void;
 	/** Closes the die picker; returns the id of the entry it was open for. */
 	oncancel: () => string | null;
 }

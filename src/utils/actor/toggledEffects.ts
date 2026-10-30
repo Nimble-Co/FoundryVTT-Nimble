@@ -11,6 +11,7 @@ import { SYSTEM_ID } from '#system';
  * Marks have no time-based expiry: "until you mark another creature" is modelled by
  * capacity eviction, and any figurative in-game duration ("for 1 day") is left to the
  * GM rather than tracked against worldTime — five real minutes can be days in-game.
+ * A rule can end its marks at the end of the encounter (`markLifecycle.ts`).
  */
 
 const FLAG_KEY = 'toggledEffects';

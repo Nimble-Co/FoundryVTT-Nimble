@@ -24,7 +24,7 @@ let rerollCost: Record<string, unknown>;
 let rollerIsOwner: boolean;
 
 function rule(id: string) {
-	return { type: 'reroll', id, disabled: false, rerollCost };
+	return { type: 'reroll', id, disabled: false, rollUseCost: rerollCost };
 }
 
 const DOCUMENTS: Record<string, () => unknown> = {
@@ -38,6 +38,10 @@ const DOCUMENTS: Record<string, () => unknown> = {
 		rules: new Map([['rule-brutality', rule('rule-brutality')]]),
 	}),
 	'Item.luck': () => ({ name: 'Lucky', rules: new Map([['rule-luck', rule('rule-luck')]]) }),
+	'Item.seer': () => ({
+		name: 'Soothsayer',
+		rules: new Map([['rule-seer', { ...rule('rule-seer'), type: 'changeDie' }]]),
+	}),
 };
 
 function rerollEntry(overrides: Record<string, unknown> = {}) {
@@ -63,6 +67,16 @@ function luckEntry() {
 		label: 'Lucky rule',
 		ruleId: 'rule-luck',
 		itemUuid: 'Item.luck',
+	});
+}
+
+function changeEntry() {
+	return rerollEntry({
+		id: 'entry-seer',
+		label: 'Soothsayer rule',
+		ruleId: 'rule-seer',
+		itemUuid: 'Item.seer',
+		use: 'change',
 	});
 }
 
@@ -196,10 +210,12 @@ describe('rerolls on check cards', () => {
 		expect(rerollButton()).toBeNull();
 	});
 
-	it('rerolls with one click through the reaction path', async () => {
+	it('opens the menu for one feature too, and rerolls through the reaction path on a pick', async () => {
 		renderSave();
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 
 		expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
@@ -219,12 +235,14 @@ describe('rerolls on check cards', () => {
 		renderSave(message);
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 		await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 		await settle();
 		expect(document.activeElement).toBe(rerollButton());
 
 		await fireEvent.click(rerollButton() as HTMLElement);
+		await fireEvent.click(screen.getByRole('menuitem'));
 		await settle();
 		await fireEvent.keyDown(screen.getByRole('button', { name: 'Cancel' }), { key: 'Escape' });
 		await settle();
@@ -246,11 +264,19 @@ describe('rerolls on check cards', () => {
 			await fireEvent.click(button);
 
 			expect(button.getAttribute('aria-expanded')).toBe('true');
-			const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+			const menu = screen.getByRole('menu');
+			const items = within(menu).getAllByRole('menuitem');
 			expect(items.map((item) => item.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-				'Reroll with Unstoppable Brutality 1 Wound',
-				'Reroll with Lucky 1 Wound',
+				'Unstoppable Brutality 1 Wound',
+				'Lucky 1 Wound',
 			]);
+			expect(items.map((item) => item.getAttribute('aria-label'))).toEqual([
+				'Reroll with Unstoppable Brutality (1 Wound)',
+				'Reroll with Lucky (1 Wound)',
+			]);
+			expect(
+				[...menu.querySelectorAll('.nimble-choice-menu__heading')].map((h) => h.textContent),
+			).toEqual(['Reroll']);
 			expect(document.activeElement).toBe(items[0]);
 			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 		});
@@ -315,6 +341,76 @@ describe('rerolls on check cards', () => {
 			} finally {
 				window.removeEventListener('keydown', windowKeydown);
 			}
+		});
+	});
+
+	describe('with a Change a Die feature', () => {
+		const d20 = { term: 0, result: 0, faces: 20, value: 6, role: 'kept' };
+
+		function changeMessage(incomingReactions: unknown[]) {
+			return Object.assign(createMessage({ incomingReactions }), {
+				changeToPick: vi.fn(() => ({ setsValue: true, dice: [d20] })),
+			});
+		}
+
+		it('puts the rerolls and the changes under their own headings', async () => {
+			renderSave(changeMessage([rerollEntry(), changeEntry()]));
+
+			const button = rerollButton() as HTMLElement;
+			expect(button.getAttribute('aria-label')).toBe(
+				'Choose a feature to reroll or change the die',
+			);
+			await fireEvent.click(button);
+
+			const menu = screen.getByRole('menu');
+			expect(
+				[...menu.querySelectorAll('.nimble-choice-menu__heading')].map((h) => h.textContent),
+			).toEqual(['Reroll', 'Change a die']);
+			const change = within(menu).getByRole('menuitem', {
+				name: 'Change the die with Soothsayer (1 Wound)',
+			});
+			expect(change.querySelector('.fa-pen')).toBeTruthy();
+		});
+
+		it('names the one change on the button, and opens the value picker in place', async () => {
+			renderSave(changeMessage([changeEntry()]));
+
+			const button = screen.getByRole('button', {
+				name: 'Change the die with Soothsayer (1 Wound)',
+			});
+			expect(button.querySelector('.fa-pen')).toBeTruthy();
+			await fireEvent.click(button);
+			await fireEvent.click(screen.getByRole('menuitem'));
+			await settle();
+
+			expect(screen.getByText('Pick a value')).toBeTruthy();
+			expect(screen.getByRole('img', { name: 'Was 6' })).toBeTruthy();
+			await fireEvent.click(screen.getByRole('button', { name: '20 (highest)' }));
+			await fireEvent.click(screen.getByRole('button', { name: 'Set to 20' }));
+			await settle();
+
+			expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+				messageId: 'message-1',
+				entryId: 'entry-seer',
+				forceHeroicReaction: false,
+				die: { term: 0, result: 0 },
+				value: 20,
+			});
+		});
+
+		it('gives the focus back to the button when the value picker closes', async () => {
+			renderSave(changeMessage([changeEntry()]));
+			const button = () =>
+				screen.getByRole('button', { name: 'Change the die with Soothsayer (1 Wound)' });
+
+			await fireEvent.click(button());
+			await fireEvent.click(screen.getByRole('menuitem'));
+			await settle();
+			await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+			await settle();
+
+			expect(screen.queryByText('Pick a value')).toBeNull();
+			expect(document.activeElement).toBe(button());
 		});
 	});
 

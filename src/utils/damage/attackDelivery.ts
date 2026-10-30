@@ -6,8 +6,11 @@
  */
 type AttackDelivery = 'melee' | 'ranged' | null;
 
+/** The deliveries a rule can be limited to. `any` also matches an attack with no delivery. */
+const ATTACK_DELIVERY_FILTERS = ['any', 'melee', 'ranged'] as const;
+
 /** A rule-side restriction on the deliveries it applies to. */
-type AttackDeliveryFilter = 'melee' | 'ranged' | 'any' | null | undefined;
+type AttackDeliveryFilter = (typeof ATTACK_DELIVERY_FILTERS)[number];
 
 /**
  * Maps an activation's attack type to the channel it is delivered through.
@@ -25,10 +28,13 @@ function attackDeliveryFromAttackType(attackType: string | null | undefined): At
  * `'any'` (or absent/null) matches any delivery; otherwise the filter must
  * equal the attack's own delivery.
  */
-function matchesAttackDelivery(filter: AttackDeliveryFilter, delivery: AttackDelivery): boolean {
+function matchesAttackDelivery(
+	filter: AttackDeliveryFilter | null | undefined,
+	delivery: AttackDelivery,
+): boolean {
 	if (filter === null || filter === undefined || filter === 'any') return true;
 	return filter === delivery;
 }
 
-export { attackDeliveryFromAttackType, matchesAttackDelivery };
-export type { AttackDelivery };
+export { ATTACK_DELIVERY_FILTERS, attackDeliveryFromAttackType, matchesAttackDelivery };
+export type { AttackDelivery, AttackDeliveryFilter };

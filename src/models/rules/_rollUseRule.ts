@@ -1,0 +1,446 @@
+import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { Predicate } from '../../etc/Predicate.js';
+import {
+	ATTACK_DELIVERY_FILTERS,
+	type AttackDeliveryFilter,
+	matchesAttackDelivery,
+} from '../../utils/damage/attackDelivery.js';
+import {
+	getHeroicReactionLabelKey,
+	HEROIC_REACTIONS,
+	type HeroicReactionKey,
+} from '../../utils/incomingReactions/heroicActions.js';
+import {
+	REROLL_SIDES,
+	REROLL_TRIGGERS,
+	type RerollSide,
+	type RerollTrigger,
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
+import {
+	type CheckRollKind,
+	REROLL_ROLL_KINDS,
+	type RerollRollKind,
+	type RollToReroll,
+} from '../../utils/reroll/rollToReroll.js';
+import { PredicateField } from '../fields/PredicateField.js';
+import type { RuleFormGroup } from './_formLayout.js';
+import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
+import { withWidget } from './_widgetOption.js';
+import { NimbleBaseRule } from './base.js';
+
+/** The lang namespace a rule's own words are under, as `NIMBLE.rules.<namespace>`. */
+type RollUseNamespace = 'reroll' | 'changeDie';
+
+// Words that say what the rule does. The other words are the same for every
+// rule that uses a roll, so they stay under the Reroll rule's keys.
+const OWN_WORDS = new Set(['rolls.label', 'chargePoolIdentifier.hint', 'chargeCost.hint']);
+const OWN_FIELDS = new Set(['oncePerAttack']);
+
+function wordKey(namespace: RollUseNamespace, field: string, part: 'label' | 'hint'): string {
+	const own = OWN_FIELDS.has(field) || OWN_WORDS.has(`${field}.${part}`);
+	return `NIMBLE.rules.${own ? namespace : 'reroll'}.${field}.${part}`;
+}
+
+/** The lang keys of a field's choices, as `NIMBLE.rules.<namespace>.<field>.choices.<value>`. */
+function choiceLabels(
+	namespace: RollUseNamespace,
+	field: string,
+	values: readonly string[],
+): Record<string, string> {
+	return Object.fromEntries(
+		values.map((value) => [value, `NIMBLE.rules.${namespace}.${field}.choices.${value}`]),
+	);
+}
+
+function rollsInclude(kind: RerollRollKind) {
+	return (data: Record<string, unknown>) => Array.isArray(data.rolls) && data.rolls.includes(kind);
+}
+
+const forAttacks = rollsInclude('attack');
+
+/** The save, skill or ability keys a rule is limited to. Empty is any. */
+function checkKeysField(
+	name: 'saves' | 'skills' | 'abilities',
+	kind: CheckRollKind,
+	choices: () => Record<string, string>,
+) {
+	const { fields } = foundry.data;
+	return new fields.ArrayField(
+		new fields.StringField({ required: true, nullable: false, choices }),
+		withWidget({
+			required: true,
+			nullable: false,
+			initial: [] as string[],
+			label: `NIMBLE.rules.reroll.${name}.label`,
+			hint: 'NIMBLE.rules.reroll.noneMeansAny',
+			showWhen: rollsInclude(kind),
+		}),
+	);
+}
+
+/** Which roll, who, when: the fields that pick the rolls a rule can be used on. */
+function rollFields(namespace: RollUseNamespace) {
+	const { fields } = foundry.data;
+	return {
+		rolls: new fields.ArrayField(
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				choices: choiceLabels('reroll', 'rolls', REROLL_ROLL_KINDS),
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: ['attack'],
+				label: wordKey(namespace, 'rolls', 'label'),
+			},
+		),
+		saves: checkKeysField('saves', 'save', () => CONFIG.NIMBLE.savingThrows),
+		skills: checkKeysField('skills', 'skillCheck', () => CONFIG.NIMBLE.skills),
+		abilities: checkKeysField('abilities', 'abilityCheck', () => CONFIG.NIMBLE.abilityScores),
+		usedBy: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'roller',
+				choices: choiceLabels('reroll', 'usedBy', REROLL_SIDES),
+				label: wordKey(namespace, 'usedBy', 'label'),
+				hint: wordKey(namespace, 'usedBy', 'hint'),
+				widget: 'chips',
+			}),
+		),
+		reach: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: wordKey(namespace, 'reach', 'label'),
+				hint: wordKey(namespace, 'reach', 'hint'),
+				showWhen: (data: Record<string, unknown>) => data.usedBy === 'ally',
+			}),
+		),
+	};
+}
+
+/** The attack outcome and delivery a rule can be used on, and the other creature. */
+function whenFields(namespace: RollUseNamespace) {
+	const { fields } = foundry.data;
+	return {
+		otherCreature: new PredicateField(
+			withWidget({
+				label: wordKey(namespace, 'otherCreature', 'label'),
+				hint: wordKey(namespace, 'otherCreature', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+		outcome: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'always',
+				choices: choiceLabels('reroll', 'outcome', REROLL_TRIGGERS),
+				label: wordKey(namespace, 'outcome', 'label'),
+				hint: wordKey(namespace, 'outcome', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+		attackDelivery: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('reroll', 'attackDelivery', ATTACK_DELIVERY_FILTERS),
+				label: wordKey(namespace, 'attackDelivery', 'label'),
+				hint: wordKey(namespace, 'attackDelivery', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+	};
+}
+
+/** What one use costs, and how often it can be used on one attack. */
+function costFields(namespace: RollUseNamespace) {
+	const { fields } = foundry.data;
+	return {
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
+				nullable: false,
+				initial: '',
+				label: wordKey(namespace, 'chargePoolIdentifier', 'label'),
+				hint: wordKey(namespace, 'chargePoolIdentifier', 'hint'),
+				widget: 'chargePoolPicker',
+			}),
+		),
+		chargeCost: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 1,
+				min: 1,
+				integer: true,
+				label: wordKey(namespace, 'chargeCost', 'label'),
+				hint: wordKey(namespace, 'chargeCost', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					typeof data.chargePoolIdentifier === 'string' && data.chargePoolIdentifier.trim() !== '',
+			}),
+		),
+		manaCost: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			min: 0,
+			integer: true,
+			label: wordKey(namespace, 'manaCost', 'label'),
+			hint: wordKey(namespace, 'manaCost', 'hint'),
+		}),
+		woundCost: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			min: 0,
+			integer: true,
+			label: wordKey(namespace, 'woundCost', 'label'),
+			hint: wordKey(namespace, 'woundCost', 'hint'),
+		}),
+		heroicReaction: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			choices: {
+				'': 'NIMBLE.rules.reroll.heroicReaction.choices.none',
+				...Object.fromEntries(HEROIC_REACTIONS.map((key) => [key, getHeroicReactionLabelKey(key)])),
+			} as Record<HeroicReactionKey | '', string>,
+			label: wordKey(namespace, 'heroicReaction', 'label'),
+			hint: wordKey(namespace, 'heroicReaction', 'hint'),
+		}),
+		actionCost: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			min: 0,
+			max: 1,
+			integer: true,
+			choices: {
+				0: 'NIMBLE.rules.reroll.actionCost.choices.none',
+				1: 'NIMBLE.rules.reroll.actionCost.choices.one',
+			},
+			label: wordKey(namespace, 'actionCost', 'label'),
+			hint: wordKey(namespace, 'actionCost', 'hint'),
+		}),
+		oncePerAttack: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: wordKey(namespace, 'oncePerAttack', 'label'),
+				hint: wordKey(namespace, 'oncePerAttack', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+	};
+}
+
+/** A short note under the feature on the card, and when it shows. */
+function noteFields(namespace: RollUseNamespace) {
+	const { fields } = foundry.data;
+	return {
+		cardHint: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			label: wordKey(namespace, 'cardHint', 'label'),
+			hint: wordKey(namespace, 'cardHint', 'hint'),
+		}),
+		cardHintWhen: new PredicateField(
+			withWidget({
+				label: wordKey(namespace, 'cardHintWhen', 'label'),
+				hint: wordKey(namespace, 'cardHintWhen', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					typeof data.cardHint === 'string' && data.cardHint.trim() !== '',
+			}),
+		),
+	};
+}
+
+function rollUseFields(namespace: RollUseNamespace) {
+	return {
+		...rollFields(namespace),
+		...whenFields(namespace),
+		...costFields(namespace),
+		...noteFields(namespace),
+	};
+}
+
+declare namespace RollUseRule {
+	type Schema = NimbleBaseRule.Schema & ReturnType<typeof rollUseFields>;
+}
+
+/**
+ * Which side of the roll is asking, which roll it is, and the other creature:
+ * the target for the one who rolled and an ally, the one who rolled for the
+ * target. Null or absent when the roll has none.
+ */
+interface RollUseContext {
+	side: RerollSide;
+	roll: RollToReroll;
+	other?: OtherCreature | null;
+}
+
+const COST_FIELDS = [
+	'chargePoolIdentifier',
+	'chargeCost',
+	'manaCost',
+	'woundCost',
+	'heroicReaction',
+	'actionCost',
+	'oncePerAttack',
+] as const;
+
+/**
+ * A rule a creature uses on a roll after it is made: who can use it, on which
+ * rolls, when, and what one use costs. Read when a card is posted and again
+ * when the rule is used, never during data preparation.
+ */
+abstract class RollUseRule<
+	TSchema extends RollUseRule.Schema = RollUseRule.Schema,
+> extends NimbleBaseRule<TSchema> {
+	declare rolls: RerollRollKind[];
+	declare saves: string[];
+	declare skills: string[];
+	declare abilities: string[];
+	declare usedBy: RerollSide;
+	declare reach: number;
+	declare outcome: RerollTrigger;
+	declare attackDelivery: AttackDeliveryFilter;
+	declare otherCreature: Predicate;
+	declare chargePoolIdentifier: string;
+	declare chargeCost: number;
+	declare manaCost: number;
+	declare woundCost: number;
+	declare heroicReaction: HeroicReactionKey | '';
+	declare actionCost: number;
+	declare oncePerAttack: boolean;
+	declare cardHint: string;
+	declare cardHintWhen: Predicate;
+
+	/**
+	 * The fields every rule that uses a roll has, with the rule's own words, in
+	 * four parts (roll, when, cost, note) so a rule can put its own fields between them.
+	 */
+	static rollUseSchemaParts(namespace: RollUseNamespace) {
+		return {
+			roll: rollFields(namespace),
+			when: whenFields(namespace),
+			cost: costFields(namespace),
+			note: noteFields(namespace),
+		};
+	}
+
+	/** The form group of the note on the card, which goes last. */
+	static noteFormGroup(): RuleFormGroup {
+		return { fields: ['cardHint', 'cardHintWhen'] };
+	}
+
+	/** The form groups of the fields that pick the rolls. */
+	static rollFormGroup(): RuleFormGroup {
+		return { fields: ['rolls', 'saves', 'skills', 'abilities'] };
+	}
+
+	/** The form groups of who, when, only while and cost, with `between` after who. */
+	static useFormGroups(between: readonly RuleFormGroup[] = []): RuleFormGroup[] {
+		return [
+			{ fields: ['usedBy', 'reach'] },
+			...between,
+			{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
+			{
+				label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
+				hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
+				fields: ['predicate'],
+			},
+			{ fields: ['otherCreature'] },
+			{
+				label: 'NIMBLE.rules.reroll.form.cost.label',
+				hint: 'NIMBLE.rules.reroll.form.cost.hint',
+				fields: COST_FIELDS,
+			},
+		];
+	}
+
+	/** The tooltip types of the shared fields. */
+	static rollUseTooltipTypes(): Array<[string, string]> {
+		return [
+			['rolls', 'string[]'],
+			['saves', 'string[]'],
+			['skills', 'string[]'],
+			['abilities', 'string[]'],
+			['usedBy', 'string'],
+			['outcome', 'string'],
+			['attackDelivery', 'string'],
+			['otherCreature', 'object'],
+			['chargePoolIdentifier', 'string'],
+			['chargeCost', 'number'],
+			['manaCost', 'number'],
+			['woundCost', 'number'],
+			['heroicReaction', 'string'],
+			['actionCost', 'number'],
+			['oncePerAttack', 'boolean'],
+			['reach', 'number'],
+			['cardHint', 'string'],
+			['cardHintWhen', 'object'],
+		];
+	}
+
+	get rollUseCost(): RerollCost {
+		return {
+			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
+			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
+			manaCost: Math.max(0, Number(this.manaCost) || 0),
+			woundCost: Math.max(0, Number(this.woundCost) || 0),
+			heroicReaction: this.heroicReaction ?? '',
+			actionCost: Math.min(1, Math.max(0, Math.trunc(Number(this.actionCost) || 0))),
+		};
+	}
+
+	/**
+	 * Whether this rule lets `context.side` use it on this roll now. The outcome
+	 * of an attack is checked by the caller against the roll.
+	 */
+	offersUseOn(context: RollUseContext): boolean {
+		if (!this.item.isEmbedded) return false;
+		if (!this.test()) return false;
+		const { side, roll } = context;
+		if (!this.rolls?.includes(roll.kind)) return false;
+		if (this.usedBy !== side) return false;
+		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
+		if (roll.kind === 'attack') {
+			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
+		} else {
+			// A check has no target side.
+			if (side === 'target') return false;
+			const keys = this.checkKeys(roll.kind);
+			if (keys.length > 0 && !keys.includes(roll.key)) return false;
+		}
+		return canPayRerollCost(this.actor, this.rollUseCost);
+	}
+
+	/** The note this rule puts under its feature on the card for this roll. Empty for none. */
+	cardHintFor(context: RollUseContext): string {
+		const note = (this.cardHint ?? '').trim();
+		if (!note) return '';
+		return ruleOtherCreatureMatches(this, this.cardHintWhen, context.other) ? note : '';
+	}
+
+	private checkKeys(kind: CheckRollKind): string[] {
+		const keys = { save: this.saves, skillCheck: this.skills, abilityCheck: this.abilities }[kind];
+		return Array.isArray(keys) ? keys : [];
+	}
+}
+
+export { choiceLabels, RollUseRule, type RollUseContext };
