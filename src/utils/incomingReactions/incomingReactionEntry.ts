@@ -42,6 +42,8 @@ export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
 export interface AttackOutcomeView {
 	isCritical?: boolean;
 	isMiss?: boolean;
+	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
+	critStays?: boolean;
 }
 
 /** Does the attack's outcome satisfy a trigger? */

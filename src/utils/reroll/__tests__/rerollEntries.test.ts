@@ -439,6 +439,15 @@ describe('collectRerollEntries for an ally', () => {
 		expect(result.manual).toEqual([]);
 	});
 
+	it('gives no crit-only entry when the crit cannot go away', () => {
+		const rule = rerollRule({ outcome: 'criticalHit' });
+		const targets = [{ tokenUuid: TOKEN, actor: actor('Actor.target', [rule]) }];
+		const forced = { ...CRIT, critStays: true };
+
+		expect(collectRerollEntries(context({ targets, outcome: forced })).manual).toEqual([]);
+		expect(collectRerollEntries(context({ targets, outcome: CRIT })).manual).toHaveLength(1);
+	});
+
 	it('asks the rule about the ally side and checks the attack outcome', () => {
 		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
@@ -467,6 +476,13 @@ describe('offerStands', () => {
 		const stands = (outcome: typeof HIT) =>
 			offerStands(entry(trigger), { outcome, forcedMiss: false });
 		expect([stands(CRIT), stands(HIT), stands(MISS)]).toEqual([onCrit, onHit, onMiss]);
+	});
+
+	it('does not let a crit-only entry stand when the crit cannot go away', () => {
+		const forced = { ...CRIT, critStays: true };
+
+		expect(offerStands(entry('criticalHit'), { outcome: forced, forcedMiss: false })).toBe(false);
+		expect(offerStands(entry('hit'), { outcome: forced, forcedMiss: false })).toBe(true);
 	});
 
 	it('stands before the roll is made', () => {

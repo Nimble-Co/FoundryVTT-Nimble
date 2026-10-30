@@ -94,6 +94,11 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
+/** Whether a serialized or live roll has a Forced Crit that always applies. */
+function hasLastingCrit(roll: unknown): boolean {
+	return (roll as { options?: { forcedCrit?: unknown } } | null)?.options?.forcedCrit === 'always';
+}
+
 /**
  * A damage card's roll with this outcome, as the reroll gate sees it. The
  * allies are those the card was posted with, unless the caller scanned anew.
@@ -112,7 +117,14 @@ function damageRollContext(
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
 		roll: { kind: 'attack', delivery: card.delivery() },
-		outcome: { isCritical: outcome.isCritical, isMiss: outcome.isMiss },
+		outcome: {
+			isCritical: outcome.isCritical,
+			isMiss: outcome.isMiss,
+			critStays:
+				outcome.isCritical === true &&
+				(hasLastingCrit(outcome) ||
+					hasLastingCrit(findPrimaryDamageRoll(card.system())?.damageNode.roll)),
+		},
 		forcedMiss,
 	};
 }

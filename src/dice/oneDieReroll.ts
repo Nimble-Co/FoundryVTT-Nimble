@@ -101,6 +101,8 @@ interface OneDieRoll extends PrimaryDieBonusRoll {
 	terms: unknown[];
 	toJSON(): object;
 	explosionStyleOf?(term: unknown): ExplosionStyle;
+	/** The lowest kept face of `term` that is a crit. */
+	critFaceOf?(term: unknown): number;
 	refreshOutcome?(): void;
 	/** "Add to Primary Die Result" when `term` is the Primary Die and has it. */
 	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
@@ -209,6 +211,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 		style,
 		drawWithMode,
 		copy.primaryDieBonusOf?.(term) ?? null,
+		copy.critFaceOf?.(term) ?? term.faces,
 	);
 	copy.primaryDieRerolled?.(term, changed.keptBase);
 
@@ -270,6 +273,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 		style,
 		face,
 		options.draw ?? rollOneDieFace,
+		copy.critFaceOf?.(term) ?? term.faces,
 	);
 	if (kept) copy.primaryDieChanged?.(term, bonus ? base : changed.next, bonusOnFace);
 

@@ -75,6 +75,26 @@ describe('damageCardRollTarget', () => {
 		});
 	});
 
+	it('tells the gate a crit stays when the roll has a Forced Crit that always applies', () => {
+		const forced = serializedRoll();
+		Object.assign(forced, { isCritical: true });
+		Object.assign(forced.options, { canCrit: true, forcedCrit: 'always' });
+		const card = makeCard([damageNode(forced)]);
+		Object.assign(card.system(), { isCritical: true });
+
+		expect(damageCardRollTarget(card).context().outcome).toMatchObject({
+			isCritical: true,
+			critStays: true,
+		});
+	});
+
+	it('tells the gate a crit can go away without such a Forced Crit', () => {
+		const card = makeCard([damageNode(serializedRoll())]);
+		Object.assign(card.system(), { isCritical: true });
+
+		expect(damageCardRollTarget(card).context().outcome?.critStays).toBe(false);
+	});
+
 	it('writes nothing until the flow writes, then makes one update with its changes', async () => {
 		const card = makeCard([damageNode(serializedRoll())]);
 		const roll = damageCardRollTarget(card).findRoll();

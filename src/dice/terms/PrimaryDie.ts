@@ -14,6 +14,8 @@ declare namespace PrimaryDie {
 		missThreshold?: number;
 		/** Lowest kept face that is a crit. Defaults to the max. */
 		criticalThreshold?: number;
+		/** A crit without the max: on any face, or on any face that is not a miss. */
+		forcedCrit?: 'always' | 'onHit';
 		/** Per-term appearance override read by Dice So Nice when active. */
 		appearance?: PrimaryDieDiceOptions['appearance'];
 		/** Marks the term's damage type as system-managed for Dice So Nice. */
@@ -96,7 +98,7 @@ class PrimaryDie extends foundry.dice.terms.Die {
 
 	/** The lowest kept face that is a crit. Crit dice still explode only on the max. */
 	get critFace(): number {
-		return critFaceOf(this.faces ?? 6, this.options.criticalThreshold);
+		return critFaceOf(this.faces ?? 6, this.options);
 	}
 
 	/**

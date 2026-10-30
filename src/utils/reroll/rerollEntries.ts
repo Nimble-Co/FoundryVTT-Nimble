@@ -117,12 +117,21 @@ function attackOutcome(context: RerollRollContext): RerollRollOutcome {
 	return { outcome: context.outcome, forcedMiss: context.forcedMiss };
 }
 
+/** Whether a roll use with this trigger fits the outcome. A crit that stays has no crit-only use. */
+function rollUseTriggerMatches(
+	trigger: RerollTrigger | null | undefined,
+	outcome: AttackOutcomeView,
+): boolean {
+	if (trigger === 'criticalHit' && outcome.critStays) return false;
+	return rerollTriggerMatches(trigger, outcome);
+}
+
 function outcomeAllows(
 	trigger: RerollTrigger | null | undefined,
 	roll: RerollRollOutcome,
 ): boolean {
 	if (roll.forcedMiss) return false;
-	return !roll.outcome || rerollTriggerMatches(trigger, roll.outcome);
+	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome);
 }
 
 /**
@@ -353,7 +362,7 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const { outcome, forcedMiss } = attackOutcome(context);
-	if (outcome && !rerollTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
+	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
 	return { ok: true, rule, actor };
 }
