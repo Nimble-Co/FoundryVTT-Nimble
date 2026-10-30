@@ -9,6 +9,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	import SheetPortrait from '../../shared/SheetPortrait.svelte';
 	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
+	import HeroInspirationSeal from './HeroInspirationSeal.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroStats from './HeroStats.svelte';
 	import HeroTurnBox from './HeroTurnBox.svelte';
@@ -21,6 +22,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 <header class="nimble-chrome header" class:editing aria-label={view.text.label}>
 	<SheetPortrait {view} form="header" />
 	<div class="fade"></div>
+	<HeroInspirationSeal inspiration={view.inspiration} {perform} />
 	<div class="column">
 		<div class="who">
 			{#if editing}

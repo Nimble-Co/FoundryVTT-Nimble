@@ -21,6 +21,16 @@ function renderRail(context: Partial<HeroSheetContext> = {}, editing = false) {
 }
 
 describe('HeroRail', () => {
+	it('gives Inspiration from the seal on the portrait, also in edit mode', async () => {
+		const { perform } = renderRail({}, true);
+		const seal = screen.getByRole('button', { name: `${RAIL}.inspiration.label` });
+
+		expect(seal).toHaveAttribute('aria-pressed', 'false');
+		expect(seal).toHaveAttribute('data-tooltip', `${RAIL}.inspiration.off`);
+		await fireEvent.click(seal);
+		expect(perform).toHaveBeenCalledWith({ kind: 'setInspiration', value: true });
+	});
+
 	it('sends the intent of a wound segment', async () => {
 		const { perform } = renderRail();
 

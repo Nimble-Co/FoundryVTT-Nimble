@@ -10,6 +10,7 @@ The rail stays dark in both themes.
 	import SheetPortrait from '../../shared/SheetPortrait.svelte';
 	import HeroHitPoints from './HeroHitPoints.svelte';
 	import HeroInitiative from './HeroInitiative.svelte';
+	import HeroInspirationSeal from './HeroInspirationSeal.svelte';
 	import HeroMeter from './HeroMeter.svelte';
 	import HeroRareActions from './HeroRareActions.svelte';
 	import HeroStats from './HeroStats.svelte';
@@ -24,6 +25,7 @@ The rail stays dark in both themes.
 	<div class="portrait">
 		<SheetPortrait {view} form="rail" />
 		<div class="fade"></div>
+		<HeroInspirationSeal inspiration={view.inspiration} {perform} />
 		{#if editing}
 			<button
 				type="button"

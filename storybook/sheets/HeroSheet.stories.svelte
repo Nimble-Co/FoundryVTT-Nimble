@@ -33,6 +33,8 @@
 		actor: 'blank' | 'dicePool' | 'mana' | 'containers' | 'features' | 'effects';
 		/** both themes side by side */
 		both: boolean;
+		/** the hero has Inspiration */
+		inspired: boolean;
 	}
 
 	const { Story } = defineMeta({
@@ -46,6 +48,7 @@
 			tab: 'core',
 			actor: 'blank',
 			both: false,
+			inspired: false,
 		},
 		argTypes: {
 			width: { control: { type: 'select' }, options: [390, 460, 600, 720, 960] },
@@ -125,6 +128,16 @@
 	const raging = effectsHero({ img: 'assets/classImages/berserker.webp' });
 
 	function actorOf(args: Args): HeroActorLike {
+		const actor = chosenActor(args);
+		if (!args.inspired) return actor;
+		const { system } = actor;
+		return {
+			...actor,
+			system: { ...system, resources: { ...system.resources, inspiration: true } },
+		};
+	}
+
+	function chosenActor(args: Args): HeroActorLike {
 		if (args.actor === 'dicePool') return furyHero;
 		if (args.actor === 'mana') return mage;
 		if (args.actor === 'containers') return packer;
@@ -164,6 +177,12 @@
 <Story name="Not your turn" args={{ combat: 'notYourTurn', width: 390 }} {template} />
 <Story name="Mana, pools and a level warning" args={{ pools: true }} {template} />
 <Story name="Both themes" args={{ both: true, width: 600 }} {template} />
+<Story
+	name="Inspired"
+	args={{ inspired: true, tab: 'effects', both: true, width: 600 }}
+	{template}
+/>
+<Story name="Inspired, narrow" args={{ inspired: true, width: 390 }} {template} />
 <Story name="Actions: Fury Dice" args={{ tab: 'actions', actor: 'dicePool' }} {template} />
 <Story
 	name="Actions: your turn"
