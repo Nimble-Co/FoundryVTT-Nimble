@@ -1,7 +1,7 @@
 <!--
 @component
 The NPC sheet in a window box for the stories: fixture actors, the real view model, its own UI state,
-and a `perform` that only logs. `tab` is the tab at the start. A `nimble-story:reveal` event on `window`
+and a `perform` that only logs. `tab` is the tab at the start, and `editing` starts edit mode. A `nimble-story:reveal` event on `window`
 calls `revealIn`, as outside code calls `sheet.reveal()`.
 -->
 <script lang="ts">
@@ -19,6 +19,7 @@ calls `revealIn`, as outside code calls `sheet.reveal()`.
 		width,
 		height,
 		tab = 'abilities',
+		editing = false,
 		theme = '',
 	}: MonsterSheetStoryProps = $props();
 
@@ -26,6 +27,7 @@ calls `revealIn`, as outside code calls `sheet.reveal()`.
 
 	$effect.pre(() => {
 		ui.tab = tab;
+		ui.editing = editing;
 	});
 
 	$effect(() => {

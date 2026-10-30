@@ -8,6 +8,8 @@ export interface MonsterSheetStoryProps {
 	height: number;
 	/** the tab at the start; default abilities */
 	tab?: string;
+	/** start in edit mode */
+	editing?: boolean;
 	/** theme-light or theme-dark; leave it out to follow the toolbar */
 	theme?: string;
 }

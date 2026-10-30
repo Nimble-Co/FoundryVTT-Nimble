@@ -28,6 +28,10 @@
 		bloodied: boolean;
 		/** both themes side by side */
 		both: boolean;
+		/** start in edit mode */
+		editing: boolean;
+		/** the Goblin's Shoot has a charge pool, so its uses show */
+		uses: boolean;
 	}
 
 	const { Story } = defineMeta({
@@ -39,6 +43,8 @@
 			actor: 'solo',
 			bloodied: false,
 			both: false,
+			editing: false,
+			uses: false,
 		},
 		argTypes: {
 			width: { control: { type: 'select' }, options: [390, 460, 660, 900] },
@@ -60,7 +66,18 @@
 				sizes: { small: 'Small', medium: 'Medium', large: 'Large' },
 			},
 		};
-		return args.actor === 'effects' ? effectsMonsterContext(words) : monsterContext(words);
+		const pools = args.uses
+			? {
+					itemPools: {
+						shoot00000000001: [
+							{ id: 'arrows', label: 'Arrows', current: 1, max: 2, per: 'encounter' as const },
+						],
+					},
+				}
+			: {};
+		return args.actor === 'effects'
+			? effectsMonsterContext(words)
+			: monsterContext({ ...words, ...pools });
 	}
 
 	function actorOf(args: Args): MonsterActorLike {
@@ -84,6 +101,7 @@
 		width={args.width}
 		height={args.height}
 		tab={args.tab}
+		editing={args.editing}
 		{theme}
 	/>
 {/snippet}
@@ -126,3 +144,12 @@
 <Story name="Effects" args={{ actor: 'effects', tab: 'effects' }} {template} />
 <Story name="Notes" args={{ actor: 'monster', tab: 'notes' }} {template} />
 <Story name="Settings" args={{ actor: 'monster', tab: 'settings' }} {template} />
+<Story name="Edit mode" args={{ editing: true }} {template} />
+<Story name="Edit mode: both themes" args={{ editing: true, both: true }} {template} />
+<Story name="Edit mode: narrow" args={{ editing: true, width: 390 }} {template} />
+<Story
+	name="Monster: edit mode, uses"
+	args={{ actor: 'monster', editing: true, uses: true }}
+	{template}
+/>
+<Story name="Monster: uses" args={{ actor: 'monster', uses: true }} {template} />
