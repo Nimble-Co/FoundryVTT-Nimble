@@ -172,8 +172,6 @@ export interface RerollRecord {
 	use?: RollUse;
 	/** A change only: how the die changed. `amount` is 0 for a set value. */
 	change?: RollDieChange | null;
-	/** A set value on the Primary Die: the "Add to Primary Die Result" bonus it did not add. */
-	bonusNotAdded?: number;
 }
 
 /**

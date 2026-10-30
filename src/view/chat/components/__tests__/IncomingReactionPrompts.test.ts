@@ -229,7 +229,7 @@ describe('IncomingReactionPrompts', () => {
 		expect(item.textContent).toContain('Heroic Reaction');
 	});
 
-	it('tells a change of the die at the roll: set on the arrow, the crit and the bonus tags', () => {
+	it('tells a change of the die at the roll: set on the arrow and the crit tag', () => {
 		const message = createMessage(
 			[],
 			[
@@ -246,7 +246,6 @@ describe('IncomingReactionPrompts', () => {
 					woundsGained: 0,
 					use: 'change',
 					change: { mode: 'set', amount: 0 },
-					bonusNotAdded: 1,
 				},
 			],
 			'Actor.cheat',
@@ -262,7 +261,6 @@ describe('IncomingReactionPrompts', () => {
 		).toBeTruthy();
 		expect(rollPlace().getByText('set')).toBeTruthy();
 		expect(rollPlace().getByText('Crit')).toBeTruthy();
-		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
 	});
 
 	it('shows one line per Primary Die Bonus at the roll only', () => {

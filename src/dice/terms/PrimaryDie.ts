@@ -17,6 +17,10 @@ declare namespace PrimaryDie {
 		dsnDamageTypeManaged?: boolean;
 		/** The keep/drop flags on the results are final; `khn`/`kln` must not run again. */
 		keepResolved?: boolean;
+		/** A number added to the face the die keeps, from 1 up to its max, before it can explode. */
+		faceBonus?: number;
+		/** The kept face before `faceBonus`. Set when the bonus goes on. */
+		rolledFace?: number;
 	}
 
 	/** Term data for configuring a PrimaryDie. */
@@ -59,6 +63,32 @@ class PrimaryDie extends foundry.dice.terms.Die {
 	constructor(termData?: InexactPartial<PrimaryDie.TermData>) {
 		super(termData);
 		if (!this.modifiers) this.modifiers = [];
+	}
+
+	override async _evaluateModifier(command: string, modifier: string): Promise<void> {
+		if (command === 'x' || command === 'xo') this.#addFaceBonus();
+		return super._evaluateModifier(command, modifier);
+	}
+
+	override async _evaluateModifiers(): Promise<void> {
+		await super._evaluateModifiers();
+		this.#addFaceBonus();
+	}
+
+	/**
+	 * Puts `faceBonus` on the kept face, after the keep and before the explosion,
+	 * so the face with the bonus decides crit and miss. The part past the max is lost.
+	 */
+	#addFaceBonus(): void {
+		const bonus = Math.trunc(Number(this.options.faceBonus) || 0);
+		if (!bonus || typeof this.options.rolledFace === 'number' || typeof this.faces !== 'number') {
+			return;
+		}
+		const pool = Number(this.number) || 1;
+		const kept = this.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (!kept) return;
+		this.options.rolledFace = kept.result;
+		kept.result = Math.max(1, Math.min(kept.result + bonus, this.faces));
 	}
 
 	/**

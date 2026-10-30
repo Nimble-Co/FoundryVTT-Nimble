@@ -124,7 +124,6 @@ function changeableFor<TRoll>(
 			faces: made?.faces ?? null,
 			value: made?.next ?? null,
 			dropped: null,
-			bonusNotAdded: made?.bonusNotAdded ?? 0,
 		}),
 		diceToThrow: () => made?.thrown ?? null,
 	};

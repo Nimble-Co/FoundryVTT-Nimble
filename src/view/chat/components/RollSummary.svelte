@@ -73,7 +73,7 @@
 			<span>{hitDice.primaryDieValue}: {primaryDieValue}</span>
 		{/if}
 		{#if primaryDieBreakdown}
-			<span>{primaryDieBreakdown}</span>
+			<span data-tooltip={primaryDieBreakdown.tooltip || null}>{primaryDieBreakdown.text}</span>
 		{:else if primaryDieModifier}
 			<span>{hitDice.primaryDieModifier}: {primaryDieModifier}</span>
 		{/if}

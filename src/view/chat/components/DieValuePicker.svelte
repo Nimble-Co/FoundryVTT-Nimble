@@ -3,13 +3,16 @@
 
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
+	import DieBonusBadge from '../../components/DieBonusBadge.svelte';
 	import DieFace from '../../components/DieFace.svelte';
 	import { createDieValuePickerState } from './DieValuePicker.svelte.ts';
+	import { primaryDieBonusText } from './primaryDieBonusText.ts';
 
 	let {
 		die,
 		feature,
 		primaryOutcome = null,
+		bonusLines = [],
 		sending = false,
 		onpick,
 		oncancel,
@@ -18,6 +21,8 @@
 	const titleId = $props.id();
 	const picker = createDieValuePickerState(() => ({ die, feature, sending, onpick, oncancel }));
 	const { elements, set, confirm, onInputKeydown, onKeydown, onInputBlur, focusInput } = picker;
+
+	const bonus = $derived(primaryDieBonusText(die.bonus ?? 0, bonusLines));
 
 	onMount(focusInput);
 </script>
@@ -60,6 +65,9 @@
 				<span class="nimble-value-picker__new-face" aria-hidden="true">
 					<DieFace faces={die.faces} />
 				</span>
+				{#if bonus}
+					<DieBonusBadge {bonus} />
+				{/if}
 				<input
 					bind:this={elements.input}
 					bind:value={picker.typed}

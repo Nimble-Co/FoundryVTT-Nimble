@@ -120,30 +120,20 @@ describe('rerollOneDie on live dice', () => {
 		).toEqual([8, 5]);
 	});
 
-	test('a Primary Die rerolled gets Add to Primary Die Result again, and the damage past its max is worked out again', async () => {
-		const options = { ...DAMAGE, primaryDieValue: 4, primaryDieModifier: 5 };
-		// The first die is the one the set value replaces.
-		const roll = await rolled('DamageRoll', '1d6 + 2', options, 6, [1, 2]);
-		expect(resultsOf(roll)).toEqual([6, 2]);
-		expect([roll.total, roll.isCritical]).toEqual([13, true]);
+	test('a Primary Die bonus goes on the rerolled face, so it can crit, and stops at the max', async () => {
+		const options = { ...DAMAGE, primaryDieModifier: 1 };
+		const roll = await rolled('DamageRoll', '1d6 + 2', options, 6, [2]);
+		expect([resultsOf(roll), roll.total, roll.isCritical]).toEqual([[3], 5, false]);
 
-		nextDice(6, 3, 1);
-		const done = await rerollOneDie(roll as never, { term: 0, result: 0 });
-		const after = done.roll as unknown as LiveRoll;
-
-		expect(resultsOf(after)).toEqual([6, 1]);
-		expect([after.total, after.isCritical, after.isMiss]).toEqual([11, true, false]);
-		expect([done.previous, done.next]).toEqual([6, 6]);
-		expect(after.options.primaryDieBaseResult).toBe(3);
-		expect(after.options.primaryDieValue).toBeUndefined();
-
-		nextDice(6, 1, 2);
-		const exact = (await rerollOneDie(after as never, { term: 0, result: 0 }))
+		nextDice(6, 5, 1);
+		const crit = (await rerollOneDie(roll as never, { term: 0, result: 0 }))
 			.roll as unknown as LiveRoll;
+		expect([resultsOf(crit), crit.total, crit.isCritical]).toEqual([[6, 1], 9, true]);
 
-		expect(resultsOf(exact)).toEqual([6, 2]);
-		expect([exact.total, exact.isCritical]).toEqual([10, true]);
-		expect(exact.options.primaryDieBaseResult).toBe(1);
+		nextDice(6, 6, 2);
+		const max = (await rerollOneDie(crit as never, { term: 0, result: 0 }))
+			.roll as unknown as LiveRoll;
+		expect([resultsOf(max), max.total, max.isCritical]).toEqual([[6, 2], 10, true]);
 	});
 
 	test('a pool die of a damage roll changes only the total', async () => {
@@ -280,20 +270,22 @@ describe('changeOneDie on live dice', () => {
 		expect(after.isMiss).toBe(true);
 	});
 
-	test('a set value is final: Add to Primary Die Result is not added, and a later reroll adds it again', async () => {
+	test('a set value gets the Primary Die bonus, up to the max, and so does a later reroll', async () => {
 		const options = { ...DAMAGE, primaryDieModifier: 1 };
 		const roll = await rolled('DamageRoll', '1d8 + 2', options, 8, [3]);
-		expect(resultsOf(roll)).toEqual([4]);
+		expect([resultsOf(roll), roll.total]).toEqual([[4], 6]);
 
 		const done = await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 6 });
 		const after = done.roll as unknown as LiveRoll;
-
-		expect(resultsOf(after)).toEqual([6]);
-		expect([after.total, done.bonusNotAdded]).toEqual([8, 1]);
+		expect([resultsOf(after), after.total, after.options.primaryDieBaseResult]).toEqual([
+			[7],
+			9,
+			6,
+		]);
 
 		nextDice(8, 2);
 		const again = (await rerollOneDie(after as never, primary(after))).roll as unknown as LiveRoll;
-		expect(resultsOf(again)).toEqual([3]);
+		expect([resultsOf(again), again.total]).toEqual([[3], 5]);
 	});
 
 	test('an add change adds to the die, up to its max', async () => {
@@ -302,8 +294,7 @@ describe('changeOneDie on live dice', () => {
 		const done = await changeOneDie(roll as never, primary(roll), { mode: 'add', value: 1 });
 		const after = done.roll as unknown as LiveRoll;
 
-		expect(resultsOf(after)).toEqual([4]);
-		expect([after.total, done.bonusNotAdded]).toEqual([6, 0]);
+		expect([resultsOf(after), after.total]).toEqual([[4], 6]);
 	});
 
 	test('a kept d20 of a check set lower stays the kept one: the keep rule does not run again', async () => {

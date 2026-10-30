@@ -216,11 +216,10 @@ describe('changeableFor', () => {
 		faces: 8,
 		previous: 6,
 		next: 8,
-		bonusNotAdded: 1,
 		thrown: null,
 	};
 
-	it('changes the kept Primary Die with the change, and reads the new face and bonus', async () => {
+	it('changes the kept Primary Die with the change, and reads the new face', async () => {
 		const changer = vi.fn(async () => made);
 		const current = damageRoll();
 		const one = changeableFor(
@@ -243,7 +242,6 @@ describe('changeableFor', () => {
 			faces: 8,
 			value: 8,
 			dropped: null,
-			bonusNotAdded: 1,
 		});
 		expect(one.diceToThrow?.('changed')).toBeNull();
 	});

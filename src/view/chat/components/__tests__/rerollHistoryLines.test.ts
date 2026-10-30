@@ -398,17 +398,6 @@ describe('rerollHistoryLines for a change', () => {
 		expect(line.tags.map((tag) => tag.label)).toEqual(['Miss']);
 	});
 
-	it('tags a Primary Die bonus a set value did not add', () => {
-		const [line] = changeLines([changed({ bonusNotAdded: 1 })]);
-		expect(line.tags.at(-1)).toEqual({
-			kind: 'bonusNotAdded',
-			label: '+1 bonus not added',
-			tooltip:
-				'Vicious Opportunist set the die to 8. A set value is final, so the +1 Primary Die bonus is not added.',
-			off: false,
-		});
-	});
-
 	it('keeps the uses left and who used it', () => {
 		const [line] = changeLines([changed({ actorUuid: 'Actor.bram', usesLeft: 0 })]);
 		expect(line.detail).toBe('Used by Bram - Uses left: 0');

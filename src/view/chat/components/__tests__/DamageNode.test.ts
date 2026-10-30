@@ -131,7 +131,7 @@ describe('DamageNode', () => {
 			}),
 		);
 
-		expect(screen.getByText(/primary die: rolled 1, modifier \+1, result 2/i)).toBeTruthy();
+		expect(screen.getByText(/primary die: 1 \+ 1 = 2/i)).toBeTruthy();
 		expect(screen.queryByText(/primary die set to/i)).toBeNull();
 	});
 

@@ -77,8 +77,6 @@ interface RolledDie {
 	value: number | null;
 	/** The other result of a die rolled two times for advantage or disadvantage. */
 	dropped?: number | null;
-	/** A changed die: the Primary Die bonus a set value did not add. */
-	bonusNotAdded?: number;
 }
 
 interface NewRoll {
@@ -153,7 +151,6 @@ async function rerollWithRule<TRoll>(
 				changes: rollChanges,
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
-				...(die.bonusNotAdded ? { bonusNotAdded: die.bonusNotAdded } : {}),
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),

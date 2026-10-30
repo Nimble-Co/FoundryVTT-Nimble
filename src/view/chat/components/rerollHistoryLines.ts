@@ -7,6 +7,7 @@ import type {
 
 import localize from '#utils/localize.js';
 import { rerollRuleKey } from '#utils/reroll/rerollEntries.ts';
+import { signed } from './primaryDieBonusText.ts';
 
 interface RerollHistoryDie {
 	faces: number;
@@ -24,8 +25,7 @@ interface RerollTag {
 		| 'noAction'
 		| 'tempHp'
 		| 'crit'
-		| 'miss'
-		| 'bonusNotAdded';
+		| 'miss';
 	label: string;
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
@@ -43,7 +43,7 @@ interface RerollHistoryLine {
 	/** What to give by hand when Feature Effects is off. */
 	offNote: string | null;
 	detail: string | null;
-	/** The old and the new Primary Die; null when either cannot be read */
+	/** The old and the new die; null when either cannot be read */
 	dice: { previous: RerollHistoryDie; next: RerollHistoryDie } | null;
 	/** A player kept the old roll, so the old die stands and the new one does not. */
 	keptOld: boolean;
@@ -217,11 +217,7 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	return { tags: [...tags, ...notGiven], tempHpNote, offNote };
 }
 
-function signed(value: number): string {
-	return value > 0 ? `+${value}` : String(value);
-}
-
-/** The tags of a change: the outcome it made, and a Primary Die bonus it did not add. */
+/** The tags of a change: the outcome it made. */
 function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
 	const tags: RerollTag[] = [];
 	const outcome = record.next?.outcome;
@@ -230,16 +226,6 @@ function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
 			kind: outcome,
 			label: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}`),
 			tooltip: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}Tooltip`, { feature }),
-			off: false,
-		});
-	}
-	const bonus = record.bonusNotAdded ?? 0;
-	if (bonus !== 0) {
-		const values = { feature, amount: signed(bonus), value: String(record.next?.value ?? '') };
-		tags.push({
-			kind: 'bonusNotAdded',
-			label: localize('NIMBLE.chat.incomingReactions.rerollTags.bonusNotAdded', values),
-			tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.bonusNotAddedTooltip', values),
 			off: false,
 		});
 	}

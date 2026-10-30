@@ -528,7 +528,8 @@
 			},
 			"primaryDieBonus": {
 				"tag": "{value} Primary Die",
-				"text": "{label}: {value} to the Primary Die"
+				"text": "{label}: {value} to the Primary Die",
+				"dialog": "Add to Primary Die Result {value}"
 			},
 			"incomingReactions": {
 				"heading": "Options",
@@ -575,8 +576,6 @@
 					"critTooltip": "{feature} made the die a crit.",
 					"miss": "Miss",
 					"missTooltip": "{feature} made the die a miss.",
-					"bonusNotAdded": "{amount} bonus not added",
-					"bonusNotAddedTooltip": "{feature} set the die to {value}. A set value is final, so the {amount} Primary Die bonus is not added.",
 					"automatic": "Automatic",
 					"automaticTooltip": "{feature} rerolled by itself. Nobody clicked.",
 					"advantage": "Advantage",
@@ -2335,7 +2334,7 @@
 				},
 				"change": {
 					"label": "How does it change the die?",
-					"hint": "A set value is final: an \"Add to Primary Die Result\" bonus is not added to it. The die stays between 1 and its max.",
+					"hint": "The die stays between 1 and its max. A Primary Die bonus goes on a set value too.",
 					"choices": {
 						"set": "Set it to a value the player picks",
 						"add": "Add a number"
@@ -2343,7 +2342,7 @@
 				},
 				"amount": {
 					"label": "Number to add",
-					"hint": "Added to the face the die shows. Use a negative number to take away."
+					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0."
 				},
 				"chargePoolIdentifier": {
 					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
@@ -2357,10 +2356,10 @@
 				}
 			},
 			"primaryDieBonus": {
-				"description": "Adds a number to the Primary Die of the owner's attack rolls, as \"Add to Primary Die Result\" in the attack dialog does. A reroll keeps it. Not on area attacks.",
+				"description": "Adds a number to the Primary Die of the owner's attack rolls, as \"Add to Primary Die Result\" in the attack dialog does. The die can become a crit or stop being a miss. A reroll keeps the number. Not on area attacks.",
 				"value": {
 					"label": "Add to the Primary Die",
-					"hint": "A whole number or a formula, such as 1 or @level. It can be negative. The die stops at its max and at 1."
+					"hint": "A whole number or a formula, such as 1 or @level. It can be negative. The die stops at its max and at 1: the rest is lost."
 				},
 				"otherCreature": {
 					"label": "Only when the target is",
@@ -3212,8 +3211,9 @@
 			"configureHitDice": "Configure Hit Dice",
 			"primaryDieValue": "Primary Die Set To",
 			"primaryDieModifier": "Added to Primary Die",
-			"primaryDieModifierBreakdown": "Primary Die: rolled {base}, modifier {modifier}, result {result}",
-			"primaryDieModifierBreakdownCapped": "Primary Die: rolled {base}, modifier {modifier}, result {result} (maximum), {excess} added to damage",
+			"primaryDieModifierBreakdown": "Primary Die: {sum} = {result}",
+			"primaryDieModifierBreakdownMax": "Primary Die: {sum} = {result}, the max",
+			"primaryDieModifierBreakdownLowest": "Primary Die: {sum} = {result}, the lowest",
 			"setPrimaryDie": "Set Primary Die Result",
 			"setPrimaryDieModifier": "Add to Primary Die Result",
 			"situationalModifiers": "Add to Roll (number or dice)",

@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { getPrimaryDieBreakdown } from '../RollSummary.svelte.ts';
 
-function options(rollOptions: Record<string, unknown>, faces: number | null = 6) {
-	return { rollOptions, roll: { terms: faces ? [{ faces }] : [] } };
+function options(
+	rollOptions: Record<string, unknown>,
+	faces: number | null = 6,
+	primaryDieBonuses: { label: string; value: number }[] = [],
+) {
+	return { rollOptions, roll: { terms: faces ? [{ faces }] : [] }, primaryDieBonuses };
 }
 
 describe('getPrimaryDieBreakdown', () => {
@@ -12,31 +16,45 @@ describe('getPrimaryDieBreakdown', () => {
 		expect(getPrimaryDieBreakdown(undefined)).toBeNull();
 	});
 
-	it('returns null when the roll did not record the roll before the modifier', () => {
+	it('returns null when the face before the number is not known', () => {
 		expect(getPrimaryDieBreakdown(options({ primaryDieModifier: 2 }))).toBeNull();
 	});
 
-	it('shows the roll before and after the modifier', () => {
+	it('shows the face, the number and the result, and names who added it', () => {
 		expect(
-			getPrimaryDieBreakdown(options({ primaryDieModifier: 1, primaryDieBaseResult: 1 })),
-		).toBe('Primary Die: rolled 1, modifier +1, result 2');
+			getPrimaryDieBreakdown(
+				options({ primaryDieModifier: 1, primaryDieBaseResult: 5 }, 6, [
+					{ label: 'Unerring Judgment', value: 1 },
+				]),
+			),
+		).toEqual({ text: 'Primary Die: 5 + 1 = 6', tooltip: 'Unerring Judgment +1' });
 	});
 
-	it('shows a negative modifier with its sign', () => {
+	it('names the part no feature added as the attack dialog', () => {
 		expect(
-			getPrimaryDieBreakdown(options({ primaryDieModifier: -2, primaryDieBaseResult: 5 })),
-		).toBe('Primary Die: rolled 5, modifier -2, result 3');
+			getPrimaryDieBreakdown(options({ primaryDieModifier: 1, primaryDieBaseResult: 2 }))?.tooltip,
+		).toBe('Add to Primary Die Result +1');
 	});
 
-	it('caps the result at the die maximum and shows the rest as damage', () => {
+	it('stops at the max: the part past it is lost', () => {
 		expect(
-			getPrimaryDieBreakdown(options({ primaryDieModifier: 5, primaryDieBaseResult: 4 })),
-		).toBe('Primary Die: rolled 4, modifier +5, result 6 (maximum), 3 added to damage');
+			getPrimaryDieBreakdown(options({ primaryDieModifier: 1, primaryDieBaseResult: 6 }))?.text,
+		).toBe('Primary Die: 6 + 1 = 6, the max');
 	});
 
-	it('does not cap the result when the die size is not known', () => {
+	it('stops at 1 with a negative number', () => {
 		expect(
-			getPrimaryDieBreakdown(options({ primaryDieModifier: 5, primaryDieBaseResult: 4 }, null)),
-		).toBe('Primary Die: rolled 4, modifier +5, result 9');
+			getPrimaryDieBreakdown(options({ primaryDieModifier: -2, primaryDieBaseResult: 2 }))?.text,
+		).toBe('Primary Die: 2 - 2 = 1, the lowest');
+		expect(
+			getPrimaryDieBreakdown(options({ primaryDieModifier: -2, primaryDieBaseResult: 5 }))?.text,
+		).toBe('Primary Die: 5 - 2 = 3');
+	});
+
+	it('does not stop at a max when the die size is not known', () => {
+		expect(
+			getPrimaryDieBreakdown(options({ primaryDieModifier: 5, primaryDieBaseResult: 4 }, null))
+				?.text,
+		).toBe('Primary Die: 4 + 5 = 9');
 	});
 });

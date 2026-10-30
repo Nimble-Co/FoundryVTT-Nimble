@@ -5,6 +5,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
@@ -18,7 +19,6 @@
 		tempHp: 'fa-shield-heart',
 		crit: 'fa-burst',
 		miss: 'fa-xmark',
-		bonusNotAdded: 'fa-ban',
 	};
 
 	let {
@@ -29,10 +29,6 @@
 		held,
 		primaryDieBonuses = [],
 	}: RerollHistoryProps = $props();
-
-	function signed(value: number): string {
-		return value > 0 ? `+${value}` : String(value);
-	}
 
 	const keepChoice = createRerollHistoryState(
 		getContext<NimbleChatMessage>('messageDocument'),

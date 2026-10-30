@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { PrimaryDieBonusLine } from '../../src/view/chat/components/primaryDieBonusText.ts';
 
 export interface RollSummaryOptions {
 	rollOptions?: {
@@ -8,6 +9,8 @@ export interface RollSummaryOptions {
 		[key: string]: unknown;
 	};
 	roll?: { terms?: { faces?: number }[] } | null;
+	/** The card's Primary Die Bonus lines, to name who added the Primary Die bonus. */
+	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
 	[key: string]: unknown;
 }
 

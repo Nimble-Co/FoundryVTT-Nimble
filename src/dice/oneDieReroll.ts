@@ -19,12 +19,27 @@ interface PickableDie extends DieRef {
 	faces: number;
 	value: number;
 	role: PickableRole;
+	/** The number a set value of the die gets, on the Primary Die only. */
+	bonus?: number;
 }
 
-interface RollLike {
-	terms: readonly unknown[];
+interface PrimaryDieBonusRoll {
 	primaryDie?: unknown;
-	options?: { brutalPrimary?: boolean };
+	modifierMode?: boolean;
+	options?: {
+		brutalPrimary?: boolean;
+		primaryDieModifier?: unknown;
+	};
+}
+
+interface RollLike extends PrimaryDieBonusRoll {
+	terms: readonly unknown[];
+}
+
+/** The number added to the face of the roll's Primary Die, or 0. */
+function primaryDieBonus(roll: PrimaryDieBonusRoll): number {
+	if (!roll.primaryDie || roll.modifierMode) return 0;
+	return Math.trunc(Number(roll.options?.primaryDieModifier) || 0);
 }
 
 function isDieTerm(term: unknown): term is DieTermLike {
@@ -38,6 +53,7 @@ function isDieTerm(term: unknown): term is DieTermLike {
  */
 function pickableDice(roll: RollLike, options: { droppedFrom?: number } = {}): PickableDie[] {
 	const primary = primaryDieRef(roll);
+	const bonus = primaryDieBonus(roll);
 	const dice: PickableDie[] = [];
 	roll.terms.forEach((term, termIndex) => {
 		if (!isDieTerm(term)) return;
@@ -55,6 +71,7 @@ function pickableDice(roll: RollLike, options: { droppedFrom?: number } = {}): P
 				faces: term.faces,
 				value: result.result,
 				role,
+				...(role === 'primary' && bonus ? { bonus } : {}),
 			});
 		});
 	});
@@ -78,7 +95,7 @@ function primaryDieRef(roll: RollLike): DieRef | null {
 	return best === -1 ? null : { term: termIndex, result: best };
 }
 
-interface OneDieRoll {
+interface OneDieRoll extends PrimaryDieBonusRoll {
 	terms: unknown[];
 	toJSON(): object;
 	explosionStyleOf?(term: unknown): ExplosionStyle;
@@ -87,8 +104,8 @@ interface OneDieRoll {
 	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
 	/** The Primary Die `term` was rolled again; `keptBase` is its new result before the bonus. */
 	primaryDieRerolled?(term: unknown, keptBase: number | null): void;
-	/** The kept Primary Die `term` got a final face; gives the bonus a set value dropped. */
-	primaryDieChanged?(term: unknown, value: number, mode: DieChange['mode']): number;
+	/** The kept Primary Die `term` got a new face; `base` is that face before the bonus. */
+	primaryDieChanged?(term: unknown, base: number): void;
 }
 
 /** A change to one die: set it to a face, or add a number (which may be negative) to it. */
@@ -213,9 +230,9 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
  * The old roll is not changed: the new roll is a copy with the die changed and
  * its total, crit and miss worked out again. The die keeps its place (the
  * keep is not worked out again). Dice a new max explodes into are rolled;
- * `thrown` holds only those, or is null when none were rolled. On the kept
- * Primary Die, a set value drops the "Add to Primary Die Result" bonus, and
- * `bonusNotAdded` says how much.
+ * `thrown` holds only those, or is null when none were rolled. A Primary Die
+ * bonus goes on a set value too, up to the max; an add moves the face, which
+ * already holds the bonus.
  */
 async function changeOneDie<TRoll extends OneDieRoll>(
 	roll: TRoll,
@@ -227,7 +244,6 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	faces: number;
 	previous: number;
 	next: number;
-	bonusNotAdded: number;
 	thrown: foundry.dice.Roll | null;
 }> {
 	const copy = foundry.dice.Roll.fromData(
@@ -239,9 +255,15 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	if (!result) throw new Error(`The dice term has no result ${ref.result}.`);
 
 	const style = copy.explosionStyleOf?.(term) ?? modifierExplosionStyle(term.modifiers);
-	const wanted = change.mode === 'set' ? change.value : result.result + change.value;
-	const face = Math.min(term.faces, Math.max(1, Math.trunc(wanted)));
 	const kept = isActive(result);
+	const bonus = kept ? (copy.primaryDieBonusOf?.(term) ?? null) : null;
+	const clamp = (value: number) => Math.min(term.faces, Math.max(1, Math.trunc(value)));
+	const base =
+		change.mode === 'set'
+			? clamp(change.value)
+			: clamp(result.result + change.value - (bonus?.add ?? 0));
+	const face =
+		change.mode === 'set' ? clamp(base + (bonus?.add ?? 0)) : clamp(result.result + change.value);
 	const changed = await changeDieInTerm(
 		term,
 		ref.result,
@@ -249,11 +271,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 		face,
 		options.draw ?? rollOneDieFace,
 	);
-	// A set value is final even on the face the die shows, so a bonus on it is not added.
-	const bonusNotAdded =
-		kept && (change.mode === 'set' || changed.next !== changed.previous)
-			? (copy.primaryDieChanged?.(term, changed.next, change.mode) ?? 0)
-			: 0;
+	if (kept) copy.primaryDieChanged?.(term, bonus ? base : changed.next);
 
 	refreshTotals(copy);
 
@@ -262,7 +280,6 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 		faces: term.faces,
 		previous: changed.previous,
 		next: changed.next,
-		bonusNotAdded,
 		thrown: changed.drawn.length > 0 ? thrownDice(term, changed.drawn) : null,
 	};
 }
@@ -277,8 +294,10 @@ export {
 	type OneDieRoll,
 	type PickableDie,
 	type PickableRole,
+	type PrimaryDieBonusRoll,
 	modifierExplosionStyle,
 	pickableDice,
+	primaryDieBonus,
 	primaryDieRef,
 	rerollOneDie,
 };

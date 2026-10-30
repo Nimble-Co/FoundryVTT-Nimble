@@ -398,17 +398,21 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/**
 	 * Apply primaryDieValue / primaryDieModifier presets to the primary die.
+	 * The modifier goes on the face the die keeps (see `PrimaryDie`), so it can
+	 * make a crit or lift a miss. Foundry still rolls the die unless a value is set.
 	 *
 	 * @param primaryTerm - The primary die to configure.
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
 	 */
 	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
-		const { primaryDieValue, primaryDieModifier } = options;
-		const faces = primaryTerm.faces;
-		if (DamageRoll.rebuilding || typeof faces !== 'number') return;
-		if (!primaryDieValue && !primaryDieModifier) return;
+		const { primaryDieValue } = options;
+		const primaryDieModifier = Math.trunc(Number(options.primaryDieModifier) || 0);
+		if (DamageRoll.rebuilding || typeof primaryTerm.faces !== 'number') return;
 
-		// The preset applies to the die that stays, so the pool is rolled and dropped here.
+		if (primaryDieModifier) primaryTerm.options.faceBonus = primaryDieModifier;
+		if (!primaryDieValue) return;
+
+		// The set value applies to the die that stays, so the pool is rolled and dropped here.
 		const poolSize = Math.max(1, Number(primaryTerm.number) || 1);
 		const results: foundry.dice.terms.DiceTerm.Result[] = Array.from({ length: poolSize }, () => ({
 			result: primaryTerm.randomFace(),
@@ -421,19 +425,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 
 		const kept = results.find((result) => result.active) ?? results[0];
-		if (primaryDieValue) kept.result = primaryDieValue;
-
-		if (primaryDieModifier) {
-			this.options.primaryDieBaseResult = kept.result;
-			const modifiedResult = kept.result + primaryDieModifier;
-			kept.result = Math.max(1, Math.min(modifiedResult, faces));
-			if (modifiedResult > faces) {
-				const excessTerm = new Terms.NumericTerm({ number: modifiedResult - faces });
-				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-				this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
-			}
-		}
-
+		kept.result = primaryDieValue;
 		primaryTerm.results = results;
 	}
 
@@ -563,6 +555,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// ── Legacy path ──
 			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
 			if (primaryTerm) {
+				const rolledFace = primaryTerm.options.rolledFace;
+				if (typeof rolledFace === 'number') this.options.primaryDieBaseResult = rolledFace;
 				if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
 					await this._evaluateViciousExplosion(primaryTerm);
 				}
@@ -889,57 +883,45 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * The Primary Die was rolled again. A set result no longer holds, and the
-	 * damage past the die's max is worked out again from the new result.
+	 * The Primary Die was rolled again; `keptBase` is its new face before the
+	 * bonus. A set result no longer holds.
 	 */
 	primaryDieRerolled(term: unknown, keptBase: number | null): void {
 		if (!this._isPresetPrimaryDie(term) || keptBase === null) return;
 		if (this.options.primaryDieValue && this.options.primaryDieValue !== keptBase) {
 			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
 		}
+		this._setPrimaryDieBase(term, keptBase);
+	}
 
+	/**
+	 * The kept Primary Die got a new face; `base` is that face before the bonus.
+	 * A set value it no longer matches goes away.
+	 */
+	primaryDieChanged(term: unknown, base: number): void {
+		if (!this._isPresetPrimaryDie(term)) return;
+		if (this.options.primaryDieValue && this.options.primaryDieValue !== base) {
+			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
+		}
+		this._setPrimaryDieBase(term, base);
+	}
+
+	/**
+	 * Records the face before the bonus. A card from before the bonus stopped at
+	 * the max has the damage past the max as a "+ N" term; it goes, and no new one comes.
+	 */
+	private _setPrimaryDieBase(term: PrimaryDie & { faces: number }, base: number): void {
 		const add = Number(this.options.primaryDieModifier) || 0;
 		const oldBase = this.options.primaryDieBaseResult;
 		if (!add || typeof oldBase !== 'number') return;
 
-		const at = this._removePrimaryDieExcess(term, oldBase, add);
-		const newExcess = keptBase + add - term.faces;
-		if (newExcess > 0) {
-			this.terms.splice(
-				at,
-				0,
-				Terms.OperatorTerm.fromData({ class: 'OperatorTerm', operator: '+', evaluated: true }),
-				Terms.NumericTerm.fromData({ class: 'NumericTerm', number: newExcess, evaluated: true }),
-			);
-		}
-		this.options.primaryDieBaseResult = keptBase;
+		if (typeof term.options.rolledFace === 'number') term.options.rolledFace = base;
+		else this._removePrimaryDieExcess(term, oldBase, add);
+		this.options.primaryDieBaseResult = base;
 		this.resetFormula();
 	}
 
-	/**
-	 * The kept Primary Die got a new face, `value`, that is final. A set value
-	 * drops the "Add to Primary Die Result" bonus; an added number started from
-	 * the face with the bonus in it. Either way nothing goes past the die's max
-	 * any more, and a later reroll of the die adds the bonus again. Gives the
-	 * bonus a set value dropped, else 0.
-	 */
-	primaryDieChanged(term: unknown, value: number, mode: 'set' | 'add'): number {
-		if (!this._isPresetPrimaryDie(term)) return 0;
-		if (this.options.primaryDieValue && this.options.primaryDieValue !== value) {
-			delete (this.options as Partial<DamageRoll.Options>).primaryDieValue;
-		}
-
-		const add = Number(this.options.primaryDieModifier) || 0;
-		const oldBase = this.options.primaryDieBaseResult;
-		if (!add || typeof oldBase !== 'number') return 0;
-
-		this._removePrimaryDieExcess(term, oldBase, add);
-		this.options.primaryDieBaseResult = value - add;
-		this.resetFormula();
-		return mode === 'set' ? add : 0;
-	}
-
-	/** Take out the damage past the Primary Die's max; gives where it was. */
+	/** Take out the damage past the Primary Die's max on an old card. */
 	private _removePrimaryDieExcess(term: PrimaryDie & { faces: number }, base: number, add: number) {
 		const at = this.terms.indexOf(term) + 1;
 		const oldExcess = base + add - term.faces;

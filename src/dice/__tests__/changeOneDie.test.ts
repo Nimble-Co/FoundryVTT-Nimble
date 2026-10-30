@@ -6,10 +6,12 @@ type Result = { result: number; active?: boolean; discarded?: boolean; exploded?
 type FakeRoll = OneDieRoll & {
 	terms: Array<{ faces: number; number: number; modifiers: string[]; results: Result[] }>;
 	refreshOutcome: Mock<() => void>;
-	primaryDieChanged: Mock<(term: unknown, value: number, mode: 'set' | 'add') => number>;
+	primaryDieChanged: Mock<(term: unknown, base: number) => void>;
+	primaryDieBonusOf?: () => { add: number; base: number } | null;
 };
 
 let copies: FakeRoll[] = [];
+let copyBonus: { add: number; base: number } | null = null;
 
 /** A roll whose copy is a plain object with the same dice. */
 function fakeRoll(results: Result[], modifiers: string[] = [], number = 1): FakeRoll {
@@ -17,9 +19,8 @@ function fakeRoll(results: Result[], modifiers: string[] = [], number = 1): Fake
 		terms: [{ faces: 8, number, modifiers, results }],
 		toJSON: () => ({ class: 'DamageRoll', terms: structuredClone(roll.terms) }),
 		refreshOutcome: vi.fn<() => void>(),
-		primaryDieChanged: vi.fn<(term: unknown, value: number, mode: 'set' | 'add') => number>(
-			() => 1,
-		),
+		primaryDieChanged: vi.fn<(term: unknown, base: number) => void>(),
+		primaryDieBonusOf: () => copyBonus,
 	};
 	return roll as unknown as FakeRoll;
 }
@@ -44,7 +45,48 @@ describe('changeOneDie', () => {
 		}) as never);
 	});
 
-	afterEach(() => vi.restoreAllMocks());
+	afterEach(() => {
+		vi.restoreAllMocks();
+		copyBonus = null;
+	});
+
+	describe('with a Primary Die bonus of +1', () => {
+		beforeEach(() => {
+			copyBonus = { add: 1, base: 3 };
+		});
+
+		it('puts the bonus on a set value and records the value as the face before it', async () => {
+			const roll = fakeRoll([{ result: 4, active: true }]);
+
+			const changed = await changeOneDie(roll, { term: 0, result: 0 }, { mode: 'set', value: 5 });
+
+			expect([changed.previous, changed.next]).toEqual([4, 6]);
+			expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 5);
+		});
+
+		it('stops a set value with the bonus at the max', async () => {
+			const roll = fakeRoll([{ result: 4, active: true }]);
+
+			const changed = await changeOneDie(
+				roll,
+				{ term: 0, result: 0 },
+				{ mode: 'set', value: 8 },
+				{ draw: draws(2) },
+			);
+
+			expect(changed.next).toBe(8);
+			expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 8);
+		});
+
+		it('moves the face on an add, which already holds the bonus', async () => {
+			const roll = fakeRoll([{ result: 4, active: true }]);
+
+			const changed = await changeOneDie(roll, { term: 0, result: 0 }, { mode: 'add', value: 1 });
+
+			expect(changed.next).toBe(5);
+			expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 4);
+		});
+	});
 
 	it('sets the die to the face, works the outcome out again, and rolls nothing', async () => {
 		const roll = fakeRoll([{ result: 3, active: true }]);
@@ -55,12 +97,11 @@ describe('changeOneDie', () => {
 			faces: 8,
 			previous: 3,
 			next: 6,
-			bonusNotAdded: 1,
 			thrown: null,
 		});
 		expect(changed.roll.terms[0]).toMatchObject({ results: [{ result: 6, active: true }] });
 		expect(copies[0].refreshOutcome).toHaveBeenCalled();
-		expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 6, 'set');
+		expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 6);
 		expect(roll.terms[0].results[0].result).toBe(3);
 	});
 
@@ -111,8 +152,8 @@ describe('changeOneDie', () => {
 		expect(changed.thrown).toMatchObject({ formula: '1d8' });
 	});
 
-	it('leaves the bonus alone for a dropped die', async () => {
-		const dropped = await changeOneDie(
+	it('does not touch the Primary Die options for a dropped die', async () => {
+		await changeOneDie(
 			fakeRoll(
 				[
 					{ result: 6, active: true },
@@ -124,33 +165,6 @@ describe('changeOneDie', () => {
 			{ term: 0, result: 1 },
 			{ mode: 'set', value: 7 },
 		);
-		expect(dropped.bonusNotAdded).toBe(0);
-		expect(copies[0].primaryDieChanged).not.toHaveBeenCalled();
-	});
-
-	it('makes a set value final also when the die already shows that face', async () => {
-		const same = await changeOneDie(
-			fakeRoll([{ result: 4 }]),
-			{ term: 0, result: 0 },
-			{
-				mode: 'set',
-				value: 4,
-			},
-		);
-		expect(same.bonusNotAdded).toBe(1);
-		expect(copies[0].primaryDieChanged).toHaveBeenCalledWith(copies[0].terms[0], 4, 'set');
-	});
-
-	it('changes nothing for an add that leaves the face the same', async () => {
-		const same = await changeOneDie(
-			fakeRoll([{ result: 8 }]),
-			{ term: 0, result: 0 },
-			{
-				mode: 'add',
-				value: 1,
-			},
-		);
-		expect(same.bonusNotAdded).toBe(0);
 		expect(copies[0].primaryDieChanged).not.toHaveBeenCalled();
 	});
 });

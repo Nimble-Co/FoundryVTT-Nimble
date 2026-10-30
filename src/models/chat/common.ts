@@ -287,12 +287,6 @@ const rerollRecord = () =>
 			},
 			{ required: false, nullable: true, initial: null },
 		),
-		bonusNotAdded: new fields.NumberField({
-			required: false,
-			nullable: false,
-			initial: 0,
-			integer: true,
-		}),
 	});
 
 const rollChange = () =>

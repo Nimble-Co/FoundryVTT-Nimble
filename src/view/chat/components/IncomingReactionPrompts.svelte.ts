@@ -18,6 +18,7 @@ import localize from '../../../utils/localize.js';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 import { createHeldIncomingReactions } from './heldIncomingReactions.svelte.ts';
 import { createIncomingReactionText } from './incomingReactionText.ts';
+import type { PrimaryDieBonusLine } from './primaryDieBonusText.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 import { spendBaselineInterpose } from './spendBaselineInterpose.ts';
@@ -52,6 +53,10 @@ export function createIncomingReactionPromptsState(
 		(message?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
 	);
 	const text = createIncomingReactionText(() => rerolls);
+	const cardPrimaryDieBonuses = $derived(
+		(message?.reactive?.system as { primaryDieBonuses?: PrimaryDieBonusLine[] })
+			?.primaryDieBonuses ?? [],
+	);
 
 	// Old cards can still hold the legacy `forceReroll` kind. Nothing resolves a
 	// waiting one, and a used one wrote no reroll record, so it keeps its old line.
@@ -102,12 +107,7 @@ export function createIncomingReactionPromptsState(
 			? storedEntries.filter((entry) => entry.kind === 'reroll' && !entry.used && !!entry.leftOut)
 			: [],
 	);
-	const primaryDieBonuses = $derived(
-		getPlace() === 'roll'
-			? ((message?.reactive?.system as { primaryDieBonuses?: { label: string; value: number }[] })
-					?.primaryDieBonuses ?? [])
-			: [],
-	);
+	const primaryDieBonuses = $derived(getPlace() === 'roll' ? cardPrimaryDieBonuses : []);
 	const pendingKeep = $derived(
 		showsHistory
 			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
