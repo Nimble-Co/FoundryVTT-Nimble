@@ -6,15 +6,25 @@ import type { PrimaryDie } from '../terms/PrimaryDie.js';
 
 const PRIMARY = { term: 0, result: 0 };
 
-/** An evaluated 1d6 attack that rolled `rolled`, with "Add to Primary Die Result" +1. */
-function attack(rolled: number): DamageRoll {
+/** An evaluated 1d6 attack that rolled `rolled`, with "Add to Primary Die Result" `add`. */
+function attack(
+	rolled: number,
+	{ add = 1, missThreshold }: { add?: number; missThreshold?: number } = {},
+): DamageRoll {
 	const roll = new DamageRoll(
 		'1d6+1',
 		{},
-		{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 1 },
+		{
+			canCrit: true,
+			canMiss: true,
+			rollMode: 0,
+			primaryDieValue: 0,
+			primaryDieModifier: add,
+			missThreshold,
+		},
 	);
 	const die = roll.primaryDie as PrimaryDie;
-	die.results = [{ result: Math.min(6, rolled + 1), active: true }];
+	die.results = [{ result: Math.min(6, rolled + add), active: true }];
 	die.options.rolledFace = rolled;
 	Object.assign(die, { _evaluated: true });
 	roll.options.primaryDieBaseResult = rolled;
@@ -113,5 +123,44 @@ describe('a Change a Die set on a Primary Die with a bonus', () => {
 
 		expect(roll.primaryDie?.results[0].result).toBe(5);
 		expect(breakdown(roll)).toBe('Primary Die: 4 + 1 = 5');
+	});
+});
+
+describe('a change against a miss threshold above 1', () => {
+	beforeEach(() => {
+		(CONFIG.Dice as unknown as { parser: unknown }).parser = { toAST: () => null };
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		delete (CONFIG.Dice as unknown as { parser?: unknown }).parser;
+	});
+
+	function inPlace(roll: DamageRoll) {
+		vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: { class?: string }) =>
+			data.class === 'Roll' ? data : roll) as never);
+	}
+
+	it('makes a set at the threshold a miss, and a set above it a hit', async () => {
+		const low = attack(5, { add: 0, missThreshold: 2 });
+		inPlace(low);
+		await changeOneDie(low, PRIMARY, { mode: 'set', value: 2 });
+		expect(low.isMiss).toBe(true);
+
+		vi.restoreAllMocks();
+		const high = attack(1, { add: 0, missThreshold: 2 });
+		inPlace(high);
+		await changeOneDie(high, PRIMARY, { mode: 'set', value: 3 });
+		expect(high.isMiss).toBe(false);
+	});
+
+	it('makes an add that lands on the threshold a miss', async () => {
+		const roll = attack(3, { add: 0, missThreshold: 2 });
+		inPlace(roll);
+
+		await changeOneDie(roll, PRIMARY, { mode: 'add', value: -1 });
+
+		expect(roll.primaryDie?.results[0].result).toBe(2);
+		expect(roll.isMiss).toBe(true);
 	});
 });
