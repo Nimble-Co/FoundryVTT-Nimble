@@ -3367,6 +3367,8 @@
 			"alreadyFull": "Already full",
 			"tempHp": "Temp HP",
 			"removed": "-{amount} removed",
+			"inspiration": "Inspiration",
+			"ends": "Ends",
 			"hitDice": "Hit Dice",
 			"hitDieRecovery": "+{amount} d{size}",
 			"mana": "Mana",
@@ -3383,6 +3385,7 @@
 			"manaRestored": "Mana Restored",
 			"hitDiceRecovered": "Hit Dice Recovered",
 			"woundsHealed": "Wounds Healed",
+			"inspirationEnded": "Inspiration Ended",
 			"alreadyFullyRested": "Already fully rested"
 		},
 		"fieldRest": {

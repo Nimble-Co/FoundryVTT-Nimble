@@ -28,6 +28,7 @@ const safeRestCardSchema = () => ({
 	manaRestored: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 	// Wounds recovered
 	woundsRecovered: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+	inspirationEnded: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 	// Charge pools recovered: Array of { label, amount, previousValue, newValue, icon }
 	chargePoolsRecovered: new fields.ArrayField(
 		new fields.ObjectField({

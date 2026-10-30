@@ -971,6 +971,8 @@ const safeRest = {
 	alreadyFull: 'NIMBLE.safeRest.alreadyFull',
 	tempHp: 'NIMBLE.safeRest.tempHp',
 	removed: 'NIMBLE.safeRest.removed',
+	inspiration: 'NIMBLE.safeRest.inspiration',
+	ends: 'NIMBLE.safeRest.ends',
 	hitDice: 'NIMBLE.safeRest.hitDice',
 	hitDieRecovery: 'NIMBLE.safeRest.hitDieRecovery',
 	mana: 'NIMBLE.safeRest.mana',
@@ -989,6 +991,7 @@ const safeRest = {
 	manaRestored: 'NIMBLE.safeRest.manaRestored',
 	hitDiceRecovered: 'NIMBLE.safeRest.hitDiceRecovered',
 	woundsHealed: 'NIMBLE.safeRest.woundsHealed',
+	inspirationEnded: 'NIMBLE.safeRest.inspirationEnded',
 	alreadyFullyRested: 'NIMBLE.safeRest.alreadyFullyRested',
 };
 
