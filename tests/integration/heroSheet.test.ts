@@ -45,7 +45,7 @@ interface HeroActor {
 	sheet: HeroSheetApp;
 	items: { get(id: string): Item | undefined; contents: Item[] };
 	effects: { get(id: string): ActiveEffect | undefined; contents: ActiveEffect[] };
-	system: { attributes: { hp: { value: number } } };
+	system: { attributes: { hp: { value: number } }; resources: { inspiration: boolean } };
 	createEmbeddedDocuments(type: 'Item', data: object[]): Promise<Item[]>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
 }
@@ -590,6 +590,51 @@ describe('the new character sheet', () => {
 		buttonNamed(row()!, t('NIMBLE.actorSheet.shared.effects.remove'))!.click();
 		await waitFor(() => !hero.effects.get(effect!.id!), 'the effect to be deleted');
 		await waitFor(() => !row(), 'the effect row to go');
+	}, 30_000);
+
+	test('the seal gives Inspiration, it is an active effect, and a click on its row ends it', async () => {
+		await hero.update({ 'system.resources.inspiration': false });
+		const sheet = await openHeroSheet(hero);
+		const seal = () =>
+			sheet.querySelector<HTMLButtonElement>(
+				`.rail button[aria-label="${CSS.escape(t('NIMBLE.actorSheet.hero.rail.inspiration.label'))}"]`,
+			);
+		expect(seal()?.getAttribute('aria-pressed'), 'the seal is off').toBe('false');
+		seal()!.click();
+		await waitFor(() => hero.system.resources.inspiration === true, 'the hero to have Inspiration');
+		await waitFor(() => seal()?.getAttribute('aria-pressed') === 'true', 'the seal to be on');
+
+		await openTab(sheet, 'effects');
+		const row = () => rowOf(sheet, 'inspiration');
+		await waitFor(() => !!row(), 'the Inspiration row');
+		useButtonOf(row()!)!.click();
+		await waitFor(() => hero.system.resources.inspiration === false, 'Inspiration to end');
+		await waitFor(() => !row(), 'the Inspiration row to go');
+	}, 30_000);
+
+	test('a Safe Rest ends Inspiration, and the window and the card say so', async () => {
+		await hero.update({ 'system.resources.inspiration': true });
+		const sheet = await openHeroSheet(hero);
+		buttonNamed(sheet, t('NIMBLE.prompts.safeRest'))!.click();
+		const restWindow = () =>
+			[...foundry.applications.instances.values()].find((app) =>
+				String((app as { title?: string }).title ?? '').startsWith(`${hero.name}: Safe Rest`),
+			) as { rendered: boolean; element: HTMLElement } | undefined;
+		await waitFor(() => !!restWindow()?.rendered, 'the safe rest window');
+		await settle(300);
+		expect(restWindow()!.element.textContent, 'the preview line').toContain(
+			t('NIMBLE.safeRest.inspiration'),
+		);
+		const before = game.messages.contents.length;
+		buttonNamed(restWindow()!.element, t('NIMBLE.safeRest.safeRestButton'))!.click();
+		await waitFor(() => hero.system.resources.inspiration === false, 'the rest to end Inspiration');
+		await waitFor(() => game.messages.contents.length > before, 'the safe rest card');
+		const card = game.messages.contents.at(-1) as unknown as {
+			type: string;
+			system: { inspirationEnded: boolean };
+		};
+		expect(card.type).toBe('safeRest');
+		expect(card.system.inspirationEnded).toBe(true);
 	}, 30_000);
 
 	test('the roll button of a dice pool adds a die, and the meter shows it', async () => {
