@@ -3,15 +3,13 @@
 The Abilities tab: the ability groups in columns, as a stat block. A click on a card rolls or posts it; the arrow
 shows or hides its text, which starts open; the pen opens its window. An attack sequence is a note above its actions.
 Drag a card to reorder it in its group, or to put an action in or out of an attack sequence. On a touch screen
-you drag only in edit mode.
+you drag only in edit mode. Each entry, with its edit mode, is a MonsterAbilityEntry.
 -->
 <script lang="ts">
 	import type { MonsterAbilitiesTabProps } from '#types/components/actorSheets/MonsterAbilitiesTab.d.ts';
-	import AbilityCard from '../../parts/AbilityCard.svelte';
-	import AttackSequence from '../../parts/AttackSequence.svelte';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
-	import { toggleClosedRow } from '../../shared/sheetUiState.ts';
 	import { abilityDrag } from './abilityDrag.svelte.ts';
+	import MonsterAbilityEntry from './MonsterAbilityEntry.svelte';
 
 	let { view, ui, perform }: MonsterAbilitiesTabProps = $props();
 
@@ -42,33 +40,7 @@ you drag only in edit mode.
 						ondragend={drag.ondragend}
 						ondrop={(event) => drag.ondrop(entry, event)}
 					>
-						{#if entry.kind === 'card'}
-							<AbilityCard
-								id="{uid}-{entry.id}"
-								name={entry.name}
-								img={entry.img}
-								kind={entry.roll ? 'roll' : 'chat'}
-								range={entry.range}
-								uses={entry.uses}
-								description={entry.description}
-								descriptionHtml={entry.descriptionHtml}
-								nested={entry.nested}
-								bind:open={
-									() => !ui.closedRows.includes(entry.id), () => toggleClosedRow(ui, entry.id)
-								}
-								onuse={() => perform(entry.use.intent)}
-								onedit={() => perform(entry.edit.intent)}
-							/>
-						{:else if entry.kind === 'sequence'}
-							<AttackSequence
-								parts={entry.html === undefined ? [entry.text] : []}
-								html={entry.html}
-								name={entry.name}
-								onedit={() => perform(entry.edit.intent)}
-							/>
-						{:else}
-							<GroupHeading label={entry.name} plain />
-						{/if}
+						<MonsterAbilityEntry {entry} {ui} {perform} {uid} />
 					</div>
 				{/each}
 			</section>

@@ -11,8 +11,9 @@ import { createSheetUiState } from '../../../shared/sheetUiState.ts';
 import { monsterAbilitiesTab } from '../../monsterAbilitiesTab.ts';
 import MonsterAbilitiesTab from '../MonsterAbilitiesTab.svelte';
 
-function renderTab(view = monsterAbilitiesTab(soloMonster(), monsterContext())) {
+function renderTab(view = monsterAbilitiesTab(soloMonster(), monsterContext()), editing = false) {
 	const ui = $state(createSheetUiState('abilities'));
+	ui.editing = editing;
 	const perform = vi.fn();
 	const sheetDrop = vi.fn();
 	const { container } = render(MonsterAbilitiesTab, { view, ui, perform });
@@ -176,6 +177,61 @@ describe('MonsterAbilitiesTab', () => {
 			'text/plain',
 			JSON.stringify({ type: 'Item', uuid: 'Actor.pudge00000000001.Item.moveAndSmack0001' }),
 		);
+	});
+
+	it('in edit mode a card does not act, and its uses are a number that you type', async () => {
+		const context = monsterContext({
+			itemPools: {
+				moveAndSmack0001: [{ id: 'smacks', label: 'Smacks', current: 2, max: 3, per: null }],
+			},
+		});
+		const { perform } = renderTab(monsterAbilitiesTab(soloMonster(), context), true);
+
+		expect(screen.queryByRole('button', { name: 'Move & Smack' })).toBeNull();
+		const uses = screen.getByRole('spinbutton', { name: /usesOf.*Smacks/ });
+		await fireEvent.input(uses, { target: { value: '1' } });
+		await fireEvent.blur(uses);
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'setPoolCharges', poolId: 'smacks', value: 1 });
+	});
+
+	it.each([
+		['a card', 'Move & Smack', 'moveAndSmack0001'],
+		['an attack sequence', 'Actions', 'sequence00000001'],
+		['a heading line', 'Tactics', 'tactics'],
+	])('in edit mode %s asks before Delete, and deletes on Yes', async (_kind, name, itemId) => {
+		const monster = soloMonster();
+		monster.items.push(monsterAbility(monster.id, 'tactics', 'Tactics', 'feature', 50000));
+		const { perform } = renderTab(monsterAbilitiesTab(monster, monsterContext()), true);
+
+		await fireEvent.click(
+			screen.getByRole('button', {
+				name: `NIMBLE.actorSheet.shared.deleteName ${JSON.stringify({ name })}`,
+			}),
+		);
+		expect(perform).not.toHaveBeenCalled();
+		expect(
+			screen.getByText(`NIMBLE.actorSheet.shared.deleteQuestion ${JSON.stringify({ name })}`),
+		).toBeInTheDocument();
+
+		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.actorSheet.shared.delete' }));
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'deleteItem', itemId });
+	});
+
+	it('gives a heading line a pen in edit mode only', async () => {
+		const monster = goblin();
+		monster.items.push(monsterAbility(monster.id, 'tactics', 'Tactics', 'feature', 50000));
+		const view = monsterAbilitiesTab(monster, monsterContext());
+
+		renderTab(view);
+		expect(screen.queryByRole('button', { name: 'Configure Tactics' })).toBeNull();
+
+		document.body.innerHTML = '';
+		const { perform } = renderTab(view, true);
+		await fireEvent.click(screen.getByRole('button', { name: 'Configure Tactics' }));
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'openItem', itemId: 'tactics' });
 	});
 
 	it('says so when the monster has no abilities', () => {
