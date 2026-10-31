@@ -529,6 +529,7 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
+							this.#item.identifier,
 						);
 						if (numericBonus > 0) {
 							formula = `${formula} + ${numericBonus}`;
@@ -539,6 +540,7 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
+							this.#item.identifier,
 						)) {
 							formula = `${formula} + ${diceFormula}`;
 						}

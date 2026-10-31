@@ -55,6 +55,21 @@
 					]
 				},
 				"chargePoolIdentifier": "deathbringers-touch"
+			},
+			{
+				"type": "damageBonus",
+				"disabled": false,
+				"id": "bP8wGf3SrZ6nVa1J",
+				"identifier": "",
+				"label": "Deathbringer's Touch: Lifebinding Spirit",
+				"predicate": {},
+				"priority": 3,
+				"value": "@strength",
+				"damageType": "",
+				"delivery": "any",
+				"source": "any",
+				"itemIdentifier": "lifebinding-spirit",
+				"targetCondition": {}
 			}
 		],
 		"activation": {

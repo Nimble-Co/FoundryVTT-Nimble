@@ -5,14 +5,14 @@
 	"img": "icons/magic/light/hand-sparks-glow-yellow.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "lifebinding-spirit",
 		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,11 +20,45 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "qL7vXb2NtY9cKs4M",
+					"type": "damage",
+					"damageType": "radiant",
+					"formula": "1d6+@will",
+					"ignoreArmor": true,
+					"canCrit": true,
+					"canMiss": true,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "wR3zJp6HgD1fUe8A",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "qL7vXb2NtY9cKs4M"
+							}
+						]
+					}
+				},
+				{
+					"id": "mC5yTn9BvK2xQh7L",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "1d6+@will",
+					"targetDisposition": "friendly",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach",
+				"distance": 4
 			},
 			"template": {
 				"length": 1,
