@@ -35,6 +35,7 @@ Click the moon button in the sheet sidebar. The safe rest window is a preview, n
 - **Mana** restored to maximum, if your class recovers mana on a safe rest.
 - **One wound** healed.
 - **Charges** on features and items that recharge on a safe rest.
+- **Inspiration** ends, if you have it. The GM grants it again later.
 
 Anything already full is marked "Already full". Click the Safe Rest button to apply it all; a chat card summarizes what was recovered (no card is posted if there was nothing to recover).
 

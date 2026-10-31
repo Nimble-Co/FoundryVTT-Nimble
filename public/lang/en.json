@@ -127,6 +127,11 @@
 						"dying": "Dying: at 0 HP. Taking damage while Dying causes 2 Wounds, a crit causes 3 instead.",
 						"healthy": "Hit Points"
 					},
+					"inspiration": {
+						"label": "Inspiration",
+						"on": "Inspired: you can reroll any single die. It ends after a Safe Rest. Click to end it.",
+						"off": "Grant Inspiration: the ability to reroll any single die, until a Safe Rest."
+					},
 					"levelUpHint": "Level Up. This opens the Level Up window",
 					"levelUpMax": "You are at the highest level",
 					"levelUpNoClass": "Add a class to level up",
@@ -243,7 +248,13 @@
 					}
 				},
 				"effects": {
-					"conditionsOn": "Conditions on you"
+					"conditionsOn": "Conditions on you",
+					"inspiration": {
+						"name": "Inspiration",
+						"summary": "Reroll any single die.",
+						"description": "The GM grants Inspiration when a hero does something memorable. Spend it to reroll any single die. It ends after a Safe Rest.",
+						"lasts": "Until a Safe Rest"
+					}
 				},
 				"bio": {
 					"age": "Age",
@@ -276,8 +287,7 @@
 					"initiativeBonus": "Initiative bonus",
 					"passiveSkills": "Show Passive Skill Scores",
 					"spellTier": "Highest Unlocked Spell Tier",
-					"resetSpellTier": "Reset spell tier",
-					"inspiration": "Inspiration"
+					"resetSpellTier": "Reset spell tier"
 				},
 				"inventory": {
 					"create": "Create Object",
@@ -3357,6 +3367,8 @@
 			"alreadyFull": "Already full",
 			"tempHp": "Temp HP",
 			"removed": "-{amount} removed",
+			"inspiration": "Inspiration",
+			"ends": "Ends",
 			"hitDice": "Hit Dice",
 			"hitDieRecovery": "+{amount} d{size}",
 			"mana": "Mana",
@@ -3373,6 +3385,7 @@
 			"manaRestored": "Mana Restored",
 			"hitDiceRecovered": "Hit Dice Recovered",
 			"woundsHealed": "Wounds Healed",
+			"inspirationEnded": "Inspiration Ended",
 			"alreadyFullyRested": "Already fully rested"
 		},
 		"fieldRest": {

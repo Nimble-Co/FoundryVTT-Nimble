@@ -29,6 +29,19 @@ describe('HeroEffectsTab', () => {
 		expect(screen.queryByRole('alertdialog')).toBeNull();
 	});
 
+	it('ends Inspiration from its row, with no question', async () => {
+		const hero = effectsHero();
+		hero.system.resources.inspiration = true;
+		const { perform } = renderTab(heroEffectsTab(hero, effectsContext()));
+
+		await fireEvent.click(
+			screen.getByRole('button', { name: /shared\.endName.*effects\.inspiration\.name/ }),
+		);
+
+		expect(perform).toHaveBeenCalledWith({ kind: 'setInspiration', value: false });
+		expect(screen.queryByRole('alertdialog')).toBeNull();
+	});
+
 	it('asks before it removes an effect, and removes it on Yes', async () => {
 		const { perform } = renderTab();
 		const bless = screen.getByRole('button', { name: `${FX}.removeName {"name":"Bless"}` });

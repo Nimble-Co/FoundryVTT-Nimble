@@ -70,6 +70,7 @@
 	let hp = $derived(actor.reactive.system.attributes.hp);
 	let hpRecovery = $derived(hp.max - hp.value);
 	let tempHpLoss = $derived(hp.temp);
+	let inspirationEnds = $derived(actor.reactive.system.resources.inspiration === true);
 
 	let mana = $derived(actor.reactive.system.resources.mana);
 	let manaRecoveryTypes = $derived.by(() =>
@@ -162,7 +163,8 @@
 			totalHitDiceRecovery > 0 ||
 			(restoresManaOnSafeRest && mana.max > 0 && manaRecovery > 0) ||
 			woundRecovery > 0 ||
-			hasAnyChargePoolRecovery,
+			hasAnyChargePoolRecovery ||
+			inspirationEnds,
 	);
 </script>
 
@@ -204,6 +206,20 @@
 								>-{tempHpLoss}</span
 							>
 							<span class="recovery-card__detail">{CONFIG.NIMBLE.safeRest.removed}</span>
+						</span>
+					</div>
+				</div>
+			{/if}
+
+			{#if inspirationEnds}
+				<div class="recovery-card recovery-card--loss">
+					<div class="recovery-card__icon-wrapper recovery-card__icon-wrapper--inspiration">
+						<i class="fa-solid fa-star"></i>
+					</div>
+					<div class="recovery-card__content">
+						<span class="recovery-card__label">{CONFIG.NIMBLE.safeRest.inspiration}</span>
+						<span class="recovery-card__value">
+							<span class="recovery-card__detail">{CONFIG.NIMBLE.safeRest.ends}</span>
 						</span>
 					</div>
 				</div>
@@ -416,6 +432,11 @@
 				color: hsl(0, 50%, 45%);
 			}
 
+			&--inspiration {
+				background: hsla(1, 51%, 34%, 0.15);
+				color: var(--nimble-crimson);
+			}
+
 			&--hd {
 				background: hsla(45, 70%, 50%, 0.15);
 				color: hsl(45, 70%, 40%);
@@ -520,6 +541,11 @@
 				&--temp {
 					background: hsla(0, 50%, 50%, 0.2);
 					color: hsl(0, 50%, 60%);
+				}
+
+				&--inspiration {
+					background: hsla(1, 51%, 40%, 0.24);
+					color: hsl(1, 70%, 70%);
 				}
 
 				&--hd {

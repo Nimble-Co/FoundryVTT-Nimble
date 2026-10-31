@@ -15,6 +15,7 @@
 	const manaRestored = $derived(system.manaRestored);
 	const woundsRecovered = $derived(system.woundsRecovered);
 	const chargePoolsRecovered = $derived(system.chargePoolsRecovered ?? []);
+	const inspirationEnded = $derived(system.inspirationEnded === true);
 	const optionChanges = $derived(system.optionChanges ?? []);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
@@ -34,7 +35,8 @@
 			hpRestored > 0 ||
 			manaRestored > 0 ||
 			woundsRecovered > 0 ||
-			chargePoolsRecovered.length > 0,
+			chargePoolsRecovered.length > 0 ||
+			inspirationEnded,
 	);
 </script>
 
@@ -91,6 +93,13 @@
 						<i class="recovery-item__icon fa-solid fa-bandage"></i>
 						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.woundsHealed}</span>
 						<span class="recovery-item__value recovery-item__value--wounds">{woundsRecovered}</span>
+					</div>
+				{/if}
+
+				{#if inspirationEnded}
+					<div class="recovery-item recovery-item--removed">
+						<i class="recovery-item__icon fa-solid fa-star"></i>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.inspirationEnded}</span>
 					</div>
 				{/if}
 

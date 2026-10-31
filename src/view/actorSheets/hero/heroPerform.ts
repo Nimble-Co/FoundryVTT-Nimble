@@ -182,7 +182,6 @@ const SETTINGS_FIELDS: Record<HeroSettingsField, string> = {
 	woundsBonus: 'system.attributes.wounds.bonus',
 	highestUnlockedSpellTier: 'system.resources.highestUnlockedSpellTier',
 	initiativeBonuses: 'system.attributes.initiative.bonuses',
-	inspiration: 'system.resources.inspiration',
 };
 
 const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemType'], string> = {
@@ -358,6 +357,12 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'setField':
 				await actor.update({ [SETTINGS_FIELDS[intent.field]]: intent.value } as Record<
+					string,
+					unknown
+				>);
+				return;
+			case 'setInspiration':
+				await actor.update({ 'system.resources.inspiration': intent.value } as Record<
 					string,
 					unknown
 				>);

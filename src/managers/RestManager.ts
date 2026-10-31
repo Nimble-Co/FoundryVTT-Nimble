@@ -35,6 +35,7 @@ class RestManager {
 		manaRestored: number;
 		woundsRecovered: number;
 		chargePoolsRecovered: ChargePoolRecoveryEntry[];
+		inspirationEnded: boolean;
 	};
 
 	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
@@ -58,6 +59,7 @@ class RestManager {
 			manaRestored: 0,
 			woundsRecovered: 0,
 			chargePoolsRecovered: [],
+			inspirationEnded: false,
 		};
 
 		const defaultData: RestManager.Data = {
@@ -93,6 +95,7 @@ class RestManager {
 			}
 			this.#restoreWounds();
 			this.#restoreChargePools();
+			this.#endInspiration();
 		}
 		if (this.#restType === 'field' && this.#shouldRestoreMana('field')) {
 			this.#restoreMana();
@@ -124,6 +127,7 @@ class RestManager {
 				this.#recovery.manaRestored > 0 ||
 				this.#recovery.woundsRecovered > 0 ||
 				this.#recovery.chargePoolsRecovered.length > 0 ||
+				this.#recovery.inspirationEnded ||
 				// A fully rested character who only changed their options still has something
 				// to report, and the table should see a build change.
 				optionChanges.length > 0;
@@ -149,6 +153,7 @@ class RestManager {
 						manaRestored: this.#recovery.manaRestored,
 						woundsRecovered: this.#recovery.woundsRecovered,
 						chargePoolsRecovered: this.#recovery.chargePoolsRecovered,
+						inspirationEnded: this.#recovery.inspirationEnded,
 						optionChanges,
 					},
 				} as unknown as ChatMessage.CreateData);
@@ -325,6 +330,13 @@ class RestManager {
 			this.#recovery.woundsRecovered = 1;
 			this.#summary.push('Recovered 1 wound.');
 		}
+	}
+
+	#endInspiration() {
+		if (!this.#actor.system.resources.inspiration) return;
+		this.#updates.actor['system.resources.inspiration'] = false;
+		this.#recovery.inspirationEnded = true;
+		this.#summary.push('Inspiration ended.');
 	}
 
 	#restoreChargePools() {

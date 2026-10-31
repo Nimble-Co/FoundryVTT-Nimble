@@ -45,6 +45,48 @@ describe('heroEffectsTab', () => {
 		expect(effectsOnHero(blankHero(), heroContext())).toBe(0);
 	});
 
+	describe('Inspiration', () => {
+		const IN = 'NIMBLE.actorSheet.hero.effects.inspiration';
+		const inspired = () => {
+			const hero = effectsHero();
+			hero.system.resources.inspiration = true;
+			return hero;
+		};
+
+		it('is an active effect, A to Z with the others, and counts on the tab', () => {
+			const view = heroEffectsTab(inspired(), effectsContext());
+
+			expect(layout(view)[0]).toEqual([`${FX}.active`, '3', ['Bless', `${IN}.name`, 'Rage']]);
+			expect(effectsOnHero(inspired(), effectsContext())).toBe(4);
+		});
+
+		it('ends from its row with no question, and lasts until a Safe Rest', () => {
+			const row = rowOf(heroEffectsTab(inspired(), effectsContext()), 'inspiration');
+
+			expect(row).toMatchObject({
+				icon: 'fa-solid fa-star',
+				summary: `${IN}.summary`,
+				description: `${IN}.description`,
+				cost: { text: `${IN}.lasts` },
+				facts: [[`${FX}.facts.lasts`, `${IN}.lasts`]],
+				use: {
+					kind: 'act',
+					label: 'NIMBLE.actorSheet.shared.endName {"name":"' + `${IN}.name` + '"}',
+					intent: { kind: 'setInspiration', value: false },
+				},
+				edit: null,
+			});
+		});
+
+		it('is not on the tab when the hero has none', () => {
+			const view = heroEffectsTab(effectsHero(), effectsContext());
+
+			expect(view.groups.flatMap((group) => group.rows).map((row) => row.id)).not.toContain(
+				'inspiration',
+			);
+		});
+	});
+
 	it('ends a toggle effect from its row, with no question, and says when it ends', () => {
 		const row = rowOf(heroEffectsTab(effectsHero(), effectsContext()), 'effect-rageEffect');
 

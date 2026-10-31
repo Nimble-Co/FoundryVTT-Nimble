@@ -10,6 +10,36 @@ import { heroRail } from '../heroRail.ts';
 const RAIL = 'NIMBLE.actorSheet.hero.rail';
 
 describe('heroRail', () => {
+	describe('Inspiration', () => {
+		it('shows the seal on, and a click ends it', () => {
+			const view = heroRail(
+				blankHero({ system: { resources: { inspiration: true } } }),
+				heroContext(),
+			);
+
+			expect(view.inspiration).toEqual({
+				on: true,
+				label: `${RAIL}.inspiration.label`,
+				tooltip: `${RAIL}.inspiration.on`,
+				intent: { kind: 'setInspiration', value: false },
+			});
+		});
+
+		it('shows the seal off, and a click grants it', () => {
+			const view = heroRail(
+				blankHero({ system: { resources: { inspiration: false } } }),
+				heroContext(),
+			);
+
+			expect(view.inspiration).toEqual({
+				on: false,
+				label: `${RAIL}.inspiration.label`,
+				tooltip: `${RAIL}.inspiration.off`,
+				intent: { kind: 'setInspiration', value: true },
+			});
+		});
+	});
+
 	describe('who the hero is', () => {
 		it('names the ancestry, size, class and level', () => {
 			const view = heroRail(blankHero(), heroContext());

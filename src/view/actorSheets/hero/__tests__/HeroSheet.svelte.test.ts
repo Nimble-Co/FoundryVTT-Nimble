@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { blankHero, heroContext } from '../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { createSheetUiState, revealIn } from '../../shared/sheetUiState.ts';
@@ -63,7 +63,7 @@ describe('HeroSheet', () => {
 		['inventory', 'NIMBLE.actorSheet.hero.inventory.none'],
 		['effects', 'NIMBLE.actorSheet.shared.effects.allConditions'],
 		['bio', 'NIMBLE.actorSheet.hero.bio.notes'],
-		['settings', 'NIMBLE.actorSheet.hero.settings.groups.needsAPlace'],
+		['settings', 'NIMBLE.actorSheet.hero.settings.groups.image'],
 	])('opens the %s tab', async (tab, text) => {
 		stubWidth(720);
 		const { ui } = renderSheet();
@@ -92,6 +92,22 @@ describe('HeroSheet', () => {
 		expect(screen.queryByRole('complementary', { name: RAIL_LABEL })).toBeNull();
 		expect(screen.getByRole('banner', { name: RAIL_LABEL })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /NIMBLE.hitDice.heading/ })).toBeInTheDocument();
+	});
+
+	it('ends Inspiration from the seal in the narrow header', async () => {
+		stubWidth(390);
+		const perform = vi.fn();
+		const ui = $state(createSheetUiState('core'));
+		const actor = blankHero({ system: { resources: { inspiration: true } } });
+		render(HeroSheet, { source: () => ({ actor, context: heroContext() }), ui, perform });
+		const header = screen.getByRole('banner', { name: RAIL_LABEL });
+		const seal = within(header).getByRole('button', {
+			name: 'NIMBLE.actorSheet.hero.rail.inspiration.label',
+		});
+
+		expect(seal).toHaveAttribute('aria-pressed', 'true');
+		await fireEvent.click(seal);
+		expect(perform).toHaveBeenCalledWith({ kind: 'setInspiration', value: false });
 	});
 
 	it('shows the edit band in edit mode, and Done leaves it', async () => {

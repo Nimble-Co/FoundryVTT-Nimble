@@ -10,6 +10,10 @@ The new character sheet and the new NPC sheet are a preview. They are in the sys
 
 The new character sheet has a rail with your Hit Points, mana, wounds and Hit Dice, and eight tabs: Core, Actions, Features, Inventory, Spells, Effects, Bio and Settings. A click on a row uses the thing. The arrow at the start of a row shows its full text. The pen at the end opens its window. Turn on edit mode to configure the values of your character and to delete items.
 
+### Inspiration
+
+Inspiration is an optional rule: the GM grants it, and you can spend it to reroll any single die. It ends after a Safe Rest. The star seal in the top-right corner of the portrait shows it. A crimson seal means that you have Inspiration, and a ghost ring means that you do not. Click the seal to grant Inspiration or to end it. While you have it, it is also in **Active effects** on the Effects tab, and the tab count includes it. Click its row to end it when you spend it. Reroll the die by hand: the chat cards do not have an Inspiration reroll yet.
+
 ## The new NPC sheet
 
 The new NPC sheet is for NPCs, minions and solo monsters. The rail has the Hit Points, the saves, armor, speed and the damage defenses, and four tabs: Abilities, Effects, Notes and Settings. The abilities are cards in columns, as a stat block, and their text starts open. A click on the name of an ability rolls it or posts it to chat. A click on a save rolls it.

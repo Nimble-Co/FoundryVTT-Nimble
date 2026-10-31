@@ -195,15 +195,7 @@ export function heroSettingsTab(
 			id: 'needsAPlace',
 			label: label('groups.needsAPlace'),
 			hint: label('needsAPlaceHint'),
-			settings: [
-				{
-					kind: 'check',
-					id: 'inspiration',
-					label: label('inspiration'),
-					on: system.resources.inspiration,
-					intent: field('inspiration'),
-				},
-			],
+			settings: [],
 		},
 	};
 }
