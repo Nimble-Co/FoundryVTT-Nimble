@@ -738,6 +738,85 @@ describe('resolveRerollReaction', () => {
 		});
 	});
 
+	describe('a Make It a Crit entry', () => {
+		const makeCrit = { type: 'makeCrit', rerollChanges: undefined };
+
+		function critMessage() {
+			const message = createMessage({ entries: [rerollEntry({ use: 'crit' })] });
+			const node = (message.system.activation as { effects: Array<{ roll: { options: object } }> })
+				.effects[0];
+			Object.assign(node.roll.options, { canCrit: true });
+			return message;
+		}
+
+		it('makes the attack a crit that stays, and writes a crit line', async () => {
+			setupWorld(makeCrit);
+			const message = critMessage();
+			const spy = vi.spyOn(DamageRoll.prototype, 'makeCritical').mockImplementation(async function (
+				this: DamageRoll,
+			) {
+				this.isCritical = true;
+				this.isMiss = false;
+				this.options.forcedCrit = 'always';
+				return { term: { faces: 6, number: 1, results: [] } as never, drawn: [] };
+			});
+			// The mock Roll has no class in its data: copy a damage roll as a DamageRoll.
+			const fromData = foundry.dice.Roll.fromData;
+			let copying = false;
+			const copies = vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: {
+				originalFormula?: string;
+			}) => {
+				if (copying || !data.originalFormula)
+					return fromData.call(foundry.dice.Roll, data as never);
+				copying = true;
+				try {
+					return DamageRoll.fromData(data as never);
+				} finally {
+					copying = false;
+				}
+			}) as never);
+
+			try {
+				await message.resolveRerollReaction('entry-1', 'gm-user');
+
+				expect(spy).toHaveBeenCalledTimes(1);
+				const payload = updatePayload(message);
+				expect(payload.system.isCritical).toBe(true);
+				expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
+				expect(payload.system.rerolls).toEqual([
+					expect.objectContaining({ entryId: 'entry-1', use: 'crit' }),
+				]);
+			} finally {
+				spy.mockRestore();
+				copies.mockRestore();
+			}
+		});
+
+		it('is refused on an attack that cannot crit, and spends nothing', async () => {
+			setupWorld(makeCrit);
+			const message = createMessage({ entries: [rerollEntry({ use: 'crit' })] });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(message.update).not.toHaveBeenCalled();
+			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+				localize('NIMBLE.chat.incomingReactions.rerollNoLongerAvailable'),
+			);
+		});
+
+		it('is refused on a crit', async () => {
+			setupWorld(makeCrit);
+			const message = createMessage({ entries: [rerollEntry({ use: 'crit' })], isCritical: true });
+			const node = (message.system.activation as { effects: Array<{ roll: { options: object } }> })
+				.effects[0];
+			Object.assign(node.roll.options, { canCrit: true });
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(message.update).not.toHaveBeenCalled();
+		});
+	});
+
 	it('gives no dice to pick for a rule that rerolls the whole roll', () => {
 		setupWorld();
 		const message = createMessage();

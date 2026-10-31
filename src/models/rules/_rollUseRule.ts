@@ -30,7 +30,7 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 /** The lang namespace a rule's own words are under, as `NIMBLE.rules.<namespace>`. */
-type RollUseNamespace = 'reroll' | 'changeDie';
+type RollUseNamespace = 'reroll' | 'changeDie' | 'makeCrit';
 
 // Words that say what the rule does. The other words are the same for every
 // rule that uses a roll, so they stay under the Reroll rule's keys.
@@ -53,8 +53,10 @@ function choiceLabels(
 	);
 }
 
+/** A rule with no roll field is used on attacks only. */
 function rollsInclude(kind: RerollRollKind) {
-	return (data: Record<string, unknown>) => Array.isArray(data.rolls) && data.rolls.includes(kind);
+	return (data: Record<string, unknown>) =>
+		Array.isArray(data.rolls) ? data.rolls.includes(kind) : kind === 'attack';
 }
 
 const forAttacks = rollsInclude('attack');
@@ -309,7 +311,7 @@ const COST_FIELDS = [
  * when the rule is used, never during data preparation.
  */
 abstract class RollUseRule<
-	TSchema extends RollUseRule.Schema = RollUseRule.Schema,
+	TSchema extends NimbleBaseRule.Schema = RollUseRule.Schema,
 > extends NimbleBaseRule<TSchema> {
 	declare rolls: RerollRollKind[];
 	declare saves: string[];
@@ -416,7 +418,7 @@ abstract class RollUseRule<
 		if (!this.item.isEmbedded) return false;
 		if (!this.test()) return false;
 		const { side, roll } = context;
-		if (!this.rolls?.includes(roll.kind)) return false;
+		if (!this.usesOnRolls().includes(roll.kind)) return false;
 		if (this.usedBy !== side) return false;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
@@ -428,6 +430,11 @@ abstract class RollUseRule<
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
 		return canPayRerollCost(this.actor, this.rollUseCost);
+	}
+
+	/** The kinds of roll this rule can be used on. */
+	protected usesOnRolls(): readonly RerollRollKind[] {
+		return this.rolls ?? [];
 	}
 
 	/** The note this rule puts under its feature on the card for this roll. Empty for none. */

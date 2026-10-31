@@ -77,7 +77,7 @@ interface EntryOptions {
 	usedPoolLabel?: string;
 	usedFaces?: number[];
 	leftOut?: unknown;
-	use?: 'reroll' | 'change';
+	use?: 'reroll' | 'change' | 'crit';
 }
 
 function createEntry(options: EntryOptions = {}) {
@@ -722,6 +722,31 @@ describe('IncomingReactionPrompts', () => {
 					expect.objectContaining({ entryId: 'wren-change' }),
 				);
 				expect(rollPlace().queryByRole('menu')).toBeNull();
+			});
+
+			it('shows Make crit after Change die, and uses it with no die to pick', async () => {
+				const message = createMessage([
+					rerollEntry({ id: 'wren-change', actorUuid: 'Actor.wren', use: 'change' }),
+					rerollEntry({ id: 'wren-crit', actorUuid: 'Actor.wren', use: 'crit' }),
+				]);
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				const buttons = rollPlace().getAllByRole('button');
+				expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+					'Change die',
+					'Make crit',
+				]);
+				expect(buttons[1].querySelector('.fa-burst')).toBeTruthy();
+
+				await useFeature(rollPlace(), 'Make crit', 'Make the attack a crit with Pocket Sand');
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ entryId: 'wren-crit' }),
+				);
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalledWith(
+					expect.objectContaining({ die: expect.anything() }),
+				);
 			});
 
 			it('opens one menu at a time, and a second click closes it', async () => {

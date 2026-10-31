@@ -66,7 +66,9 @@ export function createIncomingReactionText(getRerolls: () => RerollRecord[]): In
 			});
 		}
 		if (entry.kind === 'reroll') {
-			const key = entry.use === 'change' ? 'changeWith' : 'rerollWith';
+			const key = { reroll: 'rerollWith', change: 'changeWith', crit: 'critWith' }[
+				entry.use ?? 'reroll'
+			];
 			return localize(`NIMBLE.chat.incomingReactions.${key}`, {
 				feature: featureName(entry) || entry.label,
 			});

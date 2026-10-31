@@ -2,6 +2,7 @@ import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	changeOneDie,
 	type DieRef,
+	makeRollCrit,
 	type OneDieRoll,
 	type PickableDie,
 	pickableDice,
@@ -138,4 +139,30 @@ function changeableFor<TRoll>(
 	};
 }
 
-export { changeableFor, diceForRule, diceToPick, rerollableFor };
+/**
+ * The roll a Make It a Crit rule makes a crit, with the crit dice rolled. The
+ * Primary Die keeps its face. Null when the card has no roll to change. Only
+ * the crit dice are thrown.
+ */
+function critFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	maker: typeof makeRollCrit = makeRollCrit,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const ref = primaryDieRef(current);
+
+	let made: Awaited<ReturnType<typeof makeRollCrit>> | null = null;
+	return {
+		...found,
+		previousResult: ref ? resultAt(current, ref) : null,
+		makeRoll: async () => {
+			made = await maker(current);
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+export { changeableFor, critFor, diceForRule, diceToPick, rerollableFor };

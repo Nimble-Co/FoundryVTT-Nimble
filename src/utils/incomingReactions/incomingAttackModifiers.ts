@@ -88,7 +88,13 @@ interface EvaluatedDamageRollLike {
 	isMiss?: boolean;
 	originalFormula?: string;
 	primaryDieValue?: number;
-	options: { forceMiss?: boolean; netRollMode?: number; [key: string]: unknown };
+	options: {
+		forceMiss?: boolean;
+		netRollMode?: number;
+		canCrit?: boolean;
+		forcedCrit?: string;
+		[key: string]: unknown;
+	};
 	toJSON: () => object;
 }
 

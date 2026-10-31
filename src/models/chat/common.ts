@@ -160,7 +160,7 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
-			// reroll only: a Change a Die rule's entry changes a die instead of rolling again.
+			// reroll only: a Change a Die entry changes a die, a Make It a Crit entry makes a crit.
 			use: new fields.StringField({
 				required: false,
 				nullable: false,

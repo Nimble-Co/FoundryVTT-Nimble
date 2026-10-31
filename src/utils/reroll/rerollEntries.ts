@@ -2,12 +2,15 @@ import type { DieChange } from '#types/dieChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type AttackOutcomeView,
+	canBecomeCrit,
+	critStays,
 	type IncomingReactionEntry,
 	type RerollDie,
 	type RerollKeep,
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { soleTarget } from '../tokens/soleTarget.js';
@@ -17,10 +20,18 @@ import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
+const MAKE_CRIT_RULE_TYPE = 'makeCrit';
 
 /** The rule types whose entries go on a card as `reroll` entries. */
 function isRollUseRule(type: string | undefined): boolean {
-	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE;
+	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE || type === MAKE_CRIT_RULE_TYPE;
+}
+
+/** What an entry of a rule of this type does. Absent is a reroll. */
+function rollUseOf(type: string | undefined): RollUse | undefined {
+	if (type === CHANGE_DIE_RULE_TYPE) return 'change';
+	if (type === MAKE_CRIT_RULE_TYPE) return 'crit';
+	return undefined;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -117,21 +128,27 @@ function attackOutcome(context: RerollRollContext): RerollRollOutcome {
 	return { outcome: context.outcome, forcedMiss: context.forcedMiss };
 }
 
-/** Whether a roll use with this trigger fits the outcome. A crit that stays has no crit-only use. */
+/**
+ * Whether a roll use with this trigger fits the outcome. A crit that stays has
+ * no crit-only use, and a crit use needs a roll that can still be made a crit.
+ */
 function rollUseTriggerMatches(
 	trigger: RerollTrigger | null | undefined,
 	outcome: AttackOutcomeView,
+	use?: RollUse,
 ): boolean {
-	if (trigger === 'criticalHit' && outcome.critStays) return false;
+	if (use === 'crit' && !canBecomeCrit(outcome)) return false;
+	if (trigger === 'criticalHit' && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
 
 function outcomeAllows(
 	trigger: RerollTrigger | null | undefined,
 	roll: RerollRollOutcome,
+	use?: RollUse,
 ): boolean {
 	if (roll.forcedMiss) return false;
-	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome);
+	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome, use);
 }
 
 /**
@@ -210,7 +227,8 @@ function collectRerollEntries(context: RerollRollContext): {
 				if (!isRollUseRule(rule?.type)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
-				if (!outcomeAllows(trigger, outcome)) continue;
+				const use = rollUseOf(rule.type);
+				if (!outcomeAllows(trigger, outcome, use)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
 				const entry: IncomingReactionEntry = {
@@ -227,7 +245,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					used: false,
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
-					...(rule.type === CHANGE_DIE_RULE_TYPE ? { use: 'change' as const } : {}),
+					...(use ? { use } : {}),
 					...(hint ? { hint } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
@@ -248,7 +266,7 @@ function collectRerollEntries(context: RerollRollContext): {
  * made, every offer stands.
  */
 function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
-	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll);
+	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll, entry.use);
 	if (!roll.outcome) return true;
 	return rerollTriggerMatches(entry.outcomeTrigger, roll.outcome);
 }
@@ -314,7 +332,7 @@ function nextAutomaticReroll(
 	);
 }
 
-/** The live Reroll or Change a Die rule an entry came from, or null when it is gone or off. */
+/** The live roll use rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	if (!entry.itemUuid) return null;
 	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
@@ -362,7 +380,9 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const { outcome, forcedMiss } = attackOutcome(context);
-	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
+	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, rollUseOf(rule.type))) {
+		return UNAVAILABLE;
+	}
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
 	return { ok: true, rule, actor };
 }
@@ -371,6 +391,7 @@ export {
 	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
+	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,
 	REROLL_RULE_TYPE,

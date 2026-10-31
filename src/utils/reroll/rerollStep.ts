@@ -67,6 +67,8 @@ interface RerollStepInput<TRoll> {
 	automatic?: boolean;
 	/** A Change a Die rule's use: the change it makes. Absent for a reroll. */
 	change?: DieChange;
+	/** A Make It a Crit rule's use. */
+	makesCrit?: boolean;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
@@ -151,6 +153,7 @@ async function rerollWithRule<TRoll>(
 				changes: rollChanges,
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
+				...(input.makesCrit ? { use: 'crit' as const } : {}),
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),

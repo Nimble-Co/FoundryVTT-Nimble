@@ -676,17 +676,20 @@
 				"useFailed": "That reaction could not be completed.",
 				"rerollWith": "Reroll with {feature}",
 				"changeWith": "Change the die with {feature}",
+				"critWith": "Make the attack a crit with {feature}",
 				"rerollAgain": "Reroll again with {feature}",
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
 				"verbs": {
 					"reroll": "Reroll",
-					"change": "Change die"
+					"change": "Change die",
+					"crit": "Make crit"
 				},
 				"verbCount": "{verb}: {count} features",
 				"withNote": "{text}. {note}",
 				"rollMenu": {
 					"change": "Change a die",
+					"crit": "Make it a crit",
 					"choose": "Choose a feature to reroll or change the die"
 				},
 				"rerollHistoryPlain": "Rerolled with {feature}",
@@ -695,10 +698,12 @@
 				"changeHistory": "Changed with {feature}: {previous} became {next}",
 				"changeHistoryCrit": "Changed with {feature}: {previous} became {next}, a crit",
 				"changeHistoryMiss": "Changed with {feature}: {previous} became {next}, a miss",
+				"critHistory": "Made the attack a crit with {feature}",
 				"changeArrowSet": "set",
 				"rerollTags": {
 					"crit": "Crit",
 					"critTooltip": "{feature} made the die a crit.",
+					"critMadeTooltip": "{feature} made the attack a crit.",
 					"miss": "Miss",
 					"missTooltip": "{feature} made the die a miss.",
 					"automatic": "Automatic",
@@ -1552,6 +1557,7 @@
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
 			"markTarget": "Mark Target",
+			"makeCrit": "Make It a Crit",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -2487,6 +2493,19 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool it spends 1 charge from each time it changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
+				}
+			},
+			"makeCrit": {
+				"description": "Lets the one who rolled, the target of an attack, or an ally make an attack a crit after it is rolled. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a reroll or a change after it alters only the damage dice. It is not offered on an attack with 2 or more targets, on an area attack, or on an attack that is already a crit.",
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"oncePerAttack": {
+					"label": "Only once per attack",
+					"hint": "The feature can make the same attack a crit only once, even with uses left."
 				}
 			},
 			"changeDie": {

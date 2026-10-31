@@ -138,6 +138,7 @@ export function createIncomingReactionPromptsState(
 		return [
 			section('reroll', 'NIMBLE.chat.incomingReactions.verbs.reroll'),
 			section('change', 'NIMBLE.chat.incomingReactions.rollMenu.change'),
+			section('crit', 'NIMBLE.chat.incomingReactions.rollMenu.crit'),
 		].filter((menuSection) => menuSection.items.length > 0);
 	});
 	const primaryOutcome = $derived.by<DieOutcome>(() => {
@@ -291,7 +292,8 @@ export function createIncomingReactionPromptsState(
 			}
 
 			if (entry.kind === 'reroll') {
-				await (entry.use === 'change' ? useChange(entry) : useReroll(entry));
+				if (entry.use === 'crit') await sendReroll(entry, null);
+				else await (entry.use === 'change' ? useChange(entry) : useReroll(entry));
 				return;
 			}
 

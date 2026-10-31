@@ -3,6 +3,7 @@ import type {
 	IncomingReactionEntry,
 	RerollGrant,
 	RerollRecord,
+	RollUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '#utils/localize.js';
@@ -49,6 +50,8 @@ interface RerollHistoryLine {
 	keptOld: boolean;
 	/** A change of the die, not a reroll: the label on its arrow ("set", "+1"). */
 	change?: { arrow: string };
+	/** What the use did: a reroll, a change of the die, or a crit. */
+	use: RollUse;
 }
 
 interface RerollHistoryInput {
@@ -63,7 +66,7 @@ interface RerollHistoryInput {
 
 /** A waiting reroll entry is a "Reroll again" when its rule already rerolled in this list. */
 export function isRerollAgain(entry: IncomingReactionEntry, records: RerollRecord[]): boolean {
-	if (entry.kind !== 'reroll' || entry.use === 'change') return false;
+	if (entry.kind !== 'reroll' || (entry.use ?? 'reroll') !== 'reroll') return false;
 	const key = rerollRuleKey(entry);
 	return records.some((record) => rerollRuleKey(record) === key);
 }
@@ -277,6 +280,29 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			);
 		}
 
+		if (record.use === 'crit') {
+			return {
+				title: feature,
+				tags: [
+					{
+						kind: 'crit',
+						label: localize('NIMBLE.chat.incomingReactions.rerollTags.crit'),
+						tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.critMadeTooltip', {
+							feature,
+						}),
+						off: false,
+					},
+				],
+				tempHpNote: null,
+				offNote: null,
+				text: localize('NIMBLE.chat.incomingReactions.critHistory', { feature }),
+				detail: details.length > 0 ? details.join(' - ') : null,
+				dice: dice(record),
+				keptOld: false,
+				use: 'crit',
+			};
+		}
+
 		if (record.use === 'change') {
 			const mode = record.change?.mode ?? 'set';
 			return {
@@ -294,6 +320,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 							? signed(record.change?.value ?? 0)
 							: localize('NIMBLE.chat.incomingReactions.changeArrowSet'),
 				},
+				use: 'change',
 			};
 		}
 
@@ -330,6 +357,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			detail: details.length > 0 ? details.join(' - ') : null,
 			dice: dice(record),
 			keptOld: record.kept === 'old',
+			use: 'reroll',
 		};
 	});
 }

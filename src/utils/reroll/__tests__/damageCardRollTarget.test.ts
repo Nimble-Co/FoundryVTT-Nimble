@@ -88,6 +88,18 @@ describe('damageCardRollTarget', () => {
 		});
 	});
 
+	it('tells the gate whether the roll can crit, from its options', () => {
+		const multi = serializedRoll();
+		Object.assign(multi.options, { canCrit: false, multiTarget: true });
+		const cannot = makeCard([damageNode(multi)]);
+		const critting = serializedRoll();
+		Object.assign(critting.options, { canCrit: true });
+		const can = makeCard([damageNode(critting)]);
+
+		expect(damageCardRollTarget(cannot).context().outcome?.canCrit).toBe(false);
+		expect(damageCardRollTarget(can).context().outcome?.canCrit).toBe(true);
+	});
+
 	it('tells the gate a crit can go away without such a Forced Crit', () => {
 		const card = makeCard([damageNode(serializedRoll())]);
 		Object.assign(card.system(), { isCritical: true });

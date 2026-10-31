@@ -354,12 +354,39 @@ describe('RuleCard with a form layout (attackOutcome)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (makeCrit)', () => {
+	it('asks who, when and the cost, with no roll question', () => {
+		const { container } = render(RuleCard, { rule: initialRule('makeCrit'), manager });
+		expect(shownFields(container)).toEqual([
+			'usedBy',
+			'outcome',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+			'manaCost',
+			'woundCost',
+			'heroicReaction',
+			'actionCost',
+			'oncePerAttack',
+			'cardHint',
+		]);
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie', 'attackOutcome'];
+	const withLayout = [
+		'reroll',
+		'modifyReroll',
+		'primaryDieBonus',
+		'changeDie',
+		'attackOutcome',
+		'makeCrit',
+	];
 
 	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);

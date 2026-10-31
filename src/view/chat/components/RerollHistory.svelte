@@ -68,7 +68,7 @@
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
 			data-tooltip={line.text}
 		>
-			<i class={REACTION_VERB_ICONS[line.change ? 'change' : 'reroll']} aria-hidden="true"></i>
+			<i class={REACTION_VERB_ICONS[line.use]} aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
 					<span aria-hidden="true">{line.title}</span>

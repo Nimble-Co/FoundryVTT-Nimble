@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type OneDieRoll, rerollOneDie } from '../../../dice/oneDieReroll.js';
-import { changeableFor, diceForRule, diceToPick, rerollableFor } from '../rerollDieChoice.js';
+import {
+	changeableFor,
+	critFor,
+	diceForRule,
+	diceToPick,
+	rerollableFor,
+} from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
 const kept = (result: number) => ({ result, active: true });
@@ -278,5 +284,27 @@ describe('changeableFor', () => {
 
 	it('needs the roll as it stands on the card', () => {
 		expect(changeableFor(found(null), 'primaryDie', null, { mode: 'set', value: 2 })).toBeNull();
+	});
+});
+
+describe('critFor', () => {
+	const thrown = { formula: '1d8' } as never;
+	const made = { roll: 'crit' as never, faces: 8, next: 6, thrown };
+
+	it('makes the roll a crit, keeps the Primary Die face, and throws only the crit dice', async () => {
+		const maker = vi.fn(async () => made);
+		const current = damageRoll();
+		const crit = critFor(found(current), maker);
+		if (!crit) throw new Error('expected a crit');
+
+		expect(crit.previousResult).toBe(6);
+		expect(await crit.makeRoll('ignored', {})).toBe('crit');
+		expect(maker).toHaveBeenCalledWith(current);
+		expect(crit.readNewDie?.('crit')).toEqual({ faces: 8, value: 6, dropped: null });
+		expect(crit.diceToThrow?.('crit')).toBe(thrown);
+	});
+
+	it('needs the roll as it stands on the card', () => {
+		expect(critFor(found(null))).toBeNull();
 	});
 });

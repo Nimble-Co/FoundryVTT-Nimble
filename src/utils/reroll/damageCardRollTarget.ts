@@ -94,10 +94,7 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
-/** Whether a serialized or live roll has a Forced Crit that always applies. */
-function hasLastingCrit(roll: unknown): boolean {
-	return (roll as { options?: { forcedCrit?: unknown } } | null)?.options?.forcedCrit === 'always';
-}
+type RollOptionsView = { options?: { canCrit?: unknown; forcedCrit?: unknown } | null } | null;
 
 /**
  * A damage card's roll with this outcome, as the reroll gate sees it. The
@@ -109,6 +106,12 @@ function damageRollContext(
 	forcedMiss: boolean,
 	allies: RerollAlly[] = alliesOnCard(card.system().incomingReactions ?? []),
 ): RerollRollContext {
+	// A rolled attack has its options; a card's system data reads them from its primary roll.
+	const rolled = (
+		(outcome as RollOptionsView)?.options
+			? outcome
+			: findPrimaryDamageRoll(card.system())?.damageNode.roll
+	) as RollOptionsView | undefined;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -120,10 +123,8 @@ function damageRollContext(
 		outcome: {
 			isCritical: outcome.isCritical,
 			isMiss: outcome.isMiss,
-			critStays:
-				outcome.isCritical === true &&
-				(hasLastingCrit(outcome) ||
-					hasLastingCrit(findPrimaryDamageRoll(card.system())?.damageNode.roll)),
+			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
+			canCrit: rolled?.options?.canCrit === true,
 		},
 		forcedMiss,
 	};

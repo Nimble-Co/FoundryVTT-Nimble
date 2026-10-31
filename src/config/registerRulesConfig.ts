@@ -28,6 +28,7 @@ import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
+import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
@@ -87,6 +88,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
+		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -146,6 +148,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
+		makeCrit: MakeCritRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,

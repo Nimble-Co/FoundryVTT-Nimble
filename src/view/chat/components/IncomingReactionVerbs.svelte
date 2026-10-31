@@ -46,7 +46,12 @@
 			aria-controls={expanded ? menuId : undefined}
 			onclick={() => toggle(verb.verb)}
 		>
-			<i class="nimble-reaction-verb__icon {REACTION_VERB_ICONS[verb.verb]}" aria-hidden="true"></i>
+			<i
+				class="nimble-reaction-verb__icon nimble-reaction-verb__icon--{verb.verb} {REACTION_VERB_ICONS[
+					verb.verb
+				]}"
+				aria-hidden="true"
+			></i>
 			<span>{verbLabel(verb.verb)}</span>
 			{#if verb.count > 1}
 				<span class="nimble-reaction-verb__count" aria-hidden="true">{verb.count}</span>
@@ -111,6 +116,10 @@
 
 		&__icon {
 			line-height: 0;
+		}
+
+		&__icon--crit {
+			color: var(--nimble-die-face-crit-fill);
 		}
 
 		&__count {

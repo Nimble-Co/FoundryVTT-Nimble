@@ -121,6 +121,38 @@ describe('collectRerollEntries', () => {
 		]);
 	});
 
+	describe('a Make It a Crit rule', () => {
+		const makeCrit = () => rerollRule({ id: 'crit', type: 'makeCrit', usedBy: 'roller' });
+		const collect = (outcome: RerollRollContext['outcome']) =>
+			collectRerollEntries(context({ attacker: actor('Actor.hero', [makeCrit()]), outcome }))
+				.manual;
+
+		it('is stamped as a crit use', () => {
+			expect(collect(HIT).map((entry) => [entry.kind, entry.use])).toEqual([['reroll', 'crit']]);
+		});
+
+		it('gives an entry on a hit and a miss, not on a crit', () => {
+			expect([collect(HIT).length, collect(MISS).length, collect(CRIT).length]).toEqual([1, 1, 0]);
+		});
+
+		it('gives no entry on a roll that cannot crit, read from the roll or its options', () => {
+			expect(collect({ ...HIT, canCrit: false })).toEqual([]);
+			expect(collect({ ...HIT, options: { canCrit: false } })).toEqual([]);
+		});
+
+		it('stands only while the roll can still be made a crit', () => {
+			const entry = { kind: 'reroll', use: 'crit', outcomeTrigger: 'always' } as const;
+			const stands = (outcome: RerollRollContext['outcome']) =>
+				offerStands(entry as IncomingReactionEntry, { outcome, forcedMiss: false });
+			expect([stands(HIT), stands(CRIT), stands({ ...MISS, canCrit: false })]).toEqual([
+				true,
+				false,
+				false,
+			]);
+			expect(stands(null)).toBe(true);
+		});
+	});
+
 	it("stamps the rule's note for this roll on its entry, and none when it has none", () => {
 		const noted = rerollRule({
 			id: 'noted',
@@ -476,6 +508,18 @@ describe('offerStands', () => {
 		const stands = (outcome: typeof HIT) =>
 			offerStands(entry(trigger), { outcome, forcedMiss: false });
 		expect([stands(CRIT), stands(HIT), stands(MISS)]).toEqual([onCrit, onHit, onMiss]);
+	});
+
+	it('reads a crit that cannot go away from the options of a rolled attack', () => {
+		const rolled = { ...CRIT, options: { forcedCrit: 'always' as const } };
+
+		expect(offerStands(entry('criticalHit'), { outcome: rolled, forcedMiss: false })).toBe(false);
+		expect(
+			offerStands(entry('criticalHit'), {
+				outcome: { ...CRIT, options: { forcedCrit: 'onHit' as const } },
+				forcedMiss: false,
+			}),
+		).toBe(true);
 	});
 
 	it('does not let a crit-only entry stand when the crit cannot go away', () => {

@@ -10,7 +10,7 @@ import type {
 } from './IncomingReactionPrompts.d.ts';
 
 /** The kinds of use the card gives one button each. */
-export type ReactionVerb = 'reroll' | 'change' | 'addDamage' | 'interpose';
+export type ReactionVerb = 'reroll' | 'change' | 'crit' | 'addDamage' | 'interpose';
 
 export interface ReactionVerbGroup {
 	verb: ReactionVerb;
