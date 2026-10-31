@@ -123,4 +123,63 @@ describe('AttackOutcomeRule', () => {
 	it('does not apply with a charge pool the owner does not have', () => {
 		expect(makeRule({ chargePoolIdentifier: 'touch' }).changeFor(attack())).toBeNull();
 	});
+
+	describe('as a Make It a Crit button, with Feature Effects off', () => {
+		const roll = (itemUuid?: string) =>
+			({ kind: 'attack', delivery: 'melee', ...(itemUuid ? { itemUuid } : {}) }) as const;
+
+		it('is used by the one who attacks, or by the target for attacks against it', () => {
+			const yours = makeRule({ forceCrit: 'always' });
+			const against = makeRule({ forceCrit: 'always', side: 'attacksAgainstYou' });
+
+			expect(yours.offersUseOn({ side: 'roller', roll: roll(), other: unhurt })).toBe(true);
+			expect(yours.offersUseOn({ side: 'target', roll: roll(), other: unhurt })).toBe(false);
+			expect(against.offersUseOn({ side: 'target', roll: roll(), other: unhurt })).toBe(true);
+			expect(yours.offersUseOn({ side: 'ally', roll: roll(), other: unhurt })).toBe(false);
+		});
+
+		it('is not a button when it gives no crit', () => {
+			const rule = makeRule({ cannotMiss: true, critRange: 1 });
+			expect(rule.offersUseOn({ side: 'roller', roll: roll(), other: unhurt })).toBe(false);
+		});
+
+		it('is not a button on a check', () => {
+			const rule = makeRule({ forceCrit: 'always' });
+			expect(
+				rule.offersUseOn({ side: 'roller', roll: { kind: 'save', key: 'will' }, other: null }),
+			).toBe(false);
+		});
+
+		it('reads the item of the attack for an item-only rule', () => {
+			const rule = makeRule({ anyDieCrits: true, thisItemOnly: true });
+			expect(rule.offersUseOn({ side: 'roller', roll: roll(), other: unhurt })).toBe(false);
+			expect(rule.offersUseOn({ side: 'roller', roll: roll(ITEM_UUID), other: unhurt })).toBe(true);
+		});
+
+		it('is used on any result for an "always" crit, else on a hit', () => {
+			expect(makeRule({ forceCrit: 'always' }).outcome).toBe('always');
+			expect(makeRule({ forceCrit: 'onHit' }).outcome).toBe('hit');
+			expect(makeRule({ anyDieCrits: true }).outcome).toBe('hit');
+		});
+
+		it('needs a die at its max only when the crit comes from a die at its max', () => {
+			expect(makeRule({ anyDieCrits: true }).critNeedsDieAtMax).toBe(true);
+			expect(makeRule({ anyDieCrits: true, forceCrit: 'onHit' }).critNeedsDieAtMax).toBe(false);
+		});
+
+		it('costs one charge of its pool on your attacks, and nothing else', () => {
+			expect(makeRule({ chargePoolIdentifier: ' touch ' }).rollUseCost).toEqual({
+				chargePoolIdentifier: 'touch',
+				chargeCost: 1,
+				manaCost: 0,
+				woundCost: 0,
+				heroicReaction: '',
+				actionCost: 0,
+			});
+			expect(
+				makeRule({ chargePoolIdentifier: 'touch', side: 'attacksAgainstYou' }).rollUseCost
+					.chargePoolIdentifier,
+			).toBe('');
+		});
+	});
 });

@@ -377,7 +377,7 @@ class ItemActivationManager {
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
 			this.actor as OfferingActor,
-			{ delivery: this.#getAttackDelivery() },
+			{ delivery: this.#getAttackDelivery(), itemUuid: this.#item.uuid },
 		);
 
 		// Hold what the dialog spent until the caller clears the preUseItem gate.

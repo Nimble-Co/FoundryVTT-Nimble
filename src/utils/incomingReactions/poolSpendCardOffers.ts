@@ -6,6 +6,8 @@ const DICE_CONSUMER_RULE_TYPE = 'diceConsumer';
 /** What the attack about to be posted looks like, for rules that filter on it. */
 export interface CardOfferContext {
 	delivery: AttackDelivery;
+	/** The item the attack is made with, when it has one. */
+	itemUuid?: string | null;
 }
 
 interface CardOfferRuleLike {

@@ -380,7 +380,11 @@ function computeIncomingAttackPlan(
 			? [{ tokenUuid: firstTargetToken.document.uuid, actor: targetActor as RerollingActor | null }]
 			: [],
 		allies: scanRerollAllies(rollerTokenOf(attackingActor)),
-		roll: { kind: 'attack', delivery: attackContext?.delivery ?? null },
+		roll: {
+			kind: 'attack',
+			delivery: attackContext?.delivery ?? null,
+			...(attackContext?.itemUuid ? { itemUuid: attackContext.itemUuid } : {}),
+		},
 		outcome: null,
 		forcedMiss: plan.forceMiss,
 	});

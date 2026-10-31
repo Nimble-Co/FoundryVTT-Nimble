@@ -4,6 +4,7 @@ import {
 	type AttackOutcomeView,
 	canBecomeCrit,
 	critStays,
+	hasDieAtMax,
 	type IncomingReactionEntry,
 	type RerollDie,
 	type RerollKeep,
@@ -21,17 +22,29 @@ import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
 const MAKE_CRIT_RULE_TYPE = 'makeCrit';
+const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
 
-/** The rule types whose entries go on a card as `reroll` entries. */
+/**
+ * The rule types whose entries go on a card as `reroll` entries. With Feature
+ * Effects off, an Attack Outcome rule that gives a crit is a Make It a Crit button.
+ */
 function isRollUseRule(type: string | undefined): boolean {
+	if (type === ATTACK_OUTCOME_RULE_TYPE) return !isRuleAutomationEnabled();
 	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE || type === MAKE_CRIT_RULE_TYPE;
 }
 
 /** What an entry of a rule of this type does. Absent is a reroll. */
 function rollUseOf(type: string | undefined): RollUse | undefined {
 	if (type === CHANGE_DIE_RULE_TYPE) return 'change';
-	if (type === MAKE_CRIT_RULE_TYPE) return 'crit';
+	if (type === MAKE_CRIT_RULE_TYPE || type === ATTACK_OUTCOME_RULE_TYPE) return 'crit';
 	return undefined;
+}
+
+/** A roll use as the outcome gate reads it. */
+interface RollUseGate {
+	use?: RollUse;
+	/** A crit use that also needs a die of the roll at its max. */
+	needsDieAtMax?: boolean;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -60,6 +73,8 @@ interface RerollRuleLike {
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: DieChange;
+	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
+	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;
@@ -135,9 +150,10 @@ function attackOutcome(context: RerollRollContext): RerollRollOutcome {
 function rollUseTriggerMatches(
 	trigger: RerollTrigger | null | undefined,
 	outcome: AttackOutcomeView,
-	use?: RollUse,
+	gate: RollUseGate = {},
 ): boolean {
-	if (use === 'crit' && !canBecomeCrit(outcome)) return false;
+	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
+	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
 	if (trigger === 'criticalHit' && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
@@ -145,10 +161,18 @@ function rollUseTriggerMatches(
 function outcomeAllows(
 	trigger: RerollTrigger | null | undefined,
 	roll: RerollRollOutcome,
-	use?: RollUse,
+	gate: RollUseGate = {},
 ): boolean {
 	if (roll.forcedMiss) return false;
-	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome, use);
+	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome, gate);
+}
+
+function gateOf(rule: RerollRuleLike): RollUseGate {
+	const use = rollUseOf(rule.type);
+	return {
+		...(use ? { use } : {}),
+		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
+	};
 }
 
 /**
@@ -227,8 +251,8 @@ function collectRerollEntries(context: RerollRollContext): {
 				if (!isRollUseRule(rule?.type)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
-				const use = rollUseOf(rule.type);
-				if (!outcomeAllows(trigger, outcome, use)) continue;
+				const gate = gateOf(rule);
+				if (!outcomeAllows(trigger, outcome, gate)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
 				const entry: IncomingReactionEntry = {
@@ -245,7 +269,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					used: false,
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
-					...(use ? { use } : {}),
+					...gate,
 					...(hint ? { hint } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
@@ -266,7 +290,7 @@ function collectRerollEntries(context: RerollRollContext): {
  * made, every offer stands.
  */
 function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
-	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll, entry.use);
+	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll, entry);
 	if (!roll.outcome) return true;
 	return rerollTriggerMatches(entry.outcomeTrigger, roll.outcome);
 }
@@ -380,7 +404,7 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const { outcome, forcedMiss } = attackOutcome(context);
-	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, rollUseOf(rule.type))) {
+	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, gateOf(rule))) {
 		return UNAVAILABLE;
 	}
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
@@ -396,6 +420,7 @@ export {
 	offerStands,
 	REROLL_RULE_TYPE,
 	rerollRuleKey,
+	rollUseOf,
 	usableRerollEntry,
 	withNewRerollEntries,
 	type AutomaticReroll,

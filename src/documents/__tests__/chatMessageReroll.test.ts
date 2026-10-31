@@ -749,48 +749,59 @@ describe('resolveRerollReaction', () => {
 			return message;
 		}
 
-		it('makes the attack a crit that stays, and writes a crit line', async () => {
-			setupWorld(makeCrit);
-			const message = critMessage();
-			const spy = vi.spyOn(DamageRoll.prototype, 'makeCritical').mockImplementation(async function (
-				this: DamageRoll,
-			) {
-				this.isCritical = true;
-				this.isMiss = false;
-				this.options.forcedCrit = 'always';
-				return { term: { faces: 6, number: 1, results: [] } as never, drawn: [] };
-			});
-			// The mock Roll has no class in its data: copy a damage roll as a DamageRoll.
-			const fromData = foundry.dice.Roll.fromData;
-			let copying = false;
-			const copies = vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: {
-				originalFormula?: string;
-			}) => {
-				if (copying || !data.originalFormula)
-					return fromData.call(foundry.dice.Roll, data as never);
-				copying = true;
+		it.each([
+			['a Make It a Crit rule', 'makeCrit'],
+			['an Attack Outcome rule with Feature Effects off', 'attackOutcome'],
+		])(
+			'makes the attack a crit that stays, and writes a crit line, for %s',
+			async (_name, type) => {
+				setupWorld({ ...makeCrit, type });
+				const settings = globalThis as unknown as { game: { settings?: unknown } };
+				settings.game.settings = {
+					get: (_scope: string, key: string) => !key.includes('RuleEffects'),
+				};
+				const message = critMessage();
+				const spy = vi
+					.spyOn(DamageRoll.prototype, 'makeCritical')
+					.mockImplementation(async function (this: DamageRoll) {
+						this.isCritical = true;
+						this.isMiss = false;
+						this.options.forcedCrit = 'always';
+						return { term: { faces: 6, number: 1, results: [] } as never, drawn: [] };
+					});
+				// The mock Roll has no class in its data: copy a damage roll as a DamageRoll.
+				const fromData = foundry.dice.Roll.fromData;
+				let copying = false;
+				const copies = vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: {
+					originalFormula?: string;
+				}) => {
+					if (copying || !data.originalFormula)
+						return fromData.call(foundry.dice.Roll, data as never);
+					copying = true;
+					try {
+						return DamageRoll.fromData(data as never);
+					} finally {
+						copying = false;
+					}
+				}) as never);
+
 				try {
-					return DamageRoll.fromData(data as never);
+					await message.resolveRerollReaction('entry-1', 'gm-user');
+
+					expect(spy).toHaveBeenCalledTimes(1);
+					const payload = updatePayload(message);
+					expect(payload.system.isCritical).toBe(true);
+					expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
+					expect(payload.system.rerolls).toEqual([
+						expect.objectContaining({ entryId: 'entry-1', use: 'crit' }),
+					]);
 				} finally {
-					copying = false;
+					spy.mockRestore();
+					copies.mockRestore();
+					delete settings.game.settings;
 				}
-			}) as never);
-
-			try {
-				await message.resolveRerollReaction('entry-1', 'gm-user');
-
-				expect(spy).toHaveBeenCalledTimes(1);
-				const payload = updatePayload(message);
-				expect(payload.system.isCritical).toBe(true);
-				expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
-				expect(payload.system.rerolls).toEqual([
-					expect.objectContaining({ entryId: 'entry-1', use: 'crit' }),
-				]);
-			} finally {
-				spy.mockRestore();
-				copies.mockRestore();
-			}
-		});
+			},
+		);
 
 		it('is refused on an attack that cannot crit, and spends nothing', async () => {
 			setupWorld(makeCrit);

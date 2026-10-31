@@ -153,6 +153,49 @@ describe('collectRerollEntries', () => {
 		});
 	});
 
+	describe('an Attack Outcome rule that gives a crit', () => {
+		const outcomeRule = (overrides: Partial<RerollRuleLike> = {}) =>
+			rerollRule({ id: 'touch', type: 'attackOutcome', usedBy: 'roller', ...overrides });
+		const collect = (rule: RerollRuleLike, outcome: RerollRollContext['outcome'] = HIT) =>
+			collectRerollEntries(context({ attacker: actor('Actor.hero', [rule]), outcome })).manual;
+
+		it('gives no entry while Feature Effects is on: the roll reads it', () => {
+			expect(collect(outcomeRule())).toEqual([]);
+		});
+
+		it('is a Make It a Crit button while Feature Effects is off', () => {
+			setToggles({ 'automation.applyRuleEffects': false });
+			expect(collect(outcomeRule()).map((entry) => [entry.ruleId, entry.use])).toEqual([
+				['touch', 'crit'],
+			]);
+		});
+
+		it('needs a die at its max when the crit comes from one', () => {
+			setToggles({ 'automation.applyRuleEffects': false });
+			const rule = outcomeRule({ critNeedsDieAtMax: true });
+			expect(collect(rule)).toEqual([]);
+			expect(collect(rule, { ...HIT, anyDieAtMax: true })[0]).toMatchObject({
+				use: 'crit',
+				needsDieAtMax: true,
+			});
+		});
+	});
+
+	it('reads a die at its max from the terms of a rolled attack', () => {
+		const entry = { kind: 'reroll', use: 'crit', needsDieAtMax: true } as IncomingReactionEntry;
+		const stands = (terms: unknown[]) =>
+			offerStands(entry, { outcome: { ...HIT, terms }, forcedMiss: false });
+		const die = (result: number, extra = {}) => ({
+			faces: 6,
+			results: [{ result, active: true, ...extra }],
+		});
+
+		expect(stands([die(6)])).toBe(true);
+		expect(stands([die(5)])).toBe(false);
+		expect(stands([die(6, { active: false })])).toBe(false);
+		expect(stands([{ operator: '+' }, die(3)])).toBe(false);
+	});
+
 	it("stamps the rule's note for this roll on its entry, and none when it has none", () => {
 		const noted = rerollRule({
 			id: 'noted',

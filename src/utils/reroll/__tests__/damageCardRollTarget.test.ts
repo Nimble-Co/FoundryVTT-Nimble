@@ -100,6 +100,38 @@ describe('damageCardRollTarget', () => {
 		expect(damageCardRollTarget(can).context().outcome?.canCrit).toBe(true);
 	});
 
+	it('gives the gate the item of the attack, when the card has one', () => {
+		const card = makeCard([damageNode(serializedRoll())]);
+		expect(damageCardRollTarget(card).context().roll).toEqual({
+			kind: 'attack',
+			delivery: 'melee',
+		});
+
+		const withItem = { ...card, itemUuid: () => 'Actor.a.Item.shatter' };
+		expect(damageCardRollTarget(withItem).context().roll).toEqual({
+			kind: 'attack',
+			delivery: 'melee',
+			itemUuid: 'Actor.a.Item.shatter',
+		});
+	});
+
+	it('tells the gate whether a die of the roll is at its max', () => {
+		const die = (result: number) => ({
+			class: 'Die',
+			faces: 6,
+			results: [{ result, active: true }],
+		});
+		const atMax = { ...serializedRoll(), terms: [die(6)] };
+		const below = { ...serializedRoll(), terms: [die(5)] };
+
+		expect(damageCardRollTarget(makeCard([damageNode(atMax)])).context().outcome?.anyDieAtMax).toBe(
+			true,
+		);
+		expect(damageCardRollTarget(makeCard([damageNode(below)])).context().outcome?.anyDieAtMax).toBe(
+			false,
+		);
+	});
+
 	it('tells the gate a crit can go away without such a Forced Crit', () => {
 		const card = makeCard([damageNode(serializedRoll())]);
 		Object.assign(card.system(), { isCritical: true });

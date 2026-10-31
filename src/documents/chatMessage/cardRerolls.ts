@@ -45,12 +45,12 @@ import {
 	type AutomaticReroll,
 	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
-	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,
 	type RerollingActor,
 	type RerollRollOutcome,
 	type RerollRuleLike,
+	rollUseOf,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -173,6 +173,10 @@ export class CardRerolls {
 			// Not `speakerActor`: it falls back to the author's character.
 			attacker: () => this.#host.attacker(),
 			delivery: () => this.#host.attackDelivery(),
+			itemUuid: () => {
+				const itemUuid = this.#host.flags()?.itemUuid;
+				return typeof itemUuid === 'string' ? itemUuid : null;
+			},
 			movementOfferChanges: (changes) => this.#host.movementOfferChanges(changes),
 			update: (changes) => this.#host.update(changes),
 			followChargeRecovery: (change) => this.followChargeRecovery(change),
@@ -682,7 +686,7 @@ export class CardRerolls {
 				reject,
 			);
 		}
-		if (usable.rule.type === MAKE_CRIT_RULE_TYPE) {
+		if (rollUseOf(usable.rule.type) === 'crit') {
 			return this.#applyMakeCrit(rollTarget, found, entry, usable, forceHeroicReaction, reject);
 		}
 		const target = rerollableFor(found, usable.rule.die, die);

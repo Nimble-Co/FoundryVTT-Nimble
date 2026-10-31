@@ -16,10 +16,11 @@ import { type DicePoolConsumer, getDicePoolConsumers } from '../dicePool/dicePoo
 import { setPoolFaces } from '../dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '../dicePool/dicePoolSync.js';
 import type { DicePoolState } from '../dicePool/types.js';
-import type {
-	AttackOutcomeView,
-	IncomingReactionEntry,
-	RollChange,
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type RollChange,
+	termsHaveDieAtMax,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../treeManipulation/reconstructEffectsTree.js';
@@ -51,6 +52,8 @@ interface DamageCard {
 	/** The actor that made the attack. */
 	attacker(): RerollingActor | null;
 	delivery(): AttackDelivery;
+	/** The item the attack was made with, when the card has one. */
+	itemUuid?(): string | null;
 	/** The card's Movement Offers once its outcome changes. */
 	movementOfferChanges(changes: Record<string, unknown>): Record<string, unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -94,7 +97,10 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
-type RollOptionsView = { options?: { canCrit?: unknown; forcedCrit?: unknown } | null } | null;
+type RollOptionsView = {
+	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	terms?: readonly unknown[];
+} | null;
 
 /**
  * A damage card's roll with this outcome, as the reroll gate sees it. The
@@ -112,6 +118,7 @@ function damageRollContext(
 			? outcome
 			: findPrimaryDamageRoll(card.system())?.damageNode.roll
 	) as RollOptionsView | undefined;
+	const itemUuid = card.itemUuid?.() ?? null;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -119,12 +126,13 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
-		roll: { kind: 'attack', delivery: card.delivery() },
+		roll: { kind: 'attack', delivery: card.delivery(), ...(itemUuid ? { itemUuid } : {}) },
 		outcome: {
 			isCritical: outcome.isCritical,
 			isMiss: outcome.isMiss,
 			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
 			canCrit: rolled?.options?.canCrit === true,
+			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
 		},
 		forcedMiss,
 	};

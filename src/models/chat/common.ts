@@ -167,6 +167,7 @@ export const incomingReactions = () => ({
 				initial: 'reroll',
 				choices: [...ROLL_USES],
 			}),
+			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			leftOut: new fields.SchemaField(
 				{

@@ -8,10 +8,12 @@ import {
 	type AttackDeliveryFilter,
 	matchesAttackDelivery,
 } from '../../utils/damage/attackDelivery.js';
+import type { RerollTrigger } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
-import { choiceLabels } from './_rollUseRule.js';
+import { choiceLabels, type RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -203,6 +205,48 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			forcedCrit: this.forceCrit === 'always' || this.forceCrit === 'onHit' ? this.forceCrit : null,
 			anyDieCrits: this.anyDieCrits === true,
 			chargePoolIdentifier,
+		};
+	}
+
+	/**
+	 * With Feature Effects off, a rule that gives a crit is a Make It a Crit
+	 * button: whether `context.side` can use it on this attack now.
+	 */
+	offersUseOn(context: RollUseContext): boolean {
+		const { roll } = context;
+		if (roll.kind !== 'attack') return false;
+		const sides = { roller: 'yourAttacks', target: 'attacksAgainstYou' } as const;
+		const side = context.side === 'ally' ? null : sides[context.side];
+		if (!side) return false;
+		const change = this.changeFor({
+			side,
+			delivery: roll.delivery,
+			other: context.other,
+			itemUuid: roll.itemUuid,
+		});
+		return !!change && (change.forcedCrit !== null || change.anyDieCrits);
+	}
+
+	/** The attack result the button is used on: any for an "always" crit, else a hit. */
+	get outcome(): RerollTrigger {
+		return this.forceCrit === 'always' ? 'always' : 'hit';
+	}
+
+	/** The button also needs a die of the roll at its max. */
+	get critNeedsDieAtMax(): boolean {
+		return this.forceCrit === 'none' && this.anyDieCrits === true;
+	}
+
+	/** One charge of its pool, on your attacks only. */
+	get rollUseCost(): RerollCost {
+		return {
+			chargePoolIdentifier:
+				this.side === 'attacksAgainstYou' ? '' : (this.chargePoolIdentifier ?? '').trim(),
+			chargeCost: 1,
+			manaCost: 0,
+			woundCost: 0,
+			heroicReaction: '',
+			actionCost: 0,
 		};
 	}
 }

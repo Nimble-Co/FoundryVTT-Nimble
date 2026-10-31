@@ -48,6 +48,30 @@ export interface AttackOutcomeView {
 	canCrit?: boolean;
 	/** The options of a rolled attack, when the view is the roll. */
 	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	/** A die of the roll is at its max. Absent: read from `terms`. */
+	anyDieAtMax?: boolean;
+	/** The terms of a rolled attack, when the view is the roll. */
+	terms?: readonly unknown[];
+}
+
+/** Whether a kept die of these terms is at its max. */
+export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined): boolean {
+	return (terms ?? []).some((term) => {
+		const die = term as {
+			faces?: unknown;
+			results?: Array<{ result: number; active?: boolean; discarded?: boolean }>;
+		};
+		return (
+			typeof die?.faces === 'number' &&
+			Array.isArray(die.results) &&
+			die.results.some((r) => r.active !== false && !r.discarded && r.result === die.faces)
+		);
+	});
+}
+
+/** Whether a die of the attack is at its max. */
+export function hasDieAtMax(view: AttackOutcomeView): boolean {
+	return view.anyDieAtMax ?? termsHaveDieAtMax(view.terms);
 }
 
 /** Whether the attack is a crit that no reroll or change takes away. */
@@ -124,6 +148,8 @@ export interface IncomingReactionEntry {
 	oncePerAttack?: boolean;
 	/** reroll only: `change` for a Change a Die rule, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
+	/** reroll only: a crit use that also needs a die of the roll at its max. */
+	needsDieAtMax?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
