@@ -2,7 +2,7 @@
 @component
 A button with a frame. `secondary` is the outlined button (Cancel, Delete, Expand all). `primary` is the crimson button
 that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
-`size="sm"` is 26 px high. `iconOnly` is a 32 px square: give it `ariaLabel`.
+`size="sm"` is 26 px high. `iconOnly` is a 28 px square, the size of the other header icon buttons: give it `ariaLabel`.
 -->
 <script lang="ts">
 	import type { ButtonProps } from '#types/components/actorSheets/Button.d.ts';
@@ -96,8 +96,11 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 		gap: 6px;
 	}
 	.icon-only {
-		width: 32px;
-		height: 32px;
+		width: 28px;
+		height: 28px;
 		padding: 0;
+	}
+	.icon-only i {
+		font-size: 0.75rem;
 	}
 </style>

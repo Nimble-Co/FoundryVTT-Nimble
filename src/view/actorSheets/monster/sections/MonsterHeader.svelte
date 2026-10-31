@@ -150,7 +150,7 @@ the monster window. It stays dark in both themes.
 		height: 28px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.688rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink);
 	}
 	.icon:hover {
