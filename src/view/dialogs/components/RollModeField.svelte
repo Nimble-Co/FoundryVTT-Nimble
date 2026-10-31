@@ -5,9 +5,10 @@ Each advantage cancels one disadvantage (Core Rules), so the middle is a Straigh
 -->
 <script lang="ts">
 	import RangeSlider from 'svelte-range-slider-pips';
+	import type { RollModeFieldProps } from '#types/components/RollWindow.d.ts';
 	import localize from '#utils/localize.js';
 
-	let { value = $bindable(0) }: { value: number } = $props();
+	let { value = $bindable(0), rushedAttack }: RollModeFieldProps = $props();
 
 	const MODE = 'NIMBLE.actorSheet.parts.rollMode';
 	const HELP = 'NIMBLE.rollWindow.rollModeHelp';
@@ -51,6 +52,14 @@ Each advantage cancels one disadvantage (Core Rules), so the middle is a Straigh
 		/>
 	</div>
 	<p class="help">{help}</p>
+	{#if rushedAttack}
+		<p class="rush">
+			{localize('NIMBLE.rollWindow.rushedAttack', {
+				attack: String(rushedAttack),
+				count: String(rushedAttack - 1),
+			})}
+		</p>
+	{/if}
 </div>
 
 <style>
@@ -173,5 +182,11 @@ Each advantage cancels one disadvantage (Core Rules), so the middle is a Straigh
 		margin: 0;
 		font-size: 0.75rem;
 		color: var(--nimble-ui-ink-muted);
+	}
+	.rush {
+		margin: 6px 0 0;
+		font-size: 0.75rem;
+		line-height: 1.35;
+		color: var(--nimble-ui-ink);
 	}
 </style>

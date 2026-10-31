@@ -12,6 +12,7 @@
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
+	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	let { actor, dialog, spell, ...data } = $props();
 
@@ -96,7 +97,7 @@
 			: null,
 	);
 
-	// let remainingMana = $derived(currentMana - manaToSpend);
+	const spendLine = $derived(rollSpendLine(data.spendsActions, costLabel ?? ''));
 
 	// Compute preview of upcast effects
 	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice', 'increaseDieSize']);
@@ -276,10 +277,8 @@
 	oncancel={() => dialog.close()}
 	onroll={onCast}
 >
-	{#if costLabel}
-		<p class="note nimble-spell-cost">
-			{format(spellUpcastDialog.cost, { cost: costLabel ?? '' })}
-		</p>
+	{#if spendLine}
+		<p class="note nimble-spell-cost">{spendLine}</p>
 	{/if}
 
 	{#if effectiveCastTier !== null}
@@ -288,7 +287,7 @@
 		</p>
 	{/if}
 
-	<RollModeField bind:value={selectedRollMode} />
+	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
 
 	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 

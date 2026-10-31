@@ -58,6 +58,8 @@ describe('rollUnarmedStrike', () => {
 
 		expect(dialogMock).toHaveBeenCalledWith(actor, expect.anything(), expect.any(String), {
 			rollMode: 0,
+			rushedAttack: undefined,
+			spendsActions: 0,
 		});
 		expect(damageRollMock).toHaveBeenCalledWith(
 			'1 + 2 + 1d4',
@@ -85,7 +87,7 @@ describe('rollUnarmedStrike', () => {
 			expect.anything(),
 			expect.anything(),
 			expect.any(String),
-			{ rollMode: -1 },
+			{ rollMode: -1, rushedAttack: undefined, spendsActions: 0 },
 		);
 		expect(damageRollMock).toHaveBeenCalledWith(
 			expect.any(String),

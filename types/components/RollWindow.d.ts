@@ -18,3 +18,9 @@ export interface RollModifierFieldsProps {
 	primaryDieValue: number | undefined | null;
 	primaryDieModifier: number | undefined | null;
 }
+
+export interface RollModeFieldProps {
+	value: number;
+	/** which attack of the turn this is, when the roll starts with Rushed Attack disadvantage */
+	rushedAttack?: number;
+}

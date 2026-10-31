@@ -670,18 +670,11 @@ const skills: Record<SkillKeyType, string> = {
 };
 
 const spellUpcastDialog = {
-	upcastHeading: 'NIMBLE.spells.spellUpcastDialog.upcastHeading',
 	castSpell: 'NIMBLE.spells.spellUpcastDialog.castSpell',
-	cost: 'NIMBLE.spells.spellUpcastDialog.cost',
 	castsAtTier: 'NIMBLE.spells.spellUpcastDialog.castsAtTier',
 	manaInfo: {
 		currentManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.currentManaCost',
 		upcastManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.upcastManaCost',
-	},
-	slider: {
-		level: 'NIMBLE.spells.spellUpcastDialog.slider.level',
-		minTier: 'NIMBLE.spells.spellUpcastDialog.slider.minTier',
-		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.maxTier',
 	},
 	chooseEnhancement: 'NIMBLE.spells.spellUpcastDialog.chooseEnhancement',
 	increaseDieSize: 'NIMBLE.spells.spellUpcastDialog.increaseDieSize',

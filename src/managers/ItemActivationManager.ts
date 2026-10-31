@@ -272,6 +272,8 @@ class ItemActivationManager {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
 			rollMode: options.rollMode ?? 0,
+			rushedAttack: options.rushedAttack,
+			spendsActions: options.spendsActions,
 		};
 
 		const dialogData = await this.#resolveDialogData(rollOptions);
@@ -1390,6 +1392,10 @@ namespace ItemActivationManager {
 		upcastChoiceIndex?: number;
 		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode?: number;
+		/** Which attack of the turn this is, when `rollMode` starts with Rushed Attack disadvantage. */
+		rushedAttack?: number;
+		/** The actions that this use spends; the roll window says so. */
+		spendsActions?: number;
 		/**
 		 * Optional list of advantage/disadvantage source contributions. When
 		 * provided, the manager sums them into a net rollMode (advantage and

@@ -8,10 +8,19 @@
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
+	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	const { skillCheckDialog, damageTypes } = CONFIG.NIMBLE;
 
-	let { actor, dialog, item, rollMode }: ItemActivationConfigDialogProps = $props();
+	let {
+		actor,
+		dialog,
+		item,
+		rollMode,
+		rushedAttack,
+		spendsActions,
+	}: ItemActivationConfigDialogProps = $props();
+	const spendLine = $derived(rollSpendLine(spendsActions));
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -72,7 +81,9 @@
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
-	<RollModeField bind:value={state.selectedRollMode} />
+	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
+
+	<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
 
 	{#if state.hasConditionalBonuses}
 		<div>
@@ -327,6 +338,13 @@
 </RollWindow>
 
 <style lang="scss">
+	.spends {
+		margin: 0;
+		font-size: 0.781rem;
+		font-weight: 600;
+		color: var(--nimble-ui-ink-muted);
+	}
+
 	.nimble-conditional-bonus {
 		display: flex;
 		flex-direction: column;

@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
+import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
@@ -16,6 +17,7 @@ import {
 import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '#utils/localize.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 
 /**
  * An unarmed strike is a melee attack at reach 1. The posted card declares it
@@ -53,7 +55,8 @@ export async function rollUnarmedStrike(
 	actor: NimbleCharacter,
 	options: RollUnarmedStrikeOptions = {},
 ): Promise<boolean> {
-	const startRollMode = options.rollMode ?? 0;
+	const rushed = options.rollMode === undefined ? attacksMadeThisTurn(actor) : 0;
+	const startRollMode = options.rollMode ?? (rushed > 0 ? -rushed : 0);
 	const rollFormula = buildRollFormula(actor);
 	// Only characters proficient with unarmed strikes can crit.
 	const canCrit = hasUnarmedProficiency(actor);
@@ -79,6 +82,14 @@ export async function rollUnarmedStrike(
 
 	const dialog = new ItemActivationConfigDialog(actor, unarmedItem, name, {
 		rollMode: startRollMode,
+		rushedAttack: rushed > 0 ? rushed + 1 : undefined,
+		spendsActions:
+			options.rollMode === undefined &&
+			isActionTrackingAutomationEnabled() &&
+			game.combat?.started &&
+			game.combat.combatants.some((entry) => entry.actorId === actor.id)
+				? 1
+				: 0,
 	});
 	await dialog.render(true);
 	const result = await dialog.promise;
@@ -193,6 +204,7 @@ export async function rollUnarmedStrike(
 	};
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+	await recordAttack(actor);
 	return true;
 }
 

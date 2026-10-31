@@ -59,8 +59,6 @@
 					"advantageButton": "Advantage",
 					"disadvantage": "Disadvantage × {count}",
 					"disadvantageButton": "Disadvantage",
-					"lessHint": "Add 1 disadvantage, or remove 1 advantage",
-					"moreHint": "Add 1 advantage, or remove 1 disadvantage",
 					"straight": "Straight Roll"
 				},
 				"row": {
@@ -2856,18 +2854,11 @@
 				"tier9": "Tier 9"
 			},
 			"spellUpcastDialog": {
-				"upcastHeading": "Upcast {spellName}",
 				"castSpell": "Cast Spell",
-				"cost": "Cost: {cost}",
 				"castsAtTier": "This spell is cast at tier {tier}, your highest unlocked tier.",
 				"manaInfo": {
 					"currentManaCost": "Current mana cost: {currentCost}",
 					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
-				},
-				"slider": {
-					"level": "Upcast Level",
-					"min": "Min Tier {tier}",
-					"max": "Max Tier {tier}"
 				},
 				"chooseEnhancement": "Choose Enhancement",
 				"increaseDieSize": "Die size +{steps}",
@@ -3802,6 +3793,11 @@
 				"disadvantage": "Roll {count} more {dice} and remove the highest.",
 				"straight": "Each advantage cancels one disadvantage."
 			},
+			"rushedAttack": "Rushed Attack: this is attack {attack} of your turn, so the roll starts with Disadvantage × {count}. You can change it.",
+			"spendAction": "{count} action",
+			"spendActions": "{count} actions",
+			"spendBoth": "{first} and {second}",
+			"spends": "When you roll, it spends {cost}.",
 			"tierBase": "Tier {tier}, the base cost",
 			"tierUpcast": "Upcast to tier {tier}, {tier} mana"
 		},
