@@ -102,4 +102,10 @@ describe('HeroEffectsTab', () => {
 
 		expect(screen.getAllByText(`${FX}.none`)).toHaveLength(3);
 	});
+
+	it('has no Expand all when no row can open', () => {
+		renderTab(heroEffectsTab(blankHero(), heroContext()));
+
+		expect(screen.queryByRole('button', { name: /expandAll/ })).toBeNull();
+	});
 });

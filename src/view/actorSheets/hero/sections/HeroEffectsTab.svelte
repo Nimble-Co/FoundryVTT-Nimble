@@ -18,9 +18,11 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
 </script>
 
-<div class="bar">
-	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
-</div>
+{#if rowIds.length}
+	<div class="bar">
+		<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
+	</div>
+{/if}
 <HeroRowGroupList groups={view.groups} {ui} {perform} none={view.none} />
 <GroupHeading label={view.conditions.label} />
 <ConditionGrid

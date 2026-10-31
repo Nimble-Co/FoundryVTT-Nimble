@@ -31,9 +31,11 @@ The arrow keys, Home and End move the focus in the condition grid.
 	}
 </script>
 
-<div class="bar">
-	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
-</div>
+{#if rowIds.length}
+	<div class="bar">
+		<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
+	</div>
+{/if}
 {#each view.groups as group, index (group.id)}
 	<section class="group">
 		<GroupHeading label={group.label} note={group.note} noteTone="muted" flush={index === 0} />
