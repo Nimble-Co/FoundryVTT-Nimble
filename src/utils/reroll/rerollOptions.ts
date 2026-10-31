@@ -13,9 +13,14 @@ const RESULT_OPTIONS = new Set([
 function rerollOptions(
 	options: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> {
-	return Object.fromEntries(
+	const kept = Object.fromEntries(
 		Object.entries(options ?? {}).filter(([key]) => !RESULT_OPTIONS.has(key)),
 	);
+	if (kept.forcedCritFromDice) {
+		delete kept.forcedCrit;
+		delete kept.forcedCritFromDice;
+	}
+	return kept;
 }
 
 /** What a reroll adds on top of the roll it replaces. */

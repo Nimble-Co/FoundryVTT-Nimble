@@ -8,3 +8,17 @@ export interface AttackOutcomeSources {
 	forcedCrit: string[];
 	anyDieCrits: string[];
 }
+
+/** A tag at the roll that tells why the attack result is not what the die face shows. */
+export interface AttackOutcomeTag {
+	kind: 'crit' | 'cannotMiss' | 'noOutcome';
+	label: string;
+	tooltip: string;
+}
+
+/** What a Multi-target Attack gave up, as it was when rolled. */
+export interface MultiTargetDetail {
+	targets: number;
+	couldCrit: boolean;
+	couldMiss: boolean;
+}

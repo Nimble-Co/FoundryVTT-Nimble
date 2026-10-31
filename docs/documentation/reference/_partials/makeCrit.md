@@ -6,12 +6,12 @@ The other fields work as on the [Reroll](#reroll) rule: **Attack type**, **Only 
 
 **Example: Unleash the Beast.** 1/encounter, when you miss, you can crit instead.
 
-- **Who can use it?** → `roller`
-- **The attack is** → `miss`
+- **Who can use it?** → **The one who rolled**
+- **The attack is** → **A miss**
 - **Charge pool** → `unleash-the-beast`
 
 **Example: Bring the Pain.** 1/round, you may turn any melee attack against you into a crit.
 
-- **Who can use it?** → `target`
-- **Attack type** → `melee`
+- **Who can use it?** → **The target**
+- **Attack type** → **Melee**
 - **Charge pool** → `bring-the-pain`

@@ -121,6 +121,9 @@ export async function rollUnarmedStrike(
 		canCrit: canCrit && !multiTarget,
 		...attackOutcome.options,
 		multiTarget,
+		...(multiTarget
+			? { multiTargetDetail: { targets: targets.length, couldCrit: canCrit, couldMiss: true } }
+			: {}),
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
 		primaryDieModifier: Number(result.primaryDieModifier) || 0,

@@ -178,8 +178,7 @@ async function rerollDieInTerm(
 		(root) => root !== picked && !keptBefore.has(root) && isActive(root.result),
 	);
 	for (const node of [picked, ...newlyKept]) {
-		const from = roots.includes(node) ? critFace : term.faces;
-		await explodeAtMax(node, term.faces, style, roll, from);
+		await explodeAtMax(node, term.faces, style, roll, node === stays ? critFace : term.faces);
 	}
 
 	term.results = flattenDieTree(roots, style);
@@ -252,7 +251,7 @@ async function changeDieInTerm(
 
 	picked.result.result = value;
 	cutExplosion(picked);
-	const from = roots.includes(picked) ? critFace : term.faces;
+	const from = picked === roots.find((root) => isActive(root.result)) ? critFace : term.faces;
 	await explodeAtMax(
 		picked,
 		term.faces,

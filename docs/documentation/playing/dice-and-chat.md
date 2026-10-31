@@ -14,7 +14,7 @@ When you attack, the whole damage pool is rolled at once, but only one die decid
 - **Miss:** the primary die normally rolls a natural 1. Some targets can raise this threshold, causing other low primary-die results to miss too. The attack misses no matter what the bonus dice rolled.
 - **Advantage and disadvantage:** each level of advantage adds one extra die to the pool, and the lowest die is dropped before anything else is decided (disadvantage drops the highest instead). Advantage and disadvantage cancel each other out one-for-one, and only the leftover applies.
 - **Area attacks** (anything with a template shape, such as a cone, line, or circle) can neither crit nor miss: one shared roll applies to everyone in the area.
-- **Attacks on 2 or more targets** can neither crit nor miss either (Core:1403). One roll applies to all the targets, and the targets' own reactions do not apply. The card shows "No miss: 2 targets" when the die shows a miss face, and "No crit: 2 targets" when it shows its max. Other rolls show nothing.
+- **Attacks on 2 or more targets** can neither crit nor miss either. One roll applies to all the targets, and the targets' own reactions do not apply. The card shows "No miss: 2 targets" when the die shows a miss face, and "No crit: 2 targets" when it shows its max. Other rolls show nothing.
 - **No proficiency, no crit.** If a weapon requires a proficiency you don't have, you can still use it, but it won't crit. Minions never crit.
 
 Because advantage is resolved first, a natural 1 that gets dropped by advantage does *not* cause a miss. The primary die is whichever die survives the drop.
@@ -143,7 +143,7 @@ A feature can change how the roll is read. When the die does not explain the res
 - **"Crit: Deathbringer's Touch"** when a feature made a face below the max a crit. The tag does not show when the die rolled its max.
 - **"Cannot miss: Slashing"** when a feature made a miss face a hit.
 
-**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit (Core:419). The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make crit** button for the one who attacked.
+**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make crit** button for the one who attacked.
 
 The expanded roll details mark a Primary Die face that is a crit or a miss in the same way.
 

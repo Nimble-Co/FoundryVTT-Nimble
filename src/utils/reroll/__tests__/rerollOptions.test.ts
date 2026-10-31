@@ -22,6 +22,14 @@ describe('prepareReroll', () => {
 		});
 	});
 
+	it('works a crit from a die at its max out again, and keeps one from a rule', () => {
+		const fromDice = { anyDieCrits: true, forcedCrit: 'onHit', forcedCritFromDice: true };
+		expect(prepareReroll('2d6', fromDice).options).toEqual({ anyDieCrits: true });
+
+		const fromRule = { anyDieCrits: true, forcedCrit: 'onHit' };
+		expect(prepareReroll('2d6', fromRule).options).toEqual(fromRule);
+	});
+
 	it('does not change the options it is given', () => {
 		const source = { primaryDieValue: 3, primaryDieModifier: 1 };
 

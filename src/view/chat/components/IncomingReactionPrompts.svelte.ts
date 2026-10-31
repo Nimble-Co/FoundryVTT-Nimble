@@ -114,14 +114,7 @@ export function createIncomingReactionPromptsState(
 	);
 	const primaryDieBonuses = $derived(getPlace() === 'roll' ? cardPrimaryDieBonuses : []);
 	const primaryRoll = $derived(cardPrimaryRoll(message?.reactive?.system));
-	const outcomeTags = $derived(
-		getPlace() === 'roll'
-			? attackOutcomeTags(
-					primaryRoll,
-					(message?.reactive?.system as { targets?: unknown[] } | undefined)?.targets?.length ?? 0,
-				)
-			: [],
-	);
+	const outcomeTags = $derived(getPlace() === 'roll' ? attackOutcomeTags(primaryRoll) : []);
 	const bonusNotAdded = $derived(
 		primaryDieBonusNotAdded(primaryRoll?.options, rerolls, text.documentName),
 	);

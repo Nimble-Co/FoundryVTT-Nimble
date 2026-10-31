@@ -500,7 +500,8 @@ class ItemActivationManager {
 					// The acquireTargetsFromTemplate flag marks intentional AoE items;
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
-					const multiTarget = !isAoE && Array.from(game.user?.targets ?? []).length > 1;
+					const targetCount = Array.from(game.user?.targets ?? []).length;
+					const multiTarget = !isAoE && targetCount > 1;
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
@@ -568,7 +569,16 @@ class ItemActivationManager {
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						...attackOutcome.options,
-						...(multiTarget ? { multiTarget } : {}),
+						...(multiTarget
+							? {
+									multiTarget,
+									multiTargetDetail: {
+										targets: targetCount,
+										couldCrit: !isMinion && !isFlunky && !lacksProficiency && (canCrit ?? true),
+										couldMiss: isMinion || (canMiss ?? true),
+									},
+								}
+							: {}),
 						rollMode: node.rollMode ?? 0,
 						primaryDieValue: dialogData.primaryDieValue ?? 0,
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,

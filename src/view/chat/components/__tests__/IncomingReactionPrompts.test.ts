@@ -309,7 +309,7 @@ describe('IncomingReactionPrompts', () => {
 
 		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
 		expect(rollPlace().queryByText('+1 to Primary Die')).toBeNull();
-		expect(rollPlace().getByText(/Judgment set the die to 8/)).toBeTruthy();
+		expect(rollPlace().getByText(/Judgment changed the die to 8/)).toBeTruthy();
 	});
 
 	it('shows the outcome tags at the roll only', () => {

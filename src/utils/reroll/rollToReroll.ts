@@ -10,7 +10,12 @@ type CheckRollKind = Exclude<RerollRollKind, 'attack'>;
  * is made with, or a check and its save, skill or ability key.
  */
 type RollToReroll =
-	| { kind: 'attack'; delivery: AttackDelivery; itemUuid?: string | null }
+	| {
+			kind: 'attack';
+			delivery: AttackDelivery;
+			itemUuid?: string | null;
+			damageTypes?: readonly string[];
+	  }
 	| { kind: CheckRollKind; key: string };
 
 export { REROLL_ROLL_KINDS, type CheckRollKind, type RerollRollKind, type RollToReroll };

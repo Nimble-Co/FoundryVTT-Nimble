@@ -84,6 +84,13 @@ describe('MakeCritRule', () => {
 		);
 	});
 
+	it('offers nothing when its predicate fails', () => {
+		const rule = makeRule({ predicate: new Predicate({ self: 'other' } as never) });
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } })).toBe(
+			false,
+		);
+	});
+
 	it('offers to the target when it is on the target side', () => {
 		const rule = makeRule({ usedBy: 'target', attackDelivery: 'melee' });
 		expect(rule.offersUseOn({ side: 'target', roll: { kind: 'attack', delivery: 'melee' } })).toBe(

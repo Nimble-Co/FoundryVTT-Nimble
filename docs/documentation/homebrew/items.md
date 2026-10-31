@@ -175,6 +175,14 @@ An alternative way to add the fire damage is a **Damage Bonus** rule on the Rule
 A weapon can carry a *weapon type* (for example "Longsword") in its data. If it does, a wielder whose class does not grant proficiency with that type can still attack, but cannot score critical hits. Weapons with no weapon type set skip this check entirely, so anything you create by hand works for everyone unless you copy an item that has a type set.
 :::
 
+### Healing that goes to the user
+
+A healing effect has a **Who gets it?** field on the Activation tab. **The target** works as normal. **The one who uses the item** heals the user, whoever is targeted. With Feature Effects on, this healing is applied when the item is used. With Feature Effects off, the card shows the button.
+
+### Weapon-only and item-specific rules
+
+An [Attack Outcome](../reference/rules-bonuses.md) rule can apply to weapon attacks or spell attacks only with **Source**. **Not attacks with this item** takes an item identifier, so a companion's attack does not count as yours.
+
 ## Armor and shields
 
 Armor protection is **not** a number typed on the armor's sheet. It is a rule. A character's armor starts at their Dexterity modifier ("unarmored"), and every equipped item with an **Armor Class** rule adds its contribution on top, or overrides the value entirely.

@@ -34,7 +34,9 @@
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
 
-	let targetDisposition = $derived(hasDispositionTarget(node) ? node.targetDisposition : undefined);
+	let targetDisposition = $derived(
+		node.recipient !== 'self' && hasDispositionTarget(node) ? node.targetDisposition : undefined,
+	);
 
 	const { dispositionState } = useDispositionState(
 		() => targetDisposition,

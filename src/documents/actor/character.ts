@@ -404,13 +404,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		});
 		this.tags.add(`armor:${hasArmor ? 'equipped' : 'unarmored'}`);
 
-		// Armor that is not worn has its rules off.
-		const wearsArmor = this.items.some((item) => {
+		// Armor that is not equipped has its rules off.
+		const hasEquippedArmor = this.items.some((item) => {
 			if (!item.isType('object')) return false;
 			if ((item as unknown as NimbleObjectItem).system.objectType !== 'armor') return false;
 			return [...item.rules.values()].some((rule) => rule.type === 'armorClass' && !rule.disabled);
 		});
-		if (!wearsArmor) {
+		if (!hasEquippedArmor) {
 			this.tags.add('self:armor:none');
 			this.tags.add('target:armor:none');
 		}

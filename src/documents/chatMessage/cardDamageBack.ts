@@ -99,7 +99,9 @@ export class CardDamageBack {
 			}
 		}
 		if (added.length > 0) {
-			await this.#host.update({ 'system.damageBack': [...this.#host.records(), ...added] });
+			await queueReactionWrite(this.#host.id() ?? '', async () => {
+				await this.#host.update({ 'system.damageBack': [...this.#host.records(), ...added] });
+			});
 		}
 	}
 

@@ -24,6 +24,9 @@ type AttackOutcomeSide = (typeof ATTACK_OUTCOME_SIDES)[number];
 const FORCE_CRIT_CHOICES = ['none', 'always', 'onHit'] as const;
 type ForceCritChoice = (typeof FORCE_CRIT_CHOICES)[number];
 
+const ATTACK_SOURCES = ['any', 'weapon', 'spell'] as const;
+type AttackSourceFilter = (typeof ATTACK_SOURCES)[number];
+
 const onYourAttacks = (data: Record<string, unknown>) => data.side !== 'attacksAgainstYou';
 
 function schema() {
@@ -90,6 +93,21 @@ function schema() {
 				showWhen: onYourAttacks,
 			}),
 		),
+		attackSource: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'any',
+			choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
+			label: 'NIMBLE.rules.attackOutcome.attackSource.label',
+			hint: 'NIMBLE.rules.attackOutcome.attackSource.hint',
+		}),
+		exceptItemIdentifier: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.attackOutcome.exceptItemIdentifier.label',
+			hint: 'NIMBLE.rules.attackOutcome.exceptItemIdentifier.hint',
+		}),
 		otherCreature: new PredicateField({
 			label: 'NIMBLE.rules.attackOutcome.otherCreature.label',
 			hint: 'NIMBLE.rules.attackOutcome.otherCreature.hint',
@@ -154,7 +172,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		},
 		{
 			label: 'NIMBLE.rules.attackOutcome.form.onlyAttacks',
-			fields: ['attackDelivery', 'thisItemOnly'],
+			fields: ['attackDelivery', 'attackSource', 'thisItemOnly', 'exceptItemIdentifier'],
 		},
 		{
 			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
@@ -174,7 +192,9 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	declare forceCrit: ForceCritChoice;
 	declare anyDieCrits: boolean;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare attackSource: AttackSourceFilter;
 	declare thisItemOnly: boolean;
+	declare exceptItemIdentifier: string;
 	declare otherCreature: Predicate;
 	declare chargePoolIdentifier: string;
 
@@ -194,7 +214,9 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 				['forceCrit', 'string'],
 				['anyDieCrits', 'boolean'],
 				['attackDelivery', 'string'],
+				['attackSource', 'string'],
 				['thisItemOnly', 'boolean'],
+				['exceptItemIdentifier', 'string'],
 				['otherCreature', 'object'],
 				['chargePoolIdentifier', 'string'],
 			]),
@@ -208,6 +230,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return null;
 		const ownAttack = context.side === 'yourAttacks';
 		if (ownAttack && this.thisItemOnly && context.itemUuid !== this.item.uuid) return null;
+		if (!this.#matchesAttackItem(context.itemUuid)) return null;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return null;
 		const chargePoolIdentifier = ownAttack ? (this.chargePoolIdentifier ?? '').trim() : '';
 		if (!hasRuleCharge(this.actor as Actor | null, chargePoolIdentifier)) return null;
@@ -220,6 +243,18 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			anyDieCrits: this.anyDieCrits === true,
 			chargePoolIdentifier,
 		};
+	}
+
+	#matchesAttackItem(itemUuid: string | null | undefined): boolean {
+		const except = (this.exceptItemIdentifier ?? '').trim();
+		if (this.attackSource === 'any' && !except) return true;
+		const item = (itemUuid ? fromUuidSync(itemUuid as never) : null) as {
+			type?: string;
+			identifier?: string;
+		} | null;
+		if (except && item?.identifier === except) return false;
+		if (this.attackSource === 'any') return true;
+		return (item?.type === 'spell' ? 'spell' : 'weapon') === this.attackSource;
 	}
 
 	/**
@@ -237,6 +272,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			delivery: roll.delivery,
 			other: context.other,
 			itemUuid: roll.itemUuid,
+			damageTypes: roll.damageTypes,
 		});
 		return !!change && (change.forcedCrit !== null || change.anyDieCrits);
 	}

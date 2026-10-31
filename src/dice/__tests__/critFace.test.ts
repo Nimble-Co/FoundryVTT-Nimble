@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../DamageRoll.js';
+import { NIMBLE_MODS } from '../nimbleDieModifiers.js';
 
 type Result = { result: number; active: boolean; discarded?: boolean; exploded?: boolean };
 
@@ -34,6 +35,27 @@ describe('the crit face of a Primary Die', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
 		delete (CONFIG.Dice as unknown as { parser?: unknown }).parser;
+	});
+
+	it('is 1 for a Forced Crit on a hit on a roll that cannot miss', () => {
+		const roll = readAgain('1d6', [[kept(1)]], { forcedCrit: 'onHit', canMiss: false });
+		expect(roll.isCritical).toBe(true);
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('finds the crit die of a roll rebuilt from stored data', () => {
+		const roll = new DamageRoll('1d8c', {}, {
+			canCrit: true,
+			canMiss: true,
+			rollMode: 0,
+			primaryDieValue: 0,
+			primaryDieModifier: 0,
+			forcedCrit: 'always',
+		} as DamageRoll.Options);
+		const term = roll.terms.find((candidate) => candidate instanceof foundry.dice.terms.Die);
+		delete (term as unknown as Record<symbol, unknown>)[NIMBLE_MODS];
+		Object.assign(term as object, { modifiers: ['c'] });
+		expect(roll.critFaceOf(term)).toBe(1);
 	});
 
 	it('is the max when no crit threshold is set', () => {

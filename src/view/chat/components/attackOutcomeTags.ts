@@ -1,4 +1,8 @@
-import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
+import type {
+	AttackOutcomeSources,
+	AttackOutcomeTag,
+	MultiTargetDetail,
+} from '#types/attackOutcome.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import { critFaceOf } from '../../../dice/critFace.js';
 import { findPrimaryDamageNode } from '../../../utils/damage/foldBonusIntoPrimaryDamage.js';
@@ -7,17 +11,9 @@ import { termsHaveDieAtMax } from '../../../utils/incomingReactions/incomingReac
 import localize from '../../../utils/localize.js';
 import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 
-type AttackOutcomeTagKind = 'crit' | 'cannotMiss' | 'noOutcome';
-
-/** A tag at the roll that tells why the attack result is not what the die face shows. */
-interface AttackOutcomeTag {
-	kind: AttackOutcomeTagKind;
-	label: string;
-	tooltip: string;
-}
-
 interface OutcomeRollOptions {
 	multiTarget?: boolean;
+	multiTargetDetail?: MultiTargetDetail;
 	critRange?: number;
 	forcedCrit?: string;
 	missThreshold?: number;
@@ -77,7 +73,7 @@ function critCauses(
  * the max a crit, what made a miss face a hit, and that an attack on 2 or more
  * targets has no miss and no crit. Nothing on other rolls.
  */
-function attackOutcomeTags(roll: OutcomeRollView | null, targetCount: number): AttackOutcomeTag[] {
+function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	const die = keptFace(roll?.terms);
 	if (!roll || !die) return [];
 	const options = roll.options ?? {};
@@ -86,9 +82,14 @@ function attackOutcomeTags(roll: OutcomeRollView | null, targetCount: number): A
 	const missFace = face <= (options.missThreshold ?? DEFAULT_MISS_THRESHOLD);
 
 	if (options.multiTarget) {
-		const noOutcome = missFace ? 'noMiss' : face === faces ? 'noCrit' : null;
+		const detail = options.multiTargetDetail;
+		const noOutcome = missFace
+			? detail?.couldMiss !== false && 'noMiss'
+			: face >= critFaceOf(faces, { critRange: options.critRange }) &&
+				detail?.couldCrit !== false &&
+				'noCrit';
 		if (!noOutcome) return [];
-		const count = String(targetCount);
+		const count = String(detail?.targets ?? 2);
 		return [
 			{
 				kind: 'noOutcome',
@@ -109,7 +110,7 @@ function attackOutcomeTags(roll: OutcomeRollView | null, targetCount: number): A
 		}
 	}
 	if (!roll.isMiss && missFace) {
-		for (const feature of options.outcomeSources?.cannotMiss ?? []) {
+		for (const feature of new Set(options.outcomeSources?.cannotMiss ?? [])) {
 			tags.push({
 				kind: 'cannotMiss',
 				label: localize(`${TAG_TEXT}.cannotMiss`, { feature }),
@@ -148,4 +149,4 @@ function primaryDieBonusNotAdded(
 	});
 }
 
-export { attackOutcomeTags, cardPrimaryRoll, primaryDieBonusNotAdded, type AttackOutcomeTag };
+export { attackOutcomeTags, cardPrimaryRoll, primaryDieBonusNotAdded };

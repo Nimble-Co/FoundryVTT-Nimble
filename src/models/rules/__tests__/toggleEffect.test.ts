@@ -576,11 +576,13 @@ describe('ToggleEffectRule', () => {
 		it('keeps the AE on a round change without onRoundEnd, and for another actor', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onTurnEnd'] }, actor);
+			const otherActor = createMockActor();
 			const other = createToggleEffectRule(
 				{ tags: ['self:heads'], turnOff: ['onRoundEnd'] },
-				createMockActor(),
+				otherActor,
 			);
 			pushAE(actor, rule.id, rule.item.id);
+			pushAE(otherActor, other.id, other.item.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
 			const context = {
@@ -592,6 +594,7 @@ describe('ToggleEffectRule', () => {
 			await other.onRoundChanged(context);
 
 			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(otherActor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
 
 		it('onActorWounded deletes the AE when listed in turnOff', async () => {

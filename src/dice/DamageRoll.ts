@@ -30,6 +30,8 @@ declare namespace DamageRoll {
 		 * cannot crit or miss, but keeps a Primary Die for rerolls and changes.
 		 */
 		multiTarget?: boolean;
+		/** What a Multi-target Attack gave up, as it was when rolled. */
+		multiTargetDetail?: { targets: number; couldCrit: boolean; couldMiss: boolean };
 		/** The lowest kept Primary Die face that is a crit. Defaults to the max. */
 		criticalThreshold?: number;
 		/**
@@ -38,6 +40,8 @@ declare namespace DamageRoll {
 		 * and the crit rolls the Primary Die again.
 		 */
 		forcedCrit?: 'always' | 'onHit';
+		/** The `onHit` Forced Crit comes from `anyDieCrits`, so a new roll works it out again. */
+		forcedCritFromDice?: boolean;
 		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
 		critRange?: number;
 		/** Any die of the roll at its max makes the roll a crit on a hit. */
@@ -430,12 +434,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** The options that lower the crit face. A roll that cannot crit keeps the max. */
 	private _critFaceOptions(
 		options: DamageRoll.Options,
-	): Pick<DamageRoll.Options, 'criticalThreshold' | 'critRange' | 'forcedCrit'> {
+	): Partial<
+		Pick<DamageRoll.Options, 'criticalThreshold' | 'critRange' | 'forcedCrit' | 'canMiss'>
+	> {
 		if (!options.canCrit) return {};
 		return {
 			criticalThreshold: options.criticalThreshold,
 			critRange: options.critRange,
 			forcedCrit: options.forcedCrit,
+			canMiss: options.canMiss,
 		};
 	}
 
@@ -452,6 +459,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				term.results.some((r) => r.active && !r.discarded && r.result === term.faces),
 		);
 		if (!atMax) return;
+		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
 		this.options.forcedCrit = 'onHit';
 		const primary = this.terms.find((t) => t instanceof PrimaryDie);
 		if (primary) primary.options.forcedCrit = 'onHit';
@@ -731,19 +739,16 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	async makeCritical(): Promise<{ term: foundry.dice.terms.Die; drawn: number[] } | null> {
 		if (!this.options.canCrit || this.isCritical || this.options.forceMiss) return null;
 		const term = this.modifierMode
-			? this.terms.find(
-					(candidate): candidate is foundry.dice.terms.Die =>
-						candidate instanceof Terms.Die && getNimbleMods(candidate)?.canCrit === true,
-				)
+			? this._modifierModeCritTerm()
 			: this.terms.find((candidate) => candidate instanceof PrimaryDie);
 		if (!term) return null;
 
 		this.options.forcedCrit = 'always';
+		// What gave a crit on a hit did not give this one.
+		if (this.options.outcomeSources) delete this.options.outcomeSources.forcedCrit;
 		if (term instanceof PrimaryDie) term.options.forcedCrit = 'always';
 		const before = term.results.length;
-		const style = this.modifierMode
-			? getNimbleMods(term)?.explosionStyle
-			: this.options.explosionStyle;
+		const style = this.modifierMode ? this.explosionStyleOf(term) : this.options.explosionStyle;
 		if (style === 'vicious') {
 			await (this.modifierMode
 				? this._evaluateViciousExplosions(term)
@@ -764,11 +769,17 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const faces = (term as { faces?: number } | null)?.faces ?? 6;
 		if (term instanceof PrimaryDie) return term.critFace;
 		if (!this.modifierMode || !this.options.canCrit) return faces;
-		const critTerm = this.terms.find(
+		return term === this._modifierModeCritTerm() ? critFaceOf(faces, this.options) : faces;
+	}
+
+	/** The first crit-capable die, also on a roll rebuilt from stored data. */
+	private _modifierModeCritTerm(): foundry.dice.terms.Die | undefined {
+		return this.terms.find(
 			(candidate): candidate is foundry.dice.terms.Die =>
-				candidate instanceof Terms.Die && getNimbleMods(candidate)?.canCrit === true,
+				candidate instanceof Terms.Die &&
+				(getNimbleMods(candidate) ?? nimbleModsFromModifiers(candidate.modifiers))?.canCrit ===
+					true,
 		);
-		return term === critTerm ? critFaceOf(faces, this.options) : faces;
 	}
 
 	/**

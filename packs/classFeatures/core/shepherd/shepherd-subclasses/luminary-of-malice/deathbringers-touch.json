@@ -38,6 +38,7 @@
 				"type": "attackOutcome",
 				"disabled": false,
 				"id": "F9Kwl2GVpi4DGehy",
+				"exceptItemIdentifier": "lifebinding-spirit",
 				"identifier": "",
 				"label": "Deathbringer's Touch",
 				"predicate": {},

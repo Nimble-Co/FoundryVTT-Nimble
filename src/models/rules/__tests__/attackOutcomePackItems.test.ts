@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { AttackOutcomeRule } from '../attackOutcome.js';
 import { MakeCritRule } from '../makeCrit.js';
@@ -22,7 +22,7 @@ function ruleOfType(file: string, type: string): RuleData {
 
 const ITEM_UUID = 'Actor.hero.Item.pack';
 
-/** A rule built from pack data, on an item of a hero with these tags and a charge in each pool. */
+/** A rule built from pack data, on an item of a hero with these tags. */
 function liveRule<T extends AttackOutcomeRule | MakeCritRule>(
 	RuleClass: new (...args: never[]) => T,
 	data: RuleData,
@@ -35,14 +35,12 @@ function liveRule<T extends AttackOutcomeRule | MakeCritRule>(
 		getRollData: () => ({}),
 		items: [],
 	};
-	const pool = String(data.chargePoolIdentifier ?? '');
 	const item = {
 		isEmbedded: true,
 		actor,
 		name: 'Pack item',
 		uuid: ITEM_UUID,
 		getDomain: () => new Set<string>(),
-		flags: { nimble: { chargePools: pool ? { [pool]: { current: 1 } } : {} } },
 	};
 	const rule = new RuleClass(
 		{ type: data.type } as never,
@@ -52,6 +50,8 @@ function liveRule<T extends AttackOutcomeRule | MakeCritRule>(
 		} as never,
 	);
 	Object.assign(rule, {
+		attackSource: 'any',
+		exceptItemIdentifier: '',
 		...data,
 		otherCreature: new Predicate((data.otherCreature ?? {}) as never),
 		predicate: new Predicate((data.predicate ?? {}) as never),
@@ -115,6 +115,9 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 	});
 
 	describe("Deathbringer's Touch", () => {
+		beforeEach(() => vi.stubGlobal('fromUuidSync', () => ({ type: 'object' })));
+		afterEach(() => vi.unstubAllGlobals());
+
 		const rule = ruleOfType(
 			`${FEATURES}/shepherd/shepherd-subclasses/luminary-of-malice/deathbringers-touch.json`,
 			'attackOutcome',
@@ -154,19 +157,33 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 		it('spends its pool by itself', () => {
 			expect(rule.chargePoolIdentifier).toBe('deathbringers-touch');
 		});
+
+		it("gives no crit to the Lifebinding Spirit's attack", () => {
+			vi.stubGlobal('fromUuidSync', () => ({ type: 'feature', identifier: 'lifebinding-spirit' }));
+			expect(changeOf(rule, { other: creature('target:bloodied') })).toBeNull();
+		});
 	});
 
 	describe('Slashing', () => {
 		const rule = ruleOfType(`${FEATURES}/commander/weapon-mastery/slashing.json`, 'attackOutcome');
 		const unarmored = creature('target:armor:none');
 
+		afterEach(() => vi.unstubAllGlobals());
+
+		it('does nothing with a spell that deals slashing damage', () => {
+			vi.stubGlobal('fromUuidSync', () => ({ type: 'spell' }));
+			expect(changeOf(rule, { other: unarmored, damageTypes: ['slashing'] })).toBeNull();
+		});
+
 		it('cannot miss an unarmored enemy with slashing damage', () => {
+			vi.stubGlobal('fromUuidSync', () => ({ type: 'object' }));
 			expect(changeOf(rule, { other: unarmored, damageTypes: ['slashing'] })?.cannotMiss).toBe(
 				true,
 			);
 		});
 
 		it('does nothing with another damage type, or against armor', () => {
+			vi.stubGlobal('fromUuidSync', () => ({ type: 'object' }));
 			expect(changeOf(rule, { other: unarmored, damageTypes: ['piercing'] })).toBeNull();
 			expect(
 				changeOf(rule, { other: creature('target:armor:heavy'), damageTypes: ['slashing'] }),

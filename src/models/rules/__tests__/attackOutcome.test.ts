@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { AttackOutcomeRule } from '../attackOutcome.js';
 
@@ -34,7 +34,9 @@ function makeRule(
 		forceCrit: 'none',
 		anyDieCrits: false,
 		attackDelivery: 'any',
+		attackSource: 'any',
 		thisItemOnly: false,
+		exceptItemIdentifier: '',
 		otherCreature: new Predicate({}),
 		chargePoolIdentifier: '',
 		predicate: new Predicate({}),
@@ -56,6 +58,34 @@ const attack = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('AttackOutcomeRule', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	describe('the item of the attack', () => {
+		const stubItem = (item: Record<string, unknown>) => vi.stubGlobal('fromUuidSync', () => item);
+
+		it('applies only to the source it names', () => {
+			stubItem({ type: 'spell' });
+			expect(makeRule({ attackSource: 'weapon' }).changeFor(attack())).toBeNull();
+			expect(makeRule({ attackSource: 'spell' }).changeFor(attack())).not.toBeNull();
+
+			stubItem({ type: 'object' });
+			expect(makeRule({ attackSource: 'weapon' }).changeFor(attack())).not.toBeNull();
+			expect(makeRule({ attackSource: 'spell' }).changeFor(attack())).toBeNull();
+		});
+
+		it('counts an attack with no item as a weapon attack', () => {
+			const noItem = attack({ itemUuid: null });
+			expect(makeRule({ attackSource: 'weapon' }).changeFor(noItem)).not.toBeNull();
+			expect(makeRule({ attackSource: 'spell' }).changeFor(noItem)).toBeNull();
+		});
+
+		it('ignores attacks with the item it excepts', () => {
+			stubItem({ type: 'feature', identifier: 'companion' });
+			expect(makeRule({ exceptItemIdentifier: 'companion' }).changeFor(attack())).toBeNull();
+			expect(makeRule({ exceptItemIdentifier: 'other' }).changeFor(attack())).not.toBeNull();
+		});
+	});
+
 	it('defines its fields with defaults that change nothing', () => {
 		const schema = AttackOutcomeRule.defineSchema() as unknown as Record<
 			string,
@@ -144,6 +174,16 @@ describe('AttackOutcomeRule', () => {
 			expect(yours.offersUseOn({ side: 'target', roll: roll(), other: unhurt })).toBe(false);
 			expect(against.offersUseOn({ side: 'target', roll: roll(), other: unhurt })).toBe(true);
 			expect(yours.offersUseOn({ side: 'ally', roll: roll(), other: unhurt })).toBe(false);
+		});
+
+		it("tests its predicate with the card's damage types", () => {
+			const rule = makeRule({
+				forceCrit: 'onHit',
+				predicate: new Predicate({ attack: 'damageType:slashing' } as never),
+			});
+			const slashing = { ...roll(), damageTypes: ['slashing'] };
+			expect(rule.offersUseOn({ side: 'roller', roll: slashing, other: unhurt })).toBe(true);
+			expect(rule.offersUseOn({ side: 'roller', roll: roll(), other: unhurt })).toBe(false);
 		});
 
 		it('is not a button when it gives no crit', () => {

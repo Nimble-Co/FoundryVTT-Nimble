@@ -29,3 +29,5 @@ The use limit is a Charge Pool rule with **Max charges** `1` and recoveries on `
 - **The attack cannot miss** → on
 - **Only while** → `attack:damageType:slashing`
 - **Only when the other creature is** → `target:armor:none`
+
+**Source** limits the rule to weapon or spell attacks. An attack with no item counts as a weapon attack. **Not attacks with this item** takes an item identifier: the rule ignores attacks with that item.

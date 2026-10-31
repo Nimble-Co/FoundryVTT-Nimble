@@ -304,17 +304,30 @@ describe('a Forced Crit', () => {
 			expect(faces(next)).toEqual([3, 2, 4]);
 		});
 
+		it('does not name a Forced Crit that did not give this crit', async () => {
+			crittingDice([kept(4)]);
+			const roll = await attack(1, {
+				forcedCrit: 'onHit',
+				outcomeSources: { forcedCrit: ['Target Stunned'], cannotMiss: ['Other'] },
+			});
+			inPlace(roll);
+
+			const { roll: next } = await makeRollCrit(roll);
+
+			expect(next.options.outcomeSources).toEqual({ cannotMiss: ['Other'] });
+		});
+
 		it('fails on a roll that cannot crit, and on a crit', async () => {
 			crittingDice([kept(4)]);
 			const multi = await attack(3, { canCrit: false, canMiss: false, multiTarget: true });
 			inPlace(multi);
-			await expect(makeRollCrit(multi)).rejects.toThrow();
+			await expect(makeRollCrit(multi)).rejects.toThrow('cannot be made a crit');
 
 			vi.restoreAllMocks();
 			crittingDice([kept(2)]);
 			const crit = await attack(6);
 			inPlace(crit);
-			await expect(makeRollCrit(crit)).rejects.toThrow();
+			await expect(makeRollCrit(crit)).rejects.toThrow('cannot be made a crit');
 		});
 	});
 });

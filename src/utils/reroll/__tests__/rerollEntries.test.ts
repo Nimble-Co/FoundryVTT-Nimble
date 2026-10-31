@@ -1054,7 +1054,9 @@ describe('a target in the Incapacitated group, with Feature Effects off', () => 
 			outcomeTrigger: 'hit',
 			itemUuid: '',
 		});
-		expect(findRerollRule(manual[0] as IncomingReactionEntry)?.rollUseCost).toBeUndefined();
+		const rule = findRerollRule(manual[0] as IncomingReactionEntry);
+		expect(rule?.id).toBe('incapacitatedTarget');
+		expect(rule?.rollUseCost).toBeUndefined();
 	});
 
 	it('gives no button on a miss, on a crit, or on a roll that cannot crit', () => {

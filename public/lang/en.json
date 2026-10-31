@@ -663,7 +663,7 @@
 				"dialog": "Add to Primary Die Result {value}",
 				"notAdded": "{value} bonus not added",
 				"notAddedTooltip": "The die was set to a value. A set value is final, so this bonus is not added.",
-				"notAddedBySetTooltip": "{feature} set the die to {face}. A set value is final, so this bonus is not added."
+				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"incomingReactions": {
 				"heading": "Options",
@@ -718,7 +718,7 @@
 					"cannotMissTooltip": "The die rolled {face}. It is a hit because of {feature}.",
 					"noMiss": "No miss: {count} targets",
 					"noCrit": "No crit: {count} targets",
-					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit (Core:1403)."
+					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit."
 				},
 				"rerollTags": {
 					"crit": "Crit",
@@ -1818,10 +1818,6 @@
 					"label": "Source",
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
 				},
-				"itemIdentifier": {
-					"label": "Only attacks with this item",
-					"hint": "The identifier of the item, such as lifebinding-spirit. Empty is every item."
-				},
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Predicate evaluated against the target's state at activation. The choice is only offered when the target matches, e.g. { \"$and\": [\"target:quarry\"] }."
@@ -1844,6 +1840,10 @@
 				"source": {
 					"label": "Source",
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				},
+				"itemIdentifier": {
+					"label": "Only attacks with this item",
+					"hint": "The identifier of the item, such as lifebinding-spirit. Empty is every item."
 				},
 				"targetCondition": {
 					"label": "Target condition",
@@ -2515,7 +2515,7 @@
 				},
 				"cannotMiss": {
 					"label": "The attack cannot miss",
-					"hint": "A 1 on the Primary Die is a hit."
+					"hint": "A miss face on the Primary Die is a hit."
 				},
 				"critRange": {
 					"label": "Crit on this many less than the max",
@@ -2534,9 +2534,22 @@
 					"label": "Any die at its max is a crit",
 					"hint": "Any die of the roll on its max makes the attack a crit on a hit. The crit rolls the Primary Die again."
 				},
+				"attackSource": {
+					"label": "Source",
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both.",
+					"choices": {
+						"any": "Any",
+						"weapon": "Weapon",
+						"spell": "Spell"
+					}
+				},
 				"thisItemOnly": {
 					"label": "Only attacks with this item",
 					"hint": "Only attacks made with the item that has this rule."
+				},
+				"exceptItemIdentifier": {
+					"label": "Not attacks with this item",
+					"hint": "The identifier of an item whose attacks this rule ignores, such as a companion's attack. Empty ignores none."
 				},
 				"otherCreature": {
 					"label": "Only when the other creature is",
@@ -2548,7 +2561,7 @@
 				}
 			},
 			"damageBack": {
-				"description": "When the owner takes damage from an attack, the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"description": "When the owner takes damage from an attack (a crit, unless you turn off Only against crits), the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
 				"onlyCrits": {
 					"label": "Only against crits",
 					"hint": "Give damage back only when the attack is a crit."
@@ -2559,7 +2572,7 @@
 				}
 			},
 			"makeCrit": {
-				"description": "Lets the one who rolled, the target of an attack, or an ally make an attack a crit after it is rolled. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a reroll or a change after it alters only the damage dice. It is not offered on an attack with 2 or more targets, on an area attack, or on an attack that is already a crit.",
+				"description": "Lets the one who rolled, the target of an attack, or an ally make an attack a crit after it is rolled. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a reroll or a change after it alters only the damage dice. It does not show on an attack with 2 or more targets, on an area attack, or on an attack that is already a crit.",
 				"chargePoolIdentifier": {
 					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
 				},

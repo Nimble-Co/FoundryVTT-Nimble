@@ -6,6 +6,7 @@
 	import { createReactionCardState } from './ReactionCardState.svelte.ts';
 	import localize from '../../utils/localize.js';
 	import CardHeader from './components/CardHeader.svelte';
+	import DamageBackLines from './components/DamageBackLines.svelte';
 	import Targets from './components/Targets.svelte';
 
 	const { messageDocument }: ReactionCardProps = $props();
@@ -88,6 +89,7 @@
 
 	{#if reactionConfig.showTargets}
 		<Targets />
+		<DamageBackLines />
 	{/if}
 
 	{#if chatMessage}

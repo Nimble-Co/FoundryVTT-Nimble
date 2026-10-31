@@ -16,8 +16,8 @@ const labels = (...args: Parameters<typeof attackOutcomeTags>) =>
 
 describe('attackOutcomeTags', () => {
 	it('gives no tag to a roll with no causes', () => {
-		expect(attackOutcomeTags(roll(4), 1)).toEqual([]);
-		expect(attackOutcomeTags(null, 1)).toEqual([]);
+		expect(attackOutcomeTags(roll(4))).toEqual([]);
+		expect(attackOutcomeTags(null)).toEqual([]);
 	});
 
 	describe('crit causes', () => {
@@ -26,7 +26,6 @@ describe('attackOutcomeTags', () => {
 		it('names each Forced Crit source when the die is below its max', () => {
 			const tags = attackOutcomeTags(
 				roll(3, { isCritical: true }, sources(['Touch', 'target Stunned'])),
-				1,
 			);
 			expect(tags.map((tag) => tag.label)).toEqual(['Crit: Touch', 'Crit: target Stunned']);
 			expect(tags[0]?.kind).toBe('crit');
@@ -35,11 +34,11 @@ describe('attackOutcomeTags', () => {
 		});
 
 		it('gives no tag when the die rolled its max: the max is the cause', () => {
-			expect(labels(roll(6, { isCritical: true }, sources(['Touch'])), 1)).toEqual([]);
+			expect(labels(roll(6, { isCritical: true }, sources(['Touch'])))).toEqual([]);
 		});
 
 		it('gives no tag when the roll is not a crit', () => {
-			expect(labels(roll(1, { isMiss: true }, sources(['target Stunned'])), 1)).toEqual([]);
+			expect(labels(roll(1, { isMiss: true }, sources(['target Stunned'])))).toEqual([]);
 		});
 
 		it('names a crit range source only when the face is in its range', () => {
@@ -48,11 +47,11 @@ describe('attackOutcomeTags', () => {
 				forcedCrit: 'onHit',
 				outcomeSources: { critRange: ['Heads I Win'], forcedCrit: ['target Stunned'] },
 			};
-			expect(labels(roll(5, { isCritical: true }, options), 1)).toEqual([
+			expect(labels(roll(5, { isCritical: true }, options))).toEqual([
 				'Crit: target Stunned',
 				'Crit: Heads I Win',
 			]);
-			expect(labels(roll(3, { isCritical: true }, options), 1)).toEqual(['Crit: target Stunned']);
+			expect(labels(roll(3, { isCritical: true }, options))).toEqual(['Crit: target Stunned']);
 		});
 
 		it('names an any-die source only when another die is at its max', () => {
@@ -61,10 +60,10 @@ describe('attackOutcomeTags', () => {
 				{ faces: 6, results: [{ result: 3, active: true }] },
 				{ faces: 8, results: [{ result: 8, active: true }] },
 			];
-			expect(labels(roll(3, { isCritical: true, terms: dice }, options), 1)).toEqual([
+			expect(labels(roll(3, { isCritical: true, terms: dice }, options))).toEqual([
 				'Crit: Shatter',
 			]);
-			expect(labels(roll(3, { isCritical: true }, options), 1)).toEqual([]);
+			expect(labels(roll(3, { isCritical: true }, options))).toEqual([]);
 		});
 
 		it('reads the kept face, not a dropped one', () => {
@@ -77,7 +76,7 @@ describe('attackOutcomeTags', () => {
 					],
 				},
 			];
-			expect(labels(roll(0, { isCritical: true, terms }, sources(['Touch'])), 1)).toEqual([
+			expect(labels(roll(0, { isCritical: true, terms }, sources(['Touch'])))).toEqual([
 				'Crit: Touch',
 			]);
 		});
@@ -87,42 +86,51 @@ describe('attackOutcomeTags', () => {
 		const options = { canMiss: false, outcomeSources: { cannotMiss: ['Slashing'] } };
 
 		it('names the feature when a 1 was read as a hit', () => {
-			const tags = attackOutcomeTags(roll(1, {}, options), 1);
+			const tags = attackOutcomeTags(roll(1, {}, options));
 			expect(tags.map((tag) => tag.label)).toEqual(['Cannot miss: Slashing']);
 			expect(tags[0]?.kind).toBe('cannotMiss');
 		});
 
 		it('reads a raised miss threshold', () => {
-			expect(labels(roll(2, {}, { ...options, missThreshold: 2 }), 1)).toEqual([
+			expect(labels(roll(2, {}, { ...options, missThreshold: 2 }))).toEqual([
 				'Cannot miss: Slashing',
 			]);
 		});
 
 		it('gives no tag on a face that would hit anyway', () => {
-			expect(labels(roll(2, {}, options), 1)).toEqual([]);
+			expect(labels(roll(2, {}, options))).toEqual([]);
 		});
 
 		it('gives no tag on a forced miss', () => {
-			expect(labels(roll(1, { isMiss: true }, options), 1)).toEqual([]);
+			expect(labels(roll(1, { isMiss: true }, options))).toEqual([]);
 		});
 	});
 
 	describe('a Multi-target Attack', () => {
 		const options = { multiTarget: true, canCrit: false, canMiss: false };
 
-		it('tells "No miss" on a 1, with the count of targets, and names Core:1403', () => {
-			const tags = attackOutcomeTags(roll(1, {}, options), 3);
+		const detail = (more = {}) => ({
+			multiTargetDetail: { targets: 3, couldCrit: true, couldMiss: true, ...more },
+		});
+
+		it('tells "No miss" on a 1, with the count of targets when rolled', () => {
+			const tags = attackOutcomeTags(roll(1, {}, { ...options, ...detail() }));
 			expect(tags.map((tag) => tag.label)).toEqual(['No miss: 3 targets']);
 			expect(tags[0]?.kind).toBe('noOutcome');
-			expect(tags[0]?.tooltip).toContain('Core:1403');
+			expect(tags[0]?.tooltip).toContain('3 targets');
 		});
 
 		it('tells "No crit" on the max', () => {
-			expect(labels(roll(6, {}, options), 2)).toEqual(['No crit: 2 targets']);
+			expect(labels(roll(6, {}, options))).toEqual(['No crit: 2 targets']);
+		});
+
+		it('tells nothing when the attack could not crit or miss with 1 target', () => {
+			expect(labels(roll(6, {}, { ...options, ...detail({ couldCrit: false }) }))).toEqual([]);
+			expect(labels(roll(1, {}, { ...options, ...detail({ couldMiss: false }) }))).toEqual([]);
 		});
 
 		it('tells nothing on another roll', () => {
-			expect(labels(roll(4, {}, options), 2)).toEqual([]);
+			expect(labels(roll(4, {}, options))).toEqual([]);
 		});
 	});
 });

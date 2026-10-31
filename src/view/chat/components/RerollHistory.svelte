@@ -49,7 +49,7 @@
 	<div class="nimble-roll-changes__tags nimble-roll-changes__tags--outcome">
 		{#each outcomeTags as tag (tag.label)}
 			<span
-				class="nimble-reroll-tag nimble-reroll-tag--{tag.kind}"
+				class="nimble-reroll-tag"
 				class:nimble-reroll-tag--none={tag.kind === 'noOutcome'}
 				data-tooltip={tag.tooltip}
 			>

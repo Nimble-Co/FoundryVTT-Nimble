@@ -1,4 +1,4 @@
-import { metadata, targets } from './common.js';
+import { damageBack, metadata, targets } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -16,6 +16,7 @@ const reactionCardSchema = () => ({
 
 declare namespace NimbleReactionCardData {
 	type Schema = DataSchema &
+		ReturnType<typeof damageBack> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof reactionCardSchema> &
 		ReturnType<typeof targets>;
@@ -32,6 +33,7 @@ class NimbleReactionCardData extends foundry.abstract.TypeDataModel<
 	static override defineSchema(): NimbleReactionCardData.Schema {
 		return {
 			...reactionCardSchema(),
+			...damageBack(),
 			...metadata(),
 			...targets(),
 		};

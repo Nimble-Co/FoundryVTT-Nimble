@@ -119,6 +119,9 @@ function damageRollContext(
 			: findPrimaryDamageRoll(card.system())?.damageNode.roll
 	) as RollOptionsView | undefined;
 	const itemUuid = card.itemUuid?.() ?? null;
+	const damageType = (
+		findPrimaryDamageRoll(card.system())?.damageNode as { damageType?: string } | undefined
+	)?.damageType;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -126,7 +129,12 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
-		roll: { kind: 'attack', delivery: card.delivery(), ...(itemUuid ? { itemUuid } : {}) },
+		roll: {
+			kind: 'attack',
+			delivery: card.delivery(),
+			...(itemUuid ? { itemUuid } : {}),
+			...(damageType ? { damageTypes: [damageType] } : {}),
+		},
 		outcome: {
 			isCritical: outcome.isCritical,
 			isMiss: outcome.isMiss,
