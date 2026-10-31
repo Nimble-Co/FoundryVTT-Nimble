@@ -10,12 +10,12 @@ describe('RowTile', () => {
 		expect(container.querySelector('.glyph')).toBeNull();
 	});
 
-	it('shows a core icon as a bronze glyph on a dark tile', () => {
+	it('shows a core icon as a bronze glyph on a dark tile, with the path from the page and not from the stylesheet', () => {
 		const { container } = render(RowTile, { img: 'icons/svg/item-bag.svg' });
 
 		expect(container.querySelector('img')).toBeNull();
 		expect(container.querySelector<HTMLElement>('.glyph')?.style.getPropertyValue('--glyph')).toBe(
-			'url(icons/svg/item-bag.svg)',
+			`url("${new URL('icons/svg/item-bag.svg', document.baseURI).href}")`,
 		);
 	});
 });

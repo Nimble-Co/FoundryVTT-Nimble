@@ -10,6 +10,8 @@ The image of a row is the image of the thing; each image has one meaning on the 
 	let { img, icon, size = 'md' }: RowTileProps = $props();
 
 	const glyph = $derived(!!img && img.startsWith('icons/svg/'));
+	// A url() in a custom property resolves against the stylesheet that uses it, not the page.
+	const glyphUrl = $derived(glyph ? `url("${new URL(img as string, document.baseURI).href}")` : '');
 </script>
 
 <span
@@ -20,7 +22,7 @@ The image of a row is the image of the thing; each image has one meaning on the 
 	aria-hidden="true"
 >
 	{#if glyph}
-		<span class="glyph" style:--glyph="url({img})"></span>
+		<span class="glyph" style:--glyph={glyphUrl}></span>
 	{:else if img}
 		<img src={img} alt="" />
 	{:else if icon}
