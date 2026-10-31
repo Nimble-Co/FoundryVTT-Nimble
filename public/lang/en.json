@@ -677,6 +677,8 @@
 				"rerollWith": "Reroll with {feature}",
 				"changeWith": "Change the die with {feature}",
 				"critWith": "Make the attack a crit with {feature}",
+				"incapacitatedCause": "target {condition}",
+				"incapacitatedFeature": "Target {condition}",
 				"rerollAgain": "Reroll again with {feature}",
 				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",

@@ -741,12 +741,51 @@ describe('resolveRerollReaction', () => {
 	describe('a Make It a Crit entry', () => {
 		const makeCrit = { type: 'makeCrit', rerollChanges: undefined };
 
-		function critMessage() {
-			const message = createMessage({ entries: [rerollEntry({ use: 'crit' })] });
+		function critMessage(entries = [rerollEntry({ use: 'crit' })]) {
+			const message = createMessage({ entries });
 			const node = (message.system.activation as { effects: Array<{ roll: { options: object } }> })
 				.effects[0];
 			Object.assign(node.roll.options, { canCrit: true });
 			return message;
+		}
+
+		/** Use entry-1 with Feature Effects off and a mock Roll that copies a damage roll as a DamageRoll. */
+		async function useCritEntry(message: MockedMessage) {
+			const settings = globalThis as unknown as { game: { settings?: unknown } };
+			settings.game.settings = {
+				get: (_scope: string, key: string) => !key.includes('RuleEffects'),
+			};
+			const spy = vi.spyOn(DamageRoll.prototype, 'makeCritical').mockImplementation(async function (
+				this: DamageRoll,
+			) {
+				this.isCritical = true;
+				this.isMiss = false;
+				this.options.forcedCrit = 'always';
+				return { term: { faces: 6, number: 1, results: [] } as never, drawn: [] };
+			});
+			const fromData = foundry.dice.Roll.fromData;
+			let copying = false;
+			const copies = vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: {
+				originalFormula?: string;
+			}) => {
+				if (copying || !data.originalFormula)
+					return fromData.call(foundry.dice.Roll, data as never);
+				copying = true;
+				try {
+					return DamageRoll.fromData(data as never);
+				} finally {
+					copying = false;
+				}
+			}) as never);
+
+			try {
+				await message.resolveRerollReaction('entry-1', 'gm-user');
+				return spy.mock.calls.length;
+			} finally {
+				spy.mockRestore();
+				copies.mockRestore();
+				delete settings.game.settings;
+			}
 		}
 
 		it.each([
@@ -756,52 +795,57 @@ describe('resolveRerollReaction', () => {
 			'makes the attack a crit that stays, and writes a crit line, for %s',
 			async (_name, type) => {
 				setupWorld({ ...makeCrit, type });
-				const settings = globalThis as unknown as { game: { settings?: unknown } };
-				settings.game.settings = {
-					get: (_scope: string, key: string) => !key.includes('RuleEffects'),
-				};
 				const message = critMessage();
-				const spy = vi
-					.spyOn(DamageRoll.prototype, 'makeCritical')
-					.mockImplementation(async function (this: DamageRoll) {
-						this.isCritical = true;
-						this.isMiss = false;
-						this.options.forcedCrit = 'always';
-						return { term: { faces: 6, number: 1, results: [] } as never, drawn: [] };
-					});
-				// The mock Roll has no class in its data: copy a damage roll as a DamageRoll.
-				const fromData = foundry.dice.Roll.fromData;
-				let copying = false;
-				const copies = vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: {
-					originalFormula?: string;
-				}) => {
-					if (copying || !data.originalFormula)
-						return fromData.call(foundry.dice.Roll, data as never);
-					copying = true;
-					try {
-						return DamageRoll.fromData(data as never);
-					} finally {
-						copying = false;
-					}
-				}) as never);
 
-				try {
-					await message.resolveRerollReaction('entry-1', 'gm-user');
+				expect(await useCritEntry(message)).toBe(1);
 
-					expect(spy).toHaveBeenCalledTimes(1);
-					const payload = updatePayload(message);
-					expect(payload.system.isCritical).toBe(true);
-					expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
-					expect(payload.system.rerolls).toEqual([
-						expect.objectContaining({ entryId: 'entry-1', use: 'crit' }),
-					]);
-				} finally {
-					spy.mockRestore();
-					copies.mockRestore();
-					delete settings.game.settings;
-				}
+				const payload = updatePayload(message);
+				expect(payload.system.isCritical).toBe(true);
+				expect(payload.system.incomingReactions[0]).toMatchObject({ id: 'entry-1', used: true });
+				expect(payload.system.rerolls).toEqual([
+					expect.objectContaining({ entryId: 'entry-1', use: 'crit' }),
+				]);
 			},
 		);
+
+		describe('for a target in the Incapacitated group', () => {
+			function incapacitatedMessage() {
+				return critMessage([
+					rerollEntry({
+						actorUuid: 'Actor.attacker',
+						side: 'roller',
+						targetTokenUuid: null,
+						label: 'Target Stunned',
+						ruleId: 'incapacitatedTarget',
+						itemUuid: '',
+						outcomeTrigger: 'hit',
+						use: 'crit',
+					}),
+				]);
+			}
+
+			it('makes the attack a crit, with no item and no cost', async () => {
+				const { target } = setupWorld(makeCrit);
+				Object.assign(target, { getTargetDomain: () => new Set(['target:incapacitated']) });
+				const message = incapacitatedMessage();
+
+				expect(await useCritEntry(message)).toBe(1);
+
+				expect(updatePayload(message).system.rerolls).toEqual([
+					expect.objectContaining({ label: 'Target Stunned', use: 'crit', itemUuid: '' }),
+				]);
+			});
+
+			it('is refused when the target left the group', async () => {
+				const { target } = setupWorld(makeCrit);
+				Object.assign(target, { getTargetDomain: () => new Set<string>() });
+				const message = incapacitatedMessage();
+
+				expect(await useCritEntry(message)).toBe(0);
+
+				expect(message.update).not.toHaveBeenCalled();
+			});
+		});
 
 		it('is refused on an attack that cannot crit, and spends nothing', async () => {
 			setupWorld(makeCrit);

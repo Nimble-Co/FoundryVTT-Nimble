@@ -28,7 +28,7 @@ beforeAll(async () => {
 		getDamageBonusFormulas: () => ['1d4'],
 		getDamageBonusTotal: () => 2,
 		getUnarmedDamageFormula: () => '1',
-		hasUnarmedProficiency: () => false,
+		hasUnarmedProficiency: (actor: { proficient?: boolean }) => actor.proficient === true,
 	}));
 	({ rollUnarmedStrike, strikeUnarmed } = await import('../unarmedStrike.ts'));
 });
@@ -140,6 +140,27 @@ describe('rollUnarmedStrike', () => {
 
 		expect(changeFor).toHaveBeenCalledWith(
 			expect.objectContaining({ damageTypes: ['bludgeoning'] }),
+		);
+	});
+
+	it('is a crit on a hit against a target in the Incapacitated group', async () => {
+		dialogResult({ rollMode: 0 });
+		const token = targetToken('Scene.s.Token.goblin') as unknown as { actor: object };
+		Object.assign(token.actor, {
+			statuses: new Set(['stunned']),
+			getTargetDomain: () => new Set(['target:incapacitated']),
+		});
+		heroicGlobals().game.user.targets = new Set([token]);
+
+		await rollUnarmedStrike(createHeroicCharacter({ proficient: true }));
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({
+				forcedCrit: 'onHit',
+				outcomeSources: { forcedCrit: ['target Stunned'] },
+			}),
 		);
 	});
 

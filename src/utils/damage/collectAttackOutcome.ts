@@ -3,6 +3,7 @@ import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type { AttackDelivery } from './attackDelivery.js';
+import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
 
 interface AttackOutcomeRuleLike {
 	type?: string;
@@ -23,7 +24,7 @@ interface RuleOwner {
 interface AttackOutcomeInput {
 	attacker: RuleOwner | null | undefined;
 	/** The target, when the attack has exactly one. */
-	target: RuleOwner | null | undefined;
+	target: (RuleOwner & Parameters<typeof incapacitatedConditionOf>[0]) | null | undefined;
 	delivery: AttackDelivery | null;
 	itemUuid: string | null | undefined;
 	canCrit: boolean;
@@ -55,10 +56,11 @@ function rulesOf(owner: RuleOwner | null | undefined): AttackOutcomeRuleLike[] {
 /**
  * Reads the Attack Outcome rules of the one who attacks and of the target for
  * one attack. Any "cannot miss" wins, the largest crit range wins, and an
- * "always" Forced Crit beats one on a hit. A roll that cannot crit takes no
+ * "always" Forced Crit beats one on a hit. A melee hit against a target in the
+ * Incapacitated group is a crit (Core:419). A roll that cannot crit takes no
  * crit change, and one that cannot miss takes no "cannot miss". With Feature
- * Effects off, a rule that gives a crit does not give it here. A rule that
- * gives nothing to this roll spends no charge.
+ * Effects off, a rule or condition that gives a crit does not give it here. A
+ * rule that gives nothing to this roll spends no charge.
  */
 export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 	const automatic = isRuleAutomationEnabled();
@@ -108,6 +110,15 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 			}
 			if (gives && change.chargePoolIdentifier) charges.push(change.chargePoolIdentifier);
 		}
+	}
+
+	const condition =
+		input.canCrit && automatic && input.delivery === 'melee'
+			? incapacitatedConditionOf(input.target)
+			: null;
+	if (condition) {
+		sources.forcedCrit.push(incapacitatedCause(condition));
+		forcedCrit ??= 'onHit';
 	}
 
 	const options: AttackOutcome['options'] = {

@@ -49,6 +49,66 @@ describe('collectAttackOutcome', () => {
 		delete settings.game.settings;
 	});
 
+	describe('a target in the Incapacitated group', () => {
+		function creature(...statuses: string[]) {
+			return {
+				statuses: new Set(statuses),
+				getTargetDomain: () => new Set(statuses.length ? ['target:incapacitated'] : []),
+			};
+		}
+
+		it('makes a melee hit a crit, and names the condition', () => {
+			const { options, charges } = collectAttackOutcome(roll({ target: creature('stunned') }));
+			expect(options.forcedCrit).toBe('onHit');
+			expect(options.canMiss).toBe(true);
+			expect(options.outcomeSources?.forcedCrit).toEqual(['target Stunned']);
+			expect(charges).toEqual([]);
+		});
+
+		it('names the most specific condition of a Petrified target', () => {
+			const { options } = collectAttackOutcome(
+				roll({ target: creature('incapacitated', 'petrified') }),
+			);
+			expect(options.outcomeSources?.forcedCrit).toEqual(['target Petrified']);
+		});
+
+		it('does nothing on a ranged attack, or an attack with no delivery', () => {
+			for (const delivery of ['ranged', null]) {
+				const { options } = collectAttackOutcome(roll({ delivery, target: creature('stunned') }));
+				expect(options.forcedCrit).toBeUndefined();
+			}
+		});
+
+		it('does nothing on a roll that cannot crit', () => {
+			const { options } = collectAttackOutcome(
+				roll({ canCrit: false, target: creature('stunned') }),
+			);
+			expect(options.forcedCrit).toBeUndefined();
+		});
+
+		it('does nothing with no sole target, or a target outside the group', () => {
+			expect(collectAttackOutcome(roll({ target: null })).options.forcedCrit).toBeUndefined();
+			expect(collectAttackOutcome(roll({ target: creature() })).options.forcedCrit).toBeUndefined();
+		});
+
+		it('does not lower an "always" Forced Crit', () => {
+			const { options } = collectAttackOutcome(
+				roll({
+					attacker: owner(change({ label: 'Touch', forcedCrit: 'always' })),
+					target: creature('unconscious'),
+				}),
+			);
+			expect(options.forcedCrit).toBe('always');
+			expect(options.outcomeSources?.forcedCrit).toHaveLength(2);
+		});
+
+		it('does not read the crit with Feature Effects off', () => {
+			setFeatureEffects(false);
+			const { options } = collectAttackOutcome(roll({ target: creature('paralyzed') }));
+			expect(options.forcedCrit).toBeUndefined();
+		});
+	});
+
 	it('changes nothing with no rules', () => {
 		expect(collectAttackOutcome(roll())).toEqual({ options: { canMiss: true }, charges: [] });
 	});

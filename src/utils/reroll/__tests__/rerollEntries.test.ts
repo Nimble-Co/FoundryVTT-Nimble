@@ -1017,3 +1017,78 @@ describe('findRerollRule', () => {
 		expect(findRerollRule({ ...entry, itemUuid: '' })).toBeNull();
 	});
 });
+
+describe('a target in the Incapacitated group, with Feature Effects off', () => {
+	const incapacitated = () =>
+		actor('Actor.target', [], {
+			statuses: new Set(['unconscious']),
+			getTargetDomain: () => new Set(['target:incapacitated']),
+		} as Partial<RerollingActor>);
+	const onTarget = (overrides: Partial<RerollRollContext> = {}) =>
+		context({
+			targets: [{ tokenUuid: TOKEN, actor: incapacitated() }],
+			outcome: HIT,
+			...overrides,
+		});
+
+	beforeEach(() => {
+		setToggles({ 'automation.applyRuleEffects': false });
+		testGlobals.fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.attacker' ? { uuid } : null,
+		);
+	});
+
+	afterEach(() => {
+		delete testGlobals.game.settings;
+		delete (testGlobals as { fromUuidSync?: unknown }).fromUuidSync;
+	});
+
+	it('gives the one who attacks a free Make It a Crit button on a hit', () => {
+		const { manual, automatic } = collectRerollEntries(onTarget());
+		expect(automatic).toEqual([]);
+		expect(manual).toHaveLength(1);
+		expect(manual[0]).toMatchObject({
+			use: 'crit',
+			side: 'roller',
+			actorUuid: 'Actor.attacker',
+			outcomeTrigger: 'hit',
+			itemUuid: '',
+		});
+		expect(findRerollRule(manual[0] as IncomingReactionEntry)?.rollUseCost).toBeUndefined();
+	});
+
+	it('gives no button on a miss, on a crit, or on a roll that cannot crit', () => {
+		for (const outcome of [MISS, CRIT, { ...HIT, canCrit: false }]) {
+			expect(collectRerollEntries(onTarget({ outcome })).manual).toEqual([]);
+		}
+	});
+
+	it('gives no button on a ranged attack, or with 2 targets', () => {
+		expect(
+			collectRerollEntries(onTarget({ roll: { kind: 'attack', delivery: 'ranged' } })).manual,
+		).toEqual([]);
+		const two = [
+			{ tokenUuid: TOKEN, actor: incapacitated() },
+			{ tokenUuid: OTHER_TOKEN, actor: incapacitated() },
+		];
+		expect(collectRerollEntries(onTarget({ targets: two })).manual).toEqual([]);
+	});
+
+	it('gives no button when the target is not in the group', () => {
+		expect(collectRerollEntries(context({ outcome: HIT })).manual).toEqual([]);
+	});
+
+	it('gives no button with Feature Effects on: the roll reads the crit', () => {
+		setToggles({});
+		expect(collectRerollEntries(onTarget()).manual).toEqual([]);
+	});
+
+	it('stops being usable when the target leaves the group', () => {
+		const entry = collectRerollEntries(onTarget()).manual[0] as IncomingReactionEntry;
+		expect(usableRerollEntry(entry, onTarget(), [entry]).ok).toBe(true);
+		expect(usableRerollEntry(entry, context({ outcome: HIT }), [entry])).toEqual({
+			ok: false,
+			reason: 'unavailable',
+		});
+	});
+});

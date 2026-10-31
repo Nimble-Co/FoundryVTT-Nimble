@@ -1,5 +1,6 @@
 import type { DieChange } from '#types/dieChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
 	type AttackOutcomeView,
 	canBecomeCrit,
@@ -23,6 +24,7 @@ const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
 const MAKE_CRIT_RULE_TYPE = 'makeCrit';
 const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
+const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
 /**
  * The rule types whose entries go on a card as `reroll` entries. With Feature
@@ -87,6 +89,26 @@ interface RerollingActor {
 	isOwner?: boolean;
 	rules?: RerollRuleLike[];
 	getTargetDomain?(): Set<string>;
+}
+
+/**
+ * With Feature Effects off, the crit of a melee hit against a target in the
+ * Incapacitated group is a free Make It a Crit button. No item holds this rule.
+ */
+function incapacitatedTargetRule(other: RerollingActor | null): RerollRuleLike {
+	const condition = incapacitatedConditionOf(other);
+	return {
+		type: MAKE_CRIT_RULE_TYPE,
+		id: INCAPACITATED_TARGET_RULE_ID,
+		label: condition ? incapacitatedFeature(condition) : '',
+		outcome: 'hit',
+		offersUseOn: (context) =>
+			!isRuleAutomationEnabled() &&
+			context.side === 'roller' &&
+			context.roll.kind === 'attack' &&
+			context.roll.delivery === 'melee' &&
+			incapacitatedConditionOf(context.other) !== null,
+	};
 }
 
 interface RerollTarget {
@@ -247,7 +269,9 @@ function collectRerollEntries(context: RerollRollContext): {
 			const actorUuid = actor?.uuid ?? '';
 			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
-			for (const rule of actor.rules) {
+			const rules =
+				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
+			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
@@ -358,6 +382,7 @@ function nextAutomaticReroll(
 
 /** The live roll use rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
+	if (entry.ruleId === INCAPACITATED_TARGET_RULE_ID) return incapacitatedTargetRule(null);
 	if (!entry.itemUuid) return null;
 	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
 		rules?: Map<string, RerollRuleLike>;
