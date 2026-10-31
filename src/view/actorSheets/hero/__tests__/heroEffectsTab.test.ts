@@ -72,7 +72,6 @@ describe('heroEffectsTab', () => {
 
 			expect(row).toMatchObject({
 				icon: 'fa-solid fa-star',
-				summary: `${IN}.summary`,
 				description: `${IN}.description`,
 				cost: { text: `${IN}.lasts` },
 				facts: [[`${FX}.facts.lasts`, `${IN}.lasts`]],
@@ -83,6 +82,7 @@ describe('heroEffectsTab', () => {
 				},
 				edit: null,
 			});
+			expect(row.summary, 'no line under the name').toBeUndefined();
 		});
 
 		it('is not on the tab when the hero has none', () => {
@@ -147,6 +147,7 @@ describe('heroEffectsTab', () => {
 			ask: { intent: { kind: 'setCondition', conditionId: 'dazed', active: false } },
 		});
 		expect(row.description).toBe('You lose 1 action.');
+		expect(row.summary, 'the description is not on the line').toBeUndefined();
 	});
 
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {

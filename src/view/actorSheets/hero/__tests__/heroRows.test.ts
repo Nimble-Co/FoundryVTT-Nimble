@@ -24,9 +24,19 @@ describe('itemRow', () => {
 		const hero = dicePoolHero();
 		const view = itemRow(hero, item(hero, 'greataxe'), dicePoolContext());
 
-		expect(view.summary).toBe('2d6+3, NIMBLE.actorSheet.shared.reach {"distance":"1"}');
+		expect(view.summary).toBe(
+			'2d6+3, NIMBLE.actorSheet.shared.reach {"distance":"1"}, NIMBLE.properties.twoHanded',
+		);
 		expect(view.drag).toEqual({ kind: 'item', uuid: 'Actor.blankHero00000001.Item.greataxe' });
 		expect(view.edit).toEqual({ kind: 'openItem', itemId: 'greataxe' });
+	});
+
+	it('leaves the description off the line of a feature; the open row shows it', () => {
+		const hero = dicePoolHero();
+		const view = itemRow(hero, item(hero, 'rage'), dicePoolContext());
+
+		expect(view.summary).toBeUndefined();
+		expect(view.description).toBe('Enter a rage.');
 	});
 
 	it('shows a spell with its range and damage type in words, and no numbers', () => {

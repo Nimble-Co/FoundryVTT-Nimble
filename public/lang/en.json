@@ -252,7 +252,6 @@
 					"conditionsOn": "Conditions on you",
 					"inspiration": {
 						"name": "Inspiration",
-						"summary": "Reroll any single die.",
 						"description": "The GM grants Inspiration when a hero does something memorable. Spend it to reroll any single die. It ends after a Safe Rest.",
 						"lasts": "Until a Safe Rest"
 					}

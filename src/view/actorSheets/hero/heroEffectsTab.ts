@@ -40,7 +40,6 @@ function inspirationRow(context: HeroSheetContext): HeroRowView {
 		id: 'inspiration',
 		name,
 		icon: 'fa-solid fa-star',
-		summary: localize(`${INSPIRATION}.summary`),
 		description: localize(`${INSPIRATION}.description`),
 		cost: { text: lasts },
 		facts: [[localize('NIMBLE.actorSheet.shared.effects.facts.lasts'), lasts]],

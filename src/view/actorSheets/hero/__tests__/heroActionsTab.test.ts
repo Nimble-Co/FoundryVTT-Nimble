@@ -165,6 +165,16 @@ describe('heroActionsTab', () => {
 			]);
 		});
 
+		it('has no line under a reaction that is not spent; the open row has its text', () => {
+			const defend = row(
+				heroActionsTab(blankHero(), heroContext()).reactionGroups,
+				'heroic-defend',
+			);
+
+			expect(defend?.summary).toBeUndefined();
+			expect(defend?.description).toBeTruthy();
+		});
+
 		it('names the target in the choice step and never blocks without one', () => {
 			const none = row(heroActionsTab(blankHero(), heroContext()).reactionGroups, 'heroic-defend');
 			const one = row(

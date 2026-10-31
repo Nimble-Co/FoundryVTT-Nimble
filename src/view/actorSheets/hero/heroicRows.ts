@@ -189,7 +189,7 @@ function reactionRow(
 		icon: definition.icon,
 		tag: spent ? localize(`${SHARED}.used`) : undefined,
 		state: spent ? 'used' : undefined,
-		summary: spent ? format(`${SHARED}.reason.usedThis`, { per: round }) : description,
+		summary: spent ? format(`${SHARED}.reason.usedThis`, { per: round }) : undefined,
 		description,
 		cost: {
 			...actionCost(1, context),

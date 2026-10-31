@@ -118,7 +118,7 @@ function stateRow(
 		id: base.id,
 		name: base.name,
 		img: base.img || undefined,
-		summary: base.from || base.description || undefined,
+		summary: base.from || undefined,
 		lasts: base.duration || undefined,
 		description: base.description || undefined,
 		facts: [

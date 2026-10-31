@@ -354,6 +354,15 @@ export function spendIntent(spend: HeroDiceSpend, indices: number[]): HeroIntent
 	};
 }
 
+const WEAPON_PROPERTIES = ['twoHanded', 'light', 'load', 'thrown', 'vicious', 'concentration'];
+
+function weaponPropertyWords(item: ItemLike, context: HeroSheetContext): string[] {
+	const selected = selectedProperties(item);
+	return WEAPON_PROPERTIES.filter((key) => selected.includes(key)).map((key) =>
+		context.localize(`NIMBLE.properties.${key}`),
+	);
+}
+
 /** A row for an item of the hero: a weapon, a feature or a spell. */
 export function itemRow(
 	actor: HeroActorLike,
@@ -387,7 +396,7 @@ export function itemRow(
 					...damageWords(item, context),
 					concentration ? localize(`${SHARED}.concentration`) : '',
 				]
-			: [when, weapon ? formula : '', range]
+			: [when, weapon ? formula : '', range, ...(weapon ? weaponPropertyWords(item, context) : [])]
 	).filter(Boolean);
 
 	const toggle = state.toggle;
@@ -411,12 +420,8 @@ export function itemRow(
 		};
 	}
 
-	const summaryLead = lead.join(', ');
-	const summary = reason
-		? reason
-		: spell
-			? summaryLead || description
-			: [summaryLead, description].filter(Boolean).join('. ');
+	// The line holds facts only; the description shows when the row opens.
+	const summary = reason || lead.join(', ');
 
 	const facts: [string, string][] = [];
 	const costWords = [
