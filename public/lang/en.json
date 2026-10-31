@@ -654,7 +654,10 @@
 			"primaryDieBonus": {
 				"tag": "{value} to Primary Die",
 				"text": "{label}: {value} to the Primary Die",
-				"dialog": "Add to Primary Die Result {value}"
+				"dialog": "Add to Primary Die Result {value}",
+				"notAdded": "{value} bonus not added",
+				"notAddedTooltip": "The die was set to a value. A set value is final, so this bonus is not added.",
+				"notAddedBySetTooltip": "{feature} set the die to {face}. A set value is final, so this bonus is not added."
 			},
 			"incomingReactions": {
 				"heading": "Options",
@@ -702,6 +705,15 @@
 				"changeHistoryMiss": "Changed with {feature}: {previous} became {next}, a miss",
 				"critHistory": "Made the attack a crit with {feature}",
 				"changeArrowSet": "set",
+				"outcomeTags": {
+					"crit": "Crit: {cause}",
+					"critTooltip": "The die rolled {face}. It is a crit because of {cause}.",
+					"cannotMiss": "Cannot miss: {feature}",
+					"cannotMissTooltip": "The die rolled {face}. It is a hit because of {feature}.",
+					"noMiss": "No miss: {count} targets",
+					"noCrit": "No crit: {count} targets",
+					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit (Core:1403)."
+				},
 				"rerollTags": {
 					"crit": "Crit",
 					"critTooltip": "{feature} made the die a crit.",

@@ -279,6 +279,64 @@ describe('IncomingReactionPrompts', () => {
 		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 	});
 
+	it('marks the Primary Die Bonus lines "not added" after a set, and tells why', () => {
+		const message = createMessage(
+			[],
+			[
+				{
+					use: 'change',
+					itemUuid: '',
+					label: 'Judgment',
+					change: { mode: 'set', value: 0 },
+					next: { value: 8, outcome: 'crit' },
+					previous: { value: 3, outcome: null },
+				},
+			],
+		);
+		Object.assign(message.system, {
+			primaryDieBonuses: [{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.judgment' }],
+			activation: {
+				effects: [
+					{
+						id: 'damage',
+						type: 'damage',
+						roll: { class: 'DamageRoll', options: { primaryDieBonusOff: true }, terms: [] },
+					},
+				],
+			},
+		});
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
+		expect(rollPlace().queryByText('+1 to Primary Die')).toBeNull();
+		expect(rollPlace().getByText(/Judgment set the die to 8/)).toBeTruthy();
+	});
+
+	it('shows the outcome tags at the roll only', () => {
+		const message = createMessage([]);
+		Object.assign(message.system, {
+			targets: ['Scene.s.Token.t'],
+			activation: {
+				effects: [
+					{
+						id: 'damage',
+						type: 'damage',
+						roll: {
+							class: 'DamageRoll',
+							isCritical: true,
+							options: { outcomeSources: { forcedCrit: ['target Stunned'] } },
+							terms: [{ faces: 6, results: [{ result: 3, active: true }] }],
+						},
+					},
+				],
+			},
+		});
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('Crit: target Stunned')).toBeTruthy();
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
 	it('tells a used legacy forceReroll entry at the roll, as old cards did', () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: {
