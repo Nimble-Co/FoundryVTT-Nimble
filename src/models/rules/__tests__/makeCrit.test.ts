@@ -52,10 +52,10 @@ describe('MakeCritRule', () => {
 		for (const name of ['usedBy', 'reach', 'outcome', 'attackDelivery', 'otherCreature']) {
 			expect(schema[name], name).toBeTruthy();
 		}
-		for (const name of ['chargePoolIdentifier', 'chargeCost', 'oncePerAttack', 'cardHint']) {
+		for (const name of ['chargePoolIdentifier', 'chargeCost', 'cardHint']) {
 			expect(schema[name], name).toBeTruthy();
 		}
-		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep']) {
+		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep', 'oncePerAttack']) {
 			expect(schema[name], name).toBeUndefined();
 		}
 		expect(schema.type?.initial).toBe('makeCrit');
@@ -63,9 +63,15 @@ describe('MakeCritRule', () => {
 
 	it('uses its own words where the Reroll words say reroll', () => {
 		const field = (name: string) => schema[name]?.options ?? schema[name];
-		expect(field('oncePerAttack')?.label).toBe('NIMBLE.rules.makeCrit.oncePerAttack.label');
+		expect(field('outcome')?.label).toBe('NIMBLE.rules.makeCrit.outcome.label');
+		expect(field('usedBy')?.hint).toBe('NIMBLE.rules.makeCrit.usedBy.hint');
 		expect(field('chargeCost')?.hint).toBe('NIMBLE.rules.makeCrit.chargeCost.hint');
 		expect(field('usedBy')?.label).toBe('NIMBLE.rules.reroll.usedBy.label');
+	});
+
+	it('offers no crit-only outcome: a crit cannot be made a crit', () => {
+		const element = schema.outcome as unknown as { choices: Record<string, string> };
+		expect(Object.keys(element.choices)).toEqual(['always', 'hit', 'miss']);
 	});
 
 	it('offers on attacks only, on the side it names', () => {

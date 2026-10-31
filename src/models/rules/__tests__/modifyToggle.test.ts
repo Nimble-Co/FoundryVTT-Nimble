@@ -94,9 +94,9 @@ describe('ModifyToggleRule', () => {
 		it('offers the toggleEffect turn-on vocabulary for turnOn choices', () => {
 			const schema = ModifyToggleRule.defineSchema();
 			const turnOnField = schema.turnOn as unknown as {
-				element: { choices: readonly string[] };
+				element: { choices: Record<string, string> };
 			};
-			expect([...turnOnField.element.choices]).toEqual([
+			expect(Object.keys(turnOnField.element.choices)).toEqual([
 				'onTurnStart',
 				'onActorDying',
 				'onCritReceived',
@@ -106,9 +106,9 @@ describe('ModifyToggleRule', () => {
 		it('shares the toggleEffect turn-off vocabulary for suppressTurnOff choices', () => {
 			const schema = ModifyToggleRule.defineSchema();
 			const suppressField = schema.suppressTurnOff as unknown as {
-				element: { choices: readonly string[] };
+				element: { choices: Record<string, string> };
 			};
-			const choices = suppressField.element.choices;
+			const choices = Object.keys(suppressField.element.choices);
 			expect(choices).toEqual([...TURN_OFF_CHOICES]);
 			expect(choices).toContain('onActorKilled');
 			expect(choices).toContain('onActorWounded');

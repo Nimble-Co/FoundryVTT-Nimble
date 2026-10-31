@@ -2249,12 +2249,17 @@
 					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
 				},
 				"suppressTurnOff": {
-					"label": "Suppress turn-off on",
-					"hint": "Turn-off events the target toggle should ignore. The toggle no longer ends automatically when these events fire."
+					"label": "Does not turn off",
+					"hint": "The toggle stays on when one of these happens."
 				},
 				"turnOn": {
-					"label": "Turn on automatically on",
-					"hint": "Events on which the target toggle switches on automatically. This rule's condition gates the turn-on, so add one to restrict when it applies."
+					"label": "Turn on by itself",
+					"hint": "The toggle turns on when one of these happens. Add an \"Only while\" condition to limit when it applies.",
+					"choices": {
+						"onTurnStart": "When its turn starts",
+						"onActorDying": "When the creature starts dying",
+						"onCritReceived": "When the creature is crit"
+					}
 				}
 			},
 			"note": {
@@ -2386,8 +2391,19 @@
 					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
 				},
 				"turnOff": {
-					"label": "Turn off on",
-					"hint": "Events that automatically toggle the effect off."
+					"label": "Turn off",
+					"hint": "The effect turns off by itself when one of these happens. Select none to turn it off only by hand.",
+					"choices": {
+						"onActorKilled": "When the creature dies",
+						"onActorWounded": "When the creature gets a Wound",
+						"onActorHealed": "When the creature is healed",
+						"onRest": "After a rest",
+						"onTurnStart": "When its turn starts",
+						"onTurnEnd": "When its turn ends",
+						"onEncounterEnd": "When the encounter ends",
+						"onActorDying": "When the creature starts dying",
+						"onRoundEnd": "When the round ends"
+					}
 				},
 				"confirmEndPrompt": {
 					"label": "End confirm prompt",
@@ -2471,7 +2487,13 @@
 				}
 			},
 			"attackOutcome": {
-				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make.",
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make crit button on the card.",
+				"form": {
+					"changes": "What changes?",
+					"onlyAttacks": "On which attacks?",
+					"onlyWhileHint": "For example, only while Raging. To test the damage type of the attack, use attack:damageType:slashing.",
+					"limit": "Limit (optional)"
+				},
 				"side": {
 					"label": "Which attacks does it change?",
 					"hint": "Your attacks, or the attacks other creatures make against you.",
@@ -2511,7 +2533,7 @@
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
-					"hint": "The pool it spends 1 charge from each time it changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
+					"hint": "The pool that gives 1 charge each time the rule changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
 				}
 			},
 			"makeCrit": {
@@ -2522,9 +2544,12 @@
 				"chargeCost": {
 					"hint": "How many charges one use takes from the pool."
 				},
-				"oncePerAttack": {
-					"label": "Only once per attack",
-					"hint": "The feature can make the same attack a crit only once, even with uses left."
+				"usedBy": {
+					"hint": "The one who rolled the attack, the creature the attack is against, or an ally of the one who rolled (a friendly creature, not yourself)."
+				},
+				"outcome": {
+					"label": "The attack is",
+					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
 				}
 			},
 			"changeDie": {

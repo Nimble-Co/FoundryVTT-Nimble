@@ -96,11 +96,13 @@ function schema() {
 		}),
 		chargePoolIdentifier: new fields.StringField(
 			withWidget({
-				required: true,
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
 				nullable: false,
 				initial: '',
 				label: 'NIMBLE.rules.attackOutcome.chargePoolIdentifier.label',
 				hint: 'NIMBLE.rules.attackOutcome.chargePoolIdentifier.hint',
+				widget: 'chargePoolPicker',
 				showWhen: onYourAttacks,
 			}),
 		),
@@ -146,15 +148,24 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	static override description = 'NIMBLE.rules.attackOutcome.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['side'] },
-		{ fields: ['cannotMiss', 'critRange', 'forceCrit', 'anyDieCrits'] },
-		{ fields: ['attackDelivery', 'thisItemOnly'] },
+		{
+			label: 'NIMBLE.rules.attackOutcome.form.changes',
+			fields: ['cannotMiss', 'critRange', 'forceCrit', 'anyDieCrits'],
+		},
+		{
+			label: 'NIMBLE.rules.attackOutcome.form.onlyAttacks',
+			fields: ['attackDelivery', 'thisItemOnly'],
+		},
 		{
 			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
-			hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
+			hint: 'NIMBLE.rules.attackOutcome.form.onlyWhileHint',
 			fields: ['predicate'],
 		},
 		{ fields: ['otherCreature'] },
-		{ fields: ['chargePoolIdentifier'] },
+		{
+			label: 'NIMBLE.rules.attackOutcome.form.limit',
+			fields: ['chargePoolIdentifier'],
+		},
 	];
 
 	declare side: AttackOutcomeSide;

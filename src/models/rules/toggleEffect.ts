@@ -4,6 +4,7 @@ import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
+import { choiceLabels } from './_rollUseRule.js';
 import {
 	type ActorDyingContext,
 	type ActorHealthContext,
@@ -96,7 +97,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'onRest',
-				choices: TURN_OFF_CHOICES as unknown as string[],
+				choices: choiceLabels('toggleEffect', 'turnOff', TURN_OFF_CHOICES),
 			}),
 			{
 				required: true,

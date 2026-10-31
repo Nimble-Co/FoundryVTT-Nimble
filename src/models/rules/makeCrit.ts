@@ -9,12 +9,14 @@ function schema() {
 	const { fields } = foundry.data;
 	const shared = RollUseRule.rollUseSchemaParts('makeCrit');
 	const { usedBy, reach } = shared.roll;
+	// The crit stays for the card, so one attack can use the rule only once.
+	const { oncePerAttack: _oncePerAttack, ...cost } = shared.cost;
 
 	return {
 		usedBy,
 		reach,
 		...shared.when,
-		...shared.cost,
+		...cost,
 		...shared.note,
 		type: new fields.StringField({ required: true, nullable: false, initial: 'makeCrit' }),
 	};

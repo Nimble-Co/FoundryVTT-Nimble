@@ -36,9 +36,16 @@ type RollUseNamespace = 'reroll' | 'changeDie' | 'makeCrit';
 // rule that uses a roll, so they stay under the Reroll rule's keys.
 const OWN_WORDS = new Set(['rolls.label', 'chargePoolIdentifier.hint', 'chargeCost.hint']);
 const OWN_FIELDS = new Set(['oncePerAttack']);
+// A crit use is only on attacks, and a roll that is a crit has no use for it.
+const CRIT_WORDS = new Set(['usedBy.hint', 'outcome.label', 'outcome.hint']);
+const CRIT_TRIGGERS = ['always', 'hit', 'miss'] as const;
 
 function wordKey(namespace: RollUseNamespace, field: string, part: 'label' | 'hint'): string {
-	const own = OWN_FIELDS.has(field) || OWN_WORDS.has(`${field}.${part}`);
+	const word = `${field}.${part}`;
+	const own =
+		OWN_FIELDS.has(field) ||
+		OWN_WORDS.has(word) ||
+		(namespace === 'makeCrit' && CRIT_WORDS.has(word));
 	return `NIMBLE.rules.${own ? namespace : 'reroll'}.${field}.${part}`;
 }
 
@@ -143,7 +150,11 @@ function whenFields(namespace: RollUseNamespace) {
 				required: true,
 				nullable: false,
 				initial: 'always',
-				choices: choiceLabels('reroll', 'outcome', REROLL_TRIGGERS),
+				choices: choiceLabels(
+					'reroll',
+					'outcome',
+					namespace === 'makeCrit' ? CRIT_TRIGGERS : REROLL_TRIGGERS,
+				),
 				label: wordKey(namespace, 'outcome', 'label'),
 				hint: wordKey(namespace, 'outcome', 'hint'),
 				showWhen: forAttacks,

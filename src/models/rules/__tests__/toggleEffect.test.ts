@@ -229,9 +229,9 @@ describe('ToggleEffectRule', () => {
 		it('declares the supported turnOff trigger choices', () => {
 			const schema = ToggleEffectRule.defineSchema();
 			const turnOffField = schema.turnOff as unknown as {
-				element: { choices: readonly string[] };
+				element: { choices: Record<string, string> };
 			};
-			const choices = turnOffField.element.choices;
+			const choices = Object.keys(turnOffField.element.choices);
 			expect(choices).toContain('onActorKilled');
 			expect(choices).toContain('onActorWounded');
 			expect(choices).toContain('onActorHealed');
@@ -1559,5 +1559,19 @@ describe('ToggleEffectRule', () => {
 
 			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe('toggle turn-off choices', () => {
+	it('have a plain label for every event, the round included', () => {
+		const schema = ToggleEffectRule.defineSchema() as unknown as {
+			turnOff: { element: { choices: Record<string, string> } };
+		};
+		const { choices } = schema.turnOff.element;
+		expect(choices.onRoundEnd).toBe('NIMBLE.rules.toggleEffect.turnOff.choices.onRoundEnd');
+		expect(game.i18n.localize(choices.onRoundEnd as string)).toBe('When the round ends');
+		for (const label of Object.values(choices)) {
+			expect(game.i18n.localize(label)).not.toBe(label);
+		}
 	});
 });
