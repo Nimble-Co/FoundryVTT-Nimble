@@ -27,6 +27,7 @@ A GM opens many NPC sheets in an encounter. With the setting **Open NPC sheets n
 ## On both new sheets
 
 - **Window:** the new sheets have no title bar. To move the window, drag the top edge of the portrait in the rail. In the narrow form, drag the line with the name (out of edit mode). The window buttons sit in the top-right corner. A wide window stops at three columns of rows, because a wider window shows nothing more.
+- **The line under a row name:** it shows facts only, for example the damage, reach and properties of a weapon, or the range of a spell. The full text of a feature, an object or an effect shows when you open the row with the arrow.
 - **Costs on a row:** point to the uses, the mana cost or the green action bars of a row to see what they mean.
 - **Effects tab:** a group with nothing in it does not show. The condition grid shows the conditions that you set by hand. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they are not in the grid. They show in the list above the grid while they are on. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**. A condition that is on is crimson, with a check.
 - **Bio tab:** the details read as text. Turn on edit mode to type them and to write the notes.
