@@ -40,6 +40,8 @@ If you're a GM who usually rolls in secret, turn on the **Hide Rolls by Default*
 
 Attacks, spells, and other items that roll damage or healing open their own roll window. It has the same advantage slider, plus three fields for one-off changes. Leave a field empty (or at 0) and it does nothing.
 
+In combat, the window says what the roll spends: "When you roll, it spends 1 action." From your second attack on your turn, the slider starts with the disadvantage of a Rushed Attack, and a line in the window says so. Move the slider if a feature or the GM says otherwise. A spell that the target saves against does not start with disadvantage: the rule gives the target advantage instead, so tell the GM.
+
 - **Add to Roll (number or dice).** A bonus for this roll only, such as `2` or `1d4`. It is added to the end of the item's first damage formula. Other damage rolls of the item, and healing rolls, do not get it. It does not change the primary die, so it cannot cause a crit or prevent a miss.
 - **Set Primary Die Result.** The primary die is not rolled: it shows the number you enter, from 1 up to the die's size. Enter the maximum and the attack crits and the die explodes as usual, if the attack can crit. Enter 1 and the attack misses.
 - **Add to Primary Die Result.** The primary die is rolled, then this number is added to its face. The die stops at its maximum and at 1, and the rest of the number is lost. The new face decides the outcome: a d6 that rolls 5 with 1 added is a 6, so the attack crits and the die explodes, if the attack can crit. A rolled 1 with 1 added is a 2, so the attack does not miss. A d6 that rolls 6 with 1 added stays a 6: the 1 is lost.

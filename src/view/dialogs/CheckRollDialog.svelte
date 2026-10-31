@@ -11,7 +11,8 @@
 		getSituationalRollModeOptions,
 		type SituationalRollModeOption,
 	} from './CheckRollDialog.utils.js';
-	import RollModeConfig from './components/RollModeConfig.svelte';
+	import RollModeField from './components/RollModeField.svelte';
+	import RollWindow from './components/RollWindow.svelte';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
@@ -34,6 +35,9 @@
 	// than the option's own value: clamping at the slider's ends can swallow part of
 	// it, and unchecking has to give back exactly what checking took.
 	let appliedAdjustments = $state<Record<string, number>>({});
+
+	// The window title starts with the name of the actor; the portrait in the head shows who it is.
+	const heading = $derived(dialog.title.replace(`${actor.name}: `, ''));
 
 	let rollFormula = $derived.by(() => {
 		if (type === 'initiative') {
@@ -96,16 +100,27 @@
 	}
 </script>
 
-<article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
+<RollWindow
+	title={heading}
+	img={actor.img ?? undefined}
+	rollLabel={localize('NIMBLE.rollWindow.roll')}
+	oncancel={() => dialog.close()}
+	onroll={() =>
+		dialog.submitRoll({
+			rollMode: selectedRollMode,
+			rollFormula,
+			visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
+		})}
+>
 	{#if data.checkHint}
 		<Hint hintType="warning" hintIcon="fa-solid fa-circle-exclamation" hintText={data.checkHint} />
 	{/if}
 
-	<RollModeConfig bind:selectedRollMode />
+	<RollModeField bind:value={selectedRollMode} />
 
 	{#if situationalOptions.length}
 		<section class="nimble-situational">
-			<h5 class="nimble-situational__heading">
+			<h5 class="lb">
 				{localize('NIMBLE.checkRollDialog.situationalRollMode.heading')}
 			</h5>
 
@@ -113,7 +128,7 @@
 				{#each situationalOptions as option (option.key)}
 					<li>
 						<label
-							class="nimble-situational__option"
+							class="check nimble-situational__option"
 							class:nimble-situational__option--selected={isSelected(option)}
 							data-direction={optionDirection(option)}
 						>
@@ -136,171 +151,81 @@
 		</section>
 	{/if}
 
-	<div class="nimble-check-roll-summary">
-		<div class="nimble-roll-formula">{rollFormula}</div>
+	<div class="frm">{rollFormula}</div>
 
-		{#if game.user?.isGM}
-			<label class="nimble-hide-roll">
-				<input type="checkbox" bind:checked={shouldRollBeHidden} />
-				<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-				<span>{skillCheckDialog.hideRoll}</span>
-			</label>
-		{/if}
-	</div>
-</article>
-
-<footer class="nimble-sheet__footer">
-	<button
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={() =>
-			dialog.submitRoll({
-				rollMode: selectedRollMode,
-				rollFormula,
-				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
-			})}
-	>
-		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
-		Roll
-	</button>
-</footer>
+	{#if game.user?.isGM}
+		<label class="check">
+			<input type="checkbox" bind:checked={shouldRollBeHidden} />
+			<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+			<span>{skillCheckDialog.hideRoll}</span>
+		</label>
+	{/if}
+</RollWindow>
 
 <style lang="scss">
-	[data-button-variant='basic'] {
-		--nimble-button-padding: 0.5rem;
-		--nimble-button-width: 100%;
-	}
-
 	.nimble-situational {
-		// Advantage and disadvantage borrow the roll success/failure pair: it is the
-		// system's only semantic green/red defined for both themes. The accent colour
-		// is desaturated in dark mode and reads as disabled at these sizes.
-		--nimble-situational-accent: var(--nimble-roll-success-color);
-		--nimble-situational-accent-background: var(--nimble-roll-success-background-color);
-
-		margin-block: 0.5rem 0.75rem;
-		margin-inline: 1rem;
-		padding: 0.625rem 0.75rem 0.75rem;
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 6px;
-		background: var(--nimble-card-background-color);
-
-		&__heading {
-			margin: 0 0 0.5rem;
-			border: 0;
-			font-size: var(--nimble-xs-text);
-			font-weight: 700;
-			letter-spacing: 0.08em;
-			text-transform: uppercase;
-			color: var(--nimble-medium-text-color);
-		}
-
 		&__list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.125rem;
+			gap: 4px;
 			margin: 0;
 			padding: 0;
 			list-style: none;
 		}
 
 		&__option {
-			display: grid;
-			grid-template-columns: auto 1.75rem 1fr auto;
+			display: flex;
 			align-items: center;
-			gap: 0.625rem;
-			padding: 0.375rem 0.5rem;
-			border: 1px solid transparent;
+			gap: 8px;
+			min-height: 30px;
+			padding: 3px 8px;
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
+			font-size: 0.75rem;
+			font-weight: 600;
+			color: var(--nimble-ui-ink);
 			cursor: pointer;
-			transition: var(--nimble-standard-transition);
 
-			&[data-direction='penalty'] {
-				--nimble-situational-accent: var(--nimble-roll-failure-color);
-				--nimble-situational-accent-background: var(--nimble-roll-failure-background-color);
-			}
-
-			&[data-direction='none'] {
-				--nimble-situational-accent: var(--nimble-medium-text-color);
-				--nimble-situational-accent-background: transparent;
-			}
-
-			// currentColor tracks the theme's body text, so the tint stays visible in
-			// both themes without a second set of tokens.
 			&:hover {
-				background: color-mix(in srgb, currentColor 8%, transparent);
+				border-color: var(--nimble-ui-highlight);
+			}
+
+			&:focus-within {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
 			}
 
 			&--selected {
-				border-color: color-mix(in srgb, var(--nimble-situational-accent) 45%, transparent);
-				background: color-mix(in srgb, var(--nimble-situational-accent) 14%, transparent);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-soft);
 			}
 		}
 
-		// Square, unringed and dark-backed, matching the feature cards on the character
-		// sheet's Features tab, so the same artwork reads as the same item in both places.
-		// Direction is carried by the row tint and the value pill, not by the icon.
 		&__icon {
-			width: 1.75rem;
-			height: 1.75rem;
+			flex: none;
+			width: 22px;
+			height: 22px;
 			border: 0;
-			border-radius: 0;
-			object-fit: cover;
-			object-position: center;
-
-			// The backing is scoped to the image: the `{:else}` element is a bare spacer
-			// keeping the grid columns aligned, and must stay invisible.
-			&:is(img) {
-				background: var(--nimble-artwork-backdrop);
-			}
-
-			&[src$='.svg' i] {
-				padding: 0.2rem;
-			}
+			border-radius: 3px;
 		}
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			line-height: 1.2;
+			flex: 1;
+			min-width: 0;
 		}
 
 		&__value {
-			padding: 0.125rem 0.5rem;
-			border-radius: 999px;
-			background: var(--nimble-situational-accent-background);
-			font-size: var(--nimble-xs-text);
+			flex: none;
 			font-weight: 700;
-			white-space: nowrap;
-			color: var(--nimble-situational-accent);
+			color: var(--nimble-ui-ink-muted);
 		}
-	}
 
-	.nimble-check-roll-summary {
-		display: flex;
-		align-items: stretch;
-		gap: 0.5rem;
-		margin-inline: 1rem;
-
-		.nimble-roll-formula {
-			flex: 1;
-			display: grid;
-			place-items: center;
+		&__option[data-direction='bonus'] &__value {
+			color: var(--nimble-ui-action);
 		}
-	}
 
-	.nimble-hide-roll {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		padding: 0.5rem 0.625rem;
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		background: var(--nimble-card-background-color);
-		cursor: pointer;
-		white-space: nowrap;
-		font-size: var(--nimble-xs-text);
-		font-weight: 600;
-		color: var(--nimble-medium-text-color);
+		&__option[data-direction='penalty'] &__value {
+			color: var(--nimble-ui-warn);
+		}
 	}
 </style>

@@ -40,15 +40,16 @@ function createSituationalRule(
 
 function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 	const submitRoll = vi.fn();
+	const close = vi.fn();
 	const { container } = render(CheckRollDialog, {
-		actor: { rules },
-		dialog: { submitRoll },
+		actor: { name: 'Hero', rules },
+		dialog: { submitRoll, close, title: 'Hero: Configure Will Save' },
 		type: 'savingThrow',
 		saveKey: 'will',
 		rollMode,
 	} as never);
 
-	const formula = () => container.querySelector('.nimble-roll-formula')?.textContent;
+	const formula = () => container.querySelector('.frm')?.textContent;
 	const optionIcons = () =>
 		Array.from(container.querySelectorAll('img.nimble-situational__icon')).map((icon) =>
 			icon.getAttribute('src'),
@@ -61,7 +62,7 @@ function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
 	const toggle = (name: string) =>
 		fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(name) }));
 
-	return { submitRoll, formula, optionIcons, optionValues, roll, toggle };
+	return { submitRoll, close, container, formula, optionIcons, optionValues, roll, toggle };
 }
 
 describe('CheckRollDialog situational roll modes', () => {
@@ -76,6 +77,31 @@ describe('CheckRollDialog situational roll modes', () => {
 
 	beforeEach(() => {
 		(game as unknown as { settings: { get: () => boolean } }).settings = { get: () => false };
+	});
+
+	it('shows the name of the roll with no actor name, and Cancel closes with no roll', async () => {
+		const { close, container, submitRoll } = renderWillSave([]);
+
+		expect(container.querySelector('.head b')?.textContent).toBe('Configure Will Save');
+
+		await fireEvent.click(container.querySelector('.foot .btn.secondary') as HTMLElement);
+
+		expect(close).toHaveBeenCalledOnce();
+		expect(submitRoll).not.toHaveBeenCalled();
+	});
+
+	it('the slider adds advantage to the roll, and the help line says what it does', async () => {
+		const { container, roll, submitRoll } = renderWillSave([]);
+
+		const handle = container.querySelector('.rangeHandle') as HTMLElement;
+		handle.focus();
+		await fireEvent.keyDown(handle, { key: 'ArrowRight' });
+
+		expect(container.querySelector('.help')?.textContent).toBe(
+			'Roll 1 more die and remove the lowest.',
+		);
+		await roll();
+		expect(submitRoll).toHaveBeenCalledWith(expect.objectContaining({ rollMode: 1 }));
 	});
 
 	it('renders no situational section when the actor offers no options', () => {

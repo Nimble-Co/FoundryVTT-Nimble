@@ -86,4 +86,8 @@ export interface ItemActivationConfigDialogProps {
 	dialog: ItemActivationConfigDialogInstance;
 	item: Item;
 	rollMode?: number;
+	/** which attack of the turn this is, when the roll starts with Rushed Attack disadvantage */
+	rushedAttack?: number;
+	/** the actions that this use spends */
+	spendsActions?: number;
 }

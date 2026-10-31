@@ -112,7 +112,7 @@ describe('inline rolls and save enrichers', () => {
 		const findRollButton = () =>
 			[...foundry.applications.instances.values()]
 				.find((app) => app.title?.includes('Configure') && app.title.includes(actor.name!))
-				?.element?.querySelector<HTMLButtonElement>('.nimble-sheet__footer button');
+				?.element?.querySelector<HTMLButtonElement>('.foot .btn.primary');
 		await waitFor(() => !!findRollButton(), 'save roll dialog');
 		findRollButton()!.click();
 		await waitFor(() => game.messages.contents.some((m) => !before.has(m.id)), 'save chat card');

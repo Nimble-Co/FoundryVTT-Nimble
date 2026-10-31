@@ -43,12 +43,12 @@ export default class SpellUpcastDialog extends SvelteApplicationMixin(Applicatio
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-roll-window'],
 		window: {
 			icon: 'fa-solid fa-wand-magic-sparkles',
 		},
 		position: {
-			width: 576,
+			width: 360,
 			height: 'auto' as const,
 		},
 		actions: {},

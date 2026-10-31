@@ -1484,6 +1484,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `isCombatantDead()` | `src/utils/combat/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
 | `combatantActionMutationQueue` | `src/utils/combat/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/combat/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
+| `attacksMadeThisTurn()`, `recordAttack()` | `src/utils/combat/rushedAttacks.ts` | Count the attacks of an actor on its own turn, for Rushed Attacks |
 | `requestCombatantActionDelta()` | `src/utils/combat/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
 | `getPendingActionsLocalizationKey()` | `src/utils/combat/pendingActionWording.ts` | Pick the singular or plural localization key describing a combatant's pending action adjustment, so the character sheet and the combat tracker word it identically |
 | `getPrimaryActiveGmId()` | `src/utils/getPrimaryActiveGmId.ts` | User id of the single GM client that executes relayed socket requests (designated active GM, falling back to any connected GM), or `null` when no GM is connected |

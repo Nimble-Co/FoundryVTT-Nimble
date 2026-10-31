@@ -86,7 +86,6 @@
 		hsl(207deg 47% 20%) 0%,
 		hsl(212deg 47% 44%) 100%
 	);
-	--nimble-range-slider-handle-color: hsl(223, 14%, 35%);
 	--nimble-image-background-color: #494949;
 	--nimble-basic-button-background-color: hsl(41, 18%, 80%);
 	--nimble-drop-flash-color-values: 45, 100%, 67%;
@@ -366,6 +365,7 @@
 	--nimble-ui-ring: hsla(41, 22%, 30%, 0.72);
 	--nimble-ui-soft: hsla(41, 20%, 36%, 0.2);
 	--nimble-ui-hover: hsla(41, 20%, 36%, 0.13);
+	--nimble-ui-raised: var(--nimble-sheet-background);
 	--nimble-ui-well: hsla(41, 20%, 36%, 0.16);
 	--nimble-ui-tile: hsl(41, 28%, 34%);
 	--nimble-ui-tile-ink: #fff;

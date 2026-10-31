@@ -36,10 +36,17 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
+import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
 } from '../../utils/combat/combatTurnActions.js';
+import {
+	attacksMadeThisTurn,
+	countsAsAttack,
+	recordAttack,
+	rollsWithRushedDisadvantage,
+} from '../../utils/combat/rushedAttacks.js';
 import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
 import {
 	type CheckCardRerollData,
@@ -2400,7 +2407,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		const result = await super.activateItem(id, options);
+		const rushed = rollsWithRushedDisadvantage(item) ? attacksMadeThisTurn(this) : 0;
+		const result = await super.activateItem(id, {
+			...options,
+			...(rushed > 0 && options.rollMode === undefined
+				? { rollMode: -rushed, rushedAttack: rushed + 1 }
+				: {}),
+			spendsActions: this.#actionsSpentBy(item, options),
+		});
+
+		if (result && countsAsAttack(item)) await recordAttack(this);
 
 		if (result && item && !options.skipActionDeduction) {
 			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
@@ -2421,5 +2437,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 
 		return result;
+	}
+
+	/** The actions that a use spends: only in a started combat, and not when the caller pays them. */
+	#actionsSpentBy(item: unknown, options: Record<string, unknown>): number {
+		if (!item || options.skipActionDeduction || !isActionTrackingAutomationEnabled()) return 0;
+		const combat = game.combat as Combat | null;
+		const inCombat =
+			combat?.started && combat.combatants?.some((entry) => entry.actorId === this.id);
+		return inCombat ? resolveCharacterItemActionCost(this, item as ActivatableItem) : 0;
 	}
 }
