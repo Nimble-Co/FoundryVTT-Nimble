@@ -87,7 +87,7 @@ you drag only in edit mode. Each entry, with its edit mode, is a MonsterAbilityE
 	}
 	.empty {
 		margin: 8px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 </style>

@@ -44,7 +44,7 @@ Every condition of the system as a toggle button, on both sheets. The arrow keys
 		padding: 0 9px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink);
 	}

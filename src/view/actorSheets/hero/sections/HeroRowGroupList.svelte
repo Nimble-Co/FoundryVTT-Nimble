@@ -57,12 +57,12 @@ With `flow`, the groups flow in columns about 300 px wide, and a group never bre
 	}
 	.none {
 		margin: 6px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.hint {
 		margin: 4px 8px 0 34px;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
 	}

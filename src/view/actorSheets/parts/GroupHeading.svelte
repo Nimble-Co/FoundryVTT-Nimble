@@ -48,7 +48,7 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 		align-items: center;
 		gap: 8px;
 		margin: 8px 0 2px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
@@ -72,7 +72,7 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 		break-after: avoid;
 		color: var(--nimble-bronze);
 		margin: 6px 0 2px;
-		font-size: 0.75rem;
+		font-size: 0.656rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}
@@ -83,7 +83,7 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 		color: var(--nimble-ability-will-color);
 	}
 	small {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 700;
 		letter-spacing: 0;
 		text-transform: none;

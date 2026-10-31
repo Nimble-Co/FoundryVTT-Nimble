@@ -185,7 +185,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		height: 28px;
 		border-radius: 4px;
 		background: var(--nimble-ui-scrim);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-fill-ink);
 	}
 	.change:hover {
@@ -218,7 +218,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
 		background: var(--nimble-ui-chrome);
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink);
 	}
@@ -227,7 +227,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		align-items: center;
 		gap: 4px;
 		white-space: nowrap;
-		font-size: 0.679rem;
+		font-size: 0.594rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -282,12 +282,12 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		height: 26px;
 		border: none;
 		background: var(--nimble-ui-well);
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.none {
 		margin: 0;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.defense {
@@ -302,7 +302,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 	}
 	dd {
 		margin: 0;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 	}
 	.resist .label {

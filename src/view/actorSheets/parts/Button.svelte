@@ -54,7 +54,7 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 		height: 28px;
 		padding: 0 10px;
 		border: 1px solid var(--nimble-ui-ring);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink);
 		transition:
 			border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -66,7 +66,7 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 		background: var(--nimble-ui-hover);
 	}
 	.secondary i {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 	}
 	.secondary[aria-disabled='true'] {
 		border-style: dashed;
@@ -78,7 +78,7 @@ that ends a window (Roll, Close, Save Changes); it fills the width that it gets.
 		flex: 1;
 		height: 34px;
 		background: var(--nimble-crimson);
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: #fff;
 	}
 	.primary:hover {

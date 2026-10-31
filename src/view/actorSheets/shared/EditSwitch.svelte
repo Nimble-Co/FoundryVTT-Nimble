@@ -33,7 +33,7 @@ It is pressed while the sheet is in edit mode.
 		padding: 0 10px 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 	}

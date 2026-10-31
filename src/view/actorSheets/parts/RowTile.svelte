@@ -34,18 +34,18 @@ The image of a row is the image of the thing; each image has one meaning on the 
 		border-radius: 4px;
 		background: var(--nimble-ui-tile);
 		color: var(--nimble-ui-tile-ink);
-		font-size: 1rem;
+		font-size: 0.875rem;
 	}
 	.sm {
 		width: 24px;
 		height: 24px;
 		border-radius: 3px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 	}
 	.win {
 		width: 28px;
 		height: 28px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 	}
 	.art {
 		background-color: #000b;

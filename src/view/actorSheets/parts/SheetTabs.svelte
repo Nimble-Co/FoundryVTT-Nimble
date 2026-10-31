@@ -78,13 +78,13 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		justify-content: center;
 		gap: 4px;
 		height: 44px;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 600;
 		line-height: 1;
 		color: var(--nimble-ui-ink-dim);
 	}
 	.t i {
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 	}
 	.t:hover {
 		color: var(--nimble-ui-ink);
@@ -98,7 +98,7 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		padding: 0 5px;
 		border-radius: 8px;
 		background: var(--nimble-crimson);
-		font: 800 0.786rem/16px var(--nimble-primary-font);
+		font: 800 0.688rem/16px var(--nimble-primary-font);
 		color: #fff;
 		text-align: center;
 	}
@@ -108,10 +108,10 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		right: 6px;
 	}
 	.fit .t {
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 	}
 	.fit .t i {
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 	}
 	.fit .t:hover {
 		color: var(--nimble-ui-ink-dim);
@@ -125,14 +125,14 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		height: 38px;
 	}
 	.fit-stacked .t {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 	}
 	.fit-icon .t {
 		flex-direction: row;
 		height: 40px;
 	}
 	.fit-icon .t i {
-		font-size: 1rem;
+		font-size: 0.875rem;
 	}
 	.fit-icon .tl {
 		display: none;
@@ -156,12 +156,12 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		min-height: 26px;
 		padding: 4px 7px;
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-bronze);
 	}
 	.rail .t i {
 		width: 14px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 	}
 	.rail .bd {
 		margin-left: auto;
@@ -179,7 +179,7 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		color: var(--nimble-bronze);
 	}
 	.strip .t i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	.rail .t:hover,
 	.strip .t:hover {

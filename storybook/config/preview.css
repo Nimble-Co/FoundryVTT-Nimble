@@ -1,6 +1,6 @@
 /* The Foundry v14 rules that the parts meet in Foundry, so Storybook shows the same result. */
 html {
-	font-size: 14px;
+	font-size: 16px;
 }
 *,
 *::before,

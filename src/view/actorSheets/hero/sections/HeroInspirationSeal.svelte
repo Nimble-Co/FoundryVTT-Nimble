@@ -34,7 +34,7 @@ while not. A click gives it or ends it. The rail and the narrow header place it.
 		border: 1.5px dashed var(--nimble-ui-edge);
 		border-radius: 50%;
 		background: var(--nimble-ui-scrim);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-edge);
 		transition:
 			border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),

@@ -125,7 +125,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		overflow: hidden;
 		background: var(--nimble-sheet-background);
 		color: var(--nimble-ui-ink);
-		font-size: 1rem;
+		font-size: 0.875rem;
 		line-height: 1.25;
 	}
 	.narrow {

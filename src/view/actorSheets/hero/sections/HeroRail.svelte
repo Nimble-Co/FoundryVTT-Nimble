@@ -132,7 +132,7 @@ The rail stays dark in both themes.
 		height: 28px;
 		border-radius: 4px;
 		background: var(--nimble-ui-scrim);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-fill-ink);
 	}
 	.change:hover {
@@ -147,7 +147,7 @@ The rail stays dark in both themes.
 	h2 {
 		margin: 0;
 		border: none;
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		line-height: 1.1;
 		color: var(--nimble-ui-highlight);
@@ -160,7 +160,7 @@ The rail stays dark in both themes.
 		padding: 0 3px;
 		margin: 0 -3px;
 		border-bottom: 1px dashed var(--nimble-ui-ring);
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		line-height: 1.25;
 		color: var(--nimble-ui-highlight);
@@ -172,7 +172,7 @@ The rail stays dark in both themes.
 	.meta {
 		position: relative;
 		margin-top: 1px;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		line-height: 1.25;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -224,7 +224,7 @@ The rail stays dark in both themes.
 		padding: 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 		white-space: nowrap;

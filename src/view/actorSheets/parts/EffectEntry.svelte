@@ -109,7 +109,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 		min-height: 30px;
 		padding: 2px 4px 2px 7px;
 		border-radius: 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		line-height: 1.15;
 		color: var(--nimble-ui-ink);
 		text-align: left;
@@ -119,7 +119,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 	}
 	.ch {
 		flex: none;
-		font-size: 0.643rem;
+		font-size: 0.563rem;
 		color: var(--nimble-ui-ink-dim);
 		transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
@@ -128,7 +128,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 	}
 	.ic {
 		width: 14px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		text-align: center;
 		color: var(--nimble-ui-highlight);
 	}
@@ -139,7 +139,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 		font-weight: 600;
 	}
 	small {
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 500;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -148,7 +148,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 		padding: 0 5px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 3px;
-		font: 700 0.786rem/18px var(--nimble-primary-font);
+		font: 700 0.688rem/18px var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 		white-space: nowrap;
 	}
@@ -158,7 +158,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 		width: 26px;
 		height: 26px;
 		border-radius: 4px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-ink-dim);
 	}
 	.end:hover {
@@ -168,7 +168,7 @@ Every entry has the same parts: the name, its source or what it is attached to, 
 	p {
 		margin: 0;
 		padding: 0 8px 7px 9px;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
 		text-wrap: pretty;

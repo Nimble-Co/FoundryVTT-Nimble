@@ -64,7 +64,7 @@ The notes are the Foundry `prose-mirror` editor; the sheet form saves it.
 	}
 	.k {
 		margin: 0;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;

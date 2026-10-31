@@ -149,14 +149,14 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 		align-items: center;
 		gap: 5px;
 		min-width: 0;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		font-weight: 700;
 		line-height: 1.2;
 		color: var(--nimble-ui-ink);
 	}
 	.nm i {
 		flex: none;
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.out .nm {
@@ -168,7 +168,7 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 	.ds {
 		margin: 0;
 		padding: 0 8px 6px 65px;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
 		text-wrap: pretty;

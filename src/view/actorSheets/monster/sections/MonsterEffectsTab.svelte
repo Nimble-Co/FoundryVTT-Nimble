@@ -96,7 +96,7 @@ The arrow keys, Home and End move the focus in the condition grid.
 	}
 	.none {
 		margin: 6px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.ask {

@@ -112,7 +112,7 @@ dashed slots and steppers that do nothing. `rest` is edit mode: the steppers fad
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 900;
 		letter-spacing: 0.05em;
 		color: var(--nimble-ui-ink-dim);
@@ -122,7 +122,7 @@ dashed slots and steppers that do nothing. `rest` is edit mode: the steppers fad
 	}
 	.hd b {
 		margin-left: auto;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		letter-spacing: 0;
 		color: var(--nimble-ui-ink);
 	}
@@ -145,7 +145,7 @@ dashed slots and steppers that do nothing. `rest` is edit mode: the steppers fad
 		place-items: center;
 		border-radius: 4px;
 		background: var(--tone);
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		font-weight: 900;
 		line-height: 1;
 		color: #181821;
@@ -162,7 +162,7 @@ dashed slots and steppers that do nothing. `rest` is edit mode: the steppers fad
 		height: 28px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 		color: var(--nimble-ui-ink);
 	}
 	.stp:hover {
@@ -189,14 +189,14 @@ dashed slots and steppers that do nothing. `rest` is edit mode: the steppers fad
 		min-width: 0;
 	}
 	.rail .hd small {
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 600;
 		letter-spacing: 0;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.rail .hd .count {
 		margin-left: 0;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 900;
 		letter-spacing: 0.05em;
 		color: color-mix(in srgb, var(--tone) 65%, #fff);

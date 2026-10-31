@@ -69,13 +69,13 @@ Put it inside `nimble-chrome` on the rail. `stripTone="card"` is the NPC rail: w
 		align-items: center;
 		justify-content: center;
 		padding: 4px 0 3px;
-		font-size: 1.071rem;
+		font-size: 0.937rem;
 		font-weight: 600;
 	}
 	.k {
 		padding: 2px 0;
 		text-align: center;
-		font-size: 0.679rem;
+		font-size: 0.594rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		background: hsla(41, 18%, 54%, 0.25);

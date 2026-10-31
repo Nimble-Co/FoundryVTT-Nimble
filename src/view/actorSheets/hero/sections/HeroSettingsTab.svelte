@@ -100,7 +100,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 		gap: 10px;
 		min-height: 32px;
 		padding: 2px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink);
 	}
 	.label {
@@ -109,7 +109,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 		flex-direction: column;
 	}
 	.label small {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.value {
@@ -134,7 +134,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 		padding: 0 12px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
-		font: 700 0.893rem/1 var(--nimble-primary-font);
+		font: 700 0.781rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.button:hover:not(:disabled),
@@ -148,7 +148,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 	}
 	.hint {
 		margin: 0 4px 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 </style>

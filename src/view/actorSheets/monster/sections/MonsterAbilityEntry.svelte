@@ -124,7 +124,7 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 		width: 24px;
 		height: 24px;
 		border-radius: 4px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.trash:hover,
@@ -136,7 +136,7 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 	.us {
 		display: flex;
 		align-items: baseline;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 		color: var(--nimble-ui-ink);
@@ -146,7 +146,7 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 	}
 	.us small {
 		margin-left: 3px;
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}

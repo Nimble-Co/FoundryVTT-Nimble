@@ -78,19 +78,19 @@ The pool kind picks the colour of the pool cost.
 		gap: 6px;
 	}
 	.tx {
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink-muted);
 	}
 	.us {
 		display: flex;
 		align-items: baseline;
-		font: 700 0.893rem/1 var(--nimble-primary-font);
+		font: 700 0.781rem/1 var(--nimble-primary-font);
 		font-variant-numeric: tabular-nums;
 		color: var(--nimble-ui-ink);
 	}
 	.us small {
 		margin-left: 3px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -105,7 +105,7 @@ The pool kind picks the colour of the pool cost.
 	}
 	.compact .us {
 		margin: 0 3px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		line-height: 1.25;
 	}
 	.pool {
@@ -113,7 +113,7 @@ The pool kind picks the colour of the pool cost.
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		font: 800 0.929rem/1 var(--nimble-primary-font);
+		font: 800 0.813rem/1 var(--nimble-primary-font);
 		color: color-mix(in srgb, var(--tone) var(--nimble-ui-tone-mix), #000);
 	}
 	.mana {
@@ -135,10 +135,10 @@ The pool kind picks the colour of the pool cost.
 		color: var(--nimble-ui-ink-muted);
 	}
 	.pool i {
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 	}
 	.free {
-		font: 800 0.786rem/1 var(--nimble-primary-font);
+		font: 800 0.688rem/1 var(--nimble-primary-font);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--nimble-ui-action);
@@ -147,7 +147,7 @@ The pool kind picks the colour of the pool cost.
 		padding: 0 5px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 3px;
-		font: 600 0.786rem/18px var(--nimble-primary-font);
+		font: 600 0.688rem/18px var(--nimble-primary-font);
 		color: var(--nimble-ui-ink-muted);
 	}
 	.compact .rng {

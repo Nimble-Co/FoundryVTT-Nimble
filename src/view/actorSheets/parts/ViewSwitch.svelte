@@ -42,7 +42,7 @@ The Spells tab uses it: "By tier" and "By school". The choice changes only the g
 		align-items: center;
 		padding: 0 8px;
 		border-radius: 2px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink-muted);
 		white-space: nowrap;

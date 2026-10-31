@@ -77,7 +77,7 @@ settings and the item macros (only in edit mode), and the coins (in all modes).
 		gap: 10px;
 		min-height: 32px;
 		padding: 2px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink);
 	}
 	.label {

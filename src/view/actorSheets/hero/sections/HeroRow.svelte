@@ -161,7 +161,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
 		background: transparent;
-		font: 600 0.857rem/1 var(--nimble-primary-font);
+		font: 600 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.store:hover,
@@ -176,7 +176,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		width: 24px;
 		height: 24px;
 		border-radius: 4px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.trash:hover,
@@ -188,7 +188,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	.us {
 		display: flex;
 		align-items: baseline;
-		font: 700 0.893rem/1 var(--nimble-primary-font);
+		font: 700 0.781rem/1 var(--nimble-primary-font);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 		color: var(--nimble-ui-ink);
@@ -198,7 +198,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	}
 	.us small {
 		margin-left: 3px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}

@@ -40,7 +40,7 @@ only in edit mode), and the import credit line at the bottom.
 	}
 	.k {
 		margin: 0;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
@@ -61,7 +61,7 @@ only in edit mode), and the import credit line at the bottom.
 	.credit {
 		margin: auto 0 0;
 		padding-top: 8px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-style: italic;
 		color: var(--nimble-ui-ink-muted);
 	}
