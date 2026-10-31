@@ -128,7 +128,7 @@
 				{#each situationalOptions as option (option.key)}
 					<li>
 						<label
-							class="nimble-situational__option"
+							class="check nimble-situational__option"
 							class:nimble-situational__option--selected={isSelected(option)}
 							data-direction={optionDirection(option)}
 						>
@@ -193,11 +193,6 @@
 			&:focus-within {
 				outline: 2px solid var(--nimble-ui-focus);
 				outline-offset: 1px;
-			}
-
-			input {
-				flex: none;
-				margin: 0;
 			}
 
 			&--selected {

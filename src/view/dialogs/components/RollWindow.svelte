@@ -140,19 +140,60 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 	.roll-window :global(.check) {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		font-size: 0.75rem;
+		gap: 8px;
+		min-height: 28px;
+		font-size: 0.812rem;
 		font-weight: 600;
-		color: var(--nimble-ui-ink-muted);
+		color: var(--nimble-ui-ink);
+		cursor: pointer;
 	}
 	.roll-window :global(.check input) {
+		appearance: none;
+		flex: none;
+		position: relative;
+		width: 18px;
+		height: 18px;
 		margin: 0;
+		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 3px;
-		outline: 1px solid var(--nimble-ui-ring);
-		outline-offset: -1px;
+		background: var(--nimble-ui-well);
+		box-shadow: none;
+		cursor: pointer;
+	}
+	.roll-window :global(.check:hover input) {
+		border-color: var(--nimble-ui-highlight);
 	}
 	.roll-window :global(.check input:focus-visible) {
 		outline: 2px solid var(--nimble-ui-focus);
 		outline-offset: 1px;
+	}
+	.roll-window :global(.check input[type='radio']) {
+		border-radius: 50%;
+	}
+	.roll-window :global(.check input::before),
+	.roll-window :global(.check input::after) {
+		content: none;
+	}
+	.roll-window :global(.check input[type='radio']:checked::after) {
+		content: '';
+		position: absolute;
+		top: 4px;
+		left: 4px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--nimble-ui-highlight);
+	}
+	.roll-window :global(.check input[type='checkbox']:checked::after) {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 5px;
+		width: 6px;
+		height: 10px;
+		border: solid var(--nimble-ui-highlight);
+		border-width: 0 2px 2px 0;
+		border-radius: 0;
+		transform: rotate(45deg);
 	}
 </style>

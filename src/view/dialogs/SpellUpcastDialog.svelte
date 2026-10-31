@@ -385,21 +385,29 @@
 	.tier.on {
 		border-color: var(--nimble-ui-highlight);
 		background: var(--nimble-ui-soft);
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-highlight);
+		font-weight: 900;
 	}
 	.choices {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
 		margin: 0;
 		padding: 0;
 		border: 0;
 	}
+	.choices legend {
+		padding: 0;
+	}
 	.effect {
 		padding: 8px 9px;
-		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
+		background: var(--nimble-ui-well);
 		font-size: 0.781rem;
+		font-weight: 600;
 		line-height: 1.35;
+	}
+	.effect .lb {
+		margin-bottom: 3px;
 	}
 	.effect ul {
 		margin: 0;
