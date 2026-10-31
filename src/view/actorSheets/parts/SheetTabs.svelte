@@ -128,7 +128,14 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 		height: 38px;
 	}
 	.fit-stacked .t {
+		flex: 1 1 auto;
+		padding: 0 2px;
 		font-size: 0.688rem;
+	}
+	.fit-stacked .tl {
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.fit-icon .t {
 		flex-direction: row;

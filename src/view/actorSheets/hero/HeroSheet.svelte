@@ -7,6 +7,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 <script lang="ts">
 	import { setEditing, showTab } from '../shared/sheetUiState.ts';
 	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
+	import { tabFit } from '../parts/tabFit.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
 	import EditBand from '../shared/EditBand.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
@@ -71,8 +72,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		ui.tab === 'settings' ? heroSettingsTab(current.actor, current.context) : null,
 	);
 	const wideMain = $derived(mainWidth >= 620);
-	const slot = $derived(mainWidth / 8);
-	const tabFit = $derived(slot >= 78 ? 'inline' : slot >= 50 ? 'stacked' : 'icon');
+	const fit = $derived(tabFit(mainWidth, frame.tabs.length));
 </script>
 
 <div class="hero" class:wide class:narrow={!wide} bind:this={root}>
@@ -86,7 +86,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			<SheetTabs
 				tabs={frame.tabs}
 				value={ui.tab}
-				fit={tabFit}
+				{fit}
 				label={frame.tabsLabel}
 				onchange={(id) => showTab(ui, id)}
 			/>
