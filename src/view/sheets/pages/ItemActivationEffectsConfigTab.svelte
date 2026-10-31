@@ -423,6 +423,26 @@
 					<label>
 						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+								{localize('NIMBLE.activationEffects.healingRecipient')}
+							</h5>
+						</header>
+
+						<select
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'recipient', target.value || null)}
+						>
+							<option value="" selected={node.recipient !== 'self'}>
+								{localize('NIMBLE.activationEffects.healingRecipients.targets')}
+							</option>
+							<option value="self" selected={node.recipient === 'self'}>
+								{localize('NIMBLE.activationEffects.healingRecipients.self')}
+							</option>
+						</select>
+					</label>
+
+					<label>
+						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
+							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
 								Target Disposition
 							</h5>
 						</header>

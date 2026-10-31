@@ -2,7 +2,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
-import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
@@ -32,6 +32,7 @@ import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRel
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import {
 	clearBankedDamageReduction,
@@ -754,6 +755,12 @@ function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: stri
 	return findPrimaryDamageNode(nodes)?.id === nodeId;
 }
 
+/** The actor of a healing target: a token's actor, or the actor itself. */
+function actorOfHealingTarget(document: TokenDocument | null): HpMutableActor | null {
+	const holder = document as unknown as { actor?: unknown } | null;
+	return ((holder?.actor ?? holder) as HpMutableActor | null) ?? null;
+}
+
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
 
@@ -1348,14 +1355,21 @@ class NimbleChatMessage extends ChatMessage {
 		return { components, total };
 	}
 
-	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
+	async applyHealing(
+		value: number,
+		healingType?: string,
+		effectId?: string,
+		recipient?: 'self',
+	): Promise<void> {
 		if (!this.isActivationCard()) return;
 
 		const healing = Math.floor(Math.abs(Number(value)));
 		if (!Number.isFinite(healing) || healing <= 0) return;
 
 		const systemData = this.system as ActivationCardSystemData;
-		const targets = systemData.targets || [];
+		const self = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
+		const targets =
+			recipient === 'self' ? (self?.uuid ? [self.uuid] : []) : systemData.targets || [];
 
 		if (!targets.length) {
 			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
@@ -1378,7 +1392,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as HpMutableActor | null;
+			const actor = actorOfHealingTarget(tokenDocument);
 			if (!actor) continue;
 
 			// Get current HP values before healing
@@ -1437,7 +1451,7 @@ class NimbleChatMessage extends ChatMessage {
 		// Revert HP for each target
 		for (const targetRecord of healingRecord.targets) {
 			const tokenDocument = fromUuidSync(targetRecord.uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as HpMutableActor | null;
+			const actor = actorOfHealingTarget(tokenDocument);
 			if (!actor) continue;
 
 			if (healingRecord.healingType === 'tempHealing') {
@@ -1453,6 +1467,19 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>);
 
 		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
+	}
+
+	/** Give the healing that goes to the one who used the item, with no click. */
+	async applySelfHealing(): Promise<void> {
+		if (!this.isActivationCard() || !isRuleAutomationEnabled()) return;
+		for (const group of this.effectNodes) {
+			for (const node of group) {
+				const healing = node as HealingNode;
+				if (healing.type !== 'healing' || healing.recipient !== 'self') continue;
+				const total = Number(healing.roll?.total);
+				if (total > 0) await this.applyHealing(total, healing.healingType, healing.id, 'self');
+			}
+		}
 	}
 
 	isHealingApplied(effectId: string): boolean {

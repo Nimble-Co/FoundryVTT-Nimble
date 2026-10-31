@@ -246,6 +246,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		}
 
 		if (chatCard) {
+			await (chatCard as unknown as { applySelfHealing?(): Promise<void> }).applySelfHealing?.();
 			// Begin AoE placement immediately; the card's place button remains as
 			// the retry path. Reported rather than swallowed: Foundry installs no
 			// unhandled-rejection handler, so without this a failure here leaves

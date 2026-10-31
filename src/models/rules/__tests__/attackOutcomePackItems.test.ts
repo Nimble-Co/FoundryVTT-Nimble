@@ -102,10 +102,14 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 			);
 		});
 
-		it('gives LVL temp HP on use', () => {
+		it('gives LVL temp HP to the one who uses it', () => {
 			const item = JSON.parse(readFileSync(resolve(file), 'utf8'));
 			expect(item.system.activation.effects).toEqual([
-				expect.objectContaining({ healingType: 'tempHealing', formula: '@level' }),
+				expect.objectContaining({
+					healingType: 'tempHealing',
+					formula: '@level',
+					recipient: 'self',
+				}),
 			]);
 		});
 	});

@@ -108,7 +108,8 @@
 					"healingType": "tempHealing",
 					"formula": "@level",
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"recipient": "self"
 				}
 			],
 			"showDescription": true,

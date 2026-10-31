@@ -3833,6 +3833,11 @@
 			"rollFormula": "Roll Formula",
 			"damageType": "Damage Type",
 			"healingType": "Healing Type",
+			"healingRecipient": "Who gets it?",
+			"healingRecipients": {
+				"targets": "The targets",
+				"self": "The one who uses it (given by itself)"
+			},
 			"customSaveDC": "Custom Save DC",
 			"sharedRolls": "Shared Rolls",
 			"none": "None",
