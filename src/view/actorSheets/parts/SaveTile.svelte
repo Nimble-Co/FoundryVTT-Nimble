@@ -78,6 +78,7 @@ Put it inside `nimble-chrome` on the rail. `stripTone="card"` is the NPC rail: w
 		font-size: 0.594rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		background: hsla(41, 18%, 54%, 0.25);
 	}
 	.card .k {

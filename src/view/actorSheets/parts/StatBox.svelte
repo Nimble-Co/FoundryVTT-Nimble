@@ -39,6 +39,7 @@ A secondary number that is always visible: armor, speed, and each other movement
 		font-size: 0.594rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		color: var(--nimble-bronze);
 	}
 	b {

@@ -77,7 +77,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 						variant="label"
 						rest={editing}
 						onchange={(value) => perform({ kind: 'setHitDice', value })}
-					/><span>/{meter.max}</span>
+					/><span>/ {meter.max}</span>
 				</span>
 			{:else}
 				<span class="count">{meter.summary}</span>
@@ -137,7 +137,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 						variant="label"
 						rest={editing}
 						onchange={(value) => perform({ kind: 'setMana', value })}
-					/><span>/{meter.max}</span>
+					/><span>/ {meter.max}</span>
 				</span>
 			{/if}
 		</div>
@@ -154,7 +154,9 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 	{:else if meter.kind === 'dicePool'}
 		{@const pool = meter}
 		<div class="head">
-			<span class="label"><i class={pool.icon}></i> {pool.label} <small>d{pool.die}</small></span>
+			<span class="label" data-tooltip={pool.label}
+				><i class={pool.icon}></i> {pool.label} <small>d{pool.die}</small></span
+			>
 			<span class="count">{pool.faces.length}/{pool.max}</span>
 		</div>
 		<div class="line">
@@ -241,7 +243,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 	{:else if meter.kind === 'charges'}
 		{@const pool = meter}
 		<div class="head">
-			<span class="label">
+			<span class="label" data-tooltip={pool.label}>
 				<i class={pool.icon}></i>
 				{pool.label}
 				{#if pool.die}<small>d{pool.die}</small>{/if}
@@ -257,7 +259,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					variant="label"
 					rest={editing}
 					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: pool.id, value })}
-				/><span>/{pool.max}</span>
+				/><span>/ {pool.max}</span>
 			</span>
 		</div>
 		<div class="cells">
@@ -320,6 +322,12 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		line-height: 1.15;
 		text-transform: uppercase;
 		color: var(--nimble-ui-ink-dim);
+	}
+	.label {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 	.label i {
 		color: var(--tone);
