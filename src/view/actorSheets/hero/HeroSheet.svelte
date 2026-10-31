@@ -92,7 +92,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			/>
 		</div>
 		{#if !wide}<HeroStrip meters={rail.meters} {ui} {perform} />{/if}
-		<div class="body">
+		<div class="body" class:fill={!!bio}>
 			{#if ui.editing}
 				<EditBand {...frame.editBand} ondone={() => setEditing(ui, false)} />
 			{/if}
@@ -170,6 +170,10 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		padding: 10px 14px 14px;
 		scrollbar-width: thin;
 		scrollbar-color: var(--nimble-ui-ring) transparent;
+	}
+	.body.fill {
+		display: flex;
+		flex-direction: column;
 	}
 	.hero :global([data-row-id][data-flash]) {
 		animation: hero-flash 1.2s ease-out;

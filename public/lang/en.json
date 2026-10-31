@@ -262,7 +262,8 @@
 					"weight": "Weight",
 					"gender": "Gender",
 					"notes": "Notes",
-					"noNotes": "No notes"
+					"notSet": "Not set",
+					"noNotes": "No notes yet. Turn on Edit to write them."
 				},
 				"settings": {
 					"groups": {

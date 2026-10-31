@@ -23,9 +23,15 @@ function renderTab(editing: boolean, notes = '') {
 }
 
 describe('HeroBioTab', () => {
-	it('changes a detail only in edit mode', async () => {
+	it('shows the details as text out of edit mode, and "not set" for an empty one', () => {
 		renderTab(false);
-		expect(screen.getByRole('textbox', { name: `${BIO}.age` })).toBeDisabled();
+
+		expect(screen.queryByRole('textbox')).toBeNull();
+		expect(screen.getAllByRole('term').map((term) => term.textContent)).toEqual(
+			['age', 'height', 'weight', 'gender'].map((detail) => `${BIO}.${detail}`),
+		);
+		expect(screen.getByText('30')).toBeInTheDocument();
+		expect(screen.getAllByText(`${BIO}.notSet`)).toHaveLength(3);
 	});
 
 	it('sends the new value of a detail', async () => {
