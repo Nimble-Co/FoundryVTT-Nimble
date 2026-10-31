@@ -36,7 +36,7 @@ The control is a `.value` (a number or text with no well; a dashed line shows th
 		color: var(--nimble-ui-ink);
 	}
 	small {
-		font-size: 0.703rem;
+		font-size: 0.75rem;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -112,6 +112,8 @@ The control is a `.value` (a number or text with no well; a dashed line shows th
 		background: var(--nimble-ui-fill-ink);
 	}
 	.line :global(input[role='switch']:disabled) {
+		opacity: 0.4;
+		filter: saturate(0.35);
 		cursor: default;
 	}
 	.line :global(input[role='switch']:focus-visible) {
