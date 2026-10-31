@@ -58,6 +58,15 @@ describe('heroEffectsTab', () => {
 			expect(effectsOnHero(inspired(), effectsContext())).toBe(4);
 		});
 
+		it('shows under Active effects when it is the only effect', () => {
+			const hero = blankHero();
+			hero.system.resources.inspiration = true;
+			const view = heroEffectsTab(hero, heroContext());
+
+			expect(layout(view)).toEqual([[`${FX}.active`, '1', [`${IN}.name`]]]);
+			expect(view.empty).toBeNull();
+		});
+
 		it('ends from its row with no question, and lasts until a Safe Rest', () => {
 			const row = rowOf(heroEffectsTab(inspired(), effectsContext()), 'inspiration');
 

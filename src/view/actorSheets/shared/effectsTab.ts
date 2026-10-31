@@ -91,6 +91,8 @@ export interface EffectsTabInput {
 	format: Format;
 	/** the heading of the conditions on the actor: "Conditions on you", "Conditions" */
 	conditionsOnLabel: string;
+	/** keep the empty groups, for a caller that adds rows and then calls `shownGroups` */
+	keepEmpty?: boolean;
 }
 
 function askRemove(name: string, intent: EffectIntent, input: EffectsTabInput): EffectRowAsk {
@@ -204,6 +206,15 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 	);
 }
 
+/** Leaves out the groups with no rows; with none left, `empty` is the one line that says so. */
+export function shownGroups<G extends { rows: unknown[] }>(
+	groups: G[],
+	localize: Localize,
+): { groups: G[]; empty: string | null } {
+	const shown = groups.filter((group) => group.rows.length);
+	return { groups: shown, empty: shown.length ? null : localize(`${FX}.noEffects`) };
+}
+
 /** Active effects, the conditions on the actor and the passive effects; under them, every condition. */
 export function effectsTab(input: EffectsTabInput): EffectsTabView {
 	const { localize } = input;
@@ -238,10 +249,9 @@ export function effectsTab(input: EffectsTabInput): EffectsTabView {
 			localize(`${FX}.passive`),
 			lists.passive.map((effect) => effectRow(effect, input, true)),
 		),
-	].filter((entry) => entry.rows.length);
+	];
 	return {
-		groups,
-		empty: groups.length ? null : localize(`${FX}.noEffects`),
+		...(input.keepEmpty ? { groups, empty: null } : shownGroups(groups, localize)),
 		conditions: {
 			label: localize(`${FX}.allConditions`),
 			options: toggles.filter((toggle) => !OTHER_CONDITIONS.has(toggle.id)),

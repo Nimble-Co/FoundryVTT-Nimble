@@ -1,5 +1,10 @@
 import { effectLists, effectsOnCount } from '../shared/effectLists.ts';
-import { type EffectRowView, type EffectsTabView, effectsTab } from '../shared/effectsTab.ts';
+import {
+	type EffectRowView,
+	type EffectsTabView,
+	effectsTab,
+	shownGroups,
+} from '../shared/effectsTab.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
@@ -57,6 +62,7 @@ export function heroEffectsTab(
 	context: HeroSheetContext,
 ): HeroEffectsTabView {
 	const view = effectsTab({
+		keepEmpty: true,
 		effects: actor.effects,
 		items: actor.items,
 		conditions: context.conditions,
@@ -71,5 +77,5 @@ export function heroEffectsTab(
 		const withInspiration = byName([...rows, inspirationRow(context)]);
 		return { ...group, note: String(withInspiration.length), rows: withInspiration };
 	});
-	return { ...view, groups };
+	return { ...view, ...shownGroups(groups, context.localize) };
 }
