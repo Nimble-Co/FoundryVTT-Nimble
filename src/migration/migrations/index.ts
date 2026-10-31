@@ -70,3 +70,4 @@ export { Migration069CheckRerolls } from './Migration069CheckRerolls.js';
 export { Migration070AllyRerolls } from './Migration070AllyRerolls.js';
 export { Migration071ModifyReroll } from './Migration071ModifyReroll.js';
 export { Migration072ChangeDie } from './Migration072ChangeDie.js';
+export { Migration073AttackOutcomes } from './Migration073AttackOutcomes.js';
