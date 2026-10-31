@@ -46,7 +46,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				<h2>{view.name}</h2>
 			{/if}
 			<span class="meta">
-				<span>{view.meta}</span>
+				<span data-tooltip={view.metaHint}>{view.meta}</span>
 				{#if editing}
 					<EditZone
 						inline

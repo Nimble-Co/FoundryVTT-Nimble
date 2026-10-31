@@ -155,6 +155,8 @@ export interface HeroRailView {
 	/** offset in px and scale in percent, from the image settings */
 	portrait: { x: number; y: number; scale: number };
 	meta: string;
+	/** the size of the hero, on the meta line as a tooltip */
+	metaHint: string;
 	hp: {
 		value: number;
 		max: number;
@@ -203,33 +205,24 @@ const dieNumber = (dieSize: string | null) => (dieSize ? Number(dieSize.replace(
 const firstOfType = (actor: HeroActorLike, type: string): ItemLike | undefined =>
 	actor.items.find((item) => item.type === type);
 
+/** "Lv 6 Dwarf Berserker - Red Mist", as the design shows it. */
 function meta(actor: HeroActorLike, context: HeroSheetContext): string {
-	const { format, localize } = context;
+	const { format } = context;
 	const ancestry = firstOfType(actor, 'ancestry');
 	const characterClass = firstOfType(actor, 'class');
 	const subclass = firstOfType(actor, 'subclass');
-	const parts: string[] = [];
-	if (ancestry) {
-		parts.push(
-			format(`${RAIL}.metaAncestry`, {
-				ancestry: ancestry.name,
-				size: localize(`NIMBLE.sizeCategories.${actor.system.attributes.sizeCategory}`),
-			}),
-		);
-	}
-	if (characterClass) {
-		const level = String(characterClass.system.classLevel ?? 1);
-		parts.push(
-			subclass
-				? format(`${RAIL}.metaSubclass`, {
-						class: characterClass.name,
-						subclass: subclass.name,
-						level,
-					})
-				: format(`${RAIL}.metaClass`, { class: characterClass.name, level }),
-		);
-	}
-	return parts.join(' | ');
+	const line = [
+		characterClass
+			? format(`${RAIL}.metaLevel`, { level: String(characterClass.system.classLevel ?? 1) })
+			: '',
+		ancestry?.name ?? '',
+		characterClass?.name ?? '',
+	]
+		.filter(Boolean)
+		.join(' ');
+	return subclass && characterClass
+		? format(`${RAIL}.metaSubclass`, { line, subclass: subclass.name })
+		: line;
 }
 
 /** The current and total Hit Dice of each die size: class dice, bonus dice and the size bonus. */
@@ -536,6 +529,9 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 		img: actor.img,
 		portrait: portraitOf(actor.flags),
 		meta: meta(actor, context),
+		metaHint: context.format(`${RAIL}.metaSize`, {
+			size: context.localize(`NIMBLE.sizeCategories.${actor.system.attributes.sizeCategory}`),
+		}),
 		hp: {
 			value: hp.value,
 			max: hp.max,

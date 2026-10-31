@@ -135,9 +135,9 @@
 					"levelUpHint": "Level Up. This opens the Level Up window",
 					"levelUpMax": "You are at the highest level",
 					"levelUpNoClass": "Add a class to level up",
-					"metaAncestry": "{ancestry} ({size})",
-					"metaClass": "{class} ({level})",
-					"metaSubclass": "{class} ({subclass}, {level})",
+					"metaLevel": "Lv {level}",
+					"metaSize": "Size: {size}",
+					"metaSubclass": "{line} - {subclass}",
 					"notYourTurn": "Not your turn",
 					"offTurnHint": "A reaction spends 1 action. You start your next turn with the actions that are left.",
 					"speed": {

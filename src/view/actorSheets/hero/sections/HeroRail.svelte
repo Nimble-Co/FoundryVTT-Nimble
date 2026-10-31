@@ -50,7 +50,7 @@ The rail stays dark in both themes.
 				<h2>{view.name}</h2>
 			{/if}
 			<div class="meta">
-				<span>{view.meta}</span>
+				<span data-tooltip={view.metaHint}>{view.meta}</span>
 				{#if editing}
 					<EditZone
 						inline

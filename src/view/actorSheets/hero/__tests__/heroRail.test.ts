@@ -45,10 +45,8 @@ describe('heroRail', () => {
 			const view = heroRail(blankHero(), heroContext());
 
 			expect(view.name).toBe('Blank Hero');
-			expect(view.meta).toBe(
-				`${RAIL}.metaAncestry {"ancestry":"Human","size":"NIMBLE.sizeCategories.medium"} | ` +
-					`${RAIL}.metaClass {"class":"Berserker","level":"1"}`,
-			);
+			expect(view.meta).toBe(`${RAIL}.metaLevel {"level":"1"} Human Berserker`);
+			expect(view.metaHint).toBe(`${RAIL}.metaSize {"size":"NIMBLE.sizeCategories.medium"}`);
 		});
 
 		it('adds the subclass to the class', () => {
@@ -56,8 +54,9 @@ describe('heroRail', () => {
 			hero.items.push(heroItem({ type: 'subclass', name: 'Path of the Red Mist' }));
 			const view = heroRail(hero, heroContext());
 
-			expect(view.meta).toContain(
-				`${RAIL}.metaSubclass {"class":"Berserker","subclass":"Path of the Red Mist","level":"1"}`,
+			const line = `${RAIL}.metaLevel {"level":"1"} Human Berserker`;
+			expect(view.meta).toBe(
+				`${RAIL}.metaSubclass ${JSON.stringify({ line, subclass: 'Path of the Red Mist' })}`,
 			);
 		});
 
