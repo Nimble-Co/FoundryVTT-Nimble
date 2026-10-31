@@ -6,7 +6,31 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"id": "Nq7tR2vKxW9pLm3B",
+				"identifier": "",
+				"label": "Gnatbane Weapon",
+				"predicate": {},
+				"priority": 1,
+				"side": "yourAttacks",
+				"cannotMiss": true,
+				"critRange": 0,
+				"forceCrit": "none",
+				"anyDieCrits": false,
+				"attackDelivery": "any",
+				"thisItemOnly": true,
+				"otherCreature": {
+					"$or": [
+						"target:size:small",
+						"target:size:tiny"
+					]
+				},
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

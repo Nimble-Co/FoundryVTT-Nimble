@@ -6,7 +6,57 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "s3SVWInS9sbuvsKC",
+				"identifier": "deathbringers-touch",
+				"label": "Deathbringer's Touch (1/round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"id": "F9Kwl2GVpi4DGehy",
+				"identifier": "",
+				"label": "Deathbringer's Touch",
+				"predicate": {},
+				"priority": 2,
+				"side": "yourAttacks",
+				"cannotMiss": false,
+				"critRange": 0,
+				"forceCrit": "always",
+				"anyDieCrits": false,
+				"attackDelivery": "melee",
+				"thisItemOnly": false,
+				"otherCreature": {
+					"$and": [
+						"target:bloodied"
+					]
+				},
+				"chargePoolIdentifier": "deathbringers-touch"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

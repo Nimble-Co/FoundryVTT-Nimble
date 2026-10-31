@@ -5,7 +5,30 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"id": "Hd4sYc8ZfG1uJb6E",
+				"identifier": "",
+				"label": "Shatter",
+				"predicate": {},
+				"priority": 1,
+				"side": "yourAttacks",
+				"cannotMiss": false,
+				"critRange": 0,
+				"forceCrit": "none",
+				"anyDieCrits": true,
+				"attackDelivery": "any",
+				"thisItemOnly": true,
+				"otherCreature": {
+					"$and": [
+						"target:hampered"
+					]
+				},
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

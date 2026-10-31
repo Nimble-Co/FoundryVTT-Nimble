@@ -5,7 +5,34 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"id": "s7OVWCh9Vq1JPqkv",
+				"identifier": "",
+				"label": "Slashing",
+				"predicate": {
+					"$and": [
+						"attack:damageType:slashing"
+					]
+				},
+				"priority": 1,
+				"side": "yourAttacks",
+				"cannotMiss": true,
+				"critRange": 0,
+				"forceCrit": "none",
+				"anyDieCrits": false,
+				"attackDelivery": "any",
+				"thisItemOnly": false,
+				"otherCreature": {
+					"$and": [
+						"target:armor:none"
+					]
+				},
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

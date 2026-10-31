@@ -6,7 +6,58 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "VTwxihHZ4HZOIq78",
+				"identifier": "unleash-the-beast",
+				"label": "Unleash the Beast (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "makeCrit",
+				"disabled": false,
+				"id": "0DVaSFFND56WNfwt",
+				"identifier": "",
+				"label": "Unleash the Beast",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"usedBy": "roller",
+				"reach": 0,
+				"otherCreature": {},
+				"outcome": "miss",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "unleash-the-beast",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
