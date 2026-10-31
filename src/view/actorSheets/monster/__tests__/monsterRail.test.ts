@@ -64,7 +64,7 @@ describe('monsterRail', () => {
 		expect(armorOf('heavy')).toMatchObject({ id: 'armor', value: 'H' });
 		expect(armorOf('heavy').tooltip).toContain('NIMBLE.armorTypes.heavy');
 		expect(armorOf('medium').value).toBe('M');
-		expect(armorOf('none').value).toBe('-');
+		expect(armorOf('none').value).toBe('–');
 	});
 
 	it('offers the three armor choices for edit mode, with the armor of the monster', () => {
