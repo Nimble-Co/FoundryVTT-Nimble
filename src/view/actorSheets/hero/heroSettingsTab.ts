@@ -38,8 +38,6 @@ export type HeroSetting =
 			label: string;
 			icon: string;
 			intent: HeroIntent;
-			/** works out of edit mode too */
-			always?: boolean;
 	  };
 
 export interface HeroSettingsGroup {
@@ -62,7 +60,7 @@ const field =
 	(name: HeroSettingsField) =>
 	(value: boolean | number | string): HeroIntent => ({ kind: 'setField', field: name, value });
 
-/** The Settings tab: you change a setting only in edit mode. Export works in all modes. */
+/** The Settings tab: every setting and button works in all modes. */
 export function heroSettingsTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
@@ -196,7 +194,6 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.pdfExport.exportButton'),
 						icon: 'fa-solid fa-file-pdf',
 						intent: { kind: 'exportPdf' },
-						always: true,
 					},
 					{
 						kind: 'button',
@@ -204,7 +201,6 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.jsonExport.exportButton'),
 						icon: 'fa-solid fa-file-export',
 						intent: { kind: 'exportJson' },
-						always: true,
 					},
 				],
 			},

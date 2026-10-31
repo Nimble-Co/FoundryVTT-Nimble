@@ -1,7 +1,7 @@
 <!--
 @component
 The Settings tab of the NPC sheet: what the monster is (read only; you change it in the metadata window), the image
-settings and the item macros (only in edit mode), and the coins (in all modes).
+settings, the item macros and the coins (in all modes).
 -->
 <script lang="ts">
 	import type { MonsterSettingsTabProps } from '#types/components/actorSheets/MonsterSettingsTab.d.ts';
@@ -9,7 +9,7 @@ settings and the item macros (only in edit mode), and the coins (in all modes).
 	import SettingLine from '../../parts/SettingLine.svelte';
 	import type { MonsterIntent } from '../monsterIntent.ts';
 
-	let { view, ui, perform }: MonsterSettingsTabProps = $props();
+	let { view, perform }: MonsterSettingsTabProps = $props();
 
 	const uid = $props.id();
 
@@ -41,7 +41,6 @@ settings and the item macros (only in edit mode), and the coins (in all modes).
 									type="checkbox"
 									role="switch"
 									checked={setting.on}
-									disabled={!ui.editing}
 									aria-describedby={described}
 									onchange={(event) => perform(setting.intent(event.currentTarget.checked))}
 								/>
@@ -53,7 +52,6 @@ settings and the item macros (only in edit mode), and the coins (in all modes).
 									value={setting.value}
 									min={setting.min}
 									step="1"
-									disabled={!setting.always && !ui.editing}
 									aria-describedby={described}
 									onchange={(event) =>
 										setNumber(setting.intent, event.currentTarget.value, setting.min)}

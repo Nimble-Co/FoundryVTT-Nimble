@@ -284,25 +284,21 @@ describe('MonsterNotesTab', () => {
 });
 
 describe('MonsterSettingsTab', () => {
-	it('changes the image settings only in edit mode, and the coins in all modes', async () => {
-		const { ui, perform } = setup('settings');
-		render(MonsterSettingsTab, {
-			view: monsterSettingsTab(goblin(), monsterContext()),
-			ui,
-			perform,
-		});
+	it('changes the settings and the coins out of edit mode too', async () => {
+		const { perform } = setup('settings');
+		render(MonsterSettingsTab, { view: monsterSettingsTab(goblin(), monsterContext()), perform });
 		const scale = screen.getByRole('spinbutton', {
 			name: 'NIMBLE.actorSheet.monster.settings.imageScale',
 		});
 		const gold = screen.getByRole('spinbutton', { name: /settings\.coin .*gp/ });
 
-		expect(scale).toBeDisabled();
+		expect(scale).toBeEnabled();
 		expect(scale).toHaveAccessibleDescription(
 			'NIMBLE.actorSheet.monster.settings.hints.imageScale',
 		);
 		expect(
 			screen.getByRole('switch', { name: 'NIMBLE.actorSheet.monster.settings.runMacros' }),
-		).toBeDisabled();
+		).toBeEnabled();
 		expect(gold).toBeEnabled();
 		await fireEvent.change(gold, { target: { value: '7' } });
 

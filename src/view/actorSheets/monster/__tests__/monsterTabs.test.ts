@@ -174,13 +174,13 @@ describe('monsterSettingsTab', () => {
 		});
 	});
 
-	it('has a coin row that you type in all modes', () => {
+	it('has a coin row', () => {
 		const gold = settingOf(
 			all(monsterSettingsTab(goblin({ system: { currency: { gp: 12 } } }), monsterContext())),
 			'coin-gp',
 		);
 
-		expect(gold).toMatchObject({ kind: 'number', value: 12, min: 0, always: true });
+		expect(gold).toMatchObject({ kind: 'number', value: 12, min: 0 });
 		expect(gold.kind === 'number' && gold.intent(3)).toEqual({
 			kind: 'setCurrency',
 			coin: 'gp',

@@ -24,8 +24,6 @@ export type MonsterSetting =
 			hint?: string;
 			value: number;
 			min?: number;
-			/** you type it out of edit mode too */
-			always?: boolean;
 			intent: SetIntent<number>;
 	  };
 
@@ -127,7 +125,6 @@ export function monsterSettingsTab(
 						}),
 						value: Number(system.currency[coin] ?? 0),
 						min: 0,
-						always: true,
 						intent: (amount: number): MonsterIntent => ({
 							kind: 'setCurrency',
 							coin,

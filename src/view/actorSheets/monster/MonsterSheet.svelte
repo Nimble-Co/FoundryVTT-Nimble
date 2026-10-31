@@ -72,7 +72,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			{:else if sheet.notes}
 				<MonsterNotesTab view={sheet.notes} {ui} />
 			{:else if sheet.settings}
-				<MonsterSettingsTab view={sheet.settings} {ui} {perform} />
+				<MonsterSettingsTab view={sheet.settings} {perform} />
 			{/if}
 		</div>
 	</main>

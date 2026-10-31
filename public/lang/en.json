@@ -475,7 +475,7 @@
 						"imageY": "Moves the portrait up or down.",
 						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
 						"runMacros": "When you use an item that has a macro, the macro runs.",
-						"coins": "The coins that this creature carries. You can change them out of edit mode too."
+						"coins": "The coins that this creature carries."
 					}
 				}
 			}

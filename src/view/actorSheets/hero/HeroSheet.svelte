@@ -111,7 +111,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			{:else if bio}
 				<HeroBioTab view={bio} {ui} {perform} />
 			{:else if settings}
-				<HeroSettingsTab view={settings} {ui} {perform} />
+				<HeroSettingsTab view={settings} {perform} />
 			{/if}
 		</div>
 	</main>

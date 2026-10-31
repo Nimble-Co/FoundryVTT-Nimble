@@ -1,6 +1,6 @@
 <!--
 @component
-The Settings tab: you change a setting only in edit mode, and the export buttons work in all modes.
+The Settings tab: every setting and button works in all modes.
 At the bottom, "Needs a place" holds system data that has no place on the sheet yet, with its control.
 -->
 <script lang="ts">
@@ -9,7 +9,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 	import SettingLine from '../../parts/SettingLine.svelte';
 	import type { HeroIntent } from '../heroIntent.ts';
 
-	let { view, ui, perform }: HeroSettingsTabProps = $props();
+	let { view, perform }: HeroSettingsTabProps = $props();
 
 	const uid = $props.id();
 
@@ -35,7 +35,6 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 						<button
 							type="button"
 							class="nimble-u-reset-button button"
-							disabled={!setting.always && !ui.editing}
 							onclick={() => perform(setting.intent)}
 						>
 							<i class={setting.icon}></i>{setting.label}
@@ -50,7 +49,6 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 									type="checkbox"
 									role="switch"
 									checked={setting.on}
-									disabled={!ui.editing}
 									aria-describedby={described}
 									onchange={(event) => perform(setting.intent(event.currentTarget.checked))}
 								/>
@@ -62,7 +60,6 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 									value={setting.value}
 									min={setting.min}
 									step="1"
-									disabled={!ui.editing}
 									aria-describedby={described}
 									onchange={(event) =>
 										setNumber(setting.intent, event.currentTarget.value, setting.min)}
@@ -73,7 +70,6 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 									type="text"
 									class="value wide"
 									value={setting.value}
-									disabled={!ui.editing}
 									aria-describedby={described}
 									onchange={(event) => perform(setting.intent(event.currentTarget.value))}
 								/>
