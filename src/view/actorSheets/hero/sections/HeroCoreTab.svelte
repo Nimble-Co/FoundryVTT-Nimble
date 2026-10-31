@@ -258,7 +258,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		border-top: 1px solid var(--nimble-ui-soft);
 	}
 	.ability-label {
-		font-size: 0.656rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.04em;
 		text-align: center;

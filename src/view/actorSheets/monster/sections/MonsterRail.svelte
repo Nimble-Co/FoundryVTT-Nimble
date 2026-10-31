@@ -227,7 +227,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		align-items: center;
 		gap: 4px;
 		white-space: nowrap;
-		font-size: 0.594rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;

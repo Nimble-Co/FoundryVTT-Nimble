@@ -336,6 +336,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		color: var(--tone);
 	}
 	.label small {
+		font-size: 0.688rem;
 		font-weight: 600;
 		letter-spacing: 0;
 		text-transform: none;
