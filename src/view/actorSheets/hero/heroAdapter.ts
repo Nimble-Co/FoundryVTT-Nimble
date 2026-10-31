@@ -207,6 +207,8 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 		subscribeCombat();
 		subscribePools();
 		const hero = actorLike(actor);
+		const rollData = actor.getRollData();
+		const formula = (text: string) => Roll.replaceFormulaData(text, rollData, { missing: '0' });
 		const context: HeroSheetContext = {
 			localize: (key) => localize(key),
 			format: (key, data) => localize(key, data),
@@ -231,9 +233,10 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 			})),
 			itemState: heroItemStates(actor),
 			targets: getTargetedTokens(actor.id ?? '').map((token) => getTargetName(token)),
-			unarmedDamage: getUnarmedDamageFormula(
-				actor as unknown as Parameters<typeof getUnarmedDamageFormula>[0],
+			unarmedDamage: formula(
+				getUnarmedDamageFormula(actor as unknown as Parameters<typeof getUnarmedDamageFormula>[0]),
 			),
+			formula,
 		};
 		return { actor: hero, context };
 	};

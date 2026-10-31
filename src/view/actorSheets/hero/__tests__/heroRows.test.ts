@@ -24,7 +24,7 @@ describe('itemRow', () => {
 		const hero = dicePoolHero();
 		const view = itemRow(hero, item(hero, 'greataxe'), dicePoolContext());
 
-		expect(view.summary).toBe('2d6+@strength, NIMBLE.actorSheet.shared.reach {"distance":"1"}');
+		expect(view.summary).toBe('2d6+3, NIMBLE.actorSheet.shared.reach {"distance":"1"}');
 		expect(view.drag).toEqual({ kind: 'item', uuid: 'Actor.blankHero00000001.Item.greataxe' });
 		expect(view.edit).toEqual({ kind: 'openItem', itemId: 'greataxe' });
 	});

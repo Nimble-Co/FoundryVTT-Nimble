@@ -228,10 +228,11 @@ export function damageWords(item: ItemLike, context: HeroSheetContext): string[]
 	);
 }
 
-function damageFormula(item: ItemLike): string {
+function damageFormula(item: ItemLike, context: HeroSheetContext): string {
 	return damageNodes(item)
 		.map((node) => node.formula)
 		.filter(Boolean)
+		.map((formula) => context.formula(formula))
 		.join(' + ');
 }
 
@@ -370,7 +371,7 @@ export function itemRow(
 	const description = plainText(rawDescriptionOf(item));
 	const range = rangeWords(item, context);
 	const when = whenWords(item);
-	const formula = damageFormula(item);
+	const formula = damageFormula(item, context);
 	const concentration = spell && selectedProperties(item).includes('concentration');
 
 	const lead = (
