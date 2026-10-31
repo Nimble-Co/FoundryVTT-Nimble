@@ -25,7 +25,7 @@ while not. A click gives it or ends it. The rail and the narrow header place it.
 	.seal {
 		position: absolute;
 		top: 8px;
-		right: 8px;
+		right: var(--seal-right, 8px);
 		z-index: 1;
 		display: grid;
 		place-items: center;

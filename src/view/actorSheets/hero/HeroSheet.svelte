@@ -82,7 +82,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		<HeroHeader view={rail} {ui} {perform} />
 	{/if}
 	<main>
-		<nav class="tabs">
+		<div class="tabs">
 			<SheetTabs
 				tabs={frame.tabs}
 				value={ui.tab}
@@ -90,7 +90,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 				label={frame.tabsLabel}
 				onchange={(id) => showTab(ui, id)}
 			/>
-		</nav>
+		</div>
 		{#if !wide}<HeroStrip meters={rail.meters} {ui} {perform} />{/if}
 		<div class="body">
 			{#if ui.editing}
@@ -143,6 +143,9 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		padding: 0 6px;
 		border-bottom: 1px solid var(--nimble-ui-soft);
 		white-space: nowrap;
+	}
+	.wide .tabs {
+		padding-right: var(--nimble-sheet-controls, 6px);
 	}
 	.body {
 		flex: 1;

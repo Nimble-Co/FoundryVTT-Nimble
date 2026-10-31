@@ -130,7 +130,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 			</div>
 		{/if}
 		{#if !narrow}
-			<nav class="tabs">
+			<div class="tabs">
 				<SheetTabs
 					layout="rail"
 					tabs={frame.tabs}
@@ -138,7 +138,7 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 					label={frame.tabsLabel}
 					onchange={(id) => showTab(ui, id)}
 				/>
-			</nav>
+			</div>
 			<div class="switch">
 				<EditSwitch {editing} {...view.edit} onclick={() => setEditing(ui, !ui.editing)} />
 			</div>

@@ -104,7 +104,7 @@ the monster window. It stays dark in both themes.
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: 2px 8px;
-		padding-right: 58px;
+		padding-right: var(--nimble-sheet-controls, 58px);
 	}
 	h2 {
 		margin: 0;

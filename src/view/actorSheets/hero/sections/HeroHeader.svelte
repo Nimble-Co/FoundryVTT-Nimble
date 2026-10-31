@@ -90,6 +90,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		padding: 9px 10px;
 		background: var(--nimble-ui-chrome);
 		border-bottom: 1px solid var(--nimble-ui-line);
+		--seal-right: calc(var(--nimble-sheet-controls, 0px) + 8px);
 	}
 	.fade {
 		position: absolute;
@@ -110,7 +111,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 2px 7px;
-		padding-right: 58px;
+		padding-right: calc(var(--nimble-sheet-controls, 58px) + 34px);
 	}
 	.editing .who {
 		column-gap: 15px;

@@ -57,10 +57,12 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 6px 10px 6px 14px;
+		padding: 6px max(10px, var(--nimble-sheet-controls, 0px)) 6px 14px;
 		border-bottom: 1px solid var(--nimble-ui-soft);
 	}
 	.editing {
+		flex-wrap: wrap;
+		row-gap: 10px;
 		padding-top: 10px;
 		padding-bottom: 10px;
 	}
@@ -73,7 +75,13 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		gap: 2px 10px;
 	}
 	.editing .who {
-		gap: 12px 16px;
+		display: contents;
+	}
+	.editing .name-field {
+		flex-basis: 100%;
+	}
+	.editing .create {
+		margin-left: auto;
 	}
 	h2 {
 		margin: 0;
