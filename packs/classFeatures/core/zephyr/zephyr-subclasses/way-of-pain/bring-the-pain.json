@@ -69,6 +69,17 @@
 				"value": "0",
 				"damageTypes": [],
 				"onlyCrits": true
+			},
+			{
+				"type": "damageBack",
+				"disabled": false,
+				"id": "xG4hNc7RqT2mWk9D",
+				"identifier": "",
+				"label": "Bring the Pain",
+				"predicate": {},
+				"priority": 4,
+				"onlyCrits": true,
+				"woundDoubles": true
 			}
 		],
 		"activation": {

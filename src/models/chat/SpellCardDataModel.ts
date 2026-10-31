@@ -2,6 +2,7 @@ import { activation } from '../item/common.js';
 import {
 	appliedHealing,
 	concentration,
+	damageBack,
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
@@ -42,6 +43,7 @@ declare namespace NimbleSpellCardData {
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof rerollHistory> &
 		ReturnType<typeof primaryDieBonuses> &
+		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
@@ -65,6 +67,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 			...incomingReactions(),
 			...rerollHistory(),
 			...primaryDieBonuses(),
+			...damageBack(),
 			...movementOffers(),
 			...spellCardSchema(),
 			...metadata(),

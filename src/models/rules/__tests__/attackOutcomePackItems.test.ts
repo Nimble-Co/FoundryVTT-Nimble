@@ -127,6 +127,30 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 			expect(changeOf(rule, { other: creature() })).toBeNull();
 		});
 
+		it('adds STR to the damage of the Lifebinding Spirit, and to no other item', () => {
+			const bonus = ruleOfType(
+				`${FEATURES}/shepherd/shepherd-subclasses/luminary-of-malice/deathbringers-touch.json`,
+				'damageBonus',
+			);
+			expect(bonus).toMatchObject({ value: '@strength', itemIdentifier: 'lifebinding-spirit' });
+			const spirit = JSON.parse(
+				readFileSync(
+					resolve(`${FEATURES}/shepherd/shepherd-progression/lifebinding-spirit.json`),
+					'utf8',
+				),
+			);
+			expect(spirit.system.identifier).toBe('lifebinding-spirit');
+			expect(spirit.system.activation.effects).toEqual([
+				expect.objectContaining({
+					type: 'damage',
+					formula: '1d6+@will',
+					damageType: 'radiant',
+					ignoreArmor: true,
+				}),
+				expect.objectContaining({ type: 'healing', formula: '1d6+@will' }),
+			]);
+		});
+
 		it('spends its pool by itself', () => {
 			expect(rule.chargePoolIdentifier).toBe('deathbringers-touch');
 		});
@@ -202,6 +226,10 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 				rule.offersUseOn({ side: 'target', roll: { kind: 'attack', delivery } });
 			expect(offers('melee')).toBe(true);
 			expect(offers('ranged')).toBe(false);
+		});
+
+		it('gives the damage of a crit back, and a Wound doubles it', () => {
+			expect(ruleOfType(file, 'damageBack')).toMatchObject({ onlyCrits: true, woundDoubles: true });
 		});
 
 		it('halves the damage of a crit only', () => {

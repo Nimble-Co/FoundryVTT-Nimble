@@ -11,6 +11,7 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
@@ -72,6 +73,7 @@ export default function registerRulesConfig() {
 		conditionalBonus: 'NIMBLE.ruleTypes.conditionalBonus',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
+		damageBack: 'NIMBLE.ruleTypes.damageBack',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
 		freeMove: 'NIMBLE.ruleTypes.freeMove',
@@ -132,6 +134,7 @@ export default function registerRulesConfig() {
 		conditionalBonus: ConditionalBonusRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
+		damageBack: DamageBackRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
 		freeMove: FreeMoveRule,

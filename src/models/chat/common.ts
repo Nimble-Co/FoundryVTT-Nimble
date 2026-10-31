@@ -357,6 +357,29 @@ export const primaryDieBonuses = () => ({
 	),
 });
 
+/** Damage creatures gave back to the one who attacked, one line each. */
+export const damageBack = () => ({
+	damageBack: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			attackerUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			attackerName: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			amount: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+			}),
+			dealt: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			woundDoubles: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			doubled: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		}),
+		{ required: false, nullable: false, initial: [] },
+	),
+});
+
 export const rerollHistory = () => ({
 	rerolls: new fields.ArrayField(rerollRecord(), { required: false, nullable: false, initial: [] }),
 	// Roll changes of Modify Reroll rules this card applied; each counts once per card.

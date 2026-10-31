@@ -52,6 +52,12 @@ import {
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import {
+	CardDamageBack,
+	type DamageBackAction,
+	type DamageBackCard,
+	type DamageBackRecord,
+} from './chatMessage/cardDamageBack.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
 import { inFlightSpendOffers, queueReactionWrite } from './chatMessage/reactionWriteQueue.js';
 
@@ -766,6 +772,17 @@ class NimbleChatMessage extends ChatMessage {
 
 	#subscribe: ReturnType<typeof createSubscriber>;
 
+	#damageBack = new CardDamageBack({
+		id: () => this.id,
+		// Not `speakerActor`: it falls back to the author's character.
+		attacker: () =>
+			(this.constructor as typeof ChatMessage).getSpeakerActor(
+				this.speaker,
+			) as unknown as ReturnType<DamageBackCard['attacker']>,
+		records: () => (this.system as { damageBack?: DamageBackRecord[] }).damageBack ?? [],
+		update: (changes) => this.update(changes),
+	});
+
 	#rerolls = new CardRerolls({
 		id: () => this.id,
 		type: () => this.type,
@@ -1202,7 +1219,12 @@ class NimbleChatMessage extends ChatMessage {
 			?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
+		const hurt: Array<Parameters<CardDamageBack['afterDamage']>[0][number]> = [];
 		for (const target of damageApplicationPlan.applicableTargets) {
+			hurt.push({
+				actor: target.actor as unknown as (typeof hurt)[number]['actor'],
+				taken: target.adjustedDamage,
+			});
 			const hpBefore = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
 			);
@@ -1234,6 +1256,8 @@ class NimbleChatMessage extends ChatMessage {
 				}
 			}
 		}
+
+		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1577,6 +1601,16 @@ class NimbleChatMessage extends ChatMessage {
 	/** The reroll result waiting for a player to choose, or null. */
 	pendingKeep(): PendingKeep | null {
 		return this.#rerolls.pendingKeep();
+	}
+
+	/** Deal damage given back, or pay a Wound to double it. Primary GM only. */
+	resolveDamageBack(
+		recordId: string,
+		action: DamageBackAction,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		return this.#damageBack.resolve(recordId, action, requestingUserId, viaSocket);
 	}
 
 	/** Keep the new roll or the old one of the reroll that waits on this card. Primary GM only. */

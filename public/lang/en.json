@@ -651,6 +651,12 @@
 				"usedBy": "Granted action used by {name}",
 				"usedByVia": "Granted action used by {name} via {label}"
 			},
+			"damageBack": {
+				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
+				"waiting": "{label}: {name} takes {amount} damage, ignoring armor (not dealt)",
+				"deal": "Deal {amount} damage",
+				"double": "Suffer 1 Wound: {amount} more damage"
+			},
 			"primaryDieBonus": {
 				"tag": "{value} to Primary Die",
 				"text": "{label}: {value} to the Primary Die",
@@ -1572,6 +1578,7 @@
 			"initiativeRollMode": "Initiative Roll Mode",
 			"markTarget": "Mark Target",
 			"makeCrit": "Make It a Crit",
+			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -1810,6 +1817,10 @@
 				"source": {
 					"label": "Source",
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				},
+				"itemIdentifier": {
+					"label": "Only attacks with this item",
+					"hint": "The identifier of the item, such as lifebinding-spirit. Empty is every item."
 				},
 				"targetCondition": {
 					"label": "Target condition",
@@ -2534,6 +2545,17 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool that gives 1 charge each time the rule changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
+				}
+			},
+			"damageBack": {
+				"description": "When the owner takes damage from an attack, the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"onlyCrits": {
+					"label": "Only against crits",
+					"hint": "Give damage back only when the attack is a crit."
+				},
+				"woundDoubles": {
+					"label": "A Wound doubles it",
+					"hint": "The owner can suffer 1 Wound to deal the amount one more time."
 				}
 			},
 			"makeCrit": {
