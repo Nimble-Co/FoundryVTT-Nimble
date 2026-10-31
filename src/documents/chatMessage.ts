@@ -101,6 +101,8 @@ type DamageApplyOptions = {
 	roll?: DamageRoll.SerializedData | null;
 	rolls?: Array<DamageRoll.SerializedData | null | undefined>;
 	isCritical?: boolean;
+	/** The attack the damage comes from is a crit. Absent: read `isCritical`. */
+	attackIsCritical?: boolean;
 };
 
 interface DamageApplicationTarget {
@@ -360,13 +362,24 @@ function matchesDamageType(damageTypes: unknown, damageType?: string): boolean {
 	return Boolean(damageType && types.includes(damageType));
 }
 
+/** Whether a damageReduction rule entry applies to this damage: its type, and a crit when it asks for one. */
+function reductionApplies(
+	reduction: { damageTypes: unknown; onlyCrits?: boolean },
+	options?: DamageApplyOptions,
+): boolean {
+	if (!matchesDamageType(reduction.damageTypes, options?.damageType)) return false;
+	if (reduction.onlyCrits !== true) return true;
+	return (options?.attackIsCritical ?? options?.isCritical) === true;
+}
+
 /**
  * Resistance check: `half`-mode damageReduction rule entries and the actor's
  * `attributes.damageResistances` both mean "take half as much damage" (Core
  * Rules glossary). Halving applies once — multiple matching sources do not
  * stack into quarters.
  */
-function actorResistsDamage(actor: Actor.Implementation, damageType?: string): boolean {
+function actorResistsDamage(actor: Actor.Implementation, options?: DamageApplyOptions): boolean {
+	const damageType = options?.damageType;
 	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
 	if (Array.isArray(resistances) && damageType && resistances.includes(damageType)) return true;
 
@@ -375,8 +388,7 @@ function actorResistsDamage(actor: Actor.Implementation, damageType?: string): b
 		| undefined;
 	if (!Array.isArray(reductions)) return false;
 	return reductions.some(
-		(reduction) =>
-			reduction?.mode === 'half' && matchesDamageType(reduction.damageTypes, damageType),
+		(reduction) => reduction?.mode === 'half' && reductionApplies(reduction, options),
 	);
 }
 
@@ -474,7 +486,7 @@ function describeDefenseModifiers(
 
 	for (const reduction of reductions) {
 		if (reduction?.mode !== 'half') continue;
-		if (!matchesDamageType(reduction?.damageTypes, damageType)) continue;
+		if (!reductionApplies(reduction, options)) continue;
 
 		modifiers.push({
 			kind: 'resistant',
@@ -513,7 +525,7 @@ function calculateDefenseAdjustedDamage(params: {
 	const damageType = params.options?.damageType;
 	if (actorIsImmuneToDamage(params.actor, damageType)) return 0;
 
-	return actorResistsDamage(params.actor, damageType)
+	return actorResistsDamage(params.actor, params.options)
 		? Math.ceil(armorAdjustedDamage * 0.5)
 		: armorAdjustedDamage;
 }
@@ -538,6 +550,7 @@ interface ResolvedDamageForActor {
  */
 interface PendingFlatReduction {
 	damageTypes: unknown;
+	onlyCrits?: boolean;
 	remaining: number;
 	modifier: DamageModifier;
 }
@@ -557,6 +570,7 @@ function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatRe
 
 		pending.push({
 			damageTypes: reduction.damageTypes,
+			...(reduction.onlyCrits === true ? { onlyCrits: true } : {}),
 			remaining: Math.floor(value),
 			modifier: describeFlatReduction(reduction),
 		});
@@ -573,7 +587,7 @@ function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatRe
 function spendFlatReductions(
 	pending: PendingFlatReduction[],
 	damage: number,
-	damageType: string | undefined,
+	options: DamageApplyOptions,
 ): { remainingDamage: number; spent: DamageModifier[] } {
 	let remainingDamage = damage;
 	const spent: DamageModifier[] = [];
@@ -581,7 +595,7 @@ function spendFlatReductions(
 	for (const reduction of pending) {
 		if (remainingDamage <= 0) break;
 		if (reduction.remaining <= 0) continue;
-		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
+		if (!reductionApplies(reduction, options)) continue;
 
 		const used = Math.min(remainingDamage, reduction.remaining);
 		reduction.remaining -= used;
@@ -620,7 +634,7 @@ function resolveDamageForActor(
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
 
-		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options.damageType);
+		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options);
 		let adjustedDamage = reduced.remainingDamage;
 
 		// The bank reduces "the damage taken" from the attack, so like a flat
@@ -1273,7 +1287,8 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#collectApplicableDamageRolls(): Array<{ value: number; options: DamageApplyOptions }> {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
-		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
+		const system = this.system as unknown as ActivationCardSystemData;
+		const isMiss = system.isMiss === true;
 
 		for (const group of this.effectNodes) {
 			for (const node of group) {
@@ -1301,6 +1316,7 @@ class NimbleChatMessage extends ChatMessage {
 						outcome,
 						roll: roll as unknown as DamageRoll.SerializedData,
 						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+						attackIsCritical: system.isCritical === true,
 					},
 				});
 			}

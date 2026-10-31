@@ -1838,6 +1838,10 @@
 				"damageTypes": {
 					"label": "Damage types",
 					"hint": "Restrict to these damage types. Leave empty to reduce all incoming damage."
+				},
+				"onlyCrits": {
+					"label": "Only against crits",
+					"hint": "Reduce the damage only when the attack is a crit. All the damage of the crit is reduced."
 				}
 			},
 			"dyingActionLimit": {

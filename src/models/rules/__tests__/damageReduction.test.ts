@@ -38,6 +38,7 @@ function createDamageReductionRule(
 		damageTypes?: string[];
 		disabled?: boolean;
 		mode?: 'flat' | 'half';
+		onlyCrits?: boolean;
 	},
 	actor: MockActor,
 	itemOptions?: { isEmbedded?: boolean },
@@ -68,6 +69,7 @@ function createDamageReductionRule(
 	(rule as any).value = config.value ?? '1';
 	(rule as any).damageTypes = config.damageTypes ?? [];
 	(rule as any).disabled = config.disabled ?? false;
+	(rule as any).onlyCrits = config.onlyCrits ?? false;
 
 	Object.defineProperty(rule, 'item', {
 		get: () => item,
@@ -263,6 +265,29 @@ describe('DamageReductionRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageReductions).toBeUndefined();
+		});
+	});
+
+	describe('only against crits', () => {
+		it('is off by default', () => {
+			const schema = DamageReductionRule.defineSchema() as unknown as Record<
+				string,
+				{ initial?: unknown }
+			>;
+			expect(schema.onlyCrits?.initial).toBe(false);
+		});
+
+		it('marks its half and flat entries, and leaves other entries unmarked', () => {
+			const actor = createMockActor();
+			createDamageReductionRule({ mode: 'half', onlyCrits: true }, actor).afterPrepareData();
+			createDamageReductionRule({ value: '2', onlyCrits: true }, actor).afterPrepareData();
+			createDamageReductionRule({ value: '1' }, actor).afterPrepareData();
+
+			expect(actor.system.damageReductions?.map((entry) => entry.onlyCrits)).toEqual([
+				true,
+				true,
+				undefined,
+			]);
 		});
 	});
 });

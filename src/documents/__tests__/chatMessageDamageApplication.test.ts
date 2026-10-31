@@ -95,12 +95,12 @@ function damagePacketNode(id: string, damageType: string, total: number) {
 	};
 }
 
-function createCard(packets: Array<{ damageType: string; total: number }>) {
+function createCard(packets: Array<{ damageType: string; total: number }>, isCritical = false) {
 	return new NimbleChatMessage({
 		type: 'spell',
 		system: {
 			targets: ['Scene.scene.Token.token'],
-			isCritical: false,
+			isCritical,
 			isMiss: false,
 			activation: {
 				effects: packets.map((packet, index) =>
@@ -231,6 +231,40 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 
 		// The ward absorbs the 2 radiant and nothing else; the slashing is whole.
 		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	describe('a reduction only against crits', () => {
+		const packets = [
+			{ damageType: 'slashing', total: 7 },
+			{ damageType: 'radiant', total: 5 },
+		];
+
+		it('halves every packet of a crit, and nothing of an attack that is not a crit', async () => {
+			const actor = createTarget({
+				damageReductions: [{ value: 0, damageTypes: [], mode: 'half', onlyCrits: true }],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			await createCard(packets, true).applyAllDamage();
+			// 7 and 5, each halved (rounding up): 4 + 3.
+			expect(actor.applyDamage).toHaveBeenLastCalledWith(7);
+
+			await createCard(packets).applyAllDamage();
+			expect(actor.applyDamage).toHaveBeenLastCalledWith(12);
+		});
+
+		it('subtracts a flat reduction only from a crit', async () => {
+			const actor = createTarget({
+				damageReductions: [{ value: 2, damageTypes: [], onlyCrits: true }],
+			});
+			globals().fromUuidSync.mockReturnValue({ actor });
+
+			await createCard(packets, true).applyAllDamage();
+			expect(actor.applyDamage).toHaveBeenLastCalledWith(10);
+
+			await createCard(packets).applyAllDamage();
+			expect(actor.applyDamage).toHaveBeenLastCalledWith(12);
+		});
 	});
 
 	it('fires damageApplied once per target, not once per packet', async () => {
