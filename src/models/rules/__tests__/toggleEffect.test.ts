@@ -240,6 +240,7 @@ describe('ToggleEffectRule', () => {
 			expect(choices).toContain('onTurnEnd');
 			expect(choices).toContain('onEncounterEnd');
 			expect(choices).toContain('onActorDying');
+			expect(choices).toContain('onRoundEnd');
 		});
 	});
 
@@ -555,6 +556,42 @@ describe('ToggleEffectRule', () => {
 			});
 
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('onRoundEnd deletes the AE when the round changes', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onRoundEnd'] }, actor);
+			pushAE(actor, rule.id, rule.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
+			await rule.onRoundChanged({
+				combat: { id: 'combat-1' } as unknown as Ctx['combat'],
+				actor: actor as unknown as Ctx['actor'],
+				round: 2,
+			});
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('keeps the AE on a round change without onRoundEnd, and for another actor', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onTurnEnd'] }, actor);
+			const other = createToggleEffectRule(
+				{ tags: ['self:heads'], turnOff: ['onRoundEnd'] },
+				createMockActor(),
+			);
+			pushAE(actor, rule.id, rule.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
+			const context = {
+				combat: { id: 'combat-1' } as unknown as Ctx['combat'],
+				actor: actor as unknown as Ctx['actor'],
+				round: 2,
+			};
+			await rule.onRoundChanged(context);
+			await other.onRoundChanged(context);
+
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
 
 		it('onActorWounded deletes the AE when listed in turnOff', async () => {
