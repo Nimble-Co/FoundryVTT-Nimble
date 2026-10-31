@@ -18,7 +18,7 @@ Inspiration is an optional rule: the GM grants it, and you can spend it to rerol
 
 The new NPC sheet is for NPCs, minions and solo monsters. The rail has the Hit Points, the saves, armor, speed and the damage defenses, and four tabs: Abilities, Effects, Notes and Settings. The abilities are cards in columns, as a stat block, and their text starts open. A click on the name of an ability rolls it or posts it to chat. A click on a save rolls it.
 
-Turn on **Edit** at the bottom of the rail (in the narrow form, the pen in the header) to change the monster: the portrait, the name, the maximum HP and the armor. An outline on the line under the name opens the monster window (level, creature type, size, monster type and damage defenses). Outlines on the saves and the speeds open their windows. In edit mode you can also create a feature and delete abilities.
+Turn on **Edit**, the last row of the menu at the bottom of the rail (in the narrow form, the pen in the header), to change the monster: the portrait, the name, the maximum HP and the armor. An outline on the line under the name opens the monster window (level, creature type, size, monster type and damage defenses). Outlines on the saves and the speeds open their windows. In edit mode you can also create a feature and delete abilities.
 
 ### Open NPC sheets narrow
 

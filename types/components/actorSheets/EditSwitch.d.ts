@@ -7,5 +7,7 @@ export interface EditSwitchProps {
 	stopHint: string;
 	/** a pen icon, for the narrow header */
 	compact?: boolean;
+	/** a row with a pen, the label and the track, under the NPC rail tabs */
+	menu?: boolean;
 	onclick: () => void;
 }

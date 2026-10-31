@@ -138,9 +138,9 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 					label={frame.tabsLabel}
 					onchange={(id) => showTab(ui, id)}
 				/>
-			</div>
-			<div class="switch">
-				<EditSwitch {editing} {...view.edit} onclick={() => setEditing(ui, !ui.editing)} />
+				<div class="switch">
+					<EditSwitch menu {editing} {...view.edit} onclick={() => setEditing(ui, !ui.editing)} />
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -320,7 +320,8 @@ and quiet outlines on the saves, the speeds and the defenses open their configur
 		border-top: 1px solid var(--nimble-ui-line);
 	}
 	.switch {
-		display: flex;
-		justify-content: flex-end;
+		margin-top: 4px;
+		padding: 4px 0 2px;
+		border-top: 1px solid var(--nimble-ui-soft);
 	}
 </style>
