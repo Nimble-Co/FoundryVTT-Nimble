@@ -8,7 +8,7 @@ import {
 	spellTier,
 } from '../shared/itemFields.ts';
 import { placeOf } from '../shared/placeOf.ts';
-import { plainText } from '../shared/plainText.ts';
+import { firstSentence, plainText } from '../shared/plainText.ts';
 import type { PoolRecovery } from '../shared/poolRecovery.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
@@ -354,6 +354,11 @@ export function spendIntent(spend: HeroDiceSpend, indices: number[]): HeroIntent
 	};
 }
 
+/** The facts first; a feature or object adds the first sentence of its description. */
+export function rowLine(facts: string[], sentence: string): string {
+	return [facts.join(', '), sentence].filter(Boolean).join(' - ');
+}
+
 const WEAPON_PROPERTIES = ['twoHanded', 'light', 'load', 'thrown', 'vicious', 'concentration'];
 
 function weaponPropertyWords(item: ItemLike, context: HeroSheetContext): string[] {
@@ -420,8 +425,8 @@ export function itemRow(
 		};
 	}
 
-	// The line holds facts only; the description shows when the row opens.
-	const summary = reason || lead.join(', ');
+	const factsOnly = weapon || (spell && lead.length > 0);
+	const summary = reason || rowLine(lead, factsOnly ? '' : firstSentence(description, name));
 
 	const facts: [string, string][] = [];
 	const costWords = [

@@ -32,3 +32,31 @@ export function plainText(html: unknown): string {
 		.map((block, index) => (index < blocks.length - 1 ? endBlock(block) : block))
 		.join(' ');
 }
+
+const SENTENCE_END = /[.!?][”"’')\]]*(?=\s|$)/g;
+const ABBREVIATION = /(?:^|[\s(])(?:pg|req|e\.g|i\.e|vs)\.$/i;
+
+function sentences(text: string): string[] {
+	const found: string[] = [];
+	let start = 0;
+	for (const match of text.matchAll(SENTENCE_END)) {
+		if (ABBREVIATION.test(text.slice(start, match.index + 1))) continue;
+		const end = match.index + match[0].length;
+		found.push(text.slice(start, end).trim());
+		start = end;
+	}
+	found.push(text.slice(start).trim());
+	return found.filter(Boolean);
+}
+
+/** The first sentence of a plain text. A first sentence that only repeats `name` is skipped. */
+export function firstSentence(text: string, name = ''): string {
+	const [first = '', second = ''] = sentences(text);
+	const repeatsName =
+		name &&
+		first
+			.replace(/[.!?]+$/, '')
+			.trim()
+			.toLowerCase() === name.trim().toLowerCase();
+	return repeatsName ? second : first;
+}

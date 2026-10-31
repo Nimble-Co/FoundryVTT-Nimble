@@ -1,4 +1,5 @@
 import { effectDuration, effectLists, sourceItem } from './effectLists.ts';
+import { firstSentence, plainText } from './plainText.ts';
 import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sheetSource.ts';
 
 const FX = 'NIMBLE.actorSheet.shared.effects';
@@ -118,7 +119,7 @@ function stateRow(
 		id: base.id,
 		name: base.name,
 		img: base.img || undefined,
-		summary: base.from || undefined,
+		summary: base.from || firstSentence(plainText(base.description), base.name) || undefined,
 		lasts: base.duration || undefined,
 		description: base.description || undefined,
 		facts: [

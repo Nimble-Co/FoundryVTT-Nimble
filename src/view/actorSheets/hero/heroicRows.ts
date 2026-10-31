@@ -5,7 +5,7 @@ import {
 	BUILT_IN_HEROIC_REACTIONS,
 	type BuiltInHeroicReaction,
 } from '#utils/incomingReactions/heroicActions.js';
-import { plainText } from '../shared/plainText.ts';
+import { firstSentence, plainText } from '../shared/plainText.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import { signedNumber } from '../shared/signedNumber.ts';
@@ -189,7 +189,9 @@ function reactionRow(
 		icon: definition.icon,
 		tag: spent ? localize(`${SHARED}.used`) : undefined,
 		state: spent ? 'used' : undefined,
-		summary: spent ? format(`${SHARED}.reason.usedThis`, { per: round }) : undefined,
+		summary: spent
+			? format(`${SHARED}.reason.usedThis`, { per: round })
+			: firstSentence(plainText(description), name),
 		description,
 		cost: {
 			...actionCost(1, context),

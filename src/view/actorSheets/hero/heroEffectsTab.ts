@@ -5,6 +5,7 @@ import {
 	effectsTab,
 	shownGroups,
 } from '../shared/effectsTab.ts';
+import { firstSentence } from '../shared/plainText.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
@@ -36,11 +37,13 @@ function inspirationRow(context: HeroSheetContext): HeroRowView {
 	const { localize, format } = context;
 	const name = localize(`${INSPIRATION}.name`);
 	const lasts = localize(`${INSPIRATION}.lasts`);
+	const description = localize(`${INSPIRATION}.description`);
 	return {
 		id: 'inspiration',
 		name,
 		icon: 'fa-solid fa-star',
-		description: localize(`${INSPIRATION}.description`),
+		summary: firstSentence(description, name),
+		description,
 		cost: { text: lasts },
 		facts: [[localize('NIMBLE.actorSheet.shared.effects.facts.lasts'), lasts]],
 		use: {

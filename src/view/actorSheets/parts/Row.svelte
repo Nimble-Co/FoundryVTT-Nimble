@@ -294,9 +294,11 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		font-weight: 500;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink-muted);
-		white-space: nowrap;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 	.sm.act {
 		color: var(--nimble-ui-action);

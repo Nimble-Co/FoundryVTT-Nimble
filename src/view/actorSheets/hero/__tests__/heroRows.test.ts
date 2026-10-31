@@ -8,7 +8,7 @@ import {
 	manaCaster,
 	spellItem,
 } from '../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
-import { itemRow, spendIntent } from '../heroRows.ts';
+import { itemRow, rowLine, spendIntent } from '../heroRows.ts';
 import type { HeroActorLike } from '../heroSource.ts';
 
 const SHARED = 'NIMBLE.actorSheet.shared';
@@ -31,12 +31,17 @@ describe('itemRow', () => {
 		expect(view.edit).toEqual({ kind: 'openItem', itemId: 'greataxe' });
 	});
 
-	it('leaves the description off the line of a feature; the open row shows it', () => {
+	it('puts the first sentence of a feature on its line', () => {
 		const hero = dicePoolHero();
 		const view = itemRow(hero, item(hero, 'rage'), dicePoolContext());
 
-		expect(view.summary).toBeUndefined();
+		expect(view.summary).toBe('Enter a rage.');
 		expect(view.description).toBe('Enter a rage.');
+	});
+
+	it('puts the facts first, then the first sentence', () => {
+		expect(rowLine(['1/Safe Rest'], 'Enter a rage.')).toBe('1/Safe Rest - Enter a rage.');
+		expect(rowLine([], '')).toBe('');
 	});
 
 	it('shows a spell with its range and damage type in words, and no numbers', () => {

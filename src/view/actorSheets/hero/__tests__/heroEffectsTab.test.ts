@@ -82,7 +82,7 @@ describe('heroEffectsTab', () => {
 				},
 				edit: null,
 			});
-			expect(row.summary, 'no line under the name').toBeUndefined();
+			expect(row.summary, 'the first sentence of the description').toBe(`${IN}.description`);
 		});
 
 		it('is not on the tab when the hero has none', () => {
@@ -147,7 +147,7 @@ describe('heroEffectsTab', () => {
 			ask: { intent: { kind: 'setCondition', conditionId: 'dazed', active: false } },
 		});
 		expect(row.description).toBe('You lose 1 action.');
-		expect(row.summary, 'the description is not on the line').toBeUndefined();
+		expect(row.summary, 'no source: the first sentence').toBe('You lose 1 action.');
 	});
 
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {
