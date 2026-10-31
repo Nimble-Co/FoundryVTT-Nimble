@@ -297,6 +297,12 @@ describe('MonsterSettingsTab', () => {
 		const gold = screen.getByRole('spinbutton', { name: /settings\.coin .*gp/ });
 
 		expect(scale).toBeDisabled();
+		expect(scale).toHaveAccessibleDescription(
+			'NIMBLE.actorSheet.monster.settings.hints.imageScale',
+		);
+		expect(
+			screen.getByRole('switch', { name: 'NIMBLE.actorSheet.monster.settings.runMacros' }),
+		).toBeDisabled();
 		expect(gold).toBeEnabled();
 		await fireEvent.change(gold, { target: { value: '7' } });
 

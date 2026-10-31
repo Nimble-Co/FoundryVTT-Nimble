@@ -284,11 +284,23 @@
 					"currencyBulk": "Automatically Include Currency Bulk",
 					"bonusSlots": "Bonus Inventory Slots",
 					"woundsBonus": "Max wounds bonus",
-					"maxWounds": "Max wounds: {max}",
 					"initiativeBonus": "Initiative bonus",
 					"passiveSkills": "Show Passive Skill Scores",
 					"spellTier": "Highest Unlocked Spell Tier",
-					"resetSpellTier": "Reset spell tier"
+					"resetSpellTier": "Reset spell tier",
+					"hints": {
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"runMacros": "When you use an item that has a macro, the macro runs.",
+						"trackSlots": "Counts what you carry against your inventory slots.",
+						"currencyBulk": "Each 500 coins use 1 inventory slot.",
+						"bonusSlots": "Adds to your inventory slots (10 + STR).",
+						"woundsBonus": "Adds to your max wounds (6). Max wounds now: {max}.",
+						"initiativeBonus": "A number or a formula that adds to your Initiative roll, for example 1d4.",
+						"passiveSkills": "Shows 10 + the modifier next to each skill on the Core tab.",
+						"spellTier": "Your class features and level set it. A number here replaces it until you reset it."
+					}
 				},
 				"inventory": {
 					"create": "Create Object",
@@ -456,7 +468,15 @@
 					"imageY": "Y-Offset (px)",
 					"imageScale": "Scale (%)",
 					"runMacros": "Execute Item Macros on Item Activation",
-					"coin": "{coin} coins"
+					"coin": "{coin} coins",
+					"hints": {
+						"monster": "To change these, turn on Edit and click Monster near the name.",
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"runMacros": "When you use an item that has a macro, the macro runs.",
+						"coins": "The coins that this creature carries. You can change them out of edit mode too."
+					}
 				}
 			}
 		},

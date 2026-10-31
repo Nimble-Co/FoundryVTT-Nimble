@@ -7,7 +7,14 @@ const SET = 'NIMBLE.actorSheet.hero.settings';
 type SetIntent<T> = (value: T) => HeroIntent;
 
 export type HeroSetting =
-	| { kind: 'check'; id: string; label: string; on: boolean; intent: SetIntent<boolean> }
+	| {
+			kind: 'check';
+			id: string;
+			label: string;
+			hint?: string;
+			on: boolean;
+			intent: SetIntent<boolean>;
+	  }
 	| {
 			kind: 'number';
 			id: string;
@@ -17,7 +24,14 @@ export type HeroSetting =
 			min?: number;
 			intent: SetIntent<number>;
 	  }
-	| { kind: 'text'; id: string; label: string; value: string; intent: SetIntent<string> }
+	| {
+			kind: 'text';
+			id: string;
+			label: string;
+			hint?: string;
+			value: string;
+			intent: SetIntent<string>;
+	  }
 	| {
 			kind: 'button';
 			id: string;
@@ -59,7 +73,11 @@ export function heroSettingsTab(
 	const group = (id: string, settings: HeroSetting[]): HeroSettingsGroup => ({
 		id,
 		label: label(`groups.${id}`),
-		settings,
+		settings: settings.map((setting) =>
+			setting.kind === 'button' || setting.hint
+				? setting
+				: { ...setting, hint: label(`hints.${setting.id}`) },
+		),
 	});
 	const tracking = flags.trackInventorySlots !== false;
 
@@ -130,7 +148,7 @@ export function heroSettingsTab(
 					kind: 'number',
 					id: 'woundsBonus',
 					label: label('woundsBonus'),
-					hint: format(`${SET}.maxWounds`, { max: String(system.attributes.wounds.max) }),
+					hint: format(`${SET}.hints.woundsBonus`, { max: String(system.attributes.wounds.max) }),
 					value: system.attributes.wounds.bonus,
 					intent: field('woundsBonus'),
 				},

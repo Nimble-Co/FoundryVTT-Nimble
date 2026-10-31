@@ -40,6 +40,17 @@ describe('heroSettingsTab', () => {
 		]);
 	});
 
+	it('gives each setting a short help line', () => {
+		const view = heroSettingsTab(blankHero(), heroContext());
+		const hints = view.groups
+			.flatMap((group) => group.settings)
+			.filter((entry) => entry.kind !== 'button' && entry.id !== 'woundsBonus')
+			.map((entry) => [entry.id, entry.kind === 'button' ? null : entry.hint]);
+
+		expect(hints).toEqual(hints.map(([id]) => [id, `${SET}.hints.${id}`]));
+		expect(hints).toHaveLength(10);
+	});
+
 	it('reads each flag, with today’s defaults when the flag is not set', () => {
 		const view = heroSettingsTab(blankHero(), heroContext());
 
@@ -78,7 +89,7 @@ describe('heroSettingsTab', () => {
 			kind: 'number',
 			id: 'woundsBonus',
 			label: `${SET}.woundsBonus`,
-			hint: `${SET}.maxWounds {"max":"6"}`,
+			hint: `${SET}.hints.woundsBonus {"max":"6"}`,
 			value: 1,
 			intent: expect.any(Function),
 		});

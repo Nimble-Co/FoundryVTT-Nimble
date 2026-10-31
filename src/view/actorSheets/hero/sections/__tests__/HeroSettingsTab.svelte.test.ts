@@ -21,16 +21,18 @@ describe('HeroSettingsTab', () => {
 	it('changes a setting only in edit mode, and exports in all modes', async () => {
 		const { perform } = renderTab(false);
 
-		expect(screen.getByRole('checkbox', { name: `${SET}.passiveSkills` })).toBeDisabled();
+		expect(screen.getByRole('switch', { name: `${SET}.passiveSkills` })).toBeDisabled();
 		expect(screen.getByRole('button', { name: `${SET}.resetSpellTier` })).toBeDisabled();
 		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.pdfExport.exportButton' }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'exportPdf' });
 	});
 
-	it('sets a flag from its check box', async () => {
+	it('sets a flag from its switch, and tells what the switch does', async () => {
 		const { perform } = renderTab(true);
+		const passive = screen.getByRole('switch', { name: `${SET}.passiveSkills` });
 
-		await fireEvent.click(screen.getByRole('checkbox', { name: `${SET}.passiveSkills` }));
+		expect(passive).toHaveAccessibleDescription(`${SET}.hints.passiveSkills`);
+		await fireEvent.click(passive);
 
 		expect(perform).toHaveBeenCalledWith({
 			kind: 'setFlag',
@@ -68,6 +70,6 @@ describe('HeroSettingsTab', () => {
 		const headings = screen.getAllByRole('heading').map((heading) => heading.textContent);
 
 		expect(headings).not.toContain(`${SET}.groups.needsAPlace`);
-		expect(screen.queryByRole('checkbox', { name: `${SET}.inspiration` })).toBeNull();
+		expect(screen.queryByRole('switch', { name: `${SET}.inspiration` })).toBeNull();
 	});
 });

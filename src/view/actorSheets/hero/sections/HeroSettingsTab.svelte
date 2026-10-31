@@ -6,9 +6,12 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 <script lang="ts">
 	import type { HeroSettingsTabProps } from '#types/components/actorSheets/HeroSettingsTab.d.ts';
 	import GroupHeading from '../../parts/GroupHeading.svelte';
+	import SettingLine from '../../parts/SettingLine.svelte';
 	import type { HeroIntent } from '../heroIntent.ts';
 
 	let { view, ui, perform }: HeroSettingsTabProps = $props();
+
+	const uid = $props.id();
 
 	const groups = $derived(
 		view.needsAPlace.settings.length ? [...view.groups, view.needsAPlace] : view.groups,
@@ -28,45 +31,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 			{#if group.hint}<p class="hint">{group.hint}</p>{/if}
 			<div class="list">
 				{#each group.settings as setting (setting.id)}
-					{#if setting.kind === 'check'}
-						<label class="line">
-							<input
-								type="checkbox"
-								checked={setting.on}
-								disabled={!ui.editing}
-								onchange={(event) => perform(setting.intent(event.currentTarget.checked))}
-							/>
-							<span>{setting.label}</span>
-						</label>
-					{:else if setting.kind === 'number'}
-						<label class="line">
-							<span class="label">
-								{setting.label}
-								{#if setting.hint}<small>{setting.hint}</small>{/if}
-							</span>
-							<input
-								type="number"
-								class="value"
-								value={setting.value}
-								min={setting.min}
-								step="1"
-								disabled={!ui.editing}
-								onchange={(event) =>
-									setNumber(setting.intent, event.currentTarget.value, setting.min)}
-							/>
-						</label>
-					{:else if setting.kind === 'text'}
-						<label class="line">
-							<span class="label">{setting.label}</span>
-							<input
-								type="text"
-								class="value"
-								value={setting.value}
-								disabled={!ui.editing}
-								onchange={(event) => perform(setting.intent(event.currentTarget.value))}
-							/>
-						</label>
-					{:else}
+					{#if setting.kind === 'button'}
 						<button
 							type="button"
 							class="nimble-u-reset-button button"
@@ -75,6 +40,45 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 						>
 							<i class={setting.icon}></i>{setting.label}
 						</button>
+					{:else}
+						{@const id = `${uid}-${setting.id}`}
+						{@const described = setting.hint ? `${id}-hint` : undefined}
+						<SettingLine {id} label={setting.label} hint={setting.hint}>
+							{#if setting.kind === 'check'}
+								<input
+									{id}
+									type="checkbox"
+									role="switch"
+									checked={setting.on}
+									disabled={!ui.editing}
+									aria-describedby={described}
+									onchange={(event) => perform(setting.intent(event.currentTarget.checked))}
+								/>
+							{:else if setting.kind === 'number'}
+								<input
+									{id}
+									type="number"
+									class="value"
+									value={setting.value}
+									min={setting.min}
+									step="1"
+									disabled={!ui.editing}
+									aria-describedby={described}
+									onchange={(event) =>
+										setNumber(setting.intent, event.currentTarget.value, setting.min)}
+								/>
+							{:else}
+								<input
+									{id}
+									type="text"
+									class="value wide"
+									value={setting.value}
+									disabled={!ui.editing}
+									aria-describedby={described}
+									onchange={(event) => perform(setting.intent(event.currentTarget.value))}
+								/>
+							{/if}
+						</SettingLine>
 					{/if}
 				{/each}
 			</div>
@@ -92,39 +96,7 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 	.list {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
-	}
-	.line {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		min-height: 32px;
-		padding: 2px 4px;
-		font-size: 0.813rem;
-		color: var(--nimble-ui-ink);
-	}
-	.label {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-	}
-	.label small {
-		font-size: 0.688rem;
-		color: var(--nimble-ui-ink-muted);
-	}
-	.value {
-		width: 96px;
-		height: 28px;
-		padding: 0 7px;
-		border: 1px solid var(--nimble-ui-line);
-		border-radius: 4px;
-		background: transparent;
-		font: inherit;
-		color: var(--nimble-ui-ink);
-	}
-	.value:disabled {
-		border-color: transparent;
-		background: var(--nimble-ui-well);
+		gap: 2px;
 	}
 	.button {
 		display: flex;
@@ -147,8 +119,8 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 		opacity: 0.5;
 	}
 	.hint {
-		margin: 0 4px 4px;
-		font-size: 0.75rem;
+		margin: 0 4px 2px;
+		font-size: 0.703rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 </style>

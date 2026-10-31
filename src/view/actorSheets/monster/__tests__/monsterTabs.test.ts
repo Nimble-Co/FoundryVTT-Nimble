@@ -134,6 +134,22 @@ describe('monsterSettingsTab', () => {
 		]);
 	});
 
+	it('gives each setting a short help line, and the groups of values one for all', () => {
+		const view = monsterSettingsTab(goblin(), monsterContext());
+
+		expect(view.groups.map((group) => [group.id, group.hint])).toEqual([
+			['monster', `${SET}.hints.monster`],
+			['image', undefined],
+			['items', undefined],
+			['coins', `${SET}.hints.coins`],
+		]);
+		expect(
+			all(view)
+				.filter((entry) => entry.kind !== 'value' && !entry.id.startsWith('coin'))
+				.map((entry) => entry.kind !== 'value' && entry.hint),
+		).toEqual(['imageX', 'imageY', 'imageScale', 'runMacros'].map((id) => `${SET}.hints.${id}`));
+	});
+
 	it('sets the image offsets and scale, and the item macros, through flags', () => {
 		const settings = all(
 			monsterSettingsTab(
