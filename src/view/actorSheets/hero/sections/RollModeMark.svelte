@@ -22,7 +22,7 @@ The mark of a stacked roll mode that rules give: one plus for each advantage, on
 	.mark {
 		display: inline-flex;
 		gap: 1px;
-		font-size: 0.643rem;
+		font-size: 0.563rem;
 		color: var(--nimble-ui-vital);
 	}
 	.mark.advantage {

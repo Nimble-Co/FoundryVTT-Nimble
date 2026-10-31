@@ -54,7 +54,7 @@ under the chips, where you change it.
 		padding: 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 5px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
@@ -62,7 +62,7 @@ under the chips, where you change it.
 		white-space: nowrap;
 	}
 	.chip b {
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		letter-spacing: 0;
 		color: var(--nimble-ui-ink);
 	}

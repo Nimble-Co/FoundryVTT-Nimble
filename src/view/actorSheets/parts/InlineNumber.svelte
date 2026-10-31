@@ -104,7 +104,7 @@ A maximum changes in the configure window. The one exception is the max HP of a 
 	.field {
 		height: 26px;
 		margin: 0;
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: var(--nimble-ui-ink);
 	}
 	.cost {

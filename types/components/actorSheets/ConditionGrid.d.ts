@@ -10,4 +10,6 @@ export interface ConditionGridProps<T extends ConditionGridOption> {
 	label: string;
 	options: T[];
 	onpick: (option: T) => void;
+	/** small pills in place of grid buttons */
+	compact?: boolean;
 }

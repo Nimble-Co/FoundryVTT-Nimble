@@ -32,7 +32,7 @@ It sticks to the top while the tab scrolls. It fills the padding of the tab body
 		background:
 			linear-gradient(var(--nimble-ui-own-background), var(--nimble-ui-own-background)),
 			var(--nimble-sheet-background);
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.3;
 	}
 	.tight {
@@ -40,7 +40,7 @@ It sticks to the top while the tab scrolls. It fills the padding of the tab body
 		margin: -8px -12px 10px;
 	}
 	.band > i {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-own);
 	}
 	.band b {
@@ -54,7 +54,7 @@ It sticks to the top while the tab scrolls. It fills the padding of the tab body
 		padding: 0 12px;
 		border-radius: 4px;
 		background: var(--nimble-crimson);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-fill-ink);
 	}

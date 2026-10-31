@@ -29,6 +29,10 @@ describe('heroBioTab', () => {
 		});
 	});
 
+	it('has the words for a detail with no value', () => {
+		expect(heroBioTab(blankHero(), heroContext()).notSet).toBe(`${BIO}.notSet`);
+	});
+
 	it('says so when there are no notes', () => {
 		expect(heroBioTab(blankHero(), heroContext()).notes.empty).toBe(`${BIO}.noNotes`);
 	});

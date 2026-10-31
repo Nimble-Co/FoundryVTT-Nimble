@@ -68,7 +68,7 @@ so the arrows and the costs stay in one column. The buttons are always visible a
 		width: 30px;
 		height: 36px;
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink-dim);
 		transition:
 			background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -93,12 +93,12 @@ so the arrows and the costs stay in one column. The buttons are always visible a
 	.sm {
 		width: 26px;
 		height: 28px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 	}
 	.touch {
 		width: 40px;
 		height: 44px;
-		font-size: 1rem;
+		font-size: 0.875rem;
 	}
 	.spacer {
 		pointer-events: none;

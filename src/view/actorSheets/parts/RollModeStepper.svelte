@@ -77,7 +77,7 @@ Never draw a three-way Disadvantage / Normal / Advantage switch.
 		padding: 0 9px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 	}
@@ -89,12 +89,12 @@ Never draw a three-way Disadvantage / Normal / Advantage switch.
 		cursor: default;
 	}
 	.seg i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	b {
 		flex: 1;
 		text-align: center;
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: var(--nimble-ui-ink);
 	}
 	.adv {

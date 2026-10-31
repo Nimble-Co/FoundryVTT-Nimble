@@ -153,7 +153,7 @@ The step keeps its own picks (the first choice of a two-step pick, the toggled d
 	}
 	.chl {
 		margin: 2px 0 1px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -161,7 +161,7 @@ The step keeps its own picks (the first choice of a two-step pick, the toggled d
 	}
 	.line {
 		margin: 0;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -188,12 +188,12 @@ The step keeps its own picks (the first choice of a two-step pick, the toggled d
 		background: var(--nimble-ui-hover);
 	}
 	.cho b {
-		font-size: 0.964rem;
+		font-size: 0.843rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 	}
 	.cho span {
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -210,7 +210,7 @@ The step keeps its own picks (the first choice of a two-step pick, the toggled d
 		padding: 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font: 700 0.929rem/1 var(--nimble-primary-font);
+		font: 700 0.813rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 		transition:
 			border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),

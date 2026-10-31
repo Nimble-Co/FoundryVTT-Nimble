@@ -1,7 +1,7 @@
 <!--
 @component
 The two font families and the text size tokens, read from the loaded stylesheets. Sizes are in rem: they follow the font scale
-setting of Foundry (14 px by default).
+setting of Foundry (16 px by default).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -45,11 +45,11 @@ setting of Foundry (14 px by default).
 	}
 	h3 {
 		margin: 16px 0 8px;
-		font-size: 1.071rem;
+		font-size: 0.937rem;
 		text-transform: uppercase;
 	}
 	code {
-		font: 600 0.857rem var(--nimble-mono-font);
+		font: 600 0.75rem var(--nimble-mono-font);
 	}
 	.value {
 		margin-left: 8px;
@@ -58,7 +58,7 @@ setting of Foundry (14 px by default).
 	}
 	.font p {
 		margin: 4px 0 12px;
-		font-size: 1.286rem;
+		font-size: 1.125rem;
 	}
 	.size {
 		display: grid;

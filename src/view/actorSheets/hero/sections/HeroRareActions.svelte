@@ -93,7 +93,7 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 		padding: 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 		white-space: nowrap;
@@ -112,11 +112,12 @@ Level Up shows in all modes; Revert Last Level Up only in edit mode. The Edit sw
 		height: 30px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.786rem;
+		font-size: 0.75rem;
 		color: var(--nimble-ui-ink);
 	}
 	.compact .secondary,
-	.compact .warning {
+	.compact .warning,
+	.compact .icon {
 		flex: none;
 		width: 28px;
 		height: 28px;

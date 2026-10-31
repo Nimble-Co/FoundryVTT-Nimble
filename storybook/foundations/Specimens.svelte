@@ -75,7 +75,7 @@ The borders, frames and code colours that a token page cannot show.
 		padding: 8px 10px;
 		border-radius: 4px;
 		background: var(--nimble-code-editor-background-color);
-		font: 1rem var(--nimble-mono-font);
+		font: 0.875rem var(--nimble-mono-font);
 		color: var(--nimble-code-text-color);
 	}
 	.op {

@@ -184,5 +184,15 @@ describe('HeroRail', () => {
 		await fireEvent.error(portrait);
 
 		expect(portrait.getAttribute('src')).toBe('icons/svg/mystery-man.svg');
+		expect(portrait).toHaveClass('placeholder');
+	});
+
+	it('shows a core icon as a quiet placeholder, and painted art as it is', () => {
+		renderRail();
+		expect(screen.getByRole('img', { name: 'Blank Hero' })).toHaveClass('placeholder');
+
+		const view = heroRail(blankHero({ img: 'worlds/ash/hero.webp' }), heroContext());
+		render(HeroRail, { view, ui: createSheetUiState('core'), perform: vi.fn() });
+		expect(screen.getAllByRole('img', { name: 'Blank Hero' })[1]).not.toHaveClass('placeholder');
 	});
 });

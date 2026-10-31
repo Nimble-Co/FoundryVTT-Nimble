@@ -11,6 +11,8 @@ export type ActorCondition = {
 	durationLabel: string;
 	durationSortMs: number | null;
 	sourceLabel: string;
+	/** the document that made the effect; null when the effect has no origin */
+	originName: string | null;
 	tooltipHtml: string;
 };
 
@@ -25,6 +27,7 @@ type ConditionEffectCandidate = {
 	durationLabel: string;
 	durationSortMs: number | null;
 	sourceName: string | null;
+	originName: string | null;
 };
 
 function escapeHtml(value: string): string {
@@ -66,6 +69,7 @@ function getBestEffectCandidate(effects: ActiveEffect[]): ConditionEffectCandida
 			durationLabel: duration.label,
 			durationSortMs: duration.sortMs,
 			sourceName: getEffectSourceName(effect),
+			originName: effect.origin ? getEffectSourceName(effect) : null,
 		};
 	});
 
@@ -77,7 +81,14 @@ function getBestEffectCandidate(effects: ActiveEffect[]): ConditionEffectCandida
 		return timedCandidates[0];
 	}
 
-	return candidates[0] ?? { durationLabel: '∞', durationSortMs: null, sourceName: null };
+	return (
+		candidates[0] ?? {
+			durationLabel: '∞',
+			durationSortMs: null,
+			sourceName: null,
+			originName: null,
+		}
+	);
 }
 
 function buildConditionTooltip(
@@ -168,7 +179,11 @@ export default function prepareActorConditions(
 			sourceLabel,
 		};
 
-		return { ...baseCondition, tooltipHtml: buildConditionTooltip(baseCondition) };
+		return {
+			...baseCondition,
+			originName: bestEffect.originName,
+			tooltipHtml: buildConditionTooltip(baseCondition),
+		};
 	});
 
 	return conditions.sort((a, b) => a.name.localeCompare(b.name));

@@ -133,7 +133,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 		gap: 8px;
 	}
 	.heading b {
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 900;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -144,7 +144,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 	}
 	.pending {
 		margin: 0;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		line-height: 1.3;
 		color: var(--nimble-ui-warn);
@@ -156,16 +156,16 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 	}
 	.now {
 		flex: none;
-		font-size: 2.43rem;
+		font-size: 2.126rem;
 		font-weight: 900;
 		line-height: 0.9;
 		color: var(--nimble-ui-action);
 	}
 	.compact .now {
-		font-size: 1.714rem;
+		font-size: 1.5rem;
 	}
 	.now > span {
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.cells {
@@ -192,7 +192,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 		width: 24px;
 		border: 1px dashed var(--nimble-ui-ring);
 		box-shadow: none;
-		font-size: 0.643rem;
+		font-size: 0.563rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.cell[data-just-spent] {
@@ -215,7 +215,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 	}
 	.hint {
 		margin: 0;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 500;
 		line-height: 1.35;
 		color: var(--nimble-ui-ink-muted);
@@ -229,7 +229,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 		padding: 0 10px;
 		border-radius: 4px;
 		background: var(--nimble-ui-end-turn);
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		font-weight: 700;
 		color: var(--nimble-ui-fill-ink);
 	}
@@ -237,7 +237,7 @@ When the actions left go down, from the sheet or from anywhere else, the cells j
 		filter: brightness(1.12);
 	}
 	.end i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	button:disabled {
 		opacity: 0.4;

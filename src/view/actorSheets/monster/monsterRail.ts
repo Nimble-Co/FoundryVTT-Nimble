@@ -7,7 +7,7 @@ import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
 
 const RAIL = 'NIMBLE.actorSheet.monster.rail';
 const SAVES: SaveKeyType[] = ['strength', 'dexterity', 'intelligence', 'will'];
-const ARMOR_SHORT: Record<MonsterArmor, string> = { none: '-', medium: 'M', heavy: 'H' };
+const ARMOR_SHORT: Record<MonsterArmor, string> = { none: '–', medium: 'M', heavy: 'H' };
 const ARMORS = Object.keys(ARMOR_SHORT) as MonsterArmor[];
 
 export interface MonsterSaveView {

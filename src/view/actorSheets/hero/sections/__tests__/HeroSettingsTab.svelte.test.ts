@@ -4,33 +4,34 @@ import {
 	blankHero,
 	heroContext,
 } from '../../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
-import { createSheetUiState } from '../../../shared/sheetUiState.ts';
 import { heroSettingsTab } from '../../heroSettingsTab.ts';
 import HeroSettingsTab from '../HeroSettingsTab.svelte';
 
 const SET = 'NIMBLE.actorSheet.hero.settings';
 
-function renderTab(editing: boolean) {
-	const ui = $state({ ...createSheetUiState('settings'), editing });
+function renderTab() {
 	const perform = vi.fn();
-	render(HeroSettingsTab, { view: heroSettingsTab(blankHero(), heroContext()), ui, perform });
+	render(HeroSettingsTab, { view: heroSettingsTab(blankHero(), heroContext()), perform });
 	return { perform };
 }
 
 describe('HeroSettingsTab', () => {
-	it('changes a setting only in edit mode, and exports in all modes', async () => {
-		const { perform } = renderTab(false);
+	it('changes a setting out of edit mode too', async () => {
+		const { perform } = renderTab();
 
-		expect(screen.getByRole('checkbox', { name: `${SET}.passiveSkills` })).toBeDisabled();
-		expect(screen.getByRole('button', { name: `${SET}.resetSpellTier` })).toBeDisabled();
+		expect(screen.getByRole('switch', { name: `${SET}.passiveSkills` })).toBeEnabled();
+		expect(screen.getByRole('spinbutton', { name: `${SET}.bonusSlots` })).toBeEnabled();
+		expect(screen.getByRole('button', { name: `${SET}.resetSpellTier` })).toBeEnabled();
 		await fireEvent.click(screen.getByRole('button', { name: 'NIMBLE.pdfExport.exportButton' }));
 		expect(perform).toHaveBeenCalledWith({ kind: 'exportPdf' });
 	});
 
-	it('sets a flag from its check box', async () => {
-		const { perform } = renderTab(true);
+	it('sets a flag from its switch, and tells what the switch does', async () => {
+		const { perform } = renderTab();
+		const passive = screen.getByRole('switch', { name: `${SET}.passiveSkills` });
 
-		await fireEvent.click(screen.getByRole('checkbox', { name: `${SET}.passiveSkills` }));
+		expect(passive).toHaveAccessibleDescription(`${SET}.hints.passiveSkills`);
+		await fireEvent.click(passive);
 
 		expect(perform).toHaveBeenCalledWith({
 			kind: 'setFlag',
@@ -40,7 +41,7 @@ describe('HeroSettingsTab', () => {
 	});
 
 	it('sets a number, and ignores one below its minimum', async () => {
-		const { perform } = renderTab(true);
+		const { perform } = renderTab();
 		const slots = screen.getByRole('spinbutton', { name: `${SET}.bonusSlots` });
 
 		await fireEvent.change(slots, { target: { value: '-1' } });
@@ -50,7 +51,7 @@ describe('HeroSettingsTab', () => {
 	});
 
 	it('sets the Initiative bonus formula', async () => {
-		const { perform } = renderTab(true);
+		const { perform } = renderTab();
 
 		await fireEvent.change(screen.getByRole('textbox', { name: `${SET}.initiativeBonus` }), {
 			target: { value: '1d4' },
@@ -64,10 +65,10 @@ describe('HeroSettingsTab', () => {
 	});
 
 	it('shows no Needs a place group when it has no entry', () => {
-		renderTab(true);
+		renderTab();
 		const headings = screen.getAllByRole('heading').map((heading) => heading.textContent);
 
 		expect(headings).not.toContain(`${SET}.groups.needsAPlace`);
-		expect(screen.queryByRole('checkbox', { name: `${SET}.inspiration` })).toBeNull();
+		expect(screen.queryByRole('switch', { name: `${SET}.inspiration` })).toBeNull();
 	});
 });

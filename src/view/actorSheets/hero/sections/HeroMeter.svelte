@@ -77,7 +77,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 						variant="label"
 						rest={editing}
 						onchange={(value) => perform({ kind: 'setHitDice', value })}
-					/><span>/{meter.max}</span>
+					/><span>/ {meter.max}</span>
 				</span>
 			{:else}
 				<span class="count">{meter.summary}</span>
@@ -137,7 +137,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 						variant="label"
 						rest={editing}
 						onchange={(value) => perform({ kind: 'setMana', value })}
-					/><span>/{meter.max}</span>
+					/><span>/ {meter.max}</span>
 				</span>
 			{/if}
 		</div>
@@ -154,7 +154,9 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 	{:else if meter.kind === 'dicePool'}
 		{@const pool = meter}
 		<div class="head">
-			<span class="label"><i class={pool.icon}></i> {pool.label} <small>d{pool.die}</small></span>
+			<span class="label" data-tooltip={pool.label}
+				><i class={pool.icon}></i> {pool.label} <small>d{pool.die}</small></span
+			>
 			<span class="count">{pool.faces.length}/{pool.max}</span>
 		</div>
 		<div class="line">
@@ -241,7 +243,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 	{:else if meter.kind === 'charges'}
 		{@const pool = meter}
 		<div class="head">
-			<span class="label">
+			<span class="label" data-tooltip={pool.label}>
 				<i class={pool.icon}></i>
 				{pool.label}
 				{#if pool.die}<small>d{pool.die}</small>{/if}
@@ -257,7 +259,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					variant="label"
 					rest={editing}
 					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: pool.id, value })}
-				/><span>/{pool.max}</span>
+				/><span>/ {pool.max}</span>
 			</span>
 		</div>
 		<div class="cells">
@@ -294,7 +296,10 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		--tone: var(--nimble-ui-vital);
 	}
 	.meter.hitDice {
-		--tone: var(--nimble-pool-dice-color);
+		--tone: var(--nimble-hit-dice-color);
+	}
+	.hitDice .pip.on {
+		background: var(--nimble-hit-dice-fill);
 	}
 	.meter.mana {
 		--tone: var(--nimble-pool-mana-color);
@@ -314,17 +319,24 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		align-items: baseline;
 		gap: 6px;
 		margin-bottom: 4px;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 900;
 		letter-spacing: 0.05em;
 		line-height: 1.15;
 		text-transform: uppercase;
 		color: var(--nimble-ui-ink-dim);
 	}
+	.label {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
 	.label i {
 		color: var(--tone);
 	}
 	.label small {
+		font-size: 0.688rem;
 		font-weight: 600;
 		letter-spacing: 0;
 		text-transform: none;
@@ -391,7 +403,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		place-items: center;
 		border-radius: 4px;
 		background: var(--tone);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 900;
 		line-height: 1;
 		color: var(--nimble-ui-tone-ink);
@@ -427,7 +439,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		height: 24px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 		color: var(--nimble-ui-ink);
 	}
 	.roll {
@@ -439,7 +451,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		padding: 0 8px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		color: var(--nimble-ui-ink);
 	}
@@ -461,7 +473,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		align-items: center;
 		gap: 6px;
 		margin-top: 6px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 	}
 	.menu .roll {

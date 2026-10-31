@@ -54,6 +54,8 @@ export abstract class ActorSheetApplication<
 
 	#props: SheetRootProps<Source, Perform> | null = null;
 
+	#controls: MutationObserver | null = null;
+
 	constructor(
 		actor: { document: Document },
 		options: SvelteApplicationRenderContext,
@@ -129,10 +131,33 @@ export abstract class ActorSheetApplication<
 			});
 			this.watch();
 		});
+		const header = this.element.querySelector<HTMLElement>(':scope > .window-header');
+		if (header) {
+			this.#controls = new MutationObserver(() => this.#fitControls(header));
+			this.#controls.observe(header, {
+				childList: true,
+				subtree: true,
+				attributeFilter: ['class'],
+			});
+			requestAnimationFrame(() => this.#fitControls(header));
+		}
+	}
+
+	/** Keeps `--nimble-sheet-controls` at the width of the window controls, to which modules can add. */
+	#fitControls(header: HTMLElement): void {
+		if (this.minimized) return;
+		const lefts = [...header.querySelectorAll<HTMLElement>('.header-control')]
+			.filter((control) => control.offsetParent !== null)
+			.map((control) => control.getBoundingClientRect().left);
+		if (!lefts.length) return;
+		const width = Math.ceil(header.getBoundingClientRect().right - Math.min(...lefts)) + 4;
+		this.element.style.setProperty('--nimble-sheet-controls', `${width}px`);
 	}
 
 	protected override _onClose(options: Parameters<ActorSheet['_onClose']>[0]): void {
 		super._onClose(options);
+		this.#controls?.disconnect();
+		this.#controls = null;
 		this.#stopEffects?.();
 		this.#stopEffects = null;
 	}

@@ -47,7 +47,7 @@ It is a bar, not a second window. Foundry has no undo, so the question comes bef
 		border: 1px solid var(--nimble-ui-own);
 		border-radius: 4px;
 		background: var(--nimble-ui-own-background);
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink);
 	}
@@ -58,7 +58,7 @@ It is a bar, not a second window. Foundry has no undo, so the question comes bef
 		height: 26px;
 		padding: 0 10px;
 		border-radius: 4px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 	}
 	.yes {

@@ -97,9 +97,27 @@ describe('HeroEffectsTab', () => {
 		expect(document.activeElement).toBe(prone);
 	});
 
-	it('says None in each empty group', () => {
+	it('says once that there are no effects, with no empty groups', () => {
 		renderTab(heroEffectsTab(blankHero(), heroContext()));
 
-		expect(screen.getAllByText(`${FX}.none`)).toHaveLength(3);
+		expect(screen.getAllByText(`${FX}.noEffects`)).toHaveLength(1);
+		expect(screen.queryByText(`${FX}.none`)).toBeNull();
+	});
+
+	it('marks a condition that is on with a check', () => {
+		renderTab();
+
+		expect(
+			screen.getByRole('button', { name: 'Dazed', pressed: true }).querySelector('.fa-check'),
+		).not.toBeNull();
+		expect(
+			screen.getByRole('button', { name: 'Prone', pressed: false }).querySelector('.fa-check'),
+		).toBeNull();
+	});
+
+	it('has no Expand all when no row can open', () => {
+		renderTab(heroEffectsTab(blankHero(), heroContext()));
+
+		expect(screen.queryByRole('button', { name: /expandAll/ })).toBeNull();
 	});
 });

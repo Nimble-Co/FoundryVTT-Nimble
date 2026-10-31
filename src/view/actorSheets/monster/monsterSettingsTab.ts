@@ -9,21 +9,29 @@ type SetIntent<T> = (value: T) => MonsterIntent;
 
 export type MonsterSetting =
 	| { kind: 'value'; id: string; label: string; value: string }
-	| { kind: 'check'; id: string; label: string; on: boolean; intent: SetIntent<boolean> }
+	| {
+			kind: 'check';
+			id: string;
+			label: string;
+			hint?: string;
+			on: boolean;
+			intent: SetIntent<boolean>;
+	  }
 	| {
 			kind: 'number';
 			id: string;
 			label: string;
+			hint?: string;
 			value: number;
 			min?: number;
-			/** you type it out of edit mode too */
-			always?: boolean;
 			intent: SetIntent<number>;
 	  };
 
 export interface MonsterSettingsGroup {
 	id: string;
 	label: string;
+	/** one help line for a group of values */
+	hint?: string;
 	settings: MonsterSetting[];
 }
 
@@ -48,6 +56,14 @@ export function monsterSettingsTab(
 		label: label(`groups.${id}`),
 		settings,
 	});
+	/** a group whose settings each have a help line */
+	const helped = (id: string, settings: MonsterSetting[]): MonsterSettingsGroup =>
+		group(
+			id,
+			settings.map((setting) =>
+				setting.kind === 'value' ? setting : { ...setting, hint: label(`hints.${setting.id}`) },
+			),
+		);
 	const value = (id: string, text: string): MonsterSetting => ({
 		kind: 'value',
 		id,
@@ -57,13 +73,16 @@ export function monsterSettingsTab(
 
 	return {
 		groups: [
-			group('monster', [
-				value('monsterType', localize(`TYPES.Actor.${actor.type}`)),
-				value('level', system.details.level),
-				value('size', context.labels.sizes[system.attributes.sizeCategory] ?? ''),
-				value('creatureType', system.details.creatureType),
-			]),
-			group('image', [
+			{
+				...group('monster', [
+					value('monsterType', localize(`TYPES.Actor.${actor.type}`)),
+					value('level', system.details.level),
+					value('size', context.labels.sizes[system.attributes.sizeCategory] ?? ''),
+					value('creatureType', system.details.creatureType),
+				]),
+				hint: label('hints.monster'),
+			},
+			helped('image', [
 				{
 					kind: 'number',
 					id: 'imageX',
@@ -86,7 +105,7 @@ export function monsterSettingsTab(
 					intent: flag('actorImageScale'),
 				},
 			]),
-			group('items', [
+			helped('items', [
 				{
 					kind: 'check',
 					id: 'runMacros',
@@ -95,20 +114,26 @@ export function monsterSettingsTab(
 					intent: flag('automaticallyExecuteAvailableMacros'),
 				},
 			]),
-			group(
-				'coins',
-				COINS.map((coin) => ({
-					kind: 'number',
-					id: `coin-${coin}`,
-					label: format(`${SET}.coin`, {
-						coin: localize(`NIMBLE.currencyAbbreviations.${coin}`),
-					}),
-					value: Number(system.currency[coin] ?? 0),
-					min: 0,
-					always: true,
-					intent: (amount: number): MonsterIntent => ({ kind: 'setCurrency', coin, value: amount }),
-				})),
-			),
+			{
+				...group(
+					'coins',
+					COINS.map((coin) => ({
+						kind: 'number',
+						id: `coin-${coin}`,
+						label: format(`${SET}.coin`, {
+							coin: localize(`NIMBLE.currencyAbbreviations.${coin}`),
+						}),
+						value: Number(system.currency[coin] ?? 0),
+						min: 0,
+						intent: (amount: number): MonsterIntent => ({
+							kind: 'setCurrency',
+							coin,
+							value: amount,
+						}),
+					})),
+				),
+				hint: label('hints.coins'),
+			},
 		],
 	};
 }

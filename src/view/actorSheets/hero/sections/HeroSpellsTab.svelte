@@ -43,6 +43,7 @@ In edit mode the bar has Create Spell. The switch saves its choice on the charac
 
 <style>
 	.bar {
+		width: var(--nimble-columns-width, auto);
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
@@ -58,7 +59,7 @@ In edit mode the bar has Create Spell. The switch saves its choice on the charac
 		padding: 0 10px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.create:hover,
@@ -69,11 +70,11 @@ In edit mode the bar has Create Spell. The switch saves its choice on the charac
 		outline: none;
 	}
 	.create i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	.empty {
 		margin: 6px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 </style>

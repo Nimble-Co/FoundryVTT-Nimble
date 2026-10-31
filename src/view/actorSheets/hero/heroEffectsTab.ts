@@ -1,5 +1,11 @@
 import { effectLists, effectsOnCount } from '../shared/effectLists.ts';
-import { type EffectRowView, type EffectsTabView, effectsTab } from '../shared/effectsTab.ts';
+import {
+	type EffectRowView,
+	type EffectsTabView,
+	effectsTab,
+	shownGroups,
+} from '../shared/effectsTab.ts';
+import { firstSentence } from '../shared/plainText.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { HeroRowGroup, HeroRowView } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
@@ -7,10 +13,10 @@ import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 const INSPIRATION = 'NIMBLE.actorSheet.hero.effects.inspiration';
 
 export interface HeroEffectsTabView {
-	/** Active effects, Conditions on you, Passive effects: always all three */
+	/** Active effects, Conditions on you, Passive effects: only the groups that have rows */
 	groups: HeroRowGroup[];
-	/** the line in an empty group */
-	none: string;
+	/** the one line when no group has a row */
+	empty: string | null;
 	conditions: EffectsTabView['conditions'];
 }
 
@@ -31,12 +37,13 @@ function inspirationRow(context: HeroSheetContext): HeroRowView {
 	const { localize, format } = context;
 	const name = localize(`${INSPIRATION}.name`);
 	const lasts = localize(`${INSPIRATION}.lasts`);
+	const description = localize(`${INSPIRATION}.description`);
 	return {
 		id: 'inspiration',
 		name,
 		icon: 'fa-solid fa-star',
-		summary: localize(`${INSPIRATION}.summary`),
-		description: localize(`${INSPIRATION}.description`),
+		summary: firstSentence(description, name),
+		description,
 		cost: { text: lasts },
 		facts: [[localize('NIMBLE.actorSheet.shared.effects.facts.lasts'), lasts]],
 		use: {
@@ -57,6 +64,7 @@ export function heroEffectsTab(
 	context: HeroSheetContext,
 ): HeroEffectsTabView {
 	const view = effectsTab({
+		keepEmpty: true,
 		effects: actor.effects,
 		items: actor.items,
 		conditions: context.conditions,
@@ -71,5 +79,5 @@ export function heroEffectsTab(
 		const withInspiration = byName([...rows, inspirationRow(context)]);
 		return { ...group, note: String(withInspiration.length), rows: withInspiration };
 	});
-	return { ...view, groups };
+	return { ...view, ...shownGroups(groups, context.localize) };
 }

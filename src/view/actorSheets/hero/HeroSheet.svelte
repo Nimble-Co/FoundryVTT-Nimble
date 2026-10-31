@@ -7,6 +7,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 <script lang="ts">
 	import { setEditing, showTab } from '../shared/sheetUiState.ts';
 	import type { HeroSheetProps } from '#types/components/actorSheets/HeroSheet.d.ts';
+	import { tabFit } from '../parts/tabFit.ts';
 	import SheetTabs from '../parts/SheetTabs.svelte';
 	import EditBand from '../shared/EditBand.svelte';
 	import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
@@ -71,8 +72,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		ui.tab === 'settings' ? heroSettingsTab(current.actor, current.context) : null,
 	);
 	const wideMain = $derived(mainWidth >= 620);
-	const slot = $derived(mainWidth / 8);
-	const tabFit = $derived(slot >= 78 ? 'inline' : slot >= 50 ? 'stacked' : 'icon');
+	const fit = $derived(tabFit(mainWidth, frame.tabs.length));
 </script>
 
 <div class="hero" class:wide class:narrow={!wide} bind:this={root}>
@@ -82,17 +82,17 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		<HeroHeader view={rail} {ui} {perform} />
 	{/if}
 	<main>
-		<nav class="tabs">
+		<div class="tabs">
 			<SheetTabs
 				tabs={frame.tabs}
 				value={ui.tab}
-				fit={tabFit}
+				{fit}
 				label={frame.tabsLabel}
 				onchange={(id) => showTab(ui, id)}
 			/>
-		</nav>
+		</div>
 		{#if !wide}<HeroStrip meters={rail.meters} {ui} {perform} />{/if}
-		<div class="body">
+		<div class="body" class:fill={!!bio}>
 			{#if ui.editing}
 				<EditBand {...frame.editBand} ondone={() => setEditing(ui, false)} />
 			{/if}
@@ -111,7 +111,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			{:else if bio}
 				<HeroBioTab view={bio} {ui} {perform} />
 			{:else if settings}
-				<HeroSettingsTab view={settings} {ui} {perform} />
+				<HeroSettingsTab view={settings} {perform} />
 			{/if}
 		</div>
 	</main>
@@ -125,8 +125,23 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		overflow: hidden;
 		background: var(--nimble-sheet-background);
 		color: var(--nimble-ui-ink);
-		font-size: 1rem;
+		font-size: 0.875rem;
 		line-height: 1.25;
+		--nimble-column: 340px;
+		--nimble-column-gap: 24px;
+		/* the list tabs: columns of one width that never stretch, so a row keeps its width when the window grows;
+		   one column fills the tab. --nimble-columns-width is the width of the columns that fit. */
+		--nimble-columns-width: max(
+			calc(
+				round(
+						down,
+						100% + var(--nimble-column-gap),
+						var(--nimble-column) + var(--nimble-column-gap)
+					) -
+					var(--nimble-column-gap)
+			),
+			min(100%, calc(2 * var(--nimble-column) + var(--nimble-column-gap) - 1px))
+		);
 	}
 	.narrow {
 		flex-direction: column;
@@ -144,6 +159,9 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		border-bottom: 1px solid var(--nimble-ui-soft);
 		white-space: nowrap;
 	}
+	.wide .tabs {
+		padding-right: var(--nimble-sheet-controls, 6px);
+	}
 	.body {
 		flex: 1;
 		min-height: 0;
@@ -152,6 +170,10 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		padding: 10px 14px 14px;
 		scrollbar-width: thin;
 		scrollbar-color: var(--nimble-ui-ring) transparent;
+	}
+	.body.fill {
+		display: flex;
+		flex-direction: column;
 	}
 	.hero :global([data-row-id][data-flash]) {
 		animation: hero-flash 1.2s ease-out;

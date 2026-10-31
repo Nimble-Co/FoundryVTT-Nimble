@@ -111,13 +111,13 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 		background: var(--nimble-ui-chrome);
 		border: 1px solid var(--nimble-parchment);
 		border-radius: 5px;
-		font-size: 1.571rem;
+		font-size: 1.375rem;
 		font-weight: 600;
 		line-height: 1;
 		color: hsl(36, 58%, 90%);
 	}
 	.pv small {
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: var(--nimble-bronze);
 	}
 	.pv small :global(.num) {
@@ -127,7 +127,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 		margin-top: -1px;
 		padding: 2px 14px 3px;
 		background: var(--nimble-bronze);
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -160,13 +160,13 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 	}
 	.blk b {
 		padding: 5px 8px 4px;
-		font-size: 1.571rem;
+		font-size: 1.375rem;
 		font-weight: 600;
 		line-height: 1;
 		color: var(--nimble-ui-ink);
 	}
 	.blk b small {
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-dim);
 	}
@@ -179,7 +179,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 	.blk > span {
 		padding: 2px 0 3px;
 		background: var(--nimble-bronze);
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		line-height: 1;
@@ -187,7 +187,7 @@ the strip crimson; `dying` also turns the frame to the vital colour. `compact` i
 		color: #181821;
 	}
 	.compact b {
-		font-size: 1.286rem;
+		font-size: 1.125rem;
 	}
 	.compact b :global(.num) {
 		height: 24px;

@@ -103,7 +103,7 @@ and the `nimble-chrome` set (the dark rail of the actor sheets, in both themes).
 	}
 	h3 {
 		margin: 16px 0 6px;
-		font-size: 1.071rem;
+		font-size: 0.937rem;
 		text-transform: uppercase;
 	}
 	h3 small {
@@ -131,13 +131,13 @@ and the `nimble-chrome` set (the dark rail of the actor sheets, in both themes).
 	}
 	.head span {
 		padding: 6px 8px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 700;
 		text-transform: uppercase;
 	}
 	.name {
 		padding: 8px;
-		font: 600 0.857rem var(--nimble-mono-font);
+		font: 600 0.75rem var(--nimble-mono-font);
 		word-break: break-all;
 		user-select: all;
 	}
@@ -151,7 +151,7 @@ and the `nimble-chrome` set (the dark rail of the actor sheets, in both themes).
 		background: var(--nimble-ui-chrome);
 	}
 	.cell code {
-		font: 0.786rem var(--nimble-mono-font);
+		font: 0.688rem var(--nimble-mono-font);
 		word-break: break-all;
 		color: var(--nimble-ui-ink);
 	}

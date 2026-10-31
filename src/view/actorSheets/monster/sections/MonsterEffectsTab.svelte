@@ -31,13 +31,14 @@ The arrow keys, Home and End move the focus in the condition grid.
 	}
 </script>
 
-<div class="bar">
-	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
-</div>
+{#if rowIds.length}
+	<div class="bar">
+		<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
+	</div>
+{/if}
 {#each view.groups as group, index (group.id)}
 	<section class="group">
 		<GroupHeading label={group.label} note={group.note} noteTone="muted" flush={index === 0} />
-		{#if !group.rows.length}<p class="none">{view.none}</p>{/if}
 		{#each group.rows as row (row.id)}
 			{@const asking =
 				row.use?.kind === 'ask' && ui.confirm === `ask:${row.id}` ? row.use.ask : null}
@@ -76,12 +77,22 @@ The arrow keys, Home and End move the focus in the condition grid.
 		{/each}
 	</section>
 {/each}
+{#if view.empty}<p class="empty">{view.empty}</p>{/if}
 <GroupHeading label={view.conditions.label} />
 <ConditionGrid
 	label={view.conditions.label}
 	options={view.conditions.options}
 	onpick={(condition) => perform(condition.intent)}
 />
+{#if view.conditions.other.options.length}
+	<GroupHeading label={view.conditions.other.label} plain />
+	<ConditionGrid
+		label={view.conditions.other.label}
+		options={view.conditions.other.options}
+		onpick={(condition) => perform(condition.intent)}
+		compact
+	/>
+{/if}
 
 <style>
 	.bar {
@@ -94,9 +105,9 @@ The arrow keys, Home and End move the focus in the condition grid.
 	.group {
 		margin-bottom: 8px;
 	}
-	.none {
-		margin: 6px 4px;
-		font-size: 0.929rem;
+	.empty {
+		margin: 0 4px 4px;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.ask {

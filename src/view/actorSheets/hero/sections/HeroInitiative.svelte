@@ -30,7 +30,7 @@ and rolls to chat out of combat. It waits while a roll is on its way.
 		height: 34px;
 		border-radius: 4px;
 		background: var(--nimble-crimson);
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		font-weight: 800;
 		color: var(--nimble-ui-fill-ink);
 	}

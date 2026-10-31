@@ -194,6 +194,10 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		position: relative;
 		pointer-events: none;
 	}
+	/* Foundry stops the pointer on button children; the cost marks need it for their tooltips */
+	.row:not(.dim) .main:not(.stretch) :global(.cost [data-tooltip]) {
+		pointer-events: auto;
+	}
 	.out .use,
 	.use[aria-disabled='true'] {
 		cursor: default;
@@ -204,7 +208,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		padding: 0 5px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 3px;
-		font: 800 0.75rem/14px var(--nimble-primary-font);
+		font: 800 0.656rem/14px var(--nimble-primary-font);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		white-space: nowrap;
@@ -264,7 +268,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		flex-wrap: wrap;
 		gap: 2px 7px;
 		min-width: 0;
-		font-size: 1rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		line-height: 1.2;
 		color: var(--nimble-ui-ink);
@@ -273,7 +277,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		font-style: normal;
 		padding: 0 5px;
 		border-radius: 3px;
-		font: 800 0.75rem/16px var(--nimble-primary-font);
+		font: 800 0.656rem/16px var(--nimble-primary-font);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		white-space: nowrap;
@@ -286,13 +290,15 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		color: #fff;
 	}
 	.sm {
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		font-weight: 500;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink-muted);
-		white-space: nowrap;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 	.sm.act {
 		color: var(--nimble-ui-action);
@@ -358,7 +364,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 	.text {
 		margin: 0;
 		max-width: 68ch;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		line-height: 1.45;
 		color: var(--nimble-ui-ink);
 		text-wrap: pretty;
@@ -374,7 +380,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		grid-template-columns: max-content minmax(0, 1fr);
 		gap: 4px 10px;
 		margin: 0;
-		font-size: 0.893rem;
+		font-size: 0.781rem;
 		line-height: 1.3;
 	}
 	dl div {

@@ -70,11 +70,11 @@ The parent must be positioned (`position: relative`). Every outline is 5 px from
 		padding: 0 7px;
 		border-radius: 3px;
 		background: var(--nimble-crimson);
-		font: 700 0.821rem/1 var(--nimble-primary-font);
+		font: 700 0.718rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-fill-ink);
 		white-space: nowrap;
 	}
 	.tag i {
-		font-size: 0.643rem;
+		font-size: 0.563rem;
 	}
 </style>

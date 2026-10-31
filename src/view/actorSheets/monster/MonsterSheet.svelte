@@ -72,7 +72,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 			{:else if sheet.notes}
 				<MonsterNotesTab view={sheet.notes} {ui} />
 			{:else if sheet.settings}
-				<MonsterSettingsTab view={sheet.settings} {ui} {perform} />
+				<MonsterSettingsTab view={sheet.settings} {perform} />
 			{/if}
 		</div>
 	</main>
@@ -86,8 +86,23 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		overflow: hidden;
 		background: var(--nimble-sheet-background);
 		color: var(--nimble-ui-ink);
-		font-size: 1rem;
+		font-size: 0.875rem;
 		line-height: 1.25;
+		--nimble-column: 320px;
+		--nimble-column-gap: 18px;
+		/* the list tabs: columns of one width that never stretch, so a row keeps its width when the window grows;
+		   one column fills the tab. --nimble-columns-width is the width of the columns that fit. */
+		--nimble-columns-width: max(
+			calc(
+				round(
+						down,
+						100% + var(--nimble-column-gap),
+						var(--nimble-column) + var(--nimble-column-gap)
+					) -
+					var(--nimble-column-gap)
+			),
+			min(100%, calc(2 * var(--nimble-column) + var(--nimble-column-gap) - 1px))
+		);
 	}
 	.narrow {
 		flex-direction: column;

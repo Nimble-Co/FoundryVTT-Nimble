@@ -9,6 +9,8 @@ const DETAILS: HeroDetail[] = ['age', 'height', 'weight', 'gender'];
 
 export interface HeroBioTabView {
 	fields: { detail: HeroDetail; label: string; value: string }[];
+	/** shows in place of an empty detail */
+	notSet: string;
 	/** the `prose-mirror` editor: it saves to `field` through the sheet form */
 	notes: { label: string; field: string; value: string; enriched: string; empty: string | null };
 }
@@ -23,6 +25,7 @@ export function heroBioTab(actor: HeroActorLike, context: HeroSheetContext): Her
 			label: localize(`${BIO}.${detail}`),
 			value: details[detail],
 		})),
+		notSet: localize(`${BIO}.notSet`),
 		notes: {
 			label: localize(`${BIO}.notes`),
 			field: 'system.details.notes',

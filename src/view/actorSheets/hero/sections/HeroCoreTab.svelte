@@ -158,7 +158,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		padding: 0 6px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		letter-spacing: 0;
 		text-transform: none;
 		color: var(--nimble-ui-ink-muted);
@@ -172,7 +172,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		outline: none;
 	}
 	.configure i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	.abilities {
 		display: grid;
@@ -195,7 +195,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 			var(--nimble-ability-tab-base)
 		);
 		text-align: center;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		line-height: 1;
@@ -208,7 +208,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		justify-content: center;
 		gap: 3px;
 		padding: 6px 0 4px;
-		font-size: 1.286rem;
+		font-size: 1.125rem;
 		font-weight: 600;
 		line-height: 1.1;
 		color: var(--nimble-ui-ink);
@@ -220,12 +220,12 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		gap: 4px;
 		min-height: 26px;
 		border-top: 1px solid var(--nimble-ui-soft);
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.save span {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -250,7 +250,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		align-items: center;
 		min-height: 28px;
 		padding: 0 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink);
 	}
 	/* a line between two skills of a column: the eye goes from the name to the number at the far end */
@@ -258,7 +258,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		border-top: 1px solid var(--nimble-ui-soft);
 	}
 	.ability-label {
-		font-size: 0.75rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.04em;
 		text-align: center;
@@ -282,7 +282,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		flex-direction: column;
 		gap: 6px;
 		margin: 6px 0 0;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 	}
 	.editing .proficiencies {
 		gap: 8px;

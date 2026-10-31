@@ -46,7 +46,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 				<h2>{view.name}</h2>
 			{/if}
 			<span class="meta">
-				<span>{view.meta}</span>
+				<span data-tooltip={view.metaHint}>{view.meta}</span>
 				{#if editing}
 					<EditZone
 						inline
@@ -90,6 +90,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		padding: 9px 10px;
 		background: var(--nimble-ui-chrome);
 		border-bottom: 1px solid var(--nimble-ui-line);
+		--seal-right: calc(var(--nimble-sheet-controls, 0px) + 8px);
 	}
 	.fade {
 		position: absolute;
@@ -110,7 +111,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 2px 7px;
-		padding-right: 58px;
+		padding-right: calc(var(--nimble-sheet-controls, 58px) + 34px);
 	}
 	.editing .who {
 		column-gap: 15px;
@@ -118,7 +119,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 	h2 {
 		margin: 0;
 		border: none;
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		line-height: 1.1;
 		color: var(--nimble-ui-highlight);
@@ -129,7 +130,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		flex: 0 1 150px;
 		min-width: 0;
 		border-bottom: 1px dashed var(--nimble-ui-ring);
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		color: var(--nimble-ui-highlight);
 		cursor: text;
@@ -141,7 +142,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		position: relative;
 		display: inline-flex;
 		align-items: center;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 	.plates {
@@ -165,7 +166,7 @@ as icons, armor and speed, Initiative and the turn. It stays dark in both themes
 		height: 28px;
 		border: 1px solid var(--nimble-ui-ring);
 		border-radius: 4px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		color: var(--nimble-ui-ink);
 	}
 	.icon:hover {

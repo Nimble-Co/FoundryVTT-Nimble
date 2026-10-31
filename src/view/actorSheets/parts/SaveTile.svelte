@@ -69,23 +69,24 @@ Put it inside `nimble-chrome` on the rail. `stripTone="card"` is the NPC rail: w
 		align-items: center;
 		justify-content: center;
 		padding: 4px 0 3px;
-		font-size: 1.071rem;
+		font-size: 0.937rem;
 		font-weight: 600;
 	}
 	.k {
 		padding: 2px 0;
 		text-align: center;
-		font-size: 0.679rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		background: hsla(41, 18%, 54%, 0.25);
 	}
 	.card .k {
 		background: var(--nimble-card-border-color);
 	}
 	.adv .k {
-		background: var(--nimble-roll-success-background-color);
-		color: var(--nimble-roll-success-color);
+		background: var(--nimble-ui-action-background);
+		color: var(--nimble-ui-action);
 	}
 	.dis .k {
 		background: hsla(0, 60%, 40%, 0.35);

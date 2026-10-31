@@ -3,7 +3,7 @@
 The right side of a row: the uses left with when they come back, the pool cost (mana, dice), Free for a free use,
 and one green bar for each action. An outlined bar is an action that is spent this turn.
 NPC cards use the same part for the range and the uses, with `compact`: tighter spacing and smaller uses.
-The pool kind picks the colour of the pool cost.
+The pool kind picks the colour of the pool cost. The uses, the mana cost and the action bars have a tooltip.
 -->
 <script lang="ts">
 	import localize from '#utils/localize.js';
@@ -20,28 +20,28 @@ The pool kind picks the colour of the pool cost.
 		actionsSpent = 0,
 		compact = false,
 		outTone = 'vital',
-		hints = false,
 	}: RowCostProps = $props();
 
 	const bars = $derived(Array.from({ length: actions }, (_, i) => i >= actions - actionsSpent));
 
 	const usesHint = (u: RowUses) =>
-		hints
-			? localize(
-					u.per
-						? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
-						: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
-					{ left: String(u.left), max: String(u.max), per: u.per ?? '' },
-				)
-			: undefined;
+		localize(
+			u.per
+				? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
+				: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
+			{ left: String(u.left), max: String(u.max), per: u.per ?? '' },
+		);
 	const actionsHint = $derived(
-		hints
-			? localize(
-					actions === 1
-						? 'NIMBLE.actorSheet.parts.rowCost.action'
-						: 'NIMBLE.actorSheet.parts.rowCost.actions',
-					{ count: String(actions) },
-				)
+		localize(
+			actions === 1
+				? 'NIMBLE.actorSheet.parts.rowCost.action'
+				: 'NIMBLE.actorSheet.parts.rowCost.actions',
+			{ count: String(actions) },
+		),
+	);
+	const poolHint = $derived(
+		pool?.kind === 'mana'
+			? localize('NIMBLE.actorSheet.parts.rowCost.mana', { amount: String(pool.amount) })
 			: undefined,
 	);
 </script>
@@ -54,7 +54,7 @@ The pool kind picks the colour of the pool cost.
 		</span>
 	{/each}
 	{#if pool}
-		<span class="pool {pool.kind}" class:muted={pool.muted}
+		<span class="pool {pool.kind}" class:muted={pool.muted} data-tooltip={poolHint}
 			><i class={pool.icon}></i>{pool.amount}</span
 		>
 	{/if}
@@ -78,19 +78,19 @@ The pool kind picks the colour of the pool cost.
 		gap: 6px;
 	}
 	.tx {
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink-muted);
 	}
 	.us {
 		display: flex;
 		align-items: baseline;
-		font: 700 0.893rem/1 var(--nimble-primary-font);
+		font: 700 0.781rem/1 var(--nimble-primary-font);
 		font-variant-numeric: tabular-nums;
 		color: var(--nimble-ui-ink);
 	}
 	.us small {
 		margin-left: 3px;
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -105,7 +105,7 @@ The pool kind picks the colour of the pool cost.
 	}
 	.compact .us {
 		margin: 0 3px;
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 		line-height: 1.25;
 	}
 	.pool {
@@ -113,7 +113,7 @@ The pool kind picks the colour of the pool cost.
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		font: 800 0.929rem/1 var(--nimble-primary-font);
+		font: 800 0.813rem/1 var(--nimble-primary-font);
 		color: color-mix(in srgb, var(--tone) var(--nimble-ui-tone-mix), #000);
 	}
 	.mana {
@@ -135,10 +135,10 @@ The pool kind picks the colour of the pool cost.
 		color: var(--nimble-ui-ink-muted);
 	}
 	.pool i {
-		font-size: 0.857rem;
+		font-size: 0.75rem;
 	}
 	.free {
-		font: 800 0.786rem/1 var(--nimble-primary-font);
+		font: 800 0.688rem/1 var(--nimble-primary-font);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--nimble-ui-action);
@@ -147,7 +147,7 @@ The pool kind picks the colour of the pool cost.
 		padding: 0 5px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 3px;
-		font: 600 0.786rem/18px var(--nimble-primary-font);
+		font: 600 0.688rem/18px var(--nimble-primary-font);
 		color: var(--nimble-ui-ink-muted);
 	}
 	.compact .rng {

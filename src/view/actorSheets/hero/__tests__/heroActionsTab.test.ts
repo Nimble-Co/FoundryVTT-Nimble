@@ -165,6 +165,16 @@ describe('heroActionsTab', () => {
 			]);
 		});
 
+		it('puts the first sentence of a reaction that is not spent on its line', () => {
+			const defend = row(
+				heroActionsTab(blankHero(), heroContext()).reactionGroups,
+				'heroic-defend',
+			);
+
+			expect(defend?.description).toBeTruthy();
+			expect(defend?.summary).toBe(defend?.description);
+		});
+
 		it('names the target in the choice step and never blocks without one', () => {
 			const none = row(heroActionsTab(blankHero(), heroContext()).reactionGroups, 'heroic-defend');
 			const one = row(

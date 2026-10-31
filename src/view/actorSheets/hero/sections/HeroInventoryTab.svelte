@@ -74,6 +74,7 @@ a stored object comes out of its container.
 
 <style>
 	.bar {
+		width: var(--nimble-columns-width, auto);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -88,7 +89,7 @@ a stored object comes out of its container.
 		padding: 0 7px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 		white-space: nowrap;
 	}
@@ -107,7 +108,7 @@ a stored object comes out of its container.
 		background: linear-gradient(135deg, #d19c35, #f7e6c5 50%, #e8b558);
 	}
 	.cl {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -120,7 +121,7 @@ a stored object comes out of its container.
 		padding: 0 10px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.create:hover,
@@ -131,7 +132,7 @@ a stored object comes out of its container.
 		outline: none;
 	}
 	.create i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 	.slots {
 		margin-left: auto;
@@ -146,7 +147,7 @@ a stored object comes out of its container.
 	}
 	.empty {
 		margin: 6px 4px;
-		font-size: 0.929rem;
+		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}
 </style>

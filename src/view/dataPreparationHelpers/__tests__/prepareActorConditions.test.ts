@@ -5,15 +5,18 @@ function createEffect({
 	statuses,
 	duration,
 	sourceName,
+	origin = null,
 }: {
 	statuses: string[];
 	duration?: { remaining?: number; seconds?: number; rounds?: number; turns?: number };
 	sourceName?: string;
+	origin?: string | null;
 }) {
 	return {
 		statuses: new Set(statuses),
 		duration,
 		sourceName,
+		origin,
 	} as unknown as ActiveEffect;
 }
 
@@ -56,7 +59,12 @@ describe('prepareActorConditions', () => {
 				overlay: new Set(['blinded']),
 			},
 			effects: [
-				createEffect({ statuses: ['blinded'], duration: { rounds: 3 }, sourceName: 'Spell' }),
+				createEffect({
+					statuses: ['blinded'],
+					duration: { rounds: 3 },
+					sourceName: 'Spell',
+					origin: 'Actor.a.Item.spell',
+				}),
 			],
 		} as unknown as Actor.Implementation;
 
@@ -66,10 +74,25 @@ describe('prepareActorConditions', () => {
 		expect(result[0].isOverlay).toBe(true);
 		expect(result[0].durationLabel).toBe('3r');
 		expect(result[0].sourceLabel).toBe('Spell');
+		expect(result[0].originName).toBe('Spell');
 		expect(result[0].descriptionHtml).toBe(CONFIG.NIMBLE.conditionDescriptions.blinded);
 		expect(result[0].tooltipHtml).toContain('nimble-tooltip__enricher-heading');
 		expect(result[0].tooltipHtml).toContain('Duration: 3 Rounds');
 		expect(result[0].tooltipHtml).toContain('Source: Spell');
+	});
+
+	it('gives no origin name for an effect with no origin, as a token status toggle makes', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+		const actor = {
+			conditionsMetadata: { active: new Set(['marked']), overlay: new Set() },
+			effects: [createEffect({ statuses: ['marked'], sourceName: 'None' })],
+		} as unknown as Actor.Implementation;
+
+		expect(prepareActorConditions(actor)[0].originName).toBeNull();
 	});
 
 	it('handles missing metadata and empty actor gracefully', () => {
@@ -100,6 +123,7 @@ describe('prepareActorConditions', () => {
 				durationLabel: '∞',
 				durationSortMs: null,
 				sourceLabel: 'None',
+				originName: null,
 				tooltipHtml: expect.stringContaining('Custom Condition'),
 			},
 		]);

@@ -36,13 +36,14 @@ A secondary number that is always visible: armor, speed, and each other movement
 		align-items: center;
 		gap: 4px;
 		white-space: nowrap;
-		font-size: 0.679rem;
+		font-size: 0.688rem;
 		font-weight: 900;
 		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		color: var(--nimble-bronze);
 	}
 	b {
-		font-size: 1rem;
+		font-size: 0.875rem;
 		color: var(--nimble-ui-ink);
 	}
 	.inline {
@@ -52,7 +53,7 @@ A secondary number that is always visible: armor, speed, and each other movement
 		gap: 5px;
 		padding: 0;
 		border: 0;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-weight: 900;
 		letter-spacing: 0.05em;
 		white-space: nowrap;
@@ -61,27 +62,27 @@ A secondary number that is always visible: armor, speed, and each other movement
 	.inline .l {
 		/* icon, label and number share one baseline */
 		display: contents;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		letter-spacing: 0.05em;
 		color: var(--nimble-ui-ink-dim);
 	}
 	.inline b {
 		letter-spacing: 0;
-		font-size: 1.071rem;
+		font-size: 0.937rem;
 		font-weight: 600;
 		line-height: 1;
 	}
 	.warn {
-		font-size: 0.786rem;
+		font-size: 0.688rem;
 		font-weight: 700;
 		color: var(--nimble-ui-vital);
 	}
 	.inline .warn {
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		letter-spacing: 0;
 	}
 	.note {
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		font-style: normal;
 		letter-spacing: 0;
 		font-weight: 600;

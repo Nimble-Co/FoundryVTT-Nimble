@@ -18,16 +18,28 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
 </script>
 
-<div class="bar">
-	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
-</div>
-<HeroRowGroupList groups={view.groups} {ui} {perform} none={view.none} />
+{#if rowIds.length}
+	<div class="bar">
+		<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
+	</div>
+{/if}
+<HeroRowGroupList groups={view.groups} {ui} {perform} />
+{#if view.empty}<p class="empty">{view.empty}</p>{/if}
 <GroupHeading label={view.conditions.label} />
 <ConditionGrid
 	label={view.conditions.label}
 	options={view.conditions.options}
 	onpick={(condition) => perform(condition.intent)}
 />
+{#if view.conditions.other.options.length}
+	<GroupHeading label={view.conditions.other.label} plain />
+	<ConditionGrid
+		label={view.conditions.other.label}
+		options={view.conditions.other.options}
+		onpick={(condition) => perform(condition.intent)}
+		compact
+	/>
+{/if}
 
 <style>
 	.bar {
@@ -36,5 +48,10 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 		align-items: center;
 		gap: 8px;
 		margin: 0 0 6px;
+	}
+	.empty {
+		margin: 0 4px 4px;
+		font-size: 0.813rem;
+		color: var(--nimble-ui-ink-muted);
 	}
 </style>

@@ -1,7 +1,7 @@
 <!--
 @component
 The portrait behind the rail or the narrow header of both sheets. It moves and scales by the image settings,
-and shows the fallback portrait when the image does not load.
+and shows the fallback portrait when the image does not load. A core icon (no art yet) is a quiet placeholder.
 -->
 <script lang="ts">
 	import type { SheetPortraitProps } from '#types/components/actorSheets/SheetPortrait.d.ts';
@@ -11,11 +11,13 @@ and shows the fallback portrait when the image does not load.
 
 	let failedFor: string | null = $state(null);
 	const src = $derived(failedFor === view.img ? PORTRAIT_FALLBACK_IMAGE : view.img);
+	const placeholder = $derived(src.startsWith('icons/svg/'));
 </script>
 
 <div class="clip">
 	<img
 		class={form}
+		class:placeholder
 		{src}
 		alt={view.name}
 		draggable="false"
@@ -50,5 +52,12 @@ and shows the fallback portrait when the image does not load.
 		width: 44%;
 		object-position: center 12%;
 		transform-origin: top right;
+	}
+	.placeholder {
+		top: 12%;
+		height: 76%;
+		object-fit: contain;
+		object-position: center;
+		opacity: 0.12;
 	}
 </style>

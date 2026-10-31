@@ -169,8 +169,10 @@ export interface HeroSheetContext {
 	itemState: Record<string, HeroItemState>;
 	/** the names of the tokens that the user targets, not the hero */
 	targets: string[];
-	/** the damage formula of an Unarmed Strike, with its bonuses */
+	/** the damage formula of an Unarmed Strike, with its bonuses and the numbers of the hero */
 	unarmedDamage: string;
+	/** a roll formula with the numbers of the hero in place of its `@` references */
+	formula: (text: string) => string;
 	/** the Bio notes as Foundry enriches them, for the editor while it is closed */
 	enrichedNotes: string;
 	/** by item id, the description as Foundry enriches it; only rows that are open have one */

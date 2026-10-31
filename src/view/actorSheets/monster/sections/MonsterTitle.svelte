@@ -57,10 +57,12 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 6px 10px 6px 14px;
+		padding: 6px max(10px, var(--nimble-sheet-controls, 0px)) 6px 14px;
 		border-bottom: 1px solid var(--nimble-ui-soft);
 	}
 	.editing {
+		flex-wrap: wrap;
+		row-gap: 10px;
 		padding-top: 10px;
 		padding-bottom: 10px;
 	}
@@ -73,12 +75,18 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		gap: 2px 10px;
 	}
 	.editing .who {
-		gap: 12px 16px;
+		display: contents;
+	}
+	.editing .name-field {
+		flex-basis: 100%;
+	}
+	.editing .create {
+		margin-left: auto;
 	}
 	h2 {
 		margin: 0;
 		border: none;
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		line-height: 1.1;
 		color: var(--nimble-ui-highlight);
@@ -94,7 +102,7 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		padding: 0 3px;
 		margin: 0 -3px;
 		border-bottom: 1px dashed var(--nimble-ui-ring);
-		font-size: 1.214rem;
+		font-size: 1.062rem;
 		font-weight: 900;
 		line-height: 1.25;
 		color: var(--nimble-ui-highlight);
@@ -105,7 +113,7 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 	}
 	.meta {
 		position: relative;
-		font-size: 0.833rem;
+		font-size: 0.729rem;
 		color: var(--nimble-ui-ink-muted);
 		white-space: nowrap;
 	}
@@ -121,7 +129,7 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		padding: 0 10px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
-		font: 700 0.857rem/1 var(--nimble-primary-font);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
 	}
 	.create:hover,
@@ -132,6 +140,6 @@ on the Abilities tab. In edit mode the name is a field, and an outline on the li
 		outline: none;
 	}
 	.create i {
-		font-size: 0.714rem;
+		font-size: 0.625rem;
 	}
 </style>

@@ -7,7 +7,14 @@ const SET = 'NIMBLE.actorSheet.hero.settings';
 type SetIntent<T> = (value: T) => HeroIntent;
 
 export type HeroSetting =
-	| { kind: 'check'; id: string; label: string; on: boolean; intent: SetIntent<boolean> }
+	| {
+			kind: 'check';
+			id: string;
+			label: string;
+			hint?: string;
+			on: boolean;
+			intent: SetIntent<boolean>;
+	  }
 	| {
 			kind: 'number';
 			id: string;
@@ -17,15 +24,20 @@ export type HeroSetting =
 			min?: number;
 			intent: SetIntent<number>;
 	  }
-	| { kind: 'text'; id: string; label: string; value: string; intent: SetIntent<string> }
+	| {
+			kind: 'text';
+			id: string;
+			label: string;
+			hint?: string;
+			value: string;
+			intent: SetIntent<string>;
+	  }
 	| {
 			kind: 'button';
 			id: string;
 			label: string;
 			icon: string;
 			intent: HeroIntent;
-			/** works out of edit mode too */
-			always?: boolean;
 	  };
 
 export interface HeroSettingsGroup {
@@ -48,7 +60,7 @@ const field =
 	(name: HeroSettingsField) =>
 	(value: boolean | number | string): HeroIntent => ({ kind: 'setField', field: name, value });
 
-/** The Settings tab: you change a setting only in edit mode. Export works in all modes. */
+/** The Settings tab: every setting and button works in all modes. */
 export function heroSettingsTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
@@ -59,7 +71,11 @@ export function heroSettingsTab(
 	const group = (id: string, settings: HeroSetting[]): HeroSettingsGroup => ({
 		id,
 		label: label(`groups.${id}`),
-		settings,
+		settings: settings.map((setting) =>
+			setting.kind === 'button' || setting.hint
+				? setting
+				: { ...setting, hint: label(`hints.${setting.id}`) },
+		),
 	});
 	const tracking = flags.trackInventorySlots !== false;
 
@@ -130,7 +146,7 @@ export function heroSettingsTab(
 					kind: 'number',
 					id: 'woundsBonus',
 					label: label('woundsBonus'),
-					hint: format(`${SET}.maxWounds`, { max: String(system.attributes.wounds.max) }),
+					hint: format(`${SET}.hints.woundsBonus`, { max: String(system.attributes.wounds.max) }),
 					value: system.attributes.wounds.bonus,
 					intent: field('woundsBonus'),
 				},
@@ -178,7 +194,6 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.pdfExport.exportButton'),
 						icon: 'fa-solid fa-file-pdf',
 						intent: { kind: 'exportPdf' },
-						always: true,
 					},
 					{
 						kind: 'button',
@@ -186,7 +201,6 @@ export function heroSettingsTab(
 						label: localize('NIMBLE.jsonExport.exportButton'),
 						icon: 'fa-solid fa-file-export',
 						intent: { kind: 'exportJson' },
-						always: true,
 					},
 				],
 			},

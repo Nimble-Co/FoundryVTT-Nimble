@@ -79,6 +79,7 @@
 					"action": "1 action",
 					"actions": "{count} actions",
 					"free": "Free",
+					"mana": "Costs {amount} mana",
 					"usesBack": "{left} of {max} left. It comes back each {per}.",
 					"usesLeft": "{left} of {max} left"
 				},
@@ -135,9 +136,9 @@
 					"levelUpHint": "Level Up. This opens the Level Up window",
 					"levelUpMax": "You are at the highest level",
 					"levelUpNoClass": "Add a class to level up",
-					"metaAncestry": "{ancestry} ({size})",
-					"metaClass": "{class} ({level})",
-					"metaSubclass": "{class} ({subclass}, {level})",
+					"metaLevel": "Lv {level}",
+					"metaSize": "Size: {size}",
+					"metaSubclass": "{line} - {subclass}",
 					"notYourTurn": "Not your turn",
 					"offTurnHint": "A reaction spends 1 action. You start your next turn with the actions that are left.",
 					"speed": {
@@ -251,7 +252,6 @@
 					"conditionsOn": "Conditions on you",
 					"inspiration": {
 						"name": "Inspiration",
-						"summary": "Reroll any single die.",
 						"description": "The GM grants Inspiration when a hero does something memorable. Spend it to reroll any single die. It ends after a Safe Rest.",
 						"lasts": "Until a Safe Rest"
 					}
@@ -262,7 +262,8 @@
 					"weight": "Weight",
 					"gender": "Gender",
 					"notes": "Notes",
-					"noNotes": "No notes"
+					"notSet": "Not set",
+					"noNotes": "No notes yet. Turn on Edit to write them."
 				},
 				"settings": {
 					"groups": {
@@ -283,11 +284,23 @@
 					"currencyBulk": "Automatically Include Currency Bulk",
 					"bonusSlots": "Bonus Inventory Slots",
 					"woundsBonus": "Max wounds bonus",
-					"maxWounds": "Max wounds: {max}",
 					"initiativeBonus": "Initiative bonus",
 					"passiveSkills": "Show Passive Skill Scores",
 					"spellTier": "Highest Unlocked Spell Tier",
-					"resetSpellTier": "Reset spell tier"
+					"resetSpellTier": "Reset spell tier",
+					"hints": {
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"runMacros": "When you use an item that has a macro, the macro runs.",
+						"trackSlots": "Counts what you carry against your inventory slots.",
+						"currencyBulk": "Each 500 coins use 1 inventory slot.",
+						"bonusSlots": "Adds to your inventory slots (10 + STR).",
+						"woundsBonus": "Adds to your max wounds (6). Max wounds now: {max}.",
+						"initiativeBonus": "A number or a formula that adds to your Initiative roll, for example 1d4.",
+						"passiveSkills": "Shows 10 + the modifier next to each skill on the Core tab.",
+						"spellTier": "Your class features and level set it. A number here replaces it until you reset it."
+					}
 				},
 				"inventory": {
 					"create": "Create Object",
@@ -351,7 +364,8 @@
 					"active": "Active effects",
 					"passive": "Passive effects",
 					"allConditions": "All conditions",
-					"none": "None",
+					"otherConditions": "Other conditions",
+					"noEffects": "No effects and no conditions.",
 					"fromItem": "From {name}",
 					"inactiveRound": "Ends after 1 round with no attack and no new use",
 					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
@@ -454,7 +468,15 @@
 					"imageY": "Y-Offset (px)",
 					"imageScale": "Scale (%)",
 					"runMacros": "Execute Item Macros on Item Activation",
-					"coin": "{coin} coins"
+					"coin": "{coin} coins",
+					"hints": {
+						"monster": "To change these, turn on Edit and click Monster near the name.",
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"runMacros": "When you use an item that has a macro, the macro runs.",
+						"coins": "The coins that this creature carries."
+					}
 				}
 			}
 		},

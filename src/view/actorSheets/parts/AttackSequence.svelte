@@ -40,7 +40,7 @@ In edit mode `fields` (the trash button) goes before the pen, and `children` (a 
 		gap: 2px;
 		margin: 0 0 4px;
 		padding: 5px 8px;
-		font-size: 0.833rem;
+		font-size: 0.75rem;
 		line-height: 1.35;
 		font-style: italic;
 		color: var(--nimble-sequence-text-color);
@@ -84,7 +84,7 @@ In edit mode `fields` (the trash button) goes before the pen, and `children` (a 
 		white-space: nowrap;
 	}
 	.die i {
-		font-size: 0.643rem;
+		font-size: 0.563rem;
 		margin-right: 3px;
 	}
 </style>

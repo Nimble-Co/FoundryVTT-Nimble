@@ -1,7 +1,21 @@
 import { effectDuration, effectLists, sourceItem } from './effectLists.ts';
+import { firstSentence, plainText } from './plainText.ts';
 import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sheetSource.ts';
 
 const FX = 'NIMBLE.actorSheet.shared.effects';
+
+/** States that the system sets from HP, wounds and spells; they show in the group of the actor while they are on. */
+const SET_BY_THE_SYSTEM = new Set([
+	'bloodied',
+	'dying',
+	'dead',
+	'wounded',
+	'lastStand',
+	'concentration',
+]);
+
+/** Conditions that do nothing on their own (the "minor statuses" of the rules). */
+const OTHER_CONDITIONS = new Set(['charged', 'distracted', 'marked', 'smoldering']);
 
 /** What the Effects tab asks for. Both sheets have these intents, with the same shape. */
 export type EffectIntent =
@@ -56,11 +70,16 @@ export interface ConditionToggleView {
 }
 
 export interface EffectsTabView {
-	/** Active effects, the conditions on the actor, Passive effects: always all three */
+	/** Active effects, the conditions on the actor, Passive effects: only the groups that have rows */
 	groups: EffectRowGroup[];
-	/** the line in an empty group */
-	none: string;
-	conditions: { label: string; options: ConditionToggleView[] };
+	/** the one line when no group has a row */
+	empty: string | null;
+	/** the conditions that a user sets by hand; `other` are the ones that do nothing on their own */
+	conditions: {
+		label: string;
+		options: ConditionToggleView[];
+		other: { label: string; options: ConditionToggleView[] };
+	};
 }
 
 export interface EffectsTabInput {
@@ -73,6 +92,8 @@ export interface EffectsTabInput {
 	format: Format;
 	/** the heading of the conditions on the actor: "Conditions on you", "Conditions" */
 	conditionsOnLabel: string;
+	/** keep the empty groups, for a caller that adds rows and then calls `shownGroups` */
+	keepEmpty?: boolean;
 }
 
 function askRemove(name: string, intent: EffectIntent, input: EffectsTabInput): EffectRowAsk {
@@ -98,7 +119,7 @@ function stateRow(
 		id: base.id,
 		name: base.name,
 		img: base.img || undefined,
-		summary: base.from || base.description || undefined,
+		summary: base.from || firstSentence(plainText(base.description), base.name) || undefined,
 		lasts: base.duration || undefined,
 		description: base.description || undefined,
 		facts: [
@@ -186,6 +207,15 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 	);
 }
 
+/** Leaves out the groups with no rows; with none left, `empty` is the one line that says so. */
+export function shownGroups<G extends { rows: unknown[] }>(
+	groups: G[],
+	localize: Localize,
+): { groups: G[]; empty: string | null } {
+	const shown = groups.filter((group) => group.rows.length);
+	return { groups: shown, empty: shown.length ? null : localize(`${FX}.noEffects`) };
+}
+
 /** Active effects, the conditions on the actor and the passive effects; under them, every condition. */
 export function effectsTab(input: EffectsTabInput): EffectsTabView {
 	const { localize } = input;
@@ -195,34 +225,41 @@ export function effectsTab(input: EffectsTabInput): EffectsTabView {
 		label: string,
 		rows: EffectRowView[],
 	): EffectRowGroup => ({ id, label, note: rows.length ? String(rows.length) : '', rows });
+	const toggles: ConditionToggleView[] = input.conditions
+		.filter((condition) => !SET_BY_THE_SYSTEM.has(condition.id))
+		.map((condition) => ({
+			id: condition.id,
+			name: condition.name,
+			img: condition.img,
+			on: condition.active,
+			intent: { kind: 'setCondition', conditionId: condition.id, active: !condition.active },
+		}));
+	const groups = [
+		group(
+			'active',
+			localize(`${FX}.active`),
+			lists.active.map((effect) => effectRow(effect, input, false)),
+		),
+		group(
+			'conditionsOn',
+			input.conditionsOnLabel,
+			lists.conditions.map((condition) => conditionRow(condition, input)),
+		),
+		group(
+			'passive',
+			localize(`${FX}.passive`),
+			lists.passive.map((effect) => effectRow(effect, input, true)),
+		),
+	];
 	return {
-		groups: [
-			group(
-				'active',
-				localize(`${FX}.active`),
-				lists.active.map((effect) => effectRow(effect, input, false)),
-			),
-			group(
-				'conditionsOn',
-				input.conditionsOnLabel,
-				lists.conditions.map((condition) => conditionRow(condition, input)),
-			),
-			group(
-				'passive',
-				localize(`${FX}.passive`),
-				lists.passive.map((effect) => effectRow(effect, input, true)),
-			),
-		],
-		none: localize(`${FX}.none`),
+		...(input.keepEmpty ? { groups, empty: null } : shownGroups(groups, localize)),
 		conditions: {
 			label: localize(`${FX}.allConditions`),
-			options: input.conditions.map((condition) => ({
-				id: condition.id,
-				name: condition.name,
-				img: condition.img,
-				on: condition.active,
-				intent: { kind: 'setCondition', conditionId: condition.id, active: !condition.active },
-			})),
+			options: toggles.filter((toggle) => !OTHER_CONDITIONS.has(toggle.id)),
+			other: {
+				label: localize(`${FX}.otherConditions`),
+				options: toggles.filter((toggle) => OTHER_CONDITIONS.has(toggle.id)),
+			},
 		},
 	};
 }

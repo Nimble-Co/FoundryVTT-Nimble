@@ -126,6 +126,6 @@ export function conditionLike(condition: ActorCondition): ConditionLike {
 		active: condition.active,
 		description: plainText(condition.descriptionHtml),
 		duration: durationWords(condition.durationLabel),
-		source: condition.active ? condition.sourceLabel : '',
+		source: condition.active ? (condition.originName ?? '') : '',
 	};
 }

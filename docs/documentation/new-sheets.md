@@ -18,11 +18,21 @@ Inspiration is an optional rule: the GM grants it, and you can spend it to rerol
 
 The new NPC sheet is for NPCs, minions and solo monsters. The rail has the Hit Points, the saves, armor, speed and the damage defenses, and four tabs: Abilities, Effects, Notes and Settings. The abilities are cards in columns, as a stat block, and their text starts open. A click on the name of an ability rolls it or posts it to chat. A click on a save rolls it.
 
-Turn on **Edit** at the bottom of the rail (in the narrow form, the pen in the header) to change the monster: the portrait, the name, the maximum HP and the armor. An outline on the line under the name opens the monster window (level, creature type, size, monster type and damage defenses). Outlines on the saves and the speeds open their windows. In edit mode you can also create a feature and delete abilities.
+Turn on **Edit**, the last row of the menu at the bottom of the rail (in the narrow form, the pen in the header), to change the monster: the portrait, the name, the maximum HP and the armor. An outline on the line under the name opens the monster window (level, creature type, size, monster type and damage defenses). Outlines on the saves and the speeds open their windows. In edit mode you can also create a feature and delete abilities.
 
 ### Open NPC sheets narrow
 
 A GM opens many NPC sheets in an encounter. With the setting **Open NPC sheets narrow** on, the new NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again. Each user sets it for their own screen, in **Configure Settings** on the Nimble tab. It is off at the start, and it changes only the new NPC sheet.
+
+## On both new sheets
+
+- **Window:** the new sheets have no title bar. To move the window, drag the top edge of the portrait in the rail. In the narrow form, drag the line with the name (out of edit mode). The window buttons sit in the top-right corner. A wide window stops at three columns of rows, because a wider window shows nothing more.
+- **The line under a row name:** it shows the facts first, for example the damage, reach and properties of a weapon, or the range of a spell. A feature, an object, a reaction or a condition also shows the first sentence of its text. A long line wraps to a second line, then it is cut. The full text shows when you open the row with the arrow.
+- **Costs on a row:** point to the uses, the mana cost or the green action bars of a row to see what they mean.
+- **Effects tab:** a group with nothing in it does not show. The condition grid shows the conditions that you set by hand. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they are not in the grid. They show in the list above the grid while they are on. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**. A condition that is on is crimson, with a check.
+- **Bio tab:** the details read as text. Turn on edit mode to type them and to write the notes.
+- **Settings tab:** the settings work at all times; you do not need edit mode. Each setting has one line that tells what it does.
+- **Narrow form:** each tab keeps a short label under its icon.
 
 ## Use a new sheet for one actor
 

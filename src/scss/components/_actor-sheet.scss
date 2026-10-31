@@ -27,3 +27,111 @@
 	padding: 0;
 	overflow: hidden;
 }
+
+// Foundry core rules that the parts do not expect.
+.nimble-actor-sheet {
+	dt {
+		text-shadow: none;
+	}
+
+	input {
+		box-shadow: none;
+	}
+}
+
+// No title bar: the window controls float in the top-right corner, over the sheet. The sheet keeps
+// `--nimble-sheet-controls` free for them. The top of the portrait is the drag area of the window.
+.nimble-actor-sheet:not(.minimized) {
+	--nimble-sheet-controls: 62px;
+
+	> .window-header {
+		position: absolute;
+		inset: 0 0 auto;
+		z-index: 2;
+		height: 34px;
+		padding: 6px 7px 0 0;
+		gap: 4px;
+		align-items: flex-start;
+		justify-content: flex-end;
+		background: transparent;
+		border: 0;
+		pointer-events: none;
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0 auto 0 var(--nimble-sheet-drag-left, 0px);
+			width: calc(var(--nimble-sheet-drag-width, 0px) - var(--nimble-sheet-drag-left, 0px));
+			pointer-events: auto;
+			cursor: move;
+		}
+
+		.window-icon,
+		.window-title {
+			display: none;
+		}
+
+		.header-control {
+			flex: none;
+			display: grid;
+			place-items: center;
+			width: 22px;
+			height: 22px;
+			min-height: 0;
+			margin: 0;
+			padding: 0;
+			border: 0;
+			border-radius: 4px;
+			background: rgb(0 0 0 / 50%);
+			font-size: 11px;
+			color: #fff;
+			pointer-events: auto;
+
+			&:hover,
+			&:focus-visible {
+				background: rgb(0 0 0 / 75%);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
+			}
+		}
+	}
+
+	> .window-content {
+		height: 100%;
+	}
+}
+
+// The drag area: the top of the rail art, left of the Inspiration seal. In the narrow form it is the
+// name line, left of the seal and the controls; there edit mode puts the name field in it, so it goes.
+.nimble-actor-sheet--hero:not(.minimized):has(.hero.wide) {
+	--nimble-sheet-drag-width: 192px;
+}
+
+.nimble-actor-sheet--monster:not(.minimized):has(.monster.wide) {
+	--nimble-sheet-drag-width: 236px;
+}
+
+.nimble-actor-sheet--hero:not(.minimized):has(.hero.narrow):not(:has(.name-field)) {
+	--nimble-sheet-drag-width: calc(100% - var(--nimble-sheet-controls) - 44px);
+}
+
+.nimble-actor-sheet--monster:not(.minimized):has(.monster.narrow):not(:has(.name-field)) {
+	--nimble-sheet-drag-width: calc(100% - var(--nimble-sheet-controls) - 6px);
+}
+
+// Edit mode puts the change-portrait button in the top-left corner.
+.nimble-actor-sheet:not(.minimized):has(.name-field) {
+	--nimble-sheet-drag-left: 44px;
+}
+
+// Past three columns a wider window shows nothing more, so it stops growing.
+.nimble-actor-sheet--hero:not(.minimized) {
+	max-width: 1350px;
+}
+
+.nimble-actor-sheet--monster:not(.minimized) {
+	max-width: 1270px;
+}

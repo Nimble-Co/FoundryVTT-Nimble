@@ -8,7 +8,7 @@ import {
 	spellTier,
 } from '../shared/itemFields.ts';
 import { placeOf } from '../shared/placeOf.ts';
-import { plainText } from '../shared/plainText.ts';
+import { firstSentence, plainText } from '../shared/plainText.ts';
 import type { PoolRecovery } from '../shared/poolRecovery.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
@@ -228,10 +228,11 @@ export function damageWords(item: ItemLike, context: HeroSheetContext): string[]
 	);
 }
 
-function damageFormula(item: ItemLike): string {
+function damageFormula(item: ItemLike, context: HeroSheetContext): string {
 	return damageNodes(item)
 		.map((node) => node.formula)
 		.filter(Boolean)
+		.map((formula) => context.formula(formula))
 		.join(' + ');
 }
 
@@ -353,6 +354,20 @@ export function spendIntent(spend: HeroDiceSpend, indices: number[]): HeroIntent
 	};
 }
 
+/** The facts first; a feature or object adds the first sentence of its description. */
+export function rowLine(facts: string[], sentence: string): string {
+	return [facts.join(', '), sentence].filter(Boolean).join(' - ');
+}
+
+const WEAPON_PROPERTIES = ['twoHanded', 'light', 'load', 'thrown', 'vicious', 'concentration'];
+
+function weaponPropertyWords(item: ItemLike, context: HeroSheetContext): string[] {
+	const selected = selectedProperties(item);
+	return WEAPON_PROPERTIES.filter((key) => selected.includes(key)).map((key) =>
+		context.localize(`NIMBLE.properties.${key}`),
+	);
+}
+
 /** A row for an item of the hero: a weapon, a feature or a spell. */
 export function itemRow(
 	actor: HeroActorLike,
@@ -370,7 +385,7 @@ export function itemRow(
 	const description = plainText(rawDescriptionOf(item));
 	const range = rangeWords(item, context);
 	const when = whenWords(item);
-	const formula = damageFormula(item);
+	const formula = damageFormula(item, context);
 	const concentration = spell && selectedProperties(item).includes('concentration');
 
 	const lead = (
@@ -386,7 +401,7 @@ export function itemRow(
 					...damageWords(item, context),
 					concentration ? localize(`${SHARED}.concentration`) : '',
 				]
-			: [when, weapon ? formula : '', range]
+			: [when, weapon ? formula : '', range, ...(weapon ? weaponPropertyWords(item, context) : [])]
 	).filter(Boolean);
 
 	const toggle = state.toggle;
@@ -410,12 +425,8 @@ export function itemRow(
 		};
 	}
 
-	const summaryLead = lead.join(', ');
-	const summary = reason
-		? reason
-		: spell
-			? summaryLead || description
-			: [summaryLead, description].filter(Boolean).join('. ');
+	const factsOnly = weapon || (spell && lead.length > 0);
+	const summary = reason || rowLine(lead, factsOnly ? '' : firstSentence(description, name));
 
 	const facts: [string, string][] = [];
 	const costWords = [

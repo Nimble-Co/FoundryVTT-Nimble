@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	blankHero,
+	conditionLike,
 	effectsContext,
 	effectsHero,
 	heroContext,
@@ -29,15 +30,12 @@ describe('heroEffectsTab', () => {
 		]);
 	});
 
-	it('keeps each group, with None, when it is empty', () => {
+	it('leaves out an empty group, and has one line when every group is empty', () => {
 		const view = heroEffectsTab(blankHero(), heroContext());
 
-		expect(layout(view)).toEqual([
-			[`${FX}.active`, '', []],
-			['NIMBLE.actorSheet.hero.effects.conditionsOn', '', []],
-			[`${FX}.passive`, '', []],
-		]);
-		expect(view.none).toBe(`${FX}.none`);
+		expect(layout(view)).toEqual([]);
+		expect(view.empty).toBe(`${FX}.noEffects`);
+		expect(heroEffectsTab(effectsHero(), effectsContext()).empty).toBeNull();
 	});
 
 	it('counts the active effects and the conditions, not the passive effects', () => {
@@ -60,12 +58,20 @@ describe('heroEffectsTab', () => {
 			expect(effectsOnHero(inspired(), effectsContext())).toBe(4);
 		});
 
+		it('shows under Active effects when it is the only effect', () => {
+			const hero = blankHero();
+			hero.system.resources.inspiration = true;
+			const view = heroEffectsTab(hero, heroContext());
+
+			expect(layout(view)).toEqual([[`${FX}.active`, '1', [`${IN}.name`]]]);
+			expect(view.empty).toBeNull();
+		});
+
 		it('ends from its row with no question, and lasts until a Safe Rest', () => {
 			const row = rowOf(heroEffectsTab(inspired(), effectsContext()), 'inspiration');
 
 			expect(row).toMatchObject({
 				icon: 'fa-solid fa-star',
-				summary: `${IN}.summary`,
 				description: `${IN}.description`,
 				cost: { text: `${IN}.lasts` },
 				facts: [[`${FX}.facts.lasts`, `${IN}.lasts`]],
@@ -76,6 +82,7 @@ describe('heroEffectsTab', () => {
 				},
 				edit: null,
 			});
+			expect(row.summary, 'the first sentence of the description').toBe(`${IN}.description`);
 		});
 
 		it('is not on the tab when the hero has none', () => {
@@ -140,6 +147,7 @@ describe('heroEffectsTab', () => {
 			ask: { intent: { kind: 'setCondition', conditionId: 'dazed', active: false } },
 		});
 		expect(row.description).toBe('You lose 1 action.');
+		expect(row.summary, 'no source: the first sentence').toBe('You lose 1 action.');
 	});
 
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {
@@ -176,6 +184,22 @@ describe('heroEffectsTab', () => {
 					intent: { kind: 'setCondition', conditionId: 'prone', active: true },
 				},
 			],
+			other: { label: `${FX}.otherConditions`, options: [] },
 		});
+	});
+
+	it('leaves out the states that the system sets, and gives the other conditions their own set', () => {
+		const condition = (id: string) => conditionLike({ id, name: id });
+		const view = heroEffectsTab(
+			effectsHero(),
+			effectsContext({
+				conditions: ['bloodied', 'charged', 'concentration', 'dazed', 'dead', 'dying']
+					.map(condition)
+					.concat(['lastStand', 'marked', 'wounded'].map(condition)),
+			}),
+		);
+
+		expect(view.conditions.options.map((option) => option.id)).toEqual(['dazed']);
+		expect(view.conditions.other.options.map((option) => option.id)).toEqual(['charged', 'marked']);
 	});
 });
