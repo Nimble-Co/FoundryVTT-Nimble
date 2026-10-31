@@ -85,8 +85,8 @@ Put it inside `nimble-chrome` on the rail. `stripTone="card"` is the NPC rail: w
 		background: var(--nimble-card-border-color);
 	}
 	.adv .k {
-		background: var(--nimble-roll-success-background-color);
-		color: var(--nimble-roll-success-color);
+		background: var(--nimble-ui-action-background);
+		color: var(--nimble-ui-action);
 	}
 	.dis .k {
 		background: hsla(0, 60%, 40%, 0.35);

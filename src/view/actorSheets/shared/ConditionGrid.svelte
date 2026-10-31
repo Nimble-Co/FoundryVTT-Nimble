@@ -58,8 +58,12 @@ Every condition of the system as a toggle button, on both sheets. The arrow keys
 		background: var(--nimble-ui-well);
 	}
 	.condition img {
-		width: 18px;
-		height: 18px;
+		flex: none;
+		width: 20px;
+		height: 20px;
+		padding: 2px;
 		border: 0;
+		border-radius: 3px;
+		background: var(--nimble-ui-chrome);
 	}
 </style>

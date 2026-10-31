@@ -357,7 +357,7 @@
 	--nimble-class-resource-color: hsl(1, 60%, 42%);
 	--nimble-sequence-background: hsl(41 18% 54% / 10%);
 	--nimble-sequence-border-color: hsl(41 18% 54% / 20%);
-	--nimble-sequence-text-color: hsl(41, 18%, 40%);
+	--nimble-sequence-text-color: hsl(41, 22%, 33%);
 	--nimble-ui-ink: hsl(50, 14%, 9%);
 	--nimble-ui-ink-muted: hsl(50, 10%, 28%);
 	--nimble-ui-ink-dim: hsl(41, 30%, 27%);
@@ -382,6 +382,8 @@
 	/** POOL KINDS: one tone each, the parts darken it in the light theme **/
 	--nimble-pool-mana-color: hsl(212, 65%, 70%);
 	--nimble-pool-dice-color: hsl(1, 70%, 70%);
+	--nimble-hit-dice-color: hsl(45, 75%, 66%);
+	--nimble-hit-dice-fill: linear-gradient(to right, hsl(45, 60%, 30%), hsl(45, 60%, 50%));
 	--nimble-pool-charges-color: hsl(205, 60%, 70%);
 	--nimble-pool-uses-color: hsl(300, 45%, 76%);
 	/** the share of a tone in a toned label; the rest is black **/

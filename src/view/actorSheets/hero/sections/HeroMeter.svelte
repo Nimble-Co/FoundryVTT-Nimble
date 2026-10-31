@@ -296,7 +296,10 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 		--tone: var(--nimble-ui-vital);
 	}
 	.meter.hitDice {
-		--tone: var(--nimble-pool-dice-color);
+		--tone: var(--nimble-hit-dice-color);
+	}
+	.hitDice .pip.on {
+		background: var(--nimble-hit-dice-fill);
 	}
 	.meter.mana {
 		--tone: var(--nimble-pool-mana-color);

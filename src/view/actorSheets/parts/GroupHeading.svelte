@@ -70,7 +70,7 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 	}
 	.plain {
 		break-after: avoid;
-		color: var(--nimble-bronze);
+		color: var(--nimble-ui-ink-dim);
 		margin: 6px 0 2px;
 		font-size: 0.656rem;
 		font-weight: 700;
@@ -80,7 +80,7 @@ In edit mode, `editing` leaves 8 px under a heading over rows, and `buttonGap="m
 		color: var(--nimble-roll-failure-color);
 	}
 	.lastStand {
-		color: var(--nimble-ability-will-color);
+		color: color-mix(in srgb, var(--nimble-ability-will-color) var(--nimble-ui-tone-mix), #000);
 	}
 	small {
 		font-size: 0.688rem;
