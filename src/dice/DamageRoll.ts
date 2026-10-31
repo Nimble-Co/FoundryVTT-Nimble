@@ -723,6 +723,39 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
+	 * Make this evaluated roll a crit that stays: a Forced Crit that always
+	 * applies. The kept face stays and the crit dice are rolled. Returns the
+	 * crit term and the dice it rolled, or null when the roll cannot crit, is a
+	 * crit, or was made to miss.
+	 */
+	async makeCritical(): Promise<{ term: foundry.dice.terms.Die; drawn: number[] } | null> {
+		if (!this.options.canCrit || this.isCritical || this.options.forceMiss) return null;
+		const term = this.modifierMode
+			? this.terms.find(
+					(candidate): candidate is foundry.dice.terms.Die =>
+						candidate instanceof Terms.Die && getNimbleMods(candidate)?.canCrit === true,
+				)
+			: this.terms.find((candidate) => candidate instanceof PrimaryDie);
+		if (!term) return null;
+
+		this.options.forcedCrit = 'always';
+		if (term instanceof PrimaryDie) term.options.forcedCrit = 'always';
+		const before = term.results.length;
+		const style = this.modifierMode
+			? getNimbleMods(term)?.explosionStyle
+			: this.options.explosionStyle;
+		if (style === 'vicious') {
+			await (this.modifierMode
+				? this._evaluateViciousExplosions(term)
+				: this._evaluateViciousExplosion(term));
+		} else if (style === 'standard') {
+			await this._rollCritDice(term);
+		}
+		this.refreshOutcome();
+		return { term, drawn: term.results.slice(before).map((r) => r.result) };
+	}
+
+	/**
 	 * The lowest kept face of `term` that is a crit: the Primary Die's crit face,
 	 * or in modifier mode the one of the first crit-capable term. Other dice crit
 	 * only on their max.
@@ -822,7 +855,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const baseResults = [...dieTerm.results];
 
 		for (const result of baseResults) {
-			if (!result.active || result.discarded || result.result < this._critFaceIn(dieTerm, result)) {
+			if (
+				!result.active ||
+				result.discarded ||
+				result.exploded ||
+				result.result < this._critFaceIn(dieTerm, result)
+			) {
 				continue;
 			}
 

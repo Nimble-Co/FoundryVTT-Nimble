@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from '../DamageRoll.js';
-import { changeOneDie, rerollOneDie } from '../oneDieReroll.js';
+import { changeOneDie, makeRollCrit, rerollOneDie } from '../oneDieReroll.js';
 
 type Result = { result: number; active: boolean; exploded?: boolean; provenance?: string };
 
@@ -245,6 +245,76 @@ describe('a Forced Crit', () => {
 
 			expect(next.isCritical).toBe(true);
 			expect(faces(next)).toEqual([5, 5]);
+		});
+	});
+
+	describe('made by a Make It a Crit use after the roll', () => {
+		function inPlace(roll: DamageRoll) {
+			Object.assign(roll, { _evaluateASTSync: () => 0 });
+			vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: { class?: string }) =>
+				data.class === 'Roll' ? data : roll) as never);
+		}
+
+		it('keeps the face, rolls the crit dice, and throws only those', async () => {
+			crittingDice([kept(4)]);
+			const roll = await attack(3);
+			inPlace(roll);
+
+			const made = await makeRollCrit(roll);
+
+			expect(made.roll.isCritical).toBe(true);
+			expect(faces(made.roll)).toEqual([3, 4]);
+			expect(made.next).toBe(3);
+			expect(made.faces).toBe(6);
+			expect(
+				(made.thrown?.terms[0] as foundry.dice.terms.Die | undefined)?.results.map((r) => r.result),
+			).toEqual([4]);
+		});
+
+		it('makes a miss a crit', async () => {
+			crittingDice([kept(5)]);
+			const roll = await attack(1);
+			inPlace(roll);
+
+			const { roll: next } = await makeRollCrit(roll);
+
+			expect(next.isCritical).toBe(true);
+			expect(next.isMiss).toBe(false);
+		});
+
+		it('stays a crit after a reroll of the Primary Die', async () => {
+			crittingDice([kept(4)]);
+			const roll = await attack(3);
+			inPlace(roll);
+			const { roll: crit } = await makeRollCrit(roll);
+
+			const { roll: next } = await rerollOneDie(crit, PRIMARY, { draw: draws(1, 2) });
+
+			expect(next.isCritical).toBe(true);
+			expect(next.isMiss).toBe(false);
+		});
+
+		it('adds the vicious extra die', async () => {
+			crittingDice([kept(2), kept(4)]);
+			const roll = await attack(3, { explosionStyle: 'vicious' });
+			inPlace(roll);
+
+			const { roll: next } = await makeRollCrit(roll);
+
+			expect(faces(next)).toEqual([3, 2, 4]);
+		});
+
+		it('fails on a roll that cannot crit, and on a crit', async () => {
+			crittingDice([kept(4)]);
+			const multi = await attack(3, { canCrit: false, canMiss: false, multiTarget: true });
+			inPlace(multi);
+			await expect(makeRollCrit(multi)).rejects.toThrow();
+
+			vi.restoreAllMocks();
+			crittingDice([kept(2)]);
+			const crit = await attack(6);
+			inPlace(crit);
+			await expect(makeRollCrit(crit)).rejects.toThrow();
 		});
 	});
 });

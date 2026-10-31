@@ -104,6 +104,8 @@ interface OneDieRoll extends PrimaryDieBonusRoll {
 	/** The lowest kept face of `term` that is a crit. */
 	critFaceOf?(term: unknown): number;
 	refreshOutcome?(): void;
+	/** Make the roll a crit that stays; null when it cannot be one. */
+	makeCritical?(): Promise<{ term: unknown; drawn: number[] } | null>;
 	/** "Add to Primary Die Result" when `term` is the Primary Die and has it. */
 	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
 	/** The Primary Die `term` was rolled again; `keptBase` is its new result before the bonus. */
@@ -288,8 +290,33 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	};
 }
 
+/**
+ * Make an evaluated roll a crit that stays. The old roll is not changed: the
+ * new roll is a copy with the crit dice rolled. `thrown` holds only those, or
+ * is null when none were rolled. Throws when the roll cannot be made a crit.
+ */
+async function makeRollCrit<TRoll extends OneDieRoll>(
+	roll: TRoll,
+): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
+	const copy = foundry.dice.Roll.fromData(
+		foundry.utils.deepClone(roll.toJSON()) as never,
+	) as unknown as TRoll;
+	const made = await copy.makeCritical?.();
+	if (!made || !isDieTerm(made.term)) throw new Error('The roll cannot be made a crit.');
+	const ref = primaryDieRef(copy);
+	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
+
+	return {
+		roll: copy,
+		faces: made.term.faces,
+		next: kept ?? null,
+		thrown: made.drawn.length > 0 ? thrownDice(made.term, made.drawn) : null,
+	};
+}
+
 export {
 	changeOneDie,
+	makeRollCrit,
 	type DieRef,
 	type DieTermLike,
 	type ExplosionStyle,
