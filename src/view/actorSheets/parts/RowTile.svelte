@@ -1,12 +1,15 @@
 <!--
 @component
-The square image at the start of a row. The document art (`img`) fills the square. A Font Awesome `icon` shows only when there is no image.
+The square image at the start of a row. The document art (`img`) fills the square; a core icon (no art yet) is a bronze
+glyph on a dark tile. A Font Awesome `icon` shows only when there is no image.
 The image of a row is the image of the thing; each image has one meaning on the sheet.
 -->
 <script lang="ts">
 	import type { RowTileProps } from '#types/components/actorSheets/RowTile.d.ts';
 
 	let { img, icon, size = 'md' }: RowTileProps = $props();
+
+	const glyph = $derived(!!img && img.startsWith('icons/svg/'));
 </script>
 
 <span
@@ -16,7 +19,9 @@ The image of a row is the image of the thing; each image has one meaning on the 
 	class:art={!!img}
 	aria-hidden="true"
 >
-	{#if img}
+	{#if glyph}
+		<span class="glyph" style:--glyph="url({img})"></span>
+	{:else if img}
 		<img src={img} alt="" />
 	{:else if icon}
 		<i class={icon}></i>
@@ -49,6 +54,12 @@ The image of a row is the image of the thing; each image has one meaning on the 
 	}
 	.art {
 		background-color: #000b;
+	}
+	.glyph {
+		width: 72%;
+		height: 72%;
+		background: var(--nimble-bronze);
+		mask: var(--glyph) no-repeat center / contain;
 	}
 	img {
 		width: 100%;
