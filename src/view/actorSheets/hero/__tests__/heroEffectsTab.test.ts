@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	blankHero,
+	conditionLike,
 	effectsContext,
 	effectsHero,
 	heroContext,
@@ -176,6 +177,22 @@ describe('heroEffectsTab', () => {
 					intent: { kind: 'setCondition', conditionId: 'prone', active: true },
 				},
 			],
+			other: { label: `${FX}.otherConditions`, options: [] },
 		});
+	});
+
+	it('leaves out the states that the system sets, and gives the other conditions their own set', () => {
+		const condition = (id: string) => conditionLike({ id, name: id });
+		const view = heroEffectsTab(
+			effectsHero(),
+			effectsContext({
+				conditions: ['bloodied', 'charged', 'concentration', 'dazed', 'dead', 'dying']
+					.map(condition)
+					.concat(['lastStand', 'marked', 'wounded'].map(condition)),
+			}),
+		);
+
+		expect(view.conditions.options.map((option) => option.id)).toEqual(['dazed']);
+		expect(view.conditions.other.options.map((option) => option.id)).toEqual(['charged', 'marked']);
 	});
 });

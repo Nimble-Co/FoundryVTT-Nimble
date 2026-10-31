@@ -3,6 +3,19 @@ import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sh
 
 const FX = 'NIMBLE.actorSheet.shared.effects';
 
+/** States that the system sets from HP, wounds and spells; they show in the group of the actor while they are on. */
+const SET_BY_THE_SYSTEM = new Set([
+	'bloodied',
+	'dying',
+	'dead',
+	'wounded',
+	'lastStand',
+	'concentration',
+]);
+
+/** Conditions that do nothing on their own (the "minor statuses" of the rules). */
+const OTHER_CONDITIONS = new Set(['charged', 'distracted', 'marked', 'smoldering']);
+
 /** What the Effects tab asks for. Both sheets have these intents, with the same shape. */
 export type EffectIntent =
 	| { kind: 'endEffect'; effectId: string }
@@ -60,7 +73,12 @@ export interface EffectsTabView {
 	groups: EffectRowGroup[];
 	/** the line in an empty group */
 	none: string;
-	conditions: { label: string; options: ConditionToggleView[] };
+	/** the conditions that a user sets by hand; `other` are the ones that do nothing on their own */
+	conditions: {
+		label: string;
+		options: ConditionToggleView[];
+		other: { label: string; options: ConditionToggleView[] };
+	};
 }
 
 export interface EffectsTabInput {
@@ -195,6 +213,15 @@ export function effectsTab(input: EffectsTabInput): EffectsTabView {
 		label: string,
 		rows: EffectRowView[],
 	): EffectRowGroup => ({ id, label, note: rows.length ? String(rows.length) : '', rows });
+	const toggles: ConditionToggleView[] = input.conditions
+		.filter((condition) => !SET_BY_THE_SYSTEM.has(condition.id))
+		.map((condition) => ({
+			id: condition.id,
+			name: condition.name,
+			img: condition.img,
+			on: condition.active,
+			intent: { kind: 'setCondition', conditionId: condition.id, active: !condition.active },
+		}));
 	return {
 		groups: [
 			group(
@@ -216,13 +243,11 @@ export function effectsTab(input: EffectsTabInput): EffectsTabView {
 		none: localize(`${FX}.none`),
 		conditions: {
 			label: localize(`${FX}.allConditions`),
-			options: input.conditions.map((condition) => ({
-				id: condition.id,
-				name: condition.name,
-				img: condition.img,
-				on: condition.active,
-				intent: { kind: 'setCondition', conditionId: condition.id, active: !condition.active },
-			})),
+			options: toggles.filter((toggle) => !OTHER_CONDITIONS.has(toggle.id)),
+			other: {
+				label: localize(`${FX}.otherConditions`),
+				options: toggles.filter((toggle) => OTHER_CONDITIONS.has(toggle.id)),
+			},
 		},
 	};
 }

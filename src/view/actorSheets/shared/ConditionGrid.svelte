@@ -1,6 +1,6 @@
 <!--
 @component
-Every condition of the system as a toggle button, on both sheets. The arrow keys, Home and End move the focus in the grid.
+Every condition of the system as a toggle button, on both sheets. `compact` shows them as small pills. The arrow keys, Home and End move the focus in the grid.
 -->
 <script lang="ts" generics="T extends ConditionGridOption">
 	import type {
@@ -9,12 +9,12 @@ Every condition of the system as a toggle button, on both sheets. The arrow keys
 	} from '#types/components/actorSheets/ConditionGrid.d.ts';
 	import { moveGridFocus } from './gridKeys.ts';
 
-	let { label, options, onpick }: ConditionGridProps<T> = $props();
+	let { label, options, onpick, compact = false }: ConditionGridProps<T> = $props();
 
 	let grid: HTMLElement | undefined = $state();
 </script>
 
-<div class="conditions" role="group" aria-label={label} bind:this={grid}>
+<div class="conditions" class:compact role="group" aria-label={label} bind:this={grid}>
 	{#each options as condition (condition.id)}
 		<button
 			type="button"
@@ -65,5 +65,21 @@ Every condition of the system as a toggle button, on both sheets. The arrow keys
 		border: 0;
 		border-radius: 3px;
 		background: var(--nimble-ui-chrome);
+	}
+	.compact {
+		display: flex;
+		flex-wrap: wrap;
+	}
+	.compact .condition {
+		gap: 6px;
+		height: 26px;
+		padding: 0 11px 0 4px;
+		border-radius: 13px;
+		font-size: 0.75rem;
+	}
+	.compact .condition img {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
 	}
 </style>

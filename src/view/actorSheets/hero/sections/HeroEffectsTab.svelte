@@ -30,6 +30,15 @@ Any owner can turn a condition on or off. The arrow keys, Home and End move the 
 	options={view.conditions.options}
 	onpick={(condition) => perform(condition.intent)}
 />
+{#if view.conditions.other.options.length}
+	<GroupHeading label={view.conditions.other.label} plain />
+	<ConditionGrid
+		label={view.conditions.other.label}
+		options={view.conditions.other.options}
+		onpick={(condition) => perform(condition.intent)}
+		compact
+	/>
+{/if}
 
 <style>
 	.bar {

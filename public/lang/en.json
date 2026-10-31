@@ -351,6 +351,7 @@
 					"active": "Active effects",
 					"passive": "Passive effects",
 					"allConditions": "All conditions",
+					"otherConditions": "Other conditions",
 					"none": "None",
 					"fromItem": "From {name}",
 					"inactiveRound": "Ends after 1 round with no attack and no new use",
