@@ -129,6 +129,20 @@ describe('rollUnarmedStrike', () => {
 		expect(spendRuleChargeMock).toHaveBeenCalledWith(actor, 'heads');
 	});
 
+	it('tells the Attack Outcome rules the strike deals bludgeoning damage', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
+		const actor = createHeroicCharacter();
+		const changeFor = vi.fn(() => null);
+		Object.assign(actor, { rules: [{ type: 'attackOutcome', changeFor }] });
+
+		await rollUnarmedStrike(actor);
+
+		expect(changeFor).toHaveBeenCalledWith(
+			expect.objectContaining({ damageTypes: ['bludgeoning'] }),
+		);
+	});
+
 	it('starts the dialog at the given roll mode', async () => {
 		dialogResult({});
 

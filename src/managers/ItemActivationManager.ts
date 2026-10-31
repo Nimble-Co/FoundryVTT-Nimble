@@ -560,6 +560,7 @@ class ItemActivationManager {
 						itemUuid: this.#item.uuid,
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
+						damageTypes: node.damageType ? [node.damageType] : [],
 					});
 					this.#attackOutcomeCharges = attackOutcome.charges;
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {

@@ -114,6 +114,7 @@ export async function rollUnarmedStrike(
 		itemUuid: null,
 		canCrit: canCrit && !multiTarget,
 		canMiss: !multiTarget,
+		damageTypes: ['bludgeoning'],
 	});
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {

@@ -8,6 +8,7 @@ import {
 	type AttackDeliveryFilter,
 	matchesAttackDelivery,
 } from '../../utils/damage/attackDelivery.js';
+import { attackTags } from '../../utils/damage/attackTags.js';
 import type { RerollTrigger } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
@@ -120,6 +121,8 @@ interface AttackOutcomeContext {
 	other: OtherCreature | null | undefined;
 	/** The item the attack is made with. */
 	itemUuid: string | null | undefined;
+	/** The damage types of the attack, as `attack:damageType:<type>` tags for the predicate. */
+	damageTypes?: readonly string[];
 }
 
 /** How a rule changes the way an attack roll is read. */
@@ -190,7 +193,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	/** How this rule changes the reading of this attack, or null when it does not apply. */
 	changeFor(context: AttackOutcomeContext): AttackOutcomeChange | null {
 		if (!this.item.isEmbedded || this.side !== context.side) return null;
-		if (!this.test()) return null;
+		if (!this.test(this.domainWith(attackTags(context.damageTypes)))) return null;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return null;
 		const ownAttack = context.side === 'yourAttacks';
 		if (ownAttack && this.thisItemOnly && context.itemUuid !== this.item.uuid) return null;

@@ -138,4 +138,14 @@ describe('collectAttackOutcome', () => {
 			expect.objectContaining({ side: 'attacksAgainstYou', other: attacker }),
 		);
 	});
+
+	it("gives the rules the attack's damage types", () => {
+		const rule = { type: 'attackOutcome', changeFor: vi.fn(() => null) };
+
+		collectAttackOutcome(roll({ attacker: { rules: [rule] }, damageTypes: ['slashing'] }));
+
+		expect(rule.changeFor).toHaveBeenCalledWith(
+			expect.objectContaining({ side: 'yourAttacks', damageTypes: ['slashing'] }),
+		);
+	});
 });

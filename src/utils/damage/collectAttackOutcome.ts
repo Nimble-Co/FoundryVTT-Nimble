@@ -11,6 +11,7 @@ interface AttackOutcomeRuleLike {
 		delivery: AttackDelivery | null;
 		other: OtherCreature | null | undefined;
 		itemUuid: string | null | undefined;
+		damageTypes?: readonly string[];
 	}): AttackOutcomeChange | null;
 }
 
@@ -27,6 +28,8 @@ interface AttackOutcomeInput {
 	itemUuid: string | null | undefined;
 	canCrit: boolean;
 	canMiss: boolean;
+	/** The damage types of the attack. */
+	damageTypes?: readonly string[];
 }
 
 /** The roll options the Attack Outcome rules give, and the charges the attacker's rules spend. */
@@ -80,6 +83,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 				delivery: input.delivery,
 				other: other as OtherCreature | null | undefined,
 				itemUuid: input.itemUuid,
+				damageTypes: input.damageTypes ?? [],
 			});
 			if (!change) continue;
 

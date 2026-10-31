@@ -369,6 +369,11 @@ abstract class NimbleBaseRule<
 		return this.test(passedDomain);
 	}
 
+	/** The actor's domain with `extra` tags added, for `test`. */
+	protected domainWith(extra: readonly string[]): Set<string> {
+		return new Set([...(this.actor?.getDomain() ?? []), ...extra]);
+	}
+
 	protected test(passedDomain?: string[] | Set<string>): boolean {
 		if (this.disabled) return false;
 		// Empty predicate means "no conditions" = always pass

@@ -113,6 +113,14 @@ describe('AttackOutcomeRule', () => {
 		expect(rule.changeFor(attack({ other: null }))).toBeNull();
 	});
 
+	it("tests its predicate with the attack's damage types", () => {
+		const rule = makeRule({ predicate: new Predicate({ $and: ['attack:damageType:slashing'] }) });
+
+		expect(rule.changeFor(attack({ damageTypes: ['slashing'] }))).not.toBeNull();
+		expect(rule.changeFor(attack({ damageTypes: ['piercing'] }))).toBeNull();
+		expect(rule.changeFor(attack())).toBeNull();
+	});
+
 	it('does not apply while its own predicate fails, or off a sheet', () => {
 		expect(
 			makeRule({ predicate: new Predicate({ $and: ['self:raging'] }) }).changeFor(attack()),

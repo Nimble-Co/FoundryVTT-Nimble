@@ -1850,6 +1850,16 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 			expect(opts.outcomeSources).toEqual({ forcedCrit: ["Deathbringer's Touch"] });
 		});
 
+		it("tells the Attack Outcome rules the attack's damage type", async () => {
+			const changeFor = vi.fn(() => null);
+
+			await rollWithTargets(1, [{ type: 'attackOutcome', changeFor }]);
+
+			expect(changeFor).toHaveBeenCalledWith(
+				expect.objectContaining({ side: 'yourAttacks', damageTypes: ['slashing'] }),
+			);
+		});
+
 		it('gives a Multi-target Attack no crit from an Attack Outcome rule', async () => {
 			const rule = {
 				type: 'attackOutcome',
