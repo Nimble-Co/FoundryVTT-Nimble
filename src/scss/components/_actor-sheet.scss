@@ -112,3 +112,12 @@
 .nimble-actor-sheet--monster:not(.minimized):has(.monster.wide) {
 	--nimble-sheet-drag-width: 236px;
 }
+
+// Past three columns a wider window shows nothing more, so it stops growing.
+.nimble-actor-sheet--hero:not(.minimized) {
+	max-width: 1350px;
+}
+
+.nimble-actor-sheet--monster:not(.minimized) {
+	max-width: 1270px;
+}

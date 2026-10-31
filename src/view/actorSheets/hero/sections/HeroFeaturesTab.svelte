@@ -40,6 +40,7 @@ In edit mode the bar has Create Feature.
 
 <style>
 	.bar {
+		width: var(--nimble-columns-width, auto);
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;

@@ -74,6 +74,7 @@ a stored object comes out of its container.
 
 <style>
 	.bar {
+		width: var(--nimble-columns-width, auto);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;

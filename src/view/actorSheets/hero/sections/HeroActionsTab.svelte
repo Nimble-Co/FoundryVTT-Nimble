@@ -35,6 +35,7 @@ At a wide tab the reactions are in a second column. In one column the reactions 
 
 <style>
 	.bar {
+		max-width: calc(2 * var(--nimble-column, 50%) + var(--nimble-column-gap, 0px));
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
@@ -43,7 +44,7 @@ At a wide tab the reactions are in a second column. In one column the reactions 
 	}
 	.two {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: repeat(2, minmax(0, var(--nimble-column, 1fr)));
 		gap: 0 24px;
 		align-items: start;
 	}

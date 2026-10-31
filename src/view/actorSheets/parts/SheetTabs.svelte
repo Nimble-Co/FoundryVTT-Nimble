@@ -89,6 +89,9 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 	.t:hover {
 		color: var(--nimble-ui-ink);
 	}
+	.top .t {
+		max-width: 104px;
+	}
 	.top .t[aria-selected='true'] {
 		color: var(--nimble-ui-highlight);
 		box-shadow: inset 0 -2px 0 var(--nimble-ui-highlight);

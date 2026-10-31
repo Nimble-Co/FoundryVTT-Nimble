@@ -45,8 +45,9 @@ With `flow`, the groups flow in columns about 300 px wide, and a group never bre
 		min-width: 0;
 	}
 	.flow {
-		column-width: 300px;
-		column-gap: 24px;
+		width: var(--nimble-columns-width, auto);
+		column-width: var(--nimble-column, 300px);
+		column-gap: var(--nimble-column-gap, 24px);
 	}
 	.group {
 		break-inside: avoid;

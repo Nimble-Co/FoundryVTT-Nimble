@@ -52,10 +52,12 @@ you drag only in edit mode. Each entry, with its edit mode, is a MonsterAbilityE
 
 <style>
 	.columns {
-		column-width: 280px;
-		column-gap: 18px;
+		width: var(--nimble-columns-width, auto);
+		column-width: var(--nimble-column, 280px);
+		column-gap: var(--nimble-column-gap, 18px);
 	}
 	.group {
+		break-inside: avoid;
 		margin-bottom: 8px;
 	}
 	.entry {
