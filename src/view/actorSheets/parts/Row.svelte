@@ -194,6 +194,10 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		position: relative;
 		pointer-events: none;
 	}
+	/* Foundry stops the pointer on button children; the cost marks need it for their tooltips */
+	.row:not(.dim) .main:not(.stretch) :global(.cost [data-tooltip]) {
+		pointer-events: auto;
+	}
 	.out .use,
 	.use[aria-disabled='true'] {
 		cursor: default;
