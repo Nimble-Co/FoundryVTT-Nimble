@@ -39,7 +39,6 @@ The arrow keys, Home and End move the focus in the condition grid.
 {#each view.groups as group, index (group.id)}
 	<section class="group">
 		<GroupHeading label={group.label} note={group.note} noteTone="muted" flush={index === 0} />
-		{#if !group.rows.length}<p class="none">{view.none}</p>{/if}
 		{#each group.rows as row (row.id)}
 			{@const asking =
 				row.use?.kind === 'ask' && ui.confirm === `ask:${row.id}` ? row.use.ask : null}
@@ -78,6 +77,7 @@ The arrow keys, Home and End move the focus in the condition grid.
 		{/each}
 	</section>
 {/each}
+{#if view.empty}<p class="empty">{view.empty}</p>{/if}
 <GroupHeading label={view.conditions.label} />
 <ConditionGrid
 	label={view.conditions.label}
@@ -105,8 +105,8 @@ The arrow keys, Home and End move the focus in the condition grid.
 	.group {
 		margin-bottom: 8px;
 	}
-	.none {
-		margin: 6px 4px;
+	.empty {
+		margin: 0 4px 4px;
 		font-size: 0.813rem;
 		color: var(--nimble-ui-ink-muted);
 	}

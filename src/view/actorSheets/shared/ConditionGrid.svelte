@@ -24,7 +24,8 @@ Every condition of the system as a toggle button, on both sheets. `compact` show
 			onclick={() => onpick(condition)}
 			onkeydown={(event) => moveGridFocus(grid, event)}
 		>
-			<img src={condition.img} alt="" />{condition.name}
+			<img src={condition.img} alt="" /><span class="name">{condition.name}</span
+			>{#if condition.on}<i class="fa-solid fa-check" aria-hidden="true"></i>{/if}
 		</button>
 	{/each}
 </div>
@@ -48,14 +49,28 @@ Every condition of the system as a toggle button, on both sheets. `compact` show
 		font-weight: 600;
 		color: var(--nimble-ui-ink);
 	}
-	.condition:hover,
-	.condition:focus-visible {
+	.name {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.condition:hover {
 		border-color: var(--nimble-ui-highlight);
-		outline: none;
+	}
+	.condition:focus-visible {
+		outline: 2px solid var(--nimble-ui-highlight);
+		outline-offset: 2px;
 	}
 	.condition.on {
-		border-color: var(--nimble-ui-highlight);
-		background: var(--nimble-ui-well);
+		border-color: var(--nimble-crimson);
+		background: var(--nimble-crimson);
+		color: var(--nimble-ui-fill-ink);
+	}
+	.condition i {
+		flex: none;
+		font-size: 0.75rem;
 	}
 	.condition img {
 		flex: none;

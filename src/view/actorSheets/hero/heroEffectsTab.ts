@@ -7,10 +7,10 @@ import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 const INSPIRATION = 'NIMBLE.actorSheet.hero.effects.inspiration';
 
 export interface HeroEffectsTabView {
-	/** Active effects, Conditions on you, Passive effects: always all three */
+	/** Active effects, Conditions on you, Passive effects: only the groups that have rows */
 	groups: HeroRowGroup[];
-	/** the line in an empty group */
-	none: string;
+	/** the one line when no group has a row */
+	empty: string | null;
 	conditions: EffectsTabView['conditions'];
 }
 

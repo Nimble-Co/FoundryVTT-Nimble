@@ -69,10 +69,10 @@ export interface ConditionToggleView {
 }
 
 export interface EffectsTabView {
-	/** Active effects, the conditions on the actor, Passive effects: always all three */
+	/** Active effects, the conditions on the actor, Passive effects: only the groups that have rows */
 	groups: EffectRowGroup[];
-	/** the line in an empty group */
-	none: string;
+	/** the one line when no group has a row */
+	empty: string | null;
 	/** the conditions that a user sets by hand; `other` are the ones that do nothing on their own */
 	conditions: {
 		label: string;
@@ -222,25 +222,26 @@ export function effectsTab(input: EffectsTabInput): EffectsTabView {
 			on: condition.active,
 			intent: { kind: 'setCondition', conditionId: condition.id, active: !condition.active },
 		}));
+	const groups = [
+		group(
+			'active',
+			localize(`${FX}.active`),
+			lists.active.map((effect) => effectRow(effect, input, false)),
+		),
+		group(
+			'conditionsOn',
+			input.conditionsOnLabel,
+			lists.conditions.map((condition) => conditionRow(condition, input)),
+		),
+		group(
+			'passive',
+			localize(`${FX}.passive`),
+			lists.passive.map((effect) => effectRow(effect, input, true)),
+		),
+	].filter((entry) => entry.rows.length);
 	return {
-		groups: [
-			group(
-				'active',
-				localize(`${FX}.active`),
-				lists.active.map((effect) => effectRow(effect, input, false)),
-			),
-			group(
-				'conditionsOn',
-				input.conditionsOnLabel,
-				lists.conditions.map((condition) => conditionRow(condition, input)),
-			),
-			group(
-				'passive',
-				localize(`${FX}.passive`),
-				lists.passive.map((effect) => effectRow(effect, input, true)),
-			),
-		],
-		none: localize(`${FX}.none`),
+		groups,
+		empty: groups.length ? null : localize(`${FX}.noEffects`),
 		conditions: {
 			label: localize(`${FX}.allConditions`),
 			options: toggles.filter((toggle) => !OTHER_CONDITIONS.has(toggle.id)),

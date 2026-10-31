@@ -30,15 +30,12 @@ describe('heroEffectsTab', () => {
 		]);
 	});
 
-	it('keeps each group, with None, when it is empty', () => {
+	it('leaves out an empty group, and has one line when every group is empty', () => {
 		const view = heroEffectsTab(blankHero(), heroContext());
 
-		expect(layout(view)).toEqual([
-			[`${FX}.active`, '', []],
-			['NIMBLE.actorSheet.hero.effects.conditionsOn', '', []],
-			[`${FX}.passive`, '', []],
-		]);
-		expect(view.none).toBe(`${FX}.none`);
+		expect(layout(view)).toEqual([]);
+		expect(view.empty).toBe(`${FX}.noEffects`);
+		expect(heroEffectsTab(effectsHero(), effectsContext()).empty).toBeNull();
 	});
 
 	it('counts the active effects and the conditions, not the passive effects', () => {
