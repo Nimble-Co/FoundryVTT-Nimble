@@ -81,7 +81,9 @@ describe('variable charge spends', () => {
 
 	const submitButtonOutsideSheet = (): HTMLButtonElement | null => {
 		const buttons = [
-			...document.querySelectorAll<HTMLButtonElement>('footer.nimble-sheet__footer .nimble-button'),
+			...document.querySelectorAll<HTMLButtonElement>(
+				'.nimble-roll-window .foot .btn.primary, footer.nimble-sheet__footer .nimble-button',
+			),
 		];
 		return buttons.find((button) => !actor.sheet.element.contains(button)) ?? null;
 	};

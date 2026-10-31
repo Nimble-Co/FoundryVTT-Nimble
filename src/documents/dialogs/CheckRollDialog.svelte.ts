@@ -37,13 +37,13 @@ export default class CheckRollDialog extends SvelteApplicationMixin(ApplicationV
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-roll-window'],
 		window: {
 			icon: 'fa-solid fa-dice-d20',
 			resizable: true,
 		},
 		position: {
-			width: 576,
+			width: 360,
 			height: 'auto' as const,
 		},
 		actions: {},

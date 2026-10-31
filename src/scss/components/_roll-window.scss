@@ -1,0 +1,43 @@
+//** ROLL WINDOW: the windows that open before a roll (item activation, spell, check and save) **/
+
+.nimble-roll-window {
+	--fa-width: auto;
+
+	// It opens over a sheet: a raised surface, a ring and a shadow keep it apart from the sheet.
+	background: var(--nimble-ui-raised);
+	border: 1px solid var(--nimble-ui-ring);
+	box-shadow: 0 10px 32px rgb(0 0 0 / 60%);
+
+	> .window-content {
+		padding: 0;
+		background: none;
+	}
+}
+
+// No title bar: the head of the window shows the name. The Foundry header lies over the head, so a
+// drag on the head moves the window, and its close button stays in the corner.
+.nimble-roll-window:not(.minimized) > .window-header {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 2;
+	height: 44px;
+	padding: 0 10px 0 0;
+	justify-content: flex-end;
+	background: transparent;
+	border: 0;
+
+	.window-icon,
+	.window-title,
+	[data-action="toggleControls"] {
+		display: none;
+	}
+
+	.header-control {
+		color: var(--nimble-ui-ink-dim);
+
+		&:hover,
+		&:focus-visible {
+			color: var(--nimble-ui-ink);
+		}
+	}
+}

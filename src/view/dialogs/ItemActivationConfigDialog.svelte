@@ -5,9 +5,11 @@
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
-	import RollModeConfig from './components/RollModeConfig.svelte';
+	import RollModeField from './components/RollModeField.svelte';
+	import RollModifierFields from './components/RollModifierFields.svelte';
+	import RollWindow from './components/RollWindow.svelte';
 
-	const { skillCheckDialog, damageTypes, hitDice } = CONFIG.NIMBLE;
+	const { skillCheckDialog, damageTypes } = CONFIG.NIMBLE;
 
 	let { actor, dialog, item, rollMode }: ItemActivationConfigDialogProps = $props();
 
@@ -63,13 +65,19 @@
 	}
 </script>
 
-<article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
-	<RollModeConfig bind:selectedRollMode={state.selectedRollMode} />
+<RollWindow
+	title={item.name}
+	img={item.img}
+	rollLabel={localize('NIMBLE.rollWindow.roll')}
+	oncancel={() => dialog.close()}
+	onroll={onSubmit}
+>
+	<RollModeField bind:value={state.selectedRollMode} />
 
 	{#if state.hasConditionalBonuses}
-		<div class="nimble-roll-modifiers-container">
+		<div>
 			<div class="nimble-conditional-bonus">
-				<h5 class="nimble-conditional-bonus__heading">
+				<h5 class="lb">
 					{localize('NIMBLE.activationDialog.conditionalBonus.heading')}
 				</h5>
 
@@ -121,34 +129,16 @@
 		</div>
 	{/if}
 
-	<div class="nimble-roll-modifiers-container">
-		<div class="nimble-roll-modifiers">
-			<label>
-				{hitDice.situationalModifiers}:
-				<input type="string" bind:value={state.situationalModifiers} placeholder="0" />
-			</label>
-		</div>
-	</div>
-	<div class="nimble-roll-modifiers-container">
-		<div class="nimble-roll-modifiers">
-			<label>
-				{hitDice.setPrimaryDie}:
-				<input type="number" bind:value={state.primaryDieValue} placeholder="0" />
-			</label>
-		</div>
-
-		<div class="nimble-roll-modifiers">
-			<label>
-				{hitDice.setPrimaryDieModifier}:
-				<input type="number" bind:value={state.primaryDieModifier} placeholder="0" />
-			</label>
-		</div>
-	</div>
+	<RollModifierFields
+		bind:situationalModifiers={state.situationalModifiers}
+		bind:primaryDieValue={state.primaryDieValue}
+		bind:primaryDieModifier={state.primaryDieModifier}
+	/>
 
 	{#if state.variableChargeSpends.length > 0}
-		<div class="nimble-roll-modifiers-container">
-			<div class="nimble-roll-modifiers nimble-pool-spend">
-				<h5 class="nimble-pool-spend__heading">
+		<div>
+			<div class="nimble-pool-spend">
+				<h5 class="lb">
 					{localize('NIMBLE.activationDialog.spendCharge.heading')}
 				</h5>
 
@@ -209,9 +199,9 @@
 	{/if}
 
 	{#if state.hasSpendablePools}
-		<div class="nimble-roll-modifiers-container">
-			<div class="nimble-roll-modifiers nimble-pool-spend">
-				<h5 class="nimble-pool-spend__heading">
+		<div>
+			<div class="nimble-pool-spend">
+				<h5 class="lb">
 					{localize('NIMBLE.activationDialog.spendPoolDice')}
 				</h5>
 
@@ -319,336 +309,207 @@
 		</div>
 	{/if}
 
-	{#if state.damagePreviews.length > 0}
-		<div class="nimble-roll-formulas">
-			{#each state.damagePreviews as damageEffect}
-				<div class="nimble-roll-formula">
-					{#if damageEffect.damageType}
-						<span class="nimble-roll-formula__type">
-							{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
-						</span>
-					{/if}
-					<span class="nimble-roll-formula__formula">
-						{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
-					</span>
-				</div>
-			{/each}
+	{#each state.damagePreviews as damageEffect}
+		<div class="frm">
+			{#if damageEffect.damageType}
+				{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+			{/if}
+			{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
 		</div>
-	{/if}
+	{/each}
 	{#if game.user?.isGM}
-		<div class="nimble-roll-modifiers-container">
-			<label>
-				{skillCheckDialog.hideRoll}
-				<input
-					type="checkbox"
-					bind:checked={state.shouldRollBeHidden}
-					class="modifier-item__checkbox"
-				/>
-			</label>
-		</div>
+		<label class="check">
+			<input type="checkbox" bind:checked={state.shouldRollBeHidden} />
+			<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+			<span>{skillCheckDialog.hideRoll}</span>
+		</label>
 	{/if}
-</article>
-
-<footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="basic" onclick={onSubmit}>
-		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
-		Roll
-	</button>
-</footer>
+</RollWindow>
 
 <style lang="scss">
-	[data-button-variant='basic'] {
-		--nimble-button-padding: 0.5rem;
-		--nimble-button-width: 100%;
-	}
-
-	.nimble-roll-modifiers-container {
-		display: flex;
-		gap: 1rem;
-		margin-top: 1rem;
-	}
-
 	.nimble-conditional-bonus {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		flex: 1;
-
-		&__heading {
-			margin: 0;
-			font-size: var(--nimble-sm-text, 0.875rem);
-		}
+		gap: 6px;
 
 		&__row {
 			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			gap: 0.5rem;
+			flex-direction: column;
+			gap: 4px;
+		}
+
+		&__label {
+			font-size: 0.75rem;
+			font-weight: 600;
 		}
 
 		&__choices {
 			display: flex;
-			gap: 0.25rem;
+			gap: 4px;
 		}
 
 		&__choice {
-			padding: 0.25rem 0.5rem;
-			border: 1px solid var(--nimble-border-color);
-			border-radius: var(--nimble-border-radius);
-			cursor: pointer;
-			background: transparent;
+			flex: 1;
+			min-width: 0;
+			width: auto;
+			height: 30px;
+			padding: 0 6px;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			background: none;
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: var(--nimble-ui-ink);
+
+			&:hover {
+				border-color: var(--nimble-ui-highlight);
+			}
 
 			&--selected {
-				background: var(--nimble-accent-color);
-				color: var(--nimble-light-text-color);
-				border-color: var(--nimble-accent-color);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-soft);
 			}
-		}
-	}
-
-	.nimble-roll-modifiers {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		flex: 1;
-
-		label {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-
-			input {
-				padding: 0.5rem;
-				border: 1px solid var(--nimble-border-color);
-				border-radius: var(--nimble-border-radius);
-				flex: 1;
-			}
-		}
-	}
-
-	.nimble-roll-formulas {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.5rem;
-		margin-top: 1rem;
-	}
-
-	.nimble-roll-formula {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
-		background: var(--nimble-background-color-secondary);
-		border-radius: 9999px;
-		white-space: nowrap;
-
-		&__type {
-			font-weight: 600;
-			color: var(--nimble-text-color-primary);
-		}
-
-		&__formula {
-			font-family: var(--nimble-font-family-mono);
-			color: var(--nimble-text-color-secondary);
 		}
 	}
 
 	.nimble-pool-spend {
-		gap: 0.5rem;
-		padding: 0.625rem 0.75rem;
-		background: color-mix(in srgb, var(--nimble-sheet-background) 92%, transparent);
-		border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-		border-radius: 6px;
-
-		&__heading {
-			margin: 0;
-			font-size: 0.8125rem;
-			font-weight: 600;
-			letter-spacing: 0.02em;
-			text-transform: uppercase;
-			opacity: 0.75;
-		}
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 
 		&__row {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			gap: 0.75rem;
-			padding-block: 0.125rem;
-			flex-wrap: nowrap;
+			flex-wrap: wrap;
+			gap: 6px 8px;
 		}
 
 		&__label {
-			display: inline-flex;
+			display: flex;
 			align-items: center;
-			gap: 0.4rem;
-			font-size: 0.875rem;
+			gap: 6px;
+			min-width: 0;
+			font-size: 0.75rem;
 			font-weight: 600;
-			color: var(--nimble-text-color-primary);
-
-			i {
-				font-size: 0.95rem;
-				color: var(--nimble-pool-spend-icon-color);
-			}
 		}
 
-		&__dice {
-			display: inline-flex;
-			gap: 0.3rem;
+		&__dice,
+		&__auto-faces {
+			display: flex;
 			flex-wrap: wrap;
-			justify-content: flex-end;
-		}
-
-		&__die {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			min-width: 1.75rem;
-			height: 1.75rem;
-			padding: 0 0.4rem;
-			background: color-mix(in srgb, var(--nimble-pool-spend-die-border-color) 12%, transparent);
-			border: 2px solid var(--nimble-pool-spend-die-border-color);
-			border-radius: 4px;
-			font-weight: 700;
-			color: var(--nimble-pool-spend-die-text-color);
-			cursor: pointer;
-			transition:
-				background 0.12s ease,
-				color 0.12s ease,
-				transform 0.08s ease;
-
-			&:hover {
-				background: color-mix(in srgb, var(--nimble-pool-spend-die-border-color) 22%, transparent);
-			}
-
-			&--selected {
-				background: var(--nimble-pool-spend-die-selected-background);
-				border-color: var(--nimble-pool-spend-die-selected-border-color);
-				color: var(--nimble-pool-spend-die-selected-text-color);
-				transform: scale(0.93);
-			}
-		}
-
-		&__row--auto {
-			.nimble-pool-spend__label i {
-				color: var(--nimble-pool-spend-auto-icon-color);
-			}
+			gap: 4px;
 		}
 
 		&__auto {
-			display: inline-flex;
+			display: flex;
 			align-items: center;
-			gap: 0.5rem;
+			gap: 8px;
 		}
 
-		&__auto-faces {
-			display: inline-flex;
-			gap: 0.25rem;
-		}
-
+		&__die,
 		&__auto-face {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			min-width: 1.5rem;
-			height: 1.5rem;
-			padding: 0 0.3rem;
-			background: var(--nimble-pool-spend-auto-face-background);
-			border: 1px solid var(--nimble-pool-spend-auto-face-border-color);
-			border-radius: 3px;
-			font-size: 0.8125rem;
+			display: grid;
+			place-items: center;
+			width: 28px;
+			height: 28px;
+			padding: 0;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			background: none;
+			font-size: 0.812rem;
 			font-weight: 700;
-			color: var(--nimble-pool-spend-auto-face-text-color);
+			color: var(--nimble-ui-ink);
+		}
+
+		&__die:hover {
+			border-color: var(--nimble-ui-highlight);
+		}
+
+		&__die--selected {
+			border-color: var(--nimble-crimson);
+			background: var(--nimble-crimson);
+			color: var(--nimble-ui-fill-ink);
 		}
 
 		&__auto-total {
 			font-weight: 700;
-			color: var(--nimble-pool-spend-auto-total-color);
 			font-variant-numeric: tabular-nums;
 		}
 
 		&__stepper {
-			display: inline-flex;
+			display: flex;
 			align-items: center;
-			gap: 0.15rem;
+			gap: 6px;
 		}
 
 		&__stepper-btn {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			width: 1.75rem;
-			height: 1.75rem;
+			display: grid;
+			place-items: center;
+			width: 28px;
+			height: 28px;
 			padding: 0;
-			background: color-mix(in srgb, var(--nimble-pool-spend-die-border-color) 12%, transparent);
-			border: 1px solid var(--nimble-pool-spend-die-border-color);
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
-			font-size: 1rem;
+			background: none;
+			font-size: 0.875rem;
 			font-weight: 700;
-			line-height: 1;
-			color: var(--nimble-pool-spend-die-text-color);
-			cursor: pointer;
-			transition: background 0.12s ease;
+			color: var(--nimble-ui-ink);
 
 			&:hover:not(:disabled) {
-				background: color-mix(in srgb, var(--nimble-pool-spend-die-border-color) 22%, transparent);
+				border-color: var(--nimble-ui-highlight);
 			}
 
 			&:disabled {
-				opacity: 0.35;
-				cursor: not-allowed;
+				opacity: 0.4;
 			}
-		}
-
-		&__stepper-input {
-			width: 3.5rem;
-			padding-block: 0;
-			text-align: center;
-			font-weight: 700;
 		}
 
 		&__stepper-value {
-			min-width: 2.75rem;
-			padding-inline: 0.25rem;
-			text-align: center;
+			display: flex;
+			align-items: baseline;
+			gap: 3px;
+			font-size: 0.812rem;
 			font-variant-numeric: tabular-nums;
-			font-size: 0.875rem;
+		}
 
-			strong {
-				font-weight: 700;
-				color: var(--nimble-text-color-primary);
-			}
+		&__stepper-input {
+			width: 2.5em;
+			height: 28px;
+			padding: 0 4px;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 2px;
+			background: var(--nimble-ui-well);
+			box-shadow: none;
+			text-align: center;
+			font-weight: 700;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__stepper-available {
-			opacity: 0.55;
-			font-size: 0.8em;
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__total {
 			display: flex;
 			flex-wrap: wrap;
-			align-items: baseline;
-			gap: 0.6rem;
-			padding-top: 0.375rem;
-			border-top: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
-			font-size: 0.875rem;
-			font-weight: 600;
-			color: var(--nimble-pool-spend-total-color);
+			justify-content: flex-end;
+			gap: 4px 10px;
+			font-size: 0.812rem;
+			font-weight: 700;
 		}
 
 		&__total-part {
 			display: inline-flex;
 			align-items: baseline;
-			gap: 0.25rem;
+			gap: 3px;
 		}
 
 		&__total-label {
-			font-size: 0.75em;
+			font-size: 0.75rem;
 			font-weight: 500;
-			opacity: 0.75;
+			color: var(--nimble-ui-ink-muted);
 		}
 	}
 </style>

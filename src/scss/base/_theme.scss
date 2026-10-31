@@ -42,7 +42,6 @@
 	--nimble-card-background-color: hsl(293, 10%, 17%);
 	--nimble-sheet-background-color: unset;
 	--nimble-accent-color: hsl(278, 10%, 42%);
-	--nimble-range-slider-handle-color: var(--nimble-dark-text-color);
 	--nimble-hover-tag-text-color: white;
 	--nimble-selected-tag-text-color: white;
 	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
@@ -288,6 +287,7 @@
 	--nimble-ui-ring: hsla(41, 18%, 54%, 0.75);
 	--nimble-ui-soft: hsla(41, 18%, 54%, 0.16);
 	--nimble-ui-hover: hsla(293, 10%, 34%, 0.5);
+	--nimble-ui-raised: hsl(247, 14%, 17%);
 	--nimble-ui-well: hsla(0, 0%, 0%, 0.28);
 	--nimble-ui-tile: hsl(41, 18%, 54%);
 	--nimble-ui-tile-ink: #181821;

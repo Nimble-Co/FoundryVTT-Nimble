@@ -40,12 +40,12 @@ export default class ItemActivationConfigDialog extends SvelteApplicationMixin(A
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-roll-window'],
 		window: {
 			icon: 'fa-solid fa-dice-d20',
 		},
 		position: {
-			width: 576,
+			width: 360,
 			height: 'auto' as const,
 		},
 		actions: {},

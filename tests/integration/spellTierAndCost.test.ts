@@ -242,13 +242,13 @@ describe('casting through the cast window spends what the window said', () => {
 		const manaBefore = mage.system.resources.mana.current;
 		const root = await openCastWindow(spell);
 
-		// Scoped to the tier slider: the roll mode control is a slider too.
-		const handle = root.querySelector<HTMLElement>('.nimble-mana-slider .rangeHandle');
-		expect(handle, 'the window offers a tier slider').toBeTruthy();
-		expect(handle!.getAttribute('aria-valuemax')).toBe('2');
+		const tiers = [...root.querySelectorAll<HTMLElement>('.tiers .tier')];
+		expect(
+			tiers.map((tier) => tier.textContent?.trim()),
+			'the window offers each tier that the hero can pay',
+		).toEqual(['1', '2']);
 
-		handle!.focus();
-		handle!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		tiers[1].click();
 		await settle(400);
 
 		expect(costText(root)).toContain('2');

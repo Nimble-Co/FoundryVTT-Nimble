@@ -242,7 +242,7 @@ describe('mark target and conditional bonus', () => {
 		await settle(300);
 		expect(damageChoice!.getAttribute('aria-pressed')).toBe('true');
 
-		dialog.querySelector<HTMLButtonElement>('.nimble-sheet__footer .nimble-button')!.click();
+		dialog.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
 		const message = await messagePromise;
 		expect(message).toBeTruthy();
 
@@ -274,7 +274,7 @@ describe('mark target and conditional bonus', () => {
 		advantageChoice!.click();
 		await settle(300);
 
-		dialog.querySelector<HTMLButtonElement>('.nimble-sheet__footer .nimble-button')!.click();
+		dialog.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
 		const message = await messagePromise;
 		expect(message).toBeTruthy();
 
@@ -295,7 +295,7 @@ describe('mark target and conditional bonus', () => {
 		const dialog = activationDialogElement()!;
 		expect(dialog.querySelector('.nimble-conditional-bonus')).toBeNull();
 
-		dialog.querySelector<HTMLButtonElement>('.nimble-sheet__footer .nimble-button')!.click();
+		dialog.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
 		await messagePromise;
 		await waitForDialogClosed();
 	}, 60_000);

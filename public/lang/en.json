@@ -3789,6 +3789,22 @@
 				}
 			}
 		},
+		"rollWindow": {
+			"cancel": "Cancel",
+			"cancelHint": "Close. Nothing is spent",
+			"castAtTier": "Cast at tier",
+			"roll": "Roll",
+			"rollMode": "Advantage and disadvantage",
+			"rollModeHelp": {
+				"advantage": "Roll {count} more {dice} and remove the lowest.",
+				"dice": "dice",
+				"die": "die",
+				"disadvantage": "Roll {count} more {dice} and remove the highest.",
+				"straight": "Each advantage cancels one disadvantage."
+			},
+			"tierBase": "Tier {tier}, the base cost",
+			"tierUpcast": "Upcast to tier {tier}, {tier} mana"
+		},
 		"activationDialog": {
 			"spendPoolDice": "Spend Pool Dice",
 			"spendCharge": {

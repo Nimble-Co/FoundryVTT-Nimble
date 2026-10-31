@@ -293,7 +293,7 @@ describe('the new NPC sheet', () => {
 			() => !!windowTitled(title)?.element?.isConnected,
 			'the roll window of the attack',
 		);
-		windowTitled(title)!.element.querySelector<HTMLButtonElement>('footer button')!.click();
+		windowTitled(title)!.element.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
 		await waitFor(
 			() =>
 				game.messages.contents.some(
@@ -313,7 +313,7 @@ describe('the new NPC sheet', () => {
 		tile!.click();
 		const title = `${goblin.name}: Configure ${CONFIG.NIMBLE.savingThrows.dexterity} Save`;
 		await waitFor(() => !!windowTitled(title)?.rendered, 'the roll window of the save');
-		windowTitled(title)!.element.querySelector<HTMLButtonElement>('footer button')!.click();
+		windowTitled(title)!.element.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
 		await waitFor(
 			() => game.messages.contents.some((message) => !before.has(message.id)),
 			'the save card',

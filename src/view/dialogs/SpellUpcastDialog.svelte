@@ -8,8 +8,10 @@
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
-	import RollModeConfig from './components/RollModeConfig.svelte';
-	import RangeSlider from 'svelte-range-slider-pips';
+	import localize from '../../utils/localize.js';
+	import RollModeField from './components/RollModeField.svelte';
+	import RollModifierFields from './components/RollModifierFields.svelte';
+	import RollWindow from './components/RollWindow.svelte';
 
 	let { actor, dialog, spell, ...data } = $props();
 
@@ -26,7 +28,6 @@
 
 	// I18n helpers
 	const {
-		hitDice,
 		spellUpcastDialog,
 		effectTypes,
 		spellProperties,
@@ -64,6 +65,9 @@
 	const currentMana = $derived(bounds.currentMana);
 	const maxTier = $derived(bounds.maxTier);
 	const maxMana = $derived(bounds.maxMana);
+	const tiers = $derived(
+		Array.from({ length: maxMana - baseMana + 1 }, (_, index) => baseMana + index),
+	);
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
 	const canUpcast = $derived(
@@ -209,317 +213,198 @@
 		};
 		return operations[delta.operation as keyof typeof operations] || delta.operation;
 	}
+
+	function onCast() {
+		// Validate situational modifiers
+		if (situationalModifiers !== '') {
+			const isValid = Roll.validate(situationalModifiers);
+			if (!isValid) {
+				ui.notifications?.warn(format('NIMBLE.hitDice.invalidAddToRoll'));
+				return;
+			}
+		}
+
+		// Validate mana (only for tiered spells that cost mana; a class pool
+		// cost is validated on the activation path instead)
+		if (baseMana > 0 && !isPoolCost) {
+			if (manaToSpend < baseMana) {
+				ui.notifications?.warn(
+					format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) }),
+				);
+				return;
+			}
+			if (enforceManaCost && manaToSpend > currentMana) {
+				ui.notifications?.warn(
+					format(spellUpcastDialog.warnings.insufficientMana, {
+						current: String(currentMana),
+						needed: String(manaToSpend),
+					}),
+				);
+				return;
+			}
+		}
+
+		if (manaToSpend > maxTier) {
+			ui.notifications?.warn(
+				format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
+			);
+			return;
+		}
+
+		const activationData = {
+			rollMode: selectedRollMode,
+			situationalModifiers,
+			primaryDieValue,
+			primaryDieModifier,
+			rollHidden: shouldRollBeHidden,
+			upcast: canUpcast
+				? {
+						manaToSpend,
+						choiceIndex: hasChoices ? choiceIndex : undefined,
+					}
+				: undefined,
+		};
+		dialog.submitActivation(activationData);
+	}
 </script>
 
-<article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
-	<RollModeConfig bind:selectedRollMode />
-
+<RollWindow
+	title={spellName}
+	img={spell?.parent?.img ?? dialog?.item?.img}
+	rollIcon="fa-solid fa-wand-magic-sparkles"
+	rollLabel={format(spellUpcastDialog.castSpell)}
+	oncancel={() => dialog.close()}
+	onroll={onCast}
+>
 	{#if costLabel}
-		<p class="nimble-spell-cost">
+		<p class="note nimble-spell-cost">
 			{format(spellUpcastDialog.cost, { cost: costLabel ?? '' })}
 		</p>
 	{/if}
 
 	{#if effectiveCastTier !== null}
-		<p class="nimble-spell-pinned-tier">
+		<p class="note nimble-spell-pinned-tier">
 			{format(spellUpcastDialog.castsAtTier, { tier: String(effectiveCastTier) })}
 		</p>
 	{/if}
 
+	<RollModeField bind:value={selectedRollMode} />
+
+	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
+
 	{#if canUpcast}
-		<hr />
-		<div class="nimble-upcast-section">
-			<h3 class="nimble-upcast-heading">
-				{format(spellUpcastDialog.upcastHeading, { spellName })}
-			</h3>
-			{#if pinnedCastTier === null}
-				<div class="nimble-mana-slider">
-					<div class="nimble-upcast-meta">
-						<span class="nimble-upcast-steps"
-							>{format(spellUpcastDialog.slider.level)}: <strong>{upcastSteps}</strong></span
+		{#if pinnedCastTier === null}
+			<div>
+				<div class="lb">{localize('NIMBLE.rollWindow.castAtTier')}</div>
+				<div class="tiers" role="group" aria-label={localize('NIMBLE.rollWindow.castAtTier')}>
+					{#each tiers as tier (tier)}
+						<button
+							type="button"
+							class="nimble-u-reset-button tier"
+							class:on={tier === manaToSpend}
+							class:short={tier > currentMana}
+							aria-pressed={tier === manaToSpend}
+							data-tooltip={localize(
+								`NIMBLE.rollWindow.${tier === baseMana ? 'tierBase' : 'tierUpcast'}`,
+								{ tier: String(tier) },
+							)}
+							onclick={() => (manaToSpend = tier)}
 						>
-					</div>
-					<section class="nimble-spell-roll-mode-config">
-						<RangeSlider
-							pips
-							float
-							all="label"
-							min={baseMana}
-							max={maxMana}
-							formatter={(value) => `${value} Mana`}
-							--range-float-text="var(--nimble-light-text-color)"
-							--range-handle="var(--nimble-range-slider-handle-color)"
-							--range-handle-focus="var(--nimble-range-slider-handle-color)"
-							--range-handle-inactive="var(--nimble-range-slider-handle-color)"
-							--range-pip="var(--nimble-dark-text-color)"
-							--range-pip-active="var(--nimble-dark-text-color)"
-							--range-pip-hover="var(--nimble-dark-text-color)"
-							--range-slider="var(--nimble-accent-color)"
-							spring={false}
-							bind:value={manaToSpend}
-						/>
-					</section>
+							{tier}
+						</button>
+					{/each}
 				</div>
-			{/if}
-			<div class="nimble-upcast-info">
-				{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
-					<fieldset class="nimble-upcast-choices">
-						<legend class="nimble-choices-label"
-							>{format(spellUpcastDialog.chooseEnhancement)}</legend
-						>
-						{#each spell.scaling.choices as choice, i}
-							<label class="nimble-choice-option">
-								<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
-								<span>{choice.label}</span>
-							</label>
-						{/each}
-					</fieldset>
-				{/if}
-
-				{#if upcastSteps > 0 && upcastPreview().length > 0}
-					<div class="nimble-upcast-preview">
-						<h4 class="nimble-preview-heading">{format(spellUpcastDialog.appliedEffect)}</h4>
-						<ul class="nimble-preview-list">
-							{#each upcastPreview() as effect}
-								<li>{effect}</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
 			</div>
-		</div>
+		{/if}
+
+		{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
+			<fieldset class="choices">
+				<legend class="lb">{format(spellUpcastDialog.chooseEnhancement)}</legend>
+				{#each spell.scaling.choices as choice, i}
+					<label class="check">
+						<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
+						<span>{choice.label}</span>
+					</label>
+				{/each}
+			</fieldset>
+		{/if}
+
+		{#if upcastSteps > 0 && upcastPreview().length > 0}
+			<div class="effect">
+				<div class="lb">{format(spellUpcastDialog.appliedEffect)}</div>
+				<ul>
+					{#each upcastPreview() as effect}
+						<li>{effect}</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	{/if}
 
-	<div class="nimble-roll-modifiers-container">
-		<div class="nimble-roll-modifiers">
-			<label>
-				{format(hitDice.situationalModifiers)}:
-				<input type="string" bind:value={situationalModifiers} placeholder="0" />
-			</label>
-		</div>
-	</div>
-
-	<div class="nimble-roll-modifiers-container">
-		<div class="nimble-roll-modifiers">
-			<label>
-				{format(hitDice.setPrimaryDie)}:
-				<input type="number" bind:value={primaryDieValue} placeholder="0" />
-			</label>
-		</div>
-
-		<div class="nimble-roll-modifiers">
-			<label>
-				{format(hitDice.setPrimaryDieModifier)}:
-				<input type="number" bind:value={primaryDieModifier} placeholder="0" />
-			</label>
-		</div>
-	</div>
 	{#if game.user?.isGM}
-		<div class="nimble-roll-modifiers-container">
-			<label>
-				{skillCheckDialog.hideRoll}
-				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
-			</label>
-		</div>
+		<label class="check">
+			<input type="checkbox" bind:checked={shouldRollBeHidden} />
+			<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+			<span>{skillCheckDialog.hideRoll}</span>
+		</label>
 	{/if}
-</article>
+</RollWindow>
 
-<footer class="nimble-sheet__footer">
-	<button
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={() => {
-			// Validate situational modifiers
-			if (situationalModifiers !== '') {
-				const isValid = Roll.validate(situationalModifiers);
-				if (!isValid) {
-					ui.notifications?.warn(format('NIMBLE.hitDice.invalidAddToRoll'));
-					return;
-				}
-			}
-
-			// Validate mana (only for tiered spells that cost mana; a class pool
-			// cost is validated on the activation path instead)
-			if (baseMana > 0 && !isPoolCost) {
-				if (manaToSpend < baseMana) {
-					ui.notifications?.warn(
-						format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) }),
-					);
-					return;
-				}
-				if (enforceManaCost && manaToSpend > currentMana) {
-					ui.notifications?.warn(
-						format(spellUpcastDialog.warnings.insufficientMana, {
-							current: String(currentMana),
-							needed: String(manaToSpend),
-						}),
-					);
-					return;
-				}
-			}
-
-			if (manaToSpend > maxTier) {
-				ui.notifications?.warn(
-					format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
-				);
-				return;
-			}
-
-			const activationData = {
-				rollMode: selectedRollMode,
-				situationalModifiers,
-				primaryDieValue,
-				primaryDieModifier,
-				rollHidden: shouldRollBeHidden,
-				upcast: canUpcast
-					? {
-							manaToSpend,
-							choiceIndex: hasChoices ? choiceIndex : undefined,
-						}
-					: undefined,
-			};
-			dialog.submitActivation(activationData);
-		}}
-	>
-		<i class="nimble-button__icon fa-solid fa-wand-magic-sparkles"></i>
-		{format(spellUpcastDialog.castSpell)}
-	</button>
-</footer>
-
-<style lang="scss">
-	[data-button-variant='basic'] {
-		--nimble-button-padding: 0.5rem;
-		--nimble-button-width: 100%;
-	}
-
-	.nimble-upcast-info {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-
-		.nimble-upcast-choices {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-
-			.nimble-choice-option {
-				display: flex;
-				align-items: center;
-				gap: 0.5rem;
-				padding: 0.5rem;
-				background: var(--nimble-background-color-tertiary);
-				border-radius: var(--nimble-border-radius);
-				cursor: pointer;
-				transition: background 0.15s ease;
-
-				&:hover {
-					background: var(--nimble-background-color-hover);
-				}
-
-				input[type='radio'] {
-					border: none;
-					background: var(--nimble-background-color-secondary);
-					cursor: pointer;
-				}
-
-				span {
-					flex: 1;
-					font-size: 0.875rem;
-				}
-			}
-		}
-
-		.nimble-upcast-preview {
-			margin: 0 auto;
-			background: var(--nimble-background-color-tertiary);
-			border-radius: var(--nimble-border-radius);
-			border: 1px solid var(--nimble-color-primary-alpha);
-
-			.nimble-preview-heading {
-				margin: 0 0 0.5rem 0;
-				font-size: 1rem;
-				font-weight: 600;
-				color: var(--nimble-color-primary);
-			}
-
-			.nimble-preview-list {
-				margin: 0;
-				padding-left: 0;
-				list-style: none;
-
-				li {
-					font-size: 0.875rem;
-					color: var(--nimble-text-color-primary);
-					margin-bottom: 0.25rem;
-
-					&:last-child {
-						margin-bottom: 0;
-					}
-				}
-			}
-		}
-	}
-
-	.nimble-upcast-section {
-		padding: 1rem;
-		background: var(--nimble-background-color-secondary);
-		border-radius: var(--nimble-border-radius);
-	}
-
-	.nimble-upcast-heading {
-		margin: 0 0 0.75rem 0;
-		font-size: 1rem;
+<style>
+	.note {
+		margin: 0;
+		font-size: 0.781rem;
 		font-weight: 600;
-		color: var(--nimble-color-primary);
+		color: var(--nimble-ui-ink-muted);
 	}
-
-	.nimble-mana-slider {
+	.tiers {
 		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
+		gap: 4px;
 	}
-
-	.nimble-upcast-meta {
-		display: flex;
-		justify-content: space-between;
-		font-size: 0.875rem;
-		color: var(--nimble-text-color-secondary);
-
-		strong {
-			color: var(--nimble-text-color-primary);
-		}
-	}
-
-	.nimble-choices-label {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--nimble-text-color-primary);
-		margin-bottom: 0.25rem;
-	}
-
-	.nimble-roll-modifiers-container {
-		display: flex;
-		gap: 1rem;
-		margin-top: 1rem;
-	}
-
-	.nimble-roll-modifiers {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
+	.tier {
 		flex: 1;
-
-		label {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-
-			input {
-				padding: 0.5rem;
-				border: 1px solid var(--nimble-border-color);
-				border-radius: var(--nimble-border-radius);
-				flex: 1;
-			}
-		}
+		min-width: 0;
+		height: 30px;
+		display: grid;
+		place-items: center;
+		border: 1px solid var(--nimble-ui-ring);
+		border-radius: 4px;
+		font-size: 0.781rem;
+		font-weight: 700;
+		color: var(--nimble-ui-ink);
+	}
+	.tier:hover {
+		border-color: var(--nimble-ui-highlight);
+	}
+	.tier:focus-visible {
+		outline: 2px solid var(--nimble-ui-focus);
+		outline-offset: 1px;
+	}
+	.tier.short {
+		border-style: dashed;
+	}
+	.tier.on {
+		border-color: var(--nimble-ui-highlight);
+		background: var(--nimble-ui-soft);
+	}
+	.choices {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+	.effect {
+		padding: 8px 9px;
+		border: 1px solid var(--nimble-ui-ring);
+		border-radius: 4px;
+		font-size: 0.781rem;
+		line-height: 1.35;
+	}
+	.effect ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 </style>
