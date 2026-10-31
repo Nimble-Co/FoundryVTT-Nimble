@@ -3,7 +3,7 @@
 The right side of a row: the uses left with when they come back, the pool cost (mana, dice), Free for a free use,
 and one green bar for each action. An outlined bar is an action that is spent this turn.
 NPC cards use the same part for the range and the uses, with `compact`: tighter spacing and smaller uses.
-The pool kind picks the colour of the pool cost.
+The pool kind picks the colour of the pool cost. The uses, the mana cost and the action bars have a tooltip.
 -->
 <script lang="ts">
 	import localize from '#utils/localize.js';
@@ -20,28 +20,28 @@ The pool kind picks the colour of the pool cost.
 		actionsSpent = 0,
 		compact = false,
 		outTone = 'vital',
-		hints = false,
 	}: RowCostProps = $props();
 
 	const bars = $derived(Array.from({ length: actions }, (_, i) => i >= actions - actionsSpent));
 
 	const usesHint = (u: RowUses) =>
-		hints
-			? localize(
-					u.per
-						? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
-						: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
-					{ left: String(u.left), max: String(u.max), per: u.per ?? '' },
-				)
-			: undefined;
+		localize(
+			u.per
+				? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
+				: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
+			{ left: String(u.left), max: String(u.max), per: u.per ?? '' },
+		);
 	const actionsHint = $derived(
-		hints
-			? localize(
-					actions === 1
-						? 'NIMBLE.actorSheet.parts.rowCost.action'
-						: 'NIMBLE.actorSheet.parts.rowCost.actions',
-					{ count: String(actions) },
-				)
+		localize(
+			actions === 1
+				? 'NIMBLE.actorSheet.parts.rowCost.action'
+				: 'NIMBLE.actorSheet.parts.rowCost.actions',
+			{ count: String(actions) },
+		),
+	);
+	const poolHint = $derived(
+		pool?.kind === 'mana'
+			? localize('NIMBLE.actorSheet.parts.rowCost.mana', { amount: String(pool.amount) })
 			: undefined,
 	);
 </script>
@@ -54,7 +54,7 @@ The pool kind picks the colour of the pool cost.
 		</span>
 	{/each}
 	{#if pool}
-		<span class="pool {pool.kind}" class:muted={pool.muted}
+		<span class="pool {pool.kind}" class:muted={pool.muted} data-tooltip={poolHint}
 			><i class={pool.icon}></i>{pool.amount}</span
 		>
 	{/if}

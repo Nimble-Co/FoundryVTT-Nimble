@@ -16,6 +16,4 @@ export interface RowCostProps {
 	compact?: boolean;
 	/** the colour of uses that are out: vital (default), muted, or ink (no change, NPC card) */
 	outTone?: 'vital' | 'muted' | 'ink';
-	/** the cost is not inside a button: the uses and the actions get a tooltip */
-	hints?: boolean;
 }

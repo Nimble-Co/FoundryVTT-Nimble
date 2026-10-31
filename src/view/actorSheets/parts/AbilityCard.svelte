@@ -82,7 +82,6 @@ One ability on the NPC sheet. It stays a card, because a GM reads the abilities 
 				{range}
 				compact
 				outTone="ink"
-				hints
 			/>{/if}
 		<RowButton kind="edit" size="sm" {name} {touch} onclick={onedit} />
 	</div>

@@ -79,6 +79,7 @@
 					"action": "1 action",
 					"actions": "{count} actions",
 					"free": "Free",
+					"mana": "Costs {amount} mana",
 					"usesBack": "{left} of {max} left. It comes back each {per}.",
 					"usesLeft": "{left} of {max} left"
 				},
