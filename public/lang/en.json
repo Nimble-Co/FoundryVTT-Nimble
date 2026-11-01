@@ -704,7 +704,10 @@
 					"result": "Change Result",
 					"succeed": "Succeed Instead",
 					"setTotal": "Change to {value}",
-					"add": "Add {amount}"
+					"add": "Add {amount}",
+					"anotherStat": "Reroll With Another Stat",
+					"noDamage": "No Damage",
+					"countsAsNat20": "Count as a Natural 20"
 				},
 				"resultChange": {
 					"succeeded": "Succeeded Instead",
@@ -715,7 +718,10 @@
 					"sum": "{sum} = {total}",
 					"changedTo": "{from} changed to {to}",
 					"remove": "Remove",
-					"removeLine": "Remove: {line}"
+					"removeLine": "Remove: {line}",
+					"noDamage": "No Damage for {target}",
+					"countsAsNat20": "Counts as a Natural 20",
+					"countsAsNat20Sum": "Rolled {rolled}, counts as 20 {modifier}"
 				},
 				"changeThisRoll": {
 					"label": "Change This Roll",
@@ -771,7 +777,11 @@
 					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
 					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
 					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
-					"offAction": "Feature Effects is off. Give the action by hand."
+					"offAction": "Feature Effects is off. Give the action by hand.",
+					"stat": "With {stat}",
+					"statTooltip": "{feature} rerolled with {stat} in place of the first stat.",
+					"cannotMiss": "Cannot miss",
+					"cannotMissTooltip": "With {feature}, the new attack cannot miss."
 				},
 				"keepResult": "Keep {total}",
 				"keepWaiting": "{name} keeps {old} or {new}.",
@@ -831,6 +841,10 @@
 					"lowest": "{value} (lowest)",
 					"highest": "{value} (highest)",
 					"confirm": "Set to {value}"
+				},
+				"rerollPickAStat": "Pick the stat to reroll with.",
+				"pickStat": {
+					"title": "Pick a stat to reroll with {feature}"
 				}
 			}
 		},
@@ -2274,6 +2288,10 @@
 						"label": "What do creatures gain?",
 						"hint": "Creatures gain these each time the reroll is used."
 					}
+				},
+				"cannotFail": {
+					"label": "Cannot fail",
+					"hint": "On a save or a check, the new roll succeeds, with no choice of result. On an attack, the new roll cannot miss, and it is a crit only if the die makes it a crit. It counts on each use that is clicked."
 				}
 			},
 			"modifyToggle": {
@@ -2651,7 +2669,7 @@
 				}
 			},
 			"changeResult": {
-				"description": "Lets the one who rolled or an ally change the result of a save, a check or Initiative after it is made: it succeeds, its total becomes a formula, or a formula goes on its total. The player can take the change back and gets the cost back.",
+				"description": "Changes the result of a roll after it is made: a save, a check or Initiative succeeds, its total becomes a formula, or a formula goes on its total. A target can take no damage from an attack. A low result can count as a natural 20 by itself. The player can take a clicked change back and gets the cost back.",
 				"rolls": {
 					"label": "Which roll can it change?",
 					"choices": {
@@ -2660,11 +2678,13 @@
 				},
 				"change": {
 					"label": "How does it change the result?",
-					"hint": "The roll on the card stays what the dice gave. A reroll takes the change off, and its cost stays paid.",
+					"hint": "The roll on the card stays what the dice gave. A reroll takes a change of a total or a success off, and its cost stays paid. No damage needs Attack as the roll and The target as who can use it. A natural 20 is for saves and skill checks, costs nothing and needs no click; with Feature Effects off it is a row.",
 					"choices": {
 						"succeed": "It succeeds",
 						"setTotal": "Set the total to a formula",
-						"add": "Add a formula to the total"
+						"add": "Add a formula to the total",
+						"noDamage": "The target takes no damage",
+						"countsAsNat20": "A result of 1 or less counts as a natural 20"
 					}
 				},
 				"formula": {
@@ -2680,6 +2700,14 @@
 				},
 				"chargeCost": {
 					"hint": "How many charges one use takes from the pool."
+				},
+				"outcome": {
+					"label": "The first roll is",
+					"hint": "With A failed roll, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell.",
+					"choices": {
+						"failed": "A failed roll",
+						"always": "Any result"
+					}
 				}
 			},
 			"primaryDieBonus": {
@@ -2762,13 +2790,14 @@
 				},
 				"outcome": {
 					"label": "The first roll is",
-					"hint": "A hit includes a crit.",
+					"hint": "A hit includes a crit. A failed roll is a miss on an attack. On a save or a check, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell. The other choices are for attacks only.",
 					"choices": {
 						"always": "Any result",
 						"hit": "A hit",
 						"criticalHit": "A crit",
 						"nonCriticalHit": "A hit that is not a crit",
-						"miss": "A miss"
+						"miss": "A miss",
+						"failed": "A failed roll"
 					}
 				},
 				"attackDelivery": {
@@ -2851,6 +2880,17 @@
 				"oncePerAttack": {
 					"label": "Only once per attack",
 					"hint": "The feature can reroll the same attack only once, even with uses left."
+				},
+				"relatedStat": {
+					"label": "Related to a stat",
+					"hint": "Limits the rule to the save of that stat, the skills of that stat, the ability check of that stat, and an attack whose formula has that stat.",
+					"choices": {
+						"any": "Any stat"
+					}
+				},
+				"useAnotherStat": {
+					"label": "Use another stat",
+					"hint": "A click on the row shows the other three stats, and the player picks one for the new roll. On a save it uses that stat's save modifier. On a skill check it swaps the stat part and keeps the other bonuses. On an attack it swaps the stat in the formula; an attack with no stat in its formula gets no row."
 				}
 			}
 		},
@@ -3874,7 +3914,9 @@
 			"flat": "{label} (-{value})",
 			"flatGeneric": "damage reduction (-{value})",
 			"banked": "damage reduction (-{value})",
-			"bankedSource": "{source} (-{value})"
+			"bankedSource": "{source} (-{value})",
+			"badgeNoDamage": "No Damage",
+			"noDamage": "This target takes no damage from this attack, with {source}."
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"

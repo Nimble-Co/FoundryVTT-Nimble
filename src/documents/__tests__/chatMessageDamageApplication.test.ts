@@ -407,3 +407,85 @@ describe('NimbleChatMessage.applyDamage — single packet through the shared pat
 		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 });
+
+describe('a target with No Damage', () => {
+	const COVERED = 'Scene.scene.Token.covered';
+	const OTHER = 'Scene.scene.Token.other';
+
+	function noDamageCard() {
+		const card = slashingPlusRadiant();
+		Object.assign(card.system, {
+			targets: [COVERED, OTHER],
+			resultChanges: [
+				{
+					id: 'no-damage',
+					lineId: 'no-damage',
+					change: 'noDamage',
+					targetTokenUuid: COVERED,
+					itemUuid: 'Item.res',
+					label: 'Epic Resistance',
+					retired: false,
+				},
+			],
+		});
+		Object.assign(card, { update: vi.fn().mockResolvedValue(undefined) });
+		return card;
+	}
+
+	function world() {
+		const covered = createTarget({ bankedReduction: 4 });
+		const other = createTarget();
+		globals().fromUuidSync = vi.fn((uuid: string) => {
+			if (uuid === COVERED) return { name: 'Covered', actor: covered };
+			if (uuid === OTHER) return { name: 'Other', actor: other };
+			if (uuid === 'Item.res') return { name: 'Epic Resistance' };
+			return null;
+		});
+		return { covered, other };
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	it('takes no damage from any packet, the bank stays, and the other target is hurt', async () => {
+		const { covered, other } = world();
+
+		await noDamageCard().applyAllDamage();
+
+		expect(covered.applyDamage).not.toHaveBeenCalled();
+		expect(covered.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(other.applyDamage).toHaveBeenCalledWith(12);
+	});
+
+	it('records that the damage is applied, so Remove stops', async () => {
+		world();
+		const card = noDamageCard();
+
+		await card.applyAllDamage();
+
+		expect(card.update).toHaveBeenCalledWith({ 'system.damageApplied': true });
+	});
+
+	it('previews zero for that target only, and names the feature', () => {
+		world();
+		const card = noDamageCard();
+
+		expect(card.getDamageBreakdownForTarget(COVERED)?.total).toBe(0);
+		expect(card.getDamageBreakdownForTarget(OTHER)?.total).toBe(12);
+		expect(card.noDamageSourceFor(COVERED)).toBe('Epic Resistance');
+		expect(card.noDamageSourceFor(OTHER)).toBeNull();
+	});
+
+	it('hurts the target again when the change is gone', async () => {
+		const { covered } = world();
+		const card = noDamageCard();
+		Object.assign(card.system, { resultChanges: [] });
+
+		await card.applyAllDamage();
+
+		expect(covered.applyDamage).toHaveBeenCalledWith(8);
+	});
+});

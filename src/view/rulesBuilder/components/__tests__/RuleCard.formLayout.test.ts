@@ -45,9 +45,11 @@ describe('RuleCard with a form layout (reroll)', () => {
 		const { container } = render(RuleCard, { rule: initialRule('reroll'), manager });
 		expect(shownFields(container)).toEqual([
 			'rolls',
+			'relatedStat',
 			'usedBy',
 			'die',
 			'keep',
+			'useAnotherStat',
 			'outcome',
 			'attackDelivery',
 			'predicate',
@@ -147,7 +149,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			manager,
 		});
 		const fields = shownFields(container);
-		expect(fields.slice(0, 5)).toEqual(['rolls', 'usedBy', 'reach', 'die', 'keep']);
+		expect(fields.slice(0, 6)).toEqual(['rolls', 'relatedStat', 'usedBy', 'reach', 'die', 'keep']);
 		expect(fields).not.toContain('automatic');
 	});
 
@@ -195,14 +197,19 @@ describe('RuleCard with a form layout (reroll)', () => {
 			?.closest('section') as HTMLElement;
 		expect(
 			[...group.querySelectorAll<HTMLElement>('[data-field]')].map((el) => el.dataset.field),
-		).toEqual(['rolls', 'saves', 'skills', 'abilities']);
+		).toEqual(['rolls', 'saves', 'skills', 'abilities', 'relatedStat']);
 		expect(group.querySelector('.nimble-rule-form__question')?.textContent?.trim()).toBe(
 			'Which roll can it reroll?',
 		);
 		const labels = [...group.querySelectorAll('.nimble-rule-form__label')].map((el) =>
 			el.textContent?.trim(),
 		);
-		expect(labels).toEqual(['Which saves?', 'Which skills?', 'Which abilities?']);
+		expect(labels).toEqual([
+			'Which saves?',
+			'Which skills?',
+			'Which abilities?',
+			'Related to a stat',
+		]);
 		expect(group.textContent).toContain('None picked means any.');
 	});
 
@@ -214,9 +221,12 @@ describe('RuleCard with a form layout (reroll)', () => {
 		expect(shownFields(container)).toEqual([
 			'rolls',
 			'saves',
+			'relatedStat',
 			'usedBy',
 			'die',
 			'keep',
+			'useAnotherStat',
+			'outcome',
 			'predicate',
 			'chargePoolIdentifier',
 			'manaCost',
@@ -230,7 +240,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 		const questions = [...container.querySelectorAll('.nimble-rule-form__question')].map((el) =>
 			el.textContent?.trim(),
 		);
-		expect(questions).not.toContain('When?');
+		expect(questions).toContain('When?');
 	});
 
 	it('lists the saves by name', () => {
@@ -353,6 +363,62 @@ describe('RuleCard with a form layout (attackOutcome)', () => {
 		});
 		expect(shownFields(container)).not.toContain('thisItemOnly');
 		expect(shownFields(container)).not.toContain('chargePoolIdentifier');
+	});
+});
+
+describe('RuleCard with a form layout (new roll use fields)', () => {
+	const groupOf = (container: HTMLElement, field: string) =>
+		[
+			...(
+				container.querySelector(`[data-field="${field}"]`)?.closest('section') as HTMLElement
+			).querySelectorAll<HTMLElement>('[data-field]'),
+		].map((el) => el.dataset.field);
+
+	it('shows the stat limit of Change a Result under the roll question', () => {
+		const { container } = render(RuleCard, { rule: initialRule('changeResult'), manager });
+		expect(groupOf(container, 'rolls')).toContain('relatedStat');
+	});
+
+	it('shows cannot fail among the roll changes of Modify Reroll', () => {
+		const { container } = render(RuleCard, { rule: initialRule('modifyReroll'), manager });
+		expect(groupOf(container, 'cannotFail')).toEqual([
+			'rollModeChange',
+			'extraDamage',
+			'cannotFail',
+		]);
+	});
+
+	it('hides the second stat when the rule does not reroll the whole roll', () => {
+		const whole = render(RuleCard, {
+			rule: initialRule('reroll', { die: 'wholeRoll' }),
+			manager,
+		});
+		expect(shownFields(whole.container)).toContain('useAnotherStat');
+		whole.unmount();
+		const picked = render(RuleCard, {
+			rule: initialRule('reroll', { die: 'pickedDie' }),
+			manager,
+		});
+		expect(shownFields(picked.container)).not.toContain('useAnotherStat');
+	});
+
+	it.each(['setTotal', 'noDamage', 'countsAsNat20'])(
+		'hides the outcome of Change a Result for %s',
+		(change) => {
+			const { container } = render(RuleCard, {
+				rule: initialRule('changeResult', { change }),
+				manager,
+			});
+			expect(shownFields(container)).not.toContain('outcome');
+		},
+	);
+
+	it.each(['succeed', 'add'])('asks the outcome of Change a Result for %s', (change) => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('changeResult', { change }),
+			manager,
+		});
+		expect(shownFields(container)).toContain('outcome');
 	});
 });
 

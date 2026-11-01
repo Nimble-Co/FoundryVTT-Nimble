@@ -21,6 +21,7 @@ import localize from '#utils/localize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { statsInFormula } from '../reroll/rollStat.js';
 
 /**
  * An unarmed strike is a melee attack at reach 1. The posted card declares it
@@ -106,6 +107,7 @@ export async function rollUnarmedStrike(
 	const delivery = attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE);
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
+		stats: statsInFormula(rollFormula),
 	});
 	const attackOutcome = collectAttackOutcome({
 		attacker: actor as { rules?: unknown },

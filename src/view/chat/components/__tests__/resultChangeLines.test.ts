@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ResultChange } from '#utils/incomingReactions/incomingReactionEntry.ts';
-import { resultAmount, resultChangeLines, resultSumText } from '../resultChangeLines.ts';
+import {
+	resultAmount,
+	resultChangeLines,
+	resultSumText,
+	statChoiceLabel,
+} from '../resultChangeLines.ts';
 
 const MINUS = '−';
 function click(overrides: Partial<ResultChange> = {}): ResultChange {
@@ -47,7 +52,54 @@ describe('resultAmount', () => {
 	});
 });
 
+describe('statChoiceLabel', () => {
+	it('shows the stat with a signed modifier', () => {
+		expect(statChoiceLabel({ stat: 'dexterity', mod: 2 })).toBe('DEX +2');
+		expect(statChoiceLabel({ stat: 'intelligence', mod: 0 })).toBe('INT +0');
+		expect(statChoiceLabel({ stat: 'will', mod: -1 })).toBe(`WIL ${MINUS}1`);
+	});
+});
+
 describe('resultChangeLines', () => {
+	const documentName = (uuid: string) =>
+		({ 'Item.res': 'Epic Resistance', 'Item.soul': 'Bumblewise', 'Token.a': 'Goblin' })[uuid];
+
+	it('tells a no damage line with its target, and Remove follows the gate', () => {
+		const line = (canRemove: boolean) =>
+			resultChangeLines({
+				changes: [
+					click({
+						change: 'noDamage',
+						value: 0,
+						stat: '',
+						itemUuid: 'Item.res',
+						targetTokenUuid: 'Token.a',
+					}),
+				],
+				rollTotal: 7,
+				speakerUuid: 'Actor.hero',
+				documentName,
+				canRemove: () => canRemove,
+			})[0];
+		expect(line(true).sentence).toBe('No Damage for Goblin with Epic Resistance');
+		expect(line(true).canRemove).toBe(true);
+		expect(line(false).canRemove).toBe(false);
+	});
+
+	it('tells a natural 20, with no Remove when it was automatic', () => {
+		const lines = (automatic: boolean) =>
+			resultChangeLines({
+				changes: [click({ change: 'countsAsNat20', value: 19, stat: '', automatic })],
+				rollTotal: 1,
+				speakerUuid: 'Actor.hero',
+				documentName,
+				canRemove: () => true,
+			})[0];
+		expect(lines(true).sentence).toBe('Counts as a Natural 20 with Bumblewise');
+		expect(lines(true).canRemove).toBe(false);
+		expect(lines(false).canRemove).toBe(true);
+	});
+
 	it('tells a succeed', () => {
 		const [line] = linesOf([click({ change: 'succeed', value: 0, stat: '' })]);
 		expect(line.verb).toBe('Succeeded Instead');
@@ -100,6 +152,22 @@ describe('resultChangeLines', () => {
 	it('gives Remove only to the user who can click the row', () => {
 		expect(linesOf([click()], 7, true)[0].canRemove).toBe(true);
 		expect(linesOf([click()], 7, false)[0].canRemove).toBe(false);
+	});
+});
+
+describe('resultSumText of a natural 20', () => {
+	const nat20 = (value: number) => click({ change: 'countsAsNat20', value, stat: '' });
+
+	it('tells why the total changed', () => {
+		expect(resultSumText(1, [nat20(19)])).toBe(`Rolled 1, counts as 20 ${MINUS} 1 = 19`);
+		expect(resultSumText(1, [nat20(20)])).toBe('Rolled 1, counts as 20 + 0 = 20');
+		expect(resultSumText(0, [nat20(19)])).toBe(`Rolled 0, counts as 20 ${MINUS} 1 = 19`);
+	});
+
+	it('takes a later add on the same sum', () => {
+		expect(resultSumText(1, [nat20(19), click()])).toBe(
+			`Rolled 1, counts as 20 ${MINUS} 1 + 3 = 22`,
+		);
 	});
 });
 

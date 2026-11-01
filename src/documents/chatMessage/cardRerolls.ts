@@ -24,18 +24,15 @@ import type {
 	ResultUse,
 	RollChange,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
-import {
-	type CheckCard,
-	type CheckRoll,
-	checkCardRollTarget,
-	checkRollOfCard,
-} from '#utils/reroll/checkCardRollTarget.js';
+import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
+import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
 	type DamageCard,
 	damageCardRollTarget,
 	damageRollContext,
+	noDamageEntries,
 } from '#utils/reroll/damageCardRollTarget.js';
-import { newRollChanges } from '#utils/reroll/modifyReroll.js';
+import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
 import { payRerollCost, refundRerollCost } from '#utils/reroll/rerollCost.js';
 import {
@@ -53,15 +50,18 @@ import {
 	nextAutomaticReroll,
 	offerStands,
 	type RerollingActor,
+	type RerollRollContext,
 	type RerollRollOutcome,
 	type RerollRuleLike,
 	rollUseOf,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
+import { cannotMissOptions } from '#utils/reroll/rerollOptions.js';
 import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollTarget.js';
 import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
+import type { StatChoice } from '#utils/reroll/rollStat.js';
 import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
 import {
 	newResultChange,
@@ -73,6 +73,44 @@ import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
+/** The roll with its new attack unable to miss, whichever dice the rule rerolls. */
+function withCannotMiss<TRoll>(found: RerollableRoll<TRoll>): RerollableRoll<TRoll> {
+	const { current } = found;
+	return {
+		...found,
+		makeRoll: (formula, options, changes) =>
+			found.makeRoll(formula, cannotMissOptions(options), changes),
+		...(current
+			? {
+					current: () => {
+						const roll = current();
+						if (roll) roll.options = cannotMissOptions(roll.options ?? {});
+						return roll;
+					},
+				}
+			: {}),
+	};
+}
+
+/** The change that says a check's new roll succeeds, named by the rule that says it cannot fail. */
+function cannotFailChange(
+	entry: IncomingReactionEntry,
+	modifier: { id?: string; item?: { name?: string; uuid?: string } | null },
+): ResultChange {
+	return newResultChange({
+		entry: {
+			...entry,
+			itemUuid: modifier.item?.uuid ?? '',
+			ruleId: modifier.id ?? '',
+			label: modifier.item?.name ?? '',
+		},
+		use: { change: 'succeed', value: 0, stat: '' },
+		changes: [],
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+	});
+}
+
 /**
  * A reroll for the card's history. A new action starts a new list; an
  * automatic reroll it triggers is added to that list.
@@ -81,6 +119,8 @@ interface CardReroll {
 	reroll: RerollRecord;
 	discardedCritTriggers: boolean;
 	list: 'new' | 'append';
+	/** A check's result change that comes with this new roll. */
+	resultChange?: ResultChange;
 }
 
 /** What the reroll code reads and writes on its chat card. */
@@ -157,6 +197,7 @@ export class CardRerolls {
 				actorUuid?: string | null;
 				tokenUuid?: string | null;
 				rollMode?: number;
+				dc?: number | null;
 			};
 		return {
 			roll,
@@ -172,6 +213,7 @@ export class CardRerolls {
 			rollsSource: () => this.#host.rollsSource(),
 			incomingReactions: () => this.#host.incomingReactions(),
 			resultChanges: () => this.#resultChanges(),
+			dc: () => system().dc,
 			update: (changes) => this.#host.update(changes),
 		};
 	}
@@ -235,6 +277,7 @@ export class CardRerolls {
 				rerolls: [...(history.list === 'append' ? (systemData.rerolls ?? []) : []), history.reroll],
 				discardedCritTriggers: history.discardedCritTriggers,
 				rollChanges: this.#withRollChanges(history.reroll.changes),
+				...(history.resultChange ? { resultChange: history.resultChange } : {}),
 			});
 		} catch (error) {
 			if (rolling && messageId) broadcastRerollRolling(messageId, null);
@@ -579,6 +622,28 @@ export class CardRerolls {
 	}
 
 	/**
+	 * The stats a player picks from for a `reroll` entry whose rule uses another
+	 * stat. Null when the rule uses none.
+	 */
+	rerollStatsToPick(entry: IncomingReactionEntry): StatChoice[] | null {
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		if (!usable.ok || !usable.rule.usesAnotherStat) return null;
+		return found.statChoices?.(usable.rule.relatedStat) ?? [];
+	}
+
+	/** These entries with the no-damage rows of these targets added. */
+	withNoDamageEntries(
+		targets: readonly string[],
+		entries: IncomingReactionEntry[] = this.#host.incomingReactions(),
+	): IncomingReactionEntry[] {
+		if (!this.#host.isActivationCard()) return entries;
+		return withNewRerollEntries(entries, noDamageEntries(this.#damageCard(), targets));
+	}
+
+	/**
 	 * What a player picks for a `change` entry before it is sent: the die, and
 	 * a value when the rule sets one. Null for a reroll entry, or one the card
 	 * cannot use.
@@ -628,6 +693,7 @@ export class CardRerolls {
 		forceHeroicReaction = false,
 		die: DieRef | null = null,
 		value: number | null = null,
+		stat: string | null = null,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
 		const target = this.#rerollTarget();
@@ -647,6 +713,7 @@ export class CardRerolls {
 					forceHeroicReaction,
 					die,
 					value,
+					stat,
 				),
 			);
 		} finally {
@@ -662,6 +729,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		die: DieRef | null,
 		value: number | null,
+		stat: string | null,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
@@ -710,11 +778,19 @@ export class CardRerolls {
 		if (rollUseOf(usable.rule.type) === 'result') {
 			return this.#applyResultChange(rollTarget, entry, usable, forceHeroicReaction, reject);
 		}
-		const target = rerollableFor(found, usable.rule.die, die);
-		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
-		const chooserUuid = this.#keepChooser(usable.rule.keep, entry, rollTarget);
-		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
 		const rollKind = rollTarget.context().roll.kind;
+		const modifier = cannotFailModifier(usable.rule);
+		const cannotMiss = rollKind === 'attack' ? modifier : null;
+		const rolled = rerollableFor(cannotMiss ? withCannotMiss(found) : found, usable.rule.die, die);
+		if (!rolled) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
+		const target = usable.rule.usesAnotherStat
+			? rolled.withStat?.(rolled, stat ?? '', usable.rule.relatedStat)
+			: rolled;
+		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickAStat');
+		// A check that cannot fail has one result to keep: the new roll, which succeeds.
+		const decided = rollKind === 'attack' ? null : modifier;
+		const chooserUuid = decided ? '' : this.#keepChooser(usable.rule.keep, entry, rollTarget);
+		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
 		const result = await rerollWithRule({
 			rule: usable.rule,
 			entry,
@@ -727,6 +803,8 @@ export class CardRerolls {
 			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
+			...(usable.rule.usesAnotherStat && stat ? { stat } : {}),
+			...(cannotMiss ? { cannotMissBy: cannotMiss.item?.name ?? '' } : {}),
 			place: async (done) => {
 				await this.#addGrants(done, usable.rule, rollTarget);
 				if (chooserUuid) return this.#waitForKeep(entry, target, done, chooserUuid);
@@ -734,6 +812,7 @@ export class CardRerolls {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
+					...(decided ? { resultChange: cannotFailChange(entry, decided) } : {}),
 				});
 			},
 		});
@@ -856,8 +935,8 @@ export class CardRerolls {
 	/** What a Change a Result entry does now, for its row. Null when it can do nothing. */
 	resultUseOf(entry: IncomingReactionEntry): ResultUse | null {
 		const rule = findRerollRule(entry);
-		const roller = this.#rerollTarget()?.context().card?.roller ?? null;
-		return rule?.resultUseFor?.(roller) ?? null;
+		const card = this.#rerollTarget()?.context().card;
+		return rule?.resultUseFor?.(card?.roller ?? null, card) ?? null;
 	}
 
 	/**
@@ -874,7 +953,7 @@ export class CardRerolls {
 	): Promise<void> {
 		const { rule, actor } = usable;
 		const context = rollTarget.context();
-		const use = rule.resultUseFor?.(context.card?.roller ?? null) ?? null;
+		const use = rule.resultUseFor?.(context.card?.roller ?? null, context.card) ?? null;
 		if (!use) return void reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const cost = rule.rollUseCost;
@@ -899,7 +978,7 @@ export class CardRerolls {
 					// Read after the cost is paid: a rule that can pay again gets a new row.
 					incomingReactions: withNewRerollEntries(
 						this.#withEntryUsed(entry),
-						collectRerollEntries(context).manual,
+						this.#resultEntriesFound(context),
 					),
 					resultChanges: [...changes, added],
 				},
@@ -910,6 +989,16 @@ export class CardRerolls {
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 		await this.#followInitiative(changes, [...changes, added]);
+	}
+
+	/**
+	 * The entries a change of a result can bring back. On an attack only such rows: other
+	 * rows are stamped by the attack's own steps, and an area has none.
+	 */
+	#resultEntriesFound(context: RerollRollContext): IncomingReactionEntry[] {
+		const found = collectRerollEntries(context).manual;
+		if (!this.#host.isActivationCard()) return found;
+		return found.filter((entry) => entry.use === 'result');
 	}
 
 	/** An Initiative card's combatant follows the card. A failure here leaves the card as it is. */
@@ -973,6 +1062,9 @@ export class CardRerolls {
 		if (!this.#mayRemove(first.actorUuid, requestingUserId, viaSocket)) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
+		if (first.automatic || !this.#canStillRemove(first)) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
 
 		const removed = new Set(line.map((change) => change.id));
 		const remaining = changes.filter((change) => !removed.has(change.id));
@@ -992,13 +1084,19 @@ export class CardRerolls {
 		const context = this.#rerollTarget()?.context();
 		if (!context) return;
 		const entries = this.#host.incomingReactions();
-		const withNew = withNewRerollEntries(entries, collectRerollEntries(context).manual);
+		const withNew = withNewRerollEntries(entries, this.#resultEntriesFound(context));
 		if (withNew.length !== entries.length) {
 			await this.#host.update({ system: { incomingReactions: withNew } } as Record<
 				string,
 				unknown
 			>);
 		}
+	}
+
+	/** No damage for a target stands once the card's damage is applied. */
+	#canStillRemove(change: ResultChange): boolean {
+		if (change.change !== 'noDamage') return true;
+		return (this.#host.system() as { damageApplied?: boolean }).damageApplied !== true;
 	}
 
 	/** A GM, or a player who owns the actor whose feature made the change. */

@@ -89,8 +89,43 @@ describe('requestIncomingAttackReaction', () => {
 			false,
 			null,
 			null,
+			null,
 		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('carries the picked stat to the reroll, also through the socket', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			stat: 'dexterity',
+		});
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'gm-user',
+			false,
+			false,
+			null,
+			null,
+			'dexterity',
+		);
+
+		setUser({ id: 'player-1', isGM: false });
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			stat: 'will',
+		});
+		expect(globals().game.socket.emit).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.objectContaining({ stat: 'will' }),
+		);
 	});
 
 	it('does nothing, and does not throw, for a legacy forceReroll entry', async () => {
@@ -136,6 +171,7 @@ describe('requestIncomingAttackReaction', () => {
 			'gm-user',
 			false,
 			true,
+			null,
 			null,
 			null,
 		);
@@ -282,6 +318,7 @@ describe('registerIncomingReactionSocketListener', () => {
 			'player-1',
 			true,
 			false,
+			null,
 			null,
 			null,
 		);

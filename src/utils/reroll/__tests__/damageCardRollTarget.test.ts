@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
-import { type DamageCard, damageCardRollTarget } from '../damageCardRollTarget.js';
+import { type DamageCard, damageCardRollTarget, noDamageEntries } from '../damageCardRollTarget.js';
 
 const TARGET_TOKEN = 'Scene.scene.Token.victim';
 
@@ -170,5 +170,122 @@ describe('damageCardRollTarget', () => {
 		expect(changes.system.activation.effects[0]?.discardedRoll).toEqual(serializedRoll());
 		expect(changes.rolls).toHaveLength(1);
 		expect(card.followChargeRecovery).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('the stats of an attack', () => {
+	const roll = (originalFormula: string, data: Record<string, unknown> = {}) => ({
+		...serializedRoll(),
+		originalFormula,
+		data,
+	});
+
+	it('come from the formula that keeps its stat parts, not from the resolved one', () => {
+		const card = makeCard([damageNode(roll('1d10+@strength'))]);
+		const context = damageCardRollTarget(card).context();
+		expect(context.roll).toMatchObject({ kind: 'attack', stats: ['strength'] });
+	});
+
+	it('fall back on the node formula', () => {
+		const card = makeCard([
+			{
+				...damageNode({ ...serializedRoll(), originalFormula: undefined, formula: '1d10 + 3' }),
+				formula: '1d10+@dexterity',
+			},
+		]);
+		const context = damageCardRollTarget(card).context();
+		expect(context.roll).toMatchObject({ stats: ['dexterity'] });
+	});
+
+	it('are none on a resolved formula', () => {
+		const card = makeCard([damageNode(roll('1d10+3'))]);
+		expect(damageCardRollTarget(card).context().roll).not.toHaveProperty('stats');
+	});
+
+	it('list the other stats with their values, from the data the new roll uses', () => {
+		const data = { strength: -1, dexterity: 2, intelligence: 0, will: 1 };
+		const found = damageCardRollTarget(
+			makeCard([damageNode(roll('1d8+@strength', data))]),
+		).findRoll();
+		expect(found?.statChoices?.()).toEqual([
+			{ stat: 'dexterity', mod: 2 },
+			{ stat: 'intelligence', mod: 0 },
+			{ stat: 'will', mod: 1 },
+		]);
+	});
+
+	it('swap the stat part of the formula, and keep the other parts', () => {
+		const data = { strength: -1, dexterity: 2, intelligence: 0, will: 1 };
+		const found = damageCardRollTarget(
+			makeCard([damageNode(roll('1d8+@strength+2', data))]),
+		).findRoll();
+		const swapped = found?.withStat?.(found, 'dexterity');
+		expect(swapped?.replaced.originalFormula).toBe('1d8+@dexterity+2');
+	});
+
+	it('refuse a stat that is not one of the choices', () => {
+		const data = { strength: -1, dexterity: 2 };
+		const found = damageCardRollTarget(
+			makeCard([damageNode(roll('1d8+@strength', data))]),
+		).findRoll();
+		expect(found?.withStat?.(found, 'strength')).toBeNull();
+		expect(found?.withStat?.(found, 'will')).toBeNull();
+		expect(found?.withStat?.(found, '')).toBeNull();
+	});
+
+	it('use the rule stat when the formula has two', () => {
+		const data = { strength: 1, dexterity: 2, will: 3 };
+		const found = damageCardRollTarget(
+			makeCard([damageNode(roll('1d8+max(@strength,@dexterity)', data))]),
+		).findRoll();
+		const choices = found?.statChoices?.('dexterity').map((choice) => choice.stat);
+		expect(choices).toEqual(['strength', 'will']);
+	});
+});
+
+describe('noDamageEntries', () => {
+	const offer = { offersUseOn: (context: { side: string }) => context.side === 'target' };
+	const noDamageRule = {
+		type: 'changeResult',
+		change: 'noDamage',
+		id: 'res',
+		item: { name: 'Epic Resistance', uuid: 'Item.res' },
+		attackTrigger: 'hit',
+		...offer,
+	};
+	const otherRule = { type: 'reroll', id: 'lucky', outcome: 'always', ...offer };
+
+	function world() {
+		const byUuid: Record<string, unknown> = {
+			'Token.a': { actor: { uuid: 'Actor.a', rules: [noDamageRule, otherRule] } },
+			'Token.b': { actor: { uuid: 'Actor.b', rules: [noDamageRule] } },
+		};
+		(globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn(
+			(uuid: string) => byUuid[uuid] ?? null,
+		);
+	}
+
+	it('gives each target its own row, on a roll with two targets, and no other row', () => {
+		world();
+		const entries = noDamageEntries(makeCard([damageNode(serializedRoll())]), [
+			'Token.a',
+			'Token.b',
+		]);
+		expect(entries.map((entry) => [entry.targetTokenUuid, entry.ruleId, entry.use])).toEqual([
+			['Token.a', 'res', 'result'],
+			['Token.b', 'res', 'result'],
+		]);
+	});
+
+	it('gives none on a card with no damage roll', () => {
+		world();
+		expect(noDamageEntries(makeCard([]), ['Token.a'])).toEqual([]);
+	});
+
+	it('gives none on a miss', () => {
+		world();
+		const card = makeCard([damageNode(serializedRoll())]);
+		Object.assign(card.system(), { isMiss: true });
+		expect(noDamageEntries(card, ['Token.a'])).toEqual([]);
 	});
 });

@@ -27,18 +27,29 @@ interface ResultChangeLinesInput {
 	rollTotal: number;
 	speakerUuid: string;
 	documentName: (uuid: string) => string | null | undefined;
-	canRemove: (actorUuid: string) => boolean;
+	canRemove: (actorUuid: string, change: ResultChange) => boolean;
 }
+
+const NATURAL_20 = 20;
 
 function signedWithTrueMinus(value: number): string {
 	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : `+${value}`;
+}
+
+function statAbbreviation(stat: string): string {
+	return localize(`NIMBLE.abilityScoreAbbreviations.${stat}`).toUpperCase();
+}
+
+/** A stat with the modifier it gives: "DEX +2", "INT +0", "WIL −1". */
+function statChoiceLabel(choice: { stat: string; mod: number }): string {
+	return `${statAbbreviation(choice.stat)} ${signedWithTrueMinus(choice.mod)}`;
 }
 
 /** What an add puts on the total: "+3 STR", "−1 STR", or "+2" for no stat. */
 function resultAmount(use: Pick<ResultUse, 'value' | 'stat'>): string {
 	const amount = signedWithTrueMinus(use.value);
 	if (!use.stat) return amount;
-	return `${amount} ${localize(`NIMBLE.abilityScoreAbbreviations.${use.stat}`).toUpperCase()}`;
+	return `${amount} ${statAbbreviation(use.stat)}`;
 }
 
 function addedVerb(amount: string, wounds: number): string {
@@ -51,10 +62,22 @@ function addedVerb(amount: string, wounds: number): string {
 	);
 }
 
-function lineVerb(clicks: readonly ResultChange[], before: number): string {
+function lineVerb(
+	clicks: readonly ResultChange[],
+	before: number,
+	documentName: ResultChangeLinesInput['documentName'],
+): string {
 	const [first] = clicks;
 	if (first.change === 'succeed') {
 		return localize('NIMBLE.chat.incomingReactions.resultChange.succeeded');
+	}
+	if (first.change === 'noDamage') {
+		return localize('NIMBLE.chat.incomingReactions.resultChange.noDamage', {
+			target: (documentName(first.targetTokenUuid ?? '') ?? '').trim(),
+		});
+	}
+	if (first.change === 'countsAsNat20') {
+		return localize('NIMBLE.chat.incomingReactions.resultChange.countsAsNat20');
 	}
 	if (first.change === 'setTotal') {
 		return localize('NIMBLE.chat.incomingReactions.resultChange.changed', {
@@ -81,7 +104,7 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 
 	return [...lines].map(([id, { clicks, before }]) => {
 		const [first] = clicks;
-		const verb = lineVerb(clicks, before);
+		const verb = lineVerb(clicks, before, input.documentName);
 		const feature = (input.documentName(first.itemUuid) ?? '').trim() || first.label;
 		const name =
 			first.actorUuid === input.speakerUuid
@@ -99,7 +122,7 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 			}),
 			detail: name ? localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name }) : null,
 			retired: first.retired,
-			canRemove: !first.retired && input.canRemove(first.actorUuid),
+			canRemove: !first.retired && !first.automatic && input.canRemove(first.actorUuid, first),
 		};
 	});
 }
@@ -136,10 +159,25 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 				to: String(change.value),
 			});
 			total = change.value;
+		} else if (change.change === 'countsAsNat20') {
+			const modifier = change.value - NATURAL_20;
+			text = localize('NIMBLE.chat.incomingReactions.resultChange.countsAsNat20Sum', {
+				rolled: text,
+				modifier: `${modifier < 0 ? TRUE_MINUS : '+'} ${Math.abs(modifier)}`,
+			});
+			total = change.value;
+			openSum = true;
 		}
 	}
 	closeSum();
 	return text;
 }
 
-export { resultAmount, resultChangeLines, resultSumText, type ResultChangeLine };
+export {
+	resultAmount,
+	resultChangeLines,
+	resultSumText,
+	type ResultChangeLine,
+	statAbbreviation,
+	statChoiceLabel,
+};

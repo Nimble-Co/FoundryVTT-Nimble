@@ -48,10 +48,13 @@ import {
 	type PendingKeep,
 	type RerollKept,
 	type RerollRecord,
+	type ResultChange,
 	type ResultUse,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
+import type { StatChoice } from '../utils/reroll/rollStat.js';
+import { resultChangesOf, standingResultChanges } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import {
 	CardDamageBack,
@@ -148,6 +151,17 @@ export interface TargetDamageComponent {
 export interface TargetDamageBreakdown {
 	components: TargetDamageComponent[];
 	total: number;
+}
+
+/** The target tokens the card's standing no-damage changes cover, with what names each. */
+function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
+	const covered = new Map<string, ResultChange>();
+	for (const change of standingResultChanges(resultChangesOf(system))) {
+		if (change.change === 'noDamage' && change.targetTokenUuid) {
+			covered.set(change.targetTokenUuid, change);
+		}
+	}
+	return covered;
 }
 
 interface DamageApplicationPlan {
@@ -680,6 +694,7 @@ function resolveDamageForActor(
 function buildDamageApplicationPlan(params: {
 	targets: string[];
 	packets: DamagePacket[];
+	noDamageTargets?: ReadonlyMap<string, unknown>;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
@@ -689,6 +704,14 @@ function buildDamageApplicationPlan(params: {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
+
+		// Before any reduction: this target's bank stays for an attack that hurts it.
+		if (params.noDamageTargets?.has(uuid)) {
+			zeroDamageTargetNames.add(
+				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
+			);
+			continue;
+		}
 
 		// A banked reduction is one-shot: when the same actor is targeted through
 		// multiple tokens, only its first application entry gets the bank. It is
@@ -962,6 +985,24 @@ class NimbleChatMessage extends ChatMessage {
 		return contributed;
 	}
 
+	/**
+	 * The attack's own step finds no target on an area or a roll with two or more
+	 * targets. A target's no-damage row is added here, for every target the card has.
+	 */
+	protected override async _preCreate(
+		...args: Parameters<ChatMessage['_preCreate']>
+	): ReturnType<ChatMessage['_preCreate']> {
+		const allowed = await super._preCreate(...args);
+		if (allowed === false || !this.isActivationCard()) return allowed;
+		const targets = (this.system as ActivationCardSystemData).targets ?? [];
+		if (targets.length > 0) {
+			this.updateSource({
+				'system.incomingReactions': this.#rerolls.withNoDamageEntries(targets),
+			} as Record<string, unknown>);
+		}
+		return allowed;
+	}
+
 	/** ------------------------------------------------------ */
 	/**                     Data Prep                          */
 	/** ------------------------------------------------------ */
@@ -1038,7 +1079,11 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = [...new Set([...existingTargets, ...added])];
 
 		return this.update({
-			system: { targets, ...this.#movementOfferChanges({ targets }) },
+			system: {
+				targets,
+				incomingReactions: this.#rerolls.withNoDamageEntries(targets),
+				...this.#movementOfferChanges({ targets }),
+			},
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
@@ -1197,7 +1242,11 @@ class NimbleChatMessage extends ChatMessage {
 		// narrowing does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const targets = systemData.targets || [];
-		const damageApplicationPlan = buildDamageApplicationPlan({ targets, packets });
+		const damageApplicationPlan = buildDamageApplicationPlan({
+			targets,
+			packets,
+			noDamageTargets: noDamageTargetsOf(systemData),
+		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
 			return;
@@ -1259,6 +1308,7 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
+		await this.#markDamageApplied();
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1274,6 +1324,16 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			);
 		}
+	}
+
+	/** A no-damage row or its Remove ends here, so only a card that has one keeps the record. */
+	async #markDamageApplied(): Promise<void> {
+		const system = this.system as unknown as { damageApplied?: boolean };
+		if (system.damageApplied === true) return;
+		const hasNoDamage =
+			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
+			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
+		if (hasNoDamage) await this.update({ 'system.damageApplied': true } as Record<string, unknown>);
 	}
 
 	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {
@@ -1297,8 +1357,13 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	#canApplyPackets(packets: DamagePacket[]): boolean {
-		const targets = (this.system as unknown as ActivationCardSystemData).targets || [];
-		const damageApplicationPlan = buildDamageApplicationPlan({ targets, packets });
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const targets = systemData.targets || [];
+		const damageApplicationPlan = buildDamageApplicationPlan({
+			targets,
+			packets,
+			noDamageTargets: noDamageTargetsOf(systemData),
+		});
 		if (!damageApplicationPlan.hasTargets) return true;
 		// A pending banked reduction is spent by clicking Apply even when it
 		// absorbs the attack entirely, so the button must stay live for it.
@@ -1377,7 +1442,26 @@ class NimbleChatMessage extends ChatMessage {
 		// Deliberately the same resolver `applyAllDamage` runs, so the number this
 		// previews and the number the GM removes cannot drift apart.
 		const { components, total } = resolveDamageForActor(actor, damageRolls);
+		if (noDamageTargetsOf(this.system).has(targetUuid)) {
+			return {
+				total: 0,
+				components: components.map((component) => ({
+					...component,
+					adjustedDamage: 0,
+					modifiers: [],
+				})),
+			};
+		}
 		return { components, total };
+	}
+
+	/** The name of the feature that keeps this target from taking damage, or null. */
+	noDamageSourceFor(targetUuid: string): string | null {
+		if (!this.isActivationCard()) return null;
+		const change = noDamageTargetsOf(this.system).get(targetUuid);
+		if (!change) return null;
+		const item = fromUuidSync(change.itemUuid as `Item.${string}`) as { name?: string } | null;
+		return item?.name || change.label;
 	}
 
 	async applyHealing(
@@ -1643,6 +1727,11 @@ class NimbleChatMessage extends ChatMessage {
 		return this.#rerolls.changeToPick(entry);
 	}
 
+	/** The stats a player picks from for a `reroll` entry, or null when it uses no other stat. */
+	rerollStatsToPick(entry: IncomingReactionEntry): StatChoice[] | null {
+		return this.#rerolls.rerollStatsToPick(entry);
+	}
+
 	/** Use a Reroll or Change a Die rule's entry on this card. Primary GM only. */
 	resolveRerollReaction(
 		entryId: string,
@@ -1651,6 +1740,7 @@ class NimbleChatMessage extends ChatMessage {
 		forceHeroicReaction = false,
 		die: DieRef | null = null,
 		value: number | null = null,
+		stat: string | null = null,
 	): Promise<void> {
 		return this.#rerolls.resolveRerollReaction(
 			entryId,
@@ -1659,6 +1749,7 @@ class NimbleChatMessage extends ChatMessage {
 			forceHeroicReaction,
 			die,
 			value,
+			stat,
 		);
 	}
 
@@ -1937,7 +2028,8 @@ class NimbleChatMessage extends ChatMessage {
 		await this.update({
 			system: {
 				targets,
-				incomingReactions: updatedEntries,
+				// The protector is a new target, with its own no-damage row.
+				incomingReactions: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

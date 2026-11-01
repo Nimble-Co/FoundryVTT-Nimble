@@ -1816,3 +1816,157 @@ describe('resolveRerollReaction', () => {
 		});
 	});
 });
+
+describe('a reroll from a rule with a stat to pick', () => {
+	const rollGlobal = globalThis as unknown as { Roll: { replaceFormulaData?: unknown } };
+	let previousReplace: unknown;
+
+	beforeEach(() => {
+		previousReplace = rollGlobal.Roll.replaceFormulaData;
+		rollGlobal.Roll.replaceFormulaData = (formula: string, data: Record<string, number>) =>
+			formula.replace(/@(\w+)/g, (_match, key: string) => String(data[key] ?? 0));
+	});
+
+	afterEach(() => {
+		rollGlobal.Roll.replaceFormulaData = previousReplace;
+	});
+
+	function messageWithStat(options: Record<string, unknown> = {}) {
+		const message = createMessage();
+		const roll = {
+			...serializedRoll(),
+			formula: '1d6 + 1',
+			originalFormula: '1d6 + @strength',
+			data: { strength: 1, dexterity: 4, intelligence: 0, will: 2 },
+			options: { ...serializedRoll().options, ...options },
+		};
+		const { activation } = message.system as unknown as {
+			activation: { effects: Array<{ roll: unknown }> };
+		};
+		activation.effects[0].roll = roll;
+		(message as unknown as { _source: { rolls: string[] } })._source.rolls = [JSON.stringify(roll)];
+		return message;
+	}
+
+	it('lists the other stats for the row', () => {
+		setupWorld({ usesAnotherStat: true, die: 'wholeRoll' });
+		const message = messageWithStat();
+		const stats = message.rerollStatsToPick(rerollEntry() as never);
+		expect(stats?.map((choice) => choice.stat)).toEqual(['dexterity', 'intelligence', 'will']);
+	});
+
+	it('swaps the stat in the new roll and tells it in the history', async () => {
+		setupWorld({ usesAnotherStat: true, die: 'wholeRoll' });
+		const message = messageWithStat();
+
+		await message.resolveRerollReaction(
+			'entry-1',
+			'gm-user',
+			false,
+			false,
+			null,
+			null,
+			'dexterity',
+		);
+
+		const payload = updatePayload(message);
+		expect(JSON.parse(payload.rolls[0]).originalFormula).toBe('1d6 + @dexterity');
+		expect(payload.system.rerolls?.[0]).toMatchObject({ stat: 'dexterity' });
+	});
+
+	it('refuses a click with no stat, and takes no cost', async () => {
+		const { target } = setupWorld({
+			usesAnotherStat: true,
+			die: 'wholeRoll',
+			rollUseCost: { ...FREE, woundCost: 1 },
+		});
+		const message = messageWithStat();
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		expect(message.update).not.toHaveBeenCalled();
+		expect(target.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalled();
+	});
+
+	function withCannotFail(world: World) {
+		const modifier = {
+			id: 'song-rule',
+			type: 'modifyReroll',
+			disabled: false,
+			rerollIdentifier: 'inspiration',
+			cannotFail: true,
+			rollModeChange: 0,
+			extraDamage: '',
+			actionsForRoller: 0,
+			tempHp: '',
+			tempHpWithin: 0,
+			appliesTo: () => true,
+			item: { name: 'Sure Song', uuid: 'Item.song' },
+		};
+		const owner = Object.assign(world.target, {
+			getRollData: () => ({}),
+			items: { contents: [{ rules: new Map([[modifier.id, modifier]]) }] },
+		});
+		Object.assign(world.rule, { identifier: 'inspiration', actor: owner });
+	}
+
+	it('makes the new attack unable to miss when a modifier says it cannot fail', async () => {
+		withCannotFail(setupWorld());
+		const message = messageWithStat({ canMiss: true, canCrit: true });
+		const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		const rolled = evaluate.mock.contexts[0] as DamageRoll;
+		evaluate.mockRestore();
+		expect(rolled.options).toMatchObject({ canMiss: false, canCrit: true });
+		const payload = updatePayload(message);
+		expect(payload.system.rerolls?.[0]).toMatchObject({ cannotMissBy: 'Sure Song' });
+	});
+});
+
+describe('a card as it is made', () => {
+	it('stamps a no damage row per target, and nothing else, on a card with two targets', async () => {
+		const world = setupWorld({
+			type: 'changeResult',
+			change: 'noDamage',
+			attackTrigger: 'hit',
+			resultUseFor: () => ({ change: 'noDamage', value: 0, stat: '' }),
+		});
+		const lucky = { ...world.rule, id: 'lucky', type: 'reroll', change: undefined };
+		world.target.rules = [world.rule, lucky];
+		const other = makeActor('Actor.other');
+		other.rules = [world.rule];
+		const inner = globals().fromUuidSync as (uuid: string) => unknown;
+		globals().fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Scene.scene.Token.other' ? { actor: other } : inner(uuid),
+		);
+		const message = createMessage({
+			entries: [],
+			targets: [TARGET_TOKEN, 'Scene.scene.Token.other'],
+		});
+		const updateSource = vi.fn();
+		Object.assign(message, { updateSource });
+
+		const base = Object.getPrototypeOf(NimbleChatMessage.prototype) as Record<string, unknown>;
+		base._preCreate = vi.fn(async () => undefined);
+		try {
+			await (
+				message as unknown as { _preCreate: (...args: unknown[]) => Promise<unknown> }
+			)._preCreate({}, {}, {});
+		} finally {
+			delete base._preCreate;
+		}
+
+		const entries = updateSource.mock.calls[0][0]['system.incomingReactions'] as Array<{
+			targetTokenUuid: string;
+			ruleId: string;
+			use: string;
+		}>;
+		expect(entries.map((entry) => [entry.targetTokenUuid, entry.ruleId, entry.use])).toEqual([
+			[TARGET_TOKEN, 'reroll-1', 'result'],
+			['Scene.scene.Token.other', 'reroll-1', 'result'],
+		]);
+	});
+});

@@ -81,12 +81,21 @@ interface RerollRuleLike {
 		roll: RollToReroll;
 		other: RerollingActor | null;
 		card?: ResultCardView;
+		targetTokenUuid?: string | null;
 	}) => boolean;
 	rerollChanges?: (kind: RollUseKind) => RerollChanges;
+	/** A Reroll rule: the player picks another stat for the new roll. */
+	usesAnotherStat?: boolean;
+	/** The stat the rule is limited to. Empty is any. */
+	relatedStat?: string;
+	/** A Change a Result rule: how it changes the result. */
+	change?: ResultUse['change'];
+	/** Replaces `outcome` on an attack, for a rule whose `outcome` is about a check. */
+	attackTrigger?: RerollTrigger;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: DieChange;
 	/** A Change a Result rule: what one use does, or null when its formula gives no number. */
-	resultUseFor?: (roller: ResultCardView['roller']) => ResultUse | null;
+	resultUseFor?: (roller: ResultCardView['roller'], card?: ResultCardView) => ResultUse | null;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -101,6 +110,7 @@ interface RerollingActor {
 	isOwner?: boolean;
 	rules?: RerollRuleLike[];
 	getTargetDomain?(): Set<string>;
+	getRollData?(): Record<string, unknown>;
 }
 
 /**
@@ -154,6 +164,8 @@ interface RerollRollContext {
 	forcedMiss: boolean;
 	/** A check card's result now, for the live gate. Absent before the card exists. */
 	card?: ResultCardView;
+	/** A check being posted: a rule for a failed roll can still run by itself. */
+	rollTimeOfCheck?: boolean;
 }
 
 type RerollRollOutcome = Pick<RerollRollContext, 'outcome' | 'forcedMiss'>;
@@ -203,6 +215,24 @@ function outcomeAllows(
 	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome, gate);
 }
 
+/** The outcome of an attack this rule fits. */
+function triggerOf(rule: RerollRuleLike): RerollTrigger | undefined {
+	return rule.attackTrigger ?? rule.outcome;
+}
+
+/**
+ * Whether a rule happens by itself on this roll. On a check, a rule for a failed
+ * roll needs a known result, which only the check's posting step reads.
+ */
+function runsByItself(
+	rule: RerollRuleLike,
+	actor: RerollingActor,
+	context: RerollRollContext,
+): boolean {
+	if (!rerollsByItself(rule, actor)) return false;
+	return context.roll.kind === 'attack' || rule.outcome !== 'failed' || !!context.rollTimeOfCheck;
+}
+
 function gateOf(rule: RerollRuleLike): RollUseGate {
 	const use = rollUseOf(rule.type);
 	return {
@@ -245,9 +275,11 @@ function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[]
 	if (side === 'roller')
 		return [{ actor: context.attacker, tokenUuid: null, targetTokenUuid: null }];
 	if (side === 'target') {
-		if (context.targets.length > 1) return [];
-		const target = context.targets[0];
-		return [{ actor: target?.actor, tokenUuid: null, targetTokenUuid: target?.tokenUuid ?? null }];
+		return context.targets.map((target) => ({
+			actor: target.actor,
+			tokenUuid: null,
+			targetTokenUuid: target.tokenUuid ?? null,
+		}));
 	}
 	const rollerUuid = context.attacker?.uuid;
 	return (context.allies ?? [])
@@ -260,6 +292,11 @@ function leftOutFor(rule: RerollRuleLike, ally: RerollAlly): RerollLeftOut | nul
 	const reach = Math.max(0, Number(rule.reach) || 0);
 	if (reach > 0 && ally.spaces > reach) return { reason: 'reach', spaces: ally.spaces, reach };
 	return null;
+}
+
+/** On a roll with two or more targets, only a rule about one target's damage gives an entry. */
+function fitsTargetCount(rule: RerollRuleLike, side: RerollSide, targets: number): boolean {
+	return side !== 'target' || targets < 2 || rule.change === 'noDamage';
 }
 
 /**
@@ -287,8 +324,9 @@ function collectRerollEntries(context: RerollRollContext): {
 				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
 			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
+				if (!fitsTargetCount(rule, side, context.targets.length)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
-				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
+				const trigger = isAttack ? (triggerOf(rule) ?? 'always') : 'always';
 				const gate = gateOf(rule);
 				if (!outcomeAllows(trigger, outcome, gate)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
@@ -309,10 +347,11 @@ function collectRerollEntries(context: RerollRollContext): {
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
 					...gate,
 					...(hint ? { hint } : {}),
+					...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
 
-				if (!ally && rerollsByItself(rule, actor)) result.automatic.push({ entry, rule });
+				if (!ally && runsByItself(rule, actor, context)) result.automatic.push({ entry, rule });
 				else result.manual.push(entry);
 			}
 		}
@@ -439,12 +478,18 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const other = otherCreature(entry.side, context);
-	// Only a Change a Result rule reads the card. Its entry stays stamped, so it comes back with the row.
-	const card = rollUseOf(rule.type) === 'result' ? context.card : undefined;
-	const gate = { side: entry.side, roll: context.roll, other, ...(card ? { card } : {}) };
+	// A rule that reads the card keeps its entry stamped, so the row comes back with the result.
+	const readsCard = !isAttack || rollUseOf(rule.type) === 'result';
+	const gate = {
+		side: entry.side,
+		roll: context.roll,
+		other,
+		...(readsCard && context.card ? { card: context.card } : {}),
+		...(rollUseOf(rule.type) === 'result' ? { targetTokenUuid: entry.targetTokenUuid } : {}),
+	};
 	if (rule.offersUseOn?.(gate) !== true) return UNAVAILABLE;
 	const { outcome, forcedMiss } = attackOutcome(context);
-	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, gateOf(rule))) {
+	if (outcome && !rollUseTriggerMatches(triggerOf(rule), outcome, gateOf(rule))) {
 		return UNAVAILABLE;
 	}
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
@@ -456,6 +501,7 @@ export {
 	CHANGE_RESULT_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
+	isRollUseRule,
 	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,

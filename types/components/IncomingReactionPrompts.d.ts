@@ -1,5 +1,6 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { StatChoice } from '#utils/reroll/rollStat.ts';
 
 /**
  * Where on the card the prompts render. `roll` is inside the damage section of
@@ -35,6 +36,8 @@ export interface IncomingReactionPicking {
 	setsValue?: boolean;
 	/** The die whose new value the player picks. */
 	valueDie?: PickableDie | null;
+	/** A reroll with another stat: the stats the player picks from. */
+	stats?: StatChoice[];
 }
 
 /** Entries whose request is out, so their buttons stay hidden until it comes back. */

@@ -1,5 +1,5 @@
 import { getInitiativeStartingActions } from '../../utils/combat/initiativeStartingActions.js';
-import { keptD20 } from '../../utils/reroll/checkCardRollTarget.js';
+import { keptD20 } from '../../utils/reroll/checkRollOfCard.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { getCombatantPendingActionDelta } from './combatantSystem.js';

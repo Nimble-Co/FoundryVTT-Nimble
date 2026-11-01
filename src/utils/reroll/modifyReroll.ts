@@ -10,6 +10,7 @@ interface ModifyRerollRuleLike {
 	rerollIdentifier?: string;
 	rollModeChange?: number;
 	extraDamage?: string;
+	cannotFail?: boolean;
 	actionsForRoller?: number;
 	tempHp?: string;
 	tempHpWithin?: number;
@@ -45,6 +46,15 @@ function modifyRerollRules(reroll: {
 		}
 	}
 	return found;
+}
+
+/** The first Modify Reroll rule that says this reroll cannot fail, or null. */
+function cannotFailModifier(reroll: {
+	identifier?: string;
+	actor?: unknown;
+}): ModifyRerollRuleLike | null {
+	const owner = { identifier: reroll.identifier, actor: reroll.actor as ModifierOwner | null };
+	return modifyRerollRules(owner).find((modifier) => modifier.cannotFail === true) ?? null;
 }
 
 /**
@@ -150,6 +160,7 @@ async function newRollChanges(
 }
 
 export {
+	cannotFailModifier,
 	type ModifyRerollChange,
 	type ModifyRerollRuleLike,
 	grantModifiers,

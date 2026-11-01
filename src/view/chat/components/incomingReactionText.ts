@@ -55,6 +55,10 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 
 function resultVerb(use: ResultUse): string {
 	if (use.change === 'succeed') return localize('NIMBLE.chat.incomingReactions.verbs.succeed');
+	if (use.change === 'noDamage') return localize('NIMBLE.chat.incomingReactions.verbs.noDamage');
+	if (use.change === 'countsAsNat20') {
+		return localize('NIMBLE.chat.incomingReactions.verbs.countsAsNat20');
+	}
 	if (use.change === 'setTotal') {
 		return localize('NIMBLE.chat.incomingReactions.verbs.setTotal', { value: String(use.value) });
 	}
@@ -74,6 +78,7 @@ export function createIncomingReactionText(
 	function verb(entry: IncomingReactionEntry): string {
 		const use = entry.use === 'result' ? resultUseOf(entry) : null;
 		if (use) return resultVerb(use);
+		if (entry.anotherStat) return localize('NIMBLE.chat.incomingReactions.verbs.anotherStat');
 		return localize(
 			isRerollAgain(entry, getRerolls())
 				? 'NIMBLE.chat.incomingReactions.verbs.rerollAgain'

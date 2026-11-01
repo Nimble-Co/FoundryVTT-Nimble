@@ -1317,6 +1317,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			roll,
 			{ kind: 'skillCheck', key: skillKey },
 			rollMode ?? 0,
+			options.dc,
 		);
 		const chatData = await this.prepareSkillCheckChatCardData(skillKey, rerolls, options.dc);
 

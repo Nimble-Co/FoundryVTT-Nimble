@@ -27,6 +27,7 @@ function control(card: never, count = 2) {
 		useEntry: vi.fn(async () => undefined),
 		pickDie: vi.fn(async () => undefined),
 		pickValue: vi.fn(async () => undefined),
+		pickStat: vi.fn(async () => undefined),
 		cancelPick: vi.fn(() => null),
 	}));
 }

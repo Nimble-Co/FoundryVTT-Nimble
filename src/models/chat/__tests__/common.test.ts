@@ -125,6 +125,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			use: 'change',
 			needsDieAtMax: false,
 			hint: 'Your 2nd miss this round',
+			anotherStat: false,
 			rerollTrigger: 'always',
 			rerollWithDisadvantage: false,
 			outcomeTrigger: 'always',
@@ -163,6 +164,8 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			automatic: true,
 			use: 'change',
 			change: { mode: 'add', value: 1 },
+			stat: 'dexterity',
+			cannotMissBy: 'A feature',
 		};
 		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
 		const die = (rerollFields().previous as { fields: Fields }).fields;

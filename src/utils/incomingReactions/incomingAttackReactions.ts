@@ -59,6 +59,8 @@ type IncomingReactionRequest = {
 	die?: DieRef;
 	/** change only: the face the player set the die to */
 	value?: number;
+	/** reroll only: the stat the player picked for the new roll */
+	stat?: string;
 };
 
 type KeepChoiceRequest = {
@@ -121,6 +123,7 @@ interface ReactionCapableMessage {
 		forceHeroicReaction?: boolean,
 		die?: DieRef | null,
 		value?: number | null,
+		stat?: string | null,
 	) => Promise<void>;
 	resolveKeepChoice?: (
 		choice: RerollKept,
@@ -155,6 +158,7 @@ async function executeIncomingReaction(
 	forceHeroicReaction?: boolean,
 	die?: DieRef | null,
 	value?: number | null,
+	stat?: string | null,
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -178,6 +182,7 @@ async function executeIncomingReaction(
 			forceHeroicReaction === true,
 			die ?? null,
 			value ?? null,
+			stat ?? null,
 		);
 	}
 }
@@ -214,6 +219,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		request.forceHeroicReaction === true,
 		dieRefFrom(request.die),
 		faceFrom(request.value),
+		typeof request.stat === 'string' ? request.stat : null,
 	);
 }
 
@@ -358,6 +364,7 @@ export async function requestIncomingAttackReaction(params: {
 	forceHeroicReaction?: boolean;
 	die?: DieRef;
 	value?: number;
+	stat?: string;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
 
@@ -371,6 +378,7 @@ export async function requestIncomingAttackReaction(params: {
 			params.forceHeroicReaction,
 			params.die ?? null,
 			params.value ?? null,
+			params.stat ?? null,
 		);
 		return true;
 	}
@@ -393,6 +401,7 @@ export async function requestIncomingAttackReaction(params: {
 		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
 		...(params.die ? { die: params.die } : {}),
 		...(params.value ? { value: params.value } : {}),
+		...(params.stat ? { stat: params.stat } : {}),
 	});
 	return true;
 }

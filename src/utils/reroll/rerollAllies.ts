@@ -2,12 +2,7 @@ import type { MeasurableTokenDocument } from '#types/movement.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import { areAllies } from '../movement/alliesWithin.js';
 import { spacesBetween } from '../movement/spacesBetween.js';
-import {
-	CHANGE_RESULT_RULE_TYPE,
-	REROLL_RULE_TYPE,
-	type RerollAlly,
-	type RerollingActor,
-} from './rerollEntries.js';
+import { isRollUseRule, type RerollAlly, type RerollingActor } from './rerollEntries.js';
 
 interface ScannedActor extends RerollingActor {
 	type?: string;
@@ -44,9 +39,7 @@ function rollerTokenOf(actor: unknown): ScannedToken | null {
 
 function hasAllyReroll(actor: ScannedActor): boolean {
 	return (actor.rules ?? []).some(
-		(rule) =>
-			(rule?.type === REROLL_RULE_TYPE || rule?.type === CHANGE_RESULT_RULE_TYPE) &&
-			(rule as { usedBy?: string }).usedBy === 'ally',
+		(rule) => isRollUseRule(rule?.type) && (rule as { usedBy?: string }).usedBy === 'ally',
 	);
 }
 

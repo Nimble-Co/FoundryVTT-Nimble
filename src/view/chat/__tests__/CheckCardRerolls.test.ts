@@ -501,6 +501,56 @@ describe('rerolls on check cards', () => {
 		expect(controlButton()).toBeNull();
 	});
 
+	describe('with Another Stat', () => {
+		const statButtons = () => [
+			...document.querySelectorAll<HTMLElement>('.nimble-reroll-stats__stat'),
+		];
+		const STATS = [
+			{ stat: 'dexterity', mod: 2 },
+			{ stat: 'intelligence', mod: 0 },
+			{ stat: 'will', mod: -1 },
+		];
+
+		function statMessage(id: string) {
+			const message = createMessage({
+				incomingReactions: [rerollEntry({ anotherStat: true })],
+			});
+			Object.assign(message, { id, rerollStatsToPick: vi.fn(() => STATS) });
+			return message;
+		}
+
+		it('shows the verb, and the click opens the stats under the row with signed modifiers', async () => {
+			renderSave(statMessage('stat-open'));
+			await openControl();
+
+			expect(rowWords(rowsOf()[0])).toContain('Reroll With Another Stat');
+			expect(statButtons()).toEqual([]);
+
+			await fireEvent.click(rowsOf()[0]);
+			await settle();
+
+			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			expect(statButtons().map((button) => button.textContent?.trim())).toEqual([
+				'DEX +2',
+				'INT +0',
+				'WIL \u22121',
+			]);
+		});
+
+		it('sends the stat on one click', async () => {
+			renderSave(statMessage('stat-send'));
+			await openControl();
+			await fireEvent.click(rowsOf()[0]);
+			await settle();
+
+			await fireEvent.click(statButtons()[0]);
+			await settle();
+
+			expect(requestIncomingAttackReaction).toHaveBeenCalledTimes(1);
+			expect(requestIncomingAttackReaction.mock.calls[0][0]).toMatchObject({ stat: 'dexterity' });
+		});
+	});
+
 	describe('with Change a Result', () => {
 		const shownTotal = () => document.querySelector('.roll__value')?.textContent;
 		const sumBox = () => document.querySelector('.nimble-result-sum')?.textContent;
@@ -546,9 +596,33 @@ describe('rerolls on check cards', () => {
 				}),
 			);
 
+			// The history line tells both numbers, so one set total has no sum box.
 			expect(shownTotal()).toBe('13');
-			expect(sumBox()).toBe('6 changed to 13');
+			expect(sumBox()).toBeUndefined();
 			expect(line()).toBe('Changed 6 to 13 with Mighty Soul');
+		});
+
+		it('tells a natural 20 made by itself, with no Remove, and the roll stays', () => {
+			const message = createMessage({
+				incomingReactions: [],
+				resultChanges: [
+					resultChange({
+						change: 'countsAsNat20',
+						value: 19,
+						stat: '',
+						automatic: true,
+						paid: { charges: 0, mana: 0, wounds: 0 },
+					}),
+				],
+			});
+			message.rolls[0].total = 1;
+			renderSave(message);
+
+			expect(shownTotal()).toBe('19');
+			expect(sumBox()).toBe('Rolled 1, counts as 20 \u2212 1 = 19');
+			expect(line()).toBe('Counts as a Natural 20 with Mighty Soul');
+			expect(removeButton()).toBeNull();
+			expect(message.rolls[0].total).toBe(1);
 		});
 
 		it('shows no sum box when the total is the roll, as after a succeed', () => {

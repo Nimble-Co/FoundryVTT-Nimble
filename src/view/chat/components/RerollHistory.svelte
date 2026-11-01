@@ -26,6 +26,8 @@
 		tempHp: 'fa-shield-heart',
 		crit: 'fa-burst',
 		miss: 'fa-xmark',
+		stat: 'fa-arrows-rotate',
+		cannotMiss: 'fa-bullseye',
 	};
 
 	let {

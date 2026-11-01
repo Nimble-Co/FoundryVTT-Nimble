@@ -96,6 +96,18 @@ A change that sets a value opens the value picker in place, on the line of the r
 
 A row shows only while a feature can be used on the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. While the Dice So Nice dice are in the air, the roll on the card is a tumbling d20, as on an attack card. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before rerolls show no button.
 
+Some rows are only for a failed roll. When the card says **Succeeded**, such a row goes away, and it comes back when the result goes back to **Failed**. When the card has no DC, it has no result, so the row shows and you decide.
+
+### Rerolling with another stat
+
+Some features reroll with another stat. The row says **Reroll With Another Stat**. Click it to open the three other stats under the row, with their modifiers, for example **DEX +2**, **INT +0** and **WIL −1**. Click a stat to reroll. No other menu opens. The new roll keeps the advantage or disadvantage of the first roll.
+
+- **A save** uses the save modifier of the new stat.
+- **A skill or ability check** swaps the stat part and keeps the other bonuses.
+- **An attack** swaps the stat part of the formula. An attack with no stat part has no row.
+
+The reroll line has a tag, such as **With DEX**. The card keeps its name, so a STR save that was rerolled with DEX still says STR.
+
 ## Rerolls from an ally
 
 Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's feature shows as a row on the ally's card, under the character's name, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll or change rows.
@@ -118,6 +130,8 @@ Some features add to another feature's reroll, such as the Songweaver's Unfailin
 - **Extra damage,** for example **+3 Heroic Ballad:** added to the attack's damage when its result stands, also when a player keeps the old result. It is part of the total in the roll box and on the **Keep** buttons.
 - **Actions,** for example **Wren +1 action:** the one who rolled gains them at once. Only a hero in combat gains actions. Otherwise the tag says why no action was given.
 - **Temp HP,** for example **3 temp HP to 2 creatures** or **3 temp HP to Wren:** the one who rolled and their allies near the feature's owner gain temp HP. Click the tag to see who. Temp HP does not add up, so each creature keeps the larger amount: a creature that already has as much temp HP or more keeps its own. The list tells both amounts, for example "Bram keeps 5, not 3" or "Tam had 1, now has 3". The rules let each creature choose which amount it keeps, so a player who wants the other amount changes it on the sheet. When the owner has no token on the scene, nobody gains temp HP.
+
+- **Cannot fail:** on a save or a check, the new roll succeeds. The history says **Succeeded Instead** with the feature, and has a **Remove**. No **Keep** buttons show. On an attack, the reroll line has a **Cannot miss** tag, and the attack hits. It is a crit only when the die makes a crit.
 
 Advantage and extra damage count one time for each attack, however many times the reroll is used. Actions and temp HP come with each use. They are given when the reroll is used, not when a result is kept. With **Feature Effects** off in the Automation settings, the action and temp HP tags are dashed, with a hand, and a note under them says what to give by hand.
 
@@ -150,7 +164,7 @@ After a set with a feature that makes the set value final, a Primary Die bonus l
 
 ## Changing a result
 
-Some features change the result of a save, a skill check, an ability check or [Initiative](#the-initiative-card), after the roll. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
+Some features change the result of a save, a skill check, an ability check or [Initiative](#the-initiative-card), after the roll. One changes what an attack does to its target. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
 
 - **Succeed Instead** with Elusive. The card says **Succeeded**, or **Succeeded - DC 14** with a DC. The total stays. The row goes away while the change stands. The other rows stay under the closed button, because a reroll can still replace the result. The history line says **Succeeded Instead** with Elusive.
 - **Change to 10** with Cheat!. The total becomes that number. The history line says **Changed 7 to 10** with Cheat!. The row does not show when the total is already that number. Some features show the row only when the total is below that number.
@@ -160,7 +174,11 @@ A box above the history shows how the total came from the roll, such as **7 + 3 
 
 A known DC is read again after each change, and the small line under the name follows it. A natural 1 on a save or a skill check still fails after an add, and a natural 20 still succeeds. A change to a number replaces the roll, so only that number and the DC count. When the card goes to **Succeeded** on a save, a condition that the save added goes away again.
 
-**Remove.** Each of these lines has a **Remove** button, for the user who can click the row and for the GM. A click takes that change off the card and reads the result again. The uses, Mana and Wounds it cost come back. An action or a Heroic Reaction stays spent. A line that grew removes all its clicks and gives back all its Wounds. The other changes stay in their order, and the total is worked out again. Rerolls and changes of a die have no **Remove**.
+**Counts as a natural 20.** Some features count a total of 1 or less as a natural 20. This happens by itself and costs nothing, and the dice on the card do not change. The total is 20 plus the modifier of the roll, and the save or check succeeds. The box says **Rolled 1, counts as 20 − 1 = 19**. The history says **Counts as a Natural 20** with Bumblewise, with no **Remove**. It is read again after a reroll. With **Feature Effects** off in the Automation settings, a row **Count as a Natural 20** shows instead, and you click it.
+
+**No damage.** Some features let the target of an attack take no damage from it. After a hit, the target's owner and the GM see a row, for example **No Damage** with Epic Resistance, with its uses left. Click it, and that target takes no damage from any part of this attack when you click **Apply Damage**. The other targets take their damage as usual. The target shows a **No Damage** tag on the card. The history says **No Damage for** the target **with** the feature. **Remove** gives the cost back until the damage is applied.
+
+**Remove.** Each of these lines has a **Remove** button, for the user who can click the row and for the GM. A click takes that change off the card and reads the result again. The uses, Mana and Wounds it cost come back. An action or a Heroic Reaction stays spent. A line that grew removes all its clicks and gives back all its Wounds. The other changes stay in their order, and the total is worked out again. Rerolls and changes of a die have no **Remove**. A change that happened by itself has none, and neither does **No Damage** after the damage is applied.
 
 **A reroll replaces the result.** The new roll is the new total, and the added, set and succeed changes come off. Their costs stay paid, and any Wounds stay. Their lines stay in the history, with no **Remove**. The box starts again from the new roll. A change of a die is not a new roll, so the changes stay on the total.
 

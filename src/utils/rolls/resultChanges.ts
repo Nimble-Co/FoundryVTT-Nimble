@@ -1,8 +1,19 @@
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type {
 	IncomingReactionEntry,
 	ResultChange,
 	ResultUse,
 } from '../incomingReactions/incomingReactionEntry.js';
+import type { RollToReroll } from '../reroll/rollToReroll.js';
+
+const NATURAL_20 = 20;
+
+interface NaturalRuleLike {
+	id?: string;
+	label?: string;
+	item?: { name?: string; uuid?: string } | null;
+	countsAsNat20On?: (roll: RollToReroll) => boolean;
+}
 
 /** The Change a Result clicks on a card. A card posted before them has none. */
 function resultChangesOf(system: unknown): ResultChange[] {
@@ -17,7 +28,8 @@ function standingResultChanges(changes: readonly ResultChange[]): ResultChange[]
 
 function totalAfterChange(total: number, change: ResultChange): number {
 	if (change.change === 'add') return total + change.value;
-	return change.change === 'setTotal' ? change.value : total;
+	if (change.change === 'setTotal' || change.change === 'countsAsNat20') return change.value;
+	return total;
 }
 
 /** The total a card shows: the roll's total with the standing clicks on it, in order. */
@@ -38,7 +50,8 @@ function retireResultChanges(rollTotal: number, changes: readonly ResultChange[]
 
 /** The record of one click. A repeat of an add that stands joins that add's history line. */
 function newResultChange(input: {
-	entry: Pick<IncomingReactionEntry, 'id' | 'itemUuid' | 'ruleId' | 'label' | 'actorUuid'>;
+	entry: Pick<IncomingReactionEntry, 'id' | 'itemUuid' | 'ruleId' | 'label' | 'actorUuid'> &
+		Partial<Pick<IncomingReactionEntry, 'targetTokenUuid'>>;
 	use: ResultUse;
 	changes: readonly ResultChange[];
 	chargePoolIdentifier: string;
@@ -69,10 +82,44 @@ function newResultChange(input: {
 		before: null,
 		chargePoolIdentifier: input.chargePoolIdentifier,
 		paid: input.paid,
+		...(use.change === 'noDamage' ? { targetTokenUuid: input.entry.targetTokenUuid ?? null } : {}),
+	};
+}
+
+/** The change a rule makes with no click: a low result counts as a natural 20. */
+function naturalResultChange(input: {
+	roller: { uuid?: string; rules?: unknown } | null | undefined;
+	roll: RollToReroll;
+	rollTotal: number;
+	keptD20: number | null;
+}): ResultChange | null {
+	const { rollTotal, keptD20 } = input;
+	if (keptD20 === null || rollTotal > 1 || !isRuleAutomationEnabled()) return null;
+	const rules = Array.isArray(input.roller?.rules) ? input.roller.rules : [];
+	const rule = (rules as NaturalRuleLike[]).find((each) => each?.countsAsNat20On?.(input.roll));
+	if (!rule) return null;
+	const id = foundry.utils.randomID();
+	return {
+		id,
+		lineId: id,
+		entryId: '',
+		itemUuid: rule.item?.uuid ?? '',
+		ruleId: rule.id ?? '',
+		label: rule.label || rule.item?.name || '',
+		actorUuid: input.roller?.uuid ?? '',
+		change: 'countsAsNat20',
+		value: NATURAL_20 + rollTotal - keptD20,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+		automatic: true,
 	};
 }
 
 export {
+	naturalResultChange,
 	newResultChange,
 	resultChangesOf,
 	resultTotal,

@@ -159,6 +159,9 @@
 						? messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid)
 						: null}
 				{@const damageBadges = getDamageBadges(breakdown)}
+				{@const noDamageSource = token
+					? messageDocument?.reactive?.noDamageSourceFor?.(token.uuid)
+					: null}
 				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
 				{@const mark = targetMarks.markOn(token as never)}
 				<li
@@ -186,8 +189,19 @@
 						{/if}
 					</span>
 
-					{#if damageBadges.length > 0}
+					{#if damageBadges.length > 0 || noDamageSource}
 						<span class="nimble-target-badges">
+							{#if noDamageSource}
+								<span
+									class="nimble-target-badge"
+									data-badge-kind="noDamage"
+									data-tooltip={localize('NIMBLE.damageModifiers.noDamage', {
+										source: noDamageSource,
+									})}
+								>
+									{localize('NIMBLE.damageModifiers.badgeNoDamage')}
+								</span>
+							{/if}
 							{#each damageBadges as badge (badge.kind)}
 								<span
 									class="nimble-target-badge"
@@ -339,7 +353,8 @@
 		background: var(--nimble-damage-badge-background-color);
 		border-radius: 3px;
 
-		&[data-badge-kind='immune'] {
+		&[data-badge-kind='immune'],
+		&[data-badge-kind='noDamage'] {
 			--nimble-damage-badge-color: var(--nimble-damage-badge-immune-color);
 			--nimble-damage-badge-background-color: var(--nimble-damage-badge-immune-background-color);
 		}

@@ -384,6 +384,7 @@ function computeIncomingAttackPlan(
 			kind: 'attack',
 			delivery: attackContext?.delivery ?? null,
 			...(attackContext?.itemUuid ? { itemUuid: attackContext.itemUuid } : {}),
+			...(attackContext?.stats?.length ? { stats: attackContext.stats } : {}),
 		},
 		outcome: null,
 		forcedMiss: plan.forceMiss,

@@ -221,10 +221,10 @@ describe('Change This Roll on an Initiative card', () => {
 		expect(rowText()).not.toContain('Start with');
 	});
 
-	it('stays closed until a click: the card says no Failed', () => {
+	it('opens by itself: Initiative has rows only when a change can help', () => {
 		renderCard();
 
-		expect(controlButton()?.getAttribute('aria-expanded')).toBe('false');
+		expect(controlButton()?.getAttribute('aria-expanded')).toBe('true');
 	});
 
 	it('has no control when the card says the row cannot apply', () => {

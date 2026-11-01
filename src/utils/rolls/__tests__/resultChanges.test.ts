@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { ResultChange } from '../../incomingReactions/incomingReactionEntry.js';
 import { checkResultOfCard } from '../checkResult.js';
 import {
+	naturalResultChange,
 	newResultChange,
 	resultChangesOf,
 	resultTotal,
@@ -75,6 +76,78 @@ describe('resultTotal', () => {
 	});
 });
 
+describe('a change that counts as a natural 20', () => {
+	const nat20 = change({ change: 'countsAsNat20', value: 19, stat: '' });
+
+	it('sets the total, and later adds go on it', () => {
+		expect(resultTotal(1, [nat20])).toBe(19);
+		expect(resultTotal(1, [nat20, change()])).toBe(22);
+	});
+
+	it('succeeds on a save with no DC and over a DC it does not meet', () => {
+		expect(saveResult({ resultChanges: [nat20] }, 2, 1)).toBe('succeeded');
+		expect(saveResult({ dc: 25, resultChanges: [nat20] }, 2, 1)).toBe('succeeded');
+	});
+
+	it('succeeds on a skill check, and stops when a new roll retires it', () => {
+		const roll2 = roll(2, 1);
+		const system = { skillKey: 'insight', dc: 15, resultChanges: [nat20] };
+		expect(checkResultOfCard('skillCheck', system, roll2)).toBe('succeeded');
+		const retired = { ...system, resultChanges: [{ ...nat20, retired: true }] };
+		expect(checkResultOfCard('skillCheck', retired, roll2)).toBe('failed');
+	});
+});
+
+describe('naturalResultChange', () => {
+	const WILL = { kind: 'save', key: 'will' } as const;
+	const rule = {
+		id: 'rule-1',
+		label: '',
+		item: { name: 'Bumblewise', uuid: 'Item.bumble' },
+		countsAsNat20On: (roll: { kind: string; key?: string }) => roll.key === 'will',
+	};
+	const roller = { uuid: 'Actor.hero', rules: [{ type: 'reroll' }, rule] };
+	const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+
+	afterEach(() => {
+		gameGlobal.game.settings = { get: () => true };
+	});
+
+	it('makes a free automatic change at 1 or less: 20 plus the modifier', () => {
+		const made = naturalResultChange({ roller, roll: WILL, rollTotal: 1, keptD20: 2 });
+		expect(made).toMatchObject({
+			change: 'countsAsNat20',
+			value: 19,
+			automatic: true,
+			itemUuid: 'Item.bumble',
+			ruleId: 'rule-1',
+			actorUuid: 'Actor.hero',
+			label: 'Bumblewise',
+			retired: false,
+			paid: { charges: 0, mana: 0, wounds: 0 },
+		});
+		expect(made?.lineId).toBe(made?.id);
+	});
+
+	it('reads a modifier of 0 and a total under 1', () => {
+		expect(naturalResultChange({ roller, roll: WILL, rollTotal: 1, keptD20: 1 })?.value).toBe(20);
+		expect(naturalResultChange({ roller, roll: WILL, rollTotal: -2, keptD20: 1 })?.value).toBe(17);
+	});
+
+	it('makes none over 1, with no rule that covers the roll, or with no d20', () => {
+		expect(naturalResultChange({ roller, roll: WILL, rollTotal: 2, keptD20: 3 })).toBeNull();
+		const other = { kind: 'save', key: 'strength' } as const;
+		expect(naturalResultChange({ roller, roll: other, rollTotal: 1, keptD20: 1 })).toBeNull();
+		expect(naturalResultChange({ roller, roll: WILL, rollTotal: 1, keptD20: null })).toBeNull();
+		expect(naturalResultChange({ roller: null, roll: WILL, rollTotal: 1, keptD20: 1 })).toBeNull();
+	});
+
+	it('makes none with Feature Effects off: it is a row then', () => {
+		gameGlobal.game.settings = { get: () => false };
+		expect(naturalResultChange({ roller, roll: WILL, rollTotal: 1, keptD20: 1 })).toBeNull();
+	});
+});
+
 describe('retireResultChanges', () => {
 	it('retires the standing changes and keeps the total each one replaced', () => {
 		const old = change({ id: 'old', retired: true, before: 2 });
@@ -84,6 +157,27 @@ describe('retireResultChanges', () => {
 		expect(retired[1]).toMatchObject({ retired: true, before: 7 });
 		expect(retired[2]).toMatchObject({ retired: true, before: 10 });
 		expect(standingResultChanges(retired)).toEqual([]);
+	});
+});
+
+describe('newResultChange of no damage', () => {
+	it('names the target it covers', () => {
+		const made = newResultChange({
+			entry: {
+				id: 'e',
+				itemUuid: 'Item.res',
+				ruleId: 'r',
+				label: 'Res',
+				actorUuid: 'A',
+				targetTokenUuid: 'Token.a',
+			},
+			use: { change: 'noDamage', value: 0, stat: '' },
+			changes: [],
+			chargePoolIdentifier: 'res',
+			paid: { charges: 1, mana: 0, wounds: 0 },
+		});
+		expect(made.targetTokenUuid).toBe('Token.a');
+		expect(resultTotal(9, [made])).toBe(9);
 	});
 });
 

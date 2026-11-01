@@ -222,6 +222,279 @@ beforeEach(() => {
 	globals().ui.notifications.warn = vi.fn();
 });
 
+const TARGET_TOKEN = 'Scene.s.Token.a';
+
+/** A hit card whose `update` writes to the card, as the document does. */
+function createAttackCard(entries: IncomingReactionEntry[]): Card {
+	const roll = {
+		class: 'DamageRoll',
+		formula: '1d6 + 2',
+		originalFormula: '1d6 + 2',
+		total: 8,
+		isCritical: false,
+		isMiss: false,
+		options: { canCrit: true, canMiss: true, rollMode: 0, primaryDieModifier: 1 },
+		data: {},
+	};
+	const message = new NimbleChatMessage({
+		type: 'spell',
+		system: {
+			actorUuid: 'Actor.attacker',
+			targets: [TARGET_TOKEN],
+			isCritical: false,
+			isMiss: false,
+			activation: {
+				effects: [{ id: 'damage', type: 'damage', parentNode: null, parentContext: null, roll }],
+				targets: { count: 1, attackType: 'reach', distance: 1 },
+			},
+			incomingReactions: entries,
+			resultChanges: [],
+			rerolls: [],
+		},
+	} as unknown as ChatMessage.CreateData) as Card;
+	(message as unknown as { _source: { rolls: string[] } })._source = {
+		rolls: [JSON.stringify(roll)],
+	};
+	(message as { id: string }).id = foundry.utils.randomID();
+	Object.assign(message, { system: { ...message.system } });
+	message.update = vi.fn(
+		async (changes: { system?: Record<string, unknown> } & Record<string, unknown>) => {
+			Object.assign(message.system, changes.system ?? {});
+			if ('system.damageApplied' in changes) {
+				Object.assign(message.system, { damageApplied: changes['system.damageApplied'] });
+			}
+		},
+	) as never;
+	return message;
+}
+
+describe('No Damage on an attack card', () => {
+	const noDamageUse = { change: 'noDamage', value: 0, stat: '' };
+
+	function world() {
+		const roller = makeRoller();
+		const pool = withChargePool(roller, 1);
+		const rule = makeRule(roller, 'res', noDamageUse, {
+			...FREE,
+			chargePoolIdentifier: 'elusive',
+		});
+		setupWorld([rule], roller);
+		const inner = fromUuidSync as unknown as (uuid: string) => unknown;
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid === TARGET_TOKEN ? { actor: roller } : inner(uuid))),
+		);
+		const card = createAttackCard([
+			{
+				...entryFor('res'),
+				side: 'target',
+				targetTokenUuid: TARGET_TOKEN,
+				outcomeTrigger: 'hit',
+			},
+		]);
+		return { pool, card };
+	}
+
+	it('writes a change for the target and pays the cost, and the roll stays', async () => {
+		const { pool, card } = world();
+
+		await click(card, 'res');
+
+		expect(card.system.resultChanges).toEqual([
+			expect.objectContaining({
+				change: 'noDamage',
+				targetTokenUuid: TARGET_TOKEN,
+				retired: false,
+			}),
+		]);
+		expect(pool.current).toBe(0);
+		expect(card.update.mock.calls[0][0].rolls).toBeUndefined();
+	});
+
+	it('gives the cost back on Remove before the damage is applied', async () => {
+		const { pool, card } = world();
+		await click(card, 'res');
+		const { lineId } = card.system.resultChanges[0];
+
+		await card.resolveResultRemoval(lineId, 'gm-user');
+
+		expect(card.system.resultChanges).toEqual([]);
+		expect(pool.current).toBe(1);
+	});
+
+	it('refuses Remove after the damage is applied, and the cost stays paid', async () => {
+		const { pool, card } = world();
+		await click(card, 'res');
+		const { lineId } = card.system.resultChanges[0];
+		Object.assign(card.system, { damageApplied: true });
+
+		await card.resolveResultRemoval(lineId, 'gm-user');
+
+		expect(card.system.resultChanges).toHaveLength(1);
+		expect(pool.current).toBe(0);
+	});
+});
+
+describe('a change made by itself', () => {
+	it('has no Remove, also from a GM', async () => {
+		const roller = makeRoller();
+		setupWorld([], roller);
+		const card = createCard([]);
+		const change = {
+			id: 'nat',
+			lineId: 'nat',
+			entryId: '',
+			itemUuid: 'Item.nat',
+			ruleId: 'nat',
+			label: 'Bumblewise',
+			actorUuid: ROLLER,
+			change: 'countsAsNat20',
+			value: 19,
+			stat: '',
+			retired: false,
+			before: null,
+			chargePoolIdentifier: '',
+			paid: { charges: 0, mana: 0, wounds: 0 },
+			automatic: true,
+		} as ResultChange;
+		card.system.resultChanges = [change];
+
+		await card.resolveResultRemoval('nat', 'gm-user');
+
+		expect(card.system.resultChanges).toEqual([change]);
+		expect(globals().ui.notifications.warn).toHaveBeenCalled();
+	});
+});
+
+describe('a rule for a failed roll, on both paths of the gate', () => {
+	function world() {
+		const roller = makeRoller();
+		const rule = {
+			...makeRule(roller, 'second', { change: 'succeed', value: 0, stat: '' }),
+			type: 'reroll',
+			die: 'wholeRoll',
+			keep: 'new',
+			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
+			offersUseOn: vi.fn(
+				(gate: { card?: { result?: string | null } }) => gate.card?.result !== 'succeeded',
+			),
+		};
+		setupWorld([rule as never], roller);
+		const { use: _use, ...entry } = entryFor('second');
+		const stamped = entry as IncomingReactionEntry;
+		const card = createCard([stamped]);
+		const evaluate = vi.spyOn(NimbleRoll.prototype, 'evaluate');
+		return { card, stamped, evaluate };
+	}
+
+	const succeeded = {
+		id: 'won',
+		lineId: 'won',
+		entryId: '',
+		itemUuid: 'Item.other',
+		ruleId: 'other',
+		label: 'Other',
+		actorUuid: ROLLER,
+		change: 'succeed',
+		value: 0,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+	} as ResultChange;
+
+	it('shows on the client on a failure, goes away on a success, and comes back', () => {
+		const { card, stamped } = world();
+		expect(card.canStillUseReroll(stamped)).toBe(true);
+		card.system.resultChanges = [succeeded];
+		expect(card.canStillUseReroll(stamped)).toBe(false);
+		card.system.resultChanges = [];
+		expect(card.canStillUseReroll(stamped)).toBe(true);
+	});
+
+	it('is refused by the GM on a success, and the entry stays', async () => {
+		const { card, stamped, evaluate } = world();
+		card.system.resultChanges = [succeeded];
+
+		await card.resolveRerollReaction(stamped.id, 'gm-user');
+
+		expect(evaluate).not.toHaveBeenCalled();
+		expect(card.system.rerolls).toEqual([]);
+		expect(card.system.incomingReactions[0]).toMatchObject({ used: false });
+		expect(globals().ui.notifications.warn).toHaveBeenCalled();
+	});
+});
+
+describe('Modify Reroll: cannot fail, on a save card', () => {
+	function world(cannotFail: boolean) {
+		const roller = makeRoller();
+		const modifier = {
+			id: 'song-rule',
+			type: 'modifyReroll',
+			disabled: false,
+			rerollIdentifier: 'inspiration',
+			cannotFail,
+			rollModeChange: 0,
+			extraDamage: '',
+			actionsForRoller: 0,
+			tempHp: '',
+			tempHpWithin: 0,
+			appliesTo: () => true,
+			item: { name: 'Sure Song', uuid: 'Item.song' },
+		};
+		Object.assign(roller, { items: { contents: [{ rules: new Map([[modifier.id, modifier]]) }] } });
+		const base = makeRule(roller, 'insp', { change: 'succeed', value: 0, stat: '' });
+		const rule = {
+			...base,
+			type: 'reroll',
+			identifier: 'inspiration',
+			die: 'wholeRoll',
+			keep: 'chooser',
+			keepChooser: 'roller',
+			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
+		};
+		setupWorld([rule as never], roller);
+		const { use: _use, ...entry } = entryFor('insp');
+		vi.spyOn(NimbleRoll.prototype, 'evaluate').mockImplementation(async function (
+			this: NimbleRoll,
+		) {
+			const die = (this.terms as unknown as Array<{ faces?: number; results?: unknown[] }>).find(
+				(term) => term.faces === 20,
+			);
+			if (die) die.results = [{ result: 2, active: true }];
+			return this as never;
+		});
+		return createCard([entry as IncomingReactionEntry]);
+	}
+
+	it('makes the save succeed, named by the modifier, with nothing paid and no Keep', async () => {
+		const card = world(true);
+
+		await click(card, 'insp');
+
+		expect(card.system.resultChanges).toEqual([
+			expect.objectContaining({
+				change: 'succeed',
+				label: 'Sure Song',
+				itemUuid: 'Item.song',
+				paid: { charges: 0, mana: 0, wounds: 0 },
+			}),
+		]);
+		expect(card.system.pendingKeep ?? null).toBeNull();
+		expect(card.system.rerolls).toHaveLength(1);
+		expect(card.update.mock.calls[0][0].rolls).toBeDefined();
+	});
+
+	it('changes nothing about the result with no such modifier', async () => {
+		const card = world(false);
+
+		await click(card, 'insp');
+
+		expect(card.system.resultChanges).toEqual([]);
+	});
+});
+
 describe('Change a Result on a save card', () => {
 	it('adds a succeed: the total stays, the card says Succeeded, a new entry waits', async () => {
 		const roller = makeRoller();

@@ -14,6 +14,7 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
+	ResultChange,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import { resultChangesOf } from '#utils/rolls/resultChanges.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
@@ -161,7 +162,7 @@ export function createIncomingReactionPromptsState(
 			: null,
 	);
 	const resultLines = $derived(
-		getPlace() === 'checkRoll'
+		getPlace() !== 'options'
 			? resultChangeLines({
 					changes: resultChanges,
 					rollTotal,
@@ -207,9 +208,14 @@ export function createIncomingReactionPromptsState(
 		return true;
 	}
 
-	/** The user who can click the row of this change, and the GM. Not while a keep waits. */
-	function canRemoveResult(actorUuid: string): boolean {
+	/**
+	 * The user who can click the row of this change, and the GM. Not while a keep
+	 * waits, and no damage stands once the damage is applied.
+	 */
+	function canRemoveResult(actorUuid: string, change: ResultChange): boolean {
 		if (pendingKeep) return false;
+		const system = message?.reactive?.system as { damageApplied?: boolean } | undefined;
+		if (change.change === 'noDamage' && system?.damageApplied === true) return false;
 		if (game.user?.isGM) return true;
 		return (fromUuidSync(actorUuid) as Actor.Implementation | null)?.isOwner === true;
 	}
@@ -259,6 +265,11 @@ export function createIncomingReactionPromptsState(
 	}
 
 	async function useReroll(entry: IncomingReactionEntry): Promise<void> {
+		const stats = message?.rerollStatsToPick?.(entry) ?? null;
+		if (stats?.length) {
+			picking = { entry, dice: [], stats, rolling: null, sent: false };
+			return;
+		}
 		const dice = message?.rerollDiceToPick?.(entry) ?? null;
 		if (dice && dice.length > 1) {
 			picking = { entry, dice, rolling: null, sent: false };
@@ -290,6 +301,7 @@ export function createIncomingReactionPromptsState(
 		entry: IncomingReactionEntry,
 		die: PickableDie | null,
 		value: number | null = null,
+		stat: string | null = null,
 	): Promise<boolean> {
 		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
 		if (forceHeroicReaction === null) return false;
@@ -301,6 +313,7 @@ export function createIncomingReactionPromptsState(
 			forceHeroicReaction,
 			...(die ? { die: { term: die.term, result: die.result } } : {}),
 			...(value === null ? {} : { value }),
+			...(stat === null ? {} : { stat }),
 		});
 		return true;
 	}
@@ -334,6 +347,22 @@ export function createIncomingReactionPromptsState(
 	async function pickValue(value: number): Promise<void> {
 		const die = picking?.valueDie;
 		if (die) await sendPicked(die, value);
+	}
+
+	async function pickStat(stat: string): Promise<void> {
+		const current = picking;
+		if (!current?.stats || current.sent || busy) return;
+		busy = true;
+		try {
+			const sent = await sendReroll(current.entry, null, null, stat);
+			picking = sent && picking ? { ...picking, sent: true } : null;
+		} catch (error) {
+			picking = null;
+			console.error('Nimble | Failed to use a chat card reaction', error);
+			ui.notifications?.error(localize('NIMBLE.chat.incomingReactions.useFailed'));
+		} finally {
+			busy = false;
+		}
 	}
 
 	/** Closes the die picker. Returns the id of the entry it was open for. */
@@ -382,6 +411,7 @@ export function createIncomingReactionPromptsState(
 		useEntry,
 		pickDie,
 		pickValue,
+		pickStat,
 		cancelPick,
 	}));
 

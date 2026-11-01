@@ -9,6 +9,7 @@ import type {
 import localize from '#utils/localize.js';
 import { rerollRuleKey } from '#utils/reroll/rerollEntries.ts';
 import { signed } from './primaryDieBonusText.ts';
+import { statAbbreviation } from './resultChangeLines.ts';
 
 interface RerollHistoryDie {
 	faces: number;
@@ -26,7 +27,9 @@ interface RerollTag {
 		| 'noAction'
 		| 'tempHp'
 		| 'crit'
-		| 'miss';
+		| 'miss'
+		| 'stat'
+		| 'cannotMiss';
 	label: string;
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
@@ -220,6 +223,31 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	return { tags: [...tags, ...notGiven], tempHpNote, offNote };
 }
 
+/** What a reroll did to the new roll besides its dice: the stat it used, a hit it made sure of. */
+function buildNewRollTags(record: RerollRecord, feature: string): RerollTag[] {
+	const tags: RerollTag[] = [];
+	if (record.stat) {
+		const stat = statAbbreviation(record.stat);
+		tags.push({
+			kind: 'stat',
+			label: localize('NIMBLE.chat.incomingReactions.rerollTags.stat', { stat }),
+			tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.statTooltip', { feature, stat }),
+			off: false,
+		});
+	}
+	if (record.cannotMissBy) {
+		tags.push({
+			kind: 'cannotMiss',
+			label: localize('NIMBLE.chat.incomingReactions.rerollTags.cannotMiss'),
+			tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.cannotMissTooltip', {
+				feature: record.cannotMissBy,
+			}),
+			off: false,
+		});
+	}
+	return tags;
+}
+
 /** The tags of a change: the outcome it made. */
 function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
 	const tags: RerollTag[] = [];
@@ -340,7 +368,12 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			: [];
 		return {
 			title: feature,
-			tags: [...automatic, ...buildRollChangeTags(record), ...given.tags],
+			tags: [
+				...automatic,
+				...buildNewRollTags(record, feature),
+				...buildRollChangeTags(record),
+				...given.tags,
+			],
 			tempHpNote: given.tempHpNote,
 			offNote: given.offNote,
 			text: kept

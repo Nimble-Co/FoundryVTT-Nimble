@@ -2,9 +2,17 @@ import type { DieChange } from '#types/dieChange.d.ts';
 
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
- * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
+ * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit. `failed` is
+ * a miss on an attack, and on a check a result the card knows is not a success.
  */
-export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'] as const;
+export const REROLL_TRIGGERS = [
+	'always',
+	'hit',
+	'criticalHit',
+	'nonCriticalHit',
+	'miss',
+	'failed',
+] as const;
 export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 
 /** The side of a roll a `reroll` entry is for. */
@@ -19,8 +27,8 @@ export type RerollDie = (typeof REROLL_DICE)[number];
 export const ROLL_USES = ['reroll', 'change', 'crit', 'result'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
 
-/** How a Change a Result rule changes the result of a check. */
-export const RESULT_CHANGES = ['succeed', 'setTotal', 'add'] as const;
+/** How a Change a Result rule changes the result of a roll. */
+export const RESULT_CHANGES = ['succeed', 'setTotal', 'add', 'noDamage', 'countsAsNat20'] as const;
 export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
@@ -103,6 +111,7 @@ export function rerollTriggerMatches(
 		case 'nonCriticalHit':
 			return !view.isMiss && !view.isCritical;
 		case 'miss':
+		case 'failed':
 			return !!view.isMiss;
 		default:
 			return true; // 'always'
@@ -156,6 +165,8 @@ export interface IncomingReactionEntry {
 	needsDieAtMax?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
+	/** reroll only: the player picks another stat for the new roll. */
+	anotherStat?: boolean;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
 	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
@@ -181,7 +192,7 @@ export interface IncomingReactionEntry {
 /** What one use of a Change a Result rule does now. */
 export interface ResultUse {
 	change: ResultChangeKind;
-	/** The formula's value for a set or an add; 0 for a succeed. */
+	/** The new total for a set or a natural 20, the amount for an add, else 0. */
 	value: number;
 	/** The ability the formula is, such as `strength`. Empty when it is anything else. */
 	stat: string;
@@ -207,14 +218,24 @@ export interface ResultChange extends ResultUse {
 	chargePoolIdentifier: string;
 	/** What Remove gives back. */
 	paid: { charges: number; mana: number; wounds: number };
+	/** Made with no click. It has no Remove. */
+	automatic?: boolean;
+	/** A no-damage change: the target it covers. */
+	targetTokenUuid?: string | null;
 }
 
-/** The result of a check card now, for a gate on a rule that reads it. */
+/** A roll card now, for a gate on a rule that reads it. */
 export interface ResultCardView {
 	total: number;
 	changes: readonly ResultChange[];
 	/** Formulas read this creature's roll data. */
 	roller: { getRollData?: () => Record<string, unknown> } | null;
+	/** A check card's result. Null or absent when the card cannot tell. */
+	result?: 'failed' | 'succeeded' | null;
+	/** The check roll's total without its d20. */
+	rollModifier?: number;
+	/** An attack card's damage is already applied. */
+	damageApplied?: boolean;
 }
 
 /** One Primary Die result in a reroll record. */
@@ -259,6 +280,10 @@ export interface RerollRecord {
 	use?: RollUse;
 	/** A change only: how the die changed. `value` is 0 for a set value. */
 	change?: DieChange | null;
+	/** The stat the player picked for the new roll. Empty when the stat stayed. */
+	stat?: string;
+	/** The feature that made the new attack unable to miss. Empty for none. */
+	cannotMissBy?: string;
 }
 
 /**

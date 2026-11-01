@@ -1,4 +1,5 @@
-import { checkRollOfCard, keptD20 } from '../reroll/checkCardRollTarget.ts';
+import type { ResultChange } from '../incomingReactions/incomingReactionEntry.ts';
+import { checkRollOfCard, keptD20 } from '../reroll/checkRollOfCard.ts';
 import type { CheckRollKind } from '../reroll/rollToReroll.ts';
 import { resultChangesOf, resultTotal, standingResultChanges } from './resultChanges.ts';
 
@@ -28,10 +29,31 @@ function checkResult(input: {
 }
 
 /**
- * The result of a card's first roll, or null when it is not a check card or nothing
- * settles it. The total counts the card's Change a Result clicks. A succeed settles
- * the result. A set total replaces the roll, so no natural 1 or 20 is left to read.
+ * The result of a check roll with its changes on it, or null when nothing settles it.
+ * A succeed, and a roll that counts as a natural 20, settle the result. A set total
+ * replaces the roll, so no natural 1 or 20 is left to read.
  */
+function resultOfCheckRoll(input: {
+	kind: CheckRollKind;
+	rollTotal: number;
+	terms: unknown[];
+	changes: readonly ResultChange[];
+	dc?: number | null | undefined;
+}): CheckResult | null {
+	const { kind, rollTotal, terms, changes, dc } = input;
+	const standing = standingResultChanges(changes);
+	if (standing.some((change) => change.change === 'succeed' || change.change === 'countsAsNat20')) {
+		return 'succeeded';
+	}
+	return checkResult({
+		kind,
+		total: resultTotal(rollTotal, changes),
+		keptD20: standing.some((change) => change.change === 'setTotal') ? null : keptD20(terms),
+		dc,
+	});
+}
+
+/** The result of a card's first roll, or null when it is not a check card or nothing settles it. */
 function checkResultOfCard(
 	type: string,
 	system: Record<string, unknown>,
@@ -40,16 +62,13 @@ function checkResultOfCard(
 	const kind = checkRollOfCard(type, system)?.kind;
 	if (!roll || !kind) return null;
 
-	const changes = resultChangesOf(system);
-	const standing = standingResultChanges(changes);
-	if (standing.some((change) => change.change === 'succeed')) return 'succeeded';
-
-	return checkResult({
+	return resultOfCheckRoll({
 		kind,
-		total: resultTotal(roll.total ?? 0, changes),
-		keptD20: standing.some((change) => change.change === 'setTotal') ? null : keptD20(roll.terms),
+		rollTotal: roll.total ?? 0,
+		terms: roll.terms,
+		changes: resultChangesOf(system),
 		dc: system.dc as number | null | undefined,
 	});
 }
 
-export { checkResult, checkResultOfCard, type CheckResult };
+export { checkResult, checkResultOfCard, resultOfCheckRoll, type CheckResult };

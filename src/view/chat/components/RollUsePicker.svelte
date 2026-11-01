@@ -3,6 +3,7 @@
 
 	import DieValuePicker from './DieValuePicker.svelte';
 	import RerollDiePicker from './RerollDiePicker.svelte';
+	import RerollStatPicker from './RerollStatPicker.svelte';
 
 	let {
 		picking,
@@ -11,11 +12,14 @@
 		primaryDieBonuses = [],
 		onpick,
 		onvalue,
+		onstat,
 		oncancel,
 	}: RollUsePickerProps = $props();
 </script>
 
-{#if picking.valueDie}
+{#if picking.stats}
+	<RerollStatPicker stats={picking.stats} {feature} sending={picking.sent} onpick={onstat} />
+{:else if picking.valueDie}
 	<DieValuePicker
 		die={picking.valueDie}
 		{feature}

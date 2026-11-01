@@ -1712,3 +1712,50 @@ describe('IncomingReactionPrompts', () => {
 		});
 	});
 });
+
+describe('IncomingReactionPrompts with No Damage', () => {
+	const noDamageChange = {
+		id: 'click-1',
+		lineId: 'click-1',
+		entryId: 'entry-1',
+		itemUuid: 'Item.res',
+		ruleId: 'rule-1',
+		label: 'Epic Resistance',
+		actorUuid: 'Actor.protector',
+		change: 'noDamage',
+		value: 0,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+		targetTokenUuid: 'Scene.s.Token.victim',
+	};
+
+	it('offers a row that tells what it does', () => {
+		const entry = { ...createEntry({ id: 'entry-1', kind: 'reroll' }), use: 'result' };
+		const message = createMessage([entry as ReturnType<typeof createEntry>]);
+		Object.assign(message, { resultUseOf: () => ({ change: 'noDamage', value: 0, stat: '' }) });
+
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByRole('button', { name: /No Damage with/ })).toBeTruthy();
+	});
+
+	it('tells the target at the roll, with a Remove until the damage is applied', () => {
+		const message = createMessage([]);
+		Object.assign(message.system, { resultChanges: [noDamageChange] });
+
+		const first = render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: message },
+		});
+		expect(screen.getByTestId('roll-place').textContent).toContain('No Damage for Sir Brannon');
+		expect(rollPlace().queryByRole('button', { name: /^Remove/ })).toBeTruthy();
+		first.unmount();
+
+		Object.assign(message.system, { damageApplied: true });
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+		expect(screen.getByTestId('roll-place').textContent).toContain('No Damage for Sir Brannon');
+		expect(rollPlace().queryByRole('button', { name: /^Remove/ })).toBeNull();
+	});
+});

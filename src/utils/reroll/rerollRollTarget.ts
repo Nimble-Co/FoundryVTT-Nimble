@@ -2,11 +2,13 @@ import type { OneDieRoll } from '../../dice/oneDieReroll.js';
 import type {
 	IncomingReactionEntry,
 	KeepChoiceRoll,
+	ResultChange,
 	RollChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
+import type { StatChoice } from './rollStat.js';
 
 /**
  * The part of a card reroll that changes with the kind of card. The card's
@@ -45,6 +47,14 @@ interface RerollableRoll<TRoll = unknown> {
 	current?(): OneDieRoll | null;
 	/** A player can also pick a dropped d20 of this roll. */
 	pickDropped?: boolean;
+	/** The other stats a player can pick for a new roll. `limit` is the stat a rule is limited to. */
+	statChoices?(limit?: string): StatChoice[];
+	/** This roll with `stat` in place of its stat part, or null when the roll cannot use it. */
+	withStat?(
+		found: RerollableRoll<TRoll>,
+		stat: string,
+		limit?: string,
+	): RerollableRoll<TRoll> | null;
 	/** The total the card shows for this roll, when other changes than the dice count in it. */
 	shownTotal?(): number;
 	/** A roll as its Keep button shows it, with the extra damage of `added` too. */
@@ -72,6 +82,8 @@ interface CardRerollChanges extends RerollHistory {
 	incomingReactions: IncomingReactionEntry[];
 	/** Every roll change of Modify Reroll rules the card has applied. */
 	rollChanges: RollChange[];
+	/** A check's result change that comes with this new roll. */
+	resultChange?: ResultChange;
 }
 
 /** A new roll that is ready to go on the card. */

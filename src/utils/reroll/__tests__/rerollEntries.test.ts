@@ -535,6 +535,60 @@ describe('collectRerollEntries for an ally', () => {
 	});
 });
 
+describe('a rule for a failed roll', () => {
+	it('stamps on a miss and not on a hit', () => {
+		const rule = rerollRule({ usedBy: 'roller', outcome: 'failed' });
+		const attacker = actor('Actor.attacker', [rule]);
+		const on = (isMiss: boolean) =>
+			collectRerollEntries(context({ attacker, outcome: { isMiss } })).manual;
+		expect(on(true).map((entry) => entry.outcomeTrigger)).toEqual(['failed']);
+		expect(on(false)).toEqual([]);
+	});
+
+	it('stands on a miss only', () => {
+		const entry = { kind: 'reroll', outcomeTrigger: 'failed' } as IncomingReactionEntry;
+		const on = (isMiss: boolean) => offerStands(entry, { outcome: { isMiss }, forcedMiss: false });
+		expect(on(true)).toBe(true);
+		expect(on(false)).toBe(false);
+	});
+
+	it('never runs by itself on a check unless the check posting step asks', () => {
+		const rule = rerollRule({ usedBy: 'roller', outcome: 'failed', rerollsByItself: true });
+		const attacker = actor('Actor.attacker', [rule], { isOwner: true });
+		const check = context({ attacker, targets: [], roll: { kind: 'save', key: 'will' } });
+		expect(collectRerollEntries(check).automatic).toEqual([]);
+		expect(collectRerollEntries(check).manual.length).toBe(1);
+		const posting = collectRerollEntries({ ...check, rollTimeOfCheck: true });
+		expect(posting.automatic.length).toBe(1);
+	});
+});
+
+describe('target rules on a roll with two or more targets', () => {
+	const rule = (change?: 'noDamage') =>
+		rerollRule({ type: 'changeResult', ...(change ? { change } : {}), attackTrigger: 'hit' });
+
+	it('give a row to each target only for no damage', () => {
+		const targets = [
+			{ tokenUuid: 'Token.a', actor: actor('Actor.a', [rule('noDamage')]) },
+			{ tokenUuid: 'Token.b', actor: actor('Actor.b', [rule('noDamage'), rerollRule()]) },
+		];
+		const found = collectRerollEntries(context({ targets })).manual;
+		expect(found.map((entry) => [entry.actorUuid, entry.targetTokenUuid])).toEqual([
+			['Actor.a', 'Token.a'],
+			['Actor.b', 'Token.b'],
+		]);
+	});
+
+	it('stamps the hit as the trigger of no damage, and not the rule outcome', () => {
+		const targets = [{ tokenUuid: 'Token.a', actor: actor('Actor.a', [rule('noDamage')]) }];
+		const [entry] = collectRerollEntries(context({ targets })).manual;
+		expect(entry.outcomeTrigger).toBe('hit');
+		expect(entry.use).toBe('result');
+		const miss = collectRerollEntries(context({ targets, outcome: { isMiss: true } })).manual;
+		expect(miss).toEqual([]);
+	});
+});
+
 describe('offerStands', () => {
 	const entry = (outcomeTrigger: RerollTrigger | null | undefined) =>
 		({ kind: 'reroll', outcomeTrigger }) as IncomingReactionEntry;
@@ -770,6 +824,65 @@ describe('usableRerollEntry', () => {
 		expect(usableRerollEntry(entry(roller), card(), [])).toMatchObject({
 			ok: true,
 			actor: attacker,
+		});
+	});
+
+	describe('a rule that reads the card', () => {
+		const SAVE = { kind: 'save', key: 'strength' } as const;
+		const view = (result: 'failed' | 'succeeded' | null) => ({
+			total: 7,
+			changes: [],
+			roller: null,
+			result,
+		});
+
+		function gatedRule() {
+			return rerollRule({
+				usedBy: 'roller',
+				offersUseOn: vi.fn(
+					(gate: { card?: { result?: string | null } }) => gate.card?.result !== 'succeeded',
+				) as never,
+			});
+		}
+
+		it('gets the check card on the client and the GM path, and the row follows the result', () => {
+			const live = gatedRule();
+			useWorld(live);
+			const stamped = entry({
+				actorUuid: 'Actor.attacker',
+				side: 'roller',
+				targetTokenUuid: null,
+			});
+			const onCheck = (result: 'failed' | 'succeeded' | null) =>
+				usableRerollEntry(
+					stamped,
+					context({
+						attacker,
+						targets: [],
+						roll: SAVE,
+						card: view(result),
+					}),
+					[],
+				).ok;
+			expect(onCheck('failed')).toBe(true);
+			expect(onCheck('succeeded')).toBe(false);
+			expect(onCheck(null)).toBe(true);
+		});
+
+		it('passes the target of a result use, and no card to a plain attack rule', () => {
+			const plain = rerollRule();
+			useWorld(plain);
+			usableRerollEntry(entry(), card({ card: view(null) }), []);
+			expect(plain.offersUseOn).not.toHaveBeenCalledWith(
+				expect.objectContaining({ card: expect.anything() }),
+			);
+
+			const noDamage = rerollRule({ type: 'changeResult' });
+			useWorld(noDamage);
+			usableRerollEntry(entry(), card({ card: view(null) }), []);
+			expect(noDamage.offersUseOn).toHaveBeenCalledWith(
+				expect.objectContaining({ card: expect.anything(), targetTokenUuid: TOKEN }),
+			);
 		});
 	});
 

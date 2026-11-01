@@ -1,6 +1,7 @@
 import { activation } from '../item/common.js';
 import {
 	appliedHealing,
+	attackResultChanges,
 	concentration,
 	damageBack,
 	grantedActionOffers,
@@ -42,6 +43,7 @@ declare namespace NimbleSpellCardData {
 		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof rerollHistory> &
+		ReturnType<typeof attackResultChanges> &
 		ReturnType<typeof primaryDieBonuses> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
@@ -66,6 +68,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 			...grantedActionOffers(),
 			...incomingReactions(),
 			...rerollHistory(),
+			...attackResultChanges(),
 			...primaryDieBonuses(),
 			...damageBack(),
 			...movementOffers(),

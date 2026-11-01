@@ -91,6 +91,7 @@
 									{primaryDieBonuses}
 									onpick={control.pickDie}
 									onvalue={control.pickValue}
+									onstat={control.pickStat}
 									oncancel={control.cancelPick}
 								/>
 							{/if}

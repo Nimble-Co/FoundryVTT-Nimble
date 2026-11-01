@@ -20,7 +20,19 @@ function rerollOptions(
 		delete kept.forcedCrit;
 		delete kept.forcedCritFromDice;
 	}
-	return kept;
+	return withoutCannotMiss(kept);
+}
+
+/** Options that stop one new attack from missing. They last for that roll only. */
+function cannotMissOptions(options: Record<string, unknown>): Record<string, unknown> {
+	const before = withoutCannotMiss(options);
+	return { ...before, canMiss: false, canMissBefore: before.canMiss ?? true };
+}
+
+function withoutCannotMiss(options: Record<string, unknown>): Record<string, unknown> {
+	if (!('canMissBefore' in options)) return options;
+	const { canMissBefore, ...rest } = options;
+	return { ...rest, canMiss: canMissBefore };
 }
 
 /** What a reroll adds on top of the roll it replaces. */
@@ -63,4 +75,4 @@ function prepareReroll(
 	};
 }
 
-export { prepareReroll, type RerollChanges };
+export { cannotMissOptions, prepareReroll, type RerollChanges, withoutCannotMiss };

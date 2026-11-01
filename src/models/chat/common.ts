@@ -175,6 +175,7 @@ export const incomingReactions = () => ({
 			}),
 			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			leftOut: new fields.SchemaField(
 				{
 					reason: new fields.StringField({
@@ -295,6 +296,13 @@ const rerollRecord = () =>
 			},
 			{ required: false, nullable: true, initial: null },
 		),
+		stat: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+		cannotMissBy: new fields.StringField({
+			required: false,
+			nullable: false,
+			blank: true,
+			initial: '',
+		}),
 	});
 
 const rollChange = () =>
@@ -416,6 +424,8 @@ const resultChange = () =>
 			mana: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 			wounds: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 		}),
+		automatic: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+		targetTokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
 	});
 
 /** The Change a Result clicks on a check card, in order. A card posted before them has none. */
@@ -425,6 +435,15 @@ export const resultChanges = () => ({
 		nullable: false,
 		initial: [],
 	}),
+});
+
+/**
+ * The no-damage changes on an attack card, and whether its damage is applied:
+ * a change can be taken back only before that.
+ */
+export const attackResultChanges = () => ({
+	...resultChanges(),
+	damageApplied: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 });
 
 export const rerollHistory = () => ({

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import type {
 	ResultCardView,
@@ -58,6 +58,7 @@ function makeRule(
 		change: 'succeed',
 		formula: '',
 		onlyIfLower: false,
+		outcome: 'failed',
 		...config,
 	});
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
@@ -78,7 +79,13 @@ describe('ChangeResultRule fields', () => {
 		expect(schema.change?.initial).toBe('succeed');
 		expect(schema.formula?.initial).toBe('');
 		expect(schema.onlyIfLower?.initial).toBe(false);
-		expect(Object.keys(schema.change?.choices ?? {})).toEqual(['succeed', 'setTotal', 'add']);
+		expect(Object.keys(schema.change?.choices ?? {})).toEqual([
+			'succeed',
+			'setTotal',
+			'add',
+			'noDamage',
+			'countsAsNat20',
+		]);
 	});
 
 	it('lists only the rolls it works on, and starts on a save', () => {
@@ -88,6 +95,7 @@ describe('ChangeResultRule fields', () => {
 			'skillCheck',
 			'abilityCheck',
 			'initiative',
+			'attack',
 		]);
 		expect(schema.rolls?.element?.choices?.initiative).toBe(
 			'NIMBLE.rules.changeResult.rolls.choices.initiative',
@@ -267,5 +275,159 @@ describe('ChangeResultRule on Initiative', () => {
 	it('does not offer a succeed, since Initiative has no result', () => {
 		expect(offers({ change: 'succeed' })).toBe(false);
 		expect(offers({ change: 'succeed' }, 7)).toBe(false);
+	});
+});
+
+describe('ChangeResultRule outcome', () => {
+	const said = (result: 'failed' | 'succeeded' | null): ResultCardView => ({
+		...card(7),
+		result,
+	});
+
+	it('defaults to a failed roll, and asks only for a succeed or an add', () => {
+		expect(schema.outcome?.initial).toBe('failed');
+		expect(Object.keys(schema.outcome?.choices ?? {})).toEqual(['failed', 'always']);
+		const shows = schema.outcome?.options?.showWhen;
+		expect(shows?.({ change: 'succeed' })).toBe(true);
+		expect(shows?.({ change: 'add' })).toBe(true);
+		expect(shows?.({ change: 'setTotal' })).toBe(false);
+	});
+
+	it.each(['succeed', 'add'])(
+		'%s hides on a card that says Succeeded, and shows else',
+		(change) => {
+			const rule = makeRule({ change, formula: '@strength' });
+			expect(offered(rule, said('succeeded'))).toBe(false);
+			expect(offered(rule, said('failed'))).toBe(true);
+			expect(offered(rule, said(null))).toBe(true);
+		},
+	);
+
+	it('a rule set to any result shows on a card that says Succeeded', () => {
+		expect(offered(makeRule({ outcome: 'always' }), said('succeeded'))).toBe(true);
+	});
+
+	it('a set total keeps showing, whatever the card says', () => {
+		const rule = makeRule({
+			change: 'setTotal',
+			formula: '10+@intelligence',
+			rolls: ['skillCheck'],
+		});
+		const view = said('succeeded');
+		expect(
+			rule.offersUseOn({ side: 'roller', roll: { kind: 'skillCheck', key: 'might' }, card: view }),
+		).toBe(true);
+	});
+});
+
+describe('ChangeResultRule relatedStat', () => {
+	it('limits a rule to the rolls of that stat', () => {
+		const rule = makeRule({ relatedStat: 'will', rolls: ['save', 'skillCheck'] });
+		expect(rule.offersUseOn({ side: 'roller', roll: SAVE })).toBe(true);
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'save', key: 'strength' } })).toBe(
+			false,
+		);
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'skillCheck', key: 'insight' } })).toBe(
+			true,
+		);
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'skillCheck', key: 'might' } })).toBe(
+			false,
+		);
+	});
+});
+
+describe('ChangeResultRule noDamage', () => {
+	const attack = { kind: 'attack', delivery: 'melee' } as const;
+	const noDamage = (config: Record<string, unknown> = {}) =>
+		makeRule({ change: 'noDamage', rolls: ['attack'], usedBy: 'target', ...config });
+	const onTarget = (rule: ChangeResultRule, view?: ResultCardView) =>
+		rule.offersUseOn({
+			side: 'target',
+			roll: attack,
+			targetTokenUuid: 'Token.a',
+			...(view ? { card: view } : {}),
+		});
+
+	it('is for the target, on an attack, and needs a hit', () => {
+		expect(onTarget(noDamage())).toBe(true);
+		expect(noDamage().attackTrigger).toBe('hit');
+		expect(noDamage({ usedBy: 'roller' }).offersUseOn({ side: 'roller', roll: attack })).toBe(
+			false,
+		);
+		expect(noDamage({ rolls: ['save'] }).offersUseOn({ side: 'target', roll: attack })).toBe(false);
+	});
+
+	it('goes away while a change covers this target, and stays for another target', () => {
+		const here = { change: 'noDamage' as const, targetTokenUuid: 'Token.a', retired: false };
+		const there = { change: 'noDamage' as const, targetTokenUuid: 'Token.b', retired: false };
+		expect(onTarget(noDamage(), card(0, [here]))).toBe(false);
+		expect(onTarget(noDamage(), card(0, [there]))).toBe(true);
+	});
+
+	it('goes away once the damage is applied', () => {
+		expect(onTarget(noDamage(), { ...card(0), damageApplied: true })).toBe(false);
+	});
+
+	it('is only for an attack: other changes stay off attacks', () => {
+		const rule = makeRule({ change: 'succeed', rolls: ['attack', 'save'], usedBy: 'target' });
+		expect(rule.offersUseOn({ side: 'target', roll: attack })).toBe(false);
+	});
+
+	it('does no sum of its own', () => {
+		expect(noDamage().resultUseFor(roller)).toEqual({ change: 'noDamage', value: 0, stat: '' });
+	});
+});
+
+describe('ChangeResultRule countsAsNat20', () => {
+	const nat20 = (config: Record<string, unknown> = {}) =>
+		makeRule({
+			change: 'countsAsNat20',
+			rolls: ['save', 'skillCheck'],
+			relatedStat: 'will',
+			...config,
+		});
+
+	function setEffects(on: boolean) {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => on,
+		};
+	}
+
+	afterEach(() => setEffects(true));
+
+	it('with Feature Effects on, it happens by itself: no row, no cost', () => {
+		setEffects(true);
+		const rule = nat20({ woundCost: 9 });
+		expect(offered(rule)).toBe(false);
+		expect(rule.countsAsNat20On(SAVE)).toBe(true);
+	});
+
+	it('is limited by its stat and to saves and skill checks', () => {
+		setEffects(true);
+		const rule = nat20({ rolls: ['save', 'skillCheck', 'abilityCheck', 'initiative'] });
+		expect(rule.countsAsNat20On({ kind: 'save', key: 'strength' })).toBe(false);
+		expect(rule.countsAsNat20On({ kind: 'skillCheck', key: 'insight' })).toBe(true);
+		expect(rule.countsAsNat20On({ kind: 'abilityCheck', key: 'will' })).toBe(false);
+		expect(rule.countsAsNat20On({ kind: 'initiative', key: '' })).toBe(false);
+	});
+
+	it('with Feature Effects off, it is a row while the total is 1 or less', () => {
+		setEffects(false);
+		const rule = nat20();
+		expect(offered(rule)).toBe(true);
+		expect(offered(rule, card(1))).toBe(true);
+		expect(offered(rule, card(2))).toBe(false);
+		const stands = { change: 'countsAsNat20' as const, retired: false };
+		expect(offered(rule, card(1, [stands]))).toBe(false);
+	});
+
+	it('works out 20 plus the modifier of the roll', () => {
+		setEffects(false);
+		const view = { ...card(1), rollModifier: -1 };
+		expect(nat20().resultUseFor(roller, view)).toEqual({
+			change: 'countsAsNat20',
+			value: 19,
+			stat: '',
+		});
 	});
 });

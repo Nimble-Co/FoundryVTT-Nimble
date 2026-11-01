@@ -889,6 +889,7 @@ class NimbleBaseActor<
 			roll,
 			{ kind: 'abilityCheck', key: abilityKey },
 			rollMode ?? 0,
+			options.dc,
 		);
 		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls, options.dc);
 
@@ -978,6 +979,7 @@ class NimbleBaseActor<
 			roll,
 			{ kind: 'save', key: saveKey },
 			rollMode ?? 0,
+			options.dc,
 		);
 		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls, options.dc);
 

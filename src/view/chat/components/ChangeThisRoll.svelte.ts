@@ -20,6 +20,7 @@ interface ChangeThisRollInput {
 	useEntry: (entry: IncomingReactionEntry) => Promise<void>;
 	pickDie: (die: PickableDie) => Promise<void>;
 	pickValue: (value: number) => Promise<void>;
+	pickStat: (stat: string) => Promise<void>;
 	/** Closes the die picker. Returns the id of the entry it was open for. */
 	cancelPick: () => string | null;
 }
@@ -151,6 +152,12 @@ export function createChangeThisRollState(
 		void pick(value);
 	}
 
+	function pickStat(stat: string): void {
+		const { picking, pickStat: pick } = getInput();
+		if (picking) expectFocusLoss(picking.entry.id);
+		void pick(stat);
+	}
+
 	async function cancelPick(): Promise<void> {
 		const entryId = getInput().cancelPick();
 		await tick();
@@ -171,6 +178,7 @@ export function createChangeThisRollState(
 		useEntry,
 		pickDie,
 		pickValue,
+		pickStat,
 		cancelPick,
 		restoreFocus,
 	};

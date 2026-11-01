@@ -18,6 +18,7 @@ import {
 	type ResultCardView,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
+import { ROLL_STATS, statsOfRoll } from '../../utils/reroll/rollStat.js';
 import {
 	type CheckRollKind,
 	REROLL_ROLL_KINDS,
@@ -158,7 +159,8 @@ function whenFields(namespace: RollUseNamespace) {
 				),
 				label: wordKey(namespace, 'outcome', 'label'),
 				hint: wordKey(namespace, 'outcome', 'hint'),
-				showWhen: forAttacks,
+				// A failed save or check counts for every rule but a crit use.
+				...(namespace === 'makeCrit' ? { showWhen: forAttacks } : {}),
 			}),
 		),
 		attackDelivery: new fields.StringField(
@@ -172,6 +174,25 @@ function whenFields(namespace: RollUseNamespace) {
 				showWhen: forAttacks,
 			}),
 		),
+	};
+}
+
+/** Limits a rule to the rolls of one stat. Empty is any. */
+function relatedFields() {
+	const { fields } = foundry.data;
+	return {
+		relatedStat: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			choices: {
+				'': 'NIMBLE.rules.reroll.relatedStat.choices.any',
+				...Object.fromEntries(ROLL_STATS.map((stat) => [stat, `NIMBLE.abilityScores.${stat}`])),
+			},
+			label: 'NIMBLE.rules.reroll.relatedStat.label',
+			hint: 'NIMBLE.rules.reroll.relatedStat.hint',
+		}),
 	};
 }
 
@@ -307,6 +328,8 @@ interface RollUseContext {
 	other?: OtherCreature | null;
 	/** A check card's result now. Absent when the entry is stamped. */
 	card?: ResultCardView;
+	/** The target this use is for, when the entry names one. */
+	targetTokenUuid?: string | null;
 }
 
 const COST_FIELDS = [
@@ -331,6 +354,7 @@ abstract class RollUseRule<
 	declare saves: string[];
 	declare skills: string[];
 	declare abilities: string[];
+	declare relatedStat?: string;
 	declare usedBy: RerollSide;
 	declare reach: number;
 	declare outcome: RerollTrigger;
@@ -349,6 +373,7 @@ abstract class RollUseRule<
 	/**
 	 * The fields every rule that uses a roll has, with the rule's own words, in
 	 * four parts (roll, when, cost, note) so a rule can put its own fields between them.
+	 * `related` is an extra part for the rules that can be limited to one stat.
 	 */
 	static rollUseSchemaParts(namespace: RollUseNamespace) {
 		return {
@@ -356,6 +381,7 @@ abstract class RollUseRule<
 			when: whenFields(namespace),
 			cost: costFields(namespace),
 			note: noteFields(namespace),
+			related: relatedFields(),
 		};
 	}
 
@@ -364,9 +390,9 @@ abstract class RollUseRule<
 		return { fields: ['cardHint', 'cardHintWhen'] };
 	}
 
-	/** The form groups of the fields that pick the rolls. */
-	static rollFormGroup(): RuleFormGroup {
-		return { fields: ['rolls', 'saves', 'skills', 'abilities'] };
+	/** The form group of the fields that pick the rolls, with `extra` fields of the rule. */
+	static rollFormGroup(extra: readonly string[] = []): RuleFormGroup {
+		return { fields: ['rolls', 'saves', 'skills', 'abilities', ...extra] };
 	}
 
 	/** The form groups of who, when, only while and cost, with `between` after who. */
@@ -407,6 +433,7 @@ abstract class RollUseRule<
 			['heroicReaction', 'string'],
 			['actionCost', 'number'],
 			['oncePerAttack', 'boolean'],
+			['relatedStat', 'string'],
 			['reach', 'number'],
 			['cardHint', 'string'],
 			['cardHintWhen', 'object'],
@@ -429,6 +456,15 @@ abstract class RollUseRule<
 	 * of an attack is checked by the caller against the roll.
 	 */
 	offersUseOn(context: RollUseContext): boolean {
+		if (!this.coversRoll(context)) return false;
+		if (context.roll.kind !== 'attack' && context.card?.result === 'succeeded') {
+			if (this.waitsForFailure()) return false;
+		}
+		return canPayRerollCost(this.actor, this.rollUseCost);
+	}
+
+	/** Whether this rule's limits cover this roll and side. Not its cost, and not the card. */
+	protected coversRoll(context: RollUseContext): boolean {
 		if (!this.item.isEmbedded) return false;
 		if (!this.test()) return false;
 		const { side, roll } = context;
@@ -443,7 +479,13 @@ abstract class RollUseRule<
 			const keys = this.checkKeys(roll.kind);
 			if (keys.length > 0 && !keys.includes(roll.key)) return false;
 		}
-		return canPayRerollCost(this.actor, this.rollUseCost);
+		const stat = this.relatedStat ?? '';
+		return !stat || statsOfRoll(roll).includes(stat);
+	}
+
+	/** Whether a card that says Succeeded takes this rule's row away. */
+	protected waitsForFailure(): boolean {
+		return this.outcome === 'failed';
 	}
 
 	/** The kinds of roll this rule can be used on. */

@@ -17,6 +17,8 @@ type RollToReroll =
 			delivery: AttackDelivery;
 			itemUuid?: string | null;
 			damageTypes?: readonly string[];
+			/** The stats the attack's formula has. */
+			stats?: readonly string[];
 	  }
 	| { kind: CheckRollKind; key: string };
 

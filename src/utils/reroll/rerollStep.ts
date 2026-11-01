@@ -69,6 +69,10 @@ interface RerollStepInput<TRoll> {
 	change?: DieChange;
 	/** A Make It a Crit rule's use. */
 	makesCrit?: boolean;
+	/** The stat the player picked for the new roll. */
+	stat?: string;
+	/** The feature that made the new attack unable to miss. */
+	cannotMissBy?: string;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
@@ -154,6 +158,8 @@ async function rerollWithRule<TRoll>(
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
 				...(input.makesCrit ? { use: 'crit' as const } : {}),
+				...(input.stat ? { stat: input.stat } : {}),
+				...(input.cannotMissBy ? { cannotMissBy: input.cannotMissBy } : {}),
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),
