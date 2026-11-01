@@ -51,7 +51,7 @@
 						]
 					},
 					"sharedRolls": [],
-					"saveDC": "10"
+					"saveDC": "10+@intelligence"
 				}
 			],
 			"showDescription": true,

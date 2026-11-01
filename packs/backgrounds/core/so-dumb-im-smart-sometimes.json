@@ -103,7 +103,7 @@
 				"skills": [],
 				"abilities": [],
 				"usedBy": "roller",
-				"outcome": "always",
+				"outcome": "failed",
 				"attackDelivery": "any",
 				"chargePoolIdentifier": "so-dumb-im-smart-sometimes-save",
 				"chargeCost": 1,

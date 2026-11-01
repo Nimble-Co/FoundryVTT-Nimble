@@ -232,10 +232,17 @@ describe('The Cheat - pack data', () => {
 			expect(rule.disabled).toBe(false);
 		});
 
-		it('ships one charge pool that refreshes each round and again when the encounter ends', () => {
+		it('ships a charge pool for the skill check, which refreshes on a Safe Rest', () => {
 			const pools = rulesOf('Cheat!', 'chargePool');
-			expect(pools).toHaveLength(1);
-			const [pool] = pools;
+			expect(pools.map((pool) => pool.identifier)).toEqual([
+				'cheat-free-move-or-hide',
+				'cheat-skill-check',
+			]);
+			expect(pools[1].recoveries).toEqual([{ trigger: 'safeRest', mode: 'refresh', value: '1' }]);
+		});
+
+		it('ships a charge pool that refreshes each round and again when the encounter ends', () => {
+			const [pool] = rulesOf('Cheat!', 'chargePool');
 			expect(pool.identifier).toBe('cheat-free-move-or-hide');
 			expect(pool.scope).toBe('item');
 			expect(pool.max).toBe('1');
@@ -270,12 +277,10 @@ describe('The Cheat - pack data', () => {
 			expect(delta.disabled).toBe(false);
 		});
 
-		it('ships reminders for the action limit and the two parts the player applies by hand', () => {
+		it('ships a reminder for the action limit', () => {
 			const notes = effectsOf('Cheat!', 'note');
 			expect(notes.map((note) => [note.noteType, note.text])).toEqual([
 				['reminder', 'Spend the extra action on a Move or a Hide only.'],
-				['reminder', '1/day: you may change any skill check to 10+INT.'],
-				['reminder', 'If you roll under 10 on Initiative, you may change it to 10.'],
 			]);
 		});
 	});

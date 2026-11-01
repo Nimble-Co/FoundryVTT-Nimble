@@ -76,6 +76,94 @@
 				"timing": "now",
 				"target": "self",
 				"borrowFromNextTurn": false
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "mih21mwjz6ehjN61",
+				"identifier": "cheat-skill-check",
+				"label": "Cheat!: 10+INT skill check (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "hpY3i8MUHqyyXeef",
+				"identifier": "",
+				"label": "Cheat!",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "setTotal",
+				"formula": "10+@intelligence",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "cheat-skill-check",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			},
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "Bl3K1BHzBF6U2uJf",
+				"identifier": "",
+				"label": "Cheat!",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"initiative"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "setTotal",
+				"formula": "10",
+				"onlyIfLower": true,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
 			}
 		],
 		"activation": {
@@ -97,22 +185,6 @@
 					"type": "note",
 					"noteType": "reminder",
 					"text": "Spend the extra action on a Move or a Hide only.",
-					"parentContext": null,
-					"parentNode": null
-				},
-				{
-					"id": "q7VbN2kLwXp4RsTe",
-					"type": "note",
-					"noteType": "reminder",
-					"text": "1/day: you may change any skill check to 10+INT.",
-					"parentContext": null,
-					"parentNode": null
-				},
-				{
-					"id": "Xm3kQp9vLt2RwHn7",
-					"type": "note",
-					"noteType": "reminder",
-					"text": "If you roll under 10 on Initiative, you may change it to 10.",
 					"parentContext": null,
 					"parentNode": null
 				}

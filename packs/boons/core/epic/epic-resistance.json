@@ -6,7 +6,101 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "CO1rhY2LhawIMRf5",
+				"identifier": "epic-resistance",
+				"label": "Epic Resistance (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "BS32rk4U5NJvGJlm",
+				"identifier": "",
+				"label": "Epic Resistance",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"save"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "succeed",
+				"formula": "",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "failed",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "epic-resistance",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			},
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "MMf8pIZFk0RjPEYa",
+				"identifier": "",
+				"label": "Epic Resistance",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "target",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "noDamage",
+				"formula": "",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "epic-resistance",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/encounter. Whenever you would suffer damage or fail a save you can choose not to instead. [M]</span></p>",
 		"boonType": "epic"
 	},

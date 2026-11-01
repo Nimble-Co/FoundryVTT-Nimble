@@ -18,6 +18,61 @@
 				"skills": [
 					"stealth"
 				]
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "cti52sWpqyVNkx1l",
+				"identifier": "elusive",
+				"label": "Elusive (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "syVcXxThj6BXk6o0",
+				"identifier": "",
+				"label": "Elusive",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"save"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "succeed",
+				"formula": "",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "failed",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "elusive",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
 			}
 		],
 		"description": "<p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>"
