@@ -1,7 +1,9 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import type { RollEffect } from '../utils/incomingReactions/incomingReactionEntry.js';
 import {
 	changeDieInTerm,
 	type DieTermLike,
+	dieFaces,
 	type ExplosionStyle,
 	isActive,
 	type KeptDieBonus,
@@ -70,7 +72,7 @@ function pickableDice(roll: RollLike, options: { droppedFrom?: number } = {}): P
 			dice.push({
 				term: termIndex,
 				result: resultIndex,
-				faces: term.faces,
+				faces: dieFaces(result, term),
 				value: result.result,
 				role,
 				...(role === 'primary' && bonus ? { bonus } : {}),
@@ -106,6 +108,12 @@ interface OneDieRoll extends PrimaryDieBonusRoll {
 	refreshOutcome?(): void;
 	/** Make the roll a crit that stays; null when it cannot be one. */
 	makeCritical?(): Promise<{ term: unknown; drawn: number[] } | null>;
+	/** Reroll the first crit die as a d20; null when there is none or it is one. */
+	replaceCritDieWithD20?(): Promise<{ term: unknown; drawn: number[] } | null>;
+	/** Give each crit die the Vicious die; null when the roll is no crit or is Vicious. */
+	makeVicious?(): Promise<{ term: unknown; drawn: number[] } | null>;
+	/** Roll the crit dice a change of the roll now calls for; the dice it rolled. */
+	settleCritDice?(): Promise<number[]>;
 	/** "Add to Primary Die Result" when `term` is the Primary Die and has it. */
 	primaryDieBonusOf?(term: unknown): KeptDieBonus | null;
 	/** The Primary Die `term` was rolled again; `keptBase` is its new result before the bonus. */
@@ -216,14 +224,16 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	copy.primaryDieRerolled?.(term, changed.keptBase);
 
 	refreshTotals(copy);
+	const settled = (await copy.settleCritDice?.()) ?? [];
 
+	const rolled = [...changed.drawn, ...settled];
 	return {
 		roll: copy,
 		faces: term.faces,
 		previous: changed.previous,
 		next: changed.next,
 		dropped,
-		thrown: thrownDice(term, dropped === null ? changed.drawn : [...changed.drawn, dropped]),
+		thrown: thrownDice(term, dropped === null ? rolled : [...rolled, dropped]),
 	};
 }
 
@@ -261,7 +271,8 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	const bonusOnFace =
 		change.mode === 'set' ? change.addsBonus === true : copy.options?.primaryDieBonusOff !== true;
 	const add = bonusOnFace ? (bonus?.add ?? 0) : 0;
-	const clamp = (value: number) => Math.min(term.faces, Math.max(1, Math.trunc(value)));
+	const faces = dieFaces(result, term);
+	const clamp = (value: number) => Math.min(faces, Math.max(1, Math.trunc(value)));
 	const base =
 		change.mode === 'set' ? clamp(change.value) : clamp(result.result + change.value - add);
 	const face = change.mode === 'set' ? clamp(base + add) : clamp(result.result + change.value);
@@ -276,13 +287,15 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	if (kept) copy.primaryDieChanged?.(term, bonus ? base : changed.next, bonusOnFace);
 
 	refreshTotals(copy);
+	const settled = (await copy.settleCritDice?.()) ?? [];
 
+	const rolled = [...changed.drawn, ...settled];
 	return {
 		roll: copy,
 		faces: term.faces,
 		previous: changed.previous,
 		next: changed.next,
-		thrown: changed.drawn.length > 0 ? thrownDice(term, changed.drawn) : null,
+		thrown: rolled.length > 0 ? thrownDice(term, rolled) : null,
 	};
 }
 
@@ -303,6 +316,35 @@ async function makeRollCrit<TRoll extends OneDieRoll>(
 	const copy = cloneRoll(roll);
 	const made = await copy.makeCritical?.();
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll cannot be made a crit.');
+	const settled = (await copy.settleCritDice?.()) ?? [];
+	const ref = primaryDieRef(copy);
+	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
+
+	const rolled = [...made.drawn, ...settled];
+	return {
+		roll: copy,
+		faces: made.term.faces,
+		next: kept ?? null,
+		thrown: rolled.length > 0 ? thrownDice(made.term, rolled) : null,
+	};
+}
+
+/**
+ * Do a row's effect on an evaluated roll. The old roll is not changed: the new
+ * roll is a copy. `thrown` holds only the dice rolled. Throws when the effect has
+ * nothing to do.
+ */
+async function applyRollEffect<TRoll extends OneDieRoll>(
+	roll: TRoll,
+	effect: RollEffect,
+): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
+	const copy = foundry.dice.Roll.fromData(
+		foundry.utils.deepClone(roll.toJSON()) as never,
+	) as unknown as TRoll;
+	let made: { term: unknown; drawn: number[] } | null | undefined;
+	if (effect === 'critD20') made = await copy.replaceCritDieWithD20?.();
+	else made = await copy.makeVicious?.();
+	if (!made || !isDieTerm(made.term)) throw new Error('The roll effect has nothing to do.');
 	const ref = primaryDieRef(copy);
 	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
 
@@ -315,6 +357,7 @@ async function makeRollCrit<TRoll extends OneDieRoll>(
 }
 
 export {
+	applyRollEffect,
 	changeOneDie,
 	makeRollCrit,
 	type DieRef,

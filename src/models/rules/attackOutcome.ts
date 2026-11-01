@@ -10,7 +10,10 @@ import {
 	matchesAttackDelivery,
 } from '../../utils/damage/attackDelivery.js';
 import { attackTags } from '../../utils/damage/attackTags.js';
-import type { RerollTrigger } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type {
+	RerollTrigger,
+	RollEffect,
+} from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -75,6 +78,23 @@ function schema() {
 			initial: false,
 			label: 'NIMBLE.rules.attackOutcome.anyDieCrits.label',
 			hint: 'NIMBLE.rules.attackOutcome.anyDieCrits.hint',
+		}),
+		critD20: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.attackOutcome.critD20.label',
+				hint: 'NIMBLE.rules.attackOutcome.critD20.hint',
+				showWhen: onYourAttacks,
+			}),
+		),
+		viciousCrits: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.attackOutcome.viciousCrits.label',
+			hint: 'NIMBLE.rules.attackOutcome.viciousCrits.hint',
 		}),
 		attackDelivery: new fields.StringField({
 			required: true,
@@ -153,6 +173,8 @@ interface AttackOutcomeChange {
 	critRange: number;
 	forcedCrit: ForcedCritKind | null;
 	anyDieCrits: boolean;
+	critD20: boolean;
+	viciousCrits: boolean;
 	chargePoolIdentifier: string;
 }
 
@@ -169,7 +191,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		{ fields: ['side'] },
 		{
 			label: 'NIMBLE.rules.attackOutcome.form.changes',
-			fields: ['cannotMiss', 'critRange', 'forceCrit', 'anyDieCrits'],
+			fields: ['cannotMiss', 'critRange', 'forceCrit', 'anyDieCrits', 'critD20', 'viciousCrits'],
 		},
 		{
 			label: 'NIMBLE.rules.attackOutcome.form.onlyAttacks',
@@ -192,6 +214,8 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	declare critRange: number;
 	declare forceCrit: ForceCritChoice;
 	declare anyDieCrits: boolean;
+	declare critD20: boolean;
+	declare viciousCrits: boolean;
 	declare attackDelivery: AttackDeliveryFilter;
 	declare attackSource: AttackSourceFilter;
 	declare thisItemOnly: boolean;
@@ -214,6 +238,8 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 				['critRange', 'number'],
 				['forceCrit', 'string'],
 				['anyDieCrits', 'boolean'],
+				['critD20', 'boolean'],
+				['viciousCrits', 'boolean'],
 				['attackDelivery', 'string'],
 				['attackSource', 'string'],
 				['thisItemOnly', 'boolean'],
@@ -242,6 +268,8 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			critRange: Math.max(0, Math.trunc(Number(this.critRange) || 0)),
 			forcedCrit: this.forceCrit === 'always' || this.forceCrit === 'onHit' ? this.forceCrit : null,
 			anyDieCrits: this.anyDieCrits === true,
+			critD20: ownAttack && this.critD20 === true,
+			viciousCrits: this.viciousCrits === true,
 			chargePoolIdentifier,
 		};
 	}
@@ -260,7 +288,8 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 
 	/**
 	 * With Feature Effects off, a rule that gives a crit is a Make It a Crit
-	 * button: whether `context.side` can use it on this attack now.
+	 * button, and one that changes the crit dice is a row of its own: whether
+	 * `context.side` can use it on this attack now.
 	 */
 	offersUseOn(context: RollUseContext): boolean {
 		const { roll } = context;
@@ -275,11 +304,25 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			itemUuid: roll.itemUuid,
 			damageTypes: roll.damageTypes,
 		});
-		return !!change && (change.forcedCrit !== null || change.anyDieCrits);
+		if (!change) return false;
+		return change.forcedCrit !== null || change.anyDieCrits || !!this.rollEffect;
+	}
+
+	/** What the row of a rule that changes the crit dice does. */
+	get rollEffect(): RollEffect | undefined {
+		if (this.forceCrit !== 'none' || this.anyDieCrits) return undefined;
+		if (this.side === 'yourAttacks' && this.critD20) return 'critD20';
+		return this.viciousCrits ? 'viciousDie' : undefined;
+	}
+
+	/** A row that changes the crit dice has nothing more to do on one card. */
+	get oncePerAttack(): boolean {
+		return !!this.rollEffect;
 	}
 
 	/** The attack result the button is used on: any for an "always" crit, else a hit. */
 	get outcome(): RerollTrigger {
+		if (this.rollEffect) return 'criticalHit';
 		return this.forceCrit === 'always' ? 'always' : 'hit';
 	}
 

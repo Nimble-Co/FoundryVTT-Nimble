@@ -51,6 +51,8 @@ declare namespace DamageRoll {
 		 * no crit dice; `hit` cannot crit. Neither can miss, except by `forceMiss`.
 		 */
 		maxDamage?: 'hit' | 'crit';
+		/** The first crit die of a crit is a d20. A 20 goes on with the die of the attack. */
+		critD20?: boolean;
 		/** The features that changed how the roll is read, for the card's tags. */
 		outcomeSources?: Partial<AttackOutcomeSources>;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
@@ -663,6 +665,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					await this._rollCritDice(primaryTerm);
 				}
 				this._finalizeOutcome(primaryTerm);
+				await this.settleCritDice();
 			}
 		}
 
@@ -794,6 +797,110 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 		this.refreshOutcome();
 		return { term, drawn: term.results.slice(before).map((r) => r.result) };
+	}
+
+	/**
+	 * Roll the crit dice this roll calls for and has not rolled: the d20 crit
+	 * die. A later change of the roll calls it again. Returns the dice it rolled.
+	 */
+	async settleCritDice(): Promise<number[]> {
+		if (!this.options.critD20 || !this.isCritical) return [];
+		const made = await this.replaceCritDieWithD20();
+		return made?.drawn ?? [];
+	}
+
+	/** Reroll the first crit die as a d20, and what it starts. Null when there is none or it is one. */
+	async replaceCritDieWithD20(): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
+		const term = this.terms.find((candidate) => candidate instanceof PrimaryDie);
+		if (!term || !this.isCritical) return null;
+		const at = Number(term.number) || 1;
+		const first = term.results[at];
+		if (!first || term.results.some((result) => (result as { faces?: number }).faces)) return null;
+
+		const vicious = this.options.explosionStyle === 'vicious';
+		const drawn: number[] = [];
+		const rolled = await this._rollDice(1, 20);
+		const value = rolled[0]?.result ?? 1;
+		drawn.push(value);
+		const d20 = {
+			result: value,
+			active: true,
+			faces: 20,
+			...(vicious ? { provenance: 'viciousChain' } : {}),
+		} as foundry.dice.terms.DiceTerm.Result;
+		term.results.splice(at, vicious ? 1 : term.results.length - at, d20);
+		if (vicious) term.results.splice(at + 2);
+
+		if (value === 20) {
+			d20.exploded = true;
+			const faces = term.faces ?? 6;
+			if (vicious) {
+				const before = term.results.length;
+				await this._rollViciousChain(term, faces);
+				drawn.push(...term.results.slice(before).map((result) => result.result));
+			} else {
+				const chain = await this._rollDice(1, faces, 'x');
+				term.results.push(...chain);
+				drawn.push(...chain.map((result) => result.result));
+			}
+		}
+		this.resetFormula();
+		this._recalculateTotal();
+		return { term, drawn };
+	}
+
+	/**
+	 * Make a standard crit Vicious after it is rolled: each crit die gets the
+	 * Vicious die. Null when the roll is no crit, or is Vicious.
+	 */
+	async makeVicious(): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
+		const term = this.terms.find((candidate) => candidate instanceof PrimaryDie);
+		if (!term || !this.isCritical || this.options.explosionStyle === 'vicious') return null;
+		const at = Number(term.number) || 1;
+		const chain = term.results.slice(at);
+		if (chain.length < 1) return null;
+
+		const extra = await this._rollDice(chain.length, term.faces ?? 6);
+		term.results = [
+			...term.results.slice(0, at),
+			...chain.flatMap((die, index) => [
+				Object.assign(die, { provenance: 'viciousChain' }),
+				Object.assign(extra[index], { provenance: 'viciousBonus' }),
+			]),
+		];
+		term.modifiers = term.modifiers.filter((modifier) => !/^xo?$/i.test(modifier));
+		this.options.explosionStyle = 'vicious';
+		this.resetFormula();
+		this._recalculateTotal();
+		return { term, drawn: extra.map((die) => die.result) };
+	}
+
+	/** Roll `count` dice of `faces` as a Foundry roll. */
+	private async _rollDice(
+		count: number,
+		faces: number,
+		modifier = '',
+	): Promise<foundry.dice.terms.DiceTerm.Result[]> {
+		const roll = new Roll(`${count}d${faces}${modifier}`);
+		await roll.evaluate();
+		const term = roll.terms.find((t) => t instanceof Terms.Die) as
+			| foundry.dice.terms.Die
+			| undefined;
+		return term?.results ?? [];
+	}
+
+	/** Roll pairs of Vicious crit dice while the last die that can go on is at the max. */
+	private async _rollViciousChain(dieTerm: foundry.dice.terms.Die, faces: number): Promise<void> {
+		let lastLeft = faces;
+		for (let i = 0; lastLeft === faces && i < 100; i++) {
+			const [left, right] = await this._rollDice(2, faces);
+			if (!left || !right) return;
+			Object.assign(left, { provenance: 'viciousChain' });
+			Object.assign(right, { provenance: 'viciousBonus' });
+			dieTerm.results.push(left, right);
+			lastLeft = left.result;
+			if (lastLeft === faces) left.exploded = true;
+		}
 	}
 
 	/**

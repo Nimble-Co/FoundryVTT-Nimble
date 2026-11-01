@@ -173,6 +173,7 @@ export const incomingReactions = () => ({
 				initial: 'reroll',
 				choices: [...ROLL_USES],
 			}),
+			effect: new fields.StringField({ required: false, nullable: true, initial: null }),
 			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
@@ -290,6 +291,7 @@ const rerollRecord = () =>
 			initial: 'reroll',
 			choices: [...ROLL_USES],
 		}),
+		effect: new fields.StringField({ required: false, nullable: true, initial: null }),
 		change: new fields.SchemaField(
 			{
 				mode: new fields.StringField({

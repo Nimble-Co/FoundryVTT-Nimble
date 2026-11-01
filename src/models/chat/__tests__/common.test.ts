@@ -113,6 +113,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 		const stamped: Required<IncomingReactionEntry> = {
 			id: 'e1',
 			kind: 'reroll',
+			effect: 'critD20',
 			source: 'rule',
 			actorUuid: 'Actor.a',
 			tokenUuid: null,
@@ -163,6 +164,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			changes: [],
 			grants: [],
 			automatic: true,
+			effect: 'critD20',
 			use: 'change',
 			change: { mode: 'add', value: 1 },
 			stat: 'dexterity',

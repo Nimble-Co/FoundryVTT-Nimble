@@ -308,6 +308,25 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			);
 		}
 
+		if (record.use === 'effect') {
+			return {
+				title: feature,
+				tags: [],
+				tempHpNote: null,
+				offNote: null,
+				text: localize(
+					`NIMBLE.chat.incomingReactions.effectHistory.${record.effect ?? 'critD20'}`,
+					{
+						feature,
+					},
+				),
+				detail: details.length > 0 ? details.join(' - ') : null,
+				dice: dice(record),
+				keptOld: false,
+				use: 'effect',
+			};
+		}
+
 		if (record.use === 'crit') {
 			return {
 				title: feature,

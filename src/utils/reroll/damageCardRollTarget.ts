@@ -21,6 +21,7 @@ import {
 	type AttackOutcomeView,
 	type IncomingReactionEntry,
 	type RollChange,
+	termsHaveCritD20,
 	termsHaveDieAtMax,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { resultChangesOf } from '../rolls/resultChanges.js';
@@ -108,7 +109,13 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 }
 
 type RollOptionsView = {
-	options?: { canCrit?: unknown; forcedCrit?: unknown; maxDamage?: unknown } | null;
+	options?: {
+		canCrit?: unknown;
+		forcedCrit?: unknown;
+		maxDamage?: unknown;
+		explosionStyle?: unknown;
+		isVicious?: unknown;
+	} | null;
 	terms?: readonly unknown[];
 	originalFormula?: string;
 	formula?: string;
@@ -167,6 +174,8 @@ function damageRollContext(
 			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
 			canCrit: rolled?.options?.canCrit === true,
 			noDice: rolled?.options?.maxDamage !== undefined,
+			vicious: rolled?.options?.explosionStyle === 'vicious' || rolled?.options?.isVicious === true,
+			hasCritD20: termsHaveCritD20(rolled?.terms),
 			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
 		},
 		forcedMiss,

@@ -108,6 +108,22 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	}
 
 	const tags: AttackOutcomeTag[] = [];
+	if (roll.isCritical) {
+		for (const feature of new Set(options.outcomeSources?.critD20 ?? [])) {
+			tags.push({
+				kind: 'critDice',
+				label: localize(`${TAG_TEXT}.critD20`, { feature }),
+				tooltip: localize(`${TAG_TEXT}.critD20Tooltip`, { feature }),
+			});
+		}
+		for (const feature of new Set(options.outcomeSources?.vicious ?? [])) {
+			tags.push({
+				kind: 'critDice',
+				label: localize(`${TAG_TEXT}.vicious`, { feature }),
+				tooltip: localize(`${TAG_TEXT}.viciousTooltip`, { feature }),
+			});
+		}
+	}
 	if (roll.isCritical && face < faces) {
 		for (const cause of critCauses(options, roll.terms, face, faces)) {
 			tags.push({

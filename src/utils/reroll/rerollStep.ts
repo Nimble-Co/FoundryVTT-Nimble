@@ -4,6 +4,7 @@ import type {
 	RerollDieResult,
 	RerollRecord,
 	RollChange,
+	RollEffect,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
@@ -69,6 +70,8 @@ interface RerollStepInput<TRoll> {
 	change?: DieChange;
 	/** A Make It a Crit rule's use. */
 	makesCrit?: boolean;
+	/** A row that does what a feature does by itself with Feature Effects on. */
+	effect?: RollEffect;
 	/** The stat the player picked for the new roll. */
 	stat?: string;
 	/** The feature that made the new attack unable to miss. */
@@ -158,6 +161,7 @@ async function rerollWithRule<TRoll>(
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
 				...(input.makesCrit ? { use: 'crit' as const } : {}),
+				...(input.effect ? { use: 'effect' as const, effect: input.effect } : {}),
 				...(input.stat ? { stat: input.stat } : {}),
 				...(input.cannotMissBy ? { cannotMissBy: input.cannotMissBy } : {}),
 			},

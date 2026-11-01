@@ -12,6 +12,28 @@
 				"movementType": "fly",
 				"label": "Hollow Bones",
 				"id": "77PFA7AbSWEB2h30"
+			},
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"identifier": "",
+				"predicate": {},
+				"priority": 1,
+				"cannotMiss": false,
+				"critRange": 0,
+				"forceCrit": "none",
+				"anyDieCrits": false,
+				"critD20": false,
+				"viciousCrits": true,
+				"attackDelivery": "any",
+				"attackSource": "any",
+				"thisItemOnly": false,
+				"exceptItemIdentifier": "",
+				"otherCreature": {},
+				"chargePoolIdentifier": "",
+				"id": "hollow-bones-vicious",
+				"label": "Hollow Bones",
+				"side": "attacksAgainstYou"
 			}
 		],
 		"description": "<p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>"

@@ -14,6 +14,7 @@ import {
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type RollEffect,
 	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
@@ -51,9 +52,15 @@ function rollUseOf(type: string | undefined): RollUse | undefined {
 	return undefined;
 }
 
+/** What an entry of this rule does: a row with an effect, or what the rule type says. */
+function rollUseOfRule(rule: RerollRuleLike): RollUse | undefined {
+	return rule.rollEffect ? 'effect' : rollUseOf(rule.type);
+}
+
 /** A roll use as the outcome gate reads it. */
 interface RollUseGate {
 	use?: RollUse;
+	effect?: RollEffect;
 	/** A crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
 }
@@ -96,6 +103,8 @@ interface RerollRuleLike {
 	dieChange?: DieChange;
 	/** A Change a Result rule: what one use does, or null when its formula gives no number. */
 	resultUseFor?: (roller: ResultCardView['roller'], card?: ResultCardView) => ResultUse | null;
+	/** With Feature Effects off, what the row of this rule does to the roll. */
+	rollEffect?: RollEffect;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -203,6 +212,8 @@ function rollUseTriggerMatches(
 	gate: RollUseGate = {},
 ): boolean {
 	if (outcome.noDice && gate.use !== 'result') return false;
+	if (gate.effect === 'viciousDie' && outcome.vicious) return false;
+	if (gate.effect === 'critD20' && outcome.hasCritD20) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
 	if (trigger === 'criticalHit' && critStays(outcome)) return false;
@@ -237,9 +248,10 @@ function runsByItself(
 }
 
 function gateOf(rule: RerollRuleLike): RollUseGate {
-	const use = rollUseOf(rule.type);
+	const use = rollUseOfRule(rule);
 	return {
 		...(use ? { use } : {}),
+		...(rule.rollEffect ? { effect: rule.rollEffect } : {}),
 		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
 	};
 }
@@ -486,13 +498,13 @@ function usableRerollEntry(
 	if (rule.oncePerRoll === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
 	const other = otherCreature(entry.side, context);
 	// A rule that reads the card keeps its entry stamped, so the row comes back with the result.
-	const readsCard = !isAttack || rollUseOf(rule.type) === 'result';
+	const readsCard = !isAttack || rollUseOfRule(rule) === 'result';
 	const gate = {
 		side: entry.side,
 		roll: context.roll,
 		other,
 		...(readsCard && context.card ? { card: context.card } : {}),
-		...(rollUseOf(rule.type) === 'result' ? { targetTokenUuid: entry.targetTokenUuid } : {}),
+		...(rollUseOfRule(rule) === 'result' ? { targetTokenUuid: entry.targetTokenUuid } : {}),
 	};
 	if (rule.offersUseOn?.(gate) !== true) return UNAVAILABLE;
 	const { outcome, forcedMiss } = attackOutcome(context);
@@ -508,6 +520,7 @@ export {
 	collectRerollEntries,
 	findRerollRule,
 	isRollUseRule,
+	rollUseOfRule,
 	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,

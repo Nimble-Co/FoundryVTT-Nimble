@@ -1,5 +1,6 @@
 import type { DieChange } from '#types/dieChange.d.ts';
 import {
+	applyRollEffect,
 	changeOneDie,
 	type DieRef,
 	makeRollCrit,
@@ -9,7 +10,11 @@ import {
 	primaryDieRef,
 	rerollOneDie,
 } from '../../dice/oneDieReroll.js';
-import type { ChangeableDie, RerollDie } from '../incomingReactions/incomingReactionEntry.js';
+import type {
+	ChangeableDie,
+	RerollDie,
+	RollEffect,
+} from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollableRoll } from './rerollRollTarget.js';
 
 function pickOptions(found: RerollableRoll<unknown>, current: OneDieRoll) {
@@ -165,4 +170,30 @@ function critFor<TRoll>(
 	};
 }
 
-export { changeableFor, critFor, diceForRule, diceToPick, rerollableFor };
+/**
+ * The roll a row's effect changes. The Primary Die keeps its face. Null when the
+ * card has no roll to change. Only the dice the effect rolled are thrown.
+ */
+function effectFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	effect: RollEffect,
+	apply: typeof applyRollEffect = applyRollEffect,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const ref = primaryDieRef(current);
+
+	let made: Awaited<ReturnType<typeof applyRollEffect>> | null = null;
+	return {
+		...found,
+		previousResult: ref ? resultAt(current, ref) : null,
+		makeRoll: async () => {
+			made = await apply(current, effect);
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+export { changeableFor, critFor, diceForRule, diceToPick, effectFor, rerollableFor };

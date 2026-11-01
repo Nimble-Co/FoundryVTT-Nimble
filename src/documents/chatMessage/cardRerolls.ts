@@ -24,6 +24,7 @@ import type {
 	RerollKept,
 	RerollRecord,
 	RollChange,
+	RollEffect,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
@@ -41,6 +42,7 @@ import {
 	critFor,
 	diceForRule,
 	diceToPick,
+	effectFor,
 	rerollableFor,
 } from '#utils/reroll/rerollDieChoice.js';
 import {
@@ -54,7 +56,7 @@ import {
 	type RerollRollContext,
 	type RerollRollOutcome,
 	type RerollRuleLike,
-	rollUseOf,
+	rollUseOfRule,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -773,10 +775,21 @@ export class CardRerolls {
 				reject,
 			);
 		}
-		if (rollUseOf(usable.rule.type) === 'crit') {
+		if (rollUseOfRule(usable.rule) === 'crit') {
 			return this.#applyMakeCrit(rollTarget, found, entry, usable, forceHeroicReaction, reject);
 		}
-		if (rollUseOf(usable.rule.type) === 'result') {
+		if (usable.rule.rollEffect) {
+			return this.#applyRollEffect(
+				rollTarget,
+				found,
+				entry,
+				usable,
+				usable.rule.rollEffect,
+				forceHeroicReaction,
+				reject,
+			);
+		}
+		if (rollUseOfRule(usable.rule) === 'result') {
 			return this.#applyResultChange(rollTarget, entry, usable, forceHeroicReaction, reject);
 		}
 		const rollKind = rollTarget.context().roll.kind;
@@ -963,6 +976,52 @@ export class CardRerolls {
 		}
 		if (result.status === 'failed') {
 			console.error(failedLog, result.error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Use a row that does by hand what its feature does by itself with Feature
+	 * Effects on: pay its cost, then change the roll and put it on the card as a
+	 * reroll is put there. The cost is given back when the change cannot be made.
+	 */
+	async #applyRollEffect(
+		rollTarget: RerollRollTarget,
+		found: RerollableRoll,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		effect: RollEffect,
+		forceHeroicReaction: boolean,
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const target = effectFor(found, effect);
+		if (!target) return void reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
+		const result = await rerollWithRule({
+			rule: usable.rule,
+			entry,
+			rollKind: rollTarget.context().roll.kind,
+			effect,
+			payer: usable.actor,
+			replaced: target.replaced,
+			previousResult: target.previousResult,
+			makeRoll: (formula, options) => target.makeRoll(formula, options),
+			readNewDie: target.readNewDie?.bind(target),
+			earlierCritTriggers: systemData.discardedCritTriggers === true,
+			payOptions: { forceHeroicReaction },
+			place: (done) =>
+				this.#placeReroll(entry, target, done.roll, {
+					reroll: done.reroll,
+					discardedCritTriggers: done.discardedCritTriggers,
+					list: 'new',
+				}),
+		});
+		if (result.status === 'unpaid') {
+			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		}
+		if (result.status === 'failed') {
+			console.error('Nimble | A roll effect failed; its cost is given back.', result.error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

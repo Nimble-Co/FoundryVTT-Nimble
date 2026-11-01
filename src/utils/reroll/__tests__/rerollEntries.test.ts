@@ -1276,3 +1276,45 @@ describe('a target in the Incapacitated group, with Feature Effects off', () => 
 		});
 	});
 });
+
+describe('a row that changes the crit dice, with Feature Effects off', () => {
+	const effectRule = (rollEffect: 'critD20' | 'viciousDie', usedBy: RerollSide = 'roller') =>
+		rerollRule({ type: 'attackOutcome', rollEffect, outcome: 'criticalHit', usedBy });
+	const rows = (rule: RerollRuleLike, outcome: object, side: RerollSide = 'roller') =>
+		collectRerollEntries(
+			context({
+				...(side === 'roller'
+					? { attacker: actor('Actor.attacker', [rule]) }
+					: { targets: [{ tokenUuid: TOKEN, actor: actor('Actor.target', [rule]) }] }),
+				outcome,
+			}),
+		).manual;
+
+	beforeEach(() => setToggles({ 'automation.applyRuleEffects': false }));
+
+	it('shows on a crit, with the effect on the entry', () => {
+		const [row] = rows(effectRule('critD20'), CRIT);
+
+		expect(row).toMatchObject({ use: 'effect', effect: 'critD20' });
+	});
+
+	it('does not show on a hit', () => {
+		expect(rows(effectRule('critD20'), HIT)).toEqual([]);
+	});
+
+	it('Use a d20 goes away once a crit die is a d20', () => {
+		expect(rows(effectRule('critD20'), { ...CRIT, hasCritD20: true })).toEqual([]);
+	});
+
+	it('the Vicious die shows for the owner of the target', () => {
+		const [row] = rows(effectRule('viciousDie', 'target'), CRIT, 'target');
+
+		expect(row).toMatchObject({ side: 'target', effect: 'viciousDie' });
+	});
+
+	it('the Vicious die does not show on an attack that is Vicious', () => {
+		expect(rows(effectRule('viciousDie', 'target'), { ...CRIT, vicious: true }, 'target')).toEqual(
+			[],
+		);
+	});
+});

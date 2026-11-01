@@ -347,6 +347,8 @@ describe('RuleCard with a form layout (attackOutcome)', () => {
 			'critRange',
 			'forceCrit',
 			'anyDieCrits',
+			'critD20',
+			'viciousCrits',
 			'attackDelivery',
 			'attackSource',
 			'thisItemOnly',
@@ -471,6 +473,7 @@ describe('RuleCard without a form layout', () => {
 		'changeResult',
 		'attackOutcome',
 		'makeCrit',
+		'maxDamage',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

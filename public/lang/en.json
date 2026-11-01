@@ -700,6 +700,10 @@
 					"reroll": "Reroll",
 					"rerollAgain": "Reroll Again",
 					"change": "Change Die",
+					"effect": {
+						"critD20": "Use a d20",
+						"viciousDie": "Add the Vicious die"
+					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
 					"succeed": "Succeed Instead",
@@ -746,9 +750,17 @@
 					"noMiss": "No miss: {count} targets",
 					"noCrit": "No crit: {count} targets",
 					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit.",
+					"critD20": "d20 crit die: {feature}",
+					"critD20Tooltip": "{feature} made the first crit die a d20.",
+					"vicious": "Vicious: {feature}",
+					"viciousTooltip": "{feature} made this crit Vicious: each crit die rolls 1 more die.",
 					"maxDamage": "Max damage: {feature}",
 					"maxHealing": "Max healing: {feature}",
 					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled."
+				},
+				"effectHistory": {
+					"critD20": "{feature} rerolled the first crit die as a d20.",
+					"viciousDie": "{feature} made the crit Vicious."
 				},
 				"rerollTags": {
 					"crit": "Crit",
@@ -2574,6 +2586,14 @@
 						"always": "Always, also on a 1",
 						"onHit": "On a hit"
 					}
+				},
+				"critD20": {
+					"label": "First crit die is a d20",
+					"hint": "The first crit die of each crit of the attack is a d20. A 20 goes on with the die of the attack. With Feature Effects off, this is a row in Change This Roll."
+				},
+				"viciousCrits": {
+					"label": "Crits are Vicious",
+					"hint": "Each crit die of the attack rolls 1 more die. An attack that is Vicious stays as it is. With Feature Effects off, this is a row in Change This Roll."
 				},
 				"anyDieCrits": {
 					"label": "Any die at its max is a crit",

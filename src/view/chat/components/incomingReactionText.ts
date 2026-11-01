@@ -79,6 +79,7 @@ export function createIncomingReactionText(
 		const use = entry.use === 'result' ? resultUseOf(entry) : null;
 		if (use) return resultVerb(use);
 		if (entry.anotherStat) return localize('NIMBLE.chat.incomingReactions.verbs.anotherStat');
+		if (entry.effect) return localize(`NIMBLE.chat.incomingReactions.verbs.effect.${entry.effect}`);
 		return localize(
 			isRerollAgain(entry, getRerolls())
 				? 'NIMBLE.chat.incomingReactions.verbs.rerollAgain'
