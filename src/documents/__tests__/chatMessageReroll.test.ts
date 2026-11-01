@@ -1924,6 +1924,20 @@ describe('a reroll from a rule with a stat to pick', () => {
 		const payload = updatePayload(message);
 		expect(payload.system.rerolls?.[0]).toMatchObject({ cannotMissBy: 'Sure Song' });
 	});
+
+	it.each([
+		[true, false],
+		[false, true],
+	])('with a keep rule and an old miss of %s, a keep waits: %s', async (isMiss, waits) => {
+		withCannotFail(setupWorld({ keep: 'ownerChooses' }));
+		const message = messageWithStat({ canMiss: true, canCrit: true });
+		(message.system as Record<string, unknown>).isMiss = isMiss;
+
+		await message.resolveRerollReaction('entry-1', 'gm-user');
+
+		const { system } = updatePayload(message) as { system: { pendingKeep?: unknown } };
+		expect(Boolean(system.pendingKeep)).toBe(waits);
+	});
 });
 
 describe('a card as it is made', () => {

@@ -90,4 +90,21 @@ describe('createChangeThisRollState', () => {
 
 		expect(control(message({ dc: 14 }, 7)).open).toBe(true);
 	});
+
+	it('gives the focus back when a new draw of the card comes into the page', async () => {
+		const state = control(message({}));
+		const draw = document.createElement('div');
+		const toggle = document.createElement('button');
+		draw.append(toggle);
+		state.elements.anchor = draw;
+		state.elements.toggle = toggle;
+		state.expectFocusLoss('entry-1');
+
+		state.restoreFocus();
+		document.body.append(draw);
+		await new Promise((resolve) => requestAnimationFrame(resolve));
+
+		expect(document.activeElement).toBe(toggle);
+		draw.remove();
+	});
 });

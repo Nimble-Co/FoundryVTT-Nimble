@@ -164,6 +164,10 @@ describe('resultSumText of a natural 20', () => {
 		expect(resultSumText(0, [nat20(19)])).toBe(`Rolled 0, counts as 20 ${MINUS} 1 = 19`);
 	});
 
+	it('writes a roll below zero with a true minus', () => {
+		expect(resultSumText(-1, [nat20(18)])).toBe(`Rolled ${MINUS}1, counts as 20 ${MINUS} 2 = 18`);
+	});
+
 	it('takes a later add on the same sum', () => {
 		expect(resultSumText(1, [nat20(19), click()])).toBe(
 			`Rolled 1, counts as 20 ${MINUS} 1 + 3 = 22`,

@@ -787,10 +787,16 @@ export class CardRerolls {
 			? rolled.withStat?.(rolled, stat ?? '', usable.rule.relatedStat)
 			: rolled;
 		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickAStat');
-		// A check that cannot fail has one result to keep: the new roll, which succeeds.
+		const systemData = this.#host.system() as unknown as {
+			discardedCritTriggers?: boolean;
+			isMiss?: boolean;
+		};
+		// A check that cannot fail, or a miss that cannot stand, has one result to keep: the new roll.
 		const decided = rollKind === 'attack' ? null : modifier;
-		const chooserUuid = decided ? '' : this.#keepChooser(usable.rule.keep, entry, rollTarget);
-		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
+		const chooserUuid =
+			decided || (cannotMiss && systemData.isMiss)
+				? ''
+				: this.#keepChooser(usable.rule.keep, entry, rollTarget);
 		const result = await rerollWithRule({
 			rule: usable.rule,
 			entry,

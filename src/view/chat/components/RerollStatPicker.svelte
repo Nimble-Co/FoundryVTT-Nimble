@@ -25,7 +25,9 @@
 	}
 
 	onMount(() => {
-		if (!sending) buttons[0]?.focus();
+		if (sending) return;
+		buttons[0]?.scrollIntoView?.({ block: 'nearest' });
+		buttons[0]?.focus({ preventScroll: true });
 	});
 </script>
 

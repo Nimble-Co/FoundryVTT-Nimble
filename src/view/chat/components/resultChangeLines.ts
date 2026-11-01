@@ -36,6 +36,10 @@ function signedWithTrueMinus(value: number): string {
 	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : `+${value}`;
 }
 
+function totalWithTrueMinus(value: number): string {
+	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : String(value);
+}
+
 function statAbbreviation(stat: string): string {
 	return localize(`NIMBLE.abilityScoreAbbreviations.${stat}`).toUpperCase();
 }
@@ -136,14 +140,14 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 	if (standing.length === 1 && standing[0].change === 'setTotal') return null;
 	if (resultTotal(rollTotal, changes) === rollTotal) return null;
 
-	let text = String(rollTotal);
+	let text = totalWithTrueMinus(rollTotal);
 	let total = rollTotal;
 	let openSum = false;
 	const closeSum = () => {
 		if (!openSum) return;
 		text = localize('NIMBLE.chat.incomingReactions.resultChange.sum', {
 			sum: text,
-			total: String(total),
+			total: totalWithTrueMinus(total),
 		});
 		openSum = false;
 	};
@@ -156,7 +160,7 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 			closeSum();
 			text = localize('NIMBLE.chat.incomingReactions.resultChange.changedTo', {
 				from: text,
-				to: String(change.value),
+				to: totalWithTrueMinus(change.value),
 			});
 			total = change.value;
 		} else if (change.change === 'countsAsNat20') {
