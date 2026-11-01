@@ -1,4 +1,3 @@
-import type { Snippet } from 'svelte';
 import type { CheckResult } from '../../src/utils/rolls/checkResult.ts';
 import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 
@@ -26,8 +25,6 @@ export interface RollSummaryProps {
 	total: number;
 	options?: RollSummaryOptions;
 	showRollDetails?: boolean;
-	/** Controls at the right end of the roll row, before the expand button. */
-	action?: Snippet;
 	/** The reroll dice of this roll are in the air: the total shows a tumbling die this size. */
 	rolling?: { faces: number } | null;
 	/** The total just replaced a rolling die, so it settles in. */

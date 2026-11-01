@@ -14,7 +14,6 @@
 		total,
 		options,
 		showRollDetails,
-		action,
 		rolling = null,
 		landed = false,
 	}: RollSummaryProps = $props();
@@ -46,10 +45,6 @@
 	</div>
 
 	<h3 class="roll__label">{label}</h3>
-
-	{#if action}
-		<div class="roll__action">{@render action()}</div>
-	{/if}
 
 	{#if tooltip}
 		<button
@@ -139,22 +134,6 @@
 
 		&--no-subheading {
 			grid-template-areas: 'rollResult rollLabel expandButton';
-		}
-
-		// The action column is there only when the action rendered something.
-		&:has(> .roll__action > :global(*)) {
-			grid-template-areas:
-				'rollResult rollLabel rollAction expandButton'
-				'rollResult subHeading rollAction expandButton';
-			grid-template-columns: max-content 1fr max-content max-content;
-		}
-
-		&--no-subheading:has(> .roll__action > :global(*)) {
-			grid-template-areas: 'rollResult rollLabel rollAction expandButton';
-		}
-
-		&__action {
-			display: contents;
 		}
 
 		.roll-expand {

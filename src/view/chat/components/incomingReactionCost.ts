@@ -17,9 +17,7 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 	const parts: string[] = [];
 	const usesLeft = rerollUsesLeft(actor, cost);
 	if (usesLeft !== null) {
-		parts.push(
-			localize('NIMBLE.chat.incomingReactions.rerollUsesLeft', { count: String(usesLeft) }),
-		);
+		parts.push(localize('NIMBLE.chat.incomingReactions.costUsesLeft', { count: String(usesLeft) }));
 	}
 	if (cost.manaCost > 0) {
 		parts.push(localize('NIMBLE.ui.heroicActions.mana', { cost: String(cost.manaCost) }));
@@ -41,8 +39,8 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 }
 
 /**
- * What using a card button costs its actor, for the right side of the button.
- * Empty when the button costs nothing the card knows about.
+ * What using a row of Change This Roll costs its actor, for the right side of the row.
+ * Empty when the row costs nothing the card knows about.
  */
 export function getIncomingReactionCost(entry: IncomingReactionEntry, actor: Actor | null): string {
 	if (entry.kind === 'reroll') return rerollCost(entry, actor).join(', ');

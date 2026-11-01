@@ -166,38 +166,32 @@ function messageNode(messageId: string): HTMLElement | null {
 }
 
 /**
- * Use an incoming reaction on a chat card as a real DOM interaction: open each
- * verb button's menu until one holds the feature, then click the feature.
+ * Use an incoming reaction on a chat card as a real DOM interaction: open
+ * Change This Roll if it is closed, then click the row of the feature.
  * Returns after a settle so the un-awaited reaction chain has time to start;
  * callers still poll the resulting document state.
  */
 async function clickReactionButton(messageId: string, labelIncludes?: string): Promise<void> {
-	const menuItem = () =>
+	const row = () =>
 		[
-			...(messageNode(messageId)?.querySelectorAll<HTMLButtonElement>(
-				'.nimble-choice-menu__item',
-			) ?? []),
+			...(messageNode(messageId)?.querySelectorAll<HTMLButtonElement>('.nimble-change-roll__row') ??
+				[]),
 		].find(
 			(candidate) =>
 				!labelIncludes || (candidate.getAttribute('aria-label') ?? '').includes(labelIncludes),
 		) ?? null;
 
-	let verbs: HTMLButtonElement[] = [];
+	let button: HTMLButtonElement | null = null;
 	await waitFor(() => {
-		verbs = [
-			...(messageNode(messageId)?.querySelectorAll<HTMLButtonElement>('.nimble-reaction-verb') ??
-				[]),
-		];
-		return verbs.length > 0;
-	}, `reaction buttons on message ${messageId}`);
+		button =
+			messageNode(messageId)?.querySelector<HTMLButtonElement>('.nimble-change-roll__button') ??
+			null;
+		return button !== null;
+	}, `Change This Roll on message ${messageId}`);
 
-	let item: HTMLButtonElement | null = null;
-	for (const verb of verbs) {
-		if (verb.getAttribute('aria-expanded') !== 'true') verb.click();
-		await settle(100);
-		item = menuItem();
-		if (item) break;
-	}
+	if (button!.getAttribute('aria-expanded') !== 'true') button!.click();
+	await settle(100);
+	const item = row();
 	if (!item) {
 		throw new Error(
 			`No reaction${labelIncludes ? ` "${labelIncludes}"` : ''} on message ${messageId}`,

@@ -38,11 +38,7 @@
 	});
 </script>
 
-{#snippet rerollButton()}
-	<IncomingReactionPrompts place="rollButton" />
-{/snippet}
-
-<!-- A reroll replaces the first roll, so its button and history sit with that roll. -->
+<!-- A reroll replaces the first roll, so its control and history sit with that roll. -->
 {#each rolls as roll, index}
 	<RollSummary
 		{label}
@@ -50,12 +46,11 @@
 		checkResult={index === 0 ? firstRollResult : null}
 		tooltip={prepareRollTooltip(system.actorType, system.permissions, roll)}
 		total={roll.total ?? 0}
-		action={index === 0 ? rerollButton : undefined}
 		rolling={index === 0 ? rolling : null}
 		landed={index === 0 && landed}
 	/>
 
 	{#if index === 0}
-		<IncomingReactionPrompts place="rollHistory" />
+		<IncomingReactionPrompts place="checkRoll" />
 	{/if}
 {/each}

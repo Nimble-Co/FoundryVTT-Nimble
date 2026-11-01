@@ -47,6 +47,12 @@
   background: var(--nimble-sheet-background);
   border: 0;
 
+  // A use of Change This Roll can take the focused button away, and the focus comes here.
+  &:focus-visible {
+    outline: 2px solid var(--nimble-dark-text-color);
+    outline-offset: -2px;
+  }
+
   &__body {
     border: 1px solid var(--nimble-user-background-color);
     border-top: 0;

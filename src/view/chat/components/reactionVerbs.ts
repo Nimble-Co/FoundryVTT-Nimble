@@ -1,9 +1,8 @@
-import type { IncomingReactionActorGroup } from '#types/components/IncomingReactionPrompts.d.ts';
-import type { ReactionVerb, ReactionVerbGroup } from '#types/components/IncomingReactionVerbs.d.ts';
+import type { ReactionVerb } from '#types/components/IncomingReactionPrompts.d.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
-/** The card shows one button per verb, in this order. */
-export const REACTION_VERBS: readonly ReactionVerb[] = [
+/** Change This Roll lists the rows of one actor in this order. */
+const REACTION_VERBS: readonly ReactionVerb[] = [
 	'reroll',
 	'change',
 	'crit',
@@ -33,15 +32,7 @@ export function reactionVerb(entry: IncomingReactionEntry): ReactionVerb {
 	return 'interpose';
 }
 
-export function groupByVerb(groups: IncomingReactionActorGroup[]): ReactionVerbGroup[] {
-	return REACTION_VERBS.flatMap((verb) => {
-		const verbGroups = groups
-			.map((group) => ({
-				...group,
-				entries: group.entries.filter((entry) => reactionVerb(entry) === verb),
-			}))
-			.filter((group) => group.entries.length > 0);
-		const count = verbGroups.reduce((total, group) => total + group.entries.length, 0);
-		return count > 0 ? [{ verb, groups: verbGroups, count }] : [];
-	});
+export function sortByVerb(entries: IncomingReactionEntry[]): IncomingReactionEntry[] {
+	const place = (entry: IncomingReactionEntry) => REACTION_VERBS.indexOf(reactionVerb(entry));
+	return [...entries].sort((a, b) => place(a) - place(b));
 }

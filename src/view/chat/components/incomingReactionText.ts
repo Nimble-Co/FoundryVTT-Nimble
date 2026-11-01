@@ -1,4 +1,7 @@
-import type { IncomingReactionText } from '#types/components/IncomingReactionPrompts.d.ts';
+import type {
+	IncomingReactionRow,
+	IncomingReactionText,
+} from '#types/components/IncomingReactionPrompts.d.ts';
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
@@ -26,15 +29,6 @@ function icon(entry: IncomingReactionEntry): string {
 	return REACTION_VERB_ICONS[reactionVerb(entry)];
 }
 
-/** The short name in a verb's menu, which already says the verb. */
-function menuName(entry: IncomingReactionEntry): string {
-	return featureName(entry) || entry.label || localize(REACTION_VERB_WORDS[reactionVerb(entry)]);
-}
-
-function cost(entry: IncomingReactionEntry): string {
-	return getIncomingReactionCost(entry, reactingActor(entry));
-}
-
 function usedAttribution(entry: IncomingReactionEntry): string {
 	const actorName = reactingActor(entry)?.name ?? '';
 	// Spend offers store their outcome as components, so the sentence is
@@ -57,62 +51,55 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 		: localize('NIMBLE.chat.incomingReactions.redirectedTo', { name: actorName });
 }
 
-/** `getRerolls` gives the card's reroll records, which turn a reroll into "Reroll again". */
+/** `getRerolls` gives the card's reroll records, which turn a reroll into "Reroll Again". */
 export function createIncomingReactionText(getRerolls: () => RerollRecord[]): IncomingReactionText {
-	function label(entry: IncomingReactionEntry): string {
-		if (isRerollAgain(entry, getRerolls())) {
-			return localize('NIMBLE.chat.incomingReactions.rerollAgain', {
-				feature: featureName(entry) || entry.label,
-			});
-		}
-		if (entry.kind === 'reroll') {
-			const key = { reroll: 'rerollWith', change: 'changeWith', crit: 'critWith' }[
-				entry.use ?? 'reroll'
-			];
-			return localize(`NIMBLE.chat.incomingReactions.${key}`, {
-				feature: featureName(entry) || entry.label,
-			});
-		}
-		// Prefer the feature's own name over the rule label, which is written
-		// for the rules builder, not for players.
-		if (entry.kind === 'spendPoolForDamage') {
-			const heading = localize('NIMBLE.chat.incomingReactions.spendPoolForDamage');
-			const name = featureName(entry);
-			return name ? `${heading}: ${name}` : heading;
-		}
-		const heading = localize('NIMBLE.chat.incomingReactions.interpose');
-		return entry.source === 'rule' && entry.label ? `${heading}: ${entry.label}` : heading;
+	function verb(entry: IncomingReactionEntry): string {
+		return localize(
+			isRerollAgain(entry, getRerolls())
+				? 'NIMBLE.chat.incomingReactions.verbs.rerollAgain'
+				: REACTION_VERB_WORDS[reactionVerb(entry)],
+		);
 	}
 
-	function menuItem(entry: IncomingReactionEntry) {
-		const entryCost = cost(entry);
+	function row(entry: IncomingReactionEntry): IncomingReactionRow {
+		const words = verb(entry);
+		// The baseline Interpose is no feature's.
+		const feature = entry.source === 'baseline' ? '' : featureName(entry) || entry.label;
+		const cost = getIncomingReactionCost(entry, reactingActor(entry));
 		const note = (entry.hint ?? '').trim();
-		const sentence = entryCost
-			? localize('NIMBLE.chat.incomingReactions.rerollWithCost', {
-					label: label(entry),
-					cost: entryCost,
-				})
-			: label(entry);
+		const label = feature
+			? localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', { verb: words, feature })
+			: words;
+		const sentence = cost
+			? localize('NIMBLE.chat.incomingReactions.rerollWithCost', { label, cost })
+			: label;
 		return {
-			id: entry.id,
-			label: menuName(entry),
-			cost: entryCost,
-			text: note
+			verb: words,
+			withFeature: feature
+				? localize('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', { feature })
+				: '',
+			cost,
+			note,
+			sentence: note
 				? localize('NIMBLE.chat.incomingReactions.withNote', { text: sentence, note })
 				: sentence,
-			...(note ? { note } : {}),
 		};
+	}
+
+	// The feature's own name, not the rule label, which is written for the rules builder.
+	function spendLabel(entry: IncomingReactionEntry): string {
+		const heading = localize('NIMBLE.chat.incomingReactions.spendPoolForDamage');
+		const name = featureName(entry);
+		return name ? `${heading}: ${name}` : heading;
 	}
 
 	return {
 		reactingActor,
 		documentName,
 		featureName,
-		label,
-		menuName,
-		menuItem,
+		spendLabel,
+		row,
 		icon,
-		cost,
 		usedAttribution,
 	};
 }

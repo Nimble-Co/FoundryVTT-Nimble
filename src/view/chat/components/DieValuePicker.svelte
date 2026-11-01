@@ -133,7 +133,6 @@
 
 <style lang="scss">
 	.nimble-value-picker {
-		grid-column: 1 / -1;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;

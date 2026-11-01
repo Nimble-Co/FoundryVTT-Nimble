@@ -672,7 +672,6 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"incomingReactions": {
-				"heading": "Options",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
 				"rerolledBy": "Attack rerolled by {label}",
@@ -689,26 +688,22 @@
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed.",
-				"rerollWith": "Reroll with {feature}",
-				"changeWith": "Change the die with {feature}",
-				"critWith": "Make the attack a crit with {feature}",
 				"incapacitatedCause": "target {condition}",
 				"incapacitatedFeature": "Target {condition}",
-				"rerollAgain": "Reroll again with {feature}",
-				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
 				"verbs": {
 					"reroll": "Reroll",
-					"change": "Change die",
-					"crit": "Make crit"
+					"rerollAgain": "Reroll Again",
+					"change": "Change Die",
+					"crit": "Make Crit"
 				},
-				"verbCount": "{verb}: {count} features",
+				"changeThisRoll": {
+					"label": "Change This Roll",
+					"count": "({count})",
+					"withFeature": "with {feature}",
+					"sentence": "{verb} with {feature}"
+				},
 				"withNote": "{text}. {note}",
-				"rollMenu": {
-					"change": "Change a die",
-					"crit": "Make it a crit",
-					"choose": "Choose a feature to reroll or change the die"
-				},
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
 				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
@@ -769,8 +764,9 @@
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",
 				"rerollWoundsGained": "Wounds gained: {count}",
-				"costWound": "{count} Wound",
-				"costWounds": "{count} Wounds",
+				"costUsesLeft": "{count} left",
+				"costWound": "Gain {count} Wound",
+				"costWounds": "Gain {count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
 				"costAction": "1 action",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
@@ -2504,7 +2500,7 @@
 				}
 			},
 			"attackOutcome": {
-				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make crit button on the card.",
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make Crit row in Change This Roll on the card.",
 				"form": {
 					"changes": "What changes?",
 					"onlyAttacks": "On which attacks?",

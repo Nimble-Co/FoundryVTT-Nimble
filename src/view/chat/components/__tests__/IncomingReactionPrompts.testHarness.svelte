@@ -10,9 +10,11 @@
 	);
 </script>
 
-<div data-testid="roll-place">
-	<IncomingReactionPrompts place="roll" />
-</div>
-<div data-testid="options-place">
-	<IncomingReactionPrompts place="options" />
+<div class="nimble-chat-card" data-testid="card">
+	<div data-testid="roll-place">
+		<IncomingReactionPrompts place="roll" />
+	</div>
+	<div data-testid="options-place">
+		<IncomingReactionPrompts place="options" />
+	</div>
 </div>

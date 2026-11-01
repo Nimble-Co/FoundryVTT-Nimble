@@ -84,7 +84,6 @@
 
 <style lang="scss">
 	.nimble-reroll-picker {
-		grid-column: 1 / -1;
 		display: flex;
 		flex-direction: column;
 		gap: 0.375rem;

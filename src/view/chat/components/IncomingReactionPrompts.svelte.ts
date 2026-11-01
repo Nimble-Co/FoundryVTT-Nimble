@@ -1,5 +1,4 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type { ChoiceMenuSection } from '#types/components/ChoiceMenu.d.ts';
 import type {
 	IncomingReactionActorGroup,
 	IncomingReactionPicking,
@@ -12,7 +11,6 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
-	RollUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
@@ -21,9 +19,12 @@ import {
 	cardPrimaryRoll,
 	primaryDieBonusNotAdded,
 } from './attackOutcomeTags.ts';
+import { createChangeThisRollState } from './ChangeThisRoll.svelte.ts';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
+import { cardHasDamageSection } from './damageGroup.ts';
 import { createHeldIncomingReactions } from './heldIncomingReactions.svelte.ts';
 import { createIncomingReactionText } from './incomingReactionText.ts';
+import { sortByVerb } from './reactionVerbs.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 import { spendBaselineInterpose } from './spendBaselineInterpose.ts';
@@ -41,8 +42,9 @@ export function createIncomingReactionPromptsState(
 	let busy = $state(false);
 	let picking = $state<IncomingReactionPicking | null>(null);
 
-	const atTheRoll = $derived(getPlace() !== 'options');
-	const showsHistory = $derived(getPlace() === 'roll' || getPlace() === 'rollHistory');
+	const showsHistory = $derived(getPlace() !== 'options');
+	// Every row sits at the card's roll. A card with no damage section has only `options`.
+	const ownsControl = $derived(getPlace() !== 'options' || !cardHasDamageSection(message));
 
 	// Check cards post with no speaker; their roller is in the card data.
 	const speakerUuid = $derived(
@@ -78,10 +80,14 @@ export function createIncomingReactionPromptsState(
 					}))
 			: [],
 	);
-	const placeEntries = $derived(entries.filter((entry) => changesTheRoll(entry) === atTheRoll));
+	const rowEntries = $derived.by(() => {
+		if (!ownsControl) return [];
+		if (getPlace() === 'roll') return entries;
+		return entries.filter((entry) => changesTheRoll(entry) === (getPlace() === 'checkRoll'));
+	});
 	const pendingGroups = $derived(
 		groupByActor(
-			placeEntries.filter(
+			rowEntries.filter(
 				(entry) =>
 					!entry.used &&
 					(!held.has(entry.id) || picking?.entry.id === entry.id) &&
@@ -89,9 +95,12 @@ export function createIncomingReactionPromptsState(
 			),
 		),
 	);
+	const rowCount = $derived(
+		pendingGroups.reduce((total, group) => total + group.entries.length, 0),
+	);
 	// A used reroll is told by the card's history line, not by its entry.
 	const usedEntries = $derived(
-		placeEntries.filter((entry) => entry.used && entry.kind !== 'reroll'),
+		getPlace() === 'options' ? entries.filter((entry) => entry.used && !changesTheRoll(entry)) : [],
 	);
 	const historyLines = $derived(
 		showsHistory
@@ -134,23 +143,6 @@ export function createIncomingReactionPromptsState(
 				})[0]
 			: null,
 	);
-	// The roll row's icon menu: the rerolls, then the changes, each under its heading.
-	const rollMenu = $derived.by<ChoiceMenuSection[]>(() => {
-		if (getPlace() !== 'rollButton') return [];
-		const pending = pendingGroups.flatMap((group) => group.entries);
-		const section = (id: RollUse, heading: string) => ({
-			id,
-			heading: localize(heading),
-			items: pending
-				.filter((entry) => (entry.use ?? 'reroll') === id)
-				.map((entry) => ({ ...text.menuItem(entry), icon: text.icon(entry) })),
-		});
-		return [
-			section('reroll', 'NIMBLE.chat.incomingReactions.verbs.reroll'),
-			section('change', 'NIMBLE.chat.incomingReactions.rollMenu.change'),
-			section('crit', 'NIMBLE.chat.incomingReactions.rollMenu.crit'),
-		].filter((menuSection) => menuSection.items.length > 0);
-	});
 	const primaryOutcome = $derived.by<DieOutcome>(() => {
 		const system = message?.reactive?.system as
 			| { isCritical?: boolean; isMiss?: boolean }
@@ -165,6 +157,14 @@ export function createIncomingReactionPromptsState(
 		if (!current?.sent) return;
 		const stored = storedEntries.find((entry) => entry.id === current.entry.id);
 		if (!stored || stored.used || !held.has(current.entry.id)) picking = null;
+	});
+
+	// A row can go away by a click, by a new draw, or by another client's update.
+	$effect(() => {
+		void rowCount;
+		void picking;
+		void control.open;
+		if (ownsControl) control.restoreFocus();
 	});
 
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
@@ -192,7 +192,7 @@ export function createIncomingReactionPromptsState(
 			}
 			group.entries.push(entry);
 		}
-		return [...groups.values()];
+		return [...groups.values()].map((group) => ({ ...group, entries: sortByVerb(group.entries) }));
 	}
 
 	async function useSpendOffer(entry: IncomingReactionEntry): Promise<void> {
@@ -200,7 +200,7 @@ export function createIncomingReactionPromptsState(
 		if (!actor) return;
 		await requestPoolSpendOffer(entry, {
 			actor,
-			label: text.label(entry),
+			label: text.spendLabel(entry),
 			messageId: message?.id ?? '',
 			hold: held.hold,
 		});
@@ -324,14 +324,22 @@ export function createIncomingReactionPromptsState(
 		}
 	}
 
-	function useEntryById(entryId: string): void {
-		const entry = entries.find((candidate) => candidate.id === entryId);
-		if (entry) useEntry(entry);
-	}
+	const control = createChangeThisRollState(message, () => ({
+		count: rowCount,
+		picking,
+		useEntry,
+		pickDie,
+		pickValue,
+		cancelPick,
+	}));
 
 	return {
 		held,
 		text,
+		control,
+		get ownsControl() {
+			return ownsControl;
+		},
 		get busy() {
 			return busy;
 		},
@@ -368,16 +376,8 @@ export function createIncomingReactionPromptsState(
 		get pendingLine() {
 			return pendingLine;
 		},
-		get rollMenu() {
-			return rollMenu;
-		},
 		get primaryOutcome() {
 			return primaryOutcome;
 		},
-		useEntry,
-		useEntryById,
-		pickDie,
-		pickValue,
-		cancelPick,
 	};
 }

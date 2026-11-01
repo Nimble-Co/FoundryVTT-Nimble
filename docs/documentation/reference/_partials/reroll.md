@@ -1,4 +1,4 @@
-The Reroll rule lets a creature discard a roll and roll it again. By default the new result stands. **Which roll can it reroll?** picks one or more of Attack, Save, Skill Check and Ability Check. **Who can use it?** picks the side: the one who rolled, the target of the attack, or an ally of the one who rolled. When the roll matches, the feature shows in the **Reroll** menu on the card, for the feature's owner and the GM. The menu shows the cost, and the feature is gone when it has no uses left. See [Anatomy of a chat card](../playing/dice-and-chat.md#anatomy-of-a-chat-card) for what the card shows after a reroll.
+The Reroll rule lets a creature discard a roll and roll it again. By default the new result stands. **Which roll can it reroll?** picks one or more of Attack, Save, Skill Check and Ability Check. **Who can use it?** picks the side: the one who rolled, the target of the attack, or an ally of the one who rolled. When the roll matches, the feature shows as a **Reroll** row in **Change This Roll** on the card, for the feature's owner and the GM. The menu shows the cost, and the feature is gone when it has no uses left. See [Anatomy of a chat card](../playing/dice-and-chat.md#anatomy-of-a-chat-card) for what the card shows after a reroll.
 
 **Example: Wily.** Force an enemy to reroll a non-critical attack against you, 1/encounter.
 
@@ -24,9 +24,9 @@ The feature shows only while the condition holds, and its cost reads "1 Wound". 
 
 **Saves and checks.** With Save chosen, **Which saves?** limits the rule to the saves you pick. With Skill Check chosen, **Which skills?** does the same for skills, and with Ability Check chosen, **Which abilities?** does it for abilities. None picked means any. A save or a check has no target, so only the one who rolled can use the rule on it. The rule does not know the DC: the feature shows on every matching roll, and the player decides. The fields for attacks (**The first roll is**, **Attack type**, **Only when the other creature is**, **Only once per attack**, **Add to the Primary Die**, **Extra damage** and the discarded crit) show only when Attack is chosen, and they apply to attacks only.
 
-**Cost** can also spend mana or a heroic reaction. A heroic reaction is spent only in combat, and the player confirms on the click when the combat would normally not let them use it. With the **Costs** toggle off, only the heroic reaction is spent, and the menu shows only that cost.
+**Cost** can also spend mana or a heroic reaction. A heroic reaction is spent only in combat, and the player confirms on the click when the combat would normally not let them use it. With the **Costs** toggle off, only the heroic reaction is spent, and the row shows only that cost.
 
-After a reroll, a feature with uses left stays in the **Reroll** menu of the same card, and its sentence starts with "Reroll again with". Set **Only once per attack** to stop this: the feature then rerolls an attack one time only.
+After a reroll, a feature with uses left keeps its row on the same card, and the row says **Reroll Again**. Set **Only once per attack** to stop this: the feature then rerolls an attack one time only.
 
 **Changes to the new roll** add to the reroll: one more advantage or disadvantage, a number added to the Primary Die, or extra damage. The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too.
 
@@ -62,4 +62,4 @@ The use limit is a Charge Pool rule with **Max charges** `max(2 * @will, 0)` and
 
 **Action cost** `1 action` makes a use cost 1 action, for a hero in combat only. On their own turn, the hero spends it at once, and the feature does not show when they have no actions left. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction, so it has no 1/round limit. Out of combat, nothing is spent. With the **Costs** toggle off, nothing is spent or checked.
 
-**Note on the card** puts a short note under the feature in the menu, such as a limit that the table checks ("Your 2nd miss this round"). **Show the note only when** shows the note only when its tags match, with the same test as **Only when the other creature is**. Empty means on every roll.
+**Note on the card** puts a short note under the feature in its row, such as a limit that the table checks ("Your 2nd miss this round"). **Show the note only when** shows the note only when its tags match, with the same test as **Only when the other creature is**. Empty means on every roll.
