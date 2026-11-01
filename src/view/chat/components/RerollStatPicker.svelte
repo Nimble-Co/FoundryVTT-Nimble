@@ -3,13 +3,20 @@
 
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { claimEscape } from './claimEscape.ts';
 	import { statChoiceLabel } from './resultChangeLines.ts';
 
-	let { stats, feature, sending = false, onpick }: RerollStatPickerProps = $props();
+	let { stats, feature, sending = false, onpick, oncancel }: RerollStatPickerProps = $props();
 
+	const titleId = $props.id();
 	let buttons = $state<HTMLButtonElement[]>([]);
 
 	function onKeydown(event: KeyboardEvent): void {
+		if (sending) return;
+		if (claimEscape(event)) {
+			oncancel();
+			return;
+		}
 		const current = buttons.indexOf(event.target as HTMLButtonElement);
 		if (current === -1) return;
 		const last = buttons.length - 1;
@@ -32,31 +39,76 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div
-	class="nimble-reroll-stats"
-	role="group"
-	aria-label={localize('NIMBLE.chat.incomingReactions.pickStat.title', { feature })}
-	onkeydown={onKeydown}
->
-	{#each stats as choice, index (choice.stat)}
-		<button
-			bind:this={buttons[index]}
-			class="nimble-reroll-stats__stat"
-			type="button"
-			disabled={sending}
-			onclick={() => onpick(choice.stat)}
-		>
-			{statChoiceLabel(choice)}
-		</button>
-	{/each}
+<div class="nimble-reroll-stats" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
+	<div class="nimble-reroll-stats__head">
+		<span id={titleId} class="nimble-reroll-stats__title">
+			{localize('NIMBLE.chat.incomingReactions.pickStat.title', { feature })}
+		</span>
+		{#if !sending}
+			<button
+				class="nimble-reroll-stats__cancel nimble-u-unstyled-button"
+				type="button"
+				onclick={oncancel}
+			>
+				{localize('NIMBLE.chat.incomingReactions.pickDie.cancel')}
+			</button>
+		{/if}
+	</div>
+
+	<div class="nimble-reroll-stats__stats">
+		{#each stats as choice, index (choice.stat)}
+			<button
+				bind:this={buttons[index]}
+				class="nimble-reroll-stats__stat"
+				type="button"
+				disabled={sending}
+				onclick={() => onpick(choice.stat)}
+			>
+				{statChoiceLabel(choice)}
+			</button>
+		{/each}
+	</div>
 </div>
 
 <style lang="scss">
 	.nimble-reroll-stats {
 		display: flex;
+		flex-direction: column;
 		gap: 0.1875rem;
 		padding: 0.125rem 0.5rem 0.25rem;
 		scroll-margin-block-end: var(--nimble-chat-scroll-clearance);
+
+		&__head {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			font-size: var(--nimble-sm-text);
+		}
+
+		&__title {
+			flex: 1;
+			min-width: 0;
+			font-weight: 600;
+		}
+
+		&__cancel {
+			flex: none;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			text-decoration: underline;
+			text-underline-offset: 2px;
+			cursor: pointer;
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-input-border-color);
+				outline-offset: 1px;
+			}
+		}
+
+		&__stats {
+			display: flex;
+			gap: 0.1875rem;
+		}
 
 		&__stat {
 			flex: 1;

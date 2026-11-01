@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { getInitiativeStartingActions } from '../../combat/initiativeStartingActions.js';
-import type { ResultChange } from '../../incomingReactions/incomingReactionEntry.js';
 import { checkResultOfCard } from '../checkResult.js';
 import { startingActionsAfterUse, startingActionsOfCard } from '../initiativeCard.js';
 

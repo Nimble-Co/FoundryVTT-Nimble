@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ResultCardView, ResultChange } from '#types/resultChange.d.ts';
 import { Predicate } from '../../../etc/Predicate.js';
-import type {
-	ResultCardView,
-	ResultChange,
-} from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import { ChangeResultRule } from '../changeResult.js';
 
 type FieldLike = {

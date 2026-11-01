@@ -1,12 +1,11 @@
+import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import type {
-	IncomingReactionEntry,
-	ResultChange,
-	ResultUse,
-} from '../incomingReactions/incomingReactionEntry.js';
+import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import type { RollToReroll } from '../reroll/rollToReroll.js';
 
 const NATURAL_20 = 20;
+/** A total at or under this can count as a natural 20. */
+const LOW_RESULT = 1;
 
 interface NaturalRuleLike {
 	id?: string;
@@ -94,7 +93,7 @@ function naturalResultChange(input: {
 	keptD20: number | null;
 }): ResultChange | null {
 	const { rollTotal, keptD20 } = input;
-	if (keptD20 === null || rollTotal > 1 || !isRuleAutomationEnabled()) return null;
+	if (keptD20 === null || rollTotal > LOW_RESULT || !isRuleAutomationEnabled()) return null;
 	const rules = Array.isArray(input.roller?.rules) ? input.roller.rules : [];
 	const rule = (rules as NaturalRuleLike[]).find((each) => each?.countsAsNat20On?.(input.roll));
 	if (!rule) return null;
@@ -119,6 +118,8 @@ function naturalResultChange(input: {
 }
 
 export {
+	LOW_RESULT,
+	NATURAL_20,
 	naturalResultChange,
 	newResultChange,
 	resultChangesOf,

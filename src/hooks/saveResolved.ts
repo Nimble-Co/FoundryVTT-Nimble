@@ -1,6 +1,7 @@
 import { systemHookName } from '#system';
-import { isActiveGM } from '../utils/isActiveGM.js';
-import { type CheckResult, checkResultOfCard } from '../utils/rolls/checkResult.js';
+import type { CheckResult } from '#types/checkResult.d.ts';
+import { isActiveGM } from '#utils/isActiveGM.js';
+import { checkResultOfCard } from '#utils/rolls/checkResult.js';
 import type { NimbleSavePayload } from './ruleEventDispatch.js';
 
 interface SaveCardSystem extends Record<string, unknown> {

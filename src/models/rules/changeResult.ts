@@ -1,26 +1,23 @@
+import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	RESULT_CHANGES,
 	type RerollTrigger,
-	type ResultCardView,
 	type ResultChangeKind,
-	type ResultUse,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollRollKind, RollToReroll, RollUseKind } from '../../utils/reroll/rollToReroll.js';
-import { standingResultChanges } from '../../utils/rolls/resultChanges.js';
+import { LOW_RESULT, NATURAL_20, standingResultChanges } from '../../utils/rolls/resultChanges.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, type RollUseContext, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const CHECK_ROLLS = ['save', 'skillCheck', 'abilityCheck'] as const satisfies RerollRollKind[];
-const NATURAL_20 = 20;
-const LOW_RESULT = 1;
 
 const usesFormula = (data: Record<string, unknown>) =>
 	data.change === 'setTotal' || data.change === 'add';
-const waitsForFailed = (data: Record<string, unknown>) =>
+const changeHasOutcomeChoice = (data: Record<string, unknown>) =>
 	(data.change ?? 'succeed') === 'succeed' || data.change === 'add';
 
 function schema() {
@@ -90,7 +87,7 @@ function schema() {
 				choices: choiceLabels('changeResult', 'outcome', ['failed', 'always']),
 				label: 'NIMBLE.rules.changeResult.outcome.label',
 				hint: 'NIMBLE.rules.changeResult.outcome.hint',
-				showWhen: waitsForFailed,
+				showWhen: changeHasOutcomeChoice,
 			}),
 		),
 		...cost,
@@ -152,7 +149,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 	}
 
 	protected override waitsForFailure(): boolean {
-		return waitsForFailed({ change: this.change }) && this.outcome === 'failed';
+		return changeHasOutcomeChoice({ change: this.change }) && this.outcome === 'failed';
 	}
 
 	/** A row for no damage needs a hit: a miss deals none. */

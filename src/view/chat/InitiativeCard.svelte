@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { InitiativeCardProps } from '#types/components/InitiativeCard.d.ts';
 
-	import localize from '#utils/localize.js';
-	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
+
+	import localize from '#utils/localize.js';
+	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import { startingActionsLine } from './components/initiativeCardText.ts';
 
 	const { messageDocument }: InitiativeCardProps = $props();

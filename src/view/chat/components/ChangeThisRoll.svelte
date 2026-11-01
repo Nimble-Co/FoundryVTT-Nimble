@@ -65,7 +65,7 @@
 								type="button"
 								data-entry-id={entry.id}
 								aria-label={row.sentence}
-								aria-expanded={pickingHere ? true : undefined}
+								aria-expanded={pickingHere ? true : control.opensPicker(entry) ? false : undefined}
 								disabled={busy || !!picking?.rolling}
 								onclick={() => control.useEntry(entry)}
 							>

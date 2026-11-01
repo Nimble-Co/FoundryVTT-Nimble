@@ -4,7 +4,9 @@ import type {
 	IncomingReactionPicking,
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
+import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import {
 	requestIncomingAttackReaction,
 	requestResultRemoval,
@@ -14,7 +16,6 @@ import type {
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
-	ResultChange,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import { resultChangesOf } from '#utils/rolls/resultChanges.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
@@ -33,7 +34,7 @@ import { initiativeRowGain } from './initiativeCardText.ts';
 import { sortByVerb } from './reactionVerbs.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
-import { type ResultChangeLine, resultChangeLines, resultSumText } from './resultChangeLines.ts';
+import { resultChangeLines, resultSumText } from './resultChangeLines.ts';
 import { spendBaselineInterpose } from './spendBaselineInterpose.ts';
 
 function changesTheRoll(entry: IncomingReactionEntry): boolean {
@@ -264,36 +265,49 @@ export function createIncomingReactionPromptsState(
 		});
 	}
 
-	async function useReroll(entry: IncomingReactionEntry): Promise<void> {
+	function rerollPicker(entry: IncomingReactionEntry): IncomingReactionPicking | null {
 		const stats = message?.rerollStatsToPick?.(entry) ?? null;
-		if (stats?.length) {
-			picking = { entry, dice: [], stats, rolling: null, sent: false };
-			return;
-		}
+		if (stats?.length) return { entry, dice: [], stats, rolling: null, sent: false };
 		const dice = message?.rerollDiceToPick?.(entry) ?? null;
-		if (dice && dice.length > 1) {
-			picking = { entry, dice, rolling: null, sent: false };
-			return;
-		}
-		await sendReroll(entry, dice?.[0] ?? null);
+		return dice && dice.length > 1 ? { entry, dice, rolling: null, sent: false } : null;
 	}
 
 	/** A change picks its die, then its value when the rule sets one; an add with one die goes at once. */
-	async function useChange(entry: IncomingReactionEntry): Promise<void> {
+	function changePicker(entry: IncomingReactionEntry): IncomingReactionPicking | null {
 		const pick = message?.changeToPick?.(entry) ?? null;
 		const dice = pick?.dice ?? [];
-		if (pick && (dice.length > 1 || (pick.setsValue && dice.length === 1))) {
-			picking = {
-				entry,
-				dice,
-				rolling: null,
-				sent: false,
-				setsValue: pick.setsValue,
-				valueDie: dice.length === 1 ? dice[0] : null,
-			};
+		if (!pick || !(dice.length > 1 || (pick.setsValue && dice.length === 1))) return null;
+		return {
+			entry,
+			dice,
+			rolling: null,
+			sent: false,
+			setsValue: pick.setsValue,
+			valueDie: dice.length === 1 ? dice[0] : null,
+		};
+	}
+
+	function opensPicker(entry: IncomingReactionEntry): boolean {
+		if (entry.kind !== 'reroll' || entry.use === 'crit' || entry.use === 'result') return false;
+		return (entry.use === 'change' ? changePicker(entry) : rerollPicker(entry)) !== null;
+	}
+
+	async function useReroll(entry: IncomingReactionEntry): Promise<void> {
+		const opened = rerollPicker(entry);
+		if (opened) {
+			picking = opened;
 			return;
 		}
-		await sendReroll(entry, dice[0] ?? null);
+		await sendReroll(entry, message?.rerollDiceToPick?.(entry)?.[0] ?? null);
+	}
+
+	async function useChange(entry: IncomingReactionEntry): Promise<void> {
+		const opened = changePicker(entry);
+		if (opened) {
+			picking = opened;
+			return;
+		}
+		await sendReroll(entry, message?.changeToPick?.(entry)?.dice[0] ?? null);
 	}
 
 	/** Ask for the reroll or change. False when the player said no to the heroic reaction. */
@@ -408,6 +422,7 @@ export function createIncomingReactionPromptsState(
 	const control = createChangeThisRollState(message, () => ({
 		count: rowCount,
 		picking,
+		opensPicker,
 		useEntry,
 		pickDie,
 		pickValue,

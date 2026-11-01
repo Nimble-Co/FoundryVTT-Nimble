@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
-import type {
-	IncomingReactionEntry,
-	ResultChange,
-} from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type { IncomingReactionEntry } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { checkResultOfCard } from '../../utils/rolls/checkResult.js';
 import { resultTotal } from '../../utils/rolls/resultChanges.js';

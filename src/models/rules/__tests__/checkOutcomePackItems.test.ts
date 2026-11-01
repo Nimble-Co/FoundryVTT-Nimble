@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { ResultCardView } from '#types/resultChange.d.ts';
 import { Predicate } from '../../../etc/Predicate.js';
-import type { ResultCardView } from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RollToReroll } from '../../../utils/reroll/rollToReroll.js';
 import { ChangeResultRule } from '../changeResult.js';
 import { ModifyRerollRule } from '../modifyReroll.js';

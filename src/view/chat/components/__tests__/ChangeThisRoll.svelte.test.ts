@@ -24,6 +24,7 @@ function control(card: never, count = 2) {
 	return createChangeThisRollState(card, () => ({
 		count,
 		picking: null,
+		opensPicker: vi.fn(() => false),
 		useEntry: vi.fn(async () => undefined),
 		pickDie: vi.fn(async () => undefined),
 		pickValue: vi.fn(async () => undefined),

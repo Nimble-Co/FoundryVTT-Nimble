@@ -2,10 +2,10 @@ import type {
 	IncomingReactionRow,
 	IncomingReactionText,
 } from '#types/components/IncomingReactionPrompts.d.ts';
+import type { ResultUse } from '#types/resultChange.d.ts';
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
-	ResultUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '../../../utils/localize.js';
@@ -72,8 +72,8 @@ function resultVerb(use: ResultUse): string {
  */
 export function createIncomingReactionText(
 	getRerolls: () => RerollRecord[],
-	resultUseOf: (entry: IncomingReactionEntry) => ResultUse | null = () => null,
-	gainOf: (entry: IncomingReactionEntry) => string = () => '',
+	resultUseOf: (entry: IncomingReactionEntry) => ResultUse | null,
+	gainOf: (entry: IncomingReactionEntry) => string,
 ): IncomingReactionText {
 	function verb(entry: IncomingReactionEntry): string {
 		const use = entry.use === 'result' ? resultUseOf(entry) : null;

@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { RollStat, StatChoice } from '#types/rollStat.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	type RecoveryTriggerChange,
@@ -36,7 +37,7 @@ import {
 } from './rerollEntries.js';
 import { withoutCannotMiss } from './rerollOptions.js';
 import type { PreparedReroll, RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
-import { ROLL_STATS, type StatChoice, statsInFormula, swapStatInFormula } from './rollStat.js';
+import { ROLL_STATS, statsInFormula, swapStatInFormula } from './rollStat.js';
 
 /** The fields of an activation card's system data that a reroll reads. */
 interface DamageCardSystem {
@@ -165,10 +166,9 @@ function damageRollContext(
 }
 
 /** The stat a new attack swaps out: the rule's stat when the formula has it, else its first. */
-function statToSwap(formula: string, limit: string | undefined): string | null {
+function statToSwap(formula: string, limit: string | undefined): RollStat | null {
 	const stats = statsInFormula(formula);
-	if (limit && stats.includes(limit as (typeof stats)[number])) return limit;
-	return stats[0] ?? null;
+	return stats.find((stat) => stat === limit) ?? stats[0] ?? null;
 }
 
 function attackStatChoices(
@@ -383,7 +383,8 @@ function primaryDamageReroll(
 		withStat: (target, stat, limit) => {
 			if (!attackStatChoices(previous, limit).some((choice) => choice.stat === stat)) return null;
 			const formula = previous.originalFormula ?? previous.formula ?? '';
-			const from = statToSwap(formula, limit) as string;
+			const from = statToSwap(formula, limit);
+			if (!from) return null;
 			return {
 				...target,
 				replaced: { ...target.replaced, originalFormula: swapStatInFormula(formula, from, stat) },

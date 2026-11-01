@@ -1,4 +1,4 @@
-The Make It a Crit rule puts a **Make Crit** row in **Change This Roll** on an attack card. A click makes the attack a crit: the Primary Die keeps its face and the crit dice are rolled. The crit stays for the card, so a later reroll or change alters only the damage dice. See [Making an attack a crit](../playing/dice-and-chat.md#making-an-attack-a-crit) for what the player sees.
+The Make It a Crit rule puts a **Make It a Crit** row in **Change This Roll** on an attack card. A click makes the attack a crit: the Primary Die keeps its face and the crit dice are rolled. The crit stays for the card, so a later reroll or change alters only the damage dice. See [Making an attack a crit](../playing/dice-and-chat.md#making-an-attack-a-crit) for what the player sees.
 
 **Who can use it?** is **The one who rolled**, **The target** or **An ally**. **The attack is** picks **Any result**, **A hit** or **A miss**. An attack that is already a crit has no button, and neither does an attack with 2 or more targets, an area attack, or a roll that cannot crit.
 

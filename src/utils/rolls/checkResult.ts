@@ -1,9 +1,8 @@
-import type { ResultChange } from '../incomingReactions/incomingReactionEntry.ts';
+import type { CheckResult } from '#types/checkResult.d.ts';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { checkRollOfCard, keptD20 } from '../reroll/checkRollOfCard.ts';
 import type { CheckRollKind } from '../reroll/rollToReroll.ts';
 import { resultChangesOf, resultTotal, standingResultChanges } from './resultChanges.ts';
-
-type CheckResult = 'failed' | 'succeeded';
 
 /**
  * The result of a check card, or null when nothing settles it. A total that
@@ -71,4 +70,4 @@ function checkResultOfCard(
 	});
 }
 
-export { checkResult, checkResultOfCard, resultOfCheckRoll, type CheckResult };
+export { checkResult, checkResultOfCard, resultOfCheckRoll };

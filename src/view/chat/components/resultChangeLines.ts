@@ -1,26 +1,10 @@
-import type { ResultChange, ResultUse } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
+import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 
 import localize from '#utils/localize.js';
-import { resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
+import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
 
 const TRUE_MINUS = '−';
-
-/** One history line of Change a Result. Repeats of one add are one line. */
-interface ResultChangeLine {
-	/** The line id of its clicks, which Remove asks for. */
-	id: string;
-	/** What it did: "Added +6 STR, Gained 2 Wounds". */
-	verb: string;
-	/** "with Mighty Soul". */
-	withFeature: string;
-	/** The line as a sentence, for its Remove button. */
-	sentence: string;
-	/** Who used it, when not the one who rolled. */
-	detail: string | null;
-	/** A new roll took it off: the line stays, with no Remove. */
-	retired: boolean;
-	canRemove: boolean;
-}
 
 interface ResultChangeLinesInput {
 	changes: readonly ResultChange[];
@@ -29,8 +13,6 @@ interface ResultChangeLinesInput {
 	documentName: (uuid: string) => string | null | undefined;
 	canRemove: (actorUuid: string, change: ResultChange) => boolean;
 }
-
-const NATURAL_20 = 20;
 
 function signedWithTrueMinus(value: number): string {
 	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : `+${value}`;
@@ -177,11 +159,4 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 	return text;
 }
 
-export {
-	resultAmount,
-	resultChangeLines,
-	resultSumText,
-	type ResultChangeLine,
-	statAbbreviation,
-	statChoiceLabel,
-};
+export { resultAmount, resultChangeLines, resultSumText, statAbbreviation, statChoiceLabel };

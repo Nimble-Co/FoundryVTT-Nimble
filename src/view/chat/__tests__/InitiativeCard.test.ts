@@ -10,6 +10,9 @@ vi.mock('#utils/incomingReactions/incomingAttackReactions.js', () => ({
 }));
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import { CHECK_ROLL_SLOT } from '#utils/reroll/checkCardRollTarget.ts';
+import { startRerollRolling, stopRerollRolling } from '#utils/reroll/rerollRolling.svelte.ts';
 import InitiativeCard from '../InitiativeCard.svelte';
 
 type Globals = Record<string, any>;
@@ -149,6 +152,21 @@ afterEach(() => {
 });
 
 describe('the small line of an Initiative card', () => {
+	it('stays hidden while the dice are in the air', async () => {
+		const message = createMessage({ incomingReactions: [] });
+		const noteOf = () => screen.getByText('Start with 1 action');
+		renderCard(message);
+		expect(noteOf().classList.contains('roll__note--hidden')).toBe(false);
+
+		startRerollRolling(message.id, { slot: CHECK_ROLL_SLOT, faces: 20 });
+		await tick();
+		expect(noteOf().classList.contains('roll__note--hidden')).toBe(true);
+
+		stopRerollRolling(message.id);
+		await tick();
+		expect(noteOf().classList.contains('roll__note--hidden')).toBe(false);
+	});
+
 	it.each([
 		[5, 7, 'Start with 1 action'],
 		[12, 14, 'Start with 2 actions'],

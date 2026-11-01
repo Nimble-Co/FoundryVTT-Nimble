@@ -1,14 +1,14 @@
+import type { ResultChange } from '#types/resultChange.d.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 import type { OneDieRoll } from '../../dice/oneDieReroll.js';
 import type {
 	IncomingReactionEntry,
 	KeepChoiceRoll,
-	ResultChange,
 	RollChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollRollContext } from './rerollEntries.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { ReplacedRoll, RerollHistory, RolledDie } from './rerollStep.js';
-import type { StatChoice } from './rollStat.js';
 
 /**
  * The part of a card reroll that changes with the kind of card. The card's

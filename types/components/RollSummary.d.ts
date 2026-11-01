@@ -1,4 +1,4 @@
-import type { CheckResult } from '../../src/utils/rolls/checkResult.ts';
+import type { CheckResult } from '#types/checkResult.d.ts';
 import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 
 export interface RollSummaryOptions {

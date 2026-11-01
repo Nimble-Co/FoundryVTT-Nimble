@@ -61,12 +61,12 @@
 
 	{#if checkResult || note}
 		<span class="roll__subheading roll__subheading--pieces">
+			<!-- Hidden while the dice are in the air, so they cannot tell the result early. -->
 			{#if note}
-				<span>{note}</span>
+				<span class:roll__note--hidden={rolling}>{note}</span>
 			{/if}
 
 			{#if checkResult}
-				<!-- Hidden while the dice are in the air, so it cannot tell the result early. -->
 				<span
 					class="roll__result"
 					class:roll__result--failed={checkResult.result === 'failed'}
@@ -212,6 +212,10 @@
 			&--hidden {
 				visibility: hidden;
 			}
+		}
+
+		&__note--hidden {
+			visibility: hidden;
 		}
 
 		&__total {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import type { ResultChange } from '../../incomingReactions/incomingReactionEntry.js';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { checkResultOfCard } from '../checkResult.js';
 import {
 	naturalResultChange,

@@ -1,4 +1,4 @@
-import type { ResultUse } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { ResultUse } from '#types/resultChange.d.ts';
 
 import localize from '#utils/localize.js';
 import { startingActionsAfterUse, startingActionsOfCard } from '#utils/rolls/initiativeCard.ts';

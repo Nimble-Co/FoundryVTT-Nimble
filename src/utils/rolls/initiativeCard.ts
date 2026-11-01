@@ -1,8 +1,9 @@
-import { getInitiativeStartingActions } from '../combat/initiativeStartingActions.js';
-import type { ResultChange, ResultUse } from '../incomingReactions/incomingReactionEntry.js';
-import { type AnyRoll, checkCardRerollData } from '../reroll/checkCardRollTarget.js';
-import { keptD20 } from '../reroll/checkRollOfCard.js';
-import type { RerollingActor } from '../reroll/rerollEntries.js';
+import type { AnyRoll } from '#types/anyRoll.d.ts';
+import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
+import { getInitiativeStartingActions } from '#utils/combat/initiativeStartingActions.js';
+import { checkCardRerollData } from '#utils/reroll/checkCardRollTarget.js';
+import { keptD20 } from '#utils/reroll/checkRollOfCard.js';
+import type { RerollingActor } from '#utils/reroll/rerollEntries.js';
 import { resultTotal, standingResultChanges } from './resultChanges.js';
 
 interface CardRoll {

@@ -1,10 +1,8 @@
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { NimbleRoll } from '../../../dice/NimbleRoll.js';
-import type {
-	IncomingReactionEntry,
-	ResultChange,
-} from '../../incomingReactions/incomingReactionEntry.js';
+import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
 import {
 	type CheckCard,
 	checkCardRerollData,

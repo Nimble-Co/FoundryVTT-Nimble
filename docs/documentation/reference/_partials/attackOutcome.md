@@ -13,7 +13,7 @@ The Attack Outcome rule changes how an attack roll is read when it is made. Ther
 
 When several rules apply, any "cannot miss" wins, the largest crit range wins, and an "always" crit beats one on a hit. An attack with 2 or more targets, an area attack and a roll that cannot crit take no crit change. A target's forced miss beats every crit from this rule.
 
-With **Feature Effects** off, "cannot miss" and the crit range still apply. A rule that gives a crit becomes a **Make Crit** row in **Change This Roll** on the card.
+With **Feature Effects** off, "cannot miss" and the crit range still apply. A rule that gives a crit becomes a **Make It a Crit** row in **Change This Roll** on the card.
 
 **Example: Deathbringer's Touch.** Your first melee attack each round against a Bloodied creature is an automatic critical hit.
 

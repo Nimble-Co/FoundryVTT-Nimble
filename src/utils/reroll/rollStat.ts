@@ -1,13 +1,7 @@
+import type { RollStat } from '#types/rollStat.d.ts';
 import type { RollToReroll } from './rollToReroll.js';
 
 const ROLL_STATS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
-type RollStat = (typeof ROLL_STATS)[number];
-
-/** One stat a player can pick for a new roll, with the modifier it gives. */
-interface StatChoice {
-	stat: string;
-	mod: number;
-}
 
 const statReference = (stat: string) => new RegExp(`@${stat}(?![\\w.])`, 'g');
 
@@ -50,12 +44,4 @@ function moveLabelledModifier(formula: string, from: string, to: string, delta: 
 	return formula.replace(part, value === 0 ? '' : ` ${signedPart(value, to)}`);
 }
 
-export {
-	moveLabelledModifier,
-	ROLL_STATS,
-	type RollStat,
-	type StatChoice,
-	statsInFormula,
-	statsOfRoll,
-	swapStatInFormula,
-};
+export { moveLabelledModifier, ROLL_STATS, statsInFormula, statsOfRoll, swapStatInFormula };

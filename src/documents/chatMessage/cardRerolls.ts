@@ -1,5 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { DieChange } from '#types/dieChange.d.ts';
+import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_GIVEN_FLAG,
@@ -20,8 +22,6 @@ import type {
 	RerollKeep,
 	RerollKept,
 	RerollRecord,
-	ResultChange,
-	ResultUse,
 	RollChange,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
@@ -61,7 +61,6 @@ import { cannotMissOptions } from '#utils/reroll/rerollOptions.js';
 import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollTarget.js';
 import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
-import type { StatChoice } from '#utils/reroll/rollStat.js';
 import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
 import {
 	newResultChange,
@@ -795,9 +794,9 @@ export class CardRerolls {
 			isMiss?: boolean;
 		};
 		// A check that cannot fail, or a miss that cannot stand, has one result to keep: the new roll.
-		const decided = rollKind === 'attack' ? null : modifier;
+		const cannotFail = rollKind === 'attack' ? null : modifier;
 		const chooserUuid =
-			decided || (cannotMiss && systemData.isMiss)
+			cannotFail || (cannotMiss && systemData.isMiss)
 				? ''
 				: this.#keepChooser(usable.rule.keep, entry, rollTarget);
 		const result = await rerollWithRule({
@@ -821,7 +820,7 @@ export class CardRerolls {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
-					...(decided ? { resultChange: cannotFailChange(entry, decided) } : {}),
+					...(cannotFail ? { resultChange: cannotFailChange(entry, cannotFail) } : {}),
 				});
 			},
 		});

@@ -17,6 +17,8 @@ interface ChangeThisRollInput {
 	/** The rows this user can click. */
 	count: number;
 	picking: IncomingReactionPicking | null;
+	/** Whether a click on this row opens a choice under it. */
+	opensPicker: (entry: IncomingReactionEntry) => boolean;
 	useEntry: (entry: IncomingReactionEntry) => Promise<void>;
 	pickDie: (die: PickableDie) => Promise<void>;
 	pickValue: (value: number) => Promise<void>;
@@ -182,6 +184,7 @@ export function createChangeThisRollState(
 		toggle,
 		onKeydown,
 		expectFocusLoss,
+		opensPicker: (entry: IncomingReactionEntry) => getInput().opensPicker(entry),
 		useEntry,
 		pickDie,
 		pickValue,

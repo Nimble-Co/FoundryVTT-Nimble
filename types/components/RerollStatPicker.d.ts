@@ -1,4 +1,4 @@
-import type { StatChoice } from '#utils/reroll/rollStat.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 
 export interface RerollStatPickerProps {
 	stats: StatChoice[];
@@ -6,4 +6,5 @@ export interface RerollStatPickerProps {
 	/** The request for the picked stat is out. */
 	sending?: boolean;
 	onpick: (stat: string) => void;
+	oncancel: () => void;
 }

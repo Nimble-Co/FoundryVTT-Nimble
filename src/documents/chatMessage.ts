@@ -4,6 +4,8 @@ import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
+import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackDelivery,
@@ -49,12 +51,9 @@ import {
 	type PendingKeep,
 	type RerollKept,
 	type RerollRecord,
-	type ResultChange,
-	type ResultUse,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
-import type { StatChoice } from '../utils/reroll/rollStat.js';
 import { resultChangesOf, standingResultChanges } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import {

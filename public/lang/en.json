@@ -700,7 +700,7 @@
 					"reroll": "Reroll",
 					"rerollAgain": "Reroll Again",
 					"change": "Change Die",
-					"crit": "Make Crit",
+					"crit": "Make It a Crit",
 					"result": "Change Result",
 					"succeed": "Succeed Instead",
 					"setTotal": "Change to {value}",
@@ -2539,7 +2539,7 @@
 				}
 			},
 			"attackOutcome": {
-				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make Crit row in Change This Roll on the card.",
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
 				"form": {
 					"changes": "What changes?",
 					"onlyAttacks": "On which attacks?",

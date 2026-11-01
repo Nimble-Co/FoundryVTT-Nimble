@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ResultChange } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import {
 	resultAmount,
 	resultChangeLines,

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-	IncomingReactionEntry,
-	ResultChange,
-} from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type { ResultChange } from '#types/resultChange.d.ts';
+import type { IncomingReactionEntry } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 const ROLLER = 'Actor.roller';

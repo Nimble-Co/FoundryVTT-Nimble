@@ -865,7 +865,7 @@ describe('IncomingReactionPrompts', () => {
 				await vi.waitFor(() => expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(2));
 			});
 
-			it('shows Make Crit and uses it with no die to pick', async () => {
+			it('shows Make It a Crit and uses it with no die to pick', async () => {
 				const message = controlMessage();
 				message.system.incomingReactions = [
 					rerollEntry({ id: 'wren-crit', actorUuid: 'Actor.wren', use: 'crit' }),
@@ -876,10 +876,10 @@ describe('IncomingReactionPrompts', () => {
 				await openControl(rollPlace());
 				expect(rowsOf(screen.getByTestId('roll-place')).map(rowWords)).toEqual([
 					'Change Die with Pocket Sand',
-					'Make Crit with Pocket Sand',
+					'Make It a Crit with Pocket Sand',
 				]);
 
-				await fireEvent.click(rollPlace().getByRole('button', { name: /Make Crit with/ }));
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Make It a Crit with/ }));
 				for (let i = 0; i < 4; i++) await Promise.resolve();
 
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(

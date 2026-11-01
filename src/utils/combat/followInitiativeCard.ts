@@ -1,7 +1,7 @@
-import { getCombatantBaseActionCurrent } from '../../documents/combat/combatantSystem.js';
-import type { ResultChange } from '../incomingReactions/incomingReactionEntry.js';
-import { startingActionsOfCard } from '../rolls/initiativeCard.js';
-import { resultTotal } from '../rolls/resultChanges.js';
+import { getCombatantBaseActionCurrent } from '#documents/combat/combatantSystem.js';
+import type { ResultChange } from '#types/resultChange.d.ts';
+import { startingActionsOfCard } from '#utils/rolls/initiativeCard.js';
+import { resultTotal } from '#utils/rolls/resultChanges.js';
 import { queueCombatantMutationWithFreshDocument } from './queueCombatantMutationWithFreshDocument.js';
 
 /**

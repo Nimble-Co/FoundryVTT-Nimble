@@ -1,4 +1,5 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
@@ -12,8 +13,6 @@ import {
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
-	type ResultCardView,
-	type ResultUse,
 	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
@@ -496,7 +495,6 @@ function usableRerollEntry(
 
 export {
 	CHANGE_DIE_RULE_TYPE,
-	CHANGE_RESULT_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
 	isRollUseRule,

@@ -1,4 +1,5 @@
 import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { ResultCardView } from '#types/resultChange.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
@@ -15,7 +16,6 @@ import {
 	REROLL_TRIGGERS,
 	type RerollSide,
 	type RerollTrigger,
-	type ResultCardView,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import { ROLL_STATS, statsOfRoll } from '../../utils/reroll/rollStat.js';

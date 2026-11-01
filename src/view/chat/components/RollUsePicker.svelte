@@ -18,7 +18,13 @@
 </script>
 
 {#if picking.stats}
-	<RerollStatPicker stats={picking.stats} {feature} sending={picking.sent} onpick={onstat} />
+	<RerollStatPicker
+		stats={picking.stats}
+		{feature}
+		sending={picking.sent}
+		onpick={onstat}
+		{oncancel}
+	/>
 {:else if picking.valueDie}
 	<DieValuePicker
 		die={picking.valueDie}

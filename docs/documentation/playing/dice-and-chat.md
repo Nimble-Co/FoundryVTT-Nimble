@@ -84,7 +84,7 @@ All roll cards (attack, save, skill check and ability check) have one control fo
 
 The button opens the rows. It opens by itself when a save or check card says **Failed**, and on an attack that misses. On a card that says **Succeeded**, on an attack that hits, and on a card with no result, it starts closed. You can open or close it at any time, and it stays as you left it when the card updates.
 
-Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
+Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make It a Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
 
 With the keyboard, Enter or Space works the button. The arrow keys, Home and End move through the rows, and Escape closes them and goes back to the button. When a row goes away after you use it, the focus goes to the button. When the last row goes away, the focus goes to the card.
 
@@ -100,7 +100,7 @@ Some rows are only for a failed roll. When the card says **Succeeded**, such a r
 
 ### Rerolling with another stat
 
-Some features reroll with another stat. The row says **Reroll With Another Stat**. Click it to open the three other stats under the row, with their modifiers, for example **DEX +2**, **INT +0** and **WIL −1**. Click a stat to reroll. No other menu opens. The new roll keeps the advantage or disadvantage of the first roll.
+Some features reroll with another stat. The row says **Reroll With Another Stat**. Click it to open the three other stats under the row, with their modifiers, for example **DEX +2**, **INT +0** and **WIL −1**. Click a stat to reroll, or click **Cancel** or press Escape to close the stats and go back to the row. No other menu opens. The new roll keeps the advantage or disadvantage of the first roll.
 
 - **A save** uses the save modifier of the new stat.
 - **A skill or ability check** swaps the stat part and keeps the other bonuses.
@@ -184,7 +184,7 @@ A known DC is read again after each change, and the small line under the name fo
 
 ## The Initiative card
 
-An Initiative roll posts a card in the same layout as a check card. The small line under the name tells how many actions a hero starts combat with: **Start with 1 action**, **Start with 2 actions** or **Start with 3 actions**. A total of 10 or more gives 2. A total of 20 or more, or a natural 20, gives 3. A monster's card does not show this line. Initiative has no DC, so the card never says Failed or Succeeded. Initiative messages that were posted before this card stay as they were.
+An Initiative roll posts a card in the same layout as a check card. The small line under the name tells how many actions a hero starts combat with: **Start with 1 action**, **Start with 2 actions** or **Start with 3 actions**. A total of 10 or more gives 2. A total of 20 or more, or a natural 20, gives 3. A monster's card does not show this line. While the dice of a reroll are in the air, the line is hidden, so it cannot tell the result early. Initiative has no DC, so the card never says Failed or Succeeded. Initiative messages that were posted before this card stay as they were.
 
 A feature can change the total with a row of [Change This Roll](#change-this-roll), such as **Change to 10** with Cheat!. The right side of the row tells the gain, **Start with 2 actions**, when the feature has no other cost to show. The button stays closed until you click it. A row with **Only if the total is lower** does not show at that total or above it. A change to a number replaces the roll, so a natural 20 does not count after it. An added number keeps the natural 20. The history line says **Changed 7 to 10** with Cheat!.
 
@@ -205,13 +205,13 @@ A feature can change how the roll is read. When the die does not explain the res
 - **"Crit: Deathbringer's Touch"** when a feature made a face below the max a crit. The tag does not show when the die rolled its max.
 - **"Cannot miss: Slashing"** when a feature made a miss face a hit.
 
-**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make Crit** row for the one who attacked.
+**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make It a Crit** row for the one who attacked.
 
 The expanded roll details mark a Primary Die face that is a crit or a miss in the same way.
 
 ## Making an attack a crit
 
-Some features let a creature make an attack a crit after the roll. The card has a **Make Crit** row in [Change This Roll](#change-this-roll). The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
+Some features let a creature make an attack a crit after the roll. The card has a **Make It a Crit** row in [Change This Roll](#change-this-roll). The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
 
 The button does not show on an attack that is already a crit, an attack on 2 or more targets, an area attack, or a roll that cannot crit.
 

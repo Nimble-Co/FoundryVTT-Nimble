@@ -549,6 +549,53 @@ describe('rerolls on check cards', () => {
 			expect(requestIncomingAttackReaction).toHaveBeenCalledTimes(1);
 			expect(requestIncomingAttackReaction.mock.calls[0][0]).toMatchObject({ stat: 'dexterity' });
 		});
+
+		it('says on the row whether its stats are open', async () => {
+			renderSave(statMessage('stat-expanded'));
+			await openControl();
+			expect(rowsOf()[0].getAttribute('aria-expanded')).toBe('false');
+
+			await fireEvent.click(rowsOf()[0]);
+			await settle();
+			expect(rowsOf()[0].getAttribute('aria-expanded')).toBe('true');
+		});
+
+		it('has no open state on a row that opens no picker', async () => {
+			renderSave(createMessage({ incomingReactions: [rerollEntry()] }));
+			await openControl();
+
+			expect(rowsOf()[0].hasAttribute('aria-expanded')).toBe(false);
+		});
+
+		it('closes on Escape, keeps the control open, and gives the focus to the row', async () => {
+			renderSave(statMessage('stat-escape'));
+			await openControl();
+			await fireEvent.click(rowsOf()[0]);
+			await settle();
+
+			const notClaimed = await fireEvent.keyDown(statButtons()[0], { key: 'Escape' });
+			await settle();
+
+			expect(notClaimed).toBe(false);
+			expect(statButtons()).toEqual([]);
+			expect(controlButton()?.getAttribute('aria-expanded')).toBe('true');
+			expect(document.activeElement).toBe(rowsOf()[0]);
+			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+		});
+
+		it('closes on Cancel and gives the focus to the row', async () => {
+			renderSave(statMessage('stat-cancel'));
+			await openControl();
+			await fireEvent.click(rowsOf()[0]);
+			await settle();
+
+			await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+			await settle();
+
+			expect(statButtons()).toEqual([]);
+			expect(document.activeElement).toBe(rowsOf()[0]);
+			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('with Change a Result', () => {

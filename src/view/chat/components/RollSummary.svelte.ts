@@ -1,6 +1,6 @@
+import type { CheckResult } from '#types/checkResult.d.ts';
 import type { RollSummaryOptions } from '#types/components/RollSummary.d.ts';
 import localize from '#utils/localize.ts';
-import type { CheckResult } from '#utils/rolls/checkResult.ts';
 
 import { primaryDieBonusText } from './primaryDieBonusText.ts';
 

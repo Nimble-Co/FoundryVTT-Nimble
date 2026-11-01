@@ -1,9 +1,11 @@
+import type { AnyRoll } from '#types/anyRoll.d.ts';
+import type { ResultChange } from '#types/resultChange.d.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 import constructD20Term from '../../dice/constructD20Term.js';
 import type { OneDieRoll } from '../../dice/oneDieReroll.js';
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
-	ResultChange,
 	RollChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
@@ -28,10 +30,7 @@ import {
 import type { RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
 import { rerollWithRule } from './rerollStep.js';
 import { applyGrants, grantsForUse } from './rerollUseGrants.js';
-import { moveLabelledModifier, ROLL_STATS, type StatChoice } from './rollStat.js';
-
-/** Any roll class: saves and skill checks use NimbleRoll, ability checks a plain Roll. */
-type AnyRoll = Roll<any>;
+import { moveLabelledModifier, ROLL_STATS } from './rollStat.js';
 
 type RollClass = new (
 	formula: string,
@@ -378,7 +377,7 @@ async function collectCheckRerolls(input: {
 	const refunds: Array<() => Promise<void>> = [];
 	let roll = input.roll;
 	// A rule for a failed roll runs by itself only when this roll is known to fail.
-	const canRun = () => {
+	const runnableRerolls = () => {
 		const failed =
 			resultOfCheckRoll({
 				kind: input.check.kind,
@@ -390,7 +389,7 @@ async function collectCheckRerolls(input: {
 		return found.automatic.filter(({ rule }) => rule.outcome !== 'failed' || failed);
 	};
 
-	let next = nextAutomaticReroll(canRun(), stamped, context);
+	let next = nextAutomaticReroll(runnableRerolls(), stamped, context);
 	while (next) {
 		const target = checkReroll(liveRollSource(roll), input.rollMode);
 		const added = await newRollChanges(next.rule, input.check.kind, rollChanges);
@@ -420,7 +419,7 @@ async function collectCheckRerolls(input: {
 		refunds.unshift(result.refund);
 		await applyGrants(grants, next.rule.item?.uuid ?? '');
 		stamped.push({ ...next.entry, used: true });
-		next = nextAutomaticReroll(canRun(), stamped, context);
+		next = nextAutomaticReroll(runnableRerolls(), stamped, context);
 	}
 
 	const natural = naturalChangeFor(input.roller, input.check, roll);
@@ -506,5 +505,4 @@ export {
 	createCheckCard,
 	type CheckCard,
 	type CheckCardRerollData,
-	type AnyRoll,
 };
