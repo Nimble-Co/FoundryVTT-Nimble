@@ -270,7 +270,7 @@ describe('changeOneDie on live dice', () => {
 		expect(after.isMiss).toBe(true);
 	});
 
-	test('a set value gets the Primary Die bonus, up to the max, and so does a later reroll', async () => {
+	test('a set value is the final face with no Primary Die bonus, and a later reroll gets the bonus', async () => {
 		const options = { ...DAMAGE, primaryDieModifier: 1 };
 		const roll = await rolled('DamageRoll', '1d8 + 2', options, 8, [3]);
 		expect([resultsOf(roll), roll.total]).toEqual([[4], 6]);
@@ -278,8 +278,8 @@ describe('changeOneDie on live dice', () => {
 		const done = await changeOneDie(roll as never, primary(roll), { mode: 'set', value: 6 });
 		const after = done.roll as unknown as LiveRoll;
 		expect([resultsOf(after), after.total, after.options.primaryDieBaseResult]).toEqual([
-			[7],
-			9,
+			[6],
+			8,
 			6,
 		]);
 
