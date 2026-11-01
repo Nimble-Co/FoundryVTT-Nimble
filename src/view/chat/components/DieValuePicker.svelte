@@ -28,7 +28,13 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="nimble-value-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
+<div
+	bind:this={elements.root}
+	class="nimble-value-picker"
+	role="group"
+	aria-labelledby={titleId}
+	onkeydown={onKeydown}
+>
 	<div class="nimble-value-picker__head">
 		<i class="nimble-value-picker__icon fa-solid fa-pen" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-value-picker__title" aria-live="polite">{picker.title}</span>

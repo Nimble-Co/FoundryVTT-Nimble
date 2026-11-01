@@ -125,7 +125,6 @@ export function createChangeThisRollState(
 			focusReturns.delete(messageKey);
 			return;
 		}
-		if (document.activeElement && document.activeElement !== document.body) return;
 		const { anchor } = elements;
 		if (!anchor) return;
 		// A new draw of the card runs this before core puts it in the page.
@@ -133,6 +132,7 @@ export function createChangeThisRollState(
 			requestAnimationFrame(restoreFocus);
 			return;
 		}
+		if (document.activeElement && document.activeElement !== document.body) return;
 		const target = rowButton(expected.entryId) ?? elements.toggle ?? cardElement();
 		target?.focus({ preventScroll: true });
 	}

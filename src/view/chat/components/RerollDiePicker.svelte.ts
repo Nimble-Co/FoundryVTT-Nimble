@@ -40,7 +40,7 @@ export function dieLabel(
 export function createRerollDiePickerState(
 	getProps: () => Pick<RerollDiePickerProps, 'dice' | 'oncancel' | 'rolling'>,
 ) {
-	const elements = $state<{ dice: HTMLButtonElement[] }>({ dice: [] });
+	const elements = $state<{ root?: HTMLElement; dice: HTMLButtonElement[] }>({ dice: [] });
 
 	/** Focus the Primary Die, else the first die, when the picker opens. */
 	async function focusFirst() {
@@ -48,7 +48,7 @@ export function createRerollDiePickerState(
 		const dice = getProps().dice;
 		const primary = dice.findIndex((die) => die.role === 'primary');
 		const first = elements.dice[primary === -1 ? 0 : primary];
-		first?.scrollIntoView?.({ block: 'nearest' });
+		elements.root?.scrollIntoView?.({ block: 'nearest' });
 		first?.focus({ preventScroll: true });
 	}
 

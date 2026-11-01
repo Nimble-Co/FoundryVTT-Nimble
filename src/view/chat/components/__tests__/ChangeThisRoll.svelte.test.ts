@@ -100,8 +100,12 @@ describe('createChangeThisRollState', () => {
 		state.elements.anchor = draw;
 		state.elements.toggle = toggle;
 		state.expectFocusLoss('entry-1');
+		const oldRow = document.createElement('button');
+		document.body.append(oldRow);
+		oldRow.focus();
 
 		state.restoreFocus();
+		oldRow.remove();
 		document.body.append(draw);
 		await new Promise((resolve) => requestAnimationFrame(resolve));
 

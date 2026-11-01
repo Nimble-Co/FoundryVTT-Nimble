@@ -3,12 +3,14 @@
 
 	import { onMount } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { claimEscape } from './claimEscape.ts';
 	import { statChoiceLabel } from './resultChangeLines.ts';
 
 	let { stats, feature, sending = false, onpick, oncancel }: RerollStatPickerProps = $props();
 
 	const titleId = $props.id();
+	let root = $state<HTMLElement>();
 	let buttons = $state<HTMLButtonElement[]>([]);
 
 	function onKeydown(event: KeyboardEvent): void {
@@ -33,14 +35,21 @@
 
 	onMount(() => {
 		if (sending) return;
-		buttons[0]?.scrollIntoView?.({ block: 'nearest' });
+		root?.scrollIntoView?.({ block: 'nearest' });
 		buttons[0]?.focus({ preventScroll: true });
 	});
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="nimble-reroll-stats" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
+<div
+	bind:this={root}
+	class="nimble-reroll-stats"
+	role="group"
+	aria-labelledby={titleId}
+	onkeydown={onKeydown}
+>
 	<div class="nimble-reroll-stats__head">
+		<i class="nimble-reroll-stats__icon {REACTION_VERB_ICONS.reroll}" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-stats__title">
 			{localize('NIMBLE.chat.incomingReactions.pickStat.title', { feature })}
 		</span>
@@ -74,8 +83,11 @@
 	.nimble-reroll-stats {
 		display: flex;
 		flex-direction: column;
-		gap: 0.1875rem;
-		padding: 0.125rem 0.5rem 0.25rem;
+		gap: 0.375rem;
+		padding: 0.375rem 0.5rem 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-input-border-color);
+		border-radius: 4px;
 		scroll-margin-block-end: var(--nimble-chat-scroll-clearance);
 
 		&__head {
@@ -83,6 +95,10 @@
 			align-items: center;
 			gap: 0.375rem;
 			font-size: var(--nimble-sm-text);
+		}
+
+		&__icon {
+			font-size: 0.8em;
 		}
 
 		&__title {
