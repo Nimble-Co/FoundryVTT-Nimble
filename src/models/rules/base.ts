@@ -113,6 +113,8 @@ interface SaveResolvedContext {
 	actor: NimbleBaseActor;
 	saveType: string;
 	outcome: 'pass' | 'fail';
+	/** The save card that holds this result. */
+	messageId: string;
 }
 
 interface RestContext {

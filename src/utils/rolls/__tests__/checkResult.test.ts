@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkResult } from '../checkResult.ts';
+import { checkResult, checkResultOfCard } from '../checkResult.ts';
 
 describe('checkResult', () => {
 	describe.each(['save', 'skillCheck', 'abilityCheck'] as const)('a %s with a DC', (kind) => {
@@ -64,5 +64,27 @@ describe('checkResult', () => {
 
 	it('a DC of 0 still is a DC', () => {
 		expect(checkResult({ kind: 'skillCheck', total: 0, keptD20: 2, dc: 0 })).toBe('succeeded');
+	});
+});
+
+describe('checkResultOfCard', () => {
+	const roll = (d20: number, total: number) => ({
+		total,
+		terms: [{ faces: 20, results: [{ result: d20, active: true }] }],
+	});
+
+	it('reads the kind, the kept d20 and the DC of a save card', () => {
+		const system = { saveKey: 'dexterity', dc: 14 };
+
+		expect(checkResultOfCard('savingThrow', system, roll(5, 8))).toBe('failed');
+		expect(checkResultOfCard('savingThrow', system, roll(10, 14))).toBe('succeeded');
+	});
+
+	it('tells nothing with no roll, no check card, or nothing that settles it', () => {
+		expect(
+			checkResultOfCard('savingThrow', { saveKey: 'dexterity', dc: 14 }, undefined),
+		).toBeNull();
+		expect(checkResultOfCard('chat', { dc: 14 }, roll(5, 8))).toBeNull();
+		expect(checkResultOfCard('savingThrow', { saveKey: 'dexterity' }, roll(5, 8))).toBeNull();
 	});
 });

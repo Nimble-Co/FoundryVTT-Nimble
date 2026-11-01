@@ -2,9 +2,9 @@
 	import type { CheckCardRollsProps } from '#types/components/CheckCardRolls.d.ts';
 
 	import { setContext, untrack } from 'svelte';
-	import { CHECK_ROLL_SLOT, checkRollOfCard, keptD20 } from '#utils/reroll/checkCardRollTarget.ts';
+	import { CHECK_ROLL_SLOT } from '#utils/reroll/checkCardRollTarget.ts';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
-	import { checkResult } from '#utils/rolls/checkResult.ts';
+	import { checkResultOfCard } from '#utils/rolls/checkResult.ts';
 	import { getRollModeSummary } from '../../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
@@ -33,16 +33,7 @@
 	});
 	let landed = $derived(rerollJustLanded(messageDocument.id, CHECK_ROLL_SLOT));
 	let firstRollResult = $derived.by(() => {
-		const roll = rolls[0];
-		const kind = checkRollOfCard(messageDocument.reactive.type, system)?.kind;
-		if (!roll || !kind) return null;
-
-		const result = checkResult({
-			kind,
-			total: roll.total ?? 0,
-			keptD20: keptD20(roll.terms),
-			dc: system.dc,
-		});
+		const result = checkResultOfCard(messageDocument.reactive.type, system, rolls[0]);
 		return result ? { result, label: getCheckResultLabel(result, system.dc) } : null;
 	});
 </script>

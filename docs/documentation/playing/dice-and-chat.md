@@ -76,7 +76,7 @@ A player sees only the features of the characters they own. The GM sees all of t
 
 ## The result of a save or check
 
-When a save, skill check or ability check has a known DC, the small line under its name tells the result, such as "Failed - DC 14" or "Succeeded - DC 14". A total that meets the DC succeeds. On a save or a skill check, a natural 1 always fails and a natural 20 always succeeds, so the card says "Failed" or "Succeeded" also with no DC. With no DC and no natural 1 or 20, the card tells no result: compare the total at the table. The line only reports. It applies no damage and no effect.
+When a save, skill check or ability check has a known DC, the small line under its name tells the result, such as "Failed - DC 14" or "Succeeded - DC 14". A total that meets the DC succeeds. On a save or a skill check, a natural 1 always fails and a natural 20 always succeeds, so the card says "Failed" or "Succeeded" also with no DC. With no DC and no natural 1 or 20, the card tells no result: compare the total at the table. The line only reports. It applies no damage and no effect by itself. A feature of the creature that made the save can react to a failed save with the Apply Condition rule. If the same card later says Succeeded, that condition goes away again. A condition from another source stays.
 
 ## Rerolling a save or check
 

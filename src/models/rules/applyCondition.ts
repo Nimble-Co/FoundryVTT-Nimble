@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { ConditionNode, EffectNode } from '#types/effectTree.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
@@ -27,6 +28,26 @@ const SELF_TRIGGERS = [
 const TRIGGER_CHOICES = [...ATTACK_OUTCOME_TRIGGERS, ...SELF_TRIGGERS] as const;
 
 type ApplyConditionTrigger = (typeof TRIGGER_CHOICES)[number];
+
+/** Effect flag: the save card, and the item and condition of the rule that added this effect. */
+const SAVE_FAIL_SOURCE_FLAG = 'saveFailSource';
+
+// No rule id: a rule source without one gets a new random id each time it is built.
+interface SaveFailSource {
+	messageId: string;
+	itemUuid: string;
+	condition: string;
+}
+
+interface OwnedConditionEffect {
+	id?: string | null;
+	getFlag?(scope: string, key: string): unknown;
+}
+
+interface ConditionOwner {
+	effects?: Iterable<OwnedConditionEffect>;
+	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+}
 
 function schema() {
 	const { fields } = foundry.data;
@@ -153,8 +174,16 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	override async onSaveResolved(context: SaveResolvedContext): Promise<void> {
 		if (this.trigger !== 'onSaveFail') return;
 		if (context.actor !== this.item.actor) return;
-		if (context.outcome !== 'fail') return;
-		await this.#applyConditionToSelf();
+		if (context.outcome === 'fail') {
+			const source: SaveFailSource = {
+				messageId: context.messageId,
+				itemUuid: this.item.uuid,
+				condition: this.condition,
+			};
+			await this.#applyConditionToSelf({ [SAVE_FAIL_SOURCE_FLAG]: source });
+			return;
+		}
+		await this.#removeConditionFromSaveCard(context.messageId);
 	}
 
 	override async onRest(context: RestContext): Promise<void> {
@@ -186,14 +215,39 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return this.trigger === 'onHit' || this.trigger === 'onCrit' || this.trigger === 'onMiss';
 	}
 
-	async #applyConditionToSelf(): Promise<void> {
+	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<void> {
 		if (!this.test()) return;
 		const selfActor = this.item.actor as unknown as ConditionTargetActor | null;
 		if (!selfActor) return;
-		await this.#applyConditionTo(selfActor);
+		await this.#applyConditionTo(selfActor, systemFlags);
 	}
 
-	async #applyConditionTo(target: ConditionTargetActor): Promise<void> {
+	// No predicate test: this takes back an effect of a result that no longer stands.
+	async #removeConditionFromSaveCard(messageId: string): Promise<void> {
+		const owner = this.item.actor as unknown as ConditionOwner | null;
+		if (!owner) return;
+
+		const ids: string[] = [];
+		for (const effect of owner.effects ?? []) {
+			const source = effect.getFlag?.(SYSTEM_ID, SAVE_FAIL_SOURCE_FLAG) as
+				| SaveFailSource
+				| undefined;
+			if (
+				effect.id &&
+				source?.messageId === messageId &&
+				source.itemUuid === this.item.uuid &&
+				source.condition === this.condition
+			) {
+				ids.push(effect.id);
+			}
+		}
+		if (ids.length > 0) await owner.deleteEmbeddedDocuments('ActiveEffect', ids);
+	}
+
+	async #applyConditionTo(
+		target: ConditionTargetActor,
+		systemFlags?: Record<string, unknown>,
+	): Promise<void> {
 		if (!this.condition) return;
 
 		await applyConditionToActor(target, this.condition, {
@@ -201,6 +255,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 			sourceActor: this.item.actor as unknown as { uuid?: string } | null,
 			duration: this.duration,
 			rule: this,
+			systemFlags: systemFlags ?? null,
 		});
 	}
 }

@@ -66,6 +66,7 @@ interface NimbleSavePayload {
 	actor: ActorWithRules;
 	saveType: string;
 	outcome: 'pass' | 'fail';
+	messageId: string;
 }
 
 interface NimbleRestPayload {
@@ -280,6 +281,7 @@ function handleSaveResolved(payload: NimbleSavePayload): void {
 		actor: payload.actor as unknown as SaveResolvedContext['actor'],
 		saveType: payload.saveType,
 		outcome: payload.outcome,
+		messageId: payload.messageId,
 	};
 	void dispatch(payload.actor, 'onSaveResolved', context);
 }

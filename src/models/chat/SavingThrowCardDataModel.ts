@@ -5,6 +5,13 @@ const { fields } = foundry.data;
 const savingThrowCardSchema = () => ({
 	saveKey: new fields.StringField({ required: true, initial: '', nullable: false }),
 	rollMode: new fields.NumberField({ required: true, initial: 0, nullable: false }),
+	// The last result the saveResolved hook told, so a reload or a later write does not tell it again.
+	reportedSaveResult: new fields.StringField({
+		required: false,
+		nullable: true,
+		initial: null,
+		choices: ['failed', 'succeeded'],
+	}),
 });
 
 declare namespace NimbleSavingThrowCardData {

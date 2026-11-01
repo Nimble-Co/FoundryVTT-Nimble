@@ -1,3 +1,4 @@
+import { checkRollOfCard, keptD20 } from '../reroll/checkCardRollTarget.ts';
 import type { CheckRollKind } from '../reroll/rollToReroll.ts';
 
 type CheckResult = 'failed' | 'succeeded';
@@ -24,4 +25,21 @@ function checkResult(input: {
 	return total >= dc ? 'succeeded' : 'failed';
 }
 
-export { checkResult, type CheckResult };
+/** The result of a card's first roll, or null when it is not a check card or nothing settles it. */
+function checkResultOfCard(
+	type: string,
+	system: Record<string, unknown>,
+	roll: { total?: number | null; terms: unknown[] } | undefined,
+): CheckResult | null {
+	const kind = checkRollOfCard(type, system)?.kind;
+	if (!roll || !kind) return null;
+
+	return checkResult({
+		kind,
+		total: roll.total ?? 0,
+		keptD20: keptD20(roll.terms),
+		dc: system.dc as number | null | undefined,
+	});
+}
+
+export { checkResult, checkResultOfCard, type CheckResult };

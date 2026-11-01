@@ -573,11 +573,17 @@ describe('ruleEventDispatch', () => {
 			const actor = { rules: [rule] };
 
 			const handler = handlers.get('nimble.saveResolved');
-			handler?.({ actor, saveType: 'strength', outcome: 'fail' });
+			handler?.({ actor, saveType: 'strength', outcome: 'fail', messageId: 'card' });
 			await Promise.resolve();
 			await Promise.resolve();
 
 			expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+			expect(rule.onSaveResolved).toHaveBeenCalledWith({
+				actor,
+				saveType: 'strength',
+				outcome: 'fail',
+				messageId: 'card',
+			});
 		});
 	});
 
