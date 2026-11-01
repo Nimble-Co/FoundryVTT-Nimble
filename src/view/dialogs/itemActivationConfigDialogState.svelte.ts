@@ -7,11 +7,13 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
 	buildAutoBonusFormula,
@@ -83,6 +85,9 @@ export function createItemActivationConfigDialogState(
 		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
 		return 'none';
 	};
+
+	const maxDamage: MaxDamageOffer[] = maxDamageOffers(actor as never, item as never);
+	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -306,6 +311,14 @@ export function createItemActivationConfigDialogState(
 		set shouldRollBeHidden(value: boolean) {
 			shouldRollBeHidden = value;
 		},
+
+		get maxDamageChoice() {
+			return maxDamageChoice;
+		},
+		set maxDamageChoice(value: MaxDamageChoice | null) {
+			maxDamageChoice = value;
+		},
+		maxDamageOffers: maxDamage,
 
 		// Pool snapshots (immutable).
 		spendablePools,

@@ -54,6 +54,8 @@ export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
 export interface AttackOutcomeView {
 	isCritical?: boolean;
 	isMiss?: boolean;
+	/** No die was rolled, so nothing can reroll or change one. */
+	noDice?: boolean;
 	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
 	critStays?: boolean;
 	/** False when the roll cannot crit. Absent: read from `options`, else it can. */

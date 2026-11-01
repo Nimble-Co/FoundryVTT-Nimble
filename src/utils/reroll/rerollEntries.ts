@@ -202,6 +202,7 @@ function rollUseTriggerMatches(
 	outcome: AttackOutcomeView,
 	gate: RollUseGate = {},
 ): boolean {
+	if (outcome.noDice && gate.use !== 'result') return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
 	if (trigger === 'criticalHit' && critStays(outcome)) return false;

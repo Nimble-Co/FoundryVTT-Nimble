@@ -19,6 +19,7 @@
 		totalDamage?: number;
 		isMiss?: boolean;
 		roll?: Record<string, unknown> | null;
+		maxDamageBy?: string;
 	}
 
 	const { messageDocument } = $props();
@@ -43,6 +44,11 @@
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	function getRowOutcomeText(row: MinionGroupAttackRow): string {
+		if (row.maxDamageBy) {
+			return i18nFormat('NIMBLE.chat.incomingReactions.outcomeTags.maxDamage', {
+				feature: row.maxDamageBy,
+			});
+		}
 		return row.isMiss
 			? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.outcomeMiss')
 			: i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.outcomeHit');

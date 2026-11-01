@@ -6,7 +6,44 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "beastshift-pool",
+				"identifier": "beastshift",
+				"label": "Beastshift charges",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@dexterity, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "beastshift-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "beastshift",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"disabled": false,
+				"identifier": "",
+				"predicate": {},
+				"priority": 1,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"type": "maxDamage",
+				"id": "shadow-rush-max-damage",
+				"label": "Shadow Rush",
+				"use": "minionAttack",
+				"schools": [],
+				"givesCrit": false,
+				"tempHpChoice": false,
+				"minionDies": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

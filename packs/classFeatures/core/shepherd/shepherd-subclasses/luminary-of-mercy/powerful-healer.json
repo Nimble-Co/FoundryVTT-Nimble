@@ -6,7 +6,46 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "powerful-healer-pool",
+				"identifier": "powerful-healer",
+				"label": "Powerful Healer (WIL/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@will, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"disabled": false,
+				"identifier": "",
+				"predicate": {},
+				"priority": 1,
+				"chargePoolIdentifier": "powerful-healer",
+				"chargeCost": 1,
+				"type": "maxDamage",
+				"id": "powerful-healer-max",
+				"label": "Powerful Healer",
+				"use": "healing",
+				"schools": [],
+				"givesCrit": false,
+				"tempHpChoice": true,
+				"minionDies": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

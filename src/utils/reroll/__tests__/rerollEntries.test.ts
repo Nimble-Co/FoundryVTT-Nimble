@@ -121,6 +121,31 @@ describe('collectRerollEntries', () => {
 		]);
 	});
 
+	describe('on a card with max damage', () => {
+		const NO_DICE = { ...HIT, noDice: true };
+		const rollerRule = (overrides: Partial<RerollRuleLike>) =>
+			rerollRule({ usedBy: 'roller', ...overrides });
+		const entriesWith = (rule: RerollRuleLike) =>
+			collectRerollEntries(context({ attacker: actor('Actor.attacker', [rule]), outcome: NO_DICE }))
+				.manual;
+
+		it('has no reroll row', () => {
+			expect(entriesWith(rollerRule({}))).toEqual([]);
+		});
+
+		it('has no die change row', () => {
+			expect(entriesWith(rollerRule({ type: 'changeDie' }))).toEqual([]);
+		});
+
+		it('has no Make It a Crit row', () => {
+			expect(entriesWith(rollerRule({ type: 'makeCrit' }))).toEqual([]);
+		});
+
+		it('keeps a row that changes a result', () => {
+			expect(entriesWith(rollerRule({ type: 'changeResult' }))).toHaveLength(1);
+		});
+	});
+
 	describe('a Make It a Crit rule', () => {
 		const makeCrit = () => rerollRule({ id: 'crit', type: 'makeCrit', usedBy: 'roller' });
 		const collect = (outcome: RerollRollContext['outcome']) =>

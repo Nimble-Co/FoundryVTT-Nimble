@@ -1,4 +1,5 @@
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
@@ -38,6 +39,7 @@ import {
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
+import { type MaxDamageRuleLike, maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -182,6 +184,12 @@ class ItemActivationManager {
 	#primaryDieBonuses: PrimaryDieBonusRecord[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	/** The Max Damage rule the player ticked, and the choice that came with it. */
+	#maxDamage: { rule: MaxDamageRuleLike; tempHp: boolean } | null = null;
+
+	/** Every roll of this activation has max dice, so no die is thrown. */
+	#noDiceThrown = false;
 
 	/** Charge pools the Attack Outcome rules of this attack spend by themselves. */
 	#attackOutcomeCharges: string[] = [];
@@ -392,6 +400,15 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
+		const maxDamageRule = maxDamageRuleOf(
+			this.actor as never,
+			this.#item as never,
+			dialogData.maxDamage,
+		);
+		this.#maxDamage = maxDamageRule
+			? { rule: maxDamageRule, tempHp: dialogData.maxDamage?.tempHp === true }
+			: null;
+
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 
@@ -402,6 +419,7 @@ class ItemActivationManager {
 			incomingReactions: this.#appliedIncomingReactions,
 			rerollHistory: this.#rerollHistory,
 			primaryDieBonuses: this.#primaryDieBonuses,
+			noDiceThrown: this.#noDiceThrown,
 		};
 	}
 
@@ -577,7 +595,8 @@ class ItemActivationManager {
 						canMiss: resolvedCanMiss,
 						damageTypes: node.damageType ? [node.damageType] : [],
 					});
-					this.#attackOutcomeCharges = attackOutcome.charges;
+					this.#attackOutcomeCharges =
+						this.#maxDamage?.rule.use === 'damage' ? [] : attackOutcome.charges;
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						...attackOutcome.options,
@@ -596,6 +615,14 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					if (this.#maxDamage?.rule.use === 'damage') {
+						const { rule } = this.#maxDamage;
+						damageOptions.maxDamage = rule.givesCrit && resolvedCanCrit ? 'crit' : 'hit';
+						damageOptions.outcomeSources = {
+							...damageOptions.outcomeSources,
+							maxDamage: [rule.label || rule.item?.name || ''],
+						};
+					}
 					// Forward the optional rollMode source list so DamageRoll can
 					// compute the net rollMode itself (advantage and disadvantage
 					// cancel 1-for-1). Only attached when callers supplied the
@@ -653,7 +680,13 @@ class ItemActivationManager {
 					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
-				await roll.evaluate();
+				const healingAtMax = node.type === 'healing' && this.#maxDamage?.rule.use === 'healing';
+				if (healingAtMax && this.#maxDamage) {
+					const { rule, tempHp } = this.#maxDamage;
+					if (tempHp) (node as { healingType?: string }).healingType = 'tempHealing';
+					(node as { maxDamageBy?: string }).maxDamageBy = rule.label || rule.item?.name || '';
+				}
+				await roll.evaluate(healingAtMax ? { maximize: true } : {});
 
 				// Resolve outcome-dependent incoming behavior for the primary damage
 				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
@@ -687,6 +720,10 @@ class ItemActivationManager {
 
 			updatedEffects.push(node);
 		}
+
+		this.#noDiceThrown =
+			this.#maxDamage !== null &&
+			rolls.every((roll) => roll.dice.length === 0 || (roll as DamageRoll).noDice === true);
 
 		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
 		// specific type) rolls as its own damage effect: the primary roll carries
@@ -980,6 +1017,14 @@ class ItemActivationManager {
 		const outcomeCharges = this.#attackOutcomeCharges;
 		this.#attackOutcomeCharges = [];
 		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
+		const maxDamageRule = this.#maxDamage?.rule;
+		if (maxDamageRule?.chargePoolIdentifier) {
+			await spendRuleCharge(
+				this.actor,
+				maxDamageRule.chargePoolIdentifier,
+				maxDamageRule.chargeCost ?? 1,
+			);
+		}
 	}
 
 	/**
@@ -1497,6 +1542,8 @@ namespace ItemActivationManager {
 		};
 		/** Whether to hide the roll. */
 		rollHidden?: boolean;
+		/** The Max Damage tick the player picked. */
+		maxDamage?: MaxDamageChoice | null;
 		/**
 		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
 		 * The dialog already appended the bonus to rollFormula; this list is used to

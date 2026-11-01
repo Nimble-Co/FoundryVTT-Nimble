@@ -6,7 +6,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "expert-shifter-charges",
+				"identifier": "",
+				"label": "Expert Shifter",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "beastshift",
+				"dieSize": null,
+				"maxDelta": "+1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "expert-shifter-charges-2",
+				"identifier": "",
+				"label": "Expert Shifter (2)",
+				"predicate": {
+					"level": {
+						"min": 9
+					}
+				},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "beastshift",
+				"dieSize": null,
+				"maxDelta": "+1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "expert-shifter-charges-3",
+				"identifier": "",
+				"label": "Expert Shifter (3)",
+				"predicate": {
+					"level": {
+						"min": 12
+					}
+				},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "beastshift",
+				"dieSize": null,
+				"maxDelta": "+1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -108,7 +108,7 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 }
 
 type RollOptionsView = {
-	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	options?: { canCrit?: unknown; forcedCrit?: unknown; maxDamage?: unknown } | null;
 	terms?: readonly unknown[];
 	originalFormula?: string;
 	formula?: string;
@@ -166,6 +166,7 @@ function damageRollContext(
 			isMiss: outcome.isMiss,
 			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
 			canCrit: rolled?.options?.canCrit === true,
+			noDice: rolled?.options?.maxDamage !== undefined,
 			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
 		},
 		forcedMiss,

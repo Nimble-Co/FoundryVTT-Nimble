@@ -126,6 +126,7 @@ function mapGroupAttackRows(rollEntries: MinionGroupAttackRollEntry[]) {
 		totalDamage: entry.totalDamage,
 		isMiss: entry.isMiss,
 		roll: entry.rollData,
+		...(entry.maxDamageBy ? { maxDamageBy: entry.maxDamageBy } : {}),
 	}));
 }
 

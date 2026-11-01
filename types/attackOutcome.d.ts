@@ -7,11 +7,12 @@ export interface AttackOutcomeSources {
 	critRange: string[];
 	forcedCrit: string[];
 	anyDieCrits: string[];
+	maxDamage?: string[];
 }
 
 /** A tag at the roll that tells why the attack result is not what the die face shows. */
 export interface AttackOutcomeTag {
-	kind: 'crit' | 'cannotMiss' | 'noOutcome';
+	kind: 'crit' | 'cannotMiss' | 'noOutcome' | 'maxDamage';
 	label: string;
 	tooltip: string;
 }

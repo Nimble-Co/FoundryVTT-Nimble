@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
@@ -9,6 +10,8 @@
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import localize from '../../utils/localize.js';
+	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
+	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
@@ -21,6 +24,11 @@
 
 	// Initialize state
 	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
+	const offers = maxDamageOffers(
+		untrack(() => actor),
+		{ type: 'spell', system: untrack(() => spell) },
+	);
+	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -258,6 +266,7 @@
 			primaryDieValue,
 			primaryDieModifier,
 			rollHidden: shouldRollBeHidden,
+			maxDamage: maxDamageChoice,
 			upcast: canUpcast
 				? {
 						manaToSpend,
@@ -288,6 +297,8 @@
 	{/if}
 
 	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+
+	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
 
 	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 

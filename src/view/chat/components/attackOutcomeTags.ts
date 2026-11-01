@@ -79,6 +79,14 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	const options = roll.options ?? {};
 	const { face, faces } = die;
 	const value = { face: String(face) };
+	const maxDamageTags: AttackOutcomeTag[] = (options.outcomeSources?.maxDamage ?? []).map(
+		(feature) => ({
+			kind: 'maxDamage',
+			label: localize(`${TAG_TEXT}.maxDamage`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.maxDamageTooltip`, { feature }),
+		}),
+	);
+	if (maxDamageTags.length > 0) return maxDamageTags;
 	const missFace = face <= (options.missThreshold ?? DEFAULT_MISS_THRESHOLD);
 
 	if (options.multiTarget) {
