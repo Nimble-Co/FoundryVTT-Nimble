@@ -4224,6 +4224,8 @@
 			"acquireTargetsFromTemplate": "AoE targeting (can't miss or crit)",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
+			"singleTargetAttack": "Extra targets share one attack",
+			"singleTargetAttackHint": "The extra targets do not make this a Multi-target Attack: it can miss and crit, and the first target decides the rules that read the target.",
 			"attackType": "Attack Type",
 			"distance": "Distance",
 			"activationOptions": "Activation Options",

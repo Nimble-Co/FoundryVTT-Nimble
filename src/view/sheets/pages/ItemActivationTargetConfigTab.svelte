@@ -91,6 +91,24 @@
 		</label>
 	</div>
 
+	{#if !activationData.acquireTargetsFromTemplate && targetCount > 1}
+		<label
+			class="nimble-field"
+			style="display: flex; gap: 0.5rem; align-items: center; margin-block-start: 0.5rem;"
+			data-tooltip={game.i18n.localize('NIMBLE.itemConfig.singleTargetAttackHint')}
+		>
+			<input
+				type="checkbox"
+				checked={activationData.targets.singleTargetAttack === true}
+				onchange={({ target }) =>
+					document.update({
+						'system.activation.targets.singleTargetAttack': target?.checked,
+					})}
+			/>
+			<span>{game.i18n.localize('NIMBLE.itemConfig.singleTargetAttack')}</span>
+		</label>
+	{/if}
+
 	{#if isMonsterFeature}
 		<div class="attack-type-row">
 			<label>

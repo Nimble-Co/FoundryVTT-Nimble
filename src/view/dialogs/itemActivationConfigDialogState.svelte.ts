@@ -63,9 +63,13 @@ export function createItemActivationConfigDialogState(
 	// dialog-open time; with two or more targets, a bonus that tests the target is
 	// not offered. If the player retargets while the dialog is open, the choice is
 	// not checked again at submit.
-	const firstTargetActor = (soleTarget(game.user?.targets) as Token | null)?.actor as
-		| { uuid?: string; getTargetDomain?: () => Set<string> }
-		| undefined;
+	const firstTargetActor = (
+		soleTarget(game.user?.targets, {
+			firstDecides:
+				(item.system as { activation?: { targets?: { singleTargetAttack?: boolean } } }).activation
+					?.targets?.singleTargetAttack === true,
+		}) as Token | null
+	)?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
 	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
 		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
 		item as unknown as {

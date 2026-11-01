@@ -513,7 +513,7 @@ class ItemActivationManager {
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
 					const targetCount = Array.from(game.user?.targets ?? []).length;
-					const multiTarget = !isAoE && targetCount > 1;
+					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
@@ -1400,7 +1400,14 @@ class ItemActivationManager {
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */
 	#getSoleTargetToken(): Token.Implementation | null {
-		return soleTarget(game.user?.targets) as Token.Implementation | null;
+		return soleTarget(game.user?.targets, {
+			firstDecides: this.#isSingleTargetAttack(),
+		}) as Token.Implementation | null;
+	}
+
+	/** The item's extra targets do not make the attack a Multi-target Attack. */
+	#isSingleTargetAttack(): boolean {
+		return this.activationData?.targets?.singleTargetAttack === true;
 	}
 
 	/**

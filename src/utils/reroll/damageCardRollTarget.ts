@@ -44,7 +44,11 @@ interface DamageCardSystem {
 	targets?: string[];
 	isCritical?: boolean;
 	isMiss?: boolean;
-	activation?: { effects: unknown[]; [key: string]: unknown };
+	activation?: {
+		effects: unknown[];
+		targets?: { singleTargetAttack?: boolean };
+		[key: string]: unknown;
+	};
 	incomingReactions?: IncomingReactionEntry[];
 	rollChanges?: RollChange[];
 	damageApplied?: boolean;
@@ -147,6 +151,9 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
+		...(card.system().activation?.targets?.singleTargetAttack === true
+			? { firstTargetDecides: true }
+			: {}),
 		roll: {
 			kind: 'attack',
 			delivery: card.delivery(),

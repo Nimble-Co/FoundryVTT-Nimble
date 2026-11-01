@@ -155,6 +155,8 @@ interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
 	/** The roll's targets in card order. With two or more, no target's rules give entries. */
 	targets: RerollTarget[];
+	/** The item's extra targets do not count: only the first target's rules are read. */
+	firstTargetDecides?: boolean;
 	/** Creatures that may use an ally-side reroll. Absent means none. */
 	allies?: RerollAlly[];
 	roll: RollToReroll;
@@ -267,7 +269,7 @@ interface RerollUser {
  */
 function otherCreature(side: RerollSide, context: RerollRollContext): RerollingActor | null {
 	if (side === 'target') return context.attacker ?? null;
-	return soleTarget(context.targets)?.actor ?? null;
+	return soleTarget(context.targets, { firstDecides: context.firstTargetDecides })?.actor ?? null;
 }
 
 /** Who can use a rule on each side of this roll. */
@@ -295,8 +297,14 @@ function leftOutFor(rule: RerollRuleLike, ally: RerollAlly): RerollLeftOut | nul
 }
 
 /** On a roll with two or more targets, only a rule about one target's damage gives an entry. */
-function fitsTargetCount(rule: RerollRuleLike, side: RerollSide, targets: number): boolean {
-	return side !== 'target' || targets < 2 || rule.change === 'noDamage';
+function fitsTargetCount(
+	rule: RerollRuleLike,
+	side: RerollSide,
+	context: RerollRollContext,
+	targetTokenUuid: string | null,
+): boolean {
+	if (side !== 'target' || context.targets.length < 2 || rule.change === 'noDamage') return true;
+	return context.firstTargetDecides === true && context.targets[0]?.tokenUuid === targetTokenUuid;
 }
 
 /**
@@ -324,7 +332,7 @@ function collectRerollEntries(context: RerollRollContext): {
 				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
 			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
-				if (!fitsTargetCount(rule, side, context.targets.length)) continue;
+				if (!fitsTargetCount(rule, side, context, targetTokenUuid)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (triggerOf(rule) ?? 'always') : 'always';
 				const gate = gateOf(rule);

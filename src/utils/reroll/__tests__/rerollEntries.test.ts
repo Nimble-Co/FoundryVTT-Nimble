@@ -589,6 +589,46 @@ describe('target rules on a roll with two or more targets', () => {
 	});
 });
 
+describe('an item whose extra targets do not make it a Multi-target Attack', () => {
+	const seenOther = vi.fn();
+	const firstTargetRule = rerollRule({ id: 'first' });
+	const secondTargetRule = rerollRule({ id: 'second' });
+	const targets = [
+		{ tokenUuid: TOKEN, actor: actor('Actor.first', [firstTargetRule]) },
+		{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.second', [secondTargetRule]) },
+	];
+
+	it('gives entries only from the rules of the first target', () => {
+		const { manual } = collectRerollEntries(context({ targets, firstTargetDecides: true }));
+
+		expect(manual.map((entry) => entry.ruleId)).toEqual(['first']);
+	});
+
+	it('lets a rule of the attacker read the first target', () => {
+		const attackerRule = rerollRule({
+			usedBy: 'roller',
+			offersUseOn: (use) => {
+				seenOther(use.other?.uuid);
+				return use.side === 'roller';
+			},
+		});
+
+		collectRerollEntries(
+			context({
+				attacker: actor('Actor.attacker', [attackerRule]),
+				targets,
+				firstTargetDecides: true,
+			}),
+		);
+
+		expect(seenOther).toHaveBeenCalledWith('Actor.first');
+	});
+
+	it('without the field, gives no entries from any target', () => {
+		expect(collectRerollEntries(context({ targets })).manual).toEqual([]);
+	});
+});
+
 describe('offerStands', () => {
 	const entry = (outcomeTrigger: RerollTrigger | null | undefined) =>
 		({ kind: 'reroll', outcomeTrigger }) as IncomingReactionEntry;
