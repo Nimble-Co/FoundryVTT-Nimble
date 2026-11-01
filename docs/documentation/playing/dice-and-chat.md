@@ -74,6 +74,10 @@ A player sees only the features of the characters they own. The GM sees all of t
 
 ![An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt](/images/documentation/condition-chatcard-with-button.png)
 
+## The result of a save or check
+
+When a save, skill check or ability check has a known DC, the small line under its name tells the result, such as "Failed - DC 14" or "Succeeded - DC 14". A total that meets the DC succeeds. On a save or a skill check, a natural 1 always fails and a natural 20 always succeeds, so the card says "Failed" or "Succeeded" also with no DC. With no DC and no natural 1 or 20, the card tells no result: compare the total at the table. The line only reports. It applies no damage and no effect.
+
 ## Rerolling a save or check
 
 A save, skill check or ability check card is one line, so its rerolls and changes use a small button at the right end of the roll. Only the owner of the one who rolled, the owner of an ally with such a feature, and the GM see it.

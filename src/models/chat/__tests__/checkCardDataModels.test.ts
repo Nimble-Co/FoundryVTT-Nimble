@@ -34,4 +34,11 @@ describe('check card reroll fields', () => {
 		expect(schema.incomingReactions.options.initial).toEqual([]);
 		expect(schema.rerolls.options.initial).toEqual([]);
 	});
+
+	it.each(CHECK_CARD_TYPES)('%s cards posted before the DC load with no DC', (type) => {
+		const { dc } = schemaOf(type);
+
+		expect(dc.options).toMatchObject({ nullable: true, initial: null });
+		expect(dc.options.required).not.toBe(true);
+	});
 });

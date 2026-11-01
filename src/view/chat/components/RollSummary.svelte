@@ -9,6 +9,7 @@
 	const {
 		label,
 		subheading,
+		checkResult = null,
 		tooltip,
 		total,
 		options,
@@ -29,7 +30,7 @@
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
-<div class="roll" class:roll--no-subheading={!subheading}>
+<div class="roll" class:roll--no-subheading={!subheading && !checkResult}>
 	<div
 		class="roll__total"
 		data-tooltip={expanded || rolling ? null : tooltip}
@@ -62,7 +63,27 @@
 		</button>
 	{/if}
 
-	{#if subheading}
+	{#if checkResult}
+		<span class="roll__subheading roll__subheading--pieces">
+			<!-- Hidden while the dice are in the air, so it cannot tell the result early. -->
+			<span
+				class="roll__result"
+				class:roll__result--failed={checkResult.result === 'failed'}
+				class:roll__result--succeeded={checkResult.result === 'succeeded'}
+				class:roll__result--hidden={rolling}
+			>
+				<i
+					class={checkResult.result === 'failed' ? 'fa-solid fa-xmark' : 'fa-solid fa-check'}
+					aria-hidden="true"
+				></i>
+				{checkResult.label}
+			</span>
+
+			{#if subheading}
+				<span>{subheading}</span>
+			{/if}
+		</span>
+	{:else if subheading}
 		<span class="roll__subheading">
 			{subheading}
 		</span>
@@ -178,6 +199,33 @@
 			line-height: 1;
 			color: var(--nimble-medium-text-color);
 			font-weight: 500;
+
+			// The line wraps between its pieces and never inside one.
+			&--pieces {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.25rem 0.5rem;
+
+				> span {
+					white-space: nowrap;
+				}
+			}
+		}
+
+		&__result {
+			font-weight: 700;
+
+			&--failed {
+				color: var(--nimble-roll-failure-color);
+			}
+
+			&--succeeded {
+				color: var(--nimble-roll-success-color);
+			}
+
+			&--hidden {
+				visibility: hidden;
+			}
 		}
 
 		&__total {

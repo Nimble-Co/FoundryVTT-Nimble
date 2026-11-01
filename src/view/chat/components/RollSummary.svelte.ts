@@ -1,6 +1,6 @@
 import type { RollSummaryOptions } from '#types/components/RollSummary.d.ts';
-
 import localize from '#utils/localize.ts';
+import type { CheckResult } from '#utils/rolls/checkResult.ts';
 
 import { primaryDieBonusText } from './primaryDieBonusText.ts';
 
@@ -34,4 +34,10 @@ export function getPrimaryDieBreakdown(
 	});
 	const tooltip = primaryDieBonusText(modifier, options?.primaryDieBonuses ?? [])?.tooltip ?? '';
 	return { text, tooltip };
+}
+
+/** The words of a check's result: "Failed - DC 14", or "Failed" with no DC. */
+export function getCheckResultLabel(result: CheckResult, dc: number | null | undefined): string {
+	if (typeof dc !== 'number') return localize(`NIMBLE.chat.checkResult.${result}`);
+	return localize(`NIMBLE.chat.checkResult.${result}WithDC`, { dc: String(dc) });
 }

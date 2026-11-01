@@ -66,7 +66,7 @@ Check buttons currently render as an icon and do not perform a roll when clicked
 
 ## Saving throw buttons: `[[/savingThrow]]`
 
-Renders a labeled button with a d20 icon, such as *DC 12 DEX save*. A left click rolls that save for each selected token, with the usual roll dialog, and posts each result to chat. The DC is only shown on the button: compare it with the result at the table.
+Renders a labeled button with a d20 icon, such as *DC 12 DEX save*. A left click rolls that save for each selected token, with the usual roll dialog, and posts each result to chat. When the tag has a DC, each save card tells the result against it.
 
 | Argument | Required | Value |
 | :--- | :--- | :--- |

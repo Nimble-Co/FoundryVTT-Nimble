@@ -61,7 +61,7 @@ A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Tem
 
 ### Save
 
-A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity, Intelligence, or Will) and optionally a **Custom Save DC**. It has three sections:
+A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity, Intelligence, or Will) and optionally a **Custom Save DC**, a number or a formula such as `12+@key`. The formula reads the creature that uses the item. When the field is empty, a hero uses `10+@key`, and a monster has no DC. When a creature rolls with the d20 button on the card, its save card tells the result against this DC. It has three sections:
 
 - **Shared Rolls**: damage that is rolled once and then split by the outcome. Add a damage entry here, then put **Damage Outcome** entries under On Failed Save (Full Damage) and On Passed Save (Half Damage) for the classic "half on a save" pattern.
 - **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, conditions, or notes.

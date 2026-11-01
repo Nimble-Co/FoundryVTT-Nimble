@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { CheckResult } from '../../src/utils/rolls/checkResult.ts';
 import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 
 export interface RollSummaryOptions {
@@ -19,6 +20,8 @@ export interface RollSummaryOptions {
 export interface RollSummaryProps {
 	label: string;
 	subheading?: string | null;
+	/** The result of a check, first on the small line under the name. */
+	checkResult?: { result: CheckResult; label: string } | null;
 	tooltip?: string | null;
 	total: number;
 	options?: RollSummaryOptions;

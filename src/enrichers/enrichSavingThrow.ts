@@ -42,6 +42,7 @@ export default function enrichSavingThrow(
 		tooltip,
 	});
 	button.dataset.saveKey = saveKey;
+	if (dc !== undefined) button.dataset.dc = String(dc);
 
 	return button;
 }

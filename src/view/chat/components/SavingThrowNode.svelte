@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.ts';
 	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
 
@@ -56,23 +57,29 @@
 			return;
 		}
 
+		const itemUser = messageDocument?.speaker
+			? ChatMessage.getSpeakerActor(messageDocument.speaker)
+			: null;
+		const dc = resolveSaveNodeDC(node.saveDC, itemUser);
+
 		for (const token of selectedTokens) {
 			const actor = token.document?.actor;
 
 			if (!actor) continue;
 
-			actor.rollSavingThrowToChat(saveKey);
+			actor.rollSavingThrowToChat(saveKey, { dc });
 		}
 	}
 
 	let { node } = $props();
 
 	const effects = getContext('effects');
+	const messageDocument = getContext('messageDocument');
 </script>
 
 <header class="nimble-section-header">
 	<h4 class="nimble-heading" data-heading-variant="section">
-		{getSavingThrowLabel(node.saveType)}
+		{getSavingThrowLabel(node.saveType ?? node.savingThrowType)}
 	</h4>
 
 	<button
@@ -81,7 +88,7 @@
 		aria-label="NIMBLE.prompts.rollSavingThrow"
 		data-button-variant="icon"
 		data-tooltip="NIMBLE.prompts.rollSavingThrow"
-		onclick={() => rollSavingThrowForSelectedTokens(node.saveType)}
+		onclick={() => rollSavingThrowForSelectedTokens(node.saveType ?? node.savingThrowType)}
 	>
 		<i class="fa-solid fa-dice-d20"></i>
 	</button>

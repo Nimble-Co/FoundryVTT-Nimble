@@ -889,7 +889,7 @@ class NimbleBaseActor<
 			{ kind: 'abilityCheck', key: abilityKey },
 			rollMode ?? 0,
 		);
-		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls);
+		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls, options.dc);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -945,6 +945,7 @@ class NimbleBaseActor<
 	async prepareAbilityCheckChatCardData(
 		abilityKey: AbilityKeyType,
 		rerolls: CheckCardRerollData<Roll<Record<string, unknown>>>,
+		dc: number | null = null,
 	) {
 		return {
 			author: game.user?.id,
@@ -956,6 +957,7 @@ class NimbleBaseActor<
 				actorType: this.type,
 				permissions: this.permission,
 				abilityKey,
+				dc,
 				...rerolls.system,
 			},
 		};
@@ -976,7 +978,7 @@ class NimbleBaseActor<
 			{ kind: 'save', key: saveKey },
 			rollMode ?? 0,
 		);
-		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls);
+		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls, options.dc);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -1092,6 +1094,7 @@ class NimbleBaseActor<
 	async prepareSavingThrowChatCardData(
 		saveKey: SaveKeyType,
 		rerolls: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
+		dc: number | null = null,
 	) {
 		return {
 			author: game.user?.id,
@@ -1103,6 +1106,7 @@ class NimbleBaseActor<
 				actorType: this.type,
 				permissions: this.permission,
 				saveKey,
+				dc,
 				...rerolls.system,
 			},
 		};

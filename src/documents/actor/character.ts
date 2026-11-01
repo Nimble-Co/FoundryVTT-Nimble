@@ -1318,7 +1318,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ kind: 'skillCheck', key: skillKey },
 			rollMode ?? 0,
 		);
-		const chatData = await this.prepareSkillCheckChatCardData(skillKey, rerolls);
+		const chatData = await this.prepareSkillCheckChatCardData(skillKey, rerolls, options.dc);
 
 		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,
@@ -1373,6 +1373,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	async prepareSkillCheckChatCardData(
 		skillKey: SkillKeyType,
 		rerolls: CheckCardRerollData<NimbleRoll>,
+		dc: number | null = null,
 	) {
 		return {
 			author: game.user?.id,
@@ -1384,6 +1385,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				actorType: this.type,
 				permissions: this.permission,
 				skillKey,
+				dc,
 				...rerolls.system,
 			},
 		};

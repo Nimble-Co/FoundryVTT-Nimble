@@ -552,6 +552,12 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
+			"checkResult": {
+				"failed": "Failed",
+				"failedWithDC": "Failed - DC {dc}",
+				"succeeded": "Succeeded",
+				"succeededWithDC": "Succeeded - DC {dc}"
+			},
 			"concentrationApplied": "Concentration Applied",
 			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
@@ -3874,6 +3880,7 @@
 				"self": "The one who uses it (given by itself)"
 			},
 			"customSaveDC": "Custom Save DC",
+			"customSaveDCHint": "A number or a formula against the data of the creature that uses this. When empty, a hero uses 10+@key and a monster has no DC.",
 			"sharedRolls": "Shared Rolls",
 			"none": "None",
 			"statusCondition": "Status Condition",

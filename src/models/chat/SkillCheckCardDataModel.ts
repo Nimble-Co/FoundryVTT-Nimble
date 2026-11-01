@@ -1,4 +1,4 @@
-import { incomingReactions, metadata, rerollHistory, roller } from './common.js';
+import { checkDC, incomingReactions, metadata, rerollHistory, roller } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -17,6 +17,7 @@ declare namespace NimbleSkillCheckCardData {
 		ReturnType<typeof metadata> &
 		ReturnType<typeof skillCheckCardSchema> &
 		ReturnType<typeof roller> &
+		ReturnType<typeof checkDC> &
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof rerollHistory>;
 	interface BaseData extends Record<string, unknown> {}
@@ -34,6 +35,7 @@ class NimbleSkillCheckCardData extends foundry.abstract.TypeDataModel<
 			...skillCheckCardSchema(),
 			...metadata(),
 			...roller(),
+			...checkDC(),
 			...incomingReactions(),
 			...rerollHistory(),
 		};

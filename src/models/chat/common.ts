@@ -25,6 +25,11 @@ export const roller = () => ({
 	tokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
 });
 
+/** The DC a check is made against, when its source gives one. */
+export const checkDC = () => ({
+	dc: new fields.NumberField({ required: false, nullable: true, initial: null }),
+});
+
 /** Whether the activated item made its user concentrate. */
 export const concentration = () => ({
 	concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),

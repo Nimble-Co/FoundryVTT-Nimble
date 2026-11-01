@@ -344,6 +344,7 @@ export {
 	checkCardRollTarget,
 	checkRollOfCard,
 	createCheckCard,
+	keptD20,
 	type CheckCard,
 	type CheckCardRerollData,
 	type CheckRoll,
