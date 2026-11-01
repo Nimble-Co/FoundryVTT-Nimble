@@ -4,4 +4,6 @@ export interface CheckCardRollsProps {
 	messageDocument: NimbleChatMessage;
 	/** The check's name, such as "Strength Save" */
 	label: string;
+	/** Words for the small line of the first roll. */
+	note?: string | null;
 }

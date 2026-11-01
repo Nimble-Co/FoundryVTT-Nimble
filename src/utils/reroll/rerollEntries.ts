@@ -20,7 +20,7 @@ import {
 import { soleTarget } from '../tokens/soleTarget.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
-import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
+import type { RollToReroll, RollUseKind } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
@@ -82,7 +82,7 @@ interface RerollRuleLike {
 		other: RerollingActor | null;
 		card?: ResultCardView;
 	}) => boolean;
-	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
+	rerollChanges?: (kind: RollUseKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: DieChange;
 	/** A Change a Result rule: what one use does, or null when its formula gives no number. */

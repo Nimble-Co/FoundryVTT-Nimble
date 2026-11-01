@@ -3,6 +3,7 @@ import { NimbleAssessActionCardData } from './AssessActionCardDataModel.js';
 import { NimbleChargeAdjustmentCardData } from './ChargeAdjustmentCardDataModel.js';
 import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
 import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
+import { NimbleInitiativeCardData } from './InitiativeCardDataModel.js';
 import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel.js';
 import { NimbleMinionGroupAttackCardData } from './MinionGroupAttackCardDataModel.js';
 import { NimbleMoveActionCardData } from './MoveActionCardDataModel.js';
@@ -21,6 +22,7 @@ const chatDataModels = {
 	chargeAdjustment: NimbleChargeAdjustmentCardData,
 	feature: NimbleFeatureCardData,
 	fieldRest: NimbleFieldRestCardData,
+	initiative: NimbleInitiativeCardData,
 	levelUpSummary: NimbleLevelUpSummaryCardData,
 	minionGroupAttack: NimbleMinionGroupAttackCardData,
 	moveAction: NimbleMoveActionCardData,
@@ -45,6 +47,7 @@ declare global {
 			chargeAdjustment: NimbleChargeAdjustmentCardData;
 			feature: NimbleFeatureCardData;
 			fieldRest: NimbleFieldRestCardData;
+			initiative: NimbleInitiativeCardData;
 			levelUpSummary: NimbleLevelUpSummaryCardData;
 			minionGroupAttack: NimbleMinionGroupAttackCardData;
 			moveAction: NimbleMoveActionCardData;

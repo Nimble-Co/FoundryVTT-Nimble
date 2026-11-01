@@ -1,4 +1,4 @@
-The Change a Result rule lets a creature change the result of a save, a skill check or an ability check after it is made. **How does it change the result?** picks one of three:
+The Change a Result rule lets a creature change the result of a save, a skill check, an ability check or Initiative after it is made. **How does it change the result?** picks one of three:
 
 - **It succeeds:** the card says Succeeded, and the total stays. The row goes away while the change stands. Other rows stay.
 - **Set the total to a formula:** the total on the card becomes the formula's value. **Only if the total is lower** shows the row only when the total on the card is below that value. With it off, the row shows at any total but that value, since a click there changes nothing.
@@ -23,5 +23,15 @@ The row shows on each check the rule covers, also when the card knows no DC, bec
 - **How does it change the result?** → `setTotal`
 - **Formula** → `10+@intelligence`
 - **Charge pool** → the pool of the feature
+
+**Example: a feature that changes Initiative to 10 when it is lower.**
+
+- **Which roll can it change?** → `initiative`
+- **Who can use it?** → `roller`
+- **How does it change the result?** → `setTotal`
+- **Formula** → `10`
+- **Only if the total is lower** → on
+
+**On Initiative.** Initiative has no result, so **It succeeds** gives no row there. A set total or an add also changes the combatant's Initiative and starting actions. The Reroll and Change a Die rules do not work on Initiative. See [The Initiative card](../playing/dice-and-chat.md#the-initiative-card).
 
 **What the change does to the card.** The roll stays what the dice gave. The card keeps the changes in order and works out its total from them. A known DC is read again after each change. A natural 1 or 20 still counts through an add, but not through a set total, which replaces the roll. The player and the GM can take a change back with **Remove**: the uses, Mana and Wounds it cost go back. An action or a Heroic Reaction stays spent. A reroll takes the changes off the card, and their cost stays paid. A change of a die keeps them. See [Changing a result](../playing/dice-and-chat.md#changing-a-result) for what the player sees.

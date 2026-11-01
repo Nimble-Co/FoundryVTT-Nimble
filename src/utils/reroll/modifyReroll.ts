@@ -1,6 +1,6 @@
 import type { RollChange } from '../incomingReactions/incomingReactionEntry.js';
 import type { GrantModifier } from './rerollGrants.js';
-import type { RerollRollKind } from './rollToReroll.js';
+import type { RollUseKind } from './rollToReroll.js';
 
 /** A `modifyReroll` rule as the reroll code reads it. */
 interface ModifyRerollRuleLike {
@@ -53,7 +53,7 @@ function modifyRerollRules(reroll: {
  */
 function modifyRerollChanges(
 	reroll: { identifier?: string; actor?: ModifierOwner | null },
-	kind: RerollRollKind,
+	kind: RollUseKind,
 	applied: readonly string[] = [],
 ): ModifyRerollChange[] {
 	const changes: ModifyRerollChange[] = [];
@@ -136,7 +136,7 @@ async function resolveRollChanges(changes: readonly ModifyRerollChange[]): Promi
 /** The resolved changes the reroll owner's Modify Reroll rules add, without those in `applied`. */
 async function newRollChanges(
 	reroll: { identifier?: string; actor?: unknown },
-	kind: RerollRollKind,
+	kind: RollUseKind,
 	applied: readonly RollChange[],
 ): Promise<RollChange[]> {
 	const owner = { identifier: reroll.identifier, actor: reroll.actor as ModifierOwner | null };

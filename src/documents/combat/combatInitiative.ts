@@ -1,18 +1,16 @@
+import { getInitiativeStartingActions } from '../../utils/combat/initiativeStartingActions.js';
+import { keptD20 } from '../../utils/reroll/checkCardRollTarget.js';
+import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { getCombatantPendingActionDelta } from './combatantSystem.js';
 import type { InitiativeRollOutcome } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
-function getInitiativeStartingActions(rollTotal: number): number {
-	if (rollTotal >= 20) return 3;
-	if (rollTotal >= 10) return 2;
-	return 1;
-}
-
 export function applyCharacterInitiativeActionUpdate(
 	combatant: Combatant.Implementation,
 	combatantUpdates: Record<string, unknown>,
 	rollTotal: number,
+	naturalD20: number | null = null,
 ): void {
 	if (combatant.type !== 'character') return;
 
@@ -28,7 +26,7 @@ export function applyCharacterInitiativeActionUpdate(
 	const pendingDelta = getCombatantPendingActionDelta(combatant);
 	combatantUpdates[actionPath] = Math.max(
 		0,
-		getInitiativeStartingActions(rollTotal) + pendingDelta,
+		getInitiativeStartingActions(rollTotal, naturalD20) + pendingDelta,
 	);
 	if (pendingDelta !== 0) {
 		combatantUpdates['system.actions.pendingDelta'] = 0;
@@ -40,6 +38,8 @@ export async function buildInitiativeChatData(params: {
 	roll: Roll;
 	messageOptions: ChatMessage.CreateData;
 	rollIndex: number;
+	combatId: string | null;
+	foldedActionDelta: number;
 }): Promise<ChatMessage.CreateData> {
 	// A rollMode entry in messageOptions is a visibility request, not message
 	// data: pull it out so it doesn't leak into the created message.
@@ -72,6 +72,18 @@ export async function buildInitiativeChatData(params: {
 		create: false,
 	})) as ChatMessage.CreateData & { sound?: string | null };
 
+	Object.assign(
+		chatData,
+		await initiativeCardData({
+			actor: params.combatant.actor,
+			actorName: params.combatant.name ?? params.combatant.actor?.name ?? '',
+			roll: params.roll,
+			combatId: params.combatId,
+			combatantId: params.combatant.id,
+			foldedActionDelta: params.foldedActionDelta,
+		}),
+	);
+
 	// Play 1 sound for the whole rolled set.
 	if (params.rollIndex > 0) chatData.sound = null;
 	return chatData;
@@ -94,7 +106,13 @@ export async function rollInitiativeForCombatant(params: {
 	await roll.evaluate();
 	const rollTotal = roll.total ?? 0;
 	combatantUpdates.initiative = rollTotal;
-	applyCharacterInitiativeActionUpdate(combatant, combatantUpdates, rollTotal);
+	const foldedActionDelta = getCombatantPendingActionDelta(combatant);
+	applyCharacterInitiativeActionUpdate(
+		combatant,
+		combatantUpdates,
+		rollTotal,
+		keptD20(roll.terms as unknown[]),
+	);
 
 	await handleInitiativeRules({
 		combatId: params.combat.id,
@@ -107,6 +125,8 @@ export async function rollInitiativeForCombatant(params: {
 		roll,
 		messageOptions: params.messageOptions,
 		rollIndex: params.rollIndex,
+		combatId: params.combat.id,
+		foldedActionDelta,
 	});
 
 	return {

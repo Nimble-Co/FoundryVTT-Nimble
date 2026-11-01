@@ -12,7 +12,7 @@
 	import RollSummary from './RollSummary.svelte';
 	import { getCheckResultLabel } from './RollSummary.svelte.ts';
 
-	let { messageDocument, label }: CheckCardRollsProps = $props();
+	let { messageDocument, label, note = null }: CheckCardRollsProps = $props();
 
 	setContext(
 		'messageDocument',
@@ -45,6 +45,7 @@
 		{label}
 		subheading={getRollModeSummary(system.rollMode)}
 		checkResult={index === 0 ? firstRollResult : null}
+		note={index === 0 ? note : null}
 		tooltip={prepareRollTooltip(system.actorType, system.permissions, roll)}
 		total={index === 0 ? resultTotal(roll.total ?? 0, resultChangesOf(system)) : (roll.total ?? 0)}
 		rolling={index === 0 ? rolling : null}

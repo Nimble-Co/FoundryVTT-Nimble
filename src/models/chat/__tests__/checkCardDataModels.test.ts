@@ -49,3 +49,24 @@ describe('check card reroll fields', () => {
 		expect(dc.options.required).not.toBe(true);
 	});
 });
+
+describe('initiative card fields', () => {
+	const schema = chatDataModels.initiative.defineSchema() as unknown as Record<string, Field>;
+
+	it('stores the roller, entries, changes, combat and combatant', () => {
+		expect(Object.keys(schema)).toEqual(
+			expect.arrayContaining([
+				'actorUuid',
+				'incomingReactions',
+				'resultChanges',
+				'combatId',
+				'combatantId',
+				'foldedActionDelta',
+			]),
+		);
+	});
+
+	it('has no DC', () => {
+		expect(Object.keys(schema)).not.toContain('dc');
+	});
+});

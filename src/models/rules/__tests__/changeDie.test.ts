@@ -136,6 +136,12 @@ describe('ChangeDieRule', () => {
 		});
 	});
 
+	it('does not offer Initiative as a roll', () => {
+		const choices = (ChangeDieRule.defineSchema() as unknown as Record<string, any>).rolls.element
+			.choices;
+		expect(Object.keys(choices)).not.toContain('initiative');
+	});
+
 	it('offers on the rolls and side it names, through the shared part', () => {
 		const rule = makeRule();
 		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'attack', delivery: 'melee' } })).toBe(

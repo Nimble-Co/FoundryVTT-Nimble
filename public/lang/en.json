@@ -561,6 +561,11 @@
 			"concentrationApplied": "Concentration Applied",
 			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
+			"initiative": {
+				"label": "Initiative",
+				"startWithOneAction": "Start with 1 action",
+				"startWithActions": "Start with {count} actions"
+			},
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
 			"undo": "Undo",
@@ -2646,9 +2651,12 @@
 				}
 			},
 			"changeResult": {
-				"description": "Lets the one who rolled or an ally change the result of a save or a check after it is made: it succeeds, its total becomes a formula, or a formula goes on its total. The player can take the change back and gets the cost back.",
+				"description": "Lets the one who rolled or an ally change the result of a save, a check or Initiative after it is made: it succeeds, its total becomes a formula, or a formula goes on its total. The player can take the change back and gets the cost back.",
 				"rolls": {
-					"label": "Which roll can it change?"
+					"label": "Which roll can it change?",
+					"choices": {
+						"initiative": "Initiative"
+					}
 				},
 				"change": {
 					"label": "How does it change the result?",

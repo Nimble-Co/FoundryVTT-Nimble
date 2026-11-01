@@ -119,7 +119,7 @@ describe('resultSumText', () => {
 	});
 
 	it('tells a set total in words', () => {
-		expect(resultSumText(7, [click({ change: 'setTotal', value: 13 })])).toBe('7 changed to 13');
+		expect(resultSumText(7, [click({ change: 'setTotal', value: 13 })])).toBeNull();
 	});
 
 	it('keeps the order of mixed changes', () => {

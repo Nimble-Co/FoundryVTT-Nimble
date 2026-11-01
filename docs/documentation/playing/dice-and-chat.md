@@ -150,7 +150,7 @@ After a set with a feature that makes the set value final, a Primary Die bonus l
 
 ## Changing a result
 
-Some features change the result of a save, a skill check or an ability check, after the roll. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
+Some features change the result of a save, a skill check, an ability check or [Initiative](#the-initiative-card), after the roll. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
 
 - **Succeed Instead** with Elusive. The card says **Succeeded**, or **Succeeded - DC 14** with a DC. The total stays. The row goes away while the change stands. The other rows stay under the closed button, because a reroll can still replace the result. The history line says **Succeeded Instead** with Elusive.
 - **Change to 10** with Cheat!. The total becomes that number. The history line says **Changed 7 to 10** with Cheat!. The row does not show when the total is already that number. Some features show the row only when the total is below that number.
@@ -163,6 +163,22 @@ A known DC is read again after each change, and the small line under the name fo
 **Remove.** Each of these lines has a **Remove** button, for the user who can click the row and for the GM. A click takes that change off the card and reads the result again. The uses, Mana and Wounds it cost come back. An action or a Heroic Reaction stays spent. A line that grew removes all its clicks and gives back all its Wounds. The other changes stay in their order, and the total is worked out again. Rerolls and changes of a die have no **Remove**.
 
 **A reroll replaces the result.** The new roll is the new total, and the added, set and succeed changes come off. Their costs stay paid, and any Wounds stay. Their lines stay in the history, with no **Remove**. The box starts again from the new roll. A change of a die is not a new roll, so the changes stay on the total.
+
+## The Initiative card
+
+An Initiative roll posts a card in the same layout as a check card. The small line under the name tells how many actions a hero starts combat with: **Start with 1 action**, **Start with 2 actions** or **Start with 3 actions**. A total of 10 or more gives 2. A total of 20 or more, or a natural 20, gives 3. A monster's card does not show this line. Initiative has no DC, so the card never says Failed or Succeeded. Initiative messages that were posted before this card stay as they were.
+
+A feature can change the total with a row of [Change This Roll](#change-this-roll), such as **Change to 10** with Cheat!. The right side of the row tells the gain, **Start with 2 actions**, when the feature has no other cost to show. The button stays closed until you click it. A row with **Only if the total is lower** does not show at that total or above it. A change to a number replaces the roll, so a natural 20 does not count after it. An added number keeps the natural 20. The history line says **Changed 7 to 10** with Cheat!.
+
+The change also goes to the combat tracker, for the combat and the combatant that made the roll:
+
+- The combatant's Initiative becomes the new total, and the starting actions follow it.
+- If you did not spend your actions yet, your current actions become the new number.
+- If you click later, the difference between the old and the new number goes on your current actions. Current actions never go below 0.
+- An action adjustment that waits for your next refill stays waiting.
+- **Remove** does the reverse, and gives the cost back.
+
+The change stays on the card only, and the tracker does not change, when that combat or combatant is gone, when the roll was made outside a combat, or when the combatant has a different Initiative now (a new roll, or a number the GM set by hand).
 
 ## Why an attack is a crit, or a hit
 

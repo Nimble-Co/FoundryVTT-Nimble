@@ -40,7 +40,7 @@ Your numbers, and the place you roll from:
 
 - **Abilities**: click an ability score to roll an ability check.
 - **Saving throws**: click a save to roll it. Saves can carry a default advantage or disadvantage (from your class or ancestry); with editing enabled, the edit button opens a window where you can adjust each save's default roll mode and bonus, or reset them to what your class and items say they should be.
-- **Initiative**: click the initiative value to roll it. If a combat is running, this also handles joining it.
+- **Initiative**: click the initiative value to roll it. If a combat is running, this also handles joining it. The roll posts an [Initiative card](../playing/dice-and-chat.md#the-initiative-card) that tells how many actions you start with.
 - **Armor and movement speeds.**
 - **Skills**: click a skill to roll a skill check.
 - **Proficiencies**: languages, armor, and weapons, each editable while editing is enabled.

@@ -21,8 +21,8 @@ import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost
 import {
 	type CheckRollKind,
 	REROLL_ROLL_KINDS,
-	type RerollRollKind,
 	type RollToReroll,
+	type RollUseKind,
 } from '../../utils/reroll/rollToReroll.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -62,7 +62,7 @@ function choiceLabels(
 }
 
 /** A rule with no roll field is used on attacks only. */
-function rollsInclude(kind: RerollRollKind) {
+function rollsInclude(kind: RollUseKind) {
 	return (data: Record<string, unknown>) =>
 		Array.isArray(data.rolls) ? data.rolls.includes(kind) : kind === 'attack';
 }
@@ -327,7 +327,7 @@ const COST_FIELDS = [
 abstract class RollUseRule<
 	TSchema extends NimbleBaseRule.Schema = RollUseRule.Schema,
 > extends NimbleBaseRule<TSchema> {
-	declare rolls: RerollRollKind[];
+	declare rolls: RollUseKind[];
 	declare saves: string[];
 	declare skills: string[];
 	declare abilities: string[];
@@ -447,7 +447,7 @@ abstract class RollUseRule<
 	}
 
 	/** The kinds of roll this rule can be used on. */
-	protected usesOnRolls(): readonly RerollRollKind[] {
+	protected usesOnRolls(): readonly RollUseKind[] {
 		return this.rolls ?? [];
 	}
 
@@ -459,6 +459,7 @@ abstract class RollUseRule<
 	}
 
 	private checkKeys(kind: CheckRollKind): string[] {
+		if (kind === 'initiative') return [];
 		const keys = { save: this.saves, skillCheck: this.skills, abilityCheck: this.abilities }[kind];
 		return Array.isArray(keys) ? keys : [];
 	}

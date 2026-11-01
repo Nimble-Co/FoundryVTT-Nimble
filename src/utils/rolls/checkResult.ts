@@ -7,7 +7,7 @@ type CheckResult = 'failed' | 'succeeded';
 /**
  * The result of a check card, or null when nothing settles it. A total that
  * meets the DC succeeds. On a save or a skill check, a natural 1 fails and a
- * natural 20 succeeds, with or without a DC.
+ * natural 20 succeeds, with or without a DC. Initiative has no result.
  */
 function checkResult(input: {
 	kind: CheckRollKind;
@@ -17,6 +17,7 @@ function checkResult(input: {
 }): CheckResult | null {
 	const { kind, total, keptD20, dc } = input;
 
+	if (kind === 'initiative') return null;
 	if (kind !== 'abilityCheck') {
 		if (keptD20 === 1) return 'failed';
 		if (keptD20 === 20) return 'succeeded';

@@ -18,7 +18,7 @@ When combat begins, the system automatically:
 - Sets every monster's actions to full. Monsters don't roll initiative. They simply act after the characters.
 - Refreshes every character's heroic reactions.
 
-A character's initiative roll decides how many actions they start their first round with, exactly as in the rulebook: a total of 20 or more grants 3 actions, 10 or more grants 2, and anything less grants 1. The tracker shows these as action pips on each character's card.
+A character's initiative roll decides how many actions they start their first round with, exactly as in the rulebook: a total of 20 or more, or a natural 20, grants 3 actions, 10 or more grants 2, and anything less grants 1. The tracker shows these as action pips on each character's card. The roll posts an [Initiative card](../playing/dice-and-chat.md#the-initiative-card) that tells the same number. When a feature changes the total on that card, the tracker follows it.
 
 ::: tip Players can roll their own initiative
 A player can roll initiative from their character sheet before the fight starts, using the full roll window (advantage, disadvantage, situational modifiers, and roll visibility). If you enable the **Auto-Add Character To Combat On Initiative Roll** setting, rolling from the sheet also adds the character to the current scene's combat automatically, which is handy for ambushes and late arrivals.

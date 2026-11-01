@@ -7,6 +7,7 @@ import {
 	rerollChargeConsumption,
 } from '#utils/chargePool/chargePoolReroll.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
+import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	broadcastRerollRolling,
@@ -61,7 +62,7 @@ import {
 import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollTarget.js';
 import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
-import type { RerollRollKind } from '#utils/reroll/rollToReroll.js';
+import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
 import {
 	newResultChange,
 	resultChangesOf,
@@ -425,7 +426,7 @@ export class CardRerolls {
 	}
 
 	/** The rule owner's Modify Reroll changes this card has not applied yet. */
-	#newRollChanges(rule: RerollRuleLike, kind: RerollRollKind): Promise<RollChange[]> {
+	#newRollChanges(rule: RerollRuleLike, kind: RollUseKind): Promise<RollChange[]> {
 		return newRollChanges(rule, kind, this.#rollChanges());
 	}
 
@@ -880,8 +881,19 @@ export class CardRerolls {
 		const paid = cost ? await payRerollCost(actor, cost, { forceHeroicReaction }) : null;
 		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 
+		const changes = this.#resultChanges();
+		const added = newResultChange({
+			entry,
+			use,
+			changes,
+			chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
+			paid: {
+				charges: paid?.charges ?? 0,
+				mana: paid?.mana ?? 0,
+				wounds: paid?.wounds ?? 0,
+			},
+		});
 		try {
-			const changes = this.#resultChanges();
 			await this.#host.update({
 				system: {
 					// Read after the cost is paid: a rule that can pay again gets a new row.
@@ -889,26 +901,32 @@ export class CardRerolls {
 						this.#withEntryUsed(entry),
 						collectRerollEntries(context).manual,
 					),
-					resultChanges: [
-						...changes,
-						newResultChange({
-							entry,
-							use,
-							changes,
-							chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
-							paid: {
-								charges: paid?.charges ?? 0,
-								mana: paid?.mana ?? 0,
-								wounds: paid?.wounds ?? 0,
-							},
-						}),
-					],
+					resultChanges: [...changes, added],
 				},
 			} as Record<string, unknown>);
 		} catch (error) {
 			if (cost && paid) await refundRerollCost(actor, cost, paid);
 			console.error('Nimble | A change of a result failed; its cost is given back.', error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+		await this.#followInitiative(changes, [...changes, added]);
+	}
+
+	/** An Initiative card's combatant follows the card. A failure here leaves the card as it is. */
+	async #followInitiative(
+		before: readonly ResultChange[],
+		after: readonly ResultChange[],
+	): Promise<void> {
+		if (this.#host.type() !== 'initiative') return;
+		try {
+			await followInitiativeCard({
+				system: this.#host.system() as unknown as Record<string, unknown>,
+				rollSource: this.#host.rollsSource()[0],
+				before,
+				after,
+			});
+		} catch (error) {
+			console.error('Nimble | A combatant could not follow its Initiative card.', error);
 		}
 	}
 
@@ -957,9 +975,11 @@ export class CardRerolls {
 		}
 
 		const removed = new Set(line.map((change) => change.id));
+		const remaining = changes.filter((change) => !removed.has(change.id));
 		await this.#host.update({
-			system: { resultChanges: changes.filter((change) => !removed.has(change.id)) },
+			system: { resultChanges: remaining },
 		} as Record<string, unknown>);
+		await this.#followInitiative(changes, remaining);
 
 		try {
 			await this.#giveBackResultCost(line);

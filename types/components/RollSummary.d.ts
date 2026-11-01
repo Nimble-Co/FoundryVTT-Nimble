@@ -21,6 +21,8 @@ export interface RollSummaryProps {
 	subheading?: string | null;
 	/** The result of a check, first on the small line under the name. */
 	checkResult?: { result: CheckResult; label: string } | null;
+	/** Words on the small line in the normal colour. */
+	note?: string | null;
 	tooltip?: string | null;
 	total: number;
 	options?: RollSummaryOptions;

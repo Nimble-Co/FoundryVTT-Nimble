@@ -10,6 +10,7 @@
 		label,
 		subheading,
 		checkResult = null,
+		note = null,
 		tooltip,
 		total,
 		options,
@@ -29,7 +30,7 @@
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
-<div class="roll" class:roll--no-subheading={!subheading && !checkResult}>
+<div class="roll" class:roll--no-subheading={!subheading && !checkResult && !note}>
 	<div
 		class="roll__total"
 		data-tooltip={expanded || rolling ? null : tooltip}
@@ -58,21 +59,27 @@
 		</button>
 	{/if}
 
-	{#if checkResult}
+	{#if checkResult || note}
 		<span class="roll__subheading roll__subheading--pieces">
-			<!-- Hidden while the dice are in the air, so it cannot tell the result early. -->
-			<span
-				class="roll__result"
-				class:roll__result--failed={checkResult.result === 'failed'}
-				class:roll__result--succeeded={checkResult.result === 'succeeded'}
-				class:roll__result--hidden={rolling}
-			>
-				<i
-					class={checkResult.result === 'failed' ? 'fa-solid fa-xmark' : 'fa-solid fa-check'}
-					aria-hidden="true"
-				></i>
-				{checkResult.label}
-			</span>
+			{#if note}
+				<span>{note}</span>
+			{/if}
+
+			{#if checkResult}
+				<!-- Hidden while the dice are in the air, so it cannot tell the result early. -->
+				<span
+					class="roll__result"
+					class:roll__result--failed={checkResult.result === 'failed'}
+					class:roll__result--succeeded={checkResult.result === 'succeeded'}
+					class:roll__result--hidden={rolling}
+				>
+					<i
+						class={checkResult.result === 'failed' ? 'fa-solid fa-xmark' : 'fa-solid fa-check'}
+						aria-hidden="true"
+					></i>
+					{checkResult.label}
+				</span>
+			{/if}
 
 			{#if subheading}
 				<span>{subheading}</span>

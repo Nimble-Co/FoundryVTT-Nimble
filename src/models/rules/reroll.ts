@@ -5,7 +5,7 @@ import {
 	type RerollKeep,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
-import type { RerollRollKind } from '../../utils/reroll/rollToReroll.js';
+import type { RollUseKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -184,7 +184,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 	 * The changes this rule adds to the new roll. Extra damage reads this
 	 * rule's actor. Only an attack gets the attack changes.
 	 */
-	rerollChanges(kind: RerollRollKind): RerollChanges {
+	rerollChanges(kind: RollUseKind): RerollChanges {
 		if ((this.die ?? 'wholeRoll') !== 'wholeRoll') {
 			return { rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' };
 		}

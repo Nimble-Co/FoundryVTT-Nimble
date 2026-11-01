@@ -24,12 +24,16 @@ interface ChangeThisRollInput {
 	cancelPick: () => string | null;
 }
 
-/** A card that says Failed and an attack that misses show the rows with no click. */
+/**
+ * A card that says Failed, an attack that misses and an Initiative card show the
+ * rows with no click. Initiative has rows only when a change can help.
+ */
 function opensByItself(message: NimbleChatMessage | undefined): boolean {
 	const card = message?.reactive;
 	const system = card?.system as unknown as Record<string, unknown> | undefined;
 	if (!card || !system) return false;
 	if (system.isMiss === true && system.isCritical !== true) return true;
+	if (card.type === 'initiative') return true;
 	return checkResultOfCard(card.type, system, card.rolls?.[0]) === 'failed';
 }
 

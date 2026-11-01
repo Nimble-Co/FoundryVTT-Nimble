@@ -73,6 +73,7 @@ const LEADING_D20 = /^\s*\d*d20(?!\d)((?:[a-z]+\d*)*)/i;
 
 /** The check a card of this type holds, or null when it is not a check card. */
 function checkRollOfCard(type: string, system: Record<string, unknown>): CheckRoll | null {
+	if (type === 'initiative') return { kind: 'initiative', key: '' };
 	const card = CHECK_CARD_KEYS[type as keyof typeof CHECK_CARD_KEYS];
 	if (!card) return null;
 	const key = system[card.keyField];
@@ -386,5 +387,6 @@ export {
 	keptD20,
 	type CheckCard,
 	type CheckCardRerollData,
+	type AnyRoll,
 	type CheckRoll,
 };

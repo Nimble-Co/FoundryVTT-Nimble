@@ -103,6 +103,17 @@ describe('saveResolved hook', () => {
 		expect(card.system.reportedSaveResult).toBe('failed');
 	});
 
+	it('does nothing for an Initiative card, also on a natural 20', async () => {
+		const { rule } = createSaver();
+		const card = createCard({ type: 'initiative', rolls: [roll(20, 22)] }, { dc: null });
+
+		emit('createChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).not.toHaveBeenCalled();
+		expect(card.update).not.toHaveBeenCalled();
+	});
+
 	it('fires pass again when a Change a Result click makes the card succeed', async () => {
 		const { rule } = createSaver();
 		const card = createCard();

@@ -8,7 +8,7 @@ import type {
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
-import type { RerollRollKind } from './rollToReroll.js';
+import type { RollUseKind } from './rollToReroll.js';
 
 /** The roll a reroll replaces. A live roll and a serialized one both fit. */
 interface ReplacedRoll {
@@ -57,7 +57,7 @@ interface RerollStepInput<TRoll> {
 	/** Roll changes of Modify Reroll rules that this card has not applied yet. */
 	rollChanges?: readonly RollChange[];
 	/** The kind of roll being rerolled; attack changes apply only to an attack. */
-	rollKind: RerollRollKind;
+	rollKind: RollUseKind;
 	/** Reads the new roll's kept die. By default, the primary die of a damage roll. */
 	readNewDie?: (roll: TRoll) => RolledDie;
 	/** An earlier reroll of this roll kept the crit triggers. */

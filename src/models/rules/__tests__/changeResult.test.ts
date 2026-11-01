@@ -87,7 +87,11 @@ describe('ChangeResultRule fields', () => {
 			'save',
 			'skillCheck',
 			'abilityCheck',
+			'initiative',
 		]);
+		expect(schema.rolls?.element?.choices?.initiative).toBe(
+			'NIMBLE.rules.changeResult.rolls.choices.initiative',
+		);
 	});
 
 	it('asks for the formula only to set or add', () => {
@@ -234,5 +238,34 @@ describe('ChangeResultRule#resultUseFor', () => {
 		const more = makeRule({ id: 'b', change: 'add', formula: '2' });
 		expect(add.resultUseFor(roller)?.value).toBe(3);
 		expect(more.resultUseFor(roller)?.value).toBe(2);
+	});
+});
+
+describe('ChangeResultRule on Initiative', () => {
+	const INITIATIVE = { kind: 'initiative', key: '' } as const;
+	const offers = (config: Record<string, unknown>, total?: number) =>
+		makeRule({ rolls: ['initiative'], ...config }).offersUseOn({
+			side: 'roller',
+			roll: INITIATIVE,
+			...(total === undefined ? {} : { card: card(total) }),
+		});
+	const setTen = { change: 'setTotal', formula: '10', onlyIfLower: true };
+
+	it('shows a set total only below its value when it has onlyIfLower', () => {
+		expect(offers(setTen)).toBe(true);
+		expect(offers(setTen, 7)).toBe(true);
+		expect(offers(setTen, 10)).toBe(false);
+		expect(offers(setTen, 14)).toBe(false);
+	});
+
+	it('does not show on Initiative unless the rule names it', () => {
+		expect(
+			makeRule({ ...setTen, rolls: ['save'] }).offersUseOn({ side: 'roller', roll: INITIATIVE }),
+		).toBe(false);
+	});
+
+	it('does not offer a succeed, since Initiative has no result', () => {
+		expect(offers({ change: 'succeed' })).toBe(false);
+		expect(offers({ change: 'succeed' }, 7)).toBe(false);
 	});
 });

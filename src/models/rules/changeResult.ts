@@ -5,7 +5,7 @@ import {
 	type ResultChangeKind,
 	type ResultUse,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import type { RerollRollKind } from '../../utils/reroll/rollToReroll.js';
+import type { RerollRollKind, RollUseKind } from '../../utils/reroll/rollToReroll.js';
 import { standingResultChanges } from '../../utils/rolls/resultChanges.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, type RollUseContext, RollUseRule } from './_rollUseRule.js';
@@ -26,7 +26,10 @@ function schema() {
 			new fields.StringField({
 				required: true,
 				nullable: false,
-				choices: choiceLabels('reroll', 'rolls', CHECK_ROLLS),
+				choices: {
+					...choiceLabels('reroll', 'rolls', CHECK_ROLLS),
+					...choiceLabels('changeResult', 'rolls', ['initiative']),
+				},
 			}),
 			{
 				required: true,
@@ -79,8 +82,8 @@ declare namespace ChangeResultRule {
 }
 
 /**
- * Lets the one who rolled or an ally change the result of a save or a check
- * after it is made: it succeeds, its total becomes a formula, or a formula goes
+ * Lets the one who rolled or an ally change the result of a save, a check or
+ * Initiative after it is made: it succeeds, its total becomes a formula, or a formula goes
  * on its total. Always a choice, never automatic. Read when a card is posted and
  * again on the GM client when it is used.
  */
@@ -115,7 +118,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 		);
 	}
 
-	protected override usesOnRolls(): readonly RerollRollKind[] {
+	protected override usesOnRolls(): readonly RollUseKind[] {
 		return (this.rolls ?? []).filter((kind) => kind !== 'attack');
 	}
 
@@ -146,6 +149,8 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 
 	override offersUseOn(context: RollUseContext): boolean {
 		if (!super.offersUseOn(context)) return false;
+		// Initiative has no result to succeed.
+		if (context.roll.kind === 'initiative' && this.change === 'succeed') return false;
 		const { card } = context;
 		if (!card) return true;
 		if (this.change === 'succeed') return !this.succeedStandsOn(card);

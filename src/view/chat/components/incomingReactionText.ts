@@ -64,10 +64,12 @@ function resultVerb(use: ResultUse): string {
 /**
  * `getRerolls` gives the card's reroll records, which turn a reroll into "Reroll Again".
  * `resultUseOf` gives what a Change a Result entry does now.
+ * `gainOf` gives what a row with no cost of its own shows at the right.
  */
 export function createIncomingReactionText(
 	getRerolls: () => RerollRecord[],
 	resultUseOf: (entry: IncomingReactionEntry) => ResultUse | null = () => null,
+	gainOf: (entry: IncomingReactionEntry) => string = () => '',
 ): IncomingReactionText {
 	function verb(entry: IncomingReactionEntry): string {
 		const use = entry.use === 'result' ? resultUseOf(entry) : null;
@@ -83,7 +85,7 @@ export function createIncomingReactionText(
 		const words = verb(entry);
 		// The baseline Interpose is no feature's.
 		const feature = entry.source === 'baseline' ? '' : featureName(entry) || entry.label;
-		const cost = getIncomingReactionCost(entry, reactingActor(entry));
+		const cost = getIncomingReactionCost(entry, reactingActor(entry)) || gainOf(entry);
 		const note = (entry.hint ?? '').trim();
 		const label = feature
 			? localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', { verb: words, feature })

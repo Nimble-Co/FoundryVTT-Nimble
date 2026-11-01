@@ -105,10 +105,12 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 }
 
 /**
- * How the total came from the roll: "7 + 3 + 3 = 13", or "7 changed to 13" for a
- * set total. Null when the total is the roll's.
+ * How the total came from the roll: "7 + 3 + 3 = 13". Null when the total is the
+ * roll's, and for one set total, because its history line tells both numbers.
  */
 function resultSumText(rollTotal: number, changes: readonly ResultChange[]): string | null {
+	const standing = changes.filter((change) => !change.retired);
+	if (standing.length === 1 && standing[0].change === 'setTotal') return null;
 	if (resultTotal(rollTotal, changes) === rollTotal) return null;
 
 	let text = String(rollTotal);

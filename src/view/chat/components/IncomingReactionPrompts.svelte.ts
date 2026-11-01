@@ -28,6 +28,7 @@ import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 import { cardHasDamageSection } from './damageGroup.ts';
 import { createHeldIncomingReactions } from './heldIncomingReactions.svelte.ts';
 import { createIncomingReactionText } from './incomingReactionText.ts';
+import { initiativeRowGain } from './initiativeCardText.ts';
 import { sortByVerb } from './reactionVerbs.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
@@ -67,6 +68,10 @@ export function createIncomingReactionPromptsState(
 	const text = createIncomingReactionText(
 		() => rerolls,
 		(entry) => message?.resultUseOf?.(entry) ?? null,
+		(entry) => {
+			const use = entry.use === 'result' ? message?.resultUseOf?.(entry) : null;
+			return use && message?.reactive ? initiativeRowGain(message.reactive, use) : '';
+		},
 	);
 	const resultChanges = $derived(resultChangesOf(message?.reactive?.system));
 	const rollTotal = $derived(Number(message?.reactive?.rolls?.[0]?.total) || 0);
