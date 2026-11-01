@@ -3,6 +3,7 @@ import { ActionCostRule } from '../models/rules/actionCost.js';
 import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
+import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
@@ -10,6 +11,7 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
@@ -27,6 +29,7 @@ import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
+import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
@@ -61,6 +64,7 @@ export default function registerRulesConfig() {
 		actionDelta: 'NIMBLE.ruleTypes.actionDelta',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
+		attackOutcome: 'NIMBLE.ruleTypes.attackOutcome',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
 		changeDie: 'NIMBLE.ruleTypes.changeDie',
 		chargePool: 'NIMBLE.ruleTypes.chargePool',
@@ -69,6 +73,7 @@ export default function registerRulesConfig() {
 		conditionalBonus: 'NIMBLE.ruleTypes.conditionalBonus',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
+		damageBack: 'NIMBLE.ruleTypes.damageBack',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
 		freeMove: 'NIMBLE.ruleTypes.freeMove',
@@ -85,6 +90,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
+		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -119,6 +125,7 @@ export default function registerRulesConfig() {
 		actionDelta: ActionDeltaRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
+		attackOutcome: AttackOutcomeRule,
 		chargeConsumer: ChargeConsumerRule,
 		changeDie: ChangeDieRule,
 		chargePool: ChargePoolRule,
@@ -127,6 +134,7 @@ export default function registerRulesConfig() {
 		conditionalBonus: ConditionalBonusRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
+		damageBack: DamageBackRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
 		freeMove: FreeMoveRule,
@@ -143,6 +151,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
+		makeCrit: MakeCritRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,

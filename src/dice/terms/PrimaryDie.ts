@@ -1,6 +1,7 @@
 import type { InexactPartial } from 'fvtt-types/utils';
 import type { PrimaryDieDiceOptions } from '../../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../../utils/damage/missThreshold.js';
+import { critFaceOf } from '../critFace.js';
 
 declare namespace PrimaryDie {
 	/** Options for PrimaryDie that extend standard die options. */
@@ -11,6 +12,12 @@ declare namespace PrimaryDie {
 		flavor?: string;
 		/** Highest result that counts as a miss. Defaults to 1. */
 		missThreshold?: number;
+		/** Lowest kept face that is a crit. Defaults to the max. */
+		criticalThreshold?: number;
+		/** Crit on this many faces less than the max. */
+		critRange?: number;
+		/** A crit without the max: on any face, or on any face that is not a miss. */
+		forcedCrit?: 'always' | 'onHit';
 		/** Per-term appearance override read by Dice So Nice when active. */
 		appearance?: PrimaryDieDiceOptions['appearance'];
 		/** Marks the term's damage type as system-managed for Dice So Nice. */
@@ -91,6 +98,11 @@ class PrimaryDie extends foundry.dice.terms.Die {
 		kept.result = Math.max(1, Math.min(kept.result + bonus, this.faces));
 	}
 
+	/** The lowest kept face that is a crit. Crit dice still explode only on the max. */
+	get critFace(): number {
+		return critFaceOf(this.faces ?? 6, this.options);
+	}
+
 	/**
 	 * Whether the die exploded (rolled maximum value), indicating a critical hit.
 	 *
@@ -109,7 +121,7 @@ class PrimaryDie extends foundry.dice.terms.Die {
 	 * - Is at or below `options.missThreshold` (default 1)
 	 * - Is marked as active
 	 * - Is not discarded (e.g., from keep highest/lowest)
-	 * - Is not the die's max face, and the roll did not explode (crits cannot be misses)
+	 * - Is below the crit face, and the roll did not explode (crits cannot be misses)
 	 *
 	 * @returns `true` if the roll is a miss, `false` if not, or `undefined` if not yet evaluated.
 	 */
@@ -118,7 +130,7 @@ class PrimaryDie extends foundry.dice.terms.Die {
 		if (this.exploded) return false;
 		const threshold = this.options.missThreshold ?? DEFAULT_MISS_THRESHOLD;
 		return this.results.some(
-			(r) => r.result <= threshold && r.result !== this.faces && r.active && !r.discarded,
+			(r) => r.result <= threshold && r.result < this.critFace && r.active && !r.discarded,
 		);
 	}
 }

@@ -229,9 +229,9 @@ describe('ToggleEffectRule', () => {
 		it('declares the supported turnOff trigger choices', () => {
 			const schema = ToggleEffectRule.defineSchema();
 			const turnOffField = schema.turnOff as unknown as {
-				element: { choices: readonly string[] };
+				element: { choices: Record<string, string> };
 			};
-			const choices = turnOffField.element.choices;
+			const choices = Object.keys(turnOffField.element.choices);
 			expect(choices).toContain('onActorKilled');
 			expect(choices).toContain('onActorWounded');
 			expect(choices).toContain('onActorHealed');
@@ -240,6 +240,7 @@ describe('ToggleEffectRule', () => {
 			expect(choices).toContain('onTurnEnd');
 			expect(choices).toContain('onEncounterEnd');
 			expect(choices).toContain('onActorDying');
+			expect(choices).toContain('onRoundEnd');
 		});
 	});
 
@@ -555,6 +556,45 @@ describe('ToggleEffectRule', () => {
 			});
 
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('onRoundEnd deletes the AE when the round changes', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onRoundEnd'] }, actor);
+			pushAE(actor, rule.id, rule.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
+			await rule.onRoundChanged({
+				combat: { id: 'combat-1' } as unknown as Ctx['combat'],
+				actor: actor as unknown as Ctx['actor'],
+				round: 2,
+			});
+
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('keeps the AE on a round change without onRoundEnd, and for another actor', async () => {
+			const actor = createMockActor();
+			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onTurnEnd'] }, actor);
+			const otherActor = createMockActor();
+			const other = createToggleEffectRule(
+				{ tags: ['self:heads'], turnOff: ['onRoundEnd'] },
+				otherActor,
+			);
+			pushAE(actor, rule.id, rule.item.id);
+			pushAE(otherActor, other.id, other.item.id);
+
+			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
+			const context = {
+				combat: { id: 'combat-1' } as unknown as Ctx['combat'],
+				actor: actor as unknown as Ctx['actor'],
+				round: 2,
+			};
+			await rule.onRoundChanged(context);
+			await other.onRoundChanged(context);
+
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(otherActor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
 
 		it('onActorWounded deletes the AE when listed in turnOff', async () => {
@@ -1522,5 +1562,19 @@ describe('ToggleEffectRule', () => {
 
 			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe('toggle turn-off choices', () => {
+	it('have a plain label for every event, the round included', () => {
+		const schema = ToggleEffectRule.defineSchema() as unknown as {
+			turnOff: { element: { choices: Record<string, string> } };
+		};
+		const { choices } = schema.turnOff.element;
+		expect(choices.onRoundEnd).toBe('NIMBLE.rules.toggleEffect.turnOff.choices.onRoundEnd');
+		expect(game.i18n.localize(choices.onRoundEnd as string)).toBe('When the round ends');
+		for (const label of Object.values(choices)) {
+			expect(game.i18n.localize(label)).not.toBe(label);
+		}
 	});
 });

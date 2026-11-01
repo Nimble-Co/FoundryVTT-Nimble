@@ -14,6 +14,8 @@ interface DamageBonusEntry {
 	damageType: string;
 	delivery: DamageBonusDelivery;
 	source: DamageBonusSource;
+	/** Only attacks with the item that has this identifier. Empty is every item. */
+	itemIdentifier?: string;
 	/** Optional predicate evaluated against the target's domain at activation time */
 	targetCondition: RawPredicate | null;
 }
@@ -62,6 +64,13 @@ function schema() {
 			hint: 'NIMBLE.rules.damageBonus.source.hint',
 			choices: ['weapon', 'spell', 'any'],
 		}),
+		itemIdentifier: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.damageBonus.itemIdentifier.label',
+			hint: 'NIMBLE.rules.damageBonus.itemIdentifier.hint',
+		}),
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.damageBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.damageBonus.targetCondition.hint',
@@ -101,6 +110,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	// the narrower inferred initialized type.
 	declare delivery: DamageBonusDelivery;
 	declare source: DamageBonusSource;
+	declare itemIdentifier: string;
 
 	static override defineSchema(): DamageBonusRule.Schema {
 		return {
@@ -142,6 +152,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				damageType: this.damageType,
 				delivery: this.delivery,
 				source: this.source,
+				itemIdentifier: this.itemIdentifier,
 				targetCondition: targetConditionRaw,
 			});
 		} else {
@@ -155,6 +166,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				damageType: this.damageType,
 				delivery: this.delivery,
 				source: this.source,
+				itemIdentifier: this.itemIdentifier,
 				targetCondition: targetConditionRaw,
 			});
 		}

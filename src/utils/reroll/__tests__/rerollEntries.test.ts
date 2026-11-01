@@ -121,6 +121,81 @@ describe('collectRerollEntries', () => {
 		]);
 	});
 
+	describe('a Make It a Crit rule', () => {
+		const makeCrit = () => rerollRule({ id: 'crit', type: 'makeCrit', usedBy: 'roller' });
+		const collect = (outcome: RerollRollContext['outcome']) =>
+			collectRerollEntries(context({ attacker: actor('Actor.hero', [makeCrit()]), outcome }))
+				.manual;
+
+		it('is stamped as a crit use', () => {
+			expect(collect(HIT).map((entry) => [entry.kind, entry.use])).toEqual([['reroll', 'crit']]);
+		});
+
+		it('gives an entry on a hit and a miss, not on a crit', () => {
+			expect([collect(HIT).length, collect(MISS).length, collect(CRIT).length]).toEqual([1, 1, 0]);
+		});
+
+		it('gives no entry on a roll that cannot crit, read from the roll or its options', () => {
+			expect(collect({ ...HIT, canCrit: false })).toEqual([]);
+			expect(collect({ ...HIT, options: { canCrit: false } })).toEqual([]);
+		});
+
+		it('stands only while the roll can still be made a crit', () => {
+			const entry = { kind: 'reroll', use: 'crit', outcomeTrigger: 'always' } as const;
+			const stands = (outcome: RerollRollContext['outcome']) =>
+				offerStands(entry as IncomingReactionEntry, { outcome, forcedMiss: false });
+			expect([stands(HIT), stands(CRIT), stands({ ...MISS, canCrit: false })]).toEqual([
+				true,
+				false,
+				false,
+			]);
+			expect(stands(null)).toBe(true);
+		});
+	});
+
+	describe('an Attack Outcome rule that gives a crit', () => {
+		const outcomeRule = (overrides: Partial<RerollRuleLike> = {}) =>
+			rerollRule({ id: 'touch', type: 'attackOutcome', usedBy: 'roller', ...overrides });
+		const collect = (rule: RerollRuleLike, outcome: RerollRollContext['outcome'] = HIT) =>
+			collectRerollEntries(context({ attacker: actor('Actor.hero', [rule]), outcome })).manual;
+
+		it('gives no entry while Feature Effects is on: the roll reads it', () => {
+			expect(collect(outcomeRule())).toEqual([]);
+		});
+
+		it('is a Make It a Crit button while Feature Effects is off', () => {
+			setToggles({ 'automation.applyRuleEffects': false });
+			expect(collect(outcomeRule()).map((entry) => [entry.ruleId, entry.use])).toEqual([
+				['touch', 'crit'],
+			]);
+		});
+
+		it('needs a die at its max when the crit comes from one', () => {
+			setToggles({ 'automation.applyRuleEffects': false });
+			const rule = outcomeRule({ critNeedsDieAtMax: true });
+			expect(collect(rule)).toEqual([]);
+			expect(collect(rule, { ...HIT, anyDieAtMax: true })[0]).toMatchObject({
+				use: 'crit',
+				needsDieAtMax: true,
+			});
+		});
+	});
+
+	it('reads a die at its max from the terms of a rolled attack', () => {
+		const entry = { kind: 'reroll', use: 'crit', needsDieAtMax: true } as IncomingReactionEntry;
+		const stands = (terms: unknown[]) =>
+			offerStands(entry, { outcome: { ...HIT, terms }, forcedMiss: false });
+		const die = (result: number, extra = {}) => ({
+			faces: 6,
+			results: [{ result, active: true, ...extra }],
+		});
+
+		expect(stands([die(6)])).toBe(true);
+		expect(stands([die(5)])).toBe(false);
+		expect(stands([die(6, { active: false })])).toBe(false);
+		expect(stands([{ operator: '+' }, die(3)])).toBe(false);
+	});
+
 	it("stamps the rule's note for this roll on its entry, and none when it has none", () => {
 		const noted = rerollRule({
 			id: 'noted',
@@ -163,6 +238,31 @@ describe('collectRerollEntries', () => {
 			side: 'target',
 			roll: MELEE,
 			other: expect.objectContaining({ uuid: 'Actor.attacker' }),
+		});
+	});
+
+	describe('on a card with two targets', () => {
+		const two = (rules: { roller?: RerollRuleLike[]; target?: RerollRuleLike[] }) =>
+			context({
+				attacker: actor('Actor.attacker', rules.roller ?? []),
+				targets: [
+					{ tokenUuid: TOKEN, actor: actor('Actor.first', rules.target ?? []) },
+					{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.second', rules.target ?? []) },
+				],
+			});
+
+		it('gives the targets no entries', () => {
+			const rule = rerollRule();
+
+			expect(collectRerollEntries(two({ target: [rule] })).manual).toEqual([]);
+			expect(rule.offersUseOn).not.toHaveBeenCalled();
+		});
+
+		it('keeps the entry of the one who rolled, with no other creature to test', () => {
+			const rule = rerollRule({ usedBy: 'roller' });
+
+			expect(collectRerollEntries(two({ roller: [rule] })).manual).toHaveLength(1);
+			expect(rule.offersUseOn).toHaveBeenCalledWith({ side: 'roller', roll: MELEE, other: null });
 		});
 	});
 
@@ -414,6 +514,15 @@ describe('collectRerollEntries for an ally', () => {
 		expect(result.manual).toEqual([]);
 	});
 
+	it('gives no crit-only entry when the crit cannot go away', () => {
+		const rule = rerollRule({ outcome: 'criticalHit' });
+		const targets = [{ tokenUuid: TOKEN, actor: actor('Actor.target', [rule]) }];
+		const forced = { ...CRIT, critStays: true };
+
+		expect(collectRerollEntries(context({ targets, outcome: forced })).manual).toEqual([]);
+		expect(collectRerollEntries(context({ targets, outcome: CRIT })).manual).toHaveLength(1);
+	});
+
 	it('asks the rule about the ally side and checks the attack outcome', () => {
 		const rule = rerollRule({ usedBy: 'ally', outcome: 'miss' });
 		expect(collectRerollEntries({ ...withAlly(rule), outcome: HIT }).manual).toEqual([]);
@@ -442,6 +551,25 @@ describe('offerStands', () => {
 		const stands = (outcome: typeof HIT) =>
 			offerStands(entry(trigger), { outcome, forcedMiss: false });
 		expect([stands(CRIT), stands(HIT), stands(MISS)]).toEqual([onCrit, onHit, onMiss]);
+	});
+
+	it('reads a crit that cannot go away from the options of a rolled attack', () => {
+		const rolled = { ...CRIT, options: { forcedCrit: 'always' as const } };
+
+		expect(offerStands(entry('criticalHit'), { outcome: rolled, forcedMiss: false })).toBe(false);
+		expect(
+			offerStands(entry('criticalHit'), {
+				outcome: { ...CRIT, options: { forcedCrit: 'onHit' as const } },
+				forcedMiss: false,
+			}),
+		).toBe(true);
+	});
+
+	it('does not let a crit-only entry stand when the crit cannot go away', () => {
+		const forced = { ...CRIT, critStays: true };
+
+		expect(offerStands(entry('criticalHit'), { outcome: forced, forcedMiss: false })).toBe(false);
+		expect(offerStands(entry('hit'), { outcome: forced, forcedMiss: false })).toBe(true);
 	});
 
 	it('stands before the roll is made', () => {
@@ -887,5 +1015,82 @@ describe('findRerollRule', () => {
 		useItemRules([rerollRule({ type: 'note' })]);
 		expect(findRerollRule(entry)).toBeNull();
 		expect(findRerollRule({ ...entry, itemUuid: '' })).toBeNull();
+	});
+});
+
+describe('a target in the Incapacitated group, with Feature Effects off', () => {
+	const incapacitated = () =>
+		actor('Actor.target', [], {
+			statuses: new Set(['unconscious']),
+			getTargetDomain: () => new Set(['target:incapacitated']),
+		} as Partial<RerollingActor>);
+	const onTarget = (overrides: Partial<RerollRollContext> = {}) =>
+		context({
+			targets: [{ tokenUuid: TOKEN, actor: incapacitated() }],
+			outcome: HIT,
+			...overrides,
+		});
+
+	beforeEach(() => {
+		setToggles({ 'automation.applyRuleEffects': false });
+		testGlobals.fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.attacker' ? { uuid } : null,
+		);
+	});
+
+	afterEach(() => {
+		delete testGlobals.game.settings;
+		delete (testGlobals as { fromUuidSync?: unknown }).fromUuidSync;
+	});
+
+	it('gives the one who attacks a free Make It a Crit button on a hit', () => {
+		const { manual, automatic } = collectRerollEntries(onTarget());
+		expect(automatic).toEqual([]);
+		expect(manual).toHaveLength(1);
+		expect(manual[0]).toMatchObject({
+			use: 'crit',
+			side: 'roller',
+			actorUuid: 'Actor.attacker',
+			outcomeTrigger: 'hit',
+			itemUuid: '',
+		});
+		const rule = findRerollRule(manual[0] as IncomingReactionEntry);
+		expect(rule?.id).toBe('incapacitatedTarget');
+		expect(rule?.rollUseCost).toBeUndefined();
+	});
+
+	it('gives no button on a miss, on a crit, or on a roll that cannot crit', () => {
+		for (const outcome of [MISS, CRIT, { ...HIT, canCrit: false }]) {
+			expect(collectRerollEntries(onTarget({ outcome })).manual).toEqual([]);
+		}
+	});
+
+	it('gives no button on a ranged attack, or with 2 targets', () => {
+		expect(
+			collectRerollEntries(onTarget({ roll: { kind: 'attack', delivery: 'ranged' } })).manual,
+		).toEqual([]);
+		const two = [
+			{ tokenUuid: TOKEN, actor: incapacitated() },
+			{ tokenUuid: OTHER_TOKEN, actor: incapacitated() },
+		];
+		expect(collectRerollEntries(onTarget({ targets: two })).manual).toEqual([]);
+	});
+
+	it('gives no button when the target is not in the group', () => {
+		expect(collectRerollEntries(context({ outcome: HIT })).manual).toEqual([]);
+	});
+
+	it('gives no button with Feature Effects on: the roll reads the crit', () => {
+		setToggles({});
+		expect(collectRerollEntries(onTarget()).manual).toEqual([]);
+	});
+
+	it('stops being usable when the target leaves the group', () => {
+		const entry = collectRerollEntries(onTarget()).manual[0] as IncomingReactionEntry;
+		expect(usableRerollEntry(entry, onTarget(), [entry]).ok).toBe(true);
+		expect(usableRerollEntry(entry, context({ outcome: HIT }), [entry])).toEqual({
+			ok: false,
+			reason: 'unavailable',
+		});
 	});
 });

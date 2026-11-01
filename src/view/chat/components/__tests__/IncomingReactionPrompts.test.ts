@@ -77,7 +77,7 @@ interface EntryOptions {
 	usedPoolLabel?: string;
 	usedFaces?: number[];
 	leftOut?: unknown;
-	use?: 'reroll' | 'change';
+	use?: 'reroll' | 'change' | 'crit';
 }
 
 function createEntry(options: EntryOptions = {}) {
@@ -276,6 +276,64 @@ describe('IncomingReactionPrompts', () => {
 		expect(rollPlace().getByText('Unerring Judgment: +1 to the Primary Die')).toBeTruthy();
 		expect(rollPlace().getByText('Clumsy Grip: -1 to the Primary Die')).toBeTruthy();
 		expect(rollPlace().getByText('+1 to Primary Die')).toBeTruthy();
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
+	it('marks the Primary Die Bonus lines "not added" after a set, and tells why', () => {
+		const message = createMessage(
+			[],
+			[
+				{
+					use: 'change',
+					itemUuid: '',
+					label: 'Judgment',
+					change: { mode: 'set', value: 0 },
+					next: { value: 8, outcome: 'crit' },
+					previous: { value: 3, outcome: null },
+				},
+			],
+		);
+		Object.assign(message.system, {
+			primaryDieBonuses: [{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.judgment' }],
+			activation: {
+				effects: [
+					{
+						id: 'damage',
+						type: 'damage',
+						roll: { class: 'DamageRoll', options: { primaryDieBonusOff: true }, terms: [] },
+					},
+				],
+			},
+		});
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
+		expect(rollPlace().queryByText('+1 to Primary Die')).toBeNull();
+		expect(rollPlace().getByText(/Judgment changed the die to 8/)).toBeTruthy();
+	});
+
+	it('shows the outcome tags at the roll only', () => {
+		const message = createMessage([]);
+		Object.assign(message.system, {
+			targets: ['Scene.s.Token.t'],
+			activation: {
+				effects: [
+					{
+						id: 'damage',
+						type: 'damage',
+						roll: {
+							class: 'DamageRoll',
+							isCritical: true,
+							options: { outcomeSources: { forcedCrit: ['target Stunned'] } },
+							terms: [{ faces: 6, results: [{ result: 3, active: true }] }],
+						},
+					},
+				],
+			},
+		});
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByText('Crit: target Stunned')).toBeTruthy();
 		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 	});
 
@@ -722,6 +780,31 @@ describe('IncomingReactionPrompts', () => {
 					expect.objectContaining({ entryId: 'wren-change' }),
 				);
 				expect(rollPlace().queryByRole('menu')).toBeNull();
+			});
+
+			it('shows Make crit after Change die, and uses it with no die to pick', async () => {
+				const message = createMessage([
+					rerollEntry({ id: 'wren-change', actorUuid: 'Actor.wren', use: 'change' }),
+					rerollEntry({ id: 'wren-crit', actorUuid: 'Actor.wren', use: 'crit' }),
+				]);
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				const buttons = rollPlace().getAllByRole('button');
+				expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+					'Change die',
+					'Make crit',
+				]);
+				expect(buttons[1].querySelector('.fa-burst')).toBeTruthy();
+
+				await useFeature(rollPlace(), 'Make crit', 'Make the attack a crit with Pocket Sand');
+				for (let i = 0; i < 4; i++) await Promise.resolve();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ entryId: 'wren-crit' }),
+				);
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalledWith(
+					expect.objectContaining({ die: expect.anything() }),
+				);
 			});
 
 			it('opens one menu at a time, and a second click closes it', async () => {

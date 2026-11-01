@@ -4,6 +4,7 @@ import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
+import { choiceLabels } from './_rollUseRule.js';
 import {
 	type ActorDyingContext,
 	type ActorHealthContext,
@@ -25,6 +26,7 @@ const TURN_OFF_CHOICES = [
 	'onTurnEnd',
 	'onEncounterEnd',
 	'onActorDying',
+	'onRoundEnd',
 ] as const;
 
 type TurnOffEvent = (typeof TURN_OFF_CHOICES)[number];
@@ -95,7 +97,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'onRest',
-				choices: TURN_OFF_CHOICES as unknown as string[],
+				choices: choiceLabels('toggleEffect', 'turnOff', TURN_OFF_CHOICES),
 			}),
 			{
 				required: true,
@@ -311,6 +313,8 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 */
 	override async onRoundChanged(context: RoundChangedContext): Promise<void> {
 		if (context.actor !== this.actor) return;
+		// A round that changes has ended, also when it is rewound.
+		await this.#maybeTurnOff('onRoundEnd', context.actor);
 		if (!this.endAfterInactiveRounds) return;
 		if (!isActiveGM()) return;
 		const existing = this.#findActiveEffect();

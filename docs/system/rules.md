@@ -175,6 +175,9 @@ Two consequences for a rule in this position:
 | `ancestry:<identifier>` | Ancestry item | If present |
 | `background:<identifier>` | Background item | If present |
 | `armor:equipped` / `armor:unarmored` | Equipment scan | Has armor with armorClass rules |
+| `self:armor:none`, `target:armor:none` | Equipment scan | Hero with no equipped armor, or a monster with armor `none` |
+| `self:armor:light\|medium\|heavy`, `target:armor:light\|medium\|heavy` | Monster data | Monsters only: hero armor items have no kind |
+| `self:size:<size>`, `target:size:<size>` | Actor data | Per size category |
 | `self:shield` / `self:noShield` | Equipment scan | Has shield item equipped |
 | `proficiency:armor:<type>` | Proficiencies | Per armor proficiency |
 | `proficiency:weapon:<type>` | Proficiencies | Per weapon proficiency |
@@ -232,7 +235,7 @@ When no target is selected, bonuses with `targetCondition` are excluded. Bonuses
 - The domain is `buildTargetDomain(owner, other)`: the other creature's `target:*` tags (`getTargetDomain()`) plus the marks the owner put on it (`target:<flagKey>`).
 - The owner's domain and the item's domain are added without their `target:*` tags, so the owner's own target tags can not leak in. This is what lets one predicate mix the two sides, for example `{ "$or": ["target:distracted", "feature:supreme-execution"] }`.
 
-Who the other creature is depends on the side (`otherCreature()` in `src/utils/reroll/rerollEntries.ts`): the first target for `roller` and `ally`, and the attacker for `target`. So a `target`-side rule still tests `target:` tags, here of the one who rolled. `primaryDieBonus` passes the first target of the attack.
+Who the other creature is depends on the side (`otherCreature()` in `src/utils/reroll/rerollEntries.ts`): the one target for `roller` and `ally` (`soleTarget`: none with 2 or more targets, so a rule that tests it does not run), and the attacker for `target`. So a `target`-side rule still tests `target:` tags, here of the one who rolled. `primaryDieBonus` passes the sole target of the attack.
 
 ## Ending marks (`markTarget`)
 
@@ -267,6 +270,7 @@ Only a GM or the owner of the marked creature can delete the marker effect. The 
 
 | Value | Fires from |
 |---|---|
+| `onRoundEnd` | `updateCombat` when the round number changes |
 | `onActorKilled` | `updateActor` when HP drops to 0 with a full wound track (or no wound track, e.g. monsters) |
 | `onActorWounded` | `updateActor` on bloodied / lastStand transition |
 | `onActorHealed` | `updateActor` when HP goes up (temp HP and a level-up max HP rise do not count; `hpGained`) |
@@ -666,7 +670,7 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 
 ### The shared roll-use part: `RollUseRule`
 
-`reroll` and `changeDie` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
+`reroll`, `changeDie` and `makeCrit` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
 
 - `roll`: `rolls`, `saves`, `skills`, `abilities`, `usedBy`, `reach`.
 - `when`: `otherCreature`, `outcome`, `attackDelivery` (attacks only, through `showWhen`).
@@ -697,7 +701,23 @@ A negative Primary Die bonus now stops at 1, in `DamageRoll` and in `rerollDieIn
 
 ### Primary Die Bonus
 
-`primaryDieBonus` (`src/models/rules/primaryDieBonus.ts`, group `bonuses`) is read when the attack roll is built, never during data preparation. `collectPrimaryDieBonuses(attacker, delivery, target)` (`src/managers/ItemActivationManager.ts`) asks each rule's `bonusFor({ delivery, other })`: an embedded item, the predicate, `matchesAttackDelivery` (an attack with no attack type matches only `any`), `ruleOtherCreatureMatches` against the first target, then the resolved `value`. `ItemActivationManager` adds the sum to the dialog's `primaryDieModifier`, so the rest is the normal "Add to Primary Die Result" path, and a reroll keeps it. An AoE attack, and a roll with no Primary Die, get none. The lines (`label`, `value`, `itemUuid`) are stored on the card in `system.primaryDieBonuses` (the shared `common.ts` field of the feature, object and spell cards) and drawn by `RerollHistory` at the roll.
+`primaryDieBonus` (`src/models/rules/primaryDieBonus.ts`, group `bonuses`) is read when the attack roll is built, never during data preparation. `collectPrimaryDieBonuses(attacker, delivery, target)` (`src/managers/ItemActivationManager.ts`) asks each rule's `bonusFor({ delivery, other })`: an embedded item, the predicate, `matchesAttackDelivery` (an attack with no attack type matches only `any`), `ruleOtherCreatureMatches` against the sole target, then the resolved `value`. `ItemActivationManager` adds the sum to the dialog's `primaryDieModifier`, so the rest is the normal "Add to Primary Die Result" path, and a reroll keeps it. An AoE attack, and a roll with no Primary Die, get none. The lines (`label`, `value`, `itemUuid`) are stored on the card in `system.primaryDieBonuses` (the shared `common.ts` field of the feature, object and spell cards) and drawn by `RerollHistory` at the roll.
+
+### Crit face, Forced Crit and Multi-target Attack
+
+`critFaceOf(faces, options)` (`src/dice/critFace.ts`) is the one place that reads the lowest kept face that crits: `criticalThreshold`, `critRange` and `forcedCrit`. A crit below the max rolls the Primary Die one more time in `DamageRoll#_rollCritDice`; those dice explode only on the max. `forcedCrit: 'always'` makes the crit face 1 and stays through a reroll or a change (`critStays`); `onHit` starts at the lowest face that is not a miss and is worked out again. `DamageRoll#makeCritical` is a Make It a Crit click: `forcedCrit: 'always'` on a copy of the roll, the face stays. A `forceMiss` beats every Forced Crit.
+
+An attack with 2 or more targets and no area sets `multiTarget`: the Primary Die stays, with `canCrit` and `canMiss` false.
+
+### Attack Outcome and the Incapacitated group
+
+`attackOutcome` (`src/models/rules/attackOutcome.ts`) is read when the roll is built, by `collectAttackOutcome` (`src/utils/damage/collectAttackOutcome.ts`), for item attacks and Unarmed Strike. It returns the roll options and `outcomeSources`: the names per change, which `attackOutcomeTags` (`src/view/chat/components/attackOutcomeTags.ts`) turns into tags at the roll. `collectAttackOutcome` also gives the built-in Incapacitated group crit (`src/utils/damage/incapacitatedTarget.ts`). With Feature Effects off, both are `use: 'crit'` entries: `attackOutcome` through `offersUseOn`, the built-in one through `incapacitatedTargetRule` in `rerollEntries.ts`, a rule-like object that no item holds and `findRerollRule` finds by its id.
+
+`attack:damageType:<type>` tags reach only Attack Outcome predicates (`attackTags`, `NimbleBaseRule#domainWith`), from the primary damage node.
+
+### Damage Back
+
+`damageBack` (`src/models/rules/damageBack.ts`) is read after a card's damage is applied, by `CardDamageBack` (`src/documents/chatMessage/cardDamageBack.ts`). The amount is each target's `adjustedDamage`. Records are in `system.damageBack`, drawn by `DamageBackLines.svelte`. A click goes to the primary GM on the `damageBack` socket type. No `damageApplied` fires for damage given back, so it cannot start again.
 
 ### Legacy `forceReroll`
 

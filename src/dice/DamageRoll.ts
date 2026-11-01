@@ -1,7 +1,9 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
+import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
+import { critFaceOf } from './critFace.js';
 import {
 	applyKeep,
 	getNimbleMods,
@@ -23,8 +25,29 @@ declare namespace DamageRoll {
 		canCrit: boolean;
 		/** Whether this roll can miss based on the primary die. */
 		canMiss: boolean;
-		/** The minimum roll value needed to score a critical hit. */
+		/**
+		 * A Multi-target Attack (Core:1403): one roll for two or more targets. It
+		 * cannot crit or miss, but keeps a Primary Die for rerolls and changes.
+		 */
+		multiTarget?: boolean;
+		/** What a Multi-target Attack gave up, as it was when rolled. */
+		multiTargetDetail?: { targets: number; couldCrit: boolean; couldMiss: boolean };
+		/** The lowest kept Primary Die face that is a crit. Defaults to the max. */
 		criticalThreshold?: number;
+		/**
+		 * A crit without the max (Forced Crit): `always` also on a 1, so the roll
+		 * cannot miss; `onHit` on any face that is not a miss. The kept face stays,
+		 * and the crit rolls the Primary Die again.
+		 */
+		forcedCrit?: 'always' | 'onHit';
+		/** The `onHit` Forced Crit comes from `anyDieCrits`, so a new roll works it out again. */
+		forcedCritFromDice?: boolean;
+		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
+		critRange?: number;
+		/** Any die of the roll at its max makes the roll a crit on a hit. */
+		anyDieCrits?: boolean;
+		/** The features that changed how the roll is read, for the card's tags. */
+		outcomeSources?: Partial<AttackOutcomeSources>;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
 		/**
@@ -364,6 +387,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					flavor: 'Primary Die',
 					isVicious,
 					missThreshold: options.missThreshold,
+					...this._critFaceOptions(options),
 					...diceSoNiceOptions,
 				},
 			});
@@ -383,7 +407,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				number: 1,
 				faces: firstDieTerm.faces ?? 6,
 				modifiers: [],
-				options: { isVicious, missThreshold: options.missThreshold, ...diceSoNiceOptions },
+				options: {
+					isVicious,
+					missThreshold: options.missThreshold,
+					...this._critFaceOptions(options),
+					...diceSoNiceOptions,
+				},
 			});
 
 			// Apply advantage/disadvantage (keeps 1)
@@ -400,6 +429,40 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 
 		this.primaryDie = primaryTerm;
+	}
+
+	/** The options that lower the crit face. A roll that cannot crit keeps the max. */
+	private _critFaceOptions(
+		options: DamageRoll.Options,
+	): Partial<
+		Pick<DamageRoll.Options, 'criticalThreshold' | 'critRange' | 'forcedCrit' | 'canMiss'>
+	> {
+		if (!options.canCrit) return {};
+		return {
+			criticalThreshold: options.criticalThreshold,
+			critRange: options.critRange,
+			forcedCrit: options.forcedCrit,
+			canMiss: options.canMiss,
+		};
+	}
+
+	/**
+	 * With `anyDieCrits`, a die other than the kept Primary Die at its max makes
+	 * the roll a crit on a hit, as a Forced Crit that applies on a hit.
+	 */
+	private _applyAnyDieCrits(): void {
+		if (!this.options.canCrit || !this.options.anyDieCrits) return;
+		if (this.options.forcedCrit === 'always') return;
+		const atMax = this.terms.some(
+			(term) =>
+				term instanceof Terms.Die &&
+				term.results.some((r) => r.active && !r.discarded && r.result === term.faces),
+		);
+		if (!atMax) return;
+		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
+		this.options.forcedCrit = 'onHit';
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (primary) primary.options.forcedCrit = 'onHit';
 	}
 
 	/**
@@ -475,7 +538,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		// ── Legacy path: no Nimble modifiers in formula ──
 		const { rollMode = 0 } = options;
-		const needsPrimaryDie = options.canCrit || options.canMiss;
+		const needsPrimaryDie = options.canCrit || options.canMiss || options.multiTarget === true;
 
 		if (!needsPrimaryDie && !rollMode) return;
 
@@ -543,6 +606,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		await super._evaluate(options);
 
 		this._applyPostRollMutations();
+		this._applyAnyDieCrits();
 
 		if (this.modifierMode) {
 			// ── Count crits BEFORE vicious explosions to avoid counting chain dice ──
@@ -554,6 +618,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				const meta = getNimbleMods(term);
 				if (meta?.canCrit && meta.explosionStyle === 'vicious') {
 					await this._evaluateViciousExplosions(term);
+				} else if (meta?.canCrit && meta.explosionStyle === 'standard') {
+					await this._rollCritDice(term);
 				}
 			}
 			this._finalizeOutcomeModifierMode();
@@ -565,6 +631,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				if (typeof rolledFace === 'number') this.options.primaryDieBaseResult = rolledFace;
 				if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
 					await this._evaluateViciousExplosion(primaryTerm);
+				} else if (this.options.canCrit && this.options.explosionStyle === 'standard') {
+					await this._rollCritDice(primaryTerm);
 				}
 				this._finalizeOutcome(primaryTerm);
 			}
@@ -586,13 +654,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	private _finalizeOutcome(primaryTerm: PrimaryDie): void {
 		const isVicious = this.options.explosionStyle === 'vicious';
 
-		// Crit = a kept (active, non-discarded) result from the primary die
-		// rolled max face value. Value-based (not flag-based) so that
-		// explosionStyle: 'none' — which never sets the exploded flag —
-		// still detects crit correctly.
+		// Crit = the kept face is at or above the crit face. Value-based (not
+		// flag-based) so that explosionStyle: 'none', which never sets the
+		// exploded flag, still detects crit correctly.
 		if (this.options.canCrit) {
 			this.isCritical = primaryTerm.results.some(
-				(r) => r.active && !r.discarded && r.result === primaryTerm.faces,
+				(r) => r.active && !r.discarded && r.result >= primaryTerm.critFace,
 			);
 		}
 		this.critCount = this.isCritical ? 1 : 0;
@@ -640,6 +707,82 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
+	 * A kept die that crits below its max rolls the die again, as a crit at the
+	 * max does through Foundry's `x`. The dice it rolls go on only on the max.
+	 */
+	private async _rollCritDice(dieTerm: foundry.dice.terms.Die): Promise<void> {
+		const faces = dieTerm.faces ?? 6;
+		const pool = Number(dieTerm.number) || 1;
+		const kept = dieTerm.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (!kept || kept.exploded || kept.result >= faces) return;
+		if (kept.result < this.critFaceOf(dieTerm)) return;
+
+		const critRoll = new Roll(`1d${faces}x`);
+		await critRoll.evaluate();
+		const critTerm = critRoll.terms.find((t) => t instanceof Terms.Die) as
+			| foundry.dice.terms.Die
+			| undefined;
+		if (!critTerm || critTerm.results.length === 0) return;
+
+		kept.exploded = true;
+		dieTerm.results.push(...critTerm.results);
+		this.resetFormula();
+		this._recalculateTotal();
+	}
+
+	/**
+	 * Make this evaluated roll a crit that stays: a Forced Crit that always
+	 * applies. The kept face stays and the crit dice are rolled. Returns the
+	 * crit term and the dice it rolled, or null when the roll cannot crit, is a
+	 * crit, or was made to miss.
+	 */
+	async makeCritical(): Promise<{ term: foundry.dice.terms.Die; drawn: number[] } | null> {
+		if (!this.options.canCrit || this.isCritical || this.options.forceMiss) return null;
+		const term = this.modifierMode
+			? this._modifierModeCritTerm()
+			: this.terms.find((candidate) => candidate instanceof PrimaryDie);
+		if (!term) return null;
+
+		this.options.forcedCrit = 'always';
+		// What gave a crit on a hit did not give this one.
+		if (this.options.outcomeSources) delete this.options.outcomeSources.forcedCrit;
+		if (term instanceof PrimaryDie) term.options.forcedCrit = 'always';
+		const before = term.results.length;
+		const style = this.modifierMode ? this.explosionStyleOf(term) : this.options.explosionStyle;
+		if (style === 'vicious') {
+			await (this.modifierMode
+				? this._evaluateViciousExplosions(term)
+				: this._evaluateViciousExplosion(term));
+		} else if (style === 'standard') {
+			await this._rollCritDice(term);
+		}
+		this.refreshOutcome();
+		return { term, drawn: term.results.slice(before).map((r) => r.result) };
+	}
+
+	/**
+	 * The lowest kept face of `term` that is a crit: the Primary Die's crit face,
+	 * or in modifier mode the one of the first crit-capable term. Other dice crit
+	 * only on their max.
+	 */
+	critFaceOf(term: unknown): number {
+		const faces = (term as { faces?: number } | null)?.faces ?? 6;
+		if (term instanceof PrimaryDie) return term.critFace;
+		if (!this.modifierMode || !this.options.canCrit) return faces;
+		return term === this._modifierModeCritTerm() ? critFaceOf(faces, this.options) : faces;
+	}
+
+	/** The first crit-capable die, also on a roll rebuilt from stored data. */
+	private _modifierModeCritTerm(): foundry.dice.terms.Die | undefined {
+		return this.terms.find(
+			(candidate): candidate is foundry.dice.terms.Die =>
+				candidate instanceof Terms.Die &&
+				(getNimbleMods(candidate) ?? nimbleModsFromModifiers(candidate.modifiers))?.canCrit ===
+					true,
+		);
+	}
+
+	/**
 	 * Manually resolves vicious crit explosion to avoid Dice So Nice preempting
 	 * the rolls.
 	 *
@@ -660,14 +803,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const initialResult = dieTerm.results.find((r) => r.active && !r.discarded);
 		if (!initialResult) return;
 
-		// Check if initial roll is a crit (max value)
-		if (initialResult.result !== faces) return;
+		if (initialResult.result < this.critFaceOf(dieTerm)) return;
 
 		// Mark initial result as exploded
 		initialResult.exploded = true;
 
 		// Roll vicious explosion dice
-		let lastLeftResult = initialResult.result;
+		let lastLeftResult = faces;
 
 		while (lastLeftResult === faces && iterations < maxIterations) {
 			iterations++;
@@ -724,11 +866,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const baseResults = [...dieTerm.results];
 
 		for (const result of baseResults) {
-			if (!result.active || result.discarded || result.result !== faces) continue;
+			if (
+				!result.active ||
+				result.discarded ||
+				result.exploded ||
+				result.result < this._critFaceIn(dieTerm, result)
+			) {
+				continue;
+			}
 
 			// Mark as exploded and chain
 			result.exploded = true;
-			let lastLeftResult = result.result;
+			let lastLeftResult = faces;
 			let iterations = 0;
 			const maxIterations = 100;
 
@@ -782,6 +931,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (highestDie) this.primaryDie = highestDie;
 	}
 
+	/**
+	 * The lowest crit face of `result` in modifier mode. Only the first kept die
+	 * of the first crit-capable term reads the crit threshold and a Forced Crit.
+	 */
+	private _critFaceIn(
+		term: foundry.dice.terms.Die,
+		result: foundry.dice.terms.DiceTerm.Result,
+	): number {
+		const first = term.results.find((r) => r.active && !r.discarded);
+		return result === first ? this.critFaceOf(term) : (term.faces ?? 6);
+	}
+
 	/** Count the crit-capable dice that rolled max, not their explosion dice. */
 	private _countModifierModeCrits(): number {
 		let count = 0;
@@ -791,7 +952,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			if (!meta?.canCrit) continue;
 			// Explosion dice come after the dice the term rolled.
 			for (const r of term.results.slice(0, term.number ?? term.results.length)) {
-				if (r.active && !r.discarded && r.result === term.faces) {
+				if (r.active && !r.discarded && r.result >= this._critFaceIn(term, r)) {
 					count++;
 				}
 			}
@@ -824,7 +985,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				this.isMiss =
 					firstActive !== undefined &&
 					firstActive.result <= threshold &&
-					firstActive.result !== missDie.faces;
+					firstActive.result < this._critFaceIn(missDie, firstActive);
 			} else {
 				// All dice are neutral — no die qualifies for miss detection
 				this.isMiss = false;
@@ -1000,22 +1161,39 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/**
 	 * Recalculates the roll total from all terms. Works in both legacy and
-	 * modifier-mode by summing active results from all Die/PrimaryDie terms
-	 * and totals from other terms.
+	 * modifier-mode by adding or taking away the active results of each
+	 * Die/PrimaryDie term and the value of each other term, as the operator
+	 * before it says. A formula with another operator is left to Foundry.
 	 */
 	private _recalculateTotal(): void {
+		const internals = this as object as { _total: number; _evaluateTotal?(): number };
 		let total = 0;
+		let sign = 1;
 		for (const term of this.terms) {
-			if (term instanceof Terms.Die) {
-				total += term.results
-					.filter((r) => r.active && !r.discarded)
-					.reduce((sum, r) => sum + r.result, 0);
-			} else if ('total' in term && typeof term.total === 'number') {
-				total += term.total;
+			if (term instanceof Terms.OperatorTerm) {
+				if (term.operator !== '+' && term.operator !== '-') {
+					if (typeof internals._evaluateTotal === 'function') {
+						internals._total = internals._evaluateTotal();
+					}
+					return;
+				}
+				sign = term.operator === '-' ? -1 : 1;
+				continue;
 			}
+			if (term instanceof Terms.Die) {
+				total +=
+					sign *
+					term.results
+						.filter((r) => r.active && !r.discarded)
+						.reduce((sum, r) => sum + r.result, 0);
+			} else if (term instanceof Terms.NumericTerm) {
+				total += sign * term.number;
+			} else if ('total' in term && typeof term.total === 'number') {
+				total += sign * term.total;
+			}
+			sign = 1;
 		}
 
-		const internals = this as object as { _total: number };
 		internals._total = total;
 	}
 

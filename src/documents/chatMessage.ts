@@ -2,7 +2,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
-import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
@@ -32,6 +32,7 @@ import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRel
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import {
 	clearBankedDamageReduction,
@@ -51,6 +52,12 @@ import {
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import {
+	CardDamageBack,
+	type DamageBackAction,
+	type DamageBackCard,
+	type DamageBackRecord,
+} from './chatMessage/cardDamageBack.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
 import { inFlightSpendOffers, queueReactionWrite } from './chatMessage/reactionWriteQueue.js';
 
@@ -101,6 +108,8 @@ type DamageApplyOptions = {
 	roll?: DamageRoll.SerializedData | null;
 	rolls?: Array<DamageRoll.SerializedData | null | undefined>;
 	isCritical?: boolean;
+	/** The attack the damage comes from is a crit. Absent: read `isCritical`. */
+	attackIsCritical?: boolean;
 };
 
 interface DamageApplicationTarget {
@@ -360,13 +369,24 @@ function matchesDamageType(damageTypes: unknown, damageType?: string): boolean {
 	return Boolean(damageType && types.includes(damageType));
 }
 
+/** Whether a damageReduction rule entry applies to this damage: its type, and a crit when it asks for one. */
+function reductionApplies(
+	reduction: { damageTypes: unknown; onlyCrits?: boolean },
+	options?: DamageApplyOptions,
+): boolean {
+	if (!matchesDamageType(reduction.damageTypes, options?.damageType)) return false;
+	if (reduction.onlyCrits !== true) return true;
+	return (options?.attackIsCritical ?? options?.isCritical) === true;
+}
+
 /**
  * Resistance check: `half`-mode damageReduction rule entries and the actor's
  * `attributes.damageResistances` both mean "take half as much damage" (Core
  * Rules glossary). Halving applies once — multiple matching sources do not
  * stack into quarters.
  */
-function actorResistsDamage(actor: Actor.Implementation, damageType?: string): boolean {
+function actorResistsDamage(actor: Actor.Implementation, options?: DamageApplyOptions): boolean {
+	const damageType = options?.damageType;
 	const resistances = foundry.utils.getProperty(actor, 'system.attributes.damageResistances');
 	if (Array.isArray(resistances) && damageType && resistances.includes(damageType)) return true;
 
@@ -375,8 +395,7 @@ function actorResistsDamage(actor: Actor.Implementation, damageType?: string): b
 		| undefined;
 	if (!Array.isArray(reductions)) return false;
 	return reductions.some(
-		(reduction) =>
-			reduction?.mode === 'half' && matchesDamageType(reduction.damageTypes, damageType),
+		(reduction) => reduction?.mode === 'half' && reductionApplies(reduction, options),
 	);
 }
 
@@ -474,7 +493,7 @@ function describeDefenseModifiers(
 
 	for (const reduction of reductions) {
 		if (reduction?.mode !== 'half') continue;
-		if (!matchesDamageType(reduction?.damageTypes, damageType)) continue;
+		if (!reductionApplies(reduction, options)) continue;
 
 		modifiers.push({
 			kind: 'resistant',
@@ -513,7 +532,7 @@ function calculateDefenseAdjustedDamage(params: {
 	const damageType = params.options?.damageType;
 	if (actorIsImmuneToDamage(params.actor, damageType)) return 0;
 
-	return actorResistsDamage(params.actor, damageType)
+	return actorResistsDamage(params.actor, params.options)
 		? Math.ceil(armorAdjustedDamage * 0.5)
 		: armorAdjustedDamage;
 }
@@ -538,6 +557,7 @@ interface ResolvedDamageForActor {
  */
 interface PendingFlatReduction {
 	damageTypes: unknown;
+	onlyCrits?: boolean;
 	remaining: number;
 	modifier: DamageModifier;
 }
@@ -557,6 +577,7 @@ function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatRe
 
 		pending.push({
 			damageTypes: reduction.damageTypes,
+			...(reduction.onlyCrits === true ? { onlyCrits: true } : {}),
 			remaining: Math.floor(value),
 			modifier: describeFlatReduction(reduction),
 		});
@@ -573,7 +594,7 @@ function collectAttackFlatReductions(actor: Actor.Implementation): PendingFlatRe
 function spendFlatReductions(
 	pending: PendingFlatReduction[],
 	damage: number,
-	damageType: string | undefined,
+	options: DamageApplyOptions,
 ): { remainingDamage: number; spent: DamageModifier[] } {
 	let remainingDamage = damage;
 	const spent: DamageModifier[] = [];
@@ -581,7 +602,7 @@ function spendFlatReductions(
 	for (const reduction of pending) {
 		if (remainingDamage <= 0) break;
 		if (reduction.remaining <= 0) continue;
-		if (!matchesDamageType(reduction.damageTypes, damageType)) continue;
+		if (!reductionApplies(reduction, options)) continue;
 
 		const used = Math.min(remainingDamage, reduction.remaining);
 		reduction.remaining -= used;
@@ -620,7 +641,7 @@ function resolveDamageForActor(
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
 
-		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options.damageType);
+		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options);
 		let adjustedDamage = reduced.remainingDamage;
 
 		// The bank reduces "the damage taken" from the attack, so like a flat
@@ -740,10 +761,27 @@ function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: stri
 	return findPrimaryDamageNode(nodes)?.id === nodeId;
 }
 
+/** The actor of a healing target: a token's actor, or the actor itself. */
+function actorOfHealingTarget(document: TokenDocument | null): HpMutableActor | null {
+	const holder = document as unknown as { actor?: unknown } | null;
+	return ((holder?.actor ?? holder) as HpMutableActor | null) ?? null;
+}
+
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
 
 	#subscribe: ReturnType<typeof createSubscriber>;
+
+	#damageBack = new CardDamageBack({
+		id: () => this.id,
+		// Not `speakerActor`: it falls back to the author's character.
+		attacker: () =>
+			(this.constructor as typeof ChatMessage).getSpeakerActor(
+				this.speaker,
+			) as unknown as ReturnType<DamageBackCard['attacker']>,
+		records: () => (this.system as { damageBack?: DamageBackRecord[] }).damageBack ?? [],
+		update: (changes) => this.update(changes),
+	});
 
 	#rerolls = new CardRerolls({
 		id: () => this.id,
@@ -1181,7 +1219,12 @@ class NimbleChatMessage extends ChatMessage {
 			?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
+		const hurt: Array<Parameters<CardDamageBack['afterDamage']>[0][number]> = [];
 		for (const target of damageApplicationPlan.applicableTargets) {
+			hurt.push({
+				actor: target.actor as unknown as (typeof hurt)[number]['actor'],
+				taken: target.adjustedDamage,
+			});
 			const hpBefore = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
 			);
@@ -1213,6 +1256,8 @@ class NimbleChatMessage extends ChatMessage {
 				}
 			}
 		}
+
+		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1273,7 +1318,8 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#collectApplicableDamageRolls(): Array<{ value: number; options: DamageApplyOptions }> {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
-		const isMiss = (this.system as unknown as ActivationCardSystemData).isMiss === true;
+		const system = this.system as unknown as ActivationCardSystemData;
+		const isMiss = system.isMiss === true;
 
 		for (const group of this.effectNodes) {
 			for (const node of group) {
@@ -1301,6 +1347,7 @@ class NimbleChatMessage extends ChatMessage {
 						outcome,
 						roll: roll as unknown as DamageRoll.SerializedData,
 						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+						attackIsCritical: system.isCritical === true,
 					},
 				});
 			}
@@ -1332,14 +1379,21 @@ class NimbleChatMessage extends ChatMessage {
 		return { components, total };
 	}
 
-	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
+	async applyHealing(
+		value: number,
+		healingType?: string,
+		effectId?: string,
+		recipient?: 'self',
+	): Promise<void> {
 		if (!this.isActivationCard()) return;
 
 		const healing = Math.floor(Math.abs(Number(value)));
 		if (!Number.isFinite(healing) || healing <= 0) return;
 
 		const systemData = this.system as ActivationCardSystemData;
-		const targets = systemData.targets || [];
+		const self = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
+		const targets =
+			recipient === 'self' ? (self?.uuid ? [self.uuid] : []) : systemData.targets || [];
 
 		if (!targets.length) {
 			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
@@ -1362,7 +1416,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as HpMutableActor | null;
+			const actor = actorOfHealingTarget(tokenDocument);
 			if (!actor) continue;
 
 			// Get current HP values before healing
@@ -1421,7 +1475,7 @@ class NimbleChatMessage extends ChatMessage {
 		// Revert HP for each target
 		for (const targetRecord of healingRecord.targets) {
 			const tokenDocument = fromUuidSync(targetRecord.uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as HpMutableActor | null;
+			const actor = actorOfHealingTarget(tokenDocument);
 			if (!actor) continue;
 
 			if (healingRecord.healingType === 'tempHealing') {
@@ -1437,6 +1491,19 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>);
 
 		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
+	}
+
+	/** Give the healing that goes to the one who used the item, with no click. */
+	async applySelfHealing(): Promise<void> {
+		if (!this.isActivationCard() || !isRuleAutomationEnabled()) return;
+		for (const group of this.effectNodes) {
+			for (const node of group) {
+				const healing = node as HealingNode;
+				if (healing.type !== 'healing' || healing.recipient !== 'self') continue;
+				const total = Number(healing.roll?.total);
+				if (total > 0) await this.applyHealing(total, healing.healingType, healing.id, 'self');
+			}
+		}
 	}
 
 	isHealingApplied(effectId: string): boolean {
@@ -1534,6 +1601,16 @@ class NimbleChatMessage extends ChatMessage {
 	/** The reroll result waiting for a player to choose, or null. */
 	pendingKeep(): PendingKeep | null {
 		return this.#rerolls.pendingKeep();
+	}
+
+	/** Deal damage given back, or pay a Wound to double it. Primary GM only. */
+	resolveDamageBack(
+		recordId: string,
+		action: DamageBackAction,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		return this.#damageBack.resolve(recordId, action, requestingUserId, viaSocket);
 	}
 
 	/** Keep the new roll or the old one of the reroll that waits on this card. Primary GM only. */

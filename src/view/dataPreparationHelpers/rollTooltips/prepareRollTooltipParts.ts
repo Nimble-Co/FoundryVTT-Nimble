@@ -16,7 +16,7 @@ export default function prepareRollTooltipRollParts(roll) {
 
       <ol class="nimble-roll-details__dice-list">`;
 
-		newPart += prepareRollTooltipDiceResults(part);
+		newPart += prepareRollTooltipDiceResults(part, roll.options);
 		newPart += '</ol></section>';
 
 		return acc + newPart;

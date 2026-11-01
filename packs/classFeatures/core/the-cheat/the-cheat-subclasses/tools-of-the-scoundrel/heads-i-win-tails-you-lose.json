@@ -6,7 +6,88 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "YwEYD5uLtdIlEv9g",
+				"identifier": "heads-i-win",
+				"label": "Heads I Win, Tails You Lose (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "pMdMmAUmT7L2PP54",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "heads-i-win",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "toggleEffect",
+				"disabled": false,
+				"id": "2i7Yf6hCi1N9nB93",
+				"identifier": "heads-i-win",
+				"label": "Heads I Win, Tails You Lose",
+				"predicate": {},
+				"priority": 1,
+				"tags": [
+					"self:heads-i-win"
+				],
+				"turnOff": [
+					"onRoundEnd",
+					"onEncounterEnd",
+					"onRest",
+					"onActorKilled"
+				],
+				"confirmEndPrompt": "",
+				"clearPoolsOnEnd": [],
+				"endAfterInactiveRounds": null
+			},
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"id": "QXFhwkP6x084VaKU",
+				"identifier": "",
+				"label": "Heads I Win, Tails You Lose",
+				"predicate": {
+					"self": "heads-i-win"
+				},
+				"priority": 2,
+				"side": "yourAttacks",
+				"cannotMiss": true,
+				"critRange": 1,
+				"forceCrit": "none",
+				"anyDieCrits": false,
+				"attackDelivery": "any",
+				"thisItemOnly": false,
+				"otherCreature": {},
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +101,17 @@
 				"quantity": 1,
 				"type": "round"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "kT3wQm8ZvB2nLx5R",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "@level",
+					"parentContext": null,
+					"parentNode": null,
+					"recipient": "self"
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

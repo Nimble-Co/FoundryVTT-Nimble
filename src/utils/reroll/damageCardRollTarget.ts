@@ -16,10 +16,11 @@ import { type DicePoolConsumer, getDicePoolConsumers } from '../dicePool/dicePoo
 import { setPoolFaces } from '../dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '../dicePool/dicePoolSync.js';
 import type { DicePoolState } from '../dicePool/types.js';
-import type {
-	AttackOutcomeView,
-	IncomingReactionEntry,
-	RollChange,
+import {
+	type AttackOutcomeView,
+	type IncomingReactionEntry,
+	type RollChange,
+	termsHaveDieAtMax,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../treeManipulation/reconstructEffectsTree.js';
@@ -51,6 +52,8 @@ interface DamageCard {
 	/** The actor that made the attack. */
 	attacker(): RerollingActor | null;
 	delivery(): AttackDelivery;
+	/** The item the attack was made with, when the card has one. */
+	itemUuid?(): string | null;
 	/** The card's Movement Offers once its outcome changes. */
 	movementOfferChanges(changes: Record<string, unknown>): Record<string, unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -94,6 +97,11 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 	);
 }
 
+type RollOptionsView = {
+	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	terms?: readonly unknown[];
+} | null;
+
 /**
  * A damage card's roll with this outcome, as the reroll gate sees it. The
  * allies are those the card was posted with, unless the caller scanned anew.
@@ -104,6 +112,16 @@ function damageRollContext(
 	forcedMiss: boolean,
 	allies: RerollAlly[] = alliesOnCard(card.system().incomingReactions ?? []),
 ): RerollRollContext {
+	// A rolled attack has its options; a card's system data reads them from its primary roll.
+	const rolled = (
+		(outcome as RollOptionsView)?.options
+			? outcome
+			: findPrimaryDamageRoll(card.system())?.damageNode.roll
+	) as RollOptionsView | undefined;
+	const itemUuid = card.itemUuid?.() ?? null;
+	const damageType = (
+		findPrimaryDamageRoll(card.system())?.damageNode as { damageType?: string } | undefined
+	)?.damageType;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -111,8 +129,19 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
-		roll: { kind: 'attack', delivery: card.delivery() },
-		outcome: { isCritical: outcome.isCritical, isMiss: outcome.isMiss },
+		roll: {
+			kind: 'attack',
+			delivery: card.delivery(),
+			...(itemUuid ? { itemUuid } : {}),
+			...(damageType ? { damageTypes: [damageType] } : {}),
+		},
+		outcome: {
+			isCritical: outcome.isCritical,
+			isMiss: outcome.isMiss,
+			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
+			canCrit: rolled?.options?.canCrit === true,
+			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
+		},
 		forcedMiss,
 	};
 }

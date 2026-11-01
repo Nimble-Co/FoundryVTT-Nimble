@@ -15,8 +15,8 @@ export type RerollSide = (typeof REROLL_SIDES)[number];
 export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
 
-/** What a `reroll` entry does: roll again, or change a die (a Change a Die rule). */
-export const ROLL_USES = ['reroll', 'change'] as const;
+/** What a `reroll` entry does: roll again, change a die, or make the attack a crit. */
+export const ROLL_USES = ['reroll', 'change', 'crit'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
 
 /** The dice a Change a Die rule can change. */
@@ -42,6 +42,48 @@ export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
 export interface AttackOutcomeView {
 	isCritical?: boolean;
 	isMiss?: boolean;
+	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
+	critStays?: boolean;
+	/** False when the roll cannot crit. Absent: read from `options`, else it can. */
+	canCrit?: boolean;
+	/** The options of a rolled attack, when the view is the roll. */
+	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	/** A die of the roll is at its max. Absent: read from `terms`. */
+	anyDieAtMax?: boolean;
+	/** The terms of a rolled attack, when the view is the roll. */
+	terms?: readonly unknown[];
+}
+
+/** Whether a kept die of these terms is at its max. */
+export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined): boolean {
+	return (terms ?? []).some((term) => {
+		const die = term as {
+			faces?: unknown;
+			results?: Array<{ result: number; active?: boolean; discarded?: boolean }>;
+		};
+		return (
+			typeof die?.faces === 'number' &&
+			Array.isArray(die.results) &&
+			die.results.some((r) => r.active !== false && !r.discarded && r.result === die.faces)
+		);
+	});
+}
+
+/** Whether a die of the attack is at its max. */
+export function hasDieAtMax(view: AttackOutcomeView): boolean {
+	return view.anyDieAtMax ?? termsHaveDieAtMax(view.terms);
+}
+
+/** Whether the attack is a crit that no reroll or change takes away. */
+export function critStays(view: AttackOutcomeView): boolean {
+	if (view.isCritical !== true) return false;
+	return view.critStays ?? view.options?.forcedCrit === 'always';
+}
+
+/** Whether the attack is not a crit and can still be made one. */
+export function canBecomeCrit(view: AttackOutcomeView): boolean {
+	if (view.isCritical === true) return false;
+	return (view.canCrit ?? view.options?.canCrit) !== false;
 }
 
 /** Does the attack's outcome satisfy a trigger? */
@@ -104,8 +146,10 @@ export interface IncomingReactionEntry {
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
 	oncePerAttack?: boolean;
-	/** reroll only: `change` for a Change a Die rule. Absent is `reroll`. */
+	/** reroll only: `change` for a Change a Die rule, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
+	/** reroll only: a crit use that also needs a die of the roll at its max. */
+	needsDieAtMax?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
@@ -168,7 +212,7 @@ export interface RerollRecord {
 	grants?: RerollGrant[];
 	/** The rule rerolled by itself, with no click. */
 	automatic?: boolean;
-	/** `change` for a die a Change a Die rule changed. Absent is `reroll`. */
+	/** `change` for a die a Change a Die rule changed, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
 	/** A change only: how the die changed. `value` is 0 for a set value. */
 	change?: DieChange | null;

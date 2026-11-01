@@ -1,3 +1,4 @@
+import { choiceLabels } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
 import {
 	TURN_OFF_CHOICES,
@@ -29,7 +30,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'onActorKilled',
-				choices: TURN_OFF_CHOICES as unknown as string[],
+				choices: choiceLabels('toggleEffect', 'turnOff', TURN_OFF_CHOICES),
 			}),
 			{
 				required: true,
@@ -46,7 +47,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: 'onTurnStart',
-				choices: TURN_ON_CHOICES as unknown as string[],
+				choices: choiceLabels('modifyToggle', 'turnOn', TURN_ON_CHOICES),
 			}),
 			{
 				required: true,

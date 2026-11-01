@@ -3,6 +3,7 @@
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 	import localize from '../../../utils/localize.js';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
+	import DamageBackLines from './DamageBackLines.svelte';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
 
 	/**
@@ -44,6 +45,8 @@
 
 			{#if isDamageGroup(nodeGroup)}
 				<IncomingReactionPrompts place="roll" />
+
+				<DamageBackLines />
 
 				{#if game.user?.isGM}
 					<section class="nimble-effect">

@@ -9,6 +9,7 @@ import {
 
 const damageRollMock = vi.fn();
 const dialogMock = vi.fn();
+const spendRuleChargeMock = vi.fn(async () => true);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let rollUnarmedStrike: typeof import('../unarmedStrike.ts').rollUnarmedStrike;
@@ -20,11 +21,14 @@ beforeAll(async () => {
 	vi.doMock('../../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 		default: dialogMock,
 	}));
+	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
+		spendRuleCharge: spendRuleChargeMock,
+	}));
 	vi.doMock('../../damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => ['1d4'],
 		getDamageBonusTotal: () => 2,
 		getUnarmedDamageFormula: () => '1',
-		hasUnarmedProficiency: () => false,
+		hasUnarmedProficiency: (actor: { proficient?: boolean }) => actor.proficient === true,
 	}));
 	({ rollUnarmedStrike, strikeUnarmed } = await import('../unarmedStrike.ts'));
 });
@@ -74,6 +78,88 @@ describe('rollUnarmedStrike', () => {
 					rollMode: 0,
 					targets: ['Scene.s.Token.goblin'],
 				}),
+			}),
+		);
+	});
+
+	it('cannot crit or miss with two targets (Core:1403)', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([
+			targetToken('Scene.s.Token.goblin'),
+			targetToken('Scene.s.Token.kobold'),
+		]);
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canCrit: false, canMiss: false, multiTarget: true }),
+		);
+	});
+
+	it("reads the striker's Attack Outcome rules, and spends their charge after the card", async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
+		const actor = createHeroicCharacter();
+		Object.assign(actor, {
+			rules: [
+				{
+					type: 'attackOutcome',
+					changeFor: () => ({
+						label: 'Heads I Win',
+						cannotMiss: true,
+						critRange: 0,
+						forcedCrit: null,
+						anyDieCrits: false,
+						chargePoolIdentifier: 'heads',
+					}),
+				},
+			],
+		});
+		spendRuleChargeMock.mockClear();
+
+		await rollUnarmedStrike(actor);
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canMiss: false, outcomeSources: { cannotMiss: ['Heads I Win'] } }),
+		);
+		expect(spendRuleChargeMock).toHaveBeenCalledWith(actor, 'heads');
+	});
+
+	it('tells the Attack Outcome rules the strike deals bludgeoning damage', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
+		const actor = createHeroicCharacter();
+		const changeFor = vi.fn(() => null);
+		Object.assign(actor, { rules: [{ type: 'attackOutcome', changeFor }] });
+
+		await rollUnarmedStrike(actor);
+
+		expect(changeFor).toHaveBeenCalledWith(
+			expect.objectContaining({ damageTypes: ['bludgeoning'] }),
+		);
+	});
+
+	it('is a crit on a hit against a target in the Incapacitated group', async () => {
+		dialogResult({ rollMode: 0 });
+		const token = targetToken('Scene.s.Token.goblin') as unknown as { actor: object };
+		Object.assign(token.actor, {
+			statuses: new Set(['stunned']),
+			getTargetDomain: () => new Set(['target:incapacitated']),
+		});
+		heroicGlobals().game.user.targets = new Set([token]);
+
+		await rollUnarmedStrike(createHeroicCharacter({ proficient: true }));
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({
+				forcedCrit: 'onHit',
+				outcomeSources: { forcedCrit: ['target Stunned'] },
 			}),
 		);
 	});

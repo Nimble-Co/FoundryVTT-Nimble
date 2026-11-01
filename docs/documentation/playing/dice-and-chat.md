@@ -14,6 +14,7 @@ When you attack, the whole damage pool is rolled at once, but only one die decid
 - **Miss:** the primary die normally rolls a natural 1. Some targets can raise this threshold, causing other low primary-die results to miss too. The attack misses no matter what the bonus dice rolled.
 - **Advantage and disadvantage:** each level of advantage adds one extra die to the pool, and the lowest die is dropped before anything else is decided (disadvantage drops the highest instead). Advantage and disadvantage cancel each other out one-for-one, and only the leftover applies.
 - **Area attacks** (anything with a template shape, such as a cone, line, or circle) can neither crit nor miss: one shared roll applies to everyone in the area.
+- **Attacks on 2 or more targets** can neither crit nor miss either. One roll applies to all the targets, and the targets' own reactions do not apply. The card shows "No miss: 2 targets" when the die shows a miss face, and "No crit: 2 targets" when it shows its max. Other rolls show nothing.
 - **No proficiency, no crit.** If a weapon requires a proficiency you don't have, you can still use it, but it won't crit. Minions never crit.
 
 Because advantage is resolved first, a natural 1 that gets dropped by advantage does *not* cause a miss. The primary die is whichever die survives the drop.
@@ -132,6 +133,29 @@ Some features put a new value on one die that was already rolled. No die is roll
 An added change moves the face that the die shows, as it is. A later reroll of the die is a new roll, so it gets the number again.
 
 **The line on the card.** After a change, the roll shows a line, as after a reroll. The line names the feature and shows the old die, paler, with an arrow to the new one. Above the arrow is a small label: "set" for a set value, or the number for an added one, such as "+1". When the new die is a crit or a miss, the line has a **Crit** or **Miss** tag. Hover the line to read it as a sentence, for example "Changed with Vicious Opportunist: 3 became 8, a crit".
+
+After a set with a feature that makes the set value final, a Primary Die bonus line on the card shows "+1 bonus not added". Its tooltip says why.
+
+## Why an attack is a crit, or a hit
+
+A feature can change how the roll is read. When the die does not explain the result, a tag at the roll names the cause:
+
+- **"Crit: Deathbringer's Touch"** when a feature made a face below the max a crit. The tag does not show when the die rolled its max.
+- **"Cannot miss: Slashing"** when a feature made a miss face a hit.
+
+**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make crit** button for the one who attacked.
+
+The expanded roll details mark a Primary Die face that is a crit or a miss in the same way.
+
+## Making an attack a crit
+
+Some features let a creature make an attack a crit after the roll. The card has a **Make crit** button, with a menu of the features as on **Reroll**. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
+
+The button does not show on an attack that is already a crit, an attack on 2 or more targets, an area attack, or a roll that cannot crit.
+
+## Damage given back
+
+Some features give damage back to the one who attacked. When the GM applies the damage, the attacker takes the same amount, ignoring armor, and a line on the card tells it. When the feature lets you pay a Wound to double it, the owner of the creature and the GM see a button under the line. With **Feature Effects** off, the line has a **Deal** button.
 
 ## Rerolls and changes that cost an action
 

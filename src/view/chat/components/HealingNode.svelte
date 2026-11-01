@@ -29,12 +29,14 @@
 	let appliedHealingData = $derived(systemData.appliedHealing);
 	let isApplied = $derived(!!appliedHealingData?.[effectId]);
 	let healingRecord = $derived(appliedHealingData?.[effectId]);
-	let hasTargets = $derived((systemData.targets?.length ?? 0) > 0);
+	let hasTargets = $derived(node.recipient === 'self' || (systemData.targets?.length ?? 0) > 0);
 
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
 
-	let targetDisposition = $derived(hasDispositionTarget(node) ? node.targetDisposition : undefined);
+	let targetDisposition = $derived(
+		node.recipient !== 'self' && hasDispositionTarget(node) ? node.targetDisposition : undefined,
+	);
 
 	const { dispositionState } = useDispositionState(
 		() => targetDisposition,
@@ -45,7 +47,7 @@
 	const localize = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
 
 	function handleApplyHealing() {
-		messageDocument?.applyHealing(roll.total, healingType, effectId);
+		messageDocument?.applyHealing(roll.total, healingType, effectId, node.recipient);
 	}
 
 	function handleUndoHealing() {

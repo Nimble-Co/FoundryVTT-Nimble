@@ -5,10 +5,17 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import type { AttackOutcomeTag } from './attackOutcomeTags.ts';
 	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
+
+	const OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
+		crit: 'fa-burst',
+		cannotMiss: 'fa-bullseye',
+		noOutcome: 'fa-ban',
+	};
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {
 		automatic: 'fa-gear',
@@ -28,6 +35,8 @@
 		pendingLine,
 		held,
 		primaryDieBonuses = [],
+		bonusNotAdded = null,
+		outcomeTags = [],
 	}: RerollHistoryProps = $props();
 
 	const keepChoice = createRerollHistoryState(
@@ -36,21 +45,55 @@
 	);
 </script>
 
+{#if outcomeTags.length > 0}
+	<div class="nimble-roll-changes__tags nimble-roll-changes__tags--outcome">
+		{#each outcomeTags as tag (tag.label)}
+			<span
+				class="nimble-reroll-tag"
+				class:nimble-reroll-tag--none={tag.kind === 'noOutcome'}
+				data-tooltip={tag.tooltip}
+			>
+				<i class="fa-solid {OUTCOME_TAG_ICONS[tag.kind]}" aria-hidden="true"></i>
+				<span>{tag.label}</span>
+			</span>
+		{/each}
+	</div>
+{/if}
+
 {#each primaryDieBonuses as bonus, index (index)}
 	{@const value = signed(bonus.value)}
-	{@const sentence = localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
+	{@const sentence =
+		bonusNotAdded ?? localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
 	<div
 		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
 		data-tooltip={sentence}
 	>
-		<i class="fa-solid {bonus.value > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}" aria-hidden="true"></i>
+		<i
+			class="fa-solid {bonusNotAdded
+				? 'fa-ban'
+				: bonus.value > 0
+					? 'fa-arrow-up'
+					: 'fa-arrow-down'}"
+			aria-hidden="true"
+		></i>
 		<p class="nimble-roll-changes__text">
 			<span aria-hidden="true">{bonus.label}</span>
 			<span class="nimble-roll-changes__spoken">{sentence}</span>
 		</p>
-		<span class="nimble-reroll-tag" aria-hidden="true">
-			<i class="fa-solid fa-dice-d6"></i>
-			<span>{localize('NIMBLE.chat.primaryDieBonus.tag', { value })}</span>
+		<span
+			class="nimble-reroll-tag"
+			class:nimble-reroll-tag--none={!!bonusNotAdded}
+			aria-hidden="true"
+		>
+			<i class="fa-solid {bonusNotAdded ? 'fa-ban' : 'fa-dice-d6'}"></i>
+			<span>
+				{localize(
+					bonusNotAdded
+						? 'NIMBLE.chat.primaryDieBonus.notAdded'
+						: 'NIMBLE.chat.primaryDieBonus.tag',
+					{ value },
+				)}
+			</span>
 		</span>
 	</div>
 {/each}
@@ -68,7 +111,7 @@
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
 			data-tooltip={line.text}
 		>
-			<i class={REACTION_VERB_ICONS[line.change ? 'change' : 'reroll']} aria-hidden="true"></i>
+			<i class={REACTION_VERB_ICONS[line.use]} aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
 					<span aria-hidden="true">{line.title}</span>
@@ -218,6 +261,10 @@
 			align-items: flex-start;
 			gap: 0.25rem;
 			margin: 0.3125rem 0 0.25rem calc(1em + 0.25rem);
+
+			&--outcome {
+				margin: 0;
+			}
 		}
 
 		&__note {
@@ -332,6 +379,11 @@
 				outline: 2px solid var(--nimble-card-text-color);
 				outline-offset: 1px;
 			}
+		}
+
+		&--crit > i {
+			color: var(--nimble-crit-cause-color);
+			opacity: 1;
 		}
 
 		&--off,

@@ -368,6 +368,45 @@ describe('DamageBonusRule', () => {
 	});
 });
 
+describe('a damage bonus limited to one item', () => {
+	const actor = {
+		system: {
+			damageBonuses: [
+				{
+					value: 3,
+					formula: null,
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					itemIdentifier: 'spirit',
+					targetCondition: null,
+				},
+				{
+					value: null,
+					formula: '1d4',
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					itemIdentifier: 'spirit',
+					targetCondition: null,
+				},
+			],
+		},
+	};
+
+	it('adds to attacks with that item', () => {
+		expect(getDamageBonusTotal(actor, 'melee', 'spell', '', undefined, 'spirit')).toBe(3);
+		expect(getDamageBonusFormulas(actor, 'melee', 'spell', '', undefined, 'spirit')).toEqual([
+			'1d4',
+		]);
+	});
+
+	it('adds nothing to another attack', () => {
+		expect(getDamageBonusTotal(actor, 'melee', 'spell', '', undefined, 'sword')).toBe(0);
+		expect(getDamageBonusFormulas(actor, 'melee', 'spell')).toEqual([]);
+	});
+});
+
 describe('getDamageBonusTotal', () => {
 	it('should return 0 for null actor', () => {
 		expect(getDamageBonusTotal(null, 'melee', 'weapon')).toBe(0);

@@ -1,6 +1,7 @@
 import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 import type { PendingKeep } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { rerollHistoryLines } from '../../src/view/chat/components/rerollHistoryLines.ts';
+import type { AttackOutcomeTag } from '../../src/view/chat/components/attackOutcomeTags.ts';
 import type { HeldIncomingReactions } from './IncomingReactionPrompts.d.ts';
 
 type RerollHistoryLine = ReturnType<typeof rerollHistoryLines>[number];
@@ -15,4 +16,8 @@ export interface RerollHistoryProps {
 	held: HeldIncomingReactions;
 	/** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
 	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
+	/** Why the Primary Die Bonus lines are not on the die. Null when they are. */
+	bonusNotAdded?: string | null;
+	/** What made the attack result differ from the die face. */
+	outcomeTags?: readonly AttackOutcomeTag[];
 }

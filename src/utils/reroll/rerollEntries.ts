@@ -1,25 +1,52 @@
 import type { DieChange } from '#types/dieChange.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
 	type AttackOutcomeView,
+	canBecomeCrit,
+	critStays,
+	hasDieAtMax,
 	type IncomingReactionEntry,
 	type RerollDie,
 	type RerollKeep,
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
+import { soleTarget } from '../tokens/soleTarget.js';
 import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 
 const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
+const MAKE_CRIT_RULE_TYPE = 'makeCrit';
+const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
+const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
-/** The rule types whose entries go on a card as `reroll` entries. */
+/**
+ * The rule types whose entries go on a card as `reroll` entries. With Feature
+ * Effects off, an Attack Outcome rule that gives a crit is a Make It a Crit button.
+ */
 function isRollUseRule(type: string | undefined): boolean {
-	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE;
+	if (type === ATTACK_OUTCOME_RULE_TYPE) return !isRuleAutomationEnabled();
+	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE || type === MAKE_CRIT_RULE_TYPE;
+}
+
+/** What an entry of a rule of this type does. Absent is a reroll. */
+function rollUseOf(type: string | undefined): RollUse | undefined {
+	if (type === CHANGE_DIE_RULE_TYPE) return 'change';
+	if (type === MAKE_CRIT_RULE_TYPE || type === ATTACK_OUTCOME_RULE_TYPE) return 'crit';
+	return undefined;
+}
+
+/** A roll use as the outcome gate reads it. */
+interface RollUseGate {
+	use?: RollUse;
+	/** A crit use that also needs a die of the roll at its max. */
+	needsDieAtMax?: boolean;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -48,6 +75,8 @@ interface RerollRuleLike {
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: DieChange;
+	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
+	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;
@@ -60,6 +89,26 @@ interface RerollingActor {
 	isOwner?: boolean;
 	rules?: RerollRuleLike[];
 	getTargetDomain?(): Set<string>;
+}
+
+/**
+ * With Feature Effects off, the crit of a melee hit against a target in the
+ * Incapacitated group is a free Make It a Crit button. No item holds this rule.
+ */
+function incapacitatedTargetRule(other: RerollingActor | null): RerollRuleLike {
+	const condition = incapacitatedConditionOf(other);
+	return {
+		type: MAKE_CRIT_RULE_TYPE,
+		id: INCAPACITATED_TARGET_RULE_ID,
+		label: condition ? incapacitatedFeature(condition) : '',
+		outcome: 'hit',
+		offersUseOn: (context) =>
+			!isRuleAutomationEnabled() &&
+			context.side === 'roller' &&
+			context.roll.kind === 'attack' &&
+			context.roll.delivery === 'melee' &&
+			incapacitatedConditionOf(context.other) !== null,
+	};
 }
 
 interface RerollTarget {
@@ -82,7 +131,7 @@ interface RerollAlly {
 /** One roll as the reroll gate sees it. The caller builds it once per roll. */
 interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
-	/** The roll's targets in card order. Only the first one's rules give entries. */
+	/** The roll's targets in card order. With two or more, no target's rules give entries. */
 	targets: RerollTarget[];
 	/** Creatures that may use an ally-side reroll. Absent means none. */
 	allies?: RerollAlly[];
@@ -116,12 +165,36 @@ function attackOutcome(context: RerollRollContext): RerollRollOutcome {
 	return { outcome: context.outcome, forcedMiss: context.forcedMiss };
 }
 
+/**
+ * Whether a roll use with this trigger fits the outcome. A crit that stays has
+ * no crit-only use, and a crit use needs a roll that can still be made a crit.
+ */
+function rollUseTriggerMatches(
+	trigger: RerollTrigger | null | undefined,
+	outcome: AttackOutcomeView,
+	gate: RollUseGate = {},
+): boolean {
+	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
+	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
+	if (trigger === 'criticalHit' && critStays(outcome)) return false;
+	return rerollTriggerMatches(trigger, outcome);
+}
+
 function outcomeAllows(
 	trigger: RerollTrigger | null | undefined,
 	roll: RerollRollOutcome,
+	gate: RollUseGate = {},
 ): boolean {
 	if (roll.forcedMiss) return false;
-	return !roll.outcome || rerollTriggerMatches(trigger, roll.outcome);
+	return !roll.outcome || rollUseTriggerMatches(trigger, roll.outcome, gate);
+}
+
+function gateOf(rule: RerollRuleLike): RollUseGate {
+	const use = rollUseOf(rule.type);
+	return {
+		...(use ? { use } : {}),
+		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
+	};
 }
 
 /**
@@ -144,12 +217,13 @@ interface RerollUser {
 }
 
 /**
- * The creature on the other side of the roll from `side`: the first target
- * for the one who rolled and an ally, the one who rolled for the target.
+ * The creature on the other side of the roll from `side`: the target for the
+ * one who rolled and an ally, the one who rolled for the target. With two or
+ * more targets there is none, so a rule that tests it does not run.
  */
 function otherCreature(side: RerollSide, context: RerollRollContext): RerollingActor | null {
 	if (side === 'target') return context.attacker ?? null;
-	return context.targets[0]?.actor ?? null;
+	return soleTarget(context.targets)?.actor ?? null;
 }
 
 /** Who can use a rule on each side of this roll. */
@@ -157,6 +231,7 @@ function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[]
 	if (side === 'roller')
 		return [{ actor: context.attacker, tokenUuid: null, targetTokenUuid: null }];
 	if (side === 'target') {
+		if (context.targets.length > 1) return [];
 		const target = context.targets[0];
 		return [{ actor: target?.actor, tokenUuid: null, targetTokenUuid: target?.tokenUuid ?? null }];
 	}
@@ -194,11 +269,14 @@ function collectRerollEntries(context: RerollRollContext): {
 			const actorUuid = actor?.uuid ?? '';
 			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
-			for (const rule of actor.rules) {
+			const rules =
+				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
+			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (rule.outcome ?? 'always') : 'always';
-				if (!outcomeAllows(trigger, outcome)) continue;
+				const gate = gateOf(rule);
+				if (!outcomeAllows(trigger, outcome, gate)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
 				const entry: IncomingReactionEntry = {
@@ -215,7 +293,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					used: false,
 					outcomeTrigger: trigger,
 					oncePerAttack: isAttack && rule.oncePerAttack === true,
-					...(rule.type === CHANGE_DIE_RULE_TYPE ? { use: 'change' as const } : {}),
+					...gate,
 					...(hint ? { hint } : {}),
 					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
 				};
@@ -236,7 +314,7 @@ function collectRerollEntries(context: RerollRollContext): {
  * made, every offer stands.
  */
 function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boolean {
-	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll);
+	if (entry.kind === 'reroll') return outcomeAllows(entry.outcomeTrigger, roll, entry);
 	if (!roll.outcome) return true;
 	return rerollTriggerMatches(entry.outcomeTrigger, roll.outcome);
 }
@@ -302,8 +380,9 @@ function nextAutomaticReroll(
 	);
 }
 
-/** The live Reroll or Change a Die rule an entry came from, or null when it is gone or off. */
+/** The live roll use rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
+	if (entry.ruleId === INCAPACITATED_TARGET_RULE_ID) return incapacitatedTargetRule(null);
 	if (!entry.itemUuid) return null;
 	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
 		rules?: Map<string, RerollRuleLike>;
@@ -350,7 +429,9 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const { outcome, forcedMiss } = attackOutcome(context);
-	if (outcome && !rerollTriggerMatches(rule.outcome, outcome)) return UNAVAILABLE;
+	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, gateOf(rule))) {
+		return UNAVAILABLE;
+	}
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
 	return { ok: true, rule, actor };
 }
@@ -359,10 +440,12 @@ export {
 	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
+	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,
 	REROLL_RULE_TYPE,
 	rerollRuleKey,
+	rollUseOf,
 	usableRerollEntry,
 	withNewRerollEntries,
 	type AutomaticReroll,

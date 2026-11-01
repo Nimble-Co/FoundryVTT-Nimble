@@ -10,6 +10,8 @@ interface DamageReductionEntry {
 	mode?: 'flat' | 'half';
 	/** Rule label, surfaced in the chat card's damage-modifier breakdown */
 	label?: string;
+	/** The reduction applies only to the damage of a crit. */
+	onlyCrits?: boolean;
 }
 
 function schema() {
@@ -52,6 +54,13 @@ function schema() {
 				hint: 'NIMBLE.rules.damageReduction.damageTypes.hint',
 			},
 		),
+		onlyCrits: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.damageReduction.onlyCrits.label',
+			hint: 'NIMBLE.rules.damageReduction.onlyCrits.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'damageReduction' }),
 	};
 }
@@ -75,6 +84,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 	declare mode: 'flat' | 'half';
 	declare value: string;
 	declare damageTypes: string[];
+	declare onlyCrits: boolean;
 
 	static override defineSchema(): DamageReductionRule.Schema {
 		return {
@@ -89,6 +99,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 				['mode', 'string'],
 				['value', 'string'],
 				['damageTypes', 'string[]'],
+				['onlyCrits', 'boolean'],
 			]),
 		);
 	}
@@ -104,6 +115,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 				damageTypes: [...this.damageTypes],
 				mode: 'half',
 				label: this.label || item.name,
+				...(this.onlyCrits ? { onlyCrits: true } : {}),
 			});
 			return;
 		}
@@ -122,6 +134,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 			value: resolvedValue,
 			damageTypes: [...this.damageTypes],
 			label: this.label || item.name,
+			...(this.onlyCrits ? { onlyCrits: true } : {}),
 		});
 	}
 }

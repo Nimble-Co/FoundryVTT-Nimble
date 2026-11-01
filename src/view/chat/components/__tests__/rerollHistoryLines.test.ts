@@ -74,6 +74,7 @@ describe('rerollHistoryLines', () => {
 				text: 'Rerolled with Pocket Sand',
 				detail: 'Wounds gained: 1',
 				keptOld: false,
+				use: 'reroll',
 				dice: {
 					previous: { faces: 8, value: 8, outcome: 'crit' },
 					next: { faces: 8, value: 3, outcome: null },
@@ -87,6 +88,7 @@ describe('rerollHistoryLines', () => {
 				text: 'Rerolled with Warding Bond',
 				detail: 'Used by Bram - Uses left: 2',
 				keptOld: false,
+				use: 'reroll',
 				dice: {
 					previous: { faces: 8, value: 3, outcome: null },
 					next: { faces: 8, value: 1, outcome: 'miss' },
@@ -401,5 +403,46 @@ describe('rerollHistoryLines for a change', () => {
 	it('keeps the uses left and who used it', () => {
 		const [line] = changeLines([changed({ actorUuid: 'Actor.bram', usesLeft: 0 })]);
 		expect(line.detail).toBe('Used by Bram - Uses left: 0');
+	});
+});
+
+describe('rerollHistoryLines for Make It a Crit', () => {
+	const NAMES_WITH_CRIT = { ...NAMES, 'Item.beast': 'Unleash the Beast' };
+	const critLines = (records: RerollRecord[]) =>
+		rerollHistoryLines({
+			records,
+			speakerUuid: 'Actor.wren',
+			rerollAgain: new Set(),
+			documentName: (uuid) => NAMES_WITH_CRIT[uuid as keyof typeof NAMES_WITH_CRIT],
+		});
+	const made = (overrides: Partial<RerollRecord> = {}) =>
+		record({
+			itemUuid: 'Item.beast',
+			use: 'crit',
+			previous: { value: 1, outcome: 'miss' },
+			next: { value: 1, outcome: 'crit' },
+			...overrides,
+		});
+
+	it('names the feature, tags the crit, and tells it as a sentence', () => {
+		const [line] = critLines([made()]);
+		expect(line).toMatchObject({
+			title: 'Unleash the Beast',
+			text: 'Made the attack a crit with Unleash the Beast',
+			use: 'crit',
+			dice: { previous: { value: 1, outcome: 'miss' }, next: { value: 1, outcome: 'crit' } },
+		});
+		expect(line.tags.map((tag) => [tag.kind, tag.label, tag.tooltip])).toEqual([
+			['crit', 'Crit', 'Unleash the Beast made the attack a crit.'],
+		]);
+	});
+
+	it('keeps the uses left and who used it', () => {
+		const [line] = critLines([made({ actorUuid: 'Actor.bram', usesLeft: 0 })]);
+		expect(line.detail).toBe('Used by Bram - Uses left: 0');
+	});
+
+	it('is not a "Reroll again"', () => {
+		expect(isRerollAgain(entry({ use: 'crit' }), [record()])).toBe(false);
 	});
 });

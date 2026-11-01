@@ -327,12 +327,83 @@ describe('RuleCard with a form layout (primaryDieBonus)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (attackOutcome)', () => {
+	it('asks which attacks, what changes, the attack type, then the optional conditions', () => {
+		const { container } = render(RuleCard, { rule: initialRule('attackOutcome'), manager });
+		expect(shownFields(container)).toEqual([
+			'side',
+			'cannotMiss',
+			'critRange',
+			'forceCrit',
+			'anyDieCrits',
+			'attackDelivery',
+			'attackSource',
+			'thisItemOnly',
+			'exceptItemIdentifier',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+		]);
+	});
+
+	it('hides the item and charge pool fields for attacks against you', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('attackOutcome', { side: 'attacksAgainstYou' }),
+			manager,
+		});
+		expect(shownFields(container)).not.toContain('thisItemOnly');
+		expect(shownFields(container)).not.toContain('chargePoolIdentifier');
+	});
+});
+
+describe('RuleCard with a form layout (makeCrit)', () => {
+	it('asks who, when and the cost, with no roll question', () => {
+		const { container } = render(RuleCard, { rule: initialRule('makeCrit'), manager });
+		expect(shownFields(container)).toEqual([
+			'usedBy',
+			'outcome',
+			'attackDelivery',
+			'predicate',
+			'otherCreature',
+			'chargePoolIdentifier',
+			'manaCost',
+			'woundCost',
+			'heroicReaction',
+			'actionCost',
+			'cardHint',
+		]);
+	});
+});
+
+describe('RuleCard for a toggle', () => {
+	it('names the turn-off choices in plain words, and selects only the stored one', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('toggleEffect', { turnOff: ['onRoundEnd'] }),
+			manager,
+		});
+		const chips = [...container.querySelectorAll('.nimble-tag-group__option-button')];
+		expect(chips.map((chip) => chip.textContent?.trim())).toContain('When the round ends');
+		expect(chips.map((chip) => chip.textContent?.trim())).not.toContain('onRoundEnd');
+		const selected = chips.filter((chip) =>
+			chip.classList.contains('nimble-tag-group__option-button--selected'),
+		);
+		expect(selected.map((chip) => chip.textContent?.trim())).toEqual(['When the round ends']);
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
 	);
 
-	const withLayout = ['reroll', 'modifyReroll', 'primaryDieBonus', 'changeDie'];
+	const withLayout = [
+		'reroll',
+		'modifyReroll',
+		'primaryDieBonus',
+		'changeDie',
+		'attackOutcome',
+		'makeCrit',
+	];
 
 	it('covers every rule but the ones with a layout', () => {
 		const types = others.map(([type]) => type);

@@ -17,7 +17,7 @@ beforeAll(() => {
 
 interface ActorStub {
 	statuses: Set<string>;
-	system: { attributes: { hp: { value: number; max: number } } };
+	system: { attributes: { hp: { value: number; max: number }; [key: string]: unknown } };
 	tags: Set<string>;
 }
 
@@ -375,6 +375,33 @@ describe('_populateDerivedTags — self / target state tags', () => {
 		});
 	});
 
+	describe('size and armor tags', () => {
+		function withAttributes(attributes: Record<string, unknown>): ActorStub {
+			const stub = makeStub();
+			Object.assign(stub.system.attributes, attributes);
+			return stub;
+		}
+
+		it('adds self: and target: size tags', () => {
+			const tags = runPopulate(withAttributes({ sizeCategory: 'small' }));
+			expect(tags.has('self:size:small')).toBe(true);
+			expect(tags.has('target:size:small')).toBe(true);
+		});
+
+		it("adds a monster's armor, and none for no armor", () => {
+			const medium = runPopulate(withAttributes({ armor: 'medium' }));
+			expect(medium.has('self:armor:medium')).toBe(true);
+			expect(medium.has('target:armor:medium')).toBe(true);
+			expect(runPopulate(withAttributes({ armor: 'none' })).has('target:armor:none')).toBe(true);
+			expect(runPopulate(withAttributes({ armor: 'odd' })).has('target:armor:none')).toBe(true);
+		});
+
+		it('adds no armor tag for a creature with no armor field', () => {
+			const tags = runPopulate(makeStub());
+			expect([...tags].some((tag) => tag.includes('armor:'))).toBe(false);
+		});
+	});
+
 	describe('character subclass tags', () => {
 		interface ItemStub {
 			isType(type: string): boolean;
@@ -399,6 +426,28 @@ describe('_populateDerivedTags — self / target state tags', () => {
 		function makeItemStub(type: string, identifier: string): ItemStub {
 			return { isType: (t: string) => t === type, identifier };
 		}
+
+		function armorItem(ruleDisabled: boolean) {
+			return {
+				isType: (t: string) => t === 'object',
+				identifier: 'half-plate',
+				system: { objectType: 'armor' },
+				rules: new Map([['ac', { type: 'armorClass', disabled: ruleDisabled }]]),
+			};
+		}
+
+		it('gives an unarmored hero armor:none, and a hero who wears armor no armor:none', () => {
+			expect(runCharacterPopulate([]).has('target:armor:none')).toBe(true);
+			const worn = runCharacterPopulate([armorItem(false) as unknown as ItemStub]);
+			expect(worn.has('target:armor:none')).toBe(false);
+			expect(worn.has('self:armor:none')).toBe(false);
+		});
+
+		it('counts armor that is not worn as no armor', () => {
+			const stowed = runCharacterPopulate([armorItem(true) as unknown as ItemStub]);
+			expect(stowed.has('self:armor:none')).toBe(true);
+			expect(stowed.has('target:armor:none')).toBe(true);
+		});
 
 		it('adds subclass:<identifier> for each subclass item', () => {
 			const tags = runCharacterPopulate([

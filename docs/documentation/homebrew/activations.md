@@ -57,7 +57,7 @@ A critical hit is also a hit, so a crit card shows the children of both **On Cri
 
 ### Healing
 
-A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Temporary Healing**), and a Target Disposition. On consumable objects, healing formulas are automatically increased by any healing-potion-bonus rules the drinker has.
+A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Temporary Healing**), a **Who gets it?** choice, and a Target Disposition. **The one who uses it** gives the healing to the item's user with no target and no click. On consumable objects, healing formulas are automatically increased by any healing-potion-bonus rules the drinker has.
 
 ### Save
 

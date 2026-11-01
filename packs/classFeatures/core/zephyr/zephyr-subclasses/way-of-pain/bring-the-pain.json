@@ -6,7 +6,82 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "CeQ4Kxcng0Bc4J0S",
+				"identifier": "bring-the-pain",
+				"label": "Bring the Pain (1/round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "makeCrit",
+				"disabled": false,
+				"id": "fAvRAbLBKktaoyPE",
+				"identifier": "",
+				"label": "Bring the Pain",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"usedBy": "target",
+				"reach": 0,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "melee",
+				"chargePoolIdentifier": "bring-the-pain",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			},
+			{
+				"type": "damageReduction",
+				"disabled": false,
+				"id": "l5Qs4BESH8O0oEtv",
+				"identifier": "",
+				"label": "Bring the Pain",
+				"predicate": {},
+				"priority": 3,
+				"mode": "half",
+				"value": "0",
+				"damageTypes": [],
+				"onlyCrits": true
+			},
+			{
+				"type": "damageBack",
+				"disabled": false,
+				"id": "xG4hNc7RqT2mWk9D",
+				"identifier": "",
+				"label": "Bring the Pain",
+				"predicate": {},
+				"priority": 4,
+				"onlyCrits": true,
+				"woundDoubles": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

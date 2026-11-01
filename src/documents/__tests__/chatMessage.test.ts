@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -2730,5 +2730,74 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 
 		expect(message.update).toHaveBeenCalledTimes(1);
 		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+	});
+});
+
+describe('healing that goes to the one who used the item', () => {
+	function selfHealingMessage(total = 7) {
+		const actor = {
+			uuid: 'Actor.hero',
+			name: 'Hero',
+			system: { attributes: { hp: { value: 10, temp: 0, max: 20 } } },
+			applyHealing: vi.fn(async function (this: { system: unknown }, amount: number) {
+				foundry.utils.setProperty(this, 'system.attributes.hp.temp', amount);
+			}),
+			setTempHP: vi.fn(async () => undefined),
+		};
+		const message = new NimbleChatMessage({
+			type: 'feature',
+			speaker: { actor: 'hero' },
+			system: { targets: [], isCritical: false, isMiss: false, activation: { effects: [] } },
+		} as unknown as ChatMessage.CreateData);
+		message.update = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(message, 'effectNodes', {
+			get: () => [
+				[
+					{
+						id: 'temp',
+						type: 'healing',
+						healingType: 'tempHealing',
+						recipient: 'self',
+						roll: { total },
+					},
+				],
+			],
+		});
+		const globals = globalThis as unknown as Record<string, unknown>;
+		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === actor.uuid ? actor : null));
+		vi.spyOn(
+			NimbleChatMessage as unknown as { getSpeakerActor(): unknown },
+			'getSpeakerActor',
+		).mockReturnValue(actor);
+		return { actor, message };
+	}
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		delete (globalThis as unknown as { game: { settings?: unknown } }).game.settings;
+	});
+
+	it('goes to the user with no target, and tells who got it on the card', async () => {
+		const { actor, message } = selfHealingMessage();
+
+		await message.applySelfHealing();
+
+		expect(actor.applyHealing).toHaveBeenCalledWith(7, 'tempHealing');
+		const changes = (message.update as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+		expect(changes['system.appliedHealing'].temp.targets[0]).toMatchObject({
+			uuid: 'Actor.hero',
+			newTempHp: 7,
+		});
+	});
+
+	it('waits for a click with Feature Effects off', async () => {
+		(globalThis as unknown as { game: { settings?: unknown } }).game.settings = {
+			get: (_scope: string, key: string) => !key.includes('RuleEffects'),
+		};
+		const { actor, message } = selfHealingMessage();
+
+		await message.applySelfHealing();
+
+		expect(actor.applyHealing).not.toHaveBeenCalled();
 	});
 });

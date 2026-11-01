@@ -1707,7 +1707,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		}
 	});
 
-	it('targets.count > 1 alone does NOT auto-flag — multi-target abilities without a template (e.g. Magic Missile, "make two attacks") roll separately per target and crit/miss normally', async () => {
+	it("the item's target count alone does not make a Multi-target Attack: crit and miss stay on", async () => {
 		const MockDamageRoll = makeMockDamageRollClass();
 		const originalDR = testDependencies.DamageRoll;
 		const originalRecon = testDependencies.reconstructEffectsTree;
@@ -1763,6 +1763,129 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 			(testDependencies as any).DamageRoll = originalDR;
 			(testDependencies as any).reconstructEffectsTree = originalRecon;
 		}
+	});
+
+	describe('a Multi-target Attack (Core:1403)', () => {
+		async function rollWithTargets(count: number, rules: unknown[] = []) {
+			const MockDamageRoll = makeMockDamageRollClass();
+			const originalDR = testDependencies.DamageRoll;
+			const originalRecon = testDependencies.reconstructEffectsTree;
+			(testDependencies as any).DamageRoll = MockDamageRoll;
+			(testDependencies as any).reconstructEffectsTree = (effects: EffectNode[]) => effects;
+			ensureGameUserTargets();
+			const g = globalThis as any;
+			const before = g.game.user.targets;
+			g.game.user.targets = Array.from({ length: count }, (_, index) => ({
+				document: { uuid: `Scene.s.Token.t${index}` },
+				actor: null,
+			}));
+
+			try {
+				const actor = {
+					uuid: 'a1',
+					token: null,
+					type: 'character',
+					rules,
+					getRollData: () => ({}),
+					system: { proficiencies: { weapons: [] } },
+				};
+				const item = {
+					type: 'weapon',
+					name: 'Sweep',
+					actor,
+					system: {
+						weaponType: '',
+						properties: { selected: [] },
+						activation: { effects: [], targets: { count: 2, attackType: 'reach' } },
+					},
+				};
+				const manager = new ItemActivationManager(item as any, { fastForward: true });
+				manager.activationData = {
+					effects: [
+						{
+							id: 'd1',
+							type: 'damage',
+							damageType: 'slashing',
+							formula: '1d8',
+							canCrit: true,
+							canMiss: true,
+							parentContext: null,
+							parentNode: null,
+						} as any,
+					],
+				};
+				await manager.getData();
+				return (MockDamageRoll as any).calls[0].options;
+			} finally {
+				g.game.user.targets = before;
+				(testDependencies as any).DamageRoll = originalDR;
+				(testDependencies as any).reconstructEffectsTree = originalRecon;
+			}
+		}
+
+		it('cannot crit or miss with two targets, and keeps its Primary Die', async () => {
+			const opts = await rollWithTargets(2);
+
+			expect(opts.canCrit).toBe(false);
+			expect(opts.canMiss).toBe(false);
+			expect(opts.multiTarget).toBe(true);
+		});
+
+		it("gives the roll the attacker's Attack Outcome rules", async () => {
+			const rule = {
+				type: 'attackOutcome',
+				changeFor: () => ({
+					label: "Deathbringer's Touch",
+					cannotMiss: false,
+					critRange: 0,
+					forcedCrit: 'always',
+					anyDieCrits: false,
+					chargePoolIdentifier: '',
+				}),
+			};
+
+			const opts = await rollWithTargets(1, [rule]);
+
+			expect(opts.forcedCrit).toBe('always');
+			expect(opts.outcomeSources).toEqual({ forcedCrit: ["Deathbringer's Touch"] });
+		});
+
+		it("tells the Attack Outcome rules the attack's damage type", async () => {
+			const changeFor = vi.fn(() => null);
+
+			await rollWithTargets(1, [{ type: 'attackOutcome', changeFor }]);
+
+			expect(changeFor).toHaveBeenCalledWith(
+				expect.objectContaining({ side: 'yourAttacks', damageTypes: ['slashing'] }),
+			);
+		});
+
+		it('gives a Multi-target Attack no crit from an Attack Outcome rule', async () => {
+			const rule = {
+				type: 'attackOutcome',
+				changeFor: () => ({
+					label: 'Feature',
+					cannotMiss: false,
+					critRange: 1,
+					forcedCrit: 'always',
+					anyDieCrits: false,
+					chargePoolIdentifier: '',
+				}),
+			};
+
+			const opts = await rollWithTargets(2, [rule]);
+
+			expect(opts.forcedCrit).toBeUndefined();
+			expect(opts.critRange).toBeUndefined();
+		});
+
+		it('is a normal attack with one target', async () => {
+			const opts = await rollWithTargets(1);
+
+			expect(opts.canCrit).toBe(true);
+			expect(opts.canMiss).toBe(true);
+			expect(opts.multiTarget).toBeFalsy();
+		});
 	});
 
 	it('hasWeaponProficiency baseline cases', () => {

@@ -36,6 +36,9 @@ export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 // Forward declarations to avoid circular dependencies
 import type { SystemItemTypes } from '../item/itemInterfaces.js';
 
+/** The armor a monster's armor field can name. */
+const MONSTER_ARMOR = new Set(['none', 'medium', 'heavy']);
+
 interface NimbleBaseItem extends Item {
 	// Items in an actor's embedded collection are always stored, so these are non-null.
 	id: string;
@@ -494,6 +497,18 @@ class NimbleBaseActor<
 				this.tags.add(`self:${condition}`);
 				this.tags.add(`target:${condition}`);
 			}
+		}
+
+		if (sysData.attributes.sizeCategory) {
+			this.tags.add(`self:size:${sysData.attributes.sizeCategory}`);
+			this.tags.add(`target:size:${sysData.attributes.sizeCategory}`);
+		}
+		// Monsters have an armor field; a hero's armor is the armor it wears.
+		const armor = (sysData.attributes as { armor?: unknown }).armor;
+		if (typeof armor === 'string') {
+			const kind = MONSTER_ARMOR.has(armor) ? armor : 'none';
+			this.tags.add(`self:armor:${kind}`);
+			this.tags.add(`target:armor:${kind}`);
 		}
 
 		if (hpMax > 0 && hpVal >= hpMax) {

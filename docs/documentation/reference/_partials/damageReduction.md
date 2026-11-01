@@ -7,3 +7,5 @@
 Leave **Damage types** empty to reduce every incoming hit instead. Matching reductions stack, and they apply after armor but before temporary hit points; the damage preview on a chat card's Apply Damage button already shows the reduced number. **Reduction** takes formulas (`@abilities.str.mod`) but not dice expressions.
 
 Set **Mode** to `Half` instead to halve the matching damage (resistance). The Reduction value is then ignored, and halving applies only once no matter how many matching sources the target has.
+
+**Only against crits** reduces the damage only when the attack is a crit. All the damage of that attack is reduced, also the parts that are not the crit roll.

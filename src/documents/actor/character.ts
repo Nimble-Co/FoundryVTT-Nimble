@@ -404,6 +404,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		});
 		this.tags.add(`armor:${hasArmor ? 'equipped' : 'unarmored'}`);
 
+		// Armor that is not equipped has its rules off.
+		const hasEquippedArmor = this.items.some((item) => {
+			if (!item.isType('object')) return false;
+			if ((item as unknown as NimbleObjectItem).system.objectType !== 'armor') return false;
+			return [...item.rules.values()].some((rule) => rule.type === 'armorClass' && !rule.disabled);
+		});
+		if (!hasEquippedArmor) {
+			this.tags.add('self:armor:none');
+			this.tags.add('target:armor:none');
+		}
+
 		// Shield status tag — character-only. Monsters/NPCs don't have an equipment
 		// system, so predicates using self:shield / self:noShield only apply to PCs.
 		const hasShield = this.items.some((item) => {

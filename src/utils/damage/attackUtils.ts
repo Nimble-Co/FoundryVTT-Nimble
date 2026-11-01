@@ -89,7 +89,9 @@ function matchesBonus(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
+	itemIdentifier?: string,
 ): boolean {
+	if (bonus.itemIdentifier && bonus.itemIdentifier !== itemIdentifier) return false;
 	if (bonus.delivery !== 'any' && bonus.delivery !== delivery) return false;
 	if (bonus.source !== 'any' && bonus.source !== source) return false;
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
@@ -120,6 +122,7 @@ export function getDamageBonusTotal(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
+	itemIdentifier?: string,
 ): number {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -128,7 +131,7 @@ export function getDamageBonusTotal(
 	let total = 0;
 	for (const bonus of bonuses) {
 		if (!bonus.value) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
 		total += bonus.value;
 	}
 	return total;
@@ -151,6 +154,7 @@ export function getDamageBonusFormulas(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
+	itemIdentifier?: string,
 ): string[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -159,7 +163,7 @@ export function getDamageBonusFormulas(
 	const formulas: string[] = [];
 	for (const bonus of bonuses) {
 		if (!bonus.formula) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
 		formulas.push(bonus.formula);
 	}
 	return formulas;

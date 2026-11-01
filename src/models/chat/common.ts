@@ -160,13 +160,14 @@ export const incomingReactions = () => ({
 				choices: [...REROLL_SIDES],
 			}),
 			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
-			// reroll only: a Change a Die rule's entry changes a die instead of rolling again.
+			// reroll only: a Change a Die entry changes a die, a Make It a Crit entry makes a crit.
 			use: new fields.StringField({
 				required: false,
 				nullable: false,
 				initial: 'reroll',
 				choices: [...ROLL_USES],
 			}),
+			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			leftOut: new fields.SchemaField(
 				{
@@ -351,6 +352,29 @@ export const primaryDieBonuses = () => ({
 			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			value: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
 			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		}),
+		{ required: false, nullable: false, initial: [] },
+	),
+});
+
+/** Damage creatures gave back to the one who attacked, one line each. */
+export const damageBack = () => ({
+	damageBack: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			attackerUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			attackerName: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			amount: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+			}),
+			dealt: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			woundDoubles: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			doubled: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		}),
 		{ required: false, nullable: false, initial: [] },
 	),

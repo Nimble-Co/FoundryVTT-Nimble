@@ -124,6 +124,8 @@ export type HealingNode = {
 	type: 'healing';
 	healingType: 'healing' | 'tempHealing';
 	formula: string;
+	/** `self` goes to the one who used the item, with no target. Absent goes to the card's targets. */
+	recipient?: 'self';
 	targetDisposition?: EffectNodeDisposition;
 	parentContext: string | null;
 	parentNode: string | null;
