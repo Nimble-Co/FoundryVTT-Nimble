@@ -92,6 +92,10 @@ describe('ChangeDieRule', () => {
 		}
 	});
 
+	it('lists no field in its tooltip that it does not have', () => {
+		expect(makeRule().tooltipInfo()).not.toContain('relatedStat');
+	});
+
 	it('uses its own words where the Reroll words say reroll', () => {
 		const label = (name: string) => (schema[name]?.options ?? schema[name])?.label;
 		expect(label('rolls')).toBe('NIMBLE.rules.changeDie.rolls.label');

@@ -112,7 +112,8 @@ interface ActorHealthContext {
 interface SaveResolvedContext {
 	actor: NimbleBaseActor;
 	saveType: string;
-	outcome: 'pass' | 'fail';
+	/** `unknown`: an earlier result of this card no longer stands, and nothing settles a new one. */
+	outcome: 'pass' | 'fail' | 'unknown';
 	/** The save card that holds this result. */
 	messageId: string;
 }

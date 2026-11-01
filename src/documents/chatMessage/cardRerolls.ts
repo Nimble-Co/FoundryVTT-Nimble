@@ -97,18 +97,21 @@ function cannotFailChange(
 	entry: IncomingReactionEntry,
 	modifier: { id?: string; item?: { name?: string; uuid?: string } | null },
 ): ResultChange {
-	return newResultChange({
-		entry: {
-			...entry,
-			itemUuid: modifier.item?.uuid ?? '',
-			ruleId: modifier.id ?? '',
-			label: modifier.item?.name ?? '',
-		},
-		use: { change: 'succeed', value: 0, stat: '' },
-		changes: [],
-		chargePoolIdentifier: '',
-		paid: { charges: 0, mana: 0, wounds: 0 },
-	});
+	return {
+		...newResultChange({
+			entry: {
+				...entry,
+				itemUuid: modifier.item?.uuid ?? '',
+				ruleId: modifier.id ?? '',
+				label: modifier.item?.name ?? '',
+			},
+			use: { change: 'succeed', value: 0, stat: '' },
+			changes: [],
+			chargePoolIdentifier: '',
+			paid: { charges: 0, mana: 0, wounds: 0 },
+		}),
+		automatic: true,
+	};
 }
 
 /**

@@ -181,6 +181,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				...RollUseRule.rollUseTooltipTypes(),
+				['relatedStat', 'string'],
 				['automatic', 'boolean'],
 				['discardedCritTriggers', 'boolean'],
 				['rollModeChange', 'number'],

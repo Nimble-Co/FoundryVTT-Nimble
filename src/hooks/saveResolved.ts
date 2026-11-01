@@ -20,9 +20,12 @@ interface SaveCard {
 
 const OUTCOME_OF_RESULT = { failed: 'fail', succeeded: 'pass' } as const;
 
-function unreportedResult(card: SaveCard): CheckResult | null {
+const lastReported = (card: SaveCard) => card.system.reportedSaveResult ?? null;
+
+/** The card's result when it differs from the last one told. Null is a result no longer known. */
+function unreportedResult(card: SaveCard): CheckResult | null | undefined {
 	const result = checkResultOfCard(card.type, card.system, card.rolls[0]);
-	return result === card.system.reportedSaveResult ? null : result;
+	return result === lastReported(card) ? undefined : result;
 }
 
 function saverOf(system: SaveCardSystem): NimbleSavePayload['actor'] | null {
@@ -48,15 +51,15 @@ async function reportSaveResult(card: SaveCard): Promise<void> {
 	try {
 		// A write that lands during the await returns above, so read the card again after it.
 		let result = unreportedResult(card);
-		while (result) {
+		while (result !== undefined) {
 			// Written first: a lost write must not fire the same result twice.
 			await card.update({ 'system.reportedSaveResult': result });
-			if (card.system.reportedSaveResult !== result) return;
+			if (lastReported(card) !== result) return;
 
 			const payload: NimbleSavePayload = {
 				actor,
 				saveType: card.system.saveKey ?? '',
-				outcome: OUTCOME_OF_RESULT[result],
+				outcome: result ? OUTCOME_OF_RESULT[result] : 'unknown',
 				messageId,
 			};
 			// @ts-expect-error - nimble.saveResolved is a custom Nimble hook
@@ -72,7 +75,7 @@ async function reportSaveResult(card: SaveCard): Promise<void> {
 
 let didRegister = false;
 
-/** Tells rules the result of a save card, once per result, on the active GM. */
+/** Tells rules the result of a save card, once per change of it, on the active GM. */
 export function registerSaveResolvedHooks(): void {
 	if (didRegister) return;
 	didRegister = true;

@@ -352,13 +352,13 @@ describe('collectRerollEntries', () => {
 		});
 	});
 
-	it('ignores the outcome and once per attack of a rule on a check', () => {
+	it('ignores the outcome of a rule on a check, and keeps its limit of one use', () => {
 		const rule = rerollRule({ usedBy: 'roller', outcome: 'miss', oncePerAttack: true });
 		const { manual } = collectRerollEntries(
 			context({ attacker: actor('Actor.hero', [rule]), roll: WILL_SAVE, outcome: HIT }),
 		);
 		expect(manual).toEqual([
-			expect.objectContaining({ ruleId: 'rule-1', outcomeTrigger: 'always', oncePerAttack: false }),
+			expect.objectContaining({ ruleId: 'rule-1', outcomeTrigger: 'always', oncePerAttack: true }),
 		]);
 	});
 
@@ -1040,10 +1040,14 @@ describe('usableRerollEntry', () => {
 			});
 		});
 
-		it('ignores once per attack', () => {
+		it('refuses a waiting entry of a once per roll rule that was used on the card', () => {
 			const used = entry({ ...roller, id: 'entry-0', used: true });
 			const waiting = entry(roller);
-			expect(usableRerollEntry(waiting, check(), [used, waiting])).toMatchObject({ ok: true });
+			expect(usableRerollEntry(waiting, check(), [used, waiting])).toEqual({
+				ok: false,
+				reason: 'unavailable',
+			});
+			expect(usableRerollEntry(waiting, check(), [waiting])).toMatchObject({ ok: true });
 		});
 
 		it('has no forced miss', () => {

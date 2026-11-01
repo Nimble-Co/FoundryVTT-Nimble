@@ -164,6 +164,44 @@ describe('saveResolved hook', () => {
 		expect(card.update).not.toHaveBeenCalled();
 	});
 
+	it('tells when a known result stops being known, and clears what it stored', async () => {
+		const { rule } = createSaver();
+		const card = createCard({ rolls: [roll(1, 3)] }, { dc: null });
+		emit('createChatMessage', card);
+		await flushAsync();
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'fail' }));
+		rule.onSaveResolved.mockClear();
+
+		card.rolls = [roll(10, 12)];
+		emit('updateChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(
+			expect.objectContaining({ outcome: 'unknown', messageId: 'card' }),
+		);
+		expect(card.system.reportedSaveResult).toBeNull();
+	});
+
+	it('fires again for a known result after one that was not known', async () => {
+		const { rule } = createSaver();
+		const card = createCard({ rolls: [roll(1, 3)] }, { dc: null });
+		emit('createChatMessage', card);
+		await flushAsync();
+		card.rolls = [roll(10, 12)];
+		emit('updateChatMessage', card);
+		await flushAsync();
+		rule.onSaveResolved.mockClear();
+
+		card.rolls = [roll(1, 3)];
+		emit('updateChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'fail' }));
+		expect(card.system.reportedSaveResult).toBe('failed');
+	});
+
 	it('does not fire again on a write that leaves the result the same', async () => {
 		const { rule } = createSaver();
 		const card = createCard();

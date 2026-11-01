@@ -2664,12 +2664,12 @@
 					"hint": "How many charges one use takes from the pool."
 				},
 				"oncePerAttack": {
-					"label": "Only once per attack",
-					"hint": "The feature can change a die of the same attack only once, even with uses left."
+					"label": "Only once per roll",
+					"hint": "The feature can change a die of the same attack, save or check only once, even with uses left."
 				}
 			},
 			"changeResult": {
-				"description": "Changes the result of a roll after it is made: a save, a check or Initiative succeeds, its total becomes a formula, or a formula goes on its total. A target can take no damage from an attack. A low result can count as a natural 20 by itself. The player can take a clicked change back and gets the cost back.",
+				"description": "Changes the result of a roll after it is made: a save, a check or Initiative succeeds, its total becomes a formula, or a formula goes on its total. A target can take no damage from an attack. A low result can count as a natural 20 by itself. The player can take a clicked change back and gets its uses, Mana and Wounds back.",
 				"rolls": {
 					"label": "Which roll can it change?",
 					"choices": {
@@ -2878,8 +2878,8 @@
 					}
 				},
 				"oncePerAttack": {
-					"label": "Only once per attack",
-					"hint": "The feature can reroll the same attack only once, even with uses left."
+					"label": "Only once per roll",
+					"hint": "The feature can reroll the same attack, save or check only once, even with uses left."
 				},
 				"relatedStat": {
 					"label": "Related to a stat",

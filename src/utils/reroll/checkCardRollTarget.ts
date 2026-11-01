@@ -231,9 +231,12 @@ function naturalChangeFor(
 	});
 }
 
+const readsTheDie = (change: ResultChange) =>
+	change.automatic === true && change.change === 'countsAsNat20';
+
 /**
  * The card's changes after a new roll: a new roll takes the standing ones off,
- * and a change of a die keeps the clicks. A change made by itself is read again.
+ * and a change of a die keeps them, but a natural 20 made by itself is read again.
  */
 function changesAfterRoll(
 	resultChanges: readonly ResultChange[],
@@ -242,11 +245,11 @@ function changesAfterRoll(
 	added: readonly ResultChange[],
 ): ResultChange[] | null {
 	const standing = standingResultChanges(resultChanges);
-	const staleAutomatic = !isNewRoll && standing.some((change) => change.automatic);
+	const staleAutomatic = !isNewRoll && standing.some(readsTheDie);
 	if (added.length === 0 && !staleAutomatic && (!isNewRoll || standing.length === 0)) return null;
 	const kept = isNewRoll
 		? retireResultChanges(rollTotal, resultChanges)
-		: resultChanges.filter((change) => change.retired || !change.automatic);
+		: resultChanges.filter((change) => change.retired || !readsTheDie(change));
 	return [...kept, ...added];
 }
 

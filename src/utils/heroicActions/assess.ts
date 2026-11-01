@@ -5,6 +5,7 @@ import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
+import { assessSucceeds } from './assessResult.js';
 
 export interface AssessRequest {
 	optionId: string;
@@ -32,7 +33,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 
 	await spendAssessAction(actor);
 
-	const isSuccess = (roll.total ?? 0) >= ASSESS_DC;
+	const isSuccess = assessSucceeds(roll);
 	const resultKey = isSuccess ? option.successKey : option.failureKey;
 
 	const targets = option.requiresTarget ? getTargetedTokens(actor.id ?? '') : [];

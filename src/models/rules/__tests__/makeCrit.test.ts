@@ -61,6 +61,10 @@ describe('MakeCritRule', () => {
 		expect(schema.type?.initial).toBe('makeCrit');
 	});
 
+	it('lists no field in its tooltip that it does not have', () => {
+		expect(makeRule().tooltipInfo()).not.toContain('relatedStat');
+	});
+
 	it('uses its own words where the Reroll words say reroll', () => {
 		const field = (name: string) => schema[name]?.options ?? schema[name];
 		expect(field('outcome')?.label).toBe('NIMBLE.rules.makeCrit.outcome.label');

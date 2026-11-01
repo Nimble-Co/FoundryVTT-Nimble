@@ -1,6 +1,6 @@
 The Change a Die rule lets a creature put a new value on one die of a roll that was already made. No die is rolled again. **Which die does it change?** picks **The Primary Die** or **One die the player picks**. On a save or a check, the Primary Die is the d20. **How does it change the die?** picks **Set it to a value the player picks** or **Add a number**. The feature shows as a **Change Die** row in **Change This Roll** on attack, save and check cards. See [Changing a die](../playing/dice-and-chat.md#changing-a-die) for what the player sees.
 
-The other fields work as on the [Reroll](#reroll) rule: **Who can use it?**, **The first roll is**, **Attack type**, **Only while**, **Only when the other creature is**, the cost fields, **Only once per attack** and **Note on the card**.
+The other fields work as on the [Reroll](#reroll) rule: **Who can use it?**, **The first roll is**, **Attack type**, **Only while**, **Only when the other creature is**, the cost fields, **Only once per roll** and **Note on the card**.
 
 **Example: Vicious Opportunist.** 1/turn, when you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like.
 

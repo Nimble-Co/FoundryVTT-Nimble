@@ -96,7 +96,7 @@ function addEffect(actor: MockActor, condition: string, id: string): MockActiveE
 function saveResolved(
 	rule: ApplyConditionRule,
 	actor: MockActor,
-	outcome: 'pass' | 'fail',
+	outcome: 'pass' | 'fail' | 'unknown',
 	messageId = 'card-1',
 ) {
 	type Context = Parameters<ApplyConditionRule['onSaveResolved']>[0];
@@ -390,6 +390,17 @@ describe('ApplyConditionRule', () => {
 			expect(actor.effects).toHaveLength(1);
 
 			await saveResolved(rule, actor, 'pass');
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		it('removes the condition it added when the result stops being known', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			expect(actor.effects).toHaveLength(1);
+
+			await saveResolved(rule, actor, 'unknown');
 			expect(actor.effects).toHaveLength(0);
 		});
 

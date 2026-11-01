@@ -337,6 +337,7 @@ describe('the pack items of check outcomes', () => {
 				outcome: 'failed',
 				chargePoolIdentifier: '',
 				useAnotherStat: false,
+				oncePerAttack: true,
 			});
 			expect(offersOnRoll(rule, ATTACK('dexterity'))).toBe(true);
 			expect(offersOnRoll(rule, SAVE('dexterity'), card(5, 'failed'))).toBe(true);

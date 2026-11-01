@@ -134,6 +134,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				...RollUseRule.rollUseTooltipTypes().filter(([name]) => name !== 'oncePerAttack'),
+				['relatedStat', 'string'],
 				['change', 'string'],
 				['formula', 'string'],
 				['onlyIfLower', 'boolean'],

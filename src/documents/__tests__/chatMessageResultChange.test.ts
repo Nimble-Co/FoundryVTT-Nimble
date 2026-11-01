@@ -479,11 +479,22 @@ describe('Modify Reroll: cannot fail, on a save card', () => {
 				label: 'Sure Song',
 				itemUuid: 'Item.song',
 				paid: { charges: 0, mana: 0, wounds: 0 },
+				automatic: true,
 			}),
 		]);
 		expect(card.system.pendingKeep ?? null).toBeNull();
 		expect(card.system.rerolls).toHaveLength(1);
 		expect(card.update.mock.calls[0][0].rolls).toBeDefined();
+	});
+
+	it('has no Remove: a request to remove the line is refused', async () => {
+		const card = world(true);
+		await click(card, 'insp');
+		const [line] = card.system.resultChanges;
+
+		await card.resolveResultRemoval(line.lineId, 'gm-user');
+
+		expect(card.system.resultChanges).toHaveLength(1);
 	});
 
 	it('changes nothing about the result with no such modifier', async () => {
@@ -492,6 +503,52 @@ describe('Modify Reroll: cannot fail, on a save card', () => {
 		await click(card, 'insp');
 
 		expect(card.system.resultChanges).toEqual([]);
+	});
+});
+
+describe('a reroll limited to one use, on a save card', () => {
+	function world(oncePerAttack: boolean) {
+		const roller = makeRoller();
+		const base = makeRule(roller, 'tumble', { change: 'succeed', value: 0, stat: '' });
+		const rule = {
+			...base,
+			type: 'reroll',
+			die: 'wholeRoll',
+			keep: 'new',
+			oncePerAttack,
+			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
+		};
+		setupWorld([rule as never], roller);
+		const { use: _use, ...entry } = entryFor('tumble');
+		vi.spyOn(NimbleRoll.prototype, 'evaluate').mockImplementation(async function (
+			this: NimbleRoll,
+		) {
+			const die = (this.terms as unknown as Array<{ faces?: number; results?: unknown[] }>).find(
+				(term) => term.faces === 20,
+			);
+			if (die) die.results = [{ result: 2, active: true }];
+			return this as never;
+		});
+		return createCard([entry as IncomingReactionEntry]);
+	}
+
+	const waiting = (card: Card) => card.system.incomingReactions.filter((entry) => !entry.used);
+
+	it('gives no new row after its one use', async () => {
+		const card = world(true);
+
+		await click(card, 'tumble');
+
+		expect(card.system.rerolls).toHaveLength(1);
+		expect(waiting(card)).toEqual([]);
+	});
+
+	it('gives a new row with no limit', async () => {
+		const card = world(false);
+
+		await click(card, 'tumble');
+
+		expect(waiting(card)).toHaveLength(1);
 	});
 });
 

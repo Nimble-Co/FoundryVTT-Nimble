@@ -74,6 +74,10 @@ function offered(rule: ChangeResultRule, view?: ResultCardView): boolean {
 }
 
 describe('ChangeResultRule fields', () => {
+	it('lists the related stat in its tooltip', () => {
+		expect(makeRule().tooltipInfo()).toContain('relatedStat');
+	});
+
 	it('defines its own fields with their defaults', () => {
 		expect(schema.type?.initial).toBe('changeResult');
 		expect(schema.change?.initial).toBe('succeed');

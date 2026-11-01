@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushAsync } from '../../../tests/helpers.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import localize from '../../utils/localize.js';
 import { rollingRerollOf, stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
+import { queueReactionWrite } from '../chatMessage/reactionWriteQueue.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 /**
@@ -1940,6 +1942,22 @@ describe('a reroll from a rule with a stat to pick', () => {
 	});
 });
 
+/** A target with a no damage rule. `tokens` also stand for that target. */
+function noDamageWorld(...tokens: string[]) {
+	const world = setupWorld({
+		type: 'changeResult',
+		change: 'noDamage',
+		attackTrigger: 'hit',
+		resultUseFor: () => ({ change: 'noDamage', value: 0, stat: '' }),
+	});
+	world.target.rules = [world.rule];
+	const inner = globals().fromUuidSync as (uuid: string) => unknown;
+	globals().fromUuidSync = vi.fn((uuid: string) =>
+		tokens.includes(uuid) ? { actor: world.target } : inner(uuid),
+	);
+	return world;
+}
+
 describe('a card as it is made', () => {
 	it('stamps a no damage row per target, and nothing else, on a card with two targets', async () => {
 		const world = setupWorld({
@@ -1982,5 +2000,104 @@ describe('a card as it is made', () => {
 			[TARGET_TOKEN, 'reroll-1', 'result'],
 			['Scene.scene.Token.other', 'reroll-1', 'result'],
 		]);
+	});
+
+	async function preCreate(message: MockedMessage) {
+		const updateSource = vi.fn();
+		Object.assign(message, { updateSource });
+		const base = Object.getPrototypeOf(NimbleChatMessage.prototype) as Record<string, unknown>;
+		base._preCreate = vi.fn(async () => undefined);
+		try {
+			await (
+				message as unknown as { _preCreate: (...args: unknown[]) => Promise<unknown> }
+			)._preCreate({}, {}, {});
+		} finally {
+			delete base._preCreate;
+		}
+		return updateSource;
+	}
+
+	it('writes no rows on a card with no new no damage row', async () => {
+		setupWorld();
+
+		const updateSource = await preCreate(createMessage({ entries: [] }));
+
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+
+	it.each(['minionGroupAttack', 'reaction'])('writes no rows on a %s card', async (type) => {
+		noDamageWorld();
+		const message = createMessage({ entries: [] });
+		Object.assign(message, { type });
+
+		const updateSource = await preCreate(message);
+
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+});
+
+describe('adding a target to a card', () => {
+	const NEW_TOKEN = 'Scene.scene.Token.new';
+
+	function addTarget(message: MockedMessage) {
+		const canvasGlobal = globalThis as unknown as { canvas: unknown };
+		canvasGlobal.canvas = { tokens: { controlled: [{ document: { uuid: NEW_TOKEN } }] } };
+		return message.addSelectedTokensAsTargets();
+	}
+
+	function writtenSystem(message: MockedMessage) {
+		return (message.update.mock.calls[0][0] as { system: Record<string, unknown> }).system;
+	}
+
+	it('writes only the targets when no row is new', async () => {
+		setupWorld();
+		const message = createMessage();
+
+		await addTarget(message);
+
+		expect(writtenSystem(message).targets).toEqual([TARGET_TOKEN, NEW_TOKEN]);
+		expect(writtenSystem(message)).not.toHaveProperty('incomingReactions');
+	});
+
+	it.each(['minionGroupAttack', 'reaction'])('writes no rows on a %s card', async (type) => {
+		noDamageWorld(NEW_TOKEN);
+		const message = createMessage({ entries: [] });
+		Object.assign(message, { type });
+
+		await addTarget(message);
+
+		expect(writtenSystem(message).targets).toEqual([TARGET_TOKEN, NEW_TOKEN]);
+		expect(writtenSystem(message)).not.toHaveProperty('incomingReactions');
+	});
+
+	it('writes the new row after a reaction write in flight, on top of that write', async () => {
+		noDamageWorld(NEW_TOKEN);
+		const message = createMessage({ entries: [] });
+		Object.assign(message, { id: 'targets-card' });
+		let finishWrite = () => {};
+		const inFlight = queueReactionWrite(
+			'targets-card',
+			() =>
+				new Promise<void>((resolve) => {
+					finishWrite = () => {
+						Object.assign(message.system, {
+							incomingReactions: [rerollEntry({ id: 'written', used: true })],
+						});
+						resolve();
+					};
+				}),
+		);
+
+		const adding = addTarget(message);
+		await flushAsync();
+		expect(message.update).not.toHaveBeenCalled();
+
+		finishWrite();
+		await inFlight;
+		await adding;
+
+		const entries = writtenSystem(message).incomingReactions as Array<Record<string, unknown>>;
+		expect(entries.map((entry) => entry.id)).toContain('written');
+		expect(entries.filter((entry) => entry.targetTokenUuid === NEW_TOKEN)).toHaveLength(1);
 	});
 });

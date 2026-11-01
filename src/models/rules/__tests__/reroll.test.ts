@@ -109,6 +109,10 @@ function makeRule(
 const TARGET_MELEE = { side: 'target', roll: { kind: 'attack', delivery: 'melee' } } as const;
 
 describe('RerollRule', () => {
+	it('lists the related stat in its tooltip', () => {
+		expect(makeRule().rule.tooltipInfo()).toContain('relatedStat');
+	});
+
 	beforeEach(() => {
 		setToggles({});
 	});
@@ -231,7 +235,11 @@ describe('RerollRule', () => {
 			expect(showWhen({})).toBe(false);
 		});
 
-		it.each(['attackDelivery', 'primaryDieBonus', 'extraDamage', 'oncePerAttack'])(
+		it('shows oncePerAttack for every roll, because it limits a save or a check too', () => {
+			expect(schema.oncePerAttack?.options?.showWhen).toBeUndefined();
+		});
+
+		it.each(['attackDelivery', 'primaryDieBonus', 'extraDamage'])(
 			'shows %s only when attack is among the rolls',
 			(name) => {
 				const showWhen = schema[name]?.options?.showWhen as (

@@ -39,6 +39,7 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
+import { cardCarriesIncomingReactions } from '../utils/incomingReactions/cardCarriesIncomingReactions.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
@@ -994,11 +995,14 @@ class NimbleChatMessage extends ChatMessage {
 	): ReturnType<ChatMessage['_preCreate']> {
 		const allowed = await super._preCreate(...args);
 		if (allowed === false || !this.isActivationCard()) return allowed;
-		const targets = (this.system as ActivationCardSystemData).targets ?? [];
-		if (targets.length > 0) {
-			this.updateSource({
-				'system.incomingReactions': this.#rerolls.withNoDamageEntries(targets),
-			} as Record<string, unknown>);
+		const { incomingReactions } = this.#noDamageRowChanges(
+			(this.system as ActivationCardSystemData).targets ?? [],
+		);
+		if (incomingReactions) {
+			this.updateSource({ 'system.incomingReactions': incomingReactions } as Record<
+				string,
+				unknown
+			>);
 		}
 		return allowed;
 	}
@@ -1078,13 +1082,35 @@ class NimbleChatMessage extends ChatMessage {
 		const added = newTargets.map((token) => token.document.uuid).filter((uuid) => uuid !== null);
 		const targets = [...new Set([...existingTargets, ...added])];
 
-		return this.update({
-			system: {
-				targets,
-				incomingReactions: this.#rerolls.withNoDamageEntries(targets),
-				...this.#movementOfferChanges({ targets }),
-			},
-		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+		const write = () =>
+			this.update({
+				system: {
+					targets,
+					...this.#noDamageRowChanges(targets),
+					...this.#movementOfferChanges({ targets }),
+				},
+			} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
+		if (!this.#noDamageRowChanges(targets).incomingReactions) return write();
+
+		// The whole list is written, so it waits for a write in flight on this client.
+		let updated: ChatMessage | undefined;
+		await queueReactionWrite(this.id ?? '', async () => {
+			updated = await write();
+		});
+		return updated;
+	}
+
+	/**
+	 * The card's rows once these targets give it a new no-damage row. Empty when no
+	 * row is new, or for a card type that has no field for them.
+	 */
+	#noDamageRowChanges(targets: readonly string[]): {
+		incomingReactions?: IncomingReactionEntry[];
+	} {
+		if (targets.length === 0 || !cardCarriesIncomingReactions(this.type)) return {};
+		const current = this.#incomingReactionEntries();
+		const entries = this.#rerolls.withNoDamageEntries(targets, current);
+		return entries.length === current.length ? {} : { incomingReactions: entries };
 	}
 
 	/**

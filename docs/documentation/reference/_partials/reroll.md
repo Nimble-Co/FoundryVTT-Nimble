@@ -22,7 +22,7 @@ The use limit is a Charge Pool rule on the same item, with the identifier `wily`
 
 The feature shows only while the condition holds, and its cost reads "1 Wound". The Wound is gained when the player uses the feature.
 
-**Saves and checks.** With Save chosen, **Which saves?** limits the rule to the saves you pick. With Skill Check chosen, **Which skills?** does the same for skills, and with Ability Check chosen, **Which abilities?** does it for abilities. None picked means any. A save or a check has no target, so only the one who rolled can use the rule on it. The fields for attacks (**Attack type**, **Only when the other creature is**, **Only once per attack**, **Add to the Primary Die**, **Extra damage** and the discarded crit) show only when Attack is chosen, and they apply to attacks only.
+**Saves and checks.** With Save chosen, **Which saves?** limits the rule to the saves you pick. With Skill Check chosen, **Which skills?** does the same for skills, and with Ability Check chosen, **Which abilities?** does it for abilities. None picked means any. A save or a check has no target, so only the one who rolled can use the rule on it. The fields for attacks (**Attack type**, **Only when the other creature is**, **Add to the Primary Die**, **Extra damage** and the discarded crit) show only when Attack is chosen, and they apply to attacks only.
 
 **The first roll is** shows for every roll. **Any result** and **A failed roll** work on every roll. The other choices are for an attack. **A failed roll** on an attack is a miss. **A failed roll** on a save or a check hides the row while the card says Succeeded, and shows the row when the card says Failed. With no DC, the card has no result, so the row shows and the player decides. The row comes back by itself when the result changes.
 
@@ -32,7 +32,7 @@ The feature shows only while the condition holds, and its cost reads "1 Wound". 
 
 **Cost** can also spend mana or a heroic reaction. A heroic reaction is spent only in combat, and the player confirms on the click when the combat would normally not let them use it. With the **Costs** toggle off, only the heroic reaction is spent, and the row shows only that cost.
 
-After a reroll, a feature with uses left keeps its row on the same card, and the row says **Reroll Again**. Set **Only once per attack** to stop this: the feature then rerolls an attack one time only.
+After a reroll, a feature with uses left keeps its row on the same card, and the row says **Reroll Again**. Set **Only once per roll** to stop this: the feature then rerolls that attack, save or check one time only.
 
 **Changes to the new roll** add to the reroll: one more advantage or disadvantage, a number added to the Primary Die, or extra damage. The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too.
 

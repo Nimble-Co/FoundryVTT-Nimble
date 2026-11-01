@@ -65,7 +65,7 @@ interface NimbleDiscardedCritTriggeredPayload {
 interface NimbleSavePayload {
 	actor: ActorWithRules;
 	saveType: string;
-	outcome: 'pass' | 'fail';
+	outcome: 'pass' | 'fail' | 'unknown';
 	messageId: string;
 }
 

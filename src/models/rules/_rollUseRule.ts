@@ -196,7 +196,7 @@ function relatedFields() {
 	};
 }
 
-/** What one use costs, and how often it can be used on one attack. */
+/** What one use costs, and how often it can be used on one roll. */
 function costFields(namespace: RollUseNamespace) {
 	const { fields } = foundry.data;
 	return {
@@ -268,16 +268,14 @@ function costFields(namespace: RollUseNamespace) {
 			label: wordKey(namespace, 'actionCost', 'label'),
 			hint: wordKey(namespace, 'actionCost', 'hint'),
 		}),
-		oncePerAttack: new fields.BooleanField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: false,
-				label: wordKey(namespace, 'oncePerAttack', 'label'),
-				hint: wordKey(namespace, 'oncePerAttack', 'hint'),
-				showWhen: forAttacks,
-			}),
-		),
+		// The name stays for stored rules: it limits a save or a check too.
+		oncePerAttack: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: wordKey(namespace, 'oncePerAttack', 'label'),
+			hint: wordKey(namespace, 'oncePerAttack', 'hint'),
+		}),
 	};
 }
 
@@ -433,7 +431,6 @@ abstract class RollUseRule<
 			['heroicReaction', 'string'],
 			['actionCost', 'number'],
 			['oncePerAttack', 'boolean'],
-			['relatedStat', 'string'],
 			['reach', 'number'],
 			['cardHint', 'string'],
 			['cardHintWhen', 'object'],

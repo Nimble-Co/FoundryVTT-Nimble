@@ -808,6 +808,31 @@ describe('a rule that counts a low roll as a natural 20', () => {
 		expect(written.map((change) => change.id)).not.toContain('old');
 	});
 
+	it('keeps a success that a reroll made by itself on a change of a die', async () => {
+		const succeeded = {
+			id: 'sure',
+			lineId: 'sure',
+			change: 'succeed',
+			value: 0,
+			automatic: true,
+			retired: false,
+			paid: { charges: 0, mana: 0, wounds: 0 },
+		} as unknown as ResultChange;
+		const card = makeCard({
+			roller: () => ({ uuid: 'Actor.roller', rules: [] }),
+			resultChanges: () => [succeeded],
+		});
+		const prepared = await checkCardRollTarget(card).findRoll()?.prepare(lowRoll(), []);
+		await prepared?.write({
+			incomingReactions: [],
+			rerolls: [{ use: 'change' }],
+			rollChanges: [],
+		} as never);
+
+		const { system } = (card.update as Mock).mock.calls[0][0];
+		expect(system.resultChanges ?? [succeeded]).toEqual([succeeded]);
+	});
+
 	it('shows the counted total as the new result of a keep', () => {
 		const card = makeCard({ roller: () => ({ uuid: 'Actor.roller', rules: [naturalRule()] }) });
 		const found = checkCardRollTarget(card).findRoll();
