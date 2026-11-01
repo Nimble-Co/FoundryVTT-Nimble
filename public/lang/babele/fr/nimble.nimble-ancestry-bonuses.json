@@ -28,7 +28,15 @@
 		},
 		"Elusive": {
 			"description": "<p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>",
-			"name": "Elusive"
+			"name": "Elusive",
+			"rules": {
+				"cti52sWpqyVNkx1l": {
+					"label": "Elusive (1/Safe Rest)"
+				},
+				"syVcXxThj6BXk6o0": {
+					"label": "Elusive"
+				}
+			}
 		},
 		"Flameborn": {
 			"description": "<p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p>",
@@ -91,6 +99,9 @@
 			"rules": {
 				"dRasAQ5eyCA70sWv": {
 					"label": "Optimistic"
+				},
+				"hmFVxSMoWCRN2Ezz": {
+					"label": "Optimistic (1/healed to max HP)"
 				}
 			}
 		},
@@ -161,6 +172,12 @@
 			"rules": {
 				"eJoTbJqZZAqwHrZ2": {
 					"label": "Strength of Stone"
+				},
+				"IYPgkLaFdJxohpkT": {
+					"label": "Strength of Stone"
+				},
+				"mlOTQQZYk27NHFCE": {
+					"label": "Strength of Stone (1/encounter)"
 				}
 			}
 		},
@@ -178,7 +195,12 @@
 		},
 		"Wily": {
 			"description": "<p><strong>Wily</strong> </p><p>Force an enemy to reroll a non-critical attack against you, 1/encounter. </p><p>+3 to Influence friendly characters. [M]</p><p>Advantage on skill checks related to dragons. [M]</p>",
-			"name": "Wily"
+			"name": "Wily",
+			"rules": {
+				"67DMZ5mCJGQwlYvy": {
+					"label": "Wily (1/encounter)"
+				}
+			}
 		}
 	}
 }

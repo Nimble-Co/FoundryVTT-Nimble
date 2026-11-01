@@ -20,7 +20,12 @@
 		},
 		"Accidental Acrobat": {
 			"description": "<p>(Req. 0 or negative DEX at character creation.) Whenever you fail a DEX-related roll (e.g., DEX attack, DEX save, Stealth check, Finesse check), you may roll again. If you still fail, the consequences are BAD.</p>",
-			"name": "Accidental Acrobat"
+			"name": "Accidental Acrobat",
+			"rules": {
+				"NupzJP9M1RKKqnHk": {
+					"label": "Accidental Acrobat"
+				}
+			}
 		},
 		"Acrobat": {
 			"description": "<p>Can be thrown by a larger ally, REALLY far. Half damage from falling and forced movement.</p>",
@@ -41,7 +46,12 @@
 		},
 		"Bumblewise": {
 			"description": "<p>(Req. 0 or negative WIL at character creation.) A result of 1 or less on any WIL-related roll counts as a natural 20 (WIL save, Naturecraft, Perception, Influence, or Insight check).</p>",
-			"name": "Bumblewise"
+			"name": "Bumblewise",
+			"rules": {
+				"cSMaPn3InzEqIPCr": {
+					"label": "Bumblewise"
+				}
+			}
 		},
 		"Devoted Protector": {
 			"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>",
@@ -96,7 +106,15 @@
 		},
 		"So Dumb I'm Smart Sometimes": {
 			"description": "<p>(Req. 0 or negative INT at character creation.) </p><p>Reroll an INT-related skill check, 1/day. </p><p>Reroll a failed INT save with advantage, 1/Safe Rest.</p>",
-			"name": "So Dumb I'm Smart Sometimes"
+			"name": "So Dumb I'm Smart Sometimes",
+			"rules": {
+				"5nqfVynMtj8k8OS8": {
+					"label": "So Dumb I'm Smart Sometimes: INT save (1/Safe Rest)"
+				},
+				"LClY1NYmu2QbeXr6": {
+					"label": "So Dumb I'm Smart Sometimes: INT skill check (1/Safe Rest)"
+				}
+			}
 		},
 		"Survivalist": {
 			"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>",
@@ -139,7 +157,15 @@
 		},
 		"Wily Underdog": {
 			"description": "<p>(Req. 0 or negative STR at character creation.) Reroll a failed STR-related roll (e.g., STR attack, STR save, Might check) and use another stat instead, 1/day.</p>",
-			"name": "Wily Underdog"
+			"name": "Wily Underdog",
+			"rules": {
+				"iqcMj0xQDJkaXAuK": {
+					"label": "Wily Underdog (1/Safe Rest)"
+				},
+				"nPT6RmDpSm2VYzRF": {
+					"label": "Wily Underdog"
+				}
+			}
 		}
 	}
 }

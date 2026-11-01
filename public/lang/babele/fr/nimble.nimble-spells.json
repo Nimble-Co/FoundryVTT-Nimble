@@ -185,7 +185,12 @@
 			"name": "Shadow Trap"
 		},
 		"Shatter": {
-			"name": "Shatter"
+			"name": "Shatter",
+			"rules": {
+				"Hd4sYc8ZfG1uJb6E": {
+					"label": "Shatter"
+				}
+			}
 		},
 		"Shield of Justice": {
 			"costDetails": "Attacked",
