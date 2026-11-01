@@ -1,8 +1,12 @@
-const mocks = vi.hoisted(() => ({ requestIncomingAttackReaction: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+	requestIncomingAttackReaction: vi.fn(),
+	requestResultRemoval: vi.fn(),
+}));
 
 vi.mock('#utils/incomingReactions/incomingAttackReactions.js', () => ({
 	INCOMING_REACTION_REJECTED_HOOK: 'nimble.incomingReactionRejected',
 	requestIncomingAttackReaction: mocks.requestIncomingAttackReaction,
+	requestResultRemoval: mocks.requestResultRemoval,
 }));
 vi.mock('../components/confirmRerollHeroicReaction.js', () => ({
 	confirmRerollHeroicReaction: vi.fn(async () => false),
@@ -13,7 +17,7 @@ import AbilityCheckCard from '../AbilityCheckCard.svelte';
 import SavingThrowCard from '../SavingThrowCard.svelte';
 import SkillCheckCard from '../SkillCheckCard.svelte';
 
-const { requestIncomingAttackReaction } = mocks;
+const { requestIncomingAttackReaction, requestResultRemoval } = mocks;
 
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
@@ -38,6 +42,7 @@ const DOCUMENTS: Record<string, () => unknown> = {
 		rules: new Map([['rule-brutality', rule('rule-brutality')]]),
 	}),
 	'Item.luck': () => ({ name: 'Lucky', rules: new Map([['rule-luck', rule('rule-luck')]]) }),
+	'Item.soul': () => ({ name: 'Mighty Soul', rules: new Map() }),
 	'Item.seer': () => ({
 		name: 'Soothsayer',
 		rules: new Map([['rule-seer', { ...rule('rule-seer'), type: 'changeDie' }]]),
@@ -123,6 +128,30 @@ function createMessage(system: Record<string, unknown> = {}) {
 	};
 	message.reactive = message;
 	return message;
+}
+
+function resultChange(overrides: Record<string, unknown> = {}) {
+	return {
+		id: 'click-1',
+		lineId: 'click-1',
+		entryId: 'entry-result',
+		itemUuid: 'Item.soul',
+		ruleId: 'rule-soul',
+		label: 'rule label',
+		actorUuid: ROLLER,
+		change: 'add',
+		value: 3,
+		stat: 'strength',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 1 },
+		...overrides,
+	};
+}
+
+function resultEntry(use: { change: string; value: number; stat: string }) {
+	return { entry: rerollEntry({ id: 'entry-result', use: 'result' }), use };
 }
 
 function renderSave(message = createMessage()) {
@@ -470,6 +499,146 @@ describe('rerolls on check cards', () => {
 		expect(within(history).getByRole('img', { name: 'Now 14' })).toBeTruthy();
 		expect(history.querySelectorAll('.nimble-die-face--d20')).toHaveLength(2);
 		expect(controlButton()).toBeNull();
+	});
+
+	describe('with Change a Result', () => {
+		const shownTotal = () => document.querySelector('.roll__value')?.textContent;
+		const sumBox = () => document.querySelector('.nimble-result-sum')?.textContent;
+		const removeButton = () => screen.queryByRole('button', { name: /^Remove/ });
+		const line = () =>
+			document.querySelector('.nimble-result-line__text')?.textContent?.replace(/\s+/g, ' ').trim();
+
+		it.each([
+			[{ change: 'succeed', value: 0, stat: '' }, 'Succeed Instead with Soothsayer'],
+			[{ change: 'setTotal', value: 10, stat: '' }, 'Change to 10 with Soothsayer'],
+			[{ change: 'add', value: 3, stat: 'strength' }, 'Add +3 STR with Soothsayer'],
+			[{ change: 'add', value: -1, stat: 'strength' }, 'Add \u22121 STR with Soothsayer'],
+		])('words the row of %o', async (use, words) => {
+			const { entry } = resultEntry(use);
+			const message = createMessage({
+				incomingReactions: [{ ...entry, ruleId: 'rule-seer', itemUuid: 'Item.seer' }],
+			});
+			Object.assign(message, { id: `row-${words}`, resultUseOf: vi.fn(() => use) });
+			renderSave(message);
+			await openControl();
+
+			expect(rowWords(rowsOf()[0])).toContain(words);
+		});
+
+		it('shows the total with the changes on it, and the roll stays', () => {
+			const message = createMessage({
+				incomingReactions: [],
+				resultChanges: [resultChange(), resultChange({ id: 'click-2' })],
+			});
+			renderSave(message);
+
+			expect(shownTotal()).toBe('12');
+			expect(sumBox()).toBe('6 + 3 + 3 = 12');
+			expect(line()).toBe('Added +6 STR, Gained 2 Wounds with Mighty Soul');
+			expect(message.rolls[0].total).toBe(6);
+		});
+
+		it('says "changed to" for a set total', () => {
+			renderSave(
+				createMessage({
+					incomingReactions: [],
+					resultChanges: [resultChange({ change: 'setTotal', value: 13, stat: '' })],
+				}),
+			);
+
+			expect(shownTotal()).toBe('13');
+			expect(sumBox()).toBe('6 changed to 13');
+			expect(line()).toBe('Changed 6 to 13 with Mighty Soul');
+		});
+
+		it('shows no sum box when the total is the roll, as after a succeed', () => {
+			const message = createMessage({
+				dc: 14,
+				incomingReactions: [],
+				resultChanges: [resultChange({ change: 'succeed', value: 0, stat: '' })],
+			});
+			Object.assign(message, { type: 'savingThrow' });
+			renderSave(message);
+
+			expect(sumBox()).toBeUndefined();
+			expect(shownTotal()).toBe('6');
+			expect(line()).toBe('Succeeded Instead with Mighty Soul');
+			expect(document.querySelector('.roll__result--succeeded')?.textContent).toContain(
+				'Succeeded - DC 14',
+			);
+		});
+
+		it('keeps a Succeeded card closed, with the other rows under the button', () => {
+			const message = createMessage({
+				dc: 14,
+				incomingReactions: [rerollEntry()],
+				resultChanges: [resultChange({ change: 'succeed', value: 0, stat: '' })],
+			});
+			Object.assign(message, { id: 'closed-on-succeeded', type: 'savingThrow' });
+			renderSave(message);
+
+			expect(controlButton()?.getAttribute('aria-expanded')).toBe('false');
+			expect(controlButton()?.textContent).toContain('(1)');
+		});
+
+		it('sends a Remove click for the line', async () => {
+			requestResultRemoval.mockResolvedValue(undefined);
+			const message = createMessage({ incomingReactions: [], resultChanges: [resultChange()] });
+			renderSave(message);
+
+			await fireEvent.click(removeButton() as HTMLElement);
+
+			expect(requestResultRemoval).toHaveBeenCalledWith('message-1', 'click-1');
+			expect(removeButton()?.hasAttribute('disabled')).toBe(true);
+		});
+
+		it('gives the GM Remove on a line of another owner', () => {
+			rollerIsOwner = false;
+			globals.game.user = { isGM: true, id: 'gm' };
+			renderSave(createMessage({ incomingReactions: [], resultChanges: [resultChange()] }));
+
+			expect(removeButton()).not.toBeNull();
+		});
+
+		it('shows the line with no Remove to a player who cannot click the row', () => {
+			rollerIsOwner = false;
+			renderSave(createMessage({ incomingReactions: [], resultChanges: [resultChange()] }));
+
+			expect(line()).toContain('Added +3 STR');
+			expect(removeButton()).toBeNull();
+		});
+
+		it('shows a retired line with no Remove and starts the sum from the new roll', () => {
+			renderSave(
+				createMessage({
+					incomingReactions: [],
+					resultChanges: [resultChange({ retired: true, before: 2 })],
+				}),
+			);
+
+			expect(line()).toContain('Added +3 STR');
+			expect(removeButton()).toBeNull();
+			expect(sumBox()).toBeUndefined();
+			expect(shownTotal()).toBe('6');
+		});
+
+		it('has no Remove while a reroll waits for a keep', () => {
+			renderSave(
+				createMessage({
+					incomingReactions: [],
+					resultChanges: [resultChange()],
+					pendingKeep: {
+						entryId: 'entry-brutality',
+						chooserUuid: ROLLER,
+						reroll: rerollRecord(),
+						old: { total: 9, outcome: null },
+						new: { total: 14, outcome: null },
+					},
+				}),
+			);
+
+			expect(removeButton()).toBeNull();
+		});
 	});
 
 	it('shows no button and no history on a card posted before rerolls', () => {

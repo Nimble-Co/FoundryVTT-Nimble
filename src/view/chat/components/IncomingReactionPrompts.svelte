@@ -7,6 +7,7 @@
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import LeftOutRerolls from './LeftOutRerolls.svelte';
 	import RerollHistory from './RerollHistory.svelte';
+	import ResultChangeLines from './ResultChangeLines.svelte';
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let { place }: IncomingReactionPromptsProps = $props();
@@ -46,9 +47,21 @@
 {/if}
 
 {#if place === 'checkRoll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0}
+	{#if prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0 || prompts.resultLines.length > 0}
 		<section class="nimble-roll-changes nimble-roll-changes--under-row">
+			<!-- A change a new roll took off came before that roll's line. -->
+			<ResultChangeLines
+				sum={prompts.resultSum}
+				lines={prompts.resultLines.filter((line) => line.retired)}
+				{held}
+				onremove={prompts.removeResultLine}
+			/>
 			{@render rerollHistory()}
+			<ResultChangeLines
+				lines={prompts.resultLines.filter((line) => !line.retired)}
+				{held}
+				onremove={prompts.removeResultLine}
+			/>
 			{@render changeThisRoll()}
 			{#if prompts.leftOutEntries.length > 0}
 				<LeftOutRerolls entries={prompts.leftOutEntries} />

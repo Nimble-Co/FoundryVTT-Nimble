@@ -230,7 +230,7 @@ The `damageBonus` rule has an optional `targetCondition` field — a predicate e
 When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
 
 ::: tip
-`targetCondition` is only available on `damageBonus`. The rule types that use a roll (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+`targetCondition` is only available on `damageBonus`. The rule types that use a roll on an attack (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
 
 ### The other creature: `ruleOtherCreatureMatches`
@@ -676,7 +676,7 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 
 ### The shared roll-use part: `RollUseRule`
 
-`reroll`, `changeDie` and `makeCrit` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
+`reroll`, `changeDie`, `makeCrit` and `changeResult` extend the abstract `RollUseRule` (`src/models/rules/_rollUseRule.ts`), the part of every rule a creature uses on a roll after it is made. `RollUseRule.rollUseSchemaParts(namespace)` gives the shared fields in four parts, so a rule can put its own fields between them:
 
 - `roll`: `rolls`, `saves`, `skills`, `abilities`, `usedBy`, `reach`.
 - `when`: `otherCreature`, `outcome`, `attackDelivery` (attacks only, through `showWhen`).
@@ -704,6 +704,22 @@ A `changeDie` entry goes through `CardRerolls#changeToPick` on the client (the d
 - **Outcome.** `refreshOutcome` works out the total, crit and miss again. The place step then does what a reroll does: stale offers dropped, new entries added, charge recovery, crit triggers and Movement Offers.
 
 A negative Primary Die bonus now stops at 1, in `DamageRoll` and in `rerollDieInTerm`, so a change by add and a reroll agree.
+
+### Change a Result: a change of the total, with no change of the roll
+
+`changeResult` (`src/models/rules/changeResult.ts`) stamps a `kind: 'reroll'` entry with `use: 'result'`, on save, skill check and ability check cards only. `change` is `succeed`, `setTotal` or `add`. `resultUseFor(roller)` reads `formula` with `getDeterministicBonus` against the roll data of the one who rolled, and returns `{ change, value, stat }`, or null when the formula gives no number. `stat` is the ability key when the formula is `@<ability>` and nothing else, so the card can say "+3 STR" with no field for those words. A character's roll data has the keys `@strength`, `@dexterity`, `@intelligence`, `@will`, and the skill keys.
+
+**Gate.** The stamp step passes no card, so an entry is stamped whenever the rule covers the roll. The live gate (`usableRerollEntry`) passes `RerollRollContext#card` (`total`, `changes`, `roller`) to `offersUseOn`, for this use only. There the rule hides a `succeed` of its own that stands, a formula with no number, a `setTotal` with `onlyIfLower` when the total is not below the value, and any other `setTotal` when the total is already the value. The entry stays on the card, so its row comes back by itself after a Remove or a reroll.
+
+**The card.** `system.resultChanges` (`src/models/chat/common.ts`, on the three check card models) holds one `ResultChange` per click, in order. A card posted before it reads as empty. `rolls[0]` does not change: the roll stays what the dice gave. `resultTotal(rollTotal, changes)` (`src/utils/rolls/resultChanges.ts`) folds the clicks that stand onto the roll's total. These read it: `CheckCardRolls` (the total), `checkResultOfCard` (the small line, `opensByItself` and `saveResolved`), `RerollRollContext#card` and the old result of a Keep (`RerollableRoll#shownTotal`). In `checkResultOfCard`, a standing `succeed` gives `succeeded`, and a standing `setTotal` leaves no natural 1 or 20 to read. Repeats of one add share one `lineId`, so one history line grows, and the clicks stay flat so that a change between them keeps its place in the total.
+
+**A click.** `CardRerolls#applyResultChange` runs on the primary GM after the usual gates: `payRerollCost`, then one write of the entries and the new click. `rerollWithRule` is not used, because no roll is made. A throw in the write gives the cost back. A rule that can still pay gets a new waiting entry.
+
+**Remove.** `requestResultRemoval` goes to the primary GM on the `resultRemoval` socket type. `CardRerolls#resolveResultRemoval` allows a GM or an owner of the actor whose feature made the change, and refuses while a Keep waits. It writes the card first, so a second request finds no line and gives nothing back two times. Then it gives back `paid` (charges, Mana, Wounds) with `refundRerollCost`, and stamps new entries for a rule that can pay now. A click records no action and no heroic reaction: their give-back writes a stored action count or a turn-bound delta, which can be stale long after the click. So they stay spent.
+
+**A new roll.** The check card's `write` sets `retired: true` and `before` on each standing click (`retireResultChanges`), in the same write as the new roll. It reads `changes.rerolls.at(-1)?.use`: a Change a Die record keeps the clicks, because the roll is the same roll with one new face. A retired click has no Remove, and the `resultSumText` box leaves it out.
+
+`saveResolved` needs no code for this: a write to `resultChanges` is an `updateChatMessage`, and `checkResultOfCard` reads the new result.
 
 ### Primary Die Bonus
 

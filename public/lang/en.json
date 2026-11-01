@@ -695,7 +695,22 @@
 					"reroll": "Reroll",
 					"rerollAgain": "Reroll Again",
 					"change": "Change Die",
-					"crit": "Make Crit"
+					"crit": "Make Crit",
+					"result": "Change Result",
+					"succeed": "Succeed Instead",
+					"setTotal": "Change to {value}",
+					"add": "Add {amount}"
+				},
+				"resultChange": {
+					"succeeded": "Succeeded Instead",
+					"changed": "Changed {before} to {value}",
+					"added": "Added {amount}",
+					"addedWithWound": "Added {amount}, Gained 1 Wound",
+					"addedWithWounds": "Added {amount}, Gained {count} Wounds",
+					"sum": "{sum} = {total}",
+					"changedTo": "{from} changed to {to}",
+					"remove": "Remove",
+					"removeLine": "Remove: {line}"
 				},
 				"changeThisRoll": {
 					"label": "Change This Roll",
@@ -1556,6 +1571,7 @@
 			"attackOutcome": "Attack Outcome",
 			"chargeConsumer": "Charge Consumer",
 			"changeDie": "Change a Die",
+			"changeResult": "Change a Result",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
 			"concentrationTrack": "Concentration Track",
@@ -2627,6 +2643,35 @@
 				"oncePerAttack": {
 					"label": "Only once per attack",
 					"hint": "The feature can change a die of the same attack only once, even with uses left."
+				}
+			},
+			"changeResult": {
+				"description": "Lets the one who rolled or an ally change the result of a save or a check after it is made: it succeeds, its total becomes a formula, or a formula goes on its total. The player can take the change back and gets the cost back.",
+				"rolls": {
+					"label": "Which roll can it change?"
+				},
+				"change": {
+					"label": "How does it change the result?",
+					"hint": "The roll on the card stays what the dice gave. A reroll takes the change off, and its cost stays paid.",
+					"choices": {
+						"succeed": "It succeeds",
+						"setTotal": "Set the total to a formula",
+						"add": "Add a formula to the total"
+					}
+				},
+				"formula": {
+					"label": "Formula",
+					"hint": "A number or a formula with no dice, read from the one who rolled, such as 10+@intelligence or @strength. A formula that is only one stat shows that stat on the row, such as Add +3 STR."
+				},
+				"onlyIfLower": {
+					"label": "Only if the total is lower",
+					"hint": "The row shows only when the total on the card is below the formula's value."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The row does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
 				}
 			},
 			"primaryDieBonus": {

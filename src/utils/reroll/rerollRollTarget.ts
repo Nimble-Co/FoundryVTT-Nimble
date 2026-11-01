@@ -45,6 +45,8 @@ interface RerollableRoll<TRoll = unknown> {
 	current?(): OneDieRoll | null;
 	/** A player can also pick a dropped d20 of this roll. */
 	pickDropped?: boolean;
+	/** The total the card shows for this roll, when other changes than the dice count in it. */
+	shownTotal?(): number;
 	/** A roll as its Keep button shows it, with the extra damage of `added` too. */
 	keepChoice?(roll: unknown, added?: readonly RollChange[]): KeepChoiceRoll;
 	/**

@@ -3,8 +3,10 @@ import type { OneDieRoll } from '../../dice/oneDieReroll.js';
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
+	ResultChange,
 	RollChange,
 } from '../incomingReactions/incomingReactionEntry.js';
+import { resultTotal, retireResultChanges, standingResultChanges } from '../rolls/resultChanges.js';
 import { newRollChanges } from './modifyReroll.js';
 import { alliesOnCard, rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
@@ -42,6 +44,8 @@ interface CheckCard {
 	rollsSource(): string[];
 	/** The card's incoming reaction entries. */
 	incomingReactions(): IncomingReactionEntry[];
+	/** The card's Change a Result clicks, in order. */
+	resultChanges(): ResultChange[];
 	update(changes: Record<string, unknown>): Promise<unknown>;
 }
 
@@ -171,10 +175,31 @@ function serializedRollSource(json: string | undefined): CheckRollSource | null 
 	}
 }
 
+/** The total the dice gave on the card's first roll, as it was stored. */
+function storedRollTotal(json: string | undefined): number {
+	if (!json) return 0;
+	try {
+		return Number((JSON.parse(json) as { total?: unknown }).total) || 0;
+	} catch {
+		return 0;
+	}
+}
+
 /** The roll target of a check card: its first roll. */
 function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
-	const context = () =>
-		checkRollContext(card.roller(), card.roll, alliesOnCard(card.incomingReactions()));
+	const shownTotal = () =>
+		resultTotal(storedRollTotal(card.rollsSource()[0]), card.resultChanges());
+	const context = (): RerollRollContext => {
+		const roller = card.roller();
+		return {
+			...checkRollContext(roller, card.roll, alliesOnCard(card.incomingReactions())),
+			card: {
+				total: shownTotal(),
+				changes: card.resultChanges(),
+				roller: roller as NonNullable<RerollRollContext['card']>['roller'],
+			},
+		};
+	};
 	return {
 		context,
 		findRoll: () => {
@@ -185,6 +210,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 				current: () =>
 					foundry.dice.Roll.fromData(JSON.parse(card.rollsSource()[0])) as unknown as OneDieRoll,
 				pickDropped: true,
+				shownTotal,
 				keepChoice: (roll) => ({
 					total: Number((roll as { total?: number }).total) || 0,
 					outcome: null,
@@ -193,6 +219,11 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 					context: context(),
 					entries,
 					write: async (changes) => {
+						const resultChanges = card.resultChanges();
+						// A new roll takes the changes off. A change of a die keeps the same roll.
+						const newRoll =
+							changes.rerolls.at(-1)?.use !== 'change' &&
+							standingResultChanges(resultChanges).length > 0;
 						await card.update({
 							rolls: [JSON.stringify(roll.toJSON()), ...card.rollsSource().slice(1)],
 							system: {
@@ -201,6 +232,14 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 								rollChanges: changes.rollChanges,
 								pendingKeep: null,
 								rollMode: netRollMode(roll.options as Record<string, unknown>),
+								...(newRoll
+									? {
+											resultChanges: retireResultChanges(
+												storedRollTotal(card.rollsSource()[0]),
+												resultChanges,
+											),
+										}
+									: {}),
 							},
 						});
 					},

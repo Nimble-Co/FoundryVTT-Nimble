@@ -5,12 +5,14 @@ import type {
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
+	ResultUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '../../../utils/localize.js';
 import { getIncomingReactionCost } from './incomingReactionCost.ts';
 import { REACTION_VERB_ICONS, REACTION_VERB_WORDS, reactionVerb } from './reactionVerbs.ts';
 import { isRerollAgain } from './rerollHistoryLines.ts';
+import { resultAmount } from './resultChangeLines.ts';
 
 function reactingActor(entry: IncomingReactionEntry) {
 	return (fromUuidSync(entry.actorUuid) ?? null) as Actor.Implementation | null;
@@ -51,9 +53,25 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 		: localize('NIMBLE.chat.incomingReactions.redirectedTo', { name: actorName });
 }
 
-/** `getRerolls` gives the card's reroll records, which turn a reroll into "Reroll Again". */
-export function createIncomingReactionText(getRerolls: () => RerollRecord[]): IncomingReactionText {
+function resultVerb(use: ResultUse): string {
+	if (use.change === 'succeed') return localize('NIMBLE.chat.incomingReactions.verbs.succeed');
+	if (use.change === 'setTotal') {
+		return localize('NIMBLE.chat.incomingReactions.verbs.setTotal', { value: String(use.value) });
+	}
+	return localize('NIMBLE.chat.incomingReactions.verbs.add', { amount: resultAmount(use) });
+}
+
+/**
+ * `getRerolls` gives the card's reroll records, which turn a reroll into "Reroll Again".
+ * `resultUseOf` gives what a Change a Result entry does now.
+ */
+export function createIncomingReactionText(
+	getRerolls: () => RerollRecord[],
+	resultUseOf: (entry: IncomingReactionEntry) => ResultUse | null = () => null,
+): IncomingReactionText {
 	function verb(entry: IncomingReactionEntry): string {
+		const use = entry.use === 'result' ? resultUseOf(entry) : null;
+		if (use) return resultVerb(use);
 		return localize(
 			isRerollAgain(entry, getRerolls())
 				? 'NIMBLE.chat.incomingReactions.verbs.rerollAgain'

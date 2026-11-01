@@ -1,6 +1,10 @@
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NimbleRoll } from '../../../dice/NimbleRoll.js';
-import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
+import type {
+	IncomingReactionEntry,
+	ResultChange,
+} from '../../incomingReactions/incomingReactionEntry.js';
 import {
 	type CheckCard,
 	checkCardRerollData,
@@ -43,6 +47,7 @@ function makeCard(overrides: Partial<CheckCard> = {}, serialized = serializedSav
 		roller: () => ({ uuid: 'Actor.roller' }),
 		rollsSource: () => [JSON.stringify(serialized)],
 		incomingReactions: () => [],
+		resultChanges: () => [],
 		update: vi.fn(async (_changes: Record<string, unknown>) => undefined),
 		...overrides,
 	} satisfies CheckCard;
@@ -115,6 +120,7 @@ describe('checkCardRollTarget', () => {
 		const context = checkCardRollTarget(makeCard()).context();
 
 		expect(context).toEqual({
+			card: { total: 12, changes: [], roller: { uuid: 'Actor.roller' } },
 			attacker: { uuid: 'Actor.roller' },
 			targets: [],
 			allies: [],
@@ -164,6 +170,78 @@ describe('checkCardRollTarget', () => {
 			options: { rollMode: 2 },
 		});
 		expect(found?.previousResult).toBe(9);
+	});
+
+	describe('with Change a Result clicks', () => {
+		const add = {
+			id: 'a',
+			lineId: 'a',
+			change: 'add',
+			value: 3,
+			retired: false,
+			before: null,
+		} as unknown as ResultChange;
+
+		function written(card: ReturnType<typeof makeCard>) {
+			return (card.update as unknown as Mock).mock.calls[0]?.[0] as {
+				system: Record<string, unknown>;
+			};
+		}
+
+		async function place(card: ReturnType<typeof makeCard>, use?: 'change') {
+			rollD20(17);
+			const found = checkCardRollTarget(card).findRoll();
+			if (!found) throw new Error('no roll');
+			const roll = await found.makeRoll('1d20 + 3[Will]', {});
+			const prepared = await found.prepare(roll, []);
+			await prepared.write({
+				incomingReactions: [],
+				rerolls: [{ ...(use ? { use } : {}) } as never],
+				rollChanges: [],
+				discardedCritTriggers: false,
+			});
+		}
+
+		it('gives the live gate the total with the clicks on it, and the roller', () => {
+			const roller = { uuid: 'Actor.roller' };
+			const card = makeCard({ roller: () => roller, resultChanges: () => [add, add] });
+
+			expect(checkCardRollTarget(card).context().card).toEqual({
+				total: 18,
+				changes: [add, add],
+				roller,
+			});
+		});
+
+		it('shows the total with the clicks on it as the old result of a keep', () => {
+			const found = checkCardRollTarget(makeCard({ resultChanges: () => [add] })).findRoll();
+
+			expect(found?.shownTotal?.()).toBe(15);
+		});
+
+		it('retires the clicks when a new roll is placed', async () => {
+			const card = makeCard({ resultChanges: () => [add] });
+
+			await place(card);
+
+			expect(written(card).system.resultChanges).toEqual([{ ...add, retired: true, before: 12 }]);
+		});
+
+		it('keeps the clicks when a change of a die is placed', async () => {
+			const card = makeCard({ resultChanges: () => [add] });
+
+			await place(card, 'change');
+
+			expect(written(card).system).not.toHaveProperty('resultChanges');
+		});
+
+		it('writes no clicks on a card with none', async () => {
+			const card = makeCard();
+
+			await place(card);
+
+			expect(written(card).system).not.toHaveProperty('resultChanges');
+		});
 	});
 
 	it('finds no roll on a card with none', () => {

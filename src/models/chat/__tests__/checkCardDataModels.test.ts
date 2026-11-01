@@ -35,6 +35,13 @@ describe('check card reroll fields', () => {
 		expect(schema.rerolls.options.initial).toEqual([]);
 	});
 
+	it.each(CHECK_CARD_TYPES)('%s cards posted before the changes load with none', (type) => {
+		const { resultChanges } = schemaOf(type);
+
+		expect(resultChanges.options).toMatchObject({ initial: [] });
+		expect(resultChanges.options.required).not.toBe(true);
+	});
+
 	it.each(CHECK_CARD_TYPES)('%s cards posted before the DC load with no DC', (type) => {
 		const { dc } = schemaOf(type);
 

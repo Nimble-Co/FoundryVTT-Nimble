@@ -41,6 +41,17 @@ describe('scanRerollAllies', () => {
 		]);
 	});
 
+	it('lists a creature with an ally-side Change a Result rule', () => {
+		const roller = token('roller', { actor: actor('Actor.roller', { rules: [] }) });
+		const friend = token('friend', {
+			actor: actor('Actor.friend', { rules: [{ type: 'changeResult', usedBy: 'ally' }] }),
+		});
+		scene(roller, friend);
+		expect(scanRerollAllies(roller, spaces(2))).toEqual([
+			{ tokenUuid: friend.uuid, actor: friend.actor, isAlly: true, spaces: 2 },
+		]);
+	});
+
 	it('skips hidden tokens, tokens without an actor, the one who rolled, and creatures without an ally reroll', () => {
 		const roller = token('roller');
 		scene(

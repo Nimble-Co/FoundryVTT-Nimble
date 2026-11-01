@@ -5,13 +5,17 @@ import type {
 	IncomingReactionPlace,
 } from '#types/components/IncomingReactionPrompts.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
-import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
+import {
+	requestIncomingAttackReaction,
+	requestResultRemoval,
+} from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
 	PendingKeep,
 	RerollRecord,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import { resultChangesOf } from '#utils/rolls/resultChanges.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
 import {
@@ -27,6 +31,7 @@ import { createIncomingReactionText } from './incomingReactionText.ts';
 import { sortByVerb } from './reactionVerbs.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
+import { type ResultChangeLine, resultChangeLines, resultSumText } from './resultChangeLines.ts';
 import { spendBaselineInterpose } from './spendBaselineInterpose.ts';
 
 function changesTheRoll(entry: IncomingReactionEntry): boolean {
@@ -59,7 +64,12 @@ export function createIncomingReactionPromptsState(
 	const rerolls = $derived(
 		(message?.reactive?.system as { rerolls?: RerollRecord[] })?.rerolls ?? [],
 	);
-	const text = createIncomingReactionText(() => rerolls);
+	const text = createIncomingReactionText(
+		() => rerolls,
+		(entry) => message?.resultUseOf?.(entry) ?? null,
+	);
+	const resultChanges = $derived(resultChangesOf(message?.reactive?.system));
+	const rollTotal = $derived(Number(message?.reactive?.rolls?.[0]?.total) || 0);
 	const cardPrimaryDieBonuses = $derived(
 		(message?.reactive?.system as { primaryDieBonuses?: PrimaryDieBonusLine[] })
 			?.primaryDieBonuses ?? [],
@@ -85,16 +95,18 @@ export function createIncomingReactionPromptsState(
 		if (getPlace() === 'roll') return entries;
 		return entries.filter((entry) => changesTheRoll(entry) === (getPlace() === 'checkRoll'));
 	});
-	const pendingGroups = $derived(
-		groupByActor(
+	const pendingGroups = $derived.by(() => {
+		// A click or a Remove can bring a row back or take it away with no new entry.
+		void resultChanges;
+		return groupByActor(
 			rowEntries.filter(
 				(entry) =>
 					!entry.used &&
 					(!held.has(entry.id) || picking?.entry.id === entry.id) &&
 					canUseEntry(entry),
 			),
-		),
-	);
+		);
+	});
 	const rowCount = $derived(
 		pendingGroups.reduce((total, group) => total + group.entries.length, 0),
 	);
@@ -143,6 +155,20 @@ export function createIncomingReactionPromptsState(
 				})[0]
 			: null,
 	);
+	const resultLines = $derived(
+		getPlace() === 'checkRoll'
+			? resultChangeLines({
+					changes: resultChanges,
+					rollTotal,
+					speakerUuid,
+					documentName: text.documentName,
+					canRemove: canRemoveResult,
+				})
+			: [],
+	);
+	const resultSum = $derived(
+		getPlace() === 'checkRoll' ? resultSumText(rollTotal, resultChanges) : null,
+	);
 	const primaryOutcome = $derived.by<DieOutcome>(() => {
 		const system = message?.reactive?.system as
 			| { isCritical?: boolean; isMiss?: boolean }
@@ -164,6 +190,7 @@ export function createIncomingReactionPromptsState(
 		void rowCount;
 		void picking;
 		void control.open;
+		void resultChanges;
 		if (ownsControl) control.restoreFocus();
 	});
 
@@ -173,6 +200,26 @@ export function createIncomingReactionPromptsState(
 		// A reroll the card no longer allows (outcome, side, cost) is hidden.
 		if (entry.kind === 'reroll') return message?.canStillUseReroll(entry) ?? false;
 		return true;
+	}
+
+	/** The user who can click the row of this change, and the GM. Not while a keep waits. */
+	function canRemoveResult(actorUuid: string): boolean {
+		if (pendingKeep) return false;
+		if (game.user?.isGM) return true;
+		return (fromUuidSync(actorUuid) as Actor.Implementation | null)?.isOwner === true;
+	}
+
+	async function removeResultLine(line: ResultChangeLine): Promise<void> {
+		if (held.has(line.id)) return;
+		held.hold(line.id);
+		control.expectFocusLoss(line.id);
+		try {
+			await requestResultRemoval(message?.id ?? '', line.id);
+		} catch (error) {
+			held.release(line.id);
+			console.error('Nimble | Failed to remove a change of a result', error);
+			ui.notifications?.error(localize('NIMBLE.chat.incomingReactions.useFailed'));
+		}
 	}
 
 	/** One group per actor, in the order the card lists them. */
@@ -302,7 +349,7 @@ export function createIncomingReactionPromptsState(
 			}
 
 			if (entry.kind === 'reroll') {
-				if (entry.use === 'crit') await sendReroll(entry, null);
+				if (entry.use === 'crit' || entry.use === 'result') await sendReroll(entry, null);
 				else await (entry.use === 'change' ? useChange(entry) : useReroll(entry));
 				return;
 			}
@@ -379,5 +426,12 @@ export function createIncomingReactionPromptsState(
 		get primaryOutcome() {
 			return primaryOutcome;
 		},
+		get resultLines() {
+			return resultLines;
+		},
+		get resultSum() {
+			return resultSum;
+		},
+		removeResultLine,
 	};
 }

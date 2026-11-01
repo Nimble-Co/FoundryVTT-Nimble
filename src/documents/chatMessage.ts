@@ -48,6 +48,7 @@ import {
 	type PendingKeep,
 	type RerollKept,
 	type RerollRecord,
+	type ResultUse,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
@@ -1659,6 +1660,16 @@ class NimbleChatMessage extends ChatMessage {
 			die,
 			value,
 		);
+	}
+
+	/** What a Change a Result entry does now, for its row. */
+	resultUseOf(entry: IncomingReactionEntry): ResultUse | null {
+		return this.#rerolls.resultUseOf(entry);
+	}
+
+	/** Take a Change a Result line off this card and give back its cost. Primary GM only. */
+	resolveResultRemoval(lineId: string, requestingUserId: string, viaSocket = false): Promise<void> {
+		return this.#rerolls.resolveResultRemoval(lineId, requestingUserId, viaSocket);
 	}
 
 	/** How this card's attack is delivered. */

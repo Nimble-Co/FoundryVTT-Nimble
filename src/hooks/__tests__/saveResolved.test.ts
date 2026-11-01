@@ -103,6 +103,36 @@ describe('saveResolved hook', () => {
 		expect(card.system.reportedSaveResult).toBe('failed');
 	});
 
+	it('fires pass again when a Change a Result click makes the card succeed', async () => {
+		const { rule } = createSaver();
+		const card = createCard();
+		emit('createChatMessage', card);
+		await flushAsync();
+		rule.onSaveResolved.mockClear();
+
+		card.system.resultChanges = [{ change: 'succeed', value: 0, retired: false }];
+		emit('updateChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'pass' }));
+	});
+
+	it('fires fail again when a Remove takes the change off', async () => {
+		const { rule } = createSaver();
+		const card = createCard({}, { resultChanges: [{ change: 'add', value: 6, retired: false }] });
+		emit('createChatMessage', card);
+		await flushAsync();
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'pass' }));
+		rule.onSaveResolved.mockClear();
+
+		card.system.resultChanges = [];
+		emit('updateChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'fail' }));
+	});
+
 	it('fires pass for a total that meets the DC', async () => {
 		const { rule } = createSaver();
 

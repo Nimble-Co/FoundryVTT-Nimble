@@ -1,5 +1,6 @@
 import { checkRollOfCard, keptD20 } from '../reroll/checkCardRollTarget.ts';
 import type { CheckRollKind } from '../reroll/rollToReroll.ts';
+import { resultChangesOf, resultTotal, standingResultChanges } from './resultChanges.ts';
 
 type CheckResult = 'failed' | 'succeeded';
 
@@ -25,7 +26,11 @@ function checkResult(input: {
 	return total >= dc ? 'succeeded' : 'failed';
 }
 
-/** The result of a card's first roll, or null when it is not a check card or nothing settles it. */
+/**
+ * The result of a card's first roll, or null when it is not a check card or nothing
+ * settles it. The total counts the card's Change a Result clicks. A succeed settles
+ * the result. A set total replaces the roll, so no natural 1 or 20 is left to read.
+ */
 function checkResultOfCard(
 	type: string,
 	system: Record<string, unknown>,
@@ -34,10 +39,14 @@ function checkResultOfCard(
 	const kind = checkRollOfCard(type, system)?.kind;
 	if (!roll || !kind) return null;
 
+	const changes = resultChangesOf(system);
+	const standing = standingResultChanges(changes);
+	if (standing.some((change) => change.change === 'succeed')) return 'succeeded';
+
 	return checkResult({
 		kind,
-		total: roll.total ?? 0,
-		keptD20: keptD20(roll.terms),
+		total: resultTotal(roll.total ?? 0, changes),
+		keptD20: standing.some((change) => change.change === 'setTotal') ? null : keptD20(roll.terms),
 		dc: system.dc as number | null | undefined,
 	});
 }

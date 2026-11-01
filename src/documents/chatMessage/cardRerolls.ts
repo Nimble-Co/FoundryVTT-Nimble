@@ -19,6 +19,8 @@ import type {
 	RerollKeep,
 	RerollKept,
 	RerollRecord,
+	ResultChange,
+	ResultUse,
 	RollChange,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
 import {
@@ -34,6 +36,7 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
+import { payRerollCost, refundRerollCost } from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -45,6 +48,7 @@ import {
 	type AutomaticReroll,
 	CHANGE_DIE_RULE_TYPE,
 	collectRerollEntries,
+	findRerollRule,
 	nextAutomaticReroll,
 	offerStands,
 	type RerollingActor,
@@ -58,6 +62,11 @@ import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollT
 import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
 import type { RerollRollKind } from '#utils/reroll/rollToReroll.js';
+import {
+	newResultChange,
+	resultChangesOf,
+	standingResultChanges,
+} from '#utils/rolls/resultChanges.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
@@ -161,8 +170,13 @@ export class CardRerolls {
 			},
 			rollsSource: () => this.#host.rollsSource(),
 			incomingReactions: () => this.#host.incomingReactions(),
+			resultChanges: () => this.#resultChanges(),
 			update: (changes) => this.#host.update(changes),
 		};
+	}
+
+	#resultChanges(): ResultChange[] {
+		return resultChangesOf(this.#host.system());
 	}
 
 	/** This card as the damage-card roll target reads and writes it. */
@@ -271,7 +285,10 @@ export class CardRerolls {
 				chooserUuid,
 				roll: (done.roll as { toJSON(): Record<string, unknown> }).toJSON(),
 				reroll: done.reroll,
-				old: describe(target.current?.() ?? target.replaced),
+				old: {
+					...describe(target.current?.() ?? target.replaced),
+					...(target.shownTotal ? { total: target.shownTotal() } : {}),
+				},
 				new: describe(done.roll),
 				discardedCritTriggers: done.discardedCritTriggers,
 			};
@@ -689,6 +706,9 @@ export class CardRerolls {
 		if (rollUseOf(usable.rule.type) === 'crit') {
 			return this.#applyMakeCrit(rollTarget, found, entry, usable, forceHeroicReaction, reject);
 		}
+		if (rollUseOf(usable.rule.type) === 'result') {
+			return this.#applyResultChange(rollTarget, entry, usable, forceHeroicReaction, reject);
+		}
 		const target = rerollableFor(found, usable.rule.die, die);
 		if (!target) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const chooserUuid = this.#keepChooser(usable.rule.keep, entry, rollTarget);
@@ -829,6 +849,163 @@ export class CardRerolls {
 		if (result.status === 'failed') {
 			console.error('Nimble | Making a crit failed; its cost is given back.', result.error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/** What a Change a Result entry does now, for its row. Null when it can do nothing. */
+	resultUseOf(entry: IncomingReactionEntry): ResultUse | null {
+		const rule = findRerollRule(entry);
+		const roller = this.#rerollTarget()?.context().card?.roller ?? null;
+		return rule?.resultUseFor?.(roller) ?? null;
+	}
+
+	/**
+	 * Use a Change a Result rule's entry: pay its cost and add the click to the
+	 * card's changes. The roll stays as it is. The cost is given back when the
+	 * click cannot be written.
+	 */
+	async #applyResultChange(
+		rollTarget: RerollRollTarget,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		forceHeroicReaction: boolean,
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule, actor } = usable;
+		const context = rollTarget.context();
+		const use = rule.resultUseFor?.(context.card?.roller ?? null) ?? null;
+		if (!use) return void reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		const cost = rule.rollUseCost;
+		const paid = cost ? await payRerollCost(actor, cost, { forceHeroicReaction }) : null;
+		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+
+		try {
+			const changes = this.#resultChanges();
+			await this.#host.update({
+				system: {
+					// Read after the cost is paid: a rule that can pay again gets a new row.
+					incomingReactions: withNewRerollEntries(
+						this.#withEntryUsed(entry),
+						collectRerollEntries(context).manual,
+					),
+					resultChanges: [
+						...changes,
+						newResultChange({
+							entry,
+							use,
+							changes,
+							chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
+							paid: {
+								charges: paid?.charges ?? 0,
+								mana: paid?.mana ?? 0,
+								wounds: paid?.wounds ?? 0,
+							},
+						}),
+					],
+				},
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (cost && paid) await refundRerollCost(actor, cost, paid);
+			console.error('Nimble | A change of a result failed; its cost is given back.', error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Take a Change a Result line off the card, with all its clicks, and give back
+	 * their cost. The order of the other changes stays. Runs on the primary GM's client.
+	 */
+	async resolveResultRemoval(
+		lineId: string,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		const lockKey = `${this.#host.id()}:remove:${lineId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+		try {
+			await queueReactionWrite(this.#host.id() ?? '', () =>
+				this.#applyResultRemoval(lineId, requestingUserId, viaSocket),
+			);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applyResultRemoval(
+		lineId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const reject = (reasonKey: string) =>
+			rejectIncomingAttackReaction({
+				messageId: this.#host.id() ?? '',
+				entryId: lineId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+
+		const changes = this.#resultChanges();
+		const line = standingResultChanges(changes).filter((change) => change.lineId === lineId);
+		const first = line[0];
+		if (!first) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		if (this.pendingKeep()) return reject('NIMBLE.chat.incomingReactions.keepFirst');
+		if (!this.#mayRemove(first.actorUuid, requestingUserId, viaSocket)) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const removed = new Set(line.map((change) => change.id));
+		await this.#host.update({
+			system: { resultChanges: changes.filter((change) => !removed.has(change.id)) },
+		} as Record<string, unknown>);
+
+		try {
+			await this.#giveBackResultCost(line);
+		} catch (error) {
+			console.error('Nimble | The cost of a removed change could not be given back.', error);
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		// A rule that could not pay when the card last looked can pay now.
+		const context = this.#rerollTarget()?.context();
+		if (!context) return;
+		const entries = this.#host.incomingReactions();
+		const withNew = withNewRerollEntries(entries, collectRerollEntries(context).manual);
+		if (withNew.length !== entries.length) {
+			await this.#host.update({ system: { incomingReactions: withNew } } as Record<
+				string,
+				unknown
+			>);
+		}
+	}
+
+	/** A GM, or a player who owns the actor whose feature made the change. */
+	#mayRemove(actorUuid: string, requestingUserId: string, viaSocket: boolean): boolean {
+		const user = game.users?.get(requestingUserId) ?? null;
+		if (!user) return false;
+		if (user.isGM) return !viaSocket;
+		const actor = fromUuidSync(actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		return actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
+	}
+
+	/** Uses, Mana and Wounds go back. An action or a heroic reaction stays spent. */
+	async #giveBackResultCost(line: readonly ResultChange[]): Promise<void> {
+		for (const change of line) {
+			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
+			if (!actor) continue;
+			await refundRerollCost(
+				actor,
+				{
+					chargePoolIdentifier: change.chargePoolIdentifier,
+					chargeCost: change.paid.charges,
+					manaCost: change.paid.mana,
+					woundCost: change.paid.wounds,
+					heroicReaction: '',
+				},
+				{ ...change.paid, heroicReaction: null, action: null },
+			);
 		}
 	}
 }

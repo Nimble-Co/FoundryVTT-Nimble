@@ -7,6 +7,7 @@ interface MockMessage {
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
 	resolveRerollReaction: ReturnType<typeof vi.fn>;
 	resolveKeepChoice: ReturnType<typeof vi.fn>;
+	resolveResultRemoval: ReturnType<typeof vi.fn>;
 }
 
 type TestGlobals = {
@@ -33,6 +34,7 @@ function createMessage(entries: Array<{ id: string; kind: string }>): MockMessag
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
 		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
 		resolveKeepChoice: vi.fn().mockResolvedValue(undefined),
+		resolveResultRemoval: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -590,5 +592,44 @@ describe('requestKeepChoice', () => {
 
 		expect(message.resolveKeepChoice).toHaveBeenCalledTimes(1);
 		expect(message.resolveKeepChoice).toHaveBeenCalledWith('new', 'player-1', true);
+	});
+});
+
+describe('requestResultRemoval', () => {
+	it('removes the line directly for a GM', async () => {
+		const { requestResultRemoval } = await loadModule();
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestResultRemoval('message-1', 'line-1');
+
+		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'gm-user', false);
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('asks the primary GM for a player, as a socket request', async () => {
+		const { requestResultRemoval, registerIncomingReactionSocketListener } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+		await requestResultRemoval('message-1', 'line-1');
+		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
+		expect(payload).toEqual({
+			type: 'resultRemoval',
+			messageId: 'message-1',
+			lineId: 'line-1',
+			userId: 'player-1',
+		});
+
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+		listener(payload);
+		listener({ ...payload, lineId: undefined });
+		for (let i = 0; i < 4; i++) await Promise.resolve();
+
+		expect(message.resolveResultRemoval).toHaveBeenCalledTimes(1);
+		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'player-1', true);
 	});
 });

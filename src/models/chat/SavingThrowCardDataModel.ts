@@ -1,4 +1,11 @@
-import { checkDC, incomingReactions, metadata, rerollHistory, roller } from './common.js';
+import {
+	checkDC,
+	incomingReactions,
+	metadata,
+	rerollHistory,
+	resultChanges,
+	roller,
+} from './common.js';
 
 const { fields } = foundry.data;
 
@@ -21,7 +28,8 @@ declare namespace NimbleSavingThrowCardData {
 		ReturnType<typeof roller> &
 		ReturnType<typeof checkDC> &
 		ReturnType<typeof incomingReactions> &
-		ReturnType<typeof rerollHistory>;
+		ReturnType<typeof rerollHistory> &
+		ReturnType<typeof resultChanges>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
@@ -40,6 +48,7 @@ class NimbleSavingThrowCardData extends foundry.abstract.TypeDataModel<
 			...checkDC(),
 			...incomingReactions(),
 			...rerollHistory(),
+			...resultChanges(),
 		};
 	}
 }

@@ -24,6 +24,7 @@ const INCOMING_REACTION_REJECTED_TYPE = 'incomingAttackReactionRejected';
 const REROLL_ROLLING_TYPE = 'rerollRolling';
 const KEEP_CHOICE_REQUEST_TYPE = 'rerollKeep';
 const DAMAGE_BACK_REQUEST_TYPE = 'damageBack';
+const RESULT_REMOVAL_REQUEST_TYPE = 'resultRemoval';
 const DAMAGE_BACK_ACTIONS = ['deal', 'double'] as const;
 
 /**
@@ -75,6 +76,13 @@ type DamageBackRequest = {
 	userId: string;
 };
 
+type ResultRemovalRequest = {
+	type: typeof RESULT_REMOVAL_REQUEST_TYPE;
+	messageId: string;
+	lineId: string;
+	userId: string;
+};
+
 /** Why the GM refused, as a localization key the asking client renders. */
 export interface IncomingReactionRejection {
 	messageId: string;
@@ -122,6 +130,11 @@ interface ReactionCapableMessage {
 	resolveDamageBack?: (
 		recordId: string,
 		action: (typeof DAMAGE_BACK_ACTIONS)[number],
+		requestingUserId: string,
+		viaSocket?: boolean,
+	) => Promise<void>;
+	resolveResultRemoval?: (
+		lineId: string,
 		requestingUserId: string,
 		viaSocket?: boolean,
 	) => Promise<void>;
@@ -229,6 +242,18 @@ async function handleDamageBackRequest(payload: unknown): Promise<void> {
 	);
 }
 
+async function handleResultRemovalRequest(payload: unknown): Promise<void> {
+	if (!game.user?.isGM) return;
+	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
+	const request = payload as Partial<ResultRemovalRequest> | null;
+	if (!request?.messageId || !request.lineId || !request.userId) return;
+	await getMessageById(request.messageId)?.resolveResultRemoval?.(
+		request.lineId,
+		request.userId,
+		true,
+	);
+}
+
 /**
  * Surface a refusal on the client that asked for it: a notification saying why,
  * and a hook so the card's prompts stop holding the button.
@@ -313,6 +338,7 @@ export function registerIncomingReactionSocketListener(): void {
 		else if (type === REROLL_ROLLING_TYPE) handleRerollRolling(payload);
 		else if (type === KEEP_CHOICE_REQUEST_TYPE) void handleKeepChoiceRequest(payload);
 		else if (type === DAMAGE_BACK_REQUEST_TYPE) void handleDamageBackRequest(payload);
+		else if (type === RESULT_REMOVAL_REQUEST_TYPE) void handleResultRemovalRequest(payload);
 	});
 }
 
@@ -421,6 +447,25 @@ export async function requestDamageBack(
 		messageId,
 		recordId,
 		action,
+		userId: game.user.id,
+	});
+}
+
+/** Take a Change a Result line off a card. A player's click goes to the primary GM. */
+export async function requestResultRemoval(messageId: string, lineId: string): Promise<void> {
+	if (!game.user?.id) return;
+	if (game.user.isGM) {
+		await getMessageById(messageId)?.resolveResultRemoval?.(lineId, game.user.id, false);
+		return;
+	}
+	if (!getPrimaryActiveGmId()) return;
+	const socket = game.socket as
+		| { emit?: (eventName: string, payload: ResultRemovalRequest) => void }
+		| undefined;
+	socket?.emit?.(INCOMING_REACTION_SOCKET_NAME, {
+		type: RESULT_REMOVAL_REQUEST_TYPE,
+		messageId,
+		lineId,
 		userId: game.user.id,
 	});
 }

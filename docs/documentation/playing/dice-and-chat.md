@@ -84,7 +84,7 @@ All roll cards (attack, save, skill check and ability check) have one control fo
 
 The button opens the rows. It opens by itself when a save or check card says **Failed**, and on an attack that misses. On a card that says **Succeeded**, on an attack that hits, and on a card with no result, it starts closed. You can open or close it at any time, and it stays as you left it when the card updates.
 
-Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Make Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
+Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
 
 With the keyboard, Enter or Space works the button. The arrow keys, Home and End move through the rows, and Escape closes them and goes back to the button. When a row goes away after you use it, the focus goes to the button. When the last row goes away, the focus goes to the card.
 
@@ -147,6 +147,22 @@ An added change moves the face that the die shows, as it is. A later reroll of t
 **The line on the card.** After a change, the roll shows a line, as after a reroll. The line names the feature and shows the old die, paler, with an arrow to the new one. Above the arrow is a small label: "set" for a set value, or the number for an added one, such as "+1". When the new die is a crit or a miss, the line has a **Crit** or **Miss** tag. Hover the line to read it as a sentence, for example "Changed with Vicious Opportunist: 3 became 8, a crit".
 
 After a set with a feature that makes the set value final, a Primary Die bonus line on the card shows "+1 bonus not added". Its tooltip says why.
+
+## Changing a result
+
+Some features change the result of a save, a skill check or an ability check, after the roll. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
+
+- **Succeed Instead** with Elusive. The card says **Succeeded**, or **Succeeded - DC 14** with a DC. The total stays. The row goes away while the change stands. The other rows stay under the closed button, because a reroll can still replace the result. The history line says **Succeeded Instead** with Elusive.
+- **Change to 10** with Cheat!. The total becomes that number. The history line says **Changed 7 to 10** with Cheat!. The row does not show when the total is already that number. Some features show the row only when the total is below that number.
+- **Add +3 STR** with Mighty Soul. The number goes on the total. A negative number shows as **Add −1 STR**, and lowers the total. The row stays, so you can click it again while you can pay its cost. You can click it to gain your last Wound. Repeated clicks make one history line that grows: **Added +6 STR, Gained 2 Wounds** with Mighty Soul.
+
+A box above the history shows how the total came from the roll, such as **7 + 3 + 3 = 13** or **7 changed to 13**. It shows only when the total is different from the roll.
+
+A known DC is read again after each change, and the small line under the name follows it. A natural 1 on a save or a skill check still fails after an add, and a natural 20 still succeeds. A change to a number replaces the roll, so only that number and the DC count. When the card goes to **Succeeded** on a save, a condition that the save added goes away again.
+
+**Remove.** Each of these lines has a **Remove** button, for the user who can click the row and for the GM. A click takes that change off the card and reads the result again. The uses, Mana and Wounds it cost come back. An action or a Heroic Reaction stays spent. A line that grew removes all its clicks and gives back all its Wounds. The other changes stay in their order, and the total is worked out again. Rerolls and changes of a die have no **Remove**.
+
+**A reroll replaces the result.** The new roll is the new total, and the added, set and succeed changes come off. Their costs stay paid, and any Wounds stay. Their lines stay in the history, with no **Remove**. The box starts again from the new roll. A change of a die is not a new roll, so the changes stay on the total.
 
 ## Why an attack is a crit, or a hit
 

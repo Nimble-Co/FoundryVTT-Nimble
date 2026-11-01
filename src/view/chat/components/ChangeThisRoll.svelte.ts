@@ -163,6 +163,7 @@ export function createChangeThisRollState(
 		},
 		toggle,
 		onKeydown,
+		expectFocusLoss,
 		useEntry,
 		pickDie,
 		pickValue,

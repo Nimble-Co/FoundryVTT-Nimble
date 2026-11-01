@@ -15,9 +15,13 @@ export type RerollSide = (typeof REROLL_SIDES)[number];
 export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
 
-/** What a `reroll` entry does: roll again, change a die, or make the attack a crit. */
-export const ROLL_USES = ['reroll', 'change', 'crit'] as const;
+/** What a `reroll` entry does: roll again, change a die, make the attack a crit, or change the result. */
+export const ROLL_USES = ['reroll', 'change', 'crit', 'result'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
+
+/** How a Change a Result rule changes the result of a check. */
+export const RESULT_CHANGES = ['succeed', 'setTotal', 'add'] as const;
+export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
 export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
@@ -172,6 +176,45 @@ export interface IncomingReactionEntry {
 	usedAmount?: number | null;
 	usedPoolLabel?: string;
 	usedFaces?: number[];
+}
+
+/** What one use of a Change a Result rule does now. */
+export interface ResultUse {
+	change: ResultChangeKind;
+	/** The formula's value for a set or an add; 0 for a succeed. */
+	value: number;
+	/** The ability the formula is, such as `strength`. Empty when it is anything else. */
+	stat: string;
+}
+
+/**
+ * One click of a Change a Result rule on a check card. The card keeps the clicks
+ * in order and works out its total from them, so its roll stays what the dice gave.
+ */
+export interface ResultChange extends ResultUse {
+	id: string;
+	/** The first click of its history line: repeats of an add share one line. */
+	lineId: string;
+	entryId: string;
+	itemUuid: string;
+	ruleId: string;
+	label: string;
+	actorUuid: string;
+	/** A new roll took it off the total. Its cost stays paid and its line stays. */
+	retired: boolean;
+	/** The total this change replaced, set when a new roll retires it. */
+	before: number | null;
+	chargePoolIdentifier: string;
+	/** What Remove gives back. */
+	paid: { charges: number; mana: number; wounds: number };
+}
+
+/** The result of a check card now, for a gate on a rule that reads it. */
+export interface ResultCardView {
+	total: number;
+	changes: readonly ResultChange[];
+	/** Formulas read this creature's roll data. */
+	roller: { getRollData?: () => Record<string, unknown> } | null;
 }
 
 /** One Primary Die result in a reroll record. */

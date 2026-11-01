@@ -5,6 +5,7 @@
 	import { CHECK_ROLL_SLOT } from '#utils/reroll/checkCardRollTarget.ts';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import { checkResultOfCard } from '#utils/rolls/checkResult.ts';
+	import { resultChangesOf, resultTotal } from '#utils/rolls/resultChanges.ts';
 	import { getRollModeSummary } from '../../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
@@ -45,7 +46,7 @@
 		subheading={getRollModeSummary(system.rollMode)}
 		checkResult={index === 0 ? firstRollResult : null}
 		tooltip={prepareRollTooltip(system.actorType, system.permissions, roll)}
-		total={roll.total ?? 0}
+		total={index === 0 ? resultTotal(roll.total ?? 0, resultChangesOf(system)) : (roll.total ?? 0)}
 		rolling={index === 0 ? rolling : null}
 		landed={index === 0 && landed}
 	/>

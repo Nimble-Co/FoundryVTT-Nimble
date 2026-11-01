@@ -12,6 +12,8 @@ import {
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type ResultCardView,
+	type ResultUse,
 	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
@@ -23,6 +25,7 @@ import type { RerollRollKind, RollToReroll } from './rollToReroll.js';
 const REROLL_RULE_TYPE = 'reroll';
 const CHANGE_DIE_RULE_TYPE = 'changeDie';
 const MAKE_CRIT_RULE_TYPE = 'makeCrit';
+const CHANGE_RESULT_RULE_TYPE = 'changeResult';
 const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
 const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
@@ -32,13 +35,19 @@ const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
  */
 function isRollUseRule(type: string | undefined): boolean {
 	if (type === ATTACK_OUTCOME_RULE_TYPE) return !isRuleAutomationEnabled();
-	return type === REROLL_RULE_TYPE || type === CHANGE_DIE_RULE_TYPE || type === MAKE_CRIT_RULE_TYPE;
+	return (
+		type === REROLL_RULE_TYPE ||
+		type === CHANGE_DIE_RULE_TYPE ||
+		type === MAKE_CRIT_RULE_TYPE ||
+		type === CHANGE_RESULT_RULE_TYPE
+	);
 }
 
 /** What an entry of a rule of this type does. Absent is a reroll. */
 function rollUseOf(type: string | undefined): RollUse | undefined {
 	if (type === CHANGE_DIE_RULE_TYPE) return 'change';
 	if (type === MAKE_CRIT_RULE_TYPE || type === ATTACK_OUTCOME_RULE_TYPE) return 'crit';
+	if (type === CHANGE_RESULT_RULE_TYPE) return 'result';
 	return undefined;
 }
 
@@ -71,10 +80,13 @@ interface RerollRuleLike {
 		side: RerollSide;
 		roll: RollToReroll;
 		other: RerollingActor | null;
+		card?: ResultCardView;
 	}) => boolean;
 	rerollChanges?: (kind: RerollRollKind) => RerollChanges;
 	/** A Change a Die rule: the change one use makes. */
 	dieChange?: DieChange;
+	/** A Change a Result rule: what one use does, or null when its formula gives no number. */
+	resultUseFor?: (roller: ResultCardView['roller']) => ResultUse | null;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -140,6 +152,8 @@ interface RerollRollContext {
 	outcome: AttackOutcomeView | null;
 	/** Attacks only. A forced miss stays a miss on any reroll. */
 	forcedMiss: boolean;
+	/** A check card's result now, for the live gate. Absent before the card exists. */
+	card?: ResultCardView;
 }
 
 type RerollRollOutcome = Pick<RerollRollContext, 'outcome' | 'forcedMiss'>;
@@ -425,9 +439,10 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	const other = otherCreature(entry.side, context);
-	if (rule.offersUseOn?.({ side: entry.side, roll: context.roll, other }) !== true) {
-		return UNAVAILABLE;
-	}
+	// Only a Change a Result rule reads the card. Its entry stays stamped, so it comes back with the row.
+	const card = rollUseOf(rule.type) === 'result' ? context.card : undefined;
+	const gate = { side: entry.side, roll: context.roll, other, ...(card ? { card } : {}) };
+	if (rule.offersUseOn?.(gate) !== true) return UNAVAILABLE;
 	const { outcome, forcedMiss } = attackOutcome(context);
 	if (outcome && !rollUseTriggerMatches(rule.outcome, outcome, gateOf(rule))) {
 		return UNAVAILABLE;
@@ -438,6 +453,7 @@ function usableRerollEntry(
 
 export {
 	CHANGE_DIE_RULE_TYPE,
+	CHANGE_RESULT_RULE_TYPE,
 	collectRerollEntries,
 	findRerollRule,
 	MAKE_CRIT_RULE_TYPE,

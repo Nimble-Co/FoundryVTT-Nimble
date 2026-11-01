@@ -401,6 +401,7 @@ describe('RuleCard without a form layout', () => {
 		'modifyReroll',
 		'primaryDieBonus',
 		'changeDie',
+		'changeResult',
 		'attackOutcome',
 		'makeCrit',
 	];

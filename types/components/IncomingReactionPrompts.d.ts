@@ -11,7 +11,7 @@ import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingRea
 export type IncomingReactionPlace = 'roll' | 'checkRoll' | 'options';
 
 /** The kinds of use, in the order Change This Roll lists them. */
-export type ReactionVerb = 'reroll' | 'change' | 'crit' | 'addDamage' | 'interpose';
+export type ReactionVerb = 'reroll' | 'change' | 'crit' | 'result' | 'addDamage' | 'interpose';
 
 export interface IncomingReactionPromptsProps {
 	place: IncomingReactionPlace;

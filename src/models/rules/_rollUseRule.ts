@@ -15,6 +15,7 @@ import {
 	REROLL_TRIGGERS,
 	type RerollSide,
 	type RerollTrigger,
+	type ResultCardView,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import {
@@ -30,7 +31,7 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 /** The lang namespace a rule's own words are under, as `NIMBLE.rules.<namespace>`. */
-type RollUseNamespace = 'reroll' | 'changeDie' | 'makeCrit';
+type RollUseNamespace = 'reroll' | 'changeDie' | 'makeCrit' | 'changeResult';
 
 // Words that say what the rule does. The other words are the same for every
 // rule that uses a roll, so they stay under the Reroll rule's keys.
@@ -304,6 +305,8 @@ interface RollUseContext {
 	side: RerollSide;
 	roll: RollToReroll;
 	other?: OtherCreature | null;
+	/** A check card's result now. Absent when the entry is stamped. */
+	card?: ResultCardView;
 }
 
 const COST_FIELDS = [
