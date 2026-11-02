@@ -37,6 +37,7 @@ import type { PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
+import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
@@ -1324,6 +1325,7 @@ class NimbleChatMessage extends ChatMessage {
 			});
 
 			if (wasKilled) {
+				void giveMarkedDeathRecovery(target.actor as never, sourceItem as never);
 				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
 				if (attacker) {
 					// @ts-expect-error Custom hook

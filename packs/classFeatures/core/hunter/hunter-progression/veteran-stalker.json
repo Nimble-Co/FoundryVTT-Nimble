@@ -6,7 +6,41 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "veteranStalkerGa",
+				"identifier": "",
+				"label": "Veteran Stalker",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "thrill-of-the-hunt",
+				"dieSize": null,
+				"maxDelta": "0",
+				"addRefills": [
+					{
+						"trigger": "onBloodied",
+						"mode": "add",
+						"value": "1",
+						"temporary": false,
+						"notWhenSpent": false,
+						"needsFeatureEffects": true,
+						"predicate": {}
+					},
+					{
+						"trigger": "onWound",
+						"mode": "add",
+						"value": "1",
+						"temporary": false,
+						"notWhenSpent": false,
+						"needsFeatureEffects": true,
+						"predicate": {}
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

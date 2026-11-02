@@ -3,6 +3,7 @@ import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumerRuleLike,
@@ -21,6 +22,7 @@ import type {
 	ModifyPoolRuleLike,
 	NumericInput,
 	PoolMaxBonusRuleLike,
+	RecoveryUse,
 	RuleBackedItem,
 } from './types.js';
 
@@ -380,6 +382,8 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 			value: formula,
 		};
 		if (sourceEntry.temporary === true) normalized.temporary = true;
+		if (sourceEntry.notWhenSpent === true) normalized.notWhenSpent = true;
+		if (sourceEntry.needsFeatureEffects === true) normalized.needsFeatureEffects = true;
 
 		// Initialized rule data carries Predicate instances (whose enumerable
 		// shape is { isValid, _source }); persisted flag state may carry that
@@ -677,12 +681,17 @@ function getApplicableUsageTriggers(context: {
  * Entries without a predicate (or with an empty one) always apply. Mirrors the
  * dice pool refill path, so the same modifier behaves the same on either pool.
  */
-function recoveryPredicateHolds(actor: CharacterActorLike, recovery: ChargeRecoveryEntry): boolean {
+function recoveryPredicateHolds(
+	actor: CharacterActorLike,
+	recovery: ChargeRecoveryEntry,
+	use?: RecoveryUse,
+): boolean {
 	const raw = recovery.predicate;
 	if (!raw || Object.keys(raw).length < 1) return true;
 
 	const actorWithDomain = actor as unknown as { getDomain?: () => Set<string> };
-	const domain = actorWithDomain.getDomain?.() ?? new Set<string>();
+	const domain = new Set(actorWithDomain.getDomain?.() ?? []);
+	for (const tag of use?.domain ?? []) domain.add(tag);
 	return new Predicate(raw as RawPredicate).test(domain);
 }
 
@@ -719,6 +728,7 @@ function applyRecoveryTriggersToPools(
 	pools: ChargePoolMap,
 	triggers: ChargeRecoveryTrigger[],
 	given?: ChargeRecoveryGiven,
+	use?: RecoveryUse,
 ): ChargePoolMap {
 	if (triggers.length < 1) return pools;
 
@@ -728,9 +738,11 @@ function applyRecoveryTriggersToPools(
 	for (const [poolId, pool] of Object.entries(nextPools)) {
 		for (const recovery of pool.recoveries) {
 			if (!triggerSet.has(recovery.trigger)) continue;
+			if (recovery.notWhenSpent && use?.spentPoolIds?.has(poolId)) continue;
+			if (recovery.needsFeatureEffects && !isRuleAutomationEnabled()) continue;
 			// Entry-level predicates are evaluated now, against live state, so a
 			// recovery can depend on something that flips mid-combat.
-			if (!recoveryPredicateHolds(actor, recovery)) continue;
+			if (!recoveryPredicateHolds(actor, recovery, use)) continue;
 
 			const before = pool.current;
 			pool.current = recoveredValue(actor, pool, recovery);

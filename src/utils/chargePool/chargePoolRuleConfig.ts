@@ -19,6 +19,7 @@ const ChargePoolRuleConfig = {
 		'onKill',
 		'onBloodied',
 		'onInitiativeRolled',
+		'onMarkedDeath',
 	],
 	recoveryModes: ['add', 'set', 'refresh'],
 	restTypes: ['safe', 'field'],

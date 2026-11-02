@@ -14,6 +14,7 @@ import type {
 	ChargePoolMap,
 	ChargeRestType,
 	ManualAdjustMode,
+	RecoveryUse,
 } from './types.js';
 
 /**
@@ -36,7 +37,10 @@ type CombatEventTrigger =
 	| 'onHealed'
 	| 'onKill'
 	| 'onBloodied'
-	| 'onInitiativeRolled';
+	| 'onInitiativeRolled'
+	| 'onMarkedDeath'
+	| 'onHit'
+	| 'onCriticalHit';
 type TriggerType = CombatTrigger | CombatEventTrigger;
 
 async function applyRestRecovery(
@@ -221,11 +225,12 @@ async function applyRecoveryToActorIfEligible(
 	actor: Actor | null | undefined,
 	trigger: TriggerType,
 	_killTargetActor?: Actor.Implementation,
+	use?: RecoveryUse,
 ): Promise<void> {
 	if (!isEligibleForAutomaticRecovery(actor)) return;
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
-	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger]);
+	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger], undefined, use);
 	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
 
 	await persistChargePoolMap(actor, nextPools);

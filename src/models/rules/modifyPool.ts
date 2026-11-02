@@ -122,6 +122,20 @@ function schema() {
 					label: 'NIMBLE.rules.chargePool.recoveries.temporary.label',
 					hint: 'NIMBLE.rules.chargePool.recoveries.temporary.hint',
 				}),
+				notWhenSpent: new fields.BooleanField({
+					required: false,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.chargePool.recoveries.notWhenSpent.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.notWhenSpent.hint',
+				}),
+				needsFeatureEffects: new fields.BooleanField({
+					required: false,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.chargePool.recoveries.needsFeatureEffects.label',
+					hint: 'NIMBLE.rules.chargePool.recoveries.needsFeatureEffects.hint',
+				}),
 				// Cast: PredicateField extends ObjectField whose constructor typing
 				// doesn't accept label/hint. The renderer reads them off the instance.
 				predicate: new PredicateField({

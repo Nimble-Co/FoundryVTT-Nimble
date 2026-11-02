@@ -1881,6 +1881,14 @@
 						"label": "Only while",
 						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply."
 					},
+					"notWhenSpent": {
+						"label": "Not from a use that spends",
+						"hint": "A use that spends from this pool gains nothing from this recovery."
+					},
+					"needsFeatureEffects": {
+						"label": "Needs Feature Effects",
+						"hint": "With Feature Effects off, this recovery does nothing. The player uses + and - on the pool."
+					},
 					"temporary": {
 						"label": "Temporary uses",
 						"hint": "Only on a charge pool, with the \"add\" mode. These uses are spent first. They go away when the encounter ends."
@@ -3195,7 +3203,8 @@
 				"onTurnStart": "Turn Start",
 				"onTurnEnd": "Turn End",
 				"onKill": "Kill",
-				"onBloodied": "Bloodied"
+				"onBloodied": "Bloodied",
+				"onMarkedDeath": "Marked creature dies"
 			},
 			"configure": "Configure Charges",
 			"noPoolsForItem": "No charge pools for this item.",

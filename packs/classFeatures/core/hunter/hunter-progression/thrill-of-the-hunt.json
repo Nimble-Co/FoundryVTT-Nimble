@@ -6,7 +6,71 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "thrillOfTheHuntP",
+				"identifier": "thrill-of-the-hunt",
+				"label": "Thrill of the Hunt",
+				"predicate": {},
+				"priority": 1,
+				"scope": "actor",
+				"max": "99",
+				"dieSize": null,
+				"initial": "zero",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "onMarkedDeath",
+						"mode": "add",
+						"value": "1",
+						"temporary": false,
+						"notWhenSpent": true,
+						"needsFeatureEffects": true,
+						"predicate": {}
+					},
+					{
+						"trigger": "onHit",
+						"mode": "add",
+						"value": "1",
+						"temporary": false,
+						"notWhenSpent": true,
+						"needsFeatureEffects": true,
+						"predicate": {
+							"$and": [
+								"target:quarry",
+								"attack:melee"
+							]
+						}
+					},
+					{
+						"trigger": "onCriticalHit",
+						"mode": "add",
+						"value": "1",
+						"temporary": false,
+						"notWhenSpent": true,
+						"needsFeatureEffects": true,
+						"predicate": {
+							"$and": [
+								"target:quarry",
+								"attack:ranged"
+							]
+						}
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "set",
+						"value": "0",
+						"temporary": false,
+						"notWhenSpent": false,
+						"needsFeatureEffects": false,
+						"predicate": {}
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

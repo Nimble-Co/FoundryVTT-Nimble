@@ -5,10 +5,12 @@ import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import {
 	applyRerollRecoveryChange,
+	RECOVERY_DOMAIN_FLAG,
 	RECOVERY_GIVEN_FLAG,
 	type RecoveryTriggerChange,
 	rerollChargeConsumption,
 } from '#utils/chargePool/chargePoolReroll.js';
+import { spentPoolIdsOf } from '#utils/chargePool/itemUseRecovery.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
@@ -635,7 +637,10 @@ export class CardRerolls {
 		try {
 			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
 			const recordedGiven = flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined;
-			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven);
+			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven, {
+				domain: (flags?.[RECOVERY_DOMAIN_FLAG] as string[] | undefined) ?? [],
+				spentPoolIds: spentPoolIdsOf(item),
+			});
 			if (!result) return;
 
 			const changes: Record<string, unknown> = {

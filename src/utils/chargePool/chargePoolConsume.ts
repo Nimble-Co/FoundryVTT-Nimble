@@ -212,7 +212,16 @@ async function consumeOnResolvedItemUse(
 	}
 
 	const recoveryGiven: ChargeRecoveryGiven = [];
-	const postRecoveryPools = applyRecoveryTriggersToPools(actor, nextPools, triggers, recoveryGiven);
+	const postRecoveryPools = applyRecoveryTriggersToPools(
+		actor,
+		nextPools,
+		triggers,
+		recoveryGiven,
+		{
+			domain: context.recoveryDomain ?? [],
+			spentPoolIds: consumedPoolIds,
+		},
+	);
 
 	for (const poolId of consumedPoolIds) {
 		const preConsumptionPool = currentPools[poolId];
