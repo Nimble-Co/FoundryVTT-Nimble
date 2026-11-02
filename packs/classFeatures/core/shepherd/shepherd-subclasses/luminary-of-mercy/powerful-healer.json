@@ -42,8 +42,7 @@
 				"use": "healing",
 				"schools": [],
 				"givesCrit": false,
-				"tempHpChoice": true,
-				"minionDies": true
+				"tempHpChoice": true
 			}
 		],
 		"activation": {

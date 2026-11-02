@@ -22,8 +22,7 @@
 					"wind"
 				],
 				"givesCrit": true,
-				"tempHpChoice": false,
-				"minionDies": true
+				"tempHpChoice": false
 			}
 		],
 		"activation": {

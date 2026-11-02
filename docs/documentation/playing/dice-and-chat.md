@@ -214,7 +214,7 @@ Elemental Surge rolls on the Initiative card, the first time you roll Initiative
 
 With Steel Will, each 1 on a surge die rolls again one time by itself, and a line on the card says so.
 
-With Feature Effects off, the card shows the dice, a **Reroll a 1** row for each 1 when you have Steel Will, and a **Regain mana** button. The one who rolled and the GM can click them.
+With Feature Effects off, the card shows the dice, a **Reroll a 1** row for each 1 when you have Steel Will, and a **Regain mana** button. The one who rolled, the GM and a player who owns the hero can click them.
 
 ## Why an attack is a crit, or a hit
 
@@ -233,11 +233,19 @@ A crit can roll more dice by itself. They show as a labelled line on the attack 
 
 - **Sneak Attack dice** roll on a crit, 1/turn. An attack on the turn of another creature can use them too. A reroll or a Make It a Crit row that gives the crit adds the dice. A reroll that takes the crit away removes them and gives the use back. These dice do not explode and are not Vicious, and a die at its max here does not make a crit. With Feature Effects off, they are a row in Change This Roll.
 - **Twist the Blade** is a row that picks a Sneak Attack die and sets its value. With no action left, the row still works and the card says so. Rank 2 is free, 1/turn, and takes the place of the paid row until you use it.
-- **Cunning Strike** is a row that spends a use and posts a normal save card for the target. A failed save sets the Sneak Attack dice to their max. A passed save gives the use back. Until the save has a result, nothing changes.
+- **Cunning Strike** is a row that spends a use, then the target makes a save with the roll window, on a normal save card. A player who owns the target and is online rolls it. If not, the GM rolls it. Closing the window gives the use back. A failed save sets the Sneak Attack dice to their max. A passed save gives the use back. Until the save has a result, nothing changes.
 - **Epic Criticals** makes the first crit die a d20 by itself, with a tag. A 20 explodes again with the die of the weapon. With Feature Effects off, it is a **Use a d20** row.
 - **Hollow Bones** makes a crit against the one with this rule Vicious, with a tag. With Feature Effects off, it is a row for the owner of that target.
 
 **Any die crits.** A rule such as Shatter makes a crit from any die at its max. A change of one die reads this again, and adds or removes the crit dice. Shatter has one **+1 to a die** row per upcast step, and you can use more than one on the same die.
+
+## Shadow Rush
+
+Shadow Rush is a feature you use from the sheet, once per shadow minion. The card deals the max of the minion's attack, 12 necrotic damage. It hits and does not crit. Remove that minion yourself: the system does not track shadow minions yet.
+
+## Judgment Dice when you are attacked
+
+Radiant Judgment and Maximum Judgment run when an attack card has you as a target, hit or miss. A reroll of that card does not run them again, and neither does its damage. If damage from a card that did not target you hits you, they run then.
 
 ## The Chaos Table
 

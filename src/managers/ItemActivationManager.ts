@@ -1,6 +1,6 @@
 import type { DualWieldChoice } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
-import type { MaxDamageChoice, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
+import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
@@ -42,15 +42,7 @@ import {
 import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
-import {
-	dualWieldEntry,
-	dualWieldRecord,
-	dualWieldRollOptions,
-	keepChoiceOfWeapon,
-	markDualWieldUse,
-	rollModeOfWeapon,
-} from '../utils/damage/dualWield.js';
-import { maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
+import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -72,7 +64,6 @@ import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
-import { canShowDiceAnimation, showDiceAnimation } from '../utils/rolls/showDiceAnimation.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,
@@ -90,6 +81,24 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import {
+	activatedWeaponRollMode,
+	type DualWieldKeep,
+	rollOtherWeapon,
+} from './itemActivation/dualWieldAttack.js';
+import {
+	type ActiveMaxDamage,
+	applyMaxDamageToRollOptions,
+	noDiceThrown,
+	prepareHealingAtMax,
+	resolveMaxDamage,
+	spendMaxDamageCharge,
+} from './itemActivation/maxDamageActivation.js';
+import {
+	addOfferBonuses,
+	markOfferOnRollOptions,
+	offerSourceOf,
+} from './itemActivation/offerBonus.js';
 
 /** One Primary Die Bonus as the card stores it, with the item of its rule. */
 interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
@@ -190,8 +199,7 @@ class ItemActivationManager {
 	#dualWield = false;
 
 	/** The keep between two weapons, and its entry, for the chat card. */
-	#dualWieldKeep: { pendingKeep: Record<string, unknown>; entry: IncomingReactionEntry } | null =
-		null;
+	#dualWieldKeep: DualWieldKeep | null = null;
 
 	/** The player ticked 1 less mana: the cast invokes Chaos. */
 	invokesChaos = false;
@@ -208,14 +216,11 @@ class ItemActivationManager {
 	#deferredPoolNodes: PoolNode[] = [];
 
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
-	#maxDamage: { rule: MaxDamageRuleLike; tempHp: boolean } | null = null;
+	#maxDamage: ActiveMaxDamage | null = null;
 
 	/** The identifier of the item whose offer row started this activation. */
 	#offerSource(): string | undefined {
-		const uuid = this.#options.offerSourceUuid;
-		if (!uuid) return undefined;
-		const source = fromUuidSync(uuid as `Item.${string}`) as { identifier?: string } | null;
-		return source?.identifier || undefined;
+		return offerSourceOf(this.#options.offerSourceUuid);
 	}
 
 	/** The attack roll of this activation, for the uses its crit dice spend. */
@@ -440,14 +445,11 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
-		const maxDamageRule = maxDamageRuleOf(
+		this.#maxDamage = resolveMaxDamage(
 			this.actor as never,
 			this.#item as never,
 			dialogData.maxDamage,
 		);
-		this.#maxDamage = maxDamageRule
-			? { rule: maxDamageRule, tempHp: dialogData.maxDamage?.tempHp === true }
-			: null;
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
@@ -461,122 +463,6 @@ class ItemActivationManager {
 			primaryDieBonuses: this.#primaryDieBonuses,
 			noDiceThrown: this.#noDiceThrown,
 			dualWieldKeep: this.#dualWieldKeep,
-		};
-	}
-
-	/**
-	 * Roll the other weapon of a dual wield attack and leave the choice for the
-	 * card. It keeps its own formula, damage type and item bonuses. On-hit effects
-	 * stay with the activated weapon.
-	 */
-	async #rollOtherWeapon(
-		first: DamageRoll,
-		firstFormula: string,
-		firstOptions: DamageRoll.Options,
-		choice: DualWieldChoice,
-		context: {
-			rollData: DamageRoll.Data;
-			rollMode: number;
-			delivery: AttackDelivery;
-			source: never;
-			targetDomain: never;
-			damageType: string;
-		},
-	): Promise<void> {
-		const item = fromUuidSync(choice.otherItemUuid as `Item.${string}`) as {
-			uuid: string;
-			name: string;
-			identifier: string;
-			system: {
-				activation?: {
-					effects?: Array<{
-						type?: string;
-						formula?: string;
-						damageType?: string;
-						canCrit?: boolean;
-						canMiss?: boolean;
-					}>;
-				};
-			};
-		} | null;
-		const node = item?.system.activation?.effects?.find((each) => each.type === 'damage');
-		if (!item || !node?.formula) return;
-
-		const damageType = node.damageType ?? '';
-		let formula = normalizeDamageRollFormula(node.formula);
-		if (context.delivery) {
-			const flat = getDamageBonusTotal(
-				this.actor,
-				context.delivery,
-				context.source,
-				damageType,
-				context.targetDomain,
-				item.identifier,
-			);
-			if (flat > 0) formula = `${formula} + ${flat}`;
-			for (const dice of getDamageBonusFormulas(
-				this.actor,
-				context.delivery,
-				context.source,
-				damageType,
-				context.targetDomain,
-				item.identifier,
-			)) {
-				formula = `${formula} + ${dice}`;
-			}
-		}
-
-		const rollMode = rollModeOfWeapon(context.rollMode, choice.extraDieOn, 'other');
-		const self = {
-			itemUuid: this.#item.uuid ?? '',
-			label: this.#item.name,
-			damageType: context.damageType,
-		};
-		const otherSelf = { itemUuid: item.uuid, label: item.name, damageType };
-		const otherOptions = {
-			...firstOptions,
-			rollMode,
-			canCrit:
-				firstOptions.canCrit &&
-				node.canCrit !== false &&
-				hasWeaponProficiency(this.actor as never, item as never),
-			canMiss: firstOptions.canMiss && node.canMiss !== false,
-			damageType,
-		};
-		first.options = dualWieldRollOptions(first.options as never, self, {
-			...otherSelf,
-			formula,
-			options: otherOptions as never,
-		}) as never;
-		const second = new dependencies.DamageRoll(
-			formula,
-			context.rollData,
-			dualWieldRollOptions(otherOptions as never, otherSelf, {
-				...self,
-				formula: firstFormula,
-				options: firstOptions as never,
-			}) as never,
-		);
-		await second.evaluate();
-		if (canShowDiceAnimation()) await showDiceAnimation(second as never);
-
-		const input = {
-			actorUuid: (this.actor as { uuid?: string } | null)?.uuid ?? '',
-			itemUuid: item.uuid,
-			label: localize('NIMBLE.rollWindow.dualWield.name'),
-		};
-		const entry = dualWieldEntry(input) as IncomingReactionEntry;
-		this.#dualWieldKeep = {
-			entry,
-			pendingKeep: {
-				entryId: entry.id,
-				chooserUuid: input.actorUuid,
-				roll: second.toJSON(),
-				reroll: dualWieldRecord({ ...input, entryId: entry.id }),
-				old: keepChoiceOfWeapon(first as never),
-				new: keepChoiceOfWeapon(second as never),
-				discardedCritTriggers: false,
-			},
 		};
 	}
 
@@ -709,13 +595,7 @@ class ItemActivationManager {
 					const resolvedCanMiss = isAoE || multiTarget ? false : isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 					if (dialogData.dualWield) this.#dualWield = true;
-					if (dialogData.dualWield?.otherItemUuid) {
-						node.rollMode = rollModeOfWeapon(
-							node.rollMode,
-							dialogData.dualWield.extraDieOn,
-							'activated',
-						);
-					}
+					node.rollMode = activatedWeaponRollMode(node.rollMode, dialogData.dualWield);
 
 					// Check if item has vicious property
 					const itemSystem = this.#item.system as { properties?: { selected?: string[] } };
@@ -762,16 +642,9 @@ class ItemActivationManager {
 						this.actor as { rules?: unknown } | null,
 						offerSource,
 					);
-					for (const bonus of offerBonuses) {
-						if (bonus.damage > 0) formula = `${formula} + ${bonus.damage}`;
-						if (bonus.primaryDie !== 0 && !isAoE) {
-							this.#primaryDieBonuses.push({
-								label: bonus.label,
-								value: bonus.primaryDie,
-								itemUuid: '',
-							});
-						}
-					}
+					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
+					formula = offerAdded.formula;
+					this.#primaryDieBonuses.push(...offerAdded.primaryDieBonuses);
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const attackOutcome = collectAttackOutcome({
 						attacker: this.actor as { rules?: unknown } | null,
@@ -806,26 +679,12 @@ class ItemActivationManager {
 						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
 						damageOptions.outcomeSources = sources;
 					}
-					if (offerSource) damageOptions.offerSource = offerSource;
-					const offerDamage = offerBonuses.filter((bonus) => bonus.damage > 0);
-					if (offerDamage.length > 0) {
-						damageOptions.outcomeSources = {
-							...damageOptions.outcomeSources,
-							offerDamage: offerDamage.map((bonus) => bonus.label),
-						} as DamageRoll.Options['outcomeSources'];
-					}
+					markOfferOnRollOptions(damageOptions, offerSource, offerBonuses);
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
 						: [];
 					if (critDice.length > 0) damageOptions.critDice = critDice;
-					if (this.#maxDamage?.rule.use === 'damage') {
-						const { rule } = this.#maxDamage;
-						damageOptions.maxDamage = rule.givesCrit && resolvedCanCrit ? 'crit' : 'hit';
-						damageOptions.outcomeSources = {
-							...damageOptions.outcomeSources,
-							maxDamage: [ruleLabel(rule)],
-						};
-					}
+					applyMaxDamageToRollOptions(damageOptions, this.#maxDamage, resolvedCanCrit);
 					// Forward the optional rollMode source list so DamageRoll can
 					// compute the net rollMode itself (advantage and disadvantage
 					// cancel 1-for-1). Only attached when callers supplied the
@@ -887,12 +746,7 @@ class ItemActivationManager {
 					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
-				const healingAtMax = node.type === 'healing' && this.#maxDamage?.rule.use === 'healing';
-				if (healingAtMax && this.#maxDamage) {
-					const { rule, tempHp } = this.#maxDamage;
-					if (tempHp) (node as { healingType?: string }).healingType = 'tempHealing';
-					(node as { maxDamageBy?: string }).maxDamageBy = ruleLabel(rule);
-				}
+				const healingAtMax = prepareHealingAtMax(node, this.#maxDamage);
 				await roll.evaluate(healingAtMax ? { maximize: true } : {});
 				if (healingAtMax) healingRollsAtMax.add(roll);
 
@@ -924,12 +778,15 @@ class ItemActivationManager {
 
 				if (node === primaryAttackNode) this.#primaryRoll = roll as DamageRoll;
 				if (node === primaryAttackNode && dualWieldFirst && dialogData.dualWield) {
-					await this.#rollOtherWeapon(
-						roll as DamageRoll,
-						dualWieldFirst.formula,
-						dualWieldFirst.options,
-						dialogData.dualWield,
-						{
+					const keep = await rollOtherWeapon({
+						actor: this.actor,
+						item: this.#item,
+						DamageRollClass: dependencies.DamageRoll,
+						first: roll as DamageRoll,
+						firstFormula: dualWieldFirst.formula,
+						firstOptions: dualWieldFirst.options,
+						choice: dialogData.dualWield,
+						context: {
 							rollData: activationRollData as DamageRoll.Data,
 							rollMode: dialogData.rollMode ?? 0,
 							delivery,
@@ -937,7 +794,8 @@ class ItemActivationManager {
 							targetDomain: targetDomain as never,
 							damageType: dualWieldFirst.damageType,
 						},
-					);
+					});
+					if (keep) this.#dualWieldKeep = keep;
 				}
 				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
@@ -946,14 +804,7 @@ class ItemActivationManager {
 			updatedEffects.push(node);
 		}
 
-		this.#noDiceThrown =
-			this.#maxDamage !== null &&
-			rolls.every(
-				(roll) =>
-					roll.dice.length === 0 ||
-					(roll as DamageRoll).noDice === true ||
-					healingRollsAtMax.has(roll),
-			);
+		this.#noDiceThrown = noDiceThrown(this.#maxDamage, rolls, healingRollsAtMax);
 
 		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
 		// specific type) rolls as its own damage effect: the primary roll carries
@@ -1249,14 +1100,7 @@ class ItemActivationManager {
 		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
-		const maxDamageRule = this.#maxDamage?.rule;
-		if (maxDamageRule?.chargePoolIdentifier) {
-			await spendRuleCharge(
-				this.actor,
-				maxDamageRule.chargePoolIdentifier,
-				maxDamageRule.chargeCost ?? 1,
-			);
-		}
+		await spendMaxDamageCharge(this.actor, this.#maxDamage);
 	}
 
 	/**
