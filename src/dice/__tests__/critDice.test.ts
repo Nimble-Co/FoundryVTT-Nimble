@@ -228,6 +228,61 @@ describe('a crit that comes from a change of the roll', () => {
 	});
 });
 
+describe('crit dice on a roll in modifier mode', () => {
+	function modifierRoll(options: Partial<DamageRoll.Options> = {}) {
+		const roll = new DamageRoll('1d6c', {}, {
+			canCrit: true,
+			canMiss: false,
+			rollMode: 0,
+			primaryDieValue: 0,
+			primaryDieModifier: 0,
+			...options,
+		} as DamageRoll.Options);
+		const term = roll.terms.find((t) => t instanceof foundry.dice.terms.Die) as Die;
+		term.results = [die(6, { exploded: true }), die(2)] as never;
+		roll.isCritical = true;
+		return { roll, term };
+	}
+	type Die = foundry.dice.terms.Die;
+
+	beforeEach(() => {
+		(CONFIG.Dice as unknown as { parser: unknown }).parser = { toAST: () => null };
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		delete (CONFIG.Dice as unknown as { parser?: unknown }).parser;
+	});
+
+	it('uses a d20 for the first crit die', async () => {
+		const rolled = diceToRoll([die(13)]);
+		const { roll, term } = modifierRoll();
+		expect(roll.modifierMode).toBe(true);
+
+		const made = await roll.replaceCritDieWithD20();
+
+		expect(rolled).toEqual(['1d20']);
+		expect(made?.drawn).toEqual([13]);
+		expect(term.results.map((result) => result.result)).toEqual([6, 13]);
+		expect((term.results[1] as Result).faces).toBe(20);
+	});
+
+	it('rolls Sneak Attack dice on a crit', async () => {
+		diceToRoll([die(5)]);
+		const { roll } = modifierRoll();
+
+		const drawn = await roll.addCritDice({
+			key: 'k',
+			label: 'Sneak Attack',
+			role: 'sneakAttack',
+			formula: '1d8',
+		});
+
+		expect(drawn).toEqual([5]);
+		expect(roll.critDiceLines().map((line) => line.total)).toEqual([5]);
+	});
+});
+
 describe('Sneak Attack dice', () => {
 	const sneak = (formula = '2d8') => ({
 		key: 'Actor.h.Item.s:r',

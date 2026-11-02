@@ -977,8 +977,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/** Reroll the first crit die as a d20, and what it starts. Null when there is none or it is one. */
-	async replaceCritDieWithD20(): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
-		const term = this.terms.find((candidate) => candidate instanceof PrimaryDie);
+	async replaceCritDieWithD20(): Promise<{
+		term: foundry.dice.terms.Die;
+		drawn: number[];
+	} | null> {
+		const term =
+			this.terms.find((candidate) => candidate instanceof PrimaryDie) ??
+			this._modifierModeCritTerm();
 		if (!term || !this.isCritical) return null;
 		const at = Number(term.number) || 1;
 		const first = term.results[at];
