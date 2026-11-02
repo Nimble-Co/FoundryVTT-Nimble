@@ -192,7 +192,35 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "latchedCannotMis",
+						"identifier": "",
+						"label": "Latched On",
+						"predicate": {
+							"$and": [
+								"self:latched"
+							]
+						},
+						"priority": 1,
+						"side": "yourAttacks",
+						"cannotMiss": true,
+						"critRange": 0,
+						"forceCrit": "none",
+						"ignoreArmor": false,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "any",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -238,7 +266,20 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "hitCondition",
+						"disabled": false,
+						"id": "latchOnCondition",
+						"identifier": "",
+						"label": "Latch On",
+						"predicate": {},
+						"priority": 1,
+						"condition": "latched",
+						"when": "hit",
+						"recipient": "self"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

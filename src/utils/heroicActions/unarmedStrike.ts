@@ -199,6 +199,7 @@ export async function rollUnarmedStrike(
 			damageType: 'bludgeoning',
 			canCrit,
 			canMiss: true,
+			...(attackOutcome.options.ignoreArmor ? { ignoreArmor: true } : {}),
 			roll: roll.toJSON(),
 			...(discardedRoll ? { discardedRoll } : {}),
 			parentNode: null,

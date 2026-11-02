@@ -30,6 +30,7 @@ import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
+import { HitConditionRule } from '../models/rules/hitCondition.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
@@ -113,6 +114,7 @@ export default function registerRulesConfig() {
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		critBack: 'NIMBLE.ruleTypes.critBack',
 		freeAssess: 'NIMBLE.ruleTypes.freeAssess',
+		hitCondition: 'NIMBLE.ruleTypes.hitCondition',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
 		tableRoll: 'NIMBLE.ruleTypes.tableRoll',
@@ -188,6 +190,7 @@ export default function registerRulesConfig() {
 		critDiceSave: CritDiceSaveRule,
 		critBack: CritBackRule,
 		freeAssess: FreeAssessRule,
+		hitCondition: HitConditionRule,
 		offerAttackBonus: OfferAttackBonusRule,
 		poolDieToMax: PoolDieToMaxRule,
 		tableRoll: TableRollRule,

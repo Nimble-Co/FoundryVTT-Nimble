@@ -12,6 +12,46 @@ describe('stored result pack items', () => {
 		expect(rules[0]).toMatchObject({ type: 'keepAmount', label: 'Rampage' });
 	});
 
+	describe('monsters', () => {
+		const item = (file: string, name: string) =>
+			(
+				JSON.parse(readFileSync(resolve(file), 'utf8')).items as Array<{
+					name: string;
+					system: { rules: Record<string, unknown>[]; activation: { effects: any[] } };
+				}>
+			).find((each) => each.name === name)?.system;
+		const AZRIEL = 'packs/legendaryMonsters/core/azriel-lord-of-pain-and-flame.json';
+		const DRAVOK = 'packs/legendaryMonsters/core/dravok-all-seeing-tyrant.json';
+
+		it('PAIN! makes crits Vicious and gives the crit dice back', () => {
+			const rules = item(AZRIEL, 'PAIN!')?.rules;
+			expect(rules?.[0]).toMatchObject({ side: 'attacksAgainstYou', viciousCrits: true });
+			expect(rules?.[1]).toMatchObject({
+				type: 'damageBack',
+				onlyCrits: true,
+				amount: 'critDice',
+			});
+		});
+
+		it('Last Stand makes every hit against Azriel a crit', () => {
+			expect(item(AZRIEL, 'Last Stand')?.rules[0]).toMatchObject({
+				side: 'attacksAgainstYou',
+				forceCrit: 'onHit',
+				predicate: { $and: ['self:lastStand'] },
+			});
+		});
+
+		it('Terrible Maw has its rule, and no note that it is not modeled', () => {
+			const maw = item(DRAVOK, 'Terrible Maw');
+			expect(maw?.rules[0]).toMatchObject({
+				anyDieCrits: true,
+				viciousCrits: true,
+				thisItemOnly: true,
+			});
+			expect(JSON.stringify(maw?.activation)).not.toContain('not modeled');
+		});
+	});
+
 	describe('Thrill of the Hunt', () => {
 		const HUNTER = 'packs/classFeatures/core/hunter';
 		const activation = (file: string) =>

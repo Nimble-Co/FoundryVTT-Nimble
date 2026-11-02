@@ -265,7 +265,20 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "hitCondition",
+						"disabled": false,
+						"id": "swallowCondition",
+						"identifier": "",
+						"label": "Bite/Swallow",
+						"predicate": {},
+						"priority": 1,
+						"condition": "swallowed",
+						"when": "crit",
+						"recipient": "target"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -296,6 +309,15 @@
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
+										"parentNode": "XOR7rxFVWDUzi9ra"
+									}
+								],
+								"criticalHit": [
+									{
+										"id": "swallowCritChip0",
+										"type": "condition",
+										"condition": "swallowed",
+										"parentContext": "criticalHit",
 										"parentNode": "XOR7rxFVWDUzi9ra"
 									}
 								]

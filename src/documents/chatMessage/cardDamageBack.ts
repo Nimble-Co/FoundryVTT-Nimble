@@ -25,6 +25,7 @@ interface DamageBackRuleLike {
 	type?: string;
 	label?: string;
 	woundDoubles?: boolean;
+	amount?: string;
 	item?: { name?: string } | null;
 	disabled?: boolean;
 	answersAttack?(attack: { isCritical: boolean }): boolean;
@@ -73,7 +74,7 @@ export class CardDamageBack {
 	/** Give back the damage these creatures just took from the card's attack. */
 	async afterDamage(
 		hurt: ReadonlyArray<{ actor: HurtCreature; taken: number }>,
-		attack: { isCritical: boolean },
+		attack: { isCritical: boolean; critDiceTotal?: number },
 	): Promise<void> {
 		const attacker = this.#host.attacker();
 		if (!attacker?.uuid) return;
@@ -85,14 +86,16 @@ export class CardDamageBack {
 			for (const rule of rulesOf(actor)) {
 				if (rule?.type !== 'damageBack' || rule.disabled) continue;
 				if (rule.answersAttack?.(attack) !== true) continue;
-				if (automatic) await attacker.applyDamage?.(taken);
+				const amount = rule.amount === 'critDice' ? (attack.critDiceTotal ?? 0) : taken;
+				if (amount <= 0) continue;
+				if (automatic) await attacker.applyDamage?.(amount);
 				added.push({
 					id: foundry.utils.randomID(),
 					label: ruleLabel(rule),
 					actorUuid: actor.uuid,
 					attackerUuid: attacker.uuid,
 					attackerName: attacker.name ?? '',
-					amount: taken,
+					amount,
 					dealt: automatic,
 					woundDoubles: rule.woundDoubles === true,
 					doubled: false,

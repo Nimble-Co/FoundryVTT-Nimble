@@ -539,6 +539,19 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 	}
 
+	/** What the crit dice of this roll came to. */
+	get critDiceTotal(): number {
+		let total = critDiceLinesOf(this.terms).reduce((sum, line) => sum + line.total, 0);
+		for (const term of this.terms) {
+			if (!(term instanceof Terms.Die)) continue;
+			const pool = Number(term.number) || 1;
+			term.results.slice(pool).forEach((result) => {
+				if (result.active && !result.discarded) total += result.result;
+			});
+		}
+		return total;
+	}
+
 	/** Roll the Primary Die's crit dice when an any-die crit came. */
 	private async _settleAnyDieCritDice(): Promise<number[]> {
 		if (!this.options.anyDieCrits || this.modifierMode) return [];

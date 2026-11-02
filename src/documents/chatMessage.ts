@@ -44,6 +44,7 @@ import {
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
 import { sendCritBack } from '../utils/damage/critBack.js';
+import { applyHitConditions } from '../utils/damage/hitCondition.js';
 import { cardCarriesIncomingReactions } from '../utils/incomingReactions/cardCarriesIncomingReactions.js';
 import {
 	type PoolSpendSelection,
@@ -1336,16 +1337,30 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
-		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
+		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
+			| DamageRoll
+			| undefined;
+		await this.#damageBack.afterDamage(hurt, {
+			isCritical: systemData.isCritical === true,
+			critDiceTotal: attackRoll?.critDiceTotal ?? 0,
+		});
+		const speakerActor = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
+		await applyHitConditions({
+			attacker: speakerActor as never,
+			item: sourceItem as never,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor) as never,
+			isCritical: systemData.isCritical === true,
+			isMiss: systemData.isMiss === true,
+		});
 		await sendCritBack({
 			card: this as never,
 			sourceActor,
 			sourceItem: sourceItem as never,
 			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor) as never,
 			heroTokenUuid:
-				(this.flags as Record<string, { tokenUuid?: string } | undefined>)?.nimble?.tokenUuid ??
-				sourceActor?.getActiveTokens?.()[0]?.document?.uuid ??
-				null,
+				this.speaker?.scene && this.speaker.token
+					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
+					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
 		await this.#markDamageApplied();
 

@@ -683,6 +683,8 @@
 				"deal": "Deal {amount} damage",
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
+			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"swallowedDamage": "{name} takes {amount} damage: Swallowed.",
 			"critBack": {
 				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit.",
 				"attack": "Attack with {attack}"
@@ -1116,6 +1118,8 @@
 			"silenced": "Silenced",
 			"slowed": "Slowed",
 			"smoldering": "Smoldering",
+			"latched": "Latched",
+			"swallowed": "Swallowed",
 			"stunned": "Stunned",
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
@@ -1156,6 +1160,8 @@
 			"riding": "<p>You move with the creature you are riding. Any attacks that miss you, strike them.</p>",
 			"silenced": "<p>Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).</p>",
 			"slowed": "<p>Speed halved during your next turn.</p>",
+			"latched": "<p>You move where your target moves until either dies. Your attacks cannot miss. Attacks that miss you damage your target instead.</p>",
+			"swallowed": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>",
 			"smoldering": "<p>Some fire spells can inflict the Smoldering condition and gain additional destructive effects against Smoldering enemies.</p>",
 			"stunned": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
@@ -1680,6 +1686,7 @@
 			"critDiceSave": "Save for Max Crit Dice",
 			"keepAmount": "Keep the Amount of a Hit",
 			"critBack": "Crit Back",
+			"hitCondition": "Condition on a Hit",
 			"freeAssess": "Free Assess",
 			"demandControl": "Demand Control",
 			"offerAttackBonus": "Attack Bonus From a Row",
@@ -2718,6 +2725,11 @@
 					"label": "Only against crits",
 					"hint": "Give damage back only when the attack is a crit."
 				},
+				"amount": {
+					"label": "Amount",
+					"hint": "The damage the owner took, or what the attack's crit dice came to.",
+					"choices": { "taken": "The damage taken", "critDice": "The crit dice" }
+				},
 				"woundDoubles": {
 					"label": "A Wound doubles it",
 					"hint": "The owner can suffer 1 Wound to deal the amount one more time."
@@ -2856,6 +2868,20 @@
 				"triggerTwice": {
 					"label": "Trigger twice",
 					"hint": "The window has a tick to do the chosen option twice, and a tick to use it as a Reaction."
+				}
+			},
+			"hitCondition": {
+				"description": "When the damage of this item is applied, a creature gets a condition. A condition on the attacker also stores the creature that was hit. With Feature Effects off, the GM applies the condition by hand.",
+				"condition": { "label": "Condition", "hint": "The id of the condition." },
+				"when": {
+					"label": "When",
+					"hint": "On any hit, or only on a crit.",
+					"choices": { "hit": "On a hit", "crit": "On a crit" }
+				},
+				"recipient": {
+					"label": "Who gets it",
+					"hint": "The creature that was hit, or the attacker.",
+					"choices": { "target": "The target", "self": "The attacker" }
 				}
 			},
 			"critBack": {

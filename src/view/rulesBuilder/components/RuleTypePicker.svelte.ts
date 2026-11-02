@@ -15,6 +15,7 @@ const RULE_ICONS: Record<string, string> = {
 	keepAmount: 'fa-solid fa-rotate',
 	critBack: 'fa-solid fa-reply',
 	freeAssess: 'fa-solid fa-magnifying-glass',
+	hitCondition: 'fa-solid fa-link',
 	demandControl: 'fa-solid fa-hand',
 	invokeChaos: 'fa-solid fa-hat-wizard',
 	maxDamage: 'fa-solid fa-angles-up',

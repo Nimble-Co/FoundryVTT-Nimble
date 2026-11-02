@@ -1,4 +1,7 @@
+import { choiceLabels } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
+
+const AMOUNT_CHOICES = ['taken', 'critDice'] as const;
 
 function schema() {
 	const { fields } = foundry.data;
@@ -10,6 +13,14 @@ function schema() {
 			initial: true,
 			label: 'NIMBLE.rules.damageBack.onlyCrits.label',
 			hint: 'NIMBLE.rules.damageBack.onlyCrits.hint',
+		}),
+		amount: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'taken',
+			choices: choiceLabels('damageBack', 'amount', AMOUNT_CHOICES),
+			label: 'NIMBLE.rules.damageBack.amount.label',
+			hint: 'NIMBLE.rules.damageBack.amount.hint',
 		}),
 		woundDoubles: new fields.BooleanField({
 			required: true,
@@ -35,6 +46,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 	static override description = 'NIMBLE.rules.damageBack.description';
 
 	declare onlyCrits: boolean;
+	declare amount: (typeof AMOUNT_CHOICES)[number];
 	declare woundDoubles: boolean;
 
 	static override defineSchema(): DamageBackRule.Schema {
@@ -48,6 +60,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['onlyCrits', 'boolean'],
+				['amount', 'string'],
 				['woundDoubles', 'boolean'],
 			]),
 		);

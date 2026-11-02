@@ -191,7 +191,35 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "scorpionUnderbel",
+						"identifier": "",
+						"label": "Vulnerable Underbelly",
+						"predicate": {},
+						"priority": 1,
+						"side": "attacksAgainstYou",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "onHit",
+						"ignoreArmor": false,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "melee",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {
+							"$and": [
+								"target:prone"
+							]
+						},
+						"chargePoolIdentifier": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

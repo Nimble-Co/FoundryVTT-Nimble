@@ -772,7 +772,31 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "dravokTerribleMw",
+						"identifier": "",
+						"label": "Terrible Maw",
+						"predicate": {},
+						"priority": 1,
+						"side": "yourAttacks",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "none",
+						"ignoreArmor": false,
+						"anyDieCrits": true,
+						"critD20": false,
+						"viciousCrits": true,
+						"attackDelivery": "any",
+						"thisItemOnly": true,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -798,14 +822,6 @@
 							"canMiss": true,
 							"on": {
 								"hit": [
-									{
-										"id": "G811z6HFSAyW7uzA",
-										"type": "note",
-										"noteType": "warning",
-										"text": "[Vicious not modeled]\nFor every 4 rolled, roll an extra 1d4",
-										"parentContext": "hit",
-										"parentNode": "SqqL7WHNreF474eJ"
-									},
 									{
 										"id": "a3P1uHz3p99oSEW8",
 										"type": "damageOutcome",
