@@ -169,6 +169,39 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('takes out disadvantage with a Held Change that ignores it', async () => {
+		dialogResult({ rollMode: -1 });
+		const actor = createHeroicCharacter({ proficient: true });
+		const remove = vi.fn(async () => undefined);
+		Object.assign(actor, {
+			effects: [
+				{
+					id: 'held',
+					delete: remove,
+					flags: {
+						nimble: {
+							heldChange: {
+								kind: 'ignoreDisadvantage',
+								appliesTo: 'holderAttacks',
+								value: 0,
+								label: 'Nullify',
+								combatId: '',
+							},
+						},
+					},
+				},
+			],
+		});
+
+		await rollUnarmedStrike(actor);
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ rollMode: 0 }),
+		);
+	});
+
 	it('is a crit on a hit against a target in the Incapacitated group', async () => {
 		dialogResult({ rollMode: 0 });
 		const token = targetToken('Scene.s.Token.goblin') as unknown as { actor: object };

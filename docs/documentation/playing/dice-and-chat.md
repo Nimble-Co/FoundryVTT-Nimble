@@ -312,8 +312,9 @@ Both are described in the [Settings Reference](../reference/settings.md).
 
 ## Changes held for the next attack
 
-A feature can hold a change for a later attack. The creature that holds it shows an icon, and the attack roll window shows a line for each change. A change is spent when you roll, so Cancel costs nothing. Outside combat, nothing is held, and with Feature Effects off the card only has the text.
+A feature can hold a change for a later attack. The creature that holds it shows an icon, and the attack roll window shows a line for each change. A change is spent when you roll, so Cancel costs nothing.
 
+- Assess holds nothing outside combat, and with Feature Effects off its card only has the text.
 - **Assess: Create an Opening** needs a target. On a success, the next attack roll on that target, by any attacker, has the change. Two Openings add up. It ends with that roll, or when the round changes.
 - **Assess: Anticipate Danger** changes every attack roll on you until the round changes.
 - A Primary Die change changes the kept face. So 5+1 on a d6 crits, 1+1 hits, and 2-1 misses.

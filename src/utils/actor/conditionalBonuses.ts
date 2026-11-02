@@ -64,12 +64,6 @@ function buildTargetDomain(
 	return domain;
 }
 
-/**
- * Returns the conditional bonuses currently offered to `attacker` for an attack with
- * `item` against `targetActor`. A bonus is offered when its self-predicate passes, its
- * delivery/source matches the attack, its target condition matches, and it grants at
- * least one of advantage or damage.
- */
 /** The attack's item asks to double the damage. Heroes and monsters with no armor have none. */
 function doublesDamage(
 	rule: ConditionalBonusRule,
@@ -83,6 +77,12 @@ function doublesDamage(
 	return armor !== 'medium' && armor !== 'heavy';
 }
 
+/**
+ * Returns the conditional bonuses currently offered to `attacker` for an attack with
+ * `item` against `targetActor`. A bonus is offered when its self-predicate passes, its
+ * delivery/source matches the attack, its target condition matches, and it grants at
+ * least one of advantage or damage.
+ */
 function getActiveConditionalBonuses(
 	attacker: AttackingActor | null | undefined,
 	item: ActivationItem | null | undefined,

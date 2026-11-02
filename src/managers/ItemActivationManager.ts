@@ -51,7 +51,7 @@ import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
-import { weaponAttackOf, weaponOptionsFor } from '../utils/damage/weaponAttack.js';
+import { useWeaponDamage, weaponAttackOf, weaponOptionsFor } from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -253,13 +253,7 @@ class ItemActivationManager {
 			attackType: weapon.attackType,
 			...(weapon.distance === undefined ? {} : { distance: weapon.distance }),
 		};
-		const node = flattenEffectsTree(this.activationData.effects ?? []).find(
-			(each) => each.type === 'damage',
-		) as { formula?: string; damageType?: string } | undefined;
-		if (node) {
-			node.formula = weapon.formula;
-			node.damageType = weapon.damageType;
-		}
+		useWeaponDamage(this.activationData.effects ?? [], weapon);
 	}
 
 	/** The weapon the ability attacks with, for what a weapon decides of the roll. */

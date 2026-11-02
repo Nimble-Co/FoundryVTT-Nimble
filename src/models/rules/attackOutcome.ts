@@ -227,6 +227,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 
 	declare side: AttackOutcomeSide;
 	declare cannotMiss: boolean;
+	declare ignoreArmor: boolean;
 	declare critRange: number;
 	declare forceCrit: ForceCritChoice;
 	declare anyDieCrits: boolean;

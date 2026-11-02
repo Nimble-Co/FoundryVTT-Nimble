@@ -34,7 +34,12 @@
 
 	{#if !system.used && game.user?.isGM}
 		{#each rows as row (row.id)}
-			<button type="button" onclick={() => use(row.id)}>
+			<button
+				class="nimble-button"
+				data-button-variant="card-action"
+				type="button"
+				onclick={() => use(row.id)}
+			>
 				{localize('NIMBLE.chat.critBack.attack', { attack: row.name })}
 			</button>
 		{/each}

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const readRules = (file: string) =>
 	JSON.parse(readFileSync(resolve(file), 'utf8')).system.rules as Array<Record<string, unknown>>;
 
-describe('stored result pack items', () => {
+describe('attack change pack items', () => {
 	it('Rampage keeps the amount of a hit', () => {
 		const rules = readRules('packs/classFeatures/core/berserker/savage-arsenal/rampage.json');
 		expect(rules).toHaveLength(1);

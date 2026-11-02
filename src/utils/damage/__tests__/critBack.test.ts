@@ -39,6 +39,8 @@ describe('crit back', () => {
 
 	afterEach(() => {
 		delete globals.game.settings;
+		delete globals.canvas;
+		delete globals.fromUuidSync;
 	});
 
 	it('gives the GM a card for a creature that lives', async () => {

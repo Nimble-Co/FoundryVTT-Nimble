@@ -88,11 +88,15 @@ export function usedThisRound(actor: ControlActor): boolean {
 	return !!round && stateOf(actor).round === round;
 }
 
-export async function recordChoice(actor: ControlActor, option: ControlOption): Promise<void> {
+export async function recordChoice(
+	actor: ControlActor,
+	option: ControlOption,
+	reportsRound = false,
+): Promise<void> {
 	const state = stateOf(actor);
 	await actor.setFlag?.(SYSTEM_ID, FLAG, {
 		chosen: chosenAfter(state.chosen ?? [], option),
-		round: currentRound() ?? '',
+		round: reportsRound ? (currentRound() ?? '') : (state.round ?? ''),
 	});
 }
 

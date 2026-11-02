@@ -69,3 +69,27 @@ export function weaponOptionsFor(
 	}
 	return options;
 }
+
+interface EffectTreeNode {
+	type?: string;
+	formula?: string;
+	damageType?: string;
+	on?: Record<string, EffectTreeNode[]>;
+}
+
+function firstDamageIn(nodes: EffectTreeNode[]): EffectTreeNode | null {
+	for (const node of nodes) {
+		if (node.type === 'damage') return node;
+		const found = firstDamageIn(Object.values(node.on ?? {}).flat());
+		if (found) return found;
+	}
+	return null;
+}
+
+/** The first damage node of the tree rolls the damage of this weapon. */
+export function useWeaponDamage(effects: unknown[], weapon: WeaponOption): void {
+	const node = firstDamageIn(effects as EffectTreeNode[]);
+	if (!node) return;
+	node.formula = weapon.formula;
+	node.damageType = weapon.damageType;
+}

@@ -42,7 +42,7 @@ export async function openDemandControl(
 			return;
 		}
 	}
-	if (!options.locked) await recordChoice(actor, choice.option);
+	if (!options.locked) await recordChoice(actor, choice.option, options.reportsRound === true);
 	await applyControlChoice(actor, choice);
 	if (choice.twice) {
 		const second = await ask(actor, { locked: choice.option });

@@ -78,9 +78,16 @@ describe('the Control Table list', () => {
 		globals.game.combat = { id: 'c', started: true, round: 2 };
 		const actor = hero();
 		expect(usedThisRound(actor)).toBe(false);
-		await recordChoice(actor, 'no');
+		await recordChoice(actor, 'no', true);
 		expect(usedThisRound(actor)).toBe(true);
 		globals.game.combat.round = 3;
+		expect(usedThisRound(actor)).toBe(false);
+	});
+
+	it('does not count a use from a feature with no limit in a round', async () => {
+		globals.game.combat = { id: 'c', started: true, round: 2 };
+		const actor = hero();
+		await recordChoice(actor, 'no');
 		expect(usedThisRound(actor)).toBe(false);
 	});
 });

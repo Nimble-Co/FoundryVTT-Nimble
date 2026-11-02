@@ -21,6 +21,7 @@ import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
 	firstTargetActor,
 	heldChangesForAttack,
+	ignoreDisadvantageChange,
 	keptAmountFor,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
@@ -32,7 +33,10 @@ import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers
 import localize from '#utils/localize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
-import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
+import {
+	keptAmountRollOptions,
+	removeDisadvantage,
+} from '../../managers/itemActivation/keptAmountActivation.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
@@ -162,6 +166,8 @@ export async function rollUnarmedStrike(
 			...Array.from({ length: incomingAttackPlan.disadvantageCount }, () => -1),
 		];
 	}
+	const heldIgnore = ignoreDisadvantageChange(actor as never);
+	if (heldIgnore) removeDisadvantage(rollOptions as never);
 	if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
 	if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
 		rollOptions.missThreshold = incomingAttackPlan.missThreshold;
@@ -261,7 +267,11 @@ export async function rollUnarmedStrike(
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
 	await giveUnarmedHitRecovery(actor as never, roll as never, targets as never);
-	await spendHeldChanges([...(kept ? [] : held), ...(keptAmount ? [keptAmount] : [])]);
+	await spendHeldChanges([
+		...(kept ? [] : held),
+		...(heldIgnore ? [heldIgnore] : []),
+		...(keptAmount ? [keptAmount] : []),
+	]);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll as never)) {
 		await spendRuleCharge(actor, identifier);

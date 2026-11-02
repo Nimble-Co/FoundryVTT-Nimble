@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { weaponOptionsFor } from '../weaponAttack.js';
+import { useWeaponDamage, weaponOptionsFor } from '../weaponAttack.js';
 
 const weapon = (name: string, attackType: string, overrides: Record<string, unknown> = {}) => ({
 	uuid: `Item.${name}`,
@@ -48,5 +48,25 @@ describe('weaponOptionsFor', () => {
 			attackType: 'range',
 			distance: 8,
 		});
+	});
+});
+
+describe('useWeaponDamage', () => {
+	const bow = weaponOptionsFor(actor, 'ranged')[0] as NonNullable<
+		ReturnType<typeof weaponOptionsFor>[number]
+	>;
+
+	it('changes the first damage node of the tree itself, and no other', () => {
+		const first = { type: 'damage', formula: '1d6', damageType: 'slashing' };
+		const second = { type: 'damage', formula: '(@will)d8', damageType: 'fire' };
+		useWeaponDamage([first, second], bow);
+		expect(first).toMatchObject({ formula: '1d8+@dexterity', damageType: 'piercing' });
+		expect(second).toMatchObject({ formula: '(@will)d8', damageType: 'fire' });
+	});
+
+	it('finds a damage node under another node', () => {
+		const inner = { type: 'damage', formula: '1d6', damageType: 'slashing' };
+		useWeaponDamage([{ type: 'savingThrow', on: { failedSave: [inner] } }], bow);
+		expect(inner.formula).toBe('1d8+@dexterity');
 	});
 });

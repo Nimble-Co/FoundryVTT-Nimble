@@ -69,10 +69,9 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		return false;
 	}
 
-	const { roll } = await actor.rollSkillCheck(
-		request.skillKey,
-		...((request.free ? [{ rollMode: 1 }] : []) as []),
-	);
+	const { roll } = await (request.free
+		? actor.rollSkillCheck(request.skillKey, { rollMode: 1 })
+		: actor.rollSkillCheck(request.skillKey));
 	if (!roll) return false;
 
 	if (!request.free) await spendAssessAction(actor);

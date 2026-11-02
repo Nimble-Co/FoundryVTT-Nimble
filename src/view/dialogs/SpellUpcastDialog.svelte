@@ -279,6 +279,7 @@
 			primaryDieModifier,
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
+			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
 			lessMana,
 			upcast: canUpcast
 				? {

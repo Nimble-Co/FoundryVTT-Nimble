@@ -14,6 +14,8 @@ export interface RerollHistoryProps {
 	pendingKeep: PendingKeep | null;
 	pendingLine: RerollHistoryLine | null;
 	held: HeldIncomingReactions;
+	/** The amount this card kept for the next attack. */
+	keptAmount?: { label: string; amount: number } | null;
 	/** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
 	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
 	/** Why the Primary Die Bonus lines are not on the die. Null when they are. */

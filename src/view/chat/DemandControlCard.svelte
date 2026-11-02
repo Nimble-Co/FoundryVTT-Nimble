@@ -34,7 +34,13 @@
 
 	{#if system.option === 'loseControl' && game.user?.isGM}
 		{#each gmRows as option (option)}
-			<button type="button" disabled={system.done.includes(option)} onclick={() => doRow(option)}>
+			<button
+				class="nimble-button"
+				data-button-variant="card-action"
+				type="button"
+				disabled={system.done.includes(option)}
+				onclick={() => doRow(option)}
+			>
 				{localize(`${TEXT}.options.${option}.label`)}
 			</button>
 		{/each}

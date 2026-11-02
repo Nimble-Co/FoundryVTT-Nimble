@@ -4,12 +4,14 @@ import { actorRules, ruleLabel } from '#utils/actor/actorRules.js';
 import { hasRuleCharge, spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import localize from '#utils/localize.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 const FLAG = 'freeAssessRound';
 
 interface FreeAssessRuleLike {
 	type?: string;
 	disabled?: boolean;
+	test?(): boolean;
 	chargePoolIdentifier?: string;
 	item?: { id?: string | null } | null;
 }
@@ -29,9 +31,14 @@ export function registerFreeAssessHooks(): void {
 	Hooks.on(
 		systemHookName('useItem') as never,
 		(async (item: { id?: string | null; actor?: unknown }) => {
+			if (!isRuleAutomationEnabled()) return;
 			const actor = item.actor as FlagActor & Parameters<typeof actorRules>[0];
 			const rule = actorRules<FreeAssessRuleLike>(actor).find(
-				(each) => each?.type === 'freeAssess' && !each.disabled && each.item?.id === item.id,
+				(each) =>
+					each?.type === 'freeAssess' &&
+					!each.disabled &&
+					each.item?.id === item.id &&
+					each.test?.() !== false,
 			);
 			if (!rule) return;
 

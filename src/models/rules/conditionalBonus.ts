@@ -120,6 +120,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	static override description = 'NIMBLE.rules.conditionalBonus.description';
 
 	declare advantage: number;
+	declare doubleFor: { source: string; onlyNoArmor: boolean }[];
 	declare damageBonus: string;
 	// `damageType` is inferred from the schema's `choices` (damage-type keys plus the
 	// blank sentinel); re-declaring it as the wider `string` clashes with that type.

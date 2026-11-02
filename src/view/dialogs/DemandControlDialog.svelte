@@ -11,12 +11,12 @@ Demand Control: the options of the Control Table, with what each option asks for
 	let { actor, dialog, locked, reportsRound } = $props();
 
 	const TEXT = 'NIMBLE.demandControl';
-	const state = untrack(() => createDemandControlState({ actor, locked, reportsRound }));
+	const control = untrack(() => createDemandControlState({ actor, locked, reportsRound }));
 
-	const others = $derived(state.creatures.filter((each) => each.uuid !== state.creatureUuid));
+	const others = $derived(control.creatures.filter((each) => each.uuid !== control.creatureUuid));
 
 	function onConfirm() {
-		if (state.canConfirm) dialog.submitActivation($state.snapshot(state.choice));
+		if (control.canConfirm) dialog.submitActivation($state.snapshot(control.choice));
 	}
 </script>
 
@@ -24,21 +24,21 @@ Demand Control: the options of the Control Table, with what each option asks for
 	title={localize(`${TEXT}.title`)}
 	icon="fa-solid fa-hand"
 	rollIcon="fa-solid fa-check"
-	rollLabel={localize(state.option === 'iInsist' ? `${TEXT}.confirmCast` : `${TEXT}.confirm`)}
+	rollLabel={localize(control.option === 'iInsist' ? `${TEXT}.confirmCast` : `${TEXT}.confirm`)}
 	oncancel={() => dialog.close()}
 	onroll={onConfirm}
 >
-	{#if state.roundUsed}<p class="note">{localize(`${TEXT}.usedThisRound`)}</p>{/if}
+	{#if control.roundUsed}<p class="note">{localize(`${TEXT}.usedThisRound`)}</p>{/if}
 
 	<div class="rows">
-		{#each state.rows as row (row.id)}
+		{#each control.rows as row (row.id)}
 			<button
 				type="button"
 				class="row"
-				class:row--selected={state.option === row.id}
+				class:row--selected={control.option === row.id}
 				class:row--chosen={row.chosen}
-				aria-pressed={state.option === row.id}
-				onclick={() => (state.option = row.id)}
+				aria-pressed={control.option === row.id}
+				onclick={() => (control.option = row.id)}
 			>
 				<span>
 					<b>{row.label}</b>
@@ -49,44 +49,44 @@ Demand Control: the options of the Control Table, with what each option asks for
 		{/each}
 	</div>
 
-	{#if state.option === 'iInsist'}
+	{#if control.option === 'iInsist'}
 		<div class="fld">
 			<span class="lb">{localize(`${TEXT}.cantrip`)}</span>
-			<select bind:value={state.cantripId} aria-label={localize(`${TEXT}.cantrip`)}>
-				{#each state.cantrips as cantrip (cantrip.id)}
+			<select bind:value={control.cantripId} aria-label={localize(`${TEXT}.cantrip`)}>
+				{#each control.cantrips as cantrip (cantrip.id)}
 					<option value={cantrip.id}>{cantrip.name}</option>
 				{/each}
 			</select>
 		</div>
 	{/if}
 
-	{#if state.option === 'elementalAffliction' || state.option === 'no'}
+	{#if control.option === 'elementalAffliction' || control.option === 'no'}
 		<div class="fld">
 			<span class="lb">{localize(`${TEXT}.creature`)}</span>
-			<select bind:value={state.creatureUuid} aria-label={localize(`${TEXT}.creature`)}>
+			<select bind:value={control.creatureUuid} aria-label={localize(`${TEXT}.creature`)}>
 				<option value={null}></option>
-				{#each state.creatures as creature (creature.uuid)}
+				{#each control.creatures as creature (creature.uuid)}
 					<option value={creature.uuid}>{creature.name}</option>
 				{/each}
 			</select>
 		</div>
 	{/if}
 
-	{#if state.option === 'elementalAffliction'}
+	{#if control.option === 'elementalAffliction'}
 		<div class="fld">
 			<span class="lb">{localize(`${TEXT}.condition`)}</span>
-			<select bind:value={state.condition} aria-label={localize(`${TEXT}.condition`)}>
-				{#each state.afflictions as condition (condition)}
+			<select bind:value={control.condition} aria-label={localize(`${TEXT}.condition`)}>
+				{#each control.afflictions as condition (condition)}
 					<option value={condition}>{localize(`NIMBLE.conditions.${condition}`)}</option>
 				{/each}
 			</select>
 		</div>
 	{/if}
 
-	{#if state.option === 'no'}
+	{#if control.option === 'no'}
 		<div class="fld">
 			<span class="lb">{localize(`${TEXT}.protected`)}</span>
-			<select bind:value={state.protectedUuid} aria-label={localize(`${TEXT}.protected`)}>
+			<select bind:value={control.protectedUuid} aria-label={localize(`${TEXT}.protected`)}>
 				<option value={null}></option>
 				{#each others as creature (creature.uuid)}
 					<option value={creature.uuid}>{creature.name}</option>
@@ -95,15 +95,15 @@ Demand Control: the options of the Control Table, with what each option asks for
 		</div>
 	{/if}
 
-	{#if state.offersTwice}
+	{#if control.offersTwice}
 		<label class="check">
-			<input type="checkbox" bind:checked={state.twice} />
+			<input type="checkbox" bind:checked={control.twice} />
 			<span>{localize(`${TEXT}.twice`)}</span>
 		</label>
 	{/if}
-	{#if state.offersReaction}
+	{#if control.offersReaction}
 		<label class="check">
-			<input type="checkbox" bind:checked={state.asReaction} />
+			<input type="checkbox" bind:checked={control.asReaction} />
 			<span>{localize(`${TEXT}.asReaction`)}</span>
 		</label>
 	{/if}

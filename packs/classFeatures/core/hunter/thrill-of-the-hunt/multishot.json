@@ -10,7 +10,7 @@
 			{
 				"type": "chargeConsumer",
 				"disabled": false,
-				"id": "multishotConsumer",
+				"id": "multishotConsume",
 				"identifier": "",
 				"label": "",
 				"predicate": {},
