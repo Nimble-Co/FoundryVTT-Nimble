@@ -3,12 +3,13 @@
 Demand Control: the options of the Control Table, with what each option asks for.
 -->
 <script lang="ts">
+	import type { DemandControlDialogProps } from '#types/components/DemandControlDialog.d.ts';
 	import { untrack } from 'svelte';
 	import localize from '#utils/localize.js';
 	import { createDemandControlState } from './demandControlDialogState.svelte.ts';
 	import RollWindow from './components/RollWindow.svelte';
 
-	let { actor, dialog, locked, reportsRound } = $props();
+	let { actor, dialog, locked, reportsRound }: DemandControlDialogProps = $props();
 
 	const TEXT = 'NIMBLE.demandControl';
 	const control = untrack(() => createDemandControlState({ actor, locked, reportsRound }));

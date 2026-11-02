@@ -8,6 +8,7 @@ import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeResultRule } from '../models/rules/changeResult.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
+import { ChoiceTableRule } from '../models/rules/choiceTable.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
@@ -17,8 +18,8 @@ import { CritDiceRule } from '../models/rules/critDice.js';
 import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DamageMultiplierRule } from '../models/rules/damageMultiplier.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
-import { DemandControlRule } from '../models/rules/demandControl.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
@@ -32,6 +33,7 @@ import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
+import { HoldOnTargetRule } from '../models/rules/holdOnTarget.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { InitiativeManaRule } from '../models/rules/initiativeMana.js';
@@ -106,7 +108,9 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
-		demandControl: 'NIMBLE.ruleTypes.demandControl',
+		choiceTable: 'NIMBLE.ruleTypes.choiceTable',
+		damageMultiplier: 'NIMBLE.ruleTypes.damageMultiplier',
+		holdOnTarget: 'NIMBLE.ruleTypes.holdOnTarget',
 		keepAmount: 'NIMBLE.ruleTypes.keepAmount',
 		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
@@ -182,7 +186,9 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
-		demandControl: DemandControlRule,
+		choiceTable: ChoiceTableRule,
+		damageMultiplier: DamageMultiplierRule,
+		holdOnTarget: HoldOnTargetRule,
 		keepAmount: KeepAmountRule,
 		makeCrit: MakeCritRule,
 		maxDamage: MaxDamageRule,

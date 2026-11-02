@@ -3,12 +3,13 @@
 The Demand Control row on a save card, for the owner of the creature whose effect was saved against.
 -->
 <script lang="ts">
+	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import { runCardAction } from '#utils/chat/cardActions.js';
 	import { saveRowActor } from '#utils/demandControl/demandControl.js';
 	import { openDemandControl } from '#utils/demandControl/openDemandControl.js';
 	import localize from '#utils/localize.js';
 
-	let { messageDocument } = $props();
+	let { messageDocument }: ChatCardProps = $props();
 
 	const actor = $derived(saveRowActor(messageDocument.reactive));
 

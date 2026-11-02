@@ -131,7 +131,6 @@ describe('the options', () => {
 
 		expect(activate).toHaveBeenCalledWith(
 			expect.objectContaining({
-				fastForward: true,
 				ignoreDisadvantage: true,
 				grantedCannotMiss: 'I INSIST',
 			}),
@@ -202,7 +201,7 @@ describe('LOSE CONTROL and ELEMENTAL AFFLICTION', () => {
 describe('the row on a save card', () => {
 	const owner = (cardRow: boolean, isOwner = true) => ({
 		isOwner,
-		rules: [{ type: 'demandControl', cardRow }],
+		rules: [{ type: 'choiceTable', cardRow }],
 	});
 	const card = (result: string, flags: Record<string, unknown> = { causedBy: 'Actor.mage' }) => ({
 		flags: { nimble: flags },

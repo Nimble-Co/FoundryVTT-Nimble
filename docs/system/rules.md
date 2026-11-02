@@ -397,6 +397,13 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 }
 ```
 
+## Rules for one item use
+
+- `keepAmount`: a row on a card with a hit, 1/turn. It holds the damage total for the next attack this turn. No row outside combat.
+- `choiceTable`: the window with the options of a table the hero chooses from.
+- `damageMultiplier`: a tick in the roll window of this item that multiplies its damage. The node keeps the number, so a reroll keeps it. The label says when it applies, and the system checks nothing.
+- `holdOnTarget`: a use that does not miss puts a Held Change on each target, as `heldKind` says: `mustAttackOther` is a line on the next attack of the target, and `vulnerableOnce` lasts for the next damage of `damageType`. Nothing is held outside combat.
+
 ## Rules Builder Integration
 
 The rules-builder UI (`src/view/rulesBuilder/`) auto-generates a card per rule from `defineSchema()`. There is **no per-rule UI code** — every rule is rendered by `SchemaFieldRenderer.svelte` reading the schema metadata. To make your rule first-class in the builder:
@@ -522,6 +529,18 @@ Both pool kinds (`dicePool`, `chargePool`) are **pure storage rules** — they d
 A `dicePool` rule with no paired `diceConsumer` defaults to `manual` spending — the dialog prompts the player at activation time. To make a pool snowball as a damage bonus (Berserker Fury Dice), add a sibling `diceConsumer` with `mode: 'autoBonus'` and the desired `bonusOnAttackDelivery` filter (`'melee'`, `'ranged'`, `'any'`, or `null`).
 
 Multiple `diceConsumer` rules can target the same pool — e.g. an `autoBonus` consumer for outgoing damage and a `manual` consumer that a reaction effect spends from. This is how features like Berserker's "That all you got?!" reaction share the Fury Dice pool with the auto-bonus damage path.
+
+### Recovery fields
+
+A recovery entry has `trigger`, `mode` and `value`, and can also set:
+
+- `predicate`: reads the use, with `target:<mark>` for a mark on the target and `attack:melee` or `attack:ranged` for how it attacked. `onHit`, `onCriticalHit` and `onMarkedDeath` have it.
+- `notWhenSpent`: a use that spent from this pool gains nothing.
+- `needsFeatureEffects`: gains nothing with Feature Effects off.
+
+`onWound` runs once for each Wound of one update. `onMarkedDeath` runs for each hero who marked the creature, also on an attack of an ally.
+
+`hideMax` on the pool shows the count alone, for a pool the book gives no cap. `max` stays as the limit.
 
 ### Temporary charges
 

@@ -3,11 +3,9 @@
 The Held Changes a roll will use, read-only, each with its source.
 -->
 <script lang="ts">
-	interface Props {
-		lines: Array<{ key: string; text: string; source: string }>;
-	}
+	import type { HeldChangeLinesProps } from '#types/components/HeldChangeLines.d.ts';
 
-	let { lines }: Props = $props();
+	let { lines }: HeldChangeLinesProps = $props();
 </script>
 
 {#each lines as line (line.key)}

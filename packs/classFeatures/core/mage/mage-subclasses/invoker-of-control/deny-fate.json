@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "demandControl",
+				"type": "choiceTable",
 				"disabled": false,
 				"id": "denyFateCardRow0",
 				"identifier": "",

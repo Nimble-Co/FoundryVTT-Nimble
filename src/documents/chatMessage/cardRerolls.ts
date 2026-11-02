@@ -874,7 +874,7 @@ export class CardRerolls {
 		if (usable.rule.rollEffect === 'keepAmount') {
 			return this.#keepAmount(entry, usable, reject);
 		}
-		if (usable.rule.rollEffect === 'demandControl') {
+		if (usable.rule.rollEffect === 'choiceTable') {
 			await this.#host.update({
 				system: { incomingReactions: this.#withEntryUsed(entry) },
 			} as Record<string, unknown>);

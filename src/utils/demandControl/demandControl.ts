@@ -63,7 +63,7 @@ const stateOf = (actor: ControlActor): ControlState =>
 
 export function controlRules(actor: ControlActor | null | undefined): ControlRuleLike[] {
 	return actorRules<ControlRuleLike>(actor).filter(
-		(rule) => rule?.type === 'demandControl' && !rule.disabled && rule.test?.() !== false,
+		(rule) => rule?.type === 'choiceTable' && !rule.disabled && rule.test?.() !== false,
 	);
 }
 

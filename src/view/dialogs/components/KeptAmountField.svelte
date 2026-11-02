@@ -3,15 +3,10 @@
 The tick of a roll window that uses a kept amount in place of a roll.
 -->
 <script lang="ts">
+	import type { KeptAmountFieldProps } from '#types/components/KeptAmountField.d.ts';
 	import localize from '#utils/localize.js';
 
-	interface Props {
-		label: string;
-		amount: number;
-		checked: boolean;
-	}
-
-	let { label, amount, checked = $bindable(true) }: Props = $props();
+	let { label, amount, checked = $bindable(true) }: KeptAmountFieldProps = $props();
 </script>
 
 <label class="check">

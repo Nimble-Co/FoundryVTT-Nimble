@@ -40,7 +40,7 @@
 				"cost": "1"
 			},
 			{
-				"type": "demandControl",
+				"type": "choiceTable",
 				"disabled": false,
 				"id": "nullifyOpensCont",
 				"identifier": "",

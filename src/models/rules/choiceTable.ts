@@ -13,8 +13,8 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: false,
-			label: `NIMBLE.rules.demandControl.${name}.label`,
-			hint: `NIMBLE.rules.demandControl.${name}.hint`,
+			label: `NIMBLE.rules.choiceTable.${name}.label`,
+			hint: `NIMBLE.rules.choiceTable.${name}.hint`,
 		});
 	return {
 		opensOnUse: tick('opensOnUse'),
@@ -22,11 +22,11 @@ function schema() {
 		cardRow: tick('cardRow'),
 		ignoresDisadvantage: tick('ignoresDisadvantage'),
 		triggerTwice: tick('triggerTwice'),
-		type: new fields.StringField({ required: true, nullable: false, initial: 'demandControl' }),
+		type: new fields.StringField({ required: true, nullable: false, initial: 'choiceTable' }),
 	};
 }
 
-declare namespace DemandControlRule {
+declare namespace ChoiceTableRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
@@ -35,7 +35,7 @@ declare namespace DemandControlRule {
  * has the rule can open it when used, or by a row on the card of a missed spell
  * and on a save card where a target saved against an effect of the owner.
  */
-class DemandControlRule extends NimbleBaseRule<DemandControlRule.Schema> {
+class ChoiceTableRule extends NimbleBaseRule<ChoiceTableRule.Schema> {
 	declare opensOnUse: boolean;
 	declare oncePerRound: boolean;
 	declare cardRow: boolean;
@@ -43,14 +43,14 @@ class DemandControlRule extends NimbleBaseRule<DemandControlRule.Schema> {
 	declare triggerTwice: boolean;
 
 	static override group = 'triggers';
-	static override description = 'NIMBLE.rules.demandControl.description';
+	static override description = 'NIMBLE.rules.choiceTable.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['opensOnUse', 'oncePerRound', 'ignoresDisadvantage'] },
 		{ fields: ['cardRow'] },
 		{ fields: ['triggerTwice'] },
 	];
 
-	static override defineSchema(): DemandControlRule.Schema {
+	static override defineSchema(): ChoiceTableRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
 			...schema(),
@@ -83,7 +83,7 @@ class DemandControlRule extends NimbleBaseRule<DemandControlRule.Schema> {
 	}
 
 	get rollEffect(): RollEffect {
-		return 'demandControl';
+		return 'choiceTable';
 	}
 
 	get outcome(): RerollTrigger {
@@ -95,4 +95,4 @@ class DemandControlRule extends NimbleBaseRule<DemandControlRule.Schema> {
 	}
 }
 
-export { DemandControlRule };
+export { ChoiceTableRule };

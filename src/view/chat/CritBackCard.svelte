@@ -1,11 +1,12 @@
 <script lang="ts">
+	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import { attackRows, useCritBack } from '#utils/damage/critBack.js';
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 
-	let { messageDocument } = $props();
+	let { messageDocument }: ChatCardProps = $props();
 
 	const system = $derived(messageDocument.reactive.system);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);

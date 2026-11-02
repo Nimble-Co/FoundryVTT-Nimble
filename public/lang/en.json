@@ -732,7 +732,7 @@
 						"dualWield": "Dual wield",
 						"critDiceSave": "Make them save",
 						"keepAmount": "Keep this amount",
-						"demandControl": "Demand Control"
+						"choiceTable": "Demand Control"
 					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
@@ -791,6 +791,8 @@
 					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled.",
 					"grantedCast": "{feature}: free, no disadvantage, cannot miss",
 					"grantedCastTooltip": "{feature} made this cast free. It ignores all disadvantage and cannot miss.",
+					"mustAttackOther": "{feature}: must attack the closest other creature",
+					"mustAttackOtherTooltip": "{feature}: this attack must be against the closest other creature, chosen at random.",
 					"keptAmount": "No roll: {feature}",
 					"keptAmountTooltip": "{feature} kept the amount of an earlier hit. No die was rolled. It is a hit with no crit."
 				},
@@ -802,7 +804,7 @@
 					"dualWield": "Dual wield",
 					"offerBonus": "Added the bonus",
 					"keepAmount": "Kept the amount",
-					"demandControl": "Demanded Control",
+					"choiceTable": "Demanded Control",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
 					"critDice": "{feature} added its dice to the crit."
@@ -1686,11 +1688,13 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
+			"damageMultiplier": "Damage Multiplier Tick",
+			"holdOnTarget": "Hold a Change on the Target",
 			"keepAmount": "Keep the Amount of a Hit",
 			"critBack": "Crit Back",
 			"hitCondition": "Condition on a Hit",
 			"freeAssess": "Free Assess",
-			"demandControl": "Demand Control",
+			"choiceTable": "Choice Table",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
 			"tableRoll": "Table Roll",
@@ -1873,13 +1877,13 @@
 					"label": "Hide from sheet",
 					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends."
 				},
-				"showAsResource": {
-					"label": "Show as a resource",
-					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
-				},
 				"hideMax": {
 					"label": "Show the count with no maximum",
 					"hint": "For a pool the book gives no cap. The maximum stays only as a limit, and the sheet and the card show the count alone."
+				},
+				"showAsResource": {
+					"label": "Show as a resource",
+					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
 				},
 				"recoveries": {
 					"label": "Recoveries",
@@ -2856,7 +2860,7 @@
 					"hint": "It changes the die, so it can give a crit or make a miss a hit."
 				}
 			},
-			"demandControl": {
+			"choiceTable": {
 				"description": "Opens the window with the options of the Control Table. Chosen options are dimmed, and they reset at Initiative or when all were chosen.",
 				"opensOnUse": { "label": "Open when used", "hint": "Using this item opens the window." },
 				"oncePerRound": {
@@ -2899,6 +2903,12 @@
 					"label": "Charge pool",
 					"hint": "The pool it spends a charge from."
 				}
+			},
+			"damageMultiplier": {
+				"description": "A tick in the roll window of this item that multiplies its damage. The label says when it applies. The player decides, and the system checks nothing."
+			},
+			"holdOnTarget": {
+				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat."
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
@@ -4402,11 +4412,14 @@
 		},
 		"heldChange": {
 			"keptOnCard": "{label}, next attack: {amount}",
+			"multiplierTick": "x{multiplier} damage: {label}",
+			"multiplierOnCard": "x{multiplier} damage",
 			"keptTick": "{label}: use {amount} and do not roll",
 			"line": {
 				"primaryDie": "{label}: {value} to Primary Die",
 				"ignoreDisadvantage": "{label}: ignore all disadvantage",
 				"wholeAmount": "{label}: {value}",
+				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
 				"wholeAmountEnds": "{label}: an area attack does not use {value}",
 				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",

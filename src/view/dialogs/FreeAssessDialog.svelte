@@ -3,12 +3,13 @@
 Assess for free and with advantage: the option and the skill.
 -->
 <script lang="ts">
+	import type { FreeAssessDialogProps } from '#types/components/FreeAssessDialog.d.ts';
 	import { untrack } from 'svelte';
 	import { assessOptions } from '#utils/assessOptions.js';
 	import localize from '#utils/localize.js';
 	import RollWindow from './components/RollWindow.svelte';
 
-	let { dialog, roundUsed, spendLine } = $props();
+	let { dialog, roundUsed, spendLine }: FreeAssessDialogProps = $props();
 
 	const skills = Object.entries(CONFIG.NIMBLE.skills as Record<string, string>).sort(
 		([, a], [, b]) => a.localeCompare(b),

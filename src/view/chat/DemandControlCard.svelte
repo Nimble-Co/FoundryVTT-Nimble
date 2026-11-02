@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import { openDemandControl } from '#utils/demandControl/openDemandControl.js';
 	import { CONTROL_OPTIONS, type ControlOption } from '#utils/demandControl/demandControl.js';
 	import localize from '#utils/localize.js';
@@ -6,7 +7,7 @@
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 
-	let { messageDocument } = $props();
+	let { messageDocument }: ChatCardProps = $props();
 
 	const TEXT = 'NIMBLE.demandControl';
 	const system = $derived(messageDocument.reactive.system);

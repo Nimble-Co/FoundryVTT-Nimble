@@ -50,7 +50,7 @@ function isRollUseRule(type: string | undefined): boolean {
 		type === CRIT_DICE_SAVE_RULE_TYPE ||
 		type === OFFER_ATTACK_BONUS_RULE_TYPE ||
 		type === 'keepAmount' ||
-		type === 'demandControl'
+		type === 'choiceTable'
 	) {
 		return true;
 	}

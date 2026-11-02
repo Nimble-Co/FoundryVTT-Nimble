@@ -87,13 +87,8 @@
 			<span class="assess-action-card__target-name">{targetName}</span>
 			{#if system.primaryDieChange}
 				<span class="assess-action-card__chip">
-					<i class="fa-solid fa-arrow-{system.primaryDieChange > 0 ? 'up' : 'down'}"></i>
-					{localize('NIMBLE.chat.primaryDieBonus.tag', {
-						value:
-							system.primaryDieChange > 0
-								? `+${system.primaryDieChange}`
-								: String(system.primaryDieChange),
-					})}
+					<i class="fa-solid fa-arrow-up"></i>
+					{localize('NIMBLE.chat.primaryDieBonus.tag', { value: `+${system.primaryDieChange}` })}
 				</span>
 			{/if}
 		</div>

@@ -201,7 +201,7 @@ describe('attack change pack items', () => {
 	describe('Invoker of Control', () => {
 		const INVOKER = 'packs/classFeatures/core/mage/mage-subclasses/invoker-of-control';
 		const controlRule = (file: string) =>
-			readRules(`${INVOKER}/${file}.json`).find((rule) => rule.type === 'demandControl');
+			readRules(`${INVOKER}/${file}.json`).find((rule) => rule.type === 'choiceTable');
 
 		it('Force of Will opens the window, and reports 1/round', () => {
 			expect(controlRule('force-of-will')).toMatchObject({ opensOnUse: true, oncePerRound: true });
