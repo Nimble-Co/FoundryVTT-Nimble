@@ -40,7 +40,13 @@
 </script>
 
 {#if show && held}
-	<button class="nimble-button" data-button-variant="card-action" type="button" onclick={apply}>
+	<button
+		class="nimble-button"
+		data-button-variant="card-action"
+		style="--nimble-card-action-color: currentColor"
+		type="button"
+		onclick={apply}
+	>
 		{localize('NIMBLE.chat.applyLatchedDamage', { amount: String(amount), name: held.name })}
 	</button>
 {/if}

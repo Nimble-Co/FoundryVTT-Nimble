@@ -20,7 +20,13 @@ The Demand Control row on a save card, for the owner of the creature whose effec
 </script>
 
 {#if actor}
-	<button class="nimble-button" data-button-variant="card-action" type="button" onclick={use}>
+	<button
+		class="nimble-button"
+		data-button-variant="card-action"
+		style="--nimble-card-action-color: currentColor"
+		type="button"
+		onclick={use}
+	>
 		<i class="fa-solid fa-hand" aria-hidden="true"></i>
 		{localize('NIMBLE.demandControl.title')}
 	</button>
