@@ -4368,7 +4368,8 @@
 			"protected": "Creature it cannot harm",
 			"condition": "Condition",
 			"twice": "Do the option twice",
-			"asReaction": "Use your Reaction",
+			"asReaction": "Use your Reaction (1 action)",
+			"reactionUsed": "You used this Reaction this round.",
 			"options": {
 				"iInsist": {
 					"label": "I INSIST",

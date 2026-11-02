@@ -6,6 +6,7 @@ import {
 	type ControlChoice,
 	type ControlOption,
 	recordChoice,
+	recordReaction,
 } from './demandControl.js';
 
 interface OpenOptions {
@@ -35,12 +36,13 @@ export async function openDemandControl(
 	if (choice.asReaction) {
 		const paid = await payRerollCost(actor as never, {
 			...chargeOnlyCost(''),
-			heroicReaction: 'defend',
+			actionCost: 1,
 		});
 		if (!paid) {
 			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.rerollCostUnpaid'));
 			return;
 		}
+		await recordReaction(actor);
 	}
 	if (!options.locked) await recordChoice(actor, choice.option, options.reportsRound === true);
 	await applyControlChoice(actor, choice);

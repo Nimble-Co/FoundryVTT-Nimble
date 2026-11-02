@@ -5,8 +5,11 @@ import {
 	choiceIsComplete,
 	chosenAfter,
 	chosenOptions,
+	isOwnTurn,
 	optionRows,
+	reactionUsedThisRound,
 	recordChoice,
+	recordReaction,
 	resetChosen,
 	saveRowActor,
 	usedThisRound,
@@ -221,5 +224,43 @@ describe('the row on a save card', () => {
 		expect(saveRowActor(card('succeeded'))).toBeNull();
 		globals.fromUuidSync = vi.fn(() => owner(false));
 		expect(saveRowActor(card('succeeded'))).toBeNull();
+	});
+});
+
+describe('the Reaction of Supreme Control', () => {
+	beforeEach(() => {
+		globals.game.combat = { id: 'c', started: true, round: 2, combatant: { actor: { uuid: 'X' } } };
+	});
+
+	afterEach(() => {
+		delete globals.game.combat;
+	});
+
+	it('counts once each round', async () => {
+		const actor = hero();
+		expect(reactionUsedThisRound(actor as never)).toBe(false);
+
+		await recordReaction(actor as never);
+		expect(reactionUsedThisRound(actor as never)).toBe(true);
+
+		globals.game.combat.round = 3;
+		expect(reactionUsedThisRound(actor as never)).toBe(false);
+	});
+
+	it('stays marked when the option is recorded after it', async () => {
+		const actor = hero();
+		await recordReaction(actor as never);
+		await recordChoice(actor as never, 'no');
+
+		expect(reactionUsedThisRound(actor as never)).toBe(true);
+		expect(chosenOptions(actor as never)).toEqual(['no']);
+	});
+
+	it('knows the turn of the hero', () => {
+		const actor = hero();
+		expect(isOwnTurn(actor as never)).toBe(false);
+
+		globals.game.combat.combatant = { actor: { uuid: 'Actor.mage' } };
+		expect(isOwnTurn(actor as never)).toBe(true);
 	});
 });

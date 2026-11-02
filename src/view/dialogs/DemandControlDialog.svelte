@@ -103,13 +103,18 @@ Demand Control: the options of the Control Table, with what each option asks for
 	{/if}
 	{#if control.offersReaction}
 		<label class="check">
-			<input type="checkbox" bind:checked={control.asReaction} />
+			<input type="checkbox" disabled={control.reactionUsed} bind:checked={control.asReaction} />
 			<span>{localize(`${TEXT}.asReaction`)}</span>
 		</label>
+		{#if control.reactionUsed}<p class="note">{localize(`${TEXT}.reactionUsed`)}</p>{/if}
 	{/if}
 </RollWindow>
 
 <style lang="scss">
+	.check:has(input:disabled) {
+		opacity: 0.6;
+	}
+
 	.note {
 		margin: 0;
 		font-size: 0.781rem;

@@ -5,7 +5,9 @@ import {
 	cantripsOf,
 	choiceIsComplete,
 	controlRules,
+	isOwnTurn,
 	optionRows,
+	reactionUsedThisRound,
 	usedThisRound,
 } from '#utils/demandControl/demandControl.js';
 
@@ -43,6 +45,7 @@ export function createDemandControlState(input: {
 	let condition = $state<(typeof AFFLICTIONS)[number]>(AFFLICTIONS[0]);
 	let twice = $state(false);
 	let asReaction = $state(false);
+	const reactionUsed = reactionUsedThisRound(actor);
 
 	const choice = $derived<ControlChoice | null>(
 		option
@@ -64,7 +67,8 @@ export function createDemandControlState(input: {
 		creatures,
 		afflictions: AFFLICTIONS,
 		offersTwice: !locked && rules.some((rule) => rule.triggerTwice),
-		offersReaction: !locked && rules.some((rule) => rule.triggerTwice),
+		offersReaction: !locked && !isOwnTurn(actor) && rules.some((rule) => rule.triggerTwice),
+		reactionUsed,
 		roundUsed: !locked && input.reportsRound === true && usedThisRound(actor),
 		get option() {
 			return option;

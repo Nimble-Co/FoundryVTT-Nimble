@@ -328,6 +328,8 @@ Rampage is a row on the card of a hit. Click it to keep the full damage of that 
 
 Force of Will, Deny Fate, Supreme Control and Nullify open a window when you use them. Each row is a choice from the feature, and the window tells you what you already used. A save card that this caused has its own row.
 
+With Supreme Control, the window has a tick to use your Reaction when it is not your turn. It costs 1 action, once each round. It does not use up Defend, Interpose or your other reactions.
+
 ## Thrill of the Hunt
 
 The Thrill of the Hunt pool starts at 0 and is lost when combat ends. Charges come when your quarry dies, on a melee hit or a ranged crit on your quarry, and from the features that add to the pool. An attack that spent a charge gains none, also on a kill. A kill counts when the damage is applied from the card: a change of HP by hand gives no charge, so use + on the pool. With Feature Effects off there are no automatic gains: use + and - on the pool.

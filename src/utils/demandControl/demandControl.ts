@@ -25,6 +25,7 @@ export interface ControlChoice {
 interface ControlState {
 	chosen: ControlOption[];
 	round?: string;
+	reactionRound?: string;
 }
 
 interface ControlRuleLike {
@@ -95,9 +96,30 @@ export async function recordChoice(
 ): Promise<void> {
 	const state = stateOf(actor);
 	await actor.setFlag?.(SYSTEM_ID, FLAG, {
+		...state,
 		chosen: chosenAfter(state.chosen ?? [], option),
 		round: reportsRound ? (currentRound() ?? '') : (state.round ?? ''),
 	});
+}
+
+/** Each reaction is 1/round (C:492). This one has no heroic reaction of its own to mark. */
+export function reactionUsedThisRound(actor: ControlActor): boolean {
+	const round = currentRound();
+	return !!round && stateOf(actor).reactionRound === round;
+}
+
+export async function recordReaction(actor: ControlActor): Promise<void> {
+	await actor.setFlag?.(SYSTEM_ID, FLAG, {
+		...stateOf(actor),
+		reactionRound: currentRound() ?? '',
+	});
+}
+
+/** A reaction is performed when it is not your turn (C:492). */
+export function isOwnTurn(actor: ControlActor): boolean {
+	const combatant = game.combat?.started ? game.combat.combatant : null;
+	const actorUuid = (actor as { uuid?: string }).uuid;
+	return !!combatant?.actor && !!actorUuid && combatant.actor.uuid === actorUuid;
 }
 
 export async function resetChosen(actor: ControlActor): Promise<void> {
