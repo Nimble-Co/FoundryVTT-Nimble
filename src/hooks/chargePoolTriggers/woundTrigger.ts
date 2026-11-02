@@ -14,9 +14,14 @@ export function registerWoundTriggerHooks(): void {
 			if (actor.type !== 'character') return;
 			// The user who made the update can write the actor, so only that client refills.
 			if (userId !== game.user?.id) return;
-			if (woundsGained(actor, options) <= 0) return;
+			const gained = woundsGained(actor, options);
+			if (gained <= 0) return;
 
-			void applyRecoveryToActorIfEligible(actor as CharacterActorLike, 'onWound');
+			void (async () => {
+				for (let wound = 0; wound < gained; wound++) {
+					await applyRecoveryToActorIfEligible(actor as CharacterActorLike, 'onWound');
+				}
+			})();
 		},
 	);
 }

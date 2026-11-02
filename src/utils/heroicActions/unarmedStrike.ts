@@ -266,7 +266,12 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
-	await giveUnarmedHitRecovery(actor as never, roll as never, targets as never);
+	const recoveryFlags = await giveUnarmedHitRecovery(
+		actor as never,
+		roll as never,
+		targets as never,
+	);
+	await card?.update?.(recoveryFlags);
 	await spendHeldChanges([
 		...(kept ? [] : held),
 		...(heldIgnore ? [heldIgnore] : []),

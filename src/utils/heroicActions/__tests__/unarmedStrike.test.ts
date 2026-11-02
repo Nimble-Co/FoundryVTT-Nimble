@@ -171,6 +171,9 @@ describe('rollUnarmedStrike', () => {
 
 	it('takes out disadvantage with a Held Change that ignores it', async () => {
 		dialogResult({ rollMode: -1 });
+		(heroicGlobals().game as unknown as { combats: unknown }).combats = new Map([
+			['c1', { started: true }],
+		]);
 		const actor = createHeroicCharacter({ proficient: true });
 		const remove = vi.fn(async () => undefined);
 		Object.assign(actor, {
@@ -185,7 +188,8 @@ describe('rollUnarmedStrike', () => {
 								appliesTo: 'holderAttacks',
 								value: 0,
 								label: 'Nullify',
-								combatId: '',
+								combatId: 'c1',
+								ends: 'combat',
 							},
 						},
 					},
@@ -200,6 +204,19 @@ describe('rollUnarmedStrike', () => {
 			{},
 			expect.objectContaining({ rollMode: 0 }),
 		);
+	});
+
+	it('writes the recovery flags on its card, so a reroll can follow them', async () => {
+		dialogResult({ rollMode: 0 });
+		const update = vi.fn(async () => undefined);
+		vi.mocked(ChatMessage.create).mockResolvedValueOnce({ update } as never);
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(update).toHaveBeenCalledWith({
+			'flags.nimble.chargeRecoveryGiven': [],
+			'flags.nimble.chargeRecoveryDomain': expect.arrayContaining(['attack:melee']),
+		});
 	});
 
 	it('is a crit on a hit against a target in the Incapacitated group', async () => {

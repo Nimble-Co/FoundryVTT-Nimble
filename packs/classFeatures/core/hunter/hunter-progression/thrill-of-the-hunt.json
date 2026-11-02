@@ -29,7 +29,11 @@
 						"temporary": false,
 						"notWhenSpent": true,
 						"needsFeatureEffects": true,
-						"predicate": {}
+						"predicate": {
+							"$and": [
+								"target:quarry"
+							]
+						}
 					},
 					{
 						"trigger": "onHit",

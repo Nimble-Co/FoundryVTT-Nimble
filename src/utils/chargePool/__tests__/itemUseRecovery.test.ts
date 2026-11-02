@@ -89,6 +89,14 @@ describe('a recovery that reads the attack', () => {
 	});
 });
 
+describe('a recovery on the death of the quarry', () => {
+	it('gains for the mark it names, and not for another mark', () => {
+		const pools = pool({ trigger: 'onMarkedDeath', predicate: { $and: ['target:quarry'] } });
+		expect(gainFrom(pools, ['onMarkedDeath'], { domain: ['target:quarry'] }).current).toBe(2);
+		expect(gainFrom(pools, ['onMarkedDeath'], { domain: ['target:other'] }).current).toBe(1);
+	});
+});
+
 describe('recoveryDomainOf', () => {
 	const hunter = {
 		getFlag: () => ({ quarry: [{ actorUuid: 'Actor.ogre' }] }),

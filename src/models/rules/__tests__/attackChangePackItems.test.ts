@@ -177,7 +177,7 @@ describe('attack change pack items', () => {
 		it('gains when the quarry dies, on a melee hit, and on a ranged crit (H:691, H:693)', () => {
 			const gains = pool().recoveries.filter((each) => each.notWhenSpent);
 			expect(gains.map((each) => [each.trigger, each.predicate])).toEqual([
-				['onMarkedDeath', {}],
+				['onMarkedDeath', { $and: ['target:quarry'] }],
 				['onHit', { $and: ['target:quarry', 'attack:melee'] }],
 				['onCriticalHit', { $and: ['target:quarry', 'attack:ranged'] }],
 			]);

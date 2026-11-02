@@ -12,6 +12,7 @@ import {
 import type {
 	CharacterActorLike,
 	ChargePoolMap,
+	ChargeRecoveryGiven,
 	ChargeRestType,
 	ManualAdjustMode,
 	RecoveryUse,
@@ -226,11 +227,12 @@ async function applyRecoveryToActorIfEligible(
 	trigger: TriggerType,
 	_killTargetActor?: Actor.Implementation,
 	use?: RecoveryUse,
+	given?: ChargeRecoveryGiven,
 ): Promise<void> {
 	if (!isEligibleForAutomaticRecovery(actor)) return;
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
-	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger], undefined, use);
+	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger], given, use);
 	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
 
 	await persistChargePoolMap(actor, nextPools);

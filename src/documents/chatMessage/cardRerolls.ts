@@ -632,12 +632,18 @@ export class CardRerolls {
 	async followChargeRecovery(change: RecoveryTriggerChange): Promise<void> {
 		const flags = this.#host.flags();
 		const itemUuid = flags?.itemUuid;
-		if (typeof itemUuid !== 'string') return;
+		// A card with no item, as an Unarmed Strike has, keeps only the recovery flags.
+		if (typeof itemUuid !== 'string' && !flags?.[RECOVERY_DOMAIN_FLAG]) return;
 
 		try {
-			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
+			const item =
+				typeof itemUuid === 'string'
+					? (fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null)
+					: null;
+			const actor =
+				typeof itemUuid === 'string' ? item?.actor : (this.#host.attacker() as Actor | null);
 			const recordedGiven = flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined;
-			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven, {
+			const result = await applyRerollRecoveryChange(actor, change, recordedGiven, {
 				domain: (flags?.[RECOVERY_DOMAIN_FLAG] as string[] | undefined) ?? [],
 				spentPoolIds: spentPoolIdsOf(item),
 			});

@@ -51,6 +51,13 @@ describe('registerWoundTriggerHooks', () => {
 		expect(applyRecovery).toHaveBeenCalledWith(woundedActor, 'onWound');
 	});
 
+	it('applies the trigger once for each Wound of one update', async () => {
+		const hook = await registeredHook();
+
+		hook(actor('character', 3), {}, recordedWounds(1), 'user-1');
+		await vi.waitFor(() => expect(applyRecovery).toHaveBeenCalledTimes(2));
+	});
+
 	it('does nothing when no Wound was gained', async () => {
 		const hook = await registeredHook();
 
