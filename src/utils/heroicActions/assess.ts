@@ -9,6 +9,13 @@ import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { createHeldChange } from '../heldChange/heldChange.js';
 import { assessSucceeds } from './assessResult.js';
 
+export interface AssessRequest {
+	optionId: string;
+	skillKey: SkillKeyType;
+	/** No action, and advantage. */
+	free?: boolean;
+}
+
 async function spendAssessAction(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();
 	const combatantId = combat?.combatants.find((entry) => entry.actorId === actor.id)?.id ?? null;
@@ -62,10 +69,13 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		return false;
 	}
 
-	const { roll } = await actor.rollSkillCheck(request.skillKey);
+	const { roll } = await actor.rollSkillCheck(
+		request.skillKey,
+		...((request.free ? [{ rollMode: 1 }] : []) as []),
+	);
 	if (!roll) return false;
 
-	await spendAssessAction(actor);
+	if (!request.free) await spendAssessAction(actor);
 
 	const isSuccess = assessSucceeds(roll);
 	const resultKey = isSuccess ? option.successKey : option.failureKey;

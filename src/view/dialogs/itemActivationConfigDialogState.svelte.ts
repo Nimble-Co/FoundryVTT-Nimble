@@ -14,12 +14,16 @@ import {
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
+import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
+import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
+import localize from '#utils/localize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
+import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
@@ -86,6 +90,7 @@ export function createItemActivationConfigDialogState(
 		firstTargetActor,
 	);
 	const defaultConditionalChoice = (option: ConditionalBonusOption): ConditionalChoice => {
+		if (option.doubled) return 'damage';
 		if (option.advantage > 0) return 'advantage';
 		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
 		return 'none';
@@ -102,6 +107,7 @@ export function createItemActivationConfigDialogState(
 	let dualWield = $state(false);
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
+	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
 	const keptAmount = keptAmountFor(actor as never, item as never);
 	let usesKeptAmount = $state(keptAmount !== null);
 
@@ -262,7 +268,20 @@ export function createItemActivationConfigDialogState(
 			})),
 	);
 
-	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(options.item()));
+	const weaponAttack = weaponAttackOf(item);
+	const weapons = weaponOptionsFor(actor as never, weaponAttack);
+	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
+	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
+
+	const damageEffects = $derived.by(() => {
+		const effects = extractDamageEffectsFromItem(options.item());
+		if (!chosenWeapon || !effects[0]) return effects;
+		const [first, ...others] = effects;
+		return [
+			{ ...first, formula: chosenWeapon.formula, damageType: chosenWeapon.damageType },
+			...others,
+		];
+	});
 
 	const damageFormula = $derived(damageEffects[0]?.formula || '0');
 
@@ -337,6 +356,20 @@ export function createItemActivationConfigDialogState(
 		},
 		set maxDamageChoice(value: MaxDamageChoice | null) {
 			maxDamageChoice = value;
+		},
+		weapons,
+		needsWeapon: weaponAttack !== '',
+		get weaponUuid() {
+			return weaponUuid;
+		},
+		set weaponUuid(value: string | null) {
+			weaponUuid = value;
+		},
+		chargeCosts,
+		get cannotRollReason() {
+			if (weaponAttack !== '' && !chosenWeapon) return localize('NIMBLE.rollWindow.noWeapon');
+			const unpaid = chargeCosts.find((cost) => cost.current < cost.amount);
+			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
 		get usesKeptAmount() {

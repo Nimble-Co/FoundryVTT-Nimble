@@ -43,3 +43,13 @@ export function grantCannotMiss(options: DamageRoll.Options, label: string): voi
 		grantedCast: [label],
 	};
 }
+
+/** The attack is a crit, and its card tells why. */
+export function grantCrit(options: DamageRoll.Options, label: string): void {
+	options.canCrit = true;
+	options.forcedCrit = 'always';
+	options.outcomeSources = {
+		...options.outcomeSources,
+		forcedCrit: [...(options.outcomeSources?.forcedCrit ?? []), label],
+	};
+}

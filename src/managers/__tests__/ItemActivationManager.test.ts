@@ -1434,6 +1434,12 @@ describe('ItemActivationManager.getData (rolls)', () => {
 							grantedCast: ['I INSIST'],
 						});
 					});
+
+					it('makes the attack a crit, and names why', async () => {
+						const options = await rollWith({ grantedCrit: 'Final Takedown' }, 0);
+						expect(options.forcedCrit).toBe('always');
+						expect(options.outcomeSources?.forcedCrit).toEqual(['Final Takedown']);
+					});
 				});
 
 				it('spends nothing when the roll has no Primary Die', async () => {

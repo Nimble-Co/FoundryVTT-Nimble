@@ -6,7 +6,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "freeAssess",
+				"disabled": false,
+				"id": "wildInstinctAsse",
+				"identifier": "",
+				"label": "Wild Instinct",
+				"predicate": {},
+				"priority": 1,
+				"chargePoolIdentifier": "thrill-of-the-hunt"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

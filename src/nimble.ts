@@ -27,6 +27,7 @@ import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encou
 import { registerPoolDieToMaxTriggerHooks } from './hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
 import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnTrigger.js';
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
+import { registerFreeAssessHooks } from './hooks/freeAssessOnUse.js';
 import { registerHeldChangeExpiryHooks } from './hooks/heldChangeExpiry.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
@@ -152,6 +153,7 @@ registerPendingActionDeltaFold();
 registerChargeSystemHooks();
 registerHeldChangeExpiryHooks();
 registerDemandControlHooks();
+registerFreeAssessHooks();
 registerHeldChangeQuery();
 registerMarkedDeathQuery();
 registerManaSeedingHooks();

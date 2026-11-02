@@ -74,6 +74,7 @@
 			primaryDieModifier: state.primaryDieModifier,
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
+			...(state.weaponUuid ? { weaponUuid: state.weaponUuid } : {}),
 			...(state.keptAmount ? { keptAmount: state.usesKeptAmount } : {}),
 			lessMana: state.lessMana,
 			freeUse: state.freeUse,
@@ -99,10 +100,31 @@
 	title={item.name}
 	img={item.img}
 	rollLabel={localize('NIMBLE.rollWindow.roll')}
+	rollDisabledReason={state.cannotRollReason}
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
 	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
+	{#each state.chargeCosts as cost (cost.label)}
+		<p class="spends">
+			{localize('NIMBLE.rollWindow.spendsCharge', {
+				count: String(cost.amount),
+				pool: cost.label,
+				left: String(cost.current),
+			})}
+		</p>
+	{/each}
+
+	{#if state.needsWeapon}
+		<div class="fld">
+			<span class="lb">{localize('NIMBLE.rollWindow.weapon')}</span>
+			<select bind:value={state.weaponUuid} aria-label={localize('NIMBLE.rollWindow.weapon')}>
+				{#each state.weapons as weapon (weapon.uuid)}
+					<option value={weapon.uuid}>{weapon.name}</option>
+				{/each}
+			</select>
+		</div>
+	{/if}
 
 	{#if state.keptAmount}
 		<KeptAmountField
@@ -171,7 +193,7 @@
 									onclick={() => state.setConditionalChoice(option.key, 'damage')}
 								>
 									{localize('NIMBLE.activationDialog.conditionalBonus.damage', {
-										value: damageLabel,
+										value: option.doubled ? `${damageLabel} x2` : damageLabel,
 									})}
 								</button>
 							{/if}

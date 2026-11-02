@@ -43,6 +43,8 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
+import { sendCritBack } from '../utils/damage/critBack.js';
+import { cardCarriesIncomingReactions } from '../utils/incomingReactions/cardCarriesIncomingReactions.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
@@ -1335,6 +1337,16 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
+		await sendCritBack({
+			card: this as never,
+			sourceActor,
+			sourceItem: sourceItem as never,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor) as never,
+			heroTokenUuid:
+				(this.flags as Record<string, { tokenUuid?: string } | undefined>)?.nimble?.tokenUuid ??
+				sourceActor?.getActiveTokens?.()[0]?.document?.uuid ??
+				null,
+		});
 		await this.#markDamageApplied();
 
 		if (

@@ -69,6 +69,13 @@ export const activation = () => ({
 			nullable: false,
 			initial: false,
 		}),
+		weaponAttack: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			choices: ['', 'any', 'melee', 'ranged'],
+		}),
 		targets: new fields.SchemaField({
 			count: new fields.NumberField({
 				required: true,

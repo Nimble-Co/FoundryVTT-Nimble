@@ -52,6 +52,31 @@ function schema() {
 			hint: 'NIMBLE.rules.conditionalBonus.damageType.hint',
 			choices: () => CONFIG.NIMBLE.damageTypes,
 		}),
+		doubleFor: new fields.ArrayField(
+			new fields.SchemaField({
+				source: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: '',
+					label: 'NIMBLE.rules.conditionalBonus.doubleFor.source.label',
+					hint: 'NIMBLE.rules.conditionalBonus.doubleFor.source.hint',
+				}),
+				onlyNoArmor: new fields.BooleanField({
+					required: true,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.conditionalBonus.doubleFor.onlyNoArmor.label',
+					hint: 'NIMBLE.rules.conditionalBonus.doubleFor.onlyNoArmor.hint',
+				}),
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.conditionalBonus.doubleFor.label',
+				hint: 'NIMBLE.rules.conditionalBonus.doubleFor.hint',
+			} as never,
+		),
 		delivery: new fields.StringField({
 			required: true,
 			nullable: false,

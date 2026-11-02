@@ -12,6 +12,7 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { CritBackRule } from '../models/rules/critBack.js';
 import { CritDiceRule } from '../models/rules/critDice.js';
 import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
@@ -21,6 +22,7 @@ import { DemandControlRule } from '../models/rules/demandControl.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
@@ -109,6 +111,8 @@ export default function registerRulesConfig() {
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
 		critDice: 'NIMBLE.ruleTypes.critDice',
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
+		critBack: 'NIMBLE.ruleTypes.critBack',
+		freeAssess: 'NIMBLE.ruleTypes.freeAssess',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
 		tableRoll: 'NIMBLE.ruleTypes.tableRoll',
@@ -182,6 +186,8 @@ export default function registerRulesConfig() {
 		maxDamage: MaxDamageRule,
 		critDice: CritDiceRule,
 		critDiceSave: CritDiceSaveRule,
+		critBack: CritBackRule,
+		freeAssess: FreeAssessRule,
 		offerAttackBonus: OfferAttackBonusRule,
 		poolDieToMax: PoolDieToMaxRule,
 		tableRoll: TableRollRule,

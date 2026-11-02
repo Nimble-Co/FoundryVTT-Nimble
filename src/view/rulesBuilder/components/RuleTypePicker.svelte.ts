@@ -13,6 +13,8 @@ const RULE_ICONS: Record<string, string> = {
 	critDice: 'fa-solid fa-dice-d6',
 	critDiceSave: 'fa-solid fa-person-falling',
 	keepAmount: 'fa-solid fa-rotate',
+	critBack: 'fa-solid fa-reply',
+	freeAssess: 'fa-solid fa-magnifying-glass',
 	demandControl: 'fa-solid fa-hand',
 	invokeChaos: 'fa-solid fa-hat-wizard',
 	maxDamage: 'fa-solid fa-angles-up',

@@ -124,6 +124,15 @@ describe('collectAttackOutcome', () => {
 		expect(options.outcomeSources).toEqual({ cannotMiss: ['Heads I Win'] });
 	});
 
+	it('gives "ignores armor", also with Feature Effects off', () => {
+		setFeatureEffects(false);
+		const { options } = collectAttackOutcome(
+			roll({ attacker: owner(change({ ignoreArmor: true })) }),
+		);
+
+		expect(options.ignoreArmor).toBe(true);
+	});
+
 	it('takes the largest crit range', () => {
 		const { options } = collectAttackOutcome(
 			roll({ attacker: owner(change({ critRange: 1 }), change({ critRange: 2 })) }),

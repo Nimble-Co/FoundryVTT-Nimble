@@ -51,6 +51,7 @@ import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
+import { weaponAttackOf, weaponOptionsFor } from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -98,6 +99,7 @@ import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEff
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
+	grantCrit,
 	keptAmountRollOptions,
 	removeDisadvantage,
 } from './itemActivation/keptAmountActivation.js';
@@ -234,6 +236,34 @@ class ItemActivationManager {
 
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
 	#maxDamage: ActiveMaxDamage | null = null;
+
+	/**
+	 * An ability that attacks with a weapon rolls that weapon's damage, and the
+	 * attack has its reach or range and its kind of damage.
+	 */
+	#applyChosenWeapon(dialogData: ItemActivationManager.DialogData): void {
+		const attack = weaponAttackOf(this.#item);
+		if (!attack) return;
+		const weapons = weaponOptionsFor(this.actor as never, attack);
+		const weapon = weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0];
+		if (!weapon) return;
+		this.#weapon = fromUuidSync(weapon.uuid as never) as never;
+		this.activationData.targets = {
+			...this.activationData.targets,
+			attackType: weapon.attackType,
+			...(weapon.distance === undefined ? {} : { distance: weapon.distance }),
+		};
+		const node = flattenEffectsTree(this.activationData.effects ?? []).find(
+			(each) => each.type === 'damage',
+		) as { formula?: string; damageType?: string } | undefined;
+		if (node) {
+			node.formula = weapon.formula;
+			node.damageType = weapon.damageType;
+		}
+	}
+
+	/** The weapon the ability attacks with, for what a weapon decides of the roll. */
+	#weapon: NimbleBaseItem | null = null;
 
 	/** The identifier of the item whose offer row started this activation. */
 	#offerSource(): string | undefined {
@@ -476,6 +506,8 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
+		this.#applyChosenWeapon(dialogData);
+
 		this.#keptAmountToEnd = keptAmountFor(this.actor as never, this.#item as never);
 		this.#keptAmount = dialogData.keptAmount === false ? null : this.#keptAmountToEnd;
 		if (this.#keptAmount) {
@@ -623,7 +655,10 @@ class ItemActivationManager {
 					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
-					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
+					const lacksProficiency = !hasWeaponProficiency(
+						this.actor as any,
+						(this.#weapon ?? this.#item) as any,
+					);
 
 					const resolvedCanCrit =
 						isAoE || multiTarget || isMinion || isFlunky || lacksProficiency
@@ -637,7 +672,9 @@ class ItemActivationManager {
 					node.rollMode = activatedWeaponRollMode(node.rollMode, dialogData.dualWield);
 
 					// Check if item has vicious property
-					const itemSystem = this.#item.system as { properties?: { selected?: string[] } };
+					const itemSystem = (this.#weapon ?? this.#item).system as {
+						properties?: { selected?: string[] };
+					};
 					const isVicious = itemSystem.properties?.selected?.includes('vicious') ?? false;
 
 					// Use modified formula if provided
@@ -780,6 +817,8 @@ class ItemActivationManager {
 					if (this.#options.grantedCannotMiss) {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
+					if (this.#options.grantedCrit) grantCrit(damageOptions, this.#options.grantedCrit);
+					if (attackOutcome.options.ignoreArmor) node.ignoreArmor = true;
 					const kept = this.#keptAmount;
 					roll = new dependencies.DamageRoll(
 						kept ? String(kept.value) : formula,
@@ -1643,6 +1682,8 @@ namespace ItemActivationManager {
 		ignoreDisadvantage?: boolean;
 		/** The name of what makes this attack unable to miss. */
 		grantedCannotMiss?: string;
+		/** The name of what makes this attack a crit. */
+		grantedCrit?: string;
 		/**
 		 * The upcast enhancement to apply, by index, for a caller that skips the
 		 * dialog. A pinned cast tier that reaches a list of enhancements is
@@ -1723,6 +1764,8 @@ namespace ItemActivationManager {
 		maxDamage?: MaxDamageChoice | null;
 		/** False when the player unticked a kept amount. */
 		keptAmount?: boolean;
+		/** The weapon an ability attacks with. */
+		weaponUuid?: string;
 		/**
 		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
 		 * The dialog already appended the bonus to rollFormula; this list is used to

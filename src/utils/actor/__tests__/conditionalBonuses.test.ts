@@ -29,6 +29,52 @@ function createAttacker(rules: unknown[]) {
 const weaponItem = { type: 'weapon', system: { activation: { targets: { attackType: 'reach' } } } };
 
 describe('conditionalBonuses', () => {
+	describe('getActiveConditionalBonuses with doubled damage', () => {
+		const damageRule = (doubleFor: unknown[]) =>
+			createRule({
+				doubleFor,
+				offersDamage: vi.fn(() => true),
+				resolveDamage: vi.fn(() => ({ value: 4, formula: null })),
+			});
+		const attack = (identifier: string) => ({ ...weaponItem, identifier });
+		const armored = (armor: string) => ({ system: { attributes: { armor } } });
+
+		it('doubles for an item in the list', () => {
+			const rule = damageRule([{ source: 'final-takedown', onlyNoArmor: false }]);
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]) as never,
+				attack('final-takedown'),
+				armored('heavy') as never,
+			);
+			expect(option).toMatchObject({ damageValue: 8, doubled: true });
+		});
+
+		it('does not double for another item', () => {
+			const rule = damageRule([{ source: 'final-takedown', onlyNoArmor: false }]);
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]) as never,
+				attack('longbow'),
+				undefined,
+			);
+			expect(option?.damageValue).toBe(4);
+			expect(option?.doubled).toBeUndefined();
+		});
+
+		it.each([
+			['none', 8],
+			['medium', 4],
+			['heavy', 4],
+		])('reads armor when the item asks: %s gives %i', (armor, damageValue) => {
+			const rule = damageRule([{ source: 'vital-shot', onlyNoArmor: true }]);
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]) as never,
+				attack('vital-shot'),
+				armored(armor) as never,
+			);
+			expect(option?.damageValue).toBe(damageValue);
+		});
+	});
+
 	describe('getActiveConditionalBonuses — delivery/source inference', () => {
 		it('maps a reach attack to melee delivery', () => {
 			const rule = createRule();

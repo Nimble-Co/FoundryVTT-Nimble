@@ -683,6 +683,10 @@
 				"deal": "Deal {amount} damage",
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
+			"critBack": {
+				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit.",
+				"attack": "Attack with {attack}"
+			},
 			"primaryDieBonus": {
 				"tag": "{value} to Primary Die",
 				"text": "{label}: {value} to the Primary Die",
@@ -1675,6 +1679,8 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"keepAmount": "Keep the Amount of a Hit",
+			"critBack": "Crit Back",
+			"freeAssess": "Free Assess",
 			"demandControl": "Demand Control",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
@@ -1914,6 +1920,15 @@
 			},
 			"conditionalBonus": {
 				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"doubleFor": {
+					"label": "Doubled for",
+					"hint": "The attacks with an item in this list double the damage of this bonus.",
+					"source": { "label": "Item identifier", "hint": "The identifier of the item." },
+					"onlyNoArmor": {
+						"label": "Only with no armor",
+						"hint": "Doubled only when the target has no armor."
+					}
+				},
 				"advantage": {
 					"label": "Advantage stacks",
 					"hint": "Stacks of advantage offered as one option. 0 means advantage is not offered."
@@ -2638,6 +2653,10 @@
 						"attacksAgainstYou": "Attacks against you"
 					}
 				},
+				"ignoreArmor": {
+					"label": "Ignores armor",
+					"hint": "The attack's damage ignores the target's armor."
+				},
 				"cannotMiss": {
 					"label": "The attack cannot miss",
 					"hint": "A miss face on the Primary Die is a hit."
@@ -2837,6 +2856,16 @@
 				"triggerTwice": {
 					"label": "Trigger twice",
 					"hint": "The window has a tick to do the chosen option twice, and a tick to use it as a Reaction."
+				}
+			},
+			"critBack": {
+				"description": "After the damage of this item is applied, the GM gets a card for each creature that lives. The chosen attack is free, targets the owner and is a crit. With Feature Effects off, nothing happens by itself."
+			},
+			"freeAssess": {
+				"description": "Using the item opens Assess, free and with advantage. It spends a charge when there is one. With none, it costs nothing.",
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool it spends a charge from."
 				}
 			},
 			"keepAmount": {
@@ -3744,6 +3773,8 @@
 				"unknown": "Unknown",
 				"targetLabel": "Target:",
 				"assess": {
+					"freeWithCharge": "Free, with advantage. It spends 1 charge.",
+					"freeNoCharge": "Free, with advantage. You have no charges, so it costs nothing.",
 					"needsTarget": "Target one creature first.",
 					"dialogTitle": "Assess Action",
 					"header": "Assess",
@@ -4348,6 +4379,10 @@
 			}
 		},
 		"rollWindow": {
+			"weapon": "Weapon",
+			"noWeapon": "Equip a weapon of this kind first.",
+			"noCharge": "No {pool} charges left.",
+			"spendsCharge": "When you roll, it spends {count} {pool} charge ({left} left).",
 			"lessMana": "Spend 1 less mana",
 			"dualWield": {
 				"name": "Dual wield",

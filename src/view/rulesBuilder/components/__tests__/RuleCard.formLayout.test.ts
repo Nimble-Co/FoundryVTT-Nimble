@@ -358,6 +358,7 @@ describe('RuleCard with a form layout (attackOutcome)', () => {
 			'anyDieCrits',
 			'critD20',
 			'viciousCrits',
+			'ignoreArmor',
 			'attackDelivery',
 			'attackSource',
 			'thisItemOnly',

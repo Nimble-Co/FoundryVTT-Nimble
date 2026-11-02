@@ -196,6 +196,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };
 		effects: Record<string, unknown>[];
+		weaponAttack: '' | 'any' | 'melee' | 'ranged';
 		targets: {
 			count: number;
 			singleTargetAttack: boolean;

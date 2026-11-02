@@ -69,6 +69,7 @@ interface AttackOutcome {
 		critD20?: boolean;
 		explosionStyle?: 'vicious';
 		outcomeSources?: Partial<AttackOutcomeSources>;
+		ignoreArmor?: boolean;
 	};
 	charges: AttackOutcomeCharge[];
 }
@@ -100,6 +101,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 	const charges: AttackOutcomeCharge[] = [];
 	let critRange = 0;
 	let forcedCrit: ForcedCritKind | null = null;
+	let ignoreArmor = false;
 
 	const sides = [
 		{ side: 'yourAttacks' as const, owner: input.attacker, other: input.target },
@@ -143,6 +145,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 				sources.vicious?.push(change.label);
 				gave.push('vicious');
 			}
+			if (change.ignoreArmor) ignoreArmor = true;
 			if (gave.length > 0 && change.chargePoolIdentifier) {
 				charges.push({ identifier: change.chargePoolIdentifier, gave });
 			}
@@ -161,6 +164,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 	const options: AttackOutcome['options'] = {
 		canMiss: input.canMiss && sources.cannotMiss.length === 0,
 	};
+	if (ignoreArmor) options.ignoreArmor = true;
 	if (critRange > 0) options.critRange = critRange;
 	if (forcedCrit) options.forcedCrit = forcedCrit;
 	if (sources.anyDieCrits.length > 0) options.anyDieCrits = true;

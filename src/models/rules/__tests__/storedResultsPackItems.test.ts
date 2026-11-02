@@ -14,6 +14,113 @@ describe('stored result pack items', () => {
 
 	describe('Thrill of the Hunt', () => {
 		const HUNTER = 'packs/classFeatures/core/hunter';
+		const activation = (file: string) =>
+			JSON.parse(readFileSync(resolve(`${HUNTER}/${file}.json`), 'utf8')).system.activation;
+
+		it.each([
+			['incendiary-shot', 'ranged', true],
+			['addling-arrow', 'ranged', true],
+			['multishot', 'ranged', true],
+			['come-get-some', 'any', true],
+			['pinning-shot', 'ranged', true],
+			['sharpshooter', 'ranged', true],
+			['hail-of-arrows', 'ranged', false],
+			['vital-shot', 'ranged', true],
+			['heavy-shot', 'ranged', true],
+		])('%s attacks with a %s weapon, cannot miss, and spends 1 charge', (name, kind, canCrit) => {
+			const file = `thrill-of-the-hunt/${name}`;
+			const { weaponAttack, effects } = activation(file);
+			expect(weaponAttack).toBe(kind);
+			expect(effects[0]).toMatchObject({ type: 'damage', canMiss: false, canCrit });
+			expect(readRules(`${HUNTER}/${file}.json`)).toContainEqual(
+				expect.objectContaining({
+					type: 'chargeConsumer',
+					poolIdentifier: 'thrill-of-the-hunt',
+					poolScope: 'actor',
+					cost: '1',
+				}),
+			);
+		});
+
+		it('Incendiary Shot adds WIL d8 fire damage', () => {
+			const { effects } = activation('thrill-of-the-hunt/incendiary-shot');
+			expect(effects[1]).toMatchObject({ damageType: 'fire', formula: '(@will)d8' });
+		});
+
+		it.each([
+			['come-get-some', ['taunted']],
+			['pinning-shot', ['restrained']],
+			['hail-of-arrows', ['slowed']],
+		])('%s gives its condition on a hit', (name, conditions) => {
+			const hit = activation(`thrill-of-the-hunt/${name}`).effects[0].on.hit;
+			expect(
+				hit
+					.filter((node: { type: string }) => node.type === 'condition')
+					.map((node: { condition: string }) => node.condition),
+			).toEqual(conditions);
+		});
+
+		it('Hail of Arrows hits an area of 3x3', () => {
+			expect(activation('thrill-of-the-hunt/hail-of-arrows')).toMatchObject({
+				acquireTargetsFromTemplate: true,
+				template: { shape: 'square', width: 3 },
+			});
+		});
+
+		it('Vital Shot ignores armor', () => {
+			const { effects } = activation('thrill-of-the-hunt/vital-shot');
+			expect(effects[0].ignoreArmor).toBe(true);
+		});
+
+		it.each([
+			['snare-trap', ['restrained']],
+			['grease-trap', ['prone', 'smoldering']],
+		])('%s is 1/encounter and spends 1 charge', (name, conditions) => {
+			const file = `${HUNTER}/thrill-of-the-hunt/${name}.json`;
+			const consumers = readRules(file).filter((rule) => rule.type === 'chargeConsumer');
+			expect(consumers.map((rule) => rule.poolIdentifier)).toEqual([
+				`${name}-use`,
+				'thrill-of-the-hunt',
+			]);
+			expect(
+				activation(`thrill-of-the-hunt/${name}`).effects.map(
+					(node: { condition: string }) => node.condition,
+				),
+			).toEqual(conditions);
+		});
+
+		it('Wild Instinct is a free Assess that spends a charge when there is one', () => {
+			expect(readRules(`${HUNTER}/thrill-of-the-hunt/wild-instinct.json`)).toEqual([
+				expect.objectContaining({
+					type: 'freeAssess',
+					chargePoolIdentifier: 'thrill-of-the-hunt',
+				}),
+			]);
+		});
+
+		it('Final Takedown is a melee crit that cannot miss, and the creature can crit back', () => {
+			const file = 'hunter-progression/final-takedown';
+			expect(activation(file).weaponAttack).toBe('melee');
+			expect(activation(file).effects[0]).toMatchObject({ canMiss: false, canCrit: true });
+			const rules = readRules(`${HUNTER}/${file}.json`);
+			expect(rules.map((rule) => rule.type)).toEqual([
+				'attackOutcome',
+				'critBack',
+				'chargeConsumer',
+			]);
+			expect(rules[0]).toMatchObject({ forceCrit: 'always', thisItemOnly: true });
+		});
+
+		it("Hunter's Mark doubles for Final Takedown, and for Vital Shot with no armor", () => {
+			const bonus = readRules(`${HUNTER}/hunter-progression/hunters-mark.json`).find(
+				(rule) => rule.type === 'conditionalBonus',
+			);
+			expect(bonus?.doubleFor).toEqual([
+				{ source: 'final-takedown', onlyNoArmor: false },
+				{ source: 'vital-shot', onlyNoArmor: true },
+			]);
+		});
+
 		const pool = () =>
 			readRules(`${HUNTER}/hunter-progression/thrill-of-the-hunt.json`).find(
 				(rule) => rule.type === 'chargePool',
