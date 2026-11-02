@@ -17,6 +17,7 @@ import {
 	rejectIncomingAttackReaction,
 } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
+	ChangeableDie,
 	IncomingReactionEntry,
 	KeepChoiceRoll,
 	PendingKeep,
@@ -26,6 +27,7 @@ import type {
 	RollChange,
 	RollEffect,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
+import { SNEAK_ATTACK_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
@@ -74,7 +76,9 @@ import {
 	resultChangesOf,
 	standingResultChanges,
 } from '#utils/rolls/resultChanges.js';
+import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import { soleTarget } from '#utils/tokens/soleTarget.js';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
@@ -82,6 +86,12 @@ import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
 interface NewRollUse extends Partial<RerollStepInput<unknown>> {
 	failedLog: string;
+}
+
+function changeableDieOf(rule: RerollRuleLike): ChangeableDie {
+	const die = rule.die as string | undefined;
+	if (die === 'pickedDie' || die === 'sneakAttackDie') return die;
+	return 'primaryDie';
 }
 
 /** The roll with its new attack unable to miss, whichever dice the rule rerolls. */
@@ -674,11 +684,7 @@ export class CardRerolls {
 		const change: DieChange = usable.rule.dieChange ?? { mode: 'set', value: 0 };
 		return {
 			setsValue: change.mode === 'set',
-			dice: diceForRule(
-				found,
-				usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
-				change,
-			),
+			dice: diceForRule(found, changeableDieOf(usable.rule), change),
 		};
 	}
 
@@ -778,6 +784,9 @@ export class CardRerolls {
 		if (rollUseOfRule(usable.rule) === 'crit') {
 			return this.#applyMakeCrit(rollTarget, found, entry, usable, forceHeroicReaction, reject);
 		}
+		if (usable.rule.rollEffect === 'critDiceSave') {
+			return this.#postCritDiceSave(rollTarget, entry, usable, reject);
+		}
 		if (usable.rule.rollEffect) {
 			return this.#applyRollEffect(
 				rollTarget,
@@ -869,12 +878,7 @@ export class CardRerolls {
 		}
 		const change: DieChange =
 			dieChange.mode === 'set' ? { ...dieChange, value: value ?? 0 } : dieChange;
-		const target = changeableFor(
-			found,
-			rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
-			die,
-			change,
-		);
+		const target = changeableFor(found, changeableDieOf(rule), die, change);
 		if (!target) return void reject('NIMBLE.chat.incomingReactions.changePickADie');
 
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
@@ -994,7 +998,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		reject: (reasonKey: string) => unknown,
 	): Promise<void> {
-		const target = effectFor(found, effect);
+		const target = effectFor(found, effect, usable.rule.critDiceSpec ?? null);
 		if (!target) return void reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
@@ -1022,6 +1026,54 @@ export class CardRerolls {
 		}
 		if (result.status === 'failed') {
 			console.error('Nimble | A roll effect failed; its cost is given back.', result.error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Spend a use and post the target's save on a normal save card. The result
+	 * of that card changes this card later (see `critDiceSave`). The use is given
+	 * back when the save cannot be made.
+	 */
+	async #postCritDiceSave(
+		rollTarget: RerollRollTarget,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule, actor } = usable;
+		const context = rollTarget.context();
+		const target = soleTarget(context.targets)?.actor as unknown as {
+			rollSavingThrowToChat?: (key: string, options: object) => Promise<unknown>;
+		} | null;
+		const saveKey = rule.saveType;
+		if (!target?.rollSavingThrowToChat || !saveKey) {
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const cost = rule.rollUseCost;
+		const paid = cost ? await payRerollCost(actor, cost) : null;
+		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		try {
+			const card = await target.rollSavingThrowToChat(saveKey, {
+				dc: resolveSaveNodeDC(rule.saveDC, actor as never),
+				skipRollDialog: true,
+				cardFlags: {
+					critDiceSave: {
+						attackMessageId: this.#host.id(),
+						role: SNEAK_ATTACK_ROLE,
+						actorUuid: actor.uuid,
+						chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
+					},
+				},
+			});
+			if (!card) throw new Error('The save card was not made.');
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry) },
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (cost && paid) await refundRerollCost(actor, cost, paid);
+			console.error('Nimble | A save for crit dice failed; its cost is given back.', error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

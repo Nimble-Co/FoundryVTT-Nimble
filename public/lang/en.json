@@ -702,7 +702,9 @@
 					"change": "Change Die",
 					"effect": {
 						"critD20": "Use a d20",
-						"viciousDie": "Add the Vicious die"
+						"viciousDie": "Add the Vicious die",
+						"critDice": "Add the dice",
+						"critDiceSave": "Make them save"
 					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
@@ -758,9 +760,13 @@
 					"maxHealing": "Max healing: {feature}",
 					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled."
 				},
+				"critDiceLine": "{feature}: +{total}",
+				"noActionLeft": "No action left to spend.",
+				"costOncePerTurn": "1/turn",
 				"effectHistory": {
 					"critD20": "{feature} rerolled the first crit die as a d20.",
-					"viciousDie": "{feature} made the crit Vicious."
+					"viciousDie": "{feature} made the crit Vicious.",
+					"critDice": "{feature} added its dice to the crit."
 				},
 				"rerollTags": {
 					"crit": "Crit",
@@ -1631,6 +1637,8 @@
 			"markTarget": "Mark Target",
 			"makeCrit": "Make It a Crit",
 			"maxDamage": "Max Damage",
+			"critDice": "Crit Dice",
+			"critDiceSave": "Save for Max Crit Dice",
 			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -2688,6 +2696,31 @@
 					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
 				}
 			},
+			"critDiceSave": {
+				"description": "A row in Change This Roll on an attack with Sneak Attack dice. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
+				"saveType": { "label": "Save", "hint": "The save the target makes." },
+				"saveDC": { "label": "DC", "hint": "The DC of the save, as a formula of your stats." },
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool it spends a charge from. Leave empty for no limit."
+				}
+			},
+			"critDice": {
+				"description": "A crit of the attack rolls these dice as a line of their own on the attack card. The dice do not explode and are not Vicious. With Feature Effects off, this is a row in Change This Roll.",
+				"formula": {
+					"label": "Dice",
+					"hint": "The dice a crit rolls."
+				},
+				"dieRole": {
+					"label": "Name of the dice",
+					"hint": "What other features call these dice.",
+					"choices": { "sneakAttack": "Sneak Attack dice" }
+				},
+				"oncePerTurn": {
+					"label": "1/turn",
+					"hint": "Once per turn of any creature. A new roll that takes the crit away gives the use back."
+				}
+			},
 			"changeDie": {
 				"description": "Lets the one who rolled, the target of an attack, or an ally change one die of an attack, a save or a check after it is made: set it to a value the player picks, or add a number to it. Crit and miss are worked out again.",
 				"rolls": {
@@ -2697,6 +2730,7 @@
 					"label": "Which die does it change?",
 					"hint": "On a save or a check, the Primary Die is the d20. The player picks the die when they use it.",
 					"choices": {
+						"sneakAttackDie": "A Sneak Attack die",
 						"primaryDie": "The Primary Die",
 						"pickedDie": "One die the player picks"
 					}
@@ -2712,6 +2746,10 @@
 				"amount": {
 					"label": "Number to add",
 					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0."
+				},
+				"yieldsTo": {
+					"label": "Gives way to",
+					"hint": "The identifier of a rule of the same creature. While that rule can be used, this row does not show. Empty for none."
 				},
 				"addsBonusOnSet": {
 					"label": "Add the Primary Die bonus to the set value",
@@ -2928,6 +2966,14 @@
 					"choices": {
 						"none": "None"
 					}
+				},
+				"actionReportOnly": {
+					"label": "No action is no block",
+					"hint": "With no action left, the use still goes on, and the card says so."
+				},
+				"oncePerTurn": {
+					"label": "1/turn",
+					"hint": "Once per turn of any creature. Outside combat there is no limit."
 				},
 				"actionCost": {
 					"label": "Action cost",

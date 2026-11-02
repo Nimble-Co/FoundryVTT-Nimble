@@ -1,3 +1,4 @@
+import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { RollEffect } from '../utils/incomingReactions/incomingReactionEntry.js';
 import {
@@ -22,6 +23,8 @@ interface PickableDie extends DieRef {
 	faces: number;
 	value: number;
 	role: PickableRole;
+	/** What other features call this die. */
+	dieRole?: string;
 	/** The number a set value of the die gets, on the Primary Die only. */
 	bonus?: number;
 }
@@ -44,6 +47,10 @@ interface RollLike extends PrimaryDieBonusRoll {
 function primaryDieBonus(roll: PrimaryDieBonusRoll): number {
 	if (!roll.primaryDie || roll.modifierMode) return 0;
 	return Math.trunc(Number(roll.options?.primaryDieModifier) || 0);
+}
+
+function dieRoleOf(term: unknown): string | undefined {
+	return (term as { options?: { dieRole?: string } }).options?.dieRole;
 }
 
 function isDieTerm(term: unknown): term is DieTermLike {
@@ -76,6 +83,7 @@ function pickableDice(roll: RollLike, options: { droppedFrom?: number } = {}): P
 				value: result.result,
 				role,
 				...(role === 'primary' && bonus ? { bonus } : {}),
+				...(dieRoleOf(term) ? { dieRole: dieRoleOf(term) } : {}),
 			});
 		});
 	});
@@ -112,6 +120,8 @@ interface OneDieRoll extends PrimaryDieBonusRoll {
 	replaceCritDieWithD20?(): Promise<{ term: unknown; drawn: number[] } | null>;
 	/** Give each crit die the Vicious die; null when the roll is no crit or is Vicious. */
 	makeVicious?(): Promise<{ term: unknown; drawn: number[] } | null>;
+	/** Add the crit dice of a rule to this roll, for later changes too. */
+	addCritDiceTo?(spec: CritDiceSpec): Promise<{ term: unknown; drawn: number[] } | null>;
 	/** Roll the crit dice a change of the roll now calls for; the dice it rolled. */
 	settleCritDice?(): Promise<number[]>;
 	/** "Add to Primary Die Result" when `term` is the Primary Die and has it. */
@@ -337,13 +347,15 @@ async function makeRollCrit<TRoll extends OneDieRoll>(
 async function applyRollEffect<TRoll extends OneDieRoll>(
 	roll: TRoll,
 	effect: RollEffect,
+	critDice: CritDiceSpec | null = null,
 ): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
 	const copy = foundry.dice.Roll.fromData(
 		foundry.utils.deepClone(roll.toJSON()) as never,
 	) as unknown as TRoll;
 	let made: { term: unknown; drawn: number[] } | null | undefined;
 	if (effect === 'critD20') made = await copy.replaceCritDieWithD20?.();
-	else made = await copy.makeVicious?.();
+	else if (effect === 'viciousDie') made = await copy.makeVicious?.();
+	else if (critDice) made = await copy.addCritDiceTo?.(critDice);
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll effect has nothing to do.');
 	const ref = primaryDieRef(copy);
 	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;

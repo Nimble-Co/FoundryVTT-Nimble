@@ -4,12 +4,12 @@ import {
 	type DieChangeMode,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { choiceLabels, RollUseRule } from './_rollUseRule.js';
+import { choiceLabels, type RollUseContext, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 /** Which die a Change a Die rule changes. */
-const CHANGE_DICE = ['primaryDie', 'pickedDie'] as const;
+const CHANGE_DICE = ['primaryDie', 'pickedDie', 'sneakAttackDie'] as const;
 type ChangeDie = (typeof CHANGE_DICE)[number];
 
 function schema() {
@@ -50,6 +50,13 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.change === 'add',
 			}),
 		),
+		yieldsTo: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.changeDie.yieldsTo.label',
+			hint: 'NIMBLE.rules.changeDie.yieldsTo.hint',
+		}),
 		addsBonusOnSet: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -82,7 +89,9 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	static override description = 'NIMBLE.rules.changeDie.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(),
-		...RollUseRule.useFormGroups([{ fields: ['die', 'change', 'amount', 'addsBonusOnSet'] }]),
+		...RollUseRule.useFormGroups([
+			{ fields: ['die', 'change', 'amount', 'addsBonusOnSet', 'yieldsTo'] },
+		]),
 		RollUseRule.noteFormGroup(),
 	];
 
@@ -90,6 +99,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	declare change: DieChangeMode;
 	declare amount: number;
 	declare addsBonusOnSet: boolean;
+	declare yieldsTo: string;
 
 	static override defineSchema(): ChangeDieRule.Schema {
 		return {
@@ -106,8 +116,25 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 				['change', 'string'],
 				['amount', 'number'],
 				['addsBonusOnSet', 'boolean'],
+				['yieldsTo', 'string'],
 			]),
 		);
+	}
+
+	/** The rule of the same actor with the identifier `yieldsTo` takes this row's place while it can be used. */
+	override offersUseOn(context: RollUseContext): boolean {
+		if (!super.offersUseOn(context)) return false;
+		const other = (this.yieldsTo ?? '').trim();
+		if (!other) return true;
+		const rules = (this.actor as { rules?: Iterable<ChangeDieRule> } | null)?.rules ?? [];
+		return !Array.from(rules).some(
+			(rule) => rule !== this && rule.identifier === other && rule.offersUseOn?.(context) === true,
+		);
+	}
+
+	/** Only a roll with Sneak Attack dice has a use for a rule that changes them. */
+	get needsSneakDice(): boolean {
+		return this.die === 'sneakAttackDie';
 	}
 
 	/** The change one use makes. An add of 0 is an add of 1. */

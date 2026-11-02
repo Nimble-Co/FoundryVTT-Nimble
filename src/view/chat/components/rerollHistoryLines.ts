@@ -300,6 +300,9 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 				}),
 			);
 		}
+		if (record.noActionLeft) {
+			details.push(localize('NIMBLE.chat.incomingReactions.noActionLeft'));
+		}
 		if (record.woundsGained > 0) {
 			details.push(
 				localize('NIMBLE.chat.incomingReactions.rerollWoundsGained', {

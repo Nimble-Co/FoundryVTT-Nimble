@@ -39,6 +39,7 @@ import {
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
+import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { type MaxDamageRuleLike, maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
@@ -187,6 +188,9 @@ class ItemActivationManager {
 
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
 	#maxDamage: { rule: MaxDamageRuleLike; tempHp: boolean } | null = null;
+
+	/** The attack roll of this activation, for the uses its crit dice spend. */
+	#primaryRoll: DamageRoll | null = null;
 
 	/** Every roll of this activation has max dice, so no die is thrown. */
 	#noDiceThrown = false;
@@ -478,6 +482,7 @@ class ItemActivationManager {
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
 		// roll evaluates (automatic rerolls need the outcome).
+		let primaryAttackNode: EffectNode | null = null;
 		let primaryDamageNode: EffectNode | null = null;
 		let primaryDamagePlan: IncomingAttackPlan | null = null;
 
@@ -615,6 +620,10 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					const critDice = resolvedCanCrit
+						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
+						: [];
+					if (critDice.length > 0) damageOptions.critDice = critDice;
 					if (this.#maxDamage?.rule.use === 'damage') {
 						const { rule } = this.#maxDamage;
 						damageOptions.maxDamage = rule.givesCrit && resolvedCanCrit ? 'crit' : 'hit';
@@ -667,6 +676,7 @@ class ItemActivationManager {
 					if (!(roll as DamageRoll).primaryDie) this.#primaryDieBonuses = [];
 
 					foundDamageRoll = true;
+					primaryAttackNode = node;
 				} else {
 					let formula = node.formula || '0';
 
@@ -714,6 +724,7 @@ class ItemActivationManager {
 					this.#rerollHistory = result.rerollHistory;
 				}
 
+				if (node === primaryAttackNode) this.#primaryRoll = roll as DamageRoll;
 				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
 			}
@@ -1017,6 +1028,7 @@ class ItemActivationManager {
 		const outcomeCharges = this.#attackOutcomeCharges;
 		this.#attackOutcomeCharges = [];
 		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
+		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		const maxDamageRule = this.#maxDamage?.rule;
 		if (maxDamageRule?.chargePoolIdentifier) {
 			await spendRuleCharge(

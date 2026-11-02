@@ -156,6 +156,7 @@ async function rerollWithRule<TRoll>(
 				next: dieResult(die.value, rolled),
 				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
+				...(paid?.noActionLeft ? { noActionLeft: true } : {}),
 				dropped: die.dropped ?? null,
 				changes: rollChanges,
 				...(input.automatic ? { automatic: true } : {}),

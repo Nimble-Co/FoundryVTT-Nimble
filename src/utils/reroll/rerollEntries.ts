@@ -1,3 +1,4 @@
+import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
@@ -28,6 +29,7 @@ const CHANGE_DIE_RULE_TYPE = 'changeDie';
 const MAKE_CRIT_RULE_TYPE = 'makeCrit';
 const CHANGE_RESULT_RULE_TYPE = 'changeResult';
 const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
+const CRIT_DICE_RULE_TYPE = 'critDice';
 const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
 /**
@@ -35,7 +37,10 @@ const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
  * Effects off, an Attack Outcome rule that gives a crit is a Make It a Crit button.
  */
 function isRollUseRule(type: string | undefined): boolean {
-	if (type === ATTACK_OUTCOME_RULE_TYPE) return !isRuleAutomationEnabled();
+	if (type === ATTACK_OUTCOME_RULE_TYPE || type === CRIT_DICE_RULE_TYPE) {
+		return !isRuleAutomationEnabled();
+	}
+	if (type === 'critDiceSave') return true;
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||
@@ -63,6 +68,8 @@ interface RollUseGate {
 	effect?: RollEffect;
 	/** A crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
+	/** A use that changes Sneak Attack dice needs a roll that has them. */
+	needsSneakDice?: boolean;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -105,6 +112,13 @@ interface RerollRuleLike {
 	resultUseFor?: (roller: ResultCardView['roller'], card?: ResultCardView) => ResultUse | null;
 	/** With Feature Effects off, what the row of this rule does to the roll. */
 	rollEffect?: RollEffect;
+	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
+	saveType?: string;
+	saveDC?: string;
+	/** With the effect `critDice`: the dice the row adds. */
+	critDiceSpec?: CritDiceSpec;
+	/** A rule that changes Sneak Attack dice. */
+	needsSneakDice?: boolean;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -216,6 +230,8 @@ function rollUseTriggerMatches(
 	if (gate.effect === 'critD20' && outcome.hasCritD20) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
+	if (gate.needsSneakDice && !outcome.hasSneakDice) return false;
+	if (gate.effect === 'critDice' && outcome.hasSneakDice) return false;
 	if (trigger === 'criticalHit' && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
@@ -253,6 +269,7 @@ function gateOf(rule: RerollRuleLike): RollUseGate {
 		...(use ? { use } : {}),
 		...(rule.rollEffect ? { effect: rule.rollEffect } : {}),
 		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
+		...(rule.needsSneakDice === true ? { needsSneakDice: true } : {}),
 	};
 }
 

@@ -32,6 +32,9 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 	if ((cost.actionCost ?? 0) > 0) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costAction'));
 	}
+	if (cost.turnUseKey) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.costOncePerTurn'));
+	}
 	if (cost.heroicReaction) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costHeroicReaction'));
 	}

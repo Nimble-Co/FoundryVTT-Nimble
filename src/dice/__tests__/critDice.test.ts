@@ -227,3 +227,111 @@ describe('a crit that comes from a change of the roll', () => {
 		expect(rerolled.next).toBe(19);
 	});
 });
+
+describe('Sneak Attack dice', () => {
+	const sneak = (formula = '2d8') => ({
+		key: 'Actor.h.Item.s:r',
+		label: 'Sneak Attack',
+		role: 'sneakAttack',
+		formula,
+	});
+	const lines = (roll: DamageRoll) =>
+		roll
+			.critDiceLines()
+			.map((line) => `${line.label}:${line.role}:${line.values.join('+')}=${line.total}`);
+
+	beforeEach(() => {
+		(CONFIG.Dice as unknown as { parser: unknown }).parser = { toAST: () => null };
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+		delete (CONFIG.Dice as unknown as { parser?: unknown }).parser;
+	});
+
+	it('roll on a crit, as a line of their own', async () => {
+		const rolled = diceToRoll([die(3), die(7)]);
+
+		const roll = await attack([die(6, { exploded: true }), die(2)], { critDice: [sneak()] });
+
+		expect(rolled).toEqual(['2d8']);
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:3+7=10']);
+	});
+
+	it('do not roll on a hit', async () => {
+		const rolled = diceToRoll();
+
+		const roll = await attack([die(3)], { critDice: [sneak()] });
+
+		expect(rolled).toEqual([]);
+		expect(lines(roll)).toEqual([]);
+	});
+
+	it('do not explode', async () => {
+		const rolled = diceToRoll([die(8), die(8)]);
+
+		const roll = await attack([die(6, { exploded: true }), die(2)], { critDice: [sneak()] });
+
+		expect(rolled).toEqual(['2d8']);
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:8+8=16']);
+	});
+
+	it('are not Vicious on a Vicious crit', async () => {
+		const rolled = diceToRoll([die(2), die(3)], [die(7), die(4)]);
+
+		const roll = await attack([die(6)], { critDice: [sneak()], explosionStyle: 'vicious' });
+
+		expect(rolled).toEqual(['2d6', '2d8']);
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:7+4=11']);
+	});
+
+	it('go away when a change takes the crit away', async () => {
+		diceToRoll([die(3), die(7)]);
+		const roll = await attack([die(6, { exploded: true }), die(2)], { critDice: [sneak()] });
+		Object.assign(roll, { _evaluated: true, _evaluateASTSync: () => 0 });
+		vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation((() => roll) as never);
+
+		await changeOneDie(roll as never, { term: 0, result: 0 }, { mode: 'set', value: 2 });
+
+		expect(lines(roll)).toEqual([]);
+		expect(roll.critDiceKeys()).toEqual([]);
+	});
+
+	it('come when a change gives the crit', async () => {
+		const roll = await attack([die(3)], { critDice: [sneak('1d6')] });
+		Object.assign(roll, { _evaluated: true, _evaluateASTSync: () => 0 });
+		vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation((() => roll) as never);
+		diceToRoll([die(4)]);
+
+		const changed = await changeOneDie(
+			roll as never,
+			{ term: 0, result: 0 },
+			{ mode: 'set', value: 6 },
+			{ draw: async () => 1 },
+		);
+
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:4=4']);
+		expect(changed.thrown).not.toBeNull();
+	});
+
+	it('are listed for a picker, with their role', async () => {
+		diceToRoll([die(3), die(7)]);
+
+		const roll = await attack([die(6, { exploded: true }), die(2)], { critDice: [sneak()] });
+
+		expect(pickableDice(roll as never).filter((d) => d.dieRole === 'sneakAttack')).toHaveLength(2);
+	});
+
+	it('all go to their max for a failed save, and can come back', async () => {
+		diceToRoll([die(3), die(7)]);
+		const roll = await attack([die(6, { exploded: true }), die(2)], { critDice: [sneak()] });
+		Object.assign(roll, { _evaluated: true, _evaluateASTSync: () => 0 });
+
+		const before = roll.setRoleDiceToMax('sneakAttack');
+
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:8+8=16']);
+		roll.restoreRoleDice('sneakAttack', before);
+		expect(lines(roll)).toEqual(['Sneak Attack:sneakAttack:3+7=10']);
+	});
+});

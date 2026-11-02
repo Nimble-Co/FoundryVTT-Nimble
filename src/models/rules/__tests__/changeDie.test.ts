@@ -66,7 +66,11 @@ describe('ChangeDieRule', () => {
 		expect(schema.change?.initial).toBe('set');
 		expect(schema.amount?.initial).toBe(1);
 		expect(schema.type?.initial).toBe('changeDie');
-		expect(Object.keys(schema.die?.choices ?? {})).toEqual(['primaryDie', 'pickedDie']);
+		expect(Object.keys(schema.die?.choices ?? {})).toEqual([
+			'primaryDie',
+			'pickedDie',
+			'sneakAttackDie',
+		]);
 		expect(Object.keys(schema.change?.choices ?? {})).toEqual(['set', 'add']);
 	});
 

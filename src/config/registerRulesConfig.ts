@@ -12,6 +12,8 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { CritDiceRule } from '../models/rules/critDice.js';
+import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
@@ -95,6 +97,8 @@ export default function registerRulesConfig() {
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
 		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
+		critDice: 'NIMBLE.ruleTypes.critDice',
+		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -158,6 +162,8 @@ export default function registerRulesConfig() {
 		initiativeRollMode: InitiativeRollModeRule,
 		makeCrit: MakeCritRule,
 		maxDamage: MaxDamageRule,
+		critDice: CritDiceRule,
+		critDiceSave: CritDiceSaveRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,

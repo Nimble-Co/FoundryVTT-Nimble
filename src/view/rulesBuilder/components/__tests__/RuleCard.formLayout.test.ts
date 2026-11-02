@@ -59,6 +59,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
+			'oncePerTurn',
 			'oncePerRoll',
 			'rollModeChange',
 			'primaryDieBonus',
@@ -233,6 +234,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
+			'oncePerTurn',
 			'oncePerRoll',
 			'rollModeChange',
 			'automatic',
@@ -292,6 +294,7 @@ describe('RuleCard with a form layout (changeDie)', () => {
 			'die',
 			'change',
 			'addsBonusOnSet',
+			'yieldsTo',
 			'outcome',
 			'attackDelivery',
 			'predicate',
@@ -301,6 +304,7 @@ describe('RuleCard with a form layout (changeDie)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
+			'oncePerTurn',
 			'oncePerRoll',
 			'cardHint',
 		]);
@@ -439,6 +443,7 @@ describe('RuleCard with a form layout (makeCrit)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
+			'oncePerTurn',
 			'cardHint',
 		]);
 	});
@@ -474,6 +479,8 @@ describe('RuleCard without a form layout', () => {
 		'attackOutcome',
 		'makeCrit',
 		'maxDamage',
+		'critDice',
+		'critDiceSave',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

@@ -11,6 +11,7 @@ import {
 	hasUnarmedProficiency,
 } from '#utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '#utils/damage/collectAttackOutcome.js';
+import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
 	applyPostRollIncomingBehavior,
@@ -131,6 +132,9 @@ export async function rollUnarmedStrike(
 		primaryDieModifier: Number(result.primaryDieModifier) || 0,
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
+		...(canCrit && !multiTarget
+			? { critDice: collectCritDice(actor as { rules?: unknown }, delivery) }
+			: {}),
 	};
 
 	if (incomingAttackPlan.disadvantageCount > 0) {
@@ -226,6 +230,7 @@ export async function rollUnarmedStrike(
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
 	for (const identifier of attackOutcome.charges) await spendRuleCharge(actor, identifier);
+	await spendCritDiceUses(actor as unknown as Actor, roll as unknown as DamageRoll);
 	return true;
 }
 

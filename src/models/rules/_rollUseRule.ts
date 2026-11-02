@@ -268,6 +268,23 @@ function costFields(namespace: RollUseNamespace) {
 			label: wordKey(namespace, 'actionCost', 'label'),
 			hint: wordKey(namespace, 'actionCost', 'hint'),
 		}),
+		actionReportOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.actionReportOnly.label',
+				hint: 'NIMBLE.rules.reroll.actionReportOnly.hint',
+				showWhen: (data: Record<string, unknown>) => Number(data.actionCost) > 0,
+			}),
+		),
+		oncePerTurn: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.reroll.oncePerTurn.label',
+			hint: 'NIMBLE.rules.reroll.oncePerTurn.hint',
+		}),
 		oncePerRoll: new fields.BooleanField({
 			required: true,
 			nullable: false,
@@ -336,6 +353,8 @@ const COST_FIELDS = [
 	'woundCost',
 	'heroicReaction',
 	'actionCost',
+	'actionReportOnly',
+	'oncePerTurn',
 	'oncePerRoll',
 ] as const;
 
@@ -363,6 +382,8 @@ abstract class RollUseRule<
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
 	declare actionCost: number;
+	declare actionReportOnly: boolean;
+	declare oncePerTurn: boolean;
 	declare oncePerRoll: boolean;
 	declare cardHint: string;
 	declare cardHintWhen: Predicate;
@@ -429,6 +450,8 @@ abstract class RollUseRule<
 			['woundCost', 'number'],
 			['heroicReaction', 'string'],
 			['actionCost', 'number'],
+			['actionReportOnly', 'boolean'],
+			['oncePerTurn', 'boolean'],
 			['oncePerRoll', 'boolean'],
 			['reach', 'number'],
 			['cardHint', 'string'],
@@ -444,6 +467,8 @@ abstract class RollUseRule<
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			heroicReaction: this.heroicReaction ?? '',
 			actionCost: Math.min(1, Math.max(0, Math.trunc(Number(this.actionCost) || 0))),
+			...(this.actionReportOnly ? { actionReportOnly: true } : {}),
+			...(this.oncePerTurn ? { turnUseKey: `${this.item.uuid}:${this.id}` } : {}),
 		};
 	}
 

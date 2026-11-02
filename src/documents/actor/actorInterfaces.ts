@@ -16,6 +16,8 @@ export interface ActorRollOptions {
 	 * would appear with no explanation of what prompted the roll or what's at stake.
 	 */
 	checkHint?: string | undefined;
+	/** System flags for the card of a roll another card waits on. */
+	cardFlags?: Record<string, unknown> | undefined;
 	/** The DC the card reports the result against, when the source of the check gives one. */
 	dc?: number | null | undefined;
 	prompted?: boolean | undefined;

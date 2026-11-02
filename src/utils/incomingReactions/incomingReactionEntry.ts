@@ -28,7 +28,7 @@ export const ROLL_USES = ['reroll', 'change', 'crit', 'result', 'effect'] as con
 export type RollUse = (typeof ROLL_USES)[number];
 
 /** What a row does when its feature changes the roll by itself with Feature Effects on. */
-export const ROLL_EFFECTS = ['critD20', 'viciousDie'] as const;
+export const ROLL_EFFECTS = ['critD20', 'viciousDie', 'critDice', 'critDiceSave'] as const;
 export type RollEffect = (typeof ROLL_EFFECTS)[number];
 
 /** How a Change a Result rule changes the result of a roll. */
@@ -36,7 +36,7 @@ export const RESULT_CHANGES = ['succeed', 'setTotal', 'add', 'noDamage', 'counts
 export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
-export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
+export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'> | 'sneakAttackDie';
 
 /** How a Change a Die rule changes the die: set it to a face, or add a number. */
 export const DIE_CHANGE_MODES = ['set', 'add'] as const;
@@ -64,6 +64,8 @@ export interface AttackOutcomeView {
 	vicious?: boolean;
 	/** A crit die of the roll is a d20. */
 	hasCritD20?: boolean;
+	/** The roll has Sneak Attack dice. */
+	hasSneakDice?: boolean;
 	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
 	critStays?: boolean;
 	/** False when the roll cannot crit. Absent: read from `options`, else it can. */
@@ -81,9 +83,11 @@ export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined):
 	return (terms ?? []).some((term) => {
 		const die = term as {
 			faces?: unknown;
+			options?: { dieRole?: string };
 			results?: Array<{ result: number; active?: boolean; discarded?: boolean }>;
 		};
 		return (
+			!die?.options?.dieRole &&
 			typeof die?.faces === 'number' &&
 			Array.isArray(die.results) &&
 			die.results.some((r) => r.active !== false && !r.discarded && r.result === die.faces)
@@ -106,6 +110,16 @@ export function critStays(view: AttackOutcomeView): boolean {
 export function canBecomeCrit(view: AttackOutcomeView): boolean {
 	if (view.isCritical === true) return false;
 	return (view.canCrit ?? view.options?.canCrit) !== false;
+}
+
+/** The die role of the dice Sneak Attack adds. */
+export const SNEAK_ATTACK_ROLE = 'sneakAttack';
+
+/** These terms have dice with this role. */
+export function termsHaveRole(terms: readonly unknown[] | undefined, role: string): boolean {
+	return (terms ?? []).some(
+		(term) => (term as { options?: { dieRole?: string } }).options?.dieRole === role,
+	);
 }
 
 /** A crit die of these terms is a d20. */
@@ -182,6 +196,8 @@ export interface IncomingReactionEntry {
 	effect?: RollEffect;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
+	/** A use that changes Sneak Attack dice needs a roll that has them. */
+	needsSneakDice?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
 	/** reroll only: the player picks another stat for the new roll. */
@@ -233,6 +249,8 @@ export interface RerollRecord {
 	next: RerollDieResult | null;
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
+	/** The rule's action could not be paid: the use went on, and the card says so. */
+	noActionLeft?: boolean;
 	woundsGained: number;
 	/** Which result a player kept, when the rule let them choose. */
 	kept?: RerollKept | null;

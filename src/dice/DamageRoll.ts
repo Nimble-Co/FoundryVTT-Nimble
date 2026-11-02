@@ -1,8 +1,10 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
+import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
+import { critDiceLinesOf } from './critDiceLines.js';
 import { critFaceOf } from './critFace.js';
 import {
 	applyKeep,
@@ -14,6 +16,13 @@ import { type ExplosionStyle, type KeptDieBonus, modifierExplosionStyle } from '
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
+
+/** The options of a die term a crit added. */
+interface CritDiceOptions {
+	flavor?: string;
+	dieRole?: string;
+	critDiceKey?: string;
+}
 
 declare namespace DamageRoll {
 	/** Roll data for damage rolls. */
@@ -51,6 +60,8 @@ declare namespace DamageRoll {
 		 * no crit dice; `hit` cannot crit. Neither can miss, except by `forceMiss`.
 		 */
 		maxDamage?: 'hit' | 'crit';
+		/** Dice a crit adds as a line of their own. They do not explode and are not Vicious. */
+		critDice?: CritDiceSpec[];
 		/** The first crit die of a crit is a d20. A 20 goes on with the die of the attack. */
 		critD20?: boolean;
 		/** The features that changed how the roll is read, for the card's tags. */
@@ -804,9 +815,108 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * die. A later change of the roll calls it again. Returns the dice it rolled.
 	 */
 	async settleCritDice(): Promise<number[]> {
-		if (!this.options.critD20 || !this.isCritical) return [];
-		const made = await this.replaceCritDieWithD20();
-		return made?.drawn ?? [];
+		const drawn: number[] = [];
+		if (this.options.critD20 && this.isCritical) {
+			const made = await this.replaceCritDieWithD20();
+			drawn.push(...(made?.drawn ?? []));
+		}
+		if (this.isCritical) {
+			for (const spec of this.options.critDice ?? []) {
+				if (this.critDiceKeys().includes(spec.key)) continue;
+				drawn.push(...(await this.addCritDice(spec)));
+			}
+		} else {
+			this._removeCritDice();
+		}
+		return drawn;
+	}
+
+	/** With Feature Effects off: a row adds the crit dice of a rule, for later changes too. */
+	async addCritDiceTo(spec: CritDiceSpec): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
+		const term = this.terms.find((candidate) => candidate instanceof PrimaryDie);
+		if (!term || !this.isCritical || this.critDiceKeys().includes(spec.key)) return null;
+		this.options.critDice = [...(this.options.critDice ?? []), spec];
+		return { term, drawn: await this.addCritDice(spec) };
+	}
+
+	/** Roll the dice of `spec` as a line of their own. The dice it rolled. */
+	async addCritDice(spec: CritDiceSpec): Promise<number[]> {
+		const roll = new Roll(spec.formula);
+		await roll.evaluate();
+		const dice = roll.terms.filter((t) => t instanceof Terms.Die) as foundry.dice.terms.Die[];
+		for (const term of dice) {
+			Object.assign(term.options, {
+				flavor: spec.label,
+				dieRole: spec.role,
+				critDiceKey: spec.key,
+			});
+			this.terms.push(new Terms.OperatorTerm({ operator: '+' }), term);
+			Object.assign(this.terms.at(-2) as object, { _evaluated: true });
+		}
+		this.resetFormula();
+		this._recalculateTotal();
+		return dice.flatMap((term) => term.results.map((result) => result.result));
+	}
+
+	/** The rules whose crit dice are on this roll. */
+	critDiceKeys(): string[] {
+		const keys = this._critDiceTerms().map((term) => (term.options as CritDiceOptions).critDiceKey);
+		return [...new Set(keys)].filter((key): key is string => !!key);
+	}
+
+	/** One line per feature that added crit dice. */
+	critDiceLines(): CritDiceLine[] {
+		return critDiceLinesOf(this.terms);
+	}
+
+	/** Every die of this role goes to its max. The old faces, for `restoreRoleDice`. */
+	setRoleDiceToMax(role: string): number[] {
+		const before: number[] = [];
+		for (const term of this._critDiceTerms()) {
+			if ((term.options as CritDiceOptions).dieRole !== role) continue;
+			for (const result of term.results) {
+				before.push(result.result);
+				result.result = term.faces ?? result.result;
+			}
+		}
+		this._recalculateTotal();
+		return before;
+	}
+
+	/** The dice of this role get back the faces `setRoleDiceToMax` gave. */
+	restoreRoleDice(role: string, faces: readonly number[]): void {
+		const queue = [...faces];
+		for (const term of this._critDiceTerms()) {
+			if ((term.options as CritDiceOptions).dieRole !== role) continue;
+			for (const result of term.results) result.result = queue.shift() ?? result.result;
+		}
+		this._recalculateTotal();
+	}
+
+	private _critDiceTerms(): foundry.dice.terms.Die[] {
+		return this.terms.filter(
+			(term): term is foundry.dice.terms.Die =>
+				term instanceof Terms.Die && !!(term.options as CritDiceOptions)?.dieRole,
+		);
+	}
+
+	/** Take the crit dice of one rule off the roll: its use went elsewhere this turn. */
+	dropCritDice(key: string): void {
+		this._removeCritDice(key);
+		this.options.critDice = (this.options.critDice ?? []).filter((spec) => spec.key !== key);
+	}
+
+	private _removeCritDice(key?: string): void {
+		const dice = this._critDiceTerms().filter(
+			(term) => !key || (term.options as CritDiceOptions).critDiceKey === key,
+		);
+		if (dice.length < 1) return;
+		for (const term of dice) {
+			const at = this.terms.indexOf(term);
+			this.terms.splice(Math.max(0, at - 1), 2);
+		}
+		this.resetFormula();
+		this._recalculateTotal();
 	}
 
 	/** Reroll the first crit die as a d20, and what it starts. Null when there is none or it is one. */

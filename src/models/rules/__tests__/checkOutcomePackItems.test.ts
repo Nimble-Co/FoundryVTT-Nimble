@@ -379,8 +379,8 @@ describe('the pack items of check outcomes', () => {
 
 	describe('Cunning Strike', () => {
 		it('has the DC of the book, 10+INT', () => {
-			const [node] = readItem(CUNNING_STRIKE).system.activation.effects;
-			expect(node).toMatchObject({ type: 'savingThrow', saveDC: '10+@intelligence' });
+			const rule = packRules(CUNNING_STRIKE).find((each) => each.type === 'critDiceSave');
+			expect(rule).toMatchObject({ saveType: 'strength', saveDC: '10+@intelligence' });
 		});
 	});
 

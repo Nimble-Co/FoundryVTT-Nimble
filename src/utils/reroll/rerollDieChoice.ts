@@ -1,3 +1,4 @@
+import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import {
 	applyRollEffect,
@@ -10,10 +11,11 @@ import {
 	primaryDieRef,
 	rerollOneDie,
 } from '../../dice/oneDieReroll.js';
-import type {
-	ChangeableDie,
-	RerollDie,
-	RollEffect,
+import {
+	type ChangeableDie,
+	type RerollDie,
+	type RollEffect,
+	SNEAK_ATTACK_ROLE,
 } from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollableRoll } from './rerollRollTarget.js';
 
@@ -29,6 +31,12 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 	return current ? pickableDice(current, pickOptions(found, current)) : [];
 }
 
+function chooseDice(all: PickableDie[], die: ChangeableDie, ref: DieRef | null): PickableDie[] {
+	if (die === 'pickedDie') return all;
+	if (die === 'sneakAttackDie') return all.filter((d) => d.dieRole === SNEAK_ATTACK_ROLE);
+	return all.filter((d) => d.term === ref?.term && d.result === ref.result);
+}
+
 /**
  * The dice a player picks from for a Change a Die rule: every pickable die, or
  * only the Primary Die. A die has a bonus only when `change` puts it on the new face.
@@ -41,8 +49,7 @@ function diceForRule(
 	const all = diceToPick(found);
 	const current = found.current?.();
 	const ref = die === 'primaryDie' && current ? primaryDieRef(current) : null;
-	const dice =
-		die === 'pickedDie' ? all : all.filter((d) => d.term === ref?.term && d.result === ref.result);
+	const dice = chooseDice(all, die, ref);
 	if (change.mode !== 'set' || change.addsBonus) return dice;
 	return dice.map(({ bonus: _bonus, ...rest }) => rest);
 }
@@ -59,7 +66,7 @@ function dieToUse(
 	picked: DieRef | null,
 ): DieRef | null {
 	if (die === 'primaryDie') return primaryDieRef(current);
-	const dice = pickableDice(current, pickOptions(found, current));
+	const dice = chooseDice(pickableDice(current, pickOptions(found, current)), die, null);
 	const match = picked
 		? dice.find((d) => d.term === picked.term && d.result === picked.result)
 		: dice.length === 1
@@ -177,6 +184,7 @@ function critFor<TRoll>(
 function effectFor<TRoll>(
 	found: RerollableRoll<TRoll>,
 	effect: RollEffect,
+	critDice: CritDiceSpec | null = null,
 	apply: typeof applyRollEffect = applyRollEffect,
 ): RerollableRoll<TRoll> | null {
 	const current = found.current?.();
@@ -188,7 +196,7 @@ function effectFor<TRoll>(
 		...found,
 		previousResult: ref ? resultAt(current, ref) : null,
 		makeRoll: async () => {
-			made = await apply(current, effect);
+			made = await apply(current, effect, critDice);
 			return made.roll as unknown as TRoll;
 		},
 		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
