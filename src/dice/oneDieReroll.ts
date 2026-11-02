@@ -144,22 +144,47 @@ function modifierExplosionStyle(modifiers: readonly string[] = []): ExplosionSty
 	return hasExplodeModifier(modifiers) ? 'standard' : 'none';
 }
 
+/** The value of the d20 crit die in a roll, if it has one. */
+function d20CritValue(roll: OneDieRoll): number | null {
+	for (const term of roll.terms) {
+		if (!isDieTerm(term)) continue;
+		const d20 = term.results.find((result) => (result as { faces?: number }).faces);
+		if (d20) return d20.result;
+	}
+	return null;
+}
+
+/** The value of a d20 crit die that the change rolled. */
+function newD20Crit(before: number | null, roll: OneDieRoll): number | null {
+	const after = d20CritValue(roll);
+	return after === before ? null : after;
+}
+
 /** A roll of only the dice a one-die reroll rolled, for the 3D dice to throw. */
-function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): foundry.dice.Roll {
+function thrownDice(
+	term: DieTermLike & { options?: object },
+	drawn: number[],
+	d20: number | null = null,
+): foundry.dice.Roll {
+	const same = [...drawn];
+	const at = d20 === null ? -1 : same.indexOf(d20);
+	if (at >= 0) same.splice(at, 1);
+	const groups = [
+		{ faces: term.faces, values: same },
+		{ faces: 20, values: at >= 0 ? [d20 as number] : [] },
+	].filter((group) => group.values.length > 0);
 	return foundry.dice.Roll.fromData({
 		class: 'Roll',
-		formula: `${drawn.length}d${term.faces}`,
-		terms: [
-			{
-				class: 'Die',
-				number: drawn.length,
-				faces: term.faces,
-				modifiers: [],
-				options: { ...(term.options ?? {}) },
-				results: drawn.map((result) => ({ result, active: true })),
-				evaluated: true,
-			},
-		],
+		formula: groups.map((group) => `${group.values.length}d${group.faces}`).join(' + '),
+		terms: groups.map((group) => ({
+			class: 'Die',
+			number: group.values.length,
+			faces: group.faces,
+			modifiers: [],
+			options: { ...(term.options ?? {}) },
+			results: group.values.map((result) => ({ result, active: true })),
+			evaluated: true,
+		})),
 		total: drawn.reduce((sum, value) => sum + value, 0),
 		evaluated: true,
 	} as never) as foundry.dice.Roll;
@@ -220,6 +245,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	dropped: number | null;
 	thrown: foundry.dice.Roll;
 }> {
+	const d20Before = d20CritValue(roll);
 	const copy = cloneRoll(roll);
 	const term = copy.terms[ref.term];
 	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
@@ -258,7 +284,11 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 		previous: changed.previous,
 		next: changed.next,
 		dropped,
-		thrown: thrownDice(term, dropped === null ? rolled : [...rolled, dropped]),
+		thrown: thrownDice(
+			term,
+			dropped === null ? rolled : [...rolled, dropped],
+			newD20Crit(d20Before, copy),
+		),
 	};
 }
 
@@ -283,6 +313,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	next: number;
 	thrown: foundry.dice.Roll | null;
 }> {
+	const d20Before = d20CritValue(roll);
 	const copy = cloneRoll(roll);
 	const term = copy.terms[ref.term];
 	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
@@ -320,7 +351,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 		faces: term.faces,
 		previous: changed.previous,
 		next: changed.next,
-		thrown: rolled.length > 0 ? thrownDice(term, rolled) : null,
+		thrown: rolled.length > 0 ? thrownDice(term, rolled, newD20Crit(d20Before, copy)) : null,
 	};
 }
 
@@ -338,6 +369,7 @@ function cloneRoll<TRoll extends OneDieRoll>(roll: TRoll): TRoll {
 async function makeRollCrit<TRoll extends OneDieRoll>(
 	roll: TRoll,
 ): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
+	const d20Before = d20CritValue(roll);
 	const copy = cloneRoll(roll);
 	const made = await copy.makeCritical?.();
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll cannot be made a crit.');
@@ -350,7 +382,7 @@ async function makeRollCrit<TRoll extends OneDieRoll>(
 		roll: copy,
 		faces: made.term.faces,
 		next: kept ?? null,
-		thrown: rolled.length > 0 ? thrownDice(made.term, rolled) : null,
+		thrown: rolled.length > 0 ? thrownDice(made.term, rolled, newD20Crit(d20Before, copy)) : null,
 	};
 }
 
@@ -364,6 +396,7 @@ async function applyRollEffect<TRoll extends OneDieRoll>(
 	effect: RollEffect,
 	critDice: CritDiceSpec | null = null,
 ): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
+	const d20Before = d20CritValue(roll);
 	const copy = foundry.dice.Roll.fromData(
 		foundry.utils.deepClone(roll.toJSON()) as never,
 	) as unknown as TRoll;
@@ -379,7 +412,8 @@ async function applyRollEffect<TRoll extends OneDieRoll>(
 		roll: copy,
 		faces: made.term.faces,
 		next: kept ?? null,
-		thrown: made.drawn.length > 0 ? thrownDice(made.term, made.drawn) : null,
+		thrown:
+			made.drawn.length > 0 ? thrownDice(made.term, made.drawn, newD20Crit(d20Before, copy)) : null,
 	};
 }
 

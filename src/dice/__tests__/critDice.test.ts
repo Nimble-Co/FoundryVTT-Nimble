@@ -315,6 +315,30 @@ describe('Sneak Attack dice', () => {
 		expect(changed.thrown).not.toBeNull();
 	});
 
+	it('throw the die the d20 replaces, then the d20', async () => {
+		const roll = await attack([die(3)], { critD20: true });
+		Object.assign(roll, { _evaluated: true, _evaluateASTSync: () => 0 });
+		vi.spyOn(foundry.dice.Roll, 'fromData')
+			.mockImplementationOnce((() => roll) as never)
+			.mockImplementation(((data: unknown) => data) as never);
+		diceToRoll([die(13)]);
+
+		const changed = await changeOneDie(
+			roll as never,
+			{ term: 0, result: 0 },
+			{ mode: 'set', value: 6 },
+			{ draw: async () => 1 },
+		);
+
+		const thrown = changed.thrown as unknown as {
+			terms: { faces: number; results: Result[] }[];
+		};
+		expect(thrown.terms.map((term) => [term.faces, term.results.map((r) => r.result)])).toEqual([
+			[6, [1]],
+			[20, [13]],
+		]);
+	});
+
 	it('are listed for a picker, with their role', async () => {
 		diceToRoll([die(3), die(7)]);
 
