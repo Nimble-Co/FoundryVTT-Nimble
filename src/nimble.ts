@@ -20,6 +20,7 @@ import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSyn
 import { registerConditionExpiryHooks } from './hooks/conditionExpiry.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import { registerCritDiceSaveHooks } from './hooks/critDiceSave.js';
+import { registerDemandControlHooks } from './hooks/demandControlOnUse.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
 import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedTrigger.js';
 import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encounterEndTrigger.js';
@@ -149,6 +150,7 @@ registerDyingActionLimitSync();
 registerPendingActionDeltaFold();
 registerChargeSystemHooks();
 registerHeldChangeExpiryHooks();
+registerDemandControlHooks();
 registerHeldChangeQuery();
 registerManaSeedingHooks();
 registerActionEconomySystemHooks();

@@ -116,6 +116,13 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	}
 
 	const tags: AttackOutcomeTag[] = [];
+	for (const feature of new Set(options.outcomeSources?.grantedCast ?? [])) {
+		tags.push({
+			kind: 'cannotMiss',
+			label: localize(`${TAG_TEXT}.grantedCast`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.grantedCastTooltip`, { feature }),
+		});
+	}
 	for (const feature of new Set(options.outcomeSources?.offerDamage ?? [])) {
 		tags.push({
 			kind: 'critDice',

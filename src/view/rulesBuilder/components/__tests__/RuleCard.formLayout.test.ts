@@ -489,6 +489,7 @@ describe('RuleCard without a form layout', () => {
 		'critDice',
 		'critDiceSave',
 		'offerAttackBonus',
+		'demandControl',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

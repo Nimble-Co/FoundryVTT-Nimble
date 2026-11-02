@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "demandControl",
+				"disabled": false,
+				"id": "supremeControlTw",
+				"identifier": "",
+				"label": "Supreme Control",
+				"predicate": {},
+				"priority": 1,
+				"opensOnUse": false,
+				"oncePerRound": false,
+				"cardRow": false,
+				"ignoresDisadvantage": false,
+				"triggerTwice": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

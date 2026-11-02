@@ -49,9 +49,11 @@ function isRollUseRule(type: string | undefined): boolean {
 	if (
 		type === CRIT_DICE_SAVE_RULE_TYPE ||
 		type === OFFER_ATTACK_BONUS_RULE_TYPE ||
-		type === 'keepAmount'
-	)
+		type === 'keepAmount' ||
+		type === 'demandControl'
+	) {
 		return true;
+	}
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||

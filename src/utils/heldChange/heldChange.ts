@@ -76,11 +76,20 @@ export function heldChangesForAttack(input: {
 	return [...own, ...onTarget].filter((held) => held.kind === 'primaryDie');
 }
 
+/** The change that takes disadvantage out of the holder's next roll. */
+export function ignoreDisadvantageChange(attacker: Holder | null | undefined): HeldChange | null {
+	return (
+		heldChangesOn(attacker).find(
+			(held) => held.kind === 'ignoreDisadvantage' && held.appliesTo === 'holderAttacks',
+		) ?? null
+	);
+}
+
 /** The read-only lines of a roll window. */
 export function heldLines(held: HeldChange[]) {
 	return held.map((change) => ({
 		key: `${change.holderUuid}.${change.effectId}`,
-		text: localize('NIMBLE.heldChange.line.primaryDie', {
+		text: localize(`NIMBLE.heldChange.line.${change.kind}`, {
 			label: change.label,
 			value: change.value > 0 ? `+${change.value}` : String(change.value),
 		}),
@@ -126,13 +135,15 @@ export function heldLinesForItem(attacker: Holder | null | undefined, item: Acti
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
 	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return [];
-	return heldLines(
-		heldChangesForAttack({
+	const ignore = ignoreDisadvantageChange(attacker);
+	return heldLines([
+		...(ignore ? [ignore] : []),
+		...heldChangesForAttack({
 			attacker,
 			target: firstTargetActor(),
 			area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
 		}),
-	);
+	]);
 }
 
 /** The amount the holder keeps for its next attack, when this item can use it. */

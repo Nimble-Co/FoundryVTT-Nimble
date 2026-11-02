@@ -12,6 +12,7 @@ import {
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
+import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
 import {
 	broadcastRerollRolling,
@@ -861,6 +862,12 @@ export class CardRerolls {
 		}
 		if (usable.rule.rollEffect === 'keepAmount') {
 			return this.#keepAmount(entry, usable, reject);
+		}
+		if (usable.rule.rollEffect === 'demandControl') {
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry) },
+			} as Record<string, unknown>);
+			return openOnUser(requestingUserId, usable.actor.uuid ?? '');
 		}
 		if (usable.rule.rollEffect) {
 			return this.#applyRollEffect(

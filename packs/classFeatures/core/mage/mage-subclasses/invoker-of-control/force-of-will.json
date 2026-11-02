@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "demandControl",
+				"disabled": false,
+				"id": "forceOfWillOpens",
+				"identifier": "",
+				"label": "Force of Will",
+				"predicate": {},
+				"priority": 1,
+				"opensOnUse": true,
+				"oncePerRound": true,
+				"cardRow": false,
+				"ignoresDisadvantage": false,
+				"triggerTwice": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

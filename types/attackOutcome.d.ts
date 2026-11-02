@@ -9,6 +9,7 @@ export interface AttackOutcomeSources {
 	anyDieCrits: string[];
 	maxDamage?: string[];
 	keptAmount?: string[];
+	grantedCast?: string[];
 	critD20?: string[];
 	vicious?: string[];
 	offerDamage?: string[];

@@ -17,6 +17,7 @@ import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
+import { DemandControlRule } from '../models/rules/demandControl.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
@@ -102,6 +103,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
+		demandControl: 'NIMBLE.ruleTypes.demandControl',
 		keepAmount: 'NIMBLE.ruleTypes.keepAmount',
 		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
@@ -174,6 +176,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
+		demandControl: DemandControlRule,
 		keepAmount: KeepAmountRule,
 		makeCrit: MakeCritRule,
 		maxDamage: MaxDamageRule,

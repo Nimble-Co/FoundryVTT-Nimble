@@ -723,7 +723,8 @@
 						"offerBonus": "Add the bonus",
 						"dualWield": "Dual wield",
 						"critDiceSave": "Make them save",
-						"keepAmount": "Keep this amount"
+						"keepAmount": "Keep this amount",
+						"demandControl": "Demand Control"
 					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
@@ -780,6 +781,8 @@
 					"maxDamage": "Max damage: {feature}",
 					"maxHealing": "Max healing: {feature}",
 					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled.",
+					"grantedCast": "{feature}: free, no disadvantage, cannot miss",
+					"grantedCastTooltip": "{feature} made this cast free. It ignores all disadvantage and cannot miss.",
 					"keptAmount": "No roll: {feature}",
 					"keptAmountTooltip": "{feature} kept the amount of an earlier hit. No die was rolled. It is a hit with no crit."
 				},
@@ -791,6 +794,7 @@
 					"dualWield": "Dual wield",
 					"offerBonus": "Added the bonus",
 					"keepAmount": "Kept the amount",
+					"demandControl": "Demanded Control",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
 					"critDice": "{feature} added its dice to the crit."
@@ -1671,6 +1675,7 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"keepAmount": "Keep the Amount of a Hit",
+			"demandControl": "Demand Control",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
 			"tableRoll": "Table Roll",
@@ -2804,6 +2809,26 @@
 				"primaryDie": {
 					"label": "Primary Die bonus",
 					"hint": "It changes the die, so it can give a crit or make a miss a hit."
+				}
+			},
+			"demandControl": {
+				"description": "Opens the window with the options of the Control Table. Chosen options are dimmed, and they reset at Initiative or when all were chosen.",
+				"opensOnUse": { "label": "Open when used", "hint": "Using this item opens the window." },
+				"oncePerRound": {
+					"label": "1/round",
+					"hint": "The window reports a second use in a round. It does not stop it."
+				},
+				"cardRow": {
+					"label": "Row on a card",
+					"hint": "A row on the owner's missed spell, and on a save card where a target saved against an effect of the owner."
+				},
+				"ignoresDisadvantage": {
+					"label": "Ignore disadvantage",
+					"hint": "Using this item takes out all disadvantage from the owner's next roll this turn."
+				},
+				"triggerTwice": {
+					"label": "Trigger twice",
+					"hint": "The window has a tick to do the chosen option twice, and a tick to use it as a Reaction."
 				}
 			},
 			"keepAmount": {
@@ -4266,11 +4291,49 @@
 				}
 			}
 		},
+		"demandControl": {
+			"title": "Demand Control",
+			"confirm": "Confirm",
+			"confirmCast": "Cast Spell",
+			"chosen": "Chosen",
+			"usedThisRound": "You used this in this round.",
+			"cantrip": "Cantrip",
+			"creature": "Creature",
+			"protected": "Creature it cannot harm",
+			"condition": "Condition",
+			"twice": "Do the option twice",
+			"asReaction": "Use your Reaction",
+			"options": {
+				"iInsist": {
+					"label": "I INSIST",
+					"text": "Cast a cantrip for free, ignoring all disadvantage; it cannot miss."
+				},
+				"elementalAffliction": {
+					"label": "ELEMENTAL AFFLICTION",
+					"text": "A creature within 12 spaces gains the Charged, Smoldering, or Slowed condition."
+				},
+				"no": {
+					"label": "NO",
+					"text": "A creature cannot harm a creature of your choice during its next turn."
+				},
+				"loseControl": {
+					"label": "LOSE CONTROL",
+					"text": "Do all of the above, but the GM chooses each time."
+				}
+			},
+			"card": {
+				"elementalAffliction": "{creature} gains {condition}.",
+				"no": "{creature} cannot harm {protected} during its next turn.",
+				"loseControl": "The GM chooses each option."
+			}
+		},
 		"heldChange": {
 			"keptOnCard": "{label}, next attack: {amount}",
 			"keptTick": "{label}: use {amount} and do not roll",
 			"line": {
 				"primaryDie": "{label}: {value} to Primary Die",
+				"ignoreDisadvantage": "{label}: ignore all disadvantage",
+				"wholeAmount": "{label}: {value}",
 				"spends": "From {source}. This roll spends it.",
 				"stays": "From {source}. It stays until its time ends."
 			}

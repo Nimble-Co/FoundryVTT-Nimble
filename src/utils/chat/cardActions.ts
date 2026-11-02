@@ -11,6 +11,8 @@ import {
 	regainInitiativeManaOnCard,
 	rerollInitiativeManaDieOnCard,
 } from '#utils/combat/initiativeManaRoll.js';
+import { DEMAND_CONTROL_USED_FLAG } from '#utils/demandControl/demandControl.js';
+import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.cardAction`;
 
@@ -18,6 +20,7 @@ export type CardAction =
 	| { name: 'chaosChoose'; choice: ChaosRollChoice }
 	| { name: 'chaosKeep'; index: number }
 	| { name: 'chaosInvoke' }
+	| { name: 'demandControlUsed' }
 	| { name: 'initiativeManaReroll'; index: number }
 	| { name: 'initiativeManaRegain' };
 
@@ -49,6 +52,9 @@ async function runHere(card: ActionCard, action: CardAction): Promise<void> {
 		case 'chaosInvoke':
 			await card.setFlag?.(SYSTEM_ID, CHAOS_INVOKED_FLAG, true);
 			return invokeChaos(ChatMessage.getSpeakerActor(card.speaker as never) as never, card.id);
+		case 'demandControlUsed':
+			await card.setFlag?.(SYSTEM_ID, DEMAND_CONTROL_USED_FLAG, true);
+			return;
 		case 'initiativeManaReroll':
 			return rerollInitiativeManaDieOnCard(card as never, action.index);
 		case 'initiativeManaRegain':

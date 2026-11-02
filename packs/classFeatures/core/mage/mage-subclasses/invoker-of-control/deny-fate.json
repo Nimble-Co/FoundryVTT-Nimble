@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "demandControl",
+				"disabled": false,
+				"id": "denyFateCardRow0",
+				"identifier": "",
+				"label": "Deny Fate",
+				"predicate": {},
+				"priority": 1,
+				"opensOnUse": false,
+				"oncePerRound": false,
+				"cardRow": true,
+				"ignoresDisadvantage": false,
+				"triggerTwice": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

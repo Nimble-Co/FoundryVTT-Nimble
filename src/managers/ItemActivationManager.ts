@@ -62,6 +62,7 @@ import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import {
 	firstTargetActor,
 	heldChangesForAttack,
+	ignoreDisadvantageChange,
 	isAttackRoll,
 	keptAmountFor,
 	spendHeldChanges,
@@ -95,7 +96,11 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
-import { keptAmountRollOptions } from './itemActivation/keptAmountActivation.js';
+import {
+	grantCannotMiss,
+	keptAmountRollOptions,
+	removeDisadvantage,
+} from './itemActivation/keptAmountActivation.js';
 import {
 	applyMaxDamageToRollOptions,
 	noDiceThrown,
@@ -246,6 +251,9 @@ class ItemActivationManager {
 
 	/** The Held Changes this attack uses, which the roll spends. */
 	#heldChanges: HeldChange[] = [];
+
+	/** The Held Change that takes disadvantage out of this roll. */
+	#heldIgnore: HeldChange | null = null;
 
 	/** The kept amount this attack uses in place of a roll. */
 	#keptAmount: HeldChange | null = null;
@@ -765,6 +773,13 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
+					this.#heldIgnore = ignoreDisadvantageChange(this.actor as never);
+					if (this.#options.ignoreDisadvantage || this.#heldIgnore) {
+						removeDisadvantage(damageOptions);
+					}
+					if (this.#options.grantedCannotMiss) {
+						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
+					}
 					const kept = this.#keptAmount;
 					roll = new dependencies.DamageRoll(
 						kept ? String(kept.value) : formula,
@@ -1153,9 +1168,11 @@ class ItemActivationManager {
 		}
 		await spendHeldChanges([
 			...this.#heldChanges,
+			...(this.#heldIgnore ? [this.#heldIgnore] : []),
 			...(this.#keptAmountToEnd ? [this.#keptAmountToEnd] : []),
 		]);
 		this.#heldChanges = [];
+		this.#heldIgnore = null;
 		this.#keptAmountToEnd = null;
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
@@ -1622,6 +1639,10 @@ namespace ItemActivationManager {
 		executeMacro?: boolean;
 		/** Skip dialogs and use provided/default values directly. */
 		fastForward?: boolean;
+		/** The roll takes out disadvantage and keeps advantage. */
+		ignoreDisadvantage?: boolean;
+		/** The name of what makes this attack unable to miss. */
+		grantedCannotMiss?: string;
 		/**
 		 * The upcast enhancement to apply, by index, for a caller that skips the
 		 * dialog. A pinned cast tier that reaches a list of enhancements is

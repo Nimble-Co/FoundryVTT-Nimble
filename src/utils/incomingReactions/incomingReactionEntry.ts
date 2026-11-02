@@ -37,6 +37,7 @@ export const ROLL_EFFECTS = [
 	'offerBonus',
 	'dualWield',
 	'keepAmount',
+	'demandControl',
 ] as const;
 export type RollEffect = (typeof ROLL_EFFECTS)[number];
 

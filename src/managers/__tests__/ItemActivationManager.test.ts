@@ -1381,6 +1381,61 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					});
 				});
 
+				describe('ignore all disadvantage', () => {
+					async function rollWith(options: object, rollMode: number) {
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{ fastForward: true, rollMode, ...options },
+						);
+						manager.activationData = {
+							effects: [{ id: 'd', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' }],
+							targets: { attackType: 'range' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+						return vi.mocked(DamageRoll).mock.calls.at(-1)?.[2] as Record<string, any>;
+					}
+
+					it('takes out disadvantage from the roll mode', async () => {
+						const options = await rollWith({ ignoreDisadvantage: true }, -2);
+						expect(options.rollMode).toBe(0);
+					});
+
+					it('keeps advantage', async () => {
+						const options = await rollWith({ ignoreDisadvantage: true }, 1);
+						expect(options.rollMode).toBe(1);
+					});
+
+					it('takes out each source of disadvantage, and keeps the others', async () => {
+						const options = await rollWith(
+							{ ignoreDisadvantage: true, rollModeSources: [1, -1, -1] },
+							0,
+						);
+						expect(options.rollModeSources).toEqual([1]);
+					});
+
+					it('leaves disadvantage alone with no reason to take it out', async () => {
+						const options = await rollWith({}, -1);
+						expect(options.rollMode).toBe(-1);
+					});
+
+					it('makes the attack unable to miss, and names why', async () => {
+						const options = await rollWith({ grantedCannotMiss: 'I INSIST' }, 0);
+						expect(options.canMiss).toBe(false);
+						expect(options.outcomeSources).toEqual({
+							cannotMiss: ['I INSIST'],
+							grantedCast: ['I INSIST'],
+						});
+					});
+				});
+
 				it('spends nothing when the roll has no Primary Die', async () => {
 					const target = targetWithOpening();
 					await rollAttack('reach', null);

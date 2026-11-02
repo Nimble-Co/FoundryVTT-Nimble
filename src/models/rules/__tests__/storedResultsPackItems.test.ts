@@ -11,4 +11,32 @@ describe('stored result pack items', () => {
 		expect(rules).toHaveLength(1);
 		expect(rules[0]).toMatchObject({ type: 'keepAmount', label: 'Rampage' });
 	});
+
+	describe('Invoker of Control', () => {
+		const INVOKER = 'packs/classFeatures/core/mage/mage-subclasses/invoker-of-control';
+		const controlRule = (file: string) =>
+			readRules(`${INVOKER}/${file}.json`).find((rule) => rule.type === 'demandControl');
+
+		it('Force of Will opens the window, and reports 1/round', () => {
+			expect(controlRule('force-of-will')).toMatchObject({ opensOnUse: true, oncePerRound: true });
+		});
+
+		it('Deny Fate is a row', () => {
+			expect(controlRule('deny-fate')).toMatchObject({ cardRow: true, opensOnUse: false });
+		});
+
+		it('Nullify ignores disadvantage and opens the window, 1/encounter', () => {
+			expect(controlRule('nullify')).toMatchObject({
+				opensOnUse: true,
+				ignoresDisadvantage: true,
+			});
+			const rules = readRules(`${INVOKER}/nullify.json`);
+			expect(rules.find((rule) => rule.type === 'chargePool')).toMatchObject({ max: '1' });
+			expect(rules.find((rule) => rule.type === 'chargeConsumer')).toMatchObject({ cost: '1' });
+		});
+
+		it('Supreme Control triggers twice', () => {
+			expect(controlRule('supreme-control')).toMatchObject({ triggerTwice: true });
+		});
+	});
 });

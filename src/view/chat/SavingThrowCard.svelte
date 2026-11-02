@@ -3,6 +3,7 @@
 
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
+	import DemandControlSaveRow from './components/DemandControlSaveRow.svelte';
 
 	const { messageDocument } = $props();
 
@@ -24,4 +25,5 @@
 	data-card-type="check"
 >
 	<CheckCardRolls {messageDocument} {label} />
+	<DemandControlSaveRow {messageDocument} />
 </article>
