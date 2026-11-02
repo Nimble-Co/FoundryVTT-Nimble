@@ -324,6 +324,35 @@ async function payRerollCost(
 }
 
 /** The cost of a use on this many dice. */
+/**
+ * Give back the part of a per-die payment for dice that did not roll. Gives the
+ * payment that is still paid.
+ */
+async function refundSkippedDice(
+	actor: RerollPayer,
+	cost: RerollCost,
+	paid: PaidRerollCost,
+	dieCount: number,
+	skipped: number,
+): Promise<PaidRerollCost> {
+	const part = (amount: number) => (amount / dieCount) * skipped;
+	await refundRerollCost(actor, cost, {
+		...paid,
+		charges: part(paid.charges),
+		mana: part(paid.mana),
+		wounds: part(paid.wounds),
+		heroicReaction: null,
+		action: null,
+		turnUse: false,
+	});
+	return {
+		...paid,
+		charges: paid.charges - part(paid.charges),
+		mana: paid.mana - part(paid.mana),
+		wounds: paid.wounds - part(paid.wounds),
+	};
+}
+
 function costForDice(cost: RerollCost, count: number): RerollCost {
 	if (!cost.perDie) return cost;
 	return {
@@ -340,6 +369,7 @@ export {
 	findActorCombatant,
 	payRerollCost,
 	refundRerollCost,
+	refundSkippedDice,
 	rerollCostCharges,
 	rerollUsesLeft,
 	type PaidRerollCost,

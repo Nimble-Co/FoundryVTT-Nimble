@@ -1,3 +1,4 @@
+import type { MaxDamageRuleLike } from '#types/maxDamage.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
@@ -6,10 +7,7 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import {
-	type MaxDamageRuleLike,
-	minionMaxDamageRuleFor,
-} from '../../utils/damage/maxDamageOffers.js';
+import { minionMaxDamageRuleFor } from '../../utils/damage/maxDamageOffers.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import {
 	getCurrentUserTargetTokenIds,

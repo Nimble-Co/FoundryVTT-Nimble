@@ -1,5 +1,6 @@
 import type { MeasurableTokenDocument } from '#types/movement.js';
 import { woundsGained } from '#utils/actor/actorHpChangePaths.js';
+import { actorRules } from '#utils/actor/actorRules.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
@@ -24,12 +25,8 @@ interface FreeMoveRuleLike {
 
 type RuleActor = { rules?: Iterable<unknown>; type?: string; uuid?: string };
 
-function rulesOf<T>(actor: RuleActor | null | undefined): T[] {
-	return actor?.rules ? (Array.from(actor.rules) as T[]) : [];
-}
-
 function poolDieRules(actor: RuleActor | null | undefined, trigger: string) {
-	return rulesOf<PoolDieToMaxRuleLike>(actor).filter(
+	return actorRules<PoolDieToMaxRuleLike>(actor).filter(
 		(rule) => rule?.type === 'poolDieToMax' && rule.trigger === trigger && rule.appliesTo?.(),
 	);
 }
@@ -37,7 +34,7 @@ function poolDieRules(actor: RuleActor | null | undefined, trigger: string) {
 /** Raise the dice, then arm the free move of the same item, also with no dice held. */
 async function useRule(rule: PoolDieToMaxRuleLike, actor: RuleActor, count: number): Promise<void> {
 	if (isRuleAutomationEnabled()) await rule.raiseDice?.(count);
-	for (const move of rulesOf<FreeMoveRuleLike>(actor)) {
+	for (const move of actorRules<FreeMoveRuleLike>(actor)) {
 		if (move?.type !== 'freeMove' || move.trigger !== 'afterPoolDiceToMax') continue;
 		if (move.item?.uuid === rule.item?.uuid) await move.offerAfterPoolDice?.();
 	}

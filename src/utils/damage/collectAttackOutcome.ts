@@ -2,6 +2,7 @@ import type { AttackOutcomeSources, ForcedCritKind } from '#types/attackOutcome.
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 import type { AttackDelivery } from './attackDelivery.js';
 import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
 
@@ -48,9 +49,7 @@ interface AttackOutcome {
 }
 
 function rulesOf(owner: RuleOwner | null | undefined): AttackOutcomeRuleLike[] {
-	const rules = owner?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules as Iterable<AttackOutcomeRuleLike>).filter(
+	return actorRules<AttackOutcomeRuleLike>(owner).filter(
 		(rule) => rule?.type === 'attackOutcome' && typeof rule.changeFor === 'function',
 	);
 }

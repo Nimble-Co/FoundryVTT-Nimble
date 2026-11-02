@@ -1,10 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
-import { CHAOS_INVOKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
+import { CHAOS_INVOKED_FLAG, CHAOS_TICKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import { NO_DICE_SO_NICE_FLAGS } from '#utils/rolls/showDiceAnimation.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
@@ -116,6 +117,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		await manager.applyDeferredPoolNodes();
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
+		const chaosRollsNow = manager.invokesChaos && isRuleAutomationEnabled();
+
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
 
@@ -131,7 +134,9 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				flags: {
 					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
 					[SYSTEM_ID]: {
-						...(manager.invokesChaos ? { [CHAOS_INVOKED_FLAG]: true } : {}),
+						...(manager.invokesChaos
+							? { [chaosRollsNow ? CHAOS_INVOKED_FLAG : CHAOS_TICKED_FLAG]: true }
+							: {}),
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,
@@ -175,7 +180,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			targets: Array.from(game.user?.targets ?? []),
 			upcast: manager.upcastResult,
 		});
-		if (card && manager.invokesChaos && this.actor) {
+		if (card && chaosRollsNow && this.actor) {
 			await invokeChaos(this.actor as never, card.id);
 		}
 		return card;

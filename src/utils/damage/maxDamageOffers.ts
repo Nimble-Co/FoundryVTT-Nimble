@@ -1,22 +1,7 @@
 import type { EffectNode } from '#types/effectTree.js';
-import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
+import type { MaxDamageChoice, MaxDamageOffer, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
+import { actorRules } from '../actor/actorRules.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
-
-/** Structural view of a `maxDamage` rule, so this module needs no rule import. */
-export interface MaxDamageRuleLike {
-	type?: string;
-	id?: string;
-	label?: string;
-	use?: 'damage' | 'healing' | 'minionAttack';
-	item?: { name?: string; uuid?: string } | null;
-	givesCrit?: boolean;
-	tempHpChoice?: boolean;
-	minionDies?: boolean;
-	chargePoolIdentifier?: string;
-	chargeCost?: number;
-	canPay?: boolean;
-	covers?(item: unknown): boolean;
-}
 
 interface OfferActor {
 	rules?: unknown;
@@ -27,11 +12,7 @@ interface OfferItem {
 }
 
 function rulesOf(actor: OfferActor | null | undefined): MaxDamageRuleLike[] {
-	const rules = actor?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules as Iterable<MaxDamageRuleLike>).filter(
-		(rule) => rule?.type === 'maxDamage',
-	);
+	return actorRules<MaxDamageRuleLike>(actor).filter((rule) => rule?.type === 'maxDamage');
 }
 
 const hasDice = (formula: unknown) => /\d*d\d/.test(String(formula ?? ''));

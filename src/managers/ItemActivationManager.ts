@@ -1,6 +1,6 @@
 import type { DualWieldChoice } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
-import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
+import type { MaxDamageChoice, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
@@ -50,7 +50,7 @@ import {
 	markDualWieldUse,
 	rollModeOfWeapon,
 } from '../utils/damage/dualWield.js';
-import { type MaxDamageRuleLike, maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
+import { maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {

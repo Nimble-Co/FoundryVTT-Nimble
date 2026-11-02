@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
 
-export const SHOW_CHAOS_TABLE_ROLLS_SETTING_KEY = 'showChaosTableRolls';
+const SHOW_CHAOS_TABLE_ROLLS_SETTING_KEY = 'showChaosTableRolls';
 
 export function registerChaosTableSettings(): void {
 	game.settings.register(

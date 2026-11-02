@@ -69,3 +69,5 @@ The use limit is a Charge Pool rule with **Max charges** `max(2 * @will, 0)` and
 **Action cost** `1 action` makes a use cost 1 action, for a hero in combat only. On their own turn, the hero spends it at once, and the feature does not show when they have no actions left. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction, so it has no 1/round limit. Out of combat, nothing is spent. With the **Costs** toggle off, nothing is spent or checked.
 
 **Note on the card** puts a short note under the feature in its row, such as a limit that the table checks ("Your 2nd miss this round"). **Show the note only when** shows the note only when its tags match, with the same test as **Only when the other creature is**. Empty means on every roll.
+
+**Several dice.** With **Which dice does it reroll?** set to a picked die, **Most dice** lets the player pick up to that many dice and confirm. With a cost per die, each die that rolls pays the cost. A die that an earlier die of the same use removed does not roll, and its cost goes back.

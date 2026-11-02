@@ -349,6 +349,28 @@ describe('rerollWithRule', () => {
 		expect(payer.system.attributes.wounds.value).toBe(1);
 	});
 
+	it('gives back the cost of a picked die that did not roll', async () => {
+		const payer = makeActor({ mana: 3 });
+		const result = await rerollWithRule(
+			input({
+				rule: rule({ rollUseCost: cost({ chargeCost: 0, manaCost: 1, perDie: true }) }),
+				payer: payer as unknown as Actor,
+				dieCount: 2,
+				readNewDie: () => ({
+					faces: 6,
+					value: 3,
+					several: [{ faces: 6, previous: 6, next: 3 }],
+				}),
+			}),
+		);
+
+		expect(result.status).toBe('done');
+		expect(payer.system.resources.mana.current).toBe(2);
+
+		if (result.status === 'done') await result.refund();
+		expect(payer.system.resources.mana.current).toBe(3);
+	});
+
 	it('has nothing to give back for a reroll with no cost', async () => {
 		const payer = makeActor();
 		const result = await rerollWithRule(

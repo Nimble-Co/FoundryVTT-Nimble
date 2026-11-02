@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { ChaosCardDoc, ChaosRoll, ChaosRollChoice } from '#types/chaos.d.ts';
 import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import localize from '../localize.js';
 import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
@@ -8,6 +9,11 @@ import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimat
 
 /** The flag of a card that already invoked Chaos. */
 export const CHAOS_INVOKED_FLAG = 'chaosInvoked';
+
+/** The flag of a card whose tick waits for the button, with Feature Effects off. */
+export const CHAOS_TICKED_FLAG = 'chaosTicked';
+
+const CHAOS_TABLE_NAME = 'Chaos Table';
 
 interface ChaosActor {
 	uuid?: string;
@@ -34,9 +40,7 @@ interface TableResultLike {
 }
 
 function chaosRules(actor: ChaosActor | null | undefined): ChaosRuleLike[] {
-	const rules = actor?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules) as ChaosRuleLike[];
+	return actorRules<ChaosRuleLike>(actor);
 }
 
 /** Whether this hero can invoke Chaos. */
@@ -69,7 +73,7 @@ async function tableResultFor(value: number): Promise<{ name: string; text: stri
 	const pack = game.packs?.get(`${SYSTEM_ID}.nimble-tables`) as unknown as
 		| { getDocuments(query?: object): Promise<Array<{ results?: Iterable<TableResultLike> }>> }
 		| undefined;
-	const [table] = (await pack?.getDocuments({ name: 'Chaos Table' })) ?? [];
+	const [table] = (await pack?.getDocuments({ name: CHAOS_TABLE_NAME })) ?? [];
 	const result = Array.from(table?.results ?? []).find(
 		({ range }) => !!range && range[0] <= value && value <= range[1],
 	);

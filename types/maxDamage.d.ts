@@ -16,3 +16,19 @@ export interface MaxDamageChoice {
 	key: string;
 	tempHp: boolean;
 }
+
+/** Structural view of a `maxDamage` rule, so this module needs no rule import. */
+export interface MaxDamageRuleLike {
+	type?: string;
+	id?: string;
+	label?: string;
+	use?: 'damage' | 'healing' | 'minionAttack';
+	item?: { name?: string; uuid?: string } | null;
+	givesCrit?: boolean;
+	tempHpChoice?: boolean;
+	minionDies?: boolean;
+	chargePoolIdentifier?: string;
+	chargeCost?: number;
+	canPay?: boolean;
+	covers?(item: unknown): boolean;
+}

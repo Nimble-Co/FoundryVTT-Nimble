@@ -5,7 +5,9 @@
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
+	import { cardPrimaryRoll } from './components/attackOutcomeTags.ts';
 	import ConcentrationNode from './components/ConcentrationNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
@@ -117,6 +119,9 @@
 
 	<GrantedActionOffers />
 
+	{#if !cardPrimaryRoll(messageDocument.reactive.system)}
+		<ChaosButton />
+	{/if}
 	<IncomingReactionPrompts place="options" />
 
 	<ChargeConsumptionNode />

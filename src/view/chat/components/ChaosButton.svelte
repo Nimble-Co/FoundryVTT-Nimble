@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SYSTEM_ID } from '#system';
-	import { CHAOS_INVOKED_FLAG, canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
+	import {
+		CHAOS_INVOKED_FLAG,
+		CHAOS_TICKED_FLAG,
+		canInvokeChaos,
+		invokeChaos,
+	} from '#utils/chaos/invokeChaos.js';
 	import localize from '#utils/localize.js';
 	import { isRuleAutomationEnabled } from '../../../settings/automationSettings.js';
 
@@ -24,7 +29,8 @@
 	const shows = $derived(
 		!!message &&
 			!isRuleAutomationEnabled() &&
-			message.reactive?.system?.isCritical === true &&
+			(message.reactive?.system?.isCritical === true ||
+				!!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_TICKED_FLAG]) &&
 			!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_INVOKED_FLAG] &&
 			(game.user?.isGM === true || message.isAuthor === true) &&
 			canInvokeChaos(actor()),

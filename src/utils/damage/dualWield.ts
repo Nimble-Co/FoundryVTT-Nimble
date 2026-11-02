@@ -34,7 +34,7 @@ function currentRoundId(): string | null {
 }
 
 /** Whether the use of this round was spent. Outside combat there is no limit. */
-export function dualWieldUsedThisRound(actor: DualWieldActor | null | undefined): boolean {
+function dualWieldUsedThisRound(actor: DualWieldActor | null | undefined): boolean {
 	const round = currentRoundId();
 	return !!round && actor?.getFlag?.(SYSTEM_ID, FLAG) === round;
 }

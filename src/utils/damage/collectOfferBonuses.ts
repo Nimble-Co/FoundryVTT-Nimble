@@ -1,5 +1,6 @@
 import type { OfferBonus } from '../../models/rules/offerAttackBonus.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 
 interface OfferBonusRuleLike {
 	type?: string;
@@ -12,9 +13,7 @@ export function collectOfferBonuses(
 	offerSource: string | null | undefined,
 ): OfferBonus[] {
 	if (!offerSource || !isRuleAutomationEnabled()) return [];
-	const rules = attacker?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules as Iterable<OfferBonusRuleLike>).flatMap((rule) => {
+	return actorRules<OfferBonusRuleLike>(attacker).flatMap((rule) => {
 		const bonus = rule?.type === 'offerAttackBonus' ? rule.bonusFor?.(offerSource) : null;
 		return bonus ? [bonus] : [];
 	});

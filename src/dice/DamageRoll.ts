@@ -720,6 +720,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				}
 			}
 			this._finalizeOutcomeModifierMode();
+			await this.settleCritDice();
 		} else {
 			// ── Legacy path ──
 			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);

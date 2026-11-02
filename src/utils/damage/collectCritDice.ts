@@ -1,5 +1,6 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 import { markTurnUse } from '../combat/perTurnUse.js';
 import type { AttackDelivery } from './attackDelivery.js';
 
@@ -14,9 +15,7 @@ export function collectCritDice(
 	delivery: AttackDelivery | null,
 ): CritDiceSpec[] {
 	if (!isRuleAutomationEnabled() || !delivery) return [];
-	const rules = attacker?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules as Iterable<CritDiceRuleLike>).flatMap((rule) => {
+	return actorRules<CritDiceRuleLike>(attacker).flatMap((rule) => {
 		const spec = rule?.type === 'critDice' ? rule.specFor?.(delivery) : null;
 		return spec ? [spec] : [];
 	});
