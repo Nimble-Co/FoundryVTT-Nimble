@@ -3,6 +3,7 @@ import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
 import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
+import type { DualWieldWeapon, DualWieldWeaponSelf } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { critDiceLinesOf } from './critDiceLines.js';
 import { critFaceOf } from './critFace.js';
@@ -53,6 +54,9 @@ declare namespace DamageRoll {
 		forcedCritFromDice?: boolean;
 		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
 		critRange?: number;
+		/** This weapon and the other one, on a dual wield attack. */
+		dualWieldSelf?: DualWieldWeaponSelf;
+		dualWieldOther?: DualWieldWeapon;
 		/** The identifier of the item whose offer row made this attack. */
 		offerSource?: string;
 		/** Any die of the roll at its max makes the roll a crit on a hit. */

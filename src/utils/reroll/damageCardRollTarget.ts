@@ -387,6 +387,10 @@ async function preparePrimaryDamage(
 	const roll = appendExtraDamageToRoll(carried.roll, extraDamageChanges(card, added));
 	damageNode.discardedRoll = serialized;
 	damageNode.roll = roll;
+	const keptWeapon = newRoll.options?.dualWieldSelf;
+	if (keptWeapon?.damageType) {
+		(damageNode as { damageType?: string }).damageType = keptWeapon.damageType;
+	}
 	activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
 	const rollsSource = replaceDamageRollInRollsSource(card.rollsSource(), roll);

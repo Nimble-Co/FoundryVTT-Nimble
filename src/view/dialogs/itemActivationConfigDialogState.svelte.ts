@@ -14,6 +14,7 @@ import {
 } from '#utils/actor/conditionalBonuses.js';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import { type DualWieldOffer, dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
@@ -91,6 +92,9 @@ export function createItemActivationConfigDialogState(
 	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
 	const offersLessMana = offersLessManaFor(actor as never, item as never);
 	let lessMana = $state(false);
+	const dualWieldOffer: DualWieldOffer | null = dualWieldOfferFor(actor as never, item as never);
+	let dualWield = $state(false);
+	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -323,6 +327,23 @@ export function createItemActivationConfigDialogState(
 		},
 		maxDamageOffers: maxDamage,
 		offersLessMana,
+		dualWieldOffer,
+		get dualWield() {
+			return dualWield;
+		},
+		// With the same formula, the tick is advantage in the Roll Mode field.
+		set dualWield(value: boolean) {
+			if (dualWieldOffer && !dualWieldOffer.other && value !== dualWield) {
+				selectedRollMode = Math.clamp(selectedRollMode + (value ? 1 : -1), -6, 6);
+			}
+			dualWield = value;
+		},
+		get dualWieldExtraDieOn() {
+			return dualWieldExtraDieOn;
+		},
+		set dualWieldExtraDieOn(value: 'activated' | 'other') {
+			dualWieldExtraDieOn = value;
+		},
 		get lessMana() {
 			return lessMana;
 		},

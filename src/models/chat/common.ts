@@ -373,6 +373,7 @@ const rerollGrant = () =>
 const keepChoiceRoll = () =>
 	new fields.SchemaField({
 		total: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		label: new fields.StringField({ required: false, nullable: false, initial: '' }),
 		outcome: new fields.StringField({
 			required: true,
 			nullable: true,

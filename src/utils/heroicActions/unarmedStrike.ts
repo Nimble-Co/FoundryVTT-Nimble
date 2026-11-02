@@ -12,6 +12,7 @@ import {
 } from '#utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '#utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
+import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
 	applyPostRollIncomingBehavior,
@@ -229,6 +230,7 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
+	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcome.charges) await spendRuleCharge(actor, identifier);
 	await spendCritDiceUses(actor as unknown as Actor, roll as unknown as DamageRoll);
 	return true;

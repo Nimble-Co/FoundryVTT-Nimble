@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
+	import DualWieldField from './components/DualWieldField.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -68,6 +69,14 @@
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
 			lessMana: state.lessMana,
+			...(state.dualWield
+				? {
+						dualWield: {
+							otherItemUuid: state.dualWieldOffer?.other?.uuid ?? null,
+							extraDieOn: state.dualWieldExtraDieOn,
+						},
+					}
+				: {}),
 			consumedPoolDice,
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
@@ -91,6 +100,15 @@
 
 	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
 	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
+	{#if state.dualWieldOffer}
+		<DualWieldField
+			offer={state.dualWieldOffer}
+			itemName={item.name}
+			rollMode={state.selectedRollMode}
+			bind:checked={state.dualWield}
+			bind:extraDieOn={state.dualWieldExtraDieOn}
+		/>
+	{/if}
 
 	{#if state.hasConditionalBonuses}
 		<div>

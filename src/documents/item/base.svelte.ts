@@ -280,6 +280,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			rerollHistory,
 			primaryDieBonuses,
 			noDiceThrown,
+			dualWieldKeep,
 		} = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
@@ -352,7 +353,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					actorType: this.actor?.type ?? '',
 					activation,
 					image: this.img || 'icons/svg/item-bag.svg',
-					incomingReactions: incomingReactions ?? [],
+					incomingReactions: [
+						...(incomingReactions ?? []),
+						...(dualWieldKeep ? [dualWieldKeep.entry] : []),
+					],
+					...(dualWieldKeep ? { pendingKeep: dualWieldKeep.pendingKeep } : {}),
 					rerolls: rerollHistory?.rerolls ?? [],
 					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,

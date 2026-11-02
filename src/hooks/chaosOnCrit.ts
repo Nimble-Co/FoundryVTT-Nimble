@@ -9,7 +9,7 @@ interface AttackCard {
 	id?: string | null;
 	author?: { id?: string | null; active?: boolean } | null;
 	speaker?: unknown;
-	system?: { isCritical?: boolean };
+	system?: { isCritical?: boolean; pendingKeep?: unknown };
 	getFlag(scope: string, key: string): unknown;
 	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 }
@@ -24,6 +24,7 @@ const invoked = new Set<string>();
 
 export async function invokeChaosOnCrit(card: AttackCard): Promise<void> {
 	if (!card.id || card.system?.isCritical !== true || !isRuleAutomationEnabled()) return;
+	if (card.system.pendingKeep) return;
 	if (invoked.has(card.id) || card.getFlag(SYSTEM_ID, CHAOS_INVOKED_FLAG)) return;
 	if (!isAttackAuthorClient(card)) return;
 	const actor = ChatMessage.getSpeakerActor(card.speaker as never);

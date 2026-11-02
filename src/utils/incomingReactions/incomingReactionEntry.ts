@@ -34,6 +34,7 @@ export const ROLL_EFFECTS = [
 	'critDice',
 	'critDiceSave',
 	'offerBonus',
+	'dualWield',
 ] as const;
 export type RollEffect = (typeof ROLL_EFFECTS)[number];
 
@@ -322,6 +323,8 @@ export interface KeepChoiceRoll {
 	total: number;
 	/** Null for a roll that has no hit or miss, such as a save. */
 	outcome: (typeof KEEP_OUTCOMES)[number] | null;
+	/** The weapon of this result, on a dual wield attack. */
+	label?: string;
 }
 
 /**

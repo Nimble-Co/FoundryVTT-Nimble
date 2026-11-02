@@ -28,6 +28,7 @@ import type {
 	RollEffect,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { SNEAK_ATTACK_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
+import localize from '#utils/localize.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
@@ -86,8 +87,14 @@ import {
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
-import type { DamageRoll } from '../../dice/DamageRoll.js';
+import { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
+import {
+	dualWieldEntry,
+	dualWieldRecord,
+	keepChoiceOfWeapon,
+	otherWeaponOf,
+} from '../../utils/damage/dualWield.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
@@ -374,6 +381,43 @@ export class CardRerolls {
 			if (rolling && messageId) broadcastRerollRolling(messageId, null);
 			throw error;
 		}
+	}
+
+	/** A whole reroll of a dual wield attack rolls the other weapon too: the choice comes again. */
+	async #offerOtherWeaponAgain(rollTarget: RerollRollTarget, actor: Actor.Implementation) {
+		const target = rollTarget.findRoll();
+		const current = target?.current?.();
+		const next = current ? otherWeaponOf(current as never) : null;
+		if (!target || !current || !next) return;
+
+		const roll = new DamageRoll(next.formula, actor.getRollData() as never, next.options as never);
+		await roll.evaluate();
+		const input = {
+			actorUuid: actor.uuid ?? '',
+			itemUuid: (next.options.dualWieldSelf as { itemUuid: string }).itemUuid,
+			label: localize('NIMBLE.rollWindow.dualWield.name'),
+		};
+		const entry = dualWieldEntry(input) as IncomingReactionEntry;
+		await this.#host.update({
+			system: { incomingReactions: [...this.#host.incomingReactions(), entry] },
+		} as Record<string, unknown>);
+		await this.#waitForKeep(
+			entry,
+			{
+				...target,
+				diceToThrow: () => roll,
+				keepChoice: (each: unknown) => keepChoiceOfWeapon(each as never),
+				shownTotal: undefined,
+			},
+			{
+				status: 'done',
+				roll,
+				reroll: dualWieldRecord({ ...input, entryId: entry.id }),
+				discardedCritTriggers: false,
+				refund: async () => {},
+			},
+			actor.uuid ?? '',
+		);
 	}
 
 	/** The reroll result waiting for a player to choose, or null. */
@@ -872,12 +916,15 @@ export class CardRerolls {
 			place: async (done) => {
 				await this.#addGrants(done, usable.rule, rollTarget);
 				if (chooserUuid) return this.#waitForKeep(entry, target, done, chooserUuid);
-				return this.#placeReroll(entry, target, done.roll, {
+				await this.#placeReroll(entry, target, done.roll, {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
 					...(cannotFail ? { resultChange: cannotFailChange(entry, cannotFail) } : {}),
 				});
+				if ((usable.rule.die ?? 'wholeRoll') === 'wholeRoll') {
+					await this.#offerOtherWeaponAgain(rollTarget, usable.actor);
+				}
 			},
 		});
 		if (result.status === 'done') await this.#applyGrants(result.reroll, usable.rule);

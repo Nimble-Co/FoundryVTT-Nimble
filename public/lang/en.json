@@ -719,6 +719,7 @@
 						"viciousDie": "Add the Vicious die",
 						"critDice": "Add the dice",
 						"offerBonus": "Add the bonus",
+						"dualWield": "Dual wield",
 						"critDiceSave": "Make them save"
 					},
 					"crit": "Make It a Crit",
@@ -782,6 +783,7 @@
 				"costOncePerTurn": "1/turn",
 				"costManaPerDie": "{cost} mana per die",
 				"effectHistory": {
+					"dualWield": "Dual wield",
 					"offerBonus": "Added the bonus",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
@@ -4238,6 +4240,13 @@
 		},
 		"rollWindow": {
 			"lessMana": "Spend 1 less mana",
+			"dualWield": {
+				"name": "Dual wield",
+				"advantage": "Dual wield: gain advantage (1/round)",
+				"withOther": "Dual wield: also roll {other} and keep one (1/round)",
+				"extraDie": "Which weapon gets the extra die?",
+				"used": "You used this in this round."
+			},
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",
