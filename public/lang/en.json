@@ -690,6 +690,7 @@
 				"notAddedTooltip": "The die was set to a value. A set value is final, so this bonus is not added.",
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
+			"cardActionNeedsGm": "A GM must be online to do this.",
 			"incomingReactions": {
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",

@@ -5,8 +5,8 @@
 		CHAOS_INVOKED_FLAG,
 		CHAOS_TICKED_FLAG,
 		canInvokeChaos,
-		invokeChaos,
 	} from '#utils/chaos/invokeChaos.js';
+	import { canActOnCard, runCardAction } from '#utils/chat/cardActions.js';
 	import localize from '#utils/localize.js';
 	import { isRuleAutomationEnabled } from '../../../settings/automationSettings.js';
 
@@ -18,7 +18,6 @@
 			system?: { isCritical?: boolean };
 			flags?: Record<string, Record<string, unknown>>;
 		};
-		setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 	}
 
 	let busy = $state(false);
@@ -32,7 +31,7 @@
 			(message.reactive?.system?.isCritical === true ||
 				!!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_TICKED_FLAG]) &&
 			!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_INVOKED_FLAG] &&
-			(game.user?.isGM === true || message.isAuthor === true) &&
+			canActOnCard(message, actor()) &&
 			canInvokeChaos(actor()),
 	);
 
@@ -40,8 +39,7 @@
 		if (busy || !message) return;
 		busy = true;
 		try {
-			await message.setFlag(SYSTEM_ID, CHAOS_INVOKED_FLAG, true);
-			await invokeChaos(actor(), message.id ?? null);
+			await runCardAction(message as never, { name: 'chaosInvoke' });
 		} finally {
 			busy = false;
 		}

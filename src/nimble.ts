@@ -45,6 +45,7 @@ import registerModuleIntegrations from './integrations/index.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import { registerMarkLifecycleHooks } from './utils/actor/markLifecycle.js';
+import { registerCardActionQuery } from './utils/chat/cardActions.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
@@ -170,6 +171,7 @@ registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerSaveResolvedHooks();
 registerCritDiceSaveHooks();
+registerCardActionQuery();
 registerChaosOnCritHooks();
 registerChaosWhisperHooks();
 registerModuleIntegrations();

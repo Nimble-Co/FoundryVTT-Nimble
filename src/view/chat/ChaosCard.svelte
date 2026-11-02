@@ -2,7 +2,7 @@
 	import type { ChaosCardDoc, ChaosCardSystem, ChaosRollChoice } from '#types/chaos.d.ts';
 	import type { ChaosCardProps } from '#types/components/ChaosCard.d.ts';
 
-	import { chooseChaosRoll, keepChaosRoll } from '#utils/chaos/invokeChaos.js';
+	import { canActOnCard, runCardAction } from '#utils/chat/cardActions.js';
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardHeader from './components/CardHeader.svelte';
@@ -19,9 +19,7 @@
 	const system = $derived(message.reactive.system);
 	const headerBackgroundColor = $derived(message.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
-	const canAct = $derived(game.user?.isGM === true || message.isAuthor === true);
-
-	const actor = () => fromUuidSync(system.actorUuid as never) as never;
+	const canAct = $derived(canActOnCard(message, fromUuidSync(system.actorUuid as never) as never));
 
 	async function run(action: () => Promise<void>) {
 		if (busy) return;
@@ -33,8 +31,10 @@
 		}
 	}
 
-	const choose = (choice: ChaosRollChoice) => run(() => chooseChaosRoll(message, actor(), choice));
-	const keep = (index: number) => run(() => keepChaosRoll(message, index));
+	const choose = (choice: ChaosRollChoice) =>
+		run(() => runCardAction(message as never, { name: 'chaosChoose', choice }));
+	const keep = (index: number) =>
+		run(() => runCardAction(message as never, { name: 'chaosKeep', index }));
 </script>
 
 <CardHeader {messageDocument} />

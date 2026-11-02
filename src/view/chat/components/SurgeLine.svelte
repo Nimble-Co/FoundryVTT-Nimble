@@ -2,17 +2,18 @@
 	import type { SurgeLineProps } from '#types/components/SurgeLine.d.ts';
 
 	import localize from '#utils/localize.js';
-	import {
-		canRerollSurgeDie,
-		regainSurgeManaOnCard,
-		rerollSurgeDieOnCard,
-		surgeTotal,
-	} from '#utils/combat/surgeMana.js';
+	import { canActOnCard, runCardAction } from '#utils/chat/cardActions.js';
+	import { canRerollSurgeDie, surgeTotal } from '#utils/combat/surgeMana.js';
 
 	let { messageDocument }: SurgeLineProps = $props();
 
 	const surge = $derived(messageDocument.reactive?.system?.surge ?? null);
-	const canAct = $derived(game.user?.isGM === true || messageDocument.isAuthor === true);
+	const canAct = $derived(
+		canActOnCard(
+			messageDocument as never,
+			fromUuidSync((messageDocument.system as { actorUuid?: string }).actorUuid as never) as never,
+		),
+	);
 	const diceText = $derived(
 		surge
 			? [
@@ -64,7 +65,8 @@
 						<button
 							type="button"
 							disabled={busy}
-							onclick={() => run(() => rerollSurgeDieOnCard(messageDocument as never, index))}
+							onclick={() =>
+								run(() => runCardAction(messageDocument as never, { name: 'surgeReroll', index }))}
 						>
 							{localize('NIMBLE.chat.initiative.surgeRerollOne')}
 						</button>
@@ -74,14 +76,7 @@
 					type="button"
 					disabled={busy}
 					onclick={() =>
-						run(() =>
-							regainSurgeManaOnCard(
-								messageDocument as never,
-								fromUuidSync(
-									(messageDocument.system as { actorUuid?: string }).actorUuid as never,
-								) as never,
-							),
-						)}
+						run(() => runCardAction(messageDocument as never, { name: 'surgeRegain' }))}
 				>
 					{localize('NIMBLE.chat.initiative.surgeRegain')}
 				</button>
