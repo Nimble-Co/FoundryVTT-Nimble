@@ -166,8 +166,6 @@ export async function rollUnarmedStrike(
 			...Array.from({ length: incomingAttackPlan.disadvantageCount }, () => -1),
 		];
 	}
-	const heldIgnore = ignoreDisadvantageChange(actor as never);
-	if (heldIgnore) removeDisadvantage(rollOptions as never);
 	if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
 	if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
 		rollOptions.missThreshold = incomingAttackPlan.missThreshold;
@@ -179,6 +177,8 @@ export async function rollUnarmedStrike(
 
 	const keptAmount = keptAmountFor(actor as never, unarmedItem as never);
 	const kept = result.keptAmount === false ? null : keptAmount;
+	const heldIgnore = kept ? null : ignoreDisadvantageChange(actor as never);
+	if (heldIgnore) removeDisadvantage(rollOptions as never);
 	const firstRoll = new DamageRoll(
 		kept ? String(kept.value) : rollFormula,
 		actor.getRollData(),

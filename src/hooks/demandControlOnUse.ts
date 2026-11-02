@@ -6,6 +6,7 @@ import {
 } from '#utils/demandControl/demandControl.js';
 import { openDemandControl } from '#utils/demandControl/openDemandControl.js';
 import { createHeldChange } from '#utils/heldChange/heldChange.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 interface UsedItem {
 	id?: string | null;
@@ -45,6 +46,7 @@ export function registerDemandControlHooks(): void {
 	Hooks.on(
 		systemHookName('useItem') as never,
 		(async (item: UsedItem) => {
+			if (!isRuleAutomationEnabled()) return;
 			const actor = item.actor as never;
 			const rule = controlRules(actor).find(
 				(each) => (each as RuleOfItem).item?.id === item.id && each.opensOnUse,

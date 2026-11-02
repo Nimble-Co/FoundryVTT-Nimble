@@ -36,6 +36,13 @@ describe('attackOutcomeChargesToSpend', () => {
 		).toEqual(['pool']);
 	});
 
+	it('spends nothing for a crit the Primary Die gave by itself', () => {
+		const natural = hit(8, { isCritical: true, anyDieAtMax: true });
+		for (const gift of ['forcedCritAlways', 'forcedCritOnHit', 'anyDieCrits'] as const) {
+			expect(attackOutcomeChargesToSpend([charge(gift)], natural)).toEqual([]);
+		}
+	});
+
 	it('spends nothing for any-die crits with no die at max', () => {
 		expect(attackOutcomeChargesToSpend([charge('anyDieCrits')], hit(4))).toEqual([]);
 	});

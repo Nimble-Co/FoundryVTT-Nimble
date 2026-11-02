@@ -191,11 +191,11 @@ function gaveToRoll(gift: AttackOutcomeGift, roll: OutcomeRoll): boolean {
 		case 'cannotMiss':
 			return face > 0 && face <= (roll.options?.missThreshold ?? DEFAULT_MISS_THRESHOLD);
 		case 'critRange':
-			return roll.isCritical === true && face < faces;
-		case 'anyDieCrits':
-			return roll.isCritical === true && roll.anyDieAtMax === true;
 		case 'forcedCritAlways':
 		case 'forcedCritOnHit':
+			return roll.isCritical === true && face < faces;
+		case 'anyDieCrits':
+			return roll.isCritical === true && face < faces && roll.anyDieAtMax === true;
 		case 'critD20':
 		case 'vicious':
 			return roll.isCritical === true;

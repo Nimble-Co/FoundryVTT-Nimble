@@ -1328,7 +1328,7 @@ class NimbleChatMessage extends ChatMessage {
 			});
 
 			if (wasKilled) {
-				void giveMarkedDeathRecovery(target.actor as never, sourceItem as never);
+				await giveMarkedDeathRecovery(target.actor as never, sourceItem as never);
 				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
 				if (attacker) {
 					// @ts-expect-error Custom hook

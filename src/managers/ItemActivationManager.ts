@@ -482,6 +482,8 @@ class ItemActivationManager {
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 		const targetDomain = this.#getSoleTargetDomain();
+		this.#applyChosenWeapon(dialogData);
+
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
 			this.actor as OfferingActor,
@@ -499,8 +501,6 @@ class ItemActivationManager {
 		// before the rolls so the spend and the `@spent` the formulas resolve
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
-
-		this.#applyChosenWeapon(dialogData);
 
 		this.#keptAmountToEnd = keptAmountFor(this.actor as never, this.#item as never);
 		this.#keptAmount = dialogData.keptAmount === false ? null : this.#keptAmountToEnd;
@@ -804,7 +804,13 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
-					this.#heldIgnore = ignoreDisadvantageChange(this.actor as never);
+					this.#heldIgnore =
+						isAttackRoll(this.activationData?.targets?.attackType, node) &&
+						!this.#keptAmount &&
+						!this.#maxDamage &&
+						!this.#options.ignoreDisadvantage
+							? ignoreDisadvantageChange(this.actor as never)
+							: null;
 					if (this.#options.ignoreDisadvantage || this.#heldIgnore) {
 						removeDisadvantage(damageOptions);
 					}
