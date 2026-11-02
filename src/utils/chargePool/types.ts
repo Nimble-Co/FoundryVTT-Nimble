@@ -67,6 +67,8 @@ type ChargePoolState = {
 	 * wins: a pool left out of the readouts never reaches the header.
 	 */
 	showAsResource: boolean;
+	/** The book gives no cap: show the count alone. */
+	hideMax?: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -89,6 +91,7 @@ type ChargePoolRuleLike = {
 	dieSize?: string | null;
 	hidden?: boolean;
 	showAsResource?: boolean;
+	hideMax?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;
@@ -193,6 +196,7 @@ type ChargeConsumptionDetail = {
 	previousValue: number;
 	currentValue: number;
 	maxValue: number;
+	hideMax?: boolean;
 	change: number;
 	recovery?: {
 		trigger: string;

@@ -79,7 +79,8 @@
 					"free": "Free",
 					"mana": "Costs {amount} mana",
 					"usesBack": "{left} of {max} left. It comes back each {per}.",
-					"usesLeft": "{left} of {max} left"
+					"usesLeft": "{left} of {max} left",
+					"countLeft": "{left} left"
 				},
 				"saveTile": {
 					"advantage": "Saves with {count} Advantage",
@@ -333,6 +334,7 @@
 				"damageType": "{type} damage",
 				"concentration": "Concentration",
 				"usesLeft": "{left} of {max} left.",
+				"countLeft": "{left} left.",
 				"usesBack": "{left} of {max} left. They come back each {per}.",
 				"usesOf": "{pool} of {name}",
 				"delete": "Delete",
@@ -1874,6 +1876,10 @@
 				"showAsResource": {
 					"label": "Show as a resource",
 					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
+				},
+				"hideMax": {
+					"label": "Show the count with no maximum",
+					"hint": "For a pool the book gives no cap. The maximum stays only as a limit, and the sheet and the card show the count alone."
 				},
 				"recoveries": {
 					"label": "Recoveries",

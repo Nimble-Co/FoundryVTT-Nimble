@@ -151,6 +151,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
 				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				hideMax: toPoolDisplayFlag(sourcePool.hideMax),
 				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
@@ -202,6 +203,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				icon: normalizeIcon(sourcePool.icon),
 				hidden: toPoolDisplayFlag(sourcePool.hidden),
 				showAsResource: toPoolDisplayFlag(sourcePool.showAsResource),
+				hideMax: toPoolDisplayFlag(sourcePool.hideMax),
 				seeded: toSeededMarker(sourcePool.seeded),
 				recoveries,
 			};
@@ -452,6 +454,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				icon: normalizeIcon(poolRule.icon),
 				hidden: toPoolDisplayFlag(poolRule.hidden),
 				showAsResource: toPoolDisplayFlag(poolRule.showAsResource),
+				hideMax: toPoolDisplayFlag(poolRule.hideMax),
 				initial,
 				recoveries,
 			};
@@ -501,6 +504,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			// rule re-hides or re-reveals a pool that is already tracked in storage.
 			hidden: definition.hidden,
 			showAsResource: definition.showAsResource,
+			hideMax: definition.hideMax,
 			recoveries: definition.recoveries,
 		};
 	}
@@ -931,6 +935,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.icon === right.icon &&
 		left.hidden === right.hidden &&
 		left.showAsResource === right.showAsResource &&
+		Boolean(left.hideMax) === Boolean(right.hideMax) &&
 		left.seeded === right.seeded &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);

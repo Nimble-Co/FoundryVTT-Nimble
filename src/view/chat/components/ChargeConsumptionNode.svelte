@@ -55,7 +55,9 @@
 						</span>
 					{/if}
 					<span class="nimble-charge-consumption__label">{entry.poolLabel}</span>
-					({entry.recovery?.newValue ?? entry.currentValue}/{entry.maxValue})
+					({entry.recovery?.newValue ?? entry.currentValue}{entry.hideMax
+						? ''
+						: `/${entry.maxValue}`})
 				</span>
 			</div>
 		{/each}

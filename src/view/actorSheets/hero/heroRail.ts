@@ -88,6 +88,8 @@ export interface ChargesMeterView {
 	die: number | null;
 	value: number;
 	max: number;
+	/** the book gives no cap: show the count alone */
+	hideMax?: boolean;
 	/** the temporary uses in `value`, in words; null with none */
 	temporary: string | null;
 	summary: string;
@@ -393,10 +395,11 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 				die,
 				value: pool.current,
 				max: pool.max,
+				hideMax: pool.hideMax,
 				temporary: pool.temporary
 					? format(`${METER}.temporary`, { count: String(pool.temporary) })
 					: null,
-				summary: `${pool.current}/${pool.max}`,
+				summary: pool.hideMax ? String(pool.current) : `${pool.current}/${pool.max}`,
 				currentLabel: format('NIMBLE.actorSheet.parts.vitalPlate.current', { label: pool.label }),
 				rollOne:
 					die && pool.current > 0

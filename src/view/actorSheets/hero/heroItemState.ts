@@ -33,6 +33,7 @@ function poolsOf(actor: NimbleCharacter, item: Item, all: ChargePoolState[]): It
 		label: pool.label,
 		current: pool.current,
 		max: pool.max,
+		hideMax: pool.hideMax,
 		need: Math.max(
 			1,
 			consumers

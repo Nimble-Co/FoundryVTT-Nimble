@@ -85,4 +85,5 @@ export interface ChargePoolLike {
 	hidden: boolean;
 	/** the author put the pool in the header */
 	showAsResource: boolean;
+	hideMax?: boolean;
 }

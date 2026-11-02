@@ -4,6 +4,8 @@ export type PoolKind = 'mana' | 'dice' | 'charges' | 'uses' | 'count';
 export interface RowUses {
 	left: number;
 	max: number;
+	/** the book gives no cap: show the count alone */
+	hideMax?: boolean;
 	/** when they come back: turn, Safe Rest, encounter */
 	per?: string;
 	/** uses that one use costs; fewer left = out. Default 1 */

@@ -69,7 +69,7 @@
 		return `
 			<header class="nimble-tooltip__enricher-header">
 				<h3 class="nimble-tooltip__enricher-heading">${escapedLabel}</h3>
-				<span class="nimble-tooltip__tag nimble-tooltip__tag--item">${pool.current}/${pool.max}</span>
+				<span class="nimble-tooltip__tag nimble-tooltip__tag--item">${pool.current}${pool.hideMax ? '' : `/${pool.max}`}</span>
 			</header>
 			<section class="nimble-tooltip__description-wrapper">
 				<p class="nimble-charge-tooltip__section-label">${escapeHtml(localize('NIMBLE.charges.recoveryMethods'))}</p>
@@ -137,7 +137,9 @@
 				{:else}
 					<i class="{ChargeUiConfig.defaultPoolIcon} charge-indicator__icon" aria-hidden="true"></i>
 				{/if}
-				<span class="charge-indicator__value">{pool.current}/{pool.max}</span>
+				<span class="charge-indicator__value"
+					>{pool.current}{pool.hideMax ? '' : `/${pool.max}`}</span
+				>
 			</button>
 		{/each}
 	</div>

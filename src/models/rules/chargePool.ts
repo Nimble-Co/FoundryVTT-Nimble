@@ -61,6 +61,13 @@ function schema() {
 			label: 'NIMBLE.rules.chargePool.showAsResource.label',
 			hint: 'NIMBLE.rules.chargePool.showAsResource.hint',
 		}),
+		hideMax: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.chargePool.hideMax.label',
+			hint: 'NIMBLE.rules.chargePool.hideMax.hint',
+		}),
 		recoveries: new fields.ArrayField(
 			new fields.SchemaField({
 				trigger: new fields.StringField({

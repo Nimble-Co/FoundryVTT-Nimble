@@ -259,11 +259,11 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 					variant="label"
 					rest={editing}
 					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: pool.id, value })}
-				/><span>/ {pool.max}</span>
+				/>{#if !pool.hideMax}<span>/ {pool.max}</span>{/if}
 			</span>
 		</div>
 		<div class="cells">
-			{#each { length: pool.max }, index}
+			{#each { length: pool.hideMax ? 0 : pool.max }, index}
 				{#if pool.rollOne && index < pool.value}
 					{@const rollOne = pool.rollOne}
 					<button

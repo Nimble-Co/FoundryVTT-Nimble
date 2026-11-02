@@ -76,7 +76,15 @@ export type HeroChoiceStep =
 
 /** A number that you type in edit mode: the charges left in a pool of the item, or its quantity. */
 export type HeroRowField =
-	| { kind: 'uses'; poolId: string; label: string; value: number; max: number; per: string }
+	| {
+			kind: 'uses';
+			poolId: string;
+			label: string;
+			value: number;
+			max: number;
+			hideMax?: boolean;
+			per: string;
+	  }
 	| { kind: 'quantity'; itemId: string; label: string; value: number };
 
 /** The edit-mode select that moves an object in or out of a container. */
@@ -276,6 +284,7 @@ function usesOf(state: HeroItemState, context: HeroSheetContext): RowUses[] {
 	return state.pools.map((pool) => ({
 		left: pool.current,
 		max: pool.max,
+		hideMax: pool.hideMax,
 		per: perWord(pool.per, context),
 		need: pool.need,
 	}));
@@ -286,6 +295,7 @@ function usesFacts(state: HeroItemState, context: HeroSheetContext): [string, st
 	return state.pools.map((pool) => {
 		const per = perWord(pool.per, context);
 		const data = { left: String(pool.current), max: String(pool.max) };
+		if (pool.hideMax) return [label, context.format(`${SHARED}.countLeft`, data)];
 		return [
 			label,
 			per
@@ -480,6 +490,7 @@ export function itemRow(
 			label: format(`${SHARED}.usesOf`, { name, pool: pool.label }),
 			value: pool.current,
 			max: pool.max,
+			hideMax: pool.hideMax,
 			per: perWord(pool.per, context) ?? '',
 		})),
 	};

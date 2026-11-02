@@ -72,7 +72,8 @@
 						"needsFeatureEffects": false,
 						"predicate": {}
 					}
-				]
+				],
+				"hideMax": true
 			}
 		],
 		"activation": {

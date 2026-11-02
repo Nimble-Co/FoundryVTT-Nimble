@@ -240,6 +240,7 @@ async function consumeOnResolvedItemUse(
 			previousValue,
 			currentValue,
 			maxValue: postRecoveryPool.max,
+			...(postRecoveryPool.hideMax ? { hideMax: true } : {}),
 			change,
 		});
 	}
@@ -272,6 +273,7 @@ async function consumeOnResolvedItemUse(
 			previousValue,
 			currentValue,
 			maxValue: postRecoveryPool.max,
+			...(postRecoveryPool.hideMax ? { hideMax: true } : {}),
 			change,
 			recovery,
 		});

@@ -221,6 +221,7 @@ function rerollChargeConsumption(
 			previousValue: before,
 			currentValue: before,
 			maxValue: pool.max,
+			...(pool.hideMax ? { hideMax: true } : {}),
 			change: 0,
 			recovery: { trigger: refill.trigger, previousValue: before, newValue: pool.current },
 		});

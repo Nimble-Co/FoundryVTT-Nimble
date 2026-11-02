@@ -5,6 +5,7 @@
 	let {
 		current,
 		max,
+		hideMax = false,
 		label,
 		temporary = 0,
 		temporarySource = '',
@@ -12,7 +13,7 @@
 	}: ResourceBarProps = $props();
 
 	const percent = (value: number) =>
-		max > 0 ? Math.clamp(Math.round((value / max) * 100), 0, 100) : 0;
+		max > 0 && !hideMax ? Math.clamp(Math.round((value / max) * 100), 0, 100) : 0;
 	const shownTemporary = $derived(Math.clamp(temporary, 0, current));
 	const temporaryTooltip = $derived(
 		temporarySource
@@ -51,15 +52,17 @@
 				aria-label="{label} current"
 				onchange={({ target }) => updateCurrent(Number((target as HTMLInputElement).value))}
 			/>
-			/
-			<input
-				class="nimble-resource-bar__input nimble-resource-bar__input--max"
-				type="number"
-				min="0"
-				value={max}
-				aria-label="{label} maximum"
-				disabled
-			/>
+			{#if !hideMax}
+				/
+				<input
+					class="nimble-resource-bar__input nimble-resource-bar__input--max"
+					type="number"
+					min="0"
+					value={max}
+					aria-label="{label} maximum"
+					disabled
+				/>
+			{/if}
 		</div>
 	</div>
 </div>
