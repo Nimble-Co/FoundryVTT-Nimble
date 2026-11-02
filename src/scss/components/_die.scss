@@ -46,6 +46,30 @@ $die-sizes: 4, 6, 8, 10, 12, 20;
     filter: sepia(0.5) hue-rotate(60deg);
   }
 
+  // A die that is not the size of its term names its size.
+  &[data-die-size] {
+    position: relative;
+    margin-left: 1.75rem;
+
+    &::before {
+      content: attr(data-die-size);
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      margin-right: 0.125rem;
+      padding: 0 0.25rem;
+      transform: translateY(-50%);
+      border-radius: 0.1875rem;
+      background: #d4af37;
+      color: #231c05;
+      font-size: var(--nimble-xs-text);
+      font-weight: 700;
+      line-height: 1.25;
+      text-shadow: none;
+      -webkit-text-stroke: 0;
+    }
+  }
+
   @each $size in $die-sizes {
     &--#{$size} {
       background-image: url("/icons/svg/d#{$size}-grey.svg");

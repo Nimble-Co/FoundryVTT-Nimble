@@ -13,20 +13,22 @@ export default function prepareRollTooltipDiceResults(
 	const canMiss = rollOptions?.canMiss !== false;
 	let keptFaceFound = false;
 
-	return results.reduce((acc, { rerolled, discarded, result }) => {
+	return results.reduce((acc, { rerolled, discarded, result, faces: ownFaces }) => {
 		const isDiscarded = discarded || rerolled;
+		const dieFaces = ownFaces ?? faces;
 		// Only the kept face reads the crit face. A crit die crits on its max.
-		const critFace = !isDiscarded && !keptFaceFound ? critFaceOf(faces, options) : faces;
+		const critFace = !isDiscarded && !keptFaceFound ? critFaceOf(faces, options) : dieFaces;
 		if (!isDiscarded) keptFaceFound = true;
 		const isCritical = result >= critFace;
-		const isMiss = result <= missThreshold && !isCritical;
+		const isMiss = result <= missThreshold && !isCritical && !ownFaces;
 
-		let classes = `nimble-die nimble-die--${faces}`;
+		let classes = `nimble-die nimble-die--${dieFaces}`;
 
 		if (isDiscarded) classes += ' nimble-die--discarded';
 		else if (isPrimaryDie && isMiss && canMiss) classes += ' nimble-die--min';
 		else if (isPrimaryDie && isCritical && canCrit) classes += ' nimble-die--max';
 
-		return `${acc}<li class="${classes}">${result}</li>`;
+		const size = ownFaces ? ` data-die-size="d${ownFaces}"` : '';
+		return `${acc}<li class="${classes}"${size}>${result}</li>`;
 	}, '');
 }

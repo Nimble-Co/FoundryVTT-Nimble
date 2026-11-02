@@ -119,7 +119,7 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 		for (const feature of new Set(options.outcomeSources?.critD20 ?? [])) {
 			tags.push({
 				kind: 'critDice',
-				label: localize(`${TAG_TEXT}.critD20`, { feature }),
+				label: localize(`${TAG_TEXT}.critD20`, { feature, faces: String(faces) }),
 				tooltip: localize(`${TAG_TEXT}.critD20Tooltip`, { feature }),
 			});
 		}

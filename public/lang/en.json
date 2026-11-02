@@ -770,7 +770,7 @@
 					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit.",
 					"offerDamage": "Damage from {feature}",
 					"offerDamageTooltip": "{feature} adds this damage to the attack.",
-					"critD20": "d20 crit die: {feature}",
+					"critD20": "{feature}: d20 in place of a d{faces}",
 					"critD20Tooltip": "{feature} made the first crit die a d20.",
 					"vicious": "Vicious: {feature}",
 					"viciousTooltip": "{feature} made this crit Vicious: each crit die rolls 1 more die.",

@@ -19,6 +19,25 @@ describe('prepareRollTooltipDiceResults', () => {
 		expect(html).not.toContain('nimble-die--min">3</li>');
 	});
 
+	it('names the size of a die that is not the size of its term, and reads it at that size', () => {
+		const dice = (result: number) =>
+			prepareRollTooltipDiceResults({
+				faces: 6,
+				flavor: 'Primary Die',
+				options: {},
+				results: [
+					{ result: 6, active: true, exploded: true },
+					{ result, active: true, faces: 20 },
+				],
+			});
+
+		expect(dice(10)).toContain('<li class="nimble-die nimble-die--20" data-die-size="d20">10</li>');
+		expect(dice(20)).toContain(
+			'<li class="nimble-die nimble-die--20 nimble-die--max" data-die-size="d20">20</li>',
+		);
+		expect(dice(1)).toContain('<li class="nimble-die nimble-die--20" data-die-size="d20">1</li>');
+	});
+
 	it('keeps a maximum-face result styled as a critical hit', () => {
 		const html = prepareRollTooltipDiceResults({
 			faces: 2,
