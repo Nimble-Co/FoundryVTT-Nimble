@@ -1277,6 +1277,33 @@ describe('a target in the Incapacitated group, with Feature Effects off', () => 
 	});
 });
 
+describe('a rule that changes dice of the sneak attack role', () => {
+	const needsDice = rerollRule({ needsSneakDice: true, usedBy: 'roller' });
+	const rows = (outcome: object) =>
+		collectRerollEntries(context({ attacker: actor('Actor.attacker', [needsDice]), outcome }))
+			.manual;
+
+	it('shows on a roll with those dice in its terms', () => {
+		const withDice = { ...CRIT, terms: [{ options: { dieRole: 'sneakAttack' } }] };
+
+		expect(rows(withDice)).toHaveLength(1);
+	});
+
+	it('does not show on a roll without them', () => {
+		expect(rows({ ...CRIT, terms: [] })).toEqual([]);
+	});
+
+	it('does not show on a max damage roll', () => {
+		const maxed = {
+			...CRIT,
+			terms: [{ options: { dieRole: 'sneakAttack' } }],
+			options: { maxDamage: 'hit' },
+		};
+
+		expect(rows(maxed)).toEqual([]);
+	});
+});
+
 describe('a row that changes the crit dice, with Feature Effects off', () => {
 	const effectRule = (rollEffect: 'critD20' | 'viciousDie', usedBy: RerollSide = 'roller') =>
 		rerollRule({ type: 'attackOutcome', rollEffect, outcome: 'criticalHit', usedBy });
@@ -1310,6 +1337,18 @@ describe('a row that changes the crit dice, with Feature Effects off', () => {
 
 	it('Use a d20 goes away once a crit die is a d20', () => {
 		expect(rows(effectRule('critD20'), { ...CRIT, hasCritD20: true })).toEqual([]);
+	});
+
+	it('reads the crit dice from the terms of a roll', () => {
+		const withD20 = { ...CRIT, terms: [{ results: [{ result: 8 }, { result: 13, faces: 20 }] }] };
+
+		expect(rows(effectRule('critD20'), withD20)).toEqual([]);
+	});
+
+	it('reads the Vicious die from the options of a roll', () => {
+		const vicious = { ...CRIT, options: { explosionStyle: 'vicious' } };
+
+		expect(rows(effectRule('viciousDie', 'target'), vicious, 'target')).toEqual([]);
 	});
 
 	it('the Vicious die shows for the owner of the target', () => {

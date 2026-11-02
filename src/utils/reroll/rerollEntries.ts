@@ -8,8 +8,12 @@ import {
 	type AttackOutcomeView,
 	canBecomeCrit,
 	critStays,
+	hasCritD20Die,
 	hasDieAtMax,
+	hasNoDice,
+	hasSneakAttackDice,
 	type IncomingReactionEntry,
+	isViciousAttack,
 	type RerollDie,
 	type RerollKeep,
 	type RerollLeftOut,
@@ -231,13 +235,13 @@ function rollUseTriggerMatches(
 	outcome: AttackOutcomeView,
 	gate: RollUseGate = {},
 ): boolean {
-	if (outcome.noDice && gate.use !== 'result') return false;
-	if (gate.effect === 'viciousDie' && outcome.vicious) return false;
-	if (gate.effect === 'critD20' && outcome.hasCritD20) return false;
+	if (hasNoDice(outcome) && gate.use !== 'result') return false;
+	if (gate.effect === 'viciousDie' && isViciousAttack(outcome)) return false;
+	if (gate.effect === 'critD20' && hasCritD20Die(outcome)) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
-	if (gate.needsSneakDice && !outcome.hasSneakDice) return false;
-	if (gate.effect === 'critDice' && outcome.hasSneakDice) return false;
+	if (gate.needsSneakDice && !hasSneakAttackDice(outcome)) return false;
+	if (gate.effect === 'critDice' && hasSneakAttackDice(outcome)) return false;
 	if (trigger === 'criticalHit' && !gate.effect && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }

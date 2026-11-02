@@ -78,7 +78,13 @@ export interface AttackOutcomeView {
 	/** False when the roll cannot crit. Absent: read from `options`, else it can. */
 	canCrit?: boolean;
 	/** The options of a rolled attack, when the view is the roll. */
-	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	options?: {
+		canCrit?: unknown;
+		forcedCrit?: unknown;
+		maxDamage?: unknown;
+		explosionStyle?: unknown;
+		isVicious?: unknown;
+	} | null;
 	/** A die of the roll is at its max. Absent: read from `terms`. */
 	anyDieAtMax?: boolean;
 	/** The terms of a rolled attack, when the view is the roll. */
@@ -105,6 +111,28 @@ export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined):
 /** Whether a die of the attack is at its max. */
 export function hasDieAtMax(view: AttackOutcomeView): boolean {
 	return view.anyDieAtMax ?? termsHaveDieAtMax(view.terms);
+}
+
+/** Whether the attack rolled dice. A max damage roll has none. */
+export function hasNoDice(view: AttackOutcomeView): boolean {
+	return view.noDice ?? view.options?.maxDamage !== undefined;
+}
+
+/** Whether the crit dice of the attack are Vicious. */
+export function isViciousAttack(view: AttackOutcomeView): boolean {
+	return (
+		view.vicious ?? (view.options?.explosionStyle === 'vicious' || view.options?.isVicious === true)
+	);
+}
+
+/** Whether a crit die of the attack is a d20. */
+export function hasCritD20Die(view: AttackOutcomeView): boolean {
+	return view.hasCritD20 ?? termsHaveCritD20(view.terms);
+}
+
+/** Whether the attack has dice of the sneak attack role. */
+export function hasSneakAttackDice(view: AttackOutcomeView): boolean {
+	return view.hasSneakDice ?? termsHaveRole(view.terms, SNEAK_ATTACK_ROLE);
 }
 
 /** Whether the attack is a crit that no reroll or change takes away. */
