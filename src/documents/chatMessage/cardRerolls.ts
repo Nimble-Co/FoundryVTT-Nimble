@@ -84,6 +84,7 @@ import {
 	resultChangesOf,
 	standingResultChanges,
 } from '#utils/rolls/resultChanges.js';
+import { rollSaveWithOwner } from '#utils/rolls/rollSaveWithOwner.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
@@ -1142,9 +1143,7 @@ export class CardRerolls {
 		const context = rollTarget.context();
 		const target = soleTarget(context.targets, {
 			firstDecides: context.firstTargetDecides,
-		})?.actor as unknown as {
-			rollSavingThrowToChat?: (key: string, options: object) => Promise<unknown>;
-		} | null;
+		})?.actor as unknown as Parameters<typeof rollSaveWithOwner>[0] | null;
 		const saveKey = rule.saveType;
 		if (!target?.rollSavingThrowToChat || !saveKey) {
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
@@ -1154,9 +1153,8 @@ export class CardRerolls {
 		const paid = cost ? await payRerollCost(actor, cost) : null;
 		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 		try {
-			const card = await target.rollSavingThrowToChat(saveKey, {
+			const made = await rollSaveWithOwner(target, saveKey, {
 				dc: resolveSaveNodeDC(rule.saveDC, actor as never),
-				skipRollDialog: true,
 				cardFlags: {
 					critDiceSave: {
 						attackMessageId: this.#host.id(),
@@ -1166,7 +1164,7 @@ export class CardRerolls {
 					},
 				},
 			});
-			if (!card) throw new Error('The save card was not made.');
+			if (!made) throw new Error('The save card was not made.');
 			await this.#host.update({
 				system: { incomingReactions: this.#withEntryUsed(entry) },
 			} as Record<string, unknown>);

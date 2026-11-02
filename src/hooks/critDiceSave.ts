@@ -5,6 +5,7 @@ import {
 	findPrimaryDamageNode,
 	replaceDamageRollInRollsSource,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
+import { registerRollSaveQuery } from '#utils/rolls/rollSaveWithOwner.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '#utils/treeManipulation/reconstructEffectsTree.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -106,6 +107,7 @@ let didRegister = false;
 export function registerCritDiceSaveHooks(): void {
 	if (didRegister) return;
 	didRegister = true;
+	registerRollSaveQuery();
 	// @ts-expect-error - nimble.saveResolved is a custom Nimble hook
 	Hooks.on(systemHookName('saveResolved'), (payload: NimbleSavePayload) => {
 		void followSave(payload).catch((error) => {
