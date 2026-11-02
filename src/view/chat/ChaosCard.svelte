@@ -33,7 +33,7 @@
 	}
 
 	const choose = (choice: ChaosRollChoice) => run(() => chooseChaosRoll(message, actor(), choice));
-	const keep = (index: number) => run(() => keepChaosRoll(message, actor(), index));
+	const keep = (index: number) => run(() => keepChaosRoll(message, index));
 </script>
 
 <CardHeader {messageDocument} />

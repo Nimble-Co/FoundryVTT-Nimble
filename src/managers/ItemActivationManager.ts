@@ -625,6 +625,7 @@ class ItemActivationManager {
 		const effects = this.activationData?.effects ?? [];
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
+		const healingRollsAtMax = new Set<Roll | DamageRoll>();
 		// `@spent` is only meaningful for this activation, so it is added here
 		// rather than on the actor's roll data. Absent a variable spend it is 0,
 		// which keeps a formula referencing it from failing to parse.
@@ -801,6 +802,10 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					if (isVicious && damageOptions.outcomeSources?.vicious) {
+						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
+						damageOptions.outcomeSources = sources;
+					}
 					if (offerSource) damageOptions.offerSource = offerSource;
 					const offerDamage = offerBonuses.filter((bonus) => bonus.damage > 0);
 					if (offerDamage.length > 0) {
@@ -889,6 +894,7 @@ class ItemActivationManager {
 					(node as { maxDamageBy?: string }).maxDamageBy = rule.label || rule.item?.name || '';
 				}
 				await roll.evaluate(healingAtMax ? { maximize: true } : {});
+				if (healingAtMax) healingRollsAtMax.add(roll);
 
 				// Resolve outcome-dependent incoming behavior for the primary damage
 				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
@@ -942,7 +948,12 @@ class ItemActivationManager {
 
 		this.#noDiceThrown =
 			this.#maxDamage !== null &&
-			rolls.every((roll) => roll.dice.length === 0 || (roll as DamageRoll).noDice === true);
+			rolls.every(
+				(roll) =>
+					roll.dice.length === 0 ||
+					(roll as DamageRoll).noDice === true ||
+					healingRollsAtMax.has(roll),
+			);
 
 		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
 		// specific type) rolls as its own damage effect: the primary roll carries
@@ -1722,11 +1733,11 @@ namespace ItemActivationManager {
 		rollFormula?: string;
 		/** Predetermined value for the primary damage die. */
 		primaryDieValue?: number;
-		/** Modifier to apply to the primary die roll. */
 		/** The tick for 1 less mana. */
 		lessMana?: boolean;
 		/** The item whose offer row started this activation. */
 		offerSourceUuid?: string;
+		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;

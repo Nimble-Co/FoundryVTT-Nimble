@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { canInvokeChaos, chooseChaosRoll, invokeChaos, keepChaosRoll } from '../invokeChaos.js';
+import {
+	canInvokeChaos,
+	chooseChaosRoll,
+	invokeChaos,
+	keepChaosRoll,
+	whisperChaosRollsToGm,
+} from '../invokeChaos.js';
 
 const TABLE = [
 	{ range: [1, 1], name: 'Elemental Eruption', description: '<p>Boom</p>' },
@@ -69,17 +75,23 @@ describe('a Chaos Table roll', () => {
 		expect(canInvokeChaos({ rules: [] })).toBe(false);
 	});
 
-	it('with the setting off, the player sees the number and the GM the text in a whisper', async () => {
+	it('with the setting off, the card has the number only', async () => {
 		diceAre([20]);
 
 		await invokeChaos(hero());
 
 		expect(created[0].system.rolls).toEqual([{ value: 20, dropped: null, name: '', text: '' }]);
-		expect(created[1].whisper).toEqual(['gm']);
-		expect(created[1].content).toContain('Top text');
+		expect(created).toHaveLength(1);
 	});
 
-	it('with the setting on, the text is on the card and no whisper goes out', async () => {
+	it('the whisper to the GM has the text of the rolls', async () => {
+		await whisperChaosRollsToGm('Hero', [{ value: 20, dropped: null, name: '', text: '' }]);
+
+		expect(created[0].whisper).toEqual(['gm']);
+		expect(created[0].content).toContain('Top text');
+	});
+
+	it('with the setting on, the text is on the card', async () => {
 		tableOpen = true;
 		diceAre([1]);
 
@@ -137,15 +149,13 @@ describe('a Chaos Table roll', () => {
 			expect(card.system.status).toBe('done');
 		});
 
-		it('Roll twice, both happen rolls two, and the GM reads both', async () => {
+		it('Roll twice, both happen rolls two', async () => {
 			diceAre([7], [20]);
 			const card = pickCard();
 
 			await chooseChaosRoll(card as never, hero(thrive) as never, 'both');
 
 			expect(card.system.rolls).toHaveLength(2);
-			expect(created[0].content).toContain('Middle text');
-			expect(created[0].content).toContain('Top text');
 		});
 
 		it('Roll twice, choose one needs a use', async () => {
@@ -162,11 +172,9 @@ describe('a Chaos Table roll', () => {
 				{ value: 20, dropped: null, name: '', text: '' },
 			];
 
-			await keepChaosRoll(card as never, hero(thrive) as never, 1);
+			await keepChaosRoll(card as never, 1);
 
 			expect(card.update).toHaveBeenCalledWith({ 'system.kept': 1, 'system.status': 'done' });
-			expect(created[0].content).toContain('Top text');
-			expect(created[0].content).not.toContain('Middle text');
 		});
 	});
 });

@@ -63,12 +63,11 @@ function inReach(hero: TokenDocument, ally: TokenDocument, reach: number): boole
 export async function raisePoolDiceOnWounds(wounded: RuleActor, wounds: number): Promise<void> {
 	for (const rule of poolDieRules(wounded, 'onWound')) await useRule(rule, wounded, wounds);
 
-	const scene = (globalThis as { canvas?: { scene?: { tokens?: Iterable<TokenDocument> } } }).canvas
-		?.scene;
 	const woundedToken = findActorToken(wounded as Actor);
-	if (!woundedToken || !scene?.tokens) return;
+	const tokens = woundedToken?.parent?.tokens as Iterable<TokenDocument> | undefined;
+	if (!woundedToken || !tokens) return;
 	const seen = new Set<string | undefined>([wounded.uuid]);
-	for (const token of scene.tokens) {
+	for (const token of tokens) {
 		const hero = token.actor as RuleActor | null;
 		if (!hero || hero.type !== 'character' || seen.has(hero.uuid)) continue;
 		seen.add(hero.uuid);

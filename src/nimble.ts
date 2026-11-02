@@ -3,6 +3,7 @@ import { handleAutomaticConditionApplication } from './hooks/automaticConditions
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerChaosOnCritHooks } from './hooks/chaosOnCrit.js';
+import { registerChaosWhisperHooks } from './hooks/chaosWhisper.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerHealedTriggerHooks } from './hooks/chargePoolTriggers/healedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -170,6 +171,7 @@ registerRuleEventDispatch();
 registerSaveResolvedHooks();
 registerCritDiceSaveHooks();
 registerChaosOnCritHooks();
+registerChaosWhisperHooks();
 registerModuleIntegrations();
 
 // Refresh tokens when combat ends to remove turn indicators

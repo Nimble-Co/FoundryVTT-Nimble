@@ -106,7 +106,7 @@
 
 <ChaosButton />
 
-{#each critDiceLines as line (line.label)}
+{#each critDiceLines as line, index (index)}
 	<p class="nimble-crit-dice-line" data-tooltip={line.values.join(' + ')}>
 		<i class="fa-solid fa-dice" aria-hidden="true"></i>
 		{game.i18n.format('NIMBLE.chat.incomingReactions.critDiceLine', {

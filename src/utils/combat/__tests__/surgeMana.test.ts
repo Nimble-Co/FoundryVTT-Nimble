@@ -171,7 +171,9 @@ describe('a surge at Initiative', () => {
 			await endSurgeMana(actor, 'combat');
 			expect(actor.system.resources.mana.current).toBe(2);
 			expect(actor.update).toHaveBeenCalledWith(
-				expect.objectContaining({ [`flags.${SYSTEM_ID}.-=surgeMana`]: null }),
+				expect.objectContaining({
+					[`flags.${SYSTEM_ID}.surgeMana`]: expect.any(foundry.data.operators.ForcedDeletion),
+				}),
 			);
 		});
 

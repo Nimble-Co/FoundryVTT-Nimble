@@ -238,7 +238,7 @@ function rollUseTriggerMatches(
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
 	if (gate.needsSneakDice && !outcome.hasSneakDice) return false;
 	if (gate.effect === 'critDice' && outcome.hasSneakDice) return false;
-	if (trigger === 'criticalHit' && critStays(outcome)) return false;
+	if (trigger === 'criticalHit' && !gate.effect && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
 

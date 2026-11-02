@@ -37,5 +37,7 @@ export async function markTurnUse(actor: Actor | null | undefined, key: string):
 /** Give back a 1/turn use, when it was spent this turn. */
 export async function clearTurnUse(actor: Actor | null | undefined, key: string): Promise<void> {
 	if (!usedThisTurn(actor, key)) return;
-	await actor?.update({ [`flags.${SYSTEM_ID}.${FLAG}.-=${flagKey(key)}`]: null } as never);
+	await actor?.update({
+		[`flags.${SYSTEM_ID}.${FLAG}.${flagKey(key)}`]: new foundry.data.operators.ForcedDeletion(),
+	} as never);
 }

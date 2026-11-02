@@ -86,7 +86,7 @@ describe('dice to max on Wounds', () => {
 		const order: string[] = [];
 		const avenger = hero('Actor.hero', 4, order);
 		const ally = { ...hero('Actor.ally', null), token: token(null, 3) };
-		vi.stubGlobal('canvas', { scene: { tokens: [token(avenger, 0), ally.token] } });
+		Object.assign(ally.token, { parent: { tokens: [token(avenger, 0), ally.token] } });
 		const { raisePoolDiceOnWounds } = await load((a, b) => Math.abs(a.x - b.x));
 
 		await raisePoolDiceOnWounds(ally as never, 1);
@@ -98,7 +98,7 @@ describe('dice to max on Wounds', () => {
 		const order: string[] = [];
 		const avenger = hero('Actor.hero', 4, order);
 		const ally = { ...hero('Actor.ally', null), token: token(null, 5) };
-		vi.stubGlobal('canvas', { scene: { tokens: [token(avenger, 0), ally.token] } });
+		Object.assign(ally.token, { parent: { tokens: [token(avenger, 0), ally.token] } });
 		const { raisePoolDiceOnWounds } = await load((a, b) => Math.abs(a.x - b.x));
 
 		await raisePoolDiceOnWounds(ally as never, 1);
@@ -108,8 +108,6 @@ describe('dice to max on Wounds', () => {
 
 	it('does nothing for an ally with no token', async () => {
 		const order: string[] = [];
-		const avenger = hero('Actor.hero', 4, order);
-		vi.stubGlobal('canvas', { scene: { tokens: [token(avenger, 0)] } });
 		const { raisePoolDiceOnWounds } = await load(() => 0);
 
 		await raisePoolDiceOnWounds(hero('Actor.ally', null) as never, 1);

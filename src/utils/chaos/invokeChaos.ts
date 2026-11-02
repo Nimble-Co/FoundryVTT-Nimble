@@ -113,9 +113,14 @@ async function rollOnTable(advantage: boolean): Promise<ChaosRoll> {
 	};
 }
 
-/** With the table secret: the GM reads the text of the rolls that stand. */
-async function whisperToGm(actorName: string, rolls: readonly ChaosRoll[]): Promise<void> {
-	if (showsChaosTableRolls()) return;
+/**
+ * With the table secret: tell the GM the rolls that stand. A player's client cannot
+ * write this, because the author of a whisper can read it.
+ */
+export async function whisperChaosRollsToGm(
+	actorName: string,
+	rolls: readonly ChaosRoll[],
+): Promise<void> {
 	const lines = await Promise.all(
 		rolls.map(async ({ value }) => {
 			const entry = await tableResultFor(value);
@@ -162,7 +167,6 @@ export async function invokeChaos(
 			chooseUses: rollTwice ? usesOfPool(actor, pool) : 0,
 		},
 	} as unknown as ChatMessage.CreateData);
-	if (!rollTwice) await whisperToGm(actor.name ?? '', rolls);
 }
 
 /** A button of the Chaos card, before the roll. */
@@ -184,18 +188,12 @@ export async function chooseChaosRoll(
 		'system.rolls': rolls,
 		'system.status': choice === 'choose' ? 'picking' : 'done',
 	});
-	if (choice !== 'choose') await whisperToGm(actor?.name ?? '', rolls);
 }
 
 /** With Roll twice, choose one: this roll stands. */
-export async function keepChaosRoll(
-	card: ChaosCardDoc,
-	actor: ChaosActor | null,
-	index: number,
-): Promise<void> {
+export async function keepChaosRoll(card: ChaosCardDoc, index: number): Promise<void> {
 	const { system } = card;
 	const kept = system.rolls[index];
 	if (system.status !== 'picking' || !kept) return;
 	await card.update({ 'system.kept': index, 'system.status': 'done' });
-	await whisperToGm(actor?.name ?? '', [kept]);
 }

@@ -143,6 +143,6 @@ export async function endSurgeMana(actor: SurgeActor, combatId: string): Promise
 	const current = Number(actor.system?.resources?.mana?.current) || 0;
 	await actor.update?.({
 		'system.resources.mana.current': Math.min(current, flag.before),
-		[`flags.${SYSTEM_ID}.-=${SURGE_FLAG}`]: null,
+		[`flags.${SYSTEM_ID}.${SURGE_FLAG}`]: new foundry.data.operators.ForcedDeletion(),
 	});
 }

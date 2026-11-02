@@ -1298,6 +1298,12 @@ describe('a row that changes the crit dice, with Feature Effects off', () => {
 		expect(row).toMatchObject({ use: 'effect', effect: 'critD20' });
 	});
 
+	it('stays on a crit that a Make It a Crit made sure', () => {
+		const [row] = rows(effectRule('critD20'), { ...CRIT, critStays: true });
+
+		expect(row).toMatchObject({ use: 'effect', effect: 'critD20' });
+	});
+
 	it('does not show on a hit', () => {
 		expect(rows(effectRule('critD20'), HIT)).toEqual([]);
 	});

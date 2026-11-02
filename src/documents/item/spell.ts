@@ -1,5 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
+import { invokeChaos } from '#utils/chaos/invokeChaos.js';
 import { NO_DICE_SO_NICE_FLAGS } from '#utils/rolls/showDiceAnimation.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
@@ -166,7 +167,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		return this._createActivationCard(chatData, rolls, activation, {
+		const card = await this._createActivationCard(chatData, rolls, activation, {
 			rolls,
 			isCritical,
 			isMiss,
@@ -174,6 +175,10 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			targets: Array.from(game.user?.targets ?? []),
 			upcast: manager.upcastResult,
 		});
+		if (card && manager.invokesChaos && this.actor) {
+			await invokeChaos(this.actor as never, card.id);
+		}
+		return card;
 	}
 
 	override async prepareChatCardData() {

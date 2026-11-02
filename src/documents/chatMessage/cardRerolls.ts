@@ -1140,7 +1140,9 @@ export class CardRerolls {
 	): Promise<void> {
 		const { rule, actor } = usable;
 		const context = rollTarget.context();
-		const target = soleTarget(context.targets)?.actor as unknown as {
+		const target = soleTarget(context.targets, {
+			firstDecides: context.firstTargetDecides,
+		})?.actor as unknown as {
 			rollSavingThrowToChat?: (key: string, options: object) => Promise<unknown>;
 		} | null;
 		const saveKey = rule.saveType;
