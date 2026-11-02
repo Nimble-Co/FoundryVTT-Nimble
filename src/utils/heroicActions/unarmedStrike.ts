@@ -18,6 +18,11 @@ import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDic
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
+	firstTargetActor,
+	heldChangesForAttack,
+	spendHeldChanges,
+} from '#utils/heldChange/heldChange.js';
+import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
 } from '#utils/incomingReactions/incomingAttackModifiers.js';
@@ -124,6 +129,13 @@ export async function rollUnarmedStrike(
 		damageTypes: ['bludgeoning'],
 	});
 
+	const held = heldChangesForAttack({
+		attacker: actor as never,
+		target: firstTargetActor(),
+		area: false,
+	});
+	const heldBonus = held.reduce((sum, change) => sum + change.value, 0);
+
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 		canCrit: canCrit && !multiTarget,
 		...attackOutcome.options,
@@ -133,7 +145,7 @@ export async function rollUnarmedStrike(
 			: {}),
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
-		primaryDieModifier: Number(result.primaryDieModifier) || 0,
+		primaryDieModifier: (Number(result.primaryDieModifier) || 0) + heldBonus,
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
 		...(canCrit && !multiTarget
@@ -208,6 +220,11 @@ export async function rollUnarmedStrike(
 			image: unarmedItem.img,
 			permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 			rollMode,
+			primaryDieBonuses: held.map((change) => ({
+				label: change.label,
+				value: change.value,
+				itemUuid: '',
+			})),
 			name,
 			description: '',
 			featureType: 'feature',
@@ -233,6 +250,7 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
+	await spendHeldChanges(held);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll as never)) {
 		await spendRuleCharge(actor, identifier);

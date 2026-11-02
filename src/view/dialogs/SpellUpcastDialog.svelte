@@ -12,6 +12,8 @@
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
+	import { heldLinesForItem } from '../../utils/heldChange/heldChange.js';
+	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -35,6 +37,7 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
+	const heldLines = untrack(() => heldLinesForItem(actor as never, { system: spell } as never));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -307,6 +310,8 @@
 
 	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
+
+	{#if !maxDamageChoice}<HeldChangeLines lines={heldLines} />{/if}
 
 	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 

@@ -6,6 +6,11 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
+import {
+	firstTargetActor,
+	heldChangesForAttack,
+	spendHeldChanges,
+} from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import {
 	getCurrentUserTargetTokenIds,
@@ -222,6 +227,7 @@ function buildMinionAttackRollEntry(params: {
 async function rollSingleMinionAttack(params: {
 	combat: Combat;
 	member: Combatant.Implementation;
+	targetActor: Parameters<typeof heldChangesForAttack>[0]['target'];
 	selectionsByMemberId: ReadonlyMap<string, string>;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
@@ -245,14 +251,20 @@ async function rollSingleMinionAttack(params: {
 			typeof resolvedActionContext.actor.getRollData === 'function'
 				? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
 				: {};
+		const held = heldChangesForAttack({
+			attacker: resolvedActionContext.actor as never,
+			target: params.targetActor,
+			area: false,
+		});
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
 			canCrit: false,
 			canMiss: true,
 			rollMode: 0,
 			primaryDieValue: 0,
-			primaryDieModifier: 0,
+			primaryDieModifier: held.reduce((sum, change) => sum + change.value, 0),
 		});
 		await damageRoll.evaluate();
+		await spendHeldChanges(held);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -462,10 +474,12 @@ async function collectMinionAttackRollData(params: {
 	const actionUpdates: Record<string, unknown>[] = [];
 	const unsupportedWarnings = new Set<string>();
 	const rollEntries: MinionGroupAttackRollEntry[] = [];
+	const targetActor = firstTargetActor();
 	for (const member of params.attackMembers) {
 		const rollOutcome = await rollSingleMinionAttack({
 			combat: params.combat,
 			member,
+			targetActor,
 			selectionsByMemberId: params.selectionsByMemberId,
 		});
 		appendMinionAttackRollOutcome({

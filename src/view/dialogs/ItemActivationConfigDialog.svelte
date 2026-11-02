@@ -2,10 +2,12 @@
 	import { untrack } from 'svelte';
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
+	import { heldLinesForItem } from '#utils/heldChange/heldChange.js';
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import DualWieldField from './components/DualWieldField.svelte';
+	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -24,6 +26,7 @@
 		spendsActions,
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
+	const heldLines = untrack(() => heldLinesForItem(actor as never, item as never));
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -172,6 +175,8 @@
 			</div>
 		</div>
 	{/if}
+
+	{#if !state.maxDamageChoice}<HeldChangeLines lines={heldLines} />{/if}
 
 	<RollModifierFields
 		bind:situationalModifiers={state.situationalModifiers}

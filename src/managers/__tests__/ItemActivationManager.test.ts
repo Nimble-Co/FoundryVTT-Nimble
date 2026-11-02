@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../../tests/mocks/foundry.js';
 import { keyPressStore } from '../../stores/keyPressStore.js';
@@ -1221,6 +1221,96 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.Unerring Judgment' },
 					{ label: 'Create an Opening', value: 2, itemUuid: 'Item.Create an Opening' },
 				]);
+			});
+
+			describe('Held Changes', () => {
+				function targetWithOpening(combatId = '') {
+					const target = {
+						uuid: 'Actor.ogre',
+						isOwner: true,
+						effects: [
+							{
+								id: 'opening',
+								flags: {
+									nimble: {
+										heldChange: {
+											kind: 'primaryDie',
+											value: 1,
+											label: 'Create an Opening',
+											sourceName: 'Mira',
+											appliesTo: 'attacksOnHolder',
+											spentBy: 'oneRoll',
+											ends: 'round',
+											combatId,
+											round: 1,
+											turn: 0,
+										},
+									},
+								},
+							},
+						],
+						deleteEmbeddedDocuments: vi.fn(async () => []),
+						getFlag: () => undefined,
+					};
+					Object.assign(mockActor, { getFlag: () => undefined });
+					const globals = globalThis as unknown as Record<string, any>;
+					globals.game.user.targets = [{ actor: target, document: { uuid: 'Token.ogre' } }];
+					globals.fromUuidSync = vi.fn(() => target);
+					globals.canvas = { tokens: { placeables: [] }, scene: { tokens: [] } };
+					return target;
+				}
+
+				afterEach(() => {
+					const globals = globalThis as unknown as Record<string, any>;
+					globals.game.user.targets = [];
+					delete globals.fromUuidSync;
+					delete globals.canvas;
+				});
+
+				it('adds the change to the Primary Die, names it, and the roll spends it', async () => {
+					const target = targetWithOpening();
+					const result = await rollAttack('reach');
+
+					expect(DamageRoll).toHaveBeenCalledWith(
+						'1d8',
+						expect.anything(),
+						expect.objectContaining({ primaryDieModifier: 1 }),
+					);
+					expect(result.primaryDieBonuses).toEqual([
+						{ label: 'Create an Opening', value: 1, itemUuid: '' },
+					]);
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+
+					await manager.applyDeferredPoolNodes();
+					expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['opening']);
+				});
+
+				it('spends nothing when the roll has no Primary Die', async () => {
+					const target = targetWithOpening();
+					await rollAttack('reach', null);
+					await manager.applyDeferredPoolNodes();
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+				});
+
+				it('adds nothing to an area attack, and spends nothing', async () => {
+					const target = targetWithOpening();
+					mockItem.system = {
+						activation: {
+							effects: [],
+							acquireTargetsFromTemplate: true,
+							template: { shape: 'circle' },
+						},
+					};
+					await rollAttack('range');
+					await manager.applyDeferredPoolNodes();
+
+					expect(DamageRoll).toHaveBeenCalledWith(
+						'1d8',
+						expect.anything(),
+						expect.objectContaining({ primaryDieModifier: 0 }),
+					);
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+				});
 			});
 
 			it('gives nothing to a ranged attack from a melee bonus', async () => {

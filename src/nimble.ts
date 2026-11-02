@@ -26,6 +26,7 @@ import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encou
 import { registerPoolDieToMaxTriggerHooks } from './hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
 import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnTrigger.js';
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
+import { registerHeldChangeExpiryHooks } from './hooks/heldChangeExpiry.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -47,6 +48,7 @@ import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import { registerMarkLifecycleHooks } from './utils/actor/markLifecycle.js';
 import { registerCardActionQuery } from './utils/chat/cardActions.js';
+import { registerHeldChangeQuery } from './utils/heldChange/heldChange.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
@@ -146,6 +148,8 @@ registerCombatantHealthStateSync();
 registerDyingActionLimitSync();
 registerPendingActionDeltaFold();
 registerChargeSystemHooks();
+registerHeldChangeExpiryHooks();
+registerHeldChangeQuery();
 registerManaSeedingHooks();
 registerActionEconomySystemHooks();
 registerDicePoolSystemHooks();

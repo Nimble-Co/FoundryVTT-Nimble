@@ -4257,6 +4257,13 @@
 				}
 			}
 		},
+		"heldChange": {
+			"line": {
+				"primaryDie": "{label}: {value} to Primary Die",
+				"spends": "From {source}. This roll spends it.",
+				"stays": "From {source}. It stays until its time ends."
+			}
+		},
 		"rollWindow": {
 			"lessMana": "Spend 1 less mana",
 			"dualWield": {

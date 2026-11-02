@@ -1,5 +1,6 @@
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { HeldChange } from '#types/heldChange.d.ts';
 import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
@@ -58,6 +59,12 @@ import {
 	setPoolFaces,
 } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
+import {
+	firstTargetActor,
+	heldChangesForAttack,
+	isAttackRoll,
+	spendHeldChanges,
+} from '../utils/heldChange/heldChange.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -234,6 +241,9 @@ class ItemActivationManager {
 
 	/** Charge pools the Attack Outcome rules of this attack spend by themselves. */
 	#attackOutcomeCharges: AttackOutcomeCharge[] = [];
+
+	/** The Held Changes this attack uses, which the roll spends. */
+	#heldChanges: HeldChange[] = [];
 
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
@@ -642,6 +652,20 @@ class ItemActivationManager {
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
+					this.#heldChanges = isAttackRoll(this.activationData?.targets?.attackType, node)
+						? heldChangesForAttack({
+								attacker: this.actor as never,
+								target: firstTargetActor(),
+								area: isAoE,
+							})
+						: [];
+					this.#primaryDieBonuses.push(
+						...this.#heldChanges.map((held) => ({
+							label: held.label,
+							value: held.value,
+							itemUuid: '',
+						})),
+					);
 					const offerSource = this.#offerSource();
 					const offerBonuses = collectOfferBonuses(
 						this.actor as { rules?: unknown } | null,
@@ -734,7 +758,10 @@ class ItemActivationManager {
 						dualWieldFirst = { formula, options: damageOptions, damageType: node.damageType ?? '' };
 					}
 					// A formula with no die has no Primary Die to add to.
-					if (!(roll as DamageRoll).primaryDie) this.#primaryDieBonuses = [];
+					if (!(roll as DamageRoll).primaryDie) {
+						this.#primaryDieBonuses = [];
+						this.#heldChanges = [];
+					}
 
 					foundDamageRoll = true;
 					primaryAttackNode = node;
@@ -1105,6 +1132,8 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
+		await spendHeldChanges(this.#heldChanges);
+		this.#heldChanges = [];
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
 		await spendMaxDamageCharge(this.actor, this.#maxDamage);
