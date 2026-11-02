@@ -4,6 +4,7 @@
 	import localize from '../../../utils/localize.js';
 	import { isDamageGroup } from './damageGroup.ts';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
+	import LatchedMissButton from './LatchedMissButton.svelte';
 	import DamageBackLines from './DamageBackLines.svelte';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
 
@@ -41,6 +42,7 @@
 
 				{#if game.user?.isGM}
 					<section class="nimble-effect">
+						<LatchedMissButton />
 						<ApplyDamageButton nodes={nodeGroup} />
 					</section>
 				{/if}

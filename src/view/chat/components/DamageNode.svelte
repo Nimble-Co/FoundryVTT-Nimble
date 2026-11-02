@@ -6,7 +6,6 @@
 	import localize from '#utils/localize.ts';
 	import { isAwaitingDeferredRoll } from '#utils/treeManipulation/isAwaitingDeferredRoll.ts';
 	import DamageRoll from './DamageRoll.svelte';
-	import LatchedMissButtons from './LatchedMissButtons.svelte';
 
 	let { node }: DamageNodeProps = $props();
 
@@ -46,7 +45,6 @@
 
 {#if !awaitingRoll}
 	<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} nodeId={node.id} />
-	<LatchedMissButtons amount={roll?.total ?? 0} />
 {:else if canRollDamage}
 	<button
 		class="nimble-button nimble-button--roll-damage"

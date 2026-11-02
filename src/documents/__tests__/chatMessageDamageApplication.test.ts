@@ -489,3 +489,90 @@ describe('a target with No Damage', () => {
 		expect(covered.applyDamage).toHaveBeenCalledWith(8);
 	});
 });
+
+describe('NimbleChatMessage latched miss damage', () => {
+	const CREATURE = 'Actor.creature';
+
+	function missedCard(slashing = 7, radiant = 5) {
+		const card = slashingPlusRadiant(slashing, radiant);
+		(card.system as unknown as { isMiss: boolean }).isMiss = true;
+		card.setFlag = vi.fn().mockResolvedValue(card) as never;
+		return card;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	it('deals what the button says after the defenses of the creature', async () => {
+		const actor = createTarget({ damageReductions: [{ value: 2, damageTypes: [] }] });
+		globals().fromUuidSync.mockReturnValue(actor);
+		const card = missedCard();
+
+		expect(card.latchedMissDamage(CREATURE)).toBe(10);
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledTimes(1);
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('adds the packets of a two-node attack and applies them once', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue(actor);
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledTimes(1);
+		expect(actor.applyDamage).toHaveBeenCalledWith(12);
+	});
+
+	it('uses resistance of the creature', () => {
+		globals().fromUuidSync.mockReturnValue(createTarget({ damageResistances: ['radiant'] }));
+
+		// 7 + ceil(5 / 2) = 10.
+		expect(missedCard().latchedMissDamage(CREATURE)).toBe(10);
+	});
+
+	it('uses up banked reduction', async () => {
+		const actor = createTarget({ bankedReduction: 4 });
+		globals().fromUuidSync.mockReturnValue(actor);
+		const card = missedCard();
+
+		expect(card.latchedMissDamage(CREATURE)).toBe(8);
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
+
+	it('marks the card so the button goes away', async () => {
+		globals().fromUuidSync.mockReturnValue(createTarget());
+		const card = missedCard();
+
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(card.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'latchedDamageApplied', true);
+	});
+
+	it('does nothing for a player', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue(actor);
+		globals().game.user.isGM = false;
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('does not fire the damage hook or the attack triggers', async () => {
+		globals().fromUuidSync.mockReturnValue(createTarget());
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(globals().Hooks.callAll).not.toHaveBeenCalled();
+		expect(globals().Hooks.call).not.toHaveBeenCalled();
+	});
+});

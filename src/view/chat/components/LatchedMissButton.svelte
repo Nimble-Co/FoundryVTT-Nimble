@@ -2,14 +2,12 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
+	import { LATCHED_DAMAGE_FLAG } from '#documents/chatMessage.ts';
 	import { SYSTEM_ID } from '#system';
 	import { latchedCreatureOf } from '#utils/damage/hitCondition.ts';
 	import localize from '#utils/localize.ts';
 
-	let { amount }: { amount: number } = $props();
-
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
-	const FLAG = 'latchedDamageApplied';
 
 	const held = $derived.by(() => {
 		const uuids: string[] = messageDocument?.reactive?.system?.targets ?? [];
@@ -22,30 +20,23 @@
 	});
 	const applied = $derived(
 		(messageDocument?.reactive?.flags as Record<string, Record<string, unknown>>)?.[SYSTEM_ID]?.[
-			FLAG
+			LATCHED_DAMAGE_FLAG
 		] === true,
 	);
-	const show = $derived(
-		game.user?.isGM && messageDocument?.reactive?.system?.isMiss === true && !!held && !applied,
+	const amount = $derived(
+		held && messageDocument?.reactive?.system?.isMiss === true && !applied
+			? (messageDocument.latchedMissDamage(held.uuid) ?? null)
+			: null,
 	);
-
-	async function apply() {
-		if (!held) return;
-		const creature = (await fromUuid(held.uuid as never)) as {
-			applyDamage?(value: number): Promise<void>;
-		} | null;
-		await creature?.applyDamage?.(amount);
-		await messageDocument?.setFlag(SYSTEM_ID as never, FLAG as never, true as never);
-	}
 </script>
 
-{#if show && held}
+{#if held && amount !== null}
 	<button
 		class="nimble-button"
 		data-button-variant="card-action"
 		style="--nimble-card-action-color: currentColor"
 		type="button"
-		onclick={apply}
+		onclick={() => messageDocument?.applyLatchedMissDamage(held.uuid)}
 	>
 		{localize('NIMBLE.chat.applyLatchedDamage', { amount: String(amount), name: held.name })}
 	</button>

@@ -157,6 +157,8 @@ export interface TargetDamageBreakdown {
 	total: number;
 }
 
+export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
+
 /** The target tokens the card's standing no-damage changes cover, with what names each. */
 function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
 	const covered = new Map<string, ResultChange>();
@@ -1507,6 +1509,39 @@ class NimbleChatMessage extends ChatMessage {
 			};
 		}
 		return { components, total };
+	}
+
+	/** A missed attack as a hit on this creature: its defenses read the same damage. */
+	#missedDamageOn(
+		creatureUuid: string,
+	): (ResolvedDamageForActor & { actor: HpMutableActor }) | null {
+		const actor = fromUuidSync(creatureUuid as never) as HpMutableActor | null;
+		if (!actor) return null;
+		const packets = this.#collectApplicableDamageRolls()
+			.filter(({ value }) => Number.isFinite(value) && value > 0)
+			.map(({ value, options }) => ({
+				value,
+				options: {
+					...options,
+					outcome: options.outcome === 'noDamage' ? ('fullDamage' as const) : options.outcome,
+				},
+			}));
+		return packets.length > 0 ? { ...resolveDamageForActor(actor, packets), actor } : null;
+	}
+
+	/** What a click would deal to the creature, or null when nothing can be dealt. */
+	latchedMissDamage(creatureUuid: string): number | null {
+		if (!this.isActivationCard()) return null;
+		return this.#missedDamageOn(creatureUuid)?.total ?? null;
+	}
+
+	async applyLatchedMissDamage(creatureUuid: string): Promise<void> {
+		if (!this.isActivationCard() || !game.user?.isGM) return;
+		const resolved = this.#missedDamageOn(creatureUuid);
+		if (!resolved) return;
+		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor as never);
+		await resolved.actor.applyDamage(resolved.total);
+		await this.setFlag(SYSTEM_ID as never, LATCHED_DAMAGE_FLAG as never, true as never);
 	}
 
 	/** The name of the feature that keeps this target from taking damage, or null. */
