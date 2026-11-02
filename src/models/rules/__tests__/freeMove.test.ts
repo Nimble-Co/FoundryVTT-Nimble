@@ -201,6 +201,7 @@ describe('FreeMoveRule', () => {
 				'onInitiativeRolled',
 				'onTurnStart',
 				'onCritReceived',
+				'afterPoolDiceToMax',
 			]);
 			expect(schema.poolIdentifier?.initial).toBe('');
 			expect(schema.distance?.initial).toBe('@speed');

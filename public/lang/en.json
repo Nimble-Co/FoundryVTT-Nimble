@@ -1649,6 +1649,7 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"offerAttackBonus": "Offer Attack Bonus",
+			"poolDieToMax": "Pool Die to Max",
 			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -2001,7 +2002,7 @@
 				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
 				"trigger": {
 					"label": "Trigger",
-					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit."
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires."
 				},
 				"poolIdentifier": {
 					"label": "Dice pool",
@@ -2040,6 +2041,7 @@
 					"onPoolGain": "gained {pool}",
 					"onInitiativeRolled": "rolled Initiative",
 					"onTurnStart": "turn started",
+					"afterPoolDiceToMax": "{item} lets you move.",
 					"onCritReceived": "took a critical hit"
 				}
 			},
@@ -2708,6 +2710,18 @@
 				"outcome": {
 					"label": "The attack is",
 					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
+				}
+			},
+			"poolDieToMax": {
+				"description": "When the trigger fires, the lowest dice of a pool go to their max: one when the hero is attacked, one per Wound on a Wound.",
+				"poolIdentifier": { "label": "Pool", "hint": "The identifier of the dice pool." },
+				"trigger": {
+					"label": "Trigger",
+					"hint": "onAttacked: an attack against the hero. onWound: Wounds gained."
+				},
+				"reach": {
+					"label": "Reach for allies",
+					"hint": "An ally this near also fires the trigger. 0 is the hero only."
 				}
 			},
 			"offerAttackBonus": {

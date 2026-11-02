@@ -2,6 +2,7 @@ import { systemHookName } from '#system';
 import { applyRefillToActorIfEligible } from '#utils/dicePool/dicePoolRefill.js';
 import type { CharacterActorLike } from '#utils/dicePool/types.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
+import { raisePoolDiceOnAttacked } from './poolDieToMaxTrigger.js';
 
 let registered = false;
 
@@ -28,7 +29,9 @@ export function registerAttackedTriggerHooks(): void {
 		const actor = target as Actor.Implementation;
 		if (actor.type !== 'character') return;
 
-		void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onAttacked');
+		void applyRefillToActorIfEligible(actor as CharacterActorLike, 'onAttacked').then(() =>
+			raisePoolDiceOnAttacked(actor as never),
+		);
 
 		// Only crits that reach damage application register — an attack that
 		// never applies damage does not fire this trigger.

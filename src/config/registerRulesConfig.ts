@@ -48,6 +48,7 @@ import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
 import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
+import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
@@ -101,6 +102,7 @@ export default function registerRulesConfig() {
 		critDice: 'NIMBLE.ruleTypes.critDice',
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
+		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -167,6 +169,7 @@ export default function registerRulesConfig() {
 		critDice: CritDiceRule,
 		critDiceSave: CritDiceSaveRule,
 		offerAttackBonus: OfferAttackBonusRule,
+		poolDieToMax: PoolDieToMaxRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,
