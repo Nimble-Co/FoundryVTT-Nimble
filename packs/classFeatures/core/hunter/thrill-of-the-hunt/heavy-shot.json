@@ -51,6 +51,23 @@
 								"outcome": "fullDamage",
 								"parentContext": "hit",
 								"parentNode": "heavyShotDamage0"
+							},
+							{
+								"id": "heavyShotPush0000",
+								"type": "move",
+								"kind": "forced",
+								"recipient": "targets",
+								"distance": "0",
+								"distanceBySize": {
+									"tiny": "4",
+									"small": "4",
+									"medium": "2",
+									"large": "1"
+								},
+								"ignoreDifficultTerrain": true,
+								"direction": "away",
+								"parentContext": "hit",
+								"parentNode": "heavyShotDamage0"
 							}
 						]
 					}

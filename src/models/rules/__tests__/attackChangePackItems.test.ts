@@ -123,9 +123,9 @@ describe('attack change pack items', () => {
 				'thrill-of-the-hunt',
 			]);
 			expect(
-				activation(`thrill-of-the-hunt/${name}`).effects.map(
-					(node: { condition: string }) => node.condition,
-				),
+				activation(`thrill-of-the-hunt/${name}`)
+					.effects.filter((node: { type: string }) => node.type === 'condition')
+					.map((node: { condition: string }) => node.condition),
 			).toEqual(conditions);
 		});
 

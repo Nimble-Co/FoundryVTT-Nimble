@@ -67,6 +67,18 @@
 			},
 			"effects": [
 				{
+					"id": "snareTrapMoveBack",
+					"type": "move",
+					"kind": "forced",
+					"recipient": "targets",
+					"distance": "1",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": true,
+					"direction": "away",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
 					"id": "snareTrapConsume0",
 					"type": "condition",
 					"condition": "restrained",
