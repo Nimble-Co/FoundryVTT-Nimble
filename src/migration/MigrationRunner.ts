@@ -153,7 +153,9 @@ class MigrationRunner extends MigrationRunnerBase {
 		options?: { isAdventure?: boolean; pack?: string },
 	): Promise<any | null> {
 		const { pack, isAdventure = false } = options ?? {};
-		const baseActor = game.data.actors?.find((a) => actor._id === a._id) ?? actor.toObject();
+		const baseActor = actor.isToken
+			? actor.toObject()
+			: (game.data.actors?.find((a) => actor._id === a._id) ?? actor.toObject());
 
 		const updatedActor = await (async () => {
 			try {
@@ -422,7 +424,11 @@ class MigrationRunner extends MigrationRunnerBase {
 						const updated = await this.#migrateActor(migrations, actor);
 						if (updated) {
 							try {
-								await actor.update(updated, { noHook: true });
+								const { items, ...rest } = updated;
+								if (items.length > 0) {
+									await actor.updateEmbeddedDocuments('Item', items, { noHook: true });
+								}
+								await actor.update(rest, { noHook: true });
 							} catch (error) {
 								console.warn(error);
 							}
