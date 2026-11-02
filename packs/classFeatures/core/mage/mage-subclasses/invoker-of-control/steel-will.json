@@ -63,7 +63,7 @@
 				"cardHintWhen": {}
 			},
 			{
-				"type": "surgeRerollOnes",
+				"type": "initiativeManaRerollOnes",
 				"disabled": false,
 				"id": "steelWillSurge01",
 				"identifier": "",

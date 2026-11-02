@@ -1,9 +1,7 @@
 import { SYSTEM_ID } from '#system';
-import { canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
+import { CHAOS_INVOKED_FLAG, canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
-
-export const CHAOS_INVOKED_FLAG = 'chaosInvoked';
 
 interface AttackCard {
 	id?: string | null;

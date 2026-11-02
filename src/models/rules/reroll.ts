@@ -62,6 +62,7 @@ function schema() {
 				initial: '',
 				label: 'NIMBLE.rules.reroll.maxDice.label',
 				hint: 'NIMBLE.rules.reroll.maxDice.hint',
+				widget: 'formula',
 				showWhen: (data: Record<string, unknown>) => data.die === 'pickedDie',
 			}),
 		),

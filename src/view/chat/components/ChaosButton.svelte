@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SYSTEM_ID } from '#system';
-	import { canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
+	import { CHAOS_INVOKED_FLAG, canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
 	import localize from '#utils/localize.js';
 	import { isRuleAutomationEnabled } from '../../../settings/automationSettings.js';
 
@@ -16,6 +16,8 @@
 		setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 	}
 
+	let busy = $state(false);
+
 	const message = getContext<AttackMessage | undefined>('messageDocument');
 	const actor = () =>
 		(message ? ChatMessage.getSpeakerActor(message.speaker as never) : null) as never;
@@ -23,17 +25,16 @@
 		!!message &&
 			!isRuleAutomationEnabled() &&
 			message.reactive?.system?.isCritical === true &&
-			!message.reactive?.flags?.[SYSTEM_ID]?.chaosInvoked &&
+			!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_INVOKED_FLAG] &&
 			(game.user?.isGM === true || message.isAuthor === true) &&
 			canInvokeChaos(actor()),
 	);
-	let busy = $state(false);
 
 	async function use() {
 		if (busy || !message) return;
 		busy = true;
 		try {
-			await message.setFlag(SYSTEM_ID, 'chaosInvoked', true);
+			await message.setFlag(SYSTEM_ID, CHAOS_INVOKED_FLAG, true);
 			await invokeChaos(actor(), message.id ?? null);
 		} finally {
 			busy = false;

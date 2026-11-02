@@ -1,3 +1,4 @@
+import type { DualWieldChoice } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
@@ -42,7 +43,6 @@ import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
 import {
-	type DualWieldChoice,
 	dualWieldEntry,
 	dualWieldRecord,
 	dualWieldRollOptions,

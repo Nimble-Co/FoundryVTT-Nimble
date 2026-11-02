@@ -3,9 +3,10 @@
 The tick of a spell's roll window that spends 1 less mana and invokes Chaos.
 -->
 <script lang="ts">
+	import type { LessManaFieldProps } from '#types/components/LessManaField.d.ts';
 	import localize from '#utils/localize.js';
 
-	let { checked = $bindable(false) }: { checked: boolean } = $props();
+	let { checked = $bindable(false) }: LessManaFieldProps = $props();
 </script>
 
 <label class="check">

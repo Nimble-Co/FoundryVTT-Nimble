@@ -10,7 +10,7 @@
 			{
 				"type": "chargePool",
 				"disabled": false,
-				"id": "beastshift-pool",
+				"id": "9PUGbI3NijCBpU4K",
 				"identifier": "beastshift",
 				"label": "Beastshift charges",
 				"predicate": {},
@@ -32,7 +32,7 @@
 			{
 				"type": "chargeConsumer",
 				"disabled": false,
-				"id": "beastshift-consumer",
+				"id": "fnEPeUQetGZ9pNh7",
 				"identifier": "",
 				"label": "",
 				"predicate": {},

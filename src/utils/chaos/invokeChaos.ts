@@ -1,31 +1,13 @@
 import { SYSTEM_ID } from '#system';
+import type { ChaosCardDoc, ChaosRoll, ChaosRollChoice } from '#types/chaos.d.ts';
 import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import localize from '../localize.js';
 import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
 
-/** One roll on the table. The name and text are empty when the GM alone reads them. */
-export interface ChaosRoll {
-	value: number;
-	/** The other die of a roll with advantage. */
-	dropped: number | null;
-	name: string;
-	text: string;
-}
-
-export type ChaosRollChoice = 'once' | 'both' | 'choose';
-
-export interface ChaosCardSystem {
-	actorUuid: string;
-	status: 'choosing' | 'picking' | 'done';
-	advantage: boolean;
-	rolls: ChaosRoll[];
-	/** With a choice: the roll that stays. */
-	kept: number | null;
-	/** The charges of the pool for Roll twice, choose one. */
-	chooseUses: number;
-}
+/** The flag of a card that already invoked Chaos. */
+export const CHAOS_INVOKED_FLAG = 'chaosInvoked';
 
 interface ChaosActor {
 	uuid?: string;
@@ -49,11 +31,6 @@ interface TableResultLike {
 	range?: number[];
 	name?: string;
 	description?: string;
-}
-
-export interface ChaosCardDoc {
-	system: ChaosCardSystem;
-	update(changes: Record<string, unknown>): Promise<unknown>;
 }
 
 function chaosRules(actor: ChaosActor | null | undefined): ChaosRuleLike[] {

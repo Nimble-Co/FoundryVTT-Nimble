@@ -255,9 +255,9 @@ Some features let a creature make an attack a crit after the roll. The card has 
 
 The button does not show on an attack that is already a crit, an attack on 2 or more targets, an area attack, or a roll that cannot crit.
 
-## Attacks from an offer row
+## Attacks from a row on a card
 
-A feature such as Coordinated Strike puts an offer row on its card, for each ally you target and, when the feature says so, for you too. The attack from a row remembers the item, and a feature can read it. Juggernaut adds damage equal to your armor and +1 to the Primary Die on your attack from a Coordinated Strike row, with a tag. The damage has the type of the attack. With Feature Effects off, this is a row in Change This Roll.
+A feature such as Coordinated Strike puts a row on its card, for each ally you target and, when the feature says so, for you too. The attack from a row remembers the item, and a feature can read it. Juggernaut adds damage equal to your armor and +1 to the Primary Die on your attack from a Coordinated Strike row, with a tag. The damage has the type of the attack. With Feature Effects off, this is a row in Change This Roll.
 
 ## Damage given back
 

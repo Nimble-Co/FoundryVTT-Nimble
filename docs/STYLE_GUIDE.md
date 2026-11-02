@@ -1530,6 +1530,12 @@ export const myStore = writable<MyStoreState>(initialState);
 | `scanRerollAllies()`, `alliesOnCard()`, `rollerTokenOf()` | `src/utils/reroll/rerollAllies.ts` | Find the creatures with an ally reroll on the roller's scene when a roll is made, with their ally state and spaces; read the allies a posted card already has |
 | `hpGained()`, `woundsGained()` | `src/utils/actor/actorHpChangePaths.ts` | What an actor update added, from the `_preUpdate` snapshot in `options.nimble`. HP that only follows a higher max HP is not a gain |
 | `ruleLabel()`, `ruleKey()` | `src/utils/actor/actorRules.ts` | A rule's label, or its item's name. The key `<item uuid>:<rule id>` of a rule. |
+| `usedThisTurn()`, `markTurnUse()`, `clearTurnUse()` | `src/utils/combat/perTurnUse.ts` | A 1/turn use of a rule, on a flag of the actor. |
+| `collectCritDice()` | `src/utils/damage/collectCritDice.ts` | The Crit Dice rules that add dice to a crit of an attack. |
+| `collectOfferBonuses()` | `src/utils/damage/collectOfferBonuses.ts` | What a hero's rules add to an attack from the row of an item. |
+| `dualWieldOfferFor()`, `dualWieldEntry()`, `keepChoiceOfWeapon()` | `src/utils/damage/dualWield.ts` | The dual wield tick and the two weapons of its roll. |
+| `rollSurge()`, `giveSurgeMana()`, `endSurgeMana()` | `src/utils/combat/surgeMana.ts` | The Initiative Mana dice on an Initiative card, and the mana they give. |
+| `invokeChaos()`, `canInvokeChaos()`, `whisperChaosRollsToGm()` | `src/utils/chaos/invokeChaos.ts` | A Chaos Table roll and its card. |
 | `appendTypedBonusDamage()` | `src/utils/damage/appendTypedBonusDamage.ts` | Add a differently-typed bonus to an activation card as its own damage packet, beside the damage it derives from |
 | `buildDeferredDamagePatch()`, `findRollableDeferredDamageNode()` | `src/utils/damage/buildDeferredDamagePatch.ts` | Attach an on-demand damage roll to a `deferredRoll` damage node, keeping the patched activation tree and the message `rolls` source in step, and resolve which node a Roll Damage click may still roll. Both return null for a node that is missing, was never deferred, or already carries a roll — which is what refuses a second click |
 | `collectPoolSpendCardOffers()` | `src/utils/incomingReactions/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |

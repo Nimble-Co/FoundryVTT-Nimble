@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { applyUpcastDeltas } from '#utils/spell/applyUpcastDeltas.js';
 import { Predicate } from '../../../etc/Predicate.js';
-import { applyUpcastDeltas } from '../../../utils/spell/applyUpcastDeltas.js';
 import { ChangeDieRule } from '../changeDie.js';
 import { RerollRule } from '../reroll.js';
 

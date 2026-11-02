@@ -7,6 +7,7 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import type { DualWieldOffer } from '#types/dualWield.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
 import {
 	type ConditionalBonusOption,
@@ -14,7 +15,7 @@ import {
 } from '#utils/actor/conditionalBonuses.js';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
-import { type DualWieldOffer, dualWieldOfferFor } from '#utils/damage/dualWield.js';
+import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {

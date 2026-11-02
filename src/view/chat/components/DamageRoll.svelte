@@ -1,4 +1,5 @@
 <script>
+	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import { critDiceLinesOf } from '../../../dice/critDiceLines.js';
@@ -109,7 +110,7 @@
 {#each critDiceLines as line, index (index)}
 	<p class="nimble-crit-dice-line" data-tooltip={line.values.join(' + ')}>
 		<i class="fa-solid fa-dice" aria-hidden="true"></i>
-		{game.i18n.format('NIMBLE.chat.incomingReactions.critDiceLine', {
+		{localize('NIMBLE.chat.incomingReactions.critDiceLine', {
 			feature: line.label,
 			total: String(line.total),
 		})}

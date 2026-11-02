@@ -2,6 +2,7 @@ import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type { RollEffect } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -14,13 +15,16 @@ function schema() {
 			label: 'NIMBLE.rules.offerAttackBonus.offerSource.label',
 			hint: 'NIMBLE.rules.offerAttackBonus.offerSource.hint',
 		}),
-		damage: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '',
-			label: 'NIMBLE.rules.offerAttackBonus.damage.label',
-			hint: 'NIMBLE.rules.offerAttackBonus.damage.hint',
-		}),
+		damage: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.offerAttackBonus.damage.label',
+				hint: 'NIMBLE.rules.offerAttackBonus.damage.hint',
+				widget: 'diceFormula',
+			}),
+		),
 		primaryDie: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -48,6 +52,10 @@ interface OfferBonus {
  * one item. With Feature Effects off, a row adds them.
  */
 class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
+	declare offerSource: string;
+	declare damage: string;
+	declare primaryDie: number;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.offerAttackBonus.description';
 	static override formLayout: readonly RuleFormGroup[] = [

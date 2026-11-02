@@ -1664,12 +1664,12 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
-			"offerAttackBonus": "Offer Attack Bonus",
+			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
 			"invokeChaos": "Invoke Chaos",
 			"chaosOptions": "Chaos Options",
-			"surgeMana": "Surge Mana",
-			"surgeRerollOnes": "Surge: Reroll Ones",
+			"initiativeMana": "Initiative Mana",
+			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
 			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -2732,12 +2732,12 @@
 					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
 				}
 			},
-			"surgeMana": {
+			"initiativeMana": {
 				"description": "Rolling Initiative gives mana that ends with the combat. The dice show on the Initiative card. With Feature Effects off, a button on the card gives the mana.",
 				"flat": { "label": "Flat mana", "hint": "A formula, as @will." },
 				"dice": { "label": "Dice", "hint": "As 1d4. Leave empty for no dice." }
 			},
-			"surgeRerollOnes": {
+			"initiativeManaRerollOnes": {
 				"description": "Each 1 on a surge die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
 			"invokeChaos": {
@@ -2768,10 +2768,10 @@
 				}
 			},
 			"offerAttackBonus": {
-				"description": "Extra damage and a Primary Die bonus on an attack made from the offer row of one item. With Feature Effects off, a row in Change This Roll adds them.",
+				"description": "Extra damage and a Primary Die bonus on an attack made from the row of one item. With Feature Effects off, a row in Change This Roll adds them.",
 				"offerSource": {
-					"label": "Offer item",
-					"hint": "The identifier of the item whose offer row makes the attack."
+					"label": "Item with the row",
+					"hint": "The identifier of the item whose row makes the attack."
 				},
 				"damage": {
 					"label": "Extra damage",

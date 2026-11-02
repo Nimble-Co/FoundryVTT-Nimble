@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
+import { collectOfferBonuses } from '#utils/damage/collectOfferBonuses.js';
 import { Predicate } from '../../../etc/Predicate.js';
-import { collectOfferBonuses } from '../../../utils/damage/collectOfferBonuses.js';
 import { OfferAttackBonusRule } from '../offerAttackBonus.js';
 
 const COMMANDER = 'packs/classFeatures/core/commander';

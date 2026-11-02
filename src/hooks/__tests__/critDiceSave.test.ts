@@ -15,6 +15,7 @@ describe('the save of a crit dice rule', () => {
 	let fire: (outcome: NimbleSavePayload['outcome']) => Promise<void>;
 	let dice: number[];
 	let flags: Record<string, unknown>;
+	let written: Record<string, unknown>;
 
 	beforeEach(async () => {
 		vi.resetModules();
@@ -46,6 +47,7 @@ describe('the save of a crit dice rule', () => {
 		const attack = {
 			getFlag: (_scope: string, key: string) => flags[key],
 			update: async (changes: Record<string, unknown>) => {
+				written = changes;
 				flags.critDiceSaveState = changes[`flags.${SYSTEM_ID}.critDiceSaveState`];
 			},
 			system: { activation: { effects: [] } },
@@ -82,6 +84,8 @@ describe('the save of a crit dice rule', () => {
 		await fire('fail');
 		expect(dice).toEqual([6, 6]);
 		expect(refundRuleCharge).not.toHaveBeenCalled();
+		expect(written).toEqual(expect.objectContaining({ rolls: [] }));
+		expect(written).toHaveProperty(['system.activation']);
 	});
 
 	it('gives the use back when the target passes, and the dice stay', async () => {

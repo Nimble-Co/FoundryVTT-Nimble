@@ -3,13 +3,11 @@
 The ticks of a roll window that take the max of a roll in place of rolling it.
 -->
 <script lang="ts">
-	import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
+	import type { MaxDamageFieldProps } from '#types/components/MaxDamageField.d.ts';
+	import type { MaxDamageOffer } from '#types/maxDamage.d.ts';
 	import localize from '#utils/localize.js';
 
-	let {
-		offers,
-		choice = $bindable(null),
-	}: { offers: MaxDamageOffer[]; choice: MaxDamageChoice | null } = $props();
+	let { offers, choice = $bindable(null) }: MaxDamageFieldProps = $props();
 
 	const TEXT = 'NIMBLE.rollWindow.maxDamage';
 

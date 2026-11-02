@@ -1,24 +1,7 @@
 import { SYSTEM_ID } from '#system';
+import type { CardSurge, SurgeDie } from '#types/surgeMana.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
-
-export interface SurgeDie {
-	faces: number;
-	value: number;
-	/** The value before the die rolled again. */
-	was?: number;
-}
-
-/** The surge on an Initiative card. */
-export interface CardSurge {
-	feature: string;
-	flat: number;
-	dice: SurgeDie[];
-	/** The feature that lets a 1 roll again; empty with none. */
-	rerollFeature: string;
-	manaGiven: boolean;
-	combatId: string;
-}
 
 interface SurgeActor {
 	rules?: Iterable<unknown>;
@@ -86,11 +69,11 @@ export async function rollSurge(
 		surgeSpec?: { feature: string; flat: number; dice: string } | null;
 		rerollFeature?: string | null;
 	}>;
-	const spec = rules.find((rule) => rule?.type === 'surgeMana' && rule.surgeSpec)?.surgeSpec;
+	const spec = rules.find((rule) => rule?.type === 'initiativeMana' && rule.surgeSpec)?.surgeSpec;
 	if (!spec) return null;
 	const rerollFeature =
-		rules.find((rule) => rule?.type === 'surgeRerollOnes' && rule.rerollFeature)?.rerollFeature ??
-		'';
+		rules.find((rule) => rule?.type === 'initiativeManaRerollOnes' && rule.rerollFeature)
+			?.rerollFeature ?? '';
 
 	const surge: CardSurge = {
 		feature: spec.feature,

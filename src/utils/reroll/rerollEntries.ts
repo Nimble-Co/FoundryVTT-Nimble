@@ -68,7 +68,7 @@ interface RollUseGate {
 	effect?: RollEffect;
 	/** A crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
-	/** A use that changes Sneak Attack dice needs a roll that has them. */
+	/** A use that changes dice of the sneak attack role needs a roll that has them. */
 	needsSneakDice?: boolean;
 }
 
@@ -123,7 +123,7 @@ interface RerollRuleLike {
 	saveDC?: string;
 	/** With the effect `critDice`: the dice the row adds. */
 	critDiceSpec?: CritDiceSpec;
-	/** A rule that changes Sneak Attack dice. */
+	/** A rule that changes dice of the sneak attack role. */
 	needsSneakDice?: boolean;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;

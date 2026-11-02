@@ -1,9 +1,9 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
 import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
+import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
-import type { DualWieldWeapon, DualWieldWeaponSelf } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { critDiceLinesOf } from './critDiceLines.js';
 import { critFaceOf } from './critFace.js';

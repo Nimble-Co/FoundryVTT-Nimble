@@ -1,6 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
-import { invokeChaos } from '#utils/chaos/invokeChaos.js';
+import { CHAOS_INVOKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import { NO_DICE_SO_NICE_FLAGS } from '#utils/rolls/showDiceAnimation.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
@@ -131,7 +131,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				flags: {
 					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
 					[SYSTEM_ID]: {
-						...(manager.invokesChaos ? { chaosInvoked: true } : {}),
+						...(manager.invokesChaos ? { [CHAOS_INVOKED_FLAG]: true } : {}),
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,

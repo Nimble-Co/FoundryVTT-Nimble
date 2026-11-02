@@ -1,4 +1,10 @@
 import { SYSTEM_ID } from '#system';
+import type {
+	DualWieldChoice,
+	DualWieldOffer,
+	DualWieldWeapon,
+	DualWieldWeaponSelf,
+} from '#types/dualWield.d.ts';
 import type { RerollRecord } from '../incomingReactions/incomingReactionEntry.js';
 
 const FLAG = 'dualWieldRound';
@@ -19,30 +25,6 @@ interface DualWieldActor {
 	items?: Iterable<WeaponItem>;
 	getFlag?(scope: string, key: string): unknown;
 	update?(data: Record<string, unknown>): Promise<unknown>;
-}
-
-/** What the tick of the roll window can do for this attack. */
-export interface DualWieldOffer {
-	/** The other weapon. Null with the same formula: the tick is advantage. */
-	other: { uuid: string; name: string } | null;
-	/** The use of this round was spent. */
-	used: boolean;
-}
-
-/** The choice of the roll window. */
-export interface DualWieldChoice {
-	otherItemUuid: string | null;
-	/** With advantage on a different weapon: the weapon with the extra die. */
-	extraDieOn: 'activated' | 'other';
-}
-
-/** One weapon of a dual wield attack, as a reroll needs it. */
-export interface DualWieldWeapon {
-	formula: string;
-	options: Record<string, unknown>;
-	itemUuid: string;
-	label: string;
-	damageType: string;
 }
 
 function currentRoundId(): string | null {
@@ -110,8 +92,6 @@ interface RollWithOptions {
 	formula?: string;
 	options?: { dualWieldOther?: DualWieldWeapon; dualWieldSelf?: DualWieldWeaponSelf };
 }
-
-export type DualWieldWeaponSelf = Pick<DualWieldWeapon, 'itemUuid' | 'label' | 'damageType'>;
 
 /** The new roll's options with the other weapon named, so a reroll can roll both again. */
 export function dualWieldRollOptions(

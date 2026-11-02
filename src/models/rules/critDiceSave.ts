@@ -19,13 +19,16 @@ function schema() {
 			label: 'NIMBLE.rules.critDiceSave.saveType.label',
 			hint: 'NIMBLE.rules.critDiceSave.saveType.hint',
 		}),
-		saveDC: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '10',
-			label: 'NIMBLE.rules.critDiceSave.saveDC.label',
-			hint: 'NIMBLE.rules.critDiceSave.saveDC.hint',
-		}),
+		saveDC: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '10',
+				label: 'NIMBLE.rules.critDiceSave.saveDC.label',
+				hint: 'NIMBLE.rules.critDiceSave.saveDC.hint',
+				widget: 'formula',
+			}),
+		),
 		chargePoolIdentifier: new fields.StringField(
 			withWidget({
 				required: false,
@@ -45,11 +48,15 @@ declare namespace CritDiceSaveRule {
 }
 
 /**
- * A row on an attack with Sneak Attack dice: spend a use, and the target makes a
+ * A row on an attack with dice of the sneak attack role: spend a use, and the target makes a
  * save on a normal save card. A failed save sets the dice to their max. A passed
  * save gives the use back. Before there is a result, nothing changes.
  */
 class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
+	declare saveType: keyof typeof CONFIG.NIMBLE.savingThrows;
+	declare saveDC: string;
+	declare chargePoolIdentifier: string;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.critDiceSave.description';
 	static override formLayout: readonly RuleFormGroup[] = [

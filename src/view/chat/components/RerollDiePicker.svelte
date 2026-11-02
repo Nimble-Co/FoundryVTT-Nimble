@@ -28,13 +28,14 @@
 	const picker = createRerollDiePickerState(() => ({ dice, oncancel, rolling }));
 	const { elements, focusFirst, onKeydown } = picker;
 
+	let picked = $state<typeof dice>([]);
+
 	let title = $derived(
 		rolling
 			? localize(`${pickDieWords(use)}.rolling`, { feature })
 			: localize(`${pickDieWords(use)}.title`),
 	);
 
-	let picked = $state<typeof dice>([]);
 	const isPicked = (die: (typeof dice)[number]) =>
 		picked.some((other) => other.term === die.term && other.result === die.result);
 	const atMax = $derived(!!several && picked.length >= several.max);

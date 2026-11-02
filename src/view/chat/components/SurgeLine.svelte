@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CardSurge } from '#utils/combat/surgeMana.ts';
+	import type { SurgeLineProps } from '#types/components/SurgeLine.d.ts';
 
 	import localize from '#utils/localize.js';
 	import {
@@ -9,15 +9,7 @@
 		surgeTotal,
 	} from '#utils/combat/surgeMana.js';
 
-	interface SurgeCardMessage {
-		isAuthor?: boolean;
-		reactive?: { system?: { surge?: CardSurge | null; actorUuid?: string | null } };
-		system: { surge?: CardSurge | null };
-		update(changes: Record<string, unknown>): Promise<unknown>;
-		speakerActor?: unknown;
-	}
-
-	let { messageDocument }: { messageDocument: SurgeCardMessage } = $props();
+	let { messageDocument }: SurgeLineProps = $props();
 
 	const surge = $derived(messageDocument.reactive?.system?.surge ?? null);
 	const canAct = $derived(game.user?.isGM === true || messageDocument.isAuthor === true);

@@ -9,13 +9,16 @@ const TRIGGERS = ['onAttacked', 'onWound'] as const;
 function schema() {
 	const { fields } = foundry.data;
 	return {
-		poolIdentifier: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '',
-			label: 'NIMBLE.rules.poolDieToMax.poolIdentifier.label',
-			hint: 'NIMBLE.rules.poolDieToMax.poolIdentifier.hint',
-		}),
+		poolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.poolDieToMax.poolIdentifier.label',
+				hint: 'NIMBLE.rules.poolDieToMax.poolIdentifier.hint',
+				widget: 'dicePoolPicker',
+			}),
+		),
 		trigger: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -49,6 +52,10 @@ declare namespace PoolDieToMaxRule {
  * hero is attacked, one per Wound on the hero or on an ally within the reach.
  */
 class PoolDieToMaxRule extends NimbleBaseRule<PoolDieToMaxRule.Schema> {
+	declare poolIdentifier: string;
+	declare trigger: (typeof TRIGGERS)[number];
+	declare reach: number;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.poolDieToMax.description';
 

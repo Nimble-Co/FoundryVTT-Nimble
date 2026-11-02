@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { ChaosCardDoc, ChaosCardSystem, ChaosRollChoice } from '#utils/chaos/invokeChaos.ts';
+	import type { ChaosCardDoc, ChaosCardSystem, ChaosRollChoice } from '#types/chaos.d.ts';
+	import type { ChaosCardProps } from '#types/components/ChaosCard.d.ts';
 
 	import { chooseChaosRoll, keepChaosRoll } from '#utils/chaos/invokeChaos.js';
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardHeader from './components/CardHeader.svelte';
 
-	let { messageDocument }: { messageDocument: never } = $props();
+	let { messageDocument }: ChaosCardProps = $props();
+	let busy = $state(false);
 
 	const message = $derived(
 		messageDocument as unknown as ChaosCardDoc & {
@@ -18,7 +20,6 @@
 	const headerBackgroundColor = $derived(message.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
 	const canAct = $derived(game.user?.isGM === true || message.isAuthor === true);
-	let busy = $state(false);
 
 	const actor = () => fromUuidSync(system.actorUuid as never) as never;
 

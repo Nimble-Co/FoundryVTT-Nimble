@@ -3,7 +3,7 @@
 The tick of an attack's roll window for dual wielding, 1/round.
 -->
 <script lang="ts">
-	import type { DualWieldOffer } from '#utils/damage/dualWield.ts';
+	import type { DualWieldFieldProps } from '#types/components/DualWieldField.d.ts';
 	import localize from '#utils/localize.js';
 
 	let {
@@ -12,13 +12,7 @@ The tick of an attack's roll window for dual wielding, 1/round.
 		rollMode,
 		checked = $bindable(false),
 		extraDieOn = $bindable('activated'),
-	}: {
-		offer: DualWieldOffer;
-		itemName: string;
-		rollMode: number;
-		checked: boolean;
-		extraDieOn: 'activated' | 'other';
-	} = $props();
+	}: DualWieldFieldProps = $props();
 
 	const TEXT = 'NIMBLE.rollWindow.dualWield';
 </script>

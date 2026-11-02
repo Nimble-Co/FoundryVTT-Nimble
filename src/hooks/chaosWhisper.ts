@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { ChaosCardSystem } from '#utils/chaos/invokeChaos.js';
+import type { ChaosCardSystem } from '#types/chaos.d.ts';
 import { whisperChaosRollsToGm } from '#utils/chaos/invokeChaos.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { showsChaosTableRolls } from '../settings/chaosTableSettings.js';

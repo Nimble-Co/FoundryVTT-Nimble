@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import type { CardSurge } from '#types/surgeMana.d.ts';
 import {
-	type CardSurge,
 	canRerollSurgeDie,
 	endSurgeMana,
 	regainSurgeManaOnCard,
@@ -40,10 +40,10 @@ function mage(mana: number, rules: unknown[], flag?: unknown) {
 }
 
 const surgeRule = (flat: number, dice: string) => ({
-	type: 'surgeMana',
+	type: 'initiativeMana',
 	surgeSpec: { feature: 'Elemental Surge', flat, dice },
 });
-const steelWill = { type: 'surgeRerollOnes', rerollFeature: 'Steel Will' };
+const steelWill = { type: 'initiativeManaRerollOnes', rerollFeature: 'Steel Will' };
 
 describe('a surge at Initiative', () => {
 	beforeEach(() => {
@@ -205,6 +205,6 @@ describe('the pack items of the surge', () => {
 
 	it('Steel Will rerolls a 1 with no use spent', () => {
 		const steel = rules('mage-subclasses/invoker-of-control/steel-will.json');
-		expect(steel.at(-1)).toMatchObject({ type: 'surgeRerollOnes' });
+		expect(steel.at(-1)).toMatchObject({ type: 'initiativeManaRerollOnes' });
 	});
 });

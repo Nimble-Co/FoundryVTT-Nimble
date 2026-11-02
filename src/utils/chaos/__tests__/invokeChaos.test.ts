@@ -158,6 +158,22 @@ describe('a Chaos Table roll', () => {
 			expect(card.system.rolls).toHaveLength(2);
 		});
 
+		it('Roll twice, choose one spends a use and waits for the pick', async () => {
+			const spendRuleCharge = vi.fn(async () => true);
+			vi.resetModules();
+			vi.doMock('../../chargePool/ruleChargeGate.js', () => ({ spendRuleCharge }));
+			const fresh = await import('../invokeChaos.js');
+			vi.doUnmock('../../chargePool/ruleChargeGate.js');
+			const card = pickCard();
+			diceAre([7], [20]);
+
+			await fresh.chooseChaosRoll(card as never, hero(thrive) as never, 'choose');
+
+			expect(spendRuleCharge).toHaveBeenCalledWith(expect.anything(), 'thrive');
+			expect(card.system.rolls).toHaveLength(2);
+			expect(card.system.status).toBe('picking');
+		});
+
 		it('Roll twice, choose one needs a use', async () => {
 			diceAre([7], [20]);
 			const noUses = pickCard('choosing', 0);

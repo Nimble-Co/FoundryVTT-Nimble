@@ -71,7 +71,7 @@ export interface AttackOutcomeView {
 	vicious?: boolean;
 	/** A crit die of the roll is a d20. */
 	hasCritD20?: boolean;
-	/** The roll has Sneak Attack dice. */
+	/** The roll has dice of the sneak attack role. */
 	hasSneakDice?: boolean;
 	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
 	critStays?: boolean;
@@ -119,7 +119,7 @@ export function canBecomeCrit(view: AttackOutcomeView): boolean {
 	return (view.canCrit ?? view.options?.canCrit) !== false;
 }
 
-/** The die role of the dice Sneak Attack adds. */
+/** The die role of the dice a rule adds. */
 export const SNEAK_ATTACK_ROLE = 'sneakAttack';
 
 /** These terms have dice with this role. */
@@ -203,7 +203,7 @@ export interface IncomingReactionEntry {
 	effect?: RollEffect;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
-	/** A use that changes Sneak Attack dice needs a roll that has them. */
+	/** A use that changes dice of the sneak attack role needs a roll that has them. */
 	/** One of several rows of the same rule on this roll. */
 	useIndex?: number;
 	needsSneakDice?: boolean;

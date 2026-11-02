@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "surgeMana",
+				"type": "initiativeMana",
 				"disabled": false,
 				"id": "elementalSurge01",
 				"identifier": "",
@@ -23,7 +23,7 @@
 				"dice": ""
 			},
 			{
-				"type": "surgeMana",
+				"type": "initiativeMana",
 				"disabled": false,
 				"id": "elementalSurge02",
 				"identifier": "",
@@ -39,7 +39,7 @@
 				"dice": "1d4"
 			},
 			{
-				"type": "surgeMana",
+				"type": "initiativeMana",
 				"disabled": false,
 				"id": "elementalSurge03",
 				"identifier": "",

@@ -148,7 +148,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 		);
 	}
 
-	/** Only a roll with Sneak Attack dice has a use for a rule that changes them. */
+	/** Only a roll with dice of the sneak attack role has a use for a rule that changes them. */
 	get needsSneakDice(): boolean {
 		return this.die === 'sneakAttackDie';
 	}

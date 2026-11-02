@@ -10,7 +10,7 @@
 			{
 				"type": "chargePool",
 				"disabled": false,
-				"id": "powerful-healer-pool",
+				"id": "XXHoJSZEiXZVhMbG",
 				"identifier": "powerful-healer",
 				"label": "Powerful Healer (WIL/Safe Rest)",
 				"predicate": {},
@@ -37,7 +37,7 @@
 				"chargePoolIdentifier": "powerful-healer",
 				"chargeCost": 1,
 				"type": "maxDamage",
-				"id": "powerful-healer-max",
+				"id": "2CJK6Truo6dfwSED",
 				"label": "Powerful Healer",
 				"use": "healing",
 				"schools": [],
