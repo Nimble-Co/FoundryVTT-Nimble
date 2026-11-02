@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
+import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
@@ -27,6 +28,7 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
+import { heldVulnerabilityTo, spendHeldChanges } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
@@ -123,6 +125,7 @@ type DamageApplyOptions = {
 interface DamageApplicationTarget {
 	actor: HpMutableActor;
 	adjustedDamage: number;
+	usedVulnerabilities: HeldChange[];
 }
 
 /**
@@ -431,7 +434,9 @@ function actorIsVulnerableToDamage(actor: Actor.Implementation, damageType?: str
 		'system.attributes.damageVulnerabilities',
 	);
 	return (
-		Array.isArray(vulnerabilities) && Boolean(damageType && vulnerabilities.includes(damageType))
+		(Array.isArray(vulnerabilities) &&
+			Boolean(damageType && vulnerabilities.includes(damageType))) ||
+		heldVulnerabilityTo(actor as never, damageType) !== null
 	);
 }
 
@@ -566,6 +571,8 @@ interface ResolvedDamageForActor {
 	components: TargetDamageComponent[];
 	/** Whether the actor's banked one-shot reduction was spent by this attack */
 	consumedBank: boolean;
+	/** The one-use vulnerabilities this damage used. */
+	usedVulnerabilities: HeldChange[];
 }
 
 /**
@@ -654,6 +661,7 @@ function resolveDamageForActor(
 
 	let remainingBank = availableBank;
 	let consumedBank = false;
+	const usedVulnerabilities = new Map<string, HeldChange>();
 
 	const components: TargetDamageComponent[] = [];
 	let total = 0;
@@ -661,6 +669,10 @@ function resolveDamageForActor(
 	for (const { value, options } of packets) {
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
+		const heldVulnerability = heldVulnerabilityTo(actor as never, options.damageType);
+		if (heldVulnerability && beforeReduction > 0) {
+			usedVulnerabilities.set(heldVulnerability.effectId, heldVulnerability);
+		}
 
 		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options);
 		let adjustedDamage = reduced.remainingDamage;
@@ -694,7 +706,12 @@ function resolveDamageForActor(
 		});
 	}
 
-	return { total, components, consumedBank };
+	return {
+		total,
+		components,
+		consumedBank,
+		usedVulnerabilities: [...usedVulnerabilities.values()],
+	};
 }
 
 function buildDamageApplicationPlan(params: {
@@ -737,6 +754,7 @@ function buildDamageApplicationPlan(params: {
 		applicableTargets.push({
 			actor,
 			adjustedDamage: resolved.total,
+			usedVulnerabilities: resolved.usedVulnerabilities,
 		});
 	}
 
@@ -1311,6 +1329,7 @@ class NimbleChatMessage extends ChatMessage {
 			);
 
 			await target.actor.applyDamage(target.adjustedDamage);
+			await spendHeldChanges(target.usedVulnerabilities);
 
 			const hpAfter = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1457,7 +1476,9 @@ class NimbleChatMessage extends ChatMessage {
 							? 'noDamage'
 							: 'fullDamage';
 
-				const multiplier = outcome === 'halfDamage' ? 0.5 : 1;
+				const multiplier =
+					(outcome === 'halfDamage' ? 0.5 : 1) *
+					((node as { damageMultiplier?: number }).damageMultiplier ?? 1);
 				const rollTotal = Number(roll.total ?? 0);
 				const value = Math.ceil((Number.isFinite(rollTotal) ? rollTotal : 0) * multiplier);
 
@@ -1541,6 +1562,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!resolved) return;
 		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor as never);
 		await resolved.actor.applyDamage(resolved.total);
+		await spendHeldChanges(resolved.usedVulnerabilities);
 		await this.setFlag(SYSTEM_ID as never, LATCHED_DAMAGE_FLAG as never, true as never);
 	}
 

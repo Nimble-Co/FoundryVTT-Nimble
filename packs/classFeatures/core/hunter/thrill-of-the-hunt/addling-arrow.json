@@ -18,6 +18,17 @@
 				"poolIdentifier": "thrill-of-the-hunt",
 				"poolScope": "actor",
 				"cost": "1"
+			},
+			{
+				"type": "holdOnTarget",
+				"disabled": false,
+				"id": "addlingHoldNext0",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"heldKind": "mustAttackOther",
+				"damageType": ""
 			}
 		],
 		"activation": {

@@ -1,5 +1,10 @@
 /** What a Held Change does to the roll that uses it. */
-export type HeldChangeKind = 'primaryDie' | 'wholeAmount' | 'ignoreDisadvantage';
+export type HeldChangeKind =
+	| 'primaryDie'
+	| 'wholeAmount'
+	| 'ignoreDisadvantage'
+	| 'mustAttackOther'
+	| 'vulnerableOnce';
 
 /** The time that ends a Held Change. */
 export type HeldChangeEnd = 'turn' | 'round' | 'combat';
@@ -18,6 +23,8 @@ export interface HeldChangeData {
 	combatId: string;
 	round: number;
 	turn: number;
+	/** The damage type of a one-use vulnerability. */
+	damageType?: string;
 }
 
 /** A Held Change as it is on a creature. */

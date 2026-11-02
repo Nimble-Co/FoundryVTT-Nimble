@@ -11,6 +11,8 @@ const ICONS: Record<HeldChangeData['kind'], string> = {
 	primaryDie: 'icons/svg/target.svg',
 	wholeAmount: 'icons/svg/sword.svg',
 	ignoreDisadvantage: 'icons/svg/aura.svg',
+	mustAttackOther: 'icons/svg/daze.svg',
+	vulnerableOnce: 'icons/svg/fire.svg',
 };
 
 interface HolderEffect {
@@ -34,7 +36,7 @@ interface LiveCombat {
 
 /** A change ends with its turn, round or combat, also if no GM was there to delete it. */
 function isLive(change: HeldChangeData): boolean {
-	if (!change.combatId) return true;
+	if (!change.combatId) return false;
 	const combat = (game.combats as unknown as { get?(id: string): LiveCombat } | undefined)?.get?.(
 		change.combatId,
 	);
@@ -85,6 +87,24 @@ export function ignoreDisadvantageChange(attacker: Holder | null | undefined): H
 	);
 }
 
+/** The change that says who the holder's next attack must be against. It only reports. */
+export function mustAttackOtherChange(attacker: Holder | null | undefined): HeldChange | null {
+	return heldChangesOn(attacker).find((held) => held.kind === 'mustAttackOther') ?? null;
+}
+
+/** The one-use vulnerability of a creature to this damage type. */
+export function heldVulnerabilityTo(
+	holder: Holder | null | undefined,
+	damageType: string | undefined,
+): HeldChange | null {
+	if (!damageType) return null;
+	return (
+		heldChangesOn(holder).find(
+			(held) => held.kind === 'vulnerableOnce' && held.damageType === damageType,
+		) ?? null
+	);
+}
+
 /** The read-only lines of a roll window. */
 export function heldLines(held: HeldChange[]) {
 	return held.map((change) => ({
@@ -131,7 +151,11 @@ interface ActivatedItem {
 }
 
 /** The lines for the roll window of an item, with what is targeted now. */
-export function heldLinesForItem(attacker: Holder | null | undefined, item: ActivatedItem) {
+export function heldLinesForItem(
+	attacker: Holder | null | undefined,
+	item: ActivatedItem,
+	options: { ignoresDisadvantage?: boolean } = {},
+) {
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
 	const ended = keptAmountEndedBy(attacker, item);
@@ -147,10 +171,12 @@ export function heldLinesForItem(attacker: Holder | null | undefined, item: Acti
 			]
 		: [];
 	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return endedLines;
-	const ignore = ignoreDisadvantageChange(attacker);
+	const ignore = options.ignoresDisadvantage ? null : ignoreDisadvantageChange(attacker);
+	const mustAttack = mustAttackOtherChange(attacker);
 	return [
 		...endedLines,
 		...heldLines([
+			...(mustAttack ? [mustAttack] : []),
 			...(ignore ? [ignore] : []),
 			...heldChangesForAttack({
 				attacker,
@@ -194,6 +220,7 @@ export function keptAmountEndedBy(
 
 interface DamageNodeLike extends AttackNodeLike {
 	roll?: { total?: number } | null;
+	damageMultiplier?: number;
 }
 
 /** The damage total a card shows: each rolled damage node and the spends folded in. */
@@ -204,7 +231,7 @@ export function cardDamageTotal(system: {
 	const nodes = flattenEffectsTree((system.activation?.effects ?? []) as never) as DamageNodeLike[];
 	const rolled = nodes
 		.filter((node) => node.type === 'damage')
-		.reduce((sum, node) => sum + (Number(node.roll?.total) || 0), 0);
+		.reduce((sum, node) => sum + (Number(node.roll?.total) || 0) * (node.damageMultiplier ?? 1), 0);
 	const folded = (system.incomingReactions ?? [])
 		.filter((entry) => entry.kind === 'spendPoolForDamage' && entry.used)
 		.reduce((sum, entry) => sum + (entry.usedAmount ?? 0), 0);
@@ -263,8 +290,12 @@ async function askGm(data: object): Promise<void> {
 	await gm.query(QUERY_NAME, data);
 }
 
-/** Puts a Held Change on a creature. A player without ownership asks the GM. */
+/**
+ * Puts a Held Change on a creature. A player without ownership asks the GM.
+ * Outside combat nothing would end it, so nothing is held.
+ */
 export async function createHeldChange(holder: Holder, change: HeldChangeData): Promise<void> {
+	if (!change.combatId) return;
 	if (holder.isOwner) return createHere(holder, change);
 	await askGm({ action: 'create', actorUuid: holder.uuid, change });
 }
@@ -278,6 +309,12 @@ export async function spendHeldChanges(held: HeldChange[]): Promise<void> {
 		if (holder.isOwner) await deleteHere(holder, change.effectId);
 		else await askGm({ action: 'delete', actorUuid: change.holderUuid, effectId: change.effectId });
 	}
+}
+
+/** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */
+export async function spendHeldIgnoreDisadvantage(holder: Holder): Promise<void> {
+	const held = ignoreDisadvantageChange(holder);
+	if (held) await spendHeldChanges([held]);
 }
 
 /** Deletes each change whose time ended. */

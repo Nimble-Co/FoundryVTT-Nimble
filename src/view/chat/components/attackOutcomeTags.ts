@@ -74,6 +74,17 @@ function critCauses(
  * targets has no miss and no crit. Nothing on other rolls.
  */
 function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
+	const mustAttack = (roll?.options?.outcomeSources?.mustAttackOther ?? []).map(
+		(feature): AttackOutcomeTag => ({
+			kind: 'mustAttackOther',
+			label: localize(`${TAG_TEXT}.mustAttackOther`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.mustAttackOtherTooltip`, { feature }),
+		}),
+	);
+	return [...mustAttack, ...outcomeTagsOfResult(roll)];
+}
+
+function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	const kept = (roll?.options?.outcomeSources?.keptAmount ?? []).map(
 		(feature): AttackOutcomeTag => ({
 			kind: 'maxDamage',

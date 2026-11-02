@@ -7,6 +7,7 @@
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import DualWieldField from './components/DualWieldField.svelte';
+	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import KeptAmountField from './components/KeptAmountField.svelte';
 	import LessManaField from './components/LessManaField.svelte';
@@ -25,9 +26,12 @@
 		rollMode,
 		rushedAttack,
 		spendsActions,
+		ignoreDisadvantage,
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
-	const heldLines = untrack(() => heldLinesForItem(actor as never, item as never));
+	const heldLines = untrack(() =>
+		heldLinesForItem(actor as never, item as never, { ignoresDisadvantage: ignoreDisadvantage }),
+	);
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 
@@ -76,6 +80,7 @@
 			maxDamage: state.maxDamageChoice,
 			...(state.weaponUuid ? { weaponUuid: state.weaponUuid } : {}),
 			...(state.keptAmount ? { keptAmount: state.usesKeptAmount } : {}),
+			...(state.damageMultiplier ? { damageMultiplier: state.usesDamageMultiplier } : {}),
 			lessMana: state.lessMana,
 			freeUse: state.freeUse,
 			...(state.dualWield
@@ -131,6 +136,14 @@
 			label={state.keptAmount.label}
 			amount={state.keptAmount.value}
 			bind:checked={state.usesKeptAmount}
+		/>
+	{/if}
+
+	{#if state.damageMultiplier && !keptInUse}
+		<DamageMultiplierField
+			label={state.damageMultiplier.label}
+			multiplier={state.damageMultiplier.multiplier}
+			bind:checked={state.usesDamageMultiplier}
 		/>
 	{/if}
 

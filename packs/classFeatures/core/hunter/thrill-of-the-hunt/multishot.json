@@ -58,9 +58,10 @@
 			],
 			"showDescription": true,
 			"targets": {
-				"count": 1,
+				"count": 2,
 				"restrictions": "",
-				"attackType": "range"
+				"attackType": "range",
+				"singleTargetAttack": true
 			},
 			"template": {
 				"length": 1,

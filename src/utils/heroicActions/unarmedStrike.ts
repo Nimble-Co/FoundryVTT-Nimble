@@ -23,6 +23,7 @@ import {
 	heldChangesForAttack,
 	ignoreDisadvantageChange,
 	keptAmountFor,
+	mustAttackOtherChange,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import {
@@ -179,6 +180,13 @@ export async function rollUnarmedStrike(
 	const kept = result.keptAmount === false ? null : keptAmount;
 	const heldIgnore = kept ? null : ignoreDisadvantageChange(actor as never);
 	if (heldIgnore) removeDisadvantage(rollOptions as never);
+	const mustAttack = mustAttackOtherChange(actor as never);
+	if (mustAttack) {
+		rollOptions.outcomeSources = {
+			...rollOptions.outcomeSources,
+			mustAttackOther: [mustAttack.label],
+		};
+	}
 	const firstRoll = new DamageRoll(
 		kept ? String(kept.value) : rollFormula,
 		actor.getRollData(),
@@ -264,7 +272,7 @@ export async function rollUnarmedStrike(
 		type: 'feature',
 	};
 
-	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+	const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(
 		actor as never,
@@ -276,6 +284,7 @@ export async function rollUnarmedStrike(
 		...(kept ? [] : held),
 		...(heldIgnore ? [heldIgnore] : []),
 		...(keptAmount ? [keptAmount] : []),
+		...(mustAttack ? [mustAttack] : []),
 	]);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll as never)) {

@@ -48,6 +48,7 @@ import {
 } from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
+import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
@@ -67,6 +68,7 @@ import {
 	isAttackRoll,
 	keptAmountEndedBy,
 	keptAmountFor,
+	mustAttackOtherChange,
 	spendHeldChanges,
 } from '../utils/heldChange/heldChange.js';
 import {
@@ -286,6 +288,11 @@ class ItemActivationManager {
 	/** The kept amount of this actor that ends with this roll, used or not. */
 	#keptAmountToEnd: HeldChange | null = null;
 
+	/** What the tick of a damage multiplier gave this use. */
+	#damageMultiplier = 1;
+
+	#mustAttackOther: HeldChange | null = null;
+
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
 	 * cleared the preUseItem gate. Deducting them during getData() would spend
@@ -382,6 +389,7 @@ class ItemActivationManager {
 			rollMode: options.rollMode ?? 0,
 			rushedAttack: options.rushedAttack,
 			spendsActions: options.spendsActions,
+			ignoreDisadvantage: options.ignoreDisadvantage,
 		};
 
 		const dialogData = await this.#resolveDialogData(rollOptions);
@@ -507,6 +515,10 @@ class ItemActivationManager {
 		this.#keptAmountToEnd =
 			usableAmount ?? keptAmountEndedBy(this.actor as never, this.#item as never);
 		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
+		this.#damageMultiplier =
+			this.#keptAmount || dialogData.damageMultiplier === false
+				? 1
+				: (damageMultiplierOf(this.#item as never)?.multiplier ?? 1);
 		if (this.#keptAmount) {
 			dialogData.maxDamage = null;
 			dialogData.dualWield = undefined;
@@ -626,6 +638,9 @@ class ItemActivationManager {
 			// so the card offers a Roll Damage button and rolls it then.
 			if ((node.type === 'damage' && !node.deferredRoll) || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
+				if (node.type === 'damage' && this.#damageMultiplier !== 1) {
+					node.damageMultiplier = this.#damageMultiplier;
+				}
 
 				if (node.type === 'damage' && !foundDamageRoll) {
 					const { canCrit, canMiss } = node;
@@ -821,6 +836,15 @@ class ItemActivationManager {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
 					if (this.#options.grantedCrit) grantCrit(damageOptions, this.#options.grantedCrit);
+					this.#mustAttackOther = isAttackRoll(this.activationData?.targets?.attackType, node)
+						? mustAttackOtherChange(this.actor as never)
+						: null;
+					if (this.#mustAttackOther) {
+						damageOptions.outcomeSources = {
+							...damageOptions.outcomeSources,
+							mustAttackOther: [this.#mustAttackOther.label],
+						};
+					}
 					if (attackOutcome.options.ignoreArmor) node.ignoreArmor = true;
 					const kept = this.#keptAmount;
 					roll = new dependencies.DamageRoll(
@@ -1212,7 +1236,9 @@ class ItemActivationManager {
 			...this.#heldChanges,
 			...(this.#heldIgnore ? [this.#heldIgnore] : []),
 			...(this.#keptAmountToEnd ? [this.#keptAmountToEnd] : []),
+			...(this.#mustAttackOther ? [this.#mustAttackOther] : []),
 		]);
+		this.#mustAttackOther = null;
 		this.#heldChanges = [];
 		this.#heldIgnore = null;
 		this.#keptAmountToEnd = null;
@@ -1740,6 +1766,8 @@ namespace ItemActivationManager {
 	 * Data returned from the activation configuration dialog.
 	 */
 	export interface DialogData {
+		/** The tick of a damage multiplier. False when the player took it off. */
+		damageMultiplier?: boolean;
 		/** The tick for dual wielding. */
 		dualWield?: DualWieldChoice;
 		/** The tick for a use with no charge. */

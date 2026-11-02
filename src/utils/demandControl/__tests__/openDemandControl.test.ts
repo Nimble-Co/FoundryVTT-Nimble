@@ -18,9 +18,10 @@ function hero() {
 	};
 }
 
-async function open(choice: object, paid: object | null = {}) {
+async function open(choice: object, paid: object | null = {}, actor = hero()) {
 	vi.resetModules();
 	const payRerollCost = vi.fn(async () => paid);
+	const refund = vi.fn(async () => undefined);
 	vi.doMock('#documents/dialogs/DemandControlDialog.svelte.js', () => ({
 		default: class {
 			promise = Promise.resolve(choice);
@@ -36,12 +37,12 @@ async function open(choice: object, paid: object | null = {}) {
 			heroicReaction: '',
 		}),
 		payRerollCost,
+		refundRerollCost: refund,
 	}));
 	const { openDemandControl } = await import('../openDemandControl.js');
 	const { chosenOptions, reactionUsedThisRound } = await import('../demandControl.js');
-	const actor = hero();
 	await openDemandControl(actor as never);
-	return { actor, payRerollCost, chosenOptions, reactionUsedThisRound };
+	return { actor, payRerollCost, refund, chosenOptions, reactionUsedThisRound };
 }
 
 describe('openDemandControl with the Reaction tick', () => {
@@ -92,5 +93,18 @@ describe('openDemandControl with the Reaction tick', () => {
 		expect(chosenOptions(actor as never)).toEqual([]);
 		expect(reactionUsedThisRound(actor as never)).toBe(false);
 		expect(globals.ui.notifications.warn).toHaveBeenCalled();
+	});
+
+	it('gives the action back and records nothing when the cantrip window is closed', async () => {
+		const actor = hero();
+		const { chosenOptions, reactionUsedThisRound, refund } = await open(
+			{ option: 'iInsist', cantripId: 'a', asReaction: true },
+			{},
+			actor,
+		);
+
+		expect(refund).toHaveBeenCalled();
+		expect(chosenOptions(actor as never)).toEqual([]);
+		expect(reactionUsedThisRound(actor as never)).toBe(false);
 	});
 });

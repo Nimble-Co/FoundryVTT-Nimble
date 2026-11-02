@@ -17,6 +17,7 @@ import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
@@ -110,6 +111,8 @@ export function createItemActivationConfigDialogState(
 	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
 	const keptAmount = keptAmountFor(actor as never, item as never);
 	let usesKeptAmount = $state(keptAmount !== null);
+	const damageMultiplier = damageMultiplierOf(item as never);
+	let usesDamageMultiplier = $state(true);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -372,6 +375,13 @@ export function createItemActivationConfigDialogState(
 			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
+		damageMultiplier,
+		get usesDamageMultiplier() {
+			return usesDamageMultiplier;
+		},
+		set usesDamageMultiplier(value: boolean) {
+			usesDamageMultiplier = value;
+		},
 		get usesKeptAmount() {
 			return usesKeptAmount;
 		},

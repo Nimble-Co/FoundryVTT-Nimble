@@ -1,3 +1,4 @@
+import type { HeldChange } from '#types/heldChange.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
@@ -191,13 +192,14 @@ function isMinionAttackRollOutcome(
 	return 'rollEntry' in value;
 }
 
-function buildMinionAttackRollEntry(params: {
+export function buildMinionAttackRollEntry(params: {
 	member: Combatant.Implementation;
 	memberId: string;
 	selectedActionId: string;
 	selectedAction: ItemLike;
 	formula: string;
 	damageRoll: DamageRoll;
+	held: HeldChange[];
 }): MinionGroupAttackRollEntry {
 	const isMiss = Boolean(params.damageRoll.isMiss);
 	const totalDamage = Number(params.damageRoll.total ?? 0);
@@ -221,6 +223,7 @@ function buildMinionAttackRollEntry(params: {
 		totalDamage: normalizedTotalDamage,
 		isMiss,
 		rollData: params.damageRoll.toJSON() as Record<string, unknown>,
+		primaryDieBonuses: params.held.map((change) => ({ label: change.label, value: change.value })),
 	};
 }
 
@@ -275,6 +278,7 @@ async function rollSingleMinionAttack(params: {
 				selectedAction: resolvedActionContext.selectedAction,
 				formula,
 				damageRoll,
+				held,
 			}),
 			actionUpdate: {
 				_id: resolvedActionContext.memberId,

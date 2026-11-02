@@ -1,6 +1,6 @@
 import DemandControlDialog from '#documents/dialogs/DemandControlDialog.svelte.js';
 import localize from '#utils/localize.js';
-import { chargeOnlyCost, payRerollCost } from '../reroll/rerollCost.js';
+import { chargeOnlyCost, payRerollCost, refundRerollCost } from '../reroll/rerollCost.js';
 import {
 	applyControlChoice,
 	type ControlChoice,
@@ -33,19 +33,18 @@ export async function openDemandControl(
 ): Promise<void> {
 	const choice = await ask(actor, options);
 	if (!choice) return;
-	if (choice.asReaction) {
-		const paid = await payRerollCost(actor as never, {
-			...chargeOnlyCost(''),
-			actionCost: 1,
-		});
-		if (!paid) {
-			ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.rerollCostUnpaid'));
-			return;
-		}
-		await recordReaction(actor);
+	const cost = { ...chargeOnlyCost(''), actionCost: 1 };
+	const paid = choice.asReaction ? await payRerollCost(actor as never, cost) : null;
+	if (choice.asReaction && !paid) {
+		ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.rerollCostUnpaid'));
+		return;
 	}
+	if (!(await applyControlChoice(actor, choice))) {
+		if (paid) await refundRerollCost(actor as never, cost, paid);
+		return;
+	}
+	if (paid) await recordReaction(actor);
 	if (!options.locked) await recordChoice(actor, choice.option, options.reportsRound === true);
-	await applyControlChoice(actor, choice);
 	if (choice.twice) {
 		const second = await ask(actor, { locked: choice.option });
 		if (second) await applyControlChoice(actor, second);

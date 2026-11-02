@@ -90,4 +90,6 @@ export interface ItemActivationConfigDialogProps {
 	rushedAttack?: number;
 	/** the actions that this use spends */
 	spendsActions?: number;
+	/** The cast ignores disadvantage by itself, so it spends no Held Change that does. */
+	ignoreDisadvantage?: boolean;
 }

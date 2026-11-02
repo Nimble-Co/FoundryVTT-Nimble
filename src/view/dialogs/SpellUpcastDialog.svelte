@@ -12,8 +12,10 @@
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
+	import { damageMultiplierOf } from '../../utils/damage/damageMultiplier.js';
 	import { heldLinesForItem, keptAmountFor } from '../../utils/heldChange/heldChange.js';
 	import KeptAmountField from './components/KeptAmountField.svelte';
+	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
@@ -38,9 +40,17 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
-	const heldLines = untrack(() => heldLinesForItem(actor as never, { system: spell } as never));
+	const heldLines = untrack(() =>
+		heldLinesForItem(actor as never, { system: spell } as never, {
+			ignoresDisadvantage: data.ignoreDisadvantage,
+		}),
+	);
 	const keptAmount = untrack(() => keptAmountFor(actor as never, { system: spell } as never));
 	let usesKeptAmount = $state(keptAmount !== null);
+	const damageMultiplier = untrack(() =>
+		damageMultiplierOf((spell?.parent ?? dialog?.item) as never),
+	);
+	let usesDamageMultiplier = $state(true);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -280,6 +290,7 @@
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
 			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
+			...(damageMultiplier ? { damageMultiplier: usesDamageMultiplier } : {}),
 			lessMana,
 			upcast: canUpcast
 				? {
@@ -315,6 +326,14 @@
 			label={keptAmount.label}
 			amount={keptAmount.value}
 			bind:checked={usesKeptAmount}
+		/>
+	{/if}
+
+	{#if damageMultiplier && !(keptAmount && usesKeptAmount)}
+		<DamageMultiplierField
+			label={damageMultiplier.label}
+			multiplier={damageMultiplier.multiplier}
+			bind:checked={usesDamageMultiplier}
 		/>
 	{/if}
 

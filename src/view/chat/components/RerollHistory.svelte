@@ -17,6 +17,7 @@
 		crit: 'fa-burst',
 		cannotMiss: 'fa-bullseye',
 		noOutcome: 'fa-ban',
+		mustAttackOther: 'fa-arrows-turn-to-dots',
 	};
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {

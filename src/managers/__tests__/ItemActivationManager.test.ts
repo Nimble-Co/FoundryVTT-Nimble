@@ -1224,7 +1224,13 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			});
 
 			describe('Held Changes', () => {
-				function targetWithOpening(combatId = '') {
+				beforeEach(() => {
+					(globalThis as unknown as Record<string, any>).game.combats = new Map([
+						['c1', { started: true, round: 0, turn: 0 }],
+					]);
+				});
+
+				function targetWithOpening(combatId = 'c1') {
 					const target = {
 						uuid: 'Actor.ogre',
 						isOwner: true,
@@ -1242,7 +1248,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 											spentBy: 'oneRoll',
 											ends: 'round',
 											combatId,
-											round: 1,
+											round: 0,
 											turn: 0,
 										},
 									},
@@ -1302,7 +1308,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 												appliesTo: 'holderAttacks',
 												spentBy: 'oneRoll',
 												ends: 'turn',
-												combatId: '',
+												combatId: 'c1',
 												round: 0,
 												turn: 0,
 											},
@@ -1382,6 +1388,21 @@ describe('ItemActivationManager.getData (rolls)', () => {
 						expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[0]).toBe('1d8');
 						await manager.applyDeferredPoolNodes();
 						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('uses no damage multiplier with the amount', async () => {
+						holdKept();
+						damageNodeItem();
+						Object.assign(mockItem, {
+							rules: new Map([['0', { type: 'damageMultiplier', multiplier: 2, label: 'x' }]]),
+						});
+
+						await rollAttack('reach');
+
+						expect(
+							mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+						).toBeUndefined();
+						delete (mockItem as { rules?: unknown }).rules;
 					});
 
 					it('rolls as normal and ends the amount when the tick is off', async () => {
@@ -1501,6 +1522,30 @@ describe('ItemActivationManager.getData (rolls)', () => {
 						expect.objectContaining({ primaryDieModifier: 0 }),
 					);
 					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+				});
+			});
+
+			describe('a damage multiplier tick', () => {
+				const withMultiplierRule = () =>
+					Object.assign(mockItem, {
+						rules: new Map([['0', { type: 'damageMultiplier', multiplier: 2, label: 'x' }]]),
+					});
+
+				afterEach(() => {
+					delete (mockItem as { rules?: unknown }).rules;
+				});
+
+				it('marks the damage node', async () => {
+					withMultiplierRule();
+					await rollAttack('range');
+					expect(mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier).toBe(2);
+				});
+
+				it('marks nothing with no rule', async () => {
+					await rollAttack('range');
+					expect(
+						mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+					).toBeUndefined();
 				});
 			});
 

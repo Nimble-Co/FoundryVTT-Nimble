@@ -199,24 +199,25 @@ async function applyAffliction(
 	});
 }
 
-/** Does the option. I INSIST has no card of its own: the cast is the result. */
+/**
+ * Does the option, and says whether it was done. I INSIST has no card of its
+ * own: the cast is the result, and its window keeps the choice of advantage.
+ */
 export async function applyControlChoice(
 	actor: ControlActor,
 	choice: ControlChoice,
-): Promise<void> {
+): Promise<boolean> {
 	switch (choice.option) {
 		case 'iInsist': {
 			const spell = [...(actor.items ?? [])].find((item) => item.id === choice.cantripId);
-			await spell?.activate?.({
-				fastForward: true,
-				rollMode: 0,
+			const card = await spell?.activate?.({
 				ignoreDisadvantage: true,
 				grantedCannotMiss: localize(`${TEXT}.options.iInsist.label`),
 			});
-			return;
+			return !!card;
 		}
 		case 'elementalAffliction': {
-			if (!choice.creatureUuid || !choice.condition) return;
+			if (!choice.creatureUuid || !choice.condition) return false;
 			await applyAffliction(actor, choice.creatureUuid, choice.condition);
 			await postCard(actor, {
 				option: choice.option,
@@ -225,7 +226,7 @@ export async function applyControlChoice(
 					condition: localize(`NIMBLE.conditions.${choice.condition}`),
 				}),
 			});
-			return;
+			return true;
 		}
 		case 'no':
 			await postCard(actor, {
@@ -235,14 +236,14 @@ export async function applyControlChoice(
 					protected: nameOf(choice.protectedUuid),
 				}),
 			});
-			return;
+			return true;
 		case 'loseControl':
 			await postCard(
 				actor,
 				{ option: choice.option, text: localize(`${TEXT}.card.loseControl`) },
 				true,
 			);
-			return;
+			return true;
 	}
 }
 

@@ -50,6 +50,17 @@
 				"poolIdentifier": "thrill-of-the-hunt",
 				"poolScope": "actor",
 				"cost": "1"
+			},
+			{
+				"type": "holdOnTarget",
+				"disabled": false,
+				"id": "greaseVulnFire00",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"heldKind": "vulnerableOnce",
+				"damageType": "fire"
 			}
 		],
 		"activation": {

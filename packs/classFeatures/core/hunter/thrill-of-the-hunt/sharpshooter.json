@@ -18,6 +18,16 @@
 				"poolIdentifier": "thrill-of-the-hunt",
 				"poolScope": "actor",
 				"cost": "1"
+			},
+			{
+				"type": "damageMultiplier",
+				"disabled": false,
+				"id": "sharpshootDouble",
+				"identifier": "",
+				"label": "you have not moved this turn, and your quarry is 4 or more spaces away",
+				"predicate": {},
+				"priority": 1,
+				"multiplier": 2
 			}
 		],
 		"activation": {

@@ -7,9 +7,11 @@ import {
 	heldChangesForAttack,
 	heldLines,
 	heldLinesForItem,
+	heldVulnerabilityTo,
 	keepAmount,
 	keptAmountEndedBy,
 	keptAmountFor,
+	mustAttackOtherChange,
 	spendHeldChanges,
 } from '../heldChange.js';
 
@@ -100,11 +102,17 @@ describe('heldChangesForAttack', () => {
 		expect(heldChangesForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
 	});
 
-	it('keeps a change with no combat until a roll spends it', () => {
+	it('does not read a change with no combat', () => {
 		const attacker = creature('A', [
 			data({ combatId: '', round: 0, appliesTo: 'holderAttacks', ends: 'turn' }),
 		]);
-		expect(heldChangesForAttack({ attacker, target: null, area: false })).toHaveLength(1);
+		expect(heldChangesForAttack({ attacker, target: null, area: false })).toHaveLength(0);
+	});
+
+	it('holds nothing outside combat', async () => {
+		const holder = creature('A');
+		await createHeldChange(holder as never, data({ combatId: '', round: 0 }));
+		expect(holder.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });
 
@@ -288,5 +296,45 @@ describe('cardDamageTotal', () => {
 				incomingReactions: [{ kind: 'spendPoolForDamage', used: true, usedAmount: 2 }],
 			}),
 		).toBe(15);
+	});
+});
+
+describe('a change that waits on the target of a feature', () => {
+	const mustAttack = data({ kind: 'mustAttackOther', appliesTo: 'holderAttacks', ends: 'combat' });
+	const greased = data({
+		kind: 'vulnerableOnce',
+		appliesTo: 'attacksOnHolder',
+		ends: 'combat',
+		damageType: 'fire',
+	});
+
+	it('tells the next attacker who it must attack, on its window', () => {
+		const attacker = creature('A', [mustAttack]);
+		expect(mustAttackOtherChange(attacker)?.kind).toBe('mustAttackOther');
+		const item = {
+			system: {
+				activation: {
+					effects: [{ type: 'damage', canMiss: true }],
+					targets: { attackType: 'reach' },
+				},
+			},
+		};
+		expect(heldLinesForItem(attacker, item)).toHaveLength(1);
+	});
+
+	it('finds a vulnerability only for its damage type', () => {
+		const holder = creature('A', [greased]);
+		expect(heldVulnerabilityTo(holder, 'fire')?.kind).toBe('vulnerableOnce');
+		expect(heldVulnerabilityTo(holder, 'cold')).toBeNull();
+	});
+});
+
+describe('cardDamageTotal with a damage multiplier', () => {
+	it('multiplies the damage node', () => {
+		expect(
+			cardDamageTotal({
+				activation: { effects: [{ type: 'damage', roll: { total: 6 }, damageMultiplier: 2 }] },
+			}),
+		).toBe(12);
 	});
 });

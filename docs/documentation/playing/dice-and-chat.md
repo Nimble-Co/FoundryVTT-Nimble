@@ -322,11 +322,15 @@ A feature can hold a change for a later attack. The creature that holds it shows
 
 ## Keeping the amount of a hit
 
-Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount. An area attack is also your next attack: it rolls as normal, does not use the amount, and ends it.
+In combat, Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount. An area attack is also your next attack: it rolls as normal, does not use the amount, and ends it.
 
 ## Demand Control
 
 Force of Will, Deny Fate, Supreme Control and Nullify open a window when you use them. Each row is a choice from the feature, and the window tells you what you already used. A save card that this caused has its own row.
+
+I INSIST opens the normal window of the cantrip, so you can set advantage. Disadvantage is ignored, and the cast is free. Close that window and nothing is spent or chosen.
+
+Nullify lasts for your next action this turn: an attack, a cast, or Assess. It holds nothing outside combat.
 
 With Supreme Control, the window has a tick to use your Reaction when it is not your turn. It costs 1 action, once each round. It does not use up Defend, Interpose or your other reactions.
 
@@ -335,6 +339,14 @@ With Supreme Control, the window has a tick to use your Reaction when it is not 
 The Thrill of the Hunt pool starts at 0 and is lost when combat ends. Charges come when your quarry dies, on a melee hit or a ranged crit on your quarry, and from the features that add to the pool. An attack that spent a charge gains none, also on a kill. A kill counts when the damage is applied from the card: a change of HP by hand gives no charge, so use + on the pool. With Feature Effects off there are no automatic gains: use + and - on the pool.
 
 Each attack ability opens the roll window with a weapon field, the Hunter's Mark choice and a line that tells what it spends. The charge goes on the roll. With no charge, or no weapon of that kind, Roll is off and tells why. These attacks cannot miss. "Half range", "if you have not moved" and "Hampered" are for the table to check. Some parts are not automated yet: the next attack of an Addling Arrow target, the second target of Multishot, the double damage of Sharpshooter, the push of Heavy Shot, the move of Snare Trap, and the vulnerability of Grease Trap.
+
+The sheet and the card show the count of the pool with no maximum, because the book gives no cap.
+
+- **Multishot:** target your quarry first, then the 2nd target. It is one attack on your quarry, and **Apply Damage** gives both the same amount.
+- **Sharpshooter:** the roll window has a tick that doubles the damage. Take it off if you moved this turn or your quarry is close. The system does not check.
+- **Heavy Shot and Snare Trap:** the target has a push on its token: 4, 2 or 1 spaces by size for Heavy Shot, 1 space for Snare Trap.
+- **Addling Arrow:** the next attack of the target shows who it must attack, on its roll window and its card. You choose the creature.
+- **Grease Trap:** the target is vulnerable to the first fire damage that it takes, then this ends.
 
 ## Final Takedown
 

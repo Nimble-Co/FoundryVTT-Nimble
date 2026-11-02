@@ -6,7 +6,7 @@ import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { createHeldChange } from '../heldChange/heldChange.js';
+import { createHeldChange, spendHeldIgnoreDisadvantage } from '../heldChange/heldChange.js';
 import { assessSucceeds } from './assessResult.js';
 
 export interface AssessRequest {
@@ -74,7 +74,10 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		: actor.rollSkillCheck(request.skillKey));
 	if (!roll) return false;
 
-	if (!request.free) await spendAssessAction(actor);
+	if (!request.free) {
+		await spendAssessAction(actor);
+		await spendHeldIgnoreDisadvantage(actor as never);
+	}
 
 	const isSuccess = assessSucceeds(roll);
 	const resultKey = isSuccess ? option.successKey : option.failureKey;

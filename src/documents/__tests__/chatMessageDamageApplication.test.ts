@@ -95,7 +95,10 @@ function damagePacketNode(id: string, damageType: string, total: number) {
 	};
 }
 
-function createCard(packets: Array<{ damageType: string; total: number }>, isCritical = false) {
+function createCard(
+	packets: Array<{ damageType: string; total: number; damageMultiplier?: number }>,
+	isCritical = false,
+) {
 	return new NimbleChatMessage({
 		type: 'spell',
 		system: {
@@ -103,9 +106,10 @@ function createCard(packets: Array<{ damageType: string; total: number }>, isCri
 			isCritical,
 			isMiss: false,
 			activation: {
-				effects: packets.map((packet, index) =>
-					damagePacketNode(`packet-${index}`, packet.damageType, packet.total),
-				),
+				effects: packets.map((packet, index) => ({
+					...damagePacketNode(`packet-${index}`, packet.damageType, packet.total),
+					...(packet.damageMultiplier ? { damageMultiplier: packet.damageMultiplier } : {}),
+				})),
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
@@ -574,5 +578,84 @@ describe('NimbleChatMessage latched miss damage', () => {
 
 		expect(globals().Hooks.callAll).not.toHaveBeenCalled();
 		expect(globals().Hooks.call).not.toHaveBeenCalled();
+	});
+});
+
+describe('a damage node with a multiplier', () => {
+	it('deals and previews the multiplied amount', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor });
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+		const card = createCard([{ damageType: 'piercing', total: 6, damageMultiplier: 2 }]);
+
+		expect(card.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total).toBe(12);
+		await card.applyAllDamage();
+		expect(actor.applyDamage).toHaveBeenCalledWith(12);
+	});
+});
+
+describe('a vulnerability to the next fire damage', () => {
+	function greased() {
+		const actor = createTarget();
+		const effect = {
+			id: 'grease',
+			disabled: false,
+			flags: {
+				[SYSTEM_ID]: {
+					heldChange: {
+						kind: 'vulnerableOnce',
+						value: 0,
+						label: 'Grease Trap',
+						sourceName: 'Grease Trap',
+						appliesTo: 'attacksOnHolder',
+						spentBy: 'oneRoll',
+						ends: 'combat',
+						combatId: 'c1',
+						round: 1,
+						turn: 0,
+						damageType: 'fire',
+					},
+				},
+			},
+		};
+		Object.assign(actor, { uuid: 'Actor.greased', isOwner: true, effects: [effect] });
+		return actor;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+		(globals().game as unknown as { combats: unknown }).combats = new Map([
+			['c1', { started: true }],
+		]);
+	});
+
+	it('deals more, and is gone after the first fire damage', async () => {
+		const actor = greased();
+		globals().fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.greased' ? actor : { actor },
+		);
+
+		const card = createCard([{ damageType: 'fire', total: 5 }]);
+		const previewed = card.getDamageBreakdownForTarget('Scene.scene.Token.token');
+		expect(previewed?.total).toBeGreaterThan(5);
+		await card.applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(previewed?.total);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['grease']);
+	});
+
+	it('stays through other damage', async () => {
+		const actor = greased();
+		globals().fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.greased' ? actor : { actor },
+		);
+
+		await createCard([{ damageType: 'cold', total: 5 }]).applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });

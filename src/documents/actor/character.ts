@@ -48,6 +48,7 @@ import {
 	rollsWithRushedDisadvantage,
 } from '../../utils/combat/rushedAttacks.js';
 import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
+import { spendHeldIgnoreDisadvantage } from '../../utils/heldChange/heldChange.js';
 import {
 	type CheckCardRerollData,
 	checkCardRerollData,
@@ -2447,6 +2448,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 						actionCost,
 					});
 				}
+				await spendHeldIgnoreDisadvantage(this as never);
 			}
 		}
 

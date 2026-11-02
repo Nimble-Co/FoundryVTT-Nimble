@@ -38,6 +38,7 @@ class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 
 	offersUseOn(context: RollUseContext): boolean {
 		if (!this.item.isEmbedded || !this.test()) return false;
+		if (!game.combat?.started) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack') return false;
 		return canPayRerollCost(this.actor as Actor | null, this.rollUseCost);
 	}

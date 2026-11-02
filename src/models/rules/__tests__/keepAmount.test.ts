@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { KeepAmountRule } from '../keepAmount.js';
 
@@ -13,12 +13,25 @@ function make(parent: object = { isEmbedded: true, name: 'Rampage', uuid: 'Item.
 }
 
 describe('Keep Amount rule', () => {
+	beforeEach(() => {
+		(game as { combat?: object | null }).combat = { started: true };
+	});
+
+	afterEach(() => {
+		delete (game as { combat?: object | null }).combat;
+	});
+
 	it('is a row on a hit, 1/turn', () => {
 		const rule = make();
 		expect(rule.rollEffect).toBe('keepAmount');
 		expect(rule.outcome).toBe('hit');
 		expect(rule.oncePerAttack).toBe(true);
 		expect(rule.rollUseCost.turnUseKey).toBe('Item.rampage:r1');
+	});
+
+	it('has no row outside combat, where nothing would end it', () => {
+		(game as { combat?: object | null }).combat = null;
+		expect(make().offersUseOn({ side: 'roller', roll: { kind: 'attack' } } as never)).toBe(false);
 	});
 
 	it('is offered only on the attack of its owner', () => {

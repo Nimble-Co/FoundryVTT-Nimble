@@ -29,6 +29,7 @@ import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnT
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
 import { registerFreeAssessHooks } from './hooks/freeAssessOnUse.js';
 import { registerHeldChangeExpiryHooks } from './hooks/heldChangeExpiry.js';
+import { registerHoldOnTargetHooks } from './hooks/holdOnTargetOnUse.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -154,6 +155,7 @@ registerPendingActionDeltaFold();
 registerChargeSystemHooks();
 registerHeldChangeExpiryHooks();
 registerDemandControlHooks();
+registerHoldOnTargetHooks();
 registerFreeAssessHooks();
 registerSwallowedTurnStartHooks();
 registerHeldChangeQuery();
