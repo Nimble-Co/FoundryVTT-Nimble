@@ -65,6 +65,7 @@ import {
 	heldChangesForAttack,
 	ignoreDisadvantageChange,
 	isAttackRoll,
+	keptAmountEndedBy,
 	keptAmountFor,
 	spendHeldChanges,
 } from '../utils/heldChange/heldChange.js';
@@ -502,8 +503,10 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
-		this.#keptAmountToEnd = keptAmountFor(this.actor as never, this.#item as never);
-		this.#keptAmount = dialogData.keptAmount === false ? null : this.#keptAmountToEnd;
+		const usableAmount = keptAmountFor(this.actor as never, this.#item as never);
+		this.#keptAmountToEnd =
+			usableAmount ?? keptAmountEndedBy(this.actor as never, this.#item as never);
+		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
 		if (this.#keptAmount) {
 			dialogData.maxDamage = null;
 			dialogData.dualWield = undefined;

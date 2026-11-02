@@ -1350,6 +1350,40 @@ describe('ItemActivationManager.getData (rolls)', () => {
 						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
 					});
 
+					it('rolls an area attack as normal and ends the amount', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						const activation = (mockItem.system as { activation: Record<string, unknown> })
+							.activation;
+						activation.acquireTargetsFromTemplate = true;
+						activation.template = { shape: 'circle' };
+						dialogState.result = { rollMode: 0 };
+
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							targets: { attackType: 'range' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+
+						expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[0]).toBe('1d8');
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
 					it('rolls as normal and ends the amount when the tick is off', async () => {
 						const deleted = holdKept();
 						damageNodeItem();

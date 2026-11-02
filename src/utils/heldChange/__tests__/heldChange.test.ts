@@ -6,7 +6,9 @@ import {
 	expireHeldChanges,
 	heldChangesForAttack,
 	heldLines,
+	heldLinesForItem,
 	keepAmount,
+	keptAmountEndedBy,
 	keptAmountFor,
 	spendHeldChanges,
 } from '../heldChange.js';
@@ -218,6 +220,27 @@ describe('a kept amount', () => {
 				attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } }),
 			),
 		).toBeNull();
+	});
+
+	it('is ended by an area attack, not by another item', () => {
+		const attacker = creature('A', [kept()]);
+		const area = attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+		expect(keptAmountEndedBy(attacker, area)?.value).toBe(13);
+		expect(keptAmountEndedBy(attacker, attack())).toBeNull();
+		expect(keptAmountEndedBy(attacker, attack({ effects: [], targets: {} }))).toBeNull();
+		const areaSpell = attack({
+			effects: [{ type: 'damage', canCrit: false, canMiss: false }],
+			targets: {},
+			acquireTargetsFromTemplate: true,
+			template: { shape: 'circle' },
+		});
+		expect(keptAmountEndedBy(attacker, areaSpell)?.value).toBe(13);
+	});
+
+	it('tells the player that an area attack ends it', () => {
+		const attacker = creature('A', [kept()]);
+		const area = attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+		expect(heldLinesForItem(attacker, area)).toHaveLength(1);
 	});
 
 	it('ends with the turn', () => {

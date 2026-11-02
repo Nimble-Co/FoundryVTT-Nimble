@@ -322,7 +322,7 @@ A feature can hold a change for a later attack. The creature that holds it shows
 
 ## Keeping the amount of a hit
 
-Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount.
+Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount. An area attack is also your next attack: it rolls as normal, does not use the amount, and ends it.
 
 ## Demand Control
 

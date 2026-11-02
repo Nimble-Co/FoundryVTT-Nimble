@@ -4401,6 +4401,8 @@
 				"primaryDie": "{label}: {value} to Primary Die",
 				"ignoreDisadvantage": "{label}: ignore all disadvantage",
 				"wholeAmount": "{label}: {value}",
+				"wholeAmountEnds": "{label}: an area attack does not use {value}",
+				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",
 				"stays": "From {source}. It stays until its time ends."
 			}

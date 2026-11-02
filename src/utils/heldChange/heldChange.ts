@@ -134,16 +134,31 @@ interface ActivatedItem {
 export function heldLinesForItem(attacker: Holder | null | undefined, item: ActivatedItem) {
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
-	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return [];
+	const ended = keptAmountEndedBy(attacker, item);
+	const endedLines = ended
+		? [
+				{
+					text: localize('NIMBLE.heldChange.line.wholeAmountEnds', {
+						label: ended.label,
+						value: String(ended.value),
+					}),
+					source: localize('NIMBLE.heldChange.line.endsSource', { source: ended.sourceName }),
+				},
+			]
+		: [];
+	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return endedLines;
 	const ignore = ignoreDisadvantageChange(attacker);
-	return heldLines([
-		...(ignore ? [ignore] : []),
-		...heldChangesForAttack({
-			attacker,
-			target: firstTargetActor(),
-			area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
-		}),
-	]);
+	return [
+		...endedLines,
+		...heldLines([
+			...(ignore ? [ignore] : []),
+			...heldChangesForAttack({
+				attacker,
+				target: firstTargetActor(),
+				area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
+			}),
+		]),
+	];
 }
 
 /** The amount the holder keeps for its next attack, when this item can use it. */
@@ -155,6 +170,21 @@ export function keptAmountFor(
 	const node = firstDamageNode(activation?.effects);
 	if (!activation || !node || !isAttackRoll(activation.targets?.attackType, node)) return null;
 	if (activation.acquireTargetsFromTemplate && activation.template?.shape) return null;
+	return (
+		heldChangesOn(attacker).find(
+			(held) => held.kind === 'wholeAmount' && held.appliesTo === 'holderAttacks',
+		) ?? null
+	);
+}
+
+/** An area attack (C:1403) is the next attack: it rolls as normal, does not use the amount, and ends it. */
+export function keptAmountEndedBy(
+	attacker: Holder | null | undefined,
+	item: ActivatedItem,
+): HeldChange | null {
+	const activation = item.system?.activation;
+	if (!activation?.acquireTargetsFromTemplate || !activation.template?.shape) return null;
+	if (!firstDamageNode(activation.effects)) return null;
 	return (
 		heldChangesOn(attacker).find(
 			(held) => held.kind === 'wholeAmount' && held.appliesTo === 'holderAttacks',
