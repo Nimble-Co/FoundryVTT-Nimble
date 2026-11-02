@@ -118,6 +118,16 @@ describe('rollUnarmedStrike', () => {
 			],
 		});
 		spendRuleChargeMock.mockClear();
+		damageRollMock.mockImplementation(function roll() {
+			return {
+				evaluate: vi.fn(),
+				toJSON: () => ({}),
+				isCritical: false,
+				isMiss: false,
+				primaryDieValue: 1,
+				options: {},
+			};
+		});
 
 		await rollUnarmedStrike(actor);
 
@@ -127,6 +137,22 @@ describe('rollUnarmedStrike', () => {
 			expect.objectContaining({ canMiss: false, outcomeSources: { cannotMiss: ['Heads I Win'] } }),
 		);
 		expect(spendRuleChargeMock).toHaveBeenCalledWith(actor, 'heads');
+
+		spendRuleChargeMock.mockClear();
+		damageRollMock.mockImplementation(function roll() {
+			return {
+				evaluate: vi.fn(),
+				toJSON: () => ({}),
+				isCritical: false,
+				isMiss: false,
+				primaryDieValue: 3,
+				options: {},
+			};
+		});
+
+		await rollUnarmedStrike(actor);
+
+		expect(spendRuleChargeMock).not.toHaveBeenCalled();
 	});
 
 	it('tells the Attack Outcome rules the strike deals bludgeoning damage', async () => {

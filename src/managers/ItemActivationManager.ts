@@ -40,7 +40,11 @@ import {
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
-import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
+import {
+	type AttackOutcomeCharge,
+	attackOutcomeChargesToSpend,
+	collectAttackOutcome,
+} from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
@@ -229,7 +233,7 @@ class ItemActivationManager {
 	#noDiceThrown = false;
 
 	/** Charge pools the Attack Outcome rules of this attack spend by themselves. */
-	#attackOutcomeCharges: string[] = [];
+	#attackOutcomeCharges: AttackOutcomeCharge[] = [];
 
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
@@ -1098,7 +1102,9 @@ class ItemActivationManager {
 		await this.#consumeChargePools();
 		const outcomeCharges = this.#attackOutcomeCharges;
 		this.#attackOutcomeCharges = [];
-		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
+		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
+			await spendRuleCharge(this.actor, identifier);
+		}
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
 		await spendMaxDamageCharge(this.actor, this.#maxDamage);

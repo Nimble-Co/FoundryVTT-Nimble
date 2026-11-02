@@ -186,7 +186,7 @@ describe('collectAttackOutcome', () => {
 			roll({ attacker: owner(change({ forcedCrit: 'always', chargePoolIdentifier: 'touch' })) }),
 		);
 
-		expect(result.charges).toEqual(['touch']);
+		expect(result.charges).toEqual([{ identifier: 'touch', gave: ['forcedCritAlways'] }]);
 	});
 
 	it("asks the target's rules about attacks against it, with the one who attacks as the other creature", () => {

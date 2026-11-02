@@ -319,6 +319,22 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		);
 	}
 
+	/** A kept die of the roll, not a crit die, is at its max. */
+	get anyDieAtMax(): boolean {
+		return this.terms.some(
+			(term) =>
+				term instanceof Terms.Die &&
+				!dieRoleOf(term) &&
+				term.results.some(
+					(r, index) =>
+						index < (Number(term.number) || 1) &&
+						r.active &&
+						!r.discarded &&
+						r.result === term.faces,
+				),
+		);
+	}
+
 	/** ------------------------------------------------------ */
 	/**                Modifier-Mode Detection                */
 	/** ------------------------------------------------------ */
@@ -490,19 +506,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	private _applyAnyDieCrits(): void {
 		if (!this.options.canCrit || !this.options.anyDieCrits) return;
 		if (this.options.forcedCrit === 'always') return;
-		const atMax = this.terms.some(
-			(term) =>
-				term instanceof Terms.Die &&
-				!dieRoleOf(term) &&
-				term.results.some(
-					(r, index) =>
-						index < (Number(term.number) || 1) &&
-						r.active &&
-						!r.discarded &&
-						r.result === term.faces,
-				),
-		);
-		if (!atMax) return;
+		if (!this.anyDieAtMax) return;
 		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
 		this.options.forcedCrit = 'onHit';
 		const primary = this.terms.find((t) => t instanceof PrimaryDie);
