@@ -4622,6 +4622,14 @@
 			"acquireTargetsFromTemplate": "AoE targeting (can't miss or crit)",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
+			"weaponAttack": "Attack with a weapon",
+			"weaponAttackHint": "The roll window asks which equipped weapon. The damage node rolls the damage of that weapon, with its reach or range and its damage type.",
+			"weaponAttacks": {
+				"none": "No, it has its own damage",
+				"any": "Any equipped weapon",
+				"melee": "A melee weapon",
+				"ranged": "A ranged weapon"
+			},
 			"singleTargetAttack": "Extra targets share one attack",
 			"singleTargetAttackHint": "The extra targets do not make this a Multi-target Attack: it can miss and crit, and the first target decides the rules that read the target.",
 			"attackType": "Attack Type",

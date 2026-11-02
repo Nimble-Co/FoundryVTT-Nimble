@@ -309,3 +309,32 @@ Both are described in the [Settings Reference](../reference/settings.md).
 - [The Character Sheet](../characters/character-sheet.md)
 - [Conditions](conditions.md)
 - [Settings Reference](../reference/settings.md)
+
+## Changes held for the next attack
+
+A feature can hold a change for a later attack. The creature that holds it shows an icon, and the attack roll window shows a line for each change. A change is spent when you roll, so Cancel costs nothing. Outside combat, nothing is held, and with Feature Effects off the card only has the text.
+
+- **Assess: Create an Opening** needs a target. On a success, the next attack roll on that target, by any attacker, has the change. Two Openings add up. It ends with that roll, or when the round changes.
+- **Assess: Anticipate Danger** changes every attack roll on you until the round changes.
+- A Primary Die change changes the kept face. So 5+1 on a d6 crits, 1+1 hits, and 2-1 misses.
+- An area attack adds nothing and spends nothing.
+
+## Keeping the amount of a hit
+
+Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount.
+
+## Demand Control
+
+Force of Will, Deny Fate, Supreme Control and Nullify open a window when you use them. Each row is a choice from the feature, and the window tells you what you already used. A save card that this caused has its own row.
+
+## Thrill of the Hunt
+
+The Thrill of the Hunt pool starts at 0 and is lost when combat ends. Charges come when your quarry dies, on a melee hit or a ranged crit on your quarry, and from the features that add to the pool. An attack that spent a charge gains none, also on a kill. A kill counts when the damage is applied from the card: a change of HP by hand gives no charge, so use + on the pool. With Feature Effects off there are no automatic gains: use + and - on the pool.
+
+Each attack ability opens the roll window with a weapon field, the Hunter's Mark choice and a line that tells what it spends. The charge goes on the roll. With no charge, or no weapon of that kind, Roll is off and tells why. These attacks cannot miss. "Half range", "if you have not moved" and "Hampered" are for the table to check. Some parts are not automated yet: the next attack of an Addling Arrow target, the second target of Multishot, the double damage of Sharpshooter, the push of Heavy Shot, the move of Snare Trap, and the vulnerability of Grease Trap.
+
+## Final Takedown
+
+Final Takedown opens the same window, with melee weapons. It is a crit that cannot miss. The Hunter's Mark choice starts on the damage, shown doubled. If you pick advantage, nothing doubles. Bloodied is for the table to check.
+
+When the damage is applied and the quarry lives, the GM gets a card with its attacks. The chosen attack is free, targets the Hunter and is a crit. With Feature Effects off, the attack has a Make It a Crit row and the crit back stays as text.
