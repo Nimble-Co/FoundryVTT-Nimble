@@ -763,6 +763,7 @@
 				"critDiceLine": "{feature}: +{total}",
 				"noActionLeft": "No action left to spend.",
 				"costOncePerTurn": "1/turn",
+				"costManaPerDie": "{cost} mana per die",
 				"effectHistory": {
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
@@ -836,6 +837,10 @@
 					"addLabel": "Add {feature} for {name}"
 				},
 				"pickDie": {
+					"several": {
+						"count": "{count} of {max} dice",
+						"confirm": "Reroll"
+					},
 					"title": "Pick a die to reroll",
 					"rolling": "Rerolling with {feature}",
 					"cancel": "Cancel",
@@ -2747,6 +2752,10 @@
 					"label": "Number to add",
 					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0."
 				},
+				"rowPerUpcastStep": {
+					"label": "One row per upcast step",
+					"hint": "The roll gets one row for each upcast step of the spell, and none with no upcast."
+				},
 				"yieldsTo": {
 					"label": "Gives way to",
 					"hint": "The identifier of a rule of the same creature. While that rule can be used, this row does not show. Empty for none."
@@ -2966,6 +2975,22 @@
 					"choices": {
 						"none": "None"
 					}
+				},
+				"attackSource": {
+					"label": "Attack made with",
+					"hint": "Limit the rule to attacks with a weapon or attacks with a spell."
+				},
+				"thisItemOnly": {
+					"label": "This item only",
+					"hint": "The rule is only for attacks with the item that has it."
+				},
+				"maxDice": {
+					"label": "Most dice",
+					"hint": "A formula. The player picks up to this many dice and confirms. Leave empty for one die."
+				},
+				"perDie": {
+					"label": "Cost per die",
+					"hint": "The cost is for each die the player picks."
 				},
 				"actionReportOnly": {
 					"label": "No action is no block",

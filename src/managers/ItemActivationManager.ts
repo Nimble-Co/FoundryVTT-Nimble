@@ -395,6 +395,7 @@ class ItemActivationManager {
 				delivery: this.#getAttackDelivery(),
 				itemUuid: this.#item.uuid,
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
+				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
 			},
 		);
 

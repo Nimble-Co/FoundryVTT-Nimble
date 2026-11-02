@@ -58,6 +58,8 @@ type IncomingReactionRequest = {
 	forceHeroicReaction?: boolean;
 	/** reroll only: the die the player picked */
 	die?: DieRef;
+	/** reroll only: the dice the player picked, for a rule that rerolls several */
+	dice?: DieRef[];
 	/** change only: the face the player set the die to */
 	value?: number;
 	/** reroll only: the stat the player picked for the new roll */
@@ -196,6 +198,13 @@ function dieRefFrom(value: unknown): DieRef | null {
 		: null;
 }
 
+/** Die references from a socket payload, or null when there are none. */
+function diceRefsFrom(value: unknown): DieRef[] | null {
+	if (!Array.isArray(value)) return null;
+	const refs = value.flatMap((each) => dieRefFrom(each) ?? []);
+	return refs.length > 0 ? refs : null;
+}
+
 async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 	if (!game.user?.isGM) return;
 	if ((game.user.id ?? null) !== getPrimaryActiveGmId()) return;
@@ -216,6 +225,7 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 			die: dieRefFrom(request.die),
 			value: faceFrom(request.value),
 			stat: typeof request.stat === 'string' ? request.stat : null,
+			dice: diceRefsFrom(request.dice),
 		},
 	);
 }
@@ -396,6 +406,7 @@ export async function requestIncomingAttackReaction(params: {
 		...(pick.die ? { die: pick.die } : {}),
 		...(pick.value ? { value: pick.value } : {}),
 		...(pick.stat ? { stat: pick.stat } : {}),
+		...(pick.dice ? { dice: pick.dice } : {}),
 	});
 	return true;
 }

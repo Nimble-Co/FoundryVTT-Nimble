@@ -3,8 +3,11 @@ import type { ResultCardView } from '#types/resultChange.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
+	ATTACK_SOURCES,
 	type AttackDeliveryFilter,
+	type AttackSourceFilter,
 	matchesAttackDelivery,
+	matchesAttackSource,
 } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
@@ -144,6 +147,27 @@ function whenFields(namespace: RollUseNamespace) {
 			withWidget({
 				label: wordKey(namespace, 'otherCreature', 'label'),
 				hint: wordKey(namespace, 'otherCreature', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+		attackSource: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
+				label: wordKey(namespace, 'attackSource', 'label'),
+				hint: wordKey(namespace, 'attackSource', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+		thisItemOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: wordKey(namespace, 'thisItemOnly', 'label'),
+				hint: wordKey(namespace, 'thisItemOnly', 'hint'),
 				showWhen: forAttacks,
 			}),
 		),
@@ -375,6 +399,8 @@ abstract class RollUseRule<
 	declare reach: number;
 	declare outcome: RerollTrigger;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare attackSource: AttackSourceFilter;
+	declare thisItemOnly: boolean;
 	declare otherCreature: Predicate;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
@@ -418,7 +444,10 @@ abstract class RollUseRule<
 		return [
 			{ fields: ['usedBy', 'reach'] },
 			...between,
-			{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
+			{
+				label: 'NIMBLE.rules.reroll.form.when',
+				fields: ['outcome', 'attackDelivery', 'attackSource', 'thisItemOnly'],
+			},
 			{
 				label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
 				hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
@@ -443,6 +472,8 @@ abstract class RollUseRule<
 			['usedBy', 'string'],
 			['outcome', 'string'],
 			['attackDelivery', 'string'],
+			['attackSource', 'string'],
+			['thisItemOnly', 'boolean'],
 			['otherCreature', 'object'],
 			['chargePoolIdentifier', 'string'],
 			['chargeCost', 'number'],
@@ -494,6 +525,11 @@ abstract class RollUseRule<
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
+			if (this.thisItemOnly && roll.itemUuid !== this.item.uuid) return false;
+			if ((this.attackSource ?? 'any') !== 'any') {
+				const item = roll.itemUuid ? fromUuidSync(roll.itemUuid) : null;
+				if (!matchesAttackSource(this.attackSource, item as { type?: string } | null)) return false;
+			}
 		} else {
 			// A check has no target side.
 			if (side === 'target') return false;

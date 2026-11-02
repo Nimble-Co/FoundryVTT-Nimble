@@ -27,6 +27,8 @@ interface RerollCost {
 	heroicReaction: HeroicReactionKey | '';
 	/** Actions a hero spends in combat. Absent is none. */
 	actionCost?: number;
+	/** The mana, charges and Wounds are per die the player picks. */
+	perDie?: boolean;
 	/** With no action left the use still goes on, and the card says so. */
 	actionReportOnly?: boolean;
 	/** The rule can be used once per turn of any creature. */
@@ -321,7 +323,19 @@ async function payRerollCost(
 	return paid;
 }
 
+/** The cost of a use on this many dice. */
+function costForDice(cost: RerollCost, count: number): RerollCost {
+	if (!cost.perDie) return cost;
+	return {
+		...cost,
+		manaCost: cost.manaCost * count,
+		chargeCost: cost.chargeCost * count,
+		woundCost: cost.woundCost * count,
+	};
+}
+
 export {
+	costForDice,
 	canPayRerollCost,
 	findActorCombatant,
 	payRerollCost,

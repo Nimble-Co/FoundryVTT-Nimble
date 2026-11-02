@@ -85,6 +85,7 @@ export function rerollAgainRecords(
 }
 
 function dice(record: RerollRecord): RerollHistoryLine['dice'] {
+	if (record.severalDice && record.severalDice.length > 1) return null;
 	const { faces, previous, next } = record;
 	if (typeof faces !== 'number' || !previous || !next) return null;
 	return { previous: { faces, ...previous }, next: { faces, ...next } };
@@ -298,6 +299,11 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 				localize('NIMBLE.chat.incomingReactions.rerollUsesLeft', {
 					count: String(record.usesLeft),
 				}),
+			);
+		}
+		if (record.severalDice && record.severalDice.length > 1) {
+			details.push(
+				record.severalDice.map((die) => `${die.previous} \u2192 ${die.next}`).join(', '),
 			);
 		}
 		if (record.noActionLeft) {

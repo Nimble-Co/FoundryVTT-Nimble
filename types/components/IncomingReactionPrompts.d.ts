@@ -43,6 +43,8 @@ export interface IncomingReactionPicking {
 	setsValue?: boolean;
 	/** The die whose new value the player picks. */
 	valueDie?: PickableDie | null;
+	/** A rule that rerolls several dice: the most the player picks, and the mana of each. */
+	several?: { max: number; manaPerDie: number };
 	/** A reroll with another stat: the stats the player picks from. */
 	stats?: StatChoice[];
 }

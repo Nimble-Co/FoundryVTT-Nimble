@@ -197,6 +197,8 @@ export interface IncomingReactionEntry {
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
 	/** A use that changes Sneak Attack dice needs a roll that has them. */
+	/** One of several rows of the same rule on this roll. */
+	useIndex?: number;
 	needsSneakDice?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
@@ -249,6 +251,8 @@ export interface RerollRecord {
 	next: RerollDieResult | null;
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
+	/** Each die of a reroll of several dice. */
+	severalDice?: Array<{ faces: number; previous: number; next: number }>;
 	/** The rule's action could not be paid: the use went on, and the card says so. */
 	noActionLeft?: boolean;
 	woundsGained: number;

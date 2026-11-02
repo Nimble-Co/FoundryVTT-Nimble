@@ -166,6 +166,8 @@ function damageRollContext(
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
+	const upcastSteps =
+		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -182,6 +184,7 @@ function damageRollContext(
 			...(itemUuid ? { itemUuid } : {}),
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
+			...(upcastSteps > 0 ? { upcastSteps } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

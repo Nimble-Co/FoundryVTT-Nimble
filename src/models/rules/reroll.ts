@@ -4,6 +4,7 @@ import {
 	type RerollDie,
 	type RerollKeep,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
 import type { RollUseKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -54,6 +55,27 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.die.label',
 			hint: 'NIMBLE.rules.reroll.die.hint',
 		}),
+		maxDice: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.reroll.maxDice.label',
+				hint: 'NIMBLE.rules.reroll.maxDice.hint',
+				showWhen: (data: Record<string, unknown>) => data.die === 'pickedDie',
+			}),
+		),
+		perDie: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.perDie.label',
+				hint: 'NIMBLE.rules.reroll.perDie.hint',
+				showWhen: (data: Record<string, unknown>) =>
+					data.die === 'pickedDie' && !!String(data.maxDice ?? '').trim(),
+			}),
+		),
 		keep: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -151,7 +173,9 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(['relatedStat']),
-		...RollUseRule.useFormGroups([{ fields: ['die', 'keep', 'useAnotherStat'] }]),
+		...RollUseRule.useFormGroups([
+			{ fields: ['die', 'maxDice', 'perDie', 'keep', 'useAnotherStat'] },
+		]),
 		{
 			label: 'NIMBLE.rules.reroll.form.changes.label',
 			hint: 'NIMBLE.rules.reroll.form.changes.hint',
@@ -167,6 +191,8 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 	declare primaryDieBonus: number;
 	declare extraDamage: string;
 	declare die: RerollDie;
+	declare maxDice: string;
+	declare perDie: boolean;
 	declare keep: RerollKeep;
 	declare useAnotherStat: boolean;
 
@@ -188,10 +214,23 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 				['primaryDieBonus', 'number'],
 				['extraDamage', 'string'],
 				['die', 'string'],
+				['maxDice', 'string'],
+				['perDie', 'boolean'],
 				['keep', 'string'],
 				['useAnotherStat', 'boolean'],
 			]),
 		);
+	}
+
+	/** The most dice one use can reroll. Null when the rule rerolls one die or the whole roll. */
+	get maxDiceCount(): number | null {
+		const formula = (this.maxDice ?? '').trim();
+		if (!formula || this.die !== 'pickedDie') return null;
+		return Math.max(0, Math.trunc(Number(this.resolveFormula(formula)) || 0));
+	}
+
+	override get rollUseCost(): RerollCost {
+		return { ...super.rollUseCost, ...(this.perDie ? { perDie: true } : {}) };
 	}
 
 	/** Whether the rule rerolls with no button. Never when someone has a choice to make. */
@@ -206,6 +245,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 
 	override offersUseOn(context: RollUseContext): boolean {
 		if (!super.offersUseOn(context)) return false;
+		if (this.maxDiceCount === 0) return false;
 		const { roll } = context;
 		return !this.usesAnotherStat || roll.kind !== 'attack' || (roll.stats?.length ?? 0) > 0;
 	}

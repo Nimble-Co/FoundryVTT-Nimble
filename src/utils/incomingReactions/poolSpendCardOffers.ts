@@ -11,6 +11,8 @@ export interface CardOfferContext {
 	itemUuid?: string | null;
 	/** The stats the attack's formula has. */
 	stats?: readonly string[];
+	/** The upcast steps of the spell. */
+	upcastSteps?: number;
 }
 
 interface CardOfferRuleLike {

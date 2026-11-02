@@ -11,6 +11,9 @@ export interface RerollDiePickerProps {
 	use?: RollUse;
 	/** The die that was picked and is now rolling. Null while the player picks. */
 	rolling?: PickableDie | null;
+	/** The player picks several dice and confirms. */
+	several?: { max: number; manaPerDie: number } | null;
+	onconfirm?: (dice: PickableDie[]) => void;
 	onpick: (die: PickableDie) => void;
 	oncancel: () => void;
 }

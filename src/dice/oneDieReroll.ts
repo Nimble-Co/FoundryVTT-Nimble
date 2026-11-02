@@ -165,6 +165,21 @@ function thrownDice(term: DieTermLike & { options?: object }, drawn: number[]): 
 	} as never) as foundry.dice.Roll;
 }
 
+/** The dice of several one-die rerolls as one roll, so they are thrown together. */
+function thrownTogether(rolls: readonly foundry.dice.Roll[]): foundry.dice.Roll | null {
+	if (rolls.length <= 1) return rolls[0] ?? null;
+	const data = rolls.map(
+		(roll) => roll.toJSON() as unknown as { formula: string; terms: object[] },
+	);
+	return foundry.dice.Roll.fromData({
+		class: 'Roll',
+		formula: data.map((each) => each.formula).join(' + '),
+		terms: data.flatMap((each) => each.terms),
+		total: rolls.reduce((sum, roll) => sum + (roll.total ?? 0), 0),
+		evaluated: true,
+	} as never) as foundry.dice.Roll;
+}
+
 /** Work out the copy's total, crit and miss again after one of its dice changed. */
 function refreshTotals(copy: OneDieRoll): void {
 	if (copy.refreshOutcome) {
@@ -385,4 +400,5 @@ export {
 	primaryDieBonus,
 	primaryDieRef,
 	rerollOneDie,
+	thrownTogether,
 };

@@ -38,7 +38,12 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { payRerollCost, refundRerollCost } from '#utils/reroll/rerollCost.js';
+import {
+	canPayRerollCost,
+	costForDice,
+	payRerollCost,
+	refundRerollCost,
+} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -46,6 +51,7 @@ import {
 	diceToPick,
 	effectFor,
 	rerollableFor,
+	severalDiceFor,
 } from '#utils/reroll/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
@@ -648,6 +654,25 @@ export class CardRerolls {
 	}
 
 	/**
+	 * The dice a player picks for a `reroll` entry whose rule rerolls several, the
+	 * most they can pick, and the mana of each die. Null for another rule.
+	 */
+	severalDiceToPick(
+		entry: IncomingReactionEntry,
+	): { dice: PickableDie[]; max: number; manaPerDie: number } | null {
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		if (!usable.ok || !usable.rule.maxDiceCount) return null;
+		const dice = diceToPick(found);
+		const cost = usable.rule.rollUseCost;
+		let max = Math.min(usable.rule.maxDiceCount, dice.length);
+		while (max > 1 && cost && !canPayRerollCost(usable.actor, costForDice(cost, max))) max -= 1;
+		return { dice, max, manaPerDie: cost?.manaCost ?? 0 };
+	}
+
+	/**
 	 * The stats a player picks from for a `reroll` entry whose rule uses another
 	 * stat. Null when the rule uses none.
 	 */
@@ -739,7 +764,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		pick: RerollPick,
 	): Promise<void> {
-		const { die = null, value = null, stat = null } = pick;
+		const { die = null, value = null, stat = null, dice = null } = pick;
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
 				messageId: this.#host.id() ?? '',
@@ -804,7 +829,15 @@ export class CardRerolls {
 		const rollKind = rollTarget.context().roll.kind;
 		const modifier = cannotFailModifier(usable.rule);
 		const cannotMiss = rollKind === 'attack' ? modifier : null;
-		const rolled = rerollableFor(cannotMiss ? withCannotMiss(found) : found, usable.rule.die, die);
+		const maxDice = usable.rule.maxDiceCount ?? null;
+		if (maxDice !== null && (!dice?.length || dice.length > maxDice)) {
+			return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
+		}
+		const base = cannotMiss ? withCannotMiss(found) : found;
+		const rolled =
+			maxDice !== null && dice
+				? severalDiceFor(base, dice)
+				: rerollableFor(base, usable.rule.die, die);
 		if (!rolled) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const target = usable.rule.usesAnotherStat
 			? rolled.withStat?.(rolled, stat ?? '', usable.rule.relatedStat)
@@ -825,6 +858,7 @@ export class CardRerolls {
 			entry,
 			rollKind,
 			rollChanges: await this.#newRollChanges(usable.rule, rollKind),
+			...(dice?.length ? { dieCount: dice.length } : {}),
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,

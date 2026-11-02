@@ -5,9 +5,12 @@ import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { hasRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
+	ATTACK_SOURCES,
 	type AttackDelivery,
 	type AttackDeliveryFilter,
+	type AttackSourceFilter,
 	matchesAttackDelivery,
+	matchesAttackSource,
 } from '../../utils/damage/attackDelivery.js';
 import { attackTags } from '../../utils/damage/attackTags.js';
 import type {
@@ -27,9 +30,6 @@ type AttackOutcomeSide = (typeof ATTACK_OUTCOME_SIDES)[number];
 
 const FORCE_CRIT_CHOICES = ['none', 'always', 'onHit'] as const;
 type ForceCritChoice = (typeof FORCE_CRIT_CHOICES)[number];
-
-const ATTACK_SOURCES = ['any', 'weapon', 'spell'] as const;
-type AttackSourceFilter = (typeof ATTACK_SOURCES)[number];
 
 const onYourAttacks = (data: Record<string, unknown>) => data.side !== 'attacksAgainstYou';
 
@@ -283,7 +283,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		} | null;
 		if (except && item?.identifier === except) return false;
 		if (this.attackSource === 'any') return true;
-		return (item?.type === 'spell' ? 'spell' : 'weapon') === this.attackSource;
+		return matchesAttackSource(this.attackSource, item);
 	}
 
 	/**

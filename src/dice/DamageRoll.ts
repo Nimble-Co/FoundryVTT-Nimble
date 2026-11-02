@@ -483,13 +483,63 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const atMax = this.terms.some(
 			(term) =>
 				term instanceof Terms.Die &&
-				term.results.some((r) => r.active && !r.discarded && r.result === term.faces),
+				!(term.options as CritDiceOptions).dieRole &&
+				term.results.some(
+					(r, index) =>
+						index < (Number(term.number) || 1) &&
+						r.active &&
+						!r.discarded &&
+						r.result === term.faces,
+				),
 		);
 		if (!atMax) return;
 		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
 		this.options.forcedCrit = 'onHit';
 		const primary = this.terms.find((t) => t instanceof PrimaryDie);
 		if (primary) primary.options.forcedCrit = 'onHit';
+	}
+
+	/** A die of the roll changed: the Forced Crit that came from a die at its max is read again. */
+	private _readAnyDieCritsAgain(): void {
+		if (!this.options.anyDieCrits) return;
+		if (this.options.forcedCritFromDice) {
+			delete this.options.forcedCritFromDice;
+			delete this.options.forcedCrit;
+			const primary = this.terms.find((t) => t instanceof PrimaryDie);
+			if (primary) delete primary.options.forcedCrit;
+		}
+		this._applyAnyDieCrits();
+		if (this.options.forcedCrit) return;
+
+		// Its crit dice go first: one at its max would read as a crit.
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (!primary) return;
+		const pool = Number(primary.number) || 1;
+		const kept = primary.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (kept?.exploded && kept.result < primary.critFace) {
+			primary.results.length = pool;
+			kept.exploded = false;
+			this.resetFormula();
+		}
+	}
+
+	/** Roll the Primary Die's crit dice when an any-die crit came. */
+	private async _settleAnyDieCritDice(): Promise<number[]> {
+		if (!this.options.anyDieCrits || this.modifierMode) return [];
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (!primary) return [];
+		const pool = Number(primary.number) || 1;
+		const kept = primary.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (!kept) return [];
+
+		const before = primary.results.length;
+		if (this.isCritical && !kept.exploded) {
+			if (this.options.explosionStyle === 'vicious') await this._evaluateViciousExplosion(primary);
+			else if (this.options.explosionStyle === 'standard') await this._rollCritDice(primary);
+			this.refreshOutcome();
+			return primary.results.slice(before).map((r) => r.result);
+		}
+		return [];
 	}
 
 	/**
@@ -815,7 +865,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * die. A later change of the roll calls it again. Returns the dice it rolled.
 	 */
 	async settleCritDice(): Promise<number[]> {
-		const drawn: number[] = [];
+		const drawn: number[] = [...(await this._settleAnyDieCritDice())];
 		if (this.options.critD20 && this.isCritical) {
 			const made = await this.replaceCritDieWithD20();
 			drawn.push(...(made?.drawn ?? []));
@@ -1383,6 +1433,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * evaluated roll changed.
 	 */
 	refreshOutcome(): void {
+		if (!this.options.maxDamage) this._readAnyDieCritsAgain();
 		const internals = this as unknown as {
 			_total: number;
 			_evaluateASTSync(node: unknown): number;

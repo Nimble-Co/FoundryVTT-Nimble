@@ -192,6 +192,69 @@ describe('a Forced Crit', () => {
 		expect(roll.isCritical).toBe(false);
 	});
 
+	describe('an any-die crit after a change of one die', () => {
+		function inPlace(roll: DamageRoll) {
+			Object.assign(roll, { _evaluateASTSync: () => 0 });
+			vi.spyOn(foundry.dice.Roll, 'fromData').mockImplementation(((data: { class?: string }) =>
+				data.class === 'Roll' ? data : roll) as never);
+		}
+		const OTHER = { term: 2, result: 0 };
+
+		it('a die raised to its max gives the crit and its crit dice', async () => {
+			const roll = await attack(3, { anyDieCrits: true }, '2d6', [[kept(5)]]);
+			inPlace(roll);
+			crittingDice([kept(4)]);
+
+			const { roll: next } = await changeOneDie(roll, OTHER, { mode: 'add', value: 1 });
+
+			expect(next.isCritical).toBe(true);
+			expect(faces(next)).toEqual([3, 4]);
+		});
+
+		it('a die at its max rerolled to a low face takes the crit and its crit dice away', async () => {
+			crittingDice([kept(2)]);
+			const roll = await attack(3, { anyDieCrits: true }, '2d6', [[kept(6)]]);
+			inPlace(roll);
+
+			const { roll: next } = await rerollOneDie(roll, OTHER, { draw: draws(2) });
+
+			expect(next.isCritical).toBe(false);
+			expect(next.isMiss).toBe(false);
+			expect(faces(next)).toEqual([3]);
+			expect(next.options.forcedCrit).toBeUndefined();
+		});
+
+		it('a crit dice of 6 on the Primary Die does not keep the crit', async () => {
+			crittingDice([kept(6)]);
+			const roll = await attack(3, { anyDieCrits: true }, '2d6', [[kept(6)]]);
+			inPlace(roll);
+
+			const { roll: next } = await rerollOneDie(roll, OTHER, { draw: draws(2) });
+
+			expect(next.isCritical).toBe(false);
+			expect(faces(next)).toEqual([3]);
+		});
+
+		it('a Primary Die raised from 1 becomes a hit', async () => {
+			const roll = await attack(1, { anyDieCrits: true }, '2d6', [[kept(3)]]);
+			inPlace(roll);
+
+			const { roll: next } = await changeOneDie(roll, PRIMARY, { mode: 'add', value: 1 });
+
+			expect(next.isMiss).toBe(false);
+		});
+
+		it('a Forced Crit from a rule stays', async () => {
+			crittingDice([kept(2)]);
+			const roll = await attack(3, { anyDieCrits: true, forcedCrit: 'onHit' }, '2d6', [[kept(6)]]);
+			inPlace(roll);
+
+			const { roll: next } = await rerollOneDie(roll, OTHER, { draw: draws(2) });
+
+			expect(next.isCritical).toBe(true);
+		});
+	});
+
 	it('does nothing on a roll that cannot crit', async () => {
 		crittingDice([kept(4)]);
 		const roll = await attack(3, {

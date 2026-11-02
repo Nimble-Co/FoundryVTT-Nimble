@@ -19,6 +19,8 @@ type RollToReroll =
 			damageTypes?: readonly string[];
 			/** The stats the attack's formula has. */
 			stats?: readonly string[];
+			/** The upcast steps of the spell. */
+			upcastSteps?: number;
 	  }
 	| { kind: CheckRollKind; key: string };
 

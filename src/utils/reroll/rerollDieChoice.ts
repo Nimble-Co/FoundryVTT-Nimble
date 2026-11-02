@@ -10,6 +10,7 @@ import {
 	pickableDice,
 	primaryDieRef,
 	rerollOneDie,
+	thrownTogether,
 } from '../../dice/oneDieReroll.js';
 import {
 	type ChangeableDie,
@@ -117,6 +118,49 @@ function rerollableFor<TRoll>(
 }
 
 /**
+ * The roll a rule with a count of dice rerolls, one die after the other. Null
+ * when no die the player picked is one the roll has. A die a change of the crit
+ * took off the roll is skipped.
+ */
+function severalDiceFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	picked: readonly DieRef[],
+	reroll: typeof rerollOneDie = rerollOneDie,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const refs = picked.flatMap((ref) => {
+		const die = dieToUse(found, current, 'pickedDie', ref);
+		return die ? [die] : [];
+	});
+	if (refs.length === 0 || refs.length !== picked.length) return null;
+
+	const made: Array<Awaited<ReturnType<typeof rerollOneDie>>> = [];
+	return {
+		...found,
+		previousResult: resultAt(current, refs[0]),
+		makeRoll: async () => {
+			let roll = current;
+			for (const ref of refs) {
+				const term = roll.terms[ref.term] as { results?: unknown[] } | undefined;
+				if (!term?.results?.[ref.result]) continue;
+				const step = await reroll(roll, ref);
+				made.push(step);
+				roll = step.roll;
+			}
+			return roll as unknown as TRoll;
+		},
+		readNewDie: () => ({
+			faces: made[0]?.faces ?? null,
+			value: made[0]?.next ?? null,
+			dropped: null,
+			several: made.map(({ faces, previous, next }) => ({ faces, previous, next })),
+		}),
+		diceToThrow: () => thrownTogether(made.map((step) => step.thrown)),
+	};
+}
+
+/**
  * The roll a Change a Die rule changes, with the change made to its Primary
  * Die or to the die the player picked. Null when that die is not one the roll
  * has, or a pick is needed and missing. Only the dice a new max explodes into
@@ -204,4 +248,12 @@ function effectFor<TRoll>(
 	};
 }
 
-export { changeableFor, critFor, diceForRule, diceToPick, effectFor, rerollableFor };
+export {
+	severalDiceFor,
+	changeableFor,
+	critFor,
+	diceForRule,
+	diceToPick,
+	effectFor,
+	rerollableFor,
+};

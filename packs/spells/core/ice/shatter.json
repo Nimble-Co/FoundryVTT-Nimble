@@ -27,6 +27,45 @@
 					]
 				},
 				"chargePoolIdentifier": ""
+			},
+			{
+				"type": "changeDie",
+				"disabled": false,
+				"id": "shatterPlusOnDie",
+				"identifier": "",
+				"label": "Shatter",
+				"predicate": {},
+				"priority": 1,
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"die": "pickedDie",
+				"change": "add",
+				"amount": 1,
+				"addsBonusOnSet": false,
+				"rowPerUpcastStep": true,
+				"yieldsTo": "",
+				"outcome": "always",
+				"attackDelivery": "any",
+				"attackSource": "any",
+				"thisItemOnly": true,
+				"otherCreature": {},
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"actionReportOnly": false,
+				"oncePerTurn": false,
+				"oncePerAttack": true,
+				"cardHint": "",
+				"cardHintWhen": {}
 			}
 		],
 		"activation": {
@@ -125,7 +164,21 @@
 			]
 		},
 		"school": "ice",
-		"tier": 2
+		"tier": 2,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addFlatDamage",
+					"value": 5,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "rH36LrKjBo8nQCXa",
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

@@ -175,6 +175,12 @@ export const incomingReactions = () => ({
 			}),
 			effect: new fields.StringField({ required: false, nullable: true, initial: null }),
 			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			useIndex: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+			}),
 			needsSneakDice: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
@@ -269,6 +275,7 @@ const rerollRecord = () =>
 		next: rerollDieResult(),
 		usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
 		noActionLeft: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+		severalDice: new fields.ArrayField(new fields.ObjectField(), { required: false }),
 		woundsGained: new fields.NumberField({
 			required: true,
 			nullable: false,

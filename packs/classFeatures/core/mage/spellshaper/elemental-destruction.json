@@ -6,7 +6,52 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "elementalDestroy",
+				"identifier": "",
+				"label": "Elemental Destruction",
+				"predicate": {},
+				"priority": 1,
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"die": "pickedDie",
+				"maxDice": "@will",
+				"perDie": true,
+				"keep": "new",
+				"useAnotherStat": false,
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"outcome": "hit",
+				"attackDelivery": "any",
+				"attackSource": "spell",
+				"thisItemOnly": false,
+				"otherCreature": {},
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 1,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"actionReportOnly": false,
+				"oncePerTurn": false,
+				"oncePerAttack": true,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

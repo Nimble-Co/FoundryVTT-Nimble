@@ -6,7 +6,7 @@ import type {
 	RollChange,
 	RollEffect,
 } from '../incomingReactions/incomingReactionEntry.js';
-import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
+import { costForDice, payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
 import type { RollUseKind } from './rollToReroll.js';
@@ -68,6 +68,8 @@ interface RerollStepInput<TRoll> {
 	automatic?: boolean;
 	/** A Change a Die rule's use: the change it makes. Absent for a reroll. */
 	change?: DieChange;
+	/** The dice the player picked: a cost per die counts them. */
+	dieCount?: number;
 	/** A Make It a Crit rule's use. */
 	makesCrit?: boolean;
 	/** A row that does what a feature does by itself with Feature Effects on. */
@@ -86,6 +88,8 @@ interface RolledDie {
 	value: number | null;
 	/** The other result of a die rolled two times for advantage or disadvantage. */
 	dropped?: number | null;
+	/** Each die of a reroll of several dice. */
+	several?: Array<{ faces: number; previous: number; next: number }>;
 }
 
 interface NewRoll {
@@ -117,7 +121,7 @@ async function rerollWithRule<TRoll>(
 	input: RerollStepInput<TRoll>,
 ): Promise<RerollStepOutcome<TRoll>> {
 	const { rule, entry, payer, replaced } = input;
-	const cost = rule.rollUseCost;
+	const cost = rule.rollUseCost ? costForDice(rule.rollUseCost, input.dieCount ?? 1) : undefined;
 	const paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
 	const refund = async () => {
@@ -158,6 +162,7 @@ async function rerollWithRule<TRoll>(
 				woundsGained: paid?.wounds ?? 0,
 				...(paid?.noActionLeft ? { noActionLeft: true } : {}),
 				dropped: die.dropped ?? null,
+				...(die.several && die.several.length > 1 ? { severalDice: die.several } : {}),
 				changes: rollChanges,
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),

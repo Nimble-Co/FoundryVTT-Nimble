@@ -112,6 +112,10 @@ interface RerollRuleLike {
 	resultUseFor?: (roller: ResultCardView['roller'], card?: ResultCardView) => ResultUse | null;
 	/** With Feature Effects off, what the row of this rule does to the roll. */
 	rollEffect?: RollEffect;
+	/** The most dice a player can pick for one use; null is one die. */
+	maxDiceCount?: number | null;
+	/** How many rows the rule gives this roll. Absent is one. */
+	rowsOn?(context: { roll: RollToReroll }): number;
 	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
 	saveType?: string;
 	saveDC?: string;
@@ -369,28 +373,32 @@ function collectRerollEntries(context: RerollRollContext): {
 				if (!outcomeAllows(trigger, outcome, gate)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
-				const entry: IncomingReactionEntry = {
-					id: foundry.utils.randomID(),
-					kind: 'reroll',
-					source: 'rule',
-					actorUuid,
-					tokenUuid,
-					targetTokenUuid,
-					side,
-					label: ruleLabel(rule),
-					ruleId: rule.id ?? '',
-					itemUuid: rule.item?.uuid ?? '',
-					used: false,
-					outcomeTrigger: trigger,
-					oncePerRoll: rule.oncePerRoll === true,
-					...gate,
-					...(hint ? { hint } : {}),
-					...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
-					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
-				};
+				const rows = Math.max(1, rule.rowsOn?.({ roll: context.roll }) ?? 1);
+				for (let useIndex = 0; useIndex < rows; useIndex += 1) {
+					const entry: IncomingReactionEntry = {
+						id: foundry.utils.randomID(),
+						kind: 'reroll',
+						source: 'rule',
+						actorUuid,
+						tokenUuid,
+						targetTokenUuid,
+						side,
+						label: ruleLabel(rule),
+						ruleId: rule.id ?? '',
+						itemUuid: rule.item?.uuid ?? '',
+						used: false,
+						outcomeTrigger: trigger,
+						oncePerRoll: rule.oncePerRoll === true,
+						...gate,
+						...(hint ? { hint } : {}),
+						...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
+						...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
+						...(rows > 1 ? { useIndex } : {}),
+					};
 
-				if (!ally && runsByItself(rule, actor, context)) result.automatic.push({ entry, rule });
-				else result.manual.push(entry);
+					if (!ally && runsByItself(rule, actor, context)) result.automatic.push({ entry, rule });
+					else result.manual.push(entry);
+				}
 			}
 		}
 	}
@@ -412,9 +420,10 @@ function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boo
 
 /** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */
 function rerollRuleKey(
-	entry: Pick<IncomingReactionEntry, 'actorUuid' | 'itemUuid' | 'ruleId'>,
+	entry: Pick<IncomingReactionEntry, 'actorUuid' | 'itemUuid' | 'ruleId' | 'useIndex'>,
 ): string {
-	return `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
+	const base = `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
+	return entry.useIndex ? `${base}|${entry.useIndex}` : base;
 }
 
 function rerollRuleKeys(entries: IncomingReactionEntry[]): Set<string> {

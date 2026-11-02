@@ -50,6 +50,13 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.change === 'add',
 			}),
 		),
+		rowPerUpcastStep: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.changeDie.rowPerUpcastStep.label',
+			hint: 'NIMBLE.rules.changeDie.rowPerUpcastStep.hint',
+		}),
 		yieldsTo: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -90,7 +97,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(),
 		...RollUseRule.useFormGroups([
-			{ fields: ['die', 'change', 'amount', 'addsBonusOnSet', 'yieldsTo'] },
+			{ fields: ['die', 'change', 'amount', 'addsBonusOnSet', 'rowPerUpcastStep', 'yieldsTo'] },
 		]),
 		RollUseRule.noteFormGroup(),
 	];
@@ -99,6 +106,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 	declare change: DieChangeMode;
 	declare amount: number;
 	declare addsBonusOnSet: boolean;
+	declare rowPerUpcastStep: boolean;
 	declare yieldsTo: string;
 
 	static override defineSchema(): ChangeDieRule.Schema {
@@ -116,14 +124,22 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 				['change', 'string'],
 				['amount', 'number'],
 				['addsBonusOnSet', 'boolean'],
+				['rowPerUpcastStep', 'boolean'],
 				['yieldsTo', 'string'],
 			]),
 		);
 	}
 
+	/** One row per upcast step of the attack, when the rule says so. */
+	rowsOn(context: Pick<RollUseContext, 'roll'>): number {
+		if (!this.rowPerUpcastStep) return 1;
+		return context.roll.kind === 'attack' ? (context.roll.upcastSteps ?? 0) : 0;
+	}
+
 	/** The rule of the same actor with the identifier `yieldsTo` takes this row's place while it can be used. */
 	override offersUseOn(context: RollUseContext): boolean {
 		if (!super.offersUseOn(context)) return false;
+		if (this.rowPerUpcastStep && this.rowsOn(context) === 0) return false;
 		const other = (this.yieldsTo ?? '').trim();
 		if (!other) return true;
 		const rules = (this.actor as { rules?: Iterable<ChangeDieRule> } | null)?.rules ?? [];

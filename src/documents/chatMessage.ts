@@ -1743,6 +1743,12 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/** The dice a player picks from for a `reroll` entry, or null when it rerolls no picked die. */
+	severalDiceToPick(
+		entry: IncomingReactionEntry,
+	): { dice: PickableDie[]; max: number; manaPerDie: number } | null {
+		return this.#rerolls.severalDiceToPick(entry);
+	}
+
 	rerollDiceToPick(entry: IncomingReactionEntry): PickableDie[] | null {
 		return this.#rerolls.rerollDiceToPick(entry);
 	}
