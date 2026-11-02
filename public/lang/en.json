@@ -2681,14 +2681,13 @@
 				}
 			},
 			"maxDamage": {
-				"description": "Lets a creature take the max of a roll in place of rolling it. No die is rolled, so the attack cannot miss and nothing can reroll or change its dice. It is a tick in the roll window, or a choice per minion in a group attack.",
+				"description": "Lets a creature take the max of a roll in place of rolling it. No die is rolled, so the attack cannot miss and nothing can reroll or change its dice. It is a tick in the roll window.",
 				"use": {
 					"label": "Roll",
 					"hint": "Which roll gets its max.",
 					"choices": {
 						"damage": "The damage of an attack",
-						"healing": "Healing dice",
-						"minionAttack": "A friendly minion's attack"
+						"healing": "Healing dice"
 					}
 				},
 				"schools": {
@@ -2702,10 +2701,6 @@
 				"tempHpChoice": {
 					"label": "Temp HP choice",
 					"hint": "The player can give that many temp HP in place of the healing."
-				},
-				"minionDies": {
-					"label": "The minion dies",
-					"hint": "The minion dies after the attack."
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
@@ -4252,8 +4247,6 @@
 				"healing": "Max healing ({feature})",
 				"withCost": "{text}: {count} use",
 				"tempHp": "Give that many temp HP",
-				"minionTooltip": "{feature}: this minion deals the max of its attack in place of rolling. It hits and does not crit.",
-				"minionDiesTooltip": "{feature}: this minion deals the max of its attack in place of rolling, then dies. It hits and does not crit.",
 				"noUses": "No uses left."
 			},
 			"cancel": "Cancel",

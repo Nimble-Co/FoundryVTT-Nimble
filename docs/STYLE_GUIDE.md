@@ -1537,7 +1537,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `rollSurge()`, `giveSurgeMana()`, `endSurgeMana()` | `src/utils/combat/surgeMana.ts` | The Initiative Mana dice on an Initiative card, and the mana they give. |
 | `invokeChaos()`, `canInvokeChaos()`, `whisperChaosRollsToGm()` | `src/utils/chaos/invokeChaos.ts` | A Chaos Table roll and its card. |
 | `actorRules()` | `src/utils/actor/actorRules.ts` | The rules of an actor as an array, empty when it has none to read. |
-| `maxDamageOffers()`, `maxDamageRuleOf()`, `minionMaxDamageRuleFor()` | `src/utils/damage/maxDamageOffers.ts` | The Max Damage ticks of a roll window, and the rule a tick stands for. |
+| `maxDamageOffers()`, `maxDamageRuleOf()` | `src/utils/damage/maxDamageOffers.ts` | The Max Damage ticks of a roll window, and the rule a tick stands for. |
 | `appendTypedBonusDamage()` | `src/utils/damage/appendTypedBonusDamage.ts` | Add a differently-typed bonus to an activation card as its own damage packet, beside the damage it derives from |
 | `buildDeferredDamagePatch()`, `findRollableDeferredDamageNode()` | `src/utils/damage/buildDeferredDamagePatch.ts` | Attach an on-demand damage roll to a `deferredRoll` damage node, keeping the patched activation tree and the message `rolls` source in step, and resolve which node a Roll Damage click may still roll. Both return null for a node that is missing, was never deferred, or already carries a roll — which is what refuses a second click |
 | `collectPoolSpendCardOffers()` | `src/utils/incomingReactions/poolSpendCardOffers.ts` | Build the attacker-side spend offers a `diceConsumer` with `cardOffer` extends to its own attack cards |

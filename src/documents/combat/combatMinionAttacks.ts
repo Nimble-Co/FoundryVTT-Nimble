@@ -1,4 +1,3 @@
-import type { MaxDamageRuleLike } from '#types/maxDamage.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
@@ -7,7 +6,6 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import { minionMaxDamageRuleFor } from '../../utils/damage/maxDamageOffers.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import {
 	getCurrentUserTargetTokenIds,
@@ -75,11 +73,6 @@ function normalizeAttackParams(params: MinionGroupAttackParams): NormalizedMinio
 		memberCombatantIds,
 		targetTokenIds,
 		selectionsByMemberId: buildSelectionsMap(params.selections),
-		maxDamageMemberIds: new Set(
-			params.selections
-				.filter((selection) => selection.maxDamage === true)
-				.map((selection) => selection.memberCombatantId),
-		),
 		endTurn: params.endTurn === true,
 	};
 }
@@ -200,7 +193,6 @@ function buildMinionAttackRollEntry(params: {
 	selectedAction: ItemLike;
 	formula: string;
 	damageRoll: DamageRoll;
-	maxDamageBy: string;
 }): MinionGroupAttackRollEntry {
 	const isMiss = Boolean(params.damageRoll.isMiss);
 	const totalDamage = Number(params.damageRoll.total ?? 0);
@@ -224,7 +216,6 @@ function buildMinionAttackRollEntry(params: {
 		totalDamage: normalizedTotalDamage,
 		isMiss,
 		rollData: params.damageRoll.toJSON() as Record<string, unknown>,
-		...(params.maxDamageBy ? { maxDamageBy: params.maxDamageBy } : {}),
 	};
 }
 
@@ -232,7 +223,6 @@ async function rollSingleMinionAttack(params: {
 	combat: Combat;
 	member: Combatant.Implementation;
 	selectionsByMemberId: ReadonlyMap<string, string>;
-	maxDamageRule: MaxDamageRuleLike | null;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
 	if (isMinionAttackRollOutcome(resolvedActionContext)) {
@@ -261,7 +251,6 @@ async function rollSingleMinionAttack(params: {
 			rollMode: 0,
 			primaryDieValue: 0,
 			primaryDieModifier: 0,
-			...(params.maxDamageRule ? { maxDamage: 'hit' as const } : {}),
 		});
 		await damageRoll.evaluate();
 
@@ -274,9 +263,6 @@ async function rollSingleMinionAttack(params: {
 				selectedAction: resolvedActionContext.selectedAction,
 				formula,
 				damageRoll,
-				maxDamageBy: params.maxDamageRule
-					? params.maxDamageRule.label || params.maxDamageRule.item?.name || ''
-					: '',
 			}),
 			actionUpdate: {
 				_id: resolvedActionContext.memberId,
@@ -467,7 +453,6 @@ async function collectMinionAttackRollData(params: {
 	combat: Combat;
 	attackMembers: Combatant.Implementation[];
 	selectionsByMemberId: ReadonlyMap<string, string>;
-	maxDamageMemberIds: ReadonlySet<string>;
 	result: MinionGroupAttackResult;
 }): Promise<{
 	actionUpdates: Record<string, unknown>[];
@@ -482,9 +467,6 @@ async function collectMinionAttackRollData(params: {
 			combat: params.combat,
 			member,
 			selectionsByMemberId: params.selectionsByMemberId,
-			maxDamageRule: params.maxDamageMemberIds.has(member.id ?? '')
-				? minionMaxDamageRuleFor(params.combat, member)
-				: null,
 		});
 		appendMinionAttackRollOutcome({
 			rollOutcome,
@@ -499,19 +481,6 @@ async function collectMinionAttackRollData(params: {
 		rollEntries,
 		unsupportedWarnings: [...unsupportedWarnings],
 	};
-}
-
-/** A minion that took the max of its attack dies after the attack, when the rule says so. */
-async function killMaxDamageMinions(
-	combat: Combat,
-	rollEntries: MinionGroupAttackRollEntry[],
-): Promise<void> {
-	for (const entry of rollEntries) {
-		if (!entry.maxDamageBy) continue;
-		const member = combat.combatants.get(entry.memberCombatantId);
-		if (!member?.actor || minionMaxDamageRuleFor(combat, member)?.minionDies === false) continue;
-		await member.actor.update({ 'system.attributes.hp.value': 0 } as never);
-	}
 }
 
 export async function performMinionGroupAttack(params: {
@@ -542,7 +511,6 @@ export async function performMinionGroupAttack(params: {
 		combat: params.combat,
 		attackMembers,
 		selectionsByMemberId: normalizedParams.selectionsByMemberId,
-		maxDamageMemberIds: normalizedParams.maxDamageMemberIds,
 		result,
 	});
 	await applyActionConsumptionUpdates(params.combat, rollData.actionUpdates);
@@ -559,7 +527,6 @@ export async function performMinionGroupAttack(params: {
 		unsupportedWarnings: rollData.unsupportedWarnings,
 		attackMembers,
 	});
-	await killMaxDamageMinions(params.combat, rollData.rollEntries);
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({

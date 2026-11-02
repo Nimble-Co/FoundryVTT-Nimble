@@ -18,7 +18,6 @@ import {
 } from '../utils/combat/combatTurnActions.js';
 import { isCombatantDead } from '../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../utils/combat/resolveMinionAttackActionCost.js';
-import { minionMaxDamageRuleFor } from '../utils/damage/maxDamageOffers.js';
 import {
 	createMinionGroupAttackSelectionState,
 	deriveDefaultMemberActionSelection,
@@ -60,7 +59,6 @@ const FONT_AWESOME_BASE_CLASSES = new Set([
 let didRegisterMinionGroupTokenActions = false;
 let refreshScheduled = false;
 let isExecutingAction = false;
-const activeGroupAttackMaxDamageMemberIds = new Set<string>();
 let windowResizeHandler: (() => void) | null = null;
 let minionGroupAttackPanelElement: HTMLDivElement | null = null;
 let activeGroupAttackSession: MinionGroupAttackSelectionState | null = null;
@@ -1682,34 +1680,6 @@ function createGroupAttackMemberCell(member: GroupAttackMemberView): HTMLTableCe
 	return memberCell;
 }
 
-/** The tick that gives a minion the max of its attack, when a hero's rule allows it. */
-function buildGroupAttackMaxDamageTick(member: GroupAttackMemberView): HTMLLabelElement | null {
-	const combat = getCombatForCurrentScene();
-	const combatant = combat?.combatants.get(member.combatantId);
-	if (!combat || !combatant) return null;
-	const rule = minionMaxDamageRuleFor(combat, combatant);
-	if (!rule) return null;
-
-	const feature = rule.label || rule.item?.name || '';
-	const label = document.createElement('label');
-	label.className = 'nimble-minion-group-attack-panel__max-damage';
-	label.dataset.tooltip = formatByKey(
-		`NIMBLE.rollWindow.maxDamage.${rule.minionDies === false ? 'minionTooltip' : 'minionDiesTooltip'}`,
-		{ feature },
-	);
-	const tick = document.createElement('input');
-	tick.type = 'checkbox';
-	tick.checked = activeGroupAttackMaxDamageMemberIds.has(member.combatantId);
-	tick.addEventListener('change', () => {
-		if (tick.checked) activeGroupAttackMaxDamageMemberIds.add(member.combatantId);
-		else activeGroupAttackMaxDamageMemberIds.delete(member.combatantId);
-	});
-	const text = document.createElement('span');
-	text.textContent = formatByKey('NIMBLE.rollWindow.maxDamage.damage', { feature });
-	label.append(tick, text);
-	return label;
-}
-
 function buildGroupAttackActionSelect(
 	member: GroupAttackMemberView,
 	options: {
@@ -1899,8 +1869,6 @@ function renderGroupAttackMinionSection(panel: HTMLDivElement): void {
 			},
 		});
 		actionCell.append(select);
-		const maxDamageTick = buildGroupAttackMaxDamageTick(member);
-		if (maxDamageTick) actionCell.append(maxDamageTick);
 
 		const diceCell = document.createElement('td');
 		diceCell.className = 'nimble-minion-group-attack-panel__dice';
@@ -2057,12 +2025,10 @@ function resolveGroupAttackTargetTokenIds(): string[] {
 function buildGroupAttackRollSelections(): Array<{
 	memberCombatantId: string;
 	actionId: string | null;
-	maxDamage: boolean;
 }> {
 	return activeGroupAttackMembers.map((member) => ({
 		memberCombatantId: member.combatantId,
 		actionId: getActionSelectValueForMember(member.combatantId) || null,
-		maxDamage: activeGroupAttackMaxDamageMemberIds.has(member.combatantId),
 	}));
 }
 
@@ -2124,7 +2090,6 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 		});
 
 		rememberCurrentGroupAttackSelections(session);
-		activeGroupAttackMaxDamageMemberIds.clear();
 		applyGroupAttackRollResultState({ result, endTurn });
 
 		renderGroupAttackPanel();

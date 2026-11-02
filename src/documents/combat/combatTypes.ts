@@ -5,8 +5,6 @@ export type CombatantBaseActions = NimbleCombatantSystem['actions']['base'];
 export interface MinionGroupAttackSelection {
 	memberCombatantId: string;
 	actionId: string | null;
-	/** The minion takes the max of its attack in place of rolling, by a hero's Max Damage rule. */
-	maxDamage?: boolean;
 }
 
 export interface MinionGroupAttackParams {
@@ -35,7 +33,6 @@ export interface NormalizedMinionGroupAttackParams {
 	memberCombatantIds: string[];
 	targetTokenIds: string[];
 	selectionsByMemberId: Map<string, string>;
-	maxDamageMemberIds: Set<string>;
 	endTurn: boolean;
 }
 
@@ -112,8 +109,6 @@ export interface MinionGroupAttackRollEntry {
 	totalDamage: number;
 	isMiss: boolean;
 	rollData: Record<string, unknown> | null;
-	/** The feature that gave the max of the roll. */
-	maxDamageBy?: string;
 }
 
 export interface InitiativeRollOutcome {

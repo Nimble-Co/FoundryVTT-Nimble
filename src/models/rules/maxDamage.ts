@@ -5,7 +5,7 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 /** What a Max Damage rule gives max dice to. */
-const MAX_DAMAGE_USES = ['damage', 'healing', 'minionAttack'] as const;
+const MAX_DAMAGE_USES = ['damage', 'healing'] as const;
 type MaxDamageUse = (typeof MAX_DAMAGE_USES)[number];
 
 function schema() {
@@ -33,7 +33,6 @@ function schema() {
 				initial: [] as string[],
 				label: 'NIMBLE.rules.maxDamage.schools.label',
 				hint: 'NIMBLE.rules.maxDamage.schools.hint',
-				showWhen: (data: Record<string, unknown>) => data.use !== 'minionAttack',
 			}),
 		),
 		givesCrit: new fields.BooleanField(
@@ -54,16 +53,6 @@ function schema() {
 				label: 'NIMBLE.rules.maxDamage.tempHpChoice.label',
 				hint: 'NIMBLE.rules.maxDamage.tempHpChoice.hint',
 				showWhen: uses('healing'),
-			}),
-		),
-		minionDies: new fields.BooleanField(
-			withWidget({
-				required: true,
-				nullable: false,
-				initial: true,
-				label: 'NIMBLE.rules.maxDamage.minionDies.label',
-				hint: 'NIMBLE.rules.maxDamage.minionDies.hint',
-				showWhen: uses('minionAttack'),
 			}),
 		),
 		chargePoolIdentifier: new fields.StringField(
@@ -105,15 +94,15 @@ interface MaxDamageItem {
 
 /**
  * Lets a creature take the max of a roll in place of rolling it. It is a tick
- * in the roll window, or a choice per minion in a group attack. Read when the
- * window opens and when the roll is made, never during data preparation.
+ * in the roll window. Read when the window opens and when the roll is made,
+ * never during data preparation.
  */
 class MaxDamageRule extends NimbleBaseRule<MaxDamageRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.maxDamage.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['use', 'schools'] },
-		{ fields: ['givesCrit', 'tempHpChoice', 'minionDies'] },
+		{ fields: ['givesCrit', 'tempHpChoice'] },
 		{
 			label: 'NIMBLE.rules.reroll.form.cost.label',
 			hint: 'NIMBLE.rules.reroll.form.cost.hint',
@@ -125,7 +114,6 @@ class MaxDamageRule extends NimbleBaseRule<MaxDamageRule.Schema> {
 	declare schools: (keyof typeof CONFIG.NIMBLE.spellSchools)[];
 	declare givesCrit: boolean;
 	declare tempHpChoice: boolean;
-	declare minionDies: boolean;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
 
@@ -143,7 +131,6 @@ class MaxDamageRule extends NimbleBaseRule<MaxDamageRule.Schema> {
 				['schools', 'string[]'],
 				['givesCrit', 'boolean'],
 				['tempHpChoice', 'boolean'],
-				['minionDies', 'boolean'],
 				['chargePoolIdentifier', 'string'],
 				['chargeCost', 'number'],
 			]),

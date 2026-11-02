@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maxDamageOffers, maxDamageRuleOf, minionMaxDamageRule } from '../maxDamageOffers.js';
+import { maxDamageOffers, maxDamageRuleOf } from '../maxDamageOffers.js';
 
 const rule = (overrides: object = {}) => ({
 	type: 'maxDamage',
@@ -40,12 +40,6 @@ describe('the Max Damage ticks of a roll window', () => {
 		).toEqual([]);
 	});
 
-	it('do not show for a minion rule', () => {
-		expect(
-			maxDamageOffers({ rules: [rule({ use: 'minionAttack' })] }, itemWith('damage', '1d12')),
-		).toEqual([]);
-	});
-
 	it('tell the cost and that no use is left', () => {
 		const [offer] = maxDamageOffers(
 			{ rules: [rule({ chargePoolIdentifier: 'beastshift', canPay: false })] },
@@ -83,17 +77,5 @@ describe('the rule of a picked tick', () => {
 
 	it('is null with no pick', () => {
 		expect(maxDamageRuleOf(hero, item, null)).toBeNull();
-	});
-});
-
-describe('the minion rule of the heroes in a fight', () => {
-	it('is found on any hero', () => {
-		const shadowRush = rule({ use: 'minionAttack' });
-
-		expect(minionMaxDamageRule([{ rules: [] }, { rules: [shadowRush] }])).toBe(shadowRush);
-	});
-
-	it('is null with no such hero', () => {
-		expect(minionMaxDamageRule([{ rules: [rule()] }, null])).toBeNull();
 	});
 });

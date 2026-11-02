@@ -61,32 +61,3 @@ export function maxDamageRuleOf(
 	if (!offer?.canPay) return null;
 	return rulesOf(actor).find((rule) => keyOf(rule) === choice.key) ?? null;
 }
-
-/** The rule that lets a minion take the max, of the first of these heroes that has one. */
-export function minionMaxDamageRule(
-	heroes: Iterable<OfferActor | null | undefined>,
-): MaxDamageRuleLike | null {
-	for (const hero of heroes) {
-		const found = rulesOf(hero).find((rule) => rule.use === 'minionAttack' && rule.covers?.({}));
-		if (found) return found;
-	}
-	return null;
-}
-
-/**
- * The Max Damage rule a minion can use: one of a hero in the same fight on the
- * minion's side. No data links a minion to the hero who summoned it, so the
- * side stands in for it, and the table only picks a minion that is the hero's.
- */
-export function minionMaxDamageRuleFor(
-	combat: Combat,
-	member: Combatant.Implementation,
-): MaxDamageRuleLike | null {
-	const side = member.token?.disposition;
-	const heroes = Array.from(combat.combatants ?? [])
-		.filter(
-			(combatant) => combatant.actor?.type === 'character' && combatant.token?.disposition === side,
-		)
-		.map((combatant) => combatant.actor as never);
-	return minionMaxDamageRule(heroes);
-}

@@ -42,13 +42,16 @@ describe('the Max Damage rules of the pack items', () => {
 		expect(rule.chargePoolIdentifier).toBe('beastshift');
 	});
 
-	it('Shadow Rush is for a minion attack, with no cost, and the minion dies', () => {
-		const rule = liveRule('shadowmancer/greater-invocations/shadow-rush.json');
+	it('Shadow Rush is a card of 12 damage that hits and does not crit, with no minion token', () => {
+		const item = JSON.parse(
+			readFileSync(resolve(FEATURES, 'shadowmancer/greater-invocations/shadow-rush.json'), 'utf8'),
+		);
+		const damage = item.system.activation.effects.find(
+			(node: { type: string }) => node.type === 'damage',
+		);
 
-		expect(rule.use).toBe('minionAttack');
-		expect(rule.givesCrit).toBe(false);
-		expect(rule.minionDies).toBe(true);
-		expect(rule.chargePoolIdentifier).toBe('');
+		expect(item.system.rules).toEqual([]);
+		expect(damage).toMatchObject({ formula: '12', canCrit: false, canMiss: false });
 	});
 
 	it('Powerful Healer is for healing dice on any item, with temp HP as the other choice', () => {
