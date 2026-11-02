@@ -35,7 +35,7 @@ interface LiveCombat {
 /** A change ends with its turn, round or combat, also if no GM was there to delete it. */
 function isLive(change: HeldChangeData): boolean {
 	if (!change.combatId) return true;
-	const combat = (game.combats as unknown as Map<string, LiveCombat> | undefined)?.get(
+	const combat = (game.combats as unknown as { get?(id: string): LiveCombat } | undefined)?.get?.(
 		change.combatId,
 	);
 	if (!combat?.started) return false;

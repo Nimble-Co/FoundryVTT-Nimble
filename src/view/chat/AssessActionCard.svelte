@@ -85,6 +85,17 @@
 				>{localize('NIMBLE.ui.heroicActions.targetLabel')}</span
 			>
 			<span class="assess-action-card__target-name">{targetName}</span>
+			{#if system.primaryDieChange}
+				<span class="assess-action-card__chip">
+					<i class="fa-solid fa-arrow-{system.primaryDieChange > 0 ? 'up' : 'down'}"></i>
+					{localize('NIMBLE.chat.primaryDieBonus.tag', {
+						value:
+							system.primaryDieChange > 0
+								? `+${system.primaryDieChange}`
+								: String(system.primaryDieChange),
+					})}
+				</span>
+			{/if}
 		</div>
 	{/if}
 
@@ -136,6 +147,14 @@
 	.assess-action-card__target-name {
 		font-size: var(--nimble-sm-text);
 		font-weight: 600;
+		color: var(--nimble-dark-text-color);
+	}
+
+	.assess-action-card__chip {
+		margin-inline-start: auto;
+		font-size: var(--nimble-xs-text);
+		font-weight: 600;
+		white-space: nowrap;
 		color: var(--nimble-dark-text-color);
 	}
 
