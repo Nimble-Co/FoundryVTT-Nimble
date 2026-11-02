@@ -1164,7 +1164,11 @@ export class CardRerolls {
 					},
 				},
 			});
-			if (!made) throw new Error('The save card was not made.');
+			// The window was closed: no save, so the use comes back with no error.
+			if (!made) {
+				if (cost && paid) await refundRerollCost(actor, cost, paid);
+				return;
+			}
 			await this.#host.update({
 				system: { incomingReactions: this.#withEntryUsed(entry) },
 			} as Record<string, unknown>);
