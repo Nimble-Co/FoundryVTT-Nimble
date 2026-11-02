@@ -6,9 +6,9 @@ vi.mock('#utils/chaos/invokeChaos.js', () => ({
 	invokeChaos: vi.fn(async () => {}),
 	keepChaosRoll: vi.fn(async () => {}),
 }));
-vi.mock('#utils/combat/surgeMana.js', () => ({
-	regainSurgeManaOnCard: vi.fn(async () => {}),
-	rerollSurgeDieOnCard: vi.fn(async () => {}),
+vi.mock('#utils/combat/initiativeManaRoll.js', () => ({
+	regainInitiativeManaOnCard: vi.fn(async () => {}),
+	rerollInitiativeManaDieOnCard: vi.fn(async () => {}),
 }));
 
 import { keepChaosRoll } from '#utils/chaos/invokeChaos.js';
@@ -60,7 +60,7 @@ describe('card actions', () => {
 	it('tells the user when no GM is online to ask', async () => {
 		(game as unknown as TestGame).users = { activeGM: null };
 
-		await runCardAction({ id: 'card', isAuthor: false } as never, { name: 'surgeRegain' });
+		await runCardAction({ id: 'card', isAuthor: false } as never, { name: 'initiativeManaRegain' });
 
 		expect(notifications.warn).toHaveBeenCalled();
 	});

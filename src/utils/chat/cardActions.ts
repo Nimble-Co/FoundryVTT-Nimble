@@ -6,7 +6,10 @@ import {
 	invokeChaos,
 	keepChaosRoll,
 } from '#utils/chaos/invokeChaos.js';
-import { regainSurgeManaOnCard, rerollSurgeDieOnCard } from '#utils/combat/surgeMana.js';
+import {
+	regainInitiativeManaOnCard,
+	rerollInitiativeManaDieOnCard,
+} from '#utils/combat/initiativeManaRoll.js';
 import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.cardAction`;
@@ -15,8 +18,8 @@ export type CardAction =
 	| { name: 'chaosChoose'; choice: ChaosRollChoice }
 	| { name: 'chaosKeep'; index: number }
 	| { name: 'chaosInvoke' }
-	| { name: 'surgeReroll'; index: number }
-	| { name: 'surgeRegain' };
+	| { name: 'initiativeManaReroll'; index: number }
+	| { name: 'initiativeManaRegain' };
 
 interface ActionCard {
 	id?: string | null;
@@ -50,10 +53,10 @@ async function runHere(card: ActionCard, action: CardAction): Promise<void> {
 		case 'chaosInvoke':
 			await card.setFlag?.(SYSTEM_ID, CHAOS_INVOKED_FLAG, true);
 			return invokeChaos(ChatMessage.getSpeakerActor(card.speaker as never) as never, card.id);
-		case 'surgeReroll':
-			return rerollSurgeDieOnCard(card as never, action.index);
-		case 'surgeRegain':
-			return regainSurgeManaOnCard(card as never, actorOf(card));
+		case 'initiativeManaReroll':
+			return rerollInitiativeManaDieOnCard(card as never, action.index);
+		case 'initiativeManaRegain':
+			return regainInitiativeManaOnCard(card as never, actorOf(card));
 	}
 }
 

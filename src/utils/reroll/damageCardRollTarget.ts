@@ -21,9 +21,9 @@ import { getPools as getDicePools } from '../dicePool/dicePoolSync.js';
 import type { DicePoolState } from '../dicePool/types.js';
 import {
 	type AttackOutcomeView,
+	CRIT_BONUS_ROLE,
 	type IncomingReactionEntry,
 	type RollChange,
-	SNEAK_ATTACK_ROLE,
 	termsHaveCritD20,
 	termsHaveDieAtMax,
 	termsHaveRole,
@@ -196,7 +196,7 @@ function damageRollContext(
 			noDice: rolled?.options?.maxDamage !== undefined,
 			vicious: rolled?.options?.explosionStyle === 'vicious' || rolled?.options?.isVicious === true,
 			hasCritD20: termsHaveCritD20(rolled?.terms),
-			hasSneakDice: termsHaveRole(rolled?.terms, SNEAK_ATTACK_ROLE),
+			hasCritBonusDice: termsHaveRole(rolled?.terms, CRIT_BONUS_ROLE),
 			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
 		},
 		forcedMiss,

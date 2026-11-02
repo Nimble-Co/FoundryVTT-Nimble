@@ -1,6 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { MaxDamageChoice, MaxDamageOffer, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
-import { actorRules } from '../actor/actorRules.js';
+import { actorRules, ruleLabel } from '../actor/actorRules.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 
 interface OfferActor {
@@ -40,7 +40,7 @@ export function maxDamageOffers(
 		return [
 			{
 				key: keyOf(rule),
-				label: rule.label || rule.item?.name || '',
+				label: ruleLabel(rule),
 				use,
 				tempHpChoice: use === 'healing' && rule.tempHpChoice === true,
 				chargeCost: poolIdentifier ? Number(rule.chargeCost) || 1 : 0,

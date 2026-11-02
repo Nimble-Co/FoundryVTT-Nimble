@@ -4,7 +4,7 @@ import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import localize from '../localize.js';
-import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
+import { canPayRerollCost, chargeOnlyCost } from '../reroll/rerollCost.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
 
 /** The flag of a card that already invoked Chaos. */
@@ -58,17 +58,6 @@ function options(actor: ChaosActor | null | undefined) {
 	};
 }
 
-function chargeCost(pool: string): RerollCost {
-	return {
-		chargePoolIdentifier: pool,
-		chargeCost: 1,
-		manaCost: 0,
-		woundCost: 0,
-		heroicReaction: '',
-		actionCost: 0,
-	};
-}
-
 async function tableResultFor(value: number): Promise<{ name: string; text: string }> {
 	const pack = game.packs?.get(`${SYSTEM_ID}.nimble-tables`) as unknown as
 		| { getDocuments(query?: object): Promise<Array<{ results?: Iterable<TableResultLike> }>> }
@@ -119,7 +108,7 @@ export async function whisperChaosRollsToGm(
 
 function usesOfPool(actor: ChaosActor, pool: string): number {
 	if (!pool) return 0;
-	return canPayRerollCost(actor as never, chargeCost(pool)) ? 1 : 0;
+	return canPayRerollCost(actor as never, chargeOnlyCost(pool)) ? 1 : 0;
 }
 
 /** Each table roll has its own card. A hero who can roll twice picks before the roll. */

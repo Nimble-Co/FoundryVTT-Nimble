@@ -27,7 +27,7 @@ import type {
 	RollChange,
 	RollEffect,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
-import { SNEAK_ATTACK_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
+import { CRIT_BONUS_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
 import localize from '#utils/localize.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
@@ -105,7 +105,7 @@ interface NewRollUse extends Partial<RerollStepInput<unknown>> {
 
 function changeableDieOf(rule: RerollRuleLike): ChangeableDie {
 	const die = rule.die as string | undefined;
-	if (die === 'pickedDie' || die === 'sneakAttackDie') return die;
+	if (die === 'pickedDie' || die === 'critBonusDie') return die;
 	return 'primaryDie';
 }
 
@@ -1158,7 +1158,7 @@ export class CardRerolls {
 				cardFlags: {
 					critDiceSave: {
 						attackMessageId: this.#host.id(),
-						role: SNEAK_ATTACK_ROLE,
+						role: CRIT_BONUS_ROLE,
 						actorUuid: actor.uuid,
 						chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
 					},

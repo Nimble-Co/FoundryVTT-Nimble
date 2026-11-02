@@ -2,15 +2,15 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import type { CardSurge } from '#types/surgeMana.d.ts';
+import type { CardInitiativeMana } from '#types/initiativeManaRoll.d.ts';
 import {
-	canRerollSurgeDie,
-	endSurgeMana,
-	regainSurgeManaOnCard,
-	rerollSurgeDieOnCard,
-	rollSurge,
-	surgeTotal,
-} from '../surgeMana.js';
+	canRerollInitiativeManaDie,
+	endInitiativeMana,
+	initiativeManaTotal,
+	regainInitiativeManaOnCard,
+	rerollInitiativeManaDieOnCard,
+	rollInitiativeMana,
+} from '../initiativeManaRoll.js';
 
 let automation = true;
 
@@ -39,13 +39,13 @@ function mage(mana: number, rules: unknown[], flag?: unknown) {
 	return actor;
 }
 
-const surgeRule = (flat: number, dice: string) => ({
+const initiativeManaRule = (flat: number, dice: string) => ({
 	type: 'initiativeMana',
-	surgeSpec: { feature: 'Elemental Surge', flat, dice },
+	initiativeManaSpec: { feature: 'Elemental Surge', flat, dice },
 });
 const steelWill = { type: 'initiativeManaRerollOnes', rerollFeature: 'Steel Will' };
 
-describe('a surge at Initiative', () => {
+describe('a initiativeMana at Initiative', () => {
 	beforeEach(() => {
 		automation = true;
 		vi.stubGlobal('game', {
@@ -61,52 +61,55 @@ describe('a surge at Initiative', () => {
 	});
 
 	it('gives WIL mana with no dice, above the max too', async () => {
-		const actor = mage(10, [surgeRule(3, '')]);
+		const actor = mage(10, [initiativeManaRule(3, '')]);
 
-		const surge = await rollSurge(actor, 'combat');
+		const initiativeMana = await rollInitiativeMana(actor, 'combat');
 
-		expect(surge).toMatchObject({ flat: 3, dice: [], manaGiven: true });
+		expect(initiativeMana).toMatchObject({ flat: 3, dice: [], manaGiven: true });
 		expect(actor.system.resources.mana.current).toBe(13);
 	});
 
 	it('adds the dice at level 10', async () => {
 		diceRolls(3);
-		const actor = mage(2, [surgeRule(3, '1d4')]);
+		const actor = mage(2, [initiativeManaRule(3, '1d4')]);
 
-		const surge = (await rollSurge(actor, 'combat')) as CardSurge;
+		const initiativeMana = (await rollInitiativeMana(actor, 'combat')) as CardInitiativeMana;
 
-		expect(surgeTotal(surge)).toBe(6);
+		expect(initiativeManaTotal(initiativeMana)).toBe(6);
 		expect(actor.system.resources.mana.current).toBe(8);
 	});
 
 	it('gives nothing with no combat', async () => {
-		expect(await rollSurge(mage(0, [surgeRule(3, '')]), null)).toBeNull();
+		expect(await rollInitiativeMana(mage(0, [initiativeManaRule(3, '')]), null)).toBeNull();
 	});
 
 	it('gives nothing again in the same combat', async () => {
-		const actor = mage(0, [surgeRule(3, '')], { combatId: 'combat', before: 0 });
-		expect(await rollSurge(actor, 'combat')).toBeNull();
+		const actor = mage(0, [initiativeManaRule(3, '')], { combatId: 'combat', before: 0 });
+		expect(await rollInitiativeMana(actor, 'combat')).toBeNull();
 		expect(actor.update).not.toHaveBeenCalled();
 	});
 
 	it('with Steel Will, each 1 rolls again by itself one time, also to a new 1', async () => {
 		diceRolls(1, 4, 1);
-		const actor = mage(0, [surgeRule(0, '2d4'), steelWill]);
+		const actor = mage(0, [initiativeManaRule(0, '2d4'), steelWill]);
 
-		const surge = (await rollSurge(actor, 'combat')) as CardSurge;
+		const initiativeMana = (await rollInitiativeMana(actor, 'combat')) as CardInitiativeMana;
 
-		expect(surge.dice).toEqual([
+		expect(initiativeMana.dice).toEqual([
 			{ faces: 4, value: 1, was: 1 },
 			{ faces: 4, value: 4 },
 		]);
-		expect(surgeTotal(surge)).toBe(5);
+		expect(initiativeManaTotal(initiativeMana)).toBe(5);
 	});
 
 	it('with no Steel Will, a 1 stays', async () => {
 		diceRolls(1);
-		const surge = (await rollSurge(mage(0, [surgeRule(0, '1d4')]), 'combat')) as CardSurge;
+		const initiativeMana = (await rollInitiativeMana(
+			mage(0, [initiativeManaRule(0, '1d4')]),
+			'combat',
+		)) as CardInitiativeMana;
 
-		expect(surge.dice).toEqual([{ faces: 4, value: 1 }]);
+		expect(initiativeMana.dice).toEqual([{ faces: 4, value: 1 }]);
 	});
 
 	describe('with Feature Effects off', () => {
@@ -116,18 +119,18 @@ describe('a surge at Initiative', () => {
 
 		it('shows the dice and gives no mana', async () => {
 			diceRolls(1);
-			const actor = mage(0, [surgeRule(2, '1d4'), steelWill]);
+			const actor = mage(0, [initiativeManaRule(2, '1d4'), steelWill]);
 
-			const surge = (await rollSurge(actor, 'combat')) as CardSurge;
+			const initiativeMana = (await rollInitiativeMana(actor, 'combat')) as CardInitiativeMana;
 
-			expect(surge.manaGiven).toBe(false);
-			expect(canRerollSurgeDie(surge, surge.dice[0])).toBe(true);
+			expect(initiativeMana.manaGiven).toBe(false);
+			expect(canRerollInitiativeManaDie(initiativeMana, initiativeMana.dice[0])).toBe(true);
 			expect(actor.update).not.toHaveBeenCalled();
 		});
 
 		it('a row rolls a 1 again, one time', async () => {
 			diceRolls(3);
-			const surge: CardSurge = {
+			const initiativeMana: CardInitiativeMana = {
 				feature: 'Elemental Surge',
 				flat: 2,
 				dice: [{ faces: 4, value: 1 }],
@@ -135,17 +138,17 @@ describe('a surge at Initiative', () => {
 				manaGiven: false,
 				combatId: 'combat',
 			};
-			const card = { system: { surge }, update: vi.fn(async () => {}) };
+			const card = { system: { initiativeMana }, update: vi.fn(async () => {}) };
 
-			await rerollSurgeDieOnCard(card, 0);
+			await rerollInitiativeManaDieOnCard(card, 0);
 
 			expect(card.update).toHaveBeenCalledWith({
-				'system.surge.dice': [{ faces: 4, value: 3, was: 1 }],
+				'system.initiativeMana.dice': [{ faces: 4, value: 3, was: 1 }],
 			});
 		});
 
 		it('the button gives the mana one time', async () => {
-			const surge: CardSurge = {
+			const initiativeMana: CardInitiativeMana = {
 				feature: 'Elemental Surge',
 				flat: 2,
 				dice: [{ faces: 4, value: 3 }],
@@ -153,45 +156,47 @@ describe('a surge at Initiative', () => {
 				manaGiven: false,
 				combatId: 'combat',
 			};
-			const card = { system: { surge }, update: vi.fn(async () => {}) };
+			const card = { system: { initiativeMana }, update: vi.fn(async () => {}) };
 			const actor = mage(1, []);
 
-			await regainSurgeManaOnCard(card, actor);
+			await regainInitiativeManaOnCard(card, actor);
 
 			expect(actor.system.resources.mana.current).toBe(6);
-			expect(card.update).toHaveBeenCalledWith({ 'system.surge.manaGiven': true });
+			expect(card.update).toHaveBeenCalledWith({ 'system.initiativeMana.manaGiven': true });
 		});
 	});
 
 	describe('at the end of combat', () => {
 		const flag = { combatId: 'combat', before: 2 };
 
-		it('takes away what the surge left', async () => {
+		it('takes away what the initiativeMana left', async () => {
 			const actor = mage(5, [], flag);
-			await endSurgeMana(actor, 'combat');
+			await endInitiativeMana(actor, 'combat');
 			expect(actor.system.resources.mana.current).toBe(2);
 			expect(actor.update).toHaveBeenCalledWith(
 				expect.objectContaining({
-					[`flags.${SYSTEM_ID}.surgeMana`]: expect.any(foundry.data.operators.ForcedDeletion),
+					[`flags.${SYSTEM_ID}.initiativeManaRoll`]: expect.any(
+						foundry.data.operators.ForcedDeletion,
+					),
 				}),
 			);
 		});
 
-		it('takes no mana when the hero spent the surge', async () => {
+		it('takes no mana when the hero spent the initiativeMana', async () => {
 			const actor = mage(1, [], flag);
-			await endSurgeMana(actor, 'combat');
+			await endInitiativeMana(actor, 'combat');
 			expect(actor.system.resources.mana.current).toBe(1);
 		});
 
 		it('does nothing for another combat', async () => {
 			const actor = mage(5, [], flag);
-			await endSurgeMana(actor, 'other');
+			await endInitiativeMana(actor, 'other');
 			expect(actor.update).not.toHaveBeenCalled();
 		});
 	});
 });
 
-describe('the pack items of the surge', () => {
+describe('the pack items of the initiativeMana', () => {
 	const rules = (file: string) =>
 		JSON.parse(readFileSync(resolve('packs/classFeatures/core/mage', file), 'utf8')).system.rules;
 

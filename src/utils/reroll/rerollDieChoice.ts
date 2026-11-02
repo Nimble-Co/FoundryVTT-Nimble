@@ -15,9 +15,9 @@ import {
 } from '../../dice/oneDieReroll.js';
 import {
 	type ChangeableDie,
+	CRIT_BONUS_ROLE,
 	type RerollDie,
 	type RollEffect,
-	SNEAK_ATTACK_ROLE,
 } from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollableRoll } from './rerollRollTarget.js';
 
@@ -35,7 +35,7 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 
 function chooseDice(all: PickableDie[], die: ChangeableDie, ref: DieRef | null): PickableDie[] {
 	if (die === 'pickedDie') return all;
-	if (die === 'sneakAttackDie') return all.filter((d) => d.dieRole === SNEAK_ATTACK_ROLE);
+	if (die === 'critBonusDie') return all.filter((d) => d.dieRole === CRIT_BONUS_ROLE);
 	return all.filter((d) => d.term === ref?.term && d.result === ref.result);
 }
 

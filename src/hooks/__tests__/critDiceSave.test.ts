@@ -4,7 +4,7 @@ import type { NimbleSavePayload } from '../ruleEventDispatch.js';
 
 const LINK = {
 	attackMessageId: 'attack',
-	role: 'sneakAttack',
+	role: 'critBonus',
 	actorUuid: 'Actor.hero',
 	chargePoolIdentifier: 'cunning-strike',
 };

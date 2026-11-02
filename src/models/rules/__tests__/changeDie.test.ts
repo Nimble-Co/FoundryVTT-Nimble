@@ -69,7 +69,7 @@ describe('ChangeDieRule', () => {
 		expect(Object.keys(schema.die?.choices ?? {})).toEqual([
 			'primaryDie',
 			'pickedDie',
-			'sneakAttackDie',
+			'critBonusDie',
 		]);
 		expect(Object.keys(schema.change?.choices ?? {})).toEqual(['set', 'add']);
 	});

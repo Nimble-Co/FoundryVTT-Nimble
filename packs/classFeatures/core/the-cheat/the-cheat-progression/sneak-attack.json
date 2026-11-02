@@ -20,7 +20,7 @@
 				},
 				"priority": 1,
 				"formula": "1d6",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -38,7 +38,7 @@
 				},
 				"priority": 1,
 				"formula": "1d8",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -56,7 +56,7 @@
 				},
 				"priority": 1,
 				"formula": "2d8",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -74,7 +74,7 @@
 				},
 				"priority": 1,
 				"formula": "2d10",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -92,7 +92,7 @@
 				},
 				"priority": 1,
 				"formula": "2d12",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -110,7 +110,7 @@
 				},
 				"priority": 1,
 				"formula": "2d20",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			},
@@ -127,7 +127,7 @@
 				},
 				"priority": 1,
 				"formula": "3d20",
-				"dieRole": "sneakAttack",
+				"dieRole": "critBonus",
 				"oncePerTurn": true,
 				"attackDelivery": "any"
 			}

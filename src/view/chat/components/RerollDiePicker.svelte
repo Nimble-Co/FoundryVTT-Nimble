@@ -25,32 +25,14 @@
 	}: RerollDiePickerProps = $props();
 
 	const titleId = $props.id();
-	const picker = createRerollDiePickerState(() => ({ dice, oncancel, rolling }));
-	const { elements, focusFirst, onKeydown } = picker;
-
-	let picked = $state<typeof dice>([]);
+	const picker = createRerollDiePickerState(() => ({ dice, oncancel, rolling, several, onpick }));
+	const { elements, focusFirst, onKeydown, onDie, isPicked, isRolling } = picker;
 
 	let title = $derived(
 		rolling
 			? localize(`${pickDieWords(use)}.rolling`, { feature })
 			: localize(`${pickDieWords(use)}.title`),
 	);
-
-	const isPicked = (die: (typeof dice)[number]) =>
-		picked.some((other) => other.term === die.term && other.result === die.result);
-	const atMax = $derived(!!several && picked.length >= several.max);
-
-	function onDie(die: (typeof dice)[number]) {
-		if (!several) return onpick(die);
-		picked = isPicked(die)
-			? picked.filter((other) => other.term !== die.term || other.result !== die.result)
-			: [...picked, die];
-	}
-
-	const isRolling = (die: (typeof dice)[number]) =>
-		several
-			? !!rolling && isPicked(die)
-			: rolling?.term === die.term && rolling.result === die.result;
 
 	onMount(() => {
 		if (!rolling) void focusFirst();
@@ -90,7 +72,7 @@
 					type="button"
 					aria-label={dieLabel(die, dice, use)}
 					aria-pressed={several ? isPicked(die) : undefined}
-					disabled={!!rolling || (atMax && !isPicked(die))}
+					disabled={!!rolling || (picker.atMax && !isPicked(die))}
 					onclick={() => onDie(die)}
 				>
 					<DieFace
@@ -110,20 +92,20 @@
 		<div class="nimble-reroll-picker__several">
 			<span>
 				{localize('NIMBLE.chat.incomingReactions.pickDie.several.count', {
-					count: String(picked.length),
+					count: String(picker.picked.length),
 					max: String(several.max),
 				})}
 				{#if several.manaPerDie > 0}
 					- {localize('NIMBLE.ui.heroicActions.mana', {
-						cost: String(picked.length * several.manaPerDie),
+						cost: String(picker.picked.length * several.manaPerDie),
 					})}
 				{/if}
 			</span>
 			<button
 				class="nimble-reroll-picker__confirm"
 				type="button"
-				disabled={picked.length === 0}
-				onclick={() => onconfirm?.(picked)}
+				disabled={picker.picked.length === 0}
+				onclick={() => onconfirm?.(picker.picked)}
 			>
 				{localize('NIMBLE.chat.incomingReactions.pickDie.several.confirm')}
 			</button>

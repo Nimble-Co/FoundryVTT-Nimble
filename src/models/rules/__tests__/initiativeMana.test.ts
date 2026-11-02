@@ -19,18 +19,18 @@ describe('Initiative Mana rule', () => {
 	it('gives the flat formula and the dice', () => {
 		const rule = make({ flat: '3', dice: ' 1d4 ', resolveFormula: () => 3, label: 'Surge' });
 
-		expect(rule.surgeSpec).toEqual({ feature: 'Surge', flat: 3, dice: '1d4' });
+		expect(rule.initiativeManaSpec).toEqual({ feature: 'Surge', flat: 3, dice: '1d4' });
 	});
 
 	it('gives nothing on an item that no hero holds', () => {
 		const rule = make({ flat: '3' }, { isEmbedded: false });
 
-		expect(rule.surgeSpec).toBeNull();
+		expect(rule.initiativeManaSpec).toBeNull();
 	});
 
 	it('gives nothing when its condition does not hold', () => {
 		const rule = make({ flat: '3', test: () => false });
 
-		expect(rule.surgeSpec).toBeNull();
+		expect(rule.initiativeManaSpec).toBeNull();
 	});
 });

@@ -17,7 +17,7 @@ import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import type { RerollCost } from '../../utils/reroll/rerollCost.js';
+import { chargeOnlyCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
@@ -333,15 +333,9 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 
 	/** One charge of its pool, on your attacks only. */
 	get rollUseCost(): RerollCost {
-		return {
-			chargePoolIdentifier:
-				this.side === 'attacksAgainstYou' ? '' : (this.chargePoolIdentifier ?? '').trim(),
-			chargeCost: 1,
-			manaCost: 0,
-			woundCost: 0,
-			heroicReaction: '',
-			actionCost: 0,
-		};
+		return chargeOnlyCost(
+			this.side === 'attacksAgainstYou' ? '' : (this.chargePoolIdentifier ?? '').trim(),
+		);
 	}
 }
 

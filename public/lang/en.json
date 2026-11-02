@@ -573,10 +573,10 @@
 			},
 			"initiative": {
 				"label": "Initiative",
-				"surge": "{feature}: +{total} mana",
-				"surgeRerolled": "{feature}: a {was} rolled again, now {value}",
-				"surgeRerollOne": "Reroll a 1",
-				"surgeRegain": "Regain mana",
+				"initiativeMana": "{feature}: +{total} mana",
+				"initiativeManaRerolled": "{feature}: a {was} rolled again, now {value}",
+				"initiativeManaRerollOne": "Reroll a 1",
+				"initiativeManaRegain": "Regain mana",
 				"startWithOneAction": "Start with 1 action",
 				"startWithActions": "Start with {count} actions"
 			},
@@ -2734,7 +2734,7 @@
 				"dice": { "label": "Dice", "hint": "As 1d4. Leave empty for no dice." }
 			},
 			"initiativeManaRerollOnes": {
-				"description": "Each 1 on a surge die rolls again one time. With Feature Effects off, the card has a row for each 1."
+				"description": "Each 1 on an Initiative Mana die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
 			"invokeChaos": {
 				"description": "The spell dialog has a tick to spend 1 less mana. The tick or a crit rolls on the Chaos Table, one roll per attack. The system shows the table text only, and applies no effect."
@@ -2779,7 +2779,7 @@
 				}
 			},
 			"critDiceSave": {
-				"description": "A row in Change This Roll on an attack with Sneak Attack dice. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
+				"description": "A row in Change This Roll on an attack with dice a crit adds. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
 				"saveType": { "label": "Save", "hint": "The save the target makes." },
 				"saveDC": { "label": "DC", "hint": "The DC of the save, as a formula of your stats." },
 				"chargePoolIdentifier": {
@@ -2796,7 +2796,7 @@
 				"dieRole": {
 					"label": "Name of the dice",
 					"hint": "What other features call these dice.",
-					"choices": { "sneakAttack": "Sneak Attack dice" }
+					"choices": { "critBonus": "Dice a crit adds" }
 				},
 				"oncePerTurn": {
 					"label": "1/turn",
@@ -2812,7 +2812,7 @@
 					"label": "Which die does it change?",
 					"hint": "On a save or a check, the Primary Die is the d20. The player picks the die when they use it.",
 					"choices": {
-						"sneakAttackDie": "A Sneak Attack die",
+						"critBonusDie": "A die a crit adds",
 						"primaryDie": "The Primary Die",
 						"pickedDie": "One die the player picks"
 					}

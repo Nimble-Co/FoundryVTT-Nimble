@@ -363,7 +363,20 @@ function costForDice(cost: RerollCost, count: number): RerollCost {
 	};
 }
 
+/** A cost of one charge of `pool`, and nothing with no pool. */
+function chargeOnlyCost(pool = ''): RerollCost {
+	return {
+		chargePoolIdentifier: pool,
+		chargeCost: 1,
+		manaCost: 0,
+		woundCost: 0,
+		heroicReaction: '',
+		actionCost: 0,
+	};
+}
+
 export {
+	chargeOnlyCost,
 	costForDice,
 	canPayRerollCost,
 	findActorCombatant,

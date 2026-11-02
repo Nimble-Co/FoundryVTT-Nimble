@@ -10,13 +10,13 @@ import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import type { RerollCost } from '../../utils/reroll/rerollCost.js';
+import { chargeOnlyCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, type RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const DIE_ROLES = ['sneakAttack'] as const;
+const DIE_ROLES = ['critBonus'] as const;
 
 function schema() {
 	const { fields } = foundry.data;
@@ -34,7 +34,7 @@ function schema() {
 		dieRole: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'sneakAttack',
+			initial: 'critBonus',
 			choices: choiceLabels('critDice', 'dieRole', DIE_ROLES),
 			label: 'NIMBLE.rules.critDice.dieRole.label',
 			hint: 'NIMBLE.rules.critDice.dieRole.hint',
@@ -143,14 +143,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 	}
 
 	get rollUseCost(): RerollCost {
-		return {
-			chargePoolIdentifier: '',
-			chargeCost: 1,
-			manaCost: 0,
-			woundCost: 0,
-			heroicReaction: '',
-			actionCost: 0,
-		};
+		return chargeOnlyCost();
 	}
 }
 

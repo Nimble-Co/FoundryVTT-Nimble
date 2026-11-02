@@ -114,7 +114,7 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			id: 'e1',
 			kind: 'reroll',
 			effect: 'critD20',
-			needsSneakDice: true,
+			needsCritBonusDice: true,
 			useIndex: 1,
 			source: 'rule',
 			actorUuid: 'Actor.a',

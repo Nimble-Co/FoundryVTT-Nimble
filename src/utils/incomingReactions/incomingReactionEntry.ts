@@ -43,7 +43,7 @@ export const RESULT_CHANGES = ['succeed', 'setTotal', 'add', 'noDamage', 'counts
 export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
-export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'> | 'sneakAttackDie';
+export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'> | 'critBonusDie';
 
 /** How a Change a Die rule changes the die: set it to a face, or add a number. */
 export const DIE_CHANGE_MODES = ['set', 'add'] as const;
@@ -71,8 +71,8 @@ export interface AttackOutcomeView {
 	vicious?: boolean;
 	/** A crit die of the roll is a d20. */
 	hasCritD20?: boolean;
-	/** The roll has dice of the sneak attack role. */
-	hasSneakDice?: boolean;
+	/** The roll has dice of the crit bonus role. */
+	hasCritBonusDice?: boolean;
 	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
 	critStays?: boolean;
 	/** False when the roll cannot crit. Absent: read from `options`, else it can. */
@@ -130,9 +130,9 @@ export function hasCritD20Die(view: AttackOutcomeView): boolean {
 	return view.hasCritD20 ?? termsHaveCritD20(view.terms);
 }
 
-/** Whether the attack has dice of the sneak attack role. */
-export function hasSneakAttackDice(view: AttackOutcomeView): boolean {
-	return view.hasSneakDice ?? termsHaveRole(view.terms, SNEAK_ATTACK_ROLE);
+/** Whether the attack has dice of the crit bonus role. */
+export function hasCritBonusDice(view: AttackOutcomeView): boolean {
+	return view.hasCritBonusDice ?? termsHaveRole(view.terms, CRIT_BONUS_ROLE);
 }
 
 /** Whether the attack is a crit that no reroll or change takes away. */
@@ -148,7 +148,7 @@ export function canBecomeCrit(view: AttackOutcomeView): boolean {
 }
 
 /** The die role of the dice a rule adds. */
-export const SNEAK_ATTACK_ROLE = 'sneakAttack';
+export const CRIT_BONUS_ROLE = 'critBonus';
 
 /** These terms have dice with this role. */
 export function termsHaveRole(terms: readonly unknown[] | undefined, role: string): boolean {
@@ -231,10 +231,10 @@ export interface IncomingReactionEntry {
 	effect?: RollEffect;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
-	/** A use that changes dice of the sneak attack role needs a roll that has them. */
+	/** A use that changes dice of the crit bonus role needs a roll that has them. */
 	/** One of several rows of the same rule on this roll. */
 	useIndex?: number;
-	needsSneakDice?: boolean;
+	needsCritBonusDice?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
 	/** reroll only: the player picks another stat for the new roll. */

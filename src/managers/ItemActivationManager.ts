@@ -823,7 +823,7 @@ class ItemActivationManager {
 						damageOptions.maxDamage = rule.givesCrit && resolvedCanCrit ? 'crit' : 'hit';
 						damageOptions.outcomeSources = {
 							...damageOptions.outcomeSources,
-							maxDamage: [rule.label || rule.item?.name || ''],
+							maxDamage: [ruleLabel(rule)],
 						};
 					}
 					// Forward the optional rollMode source list so DamageRoll can
@@ -891,7 +891,7 @@ class ItemActivationManager {
 				if (healingAtMax && this.#maxDamage) {
 					const { rule, tempHp } = this.#maxDamage;
 					if (tempHp) (node as { healingType?: string }).healingType = 'tempHealing';
-					(node as { maxDamageBy?: string }).maxDamageBy = rule.label || rule.item?.name || '';
+					(node as { maxDamageBy?: string }).maxDamageBy = ruleLabel(rule);
 				}
 				await roll.evaluate(healingAtMax ? { maximize: true } : {});
 				if (healingAtMax) healingRollsAtMax.add(roll);

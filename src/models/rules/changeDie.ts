@@ -9,7 +9,7 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 /** Which die a Change a Die rule changes. */
-const CHANGE_DICE = ['primaryDie', 'pickedDie', 'sneakAttackDie'] as const;
+const CHANGE_DICE = ['primaryDie', 'pickedDie', 'critBonusDie'] as const;
 type ChangeDie = (typeof CHANGE_DICE)[number];
 
 function schema() {
@@ -148,9 +148,9 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 		);
 	}
 
-	/** Only a roll with dice of the sneak attack role has a use for a rule that changes them. */
-	get needsSneakDice(): boolean {
-		return this.die === 'sneakAttackDie';
+	/** Only a roll with dice of the crit bonus role has a use for a rule that changes them. */
+	get needsCritBonusDice(): boolean {
+		return this.die === 'critBonusDie';
 	}
 
 	/** The change one use makes. An add of 0 is an add of 1. */

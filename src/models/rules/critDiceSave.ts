@@ -2,7 +2,11 @@ import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
+import {
+	canPayRerollCost,
+	chargeOnlyCost,
+	type RerollCost,
+} from '../../utils/reroll/rerollCost.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -48,7 +52,7 @@ declare namespace CritDiceSaveRule {
 }
 
 /**
- * A row on an attack with dice of the sneak attack role: spend a use, and the target makes a
+ * A row on an attack with dice of the crit bonus role: spend a use, and the target makes a
  * save on a normal save card. A failed save sets the dice to their max. A passed
  * save gives the use back. Before there is a result, nothing changes.
  */
@@ -96,7 +100,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 		return 'critDiceSave';
 	}
 
-	get needsSneakDice(): boolean {
+	get needsCritBonusDice(): boolean {
 		return true;
 	}
 
@@ -109,14 +113,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 	}
 
 	get rollUseCost(): RerollCost {
-		return {
-			chargePoolIdentifier: (this.chargePoolIdentifier ?? '').trim(),
-			chargeCost: 1,
-			manaCost: 0,
-			woundCost: 0,
-			heroicReaction: '',
-			actionCost: 0,
-		};
+		return chargeOnlyCost((this.chargePoolIdentifier ?? '').trim());
 	}
 }
 

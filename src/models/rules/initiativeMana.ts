@@ -60,7 +60,7 @@ class InitiativeManaRule extends NimbleBaseRule<InitiativeManaRule.Schema> {
 	}
 
 	/** What the rule gives now. Null when its condition does not hold. */
-	get surgeSpec(): { feature: string; flat: number; dice: string } | null {
+	get initiativeManaSpec(): { feature: string; flat: number; dice: string } | null {
 		if (!this.item.isEmbedded || !this.test()) return null;
 		return {
 			feature: this.label || this.item.name || '',

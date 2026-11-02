@@ -8,10 +8,10 @@ import {
 	type AttackOutcomeView,
 	canBecomeCrit,
 	critStays,
+	hasCritBonusDice,
 	hasCritD20Die,
 	hasDieAtMax,
 	hasNoDice,
-	hasSneakAttackDice,
 	type IncomingReactionEntry,
 	isViciousAttack,
 	type RerollDie,
@@ -72,8 +72,8 @@ interface RollUseGate {
 	effect?: RollEffect;
 	/** A crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
-	/** A use that changes dice of the sneak attack role needs a roll that has them. */
-	needsSneakDice?: boolean;
+	/** A use that changes dice of the crit bonus role needs a roll that has them. */
+	needsCritBonusDice?: boolean;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -127,8 +127,8 @@ interface RerollRuleLike {
 	saveDC?: string;
 	/** With the effect `critDice`: the dice the row adds. */
 	critDiceSpec?: CritDiceSpec;
-	/** A rule that changes dice of the sneak attack role. */
-	needsSneakDice?: boolean;
+	/** A rule that changes dice of the crit bonus role. */
+	needsCritBonusDice?: boolean;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -240,8 +240,8 @@ function rollUseTriggerMatches(
 	if (gate.effect === 'critD20' && hasCritD20Die(outcome)) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
-	if (gate.needsSneakDice && !hasSneakAttackDice(outcome)) return false;
-	if (gate.effect === 'critDice' && hasSneakAttackDice(outcome)) return false;
+	if (gate.needsCritBonusDice && !hasCritBonusDice(outcome)) return false;
+	if (gate.effect === 'critDice' && hasCritBonusDice(outcome)) return false;
 	if (trigger === 'criticalHit' && !gate.effect && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
@@ -279,7 +279,7 @@ function gateOf(rule: RerollRuleLike): RollUseGate {
 		...(use ? { use } : {}),
 		...(rule.rollEffect ? { effect: rule.rollEffect } : {}),
 		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
-		...(rule.needsSneakDice === true ? { needsSneakDice: true } : {}),
+		...(rule.needsCritBonusDice === true ? { needsCritBonusDice: true } : {}),
 	};
 }
 

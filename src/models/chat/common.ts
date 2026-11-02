@@ -181,7 +181,11 @@ export const incomingReactions = () => ({
 				initial: null,
 				integer: true,
 			}),
-			needsSneakDice: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			needsCritBonusDice: new fields.BooleanField({
+				required: false,
+				nullable: false,
+				initial: false,
+			}),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			leftOut: new fields.SchemaField(

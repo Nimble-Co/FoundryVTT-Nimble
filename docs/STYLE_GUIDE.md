@@ -1534,7 +1534,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `collectCritDice()` | `src/utils/damage/collectCritDice.ts` | The Crit Dice rules that add dice to a crit of an attack. |
 | `collectOfferBonuses()` | `src/utils/damage/collectOfferBonuses.ts` | What a hero's rules add to an attack from the row of an item. |
 | `dualWieldOfferFor()`, `dualWieldEntry()`, `keepChoiceOfWeapon()` | `src/utils/damage/dualWield.ts` | The dual wield tick and the two weapons of its roll. |
-| `rollSurge()`, `giveSurgeMana()`, `endSurgeMana()` | `src/utils/combat/surgeMana.ts` | The Initiative Mana dice on an Initiative card, and the mana they give. |
+| `rollInitiativeMana()`, `giveInitiativeMana()`, `endInitiativeMana()` | `src/utils/combat/initiativeManaRoll.ts` | The Initiative Mana dice on an Initiative card, and the mana they give. |
 | `invokeChaos()`, `canInvokeChaos()`, `whisperChaosRollsToGm()` | `src/utils/chaos/invokeChaos.ts` | A Chaos Table roll and its card. |
 | `actorRules()` | `src/utils/actor/actorRules.ts` | The rules of an actor as an array, empty when it has none to read. |
 | `maxDamageOffers()`, `maxDamageRuleOf()` | `src/utils/damage/maxDamageOffers.ts` | The Max Damage ticks of a roll window, and the rule a tick stands for. |

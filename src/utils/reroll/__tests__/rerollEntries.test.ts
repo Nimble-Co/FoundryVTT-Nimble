@@ -1277,14 +1277,14 @@ describe('a target in the Incapacitated group, with Feature Effects off', () => 
 	});
 });
 
-describe('a rule that changes dice of the sneak attack role', () => {
-	const needsDice = rerollRule({ needsSneakDice: true, usedBy: 'roller' });
+describe('a rule that changes dice of the crit bonus role', () => {
+	const needsDice = rerollRule({ needsCritBonusDice: true, usedBy: 'roller' });
 	const rows = (outcome: object) =>
 		collectRerollEntries(context({ attacker: actor('Actor.attacker', [needsDice]), outcome }))
 			.manual;
 
 	it('shows on a roll with those dice in its terms', () => {
-		const withDice = { ...CRIT, terms: [{ options: { dieRole: 'sneakAttack' } }] };
+		const withDice = { ...CRIT, terms: [{ options: { dieRole: 'critBonus' } }] };
 
 		expect(rows(withDice)).toHaveLength(1);
 	});
@@ -1296,7 +1296,7 @@ describe('a rule that changes dice of the sneak attack role', () => {
 	it('does not show on a max damage roll', () => {
 		const maxed = {
 			...CRIT,
-			terms: [{ options: { dieRole: 'sneakAttack' } }],
+			terms: [{ options: { dieRole: 'critBonus' } }],
 			options: { maxDamage: 'hit' },
 		};
 

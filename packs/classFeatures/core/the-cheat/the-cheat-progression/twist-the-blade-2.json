@@ -19,7 +19,7 @@
 				"abilities": [],
 				"usedBy": "roller",
 				"reach": 0,
-				"die": "sneakAttackDie",
+				"die": "critBonusDie",
 				"change": "set",
 				"amount": 1,
 				"addsBonusOnSet": false,

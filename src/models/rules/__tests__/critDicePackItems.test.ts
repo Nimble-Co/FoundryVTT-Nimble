@@ -67,13 +67,13 @@ describe('the crit dice of the pack items', () => {
 		});
 
 		expect(specs).toHaveLength(1);
-		expect(specs[0]).toMatchObject({ formula, role: 'sneakAttack', oncePerTurn: true });
+		expect(specs[0]).toMatchObject({ formula, role: 'critBonus', oncePerTurn: true });
 	});
 
 	it('Twist the Blade (1) costs an action and does not block with no action left', () => {
 		const rule = liveRule(ChangeDieRule, readRules(TWIST_1)[0], 5);
 
-		expect(rule.needsSneakDice).toBe(true);
+		expect(rule.needsCritBonusDice).toBe(true);
 		expect(rule.yieldsTo).toBe('twist-the-blade-free');
 		expect(rule.rollUseCost).toMatchObject({ actionCost: 1, actionReportOnly: true });
 	});
@@ -95,7 +95,7 @@ describe('the crit dice of the pack items', () => {
 		const save = rules.find((data) => data.type === 'critDiceSave') as RuleData;
 		const rule = liveRule(CritDiceSaveRule, save, 5);
 
-		expect(rule.needsSneakDice).toBe(true);
+		expect(rule.needsCritBonusDice).toBe(true);
 		expect(rule.rollUseCost.chargePoolIdentifier).toBe('cunning-strike');
 		expect(
 			JSON.parse(readFileSync(resolve(CUNNING_STRIKE), 'utf8')).system.activation.effects,
