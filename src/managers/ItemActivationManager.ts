@@ -176,6 +176,9 @@ class ItemActivationManager {
 	 */
 	spellCost: ResolvedSpellCost | null = null;
 
+	/** The player ticked 1 less mana: the cast invokes Chaos. */
+	invokesChaos = false;
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -392,6 +395,11 @@ class ItemActivationManager {
 				);
 				return { activation: null, rolls: null };
 			}
+		}
+
+		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
+			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
+			this.invokesChaos = true;
 		}
 
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
@@ -1548,6 +1556,8 @@ namespace ItemActivationManager {
 		/** Predetermined value for the primary damage die. */
 		primaryDieValue?: number;
 		/** Modifier to apply to the primary die roll. */
+		/** The tick for 1 less mana. */
+		lessMana?: boolean;
 		/** The item whose offer row started this activation. */
 		offerSourceUuid?: string;
 		primaryDieModifier?: string;
@@ -1573,6 +1583,8 @@ namespace ItemActivationManager {
 	 * Data returned from the activation configuration dialog.
 	 */
 	export interface DialogData {
+		/** The tick for 1 less mana. */
+		lessMana?: boolean;
 		/** Roll mode selected in the dialog. */
 		rollMode: number | undefined;
 		/** Modified roll formula from the dialog. */

@@ -2,6 +2,7 @@ import { mount, unmount } from 'svelte';
 
 import NimbleAbilityCheckCard from '../view/chat/AbilityCheckCard.svelte';
 import NimbleAssessActionCard from '../view/chat/AssessActionCard.svelte';
+import NimbleChaosCard from '../view/chat/ChaosCard.svelte';
 import NimbleChargeAdjustmentCard from '../view/chat/ChargeAdjustmentCard.svelte';
 import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
 import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
@@ -102,6 +103,7 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleInitiativeCard
 		| typeof NimbleMoveActionCard
 		| typeof NimbleMovementOfferCard
+		| typeof NimbleChaosCard
 		| typeof NimbleMovementTriggerCard
 		| typeof NimbleReactionCard
 		| typeof NimbleSafeRestCard
@@ -147,6 +149,9 @@ export default function renderChatMessageHTML(message, html) {
 			break;
 		case 'moveAction':
 			component = NimbleMoveActionCard;
+			break;
+		case 'chaos':
+			component = NimbleChaosCard;
 			break;
 		case 'movementOffer':
 			component = NimbleMovementOfferCard;

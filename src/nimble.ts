@@ -2,6 +2,7 @@ import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
+import { registerChaosOnCritHooks } from './hooks/chaosOnCrit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerHealedTriggerHooks } from './hooks/chargePoolTriggers/healedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -168,6 +169,7 @@ registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerSaveResolvedHooks();
 registerCritDiceSaveHooks();
+registerChaosOnCritHooks();
 registerModuleIntegrations();
 
 // Refresh tokens when combat ends to remove turn indicators

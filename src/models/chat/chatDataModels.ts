@@ -1,5 +1,6 @@
 import { NimbleAbilityCheckCardData } from './AbilityCheckCardDataModel.js';
 import { NimbleAssessActionCardData } from './AssessActionCardDataModel.js';
+import { NimbleChaosCardData } from './ChaosCardDataModel.js';
 import { NimbleChargeAdjustmentCardData } from './ChargeAdjustmentCardDataModel.js';
 import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
 import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
@@ -27,6 +28,7 @@ const chatDataModels = {
 	minionGroupAttack: NimbleMinionGroupAttackCardData,
 	moveAction: NimbleMoveActionCardData,
 	movementOffer: NimbleMovementOfferCardData,
+	chaos: NimbleChaosCardData,
 	movementTrigger: NimbleMovementTriggerCardData,
 	object: NimbleObjectCardData,
 	reaction: NimbleReactionCardData,
@@ -52,6 +54,7 @@ declare global {
 			minionGroupAttack: NimbleMinionGroupAttackCardData;
 			moveAction: NimbleMoveActionCardData;
 			movementOffer: NimbleMovementOfferCardData;
+			chaos: NimbleChaosCardData;
 			movementTrigger: NimbleMovementTriggerCardData;
 			object: NimbleObjectCardData;
 			reaction: NimbleReactionCardData;

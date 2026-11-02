@@ -561,6 +561,16 @@
 			"concentrationApplied": "Concentration Applied",
 			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
+			"chaos": {
+				"title": "Chaos Table",
+				"rollOnce": "Roll once",
+				"rollTwiceBoth": "Roll twice, both happen",
+				"rollTwiceChoose": "Roll twice, choose one (1/Safe Rest)",
+				"keep": "Keep {value}",
+				"rollButton": "Roll on the Chaos Table",
+				"advantageTooltip": "The other die of the roll with advantage.",
+				"whisper": "The Chaos Table for {name}:"
+			},
 			"initiative": {
 				"label": "Initiative",
 				"surge": "{feature}: +{total} mana",
@@ -1654,6 +1664,8 @@
 			"critDiceSave": "Save for Max Crit Dice",
 			"offerAttackBonus": "Offer Attack Bonus",
 			"poolDieToMax": "Pool Die to Max",
+			"invokeChaos": "Invoke Chaos",
+			"chaosOptions": "Chaos Options",
 			"surgeMana": "Surge Mana",
 			"surgeRerollOnes": "Surge: Reroll Ones",
 			"damageBack": "Damage Back",
@@ -2725,6 +2737,21 @@
 			},
 			"surgeRerollOnes": {
 				"description": "Each 1 on a surge die rolls again one time. With Feature Effects off, the card has a row for each 1."
+			},
+			"invokeChaos": {
+				"description": "The spell dialog has a tick to spend 1 less mana. The tick or a crit rolls on the Chaos Table, one roll per attack. The system shows the table text only, and applies no effect."
+			},
+			"chaosOptions": {
+				"description": "What a Chaos Table roll can do.",
+				"rollTwice": {
+					"label": "Roll twice",
+					"hint": "The Chaos card shows buttons before the roll."
+				},
+				"chooseChargePool": {
+					"label": "Pool to choose one",
+					"hint": "A use of this pool lets the player choose one of the two rolls."
+				},
+				"advantage": { "label": "Advantage", "hint": "Each table roll has advantage." }
 			},
 			"poolDieToMax": {
 				"description": "When the trigger fires, the lowest dice of a pool go to their max: one when the hero is attacked, one per Wound on a Wound.",
@@ -4210,6 +4237,7 @@
 			}
 		},
 		"rollWindow": {
+			"lessMana": "Spend 1 less mana",
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",
@@ -4789,6 +4817,10 @@
 			"combatTrackerCurrentTurnEdgeCrawlerSize": {
 				"name": "Combat Tracker Edge Crawler Size",
 				"hint": "Adjust capsule size for the active combatant edge crawler effect"
+			},
+			"showChaosTableRolls": {
+				"name": "Show Chaos Table rolls",
+				"hint": "On: the table text is open on the Chaos card. Off: players see only the number, and the GM gets the text in a whisper. The book says the table is secret."
 			},
 			"includeSpellDescriptionOnScrolls": {
 				"name": "Include Spell Description On Scrolls",

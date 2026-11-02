@@ -32,6 +32,7 @@ import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
+import { ChaosOptionsRule, InvokeChaosRule } from '../models/rules/invokeChaos.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxDamageRule } from '../models/rules/maxDamage.js';
@@ -104,6 +105,8 @@ export default function registerRulesConfig() {
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
+		invokeChaos: 'NIMBLE.ruleTypes.invokeChaos',
+		chaosOptions: 'NIMBLE.ruleTypes.chaosOptions',
 		surgeMana: 'NIMBLE.ruleTypes.surgeMana',
 		surgeRerollOnes: 'NIMBLE.ruleTypes.surgeRerollOnes',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
@@ -173,6 +176,8 @@ export default function registerRulesConfig() {
 		critDiceSave: CritDiceSaveRule,
 		offerAttackBonus: OfferAttackBonusRule,
 		poolDieToMax: PoolDieToMaxRule,
+		invokeChaos: InvokeChaosRule,
+		chaosOptions: ChaosOptionsRule,
 		surgeMana: SurgeManaRule,
 		surgeRerollOnes: SurgeRerollOnesRule,
 		maxHitDice: MaxHitDiceRule,

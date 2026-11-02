@@ -6,6 +6,7 @@ import LanguageCustomizationDialog from '#view/dialogs/LanguageCustomizationDial
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerActorSheetSettings } from './actorSheetSettings.js';
 import { registerAdjacencySettings } from './adjacencySettings.js';
+import { registerChaosTableSettings } from './chaosTableSettings.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
@@ -94,6 +95,7 @@ export default function registerSystemSettings() {
 
 	registerCombatTrackerSettings();
 	registerDiceSoNiceSettings();
+	registerChaosTableSettings();
 	registerNcswSettings();
 	registerLanguageSettings();
 	registerSpellSchoolSettings();

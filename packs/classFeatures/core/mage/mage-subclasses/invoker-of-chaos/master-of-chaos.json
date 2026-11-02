@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chaosOptions",
+				"disabled": false,
+				"id": "masterOfChaos001",
+				"identifier": "",
+				"label": "Master of Chaos",
+				"predicate": {},
+				"priority": 1,
+				"rollTwice": false,
+				"chooseChargePool": "",
+				"advantage": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

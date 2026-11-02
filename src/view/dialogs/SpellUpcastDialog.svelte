@@ -11,6 +11,8 @@
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
+	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
+	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
@@ -29,6 +31,10 @@
 		{ type: 'spell', system: untrack(() => spell) },
 	);
 	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
+	const offersLessMana = untrack(() =>
+		offersLessManaFor(actor as never, { system: spell } as never),
+	);
+	let lessMana = $state(false);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -267,6 +273,7 @@
 			primaryDieModifier,
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
+			lessMana,
 			upcast: canUpcast
 				? {
 						manaToSpend,
@@ -299,6 +306,7 @@
 	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
 
 	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
 	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 

@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import { critDiceLinesOf } from '../../../dice/critDiceLines.js';
+	import ChaosButton from './ChaosButton.svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';
@@ -102,6 +103,8 @@
 		showRollDetails={false}
 	/>
 {/if}
+
+<ChaosButton />
 
 {#each critDiceLines as line (line.label)}
 	<p class="nimble-crit-dice-line" data-tooltip={line.values.join(' + ')}>

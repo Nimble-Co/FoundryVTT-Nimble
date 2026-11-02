@@ -130,6 +130,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				flags: {
 					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
 					[SYSTEM_ID]: {
+						...(manager.invokesChaos ? { chaosInvoked: true } : {}),
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,

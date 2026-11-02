@@ -12,6 +12,7 @@ import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
+import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
@@ -88,6 +89,8 @@ export function createItemActivationConfigDialogState(
 
 	const maxDamage: MaxDamageOffer[] = maxDamageOffers(actor as never, item as never);
 	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
+	const offersLessMana = offersLessManaFor(actor as never, item as never);
+	let lessMana = $state(false);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -319,6 +322,13 @@ export function createItemActivationConfigDialogState(
 			maxDamageChoice = value;
 		},
 		maxDamageOffers: maxDamage,
+		offersLessMana,
+		get lessMana() {
+			return lessMana;
+		},
+		set lessMana(value: boolean) {
+			lessMana = value;
+		},
 
 		// Pool snapshots (immutable).
 		spendablePools,

@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
+	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
@@ -66,6 +67,7 @@
 			primaryDieModifier: state.primaryDieModifier,
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
+			lessMana: state.lessMana,
 			consumedPoolDice,
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
@@ -88,6 +90,7 @@
 	<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
 
 	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
+	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
 
 	{#if state.hasConditionalBonuses}
 		<div>
