@@ -34,6 +34,7 @@ import { InitiativeManaRule } from '../models/rules/initiativeMana.js';
 import { InitiativeManaRerollOnesRule } from '../models/rules/initiativeManaRerollOnes.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
+import { KeepAmountRule } from '../models/rules/keepAmount.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxDamageRule } from '../models/rules/maxDamage.js';
@@ -101,6 +102,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
+		keepAmount: 'NIMBLE.ruleTypes.keepAmount',
 		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
 		critDice: 'NIMBLE.ruleTypes.critDice',
@@ -172,6 +174,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
+		keepAmount: KeepAmountRule,
 		makeCrit: MakeCritRule,
 		maxDamage: MaxDamageRule,
 		critDice: CritDiceRule,

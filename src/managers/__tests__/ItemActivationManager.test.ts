@@ -1285,6 +1285,102 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['opening']);
 				});
 
+				describe('a kept amount', () => {
+					function holdKept() {
+						const deleteEmbeddedDocuments = vi.fn(async () => []);
+						const holder = {
+							effects: [
+								{
+									id: 'kept',
+									flags: {
+										nimble: {
+											heldChange: {
+												kind: 'wholeAmount',
+												value: 13,
+												label: 'Rampage',
+												sourceName: 'Rampage',
+												appliesTo: 'holderAttacks',
+												spentBy: 'oneRoll',
+												ends: 'turn',
+												combatId: '',
+												round: 0,
+												turn: 0,
+											},
+										},
+									},
+								},
+							],
+							isOwner: true,
+							deleteEmbeddedDocuments,
+						};
+						Object.assign(mockActor, holder);
+						(globalThis as unknown as Record<string, any>).fromUuidSync = vi.fn(() => mockActor);
+						mockItem.system.activation = {
+							effects: [],
+							targets: { attackType: 'reach' },
+						} as never;
+						return deleteEmbeddedDocuments;
+					}
+
+					function damageNodeItem() {
+						(mockItem.system.activation as { effects: unknown[] }).effects = [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						];
+					}
+
+					it('rolls no die, adds no modifier, and is a hit with no crit', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						mockActor.rules = [bonusRule(1)];
+
+						await rollAttack('reach');
+
+						expect(DamageRoll).toHaveBeenCalledWith(
+							'13',
+							expect.anything(),
+							expect.objectContaining({
+								fixedAmount: true,
+								canCrit: false,
+								canMiss: false,
+								primaryDieModifier: 0,
+								outcomeSources: { keptAmount: ['Rampage'] },
+							}),
+						);
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('rolls as normal and ends the amount when the tick is off', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						dialogState.result = { rollMode: 0, keptAmount: false };
+
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							targets: { attackType: 'reach' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+
+						expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[0]).not.toBe('13');
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+				});
+
 				it('spends nothing when the roll has no Primary Die', async () => {
 					const target = targetWithOpening();
 					await rollAttack('reach', null);

@@ -63,6 +63,7 @@ import {
 	firstTargetActor,
 	heldChangesForAttack,
 	isAttackRoll,
+	keptAmountFor,
 	spendHeldChanges,
 } from '../utils/heldChange/heldChange.js';
 import {
@@ -94,6 +95,7 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
+import { keptAmountRollOptions } from './itemActivation/keptAmountActivation.js';
 import {
 	applyMaxDamageToRollOptions,
 	noDiceThrown,
@@ -244,6 +246,12 @@ class ItemActivationManager {
 
 	/** The Held Changes this attack uses, which the roll spends. */
 	#heldChanges: HeldChange[] = [];
+
+	/** The kept amount this attack uses in place of a roll. */
+	#keptAmount: HeldChange | null = null;
+
+	/** The kept amount of this actor that ends with this roll, used or not. */
+	#keptAmountToEnd: HeldChange | null = null;
 
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
@@ -459,6 +467,14 @@ class ItemActivationManager {
 		// before the rolls so the spend and the `@spent` the formulas resolve
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
+
+		this.#keptAmountToEnd = keptAmountFor(this.actor as never, this.#item as never);
+		this.#keptAmount = dialogData.keptAmount === false ? null : this.#keptAmountToEnd;
+		if (this.#keptAmount) {
+			dialogData.maxDamage = null;
+			dialogData.dualWield = undefined;
+			dialogData.conditionalDamages = [];
+		}
 
 		this.#maxDamage = resolveMaxDamage(
 			this.actor as never,
@@ -749,11 +765,13 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
+					const kept = this.#keptAmount;
 					roll = new dependencies.DamageRoll(
-						formula,
+						kept ? String(kept.value) : formula,
 						activationRollData as DamageRoll.Data,
-						damageOptions,
+						kept ? keptAmountRollOptions(damageOptions, kept.label) : damageOptions,
 					);
+					if (kept) this.#attackOutcomeCharges = [];
 					if (dialogData.dualWield?.otherItemUuid) {
 						dualWieldFirst = { formula, options: damageOptions, damageType: node.damageType ?? '' };
 					}
@@ -766,7 +784,7 @@ class ItemActivationManager {
 					foundDamageRoll = true;
 					primaryAttackNode = node;
 				} else {
-					let formula = node.formula || '0';
+					let formula = this.#keptAmount && node.type === 'damage' ? '0' : node.formula || '0';
 
 					// Apply healing bonus dice if applicable
 					if (node.type === 'healing' && healingBonus > 0) {
@@ -836,7 +854,8 @@ class ItemActivationManager {
 			updatedEffects.push(node);
 		}
 
-		this.#noDiceThrown = noDiceThrown(this.#maxDamage, rolls, healingRollsAtMax);
+		this.#noDiceThrown =
+			this.#keptAmount !== null || noDiceThrown(this.#maxDamage, rolls, healingRollsAtMax);
 
 		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
 		// specific type) rolls as its own damage effect: the primary roll carries
@@ -1132,8 +1151,12 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		await spendHeldChanges(this.#heldChanges);
+		await spendHeldChanges([
+			...this.#heldChanges,
+			...(this.#keptAmountToEnd ? [this.#keptAmountToEnd] : []),
+		]);
 		this.#heldChanges = [];
+		this.#keptAmountToEnd = null;
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
 		await spendMaxDamageCharge(this.actor, this.#maxDamage);
@@ -1677,6 +1700,8 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** The Max Damage tick the player picked. */
 		maxDamage?: MaxDamageChoice | null;
+		/** False when the player unticked a kept amount. */
+		keptAmount?: boolean;
 		/**
 		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
 		 * The dialog already appended the bonus to rollFormula; this list is used to

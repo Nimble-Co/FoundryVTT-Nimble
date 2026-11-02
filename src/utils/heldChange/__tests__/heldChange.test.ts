@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
 import {
+	cardDamageTotal,
 	createHeldChange,
 	expireHeldChanges,
 	heldChangesForAttack,
 	heldLines,
+	keepAmount,
+	keptAmountFor,
 	spendHeldChanges,
 } from '../heldChange.js';
 
@@ -177,5 +180,90 @@ describe('heldLines', () => {
 				source: 'From Mira. It stays until its time ends.',
 			},
 		]);
+	});
+});
+
+describe('a kept amount', () => {
+	const kept = (overrides: Partial<HeldChangeData> = {}) =>
+		data({
+			kind: 'wholeAmount',
+			value: 13,
+			label: 'Rampage',
+			appliesTo: 'holderAttacks',
+			ends: 'turn',
+			...overrides,
+		});
+
+	const attack = (activation: Record<string, unknown> = {}) => ({
+		system: {
+			activation: {
+				effects: [{ type: 'damage', canCrit: true, canMiss: true }],
+				targets: { attackType: 'reach' },
+				...activation,
+			},
+		},
+	});
+
+	it('is offered to the next attack of the holder', () => {
+		const attacker = creature('A', [kept()]);
+		expect(keptAmountFor(attacker, attack())?.value).toBe(13);
+	});
+
+	it('is not offered to an item with no attack, or an area roll', () => {
+		const attacker = creature('A', [kept()]);
+		expect(keptAmountFor(attacker, attack({ effects: [], targets: {} }))).toBeNull();
+		expect(
+			keptAmountFor(
+				attacker,
+				attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } }),
+			),
+		).toBeNull();
+	});
+
+	it('ends with the turn', () => {
+		expect(keptAmountFor(creature('A', [kept({ turn: 1 })]), attack())).toBeNull();
+	});
+
+	it('is not a Primary Die change', () => {
+		const attacker = creature('A', [kept()]);
+		expect(heldChangesForAttack({ attacker, target: null, area: false })).toEqual([]);
+	});
+
+	it('is held with the amount and the turn', async () => {
+		globals.game.combat = { id: 'c1', started: true, round: 2, turn: 4 };
+		const holder = creature('A');
+
+		await keepAmount(holder as never, 'Rampage', 13);
+
+		delete globals.game.combat;
+		const [[, [effect]]] = holder.createEmbeddedDocuments.mock.calls as unknown as [
+			[string, [Record<string, any>]],
+		];
+		expect(effect.flags.nimble.heldChange).toMatchObject({
+			kind: 'wholeAmount',
+			value: 13,
+			spentBy: 'oneRoll',
+			ends: 'turn',
+			combatId: 'c1',
+			round: 2,
+			turn: 4,
+		});
+	});
+});
+
+describe('cardDamageTotal', () => {
+	it('adds each rolled damage node and the spends folded in', () => {
+		expect(
+			cardDamageTotal({
+				activation: {
+					effects: [
+						{ id: 'a', type: 'damage', roll: { total: 9 } },
+						{ id: 'b', type: 'healing', roll: { total: 5 } },
+						{ id: 'c', type: 'damage', roll: { total: 4 } },
+					],
+				},
+				incomingReactions: [{ kind: 'spendPoolForDamage', used: true, usedAmount: 2 }],
+			}),
+		).toBe(15);
 	});
 });

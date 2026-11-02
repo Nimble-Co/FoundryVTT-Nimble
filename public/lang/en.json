@@ -722,7 +722,8 @@
 						"critDice": "Add the dice",
 						"offerBonus": "Add the bonus",
 						"dualWield": "Dual wield",
-						"critDiceSave": "Make them save"
+						"critDiceSave": "Make them save",
+						"keepAmount": "Keep this amount"
 					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
@@ -778,7 +779,9 @@
 					"viciousTooltip": "{feature} made this crit Vicious: each crit die rolls 1 more die.",
 					"maxDamage": "Max damage: {feature}",
 					"maxHealing": "Max healing: {feature}",
-					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled."
+					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled.",
+					"keptAmount": "No roll: {feature}",
+					"keptAmountTooltip": "{feature} kept the amount of an earlier hit. No die was rolled. It is a hit with no crit."
 				},
 				"critDiceLine": "{feature}: +{total}",
 				"noActionLeft": "No action left to spend.",
@@ -787,6 +790,7 @@
 				"effectHistory": {
 					"dualWield": "Dual wield",
 					"offerBonus": "Added the bonus",
+					"keepAmount": "Kept the amount",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
 					"critDice": "{feature} added its dice to the crit."
@@ -1666,6 +1670,7 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
+			"keepAmount": "Keep the Amount of a Hit",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
 			"tableRoll": "Table Roll",
@@ -2800,6 +2805,9 @@
 					"label": "Primary Die bonus",
 					"hint": "It changes the die, so it can give a crit or make a miss a hit."
 				}
+			},
+			"keepAmount": {
+				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
 			},
 			"critDiceSave": {
 				"description": "A row in Change This Roll on an attack with dice a crit adds. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
@@ -4259,6 +4267,8 @@
 			}
 		},
 		"heldChange": {
+			"keptOnCard": "{label}, next attack: {amount}",
+			"keptTick": "{label}: use {amount} and do not roll",
 			"line": {
 				"primaryDie": "{label}: {value} to Primary Die",
 				"spends": "From {source}. This roll spends it.",

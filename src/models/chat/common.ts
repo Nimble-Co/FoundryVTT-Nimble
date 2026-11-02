@@ -388,6 +388,13 @@ const keepChoiceRoll = () =>
 
 /** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
 export const primaryDieBonuses = () => ({
+	keptAmount: new fields.SchemaField(
+		{
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		},
+		{ required: false, nullable: true, initial: null },
+	),
 	primaryDieBonuses: new fields.ArrayField(
 		new fields.SchemaField({
 			label: new fields.StringField({ required: true, nullable: false, initial: '' }),

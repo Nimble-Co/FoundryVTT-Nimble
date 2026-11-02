@@ -12,7 +12,8 @@
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
-	import { heldLinesForItem } from '../../utils/heldChange/heldChange.js';
+	import { heldLinesForItem, keptAmountFor } from '../../utils/heldChange/heldChange.js';
+	import KeptAmountField from './components/KeptAmountField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
@@ -38,6 +39,8 @@
 	);
 	let lessMana = $state(false);
 	const heldLines = untrack(() => heldLinesForItem(actor as never, { system: spell } as never));
+	const keptAmount = untrack(() => keptAmountFor(actor as never, { system: spell } as never));
+	let usesKeptAmount = $state(keptAmount !== null);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -306,14 +309,26 @@
 		</p>
 	{/if}
 
-	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+	{#if keptAmount}
+		<KeptAmountField
+			label={keptAmount.label}
+			amount={keptAmount.value}
+			bind:checked={usesKeptAmount}
+		/>
+	{/if}
 
-	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{#if !(keptAmount && usesKeptAmount)}
+		<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+
+		<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	{#if !maxDamageChoice}<HeldChangeLines lines={heldLines} />{/if}
+	{#if !maxDamageChoice && !(keptAmount && usesKeptAmount)}
+		<HeldChangeLines lines={heldLines} />
 
-	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
+		<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
+	{/if}
 
 	{#if canUpcast}
 		{#if pinnedCastTier === null}

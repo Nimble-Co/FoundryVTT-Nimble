@@ -140,3 +140,69 @@ describe('the activation dialog tick for a use with no charge', () => {
 		expect(openWithConsumer(false).offersFreeUse).toBe(false);
 	});
 });
+
+describe('the activation dialog kept amount', () => {
+	const kept = {
+		id: 'kept',
+		flags: {
+			nimble: {
+				heldChange: {
+					kind: 'wholeAmount',
+					value: 13,
+					label: 'Rampage',
+					sourceName: 'Rampage',
+					appliesTo: 'holderAttacks',
+					spentBy: 'oneRoll',
+					ends: 'turn',
+					combatId: '',
+					round: 0,
+					turn: 0,
+				},
+			},
+		},
+	};
+
+	function openAttack(effects: object[]) {
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({ rules: [], system: {}, items: [], getFlag: () => undefined, effects }) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: {
+						activation: {
+							effects: [
+								{ id: 'd', type: 'damage', formula: '1d8', damageType: 'slashing', canCrit: true },
+							],
+							targets: { attackType: 'reach' },
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('is ticked at the start, and the preview shows the amount', () => {
+		const state = openAttack([kept]);
+
+		expect(state.keptAmount?.value).toBe(13);
+		expect(state.usesKeptAmount).toBe(true);
+		expect(state.damagePreviews).toEqual([{ formula: '13', damageType: 'slashing' }]);
+	});
+
+	it('shows the roll again when it is unticked', () => {
+		const state = openAttack([kept]);
+
+		state.usesKeptAmount = false;
+
+		expect(state.damagePreviews[0]?.formula).toBe('1d8');
+	});
+
+	it('is absent with no kept amount', () => {
+		const state = openAttack([]);
+
+		expect(state.keptAmount).toBeNull();
+		expect(state.usesKeptAmount).toBe(false);
+	});
+});

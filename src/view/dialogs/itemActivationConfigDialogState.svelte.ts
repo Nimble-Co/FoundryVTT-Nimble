@@ -18,6 +18,7 @@ import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
+import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
 	buildAutoBonusFormula,
@@ -100,6 +101,9 @@ export function createItemActivationConfigDialogState(
 	const dualWieldOffer: DualWieldOffer | null = dualWieldOfferFor(actor as never, item as never);
 	let dualWield = $state(false);
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
+
+	const keptAmount = keptAmountFor(actor as never, item as never);
+	let usesKeptAmount = $state(keptAmount !== null);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -286,10 +290,14 @@ export function createItemActivationConfigDialogState(
 	// Preview rows for the dialog: the item's (modified) damage effects plus a
 	// row per typed conditional damage, so the player sees the chosen typed
 	// bonus that #getRolls will roll as its own effect.
-	const damagePreviews = $derived([
-		...modifiedFormulas,
-		...conditionalTypedDamages.map((d) => ({ formula: d.formula, damageType: d.damageType })),
-	]);
+	const damagePreviews = $derived(
+		keptAmount && usesKeptAmount
+			? [{ formula: String(keptAmount.value), damageType: damageEffects[0]?.damageType }]
+			: [
+					...modifiedFormulas,
+					...conditionalTypedDamages.map((d) => ({ formula: d.formula, damageType: d.damageType })),
+				],
+	);
 
 	return {
 		// Form fields (read/write through getter/setter so Svelte tracks writes).
@@ -329,6 +337,13 @@ export function createItemActivationConfigDialogState(
 		},
 		set maxDamageChoice(value: MaxDamageChoice | null) {
 			maxDamageChoice = value;
+		},
+		keptAmount,
+		get usesKeptAmount() {
+			return usesKeptAmount;
+		},
+		set usesKeptAmount(value: boolean) {
+			usesKeptAmount = value;
 		},
 		maxDamageOffers: maxDamage,
 		offersLessMana,

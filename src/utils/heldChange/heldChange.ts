@@ -104,6 +104,12 @@ export function isAttackRoll(attackType: string | undefined, node: AttackNodeLik
 	return Boolean(attackType || node?.canCrit || node?.canMiss);
 }
 
+function firstDamageNode(effects: unknown[] | undefined): AttackNodeLike | undefined {
+	return (flattenEffectsTree((effects ?? []) as never) as AttackNodeLike[]).find(
+		(node) => node.type === 'damage',
+	);
+}
+
 interface ActivatedItem {
 	system?: {
 		activation?: {
@@ -118,9 +124,7 @@ interface ActivatedItem {
 /** The lines for the roll window of an item, with what is targeted now. */
 export function heldLinesForItem(attacker: Holder | null | undefined, item: ActivatedItem) {
 	const activation = item.system?.activation;
-	const node = flattenEffectsTree((activation?.effects ?? []) as never).find(
-		(each) => (each as AttackNodeLike).type === 'damage',
-	) as AttackNodeLike | undefined;
+	const node = firstDamageNode(activation?.effects);
 	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return [];
 	return heldLines(
 		heldChangesForAttack({
@@ -129,6 +133,58 @@ export function heldLinesForItem(attacker: Holder | null | undefined, item: Acti
 			area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
 		}),
 	);
+}
+
+/** The amount the holder keeps for its next attack, when this item can use it. */
+export function keptAmountFor(
+	attacker: Holder | null | undefined,
+	item: ActivatedItem,
+): HeldChange | null {
+	const activation = item.system?.activation;
+	const node = firstDamageNode(activation?.effects);
+	if (!activation || !node || !isAttackRoll(activation.targets?.attackType, node)) return null;
+	if (activation.acquireTargetsFromTemplate && activation.template?.shape) return null;
+	return (
+		heldChangesOn(attacker).find(
+			(held) => held.kind === 'wholeAmount' && held.appliesTo === 'holderAttacks',
+		) ?? null
+	);
+}
+
+interface DamageNodeLike extends AttackNodeLike {
+	roll?: { total?: number } | null;
+}
+
+/** The damage total a card shows: each rolled damage node and the spends folded in. */
+export function cardDamageTotal(system: {
+	activation?: { effects?: unknown[] };
+	incomingReactions?: Array<{ used?: boolean; kind?: string; usedAmount?: number }>;
+}): number {
+	const nodes = flattenEffectsTree((system.activation?.effects ?? []) as never) as DamageNodeLike[];
+	const rolled = nodes
+		.filter((node) => node.type === 'damage')
+		.reduce((sum, node) => sum + (Number(node.roll?.total) || 0), 0);
+	const folded = (system.incomingReactions ?? [])
+		.filter((entry) => entry.kind === 'spendPoolForDamage' && entry.used)
+		.reduce((sum, entry) => sum + (entry.usedAmount ?? 0), 0);
+	return rolled + folded;
+}
+
+/** Holds the amount for the next attack of the holder. It ends with the turn. */
+export async function keepAmount(holder: Holder, label: string, amount: number): Promise<void> {
+	const combat = game.combat;
+	await createHeldChange(holder, {
+		kind: 'wholeAmount',
+		value: amount,
+		label,
+		sourceName: label,
+		appliesTo: 'holderAttacks',
+		spentBy: 'oneRoll',
+		ends: 'turn',
+		combatId: combat?.started ? (combat.id ?? '') : '',
+		round: combat?.round ?? 0,
+		turn: combat?.turn ?? 0,
+	});
 }
 
 /** The first creature targeted. It decides what applies on a multi-target attack. */

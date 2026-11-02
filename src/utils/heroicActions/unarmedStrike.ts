@@ -20,6 +20,7 @@ import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import {
 	firstTargetActor,
 	heldChangesForAttack,
+	keptAmountFor,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import {
@@ -30,6 +31,7 @@ import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers
 import localize from '#utils/localize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
@@ -168,7 +170,13 @@ export async function rollUnarmedStrike(
 			incomingAttackPlan.appliedEntries;
 	}
 
-	const firstRoll = new DamageRoll(rollFormula, actor.getRollData(), rollOptions);
+	const keptAmount = keptAmountFor(actor as never, unarmedItem as never);
+	const kept = result.keptAmount === false ? null : keptAmount;
+	const firstRoll = new DamageRoll(
+		kept ? String(kept.value) : rollFormula,
+		actor.getRollData(),
+		kept ? keptAmountRollOptions(rollOptions as never, kept.label) : rollOptions,
+	);
 	await firstRoll.evaluate();
 
 	const postRoll = await applyPostRollIncomingBehavior(
@@ -220,7 +228,7 @@ export async function rollUnarmedStrike(
 			image: unarmedItem.img,
 			permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 			rollMode,
-			primaryDieBonuses: held.map((change) => ({
+			primaryDieBonuses: (kept ? [] : held).map((change) => ({
 				label: change.label,
 				value: change.value,
 				itemUuid: '',
@@ -250,7 +258,7 @@ export async function rollUnarmedStrike(
 
 	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
-	await spendHeldChanges(held);
+	await spendHeldChanges([...(kept ? [] : held), ...(keptAmount ? [keptAmount] : [])]);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll as never)) {
 		await spendRuleCharge(actor, identifier);

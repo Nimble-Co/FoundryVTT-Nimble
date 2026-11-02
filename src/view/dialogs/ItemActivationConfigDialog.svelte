@@ -8,6 +8,7 @@
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import DualWieldField from './components/DualWieldField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
+	import KeptAmountField from './components/KeptAmountField.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -27,6 +28,8 @@
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
 	const heldLines = untrack(() => heldLinesForItem(actor as never, item as never));
+	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
+	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -71,6 +74,7 @@
 			primaryDieModifier: state.primaryDieModifier,
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
+			...(state.keptAmount ? { keptAmount: state.usesKeptAmount } : {}),
 			lessMana: state.lessMana,
 			freeUse: state.freeUse,
 			...(state.dualWield
@@ -100,9 +104,20 @@
 >
 	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
 
-	<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
+	{#if state.keptAmount}
+		<KeptAmountField
+			label={state.keptAmount.label}
+			amount={state.keptAmount.value}
+			bind:checked={state.usesKeptAmount}
+		/>
+	{/if}
 
-	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
+	{#if !rollsNoDice}<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />{/if}
+
+	{#if !state.usesKeptAmount}<MaxDamageField
+			offers={state.maxDamageOffers}
+			bind:choice={state.maxDamageChoice}
+		/>{/if}
 	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
 	{#if state.offersFreeUse}
 		<label class="check">
@@ -111,7 +126,7 @@
 			<span>{localize('NIMBLE.rollWindow.freeUse')}</span>
 		</label>
 	{/if}
-	{#if state.dualWieldOffer}
+	{#if state.dualWieldOffer && !rollsNoDice}
 		<DualWieldField
 			offer={state.dualWieldOffer}
 			itemName={item.name}
@@ -121,7 +136,7 @@
 		/>
 	{/if}
 
-	{#if state.hasConditionalBonuses}
+	{#if state.hasConditionalBonuses && !keptInUse}
 		<div>
 			<div class="nimble-conditional-bonus">
 				<h5 class="lb">
@@ -176,13 +191,15 @@
 		</div>
 	{/if}
 
-	{#if !state.maxDamageChoice}<HeldChangeLines lines={heldLines} />{/if}
+	{#if !rollsNoDice}<HeldChangeLines lines={heldLines} />{/if}
 
-	<RollModifierFields
-		bind:situationalModifiers={state.situationalModifiers}
-		bind:primaryDieValue={state.primaryDieValue}
-		bind:primaryDieModifier={state.primaryDieModifier}
-	/>
+	{#if !keptInUse}
+		<RollModifierFields
+			bind:situationalModifiers={state.situationalModifiers}
+			bind:primaryDieValue={state.primaryDieValue}
+			bind:primaryDieModifier={state.primaryDieModifier}
+		/>
+	{/if}
 
 	{#if state.variableChargeSpends.length > 0}
 		<div>

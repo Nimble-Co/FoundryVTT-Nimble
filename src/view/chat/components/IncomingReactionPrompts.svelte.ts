@@ -141,6 +141,12 @@ export function createIncomingReactionPromptsState(
 			: [],
 	);
 	const primaryDieBonuses = $derived(getPlace() === 'roll' ? cardPrimaryDieBonuses : []);
+	const keptAmount = $derived(
+		getPlace() === 'roll'
+			? ((message?.reactive?.system as { keptAmount?: { label: string; amount: number } | null })
+					?.keptAmount ?? null)
+			: null,
+	);
 	const primaryRoll = $derived(cardPrimaryRoll(message?.reactive?.system));
 	const outcomeTags = $derived(getPlace() === 'roll' ? attackOutcomeTags(primaryRoll) : []);
 	const bonusNotAdded = $derived(
@@ -486,6 +492,9 @@ export function createIncomingReactionPromptsState(
 		},
 		get primaryDieBonuses() {
 			return primaryDieBonuses;
+		},
+		get keptAmount() {
+			return keptAmount;
 		},
 		get outcomeTags() {
 			return outcomeTags;

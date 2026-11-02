@@ -12,6 +12,7 @@ import {
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
+import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
 import {
 	broadcastRerollRolling,
 	rejectIncomingAttackReaction,
@@ -858,6 +859,9 @@ export class CardRerolls {
 		if (usable.rule.rollEffect === 'critDiceSave') {
 			return this.#postCritDiceSave(rollTarget, entry, usable, reject);
 		}
+		if (usable.rule.rollEffect === 'keepAmount') {
+			return this.#keepAmount(entry, usable, reject);
+		}
 		if (usable.rule.rollEffect) {
 			return this.#applyRollEffect(
 				rollTarget,
@@ -1150,6 +1154,33 @@ export class CardRerolls {
 		} catch (error) {
 			if (cost && paid) await refundRerollCost(actor, cost, paid);
 			console.error('Nimble | A save for crit dice failed; its cost is given back.', error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Spend the 1/turn use and hold the damage total of this card for the next
+	 * attack. The amount is fixed now: a later Reroll of this card does not change it.
+	 */
+	async #keepAmount(
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule, actor } = usable;
+		const cost = rule.rollUseCost;
+		const paid = cost ? await payRerollCost(actor, cost) : null;
+		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		try {
+			const amount = cardDamageTotal(this.#host.system() as never);
+			const label = entry.label;
+			await keepAmount(actor as never, label, amount);
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry), keptAmount: { label, amount } },
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (cost && paid) await refundRerollCost(actor, cost, paid);
+			console.error('Nimble | Keeping an amount failed; its cost is given back.', error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

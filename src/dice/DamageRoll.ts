@@ -70,6 +70,8 @@ declare namespace DamageRoll {
 		 * no crit dice; `hit` cannot crit. Neither can miss, except by `forceMiss`.
 		 */
 		maxDamage?: 'hit' | 'crit';
+		/** The formula is a kept amount, in place of a roll. A hit, with no crit. */
+		fixedAmount?: boolean;
 		/** Dice a crit adds as a line of their own. They do not explode and are not Vicious. */
 		critDice?: CritDiceSpec[];
 		/** The first crit die of a crit is a d20. A 20 goes on with the die of the attack. */
@@ -230,7 +232,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/** No die was rolled: the roll has max damage. */
 	get noDice(): boolean {
-		return this.options.maxDamage !== undefined;
+		return this.options.maxDamage !== undefined || this.options.fixedAmount === true;
 	}
 
 	/** The kept value of the primary die after evaluation. Undefined if unevaluated. */
