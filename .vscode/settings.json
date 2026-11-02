@@ -23,6 +23,7 @@
 	},
 	"[json]": {
 		"editor.defaultFormatter": "biomejs.biome",
+		"files.insertFinalNewline": false,
 		"editor.quickSuggestions": {
 			"strings": true
 		}

@@ -7,7 +7,15 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"includes": ["**/*.json", "**/*.jsonc", "**/*.ts", "**/*.mts", "**/*.js", "**/*.mjs"],
+		"includes": [
+			"**/*.json",
+			"!packs/**/*.json",
+			"**/*.jsonc",
+			"**/*.ts",
+			"**/*.mts",
+			"**/*.js",
+			"**/*.mjs"
+		],
 		"attributePosition": "auto",
 		"indentStyle": "tab",
 		"indentWidth": 2,
