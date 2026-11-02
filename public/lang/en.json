@@ -4457,6 +4457,7 @@
 				"heading": "Conditional Bonuses",
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
+				"damageDoubled": "+{value} damage (doubled)",
 				"none": "None"
 			}
 		},

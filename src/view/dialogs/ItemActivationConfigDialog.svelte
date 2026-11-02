@@ -192,9 +192,10 @@
 									aria-pressed={choice === 'damage'}
 									onclick={() => state.setConditionalChoice(option.key, 'damage')}
 								>
-									{localize('NIMBLE.activationDialog.conditionalBonus.damage', {
-										value: option.doubled ? `${damageLabel} x2` : damageLabel,
-									})}
+									{localize(
+										`NIMBLE.activationDialog.conditionalBonus.${option.doubled ? 'damageDoubled' : 'damage'}`,
+										{ value: damageLabel },
+									)}
 								</button>
 							{/if}
 							<button
