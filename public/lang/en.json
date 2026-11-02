@@ -563,6 +563,10 @@
 			"healing": "Healing",
 			"initiative": {
 				"label": "Initiative",
+				"surge": "{feature}: +{total} mana",
+				"surgeRerolled": "{feature}: a {was} rolled again, now {value}",
+				"surgeRerollOne": "Reroll a 1",
+				"surgeRegain": "Regain mana",
 				"startWithOneAction": "Start with 1 action",
 				"startWithActions": "Start with {count} actions"
 			},
@@ -1650,6 +1654,8 @@
 			"critDiceSave": "Save for Max Crit Dice",
 			"offerAttackBonus": "Offer Attack Bonus",
 			"poolDieToMax": "Pool Die to Max",
+			"surgeMana": "Surge Mana",
+			"surgeRerollOnes": "Surge: Reroll Ones",
 			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -2711,6 +2717,14 @@
 					"label": "The attack is",
 					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
 				}
+			},
+			"surgeMana": {
+				"description": "Rolling Initiative gives mana that ends with the combat. The dice show on the Initiative card. With Feature Effects off, a button on the card gives the mana.",
+				"flat": { "label": "Flat mana", "hint": "A formula, as @will." },
+				"dice": { "label": "Dice", "hint": "As 1d4. Leave empty for no dice." }
+			},
+			"surgeRerollOnes": {
+				"description": "Each 1 on a surge die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
 			"poolDieToMax": {
 				"description": "When the trigger fires, the lowest dice of a pool go to their max: one when the hero is attacked, one per Wound on a Wound.",

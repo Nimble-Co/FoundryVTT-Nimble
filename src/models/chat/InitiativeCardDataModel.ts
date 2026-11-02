@@ -13,6 +13,8 @@ const initiativeCardSchema = () => ({
 	/** The combat and combatant this roll belongs to. Empty when it was no combat's roll. */
 	combatId: new fields.StringField({ required: false, nullable: true, initial: null }),
 	combatantId: new fields.StringField({ required: false, nullable: true, initial: null }),
+	/** The surge dice and mana this roll gave. */
+	surge: new fields.ObjectField({ required: false, nullable: true, initial: null }),
 	/** The pending action adjustment the roll folded into the current actions. */
 	foldedActionDelta: new fields.NumberField({
 		required: true,

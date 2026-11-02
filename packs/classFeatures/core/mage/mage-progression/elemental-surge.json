@@ -6,7 +6,54 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "surgeMana",
+				"disabled": false,
+				"id": "elementalSurge01",
+				"identifier": "",
+				"label": "Elemental Surge",
+				"predicate": {
+					"level": {
+						"max": 9
+					}
+				},
+				"priority": 1,
+				"flat": "@will",
+				"dice": ""
+			},
+			{
+				"type": "surgeMana",
+				"disabled": false,
+				"id": "elementalSurge02",
+				"identifier": "",
+				"label": "Elemental Surge",
+				"predicate": {
+					"level": {
+						"min": 10,
+						"max": 16
+					}
+				},
+				"priority": 1,
+				"flat": "@will",
+				"dice": "1d4"
+			},
+			{
+				"type": "surgeMana",
+				"disabled": false,
+				"id": "elementalSurge03",
+				"identifier": "",
+				"label": "Elemental Surge",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				},
+				"priority": 1,
+				"flat": "@will",
+				"dice": "2d4"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

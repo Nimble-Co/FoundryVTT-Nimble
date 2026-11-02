@@ -49,6 +49,7 @@ import {
 	getCombatManaGrantForCombat,
 	getCombatManaGrantMap,
 } from '#utils/actor/combatManaRules.js';
+import { endSurgeMana } from '#utils/combat/surgeMana.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
 async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
@@ -59,6 +60,8 @@ async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
 		const actor = combatant.actor;
 		if (!actor || actor.type !== 'character') return acc;
 		if (!actor.isOwner) return acc;
+
+		acc.push(endSurgeMana(actor as never, combatId));
 
 		const manaGrant = getCombatManaGrantForCombat(actor, combatId);
 		if (manaGrant <= 0) return acc;

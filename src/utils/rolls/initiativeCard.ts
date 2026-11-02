@@ -1,6 +1,7 @@
 import type { AnyRoll } from '#types/anyRoll.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import { getInitiativeStartingActions } from '#utils/combat/initiativeStartingActions.js';
+import { rollSurge } from '#utils/combat/surgeMana.js';
 import { checkCardRerollData } from '#utils/reroll/checkCardRollTarget.js';
 import { keptD20 } from '#utils/reroll/checkRollOfCard.js';
 import type { RerollingActor } from '#utils/reroll/rerollEntries.js';
@@ -34,6 +35,7 @@ async function initiativeCardData(input: {
 		| null
 		| undefined;
 	const rollMode = rollModeOfFormula(input.roll.formula);
+	const surge = await rollSurge(actor as never, input.combatId);
 	const rerolls = actor
 		? await checkCardRerollData(actor, input.roll, { kind: 'initiative', key: '' }, rollMode)
 		: null;
@@ -48,6 +50,9 @@ async function initiativeCardData(input: {
 			combatId: input.combatId,
 			combatantId: input.combatantId,
 			foldedActionDelta: input.foldedActionDelta,
+			...(surge
+				? { surge, actorUuid: (actor as { uuid?: string } | null | undefined)?.uuid ?? null }
+				: {}),
 		},
 	};
 }

@@ -60,6 +60,7 @@ import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { SurgeManaRule, SurgeRerollOnesRule } from '../models/rules/surgeMana.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 
@@ -103,6 +104,8 @@ export default function registerRulesConfig() {
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
+		surgeMana: 'NIMBLE.ruleTypes.surgeMana',
+		surgeRerollOnes: 'NIMBLE.ruleTypes.surgeRerollOnes',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -170,6 +173,8 @@ export default function registerRulesConfig() {
 		critDiceSave: CritDiceSaveRule,
 		offerAttackBonus: OfferAttackBonusRule,
 		poolDieToMax: PoolDieToMaxRule,
+		surgeMana: SurgeManaRule,
+		surgeRerollOnes: SurgeRerollOnesRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,
