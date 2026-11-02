@@ -704,6 +704,7 @@
 						"critD20": "Use a d20",
 						"viciousDie": "Add the Vicious die",
 						"critDice": "Add the dice",
+						"offerBonus": "Add the bonus",
 						"critDiceSave": "Make them save"
 					},
 					"crit": "Make It a Crit",
@@ -752,6 +753,8 @@
 					"noMiss": "No miss: {count} targets",
 					"noCrit": "No crit: {count} targets",
 					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit.",
+					"offerDamage": "Damage from {feature}",
+					"offerDamageTooltip": "{feature} adds this damage to the attack.",
 					"critD20": "d20 crit die: {feature}",
 					"critD20Tooltip": "{feature} made the first crit die a d20.",
 					"vicious": "Vicious: {feature}",
@@ -765,6 +768,7 @@
 				"costOncePerTurn": "1/turn",
 				"costManaPerDie": "{cost} mana per die",
 				"effectHistory": {
+					"offerBonus": "Added the bonus",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
 					"critDice": "{feature} added its dice to the crit."
@@ -1644,6 +1648,7 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
+			"offerAttackBonus": "Offer Attack Bonus",
 			"damageBack": "Damage Back",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -1983,6 +1988,10 @@
 			},
 			"grantActivation": {
 				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
+				"includesUser": {
+					"label": "Also for the user",
+					"hint": "The user of the item gets an offer row too."
+				},
 				"activationType": {
 					"label": "Granted activation",
 					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
@@ -2699,6 +2708,21 @@
 				"outcome": {
 					"label": "The attack is",
 					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit."
+				}
+			},
+			"offerAttackBonus": {
+				"description": "Extra damage and a Primary Die bonus on an attack made from the offer row of one item. With Feature Effects off, a row in Change This Roll adds them.",
+				"offerSource": {
+					"label": "Offer item",
+					"hint": "The identifier of the item whose offer row makes the attack."
+				},
+				"damage": {
+					"label": "Extra damage",
+					"hint": "A formula. The damage has the type of the attack."
+				},
+				"primaryDie": {
+					"label": "Primary Die bonus",
+					"hint": "It changes the die, so it can give a crit or make a miss a hit."
 				}
 			},
 			"critDiceSave": {

@@ -129,7 +129,8 @@
 				"label": "Coordinated Strike",
 				"predicate": {},
 				"priority": 3,
-				"activationType": "weaponAttack"
+				"activationType": "weaponAttack",
+				"includesUser": true
 			},
 			{
 				"type": "actionDelta",

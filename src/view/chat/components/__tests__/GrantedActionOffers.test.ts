@@ -166,7 +166,7 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton).toBeTruthy();
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword');
+		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
 	});
 
 	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
@@ -211,7 +211,7 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton?.className).not.toMatch(/discouraged/);
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword');
+		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
 	});
 
 	it('names the current target when it is not the recipient', async () => {

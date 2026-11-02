@@ -40,7 +40,7 @@ function isRollUseRule(type: string | undefined): boolean {
 	if (type === ATTACK_OUTCOME_RULE_TYPE || type === CRIT_DICE_RULE_TYPE) {
 		return !isRuleAutomationEnabled();
 	}
-	if (type === 'critDiceSave') return true;
+	if (type === 'critDiceSave' || type === 'offerAttackBonus') return true;
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||
@@ -116,6 +116,8 @@ interface RerollRuleLike {
 	maxDiceCount?: number | null;
 	/** How many rows the rule gives this roll. Absent is one. */
 	rowsOn?(context: { roll: RollToReroll }): number;
+	/** With the effect `offerBonus`: what the row adds. */
+	offerBonus?: { label: string; damage: number; primaryDie: number };
 	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
 	saveType?: string;
 	saveDC?: string;

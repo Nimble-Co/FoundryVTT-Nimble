@@ -53,6 +53,8 @@ declare namespace DamageRoll {
 		forcedCritFromDice?: boolean;
 		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
 		critRange?: number;
+		/** The identifier of the item whose offer row made this attack. */
+		offerSource?: string;
 		/** Any die of the roll at its max makes the roll a crit on a hit. */
 		anyDieCrits?: boolean;
 		/**

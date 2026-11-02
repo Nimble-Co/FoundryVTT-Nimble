@@ -108,6 +108,13 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	}
 
 	const tags: AttackOutcomeTag[] = [];
+	for (const feature of new Set(options.outcomeSources?.offerDamage ?? [])) {
+		tags.push({
+			kind: 'critDice',
+			label: localize(`${TAG_TEXT}.offerDamage`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.offerDamageTooltip`, { feature }),
+		});
+	}
 	if (roll.isCritical) {
 		for (const feature of new Set(options.outcomeSources?.critD20 ?? [])) {
 			tags.push({

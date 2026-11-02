@@ -130,6 +130,7 @@ type RollOptionsView = {
 		maxDamage?: unknown;
 		explosionStyle?: unknown;
 		isVicious?: unknown;
+		offerSource?: string;
 	} | null;
 	terms?: readonly unknown[];
 	originalFormula?: string;
@@ -185,6 +186,7 @@ function damageRollContext(
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),
+			...(rolled?.options?.offerSource ? { offerSource: rolled.options.offerSource } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

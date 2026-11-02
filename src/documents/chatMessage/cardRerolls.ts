@@ -50,6 +50,7 @@ import {
 	diceForRule,
 	diceToPick,
 	effectFor,
+	offerBonusFor,
 	rerollableFor,
 	severalDiceFor,
 } from '#utils/reroll/rerollDieChoice.js';
@@ -1032,7 +1033,10 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		reject: (reasonKey: string) => unknown,
 	): Promise<void> {
-		const target = effectFor(found, effect, usable.rule.critDiceSpec ?? null);
+		const target =
+			effect === 'offerBonus' && usable.rule.offerBonus
+				? offerBonusFor(found, usable.rule.offerBonus.primaryDie)
+				: effectFor(found, effect, usable.rule.critDiceSpec ?? null);
 		if (!target) return void reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
@@ -1041,6 +1045,18 @@ export class CardRerolls {
 			entry,
 			rollKind: rollTarget.context().roll.kind,
 			effect,
+			...(effect === 'offerBonus' && usable.rule.offerBonus?.damage
+				? {
+						rollChanges: [
+							{
+								kind: 'extraDamage' as const,
+								key: `${usable.rule.id}`,
+								value: usable.rule.offerBonus.damage,
+								label: usable.rule.offerBonus.label,
+							},
+						],
+					}
+				: {}),
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,

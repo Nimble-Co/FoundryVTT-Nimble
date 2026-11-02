@@ -1,6 +1,7 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import {
+	applyOfferBonus,
 	applyRollEffect,
 	changeOneDie,
 	type DieRef,
@@ -221,6 +222,28 @@ function critFor<TRoll>(
 	};
 }
 
+/** The roll an offer bonus changes. Null when the card has no roll to change. */
+function offerBonusFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	primaryDie: number,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const ref = primaryDieRef(current);
+
+	let made: Awaited<ReturnType<typeof applyOfferBonus>> | null = null;
+	return {
+		...found,
+		previousResult: ref ? resultAt(current, ref) : null,
+		makeRoll: async () => {
+			made = await applyOfferBonus(current, primaryDie);
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
 /**
  * The roll a row's effect changes. The Primary Die keeps its face. Null when the
  * card has no roll to change. Only the dice the effect rolled are thrown.
@@ -249,6 +272,7 @@ function effectFor<TRoll>(
 }
 
 export {
+	offerBonusFor,
 	severalDiceFor,
 	changeableFor,
 	critFor,

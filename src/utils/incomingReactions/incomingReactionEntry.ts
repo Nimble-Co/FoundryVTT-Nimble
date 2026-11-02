@@ -28,7 +28,13 @@ export const ROLL_USES = ['reroll', 'change', 'crit', 'result', 'effect'] as con
 export type RollUse = (typeof ROLL_USES)[number];
 
 /** What a row does when its feature changes the roll by itself with Feature Effects on. */
-export const ROLL_EFFECTS = ['critD20', 'viciousDie', 'critDice', 'critDiceSave'] as const;
+export const ROLL_EFFECTS = [
+	'critD20',
+	'viciousDie',
+	'critDice',
+	'critDiceSave',
+	'offerBonus',
+] as const;
 export type RollEffect = (typeof ROLL_EFFECTS)[number];
 
 /** How a Change a Result rule changes the result of a roll. */

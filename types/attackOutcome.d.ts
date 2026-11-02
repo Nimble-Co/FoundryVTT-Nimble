@@ -10,6 +10,7 @@ export interface AttackOutcomeSources {
 	maxDamage?: string[];
 	critD20?: string[];
 	vicious?: string[];
+	offerDamage?: string[];
 }
 
 /** A tag at the roll that tells why the attack result is not what the die face shows. */

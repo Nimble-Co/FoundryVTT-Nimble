@@ -383,7 +383,31 @@ async function applyRollEffect<TRoll extends OneDieRoll>(
 	};
 }
 
+/**
+ * Add an offer bonus to an evaluated roll: the Primary Die goes up, so crit and
+ * miss are read again. The old roll is not changed.
+ */
+async function applyOfferBonus<TRoll extends OneDieRoll>(
+	roll: TRoll,
+	primaryDie: number,
+): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
+	const ref = primaryDieRef(roll);
+	const die = ref ? (roll.terms[ref.term] as DieTermLike) : null;
+	if (ref && primaryDie !== 0) {
+		return changeOneDie(roll, ref, { mode: 'add', value: primaryDie });
+	}
+	return {
+		roll: foundry.dice.Roll.fromData(
+			foundry.utils.deepClone(roll.toJSON()) as never,
+		) as unknown as TRoll,
+		faces: die?.faces ?? 6,
+		next: ref && die ? die.results[ref.result].result : null,
+		thrown: null,
+	};
+}
+
 export {
+	applyOfferBonus,
 	applyRollEffect,
 	changeOneDie,
 	makeRollCrit,

@@ -40,6 +40,7 @@ import {
 } from '../utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
+import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
 import { type MaxDamageRuleLike, maxDamageRuleOf } from '../utils/damage/maxDamageOffers.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
@@ -188,6 +189,14 @@ class ItemActivationManager {
 
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
 	#maxDamage: { rule: MaxDamageRuleLike; tempHp: boolean } | null = null;
+
+	/** The identifier of the item whose offer row started this activation. */
+	#offerSource(): string | undefined {
+		const uuid = this.#options.offerSourceUuid;
+		if (!uuid) return undefined;
+		const source = fromUuidSync(uuid as `Item.${string}`) as { identifier?: string } | null;
+		return source?.identifier || undefined;
+	}
 
 	/** The attack roll of this activation, for the uses its crit dice spend. */
 	#primaryRoll: DamageRoll | null = null;
@@ -396,6 +405,7 @@ class ItemActivationManager {
 				itemUuid: this.#item.uuid,
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
+				...(this.#offerSource() ? { offerSource: this.#offerSource() } : {}),
 			},
 		);
 
@@ -591,6 +601,21 @@ class ItemActivationManager {
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
+					const offerSource = this.#offerSource();
+					const offerBonuses = collectOfferBonuses(
+						this.actor as { rules?: unknown } | null,
+						offerSource,
+					);
+					for (const bonus of offerBonuses) {
+						if (bonus.damage > 0) formula = `${formula} + ${bonus.damage}`;
+						if (bonus.primaryDie !== 0 && !isAoE) {
+							this.#primaryDieBonuses.push({
+								label: bonus.label,
+								value: bonus.primaryDie,
+								itemUuid: '',
+							});
+						}
+					}
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const attackOutcome = collectAttackOutcome({
 						attacker: this.actor as { rules?: unknown } | null,
@@ -621,6 +646,14 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					if (offerSource) damageOptions.offerSource = offerSource;
+					const offerDamage = offerBonuses.filter((bonus) => bonus.damage > 0);
+					if (offerDamage.length > 0) {
+						damageOptions.outcomeSources = {
+							...damageOptions.outcomeSources,
+							offerDamage: offerDamage.map((bonus) => bonus.label),
+						} as DamageRoll.Options['outcomeSources'];
+					}
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
 						: [];
@@ -1515,6 +1548,8 @@ namespace ItemActivationManager {
 		/** Predetermined value for the primary damage die. */
 		primaryDieValue?: number;
 		/** Modifier to apply to the primary die roll. */
+		/** The item whose offer row started this activation. */
+		offerSourceUuid?: string;
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;

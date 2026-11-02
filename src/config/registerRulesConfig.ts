@@ -46,6 +46,7 @@ import { ModifyRerollRule } from '../models/rules/modifyReroll.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
+import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
@@ -99,6 +100,7 @@ export default function registerRulesConfig() {
 		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
 		critDice: 'NIMBLE.ruleTypes.critDice',
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
+		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -164,6 +166,7 @@ export default function registerRulesConfig() {
 		maxDamage: MaxDamageRule,
 		critDice: CritDiceRule,
 		critDiceSave: CritDiceSaveRule,
+		offerAttackBonus: OfferAttackBonusRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,
