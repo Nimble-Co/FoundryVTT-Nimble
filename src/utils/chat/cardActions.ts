@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { ChaosCardDoc, ChaosRollChoice } from '#types/chaos.d.ts';
+import { askActiveGm } from '#utils/askActiveGm.js';
 import {
 	CHAOS_INVOKED_FLAG,
 	chooseChaosRoll,
@@ -10,7 +11,6 @@ import {
 	regainInitiativeManaOnCard,
 	rerollInitiativeManaDieOnCard,
 } from '#utils/combat/initiativeManaRoll.js';
-import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.cardAction`;
 
@@ -27,10 +27,6 @@ interface ActionCard {
 	speaker?: unknown;
 	system?: { actorUuid?: string };
 	setFlag?(scope: string, key: string, value: unknown): Promise<unknown>;
-}
-
-interface QueryUser {
-	query(name: string, data: object): Promise<unknown>;
 }
 
 /** The GM, the author of the card, and a player who owns the hero of the card. */
@@ -63,12 +59,7 @@ async function runHere(card: ActionCard, action: CardAction): Promise<void> {
 /** Only the GM and its author can change a card, so a player who owns the hero asks the GM. */
 export async function runCardAction(card: ActionCard, action: CardAction): Promise<void> {
 	if (game.user?.isGM === true || card.isAuthor === true) return runHere(card, action);
-	const gm = (game.users as unknown as { activeGM?: QueryUser | null }).activeGM;
-	if (!gm) {
-		ui.notifications?.warn(localize('NIMBLE.chat.cardActionNeedsGm'));
-		return;
-	}
-	await gm.query(QUERY_NAME, { messageId: card.id, action });
+	await askActiveGm(QUERY_NAME, { messageId: card.id, action });
 }
 
 export function registerCardActionQuery(): void {

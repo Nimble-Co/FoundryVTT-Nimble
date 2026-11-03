@@ -1085,13 +1085,7 @@ export class CardRerolls {
 			effect === 'offerBonus' && usable.rule.offerBonus
 				? offerBonusFor(found, usable.rule.offerBonus.primaryDie)
 				: effectFor(found, effect, usable.rule.critDiceSpec ?? null);
-		if (!target) return void reject('NIMBLE.chat.incomingReactions.useFailed');
-
-		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
-		const result = await rerollWithRule({
-			rule: usable.rule,
-			entry,
-			rollKind: rollTarget.context().roll.kind,
+		return this.#applyNewRoll(rollTarget, target, entry, usable, forceHeroicReaction, reject, {
 			effect,
 			...(effect === 'offerBonus' && usable.rule.offerBonus?.damage
 				? {
@@ -1105,27 +1099,8 @@ export class CardRerolls {
 						],
 					}
 				: {}),
-			payer: usable.actor,
-			replaced: target.replaced,
-			previousResult: target.previousResult,
-			makeRoll: (formula, options) => target.makeRoll(formula, options),
-			readNewDie: target.readNewDie?.bind(target),
-			earlierCritTriggers: systemData.discardedCritTriggers === true,
-			payOptions: { forceHeroicReaction },
-			place: (done) =>
-				this.#placeReroll(entry, target, done.roll, {
-					reroll: done.reroll,
-					discardedCritTriggers: done.discardedCritTriggers,
-					list: 'new',
-				}),
+			failedLog: 'Nimble | A roll effect failed; its cost is given back.',
 		});
-		if (result.status === 'unpaid') {
-			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
-		}
-		if (result.status === 'failed') {
-			console.error('Nimble | A roll effect failed; its cost is given back.', result.error);
-			return void reject('NIMBLE.chat.incomingReactions.useFailed');
-		}
 	}
 
 	/**

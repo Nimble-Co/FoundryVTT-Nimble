@@ -4240,9 +4240,9 @@
 				"name": "Dual wield",
 				"advantage": "Dual wield: gain advantage (1/round)",
 				"withOther": "Dual wield: also roll {other} and keep one (1/round)",
-				"extraDie": "Which weapon gets the extra die?",
-				"used": "You used this in this round."
+				"extraDie": "Which weapon gets the extra die?"
 			},
+			"usedThisRound": "You used this in this round.",
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",

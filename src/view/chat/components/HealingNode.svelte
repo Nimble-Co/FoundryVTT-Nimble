@@ -1,5 +1,4 @@
 <script lang="ts">
-	import localizeWith from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import type { NimbleChatMessage, AppliedHealingRecord } from '../../../documents/chatMessage.js';
@@ -79,11 +78,11 @@
 {#if node.maxDamageBy}
 	<div
 		class="healing-max-damage"
-		data-tooltip={localizeWith('NIMBLE.chat.incomingReactions.outcomeTags.maxDamageTooltip', {
+		data-tooltip={localize('NIMBLE.chat.incomingReactions.outcomeTags.maxDamageTooltip', {
 			feature: node.maxDamageBy,
 		})}
 	>
-		{localizeWith('NIMBLE.chat.incomingReactions.outcomeTags.maxHealing', {
+		{localize('NIMBLE.chat.incomingReactions.outcomeTags.maxHealing', {
 			feature: node.maxDamageBy,
 		})}
 	</div>

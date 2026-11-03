@@ -1,4 +1,5 @@
 import type { CritDiceOptions, CritDiceSpec } from '#types/critDice.d.ts';
+import { dieRoleOf, isCritD20Result } from './critDiceLines.js';
 import type { ExplosionStyle } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
@@ -24,8 +25,7 @@ type RecalculateTotal = () => void;
 
 function critDiceTermsOf(roll: CritDiceRoll): foundry.dice.terms.Die[] {
 	return roll.terms.filter(
-		(term): term is foundry.dice.terms.Die =>
-			term instanceof Terms.Die && !!(term.options as CritDiceOptions)?.dieRole,
+		(term): term is foundry.dice.terms.Die => term instanceof Terms.Die && !!dieRoleOf(term),
 	);
 }
 
@@ -141,7 +141,7 @@ export function setRoleDiceToMax(
 ): number[] {
 	const before: number[] = [];
 	for (const term of critDiceTermsOf(roll)) {
-		if ((term.options as CritDiceOptions).dieRole !== role) continue;
+		if (dieRoleOf(term) !== role) continue;
 		for (const result of term.results) {
 			before.push(result.result);
 			result.result = term.faces ?? result.result;
@@ -160,7 +160,7 @@ export function restoreRoleDice(
 ): void {
 	const queue = [...faces];
 	for (const term of critDiceTermsOf(roll)) {
-		if ((term.options as CritDiceOptions).dieRole !== role) continue;
+		if (dieRoleOf(term) !== role) continue;
 		for (const result of term.results) result.result = queue.shift() ?? result.result;
 	}
 	recalculateTotal();
@@ -190,7 +190,7 @@ export async function replaceCritDieWithD20(
 	if (!term || !roll.isCritical) return null;
 	const at = Number(term.number) || 1;
 	const first = term.results[at];
-	if (!first || term.results.some((result) => (result as { faces?: number }).faces)) return null;
+	if (!first || term.results.some(isCritD20Result)) return null;
 
 	const vicious = roll.options.explosionStyle === 'vicious';
 	const drawn: number[] = [];

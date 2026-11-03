@@ -14,6 +14,13 @@ function currentTurnId(): string | null {
 	return `${combat.id}:${combat.round}:${combat.turn}`;
 }
 
+/** This round of the started combat. Null outside combat. */
+export function currentRoundId(): string | null {
+	const combat = game.combat;
+	if (!combat?.started) return null;
+	return `${combat.id}:${combat.round}`;
+}
+
 function usesOf(actor: FlagActor): Record<string, string> {
 	return (actor.getFlag?.(SYSTEM_ID, FLAG) as Record<string, string> | undefined) ?? {};
 }

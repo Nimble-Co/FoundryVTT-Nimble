@@ -1,6 +1,7 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { RollEffect } from '../utils/incomingReactions/incomingReactionEntry.js';
+import { dieRoleOf, isCritD20Result } from './critDiceLines.js';
 import {
 	changeDieInTerm,
 	type DieTermLike,
@@ -47,10 +48,6 @@ interface RollLike extends PrimaryDieBonusRoll {
 function primaryDieBonus(roll: PrimaryDieBonusRoll): number {
 	if (!roll.primaryDie || roll.modifierMode) return 0;
 	return Math.trunc(Number(roll.options?.primaryDieModifier) || 0);
-}
-
-function dieRoleOf(term: unknown): string | undefined {
-	return (term as { options?: { dieRole?: string } }).options?.dieRole;
 }
 
 function isDieTerm(term: unknown): term is DieTermLike {
@@ -148,7 +145,7 @@ function modifierExplosionStyle(modifiers: readonly string[] = []): ExplosionSty
 function d20CritValue(roll: OneDieRoll): number | null {
 	for (const term of roll.terms) {
 		if (!isDieTerm(term)) continue;
-		const d20 = term.results.find((result) => (result as { faces?: number }).faces);
+		const d20 = term.results.find(isCritD20Result);
 		if (d20) return d20.result;
 	}
 	return null;

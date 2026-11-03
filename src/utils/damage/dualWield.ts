@@ -5,6 +5,7 @@ import type {
 	DualWieldWeapon,
 	DualWieldWeaponSelf,
 } from '#types/dualWield.d.ts';
+import { currentRoundId } from '#utils/combat/perTurnUse.js';
 import type { RerollRecord } from '../incomingReactions/incomingReactionEntry.js';
 
 const FLAG = 'dualWieldRound';
@@ -25,12 +26,6 @@ interface DualWieldActor {
 	items?: Iterable<WeaponItem>;
 	getFlag?(scope: string, key: string): unknown;
 	update?(data: Record<string, unknown>): Promise<unknown>;
-}
-
-function currentRoundId(): string | null {
-	const combat = game.combat;
-	if (!combat?.started) return null;
-	return `${combat.id}:${combat.round}`;
 }
 
 /** Whether the use of this round was spent. Outside combat there is no limit. */

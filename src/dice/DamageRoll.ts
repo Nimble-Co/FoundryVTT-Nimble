@@ -1,11 +1,11 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
-import type { CritDiceLine, CritDiceOptions, CritDiceSpec } from '#types/critDice.d.ts';
+import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
 import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
-import { critDiceLinesOf } from './critDiceLines.js';
+import { critDiceLinesOf, dieRoleOf } from './critDiceLines.js';
 import {
 	addCritDice,
 	addCritDiceTo,
@@ -493,7 +493,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const atMax = this.terms.some(
 			(term) =>
 				term instanceof Terms.Die &&
-				!(term.options as CritDiceOptions).dieRole &&
+				!dieRoleOf(term) &&
 				term.results.some(
 					(r, index) =>
 						index < (Number(term.number) || 1) &&

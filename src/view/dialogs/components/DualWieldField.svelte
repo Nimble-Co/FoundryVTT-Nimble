@@ -17,7 +17,7 @@ The tick of an attack's roll window for dual wielding, 1/round.
 	const TEXT = 'NIMBLE.rollWindow.dualWield';
 </script>
 
-<label class="check" data-tooltip={offer.used ? localize(`${TEXT}.used`) : null}>
+<label class="check" data-tooltip={offer.used ? localize('NIMBLE.rollWindow.usedThisRound') : null}>
 	<input type="checkbox" disabled={offer.used} bind:checked />
 	<i class="fa-solid fa-hand-fist" aria-hidden="true"></i>
 	<span>

@@ -1490,6 +1490,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `requestCombatantActionDelta()` | `src/utils/combat/requestCombatantActionDelta.ts` | Apply a combined current/pending action adjustment to a character combatant — direct for GMs/owners, relayed to the active GM over the system socket otherwise |
 | `getPendingActionsLocalizationKey()` | `src/utils/combat/pendingActionWording.ts` | Pick the singular or plural localization key describing a combatant's pending action adjustment, so the character sheet and the combat tracker word it identically |
 | `getPrimaryActiveGmId()` | `src/utils/getPrimaryActiveGmId.ts` | User id of the single GM client that executes relayed socket requests (designated active GM, falling back to any connected GM), or `null` when no GM is connected |
+| `askActiveGm()` | `src/utils/askActiveGm.ts` | Run a registered query on the active GM's client, for a change this user cannot make. Warns when no GM is online |
 | `collectGrantedActionOffers()`, `requestGrantedActionOfferUse()` | `src/utils/combat/grantedActionOffers.ts` | Granted-activation offers on activation chat cards — build offers from an item's `grantActivation` rules at use time, and consume an offer (direct for GMs, relayed to the active GM over the system socket otherwise) |
 | `getActorHpValue()` | `src/utils/combat/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/combat/isCombatantDead.ts` | Get an actor's wounds value and max |
@@ -1510,6 +1511,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `foldBonusIntoPrimaryDamage()`, `findPrimaryDamageNode()`, `replaceDamageRollInRollsSource()`, `removeFlavoredBonusesFromRoll()` | `src/utils/damage/foldBonusIntoPrimaryDamage.ts` | Add a flat bonus to an activation card's primary damage roll, locate that roll's node, keep the message `rolls` source in step with a patched damage roll, and take folded bonuses back off a serialized roll |
 | `rerollOneDie()`, `changeOneDie()`, `pickableDice()`, `primaryDieRef()` | `src/dice/oneDieReroll.ts` | Reroll one die of an evaluated roll (keep, explode, crit and miss worked out again), change one die to a fixed face (clamped from 1 to the max, the keep not run again, explosion dice cut or rolled, a set value is the final face unless the change `addsBonus`), list the dice a player can pick, and find the kept Primary Die or check d20 |
 | `critFaceOf()` | `src/dice/critFace.ts` | The lowest kept face of a die that is a crit, from a crit threshold, a crit range and a Forced Crit. Read it, never compare a face to `faces` for a crit. |
+| `dieRoleOf()`, `isCritD20Result()` | `src/dice/critDiceLines.ts` | The marks a crit leaves on the dice of a roll: the role of a term a crit added, and the d20 crit die result. Read them, never cast `options.dieRole` or `result.faces` |
 | `attackOutcomeTags()`, `cardPrimaryRoll()` | `src/view/chat/components/attackOutcomeTags.ts` | The tags at the roll that tell why an attack result is not what the die face shows. |
 | `soleTarget()` | `src/utils/tokens/` | The one token of a target list, or null with 0 or 2 or more. |
 | `critFor()`, `makeRollCrit()` | `src/utils/reroll/rerollDieChoice.ts`, `src/dice/oneDieReroll.ts` | The roll target and the copy of a roll for Make It a Crit. |
@@ -1531,6 +1533,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `hpGained()`, `woundsGained()` | `src/utils/actor/actorHpChangePaths.ts` | What an actor update added, from the `_preUpdate` snapshot in `options.nimble`. HP that only follows a higher max HP is not a gain |
 | `ruleLabel()`, `ruleKey()` | `src/utils/actor/actorRules.ts` | A rule's label, or its item's name. The key `<item uuid>:<rule id>` of a rule. |
 | `usedThisTurn()`, `markTurnUse()`, `clearTurnUse()` | `src/utils/combat/perTurnUse.ts` | A 1/turn use of a rule, on a flag of the actor. |
+| `currentRoundId()` | `src/utils/combat/perTurnUse.ts` | `<combat id>:<round>` of the started combat, or null outside combat. |
 | `collectCritDice()` | `src/utils/damage/collectCritDice.ts` | The Crit Dice rules that add dice to a crit of an attack. |
 | `collectOfferBonuses()` | `src/utils/damage/collectOfferBonuses.ts` | What a hero's rules add to an attack from the row of an item. |
 | `dualWieldOfferFor()`, `dualWieldEntry()`, `keepChoiceOfWeapon()` | `src/utils/damage/dualWield.ts` | The dual wield tick and the two weapons of its roll. |

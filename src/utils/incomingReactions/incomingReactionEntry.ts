@@ -1,4 +1,5 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import { dieRoleOf, isCritD20Result } from '../../dice/critDiceLines.js';
 
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
@@ -96,11 +97,10 @@ export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined):
 	return (terms ?? []).some((term) => {
 		const die = term as {
 			faces?: unknown;
-			options?: { dieRole?: string };
 			results?: Array<{ result: number; active?: boolean; discarded?: boolean }>;
 		};
 		return (
-			!die?.options?.dieRole &&
+			!dieRoleOf(die) &&
 			typeof die?.faces === 'number' &&
 			Array.isArray(die.results) &&
 			die.results.some((r) => r.active !== false && !r.discarded && r.result === die.faces)
@@ -152,15 +152,13 @@ export const CRIT_BONUS_ROLE = 'critBonus';
 
 /** These terms have dice with this role. */
 export function termsHaveRole(terms: readonly unknown[] | undefined, role: string): boolean {
-	return (terms ?? []).some(
-		(term) => (term as { options?: { dieRole?: string } }).options?.dieRole === role,
-	);
+	return (terms ?? []).some((term) => dieRoleOf(term) === role);
 }
 
 /** A crit die of these terms is a d20. */
 export function termsHaveCritD20(terms: readonly unknown[] | undefined): boolean {
 	return (terms ?? []).some((term) =>
-		((term as { results?: Array<{ faces?: number }> }).results ?? []).some((r) => !!r.faces),
+		((term as { results?: unknown[] }).results ?? []).some(isCritD20Result),
 	);
 }
 
