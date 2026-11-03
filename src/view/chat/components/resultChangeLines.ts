@@ -118,7 +118,7 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
  * roll's, and for one set total, because its history line tells both numbers.
  */
 function resultSumText(rollTotal: number, changes: readonly ResultChange[]): string | null {
-	const standing = changes.filter((change) => !change.retired);
+	const standing = standingResultChanges(changes);
 	if (standing.length === 1 && standing[0].change === 'setTotal') return null;
 	if (resultTotal(rollTotal, changes) === rollTotal) return null;
 

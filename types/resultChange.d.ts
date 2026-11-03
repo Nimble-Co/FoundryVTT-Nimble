@@ -1,3 +1,4 @@
+import type { CheckResult } from './checkResult.d.ts';
 import type { ResultChangeKind } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 /** What one use of a Change a Result rule does now. */
@@ -42,7 +43,7 @@ export interface ResultCardView {
 	/** Formulas read this creature's roll data. */
 	roller: { getRollData?: () => Record<string, unknown> } | null;
 	/** A check card's result. Null or absent when the card cannot tell. */
-	result?: 'failed' | 'succeeded' | null;
+	result?: CheckResult | null;
 	/** The check roll's total without its d20. */
 	rollModifier?: number;
 	/** An attack card's damage is already applied. */
