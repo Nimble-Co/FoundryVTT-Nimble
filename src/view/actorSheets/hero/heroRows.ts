@@ -1,4 +1,5 @@
 import type { RowCostProps } from '#types/components/actorSheets/RowCost.d.ts';
+import { poolCountText } from '#utils/chargePool/poolHeading.js';
 import type { RowUses, ViewOption } from '../parts/types.ts';
 import type { DragDescriptor } from '../shared/drag.ts';
 import {
@@ -285,6 +286,7 @@ function usesOf(state: HeroItemState, context: HeroSheetContext): RowUses[] {
 		left: pool.current,
 		max: pool.max,
 		hideMax: pool.hideMax,
+		count: poolCountText(pool.current, pool.max, pool.hideMax),
 		per: perWord(pool.per, context),
 		need: pool.need,
 	}));

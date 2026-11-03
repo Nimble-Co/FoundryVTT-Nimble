@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
 	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
-	import { poolCountText } from '#utils/chargePool/poolCountText.js';
+	import { poolCountText } from '#utils/chargePool/poolHeading.js';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 

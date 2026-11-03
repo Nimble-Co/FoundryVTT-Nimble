@@ -1,5 +1,6 @@
 import type { SkillKeyType } from '#types/skillKey.js';
 import { ASSESS_DC, assessOptions } from '#utils/assessOptions.js';
+import { poolCountText } from '#utils/chargePool/poolHeading.js';
 import {
 	BUILT_IN_HEROIC_ACTIONS,
 	BUILT_IN_HEROIC_REACTIONS,
@@ -195,7 +196,7 @@ function reactionRow(
 		description,
 		cost: {
 			...actionCost(1, context),
-			uses: [{ left: spent ? 0 : 1, max: 1, per: round }],
+			uses: [{ left: spent ? 0 : 1, max: 1, per: round, count: poolCountText(spent ? 0 : 1, 1) }],
 		},
 		facts: [
 			[localize(`${SHARED}.facts.cost`), actionWords(1, context)],

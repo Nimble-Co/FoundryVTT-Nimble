@@ -21,7 +21,7 @@
 		icon: 'fa-solid fa-fire',
 		open: true,
 		summary: 'Roll a Fury Die and set it aside.',
-		cost: { uses: [{ left: 1, max: 1, per: 'turn' }], actions: 1 },
+		cost: { uses: [{ left: 1, max: 1, per: 'turn', count: '1/1' }], actions: 1 },
 		description:
 			'Roll a Fury Die and set it aside. Add it to every STR attack. Max KEY Fury Dice; lost when Rage ends.',
 		facts: [
@@ -85,7 +85,7 @@
 		tagOn: true,
 		state: 'active',
 		summary: 'Fury Dice: 5, 3.',
-		cost: { uses: [{ left: 0, max: 1, per: 'turn' }], actions: 1, actionsSpent: 1 },
+		cost: { uses: [{ left: 0, max: 1, per: 'turn', count: '0/1' }], actions: 1, actionsSpent: 1 },
 	}}
 />
 
@@ -140,7 +140,7 @@
 		name="Rage"
 		icon="fa-solid fa-fire"
 		summary="Roll a Fury Die and set it aside."
-		cost={{ uses: [{ left: 1, max: 1, per: 'turn' }], actions: 1 }}
+		cost={{ uses: [{ left: 1, max: 1, per: 'turn', count: '1/1' }], actions: 1 }}
 		description="Roll a Fury Die and set it aside."
 		onuse={fn()}
 		onedit={fn()}

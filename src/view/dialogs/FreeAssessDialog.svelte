@@ -30,7 +30,7 @@ Assess for free and with advantage: the option and the skill.
 	oncancel={() => dialog.close()}
 	onroll={onConfirm}
 >
-	{#if usedLine}<p class="note">{localize('NIMBLE.demandControl.usedThisRound')}</p>{/if}
+	{#if usedLine}<p class="note">{localize('NIMBLE.rollWindow.usedThisRound')}</p>{/if}
 	<p class="note">{spendLine}</p>
 	<div class="fld">
 		<span class="lb">{localize('NIMBLE.ui.heroicActions.assess.header')}</span>

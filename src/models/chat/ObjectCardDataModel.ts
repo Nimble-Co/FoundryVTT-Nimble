@@ -6,6 +6,7 @@ import {
 	damageBack,
 	grantedActionOffers,
 	incomingReactions,
+	keptAmount,
 	metadata,
 	migrateIncomingReactions,
 	movementOffers,
@@ -44,6 +45,7 @@ declare namespace NimbleObjectCardData {
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof rerollHistory> &
 		ReturnType<typeof attackResultChanges> &
+		ReturnType<typeof keptAmount> &
 		ReturnType<typeof primaryDieBonuses> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
@@ -69,6 +71,7 @@ class NimbleObjectCardData extends foundry.abstract.TypeDataModel<
 			...incomingReactions(),
 			...rerollHistory(),
 			...attackResultChanges(),
+			...keptAmount(),
 			...primaryDieBonuses(),
 			...damageBack(),
 			...movementOffers(),

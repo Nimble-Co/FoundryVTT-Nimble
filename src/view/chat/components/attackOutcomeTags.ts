@@ -87,7 +87,7 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	const kept = (roll?.options?.outcomeSources?.keptAmount ?? []).map(
 		(feature): AttackOutcomeTag => ({
-			kind: 'maxDamage',
+			kind: 'keptAmount',
 			label: localize(`${TAG_TEXT}.keptAmount`, { feature }),
 			tooltip: localize(`${TAG_TEXT}.keptAmountTooltip`, { feature }),
 		}),

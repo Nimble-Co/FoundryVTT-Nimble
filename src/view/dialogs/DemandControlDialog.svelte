@@ -29,7 +29,7 @@ Demand Control: the options of the Control Table, with what each option asks for
 	oncancel={() => dialog.close()}
 	onroll={onConfirm}
 >
-	{#if control.roundUsed}<p class="note">{localize(`${TEXT}.usedThisRound`)}</p>{/if}
+	{#if control.roundUsed}<p class="note">{localize('NIMBLE.rollWindow.usedThisRound')}</p>{/if}
 
 	<div class="rows">
 		{#each control.rows as row (row.id)}

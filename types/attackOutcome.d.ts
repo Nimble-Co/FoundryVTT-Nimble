@@ -18,7 +18,14 @@ export interface AttackOutcomeSources {
 
 /** A tag at the roll that tells why the attack result is not what the die face shows. */
 export interface AttackOutcomeTag {
-	kind: 'crit' | 'cannotMiss' | 'noOutcome' | 'maxDamage' | 'critDice' | 'mustAttackOther';
+	kind:
+		| 'crit'
+		| 'cannotMiss'
+		| 'noOutcome'
+		| 'maxDamage'
+		| 'keptAmount'
+		| 'critDice'
+		| 'mustAttackOther';
 	label: string;
 	tooltip: string;
 }

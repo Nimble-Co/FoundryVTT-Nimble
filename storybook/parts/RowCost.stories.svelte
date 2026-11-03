@@ -5,7 +5,10 @@
 	const { Story } = defineMeta({ title: 'Parts/Rows/RowCost', component: RowCost });
 </script>
 
-<Story name="Uses and an action" args={{ uses: [{ left: 1, max: 1, per: 'turn' }], actions: 1 }} />
+<Story
+	name="Uses and an action"
+	args={{ uses: [{ left: 1, max: 1, per: 'turn', count: '1/1' }], actions: 1 }}
+/>
 <Story
 	name="Pool cost, free"
 	args={{ pool: { kind: 'dice', icon: 'fa-solid fa-dice-d6', amount: '1-3' }, free: true }}
@@ -30,12 +33,16 @@
 </Story>
 <Story
 	name="Quantity, range, no uses left"
-	args={{ text: 'x2', uses: [{ left: 0, max: 1, per: 'encounter' }], range: 'Range 8' }}
+	args={{
+		text: 'x2',
+		uses: [{ left: 0, max: 1, per: 'encounter', count: '0/1' }],
+		range: 'Range 8',
+	}}
 />
 <Story
 	name="NPC card, compact"
 	args={{
-		uses: [{ left: 0, max: 1, per: 'encounter' }],
+		uses: [{ left: 0, max: 1, per: 'encounter', count: '0/1' }],
 		range: 'Range 8',
 		compact: true,
 		outTone: 'ink',

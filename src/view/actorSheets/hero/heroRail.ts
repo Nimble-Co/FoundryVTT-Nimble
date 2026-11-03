@@ -1,5 +1,5 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
-import { poolCountText } from '#utils/chargePool/poolCountText.js';
+import { poolCountText } from '#utils/chargePool/poolHeading.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import { signedNumber } from '#utils/signedNumber.ts';
 import type { PoolKind } from '../parts/types.ts';

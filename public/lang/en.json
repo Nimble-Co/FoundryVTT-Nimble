@@ -2916,7 +2916,9 @@
 				"multiplier": {
 					"label": "Multiply the damage by",
 					"hint": "A whole number, 2 or more. The tick starts off, and a roll with no window does not use it."
-				}
+				},
+				"tick": "x{multiplier} damage: {label}",
+				"onCard": "x{multiplier} damage"
 			},
 			"holdOnTarget": {
 				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.",
@@ -4401,7 +4403,6 @@
 			"confirm": "Confirm",
 			"confirmCast": "Cast Spell",
 			"chosen": "Chosen",
-			"usedThisRound": "You used this in this round.",
 			"cantrip": "Cantrip",
 			"creature": "Creature",
 			"protected": "Creature it cannot harm",
@@ -4435,8 +4436,6 @@
 		},
 		"heldChange": {
 			"keptOnCard": "{label}, next attack: {amount}",
-			"multiplierTick": "x{multiplier} damage: {label}",
-			"multiplierOnCard": "x{multiplier} damage",
 			"keptTick": "{label}: use {amount} and do not roll",
 			"line": {
 				"primaryDie": "{label}: {value} to Primary Die",

@@ -6,6 +6,8 @@ export interface RowUses {
 	max: number;
 	/** the book gives no cap: show the count alone */
 	hideMax?: boolean;
+	/** the count as text, such as `3/5`, or `3` with `hideMax` */
+	count: string;
 	/** when they come back: turn, Safe Rest, encounter */
 	per?: string;
 	/** uses that one use costs; fewer left = out. Default 1 */

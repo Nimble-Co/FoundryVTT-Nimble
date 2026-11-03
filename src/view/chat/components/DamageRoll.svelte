@@ -17,7 +17,7 @@
 
 	function withMultiplierText(info, damageMultiplier) {
 		if (damageMultiplier === 1) return info;
-		const text = localize('NIMBLE.heldChange.multiplierOnCard', {
+		const text = localize('NIMBLE.rules.damageMultiplier.onCard', {
 			multiplier: String(damageMultiplier),
 		});
 		return `${info} ${text}`;
