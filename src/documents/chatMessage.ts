@@ -113,6 +113,7 @@ type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
 type DamageApplyOptions = {
 	damageType?: string;
+	damageMultiplier?: number;
 	ignoreArmor?: boolean;
 	outcome?: DamageApplyOutcome;
 	roll?: DamageRoll.SerializedData | null;
@@ -356,19 +357,21 @@ function calculateArmorAdjustedDamage(params: {
 		return params.damage;
 	}
 
+	// Armor reads the stored roll, which does not have the multiplier of the node.
+	const damageMultiplier = damageOptions?.damageMultiplier ?? 1;
 	let totalAdjustedDamage = 0;
 	for (const serializedRoll of serializedRolls) {
 		const rollTotal = getDamageRollTotal(serializedRoll);
 		const isCritical = serializedRoll.isCritical === true;
 
 		if (isCritical) {
-			const critAdjustedDamage = applyOutcomeHalfDamage ? Math.ceil(rollTotal * 0.5) : rollTotal;
-			totalAdjustedDamage += critAdjustedDamage;
+			const critDamage = rollTotal * damageMultiplier;
+			totalAdjustedDamage += applyOutcomeHalfDamage ? Math.ceil(critDamage * 0.5) : critDamage;
 			continue;
 		}
 
-		const diceDamage = getDiceDamageTotal(serializedRoll) ?? rollTotal;
-		const negativeModifierTotal = getNegativeModifierTotal(serializedRoll);
+		const diceDamage = (getDiceDamageTotal(serializedRoll) ?? rollTotal) * damageMultiplier;
+		const negativeModifierTotal = getNegativeModifierTotal(serializedRoll) * damageMultiplier;
 		let adjustedDamage = diceDamage;
 		if (applyOutcomeHalfDamage) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
 		if (applyHeavyArmor) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
@@ -1476,9 +1479,8 @@ class NimbleChatMessage extends ChatMessage {
 							? 'noDamage'
 							: 'fullDamage';
 
-				const multiplier =
-					(outcome === 'halfDamage' ? 0.5 : 1) *
-					((node as { damageMultiplier?: number }).damageMultiplier ?? 1);
+				const nodeMultiplier = (node as { damageMultiplier?: number }).damageMultiplier ?? 1;
+				const multiplier = (outcome === 'halfDamage' ? 0.5 : 1) * nodeMultiplier;
 				const rollTotal = Number(roll.total ?? 0);
 				const value = Math.ceil((Number.isFinite(rollTotal) ? rollTotal : 0) * multiplier);
 
@@ -1488,6 +1490,7 @@ class NimbleChatMessage extends ChatMessage {
 						damageType: (node as { damageType?: string }).damageType,
 						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
 						outcome,
+						...(nodeMultiplier !== 1 ? { damageMultiplier: nodeMultiplier } : {}),
 						roll: roll as unknown as DamageRoll.SerializedData,
 						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
 						attackIsCritical: system.isCritical === true,

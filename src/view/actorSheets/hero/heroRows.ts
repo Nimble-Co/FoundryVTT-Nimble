@@ -295,7 +295,14 @@ function usesFacts(state: HeroItemState, context: HeroSheetContext): [string, st
 	return state.pools.map((pool) => {
 		const per = perWord(pool.per, context);
 		const data = { left: String(pool.current), max: String(pool.max) };
-		if (pool.hideMax) return [label, context.format(`${SHARED}.countLeft`, data)];
+		if (pool.hideMax) {
+			return [
+				label,
+				per
+					? context.format(`${SHARED}.countBack`, { ...data, per })
+					: context.format(`${SHARED}.countLeft`, data),
+			];
+		}
 		return [
 			label,
 			per

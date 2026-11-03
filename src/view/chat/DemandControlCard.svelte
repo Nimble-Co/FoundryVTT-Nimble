@@ -10,7 +10,9 @@
 	let { messageDocument }: ChatCardProps = $props();
 
 	const TEXT = 'NIMBLE.demandControl';
-	const system = $derived(messageDocument.reactive.system);
+	const system = $derived(
+		messageDocument.reactive.system as unknown as { actorUuid: string; done: ControlOption[] },
+	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
 	const gmRows = CONTROL_OPTIONS.filter((option) => option !== 'loseControl');
@@ -18,7 +20,7 @@
 	async function doRow(option: ControlOption) {
 		const actor = fromUuidSync(system.actorUuid);
 		if (!actor) return;
-		await messageDocument.update({ 'system.done': [...system.done, option] });
+		await messageDocument.update({ 'system.done': [...system.done, option] } as never);
 		await openDemandControl(actor as never, { locked: option });
 	}
 </script>

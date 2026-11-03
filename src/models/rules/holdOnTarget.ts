@@ -8,9 +8,20 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'mustAttackOther',
-			choices: ['mustAttackOther', 'vulnerableOnce'],
+			choices: {
+				mustAttackOther: 'NIMBLE.rules.holdOnTarget.heldKind.choices.mustAttackOther',
+				vulnerableOnce: 'NIMBLE.rules.holdOnTarget.heldKind.choices.vulnerableOnce',
+			},
+			label: 'NIMBLE.rules.holdOnTarget.heldKind.label',
+			hint: 'NIMBLE.rules.holdOnTarget.heldKind.hint',
 		}),
-		damageType: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		damageType: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.holdOnTarget.damageType.label',
+			hint: 'NIMBLE.rules.holdOnTarget.damageType.hint',
+		}),
 	};
 }
 

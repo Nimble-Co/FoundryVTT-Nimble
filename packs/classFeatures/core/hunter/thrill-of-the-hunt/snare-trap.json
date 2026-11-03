@@ -74,7 +74,7 @@
 					"distance": "1",
 					"distanceBySize": {},
 					"ignoreDifficultTerrain": true,
-					"direction": "away",
+					"direction": "any",
 					"parentContext": null,
 					"parentNode": null
 				},

@@ -1,7 +1,7 @@
 export interface ResourceBarProps {
 	current: number;
 	max: number;
-	/** The book gives no cap: show the count alone, with no bar. */
+	/** The book gives no cap: show the count alone, with an empty bar. */
 	hideMax?: boolean;
 	label: string;
 	/** How many of `current` are temporary uses, drawn as a lighter part of the bar. */

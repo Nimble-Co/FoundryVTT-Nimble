@@ -322,6 +322,12 @@ describe('a change that waits on the target of a feature', () => {
 		expect(heldLinesForItem(attacker, item)).toHaveLength(1);
 	});
 
+	it('tells a damage item with no attack roll too', () => {
+		const attacker = creature('A', [mustAttack]);
+		const item = { system: { activation: { effects: [{ type: 'damage' }], targets: {} } } };
+		expect(heldLinesForItem(attacker, item)).toHaveLength(1);
+	});
+
 	it('finds a vulnerability only for its damage type', () => {
 		const holder = creature('A', [greased]);
 		expect(heldVulnerabilityTo(holder, 'fire')?.kind).toBe('vulnerableOnce');

@@ -3,6 +3,7 @@ import { getMovementSpeeds } from '#utils/actor/movementSpeeds.js';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
+import { spendHeldIgnoreDisadvantage } from '../heldChange/heldChange.js';
 
 /**
  * Takes the Move action in combat: confirms when no actions remain, spends 1
@@ -40,6 +41,7 @@ export async function runMoveAction(actor: NimbleCharacter): Promise<void> {
 
 	if (combat && combatant.id) {
 		await consumeCombatantAction({ combat, combatantId: combatant.id });
+		await spendHeldIgnoreDisadvantage(actor as never);
 	}
 
 	const movementSpeeds = getMovementSpeeds(actor);

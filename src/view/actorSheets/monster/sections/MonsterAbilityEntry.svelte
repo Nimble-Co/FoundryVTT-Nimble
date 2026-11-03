@@ -56,7 +56,9 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 					width="22px"
 					variant="cost"
 					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: field.poolId, value })}
-				/><span class="mx">/{field.max}</span>{#if field.per}<small>{field.per}</small>{/if}
+				/>{#if !field.hideMax}<span class="mx">/{field.max}</span>{/if}{#if field.per}<small
+						>{field.per}</small
+					>{/if}
 			</span>
 		{/each}
 	{/if}

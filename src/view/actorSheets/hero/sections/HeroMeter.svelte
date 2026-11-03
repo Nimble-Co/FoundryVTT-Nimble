@@ -263,7 +263,7 @@ In edit mode the numbers rest, and Mana and Hit Dice get an EditZone to their co
 			</span>
 		</div>
 		<div class="cells">
-			{#each { length: pool.hideMax ? 0 : pool.max }, index}
+			{#each { length: pool.hideMax ? (pool.die ? pool.value : 0) : pool.max }, index}
 				{#if pool.rollOne && index < pool.value}
 					{@const rollOne = pool.rollOne}
 					<button

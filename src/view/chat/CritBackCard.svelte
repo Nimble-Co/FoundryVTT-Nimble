@@ -8,14 +8,19 @@
 
 	let { messageDocument }: ChatCardProps = $props();
 
-	const system = $derived(messageDocument.reactive.system);
+	const system = $derived(
+		messageDocument.reactive.system as unknown as Record<string, string | undefined> & {
+			actorUuid: string;
+			used?: boolean;
+		},
+	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
 	const creature = $derived(fromUuidSync(system.actorUuid) as never);
 	const rows = $derived(creature ? attackRows(creature) : []);
 
 	async function use(itemId: string) {
-		await messageDocument.update({ 'system.used': true });
+		await messageDocument.update({ 'system.used': true } as never);
 		await useCritBack({
 			creature,
 			itemId,

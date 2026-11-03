@@ -13,6 +13,9 @@ The tick of a roll window that multiplies the damage of the item.
 	<input type="checkbox" bind:checked />
 	<i class="fa-solid fa-xmark" aria-hidden="true"></i>
 	<span
-		>{localize('NIMBLE.heldChange.multiplierTick', { label, multiplier: String(multiplier) })}</span
+		>{localize(label ? 'NIMBLE.heldChange.multiplierTick' : 'NIMBLE.heldChange.multiplierOnCard', {
+			label,
+			multiplier: String(multiplier),
+		})}</span
 	>
 </label>

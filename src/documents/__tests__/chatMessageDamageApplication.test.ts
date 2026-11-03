@@ -659,3 +659,28 @@ describe('a vulnerability to the next fire damage', () => {
 		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });
+
+describe('a damage node with a multiplier on an armored target', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	async function dealt(armor: string, packet: { total: number; damageMultiplier?: number }) {
+		const actor = createTarget();
+		actor.system.attributes.armor = armor;
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor });
+		await createCard([{ damageType: 'piercing', ...packet }]).applyAllDamage();
+		return actor.applyDamage.mock.calls[0]?.[0];
+	}
+
+	it('doubles what heavy armor lets through', async () => {
+		expect(await dealt('heavy', { total: 6 })).toBe(3);
+		expect(await dealt('heavy', { total: 6, damageMultiplier: 2 })).toBe(6);
+	});
+
+	it('doubles what medium armor lets through', async () => {
+		expect(await dealt('medium', { total: 6, damageMultiplier: 2 })).toBe(12);
+	});
+});

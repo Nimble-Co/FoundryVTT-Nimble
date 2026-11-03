@@ -78,11 +78,12 @@
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let critDiceLines = $derived(critDiceLinesOf(roll?.terms));
-	let multiplier = $derived(getDamageMultiplier(outcome) * damageMultiplier);
+	let shownMultiplier = $derived(outcome === 'noDamage' ? 1 : damageMultiplier);
+	let multiplier = $derived(getDamageMultiplier(outcome) * shownMultiplier);
 	let secondaryInfo = $derived(
 		withMultiplierText(
 			getSecondaryInformation(outcome, ignoreArmor, rollOptions),
-			damageMultiplier,
+			shownMultiplier,
 		).trim(),
 	);
 </script>

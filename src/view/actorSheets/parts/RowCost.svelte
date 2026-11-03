@@ -27,7 +27,9 @@ The pool kind picks the colour of the pool cost. The uses, the mana cost and the
 	const usesHint = (u: RowUses) =>
 		localize(
 			u.hideMax
-				? 'NIMBLE.actorSheet.parts.rowCost.countLeft'
+				? u.per
+					? 'NIMBLE.actorSheet.parts.rowCost.countBack'
+					: 'NIMBLE.actorSheet.parts.rowCost.countLeft'
 				: u.per
 					? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
 					: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',

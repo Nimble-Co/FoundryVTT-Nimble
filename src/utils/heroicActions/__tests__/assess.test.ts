@@ -73,6 +73,30 @@ describe('runAssess', () => {
 		);
 	});
 
+	it('takes the disadvantage off a paid Assess while the character holds Nullify', async () => {
+		const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
+		const heldChange = {
+			kind: 'ignoreDisadvantage',
+			appliesTo: 'holderAttacks',
+			combatId: 'heroic-combat',
+			ends: 'combat',
+			value: 0,
+		};
+		const actor = createHeroicCharacter({
+			rollSkillCheck,
+			system: { skills: { insight: { defaultRollMode: -1 } } },
+			effects: [{ id: 'nullify', flags: { nimble: { heldChange } }, delete: vi.fn() }],
+		});
+		setHeroicCombat(createHeroicCombatant(actor));
+		(game as unknown as { combats: { get(): { started: boolean } } }).combats = {
+			get: () => ({ started: true }),
+		};
+
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+
+		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
+	});
+
 	describe('what a success holds', () => {
 		function holder() {
 			return {

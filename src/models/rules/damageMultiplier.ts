@@ -10,6 +10,8 @@ function schema() {
 			initial: 2,
 			integer: true,
 			min: 2,
+			label: 'NIMBLE.rules.damageMultiplier.multiplier.label',
+			hint: 'NIMBLE.rules.damageMultiplier.multiplier.hint',
 		}),
 	};
 }

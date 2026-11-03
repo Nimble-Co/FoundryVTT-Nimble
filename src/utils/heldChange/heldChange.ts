@@ -159,9 +159,11 @@ export function heldLinesForItem(
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
 	const ended = keptAmountEndedBy(attacker, item);
+	const mustAttack = node ? mustAttackOtherChange(attacker) : null;
 	const endedLines = ended
 		? [
 				{
+					key: ended.effectId,
 					text: localize('NIMBLE.heldChange.line.wholeAmountEnds', {
 						label: ended.label,
 						value: String(ended.value),
@@ -170,13 +172,15 @@ export function heldLinesForItem(
 				},
 			]
 		: [];
-	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) return endedLines;
+	const mustAttackLines = heldLines(mustAttack ? [mustAttack] : []);
+	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) {
+		return [...mustAttackLines, ...endedLines];
+	}
 	const ignore = options.ignoresDisadvantage ? null : ignoreDisadvantageChange(attacker);
-	const mustAttack = mustAttackOtherChange(attacker);
 	return [
+		...mustAttackLines,
 		...endedLines,
 		...heldLines([
-			...(mustAttack ? [mustAttack] : []),
 			...(ignore ? [ignore] : []),
 			...heldChangesForAttack({
 				attacker,
@@ -312,9 +316,12 @@ export async function spendHeldChanges(held: HeldChange[]): Promise<void> {
 }
 
 /** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */
-export async function spendHeldIgnoreDisadvantage(holder: Holder): Promise<void> {
+export async function spendHeldIgnoreDisadvantage(
+	holder: Holder,
+	usedItemName?: string | null,
+): Promise<void> {
 	const held = ignoreDisadvantageChange(holder);
-	if (held) await spendHeldChanges([held]);
+	if (held && held.sourceName !== usedItemName) await spendHeldChanges([held]);
 }
 
 /** Deletes each change whose time ended. */

@@ -80,7 +80,8 @@
 					"mana": "Costs {amount} mana",
 					"usesBack": "{left} of {max} left. It comes back each {per}.",
 					"usesLeft": "{left} of {max} left",
-					"countLeft": "{left} left"
+					"countLeft": "{left} left",
+					"countBack": "{left} left. It comes back each {per}."
 				},
 				"saveTile": {
 					"advantage": "Saves with {count} Advantage",
@@ -335,6 +336,7 @@
 				"concentration": "Concentration",
 				"usesLeft": "{left} of {max} left.",
 				"countLeft": "{left} left.",
+				"countBack": "{left} left. They come back each {per}.",
 				"usesBack": "{left} of {max} left. They come back each {per}.",
 				"usesOf": "{pool} of {name}",
 				"delete": "Delete",
@@ -2905,10 +2907,26 @@
 				}
 			},
 			"damageMultiplier": {
-				"description": "A tick in the roll window of this item that multiplies its damage. The label says when it applies. The player decides, and the system checks nothing."
+				"description": "A tick in the roll window of this item that multiplies its damage. The label says when it applies. The player decides, and the system checks nothing.",
+				"multiplier": {
+					"label": "Multiply the damage by",
+					"hint": "A whole number, 2 or more. A roll with no window uses it."
+				}
 			},
 			"holdOnTarget": {
-				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat."
+				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. It is decided at the use, and a later reroll does not change it.",
+				"heldKind": {
+					"label": "What the target holds",
+					"hint": "A line on the next attack of the target, or a vulnerability that the next damage of one type ends.",
+					"choices": {
+						"mustAttackOther": "Next attack against the closest other creature",
+						"vulnerableOnce": "Vulnerable to the next damage of this type"
+					}
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "The type of a one-use vulnerability, such as fire."
+				}
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."

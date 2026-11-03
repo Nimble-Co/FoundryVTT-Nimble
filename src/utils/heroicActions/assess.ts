@@ -6,7 +6,11 @@ import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { createHeldChange, spendHeldIgnoreDisadvantage } from '../heldChange/heldChange.js';
+import {
+	createHeldChange,
+	ignoreDisadvantageChange,
+	spendHeldIgnoreDisadvantage,
+} from '../heldChange/heldChange.js';
 import { assessSucceeds } from './assessResult.js';
 
 export interface AssessRequest {
@@ -54,6 +58,13 @@ async function holdAssessChange(
 	return null;
 }
 
+function rollPaidAssess(actor: NimbleCharacter, skillKey: AssessRequest['skillKey']) {
+	const skillMode = actor.system?.skills?.[skillKey]?.defaultRollMode ?? 0;
+	return skillMode < 0 && ignoreDisadvantageChange(actor as never)
+		? actor.rollSkillCheck(skillKey, { rollMode: 0 })
+		: actor.rollSkillCheck(skillKey);
+}
+
 /**
  * Rolls the Assess skill check, spends 1 action in combat and posts the card.
  * Returns false when the option is unknown or the roll is cancelled.
@@ -71,7 +82,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 
 	const { roll } = await (request.free
 		? actor.rollSkillCheck(request.skillKey, { rollMode: 1, skipRollDialog: true })
-		: actor.rollSkillCheck(request.skillKey));
+		: rollPaidAssess(actor, request.skillKey));
 	if (!roll) return false;
 
 	if (!request.free) {

@@ -11,8 +11,10 @@ describe('buildMinionAttackRollEntry', () => {
 			formula: '1d4',
 			damageRoll: { isMiss: false, total: 3, toJSON: () => ({}) } as never,
 			held: [{ label: 'Create an Opening', value: 1 }] as never,
+			mustAttackLabel: 'Addling Arrow',
 		});
 
+		expect(entry.mustAttackLabel).toBe('Addling Arrow');
 		expect(entry.primaryDieBonuses).toEqual([{ label: 'Create an Opening', value: 1 }]);
 	});
 });

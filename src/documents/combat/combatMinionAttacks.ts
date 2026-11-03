@@ -10,6 +10,7 @@ import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttac
 import {
 	firstTargetActor,
 	heldChangesForAttack,
+	mustAttackOtherChange,
 	spendHeldChanges,
 } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
@@ -200,6 +201,7 @@ export function buildMinionAttackRollEntry(params: {
 	formula: string;
 	damageRoll: DamageRoll;
 	held: HeldChange[];
+	mustAttackLabel?: string;
 }): MinionGroupAttackRollEntry {
 	const isMiss = Boolean(params.damageRoll.isMiss);
 	const totalDamage = Number(params.damageRoll.total ?? 0);
@@ -224,6 +226,7 @@ export function buildMinionAttackRollEntry(params: {
 		isMiss,
 		rollData: params.damageRoll.toJSON() as Record<string, unknown>,
 		primaryDieBonuses: params.held.map((change) => ({ label: change.label, value: change.value })),
+		...(params.mustAttackLabel ? { mustAttackLabel: params.mustAttackLabel } : {}),
 	};
 }
 
@@ -267,7 +270,8 @@ async function rollSingleMinionAttack(params: {
 			primaryDieModifier: held.reduce((sum, change) => sum + change.value, 0),
 		});
 		await damageRoll.evaluate();
-		await spendHeldChanges(held);
+		const mustAttack = mustAttackOtherChange(resolvedActionContext.actor as never);
+		await spendHeldChanges([...held, ...(mustAttack ? [mustAttack] : [])]);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -279,6 +283,7 @@ async function rollSingleMinionAttack(params: {
 				formula,
 				damageRoll,
 				held,
+				mustAttackLabel: mustAttack?.label,
 			}),
 			actionUpdate: {
 				_id: resolvedActionContext.memberId,

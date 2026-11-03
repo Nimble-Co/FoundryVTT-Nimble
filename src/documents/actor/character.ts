@@ -2448,7 +2448,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 						actionCost,
 					});
 				}
-				await spendHeldIgnoreDisadvantage(this as never);
+				await spendHeldIgnoreDisadvantage(this as never, item.name);
 			}
 		}
 

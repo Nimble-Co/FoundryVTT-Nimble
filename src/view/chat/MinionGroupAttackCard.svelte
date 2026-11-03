@@ -20,6 +20,7 @@
 		isMiss?: boolean;
 		roll?: Record<string, unknown> | null;
 		primaryDieBonuses?: Array<{ label: string; value: number }>;
+		mustAttackLabel?: string;
 	}
 
 	const { messageDocument } = $props();
@@ -189,6 +190,12 @@
 							})}
 						</p>
 					{/each}
+					{#if row.mustAttackLabel}
+						<p class="nimble-group-member-roll__bonus">
+							<i class="fa-solid fa-arrows-turn-to-dots" aria-hidden="true"></i>
+							{i18nFormat('NIMBLE.heldChange.line.mustAttackOther', { label: row.mustAttackLabel })}
+						</p>
+					{/if}
 				</li>
 			{/each}
 		</ul>

@@ -139,6 +139,7 @@ function usesOf(item: MonsterItemLike, context: MonsterSheetContext): RowUses | 
 	return {
 		left: pool.current,
 		max: pool.max,
+		hideMax: pool.hideMax,
 		per: perOf(pool.per, context),
 	};
 }
@@ -149,6 +150,7 @@ function fieldsOf(item: MonsterItemLike, context: MonsterSheetContext): MonsterU
 		label: context.format(`${SHARED}.usesOf`, { name: item.name, pool: pool.label }),
 		value: pool.current,
 		max: pool.max,
+		hideMax: pool.hideMax,
 		per: perOf(pool.per, context) ?? '',
 	}));
 }

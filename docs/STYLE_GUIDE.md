@@ -1534,7 +1534,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `ruleLabel()`, `ruleKey()` | `src/utils/actor/actorRules.ts` | A rule's label, or its item's name. The key `<item uuid>:<rule id>` of a rule. |
 | `usedThisTurn()`, `markTurnUse()`, `clearTurnUse()` | `src/utils/combat/perTurnUse.ts` | A 1/turn use of a rule, on a flag of the actor. |
 | `currentRoundId()` | `src/utils/combat/perTurnUse.ts` | `<combat id>:<round>` of the started combat, or null outside combat. |
-| `heldChangesOn()`, `heldChangesForAttack()`, `createHeldChange()`, `spendHeldChanges()` | `src/utils/heldChange/heldChange.ts` | Held Changes: what waits on a creature for a later roll, and its end. Nothing is held outside combat. |
+| `heldChangesOn()`, `heldChangesForAttack()`, `createHeldChange()`, `spendHeldChanges()`, `mustAttackOtherChange()`, `heldVulnerabilityTo()`, `spendHeldIgnoreDisadvantage()` | `src/utils/heldChange/heldChange.ts` | Held Changes: what waits on a creature for a later roll, and its end. Nothing is held outside combat. |
 | `recoveryDomainOf()`, `spentPoolIdsOf()`, `giveUnarmedHitRecovery()`, `giveMarkedDeathRecovery()` | `src/utils/chargePool/itemUseRecovery.ts` | What a recovery predicate reads of an attack, and the recoveries that have no item use of their own. |
 | `attackOutcomeChargesToSpend()` | `src/utils/damage/collectAttackOutcome.ts` | The charges an attack spends for an Attack Outcome rule, from the roll that stands. |
 | `damageMultiplierOf()` | `src/utils/damage/damageMultiplier.ts` | The tick a damage multiplier rule offers in the roll window of an item. |

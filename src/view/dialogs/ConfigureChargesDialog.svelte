@@ -187,7 +187,7 @@
 									onclick={() => startEditing(pool)}
 									aria-label={localize('NIMBLE.charges.editCurrent', { pool: pool.label })}
 								>
-									{poolValues[pool.id] ?? pool.current}/{pool.max}
+									{poolValues[pool.id] ?? pool.current}{pool.hideMax ? '' : `/${pool.max}`}
 								</button>
 							{/if}
 

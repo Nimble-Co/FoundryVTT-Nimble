@@ -633,14 +633,14 @@ class ItemActivationManager {
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
 
 		for (const node of flattenEffectsTree(effects)) {
+			if (node.type === 'damage' && this.#damageMultiplier !== 1) {
+				node.damageMultiplier = this.#damageMultiplier;
+			}
 			// A deferred damage node is left unrolled and does not claim the primary
 			// damage slot: its damage lands on a later trigger than the activation,
 			// so the card offers a Roll Damage button and rolls it then.
 			if ((node.type === 'damage' && !node.deferredRoll) || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
-				if (node.type === 'damage' && this.#damageMultiplier !== 1) {
-					node.damageMultiplier = this.#damageMultiplier;
-				}
 
 				if (node.type === 'damage' && !foundDamageRoll) {
 					const { canCrit, canMiss } = node;
@@ -836,9 +836,7 @@ class ItemActivationManager {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
 					if (this.#options.grantedCrit) grantCrit(damageOptions, this.#options.grantedCrit);
-					this.#mustAttackOther = isAttackRoll(this.activationData?.targets?.attackType, node)
-						? mustAttackOtherChange(this.actor as never)
-						: null;
+					this.#mustAttackOther = mustAttackOtherChange(this.actor as never);
 					if (this.#mustAttackOther) {
 						damageOptions.outcomeSources = {
 							...damageOptions.outcomeSources,

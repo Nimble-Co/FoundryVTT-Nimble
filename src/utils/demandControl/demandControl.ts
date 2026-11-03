@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import { actorRules } from '#utils/actor/actorRules.js';
 import localize from '#utils/localize.js';
+import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
 
 export const CONTROL_OPTIONS = ['iInsist', 'elementalAffliction', 'no', 'loseControl'] as const;
 export type ControlOption = (typeof CONTROL_OPTIONS)[number];
@@ -200,8 +201,8 @@ async function applyAffliction(
 }
 
 /**
- * Does the option, and says whether it was done. I INSIST has no card of its
- * own: the cast is the result, and its window keeps the choice of advantage.
+ * Does the option, and says whether it was done. A granted cast has no card of
+ * its own: the cast is the result, and its window keeps the choice of advantage.
  */
 export async function applyControlChoice(
 	actor: ControlActor,
@@ -214,6 +215,7 @@ export async function applyControlChoice(
 				ignoreDisadvantage: true,
 				grantedCannotMiss: localize(`${TEXT}.options.iInsist.label`),
 			});
+			if (card && countsAsAttack(spell as never)) await recordAttack(actor as never);
 			return !!card;
 		}
 		case 'elementalAffliction': {
