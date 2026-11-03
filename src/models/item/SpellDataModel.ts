@@ -1,3 +1,4 @@
+import type { WeaponAttack } from '#types/weaponAttack.d.ts';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation, baseProperties } from './common.js';
 
@@ -196,7 +197,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };
 		effects: Record<string, unknown>[];
-		weaponAttack: '' | 'any' | 'melee' | 'ranged';
+		weaponAttack: WeaponAttack;
 		targets: {
 			count: number;
 			singleTargetAttack: boolean;

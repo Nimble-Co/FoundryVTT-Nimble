@@ -1,4 +1,5 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
+import { poolCountText } from '#utils/chargePool/poolCountText.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import { signedNumber } from '#utils/signedNumber.ts';
 import type { PoolKind } from '../parts/types.ts';
@@ -399,7 +400,7 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 				temporary: pool.temporary
 					? format(`${METER}.temporary`, { count: String(pool.temporary) })
 					: null,
-				summary: pool.hideMax ? String(pool.current) : `${pool.current}/${pool.max}`,
+				summary: poolCountText(pool.current, pool.max, pool.hideMax),
 				currentLabel: format('NIMBLE.actorSheet.parts.vitalPlate.current', { label: pool.label }),
 				rollOne:
 					die && pool.current > 0

@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { HeldChange, HeldChangeData } from '#types/heldChange.d.ts';
+import { askActiveGm } from '#utils/askActiveGm.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 
@@ -286,22 +287,9 @@ async function deleteHere(holder: Holder, effectId: string): Promise<void> {
 	await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId]);
 }
 
-interface QueryUser {
-	query(name: string, data: object): Promise<unknown>;
-}
-
 async function deleteHeld(holder: Holder, effectId: string): Promise<void> {
 	if (holder.isOwner) await deleteHere(holder, effectId);
-	else await askGm({ action: 'delete', actorUuid: holder.uuid, effectId });
-}
-
-async function askGm(data: object): Promise<void> {
-	const gm = (game.users as unknown as { activeGM?: QueryUser | null }).activeGM;
-	if (!gm) {
-		ui.notifications?.warn(localize('NIMBLE.chat.cardActionNeedsGm'));
-		return;
-	}
-	await gm.query(QUERY_NAME, data);
+	else await askActiveGm(QUERY_NAME, { action: 'delete', actorUuid: holder.uuid, effectId });
 }
 
 /**
@@ -311,7 +299,7 @@ async function askGm(data: object): Promise<void> {
 export async function createHeldChange(holder: Holder, change: HeldChangeData): Promise<void> {
 	if (!change.combatId) return;
 	if (holder.isOwner) return createHere(holder, change);
-	await askGm({ action: 'create', actorUuid: holder.uuid, change });
+	await askActiveGm(QUERY_NAME, { action: 'create', actorUuid: holder.uuid, change });
 }
 
 /** Removes what a roll spent. A change that stays for every roll is not spent. */

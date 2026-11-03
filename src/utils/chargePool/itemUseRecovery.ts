@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
+import { askActiveGm } from '#utils/askActiveGm.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
-import localize from '#utils/localize.js';
 import { getToggledTargetTags, readToggledEffects } from '../actor/toggledEffects.js';
 import { applyRecoveryToActorIfEligible } from './chargePoolRecover.js';
 import { RECOVERY_DOMAIN_FLAG, RECOVERY_GIVEN_FLAG } from './chargePoolReroll.js';
@@ -109,16 +109,7 @@ export async function giveMarkedDeathRecovery(
 			});
 			continue;
 		}
-		const gm = (
-			game.users as unknown as {
-				activeGM?: { query(name: string, data: object): Promise<unknown> } | null;
-			}
-		).activeGM;
-		if (!gm) {
-			ui.notifications?.warn(localize('NIMBLE.chat.cardActionNeedsGm'));
-			continue;
-		}
-		await gm.query(QUERY_NAME, { actorUuid: hero.uuid, domain, spentPoolIds });
+		await askActiveGm(QUERY_NAME, { actorUuid: hero.uuid, domain, spentPoolIds });
 	}
 }
 

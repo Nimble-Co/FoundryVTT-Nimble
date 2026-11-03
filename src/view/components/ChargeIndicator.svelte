@@ -5,6 +5,7 @@
 	} from '#types/components/ChargeIndicator.d.ts';
 	import { getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
+	import { poolCountText } from '#utils/chargePool/poolCountText.js';
 	import localize from '#utils/localize.js';
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import ConfigureChargesDialog from '#view/dialogs/ConfigureChargesDialog.svelte';
@@ -69,7 +70,7 @@
 		return `
 			<header class="nimble-tooltip__enricher-header">
 				<h3 class="nimble-tooltip__enricher-heading">${escapedLabel}</h3>
-				<span class="nimble-tooltip__tag nimble-tooltip__tag--item">${pool.current}${pool.hideMax ? '' : `/${pool.max}`}</span>
+				<span class="nimble-tooltip__tag nimble-tooltip__tag--item">${poolCountText(pool.current, pool.max, pool.hideMax)}</span>
 			</header>
 			<section class="nimble-tooltip__description-wrapper">
 				<p class="nimble-charge-tooltip__section-label">${escapeHtml(localize('NIMBLE.charges.recoveryMethods'))}</p>
@@ -138,7 +139,7 @@
 					<i class="{ChargeUiConfig.defaultPoolIcon} charge-indicator__icon" aria-hidden="true"></i>
 				{/if}
 				<span class="charge-indicator__value"
-					>{pool.current}{pool.hideMax ? '' : `/${pool.max}`}</span
+					>{poolCountText(pool.current, pool.max, pool.hideMax)}</span
 				>
 			</button>
 		{/each}

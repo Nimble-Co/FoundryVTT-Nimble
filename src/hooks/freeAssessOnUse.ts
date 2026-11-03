@@ -2,6 +2,7 @@ import FreeAssessDialog from '#documents/dialogs/FreeAssessDialog.svelte.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import { actorRules, ruleLabel } from '#utils/actor/actorRules.js';
 import { hasRuleCharge, spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
+import { currentRoundId } from '#utils/combat/perTurnUse.js';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import localize from '#utils/localize.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
@@ -21,11 +22,6 @@ interface FlagActor {
 	setFlag?(scope: string, key: string, value: unknown): Promise<unknown>;
 }
 
-function currentRound(): string | null {
-	const combat = game.combat;
-	return combat?.started ? `${combat.id}:${combat.round}` : null;
-}
-
 /** The client that used the item opens the window. 1/round is reported, not blocked. */
 export function registerFreeAssessHooks(): void {
 	Hooks.on(
@@ -42,7 +38,7 @@ export function registerFreeAssessHooks(): void {
 			);
 			if (!rule) return;
 
-			const round = currentRound();
+			const round = currentRoundId();
 			const pool = rule.chargePoolIdentifier ?? '';
 			const hasCharge = !!pool && hasRuleCharge(actor as never, pool);
 			const title = ruleLabel(rule as never);

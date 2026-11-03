@@ -1,7 +1,9 @@
 import { SYSTEM_ID } from '#system';
 import { actorRules } from '#utils/actor/actorRules.js';
 import applyConditionToActor from '#utils/actor/applyConditionToActor.js';
+import { askActiveGm } from '#utils/askActiveGm.js';
 import localize from '#utils/localize.js';
+import { currentRoundId } from '../combat/perTurnUse.js';
 import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
 
 export const CONTROL_OPTIONS = ['iInsist', 'elementalAffliction', 'no', 'loseControl'] as const;
@@ -80,14 +82,9 @@ export function chosenAfter(chosen: ControlOption[], option: ControlOption): Con
 	return next.length >= CONTROL_OPTIONS.length ? [] : next;
 }
 
-function currentRound(): string | undefined {
-	const combat = game.combat;
-	return combat?.started ? `${combat.id}:${combat.round}` : undefined;
-}
-
 /** Whether a 1/round feature was used this round. It is a report, not a block. */
 export function usedThisRound(actor: ControlActor): boolean {
-	const round = currentRound();
+	const round = currentRoundId();
 	return !!round && stateOf(actor).round === round;
 }
 
@@ -100,20 +97,20 @@ export async function recordChoice(
 	await actor.setFlag?.(SYSTEM_ID, FLAG, {
 		...state,
 		chosen: chosenAfter(state.chosen ?? [], option),
-		round: reportsRound ? (currentRound() ?? '') : (state.round ?? ''),
+		round: reportsRound ? (currentRoundId() ?? '') : (state.round ?? ''),
 	});
 }
 
 /** Each reaction is 1/round (C:492). This one has no heroic reaction of its own to mark. */
 export function reactionUsedThisRound(actor: ControlActor): boolean {
-	const round = currentRound();
+	const round = currentRoundId();
 	return !!round && stateOf(actor).reactionRound === round;
 }
 
 export async function recordReaction(actor: ControlActor): Promise<void> {
 	await actor.setFlag?.(SYSTEM_ID, FLAG, {
 		...stateOf(actor),
-		reactionRound: currentRound() ?? '',
+		reactionRound: currentRoundId() ?? '',
 	});
 }
 
@@ -187,12 +184,7 @@ async function applyAffliction(
 		await applyConditionToActor(creature as never, condition, { sourceActor: actor as never });
 		return;
 	}
-	const gm = (game.users as unknown as { activeGM?: QueryUser | null }).activeGM;
-	if (!gm) {
-		ui.notifications?.warn(localize('NIMBLE.chat.cardActionNeedsGm'));
-		return;
-	}
-	await gm.query(QUERY_NAME, {
+	await askActiveGm(QUERY_NAME, {
 		action: 'condition',
 		actorUuid: actor.uuid,
 		creatureUuid,

@@ -1,3 +1,5 @@
+import { WEAPON_ATTACKS } from '../../utils/damage/weaponAttack.js';
+
 const { fields } = foundry.data;
 
 export const rules = () => ({
@@ -74,7 +76,7 @@ export const activation = () => ({
 			nullable: false,
 			blank: true,
 			initial: '',
-			choices: ['', 'any', 'melee', 'ranged'],
+			choices: WEAPON_ATTACKS,
 		}),
 		targets: new fields.SchemaField({
 			count: new fields.NumberField({

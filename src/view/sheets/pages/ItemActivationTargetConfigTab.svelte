@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { WEAPON_ATTACKS } from '#utils/damage/weaponAttack.js';
 	import TemplateConfig from '../components/TemplateConfig.svelte';
 
 	async function toggleTemplateShapeOption(selectedShape) {
@@ -19,7 +20,7 @@
 	let selectedAttackType = $derived(activationData.targets?.attackType || '');
 	let distance = $derived(activationData.targets?.distance ?? 1);
 
-	const weaponAttackOptions = ['', 'any', 'melee', 'ranged'].map((value) => ({
+	const weaponAttackOptions = WEAPON_ATTACKS.map((value) => ({
 		value,
 		label: game.i18n.localize(`NIMBLE.itemConfig.weaponAttacks.${value || 'none'}`),
 	}));

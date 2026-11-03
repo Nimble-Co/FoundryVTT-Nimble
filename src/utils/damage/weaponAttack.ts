@@ -1,8 +1,8 @@
+import type { WeaponAttack } from '#types/weaponAttack.d.ts';
 import { attackDeliveryFromAttackType } from './attackDelivery.js';
 
 /** Which weapons an ability attacks with. Empty: the ability has its own damage. */
 export const WEAPON_ATTACKS = ['', 'any', 'melee', 'ranged'] as const;
-export type WeaponAttack = (typeof WEAPON_ATTACKS)[number];
 
 interface WeaponEffect {
 	type?: string;
