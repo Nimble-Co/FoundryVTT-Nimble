@@ -1,5 +1,11 @@
 import { SYSTEM_ID } from '#system';
-import type { ChaosCardDoc, ChaosRoll, ChaosRollChoice, RollTable } from '#types/chaos.d.ts';
+import type {
+	ChaosCardDoc,
+	ChaosRoll,
+	ChaosRollChoice,
+	RollTable,
+	TableRollWhen,
+} from '#types/chaos.d.ts';
 import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
@@ -28,6 +34,7 @@ interface ChaosActor {
 interface ChaosRuleLike {
 	type?: string;
 	table?: RollTable;
+	when?: TableRollWhen;
 	invokesChaos?: boolean;
 	applies?: boolean;
 	rollTwice?: boolean;
@@ -45,9 +52,23 @@ function chaosRules(actor: ChaosActor | null | undefined): ChaosRuleLike[] {
 	return actorRules<ChaosRuleLike>(actor);
 }
 
-/** Whether this hero can invoke Chaos. */
+/** Whether this hero invokes Chaos with the spell tick for 1 less mana and on a crit. */
 export function canInvokeChaos(actor: ChaosActor | null | undefined): boolean {
-	return chaosRules(actor).some((rule) => rule?.type === 'tableRoll' && rule.invokesChaos);
+	return chaosRules(actor).some(
+		(rule) => rule?.type === 'tableRoll' && rule.when !== 'onUse' && rule.invokesChaos,
+	);
+}
+
+/** The table an item rolls on when it is used, or null. */
+export function onUseTableOf(
+	item: { rules?: { values(): Iterable<unknown> } } | null | undefined,
+): RollTable | null {
+	for (const rule of (item?.rules?.values() ?? []) as Iterable<ChaosRuleLike>) {
+		if (rule?.type === 'tableRoll' && rule.when === 'onUse' && rule.invokesChaos) {
+			return rule.table ?? 'chaos';
+		}
+	}
+	return null;
 }
 
 function options(actor: ChaosActor | null | undefined) {
@@ -125,12 +146,16 @@ function usesOfPool(actor: ChaosActor, pool: string): number {
 	return canPayRerollCost(actor as never, chargeOnlyCost(pool)) ? 1 : 0;
 }
 
-/** Each table roll has its own card. A hero who can roll twice picks before the roll. */
+/**
+ * Each table roll has its own card. A hero who can roll twice picks before the roll.
+ * With no `table`, the hero's table roll rule names it.
+ */
 export async function invokeChaos(
 	actor: ChaosActor,
 	attackMessageId: string | null = null,
+	table: RollTable = options(actor).table,
 ): Promise<void> {
-	const { table, rollTwice, pool, advantage } = options(actor);
+	const { rollTwice, pool, advantage } = options(actor);
 	const rolls = rollTwice ? [] : [await rollOnTable(table, advantage)];
 	await ChatMessage.create({
 		author: game.user?.id,

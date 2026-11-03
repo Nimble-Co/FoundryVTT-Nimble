@@ -20,6 +20,15 @@ describe('Table Roll rule', () => {
 		expect(TableRollRule.defineSchema().table.initial).toBe('chaos');
 	});
 
+	it('rolls on the less mana tick or a crit by default, or when its item is used', () => {
+		const when = TableRollRule.defineSchema().when;
+		expect(when.initial).toBe('lessManaOrCrit');
+		expect(Object.keys(when.choices as Record<string, string>)).toEqual([
+			'lessManaOrCrit',
+			'onUse',
+		]);
+	});
+
 	it('lets the holder invoke Chaos', () => {
 		expect(make({}).invokesChaos).toBe(true);
 	});

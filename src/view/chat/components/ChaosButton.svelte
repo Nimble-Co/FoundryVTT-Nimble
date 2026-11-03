@@ -28,11 +28,10 @@
 	const shows = $derived(
 		!!message &&
 			!isRuleAutomationEnabled() &&
-			(message.reactive?.system?.isCritical === true ||
-				!!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_TICKED_FLAG]) &&
+			(!!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_TICKED_FLAG] ||
+				(message.reactive?.system?.isCritical === true && canInvokeChaos(actor()))) &&
 			!message.reactive?.flags?.[SYSTEM_ID]?.[CHAOS_INVOKED_FLAG] &&
-			canActOnCard(message, actor()) &&
-			canInvokeChaos(actor()),
+			canActOnCard(message, actor()),
 	);
 
 	async function use() {

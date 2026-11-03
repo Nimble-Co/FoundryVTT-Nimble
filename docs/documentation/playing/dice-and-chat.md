@@ -251,6 +251,8 @@ Radiant Judgment and Maximum Judgment run when an attack card has you as a targe
 
 A hero with Force of Chaos has a tick in the spell window, **Spend 1 less mana**. It does not show when the spell costs no mana. The tick or a crit on any attack rolls on the Chaos Table by itself, one roll per attack card, also after a reroll. With Feature Effects off, a crit shows a **Roll on the Chaos Table** button.
 
+Chaos Lash rolls on the Chaos Table each time you use it. With Feature Effects off, its card shows the **Roll on the Chaos Table** button.
+
 Each roll has its own Chaos card. The world setting **Show Chaos Table rolls** tells what the card shows. It is off by default, because the book says that the table is secret. Off: the player sees only the number, and the GM gets the text in a whisper. On: the text is on the card.
 
 With Thrive in Chaos, the card shows three buttons before the roll: **Roll once**, **Roll twice, both happen**, and **Roll twice, choose one**, which costs 1 use per Safe Rest. With Master of Chaos, each table roll has advantage.

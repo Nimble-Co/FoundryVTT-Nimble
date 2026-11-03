@@ -2737,11 +2737,19 @@
 				"description": "Each 1 on an Initiative Mana die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
 			"tableRoll": {
-				"description": "The spell dialog has a tick to spend 1 less mana. The tick or a crit rolls on the table, one roll per attack. The system shows the table text only, and applies no effect.",
+				"description": "A roll on the table. The system shows the table text only, and applies no effect.",
 				"table": {
 					"label": "Table",
 					"hint": "The table it rolls on.",
 					"choices": { "chaos": "Chaos Table" }
+				},
+				"when": {
+					"label": "When",
+					"hint": "What makes the roll. The spell dialog gets the tick for 1 less mana only from the first choice.",
+					"choices": {
+						"lessManaOrCrit": "The tick for 1 less mana on a spell, or a crit (one roll per attack)",
+						"onUse": "When this item is used"
+					}
 				}
 			},
 			"tableRollOptions": {

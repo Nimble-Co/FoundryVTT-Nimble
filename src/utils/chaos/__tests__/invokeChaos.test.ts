@@ -4,6 +4,7 @@ import {
 	chooseChaosRoll,
 	invokeChaos,
 	keepChaosRoll,
+	onUseTableOf,
 	whisperChaosRollsToGm,
 } from '../invokeChaos.js';
 
@@ -36,7 +37,8 @@ function diceAre(...totals: Array<[number, number?]>) {
 	}) as never);
 }
 
-const force = { type: 'tableRoll', table: 'chaos', invokesChaos: true };
+const force = { type: 'tableRoll', table: 'chaos', when: 'lessManaOrCrit', invokesChaos: true };
+const lash = { type: 'tableRoll', table: 'chaos', when: 'onUse', invokesChaos: true };
 const thrive = {
 	type: 'tableRollOptions',
 	applies: true,
@@ -79,6 +81,27 @@ describe('a Chaos Table roll', () => {
 	it('is only for a hero with the rule', () => {
 		expect(canInvokeChaos(hero())).toBe(true);
 		expect(canInvokeChaos({ rules: [] })).toBe(false);
+	});
+
+	it('a rule that rolls when its item is used gives no less mana tick and no crit roll', () => {
+		expect(canInvokeChaos({ rules: [lash] })).toBe(false);
+	});
+
+	it('finds the table an item rolls on when it is used', () => {
+		expect(onUseTableOf({ rules: new Map([['a', lash]]) })).toBe('chaos');
+		expect(onUseTableOf({ rules: new Map([['a', force]]) })).toBeNull();
+		expect(onUseTableOf({ rules: new Map([['a', { ...lash, invokesChaos: false }]]) })).toBeNull();
+		expect(onUseTableOf(null)).toBeNull();
+	});
+
+	it('rolls on the table it is given', async () => {
+		tableOpen = true;
+		diceAre([1]);
+
+		await invokeChaos({ ...hero(), rules: [lash] }, 'card', 'chaos');
+
+		expect(getDocuments).toHaveBeenCalledWith({ name: 'Chaos Table' });
+		expect(created[0].system).toMatchObject({ table: 'chaos', attackMessageId: 'card' });
 	});
 
 	it('with the setting off, the card has the number only', async () => {

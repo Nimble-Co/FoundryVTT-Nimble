@@ -1,8 +1,10 @@
-import type { RollTable } from '#types/chaos.d.ts';
+import type { RollTable, TableRollWhen } from '#types/chaos.d.ts';
 import { choiceLabels } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
 
 const ROLL_TABLES: readonly RollTable[] = ['chaos'];
+
+const TABLE_ROLL_WHEN: readonly TableRollWhen[] = ['lessManaOrCrit', 'onUse'];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -15,6 +17,14 @@ function schema() {
 			label: 'NIMBLE.rules.tableRoll.table.label',
 			hint: 'NIMBLE.rules.tableRoll.table.hint',
 		}),
+		when: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'lessManaOrCrit',
+			choices: choiceLabels('tableRoll', 'when', TABLE_ROLL_WHEN),
+			label: 'NIMBLE.rules.tableRoll.when.label',
+			hint: 'NIMBLE.rules.tableRoll.when.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'tableRoll' }),
 	};
 }
@@ -24,11 +34,13 @@ declare namespace TableRollRule {
 }
 
 /**
- * The spell dialog has a tick for 1 less mana. The tick or a crit rolls on the
- * rule's table. The system shows the text of the table, and applies no effect.
+ * A roll on the rule's table: from the spell tick for 1 less mana or a crit, or
+ * when the rule's item is used. The system shows the text of the table, and
+ * applies no effect.
  */
 class TableRollRule extends NimbleBaseRule<TableRollRule.Schema> {
 	declare table: RollTable;
+	declare when: TableRollWhen;
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.tableRoll.description';
@@ -41,7 +53,12 @@ class TableRollRule extends NimbleBaseRule<TableRollRule.Schema> {
 	}
 
 	override tooltipInfo(): string {
-		return super.tooltipInfo(new Map([['table', 'string']]));
+		return super.tooltipInfo(
+			new Map([
+				['table', 'string'],
+				['when', 'string'],
+			]),
+		);
 	}
 
 	get invokesChaos(): boolean {

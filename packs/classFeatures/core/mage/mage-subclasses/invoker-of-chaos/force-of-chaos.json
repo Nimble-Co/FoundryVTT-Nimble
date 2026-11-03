@@ -15,7 +15,8 @@
 				"label": "Force of Chaos",
 				"predicate": {},
 				"priority": 1,
-				"table": "chaos"
+				"table": "chaos",
+				"when": "lessManaOrCrit"
 			}
 		],
 		"activation": {

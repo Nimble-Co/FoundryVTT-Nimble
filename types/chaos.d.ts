@@ -1,6 +1,9 @@
 /** A table that a `tableRoll` rule rolls on. */
 export type RollTable = 'chaos';
 
+/** What makes a `tableRoll` rule roll: the spell tick for 1 less mana or a crit, or a use of its item. */
+export type TableRollWhen = 'lessManaOrCrit' | 'onUse';
+
 /** One roll on the table. The name and text are empty when the GM alone reads them. */
 export interface ChaosRoll {
 	value: number;
