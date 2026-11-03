@@ -1,3 +1,4 @@
+import { ruleKey } from '../../utils/actor/actorRules.js';
 import type {
 	RerollTrigger,
 	RollEffect,
@@ -56,7 +57,7 @@ class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 	}
 
 	get rollUseCost(): RerollCost {
-		return { ...chargeOnlyCost(''), turnUseKey: `${this.item.uuid}:${this.id}` };
+		return { ...chargeOnlyCost(''), turnUseKey: ruleKey(this) };
 	}
 }
 
