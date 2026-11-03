@@ -239,9 +239,11 @@ describe('Change This Roll on an Initiative card', () => {
 		expect(rowText()).not.toContain('Start with');
 	});
 
-	it('opens by itself: Initiative has rows only when a change can help', () => {
+	it('starts closed, and opens on a click', async () => {
 		renderCard();
 
+		expect(controlButton()?.getAttribute('aria-expanded')).toBe('false');
+		await fireEvent.click(controlButton() as HTMLElement);
 		expect(controlButton()?.getAttribute('aria-expanded')).toBe('true');
 	});
 

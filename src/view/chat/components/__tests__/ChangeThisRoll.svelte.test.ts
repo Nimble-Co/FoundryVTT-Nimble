@@ -46,9 +46,9 @@ describe('createChangeThisRollState', () => {
 		expect(control(attack({ isMiss: true })).open).toBe(true);
 	});
 
-	it('opens by itself on an Initiative card', () => {
+	it('starts closed on an Initiative card', () => {
 		const card = { reactive: { type: 'initiative', system: {}, rolls: [] } } as never;
-		expect(control(card).open).toBe(true);
+		expect(control(card).open).toBe(false);
 	});
 
 	it('starts closed on a card that says Succeeded', () => {
