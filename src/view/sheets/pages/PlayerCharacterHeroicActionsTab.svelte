@@ -197,12 +197,7 @@
 	{/if}
 
 	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'move'}
-		<MoveActionPanel
-			{actor}
-			inCombat={heroicState.inCombat}
-			actionsRemaining={heroicState.actionsData.current}
-			onDeductAction={() => heroicState.deductActionPips(1)}
-		/>
+		<MoveActionPanel {actor} inCombat={heroicState.inCombat} />
 	{/if}
 
 	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'assess'}

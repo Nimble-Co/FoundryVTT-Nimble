@@ -2,13 +2,9 @@
 	import type { MoveActionPanelProps } from '../../../../types/components/MoveActionPanel.d.ts';
 	import localize from '../../../utils/localize.js';
 	import { getMovementSpeeds } from '../../../utils/actor/movementSpeeds.js';
+	import { runMoveAction } from '../../../utils/heroicActions/move.js';
 
-	let {
-		actor,
-		inCombat = false,
-		actionsRemaining = 0,
-		onDeductAction = async () => {},
-	}: MoveActionPanelProps = $props();
+	let { actor, inCombat = false }: MoveActionPanelProps = $props();
 
 	let movementSpeeds = $derived(getMovementSpeeds(actor));
 	let primarySpeed = $derived(movementSpeeds.find((s) => s.type === 'walk') ?? movementSpeeds[0]);
@@ -25,35 +21,7 @@
 	}
 
 	async function handleMove() {
-		if (!inCombat) return;
-
-		// Show confirmation dialog if no actions remaining
-		if (actionsRemaining <= 0) {
-			const confirmMove = 'NIMBLE.ui.heroicActions.confirmMove';
-			const confirmed = await foundry.applications.api.DialogV2.confirm({
-				window: { title: localize(`${confirmMove}.title`) },
-				content: `<p>${localize(`${confirmMove}.noActionsMessage`)}</p><p>${localize(`${confirmMove}.confirmQuestion`)}</p>`,
-				yes: { label: localize(`${confirmMove}.confirm`) },
-				no: { label: localize(`${confirmMove}.cancel`) },
-				rejectClose: false,
-			});
-
-			if (confirmed !== true) return;
-		}
-
-		await onDeductAction();
-
-		const chatData = {
-			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor }),
-			type: 'moveAction',
-			system: {
-				actorName: actor.name,
-				speed: primarySpeed?.value ?? 0,
-			},
-		};
-
-		await ChatMessage.create(chatData);
+		await runMoveAction(actor);
 	}
 </script>
 
