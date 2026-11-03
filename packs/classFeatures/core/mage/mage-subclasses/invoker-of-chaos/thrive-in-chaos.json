@@ -30,7 +30,7 @@
 				]
 			},
 			{
-				"type": "chaosOptions",
+				"type": "tableRollOptions",
 				"disabled": false,
 				"id": "thriveInChaos002",
 				"identifier": "",

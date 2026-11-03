@@ -4,6 +4,8 @@ const { fields } = foundry.data;
 
 const chaosCardSchema = () => ({
 	actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+	/** The table of the `tableRoll` rule. */
+	table: new fields.StringField({ required: true, nullable: false, initial: 'chaos' }),
 	/** The attack card that invoked Chaos. Null for a cast with no attack. */
 	attackMessageId: new fields.StringField({ required: false, nullable: true, initial: null }),
 	status: new fields.StringField({

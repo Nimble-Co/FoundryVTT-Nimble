@@ -1667,8 +1667,8 @@
 			"critDiceSave": "Save for Max Crit Dice",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
-			"invokeChaos": "Invoke Chaos",
-			"chaosOptions": "Chaos Options",
+			"tableRoll": "Table Roll",
+			"tableRollOptions": "Table Roll Options",
 			"initiativeMana": "Initiative Mana",
 			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
 			"damageBack": "Damage Back",
@@ -2736,11 +2736,16 @@
 			"initiativeManaRerollOnes": {
 				"description": "Each 1 on an Initiative Mana die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
-			"invokeChaos": {
-				"description": "The spell dialog has a tick to spend 1 less mana. The tick or a crit rolls on the Chaos Table, one roll per attack. The system shows the table text only, and applies no effect."
+			"tableRoll": {
+				"description": "The spell dialog has a tick to spend 1 less mana. The tick or a crit rolls on the table, one roll per attack. The system shows the table text only, and applies no effect.",
+				"table": {
+					"label": "Table",
+					"hint": "The table it rolls on.",
+					"choices": { "chaos": "Chaos Table" }
+				}
 			},
-			"chaosOptions": {
-				"description": "What a Chaos Table roll can do.",
+			"tableRollOptions": {
+				"description": "What a table roll can do.",
 				"rollTwice": {
 					"label": "Roll twice",
 					"hint": "The Chaos card shows buttons before the roll."

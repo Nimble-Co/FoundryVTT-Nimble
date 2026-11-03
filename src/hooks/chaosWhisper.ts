@@ -27,7 +27,7 @@ export async function whisperFinishedChaosCard(card: ChaosCardLike): Promise<voi
 	const rolls = card.system.rolls ?? [];
 	const kept = card.system.kept;
 	const standing = typeof kept === 'number' ? rolls.slice(kept, kept + 1) : rolls;
-	await whisperChaosRollsToGm(card.system.actorName ?? '', standing);
+	await whisperChaosRollsToGm(card.system.actorName ?? '', standing, card.system.table ?? 'chaos');
 }
 
 let registered = false;

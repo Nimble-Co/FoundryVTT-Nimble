@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "chaosOptions",
+				"type": "tableRollOptions",
 				"disabled": false,
 				"id": "masterOfChaos001",
 				"identifier": "",

@@ -8,16 +8,16 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: false,
-			label: 'NIMBLE.rules.chaosOptions.rollTwice.label',
-			hint: 'NIMBLE.rules.chaosOptions.rollTwice.hint',
+			label: 'NIMBLE.rules.tableRollOptions.rollTwice.label',
+			hint: 'NIMBLE.rules.tableRollOptions.rollTwice.hint',
 		}),
 		chooseChargePool: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'NIMBLE.rules.chaosOptions.chooseChargePool.label',
-				hint: 'NIMBLE.rules.chaosOptions.chooseChargePool.hint',
+				label: 'NIMBLE.rules.tableRollOptions.chooseChargePool.label',
+				hint: 'NIMBLE.rules.tableRollOptions.chooseChargePool.hint',
 				widget: 'chargePoolPicker',
 				showWhen: (data: Record<string, unknown>) => data.rollTwice === true,
 			}),
@@ -26,27 +26,27 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: false,
-			label: 'NIMBLE.rules.chaosOptions.advantage.label',
-			hint: 'NIMBLE.rules.chaosOptions.advantage.hint',
+			label: 'NIMBLE.rules.tableRollOptions.advantage.label',
+			hint: 'NIMBLE.rules.tableRollOptions.advantage.hint',
 		}),
-		type: new fields.StringField({ required: true, nullable: false, initial: 'chaosOptions' }),
+		type: new fields.StringField({ required: true, nullable: false, initial: 'tableRollOptions' }),
 	};
 }
 
-declare namespace ChaosOptionsRule {
+declare namespace TableRollOptionsRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** What a Chaos Table roll can do: roll twice, choose with a use, or roll with advantage. */
-class ChaosOptionsRule extends NimbleBaseRule<ChaosOptionsRule.Schema> {
+/** What a table roll can do: roll twice, choose with a use, or roll with advantage. */
+class TableRollOptionsRule extends NimbleBaseRule<TableRollOptionsRule.Schema> {
 	declare rollTwice: boolean;
 	declare chooseChargePool: string;
 	declare advantage: boolean;
 
 	static override group = 'triggers';
-	static override description = 'NIMBLE.rules.chaosOptions.description';
+	static override description = 'NIMBLE.rules.tableRollOptions.description';
 
-	static override defineSchema(): ChaosOptionsRule.Schema {
+	static override defineSchema(): TableRollOptionsRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
 			...schema(),
@@ -68,4 +68,4 @@ class ChaosOptionsRule extends NimbleBaseRule<ChaosOptionsRule.Schema> {
 	}
 }
 
-export { ChaosOptionsRule };
+export { TableRollOptionsRule };

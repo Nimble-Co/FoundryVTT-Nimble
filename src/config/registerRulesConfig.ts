@@ -6,7 +6,6 @@ import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeResultRule } from '../models/rules/changeResult.js';
-import { ChaosOptionsRule } from '../models/rules/chaosOptions.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
@@ -35,7 +34,6 @@ import { InitiativeManaRule } from '../models/rules/initiativeMana.js';
 import { InitiativeManaRerollOnesRule } from '../models/rules/initiativeManaRerollOnes.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
-import { InvokeChaosRule } from '../models/rules/invokeChaos.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
 import { MaxDamageRule } from '../models/rules/maxDamage.js';
@@ -64,6 +62,8 @@ import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { TableRollRule } from '../models/rules/tableRoll.js';
+import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 
@@ -107,8 +107,8 @@ export default function registerRulesConfig() {
 		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
 		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
 		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
-		invokeChaos: 'NIMBLE.ruleTypes.invokeChaos',
-		chaosOptions: 'NIMBLE.ruleTypes.chaosOptions',
+		tableRoll: 'NIMBLE.ruleTypes.tableRoll',
+		tableRollOptions: 'NIMBLE.ruleTypes.tableRollOptions',
 		initiativeMana: 'NIMBLE.ruleTypes.initiativeMana',
 		initiativeManaRerollOnes: 'NIMBLE.ruleTypes.initiativeManaRerollOnes',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
@@ -178,8 +178,8 @@ export default function registerRulesConfig() {
 		critDiceSave: CritDiceSaveRule,
 		offerAttackBonus: OfferAttackBonusRule,
 		poolDieToMax: PoolDieToMaxRule,
-		invokeChaos: InvokeChaosRule,
-		chaosOptions: ChaosOptionsRule,
+		tableRoll: TableRollRule,
+		tableRollOptions: TableRollOptionsRule,
 		initiativeMana: InitiativeManaRule,
 		initiativeManaRerollOnes: InitiativeManaRerollOnesRule,
 		maxHitDice: MaxHitDiceRule,

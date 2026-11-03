@@ -8,13 +8,14 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "invokeChaos",
+				"type": "tableRoll",
 				"disabled": false,
 				"id": "forceOfChaos0001",
 				"identifier": "",
 				"label": "Force of Chaos",
 				"predicate": {},
-				"priority": 1
+				"priority": 1,
+				"table": "chaos"
 			}
 		],
 		"activation": {

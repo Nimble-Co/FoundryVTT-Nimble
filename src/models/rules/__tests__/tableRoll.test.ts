@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
-import { InvokeChaosRule } from '../invokeChaos.js';
+import { TableRollRule } from '../tableRoll.js';
 
 function make(
 	data: object,
 	parent: object = { isEmbedded: true, name: 'Feature', uuid: 'Item.f' },
 ) {
-	const rule = new InvokeChaosRule(
-		{ type: 'invokeChaos' } as never,
+	const rule = new TableRollRule(
+		{ type: 'tableRoll' } as never,
 		{ parent, strict: false } as never,
 	);
 	Object.assign(rule, { predicate: new Predicate({}), ...data });
@@ -15,7 +15,11 @@ function make(
 	return rule;
 }
 
-describe('Invoke Chaos rule', () => {
+describe('Table Roll rule', () => {
+	it('rolls on the Chaos Table by default', () => {
+		expect(TableRollRule.defineSchema().table.initial).toBe('chaos');
+	});
+
 	it('lets the holder invoke Chaos', () => {
 		expect(make({}).invokesChaos).toBe(true);
 	});

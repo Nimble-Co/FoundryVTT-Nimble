@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { ChaosCardDoc, ChaosRoll, ChaosRollChoice } from '#types/chaos.d.ts';
+import type { ChaosCardDoc, ChaosRoll, ChaosRollChoice, RollTable } from '#types/chaos.d.ts';
 import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
@@ -13,7 +13,8 @@ export const CHAOS_INVOKED_FLAG = 'chaosInvoked';
 /** The flag of a card whose tick waits for the button, with Feature Effects off. */
 export const CHAOS_TICKED_FLAG = 'chaosTicked';
 
-const CHAOS_TABLE_NAME = 'Chaos Table';
+/** The name of each table in the tables compendium. */
+const TABLE_NAMES: Record<RollTable, string> = { chaos: 'Chaos Table' };
 
 interface ChaosActor {
 	uuid?: string;
@@ -26,6 +27,7 @@ interface ChaosActor {
 
 interface ChaosRuleLike {
 	type?: string;
+	table?: RollTable;
 	invokesChaos?: boolean;
 	applies?: boolean;
 	rollTwice?: boolean;
@@ -45,37 +47,48 @@ function chaosRules(actor: ChaosActor | null | undefined): ChaosRuleLike[] {
 
 /** Whether this hero can invoke Chaos. */
 export function canInvokeChaos(actor: ChaosActor | null | undefined): boolean {
-	return chaosRules(actor).some((rule) => rule?.type === 'invokeChaos' && rule.invokesChaos);
+	return chaosRules(actor).some((rule) => rule?.type === 'tableRoll' && rule.invokesChaos);
 }
 
 function options(actor: ChaosActor | null | undefined) {
-	const rules = chaosRules(actor).filter((rule) => rule?.type === 'chaosOptions' && rule.applies);
+	const table =
+		chaosRules(actor).find((rule) => rule?.type === 'tableRoll' && rule.invokesChaos)?.table ??
+		'chaos';
+	const rules = chaosRules(actor).filter(
+		(rule) => rule?.type === 'tableRollOptions' && rule.applies,
+	);
 	const twice = rules.find((rule) => rule.rollTwice);
 	return {
+		table,
 		rollTwice: !!twice,
 		pool: twice?.chooseChargePool ?? '',
 		advantage: rules.some((rule) => rule.advantage),
 	};
 }
 
-async function tableResultFor(value: number): Promise<{ name: string; text: string }> {
+async function tableResultFor(
+	table: RollTable,
+	value: number,
+): Promise<{ name: string; text: string }> {
 	const pack = game.packs?.get(`${SYSTEM_ID}.nimble-tables`) as unknown as
 		| { getDocuments(query?: object): Promise<Array<{ results?: Iterable<TableResultLike> }>> }
 		| undefined;
-	const [table] = (await pack?.getDocuments({ name: CHAOS_TABLE_NAME })) ?? [];
-	const result = Array.from(table?.results ?? []).find(
+	const [document] = (await pack?.getDocuments({ name: TABLE_NAMES[table] })) ?? [];
+	const result = Array.from(document?.results ?? []).find(
 		({ range }) => !!range && range[0] <= value && value <= range[1],
 	);
 	return { name: result?.name ?? '', text: result?.description ?? '' };
 }
 
-async function rollOnTable(advantage: boolean): Promise<ChaosRoll> {
+async function rollOnTable(table: RollTable, advantage: boolean): Promise<ChaosRoll> {
 	const roll = new foundry.dice.Roll(advantage ? '2d20kh' : '1d20');
 	await roll.evaluate();
 	if (canShowDiceAnimation()) await showDiceAnimation(roll as never);
 	const results = (roll.dice[0]?.results ?? []) as Array<{ result: number; active?: boolean }>;
 	const value = roll.total ?? 0;
-	const entry = showsChaosTableRolls() ? await tableResultFor(value) : { name: '', text: '' };
+	const entry = showsChaosTableRolls()
+		? await tableResultFor(table, value)
+		: { name: '', text: '' };
 	return {
 		value,
 		dropped: results.find((result) => result.active === false)?.result ?? null,
@@ -90,10 +103,11 @@ async function rollOnTable(advantage: boolean): Promise<ChaosRoll> {
 export async function whisperChaosRollsToGm(
 	actorName: string,
 	rolls: readonly ChaosRoll[],
+	table: RollTable,
 ): Promise<void> {
 	const lines = await Promise.all(
 		rolls.map(async ({ value }) => {
-			const entry = await tableResultFor(value);
+			const entry = await tableResultFor(table, value);
 			return `<p><strong>${value}: ${foundry.utils.escapeHTML(entry.name)}</strong></p>${entry.text}`;
 		}),
 	);
@@ -116,8 +130,8 @@ export async function invokeChaos(
 	actor: ChaosActor,
 	attackMessageId: string | null = null,
 ): Promise<void> {
-	const { rollTwice, pool, advantage } = options(actor);
-	const rolls = rollTwice ? [] : [await rollOnTable(advantage)];
+	const { table, rollTwice, pool, advantage } = options(actor);
+	const rolls = rollTwice ? [] : [await rollOnTable(table, advantage)];
 	await ChatMessage.create({
 		author: game.user?.id,
 		speaker: ChatMessage.getSpeaker({ actor: actor as never }),
@@ -129,6 +143,7 @@ export async function invokeChaos(
 			permissions: actor.permission ?? 0,
 			rollMode: advantage ? 1 : 0,
 			actorUuid: actor.uuid ?? '',
+			table,
 			attackMessageId,
 			status: rollTwice ? 'choosing' : 'done',
 			advantage,
@@ -152,8 +167,8 @@ export async function chooseChaosRoll(
 		const spent = await spendRuleCharge(actor as never, options(actor).pool);
 		if (spent === false) return;
 	}
-	const rolls = [await rollOnTable(system.advantage)];
-	if (choice !== 'once') rolls.push(await rollOnTable(system.advantage));
+	const rolls = [await rollOnTable(system.table, system.advantage)];
+	if (choice !== 'once') rolls.push(await rollOnTable(system.table, system.advantage));
 	await card.update({
 		'system.rolls': rolls,
 		'system.status': choice === 'choose' ? 'picking' : 'done',

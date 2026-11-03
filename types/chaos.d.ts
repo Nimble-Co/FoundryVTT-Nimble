@@ -1,3 +1,6 @@
+/** A table that a `tableRoll` rule rolls on. */
+export type RollTable = 'chaos';
+
 /** One roll on the table. The name and text are empty when the GM alone reads them. */
 export interface ChaosRoll {
 	value: number;
@@ -11,6 +14,7 @@ export type ChaosRollChoice = 'once' | 'both' | 'choose';
 
 export interface ChaosCardSystem {
 	actorUuid: string;
+	table: RollTable;
 	status: 'choosing' | 'picking' | 'done';
 	advantage: boolean;
 	rolls: ChaosRoll[];

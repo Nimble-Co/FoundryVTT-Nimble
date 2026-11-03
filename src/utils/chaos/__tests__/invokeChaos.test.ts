@@ -14,6 +14,7 @@ const TABLE = [
 ];
 
 let tableOpen = false;
+const getDocuments = vi.fn(async (_query: object) => [{ results: TABLE }]);
 const created: Array<Record<string, any>> = [];
 
 function diceAre(...totals: Array<[number, number?]>) {
@@ -35,9 +36,14 @@ function diceAre(...totals: Array<[number, number?]>) {
 	}) as never);
 }
 
-const force = { type: 'invokeChaos', invokesChaos: true };
-const thrive = { type: 'chaosOptions', applies: true, rollTwice: true, chooseChargePool: 'thrive' };
-const master = { type: 'chaosOptions', applies: true, advantage: true };
+const force = { type: 'tableRoll', table: 'chaos', invokesChaos: true };
+const thrive = {
+	type: 'tableRollOptions',
+	applies: true,
+	rollTwice: true,
+	chooseChargePool: 'thrive',
+};
+const master = { type: 'tableRollOptions', applies: true, advantage: true };
 
 const hero = (...rules: unknown[]) => ({
 	uuid: 'Actor.hero',
@@ -60,7 +66,7 @@ describe('a Chaos Table roll', () => {
 		vi.stubGlobal('game', {
 			settings: { get: () => tableOpen },
 			users: { filter: () => [{ id: 'gm', isGM: true }] },
-			packs: { get: () => ({ getDocuments: async () => [{ results: TABLE }] }) },
+			packs: { get: () => ({ getDocuments }) },
 			i18n: { localize: (key: string) => key, format: (key: string) => key },
 		});
 	});
@@ -85,7 +91,11 @@ describe('a Chaos Table roll', () => {
 	});
 
 	it('the whisper to the GM has the text of the rolls', async () => {
-		await whisperChaosRollsToGm('Hero', [{ value: 20, dropped: null, name: '', text: '' }]);
+		await whisperChaosRollsToGm(
+			'Hero',
+			[{ value: 20, dropped: null, name: '', text: '' }],
+			'chaos',
+		);
 
 		expect(created[0].whisper).toEqual(['gm']);
 		expect(created[0].content).toContain('Top text');
@@ -99,6 +109,16 @@ describe('a Chaos Table roll', () => {
 
 		expect(created[0].system.rolls[0]).toMatchObject({ value: 1, name: 'Elemental Eruption' });
 		expect(created).toHaveLength(1);
+	});
+
+	it('rolls on the table of the rule, and the card keeps it', async () => {
+		tableOpen = true;
+		diceAre([1]);
+
+		await invokeChaos(hero());
+
+		expect(getDocuments).toHaveBeenCalledWith({ name: 'Chaos Table' });
+		expect(created[0].system.table).toBe('chaos');
 	});
 
 	it('with Master of Chaos, the roll has advantage', async () => {
@@ -115,6 +135,7 @@ describe('a Chaos Table roll', () => {
 			const card = {
 				system: {
 					actorUuid: '',
+					table: 'chaos',
 					status,
 					advantage: false,
 					rolls: [] as object[],

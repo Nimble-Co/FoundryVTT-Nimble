@@ -9,7 +9,7 @@ function card(system: object, id = 'c1') {
 	return {
 		id,
 		type: 'chaos',
-		system: { actorName: 'Hero', rolls: [], kept: null, ...system },
+		system: { actorName: 'Hero', table: 'chaos', rolls: [], kept: null, ...system },
 		getFlag: (_scope: string, key: string) => flags[key],
 		setFlag: async (_scope: string, key: string, value: unknown) => {
 			flags[key] = value;
@@ -48,7 +48,7 @@ describe('whisperFinishedChaosCard', () => {
 		await whisperFinishedChaosCard(done as never);
 
 		expect(whisper).toHaveBeenCalledTimes(1);
-		expect(whisper).toHaveBeenCalledWith('Hero', [roll(3), roll(9)]);
+		expect(whisper).toHaveBeenCalledWith('Hero', [roll(3), roll(9)], 'chaos');
 	});
 
 	it('tells only the kept roll after a choice', async () => {
@@ -56,7 +56,7 @@ describe('whisperFinishedChaosCard', () => {
 			card({ status: 'done', rolls: [roll(3), roll(9)], kept: 1 }) as never,
 		);
 
-		expect(whisper).toHaveBeenCalledWith('Hero', [roll(9)]);
+		expect(whisper).toHaveBeenCalledWith('Hero', [roll(9)], 'chaos');
 	});
 
 	it('waits while the player still chooses', async () => {
