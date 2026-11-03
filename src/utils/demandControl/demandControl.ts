@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import { actorRules } from '#utils/actor/actorRules.js';
+import applyConditionToActor from '#utils/actor/applyConditionToActor.js';
 import localize from '#utils/localize.js';
 import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
 
@@ -183,8 +184,7 @@ async function applyAffliction(
 	const creature = fromUuidSync(creatureUuid as never) as { isOwner?: boolean } | null;
 	if (!creature) return;
 	if (creature.isOwner) {
-		const { default: apply } = await import('../actor/applyConditionToActor.js');
-		await apply(creature as never, condition, { sourceActor: actor as never });
+		await applyConditionToActor(creature as never, condition, { sourceActor: actor as never });
 		return;
 	}
 	const gm = (game.users as unknown as { activeGM?: QueryUser | null }).activeGM;

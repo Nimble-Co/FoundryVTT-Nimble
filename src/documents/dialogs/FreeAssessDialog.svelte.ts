@@ -2,14 +2,17 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import type { AssessRequest } from '#utils/heroicActions/assess.js';
 import FreeAssessDialogComponent from '../../view/dialogs/FreeAssessDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export default class FreeAssessDialog extends SvelteApplicationMixin(ApplicationV2) {
-	declare promise: Promise<any>;
+type FreeAssessChoice = Omit<AssessRequest, 'free'>;
 
-	declare resolve: any;
+export default class FreeAssessDialog extends SvelteApplicationMixin(ApplicationV2) {
+	declare promise: Promise<FreeAssessChoice | null>;
+
+	declare resolve: (result: FreeAssessChoice | null) => void;
 
 	protected root;
 
@@ -42,7 +45,7 @@ export default class FreeAssessDialog extends SvelteApplicationMixin(Application
 		return { dialog: this, ...this.data } as never;
 	}
 
-	async submitActivation(results: unknown) {
+	async submitActivation(results: FreeAssessChoice) {
 		this.resolve?.(results);
 		return super.close();
 	}

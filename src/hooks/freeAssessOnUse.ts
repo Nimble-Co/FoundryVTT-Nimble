@@ -53,7 +53,7 @@ export function registerFreeAssessHooks(): void {
 				),
 			});
 			await dialog.render(true);
-			const result = (await dialog.promise) as { optionId: string; skillKey: never } | null;
+			const result = await dialog.promise;
 			if (!result) return;
 
 			const made = await runAssess(actor as never, { ...result, free: true });

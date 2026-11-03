@@ -2,14 +2,15 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import type { ControlChoice } from '#utils/demandControl/demandControl.js';
 import DemandControlDialogComponent from '../../view/dialogs/DemandControlDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
 export default class DemandControlDialog extends SvelteApplicationMixin(ApplicationV2) {
-	declare promise: Promise<any>;
+	declare promise: Promise<ControlChoice | null>;
 
-	declare resolve: any;
+	declare resolve: (result: ControlChoice | null) => void;
 
 	protected root;
 
@@ -45,7 +46,7 @@ export default class DemandControlDialog extends SvelteApplicationMixin(Applicat
 		return { actor: this.actor, dialog: this, ...this.data } as never;
 	}
 
-	async submitActivation(results: unknown) {
+	async submitActivation(results: ControlChoice) {
 		this.resolve?.(results);
 		return super.close();
 	}

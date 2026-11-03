@@ -57,7 +57,7 @@ function allHeldOn(holder: Holder | null | undefined): HeldChange[] {
 }
 
 /** The live Held Changes on a creature. */
-export function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
+function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
 	return allHeldOn(holder).filter(isLive);
 }
 

@@ -32,8 +32,6 @@
 	const heldLines = untrack(() =>
 		heldLinesForItem(actor as never, item as never, { ignoresDisadvantage: ignoreDisadvantage }),
 	);
-	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
-	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -41,6 +39,8 @@
 		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
 	});
+	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
+	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 
 	function onSubmit() {
 		if (state.situationalModifiers !== '') {

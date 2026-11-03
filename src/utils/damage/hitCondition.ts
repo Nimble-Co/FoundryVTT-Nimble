@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 import applyConditionToActor, {
@@ -69,7 +70,7 @@ export async function applyHitConditions(input: {
 
 /** The creature a Latched creature holds, read from the card's target. */
 export function latchedCreatureOf(target: Creature | null | undefined): HeldCreature | null {
-	if (!target?.statuses?.has('latched')) return null;
+	if (!target?.statuses?.has(STATUS_EFFECT_IDS.latched)) return null;
 	const held = target.getFlag?.(SYSTEM_ID, HELD_CREATURE_FLAG) as HeldCreature | undefined;
 	return held?.uuid ? held : null;
 }

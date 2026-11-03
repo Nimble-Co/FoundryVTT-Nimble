@@ -1,5 +1,6 @@
 import type { AttackOutcomeSources, ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { actorRules } from '../actor/actorRules.js';
@@ -155,7 +156,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 	}
 
 	// The condition gives this itself: the creature has no item with a rule for it.
-	if (input.attacker?.statuses?.has('swallowed')) {
+	if (input.attacker?.statuses?.has(STATUS_EFFECT_IDS.swallowed)) {
 		if (input.canMiss) sources.cannotMiss.push(localize('NIMBLE.conditions.swallowed'));
 		ignoreArmor = true;
 	}

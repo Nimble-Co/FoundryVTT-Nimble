@@ -1,4 +1,5 @@
 import localize from '#utils/localize.js';
+import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 const SWALLOWED_DAMAGE = 20;
@@ -15,7 +16,7 @@ export function registerSwallowedTurnStartHooks(): void {
 			} | null;
 		}) => {
 			const actor = combatant.actor;
-			if (!isRuleAutomationEnabled() || !actor?.statuses?.has('swallowed')) return;
+			if (!isRuleAutomationEnabled() || !actor?.statuses?.has(STATUS_EFFECT_IDS.swallowed)) return;
 			await actor.applyDamage?.(SWALLOWED_DAMAGE);
 			await ChatMessage.create({
 				content: localize('NIMBLE.chat.swallowedDamage', {

@@ -47,6 +47,7 @@
 	);
 	const keptAmount = untrack(() => keptAmountFor(actor as never, { system: spell } as never));
 	let usesKeptAmount = $state(keptAmount !== null);
+	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
 	const damageMultiplier = untrack(() =>
 		damageMultiplierOf((spell?.parent ?? dialog?.item) as never),
 	);
@@ -329,7 +330,7 @@
 		/>
 	{/if}
 
-	{#if damageMultiplier && !(keptAmount && usesKeptAmount)}
+	{#if damageMultiplier && !keptInUse}
 		<DamageMultiplierField
 			label={damageMultiplier.label}
 			multiplier={damageMultiplier.multiplier}
@@ -337,14 +338,14 @@
 		/>
 	{/if}
 
-	{#if !(keptAmount && usesKeptAmount)}
+	{#if !keptInUse}
 		<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
 
 		<MaxDamageField {offers} bind:choice={maxDamageChoice} />
 	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	{#if !maxDamageChoice && !(keptAmount && usesKeptAmount)}
+	{#if !maxDamageChoice && !keptInUse}
 		<HeldChangeLines lines={heldLines} />
 
 		<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
