@@ -108,7 +108,7 @@ interface Dice3D {
 type DieResult = foundry.dice.terms.DiceTerm.Result & { faces?: number };
 
 /** What Dice So Nice reads from the roll it throws. */
-export interface Dice3dRoll {
+interface Dice3dRoll {
 	dice: foundry.dice.terms.DiceTerm[];
 	total: number | undefined;
 	ghost?: boolean;
@@ -136,7 +136,7 @@ export function rollForDice3d(roll: foundry.dice.Roll.Any): Dice3dRoll | null {
 		const at = results.findIndex(sized);
 		if (at < 0) return [term];
 		const faces = term.faces ?? 6;
-		const part = (number: number, size: number, part: DieResult[]) =>
+		const part = (number: number, size: number, partResults: DieResult[]) =>
 			Object.assign(
 				new foundry.dice.terms.Die({
 					number,
@@ -144,7 +144,7 @@ export function rollForDice3d(roll: foundry.dice.Roll.Any): Dice3dRoll | null {
 					modifiers: [...term.modifiers] as never,
 					options: term.options,
 				}),
-				{ results: part, _evaluated: true },
+				{ results: partResults, _evaluated: true },
 			);
 		const parts = [part(0, results[at].faces as number, [results[at]])];
 		if (at > 0) parts.unshift(part(term.number ?? 1, faces, results.slice(0, at)));

@@ -1,3 +1,4 @@
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -30,7 +31,7 @@ class InitiativeManaRerollOnesRule extends NimbleBaseRule<InitiativeManaRerollOn
 	/** The feature name for the tag. Null when its condition does not hold. */
 	get rerollFeature(): string | null {
 		if (!this.item.isEmbedded || !this.test()) return null;
-		return this.label || this.item.name || '';
+		return ruleLabel(this);
 	}
 }
 

@@ -323,7 +323,6 @@ async function payRerollCost(
 	return paid;
 }
 
-/** The cost of a use on this many dice. */
 /**
  * Give back the part of a per-die payment for dice that did not roll. Gives the
  * payment that is still paid.
@@ -353,6 +352,7 @@ async function refundSkippedDice(
 	};
 }
 
+/** The cost of a use on this many dice. */
 function costForDice(cost: RerollCost, count: number): RerollCost {
 	if (!cost.perDie) return cost;
 	return {

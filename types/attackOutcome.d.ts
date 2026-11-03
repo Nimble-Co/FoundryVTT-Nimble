@@ -26,3 +26,10 @@ export interface MultiTargetDetail {
 	couldCrit: boolean;
 	couldMiss: boolean;
 }
+
+/** What an attack from the offer of another feature adds. */
+export interface OfferBonus {
+	label: string;
+	damage: number;
+	primaryDie: number;
+}

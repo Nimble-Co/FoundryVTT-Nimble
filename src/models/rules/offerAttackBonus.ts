@@ -1,4 +1,6 @@
+import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import type { RollEffect } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
@@ -39,12 +41,6 @@ function schema() {
 
 declare namespace OfferAttackBonusRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
-}
-
-interface OfferBonus {
-	label: string;
-	damage: number;
-	primaryDie: number;
 }
 
 /**
@@ -88,7 +84,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 
 	get offerBonus(): OfferBonus {
 		return {
-			label: this.label || this.item.name || '',
+			label: ruleLabel(this),
 			damage: Math.max(0, Math.trunc(Number(this.resolveFormula(this.damage)) || 0)),
 			primaryDie: Math.trunc(Number(this.primaryDie) || 0),
 		};
@@ -109,4 +105,4 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	}
 }
 
-export { OfferAttackBonusRule, type OfferBonus };
+export { OfferAttackBonusRule };

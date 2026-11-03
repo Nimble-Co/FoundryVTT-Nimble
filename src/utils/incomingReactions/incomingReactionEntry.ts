@@ -231,9 +231,9 @@ export interface IncomingReactionEntry {
 	effect?: RollEffect;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
-	/** A use that changes dice of the crit bonus role needs a roll that has them. */
 	/** One of several rows of the same rule on this roll. */
 	useIndex?: number;
+	/** A use that changes dice of the crit bonus role needs a roll that has them. */
 	needsCritBonusDice?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;

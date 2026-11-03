@@ -1,3 +1,4 @@
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -63,7 +64,7 @@ class InitiativeManaRule extends NimbleBaseRule<InitiativeManaRule.Schema> {
 	get initiativeManaSpec(): { feature: string; flat: number; dice: string } | null {
 		if (!this.item.isEmbedded || !this.test()) return null;
 		return {
-			feature: this.label || this.item.name || '',
+			feature: ruleLabel(this),
 			flat: Math.max(0, Math.trunc(Number(this.resolveFormula(this.flat)) || 0)),
 			dice: (this.dice ?? '').trim(),
 		};

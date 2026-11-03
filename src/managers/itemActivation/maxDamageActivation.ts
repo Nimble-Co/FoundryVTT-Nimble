@@ -1,15 +1,9 @@
 import type { EffectNode } from '#types/effectTree.js';
-import type { MaxDamageChoice, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
+import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import { spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { maxDamageRuleOf } from '../../utils/damage/maxDamageOffers.js';
-
-/** The Max Damage rule the player ticked, and the choice that came with it. */
-export interface ActiveMaxDamage {
-	rule: MaxDamageRuleLike;
-	tempHp: boolean;
-}
 
 export function resolveMaxDamage(
 	actor: Parameters<typeof maxDamageRuleOf>[0],

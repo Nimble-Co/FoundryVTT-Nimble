@@ -1,4 +1,4 @@
-import type { DualWieldChoice } from '#types/dualWield.d.ts';
+import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { AttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
@@ -17,12 +17,6 @@ import { normalizeDamageRollFormula } from '../../utils/damage/normalizeDamageRo
 import type { IncomingReactionEntry } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import localize from '../../utils/localize.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../../utils/rolls/showDiceAnimation.js';
-
-/** The keep between two weapons, and its entry, for the chat card. */
-export interface DualWieldKeep {
-	pendingKeep: Record<string, unknown>;
-	entry: IncomingReactionEntry;
-}
 
 /** The roll mode of the activated weapon: the same when there is no other weapon. */
 export function activatedWeaponRollMode(

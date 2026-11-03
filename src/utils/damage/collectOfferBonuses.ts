@@ -1,4 +1,4 @@
-import type { OfferBonus } from '../../models/rules/offerAttackBonus.js';
+import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 

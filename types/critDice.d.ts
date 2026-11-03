@@ -18,3 +18,10 @@ export interface CritDiceLine {
 	values: number[];
 	total: number;
 }
+
+/** The options of a die term a crit added. */
+export interface CritDiceOptions {
+	flavor?: string;
+	dieRole?: string;
+	critDiceKey?: string;
+}

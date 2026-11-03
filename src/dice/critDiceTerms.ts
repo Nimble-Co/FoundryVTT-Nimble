@@ -1,15 +1,8 @@
-import type { CritDiceSpec } from '#types/critDice.d.ts';
+import type { CritDiceOptions, CritDiceSpec } from '#types/critDice.d.ts';
 import type { ExplosionStyle } from './oneDieReroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
-
-/** The options of a die term a crit added. */
-export interface CritDiceOptions {
-	flavor?: string;
-	dieRole?: string;
-	critDiceKey?: string;
-}
 
 /** Structural view of a damage roll, so this module has no import cycle with it. */
 export interface CritDiceRoll {

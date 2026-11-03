@@ -1,3 +1,5 @@
+import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
+
 /** What the tick of the roll window can do for this attack. */
 export interface DualWieldOffer {
 	/** The other weapon. Null with the same formula: the tick is advantage. */
@@ -23,3 +25,9 @@ export interface DualWieldWeapon {
 }
 
 export type DualWieldWeaponSelf = Pick<DualWieldWeapon, 'itemUuid' | 'label' | 'damageType'>;
+
+/** The keep between two weapons, and its entry, for the chat card. */
+export interface DualWieldKeep {
+	pendingKeep: Record<string, unknown>;
+	entry: IncomingReactionEntry;
+}

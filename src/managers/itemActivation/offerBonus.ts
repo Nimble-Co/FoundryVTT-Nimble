@@ -1,6 +1,6 @@
+import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
-import type { OfferBonus } from '../../models/rules/offerAttackBonus.js';
 
 /** The identifier of the item whose offer row started this activation. */
 export function offerSourceOf(uuid: string | undefined): string | undefined {

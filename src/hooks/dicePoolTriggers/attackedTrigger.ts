@@ -88,10 +88,8 @@ let registered = false;
 /**
  * Fires the `onAttacked` refill trigger for each character an attack targets,
  * hit or miss, and for each character that takes damage from a card that did
- * not target it. Pools that opt into refilling on this trigger (Oathsworn
- * Judgment Dice: "Whenever an enemy attacks you, if you have no Judgment Dice,
- * roll your Judgment dice (2d6)") receive their refill entry's effect; pools
- * that don't opt in are untouched.
+ * not target it. Pools that opt into refilling on this trigger receive their
+ * refill entry's effect; pools that don't opt in are untouched.
  */
 export function registerAttackedTriggerHooks(): void {
 	if (registered) return;

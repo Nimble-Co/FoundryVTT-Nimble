@@ -34,6 +34,8 @@ const MAKE_CRIT_RULE_TYPE = 'makeCrit';
 const CHANGE_RESULT_RULE_TYPE = 'changeResult';
 const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
 const CRIT_DICE_RULE_TYPE = 'critDice';
+const CRIT_DICE_SAVE_RULE_TYPE = 'critDiceSave';
+const OFFER_ATTACK_BONUS_RULE_TYPE = 'offerAttackBonus';
 const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
 /**
@@ -44,7 +46,7 @@ function isRollUseRule(type: string | undefined): boolean {
 	if (type === ATTACK_OUTCOME_RULE_TYPE || type === CRIT_DICE_RULE_TYPE) {
 		return !isRuleAutomationEnabled();
 	}
-	if (type === 'critDiceSave' || type === 'offerAttackBonus') return true;
+	if (type === CRIT_DICE_SAVE_RULE_TYPE || type === OFFER_ATTACK_BONUS_RULE_TYPE) return true;
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||

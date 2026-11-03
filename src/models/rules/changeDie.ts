@@ -1,4 +1,5 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import { actorRules } from '../../utils/actor/actorRules.js';
 import {
 	DIE_CHANGE_MODES,
 	type DieChangeMode,
@@ -142,8 +143,7 @@ class ChangeDieRule extends RollUseRule<ChangeDieRule.Schema> {
 		if (this.rowPerUpcastStep && this.rowsOn(context) === 0) return false;
 		const other = (this.yieldsTo ?? '').trim();
 		if (!other) return true;
-		const rules = (this.actor as { rules?: Iterable<ChangeDieRule> } | null)?.rules ?? [];
-		return !Array.from(rules).some(
+		return !actorRules<ChangeDieRule>(this.actor as { rules?: unknown } | null).some(
 			(rule) => rule !== this && rule.identifier === other && rule.offersUseOn?.(context) === true,
 		);
 	}

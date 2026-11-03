@@ -1,4 +1,5 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { usedThisTurn } from '../../utils/combat/perTurnUse.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
@@ -6,9 +7,10 @@ import {
 	type AttackDeliveryFilter,
 	matchesAttackDelivery,
 } from '../../utils/damage/attackDelivery.js';
-import type {
-	RerollTrigger,
-	RollEffect,
+import {
+	CRIT_BONUS_ROLE,
+	type RerollTrigger,
+	type RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { chargeOnlyCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -16,7 +18,7 @@ import { choiceLabels, type RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const DIE_ROLES = ['critBonus'] as const;
+const DIE_ROLES = [CRIT_BONUS_ROLE] as const;
 
 function schema() {
 	const { fields } = foundry.data;
@@ -34,7 +36,7 @@ function schema() {
 		dieRole: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'critBonus',
+			initial: CRIT_BONUS_ROLE,
 			choices: choiceLabels('critDice', 'dieRole', DIE_ROLES),
 			label: 'NIMBLE.rules.critDice.dieRole.label',
 			hint: 'NIMBLE.rules.critDice.dieRole.hint',
@@ -114,7 +116,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 	get critDiceSpec(): CritDiceSpec {
 		return {
 			key: `${this.item.uuid}:${this.id}`,
-			label: this.label || this.item.name || '',
+			label: ruleLabel(this),
 			role: this.dieRole,
 			formula: Roll.replaceFormulaData(this.formula, this.actor?.getRollData() ?? {}, {
 				missing: '0',

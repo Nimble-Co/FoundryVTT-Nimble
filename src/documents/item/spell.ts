@@ -116,9 +116,9 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		// Pool-node side effects run only after the cast has been paid for.
 		await manager.applyDeferredPoolNodes();
 
-		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const chaosRollsNow = manager.invokesChaos && isRuleAutomationEnabled();
 
+		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
 

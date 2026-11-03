@@ -32,3 +32,9 @@ export interface MaxDamageRuleLike {
 	canPay?: boolean;
 	covers?(item: unknown): boolean;
 }
+
+/** The Max Damage rule the player ticked, and the choice that came with it. */
+export interface ActiveMaxDamage {
+	rule: MaxDamageRuleLike;
+	tempHp: boolean;
+}

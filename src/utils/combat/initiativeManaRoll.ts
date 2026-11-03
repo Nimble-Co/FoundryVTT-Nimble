@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { CardInitiativeMana, InitiativeManaDie } from '#types/initiativeManaRoll.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
 
 interface InitiativeManaActor {
@@ -14,7 +15,7 @@ const SURGE_FLAG = 'initiativeManaRoll';
 
 interface InitiativeManaFlag {
 	combatId: string;
-	/** The mana before the initiativeMana. All above this at the end of combat is what the initiativeMana left. */
+	/** The mana before the Initiative Mana. All above this at the end of combat is what the Initiative Mana left. */
 	before: number;
 }
 
@@ -47,7 +48,7 @@ async function rerollDie(die: InitiativeManaDie): Promise<InitiativeManaDie> {
 	return { faces: die.faces, value: next?.value ?? die.value, was: die.value };
 }
 
-/** Give the initiativeMana's mana, once per combat. */
+/** Give the Initiative Mana, once per combat. */
 export async function giveInitiativeMana(
 	actor: InitiativeManaActor,
 	initiativeMana: CardInitiativeMana,
@@ -60,9 +61,9 @@ export async function giveInitiativeMana(
 }
 
 /**
- * The initiativeMana an Initiative roll in this combat makes: the dice, and with Feature
+ * The Initiative Mana an Initiative roll in this combat makes: the dice, and with Feature
  * Effects on, a reroll of each 1 and the mana. Null with no rule, with no combat,
- * or when this combat has its initiativeMana.
+ * or when this combat has its Initiative Mana.
  */
 export async function rollInitiativeMana(
 	actor: InitiativeManaActor | null | undefined,
@@ -72,11 +73,11 @@ export async function rollInitiativeMana(
 	const flag = actor.getFlag?.(SYSTEM_ID, SURGE_FLAG) as InitiativeManaFlag | undefined;
 	if (flag?.combatId === combatId) return null;
 
-	const rules = Array.from(actor.rules) as Array<{
+	const rules = actorRules<{
 		type?: string;
 		initiativeManaSpec?: { feature: string; flat: number; dice: string } | null;
 		rerollFeature?: string | null;
-	}>;
+	}>(actor);
 	const spec = rules.find(
 		(rule) => rule?.type === 'initiativeMana' && rule.initiativeManaSpec,
 	)?.initiativeManaSpec;
@@ -140,7 +141,7 @@ export async function regainInitiativeManaOnCard(
 	await card.update({ 'system.initiativeMana.manaGiven': true });
 }
 
-/** What the initiativeMana left goes away with its combat. Mana spent counts as initiativeMana mana first. */
+/** What the Initiative Mana left goes away with its combat. Mana spent counts as Initiative Mana first. */
 export async function endInitiativeMana(
 	actor: InitiativeManaActor,
 	combatId: string,

@@ -1,6 +1,6 @@
-import type { DualWieldChoice } from '#types/dualWield.d.ts';
+import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
-import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
+import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
@@ -81,13 +81,8 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
-	activatedWeaponRollMode,
-	type DualWieldKeep,
-	rollOtherWeapon,
-} from './itemActivation/dualWieldAttack.js';
-import {
-	type ActiveMaxDamage,
 	applyMaxDamageToRollOptions,
 	noDiceThrown,
 	prepareHealingAtMax,
