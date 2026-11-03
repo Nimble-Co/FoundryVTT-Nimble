@@ -1,7 +1,9 @@
 <script lang="ts">
+	import type { CheckResult } from '#types/checkResult.d.ts';
 	import type { CheckCardRollsProps } from '#types/components/CheckCardRolls.d.ts';
 
 	import { setContext, untrack } from 'svelte';
+	import localize from '#utils/localize.ts';
 	import { CHECK_ROLL_SLOT } from '#utils/reroll/checkCardRollTarget.ts';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
 	import { checkResultOfCard } from '#utils/rolls/checkResult.ts';
@@ -10,7 +12,6 @@
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
 	import RollSummary from './RollSummary.svelte';
-	import { getCheckResultLabel } from './RollSummary.svelte.ts';
 
 	let { messageDocument, label, note = null }: CheckCardRollsProps = $props();
 
@@ -37,6 +38,12 @@
 		const result = checkResultOfCard(messageDocument.reactive.type, system, rolls[0]);
 		return result ? { result, label: getCheckResultLabel(result, system.dc) } : null;
 	});
+
+	/** The words of a check's result: "Failed - DC 14", or "Failed" with no DC. */
+	function getCheckResultLabel(result: CheckResult, dc: number | null | undefined): string {
+		if (typeof dc !== 'number') return localize(`NIMBLE.chat.checkResult.${result}`);
+		return localize(`NIMBLE.chat.checkResult.${result}WithDC`, { dc: String(dc) });
+	}
 </script>
 
 <!-- A reroll replaces the first roll, so its control and history sit with that roll. -->

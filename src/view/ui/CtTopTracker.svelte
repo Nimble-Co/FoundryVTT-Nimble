@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import localize from '#utils/localize.js';
 	import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
+	import { signedNumber } from '#utils/signedNumber.ts';
 	import { createCtTopTrackerState } from './CtTopTracker.state.svelte.js';
 	import { CT_SHELL_EXTRA_WIDTH_REM } from './ctTopTracker/constants.js';
 	import {
@@ -121,7 +122,7 @@
 		const count = String(Math.abs(pendingDelta));
 
 		return {
-			text: `${isNegative ? '−' : '+'}${count}`,
+			text: signedNumber(pendingDelta),
 			tooltip: localize(getPendingActionsLocalizationKey(pendingDelta), { count }),
 			isNegative,
 		};

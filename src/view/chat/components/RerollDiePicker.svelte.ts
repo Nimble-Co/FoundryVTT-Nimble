@@ -4,6 +4,7 @@ import type { RollUse } from '#utils/incomingReactions/incomingReactionEntry.ts'
 import localize from '#utils/localize.js';
 import type { PickableDie } from '../../../dice/oneDieReroll.js';
 import { claimEscape } from './claimEscape.ts';
+import { rovingFocusIndex } from './rovingFocusIndex.ts';
 
 /**
  * The word under a die: the Primary Die and a dropped die always say what
@@ -56,14 +57,7 @@ export function createRerollDiePickerState(
 		if (getProps().rolling) return;
 		const current = elements.dice.indexOf(event.target as HTMLButtonElement);
 		const last = getProps().dice.length - 1;
-		const next = {
-			ArrowRight: current >= last ? 0 : current + 1,
-			ArrowDown: current >= last ? 0 : current + 1,
-			ArrowLeft: current <= 0 ? last : current - 1,
-			ArrowUp: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
+		const next = rovingFocusIndex(event.key, current, last, 'both');
 
 		if (next !== undefined && current !== -1) {
 			event.preventDefault();

@@ -5,6 +5,7 @@ import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingRea
 import { checkResultOfCard } from '#utils/rolls/checkResult.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import { claimEscape } from './claimEscape.ts';
+import { rovingFocusIndex } from './rovingFocusIndex.ts';
 
 /** Each user's own open or close, by message id: a card renders again on every update. */
 const openChoices = new Map<string, boolean>();
@@ -90,12 +91,7 @@ export function createChangeThisRollState(
 		const current = rows.indexOf(event.target as HTMLButtonElement);
 		if (current === -1 && event.target !== elements.toggle) return;
 		const last = rows.length - 1;
-		const next = {
-			ArrowDown: current >= last ? 0 : current + 1,
-			ArrowUp: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
+		const next = rovingFocusIndex(event.key, current, last, 'vertical');
 		if (next === undefined) return;
 		event.preventDefault();
 		rows[next]?.focus();

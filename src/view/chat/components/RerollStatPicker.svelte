@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { claimEscape } from './claimEscape.ts';
+	import { rovingFocusIndex } from './rovingFocusIndex.ts';
 	import { statChoiceLabel } from './resultChangeLines.ts';
 
 	let { stats, feature, sending = false, onpick, oncancel }: RerollStatPickerProps = $props();
@@ -22,12 +23,7 @@
 		const current = buttons.indexOf(event.target as HTMLButtonElement);
 		if (current === -1) return;
 		const last = buttons.length - 1;
-		const next = {
-			ArrowRight: current >= last ? 0 : current + 1,
-			ArrowLeft: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
+		const next = rovingFocusIndex(event.key, current, last, 'horizontal');
 		if (next === undefined) return;
 		event.preventDefault();
 		buttons[next]?.focus();

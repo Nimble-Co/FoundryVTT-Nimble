@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCheckResultLabel, getPrimaryDieBreakdown } from '../RollSummary.svelte.ts';
+import { getPrimaryDieBreakdown } from '../RollSummary.svelte.ts';
 
 function options(
 	rollOptions: Record<string, unknown>,
@@ -64,17 +64,5 @@ describe('getPrimaryDieBreakdown', () => {
 			getPrimaryDieBreakdown(options({ primaryDieModifier: 5, primaryDieBaseResult: 4 }, null))
 				?.text,
 		).toBe('Primary Die: 4 + 5 = 9');
-	});
-});
-
-describe('getCheckResultLabel', () => {
-	it('names the DC when the card has one', () => {
-		expect(getCheckResultLabel('failed', 14)).toBe('Failed - DC 14');
-		expect(getCheckResultLabel('succeeded', 14)).toBe('Succeeded - DC 14');
-	});
-
-	it('tells only the result with no DC', () => {
-		expect(getCheckResultLabel('failed', null)).toBe('Failed');
-		expect(getCheckResultLabel('succeeded', undefined)).toBe('Succeeded');
 	});
 });

@@ -3,9 +3,7 @@ import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 
 import localize from '#utils/localize.js';
 import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
-import { signedNumber } from '#utils/signedNumber.ts';
-
-const TRUE_MINUS = '−';
+import { signedNumber, spacedSignedNumber } from '#utils/signedNumber.ts';
 
 interface ResultChangeLinesInput {
 	changes: readonly ResultChange[];
@@ -16,7 +14,7 @@ interface ResultChangeLinesInput {
 }
 
 function totalWithTrueMinus(value: number): string {
-	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : String(value);
+	return value < 0 ? signedNumber(value) : String(value);
 }
 
 function statAbbreviation(stat: string): string {
@@ -132,7 +130,7 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 	};
 	for (const change of standingResultChanges(changes)) {
 		if (change.change === 'add') {
-			text += ` ${change.value < 0 ? TRUE_MINUS : '+'} ${Math.abs(change.value)}`;
+			text += ` ${spacedSignedNumber(change.value)}`;
 			total += change.value;
 			openSum = true;
 		} else if (change.change === 'setTotal') {
@@ -146,7 +144,7 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 			const modifier = change.value - NATURAL_20;
 			text = localize('NIMBLE.chat.incomingReactions.resultChange.countsAsNat20Sum', {
 				rolled: text,
-				modifier: `${modifier < 0 ? TRUE_MINUS : '+'} ${Math.abs(modifier)}`,
+				modifier: spacedSignedNumber(modifier),
 			});
 			total = change.value;
 			openSum = true;

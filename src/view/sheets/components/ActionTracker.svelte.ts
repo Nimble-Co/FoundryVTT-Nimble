@@ -19,6 +19,7 @@ import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/combat/queueCombatantMutationWithFreshDocument.js';
 import localize from '#utils/localize.js';
+import { signedNumber } from '#utils/signedNumber.ts';
 
 // ============================================================================
 // Types
@@ -294,7 +295,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const isNegative = delta < 0;
 		const count = String(Math.abs(delta));
 		return {
-			text: `${isNegative ? '−' : '+'}${count}`,
+			text: signedNumber(delta),
 			tooltip: localize(getPendingActionsLocalizationKey(delta), { count }),
 			isNegative,
 		};

@@ -44,7 +44,7 @@
 	);
 
 	// Localization
-	const localize = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
+	const chatText = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
 
 	function handleApplyHealing() {
 		messageDocument?.applyHealing(roll.total, healingType, effectId, node.recipient);
@@ -65,7 +65,7 @@
 		{roll.total}
 	</div>
 
-	<h3 class="roll__label">{localize('healing')}</h3>
+	<h3 class="roll__label">{chatText('healing')}</h3>
 
 	{#if secondaryInfo}
 		<span class="roll__mode">
@@ -81,7 +81,7 @@
 				<div class="healing-applied__content">
 					<div class="healing-applied__status">
 						<i class="fa-solid fa-check healing-applied__icon" aria-hidden="true"></i>
-						<span class="healing-applied__text">{localize('healingApplied')}</span>
+						<span class="healing-applied__text">{chatText('healingApplied')}</span>
 					</div>
 					{#if healingRecord?.targets?.length}
 						<div class="healing-applied__targets">
@@ -99,8 +99,8 @@
 				</div>
 				<button
 					class="healing-applied__undo"
-					aria-label={localize('undoHealing')}
-					data-tooltip={localize('undoHealing')}
+					aria-label={chatText('undoHealing')}
+					data-tooltip={chatText('undoHealing')}
 					data-tooltip-direction="UP"
 					onclick={handleUndoHealing}
 				>
@@ -113,14 +113,14 @@
 				class:nimble-button--disabled={!hasTargets}
 				class:nimble-button--recommended={dispositionState === 'recommended'}
 				class:nimble-button--discouraged={dispositionState === 'discouraged'}
-				aria-label={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
-				data-tooltip={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
+				aria-label={hasTargets ? chatText('applyHealing') : chatText('noTargetsSelected')}
+				data-tooltip={hasTargets ? chatText('applyHealing') : chatText('noTargetsSelected')}
 				data-tooltip-direction="UP"
 				onclick={handleApplyHealing}
 				disabled={!hasTargets}
 			>
 				<i class="fa-solid fa-heart" aria-hidden="true"></i>
-				{localize('applyHealing')}
+				{chatText('applyHealing')}
 			</button>
 		{/if}
 	</div>
