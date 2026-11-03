@@ -38,7 +38,7 @@ describe('attackOutcomeChargesToSpend', () => {
 
 	it('spends nothing for a crit the Primary Die gave by itself', () => {
 		const natural = hit(8, { isCritical: true, anyDieAtMax: true });
-		for (const gift of ['forcedCritAlways', 'forcedCritOnHit', 'anyDieCrits'] as const) {
+		for (const gift of ['forcedCritOnHit', 'anyDieCrits'] as const) {
 			expect(attackOutcomeChargesToSpend([charge(gift)], natural)).toEqual([]);
 		}
 	});
@@ -70,16 +70,29 @@ describe('attackOutcomeChargesToSpend', () => {
 		).toEqual(['pool']);
 	});
 
-	it('spends for an "always" crit, but not when the attack was made to miss', () => {
+	it('spends for an "always" crit each time it applies, also on a natural crit and a forced miss', () => {
 		expect(
 			attackOutcomeChargesToSpend([charge('forcedCritAlways')], hit(1, { isCritical: true })),
 		).toEqual(['pool']);
 		expect(
 			attackOutcomeChargesToSpend(
 				[charge('forcedCritAlways')],
+				hit(8, { isCritical: true, anyDieAtMax: true }),
+			),
+		).toEqual(['pool']);
+		expect(
+			attackOutcomeChargesToSpend(
+				[charge('forcedCritAlways')],
 				hit(1, { options: { forceMiss: true } }),
 			),
-		).toEqual([]);
+		).toEqual(['pool']);
+	});
+
+	it('spends nothing for the other rules when the attack was made to miss', () => {
+		const forcedMiss = hit(1, { isCritical: true, options: { forceMiss: true } });
+		for (const gift of ['forcedCritOnHit', 'critRange', 'anyDieCrits', 'cannotMiss'] as const) {
+			expect(attackOutcomeChargesToSpend([charge(gift)], forcedMiss)).toEqual([]);
+		}
 	});
 
 	it('spends for a crit range only on a face below the max that crits', () => {

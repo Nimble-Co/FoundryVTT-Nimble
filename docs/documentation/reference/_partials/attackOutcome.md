@@ -11,6 +11,8 @@ The Attack Outcome rule changes how an attack roll is read when it is made. Ther
 
 **Charge pool** limits your own attacks: the rule spends 1 charge by itself each time it changes an attack, and it does not run when the pool is empty.
 
+An "always" crit spends its charge each time the rule applies, also when the Primary Die crits by itself and when a forced miss beats it.
+
 When several rules apply, any "cannot miss" wins, the largest crit range wins, and an "always" crit beats one on a hit. An attack with 2 or more targets, an area attack and a roll that cannot crit take no crit change. A target's forced miss beats every crit from this rule.
 
 With **Feature Effects** off, "cannot miss" and the crit range still apply. A rule that gives a crit becomes a **Make It a Crit** row in **Change This Roll** on the card.

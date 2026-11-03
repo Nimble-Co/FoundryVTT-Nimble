@@ -185,6 +185,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 }
 
 function gaveToRoll(gift: AttackOutcomeGift, roll: OutcomeRoll): boolean {
+	if (gift === 'forcedCritAlways') return true;
 	if (roll.options?.forceMiss) return false;
 	const face = roll.primaryDieValue ?? 0;
 	const faces = roll.primaryDie?.faces ?? 0;
@@ -192,7 +193,6 @@ function gaveToRoll(gift: AttackOutcomeGift, roll: OutcomeRoll): boolean {
 		case 'cannotMiss':
 			return face > 0 && face <= (roll.options?.missThreshold ?? DEFAULT_MISS_THRESHOLD);
 		case 'critRange':
-		case 'forcedCritAlways':
 		case 'forcedCritOnHit':
 			return roll.isCritical === true && face < faces;
 		case 'anyDieCrits':
