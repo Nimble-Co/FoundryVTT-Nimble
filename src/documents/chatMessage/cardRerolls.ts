@@ -366,13 +366,17 @@ export class CardRerolls {
 		viaSocket = false,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
-		const lockKey = `${this.#host.id()}:keep`;
+		await this.#runLocked(`${this.#host.id()}:keep`, () =>
+			this.#applyKeepChoice(choice, requestingUserId, viaSocket),
+		);
+	}
+
+	/** Run a write in the card's queue, once at a time for each key. */
+	async #runLocked(lockKey: string, task: () => Promise<void>): Promise<void> {
 		if (inFlightSpendOffers.has(lockKey)) return;
 		inFlightSpendOffers.add(lockKey);
 		try {
-			await queueReactionWrite(this.#host.id() ?? '', () =>
-				this.#applyKeepChoice(choice, requestingUserId, viaSocket),
-			);
+			await queueReactionWrite(this.#host.id() ?? '', task);
 		} finally {
 			inFlightSpendOffers.delete(lockKey);
 		}
@@ -392,7 +396,7 @@ export class CardRerolls {
 				userId: requestingUserId,
 				reasonKey,
 			});
-		if (!this.#mayKeep(pending, requestingUserId, viaSocket)) {
+		if (!this.#mayActFor(pending.chooserUuid, requestingUserId, viaSocket)) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 
@@ -448,15 +452,13 @@ export class CardRerolls {
 		return '';
 	}
 
-	/** A GM, or a player who owns the actor that chooses. */
-	#mayKeep(pending: PendingKeep, requestingUserId: string, viaSocket: boolean): boolean {
+	/** A GM, or a player who owns the actor. A GM's request may not come over the socket. */
+	#mayActFor(actorUuid: string, requestingUserId: string, viaSocket: boolean): boolean {
 		const user = game.users?.get(requestingUserId) ?? null;
 		if (!user) return false;
 		if (user.isGM) return !viaSocket;
-		const chooser = fromUuidSync(
-			pending.chooserUuid as `Actor.${string}`,
-		) as Actor.Implementation | null;
-		return chooser?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
+		const actor = fromUuidSync(actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		return actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 
 	/** The roll changes of Modify Reroll rules this card has applied. */
@@ -701,26 +703,18 @@ export class CardRerolls {
 		const target = this.#rerollTarget();
 		if (!target) return;
 
-		const lockKey = `${this.#host.id()}:${entryId}`;
-		if (inFlightSpendOffers.has(lockKey)) return;
-		inFlightSpendOffers.add(lockKey);
-
-		try {
-			await queueReactionWrite(this.#host.id() ?? '', () =>
-				this.#applyRerollReaction(
-					target,
-					entryId,
-					requestingUserId,
-					viaSocket,
-					forceHeroicReaction,
-					die,
-					value,
-					stat,
-				),
-			);
-		} finally {
-			inFlightSpendOffers.delete(lockKey);
-		}
+		await this.#runLocked(`${this.#host.id()}:${entryId}`, () =>
+			this.#applyRerollReaction(
+				target,
+				entryId,
+				requestingUserId,
+				viaSocket,
+				forceHeroicReaction,
+				die,
+				value,
+				stat,
+			),
+		);
 	}
 
 	async #applyRerollReaction(
@@ -1037,16 +1031,9 @@ export class CardRerolls {
 		viaSocket = false,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
-		const lockKey = `${this.#host.id()}:remove:${lineId}`;
-		if (inFlightSpendOffers.has(lockKey)) return;
-		inFlightSpendOffers.add(lockKey);
-		try {
-			await queueReactionWrite(this.#host.id() ?? '', () =>
-				this.#applyResultRemoval(lineId, requestingUserId, viaSocket),
-			);
-		} finally {
-			inFlightSpendOffers.delete(lockKey);
-		}
+		await this.#runLocked(`${this.#host.id()}:remove:${lineId}`, () =>
+			this.#applyResultRemoval(lineId, requestingUserId, viaSocket),
+		);
 	}
 
 	async #applyResultRemoval(
@@ -1067,7 +1054,7 @@ export class CardRerolls {
 		const first = line[0];
 		if (!first) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		if (this.pendingKeep()) return reject('NIMBLE.chat.incomingReactions.keepFirst');
-		if (!this.#mayRemove(first.actorUuid, requestingUserId, viaSocket)) {
+		if (!this.#mayActFor(first.actorUuid, requestingUserId, viaSocket)) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 		if (first.automatic || !this.#canStillRemove(first)) {
@@ -1105,15 +1092,6 @@ export class CardRerolls {
 	#canStillRemove(change: ResultChange): boolean {
 		if (change.change !== 'noDamage') return true;
 		return (this.#host.system() as { damageApplied?: boolean }).damageApplied !== true;
-	}
-
-	/** A GM, or a player who owns the actor whose feature made the change. */
-	#mayRemove(actorUuid: string, requestingUserId: string, viaSocket: boolean): boolean {
-		const user = game.users?.get(requestingUserId) ?? null;
-		if (!user) return false;
-		if (user.isGM) return !viaSocket;
-		const actor = fromUuidSync(actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		return actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 
 	/** Uses, Mana and Wounds go back. An action or a heroic reaction stays spent. */

@@ -1,11 +1,11 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
+import { signedNumber } from '#utils/signedNumber.ts';
 import type { PoolKind } from '../parts/types.ts';
 import { MOVEMENT_ICONS } from '../shared/movement.ts';
 import { portraitOf } from '../shared/portrait.ts';
 import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
-import { signedNumber } from '../shared/signedNumber.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
 import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';

@@ -3,6 +3,7 @@ import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 
 import localize from '#utils/localize.js';
 import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
+import { signedNumber } from '#utils/signedNumber.ts';
 
 const TRUE_MINUS = '−';
 
@@ -12,10 +13,6 @@ interface ResultChangeLinesInput {
 	speakerUuid: string;
 	documentName: (uuid: string) => string | null | undefined;
 	canRemove: (actorUuid: string, change: ResultChange) => boolean;
-}
-
-function signedWithTrueMinus(value: number): string {
-	return value < 0 ? `${TRUE_MINUS}${Math.abs(value)}` : `+${value}`;
 }
 
 function totalWithTrueMinus(value: number): string {
@@ -28,12 +25,12 @@ function statAbbreviation(stat: string): string {
 
 /** A stat with the modifier it gives: "DEX +2", "INT +0", "WIL −1". */
 function statChoiceLabel(choice: { stat: string; mod: number }): string {
-	return `${statAbbreviation(choice.stat)} ${signedWithTrueMinus(choice.mod)}`;
+	return `${statAbbreviation(choice.stat)} ${signedNumber(choice.mod)}`;
 }
 
 /** What an add puts on the total: "+3 STR", "−1 STR", or "+2" for no stat. */
 function resultAmount(use: Pick<ResultUse, 'value' | 'stat'>): string {
-	const amount = signedWithTrueMinus(use.value);
+	const amount = signedNumber(use.value);
 	if (!use.stat) return amount;
 	return `${amount} ${statAbbreviation(use.stat)}`;
 }
