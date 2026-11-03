@@ -28,6 +28,8 @@ export interface MonsterUsesField {
 	label: string;
 	value: number;
 	max: number;
+	/** The book gives no cap: show the count alone. */
+	hideMax?: boolean;
 	per: string;
 }
 
