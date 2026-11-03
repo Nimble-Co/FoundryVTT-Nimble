@@ -276,6 +276,9 @@ function handleActorUpdate(
 	}
 }
 
+const saveResultQueues = new Map<string, Promise<void>>();
+
+/** The results of one card go to the rules one at a time, so a pass finds the effect of its fail. */
 function handleSaveResolved(payload: NimbleSavePayload): void {
 	const context: SaveResolvedContext = {
 		actor: payload.actor as unknown as SaveResolvedContext['actor'],
@@ -283,7 +286,14 @@ function handleSaveResolved(payload: NimbleSavePayload): void {
 		outcome: payload.outcome,
 		messageId: payload.messageId,
 	};
-	void dispatch(payload.actor, 'onSaveResolved', context);
+	const { messageId } = payload;
+	const queued = (saveResultQueues.get(messageId) ?? Promise.resolve())
+		.then(() => dispatch(payload.actor, 'onSaveResolved', context))
+		.catch((error) => console.warn('Nimble | ruleEventDispatch onSaveResolved failed', error));
+	saveResultQueues.set(messageId, queued);
+	void queued.finally(() => {
+		if (saveResultQueues.get(messageId) === queued) saveResultQueues.delete(messageId);
+	});
 }
 
 function handleRest(payload: NimbleRestPayload): void {

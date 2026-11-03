@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const hooksCall = vi.fn().mockReturnValue(true);
 const hooksCallAll = vi.fn();
@@ -391,6 +391,37 @@ describe('ApplyConditionRule', () => {
 
 			await saveResolved(rule, actor, 'pass');
 			expect(actor.effects).toHaveLength(0);
+		});
+
+		describe('with Feature Effects off', () => {
+			const globals = globalThis as unknown as { game: { settings?: unknown } };
+			let saved: unknown;
+
+			beforeEach(() => {
+				saved = globals.game.settings;
+			});
+
+			afterEach(() => {
+				globals.game.settings = saved;
+			});
+
+			it('still gets the save result, to take back its own condition', () => {
+				expect(ApplyConditionRule.alwaysDispatchedEvents).toContain('onSaveResolved');
+			});
+
+			it('adds nothing on a fail, and removes its condition on a success', async () => {
+				const actor = createMockActor();
+				const rule = createSaveRule(actor);
+				await saveResolved(rule, actor, 'fail');
+				expect(actor.effects).toHaveLength(1);
+
+				globals.game.settings = { get: () => false };
+				await saveResolved(rule, actor, 'pass');
+				expect(actor.effects).toHaveLength(0);
+
+				await saveResolved(rule, actor, 'fail', 'card-2');
+				expect(actor.effects).toHaveLength(0);
+			});
 		});
 
 		it('removes the condition it added when the result stops being known', async () => {

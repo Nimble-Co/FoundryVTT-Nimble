@@ -3,6 +3,7 @@ import type { ConditionNode, EffectNode } from '#types/effectTree.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type ActivationCardContext,
 	type ActorHealthContext,
@@ -99,6 +100,8 @@ declare namespace ApplyConditionRule {
 class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.applyCondition.description';
+	// A success takes back the condition of a fail, also with Feature Effects off.
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onSaveResolved'];
 
 	declare condition: string;
 	declare trigger: ApplyConditionTrigger;
@@ -175,6 +178,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (this.trigger !== 'onSaveFail') return;
 		if (context.actor !== this.item.actor) return;
 		if (context.outcome === 'fail') {
+			if (!isRuleAutomationEnabled()) return;
 			const source: SaveFailSource = {
 				messageId: context.messageId,
 				itemUuid: this.item.uuid,
