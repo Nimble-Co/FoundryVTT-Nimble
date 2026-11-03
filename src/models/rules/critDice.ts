@@ -1,5 +1,5 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
-import { ruleLabel } from '../../utils/actor/actorRules.js';
+import { ruleKey, ruleLabel } from '../../utils/actor/actorRules.js';
 import { usedThisTurn } from '../../utils/combat/perTurnUse.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
@@ -115,7 +115,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 
 	get critDiceSpec(): CritDiceSpec {
 		return {
-			key: `${this.item.uuid}:${this.id}`,
+			key: ruleKey(this),
 			label: ruleLabel(this),
 			role: this.dieRole,
 			formula: Roll.replaceFormulaData(this.formula, this.actor?.getRollData() ?? {}, {

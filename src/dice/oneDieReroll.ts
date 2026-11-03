@@ -361,6 +361,23 @@ function cloneRoll<TRoll extends OneDieRoll>(roll: TRoll): TRoll {
 	) as unknown as TRoll;
 }
 
+/** The copy after a change to `term`, with the dice the change rolled. */
+function changedRoll<TRoll extends OneDieRoll>(
+	copy: TRoll,
+	term: DieTermLike,
+	drawn: number[],
+	d20Before: number | null,
+): { roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null } {
+	const ref = primaryDieRef(copy);
+	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
+	return {
+		roll: copy,
+		faces: term.faces,
+		next: kept ?? null,
+		thrown: drawn.length > 0 ? thrownDice(term, drawn, newD20Crit(d20Before, copy)) : null,
+	};
+}
+
 /**
  * Make an evaluated roll a crit that stays. The old roll is not changed: the
  * new roll is a copy with the crit dice rolled. `thrown` holds only those, or
@@ -374,16 +391,7 @@ async function makeRollCrit<TRoll extends OneDieRoll>(
 	const made = await copy.makeCritical?.();
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll cannot be made a crit.');
 	const settled = (await copy.settleCritDice?.()) ?? [];
-	const ref = primaryDieRef(copy);
-	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
-
-	const rolled = [...made.drawn, ...settled];
-	return {
-		roll: copy,
-		faces: made.term.faces,
-		next: kept ?? null,
-		thrown: rolled.length > 0 ? thrownDice(made.term, rolled, newD20Crit(d20Before, copy)) : null,
-	};
+	return changedRoll(copy, made.term, [...made.drawn, ...settled], d20Before);
 }
 
 /**
@@ -397,24 +405,13 @@ async function applyRollEffect<TRoll extends OneDieRoll>(
 	critDice: CritDiceSpec | null = null,
 ): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
 	const d20Before = d20CritValue(roll);
-	const copy = foundry.dice.Roll.fromData(
-		foundry.utils.deepClone(roll.toJSON()) as never,
-	) as unknown as TRoll;
+	const copy = cloneRoll(roll);
 	let made: { term: unknown; drawn: number[] } | null | undefined;
 	if (effect === 'critD20') made = await copy.replaceCritDieWithD20?.();
 	else if (effect === 'viciousDie') made = await copy.makeVicious?.();
 	else if (critDice) made = await copy.addCritDiceTo?.(critDice);
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll effect has nothing to do.');
-	const ref = primaryDieRef(copy);
-	const kept = ref ? (copy.terms[ref.term] as DieTermLike).results[ref.result]?.result : null;
-
-	return {
-		roll: copy,
-		faces: made.term.faces,
-		next: kept ?? null,
-		thrown:
-			made.drawn.length > 0 ? thrownDice(made.term, made.drawn, newD20Crit(d20Before, copy)) : null,
-	};
+	return changedRoll(copy, made.term, made.drawn, d20Before);
 }
 
 /**
@@ -431,9 +428,7 @@ async function applyOfferBonus<TRoll extends OneDieRoll>(
 		return changeOneDie(roll, ref, { mode: 'add', value: primaryDie });
 	}
 	return {
-		roll: foundry.dice.Roll.fromData(
-			foundry.utils.deepClone(roll.toJSON()) as never,
-		) as unknown as TRoll,
+		roll: cloneRoll(roll),
 		faces: die?.faces ?? 6,
 		next: ref && die ? die.results[ref.result].result : null,
 		thrown: null,

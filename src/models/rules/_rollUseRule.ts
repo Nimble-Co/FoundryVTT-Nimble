@@ -1,6 +1,7 @@
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { ResultCardView } from '#types/resultChange.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
+import { ruleKey } from '../../utils/actor/actorRules.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	ATTACK_SOURCES,
@@ -499,7 +500,7 @@ abstract class RollUseRule<
 			heroicReaction: this.heroicReaction ?? '',
 			actionCost: Math.min(1, Math.max(0, Math.trunc(Number(this.actionCost) || 0))),
 			...(this.actionReportOnly ? { actionReportOnly: true } : {}),
-			...(this.oncePerTurn ? { turnUseKey: `${this.item.uuid}:${this.id}` } : {}),
+			...(this.oncePerTurn ? { turnUseKey: ruleKey(this) } : {}),
 		};
 	}
 

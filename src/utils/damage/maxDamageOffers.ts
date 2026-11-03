@@ -1,6 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { MaxDamageChoice, MaxDamageOffer, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
-import { actorRules, ruleLabel } from '../actor/actorRules.js';
+import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 
 interface OfferActor {
@@ -25,8 +25,6 @@ function rollsFor(item: OfferItem, use: 'damage' | 'healing'): boolean {
 	});
 }
 
-const keyOf = (rule: MaxDamageRuleLike) => `${rule.item?.uuid ?? ''}:${rule.id ?? ''}`;
-
 /** The Max Damage ticks a roll window of `item` shows, each with its cost. */
 export function maxDamageOffers(
 	actor: OfferActor | null | undefined,
@@ -39,7 +37,7 @@ export function maxDamageOffers(
 		const poolIdentifier = rule.chargePoolIdentifier?.trim() ?? '';
 		return [
 			{
-				key: keyOf(rule),
+				key: ruleKey(rule),
 				label: ruleLabel(rule),
 				use,
 				tempHpChoice: use === 'healing' && rule.tempHpChoice === true,
@@ -59,5 +57,5 @@ export function maxDamageRuleOf(
 	if (!choice) return null;
 	const offer = maxDamageOffers(actor, item).find((each) => each.key === choice.key);
 	if (!offer?.canPay) return null;
-	return rulesOf(actor).find((rule) => keyOf(rule) === choice.key) ?? null;
+	return rulesOf(actor).find((rule) => ruleKey(rule) === choice.key) ?? null;
 }
