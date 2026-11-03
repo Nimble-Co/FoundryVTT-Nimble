@@ -4,6 +4,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
+import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -32,7 +33,7 @@ import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnima
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import type { DieRef, PickableDie } from '../dice/oneDieReroll.js';
+import type { PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
@@ -1763,18 +1764,14 @@ class NimbleChatMessage extends ChatMessage {
 		requestingUserId: string,
 		viaSocket = false,
 		forceHeroicReaction = false,
-		die: DieRef | null = null,
-		value: number | null = null,
-		stat: string | null = null,
+		pick: RerollPick = {},
 	): Promise<void> {
 		return this.#rerolls.resolveRerollReaction(
 			entryId,
 			requestingUserId,
 			viaSocket,
 			forceHeroicReaction,
-			die,
-			value,
-			stat,
+			pick,
 		);
 	}
 

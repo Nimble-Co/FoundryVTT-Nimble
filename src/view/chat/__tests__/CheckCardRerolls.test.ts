@@ -297,6 +297,7 @@ describe('rerolls on check cards', () => {
 			messageId: 'message-1',
 			entryId: 'entry-brutality',
 			forceHeroicReaction: false,
+			pick: {},
 		});
 	});
 
@@ -386,6 +387,7 @@ describe('rerolls on check cards', () => {
 				messageId: card.id,
 				entryId: 'entry-luck',
 				forceHeroicReaction: false,
+				pick: {},
 			});
 		});
 
@@ -464,8 +466,7 @@ describe('rerolls on check cards', () => {
 				messageId: 'message-1',
 				entryId: 'entry-seer',
 				forceHeroicReaction: false,
-				die: { term: 0, result: 0 },
-				value: 20,
+				pick: { die: { term: 0, result: 0 }, value: 20 },
 			});
 		});
 
@@ -547,7 +548,9 @@ describe('rerolls on check cards', () => {
 			await settle();
 
 			expect(requestIncomingAttackReaction).toHaveBeenCalledTimes(1);
-			expect(requestIncomingAttackReaction.mock.calls[0][0]).toMatchObject({ stat: 'dexterity' });
+			expect(requestIncomingAttackReaction.mock.calls[0][0]).toMatchObject({
+				pick: { stat: 'dexterity' },
+			});
 		});
 
 		it('says on the row whether its stats are open', async () => {

@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { DieChange } from '#types/dieChange.d.ts';
+import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import {
@@ -704,9 +705,7 @@ export class CardRerolls {
 		requestingUserId: string,
 		viaSocket = false,
 		forceHeroicReaction = false,
-		die: DieRef | null = null,
-		value: number | null = null,
-		stat: string | null = null,
+		pick: RerollPick = {},
 	): Promise<void> {
 		if (!game.user?.isGM) return;
 		const target = this.#rerollTarget();
@@ -719,9 +718,7 @@ export class CardRerolls {
 				requestingUserId,
 				viaSocket,
 				forceHeroicReaction,
-				die,
-				value,
-				stat,
+				pick,
 			),
 		);
 	}
@@ -732,10 +729,9 @@ export class CardRerolls {
 		requestingUserId: string,
 		viaSocket: boolean,
 		forceHeroicReaction: boolean,
-		die: DieRef | null,
-		value: number | null,
-		stat: string | null,
+		pick: RerollPick,
 	): Promise<void> {
+		const { die = null, value = null, stat = null } = pick;
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
 				messageId: this.#host.id() ?? '',

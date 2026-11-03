@@ -1,3 +1,5 @@
+import { keyedQueue } from '#utils/keyedQueue.ts';
+
 /**
  * Paid offers currently resolving (pool spends and rerolls), keyed
  * `<messageId>:<entryId>`.
@@ -11,7 +13,7 @@
 export const inFlightSpendOffers = new Set<string>();
 
 /** In-flight reaction resolve per card, so the next one starts after it. */
-const reactionWriteQueues = new Map<string, Promise<void>>();
+const reactionWriteQueues = keyedQueue();
 
 /**
  * Run a reaction resolver with at most one in flight per card.
@@ -29,18 +31,5 @@ const reactionWriteQueues = new Map<string, Promise<void>>();
  * lock misses.
  */
 export function queueReactionWrite(messageId: string, task: () => Promise<void>): Promise<void> {
-	const previous = reactionWriteQueues.get(messageId) ?? Promise.resolve();
-	// Both paths run the task: a predecessor that threw must not wedge the card.
-	const result = previous.then(task, task);
-	const settled = result.then(
-		() => undefined,
-		() => undefined,
-	);
-
-	reactionWriteQueues.set(messageId, settled);
-	void settled.then(() => {
-		if (reactionWriteQueues.get(messageId) === settled) reactionWriteQueues.delete(messageId);
-	});
-
-	return result;
+	return reactionWriteQueues.run(messageId, task);
 }

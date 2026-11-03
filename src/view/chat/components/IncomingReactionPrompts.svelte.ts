@@ -325,9 +325,11 @@ export function createIncomingReactionPromptsState(
 			messageId: message?.id ?? '',
 			entryId: entry.id,
 			forceHeroicReaction,
-			...(die ? { die: { term: die.term, result: die.result } } : {}),
-			...(value === null ? {} : { value }),
-			...(stat === null ? {} : { stat }),
+			pick: {
+				...(die ? { die: { term: die.term, result: die.result } } : {}),
+				...(value === null ? {} : { value }),
+				...(stat === null ? {} : { stat }),
+			},
 		});
 		return true;
 	}

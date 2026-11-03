@@ -1,16 +1,11 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import type { SkillKeyType } from '#types/skillKey.js';
+import type { AssessRequest } from '#types/assess.d.ts';
 import { ASSESS_DC, assessOptions } from '#utils/assessOptions.js';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import { assessSucceeds } from './assessResult.js';
-
-export interface AssessRequest {
-	optionId: string;
-	skillKey: SkillKeyType;
-}
 
 async function spendAssessAction(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();

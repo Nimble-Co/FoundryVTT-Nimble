@@ -885,8 +885,8 @@ describe('IncomingReactionPrompts', () => {
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
 					expect.objectContaining({ entryId: 'wren-crit' }),
 				);
-				expect(requestIncomingAttackReaction).not.toHaveBeenCalledWith(
-					expect.objectContaining({ die: expect.anything() }),
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ pick: {} }),
 				);
 			});
 
@@ -1079,6 +1079,7 @@ describe('IncomingReactionPrompts', () => {
 				messageId: 'message-1',
 				entryId: 'reroll-entry',
 				forceHeroicReaction: false,
+				pick: {},
 			});
 		});
 
@@ -1116,7 +1117,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 2, result: 0 },
+					pick: { die: { term: 2, result: 0 } },
 				});
 				expect(rollPlace().getByText('Rerolling with Pocket Sand')).toBeTruthy();
 			});
@@ -1211,7 +1212,7 @@ describe('IncomingReactionPrompts', () => {
 
 				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.objectContaining({ die: { term: 2, result: 0 } }),
+					expect.objectContaining({ pick: { die: { term: 2, result: 0 } } }),
 				);
 			});
 		});
@@ -1259,8 +1260,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 0, result: 0 },
-					value: 8,
+					pick: { die: { term: 0, result: 0 }, value: 8 },
 				});
 			});
 
@@ -1303,7 +1303,7 @@ describe('IncomingReactionPrompts', () => {
 				await settle();
 
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.objectContaining({ die: { term: 0, result: 0 }, value: 6 }),
+					expect.objectContaining({ pick: { die: { term: 0, result: 0 }, value: 6 } }),
 				);
 			});
 
@@ -1336,7 +1336,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 0, result: 0 },
+					pick: { die: { term: 0, result: 0 } },
 				});
 			});
 
@@ -1351,7 +1351,9 @@ describe('IncomingReactionPrompts', () => {
 
 				expect(rollPlace().queryByText('Pick a value')).toBeNull();
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.not.objectContaining({ value: expect.anything() }),
+					expect.objectContaining({
+						pick: expect.not.objectContaining({ value: expect.anything() }),
+					}),
 				);
 			});
 

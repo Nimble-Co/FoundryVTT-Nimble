@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { DieRef } from '../../dice/oneDieReroll.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
@@ -121,9 +122,7 @@ interface ReactionCapableMessage {
 		requestingUserId: string,
 		viaSocket?: boolean,
 		forceHeroicReaction?: boolean,
-		die?: DieRef | null,
-		value?: number | null,
-		stat?: string | null,
+		pick?: RerollPick,
 	) => Promise<void>;
 	resolveKeepChoice?: (
 		choice: RerollKept,
@@ -156,9 +155,7 @@ async function executeIncomingReaction(
 	viaSocket: boolean,
 	selection?: PoolSpendSelection,
 	forceHeroicReaction?: boolean,
-	die?: DieRef | null,
-	value?: number | null,
-	stat?: string | null,
+	pick: RerollPick = {},
 ): Promise<void> {
 	const message = getMessageById(messageId);
 	if (!message) return;
@@ -180,9 +177,7 @@ async function executeIncomingReaction(
 			requestingUserId,
 			viaSocket,
 			forceHeroicReaction === true,
-			die ?? null,
-			value ?? null,
-			stat ?? null,
+			pick,
 		);
 	}
 }
@@ -217,9 +212,11 @@ async function handleIncomingReactionRequest(payload: unknown): Promise<void> {
 		true,
 		request.selection,
 		request.forceHeroicReaction === true,
-		dieRefFrom(request.die),
-		faceFrom(request.value),
-		typeof request.stat === 'string' ? request.stat : null,
+		{
+			die: dieRefFrom(request.die),
+			value: faceFrom(request.value),
+			stat: typeof request.stat === 'string' ? request.stat : null,
+		},
 	);
 }
 
@@ -362,10 +359,9 @@ export async function requestIncomingAttackReaction(params: {
 	entryId: string;
 	selection?: PoolSpendSelection;
 	forceHeroicReaction?: boolean;
-	die?: DieRef;
-	value?: number;
-	stat?: string;
+	pick?: RerollPick;
 }): Promise<boolean> {
+	const pick = params.pick ?? {};
 	if (!game.user?.id) return false;
 
 	if (game.user.isGM) {
@@ -376,9 +372,7 @@ export async function requestIncomingAttackReaction(params: {
 			false,
 			params.selection,
 			params.forceHeroicReaction,
-			params.die ?? null,
-			params.value ?? null,
-			params.stat ?? null,
+			pick,
 		);
 		return true;
 	}
@@ -399,9 +393,9 @@ export async function requestIncomingAttackReaction(params: {
 		userId: game.user.id,
 		...(params.selection ? { selection: params.selection } : {}),
 		...(params.forceHeroicReaction ? { forceHeroicReaction: true } : {}),
-		...(params.die ? { die: params.die } : {}),
-		...(params.value ? { value: params.value } : {}),
-		...(params.stat ? { stat: params.stat } : {}),
+		...(pick.die ? { die: pick.die } : {}),
+		...(pick.value ? { value: pick.value } : {}),
+		...(pick.stat ? { stat: pick.stat } : {}),
 	});
 	return true;
 }

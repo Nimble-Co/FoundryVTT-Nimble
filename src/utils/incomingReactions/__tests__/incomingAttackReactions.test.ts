@@ -87,9 +87,7 @@ describe('requestIncomingAttackReaction', () => {
 			'gm-user',
 			false,
 			false,
-			null,
-			null,
-			null,
+			{},
 		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
@@ -103,24 +101,18 @@ describe('requestIncomingAttackReaction', () => {
 		await requestIncomingAttackReaction({
 			messageId: 'message-1',
 			entryId: 'entry-1',
-			stat: 'dexterity',
+			pick: { stat: 'dexterity' },
 		});
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
-			'entry-1',
-			'gm-user',
-			false,
-			false,
-			null,
-			null,
-			'dexterity',
-		);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, false, {
+			stat: 'dexterity',
+		});
 
 		setUser({ id: 'player-1', isGM: false });
 		await requestIncomingAttackReaction({
 			messageId: 'message-1',
 			entryId: 'entry-1',
-			stat: 'will',
+			pick: { stat: 'will' },
 		});
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			expect.any(String),
@@ -171,9 +163,7 @@ describe('requestIncomingAttackReaction', () => {
 			'gm-user',
 			false,
 			true,
-			null,
-			null,
-			null,
+			{},
 		);
 	});
 
@@ -184,7 +174,7 @@ describe('requestIncomingAttackReaction', () => {
 		await requestIncomingAttackReaction({
 			messageId: 'message-1',
 			entryId: 'entry-1',
-			die: { term: 0, result: 1 },
+			pick: { die: { term: 0, result: 1 } },
 		});
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
@@ -197,7 +187,11 @@ describe('requestIncomingAttackReaction', () => {
 		const { requestIncomingAttackReaction } = await loadModule();
 		setUser({ id: 'player-1', isGM: false });
 
-		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1', value: 8 });
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			pick: { value: 8 },
+		});
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			'system.nimble',
@@ -313,15 +307,11 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
-			'entry-1',
-			'player-1',
-			true,
-			false,
-			null,
-			null,
-			null,
-		);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false, {
+			die: null,
+			value: null,
+			stat: null,
+		});
 	});
 
 	it('gives the GM the die a player picked, and drops a pick that is not a die', async () => {
@@ -342,7 +332,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request({ term: '2', result: 0 }));
 		await flushAsync();
 
-		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4]);
+		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4].die);
 		expect(dice).toEqual([{ term: 2, result: 0 }, null, null]);
 	});
 
@@ -365,7 +355,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request('7'));
 		await flushAsync();
 
-		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[5]);
+		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[4].value);
 		expect(faces).toEqual([7, null, null, null]);
 	});
 

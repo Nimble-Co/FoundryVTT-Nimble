@@ -1861,15 +1861,9 @@ describe('a reroll from a rule with a stat to pick', () => {
 		setupWorld({ usesAnotherStat: true, die: 'wholeRoll' });
 		const message = messageWithStat();
 
-		await message.resolveRerollReaction(
-			'entry-1',
-			'gm-user',
-			false,
-			false,
-			null,
-			null,
-			'dexterity',
-		);
+		await message.resolveRerollReaction('entry-1', 'gm-user', false, false, {
+			stat: 'dexterity',
+		});
 
 		const payload = updatePayload(message);
 		expect(JSON.parse(payload.rolls[0]).originalFormula).toBe('1d6 + @dexterity');
