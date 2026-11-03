@@ -41,7 +41,8 @@
 				"poolScope": "item",
 				"costMode": "fixed",
 				"cost": "1",
-				"maxCost": ""
+				"maxCost": "",
+				"allowFree": true
 			}
 		],
 		"activation": {

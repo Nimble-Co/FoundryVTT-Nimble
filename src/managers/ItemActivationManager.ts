@@ -13,6 +13,7 @@ import {
 	findUnofferableVariableSpends,
 	getChargeConsumers,
 	getFixedChargeCostsByPool,
+	itemOffersFreeUse,
 } from '#utils/chargePool/helpers.js';
 import type {
 	CharacterActorLike,
@@ -198,6 +199,9 @@ class ItemActivationManager {
 
 	/** The player ticked 1 less mana: the cast invokes Chaos. */
 	invokesChaos = false;
+
+	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
+	freeUse = false;
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
@@ -413,6 +417,8 @@ class ItemActivationManager {
 				return { activation: null, rolls: null };
 			}
 		}
+
+		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
 		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
 			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
@@ -1391,7 +1397,7 @@ class ItemActivationManager {
 		// The same holds for the enhancement a pinned upcast picks from a list.
 		const mustPrompt = this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice();
 
-		if (!hasRolls && !isSpell && !mustPrompt) {
+		if (!hasRolls && !isSpell && !mustPrompt && !this.#offersFreeUse()) {
 			// No rolls needed, use default
 			return this.#getDefaultDialogData(rollOptions);
 		}
@@ -1464,6 +1470,17 @@ class ItemActivationManager {
 				includeVariable: true,
 			},
 		).some((consumer) => consumer.variable);
+	}
+
+	/** Whether the roll window of this item has the tick for a use with no charge. */
+	#offersFreeUse(): boolean {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return false;
+
+		return itemOffersFreeUse(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
 	}
 
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
@@ -1602,6 +1619,8 @@ namespace ItemActivationManager {
 	export interface DialogData {
 		/** The tick for dual wielding. */
 		dualWield?: DualWieldChoice;
+		/** The tick for a use with no charge. */
+		freeUse?: boolean;
 		/** The tick for 1 less mana. */
 		lessMana?: boolean;
 		/** Roll mode selected in the dialog. */

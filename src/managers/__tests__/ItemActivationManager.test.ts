@@ -1623,6 +1623,55 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
 		});
 
+		/** A pool and a fixed consumer that may allow a use with no charge. */
+		function makeItemSpendACharge(allowFree: boolean) {
+			makeItemSpendVariableCharges();
+			mockItem.rules?.set('1', {
+				type: 'chargeConsumer',
+				id: 'consumer-rule',
+				poolIdentifier: 'focus',
+				poolScope: 'item',
+				costMode: 'fixed',
+				cost: '1',
+				maxCost: '',
+				allowFree,
+			});
+		}
+
+		it('should open the config dialog for an item whose charge cost allows a use with none', async () => {
+			dialogState.result = { rollMode: 0, freeUse: true };
+			makeItemSpendACharge(true);
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [] };
+			mockReconstructEffectsTree.mockReturnValue([]);
+			stubRollsByFormula();
+
+			await manager.getData();
+
+			expect(MockItemActivationConfigDialog).toHaveBeenCalledTimes(1);
+			expect(manager.freeUse).toBe(true);
+		});
+
+		it('should not open the config dialog for an item with no rolls that always spends its charge', async () => {
+			dialogState.result = { rollMode: 0, freeUse: true };
+			makeItemSpendACharge(false);
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [] };
+			mockReconstructEffectsTree.mockReturnValue([]);
+			stubRollsByFormula();
+
+			await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(manager.freeUse).toBe(false);
+		});
+
 		it('should open the config dialog when the item asks for a variable charge spend', async () => {
 			// The amount spent is player input with no default, so skipRollDialog
 			// cannot suppress the prompt that collects it.

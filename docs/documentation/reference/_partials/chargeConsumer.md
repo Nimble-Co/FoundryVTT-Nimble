@@ -13,6 +13,8 @@ The item's own damage and healing formulas read that amount as `@spent`, so a he
 
 An item with a variable consumer always opens its roll window, even when it is set to skip it.
 
+**Example: Beastshift.** A fixed cost of `1` with **Use without a charge** on. The roll window of the item gets a tick, off at first. With the tick, the use spends no charge, for the uses Swiftshift and Friend of Beasts make free. An empty pool does not stop the item on the sheet, but a use without the tick still needs the charge. The system changes nothing else of a free use.
+
 An item can have a fixed cost and a variable one on the same pool. The fixed cost comes out first and the player picks from what is left, so a pool of 10 with a fixed cost of 3 offers up to 7. If the pool cannot cover both, the item cannot be used.
 
 A variable consumer will not work in these cases. The item cannot be used, and the message names the pool.

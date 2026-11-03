@@ -14,6 +14,7 @@ import {
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
+import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
@@ -93,6 +94,9 @@ export function createItemActivationConfigDialogState(
 	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
 	const offersLessMana = offersLessManaFor(actor as never, item as never);
 	let lessMana = $state(false);
+	const offersFreeUse =
+		actor.type === 'character' && itemOffersFreeUse(actor as never, item as never);
+	let freeUse = $state(false);
 	const dualWieldOffer: DualWieldOffer | null = dualWieldOfferFor(actor as never, item as never);
 	let dualWield = $state(false);
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
@@ -350,6 +354,13 @@ export function createItemActivationConfigDialogState(
 		},
 		set lessMana(value: boolean) {
 			lessMana = value;
+		},
+		offersFreeUse,
+		get freeUse() {
+			return freeUse;
+		},
+		set freeUse(value: boolean) {
+			freeUse = value;
 		},
 
 		// Pool snapshots (immutable).

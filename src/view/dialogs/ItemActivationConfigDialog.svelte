@@ -69,6 +69,7 @@
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
 			lessMana: state.lessMana,
+			freeUse: state.freeUse,
 			...(state.dualWield
 				? {
 						dualWield: {
@@ -100,6 +101,13 @@
 
 	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
 	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
+	{#if state.offersFreeUse}
+		<label class="check">
+			<input type="checkbox" bind:checked={state.freeUse} />
+			<i class="fa-solid fa-battery-empty" aria-hidden="true"></i>
+			<span>{localize('NIMBLE.rollWindow.freeUse')}</span>
+		</label>
+	{/if}
 	{#if state.dualWieldOffer}
 		<DualWieldField
 			offer={state.dualWieldOffer}

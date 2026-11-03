@@ -59,6 +59,16 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.costMode === 'variable',
 			}),
 		),
+		allowFree: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.chargeConsumer.allowFree.label',
+				hint: 'NIMBLE.rules.chargeConsumer.allowFree.hint',
+				showWhen: (data: Record<string, unknown>) => data.costMode !== 'variable',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -91,6 +101,9 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	/** Ceiling for a variable spend. Blank means the pool's current charges. */
 	declare maxCost: string;
 
+	/** The roll window has a tick to use the item with no charge. */
+	declare allowFree: boolean;
+
 	static override defineSchema(): ChargeConsumerRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -106,6 +119,7 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 				['costMode', '"fixed" | "variable"'],
 				['cost', 'string'],
 				['maxCost', 'string'],
+				['allowFree', 'boolean'],
 			]),
 		);
 	}

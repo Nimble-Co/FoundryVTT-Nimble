@@ -1795,6 +1795,10 @@
 				"maxCost": {
 					"label": "Maximum cost",
 					"hint": "Variable mode only. Ceiling formula for the player’s choice. Leave blank to allow the pool’s remaining charges."
+				},
+				"allowFree": {
+					"label": "Use without a charge",
+					"hint": "The roll window gets a tick, off at first, to use the item and spend no charge, for a use that another feature makes free. The system changes nothing else of that use: what a free use does not give stays with the player."
 				}
 			},
 			"diceConsumer": {
@@ -4256,6 +4260,7 @@
 				"extraDie": "Which weapon gets the extra die?"
 			},
 			"usedThisRound": "You used this in this round.",
+			"freeUse": "Use without a charge",
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",

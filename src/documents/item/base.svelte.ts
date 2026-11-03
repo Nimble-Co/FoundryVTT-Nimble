@@ -326,6 +326,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			isCritical,
 			isMiss,
 			targets: Array.from(game.user?.targets ?? []),
+			freeUse: manager.freeUse,
 		});
 		if (!allowed) return null;
 
@@ -406,6 +407,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			isMiss,
 			discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 			targets: Array.from(game.user?.targets ?? []),
+			freeUse: manager.freeUse,
 		});
 	}
 

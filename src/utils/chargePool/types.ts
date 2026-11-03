@@ -100,6 +100,7 @@ type ChargeConsumerRuleLike = {
 	costMode?: string;
 	cost?: string;
 	maxCost?: string;
+	allowFree?: boolean;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.
@@ -149,11 +150,15 @@ type ChargeConsumerState = {
 	variable: boolean;
 	/** Ceiling for a variable spend; `null` means the pool's current charges. */
 	maxCost: number | null;
+	/** The player can use the item with no charge from this consumer. */
+	allowFree?: true;
 };
 
 type ChargeContext = {
 	isMiss?: boolean;
 	isCritical?: boolean;
+	/** The player ticked a use with no charge: consumers that allow it spend nothing. */
+	free?: boolean;
 };
 
 type ChargeValidationFailure = {

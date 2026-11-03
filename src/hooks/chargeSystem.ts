@@ -18,6 +18,7 @@ type SupportedRestType = (typeof ChargePoolRuleConfig.restTypes)[number];
 type ItemUseContext = {
 	isMiss?: boolean;
 	isCritical?: boolean;
+	free?: boolean;
 };
 
 type RestContext = {
@@ -50,7 +51,15 @@ function toItemUseContext(context: unknown): ItemUseContext {
 	if (!context || typeof context !== 'object') return {};
 	const sourceContext = context as Record<string, unknown>;
 
-	return critTriggerOutcome(sourceContext);
+	return {
+		...critTriggerOutcome(sourceContext),
+		...freeUseOf(context),
+	};
+}
+
+/** The player ticked a use with no charge in the roll window. */
+function freeUseOf(context: unknown): { free?: true } {
+	return (context as { freeUse?: unknown } | null)?.freeUse === true ? { free: true } : {};
 }
 
 function toRestContext(context: unknown): RestContext {
@@ -139,14 +148,14 @@ function registerActorSyncHooks(): void {
 }
 
 function registerItemUseHooks(): void {
-	registerCustomHook(systemHookName('preUseItem'), (item) => {
+	registerCustomHook(systemHookName('preUseItem'), (item, context) => {
 		// With spending automation off, charge costs are neither validated nor
 		// enforced — the use is always allowed.
 		if (!isResourceSpendingAutomationEnabled()) return true;
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return true;
 
-		const validation = validateItemChargeConsumption(characterItem);
+		const validation = validateItemChargeConsumption(characterItem, freeUseOf(context));
 		if (validation.ok) return true;
 		const failure = validation.failure;
 		if (!failure) return false;

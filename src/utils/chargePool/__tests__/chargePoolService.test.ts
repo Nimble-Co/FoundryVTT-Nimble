@@ -11,7 +11,11 @@ import {
 } from '#utils/chargePool/chargePoolRecover.js';
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { getPoolsForItem, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
-import { buildEffectiveChargePoolMap, temporaryUseSources } from '#utils/chargePool/helpers.js';
+import {
+	buildEffectiveChargePoolMap,
+	itemOffersFreeUse,
+	temporaryUseSources,
+} from '#utils/chargePool/helpers.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
 
 type MockRule = {
@@ -33,6 +37,7 @@ type MockRule = {
 	cost?: string;
 	costMode?: string;
 	maxCost?: string;
+	allowFree?: boolean;
 };
 
 type MockItem = {
@@ -1807,5 +1812,78 @@ describe('ChargePoolService', () => {
 
 			expect(pool()).toMatchObject({ current: 3, temporary: 0 });
 		});
+	});
+});
+
+describe('a charge consumer that allows a use with no charge', () => {
+	function beastshift(current: number, allowFree = true) {
+		return createMockActor({
+			items: [
+				{
+					id: 'beastshift',
+					name: 'Beastshift',
+					rules: [
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'beastshift',
+							scope: 'item',
+							max: '3',
+							initial: 'max',
+						},
+						{
+							type: 'chargeConsumer',
+							id: 'consume-rule',
+							poolIdentifier: 'beastshift',
+							poolScope: 'item',
+							cost: '1',
+							allowFree,
+						},
+					],
+					itemFlags: {
+						nimble: { chargePools: { beastshift: { current, max: 3, recoveries: [] } } },
+					},
+				},
+			],
+		});
+	}
+
+	const itemOf = (actor: MockActor) => actor.items.contents[0] as unknown as Item.Implementation;
+
+	it('offers the use with no charge only when the rule allows it', () => {
+		const free = beastshift(1);
+		const paid = beastshift(1, false);
+
+		expect(itemOffersFreeUse(free as unknown as CharacterActorLike, itemOf(free) as never)).toBe(
+			true,
+		);
+		expect(itemOffersFreeUse(paid as unknown as CharacterActorLike, itemOf(paid) as never)).toBe(
+			false,
+		);
+	});
+
+	it('needs a charge for a use that spends one, and none for a use with no charge', () => {
+		const actor = beastshift(0);
+
+		expect(validateItemChargeConsumption(itemOf(actor)).ok).toBe(false);
+		expect(validateItemChargeConsumption(itemOf(actor), { free: true }).ok).toBe(true);
+	});
+
+	it('spends no charge on a use with no charge', async () => {
+		const actor = beastshift(2);
+
+		const result = await consumeOnResolvedItemUse(itemOf(actor), { free: true });
+
+		expect(result.ok).toBe(true);
+		expect(result.consumption).toEqual([]);
+		expect(actor.items.contents[0].update).not.toHaveBeenCalled();
+	});
+
+	it('spends the charge on a normal use', async () => {
+		const actor = beastshift(2);
+
+		const result = await consumeOnResolvedItemUse(itemOf(actor), {});
+
+		expect(result.consumption?.[0]).toMatchObject({ previousValue: 2, currentValue: 1 });
 	});
 });
