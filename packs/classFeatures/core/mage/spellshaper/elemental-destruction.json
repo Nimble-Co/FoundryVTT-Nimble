@@ -47,7 +47,7 @@
 				"actionCost": 0,
 				"actionReportOnly": false,
 				"oncePerTurn": false,
-				"oncePerAttack": true,
+				"oncePerRoll": true,
 				"cardHint": "",
 				"cardHintWhen": {}
 			}

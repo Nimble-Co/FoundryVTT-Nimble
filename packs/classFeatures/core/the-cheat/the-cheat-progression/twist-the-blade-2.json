@@ -31,7 +31,7 @@
 				"manaCost": 0,
 				"woundCost": 0,
 				"heroicReaction": "",
-				"oncePerAttack": false,
+				"oncePerRoll": false,
 				"cardHint": "",
 				"cardHintWhen": {},
 				"type": "changeDie",

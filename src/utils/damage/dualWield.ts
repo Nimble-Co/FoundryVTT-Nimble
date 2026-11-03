@@ -185,7 +185,7 @@ export function dualWieldEntry(input: { actorUuid: string; itemUuid: string; lab
 		itemUuid: input.itemUuid,
 		used: true,
 		outcomeTrigger: 'always' as const,
-		oncePerAttack: true,
+		oncePerRoll: true,
 		use: 'effect' as const,
 		effect: 'dualWield' as const,
 	};

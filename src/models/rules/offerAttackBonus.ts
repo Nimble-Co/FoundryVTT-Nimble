@@ -100,7 +100,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 		return 'offerBonus';
 	}
 
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return true;
 	}
 }

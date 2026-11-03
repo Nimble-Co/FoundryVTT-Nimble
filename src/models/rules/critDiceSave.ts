@@ -108,7 +108,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 		return 'criticalHit';
 	}
 
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return true;
 	}
 

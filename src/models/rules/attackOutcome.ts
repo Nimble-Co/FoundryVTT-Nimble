@@ -316,7 +316,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	}
 
 	/** A row that changes the crit dice has nothing more to do on one card. */
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return !!this.rollEffect;
 	}
 

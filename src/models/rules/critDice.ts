@@ -140,7 +140,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 		return 'criticalHit';
 	}
 
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return true;
 	}
 
