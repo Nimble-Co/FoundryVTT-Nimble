@@ -1,3 +1,4 @@
+import { ruleKey } from '../../utils/actor/actorRules.js';
 import { NimbleBaseRule } from './base.js';
 
 // Dedupe the phase-mismatch warning by item and rule so it fires once per
@@ -104,7 +105,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		if (!item?.isEmbedded) return;
 		if (!this.test()) return;
 
-		const dedupeKey = `${item.uuid}:${this.id}`;
+		const dedupeKey = ruleKey(this);
 		if (warnedPhaseMismatchRules.has(dedupeKey)) return;
 		warnedPhaseMismatchRules.add(dedupeKey);
 

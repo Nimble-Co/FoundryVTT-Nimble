@@ -1,3 +1,4 @@
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { rejectIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import { payRerollCost } from '#utils/reroll/rerollCost.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -87,7 +88,7 @@ export class CardDamageBack {
 				if (automatic) await attacker.applyDamage?.(taken);
 				added.push({
 					id: foundry.utils.randomID(),
-					label: rule.label || rule.item?.name || '',
+					label: ruleLabel(rule),
 					actorUuid: actor.uuid,
 					attackerUuid: attacker.uuid,
 					attackerName: attacker.name ?? '',

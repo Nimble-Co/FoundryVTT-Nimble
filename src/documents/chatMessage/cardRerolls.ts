@@ -59,7 +59,11 @@ import {
 } from '#utils/reroll/rerollEntries.js';
 import { cannotMissOptions } from '#utils/reroll/rerollOptions.js';
 import type { RerollableRoll, RerollRollTarget } from '#utils/reroll/rerollRollTarget.js';
-import { type RerollStepDone, rerollWithRule } from '#utils/reroll/rerollStep.js';
+import {
+	type RerollStepDone,
+	type RerollStepInput,
+	rerollWithRule,
+} from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
 import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
 import {
@@ -71,6 +75,11 @@ import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAn
 import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
+
+/** What a rule's use adds to its new roll, and the console text when that roll fails. */
+interface NewRollUse extends Partial<RerollStepInput<unknown>> {
+	failedLog: string;
+}
 
 /** The roll with its new attack unable to miss, whichever dice the rule rerolls. */
 function withCannotMiss<TRoll>(found: RerollableRoll<TRoll>): RerollableRoll<TRoll> {
@@ -902,15 +911,43 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		reject: (reasonKey: string) => unknown,
 	): Promise<void> {
-		const target = critFor(found);
+		return this.#applyNewRoll(
+			rollTarget,
+			critFor(found),
+			entry,
+			usable,
+			forceHeroicReaction,
+			reject,
+			{
+				makesCrit: true,
+				failedLog: 'Nimble | Making a crit failed; its cost is given back.',
+			},
+		);
+	}
+
+	/**
+	 * Pay the cost of a rule's entry, then make the new roll of `target` and put
+	 * it on the card as a reroll is put there. Modify Reroll rules do not apply.
+	 * The cost is given back when the roll cannot be made.
+	 */
+	async #applyNewRoll(
+		rollTarget: RerollRollTarget,
+		target: RerollableRoll | null,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		forceHeroicReaction: boolean,
+		reject: (reasonKey: string) => unknown,
+		use: NewRollUse,
+	): Promise<void> {
 		if (!target) return void reject('NIMBLE.chat.incomingReactions.useFailed');
 
+		const { failedLog, ...fields } = use;
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
 		const result = await rerollWithRule({
 			rule: usable.rule,
 			entry,
 			rollKind: rollTarget.context().roll.kind,
-			makesCrit: true,
+			...fields,
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,
@@ -929,7 +966,7 @@ export class CardRerolls {
 			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 		}
 		if (result.status === 'failed') {
-			console.error('Nimble | Making a crit failed; its cost is given back.', result.error);
+			console.error(failedLog, result.error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

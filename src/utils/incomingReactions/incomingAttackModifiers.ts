@@ -1,3 +1,4 @@
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { IncomingAttackModifier } from '../../models/rules/modifyIncomingAttack.js';
 import { appendExtraDamageToRoll } from '../damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../damage/missThreshold.js';
@@ -207,7 +208,7 @@ function getMatchingRules(actor: ActorLike | null | undefined): RuleLike[] {
 function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 	return {
 		modifier: rule.modifier as IncomingAttackModifier,
-		label: rule.label || rule.item?.name || '',
+		label: ruleLabel(rule),
 		ruleId: rule.id ?? '',
 		itemUuid: rule.item?.uuid ?? '',
 		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,

@@ -3,6 +3,7 @@ import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import {
@@ -104,7 +105,7 @@ function collectPrimaryDieBonuses(
 		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
 		if (value === 0) continue;
 		lines.push({
-			label: rule.label || rule.item?.name || '',
+			label: ruleLabel(rule),
 			value,
 			itemUuid: rule.item?.uuid ?? '',
 		});

@@ -1,6 +1,7 @@
 import type { ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { hasRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
@@ -236,7 +237,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		if (!hasRuleCharge(this.actor as Actor | null, chargePoolIdentifier)) return null;
 
 		return {
-			label: this.label || this.item.name || '',
+			label: ruleLabel(this),
 			cannotMiss: this.cannotMiss === true,
 			critRange: Math.max(0, Math.trunc(Number(this.critRange) || 0)),
 			forcedCrit: this.forceCrit === 'always' || this.forceCrit === 'onHit' ? this.forceCrit : null,

@@ -1,5 +1,6 @@
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
@@ -338,7 +339,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					tokenUuid,
 					targetTokenUuid,
 					side,
-					label: rule.label || rule.item?.name || '',
+					label: ruleLabel(rule),
 					ruleId: rule.id ?? '',
 					itemUuid: rule.item?.uuid ?? '',
 					used: false,

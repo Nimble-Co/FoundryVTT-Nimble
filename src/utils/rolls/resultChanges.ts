@@ -1,4 +1,5 @@
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import type { RollToReroll } from '../reroll/rollToReroll.js';
@@ -104,7 +105,7 @@ function naturalResultChange(input: {
 		entryId: '',
 		itemUuid: rule.item?.uuid ?? '',
 		ruleId: rule.id ?? '',
-		label: rule.label || rule.item?.name || '',
+		label: ruleLabel(rule),
 		actorUuid: input.roller?.uuid ?? '',
 		change: 'countsAsNat20',
 		value: NATURAL_20 + rollTotal - keptD20,
