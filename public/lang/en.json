@@ -2914,7 +2914,7 @@
 				}
 			},
 			"holdOnTarget": {
-				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. It is decided at the use, and a later reroll does not change it.",
+				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.",
 				"heldKind": {
 					"label": "What the target holds",
 					"hint": "A line on the next attack of the target, or a vulnerability that the next damage of one type ends.",
@@ -2925,7 +2925,7 @@
 				},
 				"damageType": {
 					"label": "Damage type",
-					"hint": "The type of a one-use vulnerability, such as fire."
+					"hint": "The type of a one-use vulnerability, such as fire. With no type, the target holds no vulnerability."
 				}
 			},
 			"keepAmount": {
@@ -4435,7 +4435,7 @@
 			"keptTick": "{label}: use {amount} and do not roll",
 			"line": {
 				"primaryDie": "{label}: {value} to Primary Die",
-				"ignoreDisadvantage": "{label}: ignore all disadvantage",
+				"ignoreDisadvantage": "{label}: ignore all disadvantage and any minus on the Primary Die",
 				"wholeAmount": "{label}: {value}",
 				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
 				"wholeAmountEnds": "{label}: an area attack does not use {value}",

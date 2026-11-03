@@ -141,6 +141,7 @@ export async function rollUnarmedStrike(
 		attacker: actor as never,
 		target: firstTargetActor(),
 		area: false,
+		ignoresNegative: !!ignoreDisadvantageChange(actor as never),
 	});
 	const heldBonus = held.reduce((sum, change) => sum + change.value, 0);
 

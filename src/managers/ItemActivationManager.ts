@@ -725,11 +725,17 @@ class ItemActivationManager {
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
-					this.#heldChanges = isAttackRoll(this.activationData?.targets?.attackType, node)
+					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
+					this.#heldIgnore =
+						isAttack && !this.#keptAmount && !this.#maxDamage && !this.#options.ignoreDisadvantage
+							? ignoreDisadvantageChange(this.actor as never)
+							: null;
+					this.#heldChanges = isAttack
 						? heldChangesForAttack({
 								attacker: this.actor as never,
 								target: firstTargetActor(),
 								area: isAoE,
+								ignoresNegative: !!this.#heldIgnore,
 							})
 						: [];
 					this.#primaryDieBonuses.push(
@@ -822,13 +828,6 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
-					this.#heldIgnore =
-						isAttackRoll(this.activationData?.targets?.attackType, node) &&
-						!this.#keptAmount &&
-						!this.#maxDamage &&
-						!this.#options.ignoreDisadvantage
-							? ignoreDisadvantageChange(this.actor as never)
-							: null;
 					if (this.#options.ignoreDisadvantage || this.#heldIgnore) {
 						removeDisadvantage(damageOptions);
 					}

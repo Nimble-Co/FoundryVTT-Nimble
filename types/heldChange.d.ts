@@ -25,6 +25,8 @@ export interface HeldChangeData {
 	turn: number;
 	/** The damage type of a one-use vulnerability. */
 	damageType?: string;
+	/** The card that made it, so a new roll on that card can take it back. */
+	sourceMessageId?: string;
 }
 
 /** A Held Change as it is on a creature. */

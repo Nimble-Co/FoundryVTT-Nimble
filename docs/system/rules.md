@@ -399,10 +399,10 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 
 ## Rules for one item use
 
-- `keepAmount`: a row on a card with a hit, 1/turn. It holds the damage total for the next attack this turn. No row outside combat.
+- `keepAmount`: a row on a card with a hit, 1/turn. It holds the damage total for the next attack this turn: any damage that is not an area, also one with only a save. No row outside combat.
 - `choiceTable`: the window with the options of a table the hero chooses from.
 - `damageMultiplier`: a tick in the roll window of this item that multiplies its damage. The node keeps the number, so a reroll keeps it. The label says when it applies, and the system checks nothing.
-- `holdOnTarget`: a use that does not miss puts a Held Change on each target, as `heldKind` says: `mustAttackOther` is a line on the next attack of the target, and `vulnerableOnce` lasts for the next damage of `damageType`. Nothing is held outside combat.
+- `holdOnTarget`: a use that does not miss puts a Held Change on each target, as `heldKind` says: `mustAttackOther` is a line on the next attack of the target, and `vulnerableOnce` lasts for the next damage of `damageType` (with no type, nothing is held). Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.
 
 ## Rules Builder Integration
 

@@ -69,13 +69,17 @@ export function heldChangesForAttack(input: {
 	attacker: Holder | null | undefined;
 	target: Holder | null | undefined;
 	area: boolean;
+	/** The roll spends a change that ignores negative effects. */
+	ignoresNegative?: boolean;
 }): HeldChange[] {
 	if (input.area) return [];
 	const own = heldChangesOn(input.attacker).filter((held) => held.appliesTo === 'holderAttacks');
 	const onTarget = heldChangesOn(input.target).filter(
 		(held) => held.appliesTo === 'attacksOnHolder',
 	);
-	return [...own, ...onTarget].filter((held) => held.kind === 'primaryDie');
+	return [...own, ...onTarget].filter(
+		(held) => held.kind === 'primaryDie' && !(input.ignoresNegative && held.value < 0),
+	);
 }
 
 /** The change that takes disadvantage out of the holder's next roll. */
@@ -186,19 +190,20 @@ export function heldLinesForItem(
 				attacker,
 				target: firstTargetActor(),
 				area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
+				ignoresNegative: !!ignore,
 			}),
 		]),
 	];
 }
 
-/** The amount the holder keeps for its next attack, when this item can use it. */
+/** The amount the holder keeps for its next attack. Any damage that can harm is an attack (C:452); an area does not use it. */
 export function keptAmountFor(
 	attacker: Holder | null | undefined,
 	item: ActivatedItem,
 ): HeldChange | null {
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
-	if (!activation || !node || !isAttackRoll(activation.targets?.attackType, node)) return null;
+	if (!activation || !node) return null;
 	if (activation.acquireTargetsFromTemplate && activation.template?.shape) return null;
 	return (
 		heldChangesOn(attacker).find(
@@ -285,6 +290,11 @@ interface QueryUser {
 	query(name: string, data: object): Promise<unknown>;
 }
 
+async function deleteHeld(holder: Holder, effectId: string): Promise<void> {
+	if (holder.isOwner) await deleteHere(holder, effectId);
+	else await askGm({ action: 'delete', actorUuid: holder.uuid, effectId });
+}
+
 async function askGm(data: object): Promise<void> {
 	const gm = (game.users as unknown as { activeGM?: QueryUser | null }).activeGM;
 	if (!gm) {
@@ -310,9 +320,18 @@ export async function spendHeldChanges(held: HeldChange[]): Promise<void> {
 		if (change.spentBy !== 'oneRoll') continue;
 		const holder = fromUuidSync(change.holderUuid as never) as unknown as Holder | null;
 		if (!holder) continue;
-		if (holder.isOwner) await deleteHere(holder, change.effectId);
-		else await askGm({ action: 'delete', actorUuid: change.holderUuid, effectId: change.effectId });
+		await deleteHeld(holder, change.effectId);
 	}
+}
+
+/** Removes the changes that one card made on a creature, and says how many there were. */
+export async function takeBackHeldChanges(
+	holder: Holder,
+	sourceMessageId: string,
+): Promise<number> {
+	const made = allHeldOn(holder).filter((held) => held.sourceMessageId === sourceMessageId);
+	for (const change of made) await deleteHeld(holder, change.effectId);
+	return made.length;
 }
 
 /** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */

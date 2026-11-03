@@ -18,7 +18,9 @@ function schema() {
 		damageType: new fields.StringField({
 			required: true,
 			nullable: false,
+			blank: true,
 			initial: '',
+			choices: () => CONFIG.NIMBLE.damageTypes,
 			label: 'NIMBLE.rules.holdOnTarget.damageType.label',
 			hint: 'NIMBLE.rules.holdOnTarget.damageType.hint',
 		}),

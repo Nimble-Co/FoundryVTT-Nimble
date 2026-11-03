@@ -57,6 +57,24 @@ afterEach(() => {
 });
 
 describe('heldChangesForAttack', () => {
+	it('drops a minus on the Primary Die on a roll that ignores negative effects', () => {
+		const target = creature('T', [
+			data({ label: 'Anticipate Danger', value: -1, spentBy: 'everyRoll' }),
+			data({ label: 'Create an Opening', value: 1 }),
+		]);
+
+		const withNullify = heldChangesForAttack({
+			attacker: creature('A'),
+			target,
+			area: false,
+			ignoresNegative: true,
+		});
+		const without = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+
+		expect(withNullify.map((held) => held.label)).toEqual(['Create an Opening']);
+		expect(without.map((held) => held.value)).toEqual([-1, 1]);
+	});
+
 	it("reads the target's changes on attacks against it and the attacker's own", () => {
 		const attacker = creature('A', [data({ label: 'Own', appliesTo: 'holderAttacks' })]);
 		const target = creature('T', [data()]);
@@ -217,6 +235,12 @@ describe('a kept amount', () => {
 	it('is offered to the next attack of the holder', () => {
 		const attacker = creature('A', [kept()]);
 		expect(keptAmountFor(attacker, attack())?.value).toBe(13);
+	});
+
+	it('is offered to single-target damage with only a save (C:452)', () => {
+		const attacker = creature('A', [kept()]);
+		const saveOnly = attack({ effects: [{ type: 'damage' }], targets: {} });
+		expect(keptAmountFor(attacker, saveOnly)?.value).toBe(13);
 	});
 
 	it('is not offered to an item with no attack, or an area roll', () => {

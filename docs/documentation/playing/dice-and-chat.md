@@ -322,7 +322,7 @@ A feature can hold a change for a later attack. The creature that holds it shows
 
 ## Keeping the amount of a hit
 
-In combat, Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount. An area attack is also your next attack: it rolls as normal, does not use the amount, and ends it.
+In combat, Rampage is a row on the card of a hit. Click it to keep the full damage of that hit. Your next attack window has a tick, ticked at the start, that shows the amount. With the tick, no die is rolled and no modifier is added: the attack is a hit and no crit, with the damage type of the new attack. Armor applies as normal. Untick it to roll as normal and end the kept amount. An area attack is also your next attack: it rolls as normal, does not use the amount, and ends it. A spell with only a save that is not an area is an attack too: it uses the amount, and a save halves it as normal.
 
 ## Demand Control
 
@@ -330,7 +330,7 @@ Force of Will, Deny Fate, Supreme Control and Nullify open a window when you use
 
 I INSIST opens the normal window of the cantrip, so you can set advantage. Disadvantage is ignored, and the cast is free. Close that window and nothing is spent or chosen.
 
-Nullify lasts for your next action this turn: an attack, a cast, Assess or Move. It holds nothing outside combat.
+Nullify lasts for your next action this turn: an attack, a cast, Assess or Move. It removes all disadvantage, and a minus on your Primary Die, such as from Anticipate Danger, on the roll that uses it. Other negative effects are for the table. It holds nothing outside combat.
 
 With Supreme Control, the window has a tick to use your Reaction when it is not your turn. It costs 1 action, once each round. It does not use up Defend, Interpose or your other reactions.
 
