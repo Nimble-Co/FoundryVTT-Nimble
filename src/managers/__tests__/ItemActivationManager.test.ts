@@ -1533,11 +1533,39 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 				afterEach(() => {
 					delete (mockItem as { rules?: unknown }).rules;
+					dialogState.result = undefined;
 				});
 
-				it('marks the damage node', async () => {
+				it('marks nothing with no window, as the tick starts off', async () => {
 					withMultiplierRule();
 					await rollAttack('range');
+					expect(
+						mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+					).toBeUndefined();
+				});
+
+				it('marks the damage node when the tick is on', async () => {
+					withMultiplierRule();
+					dialogState.result = { rollMode: 0, damageMultiplier: true };
+					manager = new ItemActivationManager(
+						mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+						{},
+					);
+					manager.activationData = {
+						effects: [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						],
+						targets: { attackType: 'range' },
+					};
+					mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+					vi.mocked(DamageRoll).mockImplementation(
+						createMockConstructorImplementation({
+							evaluate: vi.fn().mockResolvedValue(undefined),
+							toJSON: vi.fn().mockReturnValue({ total: 4 }),
+							primaryDie: { faces: 8 },
+						}),
+					);
+					await manager.getData();
 					expect(mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier).toBe(2);
 				});
 

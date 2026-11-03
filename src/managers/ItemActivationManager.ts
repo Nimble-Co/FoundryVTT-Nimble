@@ -516,7 +516,7 @@ class ItemActivationManager {
 			usableAmount ?? keptAmountEndedBy(this.actor as never, this.#item as never);
 		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
 		this.#damageMultiplier =
-			this.#keptAmount || dialogData.damageMultiplier === false
+			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
 				: (damageMultiplierOf(this.#item as never)?.multiplier ?? 1);
 		if (this.#keptAmount) {

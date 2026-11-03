@@ -401,7 +401,7 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 
 - `keepAmount`: a row on a card with a hit, 1/turn. It holds the damage total for the next attack this turn: any damage that is not an area, also one with only a save. No row outside combat.
 - `choiceTable`: the window with the options of a table the hero chooses from.
-- `damageMultiplier`: a tick in the roll window of this item that multiplies its damage. The node keeps the number, so a reroll keeps it. The label says when it applies, and the system checks nothing.
+- `damageMultiplier`: a tick in the roll window of this item that multiplies its damage. The tick starts off, and a roll with no window does not use it. The node keeps the number, so a reroll keeps it. The label says when it applies, and the system checks nothing.
 - `holdOnTarget`: a use that does not miss puts a Held Change on each target, as `heldKind` says: `mustAttackOther` is a line on the next attack of the target, and `vulnerableOnce` lasts for the next damage of `damageType` (with no type, nothing is held). Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.
 - `critBack`: after the damage of this item is applied, the GM gets a card for each creature that lives. The chosen attack is free, targets the owner and is a crit. With Feature Effects off, nothing happens.
 - `freeAssess`: a use of this item opens Assess, free and with advantage. It spends a charge from `chargePoolIdentifier` when the pool has one; with none, it costs nothing. 1/round is reported, not blocked.

@@ -51,7 +51,7 @@
 	const damageMultiplier = untrack(() =>
 		damageMultiplierOf((spell?.parent ?? dialog?.item) as never),
 	);
-	let usesDamageMultiplier = $state(true);
+	let usesDamageMultiplier = $state(false);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();

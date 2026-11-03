@@ -212,3 +212,22 @@ describe('the activation dialog kept amount', () => {
 		expect(state.usesKeptAmount).toBe(false);
 	});
 });
+
+describe('the activation dialog damage multiplier tick', () => {
+	it('is offered and starts off', () => {
+		user.targets = new Set();
+		const state = createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () =>
+				({
+					type: 'feature',
+					rules: [{ type: 'damageMultiplier', label: 'Sharpshooter', multiplier: 2 }],
+					system: { activation: { effects: [] } },
+				}) as never,
+			hideRollsDefault: false,
+		});
+
+		expect(state.damageMultiplier).toEqual({ label: 'Sharpshooter', multiplier: 2 });
+		expect(state.usesDamageMultiplier).toBe(false);
+	});
+});

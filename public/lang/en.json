@@ -2910,7 +2910,7 @@
 				"description": "A tick in the roll window of this item that multiplies its damage. The label says when it applies. The player decides, and the system checks nothing.",
 				"multiplier": {
 					"label": "Multiply the damage by",
-					"hint": "A whole number, 2 or more. A roll with no window uses it."
+					"hint": "A whole number, 2 or more. The tick starts off, and a roll with no window does not use it."
 				}
 			},
 			"holdOnTarget": {

@@ -343,7 +343,7 @@ Each attack ability opens the roll window with a weapon field, the Hunter's Mark
 The sheet and the card show the count of the pool with no maximum, because the book gives no cap.
 
 - **Multishot:** target your quarry first, then the 2nd target. It is one attack on your quarry, and **Apply Damage** gives both the same amount.
-- **Sharpshooter:** the roll window has a tick that doubles the damage. Take it off if you moved this turn or your quarry is close. The system does not check.
+- **Sharpshooter:** the roll window has a tick that doubles the damage. It starts off. Tick it if you did not move this turn and your quarry is 4 or more spaces away. The system does not check.
 - **Heavy Shot and Snare Trap:** the target has a move on its token: a push of 4, 2 or 1 spaces by size for Heavy Shot, 1 space back for Snare Trap.
 - **Addling Arrow:** the next attack of the target shows who it must attack, on its roll window and its card. You choose the creature.
 - **Grease Trap:** the target is vulnerable to the first fire damage that it takes, then this ends.

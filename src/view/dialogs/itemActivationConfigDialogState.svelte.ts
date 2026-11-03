@@ -112,7 +112,7 @@ export function createItemActivationConfigDialogState(
 	const keptAmount = keptAmountFor(actor as never, item as never);
 	let usesKeptAmount = $state(keptAmount !== null);
 	const damageMultiplier = damageMultiplierOf(item as never);
-	let usesDamageMultiplier = $state(true);
+	let usesDamageMultiplier = $state(false);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
