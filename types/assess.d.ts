@@ -4,4 +4,6 @@ import type { SkillKeyType } from './skillKey.d.ts';
 export interface AssessRequest {
 	optionId: string;
 	skillKey: SkillKeyType;
+	/** No action, and advantage. */
+	free?: boolean;
 }

@@ -19,7 +19,6 @@ const RULE_ICONS: Record<string, string> = {
 	freeAssess: 'fa-solid fa-magnifying-glass',
 	hitCondition: 'fa-solid fa-link',
 	choiceTable: 'fa-solid fa-hand',
-	invokeChaos: 'fa-solid fa-hat-wizard',
 	maxDamage: 'fa-solid fa-angles-up',
 	offerAttackBonus: 'fa-solid fa-handshake-angle',
 	poolDieToMax: 'fa-solid fa-arrow-up-9-1',

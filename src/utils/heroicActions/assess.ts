@@ -13,13 +13,6 @@ import {
 } from '../heldChange/heldChange.js';
 import { assessSucceeds } from './assessResult.js';
 
-export interface AssessRequest {
-	optionId: string;
-	skillKey: SkillKeyType;
-	/** No action, and advantage. */
-	free?: boolean;
-}
-
 async function spendAssessAction(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();
 	const combatantId = combat?.combatants.find((entry) => entry.actorId === actor.id)?.id ?? null;

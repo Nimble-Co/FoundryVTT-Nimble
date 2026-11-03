@@ -2,7 +2,7 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
-import type { AssessRequest } from '#utils/heroicActions/assess.js';
+import type { AssessRequest } from '#types/assess.d.ts';
 import FreeAssessDialogComponent from '../../view/dialogs/FreeAssessDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

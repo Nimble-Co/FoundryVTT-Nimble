@@ -25,7 +25,7 @@ describe('Keep Amount rule', () => {
 		const rule = make();
 		expect(rule.rollEffect).toBe('keepAmount');
 		expect(rule.outcome).toBe('hit');
-		expect(rule.oncePerAttack).toBe(true);
+		expect(rule.oncePerRoll).toBe(true);
 		expect(rule.rollUseCost.turnUseKey).toBe('Item.rampage:r1');
 	});
 

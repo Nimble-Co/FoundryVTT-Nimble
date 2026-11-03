@@ -52,7 +52,7 @@ class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 		return 'hit';
 	}
 
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return true;
 	}
 

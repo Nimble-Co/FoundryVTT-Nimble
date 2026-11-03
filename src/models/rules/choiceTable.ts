@@ -90,7 +90,7 @@ class ChoiceTableRule extends NimbleBaseRule<ChoiceTableRule.Schema> {
 		return 'miss';
 	}
 
-	get oncePerAttack(): boolean {
+	get oncePerRoll(): boolean {
 		return true;
 	}
 }

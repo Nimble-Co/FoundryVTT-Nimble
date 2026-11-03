@@ -47,7 +47,6 @@ import {
 } from '../utils/damage/bankedDamageReduction.js';
 import { sendCritBack } from '../utils/damage/critBack.js';
 import { applyHitConditions } from '../utils/damage/hitCondition.js';
-import { cardCarriesIncomingReactions } from '../utils/incomingReactions/cardCarriesIncomingReactions.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,

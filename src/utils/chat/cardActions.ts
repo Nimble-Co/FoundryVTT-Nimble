@@ -12,7 +12,6 @@ import {
 	rerollInitiativeManaDieOnCard,
 } from '#utils/combat/initiativeManaRoll.js';
 import { DEMAND_CONTROL_USED_FLAG } from '#utils/demandControl/demandControl.js';
-import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.cardAction`;
 
