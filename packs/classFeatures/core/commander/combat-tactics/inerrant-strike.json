@@ -34,7 +34,7 @@
 				"extraDamage": "1d@pools.combat-dice.faces",
 				"automatic": false,
 				"discardedCritTriggers": false,
-				"oncePerAttack": true
+				"oncePerRoll": true
 			}
 		],
 		"activation": {

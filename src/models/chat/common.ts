@@ -165,7 +165,7 @@ export const incomingReactions = () => ({
 				initial: null,
 				choices: [...REROLL_SIDES],
 			}),
-			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			oncePerRoll: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			// reroll only: a Change a Die entry changes a die, a Make It a Crit entry makes a crit.
 			use: new fields.StringField({
 				required: false,
@@ -222,6 +222,17 @@ export const incomingReactions = () => ({
 		{ required: true, nullable: false, initial: [] },
 	),
 });
+
+/** Old cards name the once-per-roll limit of a row `oncePerAttack`. */
+export function migrateIncomingReactions(source: Record<string, unknown>): void {
+	const entries = source.incomingReactions;
+	if (!Array.isArray(entries)) return;
+	for (const entry of entries as Record<string, unknown>[]) {
+		if (!entry || typeof entry !== 'object' || !('oncePerAttack' in entry)) continue;
+		entry.oncePerRoll ??= entry.oncePerAttack;
+		delete entry.oncePerAttack;
+	}
+}
 
 const rerollDieResult = () =>
 	new fields.SchemaField(

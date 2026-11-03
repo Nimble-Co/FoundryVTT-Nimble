@@ -682,10 +682,10 @@ Using an Interpose offer swaps the attack card's target for the protector and po
 - `roll`: `rolls`, `saves`, `skills`, `abilities`, `usedBy`, `reach`.
 - `when`: `otherCreature`, `outcome`, `attackDelivery` (attacks only, through `showWhen`). `outcome` shows for all rolls but `makeCrit`. `failed` is a miss on an attack.
 - `related`: `relatedStat`, on `reroll` and `changeResult` only. `coversRoll` reads it against the save key, `CONFIG.NIMBLE.defaultSkillAbilities`, the ability key, or `roll.stats` of an attack.
-- `cost`: `chargePoolIdentifier`, `chargeCost`, `manaCost`, `woundCost`, `heroicReaction`, `actionCost`, `oncePerAttack`.
+- `cost`: `chargePoolIdentifier`, `chargeCost`, `manaCost`, `woundCost`, `heroicReaction`, `actionCost`, `oncePerRoll`.
 - `note`: `cardHint`, `cardHintWhen`.
 
-The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the rule does (`rolls.label`, `chargePoolIdentifier.hint`, `chargeCost.hint` and the `oncePerAttack` field), which go under `NIMBLE.rules.<namespace>.*`. `rollFormGroup()`, `useFormGroups(between)` and `noteFormGroup()` give the form groups, and `rollUseTooltipTypes()` the tooltip types.
+The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the rule does (`rolls.label`, `chargePoolIdentifier.hint`, `chargeCost.hint` and the `oncePerRoll` field), which go under `NIMBLE.rules.<namespace>.*`. `rollFormGroup()`, `useFormGroups(between)` and `noteFormGroup()` give the form groups, and `rollUseTooltipTypes()` the tooltip types.
 
 `offersUseOn({ side, roll, other, card })` is the one gate: `coversRoll` (an embedded item, the predicate, the roll kind, the side, `ruleOtherCreatureMatches`, then the attack delivery or the check keys, as a check has no target side, then `relatedStat`), then `waitsForFailure` against `card.result`, then `canPayRerollCost`. The stamp step has no card, so a rule for a failed roll is stamped on every check, and the live gate hides it on a known success. Client and GM use the same live gate. `cardHintFor()` gives the note when `cardHintWhen` passes. Like the Reroll rule, the class is read when a card is posted and again when the rule is used, never during data preparation.
 

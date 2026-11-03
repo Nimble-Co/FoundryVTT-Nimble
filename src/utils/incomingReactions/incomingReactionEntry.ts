@@ -158,7 +158,7 @@ export interface IncomingReactionEntry {
 	/** reroll only: the side of the roll the entry was stamped for */
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
-	oncePerAttack?: boolean;
+	oncePerRoll?: boolean;
 	/** reroll only: `change` for a Change a Die rule, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */

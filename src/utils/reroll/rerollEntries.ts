@@ -71,7 +71,7 @@ interface RerollRuleLike {
 	outcome?: RerollTrigger;
 	rerollsByItself?: boolean;
 	discardedCritTriggers?: boolean;
-	oncePerAttack?: boolean;
+	oncePerRoll?: boolean;
 	reach?: number;
 	die?: RerollDie;
 	keep?: RerollKeep;
@@ -344,7 +344,7 @@ function collectRerollEntries(context: RerollRollContext): {
 					itemUuid: rule.item?.uuid ?? '',
 					used: false,
 					outcomeTrigger: trigger,
-					oncePerAttack: rule.oncePerAttack === true,
+					oncePerRoll: rule.oncePerRoll === true,
 					...gate,
 					...(hint ? { hint } : {}),
 					...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
@@ -401,7 +401,7 @@ function ruleUsedOnCard(
 /**
  * The card's entries with the new reroll buttons added. A rule that already
  * has an entry waiting is not added twice. A rule that was used gets a new
- * entry, unless the new entry has `oncePerAttack`.
+ * entry, unless the new entry has `oncePerRoll`.
  */
 function withNewRerollEntries(
 	entries: IncomingReactionEntry[],
@@ -411,7 +411,7 @@ function withNewRerollEntries(
 	const added = found.filter(
 		(entry) =>
 			!waiting.has(rerollRuleKey(entry)) &&
-			!(entry.oncePerAttack === true && ruleUsedOnCard(entry, entries)),
+			!(entry.oncePerRoll === true && ruleUsedOnCard(entry, entries)),
 	);
 	return [...entries, ...added];
 }
@@ -474,7 +474,7 @@ function usableRerollEntry(
 	if (!rule || !actor || !entry.side || entry.leftOut) return UNAVAILABLE;
 	if (!isOnSide(entry, entry.side, context)) return UNAVAILABLE;
 	const isAttack = context.roll.kind === 'attack';
-	if (rule.oncePerAttack === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
+	if (rule.oncePerRoll === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
 	const other = otherCreature(entry.side, context);
 	// A rule that reads the card keeps its entry stamped, so the row comes back with the result.
 	const readsCard = !isAttack || rollUseOf(rule.type) === 'result';

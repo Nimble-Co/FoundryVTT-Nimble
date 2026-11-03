@@ -59,7 +59,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
-			'oncePerAttack',
+			'oncePerRoll',
 			'rollModeChange',
 			'primaryDieBonus',
 			'extraDamage',
@@ -233,7 +233,7 @@ describe('RuleCard with a form layout (reroll)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
-			'oncePerAttack',
+			'oncePerRoll',
 			'rollModeChange',
 			'automatic',
 			'cardHint',
@@ -301,7 +301,7 @@ describe('RuleCard with a form layout (changeDie)', () => {
 			'woundCost',
 			'heroicReaction',
 			'actionCost',
-			'oncePerAttack',
+			'oncePerRoll',
 			'cardHint',
 		]);
 	});

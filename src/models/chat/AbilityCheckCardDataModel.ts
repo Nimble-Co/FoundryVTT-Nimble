@@ -2,6 +2,7 @@ import {
 	checkDC,
 	incomingReactions,
 	metadata,
+	migrateIncomingReactions,
 	rerollHistory,
 	resultChanges,
 	roller,
@@ -43,6 +44,11 @@ class NimbleAbilityCheckCardData extends foundry.abstract.TypeDataModel<
 			...rerollHistory(),
 			...resultChanges(),
 		};
+	}
+
+	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
+		migrateIncomingReactions(source);
+		return super.migrateData(source);
 	}
 }
 

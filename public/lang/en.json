@@ -2663,7 +2663,7 @@
 				"chargeCost": {
 					"hint": "How many charges one use takes from the pool."
 				},
-				"oncePerAttack": {
+				"oncePerRoll": {
 					"label": "Only once per roll",
 					"hint": "The feature can change a die of the same attack, save or check only once, even with uses left."
 				}
@@ -2877,7 +2877,7 @@
 						"one": "1 action"
 					}
 				},
-				"oncePerAttack": {
+				"oncePerRoll": {
 					"label": "Only once per roll",
 					"hint": "The feature can reroll the same attack, save or check only once, even with uses left."
 				},

@@ -6,6 +6,7 @@ import {
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
+	migrateIncomingReactions,
 	movementOffers,
 	primaryDieBonuses,
 	rerollHistory,
@@ -76,6 +77,11 @@ class NimbleFeatureCardData extends foundry.abstract.TypeDataModel<
 			...metadata(),
 			...targets(),
 		};
+	}
+
+	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
+		migrateIncomingReactions(source);
+		return super.migrateData(source);
 	}
 }
 

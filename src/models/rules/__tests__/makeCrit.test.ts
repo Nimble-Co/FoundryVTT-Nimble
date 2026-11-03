@@ -55,7 +55,7 @@ describe('MakeCritRule', () => {
 		for (const name of ['chargePoolIdentifier', 'chargeCost', 'cardHint']) {
 			expect(schema[name], name).toBeTruthy();
 		}
-		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep', 'oncePerAttack']) {
+		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep', 'oncePerRoll']) {
 			expect(schema[name], name).toBeUndefined();
 		}
 		expect(schema.type?.initial).toBe('makeCrit');

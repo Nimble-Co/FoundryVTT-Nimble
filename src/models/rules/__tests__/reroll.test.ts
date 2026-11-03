@@ -85,7 +85,7 @@ function makeRule(
 		manaCost: 0,
 		woundCost: 0,
 		heroicReaction: '',
-		oncePerAttack: false,
+		oncePerRoll: false,
 		disabled: false,
 		id: 'rule-1',
 		label: '',
@@ -151,7 +151,7 @@ describe('RerollRule', () => {
 			expect(schema.manaCost?.initial).toBe(0);
 			expect(schema.woundCost?.initial).toBe(0);
 			expect(schema.heroicReaction?.initial).toBe('');
-			expect(schema.oncePerAttack?.initial).toBe(false);
+			expect(schema.oncePerRoll?.initial).toBe(false);
 			expect(schema.saves?.initial).toEqual([]);
 			expect(schema.skills?.initial).toEqual([]);
 			expect(schema.abilities?.initial).toEqual([]);
@@ -235,8 +235,8 @@ describe('RerollRule', () => {
 			expect(showWhen({})).toBe(false);
 		});
 
-		it('shows oncePerAttack for every roll, because it limits a save or a check too', () => {
-			expect(schema.oncePerAttack?.options?.showWhen).toBeUndefined();
+		it('shows oncePerRoll for every roll, because it limits a save or a check too', () => {
+			expect(schema.oncePerRoll?.options?.showWhen).toBeUndefined();
 		});
 
 		it.each(['attackDelivery', 'primaryDieBonus', 'extraDamage'])(

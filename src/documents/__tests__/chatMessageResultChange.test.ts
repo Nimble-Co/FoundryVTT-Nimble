@@ -505,7 +505,7 @@ describe('Modify Reroll: cannot fail, on a save card', () => {
 });
 
 describe('a reroll limited to one use, on a save card', () => {
-	function world(oncePerAttack: boolean) {
+	function world(oncePerRoll: boolean) {
 		const roller = makeRoller();
 		const base = makeRule(roller, 'tumble', { change: 'succeed', value: 0, stat: '' });
 		const rule = {
@@ -513,7 +513,7 @@ describe('a reroll limited to one use, on a save card', () => {
 			type: 'reroll',
 			die: 'wholeRoll',
 			keep: 'new',
-			oncePerAttack,
+			oncePerRoll,
 			rerollChanges: () => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' }),
 		};
 		setupWorld([rule as never], roller);

@@ -77,7 +77,7 @@ describe('ChangeDieRule', () => {
 			'outcome',
 			'otherCreature',
 			'actionCost',
-			'oncePerAttack',
+			'oncePerRoll',
 		]) {
 			expect(schema[name], name).toBeTruthy();
 		}
@@ -99,7 +99,7 @@ describe('ChangeDieRule', () => {
 	it('uses its own words where the Reroll words say reroll', () => {
 		const label = (name: string) => (schema[name]?.options ?? schema[name])?.label;
 		expect(label('rolls')).toBe('NIMBLE.rules.changeDie.rolls.label');
-		expect(label('oncePerAttack')).toBe('NIMBLE.rules.changeDie.oncePerAttack.label');
+		expect(label('oncePerRoll')).toBe('NIMBLE.rules.changeDie.oncePerRoll.label');
 		expect(label('usedBy')).toBe('NIMBLE.rules.reroll.usedBy.label');
 	});
 

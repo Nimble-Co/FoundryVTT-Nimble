@@ -24,7 +24,7 @@ function schema() {
 	const { fields } = foundry.data;
 	const shared = RollUseRule.rollUseSchemaParts('changeResult');
 	// One roll can use the rule again.
-	const { oncePerAttack: _oncePerAttack, ...cost } = shared.cost;
+	const { oncePerRoll: _oncePerRoll, ...cost } = shared.cost;
 
 	return {
 		...shared.roll,
@@ -130,7 +130,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
-				...RollUseRule.rollUseTooltipTypes().filter(([name]) => name !== 'oncePerAttack'),
+				...RollUseRule.rollUseTooltipTypes().filter(([name]) => name !== 'oncePerRoll'),
 				['relatedStat', 'string'],
 				['change', 'string'],
 				['formula', 'string'],

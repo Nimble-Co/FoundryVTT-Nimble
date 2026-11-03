@@ -61,7 +61,7 @@
 				"woundCost": 0,
 				"heroicReaction": "",
 				"actionCost": 0,
-				"oncePerAttack": false,
+				"oncePerRoll": false,
 				"rollModeChange": 0,
 				"primaryDieBonus": 0,
 				"extraDamage": "",

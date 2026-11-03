@@ -37,7 +37,7 @@ type RollUseNamespace = 'reroll' | 'changeDie' | 'makeCrit' | 'changeResult';
 // Words that say what the rule does. The other words are the same for every
 // rule that uses a roll, so they stay under the Reroll rule's keys.
 const OWN_WORDS = new Set(['rolls.label', 'chargePoolIdentifier.hint', 'chargeCost.hint']);
-const OWN_FIELDS = new Set(['oncePerAttack']);
+const OWN_FIELDS = new Set(['oncePerRoll']);
 // A crit use is only on attacks, and a roll that is a crit has no use for it.
 const CRIT_WORDS = new Set(['usedBy.hint', 'outcome.label', 'outcome.hint']);
 const CRIT_TRIGGERS = ['always', 'hit', 'miss'] as const;
@@ -268,13 +268,12 @@ function costFields(namespace: RollUseNamespace) {
 			label: wordKey(namespace, 'actionCost', 'label'),
 			hint: wordKey(namespace, 'actionCost', 'hint'),
 		}),
-		// The name stays for stored rules: it limits a save or a check too.
-		oncePerAttack: new fields.BooleanField({
+		oncePerRoll: new fields.BooleanField({
 			required: true,
 			nullable: false,
 			initial: false,
-			label: wordKey(namespace, 'oncePerAttack', 'label'),
-			hint: wordKey(namespace, 'oncePerAttack', 'hint'),
+			label: wordKey(namespace, 'oncePerRoll', 'label'),
+			hint: wordKey(namespace, 'oncePerRoll', 'hint'),
 		}),
 	};
 }
@@ -337,7 +336,7 @@ const COST_FIELDS = [
 	'woundCost',
 	'heroicReaction',
 	'actionCost',
-	'oncePerAttack',
+	'oncePerRoll',
 ] as const;
 
 /**
@@ -364,7 +363,7 @@ abstract class RollUseRule<
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
 	declare actionCost: number;
-	declare oncePerAttack: boolean;
+	declare oncePerRoll: boolean;
 	declare cardHint: string;
 	declare cardHintWhen: Predicate;
 
@@ -430,7 +429,7 @@ abstract class RollUseRule<
 			['woundCost', 'number'],
 			['heroicReaction', 'string'],
 			['actionCost', 'number'],
-			['oncePerAttack', 'boolean'],
+			['oncePerRoll', 'boolean'],
 			['reach', 'number'],
 			['cardHint', 'string'],
 			['cardHintWhen', 'object'],

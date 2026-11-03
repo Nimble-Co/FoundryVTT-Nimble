@@ -1,4 +1,11 @@
-import { incomingReactions, metadata, rerollHistory, resultChanges, roller } from './common.js';
+import {
+	incomingReactions,
+	metadata,
+	migrateIncomingReactions,
+	rerollHistory,
+	resultChanges,
+	roller,
+} from './common.js';
 
 const { fields } = foundry.data;
 
@@ -42,6 +49,11 @@ class NimbleInitiativeCardData extends foundry.abstract.TypeDataModel<
 			...rerollHistory(),
 			...resultChanges(),
 		};
+	}
+
+	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
+		migrateIncomingReactions(source);
+		return super.migrateData(source);
 	}
 }
 
