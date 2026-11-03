@@ -8,13 +8,14 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "choiceTable",
+				"type": "optionWindow",
 				"disabled": false,
 				"id": "forceOfWillOpens",
 				"identifier": "",
 				"label": "Force of Will",
 				"predicate": {},
 				"priority": 1,
+				"optionSet": "control",
 				"opensOnUse": true,
 				"oncePerRound": true,
 				"cardRow": false,

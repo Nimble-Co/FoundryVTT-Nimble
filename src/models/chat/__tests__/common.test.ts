@@ -219,6 +219,20 @@ describe('migrateIncomingReactions', () => {
 		]);
 	});
 
+	it('gives a row of an old card the effect of the option window under its new name', () => {
+		const source = {
+			incomingReactions: [
+				{ id: 'old', use: 'effect', effect: 'choiceTable' },
+				{ id: 'other', use: 'effect', effect: 'keepAmount' },
+			],
+		};
+		migrateIncomingReactions(source);
+		expect(source.incomingReactions).toEqual([
+			{ id: 'old', use: 'effect', effect: 'optionWindow' },
+			{ id: 'other', use: 'effect', effect: 'keepAmount' },
+		]);
+	});
+
 	it('does nothing to a card with no rows', () => {
 		const source = { dc: 12 };
 		migrateIncomingReactions(source);

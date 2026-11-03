@@ -201,7 +201,13 @@ describe('attack change pack items', () => {
 	describe('Invoker of Control', () => {
 		const INVOKER = 'packs/classFeatures/core/mage/mage-subclasses/invoker-of-control';
 		const controlRule = (file: string) =>
-			readRules(`${INVOKER}/${file}.json`).find((rule) => rule.type === 'choiceTable');
+			readRules(`${INVOKER}/${file}.json`).find((rule) => rule.type === 'optionWindow');
+
+		it('each opens the options of the Control Table', () => {
+			for (const file of ['force-of-will', 'deny-fate', 'nullify', 'supreme-control']) {
+				expect(controlRule(file)).toMatchObject({ optionSet: 'control' });
+			}
+		});
 
 		it('Force of Will opens the window, and reports 1/round', () => {
 			expect(controlRule('force-of-will')).toMatchObject({ opensOnUse: true, oncePerRound: true });

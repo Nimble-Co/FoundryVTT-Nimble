@@ -13,6 +13,7 @@ import {
 	resetChosen,
 	saveRowActor,
 	usedThisRound,
+	windowOptions,
 } from '../demandControl.js';
 
 const globals = globalThis as unknown as Record<string, any>;
@@ -60,9 +61,19 @@ describe('the Control Table list', () => {
 		expect(rows[0].label).toBe('I INSIST');
 	});
 
+	it('reads the options through the option set of the rule', () => {
+		const control = ['iInsist', 'elementalAffliction', 'no', 'loseControl'];
+		const ruled = hero(undefined, { rules: [{ type: 'optionWindow', optionSet: 'control' }] });
+		expect(windowOptions(ruled)).toEqual(control);
+		expect(windowOptions(hero())).toEqual(control);
+	});
+
 	it('starts again when all options were chosen (H:957)', () => {
-		expect(chosenAfter(['iInsist', 'no', 'loseControl'], 'elementalAffliction')).toEqual([]);
-		expect(chosenAfter(['iInsist'], 'no')).toEqual(['iInsist', 'no']);
+		const options = windowOptions(hero());
+		expect(chosenAfter(['iInsist', 'no', 'loseControl'], 'elementalAffliction', options)).toEqual(
+			[],
+		);
+		expect(chosenAfter(['iInsist'], 'no', options)).toEqual(['iInsist', 'no']);
 	});
 
 	it('keeps the choice on the actor', async () => {
@@ -201,7 +212,7 @@ describe('LOSE CONTROL and ELEMENTAL AFFLICTION', () => {
 describe('the row on a save card', () => {
 	const owner = (cardRow: boolean, isOwner = true) => ({
 		isOwner,
-		rules: [{ type: 'choiceTable', cardRow }],
+		rules: [{ type: 'optionWindow', cardRow }],
 	});
 	const card = (result: string, flags: Record<string, unknown> = { causedBy: 'Actor.mage' }) => ({
 		flags: { nimble: flags },

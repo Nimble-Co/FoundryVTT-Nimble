@@ -734,7 +734,7 @@
 						"dualWield": "Dual wield",
 						"critDiceSave": "Make them save",
 						"keepAmount": "Keep this amount",
-						"choiceTable": "Demand Control"
+						"optionWindow": "Demand Control"
 					},
 					"crit": "Make It a Crit",
 					"result": "Change Result",
@@ -806,7 +806,7 @@
 					"dualWield": "Dual wield",
 					"offerBonus": "Added the bonus",
 					"keepAmount": "Kept the amount",
-					"choiceTable": "Demanded Control",
+					"optionWindow": "Demanded Control",
 					"critD20": "{feature} rerolled the first crit die as a d20.",
 					"viciousDie": "{feature} made the crit Vicious.",
 					"critDice": "{feature} added its dice to the crit."
@@ -1696,7 +1696,7 @@
 			"critBack": "Crit Back",
 			"hitCondition": "Condition on a Hit",
 			"freeAssess": "Free Assess",
-			"choiceTable": "Choice Table",
+			"optionWindow": "Option Window",
 			"offerAttackBonus": "Attack Bonus From a Row",
 			"poolDieToMax": "Pool Die to Max",
 			"tableRoll": "Table Roll",
@@ -2862,8 +2862,13 @@
 					"hint": "It changes the die, so it can give a crit or make a miss a hit."
 				}
 			},
-			"choiceTable": {
-				"description": "Opens the window with the options of the Control Table. Chosen options are dimmed, and they reset at Initiative or when all were chosen.",
+			"optionWindow": {
+				"description": "Opens the window with the options of its option set. Chosen options are dimmed, and they reset at Initiative or when all were chosen.",
+				"optionSet": {
+					"label": "Option set",
+					"hint": "The options the window shows.",
+					"choices": { "control": "Control Table" }
+				},
 				"opensOnUse": { "label": "Open when used", "hint": "Using this item opens the window." },
 				"oncePerRound": {
 					"label": "1/round",

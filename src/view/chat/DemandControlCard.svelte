@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import { openDemandControl } from '#utils/demandControl/openDemandControl.js';
-	import { CONTROL_OPTIONS, type ControlOption } from '#utils/demandControl/demandControl.js';
+	import { type ControlOption, windowOptions } from '#utils/demandControl/demandControl.js';
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -15,7 +15,11 @@
 	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
-	const gmRows = CONTROL_OPTIONS.filter((option) => option !== 'loseControl');
+	const gmRows = $derived(
+		windowOptions(fromUuidSync(system.actorUuid) as never).filter(
+			(option) => option !== 'loseControl',
+		),
+	);
 
 	async function doRow(option: ControlOption) {
 		const actor = fromUuidSync(system.actorUuid);

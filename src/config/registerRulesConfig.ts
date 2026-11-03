@@ -8,7 +8,6 @@ import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeResultRule } from '../models/rules/changeResult.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
-import { ChoiceTableRule } from '../models/rules/choiceTable.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
@@ -57,6 +56,7 @@ import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
 import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
+import { OptionWindowRule } from '../models/rules/optionWindow.js';
 import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
@@ -108,7 +108,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
-		choiceTable: 'NIMBLE.ruleTypes.choiceTable',
+		optionWindow: 'NIMBLE.ruleTypes.optionWindow',
 		damageMultiplier: 'NIMBLE.ruleTypes.damageMultiplier',
 		holdOnTarget: 'NIMBLE.ruleTypes.holdOnTarget',
 		keepAmount: 'NIMBLE.ruleTypes.keepAmount',
@@ -186,7 +186,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
-		choiceTable: ChoiceTableRule,
+		optionWindow: OptionWindowRule,
 		damageMultiplier: DamageMultiplierRule,
 		holdOnTarget: HoldOnTargetRule,
 		keepAmount: KeepAmountRule,

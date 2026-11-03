@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { OptionSet } from '#types/optionWindow.d.ts';
 import { actorRules } from '#utils/actor/actorRules.js';
 import applyConditionToActor from '#utils/actor/applyConditionToActor.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
@@ -6,8 +7,9 @@ import localize from '#utils/localize.js';
 import { currentRoundId } from '../combat/perTurnUse.js';
 import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
 
-export const CONTROL_OPTIONS = ['iInsist', 'elementalAffliction', 'no', 'loseControl'] as const;
+const CONTROL_OPTIONS = ['iInsist', 'elementalAffliction', 'no', 'loseControl'] as const;
 export type ControlOption = (typeof CONTROL_OPTIONS)[number];
+const OPTION_SETS: Record<OptionSet, readonly ControlOption[]> = { control: CONTROL_OPTIONS };
 export const AFFLICTIONS = ['charged', 'smoldering', 'slowed'] as const;
 
 const FLAG = 'demandControl';
@@ -36,6 +38,7 @@ interface ControlRuleLike {
 	type?: string;
 	disabled?: boolean;
 	test?(): boolean;
+	optionSet?: OptionSet;
 	opensOnUse?: boolean;
 	oncePerRound?: boolean;
 	cardRow?: boolean;
@@ -67,8 +70,13 @@ const stateOf = (actor: ControlActor): ControlState =>
 
 export function controlRules(actor: ControlActor | null | undefined): ControlRuleLike[] {
 	return actorRules<ControlRuleLike>(actor).filter(
-		(rule) => rule?.type === 'choiceTable' && !rule.disabled && rule.test?.() !== false,
+		(rule) => rule?.type === 'optionWindow' && !rule.disabled && rule.test?.() !== false,
 	);
+}
+
+/** The options of the window, from the option set of the actor's rule. */
+export function windowOptions(actor: ControlActor | null | undefined): readonly ControlOption[] {
+	return OPTION_SETS[controlRules(actor)[0]?.optionSet ?? 'control'];
 }
 
 /** The options chosen since the last reset. */
@@ -77,9 +85,13 @@ export function chosenOptions(actor: ControlActor): ControlOption[] {
 }
 
 /** H:957: the list starts again when all options were chosen. */
-export function chosenAfter(chosen: ControlOption[], option: ControlOption): ControlOption[] {
+export function chosenAfter(
+	chosen: ControlOption[],
+	option: ControlOption,
+	options: readonly ControlOption[],
+): ControlOption[] {
 	const next = [...new Set([...chosen, option])];
-	return next.length >= CONTROL_OPTIONS.length ? [] : next;
+	return next.length >= options.length ? [] : next;
 }
 
 /** Whether a 1/round feature was used this round. It is a report, not a block. */
@@ -96,7 +108,7 @@ export async function recordChoice(
 	const state = stateOf(actor);
 	await actor.setFlag?.(SYSTEM_ID, FLAG, {
 		...state,
-		chosen: chosenAfter(state.chosen ?? [], option),
+		chosen: chosenAfter(state.chosen ?? [], option, windowOptions(actor)),
 		round: reportsRound ? (currentRoundId() ?? '') : (state.round ?? ''),
 	});
 }
@@ -128,7 +140,7 @@ export async function resetChosen(actor: ControlActor): Promise<void> {
 /** The window's rows, with what was chosen dimmed. */
 export function optionRows(actor: ControlActor) {
 	const chosen = chosenOptions(actor);
-	return CONTROL_OPTIONS.map((id) => ({
+	return windowOptions(actor).map((id) => ({
 		id,
 		label: localize(`${TEXT}.options.${id}.label`),
 		text: localize(`${TEXT}.options.${id}.text`),

@@ -40,13 +40,14 @@
 				"cost": "1"
 			},
 			{
-				"type": "choiceTable",
+				"type": "optionWindow",
 				"disabled": false,
 				"id": "nullifyOpensCont",
 				"identifier": "",
 				"label": "Nullify",
 				"predicate": {},
 				"priority": 1,
+				"optionSet": "control",
 				"opensOnUse": true,
 				"oncePerRound": false,
 				"cardRow": false,
