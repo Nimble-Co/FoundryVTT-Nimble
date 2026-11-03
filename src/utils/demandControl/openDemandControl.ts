@@ -1,13 +1,9 @@
-import DemandControlDialog from '#documents/dialogs/DemandControlDialog.svelte.js';
+import ChoiceDialog from '#documents/dialogs/ChoiceDialog.svelte.js';
+import type { ControlChoice, ControlOption } from '#types/optionWindow.d.ts';
 import localize from '#utils/localize.js';
+import DemandControlDialogComponent from '../../view/dialogs/DemandControlDialog.svelte';
 import { chargeOnlyCost, payRerollCost, refundRerollCost } from '../reroll/rerollCost.js';
-import {
-	applyControlChoice,
-	type ControlChoice,
-	type ControlOption,
-	recordChoice,
-	recordReaction,
-} from './demandControl.js';
+import { applyControlChoice, recordChoice, recordReaction } from './demandControl.js';
 
 interface OpenOptions {
 	locked?: ControlOption;
@@ -17,11 +13,12 @@ interface OpenOptions {
 type ControlActor = Parameters<typeof applyControlChoice>[0];
 
 async function ask(actor: ControlActor, options: OpenOptions): Promise<ControlChoice | null> {
-	const dialog = new DemandControlDialog(
-		actor as never,
-		localize('NIMBLE.demandControl.title'),
-		options,
-	);
+	const dialog = new ChoiceDialog<ControlChoice>(actor, {
+		component: DemandControlDialogComponent,
+		icon: 'fa-solid fa-hand',
+		title: localize('NIMBLE.demandControl.title'),
+		data: options,
+	});
 	await dialog.render(true);
 	return dialog.promise;
 }

@@ -16,7 +16,7 @@ The Demand Control row on a save card, for the owner of the creature whose effec
 	async function use() {
 		if (!actor) return;
 		await runCardAction(messageDocument, { name: 'demandControlUsed' });
-		await openDemandControl(actor as never);
+		await openDemandControl(actor);
 	}
 </script>
 

@@ -247,7 +247,7 @@ class ItemActivationManager {
 	#applyChosenWeapon(dialogData: ItemActivationManager.DialogData): void {
 		const attack = weaponAttackOf(this.#item);
 		if (!attack) return;
-		const weapons = weaponOptionsFor(this.actor as never, attack);
+		const weapons = weaponOptionsFor(this.actor, attack);
 		const weapon = weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0];
 		if (!weapon) return;
 		this.#weapon = fromUuidSync(weapon.uuid as never) as never;
@@ -511,14 +511,13 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
-		const usableAmount = keptAmountFor(this.actor as never, this.#item as never);
-		this.#keptAmountToEnd =
-			usableAmount ?? keptAmountEndedBy(this.actor as never, this.#item as never);
+		const usableAmount = keptAmountFor(this.actor, this.#item);
+		this.#keptAmountToEnd = usableAmount ?? keptAmountEndedBy(this.actor, this.#item);
 		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
-				: (damageMultiplierOf(this.#item as never)?.multiplier ?? 1);
+				: (damageMultiplierOf(this.#item)?.multiplier ?? 1);
 		if (this.#keptAmount) {
 			dialogData.maxDamage = null;
 			dialogData.dualWield = undefined;
@@ -728,11 +727,11 @@ class ItemActivationManager {
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
 					this.#heldIgnore =
 						isAttack && !this.#keptAmount && !this.#maxDamage && !this.#options.ignoreDisadvantage
-							? ignoreDisadvantageChange(this.actor as never)
+							? ignoreDisadvantageChange(this.actor)
 							: null;
 					this.#heldChanges = isAttack
 						? heldChangesForAttack({
-								attacker: this.actor as never,
+								attacker: this.actor,
 								target: firstTargetActor(),
 								area: isAoE,
 								ignoresNegative: !!this.#heldIgnore,
@@ -835,7 +834,7 @@ class ItemActivationManager {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
 					if (this.#options.grantedCrit) grantCrit(damageOptions, this.#options.grantedCrit);
-					this.#mustAttackOther = mustAttackOtherChange(this.actor as never);
+					this.#mustAttackOther = mustAttackOtherChange(this.actor);
 					if (this.#mustAttackOther) {
 						damageOptions.outcomeSources = {
 							...damageOptions.outcomeSources,

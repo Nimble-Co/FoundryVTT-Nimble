@@ -93,7 +93,7 @@ class OptionWindowRule extends NimbleBaseRule<OptionWindowRule.Schema> {
 		if (!this.cardRow || !this.item.isEmbedded || !this.test()) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack') return false;
 		const uuid = context.roll.itemUuid;
-		const item = uuid ? (fromUuidSync(uuid as never) as { type?: string } | null) : null;
+		const item = uuid ? (fromUuidSync(uuid) as { type?: string } | null) : null;
 		return item?.type === 'spell';
 	}
 

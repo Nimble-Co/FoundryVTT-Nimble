@@ -52,7 +52,7 @@
 		name: 'BEEES!',
 		kind: 'roll',
 		icon: 'fa-solid fa-bolt',
-		uses: { left: 1, max: 1, per: 'encounter' },
+		uses: { left: 1, max: 1, per: 'encounter', count: '1/1' },
 		description: 'Deal 5d4 damage (doesn’t miss). Half as much to ALL adjacent creatures.',
 	}}
 />
@@ -63,7 +63,7 @@
 		name: 'HIDDEN NET!',
 		icon: 'fa-solid fa-ban',
 		state: 'out',
-		uses: { left: 0, max: 1, per: 'encounter' },
+		uses: { left: 0, max: 1, per: 'encounter', count: '0/1' },
 		description: 'Restrained (escape DC 10).',
 	}}
 />

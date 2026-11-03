@@ -41,7 +41,7 @@ function holdIgnoreDisadvantage(actor: never, label: string): Promise<void> {
 
 /** The client that used the item opens the window. Initiative starts the list again. */
 export function registerDemandControlHooks(): void {
-	registerDemandControlQuery(openDemandControl as never);
+	registerDemandControlQuery(openDemandControl);
 
 	Hooks.on(
 		systemHookName('useItem') as never,

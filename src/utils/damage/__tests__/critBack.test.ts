@@ -20,7 +20,7 @@ const send = (over: Record<string, unknown> = {}) =>
 		hurt: [living],
 		heroTokenUuid: 'Token.h',
 		...over,
-	} as never);
+	});
 
 describe('crit back', () => {
 	let featureEffects: boolean;
@@ -81,7 +81,7 @@ describe('crit back', () => {
 				{ id: 'b', name: 'Roar', system: { activation: { effects: [{ type: 'note' }] } } },
 			],
 		};
-		expect(attackRows(creature as never)).toEqual([{ id: 'a', name: 'Club' }]);
+		expect(attackRows(creature)).toEqual([{ id: 'a', name: 'Club' }]);
 	});
 
 	it('makes the attack free, on the hero, and a crit', async () => {
@@ -95,7 +95,7 @@ describe('crit back', () => {
 			itemId: 'a',
 			heroTokenUuid: 'Token.h',
 			label: 'Final Takedown',
-		} as never);
+		});
 
 		expect(setTargets).toHaveBeenCalledWith(['heroToken']);
 		expect(activate).toHaveBeenCalledWith(

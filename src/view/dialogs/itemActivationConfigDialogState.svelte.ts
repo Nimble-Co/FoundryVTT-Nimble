@@ -109,9 +109,9 @@ export function createItemActivationConfigDialogState(
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
 	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
-	const keptAmount = keptAmountFor(actor as never, item as never);
+	const keptAmount = keptAmountFor(actor, item);
 	let usesKeptAmount = $state(keptAmount !== null);
-	const damageMultiplier = damageMultiplierOf(item as never);
+	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
@@ -272,7 +272,7 @@ export function createItemActivationConfigDialogState(
 	);
 
 	const weaponAttack = weaponAttackOf(item);
-	const weapons = weaponOptionsFor(actor as never, weaponAttack);
+	const weapons = weaponOptionsFor(actor, weaponAttack);
 	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
 	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
 

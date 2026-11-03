@@ -75,7 +75,7 @@ function schema() {
 				initial: [],
 				label: 'NIMBLE.rules.conditionalBonus.doubleFor.label',
 				hint: 'NIMBLE.rules.conditionalBonus.doubleFor.hint',
-			} as never,
+			},
 		),
 		delivery: new fields.StringField({
 			required: true,

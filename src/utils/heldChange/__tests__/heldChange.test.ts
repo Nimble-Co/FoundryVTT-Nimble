@@ -129,7 +129,7 @@ describe('heldChangesForAttack', () => {
 
 	it('holds nothing outside combat', async () => {
 		const holder = creature('A');
-		await createHeldChange(holder as never, data({ combatId: '', round: 0 }));
+		await createHeldChange(holder, data({ combatId: '', round: 0 }));
 		expect(holder.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });
@@ -169,7 +169,7 @@ describe('spendHeldChanges', () => {
 describe('createHeldChange', () => {
 	it('makes an effect with a token icon on the holder', async () => {
 		const target = creature('T');
-		await createHeldChange(target as never, data());
+		await createHeldChange(target, data());
 
 		const [[, [effect]]] = target.createEmbeddedDocuments.mock.calls as unknown as [
 			[string, [Record<string, any>]],
@@ -185,7 +185,7 @@ describe('expireHeldChanges', () => {
 		globals.game.combats = new Map([['c1', { id: 'c1', started: true, round: 3, turn: 0 }]]);
 		const actor = creature('T', [data({ round: 2 }), data({ ends: 'combat' })]);
 
-		await expireHeldChanges([actor as never]);
+		await expireHeldChanges([actor]);
 
 		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
@@ -288,7 +288,7 @@ describe('a kept amount', () => {
 		globals.game.combat = { id: 'c1', started: true, round: 2, turn: 4 };
 		const holder = creature('A');
 
-		await keepAmount(holder as never, 'Rampage', 13);
+		await keepAmount(holder, 'Rampage', 13);
 
 		delete globals.game.combat;
 		const [[, [effect]]] = holder.createEmbeddedDocuments.mock.calls as unknown as [

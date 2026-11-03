@@ -138,10 +138,10 @@ export async function rollUnarmedStrike(
 	});
 
 	const held = heldChangesForAttack({
-		attacker: actor as never,
+		attacker: actor,
 		target: firstTargetActor(),
 		area: false,
-		ignoresNegative: !!ignoreDisadvantageChange(actor as never),
+		ignoresNegative: !!ignoreDisadvantageChange(actor),
 	});
 	const heldBonus = held.reduce((sum, change) => sum + change.value, 0);
 
@@ -177,11 +177,11 @@ export async function rollUnarmedStrike(
 			incomingAttackPlan.appliedEntries;
 	}
 
-	const keptAmount = keptAmountFor(actor as never, unarmedItem as never);
+	const keptAmount = keptAmountFor(actor, unarmedItem);
 	const kept = result.keptAmount === false ? null : keptAmount;
-	const heldIgnore = kept ? null : ignoreDisadvantageChange(actor as never);
-	if (heldIgnore) removeDisadvantage(rollOptions as never);
-	const mustAttack = mustAttackOtherChange(actor as never);
+	const heldIgnore = kept ? null : ignoreDisadvantageChange(actor);
+	if (heldIgnore) removeDisadvantage(rollOptions);
+	const mustAttack = mustAttackOtherChange(actor);
 	if (mustAttack) {
 		rollOptions.outcomeSources = {
 			...rollOptions.outcomeSources,
@@ -191,7 +191,7 @@ export async function rollUnarmedStrike(
 	const firstRoll = new DamageRoll(
 		kept ? String(kept.value) : rollFormula,
 		actor.getRollData(),
-		kept ? keptAmountRollOptions(rollOptions as never, kept.label) : rollOptions,
+		kept ? keptAmountRollOptions(rollOptions, kept.label) : rollOptions,
 	);
 	await firstRoll.evaluate();
 
@@ -275,11 +275,7 @@ export async function rollUnarmedStrike(
 
 	const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	await recordAttack(actor);
-	const recoveryFlags = await giveUnarmedHitRecovery(
-		actor as never,
-		roll as never,
-		targets as never,
-	);
+	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);
 	await spendHeldChanges([
 		...(kept ? [] : held),
@@ -288,7 +284,7 @@ export async function rollUnarmedStrike(
 		...(mustAttack ? [mustAttack] : []),
 	]);
 	if (result.dualWield) await markDualWieldUse(actor as never);
-	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll as never)) {
+	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll)) {
 		await spendRuleCharge(actor, identifier);
 	}
 	await spendCritDiceUses(actor as unknown as Actor, roll as unknown as DamageRoll);

@@ -1,5 +1,10 @@
 import { SYSTEM_ID } from '#system';
-import type { OptionSet } from '#types/optionWindow.d.ts';
+import type {
+	ControlAffliction,
+	ControlChoice,
+	ControlOption,
+	OptionSet,
+} from '#types/optionWindow.d.ts';
 import { actorRules } from '#utils/actor/actorRules.js';
 import applyConditionToActor from '#utils/actor/applyConditionToActor.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
@@ -7,26 +12,19 @@ import localize from '#utils/localize.js';
 import { currentRoundId } from '../combat/perTurnUse.js';
 import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
 
-const CONTROL_OPTIONS = ['iInsist', 'elementalAffliction', 'no', 'loseControl'] as const;
-export type ControlOption = (typeof CONTROL_OPTIONS)[number];
+const CONTROL_OPTIONS: readonly ControlOption[] = [
+	'iInsist',
+	'elementalAffliction',
+	'no',
+	'loseControl',
+];
 const OPTION_SETS: Record<OptionSet, readonly ControlOption[]> = { control: CONTROL_OPTIONS };
-export const AFFLICTIONS = ['charged', 'smoldering', 'slowed'] as const;
+export const AFFLICTIONS: readonly ControlAffliction[] = ['charged', 'smoldering', 'slowed'];
 
 const FLAG = 'demandControl';
 export const DEMAND_CONTROL_USED_FLAG = 'demandControlUsed';
 const QUERY_NAME = `${SYSTEM_ID}.demandControl`;
 const TEXT = 'NIMBLE.demandControl';
-
-/** What the player chose in the window. */
-export interface ControlChoice {
-	option: ControlOption;
-	cantripId?: string | null;
-	creatureUuid?: string | null;
-	protectedUuid?: string | null;
-	condition?: (typeof AFFLICTIONS)[number];
-	twice?: boolean;
-	asReaction?: boolean;
-}
 
 interface ControlState {
 	chosen: ControlOption[];
@@ -169,7 +167,7 @@ export function choiceIsComplete(choice: ControlChoice): boolean {
 }
 
 const nameOf = (uuid: string | null | undefined): string =>
-	(uuid ? (fromUuidSync(uuid as never) as { name?: string } | null)?.name : '') ?? '';
+	(uuid ? (fromUuidSync(uuid) as { name?: string } | null)?.name : '') ?? '';
 
 async function postCard(actor: ControlActor, system: object, whisperGm = false): Promise<unknown> {
 	return ChatMessage.create({
@@ -190,7 +188,7 @@ async function applyAffliction(
 	creatureUuid: string,
 	condition: string,
 ): Promise<void> {
-	const creature = fromUuidSync(creatureUuid as never) as { isOwner?: boolean } | null;
+	const creature = fromUuidSync(creatureUuid) as { isOwner?: boolean } | null;
 	if (!creature) return;
 	if (creature.isOwner) {
 		await applyConditionToActor(creature as never, condition, { sourceActor: actor as never });
@@ -255,7 +253,7 @@ export async function applyControlChoice(
 
 /** The GM does the part only the GM can write, and a row opens a window on the user who clicks. */
 export function registerDemandControlQuery(
-	open: (actor: never, options: { locked?: ControlOption }) => Promise<void>,
+	open: (actor: ControlActor, options: { locked?: ControlOption }) => Promise<void>,
 ): void {
 	Hooks.once('init', () => {
 		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
@@ -265,10 +263,10 @@ export function registerDemandControlQuery(
 			creatureUuid?: string;
 			condition?: string;
 		}) => {
-			const actor = fromUuidSync(data.actorUuid as never) as ControlActor | null;
+			const actor = fromUuidSync(data.actorUuid) as ControlActor | null;
 			if (!actor) return false;
 			if (data.action === 'open') {
-				void open(actor as never, {});
+				void open(actor, {});
 				return true;
 			}
 			if (data.creatureUuid && data.condition) {
@@ -303,7 +301,7 @@ export function saveRowActor(card: SaveCardView): ControlActor | null {
 	const causedBy = flags?.causedBy as string | undefined;
 	if (!causedBy || flags?.[DEMAND_CONTROL_USED_FLAG]) return null;
 	if (card.system?.reportedSaveResult !== 'succeeded') return null;
-	const actor = fromUuidSync(causedBy as never) as ControlActor | null;
+	const actor = fromUuidSync(causedBy) as ControlActor | null;
 	if (!actor?.isOwner || !controlRules(actor).some((rule) => rule.cardRow)) return null;
 	return actor;
 }

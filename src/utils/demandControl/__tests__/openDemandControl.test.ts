@@ -22,7 +22,7 @@ async function open(choice: object, paid: object | null = {}, actor = hero()) {
 	vi.resetModules();
 	const payRerollCost = vi.fn(async () => paid);
 	const refund = vi.fn(async () => undefined);
-	vi.doMock('#documents/dialogs/DemandControlDialog.svelte.js', () => ({
+	vi.doMock('#documents/dialogs/ChoiceDialog.svelte.js', () => ({
 		default: class {
 			promise = Promise.resolve(choice);
 			render = vi.fn(async () => undefined);
@@ -41,7 +41,7 @@ async function open(choice: object, paid: object | null = {}, actor = hero()) {
 	}));
 	const { openDemandControl } = await import('../openDemandControl.js');
 	const { chosenOptions, reactionUsedThisRound } = await import('../demandControl.js');
-	await openDemandControl(actor as never);
+	await openDemandControl(actor);
 	return { actor, payRerollCost, refund, chosenOptions, reactionUsedThisRound };
 }
 
@@ -60,7 +60,7 @@ describe('openDemandControl with the Reaction tick', () => {
 	afterEach(() => {
 		delete globals.game.combat;
 		globals.ChatMessage = savedChatMessage;
-		vi.doUnmock('#documents/dialogs/DemandControlDialog.svelte.js');
+		vi.doUnmock('#documents/dialogs/ChoiceDialog.svelte.js');
 		vi.doUnmock('../../reroll/rerollCost.js');
 	});
 
@@ -74,14 +74,14 @@ describe('openDemandControl with the Reaction tick', () => {
 			actor,
 			expect.objectContaining({ actionCost: 1, heroicReaction: '' }),
 		);
-		expect(reactionUsedThisRound(actor as never)).toBe(true);
+		expect(reactionUsedThisRound(actor)).toBe(true);
 	});
 
 	it('pays nothing with no tick', async () => {
 		const { actor, payRerollCost, reactionUsedThisRound } = await open({ option: 'no' });
 
 		expect(payRerollCost).not.toHaveBeenCalled();
-		expect(reactionUsedThisRound(actor as never)).toBe(false);
+		expect(reactionUsedThisRound(actor)).toBe(false);
 	});
 
 	it('does nothing when the cost is not paid', async () => {
@@ -90,8 +90,8 @@ describe('openDemandControl with the Reaction tick', () => {
 			null,
 		);
 
-		expect(chosenOptions(actor as never)).toEqual([]);
-		expect(reactionUsedThisRound(actor as never)).toBe(false);
+		expect(chosenOptions(actor)).toEqual([]);
+		expect(reactionUsedThisRound(actor)).toBe(false);
 		expect(globals.ui.notifications.warn).toHaveBeenCalled();
 	});
 
@@ -104,7 +104,7 @@ describe('openDemandControl with the Reaction tick', () => {
 		);
 
 		expect(refund).toHaveBeenCalled();
-		expect(chosenOptions(actor as never)).toEqual([]);
-		expect(reactionUsedThisRound(actor as never)).toBe(false);
+		expect(chosenOptions(actor)).toEqual([]);
+		expect(reactionUsedThisRound(actor)).toBe(false);
 	});
 });

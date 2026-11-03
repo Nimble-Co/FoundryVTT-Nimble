@@ -170,7 +170,7 @@ function registerItemUseHooks(): void {
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return;
 		const recoveryDomain = itemUseRecoveryDomain(
-			characterItem as never,
+			characterItem,
 			(context as { targets?: unknown[] } | null)?.targets as never,
 		);
 		const itemUseContext = { ...toItemUseContext(context), recoveryDomain };

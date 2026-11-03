@@ -1192,7 +1192,7 @@ export class CardRerolls {
 		try {
 			const amount = cardDamageTotal(this.#host.system() as never);
 			const label = entry.label;
-			await keepAmount(actor as never, label, amount);
+			await keepAmount(actor, label, amount);
 			await this.#host.update({
 				system: { incomingReactions: this.#withEntryUsed(entry), keptAmount: { label, amount } },
 			} as Record<string, unknown>);

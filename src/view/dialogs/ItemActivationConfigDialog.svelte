@@ -30,7 +30,7 @@
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
 	const heldLines = untrack(() =>
-		heldLinesForItem(actor as never, item as never, { ignoresDisadvantage: ignoreDisadvantage }),
+		heldLinesForItem(actor, item, { ignoresDisadvantage: ignoreDisadvantage }),
 	);
 
 	const state = createItemActivationConfigDialogState({

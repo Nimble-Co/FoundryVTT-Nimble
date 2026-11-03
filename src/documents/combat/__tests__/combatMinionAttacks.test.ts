@@ -7,7 +7,7 @@ describe('buildMinionAttackRollEntry', () => {
 			member: { name: 'Goblin' } as never,
 			memberId: 'm1',
 			selectedActionId: 'a1',
-			selectedAction: { name: 'Stab' } as never,
+			selectedAction: { name: 'Stab' },
 			formula: '1d4',
 			damageRoll: { isMiss: false, total: 3, toJSON: () => ({}) } as never,
 			held: [{ label: 'Create an Opening', value: 1 }] as never,

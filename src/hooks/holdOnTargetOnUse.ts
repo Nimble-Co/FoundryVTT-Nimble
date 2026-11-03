@@ -22,7 +22,7 @@ interface UsedItem {
 
 interface UseContext {
 	isMiss?: boolean;
-	targets?: Array<{ actor?: unknown }>;
+	targets?: Array<{ actor?: Actor.Implementation | null }>;
 }
 
 interface Card {
@@ -43,13 +43,18 @@ function holdRulesOf(item: UsedItem): HoldRule[] {
 	);
 }
 
-async function holdOn(item: UsedItem, rules: HoldRule[], actors: unknown[], cardId?: string) {
+async function holdOn(
+	item: UsedItem,
+	rules: HoldRule[],
+	actors: Actor.Implementation[],
+	cardId?: string,
+) {
 	const combat = game.combat;
 	if (!combat?.started) return;
 	for (const rule of rules) {
 		if (rule.heldKind === 'vulnerableOnce' && !rule.damageType) continue;
 		for (const actor of actors) {
-			await createHeldChange(actor as never, {
+			await createHeldChange(actor, {
 				kind: rule.heldKind ?? 'mustAttackOther',
 				value: 0,
 				label: item.name ?? '',
@@ -67,10 +72,10 @@ async function holdOn(item: UsedItem, rules: HoldRule[], actors: unknown[], card
 	}
 }
 
-function cardTargetActors(card: Card): unknown[] {
+function cardTargetActors(card: Card): Actor.Implementation[] {
 	return (card.system?.targets ?? [])
-		.map((uuid) => (fromUuidSync(uuid as never) as { actor?: unknown } | null)?.actor)
-		.filter(Boolean);
+		.map((uuid) => (fromUuidSync(uuid) as { actor?: Actor.Implementation | null } | null)?.actor)
+		.filter((actor): actor is Actor.Implementation => !!actor);
 }
 
 /** The author follows the new roll; with the author away, the GM does. */
@@ -97,7 +102,7 @@ async function followNewRoll(card: Card, changes: { system?: { isMiss?: boolean 
 	const actors = cardTargetActors(card);
 	if (isMiss) {
 		let taken = 0;
-		for (const actor of actors) taken += await takeBackHeldChanges(actor as never, card.id);
+		for (const actor of actors) taken += await takeBackHeldChanges(actor, card.id);
 		await card.setFlag?.(SYSTEM_ID, HELD_FLAG, taken > 0 ? false : SPENT);
 	} else {
 		await holdOn(item, rules, actors, card.id);
@@ -114,7 +119,9 @@ export function registerHoldOnTargetHooks(): void {
 			const rules = holdRulesOf(item);
 			if (rules.length === 0 || !game.combat?.started) return;
 			if (!context?.isMiss) {
-				const actors = (context.targets ?? []).map((target) => target.actor).filter(Boolean);
+				const actors = (context.targets ?? [])
+					.map((target) => target.actor)
+					.filter((actor): actor is Actor.Implementation => !!actor);
 				await holdOn(item, rules, actors, card?.id ?? undefined);
 			}
 			await card?.setFlag?.(SYSTEM_ID, HELD_FLAG, !context?.isMiss);

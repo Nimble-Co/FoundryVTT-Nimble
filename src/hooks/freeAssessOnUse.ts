@@ -1,11 +1,13 @@
-import FreeAssessDialog from '#documents/dialogs/FreeAssessDialog.svelte.js';
+import ChoiceDialog from '#documents/dialogs/ChoiceDialog.svelte.js';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { AssessRequest } from '#types/assess.d.ts';
 import { actorRules, ruleLabel } from '#utils/actor/actorRules.js';
 import { hasRuleCharge, spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { currentRoundId } from '#utils/combat/perTurnUse.js';
 import { runAssess } from '#utils/heroicActions/assess.js';
 import localize from '#utils/localize.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
+import FreeAssessDialogComponent from '../view/dialogs/FreeAssessDialog.svelte';
 
 const FLAG = 'freeAssessRound';
 
@@ -14,22 +16,19 @@ interface FreeAssessRuleLike {
 	disabled?: boolean;
 	test?(): boolean;
 	chargePoolIdentifier?: string;
-	item?: { id?: string | null } | null;
-}
-
-interface FlagActor {
-	getFlag?(scope: string, key: string): unknown;
-	setFlag?(scope: string, key: string, value: unknown): Promise<unknown>;
+	label?: string;
+	item?: { id?: string | null; name?: string | null } | null;
 }
 
 /** The client that used the item opens the window. 1/round is reported, not blocked. */
 export function registerFreeAssessHooks(): void {
 	Hooks.on(
 		systemHookName('useItem') as never,
-		(async (item: { id?: string | null; actor?: unknown }) => {
+		(async (item: { id?: string | null; actor?: Actor.Implementation | null }) => {
 			if (!isRuleAutomationEnabled()) return;
-			const actor = item.actor as FlagActor & Parameters<typeof actorRules>[0];
-			const rule = actorRules<FreeAssessRuleLike>(actor).find(
+			const actor = item.actor;
+			if (!actor) return;
+			const rule = actorRules<FreeAssessRuleLike>(actor as { rules?: unknown }).find(
 				(each) =>
 					each?.type === 'freeAssess' &&
 					!each.disabled &&
@@ -40,13 +39,18 @@ export function registerFreeAssessHooks(): void {
 
 			const round = currentRoundId();
 			const pool = rule.chargePoolIdentifier ?? '';
-			const hasCharge = !!pool && hasRuleCharge(actor as never, pool);
-			const title = ruleLabel(rule as never);
-			const dialog = new FreeAssessDialog(actor as never, title, {
-				roundUsed: !!round && actor.getFlag?.(SYSTEM_ID, FLAG) === round,
-				spendLine: localize(
-					`NIMBLE.ui.heroicActions.assess.free${hasCharge ? 'WithCharge' : 'NoCharge'}`,
-				),
+			const hasCharge = !!pool && hasRuleCharge(actor, pool);
+			const title = ruleLabel(rule);
+			const dialog = new ChoiceDialog<Omit<AssessRequest, 'free'>>(actor, {
+				component: FreeAssessDialogComponent,
+				icon: 'fa-solid fa-magnifying-glass',
+				title,
+				data: {
+					roundUsed: !!round && actor.getFlag?.(SYSTEM_ID, FLAG) === round,
+					spendLine: localize(
+						`NIMBLE.ui.heroicActions.assess.free${hasCharge ? 'WithCharge' : 'NoCharge'}`,
+					),
+				},
 			});
 			await dialog.render(true);
 			const result = await dialog.promise;
@@ -55,7 +59,7 @@ export function registerFreeAssessHooks(): void {
 			const made = await runAssess(actor as never, { ...result, free: true });
 			if (!made) return;
 			if (round) await actor.setFlag?.(SYSTEM_ID, FLAG, round);
-			if (hasCharge) await spendRuleCharge(actor as never, pool);
+			if (hasCharge) await spendRuleCharge(actor, pool);
 		}) as never,
 	);
 }

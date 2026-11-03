@@ -56,7 +56,7 @@ export function weaponOptionsFor(
 		if (item.system.equipped !== true) continue;
 		const damage = firstDamage(item);
 		const targets = item.system.activation?.targets;
-		const delivery = attackDeliveryFromAttackType(targets?.attackType as never);
+		const delivery = attackDeliveryFromAttackType(targets?.attackType);
 		if (!damage?.formula || (attack !== 'any' && delivery !== attack)) continue;
 		options.push({
 			uuid: item.uuid ?? '',

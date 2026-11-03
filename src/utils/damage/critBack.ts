@@ -22,8 +22,8 @@ interface AttackingItem {
 }
 
 interface Creature {
-	uuid?: string;
-	name?: string;
+	uuid?: string | null;
+	name?: string | null;
 	items?: Iterable<AttackingItem>;
 	system?: { attributes?: { hp?: { value?: number } } };
 }
@@ -37,7 +37,7 @@ interface Card {
 function critBackRule(actor: unknown, item: { id?: string | null } | null): CritBackRule | null {
 	if (!item) return null;
 	return (
-		actorRules<CritBackRule>(actor as never).find(
+		actorRules<CritBackRule>(actor as { rules?: unknown } | null).find(
 			(rule) =>
 				rule?.type === 'critBack' &&
 				!rule.disabled &&
@@ -86,7 +86,7 @@ export async function sendCritBack(input: {
 			system: {
 				actorUuid: creature.uuid ?? '',
 				heroTokenUuid: heroTokenUuid ?? '',
-				label: ruleLabel(rule as never),
+				label: ruleLabel(rule),
 				text: localize('NIMBLE.chat.critBack.text', {
 					creature: creature.name ?? '',
 					hero: (sourceActor as { name?: string } | null)?.name ?? '',
@@ -105,7 +105,7 @@ export async function useCritBack(input: {
 	label: string;
 }): Promise<unknown> {
 	const item = [...(input.creature.items ?? [])].find((each) => each.id === input.itemId);
-	const token = fromUuidSync(input.heroTokenUuid as never) as { id?: string } | null;
+	const token = fromUuidSync(input.heroTokenUuid) as { id?: string } | null;
 	if (token?.id) canvas.tokens?.setTargets([token.id]);
 	return item?.activate?.({ fastForward: true, rollMode: 0, grantedCrit: input.label });
 }

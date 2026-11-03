@@ -41,16 +41,18 @@
 	);
 	let lessMana = $state(false);
 	const heldLines = untrack(() =>
-		heldLinesForItem(actor as never, { system: spell } as never, {
-			ignoresDisadvantage: data.ignoreDisadvantage,
-		}),
+		heldLinesForItem(
+			actor,
+			{ system: spell },
+			{
+				ignoresDisadvantage: data.ignoreDisadvantage,
+			},
+		),
 	);
-	const keptAmount = untrack(() => keptAmountFor(actor as never, { system: spell } as never));
+	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
 	let usesKeptAmount = $state(keptAmount !== null);
 	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
-	const damageMultiplier = untrack(() =>
-		damageMultiplierOf((spell?.parent ?? dialog?.item) as never),
-	);
+	const damageMultiplier = untrack(() => damageMultiplierOf(spell?.parent ?? dialog?.item));
 	let usesDamageMultiplier = $state(false);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();

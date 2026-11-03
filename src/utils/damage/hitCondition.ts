@@ -19,7 +19,7 @@ interface HitConditionRule {
 }
 
 type Creature = ConditionTargetActor & {
-	uuid?: string;
+	uuid?: string | null;
 	name?: string | null;
 	rules?: unknown;
 	getFlag?(scope: string, key: string): unknown;
@@ -47,7 +47,7 @@ export async function applyHitConditions(input: {
 	const { attacker, item, hurt, isCritical, isMiss } = input;
 	if (!attacker || !item || isMiss || hurt.length === 0) return;
 	const automatic = isRuleAutomationEnabled();
-	const context = { sourceItem: item, sourceActor: attacker } as never;
+	const context = { sourceItem: item, sourceActor: attacker };
 
 	for (const rule of actorRules<HitConditionRule>(attacker)) {
 		if (rule?.type !== 'hitCondition' || rule.disabled || !rule.condition) continue;

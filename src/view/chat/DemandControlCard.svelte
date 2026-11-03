@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
+	import type { ControlOption } from '#types/optionWindow.d.ts';
 	import { openDemandControl } from '#utils/demandControl/openDemandControl.js';
-	import { type ControlOption, windowOptions } from '#utils/demandControl/demandControl.js';
+	import { windowOptions } from '#utils/demandControl/demandControl.js';
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -11,10 +12,15 @@
 
 	const TEXT = 'NIMBLE.demandControl';
 	const system = $derived(
-		messageDocument.reactive.system as unknown as { actorUuid: string; done: ControlOption[] },
+		messageDocument.reactive.system as unknown as {
+			actorUuid: string;
+			done: ControlOption[];
+			option: ControlOption;
+			text: string;
+		},
 	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);
-	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 	const gmRows = $derived(
 		windowOptions(fromUuidSync(system.actorUuid) as never).filter(
 			(option) => option !== 'loseControl',

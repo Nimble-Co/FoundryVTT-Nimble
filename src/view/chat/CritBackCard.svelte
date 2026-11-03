@@ -15,7 +15,7 @@
 		},
 	);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author?.color);
-	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 	const creature = $derived(fromUuidSync(system.actorUuid) as never);
 	const rows = $derived(creature ? attackRows(creature) : []);
 

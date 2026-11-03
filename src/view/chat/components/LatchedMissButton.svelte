@@ -12,7 +12,7 @@
 	const held = $derived.by(() => {
 		const uuids: string[] = messageDocument?.reactive?.system?.targets ?? [];
 		for (const uuid of uuids) {
-			const target = (fromUuidSync(uuid as never) as { actor?: never } | null)?.actor;
+			const target = (fromUuidSync(uuid) as { actor?: never } | null)?.actor;
 			const creature = latchedCreatureOf(target);
 			if (creature) return creature;
 		}

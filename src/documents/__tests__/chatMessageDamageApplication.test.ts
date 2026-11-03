@@ -500,7 +500,7 @@ describe('NimbleChatMessage latched miss damage', () => {
 	function missedCard(slashing = 7, radiant = 5) {
 		const card = slashingPlusRadiant(slashing, radiant);
 		(card.system as unknown as { isMiss: boolean }).isMiss = true;
-		card.setFlag = vi.fn().mockResolvedValue(card) as never;
+		card.setFlag = vi.fn().mockResolvedValue(card);
 		return card;
 	}
 

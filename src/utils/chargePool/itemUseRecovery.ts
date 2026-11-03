@@ -61,9 +61,9 @@ export async function giveUnarmedHitRecovery(
 	const given: ChargeRecoveryGiven = [];
 	if (!roll.isMiss) {
 		const use = { domain };
-		await applyRecoveryToActorIfEligible(actor as never, 'onHit', undefined, use, given);
+		await applyRecoveryToActorIfEligible(actor, 'onHit', undefined, use, given);
 		if (roll.isCritical) {
-			await applyRecoveryToActorIfEligible(actor as never, 'onCriticalHit', undefined, use, given);
+			await applyRecoveryToActorIfEligible(actor, 'onCriticalHit', undefined, use, given);
 		}
 	}
 	return {
@@ -72,20 +72,12 @@ export async function giveUnarmedHitRecovery(
 	};
 }
 
-interface HeroActor {
-	uuid?: string;
-	type?: string;
-	isOwner?: boolean;
-	getFlag?(scope: string, key: string): unknown;
-}
-
-function heroesWhoMarked(creatureUuid: string | undefined): HeroActor[] {
+function heroesWhoMarked(creatureUuid: string | undefined): Actor.Implementation[] {
 	if (!creatureUuid) return [];
-	const actors = [...(game.actors ?? [])] as unknown as HeroActor[];
-	return actors.filter(
+	return [...(game.actors ?? [])].filter(
 		(actor) =>
 			actor.type === 'character' &&
-			Object.values(readToggledEffects(actor as never)).some(
+			Object.values(readToggledEffects(actor)).some(
 				(entries) =>
 					Array.isArray(entries) && entries.some((entry) => entry.actorUuid === creatureUuid),
 			),
@@ -94,16 +86,17 @@ function heroesWhoMarked(creatureUuid: string | undefined): HeroActor[] {
 
 /** Each hero who marked the creature gains, also from an attack of an ally. */
 export async function giveMarkedDeathRecovery(
-	creature: { uuid?: string },
+	creature: { uuid?: string | null },
 	sourceItem: unknown,
 ): Promise<void> {
 	const spent = spentPoolIdsOf(sourceItem);
 	const source = (sourceItem as UsedItem | null)?.actor;
-	for (const hero of heroesWhoMarked(creature.uuid)) {
+	const uuid = creature.uuid ?? undefined;
+	for (const hero of heroesWhoMarked(uuid)) {
 		const spentPoolIds = hero === source ? [...spent] : [];
-		const domain = [...getToggledTargetTags(hero as never, creature)];
+		const domain = [...getToggledTargetTags(hero, { uuid })];
 		if (hero.isOwner) {
-			await applyRecoveryToActorIfEligible(hero as never, 'onMarkedDeath', undefined, {
+			await applyRecoveryToActorIfEligible(hero, 'onMarkedDeath', undefined, {
 				domain,
 				spentPoolIds: new Set(spentPoolIds),
 			});
@@ -121,7 +114,7 @@ export function registerMarkedDeathQuery(): void {
 			domain: string[];
 			spentPoolIds: string[];
 		}) => {
-			const actor = fromUuidSync(data.actorUuid as never) as never;
+			const actor = fromUuidSync(data.actorUuid) as Actor.Implementation | null;
 			await applyRecoveryToActorIfEligible(actor, 'onMarkedDeath', undefined, {
 				domain: data.domain,
 				spentPoolIds: new Set(data.spentPoolIds),

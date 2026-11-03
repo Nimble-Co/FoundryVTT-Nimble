@@ -438,7 +438,7 @@ function actorIsVulnerableToDamage(actor: Actor.Implementation, damageType?: str
 	return (
 		(Array.isArray(vulnerabilities) &&
 			Boolean(damageType && vulnerabilities.includes(damageType))) ||
-		heldVulnerabilityTo(actor as never, damageType) !== null
+		heldVulnerabilityTo(actor, damageType) !== null
 	);
 }
 
@@ -671,7 +671,7 @@ function resolveDamageForActor(
 	for (const { value, options } of packets) {
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
-		const heldVulnerability = heldVulnerabilityTo(actor as never, options.damageType);
+		const heldVulnerability = heldVulnerabilityTo(actor, options.damageType);
 		if (heldVulnerability && beforeReduction > 0) {
 			usedVulnerabilities.set(heldVulnerability.effectId, heldVulnerability);
 		}
@@ -1351,7 +1351,7 @@ class NimbleChatMessage extends ChatMessage {
 			});
 
 			if (wasKilled) {
-				await giveMarkedDeathRecovery(target.actor as never, sourceItem as never);
+				await giveMarkedDeathRecovery(target.actor, sourceItem);
 				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
 				if (attacker) {
 					// @ts-expect-error Custom hook
@@ -1369,17 +1369,17 @@ class NimbleChatMessage extends ChatMessage {
 		});
 		const speakerActor = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
 		await applyHitConditions({
-			attacker: speakerActor as never,
-			item: sourceItem as never,
-			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor) as never,
+			attacker: speakerActor,
+			item: sourceItem,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor),
 			isCritical: systemData.isCritical === true,
 			isMiss: systemData.isMiss === true,
 		});
 		await sendCritBack({
-			card: this as never,
+			card: this,
 			sourceActor,
-			sourceItem: sourceItem as never,
-			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor) as never,
+			sourceItem: sourceItem,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor),
 			heroTokenUuid:
 				this.speaker?.scene && this.speaker.token
 					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
@@ -1538,7 +1538,7 @@ class NimbleChatMessage extends ChatMessage {
 	#missedDamageOn(
 		creatureUuid: string,
 	): (ResolvedDamageForActor & { actor: HpMutableActor }) | null {
-		const actor = fromUuidSync(creatureUuid as never) as HpMutableActor | null;
+		const actor = fromUuidSync(creatureUuid) as HpMutableActor | null;
 		if (!actor) return null;
 		const packets = this.#collectApplicableDamageRolls()
 			.filter(({ value }) => Number.isFinite(value) && value > 0)
@@ -1562,10 +1562,10 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard() || !game.user?.isGM) return;
 		const resolved = this.#missedDamageOn(creatureUuid);
 		if (!resolved) return;
-		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor as never);
+		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
 		await resolved.actor.applyDamage(resolved.total);
 		await spendHeldChanges(resolved.usedVulnerabilities);
-		await this.setFlag(SYSTEM_ID as never, LATCHED_DAMAGE_FLAG as never, true as never);
+		await this.setFlag(SYSTEM_ID, LATCHED_DAMAGE_FLAG, true);
 	}
 
 	/** The name of the feature that keeps this target from taking damage, or null. */

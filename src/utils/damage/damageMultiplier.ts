@@ -12,9 +12,9 @@ interface ItemWithRules {
 
 /** The tick an item offers in its roll window, if it has one. */
 export function damageMultiplierOf(
-	item: ItemWithRules | null | undefined,
+	item: object | null | undefined,
 ): { label: string; multiplier: number } | null {
-	const rules = item?.rules;
+	const rules = (item as ItemWithRules | null | undefined)?.rules;
 	if (!rules) return null;
 	const list = (rules instanceof Map ? [...rules.values()] : [...rules]) as MultiplierRule[];
 	const rule = list.find(

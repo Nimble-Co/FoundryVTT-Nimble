@@ -22,7 +22,7 @@ interface HolderEffect {
 }
 
 interface Holder {
-	uuid?: string;
+	uuid?: string | null;
 	isOwner?: boolean;
 	effects?: Iterable<HolderEffect>;
 	createEmbeddedDocuments?(type: string, data: object[]): Promise<unknown>;
@@ -306,7 +306,7 @@ export async function createHeldChange(holder: Holder, change: HeldChangeData): 
 export async function spendHeldChanges(held: HeldChange[]): Promise<void> {
 	for (const change of held) {
 		if (change.spentBy !== 'oneRoll') continue;
-		const holder = fromUuidSync(change.holderUuid as never) as unknown as Holder | null;
+		const holder = fromUuidSync(change.holderUuid) as unknown as Holder | null;
 		if (!holder) continue;
 		await deleteHeld(holder, change.effectId);
 	}
@@ -353,7 +353,7 @@ export function registerHeldChangeQuery(): void {
 			change?: HeldChangeData;
 			effectId?: string;
 		}) => {
-			const holder = fromUuidSync(data.actorUuid as never) as unknown as Holder | null;
+			const holder = fromUuidSync(data.actorUuid) as unknown as Holder | null;
 			if (!holder) return false;
 			if (data.action === 'create' && data.change) await createHere(holder, data.change);
 			if (data.action === 'delete' && data.effectId) await deleteHere(holder, data.effectId);

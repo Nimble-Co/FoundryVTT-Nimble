@@ -42,7 +42,7 @@ describe('conditionalBonuses', () => {
 		it('doubles for an item in the list', () => {
 			const rule = damageRule([{ source: 'final-takedown', onlyNoArmor: false }]);
 			const [option] = getActiveConditionalBonuses(
-				createAttacker([rule]) as never,
+				createAttacker([rule]),
 				attack('final-takedown'),
 				armored('heavy') as never,
 			);
@@ -52,7 +52,7 @@ describe('conditionalBonuses', () => {
 		it('does not double for another item', () => {
 			const rule = damageRule([{ source: 'final-takedown', onlyNoArmor: false }]);
 			const [option] = getActiveConditionalBonuses(
-				createAttacker([rule]) as never,
+				createAttacker([rule]),
 				attack('longbow'),
 				undefined,
 			);
@@ -67,7 +67,7 @@ describe('conditionalBonuses', () => {
 		])('reads armor when the item asks: %s gives %i', (armor, damageValue) => {
 			const rule = damageRule([{ source: 'vital-shot', onlyNoArmor: true }]);
 			const [option] = getActiveConditionalBonuses(
-				createAttacker([rule]) as never,
+				createAttacker([rule]),
 				attack('vital-shot'),
 				armored(armor) as never,
 			);

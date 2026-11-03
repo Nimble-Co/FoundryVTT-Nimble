@@ -41,7 +41,7 @@ export async function runMoveAction(actor: NimbleCharacter): Promise<void> {
 
 	if (combat && combatant.id) {
 		await consumeCombatantAction({ combat, combatantId: combatant.id });
-		await spendHeldIgnoreDisadvantage(actor as never);
+		await spendHeldIgnoreDisadvantage(actor);
 	}
 
 	const movementSpeeds = getMovementSpeeds(actor);

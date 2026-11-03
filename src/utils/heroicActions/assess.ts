@@ -41,11 +41,11 @@ async function holdAssessChange(
 		sourceName: actor.name ?? '',
 	};
 	if (optionId === 'create-opening' && target?.actor) {
-		await createHeldChange(target.actor as never, { ...time, value: 1, spentBy: 'oneRoll' });
+		await createHeldChange(target.actor, { ...time, value: 1, spentBy: 'oneRoll' });
 		return 1;
 	}
 	if (optionId === 'anticipate-danger') {
-		await createHeldChange(actor as never, { ...time, value: -1, spentBy: 'everyRoll' });
+		await createHeldChange(actor, { ...time, value: -1, spentBy: 'everyRoll' });
 		return -1;
 	}
 	return null;
@@ -53,7 +53,7 @@ async function holdAssessChange(
 
 function rollPaidAssess(actor: NimbleCharacter, skillKey: AssessRequest['skillKey']) {
 	const skillMode = actor.system?.skills?.[skillKey]?.defaultRollMode ?? 0;
-	return skillMode < 0 && ignoreDisadvantageChange(actor as never)
+	return skillMode < 0 && ignoreDisadvantageChange(actor)
 		? actor.rollSkillCheck(skillKey, { rollMode: 0 })
 		: actor.rollSkillCheck(skillKey);
 }
@@ -80,7 +80,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 
 	if (!request.free) {
 		await spendAssessAction(actor);
-		await spendHeldIgnoreDisadvantage(actor as never);
+		await spendHeldIgnoreDisadvantage(actor);
 	}
 
 	const isSuccess = assessSucceeds(roll);

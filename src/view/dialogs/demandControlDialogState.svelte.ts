@@ -1,7 +1,6 @@
+import type { ControlAffliction, ControlChoice, ControlOption } from '#types/optionWindow.d.ts';
 import {
 	AFFLICTIONS,
-	type ControlChoice,
-	type ControlOption,
 	cantripsOf,
 	choiceIsComplete,
 	controlRules,
@@ -42,7 +41,7 @@ export function createDemandControlState(input: {
 	let cantripId = $state<string | null>(cantrips[0]?.id ?? null);
 	let creatureUuid = $state<string | null>(firstTarget?.actor?.uuid ?? null);
 	let protectedUuid = $state<string | null>(null);
-	let condition = $state<(typeof AFFLICTIONS)[number]>(AFFLICTIONS[0]);
+	let condition = $state<ControlAffliction>(AFFLICTIONS[0]);
 	let twice = $state(false);
 	let asReaction = $state(false);
 	const reactionUsed = reactionUsedThisRound(actor);
@@ -97,7 +96,7 @@ export function createDemandControlState(input: {
 		get condition() {
 			return condition;
 		},
-		set condition(value: (typeof AFFLICTIONS)[number]) {
+		set condition(value: ControlAffliction) {
 			condition = value;
 		},
 		get twice() {

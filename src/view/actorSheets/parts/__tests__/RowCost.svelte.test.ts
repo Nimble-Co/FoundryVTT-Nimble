@@ -5,7 +5,7 @@ import RowCost from '../RowCost.svelte';
 describe('RowCost', () => {
 	it('tells what the uses, the mana cost and the action bars mean', () => {
 		const { container } = render(RowCost, {
-			uses: [{ left: 1, max: 1, per: 'round' }],
+			uses: [{ left: 1, max: 1, per: 'round', count: '1/1' }],
 			pool: { kind: 'mana', icon: 'fa-solid fa-droplet', amount: 2 },
 			actions: 2,
 		});
