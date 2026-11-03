@@ -202,6 +202,33 @@ describe('NimbleObjectItem.activate', () => {
 			expect(baseActivate).toHaveBeenCalled();
 		});
 
+		// Core:219: a natural 1 always fails and a natural 20 always succeeds.
+		it('fails on a natural 1, whatever the total', async () => {
+			const scroll = createScroll({
+				rollSkillCheck: vi.fn(async () => ({
+					roll: { total: 12, terms: [{ faces: 20, results: [{ result: 1, active: true }] }] },
+					rollData: {},
+				})),
+			});
+
+			expect(await scroll.activate()).toBeNull();
+
+			expect(baseActivate).not.toHaveBeenCalled();
+		});
+
+		it('passes on a natural 20, whatever the total', async () => {
+			const scroll = createScroll({
+				rollSkillCheck: vi.fn(async () => ({
+					roll: { total: 8, terms: [{ faces: 20, results: [{ result: 20, active: true }] }] },
+					rollData: {},
+				})),
+			});
+
+			await scroll.activate();
+
+			expect(baseActivate).toHaveBeenCalled();
+		});
+
 		// A check the player never agreed to must not spend anything.
 		it('leaves the scroll alone when the check dialog is closed', async () => {
 			const scroll = createScroll({
