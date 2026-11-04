@@ -46,7 +46,19 @@
 </script>
 
 {#if shows}
-	<button type="button" disabled={busy} onclick={use}>
+	<button
+		class="nimble-button nimble-chaos-button"
+		data-button-variant="card-action"
+		type="button"
+		disabled={busy}
+		onclick={use}
+	>
 		{localize('NIMBLE.chat.chaos.rollButton')}
 	</button>
 {/if}
+
+<style>
+	.nimble-chaos-button {
+		--nimble-card-action-color: var(--nimble-card-text-color, currentColor);
+	}
+</style>

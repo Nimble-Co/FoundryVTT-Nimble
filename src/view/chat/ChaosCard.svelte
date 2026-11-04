@@ -47,13 +47,27 @@
 
 	{#if system.status === 'choosing' && canAct}
 		<div class="nimble-chaos-card__buttons">
-			<button type="button" disabled={busy} onclick={() => choose('once')}>
+			<button
+				class="nimble-button"
+				data-button-variant="card-action"
+				type="button"
+				disabled={busy}
+				onclick={() => choose('once')}
+			>
 				{localize('NIMBLE.chat.chaos.rollOnce')}
 			</button>
-			<button type="button" disabled={busy} onclick={() => choose('both')}>
+			<button
+				class="nimble-button"
+				data-button-variant="card-action"
+				type="button"
+				disabled={busy}
+				onclick={() => choose('both')}
+			>
 				{localize('NIMBLE.chat.chaos.rollTwiceBoth')}
 			</button>
 			<button
+				class="nimble-button"
+				data-button-variant="card-action"
 				type="button"
 				disabled={busy || system.chooseUses < 1}
 				onclick={() => choose('choose')}
@@ -79,7 +93,13 @@
 			{/if}
 			{#if roll.name}<strong>{roll.name}</strong>{/if}
 			{#if system.status === 'picking' && canAct}
-				<button type="button" disabled={busy} onclick={() => keep(index)}>
+				<button
+					class="nimble-button"
+					data-button-variant="card-action"
+					type="button"
+					disabled={busy}
+					onclick={() => keep(index)}
+				>
 					{localize('NIMBLE.chat.chaos.keep', { value: String(roll.value) })}
 				</button>
 			{/if}
@@ -93,6 +113,8 @@
 
 <style lang="scss">
 	.nimble-chaos-card {
+		--nimble-card-action-color: var(--nimble-card-text-color, currentColor);
+
 		display: flex;
 		flex-direction: column;
 		gap: 0.375rem;
