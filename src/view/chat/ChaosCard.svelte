@@ -6,6 +6,7 @@
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import CardHeader from './components/CardHeader.svelte';
+	import RollSummary from './components/RollSummary.svelte';
 
 	let { messageDocument }: ChaosCardProps = $props();
 	let busy = $state(false);
@@ -19,6 +20,7 @@
 	const system = $derived(message.reactive.system);
 	const headerBackgroundColor = $derived(message.reactive.author?.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor as never));
+	const title = localize('NIMBLE.chat.chaos.title');
 	const canAct = $derived(canActOnCard(message, fromUuidSync(system.actorUuid as never) as never));
 
 	async function run(action: () => Promise<void>) {
@@ -42,8 +44,11 @@
 <article
 	class="nimble-chat-card__body nimble-chaos-card"
 	style="--nimble-user-background-color: {headerBackgroundColor}; --nimble-user-text-color: {headerTextColor};"
+	data-card-type="check"
 >
-	<h4 class="nimble-chaos-card__title">{localize('NIMBLE.chat.chaos.title')}</h4>
+	{#if system.status === 'choosing'}
+		<h3 class="nimble-chaos-card__title">{title}</h3>
+	{/if}
 
 	{#if system.status === 'choosing' && canAct}
 		<div class="nimble-chaos-card__buttons">
@@ -78,20 +83,20 @@
 	{/if}
 
 	{#each system.rolls as roll, index (index)}
-		<div
-			class="nimble-chaos-card__roll"
-			class:nimble-chaos-card__roll--out={system.kept !== null && system.kept !== index}
-		>
-			<strong class="nimble-chaos-card__value">{roll.value}</strong>
-			{#if roll.dropped !== null}
-				<span
-					class="nimble-chaos-card__dropped"
-					data-tooltip={localize('NIMBLE.chat.chaos.advantageTooltip')}
-				>
-					({roll.dropped})
-				</span>
+		{@const notKept = system.kept !== null && system.kept !== index}
+		<section class="nimble-chaos-card__roll" class:nimble-chaos-card__roll--out={notKept}>
+			<RollSummary
+				label={roll.name || title}
+				note={notKept ? localize('NIMBLE.chat.chaos.notKept') : roll.name ? title : null}
+				subheading={roll.dropped === null
+					? null
+					: localize('NIMBLE.chat.chaos.advantageDropped', { value: String(roll.dropped) })}
+				total={roll.value}
+			/>
+			{#if roll.text}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				<div class="nimble-chaos-card__text">{@html roll.text}</div>
 			{/if}
-			{#if roll.name}<strong>{roll.name}</strong>{/if}
 			{#if system.status === 'picking' && canAct}
 				<button
 					class="nimble-button"
@@ -103,11 +108,7 @@
 					{localize('NIMBLE.chat.chaos.keep', { value: String(roll.value) })}
 				</button>
 			{/if}
-			{#if roll.text}
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				<div class="nimble-chaos-card__text">{@html roll.text}</div>
-			{/if}
-		</div>
+		</section>
 	{/each}
 </article>
 
@@ -117,11 +118,15 @@
 
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
-		font-size: var(--nimble-sm-text);
+		gap: 0.5rem;
 
 		&__title {
 			margin: 0;
+			color: inherit;
+			font-size: var(--nimble-sm-text);
+			font-weight: 900;
+			line-height: 1;
+			border: 0;
 		}
 
 		&__buttons {
@@ -132,29 +137,29 @@
 
 		&__roll {
 			display: flex;
-			flex-wrap: wrap;
-			align-items: baseline;
-			gap: 0.25rem 0.375rem;
+			flex-direction: column;
+			gap: 0.375rem;
+
+			& + & {
+				padding-block-start: 0.5rem;
+				border-block-start: 1px solid var(--nimble-card-border-color);
+			}
 
 			&--out {
-				opacity: 0.55;
-				text-decoration: line-through;
+				opacity: 0.7;
 			}
 		}
 
-		&__value {
-			font-size: var(--nimble-md-text, 1rem);
-		}
-
-		&__dropped {
-			color: var(--nimble-medium-text-color);
-		}
-
 		&__text {
-			flex-basis: 100%;
+			font-size: var(--nimble-sm-text);
+			line-height: 1.35;
 
 			:global(p) {
 				margin: 0;
+			}
+
+			:global(p + p) {
+				margin-block-start: 0.25rem;
 			}
 		}
 	}

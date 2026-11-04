@@ -568,7 +568,8 @@
 				"rollTwiceChoose": "Roll twice, choose one (1/Safe Rest)",
 				"keep": "Keep {value}",
 				"rollButton": "Roll on the Chaos Table",
-				"advantageTooltip": "The other die of the roll with advantage.",
+				"advantageDropped": "Advantage, other die {value}",
+				"notKept": "Not kept",
 				"whisper": "The Chaos Table for {name}:"
 			},
 			"initiative": {
