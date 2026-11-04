@@ -8,4 +8,11 @@
 	let roll = $derived(node.roll);
 </script>
 
-<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} nodeId={node.parentNode} />
+<DamageRoll
+	{damageType}
+	{ignoreArmor}
+	{outcome}
+	{roll}
+	nodeId={node.parentNode}
+	damageMultiplier={node.damageMultiplier ?? 1}
+/>

@@ -144,7 +144,35 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "worgSavageRule00",
+						"identifier": "",
+						"label": "Savage",
+						"predicate": {},
+						"priority": 1,
+						"side": "yourAttacks",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "always",
+						"ignoreArmor": false,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "any",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {
+							"$and": [
+								"target:grappled"
+							]
+						},
+						"chargePoolIdentifier": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

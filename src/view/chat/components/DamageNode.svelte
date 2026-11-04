@@ -44,7 +44,14 @@
 </script>
 
 {#if !awaitingRoll}
-	<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} nodeId={node.id} />
+	<DamageRoll
+		{damageType}
+		{ignoreArmor}
+		{outcome}
+		{roll}
+		nodeId={node.id}
+		damageMultiplier={node.damageMultiplier ?? 1}
+	/>
 {:else if canRollDamage}
 	<button
 		class="nimble-button nimble-button--roll-damage"

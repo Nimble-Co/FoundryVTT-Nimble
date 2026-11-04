@@ -3,6 +3,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
+import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
@@ -27,6 +28,7 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
+import { heldVulnerabilityTo, spendHeldChanges } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
@@ -37,11 +39,14 @@ import type { PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
+import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
+import { sendCritBack } from '../utils/damage/critBack.js';
+import { applyHitConditions } from '../utils/damage/hitCondition.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
@@ -107,6 +112,7 @@ type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
 type DamageApplyOptions = {
 	damageType?: string;
+	damageMultiplier?: number;
 	ignoreArmor?: boolean;
 	outcome?: DamageApplyOutcome;
 	roll?: DamageRoll.SerializedData | null;
@@ -119,6 +125,7 @@ type DamageApplyOptions = {
 interface DamageApplicationTarget {
 	actor: HpMutableActor;
 	adjustedDamage: number;
+	usedVulnerabilities: HeldChange[];
 }
 
 /**
@@ -152,6 +159,8 @@ export interface TargetDamageBreakdown {
 	components: TargetDamageComponent[];
 	total: number;
 }
+
+export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
 
 /** The target tokens the card's standing no-damage changes cover, with what names each. */
 function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
@@ -347,19 +356,21 @@ function calculateArmorAdjustedDamage(params: {
 		return params.damage;
 	}
 
+	// Armor reads the stored roll, which does not have the multiplier of the node.
+	const damageMultiplier = damageOptions?.damageMultiplier ?? 1;
 	let totalAdjustedDamage = 0;
 	for (const serializedRoll of serializedRolls) {
 		const rollTotal = getDamageRollTotal(serializedRoll);
 		const isCritical = serializedRoll.isCritical === true;
 
 		if (isCritical) {
-			const critAdjustedDamage = applyOutcomeHalfDamage ? Math.ceil(rollTotal * 0.5) : rollTotal;
-			totalAdjustedDamage += critAdjustedDamage;
+			const critDamage = rollTotal * damageMultiplier;
+			totalAdjustedDamage += applyOutcomeHalfDamage ? Math.ceil(critDamage * 0.5) : critDamage;
 			continue;
 		}
 
-		const diceDamage = getDiceDamageTotal(serializedRoll) ?? rollTotal;
-		const negativeModifierTotal = getNegativeModifierTotal(serializedRoll);
+		const diceDamage = (getDiceDamageTotal(serializedRoll) ?? rollTotal) * damageMultiplier;
+		const negativeModifierTotal = getNegativeModifierTotal(serializedRoll) * damageMultiplier;
 		let adjustedDamage = diceDamage;
 		if (applyOutcomeHalfDamage) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
 		if (applyHeavyArmor) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
@@ -425,7 +436,9 @@ function actorIsVulnerableToDamage(actor: Actor.Implementation, damageType?: str
 		'system.attributes.damageVulnerabilities',
 	);
 	return (
-		Array.isArray(vulnerabilities) && Boolean(damageType && vulnerabilities.includes(damageType))
+		(Array.isArray(vulnerabilities) &&
+			Boolean(damageType && vulnerabilities.includes(damageType))) ||
+		heldVulnerabilityTo(actor, damageType) !== null
 	);
 }
 
@@ -560,6 +573,8 @@ interface ResolvedDamageForActor {
 	components: TargetDamageComponent[];
 	/** Whether the actor's banked one-shot reduction was spent by this attack */
 	consumedBank: boolean;
+	/** The one-use vulnerabilities this damage used. */
+	usedVulnerabilities: HeldChange[];
 }
 
 /**
@@ -648,6 +663,7 @@ function resolveDamageForActor(
 
 	let remainingBank = availableBank;
 	let consumedBank = false;
+	const usedVulnerabilities = new Map<string, HeldChange>();
 
 	const components: TargetDamageComponent[] = [];
 	let total = 0;
@@ -655,6 +671,10 @@ function resolveDamageForActor(
 	for (const { value, options } of packets) {
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
+		const heldVulnerability = heldVulnerabilityTo(actor, options.damageType);
+		if (heldVulnerability && beforeReduction > 0) {
+			usedVulnerabilities.set(heldVulnerability.effectId, heldVulnerability);
+		}
 
 		const reduced = spendFlatReductions(pendingReductions, beforeReduction, options);
 		let adjustedDamage = reduced.remainingDamage;
@@ -688,7 +708,12 @@ function resolveDamageForActor(
 		});
 	}
 
-	return { total, components, consumedBank };
+	return {
+		total,
+		components,
+		consumedBank,
+		usedVulnerabilities: [...usedVulnerabilities.values()],
+	};
 }
 
 function buildDamageApplicationPlan(params: {
@@ -731,6 +756,7 @@ function buildDamageApplicationPlan(params: {
 		applicableTargets.push({
 			actor,
 			adjustedDamage: resolved.total,
+			usedVulnerabilities: resolved.usedVulnerabilities,
 		});
 	}
 
@@ -1305,6 +1331,7 @@ class NimbleChatMessage extends ChatMessage {
 			);
 
 			await target.actor.applyDamage(target.adjustedDamage);
+			await spendHeldChanges(target.usedVulnerabilities);
 
 			const hpAfter = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1324,6 +1351,7 @@ class NimbleChatMessage extends ChatMessage {
 			});
 
 			if (wasKilled) {
+				await giveMarkedDeathRecovery(target.actor, sourceItem);
 				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
 				if (attacker) {
 					// @ts-expect-error Custom hook
@@ -1332,7 +1360,31 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
-		await this.#damageBack.afterDamage(hurt, { isCritical: systemData.isCritical === true });
+		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
+			| DamageRoll
+			| undefined;
+		await this.#damageBack.afterDamage(hurt, {
+			isCritical: systemData.isCritical === true,
+			critDiceTotal: attackRoll?.critDiceTotal ?? 0,
+		});
+		const speakerActor = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
+		await applyHitConditions({
+			attacker: speakerActor,
+			item: sourceItem,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor),
+			isCritical: systemData.isCritical === true,
+			isMiss: systemData.isMiss === true,
+		});
+		await sendCritBack({
+			card: this,
+			sourceActor,
+			sourceItem: sourceItem,
+			hurt: damageApplicationPlan.applicableTargets.map((target) => target.actor),
+			heroTokenUuid:
+				this.speaker?.scene && this.speaker.token
+					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
+					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
+		});
 		await this.#markDamageApplied();
 
 		if (
@@ -1426,7 +1478,8 @@ class NimbleChatMessage extends ChatMessage {
 							? 'noDamage'
 							: 'fullDamage';
 
-				const multiplier = outcome === 'halfDamage' ? 0.5 : 1;
+				const nodeMultiplier = (node as { damageMultiplier?: number }).damageMultiplier ?? 1;
+				const multiplier = (outcome === 'halfDamage' ? 0.5 : 1) * nodeMultiplier;
 				const rollTotal = Number(roll.total ?? 0);
 				const value = Math.ceil((Number.isFinite(rollTotal) ? rollTotal : 0) * multiplier);
 
@@ -1436,6 +1489,7 @@ class NimbleChatMessage extends ChatMessage {
 						damageType: (node as { damageType?: string }).damageType,
 						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
 						outcome,
+						...(nodeMultiplier !== 1 ? { damageMultiplier: nodeMultiplier } : {}),
 						roll: roll as unknown as DamageRoll.SerializedData,
 						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
 						attackIsCritical: system.isCritical === true,
@@ -1478,6 +1532,40 @@ class NimbleChatMessage extends ChatMessage {
 			};
 		}
 		return { components, total };
+	}
+
+	/** A missed attack as a hit on this creature: its defenses read the same damage. */
+	#missedDamageOn(
+		creatureUuid: string,
+	): (ResolvedDamageForActor & { actor: HpMutableActor }) | null {
+		const actor = fromUuidSync(creatureUuid) as HpMutableActor | null;
+		if (!actor) return null;
+		const packets = this.#collectApplicableDamageRolls()
+			.filter(({ value }) => Number.isFinite(value) && value > 0)
+			.map(({ value, options }) => ({
+				value,
+				options: {
+					...options,
+					outcome: options.outcome === 'noDamage' ? ('fullDamage' as const) : options.outcome,
+				},
+			}));
+		return packets.length > 0 ? { ...resolveDamageForActor(actor, packets), actor } : null;
+	}
+
+	/** What a click would deal to the creature, or null when nothing can be dealt. */
+	latchedMissDamage(creatureUuid: string): number | null {
+		if (!this.isActivationCard()) return null;
+		return this.#missedDamageOn(creatureUuid)?.total ?? null;
+	}
+
+	async applyLatchedMissDamage(creatureUuid: string): Promise<void> {
+		if (!this.isActivationCard() || !game.user?.isGM) return;
+		const resolved = this.#missedDamageOn(creatureUuid);
+		if (!resolved) return;
+		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
+		await resolved.actor.applyDamage(resolved.total);
+		await spendHeldChanges(resolved.usedVulnerabilities);
+		await this.setFlag(SYSTEM_ID, LATCHED_DAMAGE_FLAG, true);
 	}
 
 	/** The name of the feature that keeps this target from taking damage, or null. */

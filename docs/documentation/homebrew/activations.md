@@ -30,6 +30,8 @@ Monster feature sheets hide the Activation Cost section. A monster's action econ
 - **Target Count**: how many targets the item expects (hidden when AoE targeting is on).
 - **Target Restrictions**: free text shown to the user, such as "creatures that can hear you".
 
+On items that are not monster features, **Attack with a weapon** makes the ability attack with an equipped weapon. The roll window asks which one, and the first damage node rolls that weapon's damage, with its reach or range and its damage type. Hunter abilities such as Vital Shot use it.
+
 On monster features only, an **Attack Type** dropdown (None / Reach / Range) and a **Distance** field describe the attack's reach for the stat block.
 
 ## The Effects sub-tab: the effect tree

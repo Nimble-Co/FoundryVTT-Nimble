@@ -6,7 +6,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "nullifyUsePool00",
+				"identifier": "nullify-use",
+				"label": "Nullify (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "nullifyUseConsum",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "nullify-use",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "optionWindow",
+				"disabled": false,
+				"id": "nullifyOpensCont",
+				"identifier": "",
+				"label": "Nullify",
+				"predicate": {},
+				"priority": 1,
+				"optionSet": "control",
+				"opensOnUse": true,
+				"oncePerRound": false,
+				"cardRow": false,
+				"ignoresDisadvantage": true,
+				"triggerTwice": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

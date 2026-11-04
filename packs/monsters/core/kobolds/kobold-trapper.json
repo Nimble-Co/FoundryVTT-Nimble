@@ -346,7 +346,7 @@
 								]
 							},
 							"canCrit": true,
-							"canMiss": true
+							"canMiss": false
 						}
 					],
 					"showDescription": true,

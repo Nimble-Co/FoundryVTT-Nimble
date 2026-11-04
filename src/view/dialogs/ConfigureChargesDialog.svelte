@@ -2,6 +2,7 @@
 	import type { ConfigureChargesDialogProps } from '#types/components/ConfigureChargesDialog.d.ts';
 	import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
+	import { poolCountText } from '#utils/chargePool/poolHeading.js';
 	import localize from '#utils/localize.js';
 
 	type ChargePoolState = ConfigureChargesDialogProps['pools'][number];
@@ -187,7 +188,7 @@
 									onclick={() => startEditing(pool)}
 									aria-label={localize('NIMBLE.charges.editCurrent', { pool: pool.label })}
 								>
-									{poolValues[pool.id] ?? pool.current}/{pool.max}
+									{poolCountText(poolValues[pool.id] ?? pool.current, pool.max, pool.hideMax)}
 								</button>
 							{/if}
 

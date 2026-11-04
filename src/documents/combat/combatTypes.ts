@@ -109,6 +109,8 @@ export interface MinionGroupAttackRollEntry {
 	totalDamage: number;
 	isMiss: boolean;
 	rollData: Record<string, unknown> | null;
+	primaryDieBonuses: Array<{ label: string; value: number }>;
+	mustAttackLabel?: string;
 }
 
 export interface InitiativeRollOutcome {

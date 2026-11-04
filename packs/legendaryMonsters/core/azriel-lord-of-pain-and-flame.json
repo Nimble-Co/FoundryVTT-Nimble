@@ -143,7 +143,43 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "azrielPainVicio0",
+						"identifier": "",
+						"label": "PAIN!",
+						"predicate": {},
+						"priority": 1,
+						"side": "attacksAgainstYou",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "none",
+						"ignoreArmor": false,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": true,
+						"attackDelivery": "any",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					},
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "azrielPainBack00",
+						"identifier": "",
+						"label": "PAIN!",
+						"predicate": {},
+						"priority": 1,
+						"onlyCrits": true,
+						"amount": "critDice",
+						"woundDoubles": false
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -487,7 +523,35 @@
 					"showDescription": true
 				},
 				"lastStandHp": 180,
-				"rules": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "azrielLastStand0",
+						"identifier": "",
+						"label": "Last Stand",
+						"predicate": {
+							"$and": [
+								"self:lastStand"
+							]
+						},
+						"priority": 1,
+						"side": "attacksAgainstYou",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "onHit",
+						"ignoreArmor": false,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "any",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					}
+				],
 				"subtype": "lastStand"
 			}
 		}

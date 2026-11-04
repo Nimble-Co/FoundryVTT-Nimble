@@ -57,6 +57,7 @@ export interface MonsterActorLike {
 
 /** A charge pool that an ability spends from (`getPoolsForItem`). */
 export interface MonsterItemPool {
+	hideMax?: boolean;
 	id: string;
 	label: string;
 	current: number;

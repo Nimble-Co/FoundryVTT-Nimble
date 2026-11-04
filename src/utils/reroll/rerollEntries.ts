@@ -46,7 +46,14 @@ function isRollUseRule(type: string | undefined): boolean {
 	if (type === ATTACK_OUTCOME_RULE_TYPE || type === CRIT_DICE_RULE_TYPE) {
 		return !isRuleAutomationEnabled();
 	}
-	if (type === CRIT_DICE_SAVE_RULE_TYPE || type === OFFER_ATTACK_BONUS_RULE_TYPE) return true;
+	if (
+		type === CRIT_DICE_SAVE_RULE_TYPE ||
+		type === OFFER_ATTACK_BONUS_RULE_TYPE ||
+		type === 'keepAmount' ||
+		type === 'optionWindow'
+	) {
+		return true;
+	}
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||
@@ -237,7 +244,7 @@ function rollUseTriggerMatches(
 	outcome: AttackOutcomeView,
 	gate: RollUseGate = {},
 ): boolean {
-	if (hasNoDice(outcome) && gate.use !== 'result') return false;
+	if (hasNoDice(outcome) && gate.use !== 'result' && gate.effect !== 'keepAmount') return false;
 	if (gate.effect === 'viciousDie' && isViciousAttack(outcome)) return false;
 	if (gate.effect === 'critD20' && hasCritD20Die(outcome)) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;

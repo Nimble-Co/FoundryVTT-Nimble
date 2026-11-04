@@ -7,7 +7,17 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "keepAmount",
+				"disabled": false,
+				"id": "rampageKeepAmoun",
+				"identifier": "rampage",
+				"label": "Rampage",
+				"predicate": {},
+				"priority": 1
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

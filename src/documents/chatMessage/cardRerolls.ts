@@ -5,13 +5,17 @@ import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import {
 	applyRerollRecoveryChange,
+	RECOVERY_DOMAIN_FLAG,
 	RECOVERY_GIVEN_FLAG,
 	type RecoveryTriggerChange,
 	rerollChargeConsumption,
 } from '#utils/chargePool/chargePoolReroll.js';
+import { spentPoolIdsOf } from '#utils/chargePool/itemUseRecovery.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
+import { openOnUser } from '#utils/demandControl/demandControl.js';
+import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
 import {
 	broadcastRerollRolling,
 	rejectIncomingAttackReaction,
@@ -628,12 +632,21 @@ export class CardRerolls {
 	async followChargeRecovery(change: RecoveryTriggerChange): Promise<void> {
 		const flags = this.#host.flags();
 		const itemUuid = flags?.itemUuid;
-		if (typeof itemUuid !== 'string') return;
+		// A card with no item, as an Unarmed Strike has, keeps only the recovery flags.
+		if (typeof itemUuid !== 'string' && !flags?.[RECOVERY_DOMAIN_FLAG]) return;
 
 		try {
-			const item = fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null;
+			const item =
+				typeof itemUuid === 'string'
+					? (fromUuidSync(itemUuid as `Item.${string}`) as { actor?: Actor | null } | null)
+					: null;
+			const actor =
+				typeof itemUuid === 'string' ? item?.actor : (this.#host.attacker() as Actor | null);
 			const recordedGiven = flags?.[RECOVERY_GIVEN_FLAG] as ChargeRecoveryGiven | undefined;
-			const result = await applyRerollRecoveryChange(item?.actor, change, recordedGiven);
+			const result = await applyRerollRecoveryChange(actor, change, recordedGiven, {
+				domain: (flags?.[RECOVERY_DOMAIN_FLAG] as string[] | undefined) ?? [],
+				spentPoolIds: spentPoolIdsOf(item),
+			});
 			if (!result) return;
 
 			const changes: Record<string, unknown> = {
@@ -857,6 +870,15 @@ export class CardRerolls {
 		}
 		if (usable.rule.rollEffect === 'critDiceSave') {
 			return this.#postCritDiceSave(rollTarget, entry, usable, reject);
+		}
+		if (usable.rule.rollEffect === 'keepAmount') {
+			return this.#keepAmount(entry, usable, reject);
+		}
+		if (usable.rule.rollEffect === 'optionWindow') {
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry) },
+			} as Record<string, unknown>);
+			return openOnUser(requestingUserId, usable.actor.uuid ?? '');
 		}
 		if (usable.rule.rollEffect) {
 			return this.#applyRollEffect(
@@ -1150,6 +1172,33 @@ export class CardRerolls {
 		} catch (error) {
 			if (cost && paid) await refundRerollCost(actor, cost, paid);
 			console.error('Nimble | A save for crit dice failed; its cost is given back.', error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Spend the 1/turn use and hold the damage total of this card for the next
+	 * attack. The amount is fixed now: a later Reroll of this card does not change it.
+	 */
+	async #keepAmount(
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule, actor } = usable;
+		const cost = rule.rollUseCost;
+		const paid = cost ? await payRerollCost(actor, cost) : null;
+		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		try {
+			const amount = cardDamageTotal(this.#host.system() as never);
+			const label = entry.label;
+			await keepAmount(actor, label, amount);
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry), keptAmount: { label, amount } },
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (cost && paid) await refundRerollCost(actor, cost, paid);
+			console.error('Nimble | Keeping an amount failed; its cost is given back.', error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

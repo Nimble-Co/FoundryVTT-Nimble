@@ -112,6 +112,7 @@ function itemPools(actor: MonsterDocument): Record<string, MonsterItemPool[]> {
 			label: pool.label,
 			current: pool.current,
 			max: pool.max,
+			hideMax: pool.hideMax,
 			per: recoveryOf((pool.recoveries ?? []).map((entry) => entry.trigger)),
 		}));
 		if (pools.length) byItem[item.id ?? ''] = pools;

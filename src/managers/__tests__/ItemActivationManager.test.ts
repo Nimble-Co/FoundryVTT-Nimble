@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../../tests/mocks/foundry.js';
 import { keyPressStore } from '../../stores/keyPressStore.js';
@@ -1221,6 +1221,360 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.Unerring Judgment' },
 					{ label: 'Create an Opening', value: 2, itemUuid: 'Item.Create an Opening' },
 				]);
+			});
+
+			describe('Held Changes', () => {
+				beforeEach(() => {
+					(globalThis as unknown as Record<string, any>).game.combats = new Map([
+						['c1', { started: true, round: 0, turn: 0 }],
+					]);
+				});
+
+				function targetWithOpening(combatId = 'c1') {
+					const target = {
+						uuid: 'Actor.ogre',
+						isOwner: true,
+						effects: [
+							{
+								id: 'opening',
+								flags: {
+									nimble: {
+										heldChange: {
+											kind: 'primaryDie',
+											value: 1,
+											label: 'Create an Opening',
+											sourceName: 'Mira',
+											appliesTo: 'attacksOnHolder',
+											spentBy: 'oneRoll',
+											ends: 'round',
+											combatId,
+											round: 0,
+											turn: 0,
+										},
+									},
+								},
+							},
+						],
+						deleteEmbeddedDocuments: vi.fn(async () => []),
+						getFlag: () => undefined,
+					};
+					Object.assign(mockActor, { getFlag: () => undefined });
+					const globals = globalThis as unknown as Record<string, any>;
+					globals.game.user.targets = [{ actor: target, document: { uuid: 'Token.ogre' } }];
+					globals.fromUuidSync = vi.fn(() => target);
+					globals.canvas = { tokens: { placeables: [] }, scene: { tokens: [] } };
+					return target;
+				}
+
+				afterEach(() => {
+					const globals = globalThis as unknown as Record<string, any>;
+					globals.game.user.targets = [];
+					delete globals.fromUuidSync;
+					delete globals.canvas;
+				});
+
+				it('adds the change to the Primary Die, names it, and the roll spends it', async () => {
+					const target = targetWithOpening();
+					const result = await rollAttack('reach');
+
+					expect(DamageRoll).toHaveBeenCalledWith(
+						'1d8',
+						expect.anything(),
+						expect.objectContaining({ primaryDieModifier: 1 }),
+					);
+					expect(result.primaryDieBonuses).toEqual([
+						{ label: 'Create an Opening', value: 1, itemUuid: '' },
+					]);
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+
+					await manager.applyDeferredPoolNodes();
+					expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['opening']);
+				});
+
+				describe('a kept amount', () => {
+					function holdKept() {
+						const deleteEmbeddedDocuments = vi.fn(async () => []);
+						const holder = {
+							effects: [
+								{
+									id: 'kept',
+									flags: {
+										nimble: {
+											heldChange: {
+												kind: 'wholeAmount',
+												value: 13,
+												label: 'Rampage',
+												sourceName: 'Rampage',
+												appliesTo: 'holderAttacks',
+												spentBy: 'oneRoll',
+												ends: 'turn',
+												combatId: 'c1',
+												round: 0,
+												turn: 0,
+											},
+										},
+									},
+								},
+							],
+							isOwner: true,
+							deleteEmbeddedDocuments,
+						};
+						Object.assign(mockActor, holder);
+						(globalThis as unknown as Record<string, any>).fromUuidSync = vi.fn(() => mockActor);
+						mockItem.system.activation = {
+							effects: [],
+							targets: { attackType: 'reach' },
+						} as never;
+						return deleteEmbeddedDocuments;
+					}
+
+					function damageNodeItem() {
+						(mockItem.system.activation as { effects: unknown[] }).effects = [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						];
+					}
+
+					it('rolls no die, adds no modifier, and is a hit with no crit', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						mockActor.rules = [bonusRule(1)];
+
+						await rollAttack('reach');
+
+						expect(DamageRoll).toHaveBeenCalledWith(
+							'13',
+							expect.anything(),
+							expect.objectContaining({
+								fixedAmount: true,
+								canCrit: false,
+								canMiss: false,
+								primaryDieModifier: 0,
+								outcomeSources: { keptAmount: ['Rampage'] },
+							}),
+						);
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('rolls an area attack as normal and ends the amount', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						const activation = (mockItem.system as { activation: Record<string, unknown> })
+							.activation;
+						activation.acquireTargetsFromTemplate = true;
+						activation.template = { shape: 'circle' };
+						dialogState.result = { rollMode: 0 };
+
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							targets: { attackType: 'range' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+
+						expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[0]).toBe('1d8');
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('uses no damage multiplier with the amount', async () => {
+						holdKept();
+						damageNodeItem();
+						Object.assign(mockItem, {
+							rules: new Map([['0', { type: 'damageMultiplier', multiplier: 2, label: 'x' }]]),
+						});
+
+						await rollAttack('reach');
+
+						expect(
+							mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+						).toBeUndefined();
+						delete (mockItem as { rules?: unknown }).rules;
+					});
+
+					it('rolls as normal and ends the amount when the tick is off', async () => {
+						const deleted = holdKept();
+						damageNodeItem();
+						dialogState.result = { rollMode: 0, keptAmount: false };
+
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							targets: { attackType: 'reach' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+
+						expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[0]).not.toBe('13');
+						await manager.applyDeferredPoolNodes();
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+				});
+
+				describe('ignore all disadvantage', () => {
+					async function rollWith(options: object, rollMode: number) {
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{ fastForward: true, rollMode, ...options },
+						);
+						manager.activationData = {
+							effects: [{ id: 'd', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' }],
+							targets: { attackType: 'range' },
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+						return vi.mocked(DamageRoll).mock.calls.at(-1)?.[2] as Record<string, any>;
+					}
+
+					it('takes out disadvantage from the roll mode', async () => {
+						const options = await rollWith({ ignoreDisadvantage: true }, -2);
+						expect(options.rollMode).toBe(0);
+					});
+
+					it('keeps advantage', async () => {
+						const options = await rollWith({ ignoreDisadvantage: true }, 1);
+						expect(options.rollMode).toBe(1);
+					});
+
+					it('takes out each source of disadvantage, and keeps the others', async () => {
+						const options = await rollWith(
+							{ ignoreDisadvantage: true, rollModeSources: [1, -1, -1] },
+							0,
+						);
+						expect(options.rollModeSources).toEqual([1]);
+					});
+
+					it('leaves disadvantage alone with no reason to take it out', async () => {
+						const options = await rollWith({}, -1);
+						expect(options.rollMode).toBe(-1);
+					});
+
+					it('makes the attack unable to miss, and names why', async () => {
+						const options = await rollWith({ grantedCannotMiss: 'I INSIST' }, 0);
+						expect(options.canMiss).toBe(false);
+						expect(options.outcomeSources).toEqual({
+							cannotMiss: ['I INSIST'],
+							grantedCast: ['I INSIST'],
+						});
+					});
+
+					it('makes the attack a crit, and names why', async () => {
+						const options = await rollWith({ grantedCrit: 'Final Takedown' }, 0);
+						expect(options.forcedCrit).toBe('always');
+						expect(options.outcomeSources?.forcedCrit).toEqual(['Final Takedown']);
+					});
+				});
+
+				it('spends nothing when the roll has no Primary Die', async () => {
+					const target = targetWithOpening();
+					await rollAttack('reach', null);
+					await manager.applyDeferredPoolNodes();
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+				});
+
+				it('adds nothing to an area attack, and spends nothing', async () => {
+					const target = targetWithOpening();
+					mockItem.system = {
+						activation: {
+							effects: [],
+							acquireTargetsFromTemplate: true,
+							template: { shape: 'circle' },
+						},
+					};
+					await rollAttack('range');
+					await manager.applyDeferredPoolNodes();
+
+					expect(DamageRoll).toHaveBeenCalledWith(
+						'1d8',
+						expect.anything(),
+						expect.objectContaining({ primaryDieModifier: 0 }),
+					);
+					expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+				});
+			});
+
+			describe('a damage multiplier tick', () => {
+				const withMultiplierRule = () =>
+					Object.assign(mockItem, {
+						rules: new Map([['0', { type: 'damageMultiplier', multiplier: 2, label: 'x' }]]),
+					});
+
+				afterEach(() => {
+					delete (mockItem as { rules?: unknown }).rules;
+					dialogState.result = undefined;
+				});
+
+				it('marks nothing with no window, as the tick starts off', async () => {
+					withMultiplierRule();
+					await rollAttack('range');
+					expect(
+						mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+					).toBeUndefined();
+				});
+
+				it('marks the damage node when the tick is on', async () => {
+					withMultiplierRule();
+					dialogState.result = { rollMode: 0, damageMultiplier: true };
+					manager = new ItemActivationManager(
+						mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+						{},
+					);
+					manager.activationData = {
+						effects: [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						],
+						targets: { attackType: 'range' },
+					};
+					mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+					vi.mocked(DamageRoll).mockImplementation(
+						createMockConstructorImplementation({
+							evaluate: vi.fn().mockResolvedValue(undefined),
+							toJSON: vi.fn().mockReturnValue({ total: 4 }),
+							primaryDie: { faces: 8 },
+						}),
+					);
+					await manager.getData();
+					expect(mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier).toBe(2);
+				});
+
+				it('marks nothing with no rule', async () => {
+					await rollAttack('range');
+					expect(
+						mockReconstructEffectsTree.mock.calls.at(-1)?.[0]?.[0]?.damageMultiplier,
+					).toBeUndefined();
+				});
 			});
 
 			it('gives nothing to a ranged attack from a melee bonus', async () => {

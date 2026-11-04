@@ -1696,6 +1696,19 @@ describe('resolveRerollReaction', () => {
 			expect(message.update.mock.calls[1][0]).toEqual({ 'flags.nimble.chargeRecoveryGiven': [] });
 		});
 
+		it('follows the roll on a card with no item, as an Unarmed Strike has', async () => {
+			const world = setupWorld();
+			withCritPool(world, 1);
+			const message = createMessage({
+				isCritical: true,
+				flags: { chargeRecoveryGiven: CRIT_GAVE_ONE, chargeRecoveryDomain: ['attack:melee'] },
+			});
+
+			await message.resolveRerollReaction('entry-1', 'gm-user');
+
+			expect(focus(world)).toBe(0);
+		});
+
 		it('keeps the crit recovery when the discarded crit still counts', async () => {
 			const world = setupWorld({ discardedCritTriggers: true });
 			withCritPool(world, 1);

@@ -6,9 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "hailConsumer0000",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			}
+		],
 		"activation": {
-			"acquireTargetsFromTemplate": false,
+			"acquireTargetsFromTemplate": true,
 			"cost": {
 				"details": "",
 				"quantity": 2,
@@ -20,18 +33,49 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "hailOfArrowsDmg0",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d6",
+					"canCrit": false,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "hailOfArrowsDmg0Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "hailOfArrowsDmg0"
+							},
+							{
+								"id": "hailOfArrowsDmg0C0",
+								"type": "condition",
+								"condition": "slowed",
+								"parentContext": "hit",
+								"parentNode": "hailOfArrowsDmg0"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "range"
 			},
 			"template": {
 				"length": 1,
 				"radius": 1,
-				"shape": "",
-				"width": 1
-			}
+				"shape": "square",
+				"width": 3
+			},
+			"weaponAttack": "ranged"
 		},
 		"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3×3 area. Their speed is halved until the end of their next turn.</p>",
 		"featureType": "class",

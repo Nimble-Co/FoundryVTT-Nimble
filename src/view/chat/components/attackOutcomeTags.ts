@@ -74,6 +74,25 @@ function critCauses(
  * targets has no miss and no crit. Nothing on other rolls.
  */
 function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
+	const mustAttack = (roll?.options?.outcomeSources?.mustAttackOther ?? []).map(
+		(feature): AttackOutcomeTag => ({
+			kind: 'mustAttackOther',
+			label: localize(`${TAG_TEXT}.mustAttackOther`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.mustAttackOtherTooltip`, { feature }),
+		}),
+	);
+	return [...mustAttack, ...outcomeTagsOfResult(roll)];
+}
+
+function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
+	const kept = (roll?.options?.outcomeSources?.keptAmount ?? []).map(
+		(feature): AttackOutcomeTag => ({
+			kind: 'keptAmount',
+			label: localize(`${TAG_TEXT}.keptAmount`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.keptAmountTooltip`, { feature }),
+		}),
+	);
+	if (kept.length > 0) return kept;
 	const die = keptFace(roll?.terms);
 	if (!roll || !die) return [];
 	const options = roll.options ?? {};
@@ -108,6 +127,13 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 	}
 
 	const tags: AttackOutcomeTag[] = [];
+	for (const feature of new Set(options.outcomeSources?.grantedCast ?? [])) {
+		tags.push({
+			kind: 'cannotMiss',
+			label: localize(`${TAG_TEXT}.grantedCast`, { feature }),
+			tooltip: localize(`${TAG_TEXT}.grantedCastTooltip`, { feature }),
+		});
+	}
 	for (const feature of new Set(options.outcomeSources?.offerDamage ?? [])) {
 		tags.push({
 			kind: 'critDice',

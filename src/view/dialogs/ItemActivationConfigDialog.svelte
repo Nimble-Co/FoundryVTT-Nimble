@@ -2,10 +2,14 @@
 	import { untrack } from 'svelte';
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
+	import { heldLinesForItem } from '#utils/heldChange/heldChange.js';
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import DualWieldField from './components/DualWieldField.svelte';
+	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
+	import HeldChangeLines from './components/HeldChangeLines.svelte';
+	import KeptAmountField from './components/KeptAmountField.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -22,8 +26,12 @@
 		rollMode,
 		rushedAttack,
 		spendsActions,
+		ignoreDisadvantage,
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
+	const heldLines = untrack(() =>
+		heldLinesForItem(actor, item, { ignoresDisadvantage: ignoreDisadvantage }),
+	);
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -31,6 +39,8 @@
 		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
 	});
+	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
+	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 
 	function onSubmit() {
 		if (state.situationalModifiers !== '') {
@@ -68,6 +78,9 @@
 			primaryDieModifier: state.primaryDieModifier,
 			rollHidden: state.shouldRollBeHidden,
 			maxDamage: state.maxDamageChoice,
+			...(state.weaponUuid ? { weaponUuid: state.weaponUuid } : {}),
+			...(state.keptAmount ? { keptAmount: state.usesKeptAmount } : {}),
+			...(state.damageMultiplier ? { damageMultiplier: state.usesDamageMultiplier } : {}),
 			lessMana: state.lessMana,
 			freeUse: state.freeUse,
 			...(state.dualWield
@@ -92,14 +105,54 @@
 	title={item.name}
 	img={item.img}
 	rollLabel={localize('NIMBLE.rollWindow.roll')}
+	rollDisabledReason={state.cannotRollReason}
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
 	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
+	{#each state.chargeCosts as cost (cost.label)}
+		<p class="spends">
+			{localize('NIMBLE.rollWindow.spendsCharge', {
+				count: String(cost.amount),
+				pool: cost.label,
+				left: String(cost.current),
+			})}
+		</p>
+	{/each}
 
-	<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
+	{#if state.needsWeapon}
+		<div class="fld">
+			<span class="lb">{localize('NIMBLE.rollWindow.weapon')}</span>
+			<select bind:value={state.weaponUuid} aria-label={localize('NIMBLE.rollWindow.weapon')}>
+				{#each state.weapons as weapon (weapon.uuid)}
+					<option value={weapon.uuid}>{weapon.name}</option>
+				{/each}
+			</select>
+		</div>
+	{/if}
 
-	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
+	{#if state.keptAmount}
+		<KeptAmountField
+			label={state.keptAmount.label}
+			amount={state.keptAmount.value}
+			bind:checked={state.usesKeptAmount}
+		/>
+	{/if}
+
+	{#if state.damageMultiplier && !keptInUse}
+		<DamageMultiplierField
+			label={state.damageMultiplier.label}
+			multiplier={state.damageMultiplier.multiplier}
+			bind:checked={state.usesDamageMultiplier}
+		/>
+	{/if}
+
+	{#if !rollsNoDice}<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />{/if}
+
+	{#if !state.usesKeptAmount}<MaxDamageField
+			offers={state.maxDamageOffers}
+			bind:choice={state.maxDamageChoice}
+		/>{/if}
 	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
 	{#if state.offersFreeUse}
 		<label class="check">
@@ -108,7 +161,7 @@
 			<span>{localize('NIMBLE.rollWindow.freeUse')}</span>
 		</label>
 	{/if}
-	{#if state.dualWieldOffer}
+	{#if state.dualWieldOffer && !rollsNoDice}
 		<DualWieldField
 			offer={state.dualWieldOffer}
 			itemName={item.name}
@@ -118,7 +171,7 @@
 		/>
 	{/if}
 
-	{#if state.hasConditionalBonuses}
+	{#if state.hasConditionalBonuses && !keptInUse}
 		<div>
 			<div class="nimble-conditional-bonus">
 				<h5 class="lb">
@@ -152,9 +205,10 @@
 									aria-pressed={choice === 'damage'}
 									onclick={() => state.setConditionalChoice(option.key, 'damage')}
 								>
-									{localize('NIMBLE.activationDialog.conditionalBonus.damage', {
-										value: damageLabel,
-									})}
+									{localize(
+										`NIMBLE.activationDialog.conditionalBonus.${option.doubled ? 'damageDoubled' : 'damage'}`,
+										{ value: damageLabel },
+									)}
 								</button>
 							{/if}
 							<button
@@ -173,11 +227,15 @@
 		</div>
 	{/if}
 
-	<RollModifierFields
-		bind:situationalModifiers={state.situationalModifiers}
-		bind:primaryDieValue={state.primaryDieValue}
-		bind:primaryDieModifier={state.primaryDieModifier}
-	/>
+	{#if !rollsNoDice}<HeldChangeLines lines={heldLines} />{/if}
+
+	{#if !keptInUse}
+		<RollModifierFields
+			bind:situationalModifiers={state.situationalModifiers}
+			bind:primaryDieValue={state.primaryDieValue}
+			bind:primaryDieModifier={state.primaryDieModifier}
+		/>
+	{/if}
 
 	{#if state.variableChargeSpends.length > 0}
 		<div>

@@ -10,6 +10,12 @@ const assessActionCardSchema = () => ({
 	resultMessage: new fields.StringField({ required: true, initial: '', nullable: false }),
 	target: new fields.StringField({ required: false, initial: null, nullable: true }),
 	targetName: new fields.StringField({ required: false, initial: null, nullable: true }),
+	primaryDieChange: new fields.NumberField({
+		required: false,
+		initial: null,
+		nullable: true,
+		integer: true,
+	}),
 });
 
 declare namespace NimbleAssessActionCardData {

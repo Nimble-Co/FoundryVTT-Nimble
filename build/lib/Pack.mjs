@@ -4,6 +4,7 @@ import path from 'node:path';
 import { globSync } from 'glob';
 import systemJSON from '../../public/system.json' with { type: 'json' };
 import LevelDatabase from './LevelDB.mjs';
+import { writePackFile } from './writePackFile.mjs';
 
 const MINOR_BOON_TYPE = 'minor';
 const MAJOR_BOON_TYPE = 'major';
@@ -57,7 +58,7 @@ export default class Pack {
 			const folderId = source?._id ? folderAssignments.get(source._id) : null;
 			if (folderId) source.folder = folderId;
 
-			fs.writeFileSync(file, JSON.stringify(source, null, '\t'), { encoding: 'utf-8' });
+			writePackFile(file, source);
 
 			return source;
 		});

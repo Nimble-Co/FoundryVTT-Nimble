@@ -17,10 +17,14 @@ import type {
 	ChargePoolMap,
 	ChargeRecoveryGiven,
 	ChargeRecoveryTrigger,
+	RecoveryUse,
 } from './types.js';
 
 /** Card flag with what each attack recovery trigger gave on each pool. */
 const RECOVERY_GIVEN_FLAG = 'chargeRecoveryGiven';
+
+/** Card flag with what a recovery predicate read of the attack. */
+const RECOVERY_DOMAIN_FLAG = 'chargeRecoveryDomain';
 
 interface RecoveryTriggerChange {
 	takeBack: ChargeRecoveryTrigger[];
@@ -92,6 +96,7 @@ async function applyRerollRecoveryChange(
 	actor: Actor | null | undefined,
 	change: RecoveryTriggerChange,
 	given: ChargeRecoveryGiven | null | undefined,
+	use?: RecoveryUse,
 ): Promise<RerollRecoveryResult | null> {
 	if (change.takeBack.length < 1 && change.give.length < 1) return null;
 	if (!isResourceSpendingAutomationEnabled()) return null;
@@ -102,7 +107,7 @@ async function applyRerollRecoveryChange(
 	const nextGiven = foundry.utils.deepClone(
 		takeBackRecovery(takenBack, Array.isArray(given) ? given : [], change.takeBack),
 	);
-	const nextPools = applyRecoveryTriggersToPools(actor, takenBack, change.give, nextGiven);
+	const nextPools = applyRecoveryTriggersToPools(actor, takenBack, change.give, nextGiven, use);
 
 	if (!areChargePoolMapsEqual(currentPools, nextPools)) {
 		await persistChargePoolMap(actor, nextPools);
@@ -216,6 +221,7 @@ function rerollChargeConsumption(
 			previousValue: before,
 			currentValue: before,
 			maxValue: pool.max,
+			...(pool.hideMax ? { hideMax: true } : {}),
 			change: 0,
 			recovery: { trigger: refill.trigger, previousValue: before, newValue: pool.current },
 		});
@@ -226,6 +232,7 @@ function rerollChargeConsumption(
 }
 
 export {
+	RECOVERY_DOMAIN_FLAG,
 	RECOVERY_GIVEN_FLAG,
 	applyRerollRecoveryChange,
 	rerollChargeConsumption,

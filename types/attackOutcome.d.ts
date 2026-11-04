@@ -8,14 +8,24 @@ export interface AttackOutcomeSources {
 	forcedCrit: string[];
 	anyDieCrits: string[];
 	maxDamage?: string[];
+	keptAmount?: string[];
+	grantedCast?: string[];
 	critD20?: string[];
 	vicious?: string[];
 	offerDamage?: string[];
+	mustAttackOther?: string[];
 }
 
 /** A tag at the roll that tells why the attack result is not what the die face shows. */
 export interface AttackOutcomeTag {
-	kind: 'crit' | 'cannotMiss' | 'noOutcome' | 'maxDamage' | 'critDice';
+	kind:
+		| 'crit'
+		| 'cannotMiss'
+		| 'noOutcome'
+		| 'maxDamage'
+		| 'keptAmount'
+		| 'critDice'
+		| 'mustAttackOther';
 	label: string;
 	tooltip: string;
 }

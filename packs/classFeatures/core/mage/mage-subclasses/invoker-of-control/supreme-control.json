@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "optionWindow",
+				"disabled": false,
+				"id": "supremeControlTw",
+				"identifier": "",
+				"label": "Supreme Control",
+				"predicate": {},
+				"priority": 1,
+				"optionSet": "control",
+				"opensOnUse": false,
+				"oncePerRound": false,
+				"cardRow": false,
+				"ignoresDisadvantage": false,
+				"triggerTwice": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

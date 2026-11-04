@@ -233,10 +233,10 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 			discardedCritTriggers: true,
 		});
 
-		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(item, {
-			isCritical: true,
-			isMiss: false,
-		});
+		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(
+			item,
+			expect.objectContaining({ isCritical: true, isMiss: false }),
+		);
 	});
 
 	it('writes what each attack recovery gave onto the card', async () => {

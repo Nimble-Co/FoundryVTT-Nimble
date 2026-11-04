@@ -7,6 +7,8 @@ export interface RollWindowProps {
 	icon?: string;
 	rollLabel: string;
 	rollIcon?: string;
+	/** Why Roll is off. Empty when it is on. */
+	rollDisabledReason?: string;
 	onroll: () => void;
 	/** closes the window; nothing is spent */
 	oncancel: () => void;

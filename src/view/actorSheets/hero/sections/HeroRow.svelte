@@ -66,7 +66,9 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 					width="22px"
 					variant="cost"
 					onchange={(value) => perform({ kind: 'setPoolCharges', poolId: field.poolId, value })}
-				/><span class="mx">/{field.max}</span>{#if field.per}<small>{field.per}</small>{/if}
+				/>{#if !field.hideMax}<span class="mx">/{field.max}</span>{/if}{#if field.per}<small
+						>{field.per}</small
+					>{/if}
 			{/if}
 		</span>
 	{/each}

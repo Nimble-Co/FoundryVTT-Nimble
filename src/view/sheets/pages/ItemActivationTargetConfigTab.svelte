@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { WEAPON_ATTACKS } from '#utils/damage/weaponAttack.js';
 	import TemplateConfig from '../components/TemplateConfig.svelte';
 
 	async function toggleTemplateShapeOption(selectedShape) {
@@ -18,6 +19,11 @@
 	let isMonsterFeature = $derived(document.type === 'monsterFeature');
 	let selectedAttackType = $derived(activationData.targets?.attackType || '');
 	let distance = $derived(activationData.targets?.distance ?? 1);
+
+	const weaponAttackOptions = WEAPON_ATTACKS.map((value) => ({
+		value,
+		label: game.i18n.localize(`NIMBLE.itemConfig.weaponAttacks.${value || 'none'}`),
+	}));
 
 	const attackTypeOptions = [
 		{ value: '', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.none') },
@@ -106,6 +112,28 @@
 					})}
 			/>
 			<span>{game.i18n.localize('NIMBLE.itemConfig.singleTargetAttack')}</span>
+		</label>
+	{/if}
+
+	{#if !isMonsterFeature}
+		<label data-tooltip={game.i18n.localize('NIMBLE.itemConfig.weaponAttackHint')}>
+			<header class="nimble-section-header">
+				<h4 class="nimble-heading" data-heading-variant="field">
+					{game.i18n.localize('NIMBLE.itemConfig.weaponAttack')}
+				</h4>
+			</header>
+
+			<select
+				value={activationData.weaponAttack ?? ''}
+				onchange={({ target }) =>
+					document.update({
+						'system.activation.weaponAttack': target?.value,
+					})}
+			>
+				{#each weaponAttackOptions as option}
+					<option value={option.value}>{option.label}</option>
+				{/each}
+			</select>
 		</label>
 	{/if}
 

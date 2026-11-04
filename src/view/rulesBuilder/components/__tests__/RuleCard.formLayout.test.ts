@@ -358,6 +358,7 @@ describe('RuleCard with a form layout (attackOutcome)', () => {
 			'anyDieCrits',
 			'critD20',
 			'viciousCrits',
+			'ignoreArmor',
 			'attackDelivery',
 			'attackSource',
 			'thisItemOnly',
@@ -489,6 +490,7 @@ describe('RuleCard without a form layout', () => {
 		'critDice',
 		'critDiceSave',
 		'offerAttackBonus',
+		'optionWindow',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

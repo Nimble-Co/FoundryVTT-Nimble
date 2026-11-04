@@ -19,6 +19,8 @@
 		totalDamage?: number;
 		isMiss?: boolean;
 		roll?: Record<string, unknown> | null;
+		primaryDieBonuses?: Array<{ label: string; value: number }>;
+		mustAttackLabel?: string;
 	}
 
 	const { messageDocument } = $props();
@@ -175,6 +177,25 @@
 					>
 						{getRowTotalDisplay(row)}
 					</span>
+
+					{#each row.primaryDieBonuses ?? [] as bonus, index (index)}
+						<p class="nimble-group-member-roll__bonus">
+							<i
+								class="fa-solid {bonus.value > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}"
+								aria-hidden="true"
+							></i>
+							{i18nFormat('NIMBLE.chat.primaryDieBonus.text', {
+								label: bonus.label,
+								value: bonus.value > 0 ? `+${bonus.value}` : String(bonus.value),
+							})}
+						</p>
+					{/each}
+					{#if row.mustAttackLabel}
+						<p class="nimble-group-member-roll__bonus">
+							<i class="fa-solid fa-arrows-turn-to-dots" aria-hidden="true"></i>
+							{i18nFormat('NIMBLE.heldChange.line.mustAttackOther', { label: row.mustAttackLabel })}
+						</p>
+					{/if}
 				</li>
 			{/each}
 		</ul>
@@ -225,6 +246,12 @@
 		background: var(--nimble-card-background-color);
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
+
+		&__bonus {
+			grid-column: 1 / -1;
+			margin: 0;
+			font-size: var(--nimble-xs-text);
+		}
 
 		&__member,
 		&__action {

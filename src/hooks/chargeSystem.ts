@@ -4,9 +4,10 @@ import {
 	validateItemChargeConsumption,
 } from '#utils/chargePool/chargePoolConsume.js';
 import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/chargePoolRecover.js';
-import { RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
+import { RECOVERY_DOMAIN_FLAG, RECOVERY_GIVEN_FLAG } from '#utils/chargePool/chargePoolReroll.js';
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
+import { itemUseRecoveryDomain } from '#utils/chargePool/itemUseRecovery.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { critTriggerOutcome } from '#utils/reroll/firesCritTriggers.js';
@@ -168,7 +169,11 @@ function registerItemUseHooks(): void {
 		if (!isResourceSpendingAutomationEnabled()) return;
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return;
-		const itemUseContext = toItemUseContext(context);
+		const recoveryDomain = itemUseRecoveryDomain(
+			characterItem,
+			(context as { targets?: unknown[] } | null)?.targets as never,
+		);
+		const itemUseContext = { ...toItemUseContext(context), recoveryDomain };
 		const typedChatMessage = chatMessage as {
 			flags?: Record<string, { chargeConsumption?: unknown[] } | undefined>;
 			update?(data: Record<string, unknown>): Promise<unknown>;
@@ -188,6 +193,9 @@ function registerItemUseHooks(): void {
 			// A reroll on the card reads this to take back what the first roll gave.
 			if (validation.recoveryGiven) {
 				cardChanges[`flags.${SYSTEM_ID}.${RECOVERY_GIVEN_FLAG}`] = validation.recoveryGiven;
+			}
+			if (recoveryDomain.length > 0) {
+				cardChanges[`flags.${SYSTEM_ID}.${RECOVERY_DOMAIN_FLAG}`] = recoveryDomain;
 			}
 			if (Object.keys(cardChanges).length > 0 && typedChatMessage?.update) {
 				await typedChatMessage.update(cardChanges);

@@ -7,6 +7,7 @@ import {
 	setHeroicCombat,
 	targetToken,
 } from '../../../../tests/fixtures/heroicActions.js';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import { ASSESS_DC } from '../../assessOptions.js';
 import { runAssess } from '../assess.js';
 
@@ -59,7 +60,7 @@ describe('runAssess', () => {
 		const { actor } = actorRolling(ASSESS_DC - 1);
 		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
 
-		await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'perception' });
 
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -70,6 +71,140 @@ describe('runAssess', () => {
 				}),
 			}),
 		);
+	});
+
+	it('takes the disadvantage off a paid Assess while the character holds Nullify', async () => {
+		const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
+		const heldChange = {
+			kind: 'ignoreDisadvantage',
+			appliesTo: 'holderAttacks',
+			combatId: 'heroic-combat',
+			ends: 'combat',
+			value: 0,
+		};
+		const actor = createHeroicCharacter({
+			rollSkillCheck,
+			system: { skills: { insight: { defaultRollMode: -1 } } },
+			effects: [{ id: 'nullify', flags: { nimble: { heldChange } }, delete: vi.fn() }],
+		});
+		setHeroicCombat(createHeroicCombatant(actor));
+		(game as unknown as { combats: { get(): { started: boolean } } }).combats = {
+			get: () => ({ started: true }),
+		};
+
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+
+		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
+	});
+
+	describe('what a success holds', () => {
+		function holder() {
+			return {
+				uuid: 'Actor.ogre',
+				isOwner: true,
+				createEmbeddedDocuments: vi.fn(async () => []),
+			};
+		}
+
+		function target(actor: ReturnType<typeof holder>) {
+			return { ...targetToken('Scene.s.Token.ogre'), actor };
+		}
+
+		function inCombat(actor: ReturnType<typeof actorRolling>['actor']) {
+			setHeroicCombat(createHeroicCombatant(actor));
+		}
+
+		const heldOf = (creature: { createEmbeddedDocuments: ReturnType<typeof vi.fn> }) =>
+			creature.createEmbeddedDocuments.mock.calls[0]?.[1]?.[0]?.flags?.nimble?.heldChange;
+
+		it('Create an Opening holds +1 for one roll on the target, and the card shows it', async () => {
+			const { actor } = actorRolling(ASSESS_DC);
+			inCombat(actor);
+			const ogre = holder();
+			heroicGlobals().game.user.targets = new Set([target(ogre)]);
+
+			await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
+
+			expect(heldOf(ogre)).toMatchObject({
+				kind: 'primaryDie',
+				value: 1,
+				appliesTo: 'attacksOnHolder',
+				spentBy: 'oneRoll',
+				ends: 'round',
+				sourceName: 'Heroic Tester',
+				label: 'Create an Opening',
+			});
+			expect(ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({
+					system: expect.objectContaining({ primaryDieChange: 1 }),
+				}),
+			);
+		});
+
+		it('Anticipate Danger holds -1 on every roll against the assessor', async () => {
+			const createEmbeddedDocuments = vi.fn(async () => []);
+			const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
+			const actor = createHeroicCharacter({ rollSkillCheck, createEmbeddedDocuments });
+			inCombat(actor);
+
+			await runAssess(actor, { optionId: 'anticipate-danger', skillKey: 'perception' });
+
+			expect(heldOf({ createEmbeddedDocuments })).toMatchObject({
+				value: -1,
+				appliesTo: 'attacksOnHolder',
+				spentBy: 'everyRoll',
+				ends: 'round',
+			});
+		});
+
+		it('a failed check holds nothing', async () => {
+			const { actor } = actorRolling(ASSESS_DC - 1);
+			inCombat(actor);
+			const ogre = holder();
+			heroicGlobals().game.user.targets = new Set([target(ogre)]);
+
+			await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
+
+			expect(ogre.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('outside combat nothing is held', async () => {
+			const { actor } = actorRolling(ASSESS_DC);
+			const ogre = holder();
+			heroicGlobals().game.user.targets = new Set([target(ogre)]);
+
+			await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
+
+			expect(ogre.createEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(ChatMessage.create).toHaveBeenCalled();
+		});
+
+		it('with Feature Effects off nothing is held, and the card still has its text', async () => {
+			const { actor } = actorRolling(ASSESS_DC);
+			inCombat(actor);
+			const ogre = holder();
+			heroicGlobals().game.user.targets = new Set([target(ogre)]);
+			heroicGlobals().game.settings = {
+				get: vi.fn(
+					(_scope: string, key: string) => key !== AUTOMATION_SETTING_KEYS.applyRuleEffects,
+				),
+			};
+
+			await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
+
+			expect(ogre.createEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(ChatMessage.create).toHaveBeenCalled();
+		});
+
+		it('Create an Opening asks for a target, and rolls nothing without one', async () => {
+			const { actor, rollSkillCheck } = actorRolling(ASSESS_DC);
+
+			expect(await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' })).toBe(
+				false,
+			);
+
+			expect(rollSkillCheck).not.toHaveBeenCalled();
+		});
 	});
 
 	it.each([

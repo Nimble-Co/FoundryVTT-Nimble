@@ -36,6 +36,8 @@ export const ROLL_EFFECTS = [
 	'critDiceSave',
 	'offerBonus',
 	'dualWield',
+	'keepAmount',
+	'optionWindow',
 ] as const;
 export type RollEffect = (typeof ROLL_EFFECTS)[number];
 
@@ -83,6 +85,7 @@ export interface AttackOutcomeView {
 		canCrit?: unknown;
 		forcedCrit?: unknown;
 		maxDamage?: unknown;
+		fixedAmount?: unknown;
 		explosionStyle?: unknown;
 		isVicious?: unknown;
 	} | null;
@@ -115,7 +118,9 @@ export function hasDieAtMax(view: AttackOutcomeView): boolean {
 
 /** Whether the attack rolled dice. A max damage roll has none. */
 export function hasNoDice(view: AttackOutcomeView): boolean {
-	return view.noDice ?? view.options?.maxDamage !== undefined;
+	return (
+		view.noDice ?? (view.options?.maxDamage !== undefined || view.options?.fixedAmount === true)
+	);
 }
 
 /** Whether the crit dice of the attack are Vicious. */

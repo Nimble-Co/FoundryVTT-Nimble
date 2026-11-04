@@ -124,6 +124,26 @@ describe('collectAttackOutcome', () => {
 		expect(options.outcomeSources).toEqual({ cannotMiss: ['Heads I Win'] });
 	});
 
+	it('gives "ignores armor", also with Feature Effects off', () => {
+		setFeatureEffects(false);
+		const { options } = collectAttackOutcome(
+			roll({ attacker: owner(change({ ignoreArmor: true })) }),
+		);
+
+		expect(options.ignoreArmor).toBe(true);
+	});
+
+	it('a Swallowed attacker cannot miss and ignores armor, also with Feature Effects off', () => {
+		setFeatureEffects(false);
+		const { options } = collectAttackOutcome(
+			roll({ attacker: { rules: [], statuses: new Set(['swallowed']) } }),
+		);
+
+		expect(options.canMiss).toBe(false);
+		expect(options.ignoreArmor).toBe(true);
+		expect(options.outcomeSources?.cannotMiss).toHaveLength(1);
+	});
+
 	it('takes the largest crit range', () => {
 		const { options } = collectAttackOutcome(
 			roll({ attacker: owner(change({ critRange: 1 }), change({ critRange: 2 })) }),
@@ -186,7 +206,7 @@ describe('collectAttackOutcome', () => {
 			roll({ attacker: owner(change({ forcedCrit: 'always', chargePoolIdentifier: 'touch' })) }),
 		);
 
-		expect(result.charges).toEqual(['touch']);
+		expect(result.charges).toEqual([{ identifier: 'touch', gave: ['forcedCritAlways'] }]);
 	});
 
 	it("asks the target's rules about attacks against it, with the one who attacks as the other creature", () => {

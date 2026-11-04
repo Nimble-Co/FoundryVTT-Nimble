@@ -97,6 +97,8 @@
 			"moveAction": {},
 			"movementOffer": {},
 			"chaos": {},
+			"critBack": {},
+			"demandControl": {},
 			"movementTrigger": {},
 			"object": {},
 			"reaction": {},

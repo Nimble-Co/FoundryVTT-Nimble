@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "comeGetSomeConsu",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,18 +33,49 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "comeGetSomeDmg00",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d6",
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "comeGetSomeDmg00Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "comeGetSomeDmg00"
+							},
+							{
+								"id": "comeGetSomeDmg00C0",
+								"type": "condition",
+								"condition": "taunted",
+								"parentContext": "hit",
+								"parentNode": "comeGetSomeDmg00"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach"
 			},
 			"template": {
 				"length": 1,
 				"radius": 1,
 				"shape": "",
 				"width": 1
-			}
+			},
+			"weaponAttack": "any"
 		},
 		"description": "<p>Action: Attack a target. It is Taunted by you until the end of their next turn.</p>",
 		"featureType": "class",

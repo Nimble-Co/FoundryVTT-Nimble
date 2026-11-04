@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
 	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
+	import { poolCountText } from '#utils/chargePool/poolHeading.js';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 
@@ -55,7 +56,11 @@
 						</span>
 					{/if}
 					<span class="nimble-charge-consumption__label">{entry.poolLabel}</span>
-					({entry.recovery?.newValue ?? entry.currentValue}/{entry.maxValue})
+					({poolCountText(
+						entry.recovery?.newValue ?? entry.currentValue,
+						entry.maxValue,
+						entry.hideMax,
+					)})
 				</span>
 			</div>
 		{/each}

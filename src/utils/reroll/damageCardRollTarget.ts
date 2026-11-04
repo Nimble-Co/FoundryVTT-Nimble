@@ -131,6 +131,7 @@ type RollOptionsView = {
 		explosionStyle?: unknown;
 		isVicious?: unknown;
 		offerSource?: string;
+		fixedAmount?: unknown;
 	} | null;
 	terms?: readonly unknown[];
 	originalFormula?: string;
@@ -193,7 +194,7 @@ function damageRollContext(
 			isMiss: outcome.isMiss,
 			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
 			canCrit: rolled?.options?.canCrit === true,
-			noDice: rolled?.options?.maxDamage !== undefined,
+			noDice: rolled?.options?.maxDamage !== undefined || rolled?.options?.fixedAmount === true,
 			vicious: rolled?.options?.explosionStyle === 'vicious' || rolled?.options?.isVicious === true,
 			hasCritD20: termsHaveCritD20(rolled?.terms),
 			hasCritBonusDice: termsHaveRole(rolled?.terms, CRIT_BONUS_ROLE),

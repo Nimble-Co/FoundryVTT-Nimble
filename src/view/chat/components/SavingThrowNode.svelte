@@ -68,7 +68,10 @@
 
 			if (!actor) continue;
 
-			actor.rollSavingThrowToChat(saveKey, { dc });
+			actor.rollSavingThrowToChat(saveKey, {
+				dc,
+				...(itemUser?.uuid ? { cardFlags: { causedBy: itemUser.uuid } } : {}),
+			});
 		}
 	}
 

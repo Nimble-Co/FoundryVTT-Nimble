@@ -19,6 +19,10 @@ type ChargeRecoveryEntry = {
 	predicate?: Record<string, unknown>;
 	/** An `add` with this flag gives temporary uses: spent first, gone when the encounter ends. */
 	temporary?: boolean;
+	/** No gain from a use that spends from this pool. */
+	notWhenSpent?: boolean;
+	/** The gain needs Feature Effects on. */
+	needsFeatureEffects?: boolean;
 	/** The feature that added this entry to another feature's pool. Absent for the pool's own. */
 	source?: string;
 };
@@ -63,6 +67,8 @@ type ChargePoolState = {
 	 * wins: a pool left out of the readouts never reaches the header.
 	 */
 	showAsResource: boolean;
+	/** The book gives no cap: show the count alone. */
+	hideMax?: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -85,6 +91,7 @@ type ChargePoolRuleLike = {
 	dieSize?: string | null;
 	hidden?: boolean;
 	showAsResource?: boolean;
+	hideMax?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;
@@ -159,6 +166,14 @@ type ChargeContext = {
 	isCritical?: boolean;
 	/** The player ticked a use with no charge: consumers that allow it spend nothing. */
 	freeUse?: boolean;
+	/** What a recovery predicate can read of this use, as the target and how it attacked. */
+	recoveryDomain?: readonly string[];
+};
+
+/** What a recovery reads of the use that fired it. */
+type RecoveryUse = {
+	domain?: readonly string[];
+	spentPoolIds?: ReadonlySet<string>;
 };
 
 type ChargeValidationFailure = {
@@ -181,6 +196,7 @@ type ChargeConsumptionDetail = {
 	previousValue: number;
 	currentValue: number;
 	maxValue: number;
+	hideMax?: boolean;
 	change: number;
 	recovery?: {
 		trigger: string;
@@ -233,6 +249,7 @@ export type {
 	CharacterActorLike,
 	ChargeConsumerState,
 	ChargeContext,
+	RecoveryUse,
 	ChargeValidationFailure,
 	ChargeConsumptionDetail,
 	ChargeValidationResult,

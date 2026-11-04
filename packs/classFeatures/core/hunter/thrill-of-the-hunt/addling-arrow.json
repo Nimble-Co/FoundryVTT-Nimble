@@ -6,7 +6,31 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "addlingConsumer0",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			},
+			{
+				"type": "holdOnTarget",
+				"disabled": false,
+				"id": "addlingHoldNext0",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"heldKind": "mustAttackOther",
+				"damageType": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,18 +44,42 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "addlingArrowD000",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d6",
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "addlingArrowD000Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "addlingArrowD000"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "range"
 			},
 			"template": {
 				"length": 1,
 				"radius": 1,
 				"shape": "",
 				"width": 1
-			}
+			},
+			"weaponAttack": "ranged"
 		},
 		"description": "<p>Action: Attack with a ranged weapon. The next attack the target makes must be against the closest other creature, chosen at random.</p>",
 		"featureType": "class",

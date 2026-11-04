@@ -15,6 +15,14 @@
 		return 0;
 	}
 
+	function withMultiplierText(info, damageMultiplier) {
+		if (damageMultiplier === 1) return info;
+		const text = localize('NIMBLE.rules.damageMultiplier.onCard', {
+			multiplier: String(damageMultiplier),
+		});
+		return `${info} ${text}`;
+	}
+
 	function getRollModeSummary(rollMode) {
 		if (rollMode >= 1) return `Advantage x ${rollMode}`;
 		if (rollMode <= -1) return `Disadvantage x ${Math.abs(rollMode)}`;
@@ -54,7 +62,14 @@
 	const { actorType, permissions } = messageDocument.system;
 	let primaryDieBonuses = $derived(messageDocument.reactive?.system?.primaryDieBonuses ?? []);
 
-	let { damageType, ignoreArmor = false, outcome, roll, nodeId = null } = $props();
+	let {
+		damageType,
+		ignoreArmor = false,
+		outcome,
+		roll,
+		nodeId = null,
+		damageMultiplier = 1,
+	} = $props();
 	let rolling = $derived.by(() => {
 		const inAir = nodeId ? rollingRerollOf(messageDocument.id) : null;
 		return inAir?.slot === nodeId ? inAir : null;
@@ -63,8 +78,14 @@
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let critDiceLines = $derived(critDiceLinesOf(roll?.terms));
-	let multiplier = $derived(getDamageMultiplier(outcome));
-	let secondaryInfo = $derived(getSecondaryInformation(outcome, ignoreArmor, rollOptions).trim());
+	let shownMultiplier = $derived(outcome === 'noDamage' ? 1 : damageMultiplier);
+	let multiplier = $derived(getDamageMultiplier(outcome) * shownMultiplier);
+	let secondaryInfo = $derived(
+		withMultiplierText(
+			getSecondaryInformation(outcome, ignoreArmor, rollOptions),
+			shownMultiplier,
+		).trim(),
+	);
 </script>
 
 {#if roll?.class}

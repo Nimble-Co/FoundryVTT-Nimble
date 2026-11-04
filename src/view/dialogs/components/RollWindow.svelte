@@ -16,6 +16,7 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 		icon,
 		rollLabel,
 		rollIcon = 'fa-solid fa-dice-d20',
+		rollDisabledReason = '',
 		onroll,
 		oncancel,
 		children,
@@ -42,7 +43,15 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 			tooltip={localize('NIMBLE.rollWindow.cancelHint')}
 			onclick={oncancel}
 		/>
-		<Button variant="primary" icon={rollIcon} label={rollLabel} autofocus onclick={onroll} />
+		<Button
+			variant="primary"
+			icon={rollIcon}
+			label={rollLabel}
+			autofocus
+			disabled={!!rollDisabledReason}
+			tooltip={rollDisabledReason || undefined}
+			onclick={onroll}
+		/>
 	</div>
 </div>
 

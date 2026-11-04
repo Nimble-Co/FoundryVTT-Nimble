@@ -14,6 +14,15 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 ![A chat card with a condition button, next to the token status panel showing named conditions](/images/documentation/condition-chatcard-with-button.png)
 
+## Latched and Swallowed
+
+These two conditions come from monsters. The GM removes them by hand.
+
+- **Latched** goes on the creature that hit with Latch On, and the creature stores who it hit. Its attacks cannot miss. When an attack on it misses, the card has one button for the whole attack, **Apply N Damage to** that creature. N is the amount after the creature's armor, immunity, resistance and damage reduction. With no click, nothing happens. Moving with the target stays with the table.
+- **Swallowed** goes on the target of a crit from Bite/Swallow. The creature takes 20 damage at the start of its turn. Its attacks cannot miss and ignore armor.
+
+With Feature Effects off, the GM applies them by hand and there is no damage at the start of the turn. The attack effects and the button stay.
+
 ## Linked conditions
 
 Some conditions come bundled together, and the system tracks the relationships for you:

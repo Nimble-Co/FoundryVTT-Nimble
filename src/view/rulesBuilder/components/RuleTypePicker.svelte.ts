@@ -12,6 +12,13 @@ interface PickerEntry {
 const RULE_ICONS: Record<string, string> = {
 	critDice: 'fa-solid fa-dice-d6',
 	critDiceSave: 'fa-solid fa-person-falling',
+	damageMultiplier: 'fa-solid fa-xmark',
+	holdOnTarget: 'fa-solid fa-hourglass-half',
+	keepAmount: 'fa-solid fa-rotate',
+	critBack: 'fa-solid fa-reply',
+	freeAssess: 'fa-solid fa-magnifying-glass',
+	hitCondition: 'fa-solid fa-link',
+	optionWindow: 'fa-solid fa-hand',
 	maxDamage: 'fa-solid fa-angles-up',
 	offerAttackBonus: 'fa-solid fa-handshake-angle',
 	poolDieToMax: 'fa-solid fa-arrow-up-9-1',

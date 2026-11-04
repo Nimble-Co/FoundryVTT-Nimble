@@ -235,10 +235,18 @@ export const incomingReactions = () => ({
 	),
 });
 
+/** Old cards name the effect of the option window `choiceTable`. */
+function migrateOptionWindowEffect(entries: Record<string, unknown>[]): void {
+	for (const entry of entries) {
+		if (entry?.effect === 'choiceTable') entry.effect = 'optionWindow';
+	}
+}
+
 /** Gives the reaction rows of an old card the names the schema uses now. */
 export function migrateIncomingReactions(source: Record<string, unknown>): void {
 	const entries = source.incomingReactions;
 	if (!Array.isArray(entries)) return;
+	migrateOptionWindowEffect(entries);
 	for (const entry of entries as Record<string, unknown>[]) {
 		if (!entry || typeof entry !== 'object' || !('oncePerAttack' in entry)) continue;
 		entry.oncePerRoll ??= entry.oncePerAttack;
@@ -395,6 +403,17 @@ export const primaryDieBonuses = () => ({
 			itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		}),
 		{ required: false, nullable: false, initial: [] },
+	),
+});
+
+/** The kept amount the card's attack used in place of a roll. */
+export const keptAmount = () => ({
+	keptAmount: new fields.SchemaField(
+		{
+			label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		},
+		{ required: false, nullable: true, initial: null },
 	),
 });
 

@@ -72,6 +72,13 @@ function schema() {
 			label: 'NIMBLE.rules.attackOutcome.forceCrit.label',
 			hint: 'NIMBLE.rules.attackOutcome.forceCrit.hint',
 		}),
+		ignoreArmor: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.attackOutcome.ignoreArmor.label',
+			hint: 'NIMBLE.rules.attackOutcome.ignoreArmor.hint',
+		}),
 		anyDieCrits: new fields.BooleanField({
 			required: true,
 			nullable: false,
@@ -175,6 +182,7 @@ interface AttackOutcomeChange {
 	anyDieCrits: boolean;
 	critD20: boolean;
 	viciousCrits: boolean;
+	ignoreArmor?: boolean;
 	chargePoolIdentifier: string;
 }
 
@@ -191,7 +199,15 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		{ fields: ['side'] },
 		{
 			label: 'NIMBLE.rules.attackOutcome.form.changes',
-			fields: ['cannotMiss', 'critRange', 'forceCrit', 'anyDieCrits', 'critD20', 'viciousCrits'],
+			fields: [
+				'cannotMiss',
+				'critRange',
+				'forceCrit',
+				'anyDieCrits',
+				'critD20',
+				'viciousCrits',
+				'ignoreArmor',
+			],
 		},
 		{
 			label: 'NIMBLE.rules.attackOutcome.form.onlyAttacks',
@@ -211,6 +227,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 
 	declare side: AttackOutcomeSide;
 	declare cannotMiss: boolean;
+	declare ignoreArmor: boolean;
 	declare critRange: number;
 	declare forceCrit: ForceCritChoice;
 	declare anyDieCrits: boolean;
@@ -267,6 +284,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			cannotMiss: this.cannotMiss === true,
 			critRange: Math.max(0, Math.trunc(Number(this.critRange) || 0)),
 			forcedCrit: this.forceCrit === 'always' || this.forceCrit === 'onHit' ? this.forceCrit : null,
+			...(this.ignoreArmor === true ? { ignoreArmor: true } : {}),
 			anyDieCrits: this.anyDieCrits === true,
 			critD20: ownAttack && this.critD20 === true,
 			viciousCrits: this.viciousCrits === true,

@@ -26,9 +26,13 @@ The pool kind picks the colour of the pool cost. The uses, the mana cost and the
 
 	const usesHint = (u: RowUses) =>
 		localize(
-			u.per
-				? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
-				: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
+			u.hideMax
+				? u.per
+					? 'NIMBLE.actorSheet.parts.rowCost.countBack'
+					: 'NIMBLE.actorSheet.parts.rowCost.countLeft'
+				: u.per
+					? 'NIMBLE.actorSheet.parts.rowCost.usesBack'
+					: 'NIMBLE.actorSheet.parts.rowCost.usesLeft',
 			{ left: String(u.left), max: String(u.max), per: u.per ?? '' },
 		);
 	const actionsHint = $derived(
@@ -50,7 +54,7 @@ The pool kind picks the colour of the pool cost. The uses, the mana cost and the
 	{#if text}<span class="tx">{text}</span>{/if}
 	{#each uses as u}
 		<span class="us {outTone}" class:out={u.left < (u.need ?? 1)} data-tooltip={usesHint(u)}>
-			{u.left}/{u.max}<small>{u.per}</small>
+			{u.left}{u.hideMax ? '' : `/${u.max}`}<small>{u.per}</small>
 		</span>
 	{/each}
 	{#if pool}

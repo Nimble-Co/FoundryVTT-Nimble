@@ -212,7 +212,16 @@ async function consumeOnResolvedItemUse(
 	}
 
 	const recoveryGiven: ChargeRecoveryGiven = [];
-	const postRecoveryPools = applyRecoveryTriggersToPools(actor, nextPools, triggers, recoveryGiven);
+	const postRecoveryPools = applyRecoveryTriggersToPools(
+		actor,
+		nextPools,
+		triggers,
+		recoveryGiven,
+		{
+			domain: context.recoveryDomain ?? [],
+			spentPoolIds: consumedPoolIds,
+		},
+	);
 
 	for (const poolId of consumedPoolIds) {
 		const preConsumptionPool = currentPools[poolId];
@@ -231,6 +240,7 @@ async function consumeOnResolvedItemUse(
 			previousValue,
 			currentValue,
 			maxValue: postRecoveryPool.max,
+			...(postRecoveryPool.hideMax ? { hideMax: true } : {}),
 			change,
 		});
 	}
@@ -263,6 +273,7 @@ async function consumeOnResolvedItemUse(
 			previousValue,
 			currentValue,
 			maxValue: postRecoveryPool.max,
+			...(postRecoveryPool.hideMax ? { hideMax: true } : {}),
 			change,
 			recovery,
 		});

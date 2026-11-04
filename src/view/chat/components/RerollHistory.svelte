@@ -13,10 +13,12 @@
 
 	const OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
 		maxDamage: 'fa-angles-up',
+		keptAmount: 'fa-angles-up',
 		critDice: 'fa-dice-d20',
 		crit: 'fa-burst',
 		cannotMiss: 'fa-bullseye',
 		noOutcome: 'fa-ban',
+		mustAttackOther: 'fa-arrows-turn-to-dots',
 	};
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {
@@ -39,6 +41,7 @@
 		pendingLine,
 		held,
 		primaryDieBonuses = [],
+		keptAmount = null,
 		bonusNotAdded = null,
 		outcomeTags = [],
 	}: RerollHistoryProps = $props();
@@ -61,6 +64,18 @@
 				<span>{tag.label}</span>
 			</span>
 		{/each}
+	</div>
+{/if}
+
+{#if keptAmount}
+	<div class="nimble-roll-changes__history nimble-roll-changes__history--bonus">
+		<i class="fa-solid fa-rotate" aria-hidden="true"></i>
+		<p class="nimble-roll-changes__text">
+			{localize('NIMBLE.heldChange.keptOnCard', {
+				label: keptAmount.label,
+				amount: String(keptAmount.amount),
+			})}
+		</p>
 	</div>
 {/if}
 

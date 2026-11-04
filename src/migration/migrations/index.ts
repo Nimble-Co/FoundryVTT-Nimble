@@ -73,3 +73,4 @@ export { Migration072ChangeDie } from './Migration072ChangeDie.js';
 export { Migration073AttackOutcomes } from './Migration073AttackOutcomes.js';
 export { Migration074CheckOutcomes } from './Migration074CheckOutcomes.js';
 export { Migration075MaxAndDice } from './Migration075MaxAndDice.js';
+export { Migration076StoredResults } from './Migration076StoredResults.js';

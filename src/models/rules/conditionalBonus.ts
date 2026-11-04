@@ -52,6 +52,31 @@ function schema() {
 			hint: 'NIMBLE.rules.conditionalBonus.damageType.hint',
 			choices: () => CONFIG.NIMBLE.damageTypes,
 		}),
+		doubleFor: new fields.ArrayField(
+			new fields.SchemaField({
+				source: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: '',
+					label: 'NIMBLE.rules.conditionalBonus.doubleFor.source.label',
+					hint: 'NIMBLE.rules.conditionalBonus.doubleFor.source.hint',
+				}),
+				onlyNoArmor: new fields.BooleanField({
+					required: true,
+					nullable: false,
+					initial: false,
+					label: 'NIMBLE.rules.conditionalBonus.doubleFor.onlyNoArmor.label',
+					hint: 'NIMBLE.rules.conditionalBonus.doubleFor.onlyNoArmor.hint',
+				}),
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.conditionalBonus.doubleFor.label',
+				hint: 'NIMBLE.rules.conditionalBonus.doubleFor.hint',
+			},
+		),
 		delivery: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -95,6 +120,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	static override description = 'NIMBLE.rules.conditionalBonus.description';
 
 	declare advantage: number;
+	declare doubleFor: { source: string; onlyNoArmor: boolean }[];
 	declare damageBonus: string;
 	// `damageType` is inferred from the schema's `choices` (damage-type keys plus the
 	// blank sentinel); re-declaring it as the wider `string` clashes with that type.

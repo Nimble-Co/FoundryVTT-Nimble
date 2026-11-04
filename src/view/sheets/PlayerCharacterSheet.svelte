@@ -325,6 +325,7 @@
 				<ResourceBar
 					current={pool.current}
 					max={pool.max}
+					hideMax={pool.hideMax}
 					label={pool.label}
 					temporary={pool.temporary ?? 0}
 					temporarySource={temporaryUseSources(pool).join(', ')}

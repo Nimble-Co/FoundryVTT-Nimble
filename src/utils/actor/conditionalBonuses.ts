@@ -24,6 +24,8 @@ interface ConditionalBonusOption {
 	/** Raw dice damage formula (null when numeric or no damage offered). */
 	damageFormula: string | null;
 	damageType: string;
+	/** The item of the attack doubles this bonus. */
+	doubled?: boolean;
 }
 
 interface AttackingActor {
@@ -38,6 +40,7 @@ interface TargetActor {
 
 interface ActivationItem {
 	type?: string;
+	identifier?: string;
 	system?: { activation?: { targets?: { attackType?: string } } };
 }
 
@@ -59,6 +62,19 @@ function buildTargetDomain(
 	const domain = new Set<string>(targetActor?.getTargetDomain?.() ?? []);
 	for (const tag of getToggledTargetTags(attacker, targetActor)) domain.add(tag);
 	return domain;
+}
+
+/** The attack's item asks to double the damage. Heroes and monsters with no armor have none. */
+function doublesDamage(
+	rule: ConditionalBonusRule,
+	item: ActivationItem,
+	targetActor: TargetActor | null | undefined,
+): boolean {
+	const entry = rule.doubleFor?.find((each) => each.source === item.identifier);
+	if (!entry) return false;
+	if (!entry.onlyNoArmor) return true;
+	const armor = foundry.utils.getProperty(targetActor ?? {}, 'system.attributes.armor');
+	return armor !== 'medium' && armor !== 'heavy';
 }
 
 /**
@@ -92,13 +108,15 @@ function getActiveConditionalBonuses(
 		if (!rule.offersAdvantage() && !rule.offersDamage()) continue;
 
 		const damage = rule.resolveDamage();
+		const doubled = doublesDamage(rule, item, targetActor);
 		options.push({
 			key: `${rule.item?.uuid ?? ''}:${rule.id}`,
 			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
-			damageValue: damage.value,
-			damageFormula: damage.formula,
+			damageValue: damage.value === null ? null : damage.value * (doubled ? 2 : 1),
+			damageFormula: damage.formula && doubled ? `(${damage.formula})*2` : damage.formula,
 			damageType: rule.damageType ?? '',
+			...(doubled ? { doubled } : {}),
 		});
 	}
 

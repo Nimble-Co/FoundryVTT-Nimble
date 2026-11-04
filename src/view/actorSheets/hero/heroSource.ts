@@ -103,6 +103,8 @@ export interface ItemPoolLike {
 	label: string;
 	current: number;
 	max: number;
+	/** the book gives no cap: show the count alone */
+	hideMax?: boolean;
 	/** the charges that one use of the item spends */
 	need: number;
 	per: PoolRecovery | null;

@@ -34,6 +34,7 @@ export function createHeroicCharacter(overrides: Record<string, unknown> = {}): 
 		img: 'hero.webp',
 		permission: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 		getRollData: () => ({}),
+		items: { contents: [] },
 		reactive: { system: { attributes: { armor: { value: 15 } } } },
 		...overrides,
 	} as unknown as NimbleCharacter;

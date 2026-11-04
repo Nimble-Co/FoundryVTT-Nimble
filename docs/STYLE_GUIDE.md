@@ -1534,6 +1534,10 @@ export const myStore = writable<MyStoreState>(initialState);
 | `ruleLabel()`, `ruleKey()` | `src/utils/actor/actorRules.ts` | A rule's label, or its item's name. The key `<item uuid>:<rule id>` of a rule. |
 | `usedThisTurn()`, `markTurnUse()`, `clearTurnUse()` | `src/utils/combat/perTurnUse.ts` | A 1/turn use of a rule, on a flag of the actor. |
 | `currentRoundId()` | `src/utils/combat/perTurnUse.ts` | `<combat id>:<round>` of the started combat, or null outside combat. |
+| `heldChangesForAttack()`, `createHeldChange()`, `spendHeldChanges()`, `mustAttackOtherChange()`, `heldVulnerabilityTo()`, `spendHeldIgnoreDisadvantage()` | `src/utils/heldChange/heldChange.ts` | Held Changes: what waits on a creature for a later roll, and its end. Nothing is held outside combat. |
+| `recoveryDomainOf()`, `spentPoolIdsOf()`, `giveUnarmedHitRecovery()`, `giveMarkedDeathRecovery()` | `src/utils/chargePool/itemUseRecovery.ts` | What a recovery predicate reads of an attack, and the recoveries that have no item use of their own. |
+| `attackOutcomeChargesToSpend()` | `src/utils/damage/collectAttackOutcome.ts` | The charges an attack spends for an Attack Outcome rule, from the roll that stands. |
+| `damageMultiplierOf()` | `src/utils/damage/damageMultiplier.ts` | The tick a damage multiplier rule offers in the roll window of an item. |
 | `collectCritDice()` | `src/utils/damage/collectCritDice.ts` | The Crit Dice rules that add dice to a crit of an attack. |
 | `collectOfferBonuses()` | `src/utils/damage/collectOfferBonuses.ts` | What a hero's rules add to an attack from the row of an item. |
 | `dualWieldOfferFor()`, `dualWieldEntry()`, `keepChoiceOfWeapon()` | `src/utils/damage/dualWield.ts` | The dual wield tick and the two weapons of its roll. |
@@ -1584,6 +1588,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `alliesWithin()`, `areAllies()` | `src/utils/movement/alliesWithin.ts` | The visible allies of a token on its scene within a number of spaces, by disposition; 0 means every ally on the scene. Use it for every rule field that reads "allies within" |
 | `gainedPoolIdentifier()` | `src/utils/dicePool/poolGain.ts` | The one test of whether a `dicePool.changed` event is a gain, and for which pool identifier. Every listener that reacts to gained dice uses it |
 | `withRuleCharge()`, `hasRuleCharge()`, `spendRuleCharge()` | `src/utils/chargePool/ruleChargeGate.ts` | Let a rule post a card only while a charge pool holds a charge, and spend one when the card posts. Calls for one actor and pool run in turn, so two posts started together cannot share one charge. No limit for an empty identifier or with resource spending automation off |
+| `poolCountText()` | `src/utils/chargePool/poolHeading.ts` | A pool's count as text: `3/5`, or `3` alone for a pool with `hideMax` |
 | `findActorToken()` | `src/utils/movement/findActorToken.ts` | The token that stands for an actor, found without the canvas: a synthetic actor's own token, else its linked token in a started combat, then on the viewed scene, the active scene or any scene |
 | `markWaypointsPastOffer()` | `src/utils/movement/markWaypointsPastOffer.ts` | Mark the part of a planned drag past a Movement Offer so the token ruler draws it as core draws an unreachable path, and note how many offered spaces each waypoint has used for the ruler label; never shortens the dropped path |
 | `markMoveBands()` | `src/utils/movement/markMoveBands.ts` | Mark each planned waypoint of a drag that uses the creature's own movement with the Move it falls in (Speed spaces per Move, counted on from its own movement earlier in the history, by cost); only a creature with no Speed for the action is drawn as unreachable; never shortens the dropped path |

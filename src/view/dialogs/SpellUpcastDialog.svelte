@@ -12,6 +12,11 @@
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
+	import { damageMultiplierOf } from '../../utils/damage/damageMultiplier.js';
+	import { heldLinesForItem, keptAmountFor } from '../../utils/heldChange/heldChange.js';
+	import KeptAmountField from './components/KeptAmountField.svelte';
+	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
+	import HeldChangeLines from './components/HeldChangeLines.svelte';
 	import LessManaField from './components/LessManaField.svelte';
 	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
@@ -35,6 +40,20 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
+	const heldLines = untrack(() =>
+		heldLinesForItem(
+			actor,
+			{ system: spell },
+			{
+				ignoresDisadvantage: data.ignoreDisadvantage,
+			},
+		),
+	);
+	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
+	let usesKeptAmount = $state(keptAmount !== null);
+	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
+	const damageMultiplier = untrack(() => damageMultiplierOf(spell?.parent ?? dialog?.item));
+	let usesDamageMultiplier = $state(false);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -273,6 +292,8 @@
 			primaryDieModifier,
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
+			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
+			...(damageMultiplier ? { damageMultiplier: usesDamageMultiplier } : {}),
 			lessMana,
 			upcast: canUpcast
 				? {
@@ -303,12 +324,34 @@
 		</p>
 	{/if}
 
-	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+	{#if keptAmount}
+		<KeptAmountField
+			label={keptAmount.label}
+			amount={keptAmount.value}
+			bind:checked={usesKeptAmount}
+		/>
+	{/if}
 
-	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{#if damageMultiplier && !keptInUse}
+		<DamageMultiplierField
+			label={damageMultiplier.label}
+			multiplier={damageMultiplier.multiplier}
+			bind:checked={usesDamageMultiplier}
+		/>
+	{/if}
+
+	{#if !keptInUse}
+		<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+
+		<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
+	{#if !maxDamageChoice && !keptInUse}
+		<HeldChangeLines lines={heldLines} />
+
+		<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
+	{/if}
 
 	{#if canUpcast}
 		{#if pinnedCastTier === null}

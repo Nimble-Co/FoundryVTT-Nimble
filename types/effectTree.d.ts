@@ -96,6 +96,8 @@ export type DamageNode = {
 	 * card for something that has not happened yet.
 	 */
 	deferredRoll?: boolean;
+	/** What a tick in the roll window multiplies the damage by. */
+	damageMultiplier?: number;
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
 	targetDisposition?: EffectNodeDisposition;
@@ -109,6 +111,7 @@ export type DamageNode = {
 export type DamageOutcomeNode = {
 	id: string;
 	type: 'damageOutcome';
+	damageMultiplier?: number;
 	damageType?: string;
 	targetDisposition?: EffectNodeDisposition;
 	ignoreArmor?: boolean;

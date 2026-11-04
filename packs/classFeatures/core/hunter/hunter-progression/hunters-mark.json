@@ -36,7 +36,17 @@
 					"$and": [
 						"target:quarry"
 					]
-				}
+				},
+				"doubleFor": [
+					{
+						"source": "final-takedown",
+						"onlyNoArmor": false
+					},
+					{
+						"source": "vital-shot",
+						"onlyNoArmor": true
+					}
+				]
 			},
 			{
 				"type": "note",

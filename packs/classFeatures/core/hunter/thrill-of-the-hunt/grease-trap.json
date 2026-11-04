@@ -6,7 +6,63 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "greaseTrapPool00",
+				"identifier": "grease-trap-use",
+				"label": "Grease Trap (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "greaseTrapPool0U",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "grease-trap-use",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "greaseTrapConsum",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			},
+			{
+				"type": "holdOnTarget",
+				"disabled": false,
+				"id": "greaseVulnFire00",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"heldKind": "vulnerableOnce",
+				"damageType": "fire"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +76,22 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "greaseTrapConsum0",
+					"type": "condition",
+					"condition": "prone",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "greaseTrapConsum1",
+					"type": "condition",
+					"condition": "smoldering",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

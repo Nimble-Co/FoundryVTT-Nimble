@@ -97,6 +97,7 @@ function createCharacterActor(): MacroTestActor {
 		img: 'hero.webp',
 		permission: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 		getRollData: () => ({}),
+		items: { contents: [] },
 		system: {
 			attributes: {
 				movement: {

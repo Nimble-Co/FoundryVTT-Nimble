@@ -20,6 +20,11 @@ describe('attackOutcomeTags', () => {
 		expect(attackOutcomeTags(null)).toEqual([]);
 	});
 
+	it('gives a kept amount its own tag', () => {
+		const tags = attackOutcomeTags(roll(4, {}, { outcomeSources: { keptAmount: ['Rampage'] } }));
+		expect(tags.map((tag) => tag.kind)).toEqual(['keptAmount']);
+	});
+
 	describe('crit causes', () => {
 		const sources = (forcedCrit: string[]) => ({ outcomeSources: { forcedCrit } });
 

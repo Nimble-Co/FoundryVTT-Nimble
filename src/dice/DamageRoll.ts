@@ -70,6 +70,8 @@ declare namespace DamageRoll {
 		 * no crit dice; `hit` cannot crit. Neither can miss, except by `forceMiss`.
 		 */
 		maxDamage?: 'hit' | 'crit';
+		/** The formula is a kept amount, in place of a roll. A hit, with no crit. */
+		fixedAmount?: boolean;
 		/** Dice a crit adds as a line of their own. They do not explode and are not Vicious. */
 		critDice?: CritDiceSpec[];
 		/** The first crit die of a crit is a d20. A 20 goes on with the die of the attack. */
@@ -230,7 +232,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	/** No die was rolled: the roll has max damage. */
 	get noDice(): boolean {
-		return this.options.maxDamage !== undefined;
+		return this.options.maxDamage !== undefined || this.options.fixedAmount === true;
 	}
 
 	/** The kept value of the primary die after evaluation. Undefined if unevaluated. */
@@ -316,6 +318,22 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			formula,
 			this.data ?? ({} as DamageRoll.Data),
 			(this.options ?? {}) as DamageRoll.Options,
+		);
+	}
+
+	/** A kept die of the roll, not a crit die, is at its max. */
+	get anyDieAtMax(): boolean {
+		return this.terms.some(
+			(term) =>
+				term instanceof Terms.Die &&
+				!dieRoleOf(term) &&
+				term.results.some(
+					(r, index) =>
+						index < (Number(term.number) || 1) &&
+						r.active &&
+						!r.discarded &&
+						r.result === term.faces,
+				),
 		);
 	}
 
@@ -490,19 +508,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	private _applyAnyDieCrits(): void {
 		if (!this.options.canCrit || !this.options.anyDieCrits) return;
 		if (this.options.forcedCrit === 'always') return;
-		const atMax = this.terms.some(
-			(term) =>
-				term instanceof Terms.Die &&
-				!dieRoleOf(term) &&
-				term.results.some(
-					(r, index) =>
-						index < (Number(term.number) || 1) &&
-						r.active &&
-						!r.discarded &&
-						r.result === term.faces,
-				),
-		);
-		if (!atMax) return;
+		if (!this.anyDieAtMax) return;
 		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
 		this.options.forcedCrit = 'onHit';
 		const primary = this.terms.find((t) => t instanceof PrimaryDie);
@@ -531,6 +537,19 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			kept.exploded = false;
 			this.resetFormula();
 		}
+	}
+
+	/** What the crit dice of this roll came to. */
+	get critDiceTotal(): number {
+		let total = critDiceLinesOf(this.terms).reduce((sum, line) => sum + line.total, 0);
+		for (const term of this.terms) {
+			if (!(term instanceof Terms.Die)) continue;
+			const pool = Number(term.number) || 1;
+			term.results.slice(pool).forEach((result) => {
+				if (result.active && !result.discarded) total += result.result;
+			});
+		}
+		return total;
 	}
 
 	/** Roll the Primary Die's crit dice when an any-die crit came. */

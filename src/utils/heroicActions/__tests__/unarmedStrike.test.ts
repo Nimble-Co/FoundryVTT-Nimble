@@ -118,6 +118,16 @@ describe('rollUnarmedStrike', () => {
 			],
 		});
 		spendRuleChargeMock.mockClear();
+		damageRollMock.mockImplementation(function roll() {
+			return {
+				evaluate: vi.fn(),
+				toJSON: () => ({}),
+				isCritical: false,
+				isMiss: false,
+				primaryDieValue: 1,
+				options: {},
+			};
+		});
 
 		await rollUnarmedStrike(actor);
 
@@ -127,6 +137,22 @@ describe('rollUnarmedStrike', () => {
 			expect.objectContaining({ canMiss: false, outcomeSources: { cannotMiss: ['Heads I Win'] } }),
 		);
 		expect(spendRuleChargeMock).toHaveBeenCalledWith(actor, 'heads');
+
+		spendRuleChargeMock.mockClear();
+		damageRollMock.mockImplementation(function roll() {
+			return {
+				evaluate: vi.fn(),
+				toJSON: () => ({}),
+				isCritical: false,
+				isMiss: false,
+				primaryDieValue: 3,
+				options: {},
+			};
+		});
+
+		await rollUnarmedStrike(actor);
+
+		expect(spendRuleChargeMock).not.toHaveBeenCalled();
 	});
 
 	it('tells the Attack Outcome rules the strike deals bludgeoning damage', async () => {
@@ -141,6 +167,56 @@ describe('rollUnarmedStrike', () => {
 		expect(changeFor).toHaveBeenCalledWith(
 			expect.objectContaining({ damageTypes: ['bludgeoning'] }),
 		);
+	});
+
+	it('takes out disadvantage with a Held Change that ignores it', async () => {
+		dialogResult({ rollMode: -1 });
+		(heroicGlobals().game as unknown as { combats: unknown }).combats = new Map([
+			['c1', { started: true }],
+		]);
+		const actor = createHeroicCharacter({ proficient: true });
+		const remove = vi.fn(async () => undefined);
+		Object.assign(actor, {
+			effects: [
+				{
+					id: 'held',
+					delete: remove,
+					flags: {
+						nimble: {
+							heldChange: {
+								kind: 'ignoreDisadvantage',
+								appliesTo: 'holderAttacks',
+								value: 0,
+								label: 'Nullify',
+								combatId: 'c1',
+								ends: 'combat',
+							},
+						},
+					},
+				},
+			],
+		});
+
+		await rollUnarmedStrike(actor);
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ rollMode: 0 }),
+		);
+	});
+
+	it('writes the recovery flags on its card, so a reroll can follow them', async () => {
+		dialogResult({ rollMode: 0 });
+		const update = vi.fn(async () => undefined);
+		vi.mocked(ChatMessage.create).mockResolvedValueOnce({ update } as never);
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(update).toHaveBeenCalledWith({
+			'flags.nimble.chargeRecoveryGiven': [],
+			'flags.nimble.chargeRecoveryDomain': expect.arrayContaining(['attack:melee']),
+		});
 	});
 
 	it('is a crit on a hit against a target in the Incapacitated group', async () => {

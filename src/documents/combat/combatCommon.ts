@@ -126,6 +126,8 @@ function mapGroupAttackRows(rollEntries: MinionGroupAttackRollEntry[]) {
 		totalDamage: entry.totalDamage,
 		isMiss: entry.isMiss,
 		roll: entry.rollData,
+		primaryDieBonuses: entry.primaryDieBonuses,
+		mustAttackLabel: entry.mustAttackLabel,
 	}));
 }
 

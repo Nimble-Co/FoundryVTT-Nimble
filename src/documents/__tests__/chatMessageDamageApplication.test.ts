@@ -95,7 +95,10 @@ function damagePacketNode(id: string, damageType: string, total: number) {
 	};
 }
 
-function createCard(packets: Array<{ damageType: string; total: number }>, isCritical = false) {
+function createCard(
+	packets: Array<{ damageType: string; total: number; damageMultiplier?: number }>,
+	isCritical = false,
+) {
 	return new NimbleChatMessage({
 		type: 'spell',
 		system: {
@@ -103,9 +106,10 @@ function createCard(packets: Array<{ damageType: string; total: number }>, isCri
 			isCritical,
 			isMiss: false,
 			activation: {
-				effects: packets.map((packet, index) =>
-					damagePacketNode(`packet-${index}`, packet.damageType, packet.total),
-				),
+				effects: packets.map((packet, index) => ({
+					...damagePacketNode(`packet-${index}`, packet.damageType, packet.total),
+					...(packet.damageMultiplier ? { damageMultiplier: packet.damageMultiplier } : {}),
+				})),
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
@@ -487,5 +491,196 @@ describe('a target with No Damage', () => {
 		await card.applyAllDamage();
 
 		expect(covered.applyDamage).toHaveBeenCalledWith(8);
+	});
+});
+
+describe('NimbleChatMessage latched miss damage', () => {
+	const CREATURE = 'Actor.creature';
+
+	function missedCard(slashing = 7, radiant = 5) {
+		const card = slashingPlusRadiant(slashing, radiant);
+		(card.system as unknown as { isMiss: boolean }).isMiss = true;
+		card.setFlag = vi.fn().mockResolvedValue(card);
+		return card;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	it('deals what the button says after the defenses of the creature', async () => {
+		const actor = createTarget({ damageReductions: [{ value: 2, damageTypes: [] }] });
+		globals().fromUuidSync.mockReturnValue(actor);
+		const card = missedCard();
+
+		expect(card.latchedMissDamage(CREATURE)).toBe(10);
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledTimes(1);
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('adds the packets of a two-node attack and applies them once', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue(actor);
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledTimes(1);
+		expect(actor.applyDamage).toHaveBeenCalledWith(12);
+	});
+
+	it('uses resistance of the creature', () => {
+		globals().fromUuidSync.mockReturnValue(createTarget({ damageResistances: ['radiant'] }));
+
+		// 7 + ceil(5 / 2) = 10.
+		expect(missedCard().latchedMissDamage(CREATURE)).toBe(10);
+	});
+
+	it('uses up banked reduction', async () => {
+		const actor = createTarget({ bankedReduction: 4 });
+		globals().fromUuidSync.mockReturnValue(actor);
+		const card = missedCard();
+
+		expect(card.latchedMissDamage(CREATURE)).toBe(8);
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(8);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
+
+	it('marks the card so the button goes away', async () => {
+		globals().fromUuidSync.mockReturnValue(createTarget());
+		const card = missedCard();
+
+		await card.applyLatchedMissDamage(CREATURE);
+
+		expect(card.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'latchedDamageApplied', true);
+	});
+
+	it('does nothing for a player', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue(actor);
+		globals().game.user.isGM = false;
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('does not fire the damage hook or the attack triggers', async () => {
+		globals().fromUuidSync.mockReturnValue(createTarget());
+
+		await missedCard().applyLatchedMissDamage(CREATURE);
+
+		expect(globals().Hooks.callAll).not.toHaveBeenCalled();
+		expect(globals().Hooks.call).not.toHaveBeenCalled();
+	});
+});
+
+describe('a damage node with a multiplier', () => {
+	it('deals and previews the multiplied amount', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor });
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+		const card = createCard([{ damageType: 'piercing', total: 6, damageMultiplier: 2 }]);
+
+		expect(card.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total).toBe(12);
+		await card.applyAllDamage();
+		expect(actor.applyDamage).toHaveBeenCalledWith(12);
+	});
+});
+
+describe('a vulnerability to the next fire damage', () => {
+	function greased() {
+		const actor = createTarget();
+		const effect = {
+			id: 'grease',
+			disabled: false,
+			flags: {
+				[SYSTEM_ID]: {
+					heldChange: {
+						kind: 'vulnerableOnce',
+						value: 0,
+						label: 'Grease Trap',
+						sourceName: 'Grease Trap',
+						appliesTo: 'attacksOnHolder',
+						spentBy: 'oneRoll',
+						ends: 'combat',
+						combatId: 'c1',
+						round: 1,
+						turn: 0,
+						damageType: 'fire',
+					},
+				},
+			},
+		};
+		Object.assign(actor, { uuid: 'Actor.greased', isOwner: true, effects: [effect] });
+		return actor;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+		(globals().game as unknown as { combats: unknown }).combats = new Map([
+			['c1', { started: true }],
+		]);
+	});
+
+	it('deals more, and is gone after the first fire damage', async () => {
+		const actor = greased();
+		globals().fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.greased' ? actor : { actor },
+		);
+
+		const card = createCard([{ damageType: 'fire', total: 5 }]);
+		const previewed = card.getDamageBreakdownForTarget('Scene.scene.Token.token');
+		expect(previewed?.total).toBeGreaterThan(5);
+		await card.applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(previewed?.total);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['grease']);
+	});
+
+	it('stays through other damage', async () => {
+		const actor = greased();
+		globals().fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.greased' ? actor : { actor },
+		);
+
+		await createCard([{ damageType: 'cold', total: 5 }]).applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+});
+
+describe('a damage node with a multiplier on an armored target', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	async function dealt(armor: string, packet: { total: number; damageMultiplier?: number }) {
+		const actor = createTarget();
+		actor.system.attributes.armor = armor;
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor });
+		await createCard([{ damageType: 'piercing', ...packet }]).applyAllDamage();
+		return actor.applyDamage.mock.calls[0]?.[0];
+	}
+
+	it('doubles what heavy armor lets through', async () => {
+		expect(await dealt('heavy', { total: 6 })).toBe(3);
+		expect(await dealt('heavy', { total: 6, damageMultiplier: 2 })).toBe(6);
+	});
+
+	it('doubles what medium armor lets through', async () => {
+		expect(await dealt('medium', { total: 6, damageMultiplier: 2 })).toBe(12);
 	});
 });
