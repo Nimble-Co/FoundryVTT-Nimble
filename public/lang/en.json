@@ -4451,8 +4451,8 @@
 		"rollWindow": {
 			"weapon": "Weapon",
 			"noWeapon": "Equip a weapon of this kind first.",
-			"noCharge": "No {pool} charges left.",
-			"spendsCharge": "When you roll, it spends {count} {pool} charge ({left} left).",
+			"noCharge": "{pool}: none left.",
+			"spendsCharge": "{pool}: this roll spends {count} ({left} left).",
 			"lessMana": "Spend 1 less mana",
 			"dualWield": {
 				"name": "Dual wield",
