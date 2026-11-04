@@ -23,6 +23,7 @@ import {
 	foldBonusIntoPrimaryDamage,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
+import { damageAppliedTo, defendsOf } from '#utils/defend/defendRecords.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -163,6 +164,15 @@ export interface TargetDamageBreakdown {
 export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
 
 /** The target tokens the card's standing no-damage changes cover, with what names each. */
+/** The armor each Defended target removes from the attack, while the GM leaves it on. */
+function defendArmorOf(system: unknown): Map<string, number> {
+	const armor = new Map<string, number>();
+	for (const defend of defendsOf(system)) {
+		if (defend.armorApplies && defend.armor > 0) armor.set(defend.tokenUuid, defend.armor);
+	}
+	return armor;
+}
+
 function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
 	const covered = new Map<string, ResultChange>();
 	for (const change of standingResultChanges(resultChangesOf(system))) {
@@ -588,6 +598,8 @@ interface ResolvedDamageForActor {
 interface PendingFlatReduction {
 	damageTypes: unknown;
 	onlyCrits?: boolean;
+	/** Armor: damage "ignoring armor" goes past it. */
+	isArmor?: boolean;
 	remaining: number;
 	modifier: DamageModifier;
 }
@@ -633,6 +645,7 @@ function spendFlatReductions(
 		if (remainingDamage <= 0) break;
 		if (reduction.remaining <= 0) continue;
 		if (!reductionApplies(reduction, options)) continue;
+		if (reduction.isArmor && options.ignoreArmor === true) continue;
 
 		const used = Math.min(remainingDamage, reduction.remaining);
 		reduction.remaining -= used;
@@ -657,8 +670,20 @@ function resolveDamageForActor(
 	actor: Actor.Implementation,
 	packets: DamagePacket[],
 	availableBank = getBankedDamageReduction(actor),
+	defendArmor = 0,
 ): ResolvedDamageForActor {
 	const pendingReductions = collectAttackFlatReductions(actor);
+	if (defendArmor > 0) {
+		pendingReductions.unshift({
+			damageTypes: [],
+			isArmor: true,
+			remaining: Math.floor(defendArmor),
+			modifier: {
+				kind: 'reduction',
+				label: localize('NIMBLE.chat.defend.armorModifier', { value: String(defendArmor) }),
+			},
+		});
+	}
 	const bankedEntries = getBankedDamageReductionEntries(actor);
 
 	let remainingBank = availableBank;
@@ -720,6 +745,7 @@ function buildDamageApplicationPlan(params: {
 	targets: string[];
 	packets: DamagePacket[];
 	noDamageTargets?: ReadonlyMap<string, unknown>;
+	defendArmor?: ReadonlyMap<string, number>;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
@@ -743,7 +769,12 @@ function buildDamageApplicationPlan(params: {
 		// only consumed when the attack would otherwise deal damage — immunity or
 		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
-		const resolved = resolveDamageForActor(actor, params.packets, availableBank);
+		const resolved = resolveDamageForActor(
+			actor,
+			params.packets,
+			availableBank,
+			params.defendArmor?.get(uuid) ?? 0,
+		);
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
@@ -1297,6 +1328,7 @@ class NimbleChatMessage extends ChatMessage {
 			targets,
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
+			defendArmor: defendArmorOf(systemData),
 		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
@@ -1386,6 +1418,7 @@ class NimbleChatMessage extends ChatMessage {
 					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
 		await this.#markDamageApplied();
+		await this.#markDamageAppliedTo(targets);
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1401,6 +1434,18 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			);
 		}
+	}
+
+	/** A Defend closes for a target once its damage is applied. */
+	async #markDamageAppliedTo(targets: string[]): Promise<void> {
+		const system = this.system as unknown as { damageAppliedTo?: unknown };
+		if (!Array.isArray(system.damageAppliedTo)) return;
+		const applied = damageAppliedTo(system);
+		const added = targets.filter((uuid) => !applied.has(uuid));
+		if (added.length < 1) return;
+		await this.update({
+			'system.damageAppliedTo': [...applied, ...added],
+		} as Record<string, unknown>);
 	}
 
 	/** A no-damage row or its Remove ends here, so only a card that has one keeps the record. */
@@ -1440,6 +1485,7 @@ class NimbleChatMessage extends ChatMessage {
 			targets,
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
+			defendArmor: defendArmorOf(systemData),
 		});
 		if (!damageApplicationPlan.hasTargets) return true;
 		// A pending banked reduction is spent by clicking Apply even when it
@@ -1520,7 +1566,12 @@ class NimbleChatMessage extends ChatMessage {
 
 		// Deliberately the same resolver `applyAllDamage` runs, so the number this
 		// previews and the number the GM removes cannot drift apart.
-		const { components, total } = resolveDamageForActor(actor, damageRolls);
+		const { components, total } = resolveDamageForActor(
+			actor,
+			damageRolls,
+			undefined,
+			defendArmorOf(this.system).get(targetUuid) ?? 0,
+		);
 		if (noDamageTargetsOf(this.system).has(targetUuid)) {
 			return {
 				total: 0,
@@ -1532,6 +1583,24 @@ class NimbleChatMessage extends ChatMessage {
 			};
 		}
 		return { components, total };
+	}
+
+	/**
+	 * What this card's damage removes from a token's actor with a Defend of
+	 * `defendArmor`. The token does not have to be a target yet: an Interpose
+	 * makes the hero the new target.
+	 */
+	previewDamageFor(tokenUuid: string, defendArmor = 0): number | null {
+		if (!this.isActivationCard()) return null;
+		const packets = this.#applicableDamagePackets();
+		if (packets.length < 1) return null;
+		const actor = (fromUuidSync(tokenUuid) as TokenDocument | null)?.actor as
+			| Actor.Implementation
+			| null
+			| undefined;
+		if (!actor) return null;
+		if (noDamageTargetsOf(this.system).has(tokenUuid)) return 0;
+		return resolveDamageForActor(actor, packets, undefined, defendArmor).total;
 	}
 
 	/** A missed attack as a hit on this creature: its defenses read the same damage. */

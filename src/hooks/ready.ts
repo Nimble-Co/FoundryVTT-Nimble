@@ -16,6 +16,7 @@ import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffec
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
+import { registerDefendSocketListener } from '../utils/defend/defendRequests.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingReactions/incomingAttackReactions.js';
 import { registerRerollRollingHook } from '../utils/reroll/rerollRolling.svelte.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
@@ -71,6 +72,7 @@ export default async function ready() {
 	registerGrantedActionOfferSocketListener();
 	registerMovementOffers();
 	registerIncomingReactionSocketListener();
+	registerDefendSocketListener();
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
