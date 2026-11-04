@@ -142,9 +142,7 @@ describe('itemRow', () => {
 			const context = dicePoolContext({ itemState: { rage: itemState({ pools: [pool] }) } });
 			const view = itemRow(hero, item(hero, 'rage'), context);
 
-			expect(view.cost.uses).toEqual([
-				{ left: 0, max: 1, count: '0/1', per: `${SHARED}.per.round`, need: 1 },
-			]);
+			expect(view.cost.uses).toEqual([{ left: 0, max: 1, per: `${SHARED}.per.round`, need: 1 }]);
 			expect(view.fields).toEqual([
 				{
 					kind: 'uses',
@@ -163,7 +161,7 @@ describe('itemRow', () => {
 			const context = heroContext({ itemState: { flameDart: itemState({ pools: [limit] }) } });
 
 			expect(itemRow(hero, item(hero, 'flameDart'), context).cost.uses).toEqual([
-				{ left: 2, max: 3, count: '2/3', per: `${SHARED}.per.safeRest`, need: 1 },
+				{ left: 2, max: 3, per: `${SHARED}.per.safeRest`, need: 1 },
 			]);
 		});
 

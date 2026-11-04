@@ -121,7 +121,6 @@ describe('monsterAbilitiesTab', () => {
 		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'shoot00000000001').uses).toEqual({
 			left: 1,
 			max: 1,
-			count: '1/1',
 			per: 'NIMBLE.actorSheet.shared.per.encounter',
 		});
 		expect(cardOf(monsterAbilitiesTab(goblin(), context), 'stab000000000001').uses).toBeUndefined();

@@ -11,14 +11,8 @@ import { askActiveGm } from '#utils/askActiveGm.js';
 import localize from '#utils/localize.js';
 import { currentRoundId } from '../combat/perTurnUse.js';
 import { countsAsAttack, recordAttack } from '../combat/rushedAttacks.js';
+import { OPTION_SET_OPTIONS } from './optionSets.js';
 
-const CONTROL_OPTIONS: readonly ControlOption[] = [
-	'iInsist',
-	'elementalAffliction',
-	'no',
-	'loseControl',
-];
-const OPTION_SETS: Record<OptionSet, readonly ControlOption[]> = { control: CONTROL_OPTIONS };
 export const AFFLICTIONS: readonly ControlAffliction[] = ['charged', 'smoldering', 'slowed'];
 
 const FLAG = 'demandControl';
@@ -36,7 +30,7 @@ interface ControlRuleLike {
 	type?: string;
 	disabled?: boolean;
 	test?(): boolean;
-	optionSet?: OptionSet;
+	optionSet: OptionSet;
 	opensOnUse?: boolean;
 	oncePerRound?: boolean;
 	cardRow?: boolean;
@@ -72,9 +66,10 @@ export function controlRules(actor: ControlActor | null | undefined): ControlRul
 	);
 }
 
-/** The options of the window, from the option set of the actor's rule. */
+/** The options of the window, from the option set of the actor's rule; none with no rule. */
 export function windowOptions(actor: ControlActor | null | undefined): readonly ControlOption[] {
-	return OPTION_SETS[controlRules(actor)[0]?.optionSet ?? 'control'];
+	const rule = controlRules(actor)[0];
+	return rule ? OPTION_SET_OPTIONS[rule.optionSet] : [];
 }
 
 /** The options chosen since the last reset. */

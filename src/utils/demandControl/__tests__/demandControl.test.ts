@@ -18,13 +18,15 @@ import {
 
 const globals = globalThis as unknown as Record<string, any>;
 
+const CONTROL_RULE = { type: 'optionWindow', optionSet: 'control' };
+
 function hero(state?: object, extra: object = {}) {
 	let stored = state;
 	return {
 		uuid: 'Actor.mage',
 		name: 'Mage',
 		isOwner: true,
-		rules: [],
+		rules: [CONTROL_RULE],
 		items: [],
 		getFlag: () => stored,
 		setFlag: vi.fn(async (_scope: string, _key: string, value: object) => {
@@ -61,11 +63,9 @@ describe('the Control Table list', () => {
 		expect(rows[0].label).toBe('I INSIST');
 	});
 
-	it('reads the options through the option set of the rule', () => {
-		const control = ['iInsist', 'elementalAffliction', 'no', 'loseControl'];
-		const ruled = hero(undefined, { rules: [{ type: 'optionWindow', optionSet: 'control' }] });
-		expect(windowOptions(ruled)).toEqual(control);
-		expect(windowOptions(hero())).toEqual(control);
+	it('reads the options through the option set of the rule, none with no rule', () => {
+		expect(windowOptions(hero())).toEqual(['iInsist', 'elementalAffliction', 'no', 'loseControl']);
+		expect(windowOptions(hero(undefined, { rules: [] }))).toEqual([]);
 	});
 
 	it('starts again when all options were chosen (H:957)', () => {

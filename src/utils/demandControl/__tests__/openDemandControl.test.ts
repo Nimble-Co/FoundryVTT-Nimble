@@ -9,7 +9,7 @@ function hero() {
 		uuid: 'Actor.mage',
 		name: 'Mage',
 		isOwner: true,
-		rules: [],
+		rules: [{ type: 'optionWindow', optionSet: 'control' }],
 		items: [],
 		getFlag: () => stored,
 		setFlag: vi.fn(async (_scope: string, _key: string, value: object) => {

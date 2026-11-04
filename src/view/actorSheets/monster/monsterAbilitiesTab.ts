@@ -1,4 +1,3 @@
-import { poolCountText } from '#utils/chargePool/poolHeading.js';
 import type { RowUses } from '../parts/types.ts';
 import type { DragDescriptor } from '../shared/drag.ts';
 import { activationOf } from '../shared/itemFields.ts';
@@ -143,7 +142,6 @@ function usesOf(item: MonsterItemLike, context: MonsterSheetContext): RowUses | 
 		left: pool.current,
 		max: pool.max,
 		hideMax: pool.hideMax,
-		count: poolCountText(pool.current, pool.max, pool.hideMax),
 		per: perOf(pool.per, context),
 	};
 }

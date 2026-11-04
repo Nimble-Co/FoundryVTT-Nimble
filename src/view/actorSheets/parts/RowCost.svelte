@@ -54,7 +54,7 @@ The pool kind picks the colour of the pool cost. The uses, the mana cost and the
 	{#if text}<span class="tx">{text}</span>{/if}
 	{#each uses as u}
 		<span class="us {outTone}" class:out={u.left < (u.need ?? 1)} data-tooltip={usesHint(u)}>
-			{u.count}<small>{u.per}</small>
+			{u.left}{u.hideMax ? '' : `/${u.max}`}<small>{u.per}</small>
 		</span>
 	{/each}
 	{#if pool}

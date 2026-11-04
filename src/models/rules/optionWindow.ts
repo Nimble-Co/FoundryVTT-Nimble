@@ -1,4 +1,5 @@
 import type { OptionSet } from '#types/optionWindow.d.ts';
+import { CONTROL_OPTION_SET, OPTION_SETS } from '../../utils/demandControl/optionSets.js';
 import type {
 	RerollTrigger,
 	RollEffect,
@@ -6,8 +7,6 @@ import type {
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, type RollUseContext } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
-
-const OPTION_SETS: readonly OptionSet[] = ['control'];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -23,7 +22,7 @@ function schema() {
 		optionSet: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'control',
+			initial: CONTROL_OPTION_SET,
 			choices: choiceLabels('optionWindow', 'optionSet', OPTION_SETS),
 			label: 'NIMBLE.rules.optionWindow.optionSet.label',
 			hint: 'NIMBLE.rules.optionWindow.optionSet.hint',
