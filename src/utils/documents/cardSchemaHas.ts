@@ -1,8 +1,4 @@
-export interface CardDataModel {
-	defineSchema(): Record<string, unknown>;
-}
-
-export type CardDataModels = Record<string, CardDataModel | undefined>;
+import type { CardDataModels } from '#types/cardDataModel.d.ts';
 
 /**
  * Whether the data model of a chat card type has the field `key`.

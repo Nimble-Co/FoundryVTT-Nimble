@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import type { NimbleChatMessage, AppliedHealingRecord } from '../../../documents/chatMessage.js';
+	import localize from '#utils/localize.js';
 	import { hasDispositionTarget } from '#utils/treeManipulation/hasDispositionTarget.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
@@ -44,7 +45,7 @@
 	);
 
 	// Localization
-	const chatText = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
+	const chatText = (key: string) => localize(`NIMBLE.chat.${key}`);
 
 	function handleApplyHealing() {
 		messageDocument?.applyHealing(roll.total, healingType, effectId, node.recipient);

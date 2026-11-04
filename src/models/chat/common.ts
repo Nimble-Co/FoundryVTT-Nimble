@@ -223,7 +223,7 @@ export const incomingReactions = () => ({
 	),
 });
 
-/** Old cards name the once-per-roll limit of a row `oncePerAttack`. */
+/** Gives the reaction rows of an old card the names the schema uses now. */
 export function migrateIncomingReactions(source: Record<string, unknown>): void {
 	const entries = source.incomingReactions;
 	if (!Array.isArray(entries)) return;

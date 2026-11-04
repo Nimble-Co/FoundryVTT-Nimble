@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { signedNumber, spacedSignedNumber, TRUE_MINUS } from '../signedNumber.ts';
+import { signedNumber, spacedSignedNumber } from '../signedNumber.ts';
 
 describe('signedNumber', () => {
 	it('writes the sign with no space and a true minus sign', () => {
@@ -18,8 +18,9 @@ describe('spacedSignedNumber', () => {
 	});
 });
 
-describe('TRUE_MINUS', () => {
-	it('is U+2212', () => {
-		expect(TRUE_MINUS).toBe('−');
+describe('the minus sign', () => {
+	it('is the true minus sign U+2212, not a hyphen', () => {
+		expect(signedNumber(-1).codePointAt(0)).toBe(0x2212);
+		expect(spacedSignedNumber(-1).codePointAt(0)).toBe(0x2212);
 	});
 });

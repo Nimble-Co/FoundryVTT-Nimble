@@ -26,8 +26,8 @@ import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dic
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
+import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import localize from '#utils/localize.ts';
-import { cardCarriesMovementOffers } from '#utils/movement/cardCarriesMovementOffers.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
@@ -42,7 +42,6 @@ import {
 	getBankedDamageReduction,
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
-import { cardCarriesIncomingReactions } from '../utils/incomingReactions/cardCarriesIncomingReactions.js';
 import {
 	type PoolSpendSelection,
 	rejectIncomingAttackReaction,
@@ -1107,7 +1106,7 @@ class NimbleChatMessage extends ChatMessage {
 	#noDamageRowChanges(targets: readonly string[]): {
 		incomingReactions?: IncomingReactionEntry[];
 	} {
-		if (targets.length === 0 || !cardCarriesIncomingReactions(this.type)) return {};
+		if (targets.length === 0 || !cardSchemaHas(this.type, 'incomingReactions')) return {};
 		const current = this.#incomingReactionEntries();
 		const entries = this.#rerolls.withNoDamageEntries(targets, current);
 		return entries.length === current.length ? {} : { incomingReactions: entries };
@@ -1118,7 +1117,7 @@ class NimbleChatMessage extends ChatMessage {
 	 * for a card type that has no field for them.
 	 */
 	#movementOfferChanges(changes: Record<string, unknown>): { movementOffers?: MovementOffer[] } {
-		if (!cardCarriesMovementOffers(this.type)) return {};
+		if (!cardSchemaHas(this.type, 'movementOffers')) return {};
 		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
 		return { movementOffers: reconcileMovementOffers({ speaker: this.speaker, system }) };
 	}

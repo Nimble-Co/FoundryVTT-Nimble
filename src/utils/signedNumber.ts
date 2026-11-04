@@ -1,5 +1,5 @@
 /** The true minus sign (U+2212), for numbers a reader sees. */
-export const TRUE_MINUS = '−';
+const TRUE_MINUS = '−';
 
 /** `+3`, `+0` or `−1`, with a true minus sign. */
 export function signedNumber(value: number): string {
