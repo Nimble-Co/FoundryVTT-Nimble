@@ -90,6 +90,7 @@
 									{primaryOutcome}
 									{primaryDieBonuses}
 									onpick={control.pickDie}
+									onseveral={control.pickSeveral}
 									onvalue={control.pickValue}
 									onstat={control.pickStat}
 									oncancel={control.cancelPick}

@@ -6,6 +6,7 @@ interface OfferOptions {
 	id?: string;
 	label?: string;
 	used?: boolean;
+	sourceItemUuid?: string;
 }
 
 function createOffer(options: OfferOptions = {}) {
@@ -15,7 +16,7 @@ function createOffer(options: OfferOptions = {}) {
 		label: options.label ?? 'Granting Feature',
 		activationType: 'weaponAttack',
 		ruleId: 'rule-1',
-		sourceItemUuid: '',
+		sourceItemUuid: options.sourceItemUuid ?? '',
 		used: options.used ?? false,
 		usedBy: options.used ? 'player-1' : null,
 	};
@@ -166,7 +167,23 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton).toBeTruthy();
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword');
+		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
+	});
+
+	it('gives the attack the item of the row', async () => {
+		const g = globalThis as any;
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
+		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer({ sourceItemUuid: 'Item.source' })]) },
+		});
+
+		await fireEvent.click(screen.getByRole('button'));
+		await fireEvent.click(findItemButton('Longsword') as HTMLButtonElement);
+
+		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: 'Item.source' });
 	});
 
 	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
@@ -211,7 +228,7 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton?.className).not.toMatch(/discouraged/);
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword');
+		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
 	});
 
 	it('names the current target when it is not the recipient', async () => {

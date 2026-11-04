@@ -5,6 +5,9 @@
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
+	import DualWieldField from './components/DualWieldField.svelte';
+	import LessManaField from './components/LessManaField.svelte';
+	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
@@ -64,6 +67,17 @@
 			primaryDieValue: state.primaryDieValue,
 			primaryDieModifier: state.primaryDieModifier,
 			rollHidden: state.shouldRollBeHidden,
+			maxDamage: state.maxDamageChoice,
+			lessMana: state.lessMana,
+			freeUse: state.freeUse,
+			...(state.dualWield
+				? {
+						dualWield: {
+							otherItemUuid: state.dualWieldOffer?.other?.uuid ?? null,
+							extraDieOn: state.dualWieldExtraDieOn,
+						},
+					}
+				: {}),
 			consumedPoolDice,
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
@@ -84,6 +98,25 @@
 	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
 
 	<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
+
+	<MaxDamageField offers={state.maxDamageOffers} bind:choice={state.maxDamageChoice} />
+	{#if state.offersLessMana}<LessManaField bind:checked={state.lessMana} />{/if}
+	{#if state.offersFreeUse}
+		<label class="check">
+			<input type="checkbox" bind:checked={state.freeUse} />
+			<i class="fa-solid fa-battery-empty" aria-hidden="true"></i>
+			<span>{localize('NIMBLE.rollWindow.freeUse')}</span>
+		</label>
+	{/if}
+	{#if state.dualWieldOffer}
+		<DualWieldField
+			offer={state.dualWieldOffer}
+			itemName={item.name}
+			rollMode={state.selectedRollMode}
+			bind:checked={state.dualWield}
+			bind:extraDieOn={state.dualWieldExtraDieOn}
+		/>
+	{/if}
 
 	{#if state.hasConditionalBonuses}
 		<div>

@@ -48,6 +48,7 @@ interface GrantActivationRuleLike {
 	id?: string;
 	label?: string;
 	activationType?: GrantedActivationType;
+	includesUser?: boolean;
 	appliesTo?: () => boolean;
 }
 
@@ -65,7 +66,7 @@ interface OfferTargetToken {
 /**
  * Build the granted-activation offers a used item extends to the user's
  * current targets, one offer per (rule, target actor). The activating actor
- * never receives an offer from their own activation.
+ * gets an offer from their own activation only when the rule says so.
  */
 export function collectGrantedActionOffers(
 	item: OfferGrantingItem,
@@ -82,9 +83,11 @@ export function collectGrantedActionOffers(
 	const offersByKey = new Map<string, GrantedActionOffer>();
 
 	for (const rule of grantRules) {
-		for (const target of targets) {
+		const recipients = rule.includesUser ? [{ actor: item.actor }, ...targets] : targets;
+		for (const target of recipients) {
 			const targetActorUuid = target.actor?.uuid ?? '';
-			if (!targetActorUuid || targetActorUuid === sourceActorUuid) continue;
+			if (!targetActorUuid) continue;
+			if (targetActorUuid === sourceActorUuid && !rule.includesUser) continue;
 
 			const key = `${rule.id ?? ''}:${targetActorUuid}`;
 			if (offersByKey.has(key)) continue;

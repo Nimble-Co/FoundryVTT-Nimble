@@ -52,3 +52,91 @@ describe('the activation dialog conditional bonuses', () => {
 		expect(openWith([{ uuid: 'Actor.goblin' }, { uuid: 'Actor.kobold' }])).toBeUndefined();
 	});
 });
+
+describe('the activation dialog Max Damage tick', () => {
+	function openWithRule(rule: object, effects: object[]) {
+		user.targets = new Set();
+		return createState({
+			actor: () => ({ rules: [rule], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'feature', system: { activation: { effects } } }) as never,
+			hideRollsDefault: false,
+		});
+	}
+	const healing = {
+		type: 'maxDamage',
+		id: 'heal',
+		use: 'healing',
+		item: { name: 'Powerful Healer', uuid: 'Actor.h.Item.p' },
+		tempHpChoice: true,
+		chargePoolIdentifier: 'powerful-healer',
+		chargeCost: 1,
+		canPay: true,
+		covers: () => true,
+	};
+
+	it('shows for an item with healing dice, with its cost', () => {
+		const state = openWithRule(healing, [{ id: 'n', type: 'healing', formula: '2d6' }]);
+
+		expect(state.maxDamageOffers).toEqual([
+			{
+				key: 'Actor.h.Item.p:heal',
+				label: 'Powerful Healer',
+				use: 'healing',
+				tempHpChoice: true,
+				chargeCost: 1,
+				canPay: true,
+			},
+		]);
+	});
+
+	it('does not show for an item with no healing dice', () => {
+		const state = openWithRule(healing, [{ id: 'n', type: 'damage', formula: '2d6' }]);
+
+		expect(state.maxDamageOffers).toEqual([]);
+	});
+
+	it('starts with no tick', () => {
+		const state = openWithRule(healing, [{ id: 'n', type: 'healing', formula: '2d6' }]);
+
+		expect(state.maxDamageChoice).toBeNull();
+	});
+});
+
+describe('the activation dialog tick for a use with no charge', () => {
+	function openWithConsumer(allowFree: boolean) {
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules: [],
+					system: {},
+					items: { contents: [] },
+					flags: {},
+					getFlag: () => undefined,
+					getRollData: () => ({}),
+				}) as never,
+			item: () =>
+				({
+					id: 'beastshift',
+					type: 'feature',
+					system: { activation: { effects: [] } },
+					rules: new Map([
+						['0', { type: 'chargeConsumer', poolIdentifier: 'beastshift', cost: '1', allowFree }],
+					]),
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('shows for an item whose charge cost allows it, and starts off', () => {
+		const state = openWithConsumer(true);
+
+		expect(state.offersFreeUse).toBe(true);
+		expect(state.freeUse).toBe(false);
+	});
+
+	it('does not show for an item that always spends its charge', () => {
+		expect(openWithConsumer(false).offersFreeUse).toBe(false);
+	});
+});

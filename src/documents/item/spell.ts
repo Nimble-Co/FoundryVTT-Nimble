@@ -1,8 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
+import { CHAOS_INVOKED_FLAG, CHAOS_TICKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
+import { NO_DICE_SO_NICE_FLAGS } from '#utils/rolls/showDiceAnimation.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
@@ -37,8 +40,15 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		}
 
 		const manager = new ItemActivationManager(this as any, options);
-		const { activation, rolls, rollHidden, incomingReactions, rerollHistory, primaryDieBonuses } =
-			await manager.getData();
+		const {
+			activation,
+			rolls,
+			rollHidden,
+			incomingReactions,
+			rerollHistory,
+			primaryDieBonuses,
+			noDiceThrown,
+		} = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -106,6 +116,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		// Pool-node side effects run only after the cast has been paid for.
 		await manager.applyDeferredPoolNodes();
 
+		const chaosRollsNow = manager.invokesChaos && isRuleAutomationEnabled();
+
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
@@ -120,7 +132,11 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
+					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
 					[SYSTEM_ID]: {
+						...(manager.invokesChaos
+							? { [chaosRollsNow ? CHAOS_INVOKED_FLAG : CHAOS_TICKED_FLAG]: true }
+							: {}),
 						itemId: this.id,
 						itemUuid: this.uuid,
 						actorId: this.actor?.id,
@@ -156,7 +172,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		return this._createActivationCard(chatData, rolls, activation, {
+		const card = await this._createActivationCard(chatData, rolls, activation, {
 			rolls,
 			isCritical,
 			isMiss,
@@ -164,6 +180,10 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 			targets: Array.from(game.user?.targets ?? []),
 			upcast: manager.upcastResult,
 		});
+		if (card && chaosRollsNow && this.actor) {
+			await invokeChaos(this.actor as never, card.id);
+		}
+		return card;
 	}
 
 	override async prepareChatCardData() {

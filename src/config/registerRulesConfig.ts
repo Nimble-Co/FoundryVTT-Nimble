@@ -12,6 +12,8 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { CritDiceRule } from '../models/rules/critDice.js';
+import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
@@ -28,10 +30,13 @@ import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
+import { InitiativeManaRule } from '../models/rules/initiativeMana.js';
+import { InitiativeManaRerollOnesRule } from '../models/rules/initiativeManaRerollOnes.js';
 import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
+import { MaxDamageRule } from '../models/rules/maxDamage.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
@@ -43,7 +48,9 @@ import { ModifyRerollRule } from '../models/rules/modifyReroll.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
+import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
+import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
@@ -55,6 +62,8 @@ import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { TableRollRule } from '../models/rules/tableRoll.js';
+import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
 import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 
@@ -93,6 +102,15 @@ export default function registerRulesConfig() {
 		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
 		makeCrit: 'NIMBLE.ruleTypes.makeCrit',
+		maxDamage: 'NIMBLE.ruleTypes.maxDamage',
+		critDice: 'NIMBLE.ruleTypes.critDice',
+		critDiceSave: 'NIMBLE.ruleTypes.critDiceSave',
+		offerAttackBonus: 'NIMBLE.ruleTypes.offerAttackBonus',
+		poolDieToMax: 'NIMBLE.ruleTypes.poolDieToMax',
+		tableRoll: 'NIMBLE.ruleTypes.tableRoll',
+		tableRollOptions: 'NIMBLE.ruleTypes.tableRollOptions',
+		initiativeMana: 'NIMBLE.ruleTypes.initiativeMana',
+		initiativeManaRerollOnes: 'NIMBLE.ruleTypes.initiativeManaRerollOnes',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		markTarget: 'NIMBLE.ruleTypes.markTarget',
@@ -155,6 +173,15 @@ export default function registerRulesConfig() {
 		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
 		makeCrit: MakeCritRule,
+		maxDamage: MaxDamageRule,
+		critDice: CritDiceRule,
+		critDiceSave: CritDiceSaveRule,
+		offerAttackBonus: OfferAttackBonusRule,
+		poolDieToMax: PoolDieToMaxRule,
+		tableRoll: TableRollRule,
+		tableRollOptions: TableRollOptionsRule,
+		initiativeMana: InitiativeManaRule,
+		initiativeManaRerollOnes: InitiativeManaRerollOnesRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		markTarget: MarkTargetRule,

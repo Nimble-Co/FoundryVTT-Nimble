@@ -22,6 +22,7 @@ interface ChangeThisRollInput {
 	opensPicker: (entry: IncomingReactionEntry) => boolean;
 	useEntry: (entry: IncomingReactionEntry) => Promise<void>;
 	pickDie: (die: PickableDie) => Promise<void>;
+	pickSeveral: (dice: PickableDie[]) => Promise<void>;
 	pickValue: (value: number) => Promise<void>;
 	pickStat: (stat: string) => Promise<void>;
 	/** Closes the die picker. Returns the id of the entry it was open for. */
@@ -147,6 +148,12 @@ export function createChangeThisRollState(
 		void pick(die);
 	}
 
+	function pickSeveral(dice: PickableDie[]): void {
+		const { picking, pickSeveral: pick } = getInput();
+		if (picking) expectFocusLoss(picking.entry.id);
+		void pick(dice);
+	}
+
 	function pickValue(value: number): void {
 		const { picking, pickValue: pick } = getInput();
 		if (picking) expectFocusLoss(picking.entry.id);
@@ -179,6 +186,7 @@ export function createChangeThisRollState(
 		opensPicker: (entry: IncomingReactionEntry) => getInput().opensPicker(entry),
 		useEntry,
 		pickDie,
+		pickSeveral,
 		pickValue,
 		pickStat,
 		cancelPick,

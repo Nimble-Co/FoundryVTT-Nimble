@@ -7,11 +7,17 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import type { DualWieldOffer } from '#types/dualWield.d.ts';
+import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
 } from '#utils/actor/conditionalBonuses.js';
+import { offersLessManaFor } from '#utils/chaos/lessMana.js';
+import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
+import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
 	buildAutoBonusFormula,
@@ -63,9 +69,13 @@ export function createItemActivationConfigDialogState(
 	// dialog-open time; with two or more targets, a bonus that tests the target is
 	// not offered. If the player retargets while the dialog is open, the choice is
 	// not checked again at submit.
-	const firstTargetActor = (soleTarget(game.user?.targets) as Token | null)?.actor as
-		| { uuid?: string; getTargetDomain?: () => Set<string> }
-		| undefined;
+	const firstTargetActor = (
+		soleTarget(game.user?.targets, {
+			firstDecides:
+				(item.system as { activation?: { targets?: { singleTargetAttack?: boolean } } }).activation
+					?.targets?.singleTargetAttack === true,
+		}) as Token | null
+	)?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
 	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
 		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
 		item as unknown as {
@@ -79,6 +89,17 @@ export function createItemActivationConfigDialogState(
 		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
 		return 'none';
 	};
+
+	const maxDamage: MaxDamageOffer[] = maxDamageOffers(actor as never, item as never);
+	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
+	const offersLessMana = offersLessManaFor(actor as never, item as never);
+	let lessMana = $state(false);
+	const offersFreeUse =
+		actor.type === 'character' && itemOffersFreeUse(actor as never, item as never);
+	let freeUse = $state(false);
+	const dualWieldOffer: DualWieldOffer | null = dualWieldOfferFor(actor as never, item as never);
+	let dualWield = $state(false);
+	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
 	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
@@ -301,6 +322,45 @@ export function createItemActivationConfigDialogState(
 		},
 		set shouldRollBeHidden(value: boolean) {
 			shouldRollBeHidden = value;
+		},
+
+		get maxDamageChoice() {
+			return maxDamageChoice;
+		},
+		set maxDamageChoice(value: MaxDamageChoice | null) {
+			maxDamageChoice = value;
+		},
+		maxDamageOffers: maxDamage,
+		offersLessMana,
+		dualWieldOffer,
+		get dualWield() {
+			return dualWield;
+		},
+		// With the same formula, the tick is advantage in the Roll Mode field.
+		set dualWield(value: boolean) {
+			if (dualWieldOffer && !dualWieldOffer.other && value !== dualWield) {
+				selectedRollMode = Math.clamp(selectedRollMode + (value ? 1 : -1), -6, 6);
+			}
+			dualWield = value;
+		},
+		get dualWieldExtraDieOn() {
+			return dualWieldExtraDieOn;
+		},
+		set dualWieldExtraDieOn(value: 'activated' | 'other') {
+			dualWieldExtraDieOn = value;
+		},
+		get lessMana() {
+			return lessMana;
+		},
+		set lessMana(value: boolean) {
+			lessMana = value;
+		},
+		offersFreeUse,
+		get freeUse() {
+			return freeUse;
+		},
+		set freeUse(value: boolean) {
+			freeUse = value;
 		},
 
 		// Pool snapshots (immutable).

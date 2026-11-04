@@ -55,6 +55,13 @@ When an ability rerolls the attack, the new roll does not keep **Set Primary Die
 
 Some features add to the Primary Die of your attacks without the roll window. Such a feature adds its number in the same way as **Add to Primary Die Result**, and it adds to the number you type there. It can apply only to melee or only to ranged attacks, or only while a condition is true. A reroll keeps it. An area attack does not get it. The card shows one line at the roll for each of these features, with the feature's name and a tag such as **+1 to Primary Die**. Hover the line to read it as a sentence, for example "Unerring Judgment: +1 to the Primary Die".
 
+Some features add a tick to the window:
+
+- **Max damage.** No die is rolled. The total is the max of the formula, after upcast. The tick says the cost. A card from this tick has no reroll or die change rows, because no die was rolled. A feature can also make the attack a hit or a crit with this tick, and a tag on the card tells why.
+- **Dual wield (1/round).** It shows with 2 equipped weapons, and on an Unarmed Strike. The system does not check the Light property or your STR: that is for the table. With the same damage formula, the tick is advantage. With a different formula, both weapons roll and the card asks which result you keep. If you keep the second weapon, its damage type and item bonuses apply. Effects on a hit stay with the weapon you used. With other advantage, the window asks which weapon gets the extra die. A reroll of the attack rolls both weapons again, and you choose again.
+- **Spend 1 less mana.** See [The Chaos Table](#the-chaos-table).
+- **Use without a charge.** It shows on Beastshift, starts off, and spends no charge when ticked: for Swiftshift and Friend of Beasts. Swiftshift says a free Beastshift gives no temp HP. The system does not track that: it is for you.
+
 The chat card shows what happened below the dice. A set result appears as **Primary Die Set To**. An added number appears with the face before it and the result, for example "Primary Die: 5 + 1 = 6". When the die stops at its maximum, the line says so, for example "Primary Die: 6 + 1 = 6, the max". Hover it to see who added the number, for example "Unerring Judgment +1". The die on the card always shows the result. When a feature sets the Primary Die and adds the number to the set value, the value picker shows a small badge with the number on the corner of the new value, such as **+1**. Hover the badge to see who added it.
 
 ## Anatomy of a chat card
@@ -117,6 +124,10 @@ When a disposition or a Reach kept an ally's reroll off a card, the GM sees one 
 ### Rerolling one die
 
 Some features reroll one die and keep the others. When the player picks the die, a click on the row opens the dice of the roll under it, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice and go back to the row. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown. With manual dice entry on in Foundry's Dice Configuration, the new die and each explosion die are asked for, as for a whole reroll. A player's reroll is rolled on the GM's client, so the GM's dice settings apply to it.
+
+### Rerolling several dice
+
+A feature can let you pick more than one die, such as Elemental Destruction after a spell hit. Click the row, click each die you want, and look at the count and the cost under the dice. The cost is per die. Click **Reroll** to pay and roll. **Cancel** costs nothing. You can pick the Primary Die, and the system reads the crit and the miss again.
 
 ### Keeping either result
 
@@ -198,6 +209,14 @@ The change also goes to the combat tracker, for the combat and the combatant tha
 
 The change stays on the card only, and the tracker does not change, when that combat or combatant is gone, when the roll was made outside a combat, or when the combatant has a different Initiative now (a new roll, or a number the GM set by hand).
 
+### Surge dice
+
+Elemental Surge rolls on the Initiative card, the first time you roll Initiative in a combat. The card shows the total and the dice, and you get the mana. The mana can go above your max. At the end of combat, the mana above what you had before the surge goes away. Mana you spent counts as surge mana first.
+
+With Steel Will, each 1 on a surge die rolls again one time by itself, and a line on the card says so.
+
+With Feature Effects off, the card shows the dice, a **Reroll a 1** row for each 1 when you have Steel Will, and a **Regain mana** button. The one who rolled, the GM and a player who owns the hero can click them.
+
 ## Why an attack is a crit, or a hit
 
 A feature can change how the roll is read. When the die does not explain the result, a tag at the roll names the cause:
@@ -209,11 +228,47 @@ A feature can change how the roll is read. When the die does not explain the res
 
 The expanded roll details mark a Primary Die face that is a crit or a miss in the same way.
 
+## Crit dice
+
+A crit can roll more dice by itself. They show as a labelled line on the attack card, for example "Sneak Attack: +7". Hover the line to read the dice.
+
+- **Sneak Attack dice** roll on a crit, 1/turn. An attack on the turn of another creature can use them too. A reroll or a Make It a Crit row that gives the crit adds the dice. A reroll that takes the crit away removes them and gives the use back. These dice do not explode and are not Vicious, and a die at its max here does not make a crit. With Feature Effects off, they are a row in Change This Roll.
+- **Twist the Blade** is a row that picks a Sneak Attack die and sets its value. With no action left, the row still works and the card says so. Rank 2 is free, 1/turn, and takes the place of the paid row until you use it.
+- **Cunning Strike** is a row that spends a use, then the target makes a save with the roll window, on a normal save card. A player who owns the target and is online rolls it. If not, the GM rolls it. Closing the window gives the use back. A failed save sets the Sneak Attack dice to their max. A passed save gives the use back. Until the save has a result, nothing changes.
+- **Epic Criticals** makes the first crit die a d20 by itself, with a tag. A 20 explodes again with the die of the weapon. With Feature Effects off, it is a **Use a d20** row.
+- **Hollow Bones** makes a crit against the one with this rule Vicious, with a tag. With Feature Effects off, it is a row for the owner of that target.
+
+**Any die crits.** A rule such as Shatter makes a crit from any die at its max. A change of one die reads this again, and adds or removes the crit dice. Shatter has one **+1 to a die** row per upcast step, and you can use more than one on the same die.
+
+## Shadow Rush
+
+Shadow Rush is a feature you use from the sheet, once per shadow minion. The card deals the max of the minion's attack, 12 necrotic damage. It hits and does not crit. Remove that minion yourself: the system does not track shadow minions yet.
+
+## Judgment Dice when you are attacked
+
+Radiant Judgment and Maximum Judgment run when an attack card has you as a target, hit or miss. A reroll of that card does not run them again, and neither does its damage. If damage from a card that did not target you hits you, they run then.
+
+## The Chaos Table
+
+A hero with Force of Chaos has a tick in the spell window, **Spend 1 less mana**. It does not show when the spell costs no mana. The tick or a crit on any attack rolls on the Chaos Table by itself, one roll per attack card, also after a reroll. With Feature Effects off, a crit shows a **Roll on the Chaos Table** button.
+
+Chaos Lash rolls on the Chaos Table each time you use it. With Feature Effects off, its card shows the **Roll on the Chaos Table** button.
+
+Each roll has its own Chaos card. The world setting **Show Chaos Table rolls** tells what the card shows. It is off by default, because the book says that the table is secret. Off: the player sees only the number, and the GM gets the text in a whisper. On: the text is on the card.
+
+With Thrive in Chaos, the card shows three buttons before the roll: **Roll once**, **Roll twice, both happen**, and **Roll twice, choose one**, which costs 1 use per Safe Rest. With Master of Chaos, each table roll has advantage.
+
+The system shows the text of the table only. It applies no effect of the table.
+
 ## Making an attack a crit
 
 Some features let a creature make an attack a crit after the roll. The card has a **Make It a Crit** row in [Change This Roll](#change-this-roll). The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
 
 The button does not show on an attack that is already a crit, an attack on 2 or more targets, an area attack, or a roll that cannot crit.
+
+## Attacks from a row on a card
+
+A feature such as Coordinated Strike puts a row on its card, for each ally you target and, when the feature says so, for you too. The attack from a row remembers the item, and a feature can read it. Juggernaut adds damage equal to your armor and +1 to the Primary Die on your attack from a Coordinated Strike row, with a tag. The damage has the type of the attack. With Feature Effects off, this is a row in Change This Roll.
 
 ## Damage given back
 

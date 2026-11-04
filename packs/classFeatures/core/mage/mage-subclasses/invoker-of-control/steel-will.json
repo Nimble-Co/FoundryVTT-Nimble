@@ -61,6 +61,15 @@
 				"actionCost": 0,
 				"cardHint": "",
 				"cardHintWhen": {}
+			},
+			{
+				"type": "initiativeManaRerollOnes",
+				"disabled": false,
+				"id": "steelWillSurge01",
+				"identifier": "",
+				"label": "Steel Will",
+				"predicate": {},
+				"priority": 2
 			}
 		],
 		"activation": {

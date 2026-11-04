@@ -5,7 +5,133 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice1",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 1,
+						"max": 2
+					}
+				},
+				"priority": 1,
+				"formula": "1d6",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice2",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 3,
+						"max": 6
+					}
+				},
+				"priority": 1,
+				"formula": "1d8",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice3",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 7,
+						"max": 8
+					}
+				},
+				"priority": 1,
+				"formula": "2d8",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice4",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 9,
+						"max": 10
+					}
+				},
+				"priority": 1,
+				"formula": "2d10",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice5",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 11,
+						"max": 14
+					}
+				},
+				"priority": 1,
+				"formula": "2d12",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice6",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 15,
+						"max": 16
+					}
+				},
+				"priority": 1,
+				"formula": "2d20",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			},
+			{
+				"type": "critDice",
+				"disabled": false,
+				"id": "sneakAttackDice7",
+				"identifier": "sneak-attack",
+				"label": "Sneak Attack",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				},
+				"priority": 1,
+				"formula": "3d20",
+				"dieRole": "critBonus",
+				"oncePerTurn": true,
+				"attackDelivery": "any"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

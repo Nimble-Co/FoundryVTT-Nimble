@@ -5,7 +5,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "offerAttackBonus",
+				"disabled": false,
+				"id": "juggernautOffer1",
+				"identifier": "",
+				"label": "Juggernaut",
+				"predicate": {},
+				"priority": 1,
+				"offerSource": "coordinated-strike",
+				"damage": "@attributes.armor.value",
+				"primaryDie": 1
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -19,37 +32,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "IqEVFq6bKyOspDba",
-					"type": "damage",
-					"damageType": "psychic",
-					"formula": "@attributes.armor.value",
-					"parentContext": null,
-					"parentNode": null,
-					"canCrit": false,
-					"canMiss": false,
-					"on": {
-						"hit": [
-							{
-								"id": "J1jF8o8v0mlvw5Ob",
-								"type": "note",
-								"noteType": "warning",
-								"text": "damage equal to your armor",
-								"parentContext": "hit",
-								"parentNode": "IqEVFq6bKyOspDba"
-							},
-							{
-								"id": "ZMCkbXGT55MPKSsT",
-								"type": "damageOutcome",
-								"outcome": "fullDamage",
-								"parentContext": "hit",
-								"parentNode": "IqEVFq6bKyOspDba"
-							}
-						]
-					}
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

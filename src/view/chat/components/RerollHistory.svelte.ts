@@ -28,7 +28,10 @@ export function createRerollHistoryState(
 	});
 
 	function keepLabel(roll: KeepChoiceRoll): string {
-		return localize('NIMBLE.chat.incomingReactions.keepResult', { total: String(roll.total) });
+		const text = localize('NIMBLE.chat.incomingReactions.keepResult', {
+			total: String(roll.total),
+		});
+		return roll.label ? `${roll.label}: ${text}` : text;
 	}
 
 	async function keep(choice: RerollKept): Promise<void> {

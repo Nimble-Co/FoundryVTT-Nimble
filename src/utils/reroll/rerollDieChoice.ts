@@ -1,5 +1,8 @@
+import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import {
+	applyOfferBonus,
+	applyRollEffect,
 	changeOneDie,
 	type DieRef,
 	makeRollCrit,
@@ -8,8 +11,14 @@ import {
 	pickableDice,
 	primaryDieRef,
 	rerollOneDie,
+	thrownTogether,
 } from '../../dice/oneDieReroll.js';
-import type { ChangeableDie, RerollDie } from '../incomingReactions/incomingReactionEntry.js';
+import {
+	type ChangeableDie,
+	CRIT_BONUS_ROLE,
+	type RerollDie,
+	type RollEffect,
+} from '../incomingReactions/incomingReactionEntry.js';
 import type { RerollableRoll } from './rerollRollTarget.js';
 
 function pickOptions(found: RerollableRoll<unknown>, current: OneDieRoll) {
@@ -24,6 +33,12 @@ function diceToPick(found: RerollableRoll<unknown>): PickableDie[] {
 	return current ? pickableDice(current, pickOptions(found, current)) : [];
 }
 
+function chooseDice(all: PickableDie[], die: ChangeableDie, ref: DieRef | null): PickableDie[] {
+	if (die === 'pickedDie') return all;
+	if (die === 'critBonusDie') return all.filter((d) => d.dieRole === CRIT_BONUS_ROLE);
+	return all.filter((d) => d.term === ref?.term && d.result === ref.result);
+}
+
 /**
  * The dice a player picks from for a Change a Die rule: every pickable die, or
  * only the Primary Die. A die has a bonus only when `change` puts it on the new face.
@@ -36,8 +51,7 @@ function diceForRule(
 	const all = diceToPick(found);
 	const current = found.current?.();
 	const ref = die === 'primaryDie' && current ? primaryDieRef(current) : null;
-	const dice =
-		die === 'pickedDie' ? all : all.filter((d) => d.term === ref?.term && d.result === ref.result);
+	const dice = chooseDice(all, die, ref);
 	if (change.mode !== 'set' || change.addsBonus) return dice;
 	return dice.map(({ bonus: _bonus, ...rest }) => rest);
 }
@@ -54,7 +68,7 @@ function dieToUse(
 	picked: DieRef | null,
 ): DieRef | null {
 	if (die === 'primaryDie') return primaryDieRef(current);
-	const dice = pickableDice(current, pickOptions(found, current));
+	const dice = chooseDice(pickableDice(current, pickOptions(found, current)), die, null);
 	const match = picked
 		? dice.find((d) => d.term === picked.term && d.result === picked.result)
 		: dice.length === 1
@@ -101,6 +115,49 @@ function rerollableFor<TRoll>(
 			dropped: made?.dropped ?? null,
 		}),
 		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+/**
+ * The roll a rule with a count of dice rerolls, one die after the other. Null
+ * when no die the player picked is one the roll has. A die a change of the crit
+ * took off the roll is skipped.
+ */
+function severalDiceFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	picked: readonly DieRef[],
+	reroll: typeof rerollOneDie = rerollOneDie,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const refs = picked.flatMap((ref) => {
+		const die = dieToUse(found, current, 'pickedDie', ref);
+		return die ? [die] : [];
+	});
+	if (refs.length === 0 || refs.length !== picked.length) return null;
+
+	const made: Array<Awaited<ReturnType<typeof rerollOneDie>>> = [];
+	return {
+		...found,
+		previousResult: resultAt(current, refs[0]),
+		makeRoll: async () => {
+			let roll = current;
+			for (const ref of refs) {
+				const term = roll.terms[ref.term] as { results?: unknown[] } | undefined;
+				if (!term?.results?.[ref.result]) continue;
+				const step = await reroll(roll, ref);
+				made.push(step);
+				roll = step.roll;
+			}
+			return roll as unknown as TRoll;
+		},
+		readNewDie: () => ({
+			faces: made[0]?.faces ?? null,
+			value: made[0]?.next ?? null,
+			dropped: null,
+			several: made.map(({ faces, previous, next }) => ({ faces, previous, next })),
+		}),
+		diceToThrow: () => thrownTogether(made.map((step) => step.thrown)),
 	};
 }
 
@@ -165,4 +222,62 @@ function critFor<TRoll>(
 	};
 }
 
-export { changeableFor, critFor, diceForRule, diceToPick, rerollableFor };
+/** The roll an offer bonus changes. Null when the card has no roll to change. */
+function offerBonusFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	primaryDie: number,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const ref = primaryDieRef(current);
+
+	let made: Awaited<ReturnType<typeof applyOfferBonus>> | null = null;
+	return {
+		...found,
+		previousResult: ref ? resultAt(current, ref) : null,
+		makeRoll: async () => {
+			made = await applyOfferBonus(current, primaryDie);
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+/**
+ * The roll a row's effect changes. The Primary Die keeps its face. Null when the
+ * card has no roll to change. Only the dice the effect rolled are thrown.
+ */
+function effectFor<TRoll>(
+	found: RerollableRoll<TRoll>,
+	effect: RollEffect,
+	critDice: CritDiceSpec | null = null,
+	apply: typeof applyRollEffect = applyRollEffect,
+): RerollableRoll<TRoll> | null {
+	const current = found.current?.();
+	if (!current) return null;
+	const ref = primaryDieRef(current);
+
+	let made: Awaited<ReturnType<typeof applyRollEffect>> | null = null;
+	return {
+		...found,
+		previousResult: ref ? resultAt(current, ref) : null,
+		makeRoll: async () => {
+			made = await apply(current, effect, critDice);
+			return made.roll as unknown as TRoll;
+		},
+		readNewDie: () => ({ faces: made?.faces ?? null, value: made?.next ?? null, dropped: null }),
+		diceToThrow: () => made?.thrown ?? null,
+	};
+}
+
+export {
+	offerBonusFor,
+	severalDiceFor,
+	changeableFor,
+	critFor,
+	diceForRule,
+	diceToPick,
+	effectFor,
+	rerollableFor,
+};

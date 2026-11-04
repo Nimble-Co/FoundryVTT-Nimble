@@ -39,9 +39,31 @@ export function dieLabel(
 }
 
 export function createRerollDiePickerState(
-	getProps: () => Pick<RerollDiePickerProps, 'dice' | 'oncancel' | 'rolling'>,
+	getProps: () => Pick<
+		RerollDiePickerProps,
+		'dice' | 'oncancel' | 'rolling' | 'several' | 'onpick'
+	>,
 ) {
 	const elements = $state<{ root?: HTMLElement; dice: HTMLButtonElement[] }>({ dice: [] });
+	let picked = $state<PickableDie[]>([]);
+	const atMax = $derived(!!getProps().several && picked.length >= (getProps().several?.max ?? 0));
+
+	const isPicked = (die: PickableDie) =>
+		picked.some((other) => other.term === die.term && other.result === die.result);
+
+	function onDie(die: PickableDie) {
+		if (!getProps().several) return getProps().onpick(die);
+		picked = isPicked(die)
+			? picked.filter((other) => other.term !== die.term || other.result !== die.result)
+			: [...picked, die];
+	}
+
+	function isRolling(die: PickableDie) {
+		const { several, rolling } = getProps();
+		return several
+			? !!rolling && isPicked(die)
+			: rolling?.term === die.term && rolling.result === die.result;
+	}
 
 	/** Focus the Primary Die, else the first die, when the picker opens. */
 	async function focusFirst() {
@@ -67,5 +89,18 @@ export function createRerollDiePickerState(
 		}
 	}
 
-	return { elements, focusFirst, onKeydown };
+	return {
+		elements,
+		focusFirst,
+		onKeydown,
+		onDie,
+		isPicked,
+		isRolling,
+		get picked() {
+			return picked;
+		},
+		get atMax() {
+			return atMax;
+		},
+	};
 }

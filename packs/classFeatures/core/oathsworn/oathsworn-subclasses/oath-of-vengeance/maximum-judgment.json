@@ -6,7 +6,37 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "poolDieToMax",
+				"disabled": false,
+				"id": "maximumJudgment1",
+				"identifier": "",
+				"label": "Maximum Judgment",
+				"predicate": {},
+				"priority": 7,
+				"poolIdentifier": "judgment",
+				"trigger": "onAttacked",
+				"reach": 0
+			},
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "maximumJudgment2",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "judgment",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": null,
+				"effectType": "generic",
+				"selectionOutcome": "maximize"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

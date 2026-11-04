@@ -258,6 +258,23 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 		});
 	});
 
+	it('a use with no charge validates and consumes with no charge', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(true);
+		const registerChargeSystemHooks = (await import('../chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = createCharacterItem();
+		hooks.get('nimble.preUseItem')?.(item, { freeUse: true });
+		expect(validateItemChargeConsumptionMock).toHaveBeenCalledWith(item, { freeUse: true });
+
+		hooks.get('nimble.useItem')?.(item, null, { freeUse: true });
+		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(
+			item,
+			expect.objectContaining({ freeUse: true }),
+		);
+	});
+
 	it('skips validation and consumption but allows the use when spending automation is off', async () => {
 		const hooks = captureHooks();
 		setSpendingAutomation(false);

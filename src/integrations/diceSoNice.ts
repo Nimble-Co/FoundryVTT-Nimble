@@ -105,6 +105,56 @@ interface Dice3D {
 	addColorset(colorset: Record<string, string>, mode?: string): Promise<void>;
 }
 
+type DieResult = foundry.dice.terms.DiceTerm.Result & { faces?: number };
+
+/** What Dice So Nice reads from the roll it throws. */
+interface Dice3dRoll {
+	dice: foundry.dice.terms.DiceTerm[];
+	total: number | undefined;
+	ghost?: boolean;
+	secret?: boolean;
+}
+
+/** The context of the `diceSoNiceRollStart` hook. It throws `dsnRoll` when that is set. */
+interface Dice3dContext {
+	roll: foundry.dice.Roll.Any;
+	dsnRoll?: Dice3dRoll;
+}
+
+/**
+ * Dice So Nice reads the size of a die from its term, so a result of another
+ * size needs a term of its own. A term with number 0 starts in a later throw,
+ * as an explosion does. Null when each die is the size of its term.
+ */
+export function rollForDice3d(roll: foundry.dice.Roll.Any): Dice3dRoll | null {
+	const dice = roll.dice as foundry.dice.terms.DiceTerm[];
+	const sized = (result: DieResult) => !!result.faces;
+	if (!dice.some((term) => (term.results as DieResult[]).some(sized))) return null;
+
+	const split = dice.flatMap((term) => {
+		const results = term.results as DieResult[];
+		const at = results.findIndex(sized);
+		if (at < 0) return [term];
+		const faces = term.faces ?? 6;
+		const part = (number: number, size: number, partResults: DieResult[]) =>
+			Object.assign(
+				new foundry.dice.terms.Die({
+					number,
+					faces: size,
+					modifiers: [...term.modifiers] as never,
+					options: term.options,
+				}),
+				{ results: partResults, _evaluated: true },
+			);
+		const parts = [part(0, results[at].faces as number, [results[at]])];
+		if (at > 0) parts.unshift(part(term.number ?? 1, faces, results.slice(0, at)));
+		if (at + 1 < results.length) parts.push(part(0, faces, results.slice(at + 1)));
+		return parts;
+	});
+	const { total, ghost, secret } = roll as foundry.dice.Roll.Any & Dice3dRoll;
+	return { dice: split, total, ghost, secret };
+}
+
 /**
  * Registers the system's Dice So Nice colorsets.
  *
@@ -114,6 +164,13 @@ interface Dice3D {
  * construction are inert.
  */
 export default function registerDiceSoNiceIntegration() {
+	(Hooks.on as (event: string, fn: (id: string, context: Dice3dContext) => void) => number)(
+		'diceSoNiceRollStart',
+		(_messageId, context) => {
+			const split = rollForDice3d(context.roll);
+			if (split) context.dsnRoll = split;
+		},
+	);
 	(Hooks.once as (event: string, fn: (dice3d: Dice3D) => Promise<void>) => number)(
 		'diceSoNiceReady',
 		async (dice3d) => {

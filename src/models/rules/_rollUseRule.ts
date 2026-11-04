@@ -1,10 +1,14 @@
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { ResultCardView } from '#types/resultChange.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
+import { ruleKey } from '../../utils/actor/actorRules.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
+	ATTACK_SOURCES,
 	type AttackDeliveryFilter,
+	type AttackSourceFilter,
 	matchesAttackDelivery,
+	matchesAttackSource,
 } from '../../utils/damage/attackDelivery.js';
 import {
 	getHeroicReactionLabelKey,
@@ -147,6 +151,27 @@ function whenFields(namespace: RollUseNamespace) {
 				showWhen: forAttacks,
 			}),
 		),
+		attackSource: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
+				label: wordKey(namespace, 'attackSource', 'label'),
+				hint: wordKey(namespace, 'attackSource', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
+		thisItemOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: wordKey(namespace, 'thisItemOnly', 'label'),
+				hint: wordKey(namespace, 'thisItemOnly', 'hint'),
+				showWhen: forAttacks,
+			}),
+		),
 		outcome: new fields.StringField(
 			withWidget({
 				required: true,
@@ -268,6 +293,23 @@ function costFields(namespace: RollUseNamespace) {
 			label: wordKey(namespace, 'actionCost', 'label'),
 			hint: wordKey(namespace, 'actionCost', 'hint'),
 		}),
+		actionReportOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.actionReportOnly.label',
+				hint: 'NIMBLE.rules.reroll.actionReportOnly.hint',
+				showWhen: (data: Record<string, unknown>) => Number(data.actionCost) > 0,
+			}),
+		),
+		oncePerTurn: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.reroll.oncePerTurn.label',
+			hint: 'NIMBLE.rules.reroll.oncePerTurn.hint',
+		}),
 		oncePerRoll: new fields.BooleanField({
 			required: true,
 			nullable: false,
@@ -336,6 +378,8 @@ const COST_FIELDS = [
 	'woundCost',
 	'heroicReaction',
 	'actionCost',
+	'actionReportOnly',
+	'oncePerTurn',
 	'oncePerRoll',
 ] as const;
 
@@ -356,6 +400,8 @@ abstract class RollUseRule<
 	declare reach: number;
 	declare outcome: RerollTrigger;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare attackSource: AttackSourceFilter;
+	declare thisItemOnly: boolean;
 	declare otherCreature: Predicate;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
@@ -363,6 +409,8 @@ abstract class RollUseRule<
 	declare woundCost: number;
 	declare heroicReaction: HeroicReactionKey | '';
 	declare actionCost: number;
+	declare actionReportOnly: boolean;
+	declare oncePerTurn: boolean;
 	declare oncePerRoll: boolean;
 	declare cardHint: string;
 	declare cardHintWhen: Predicate;
@@ -397,7 +445,10 @@ abstract class RollUseRule<
 		return [
 			{ fields: ['usedBy', 'reach'] },
 			...between,
-			{ label: 'NIMBLE.rules.reroll.form.when', fields: ['outcome', 'attackDelivery'] },
+			{
+				label: 'NIMBLE.rules.reroll.form.when',
+				fields: ['outcome', 'attackDelivery', 'attackSource', 'thisItemOnly'],
+			},
 			{
 				label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
 				hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
@@ -422,6 +473,8 @@ abstract class RollUseRule<
 			['usedBy', 'string'],
 			['outcome', 'string'],
 			['attackDelivery', 'string'],
+			['attackSource', 'string'],
+			['thisItemOnly', 'boolean'],
 			['otherCreature', 'object'],
 			['chargePoolIdentifier', 'string'],
 			['chargeCost', 'number'],
@@ -429,6 +482,8 @@ abstract class RollUseRule<
 			['woundCost', 'number'],
 			['heroicReaction', 'string'],
 			['actionCost', 'number'],
+			['actionReportOnly', 'boolean'],
+			['oncePerTurn', 'boolean'],
 			['oncePerRoll', 'boolean'],
 			['reach', 'number'],
 			['cardHint', 'string'],
@@ -444,6 +499,8 @@ abstract class RollUseRule<
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			heroicReaction: this.heroicReaction ?? '',
 			actionCost: Math.min(1, Math.max(0, Math.trunc(Number(this.actionCost) || 0))),
+			...(this.actionReportOnly ? { actionReportOnly: true } : {}),
+			...(this.oncePerTurn ? { turnUseKey: ruleKey(this) } : {}),
 		};
 	}
 
@@ -469,6 +526,11 @@ abstract class RollUseRule<
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
+			if (this.thisItemOnly && roll.itemUuid !== this.item.uuid) return false;
+			if ((this.attackSource ?? 'any') !== 'any') {
+				const item = roll.itemUuid ? fromUuidSync(roll.itemUuid) : null;
+				if (!matchesAttackSource(this.attackSource, item as { type?: string } | null)) return false;
+			}
 		} else {
 			// A check has no target side.
 			if (side === 'target') return false;

@@ -1,4 +1,6 @@
+import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
+import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
@@ -11,6 +13,7 @@ import {
 	findUnofferableVariableSpends,
 	getChargeConsumers,
 	getFixedChargeCostsByPool,
+	itemOffersFreeUse,
 } from '#utils/chargePool/helpers.js';
 import type {
 	CharacterActorLike,
@@ -38,6 +41,9 @@ import {
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
 import { collectAttackOutcome } from '../utils/damage/collectAttackOutcome.js';
+import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
+import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
+import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -76,6 +82,19 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
+import {
+	applyMaxDamageToRollOptions,
+	noDiceThrown,
+	prepareHealingAtMax,
+	resolveMaxDamage,
+	spendMaxDamageCharge,
+} from './itemActivation/maxDamageActivation.js';
+import {
+	addOfferBonuses,
+	markOfferOnRollOptions,
+	offerSourceOf,
+} from './itemActivation/offerBonus.js';
 
 /** One Primary Die Bonus as the card stores it, with the item of its rule. */
 interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
@@ -172,6 +191,18 @@ class ItemActivationManager {
 	 */
 	spellCost: ResolvedSpellCost | null = null;
 
+	/** The tick for dual wielding was used on this activation. */
+	#dualWield = false;
+
+	/** The keep between two weapons, and its entry, for the chat card. */
+	#dualWieldKeep: DualWieldKeep | null = null;
+
+	/** The player ticked 1 less mana: the cast invokes Chaos. */
+	invokesChaos = false;
+
+	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
+	freeUse = false;
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -182,6 +213,20 @@ class ItemActivationManager {
 	#primaryDieBonuses: PrimaryDieBonusRecord[] = [];
 
 	#deferredPoolNodes: PoolNode[] = [];
+
+	/** The Max Damage rule the player ticked, and the choice that came with it. */
+	#maxDamage: ActiveMaxDamage | null = null;
+
+	/** The identifier of the item whose offer row started this activation. */
+	#offerSource(): string | undefined {
+		return offerSourceOf(this.#options.offerSourceUuid);
+	}
+
+	/** The attack roll of this activation, for the uses its crit dice spend. */
+	#primaryRoll: DamageRoll | null = null;
+
+	/** Every roll of this activation has max dice, so no die is thrown. */
+	#noDiceThrown = false;
 
 	/** Charge pools the Attack Outcome rules of this attack spend by themselves. */
 	#attackOutcomeCharges: string[] = [];
@@ -373,6 +418,13 @@ class ItemActivationManager {
 			}
 		}
 
+		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
+
+		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
+			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
+			this.invokesChaos = true;
+		}
+
 		// Get Targets — resolve the first target's domain for targetCondition evaluation
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 		const targetDomain = this.#getSoleTargetDomain();
@@ -383,6 +435,8 @@ class ItemActivationManager {
 				delivery: this.#getAttackDelivery(),
 				itemUuid: this.#item.uuid,
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
+				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
+				...(this.#offerSource() ? { offerSource: this.#offerSource() } : {}),
 			},
 		);
 
@@ -391,6 +445,12 @@ class ItemActivationManager {
 		// before the rolls so the spend and the `@spent` the formulas resolve
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
+
+		this.#maxDamage = resolveMaxDamage(
+			this.actor as never,
+			this.#item as never,
+			dialogData.maxDamage,
+		);
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
@@ -402,6 +462,8 @@ class ItemActivationManager {
 			incomingReactions: this.#appliedIncomingReactions,
 			rerollHistory: this.#rerollHistory,
 			primaryDieBonuses: this.#primaryDieBonuses,
+			noDiceThrown: this.#noDiceThrown,
+			dualWieldKeep: this.#dualWieldKeep,
 		};
 	}
 
@@ -450,6 +512,7 @@ class ItemActivationManager {
 		const effects = this.activationData?.effects ?? [];
 		const updatedEffects: EffectNode[] = [];
 		const rolls: (Roll | DamageRoll)[] = [];
+		const healingRollsAtMax = new Set<Roll | DamageRoll>();
 		// `@spent` is only meaningful for this activation, so it is added here
 		// rather than on the actor's roll data. Absent a variable spend it is 0,
 		// which keeps a formula referencing it from failing to parse.
@@ -460,6 +523,12 @@ class ItemActivationManager {
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
 		// roll evaluates (automatic rerolls need the outcome).
+		let primaryAttackNode: EffectNode | null = null;
+		let dualWieldFirst: {
+			formula: string;
+			options: DamageRoll.Options;
+			damageType: string;
+		} | null = null;
 		let primaryDamageNode: EffectNode | null = null;
 		let primaryDamagePlan: IncomingAttackPlan | null = null;
 
@@ -513,7 +582,7 @@ class ItemActivationManager {
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
 					const targetCount = Array.from(game.user?.targets ?? []).length;
-					const multiTarget = !isAoE && targetCount > 1;
+					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
@@ -526,6 +595,8 @@ class ItemActivationManager {
 					// resolvedCanCrit above is intentional.
 					const resolvedCanMiss = isAoE || multiTarget ? false : isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
+					if (dialogData.dualWield) this.#dualWield = true;
+					node.rollMode = activatedWeaponRollMode(node.rollMode, dialogData.dualWield);
 
 					// Check if item has vicious property
 					const itemSystem = this.#item.system as { properties?: { selected?: string[] } };
@@ -567,6 +638,14 @@ class ItemActivationManager {
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
+					const offerSource = this.#offerSource();
+					const offerBonuses = collectOfferBonuses(
+						this.actor as { rules?: unknown } | null,
+						offerSource,
+					);
+					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
+					formula = offerAdded.formula;
+					this.#primaryDieBonuses.push(...offerAdded.primaryDieBonuses);
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const attackOutcome = collectAttackOutcome({
 						attacker: this.actor as { rules?: unknown } | null,
@@ -577,7 +656,8 @@ class ItemActivationManager {
 						canMiss: resolvedCanMiss,
 						damageTypes: node.damageType ? [node.damageType] : [],
 					});
-					this.#attackOutcomeCharges = attackOutcome.charges;
+					this.#attackOutcomeCharges =
+						this.#maxDamage?.rule.use === 'damage' ? [] : attackOutcome.charges;
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
 						...attackOutcome.options,
@@ -596,6 +676,16 @@ class ItemActivationManager {
 						primaryDieModifier: (Number(dialogData.primaryDieModifier) || 0) + ruleBonus,
 						isVicious,
 					};
+					if (isVicious && damageOptions.outcomeSources?.vicious) {
+						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
+						damageOptions.outcomeSources = sources;
+					}
+					markOfferOnRollOptions(damageOptions, offerSource, offerBonuses);
+					const critDice = resolvedCanCrit
+						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
+						: [];
+					if (critDice.length > 0) damageOptions.critDice = critDice;
+					applyMaxDamageToRollOptions(damageOptions, this.#maxDamage, resolvedCanCrit);
 					// Forward the optional rollMode source list so DamageRoll can
 					// compute the net rollMode itself (advantage and disadvantage
 					// cancel 1-for-1). Only attached when callers supplied the
@@ -636,10 +726,14 @@ class ItemActivationManager {
 						activationRollData as DamageRoll.Data,
 						damageOptions,
 					);
+					if (dialogData.dualWield?.otherItemUuid) {
+						dualWieldFirst = { formula, options: damageOptions, damageType: node.damageType ?? '' };
+					}
 					// A formula with no die has no Primary Die to add to.
 					if (!(roll as DamageRoll).primaryDie) this.#primaryDieBonuses = [];
 
 					foundDamageRoll = true;
+					primaryAttackNode = node;
 				} else {
 					let formula = node.formula || '0';
 
@@ -653,7 +747,9 @@ class ItemActivationManager {
 					roll = new Roll(formula, activationRollData) as unknown as Roll;
 				}
 
-				await roll.evaluate();
+				const healingAtMax = prepareHealingAtMax(node, this.#maxDamage);
+				await roll.evaluate(healingAtMax ? { maximize: true } : {});
+				if (healingAtMax) healingRollsAtMax.add(roll);
 
 				// Resolve outcome-dependent incoming behavior for the primary damage
 				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
@@ -681,12 +777,35 @@ class ItemActivationManager {
 					this.#rerollHistory = result.rerollHistory;
 				}
 
+				if (node === primaryAttackNode) this.#primaryRoll = roll as DamageRoll;
+				if (node === primaryAttackNode && dualWieldFirst && dialogData.dualWield) {
+					const keep = await rollOtherWeapon({
+						actor: this.actor,
+						item: this.#item,
+						DamageRollClass: dependencies.DamageRoll,
+						first: roll as DamageRoll,
+						firstFormula: dualWieldFirst.formula,
+						firstOptions: dualWieldFirst.options,
+						choice: dialogData.dualWield,
+						context: {
+							rollData: activationRollData as DamageRoll.Data,
+							rollMode: dialogData.rollMode ?? 0,
+							delivery,
+							source: source as never,
+							targetDomain: targetDomain as never,
+							damageType: dualWieldFirst.damageType,
+						},
+					});
+					if (keep) this.#dualWieldKeep = keep;
+				}
 				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
 			}
 
 			updatedEffects.push(node);
 		}
+
+		this.#noDiceThrown = noDiceThrown(this.#maxDamage, rolls, healingRollsAtMax);
 
 		// Typed conditional-bonus damage (e.g. a marked-target rule granting a
 		// specific type) rolls as its own damage effect: the primary roll carries
@@ -980,6 +1099,9 @@ class ItemActivationManager {
 		const outcomeCharges = this.#attackOutcomeCharges;
 		this.#attackOutcomeCharges = [];
 		for (const identifier of outcomeCharges) await spendRuleCharge(this.actor, identifier);
+		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
+		if (this.#dualWield) await markDualWieldUse(this.actor as never);
+		await spendMaxDamageCharge(this.actor, this.#maxDamage);
 	}
 
 	/**
@@ -1275,7 +1397,7 @@ class ItemActivationManager {
 		// The same holds for the enhancement a pinned upcast picks from a list.
 		const mustPrompt = this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice();
 
-		if (!hasRolls && !isSpell && !mustPrompt) {
+		if (!hasRolls && !isSpell && !mustPrompt && !this.#offersFreeUse()) {
 			// No rolls needed, use default
 			return this.#getDefaultDialogData(rollOptions);
 		}
@@ -1350,6 +1472,17 @@ class ItemActivationManager {
 		).some((consumer) => consumer.variable);
 	}
 
+	/** Whether the roll window of this item has the tick for a use with no charge. */
+	#offersFreeUse(): boolean {
+		const actor = this.actor;
+		if (actor?.type !== 'character') return false;
+
+		return itemOffersFreeUse(
+			actor as unknown as CharacterActorLike,
+			this.#item as unknown as RuleBackedItem,
+		);
+	}
+
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
 	#hasPinnedUpcastChoice(): boolean {
 		if (this.#item.type !== 'spell') return false;
@@ -1400,7 +1533,14 @@ class ItemActivationManager {
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */
 	#getSoleTargetToken(): Token.Implementation | null {
-		return soleTarget(game.user?.targets) as Token.Implementation | null;
+		return soleTarget(game.user?.targets, {
+			firstDecides: this.#isSingleTargetAttack(),
+		}) as Token.Implementation | null;
+	}
+
+	/** The item's extra targets do not make the attack a Multi-target Attack. */
+	#isSingleTargetAttack(): boolean {
+		return this.activationData?.targets?.singleTargetAttack === true;
 	}
 
 	/**
@@ -1449,6 +1589,10 @@ namespace ItemActivationManager {
 		rollFormula?: string;
 		/** Predetermined value for the primary damage die. */
 		primaryDieValue?: number;
+		/** The tick for 1 less mana. */
+		lessMana?: boolean;
+		/** The item whose offer row started this activation. */
+		offerSourceUuid?: string;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
@@ -1473,6 +1617,12 @@ namespace ItemActivationManager {
 	 * Data returned from the activation configuration dialog.
 	 */
 	export interface DialogData {
+		/** The tick for dual wielding. */
+		dualWield?: DualWieldChoice;
+		/** The tick for a use with no charge. */
+		freeUse?: boolean;
+		/** The tick for 1 less mana. */
+		lessMana?: boolean;
 		/** Roll mode selected in the dialog. */
 		rollMode: number | undefined;
 		/** Modified roll formula from the dialog. */
@@ -1490,6 +1640,8 @@ namespace ItemActivationManager {
 		};
 		/** Whether to hide the roll. */
 		rollHidden?: boolean;
+		/** The Max Damage tick the player picked. */
+		maxDamage?: MaxDamageChoice | null;
 		/**
 		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
 		 * The dialog already appended the bonus to rollFormula; this list is used to

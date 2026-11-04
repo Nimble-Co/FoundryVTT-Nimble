@@ -4,8 +4,15 @@ import type {
 	RerollDieResult,
 	RerollRecord,
 	RollChange,
+	RollEffect,
 } from '../incomingReactions/incomingReactionEntry.js';
-import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
+import {
+	costForDice,
+	payRerollCost,
+	refundRerollCost,
+	refundSkippedDice,
+	rerollUsesLeft,
+} from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
 import type { RollUseKind } from './rollToReroll.js';
@@ -67,8 +74,12 @@ interface RerollStepInput<TRoll> {
 	automatic?: boolean;
 	/** A Change a Die rule's use: the change it makes. Absent for a reroll. */
 	change?: DieChange;
+	/** The dice the player picked: a cost per die counts them. */
+	dieCount?: number;
 	/** A Make It a Crit rule's use. */
 	makesCrit?: boolean;
+	/** A row that does what a feature does by itself with Feature Effects on. */
+	effect?: RollEffect;
 	/** The stat the player picked for the new roll. */
 	stat?: string;
 	/** The feature that made the new attack unable to miss. */
@@ -83,6 +94,8 @@ interface RolledDie {
 	value: number | null;
 	/** The other result of a die rolled two times for advantage or disadvantage. */
 	dropped?: number | null;
+	/** Each die of a reroll of several dice. */
+	several?: Array<{ faces: number; previous: number; next: number }>;
 }
 
 interface NewRoll {
@@ -114,8 +127,8 @@ async function rerollWithRule<TRoll>(
 	input: RerollStepInput<TRoll>,
 ): Promise<RerollStepOutcome<TRoll>> {
 	const { rule, entry, payer, replaced } = input;
-	const cost = rule.rollUseCost;
-	const paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
+	const cost = rule.rollUseCost ? costForDice(rule.rollUseCost, input.dieCount ?? 1) : undefined;
+	let paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
 	const refund = async () => {
 		if (cost && paid) await refundRerollCost(payer, cost, paid);
@@ -138,6 +151,10 @@ async function rerollWithRule<TRoll>(
 		const roll = await input.makeRoll(next.formula, next.options, changes);
 		const rolled = roll as NewRoll;
 		const die = input.readNewDie ? input.readNewDie(roll) : primaryDieOf(rolled);
+		const skipped = (input.dieCount ?? 0) - (die.several?.length ?? input.dieCount ?? 0);
+		if (cost?.perDie && paid && skipped > 0) {
+			paid = await refundSkippedDice(payer, cost, paid, input.dieCount ?? 1, skipped);
+		}
 		const previousWasCritical = replaced.isCritical === true;
 		const done: RerollStepDone<TRoll> = {
 			status: 'done',
@@ -153,11 +170,14 @@ async function rerollWithRule<TRoll>(
 				next: dieResult(die.value, rolled),
 				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
+				...(paid?.noActionLeft ? { noActionLeft: true } : {}),
 				dropped: die.dropped ?? null,
+				...(die.several && die.several.length > 1 ? { severalDice: die.several } : {}),
 				changes: rollChanges,
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
 				...(input.makesCrit ? { use: 'crit' as const } : {}),
+				...(input.effect ? { use: 'effect' as const, effect: input.effect } : {}),
 				...(input.stat ? { stat: input.stat } : {}),
 				...(input.cannotMissBy ? { cannotMissBy: input.cannotMissBy } : {}),
 			},

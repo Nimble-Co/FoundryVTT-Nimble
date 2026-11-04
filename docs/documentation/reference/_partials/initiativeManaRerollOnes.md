@@ -1,0 +1,1 @@
+The Initiative Mana: Reroll Ones rule makes each 1 on an Initiative Mana die roll again one time, with a tag on the card. The rule has no fields. With Feature Effects off, the card has a row for each 1.

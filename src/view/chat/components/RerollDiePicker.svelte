@@ -18,22 +18,21 @@
 		primaryOutcome = null,
 		use = 'reroll',
 		rolling = null,
+		several = null,
+		onconfirm,
 		onpick,
 		oncancel,
 	}: RerollDiePickerProps = $props();
 
 	const titleId = $props.id();
-	const picker = createRerollDiePickerState(() => ({ dice, oncancel, rolling }));
-	const { elements, focusFirst, onKeydown } = picker;
+	const picker = createRerollDiePickerState(() => ({ dice, oncancel, rolling, several, onpick }));
+	const { elements, focusFirst, onKeydown, onDie, isPicked, isRolling } = picker;
 
 	let title = $derived(
 		rolling
 			? localize(`${pickDieWords(use)}.rolling`, { feature })
 			: localize(`${pickDieWords(use)}.title`),
 	);
-
-	const isRolling = (die: (typeof dice)[number]) =>
-		rolling?.term === die.term && rolling.result === die.result;
 
 	onMount(() => {
 		if (!rolling) void focusFirst();
@@ -69,10 +68,12 @@
 				<button
 					bind:this={elements.dice[index]}
 					class="nimble-reroll-picker__die nimble-u-unstyled-button"
+					class:nimble-reroll-picker__die--picked={several && isPicked(die)}
 					type="button"
 					aria-label={dieLabel(die, dice, use)}
-					disabled={!!rolling}
-					onclick={() => onpick(die)}
+					aria-pressed={several ? isPicked(die) : undefined}
+					disabled={!!rolling || (picker.atMax && !isPicked(die))}
+					onclick={() => onDie(die)}
 				>
 					<DieFace
 						faces={die.faces}
@@ -86,6 +87,30 @@
 			</li>
 		{/each}
 	</ul>
+
+	{#if several && !rolling}
+		<div class="nimble-reroll-picker__several">
+			<span>
+				{localize('NIMBLE.chat.incomingReactions.pickDie.several.count', {
+					count: String(picker.picked.length),
+					max: String(several.max),
+				})}
+				{#if several.manaPerDie > 0}
+					- {localize('NIMBLE.ui.heroicActions.mana', {
+						cost: String(picker.picked.length * several.manaPerDie),
+					})}
+				{/if}
+			</span>
+			<button
+				class="nimble-reroll-picker__confirm"
+				type="button"
+				disabled={picker.picked.length === 0}
+				onclick={() => onconfirm?.(picker.picked)}
+			>
+				{localize('NIMBLE.chat.incomingReactions.pickDie.several.confirm')}
+			</button>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -170,6 +195,26 @@
 			&:disabled {
 				cursor: default;
 			}
+		}
+
+		&__die--picked {
+			background: var(--nimble-card-background-color);
+			border-color: var(--nimble-input-border-color);
+			box-shadow: inset 0 0 0 1px var(--nimble-input-border-color);
+		}
+
+		&__several {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.5rem;
+			font-size: var(--nimble-sm-text);
+		}
+
+		&__confirm {
+			flex: none;
+			width: auto;
+			padding-inline: 0.5rem;
 		}
 
 		&__caption {

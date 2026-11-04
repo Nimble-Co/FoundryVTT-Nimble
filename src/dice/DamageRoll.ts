@@ -1,8 +1,22 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
+import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
+import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
+import { critDiceLinesOf, dieRoleOf } from './critDiceLines.js';
+import {
+	addCritDice,
+	addCritDiceTo,
+	critDiceKeys,
+	dropCritDice,
+	makeVicious,
+	replaceCritDieWithD20,
+	restoreRoleDice,
+	setRoleDiceToMax,
+	settleCritDice,
+} from './critDiceTerms.js';
 import { critFaceOf } from './critFace.js';
 import {
 	applyKeep,
@@ -44,8 +58,22 @@ declare namespace DamageRoll {
 		forcedCritFromDice?: boolean;
 		/** Crit on this many faces less than the max, on the Primary Die's kept face only. */
 		critRange?: number;
+		/** This weapon and the other one, on a dual wield attack. */
+		dualWieldSelf?: DualWieldWeaponSelf;
+		dualWieldOther?: DualWieldWeapon;
+		/** The identifier of the item whose offer row made this attack. */
+		offerSource?: string;
 		/** Any die of the roll at its max makes the roll a crit on a hit. */
 		anyDieCrits?: boolean;
+		/**
+		 * No die is rolled: every die gives its max. `crit` is a hit and a crit with
+		 * no crit dice; `hit` cannot crit. Neither can miss, except by `forceMiss`.
+		 */
+		maxDamage?: 'hit' | 'crit';
+		/** Dice a crit adds as a line of their own. They do not explode and are not Vicious. */
+		critDice?: CritDiceSpec[];
+		/** The first crit die of a crit is a d20. A 20 goes on with the die of the attack. */
+		critD20?: boolean;
 		/** The features that changed how the roll is read, for the card's tags. */
 		outcomeSources?: Partial<AttackOutcomeSources>;
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
@@ -200,6 +228,11 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 */
 	primaryDie: PrimaryDie | foundry.dice.terms.Die | undefined = undefined;
 
+	/** No die was rolled: the roll has max damage. */
+	get noDice(): boolean {
+		return this.options.maxDamage !== undefined;
+	}
+
 	/** The kept value of the primary die after evaluation. Undefined if unevaluated. */
 	get primaryDieValue(): number | undefined {
 		const die = this.primaryDie;
@@ -247,6 +280,10 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canCrit ??= true;
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
+		if (this.options.maxDamage) {
+			this.options.canMiss = false;
+			this.options.canCrit = this.options.maxDamage === 'crit';
+		}
 
 		// Aggregate multiple adv/dis sources into a single net rollMode.
 		// Per Nimble rules, advantage and disadvantage cancel 1-for-1.
@@ -456,13 +493,63 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const atMax = this.terms.some(
 			(term) =>
 				term instanceof Terms.Die &&
-				term.results.some((r) => r.active && !r.discarded && r.result === term.faces),
+				!dieRoleOf(term) &&
+				term.results.some(
+					(r, index) =>
+						index < (Number(term.number) || 1) &&
+						r.active &&
+						!r.discarded &&
+						r.result === term.faces,
+				),
 		);
 		if (!atMax) return;
 		if (!this.options.forcedCrit) this.options.forcedCritFromDice = true;
 		this.options.forcedCrit = 'onHit';
 		const primary = this.terms.find((t) => t instanceof PrimaryDie);
 		if (primary) primary.options.forcedCrit = 'onHit';
+	}
+
+	/** A die of the roll changed: the Forced Crit that came from a die at its max is read again. */
+	private _readAnyDieCritsAgain(): void {
+		if (!this.options.anyDieCrits) return;
+		if (this.options.forcedCritFromDice) {
+			delete this.options.forcedCritFromDice;
+			delete this.options.forcedCrit;
+			const primary = this.terms.find((t) => t instanceof PrimaryDie);
+			if (primary) delete primary.options.forcedCrit;
+		}
+		this._applyAnyDieCrits();
+		if (this.options.forcedCrit) return;
+
+		// Its crit dice go first: one at its max would read as a crit.
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (!primary) return;
+		const pool = Number(primary.number) || 1;
+		const kept = primary.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (kept?.exploded && kept.result < primary.critFace) {
+			primary.results.length = pool;
+			kept.exploded = false;
+			this.resetFormula();
+		}
+	}
+
+	/** Roll the Primary Die's crit dice when an any-die crit came. */
+	private async _settleAnyDieCritDice(): Promise<number[]> {
+		if (!this.options.anyDieCrits || this.modifierMode) return [];
+		const primary = this.terms.find((t) => t instanceof PrimaryDie);
+		if (!primary) return [];
+		const pool = Number(primary.number) || 1;
+		const kept = primary.results.find((r, index) => index < pool && r.active && !r.discarded);
+		if (!kept) return [];
+
+		const before = primary.results.length;
+		if (this.isCritical && !kept.exploded) {
+			if (this.options.explosionStyle === 'vicious') await this._evaluateViciousExplosion(primary);
+			else if (this.options.explosionStyle === 'standard') await this._rollCritDice(primary);
+			this.refreshOutcome();
+			return primary.results.slice(before).map((r) => r.result);
+		}
+		return [];
 	}
 
 	/**
@@ -512,6 +599,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param options - Roll options containing canCrit, canMiss, and rollMode settings.
 	 */
 	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
+		if (options.maxDamage) {
+			for (const term of this.terms) {
+				if (term instanceof Terms.Die) term.modifiers = [];
+			}
+			this.resetFormula();
+			return;
+		}
+
 		// ── Modifier-mode: formula already carries Nimble modifiers ──
 		if (this._hasNimbleModifiers()) {
 			this.modifierMode = true;
@@ -603,6 +698,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	override async _evaluate(
 		options?: InexactPartial<foundry.dice.Roll.Options>,
 	): Promise<DamageRoll.Evaluated<this>> {
+		if (this.options.maxDamage) {
+			await super._evaluate({ ...options, maximize: true } as never);
+			this._finalizeMaxDamage();
+			return this as DamageRoll.Evaluated<this>;
+		}
+
 		await super._evaluate(options);
 
 		this._applyPostRollMutations();
@@ -623,6 +724,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				}
 			}
 			this._finalizeOutcomeModifierMode();
+			await this.settleCritDice();
 		} else {
 			// ── Legacy path ──
 			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
@@ -635,6 +737,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					await this._rollCritDice(primaryTerm);
 				}
 				this._finalizeOutcome(primaryTerm);
+				await this.settleCritDice();
 			}
 		}
 
@@ -645,6 +748,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 
 		return this as DamageRoll.Evaluated<this>;
+	}
+
+	private _finalizeMaxDamage(): void {
+		const forcedMiss = this.options.forceMiss === true;
+		this.isMiss = forcedMiss;
+		this.isCritical = !forcedMiss && this.options.maxDamage === 'crit';
+		this.critCount = this.isCritical ? 1 : 0;
 	}
 
 	/**
@@ -737,6 +847,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * crit, or was made to miss.
 	 */
 	async makeCritical(): Promise<{ term: foundry.dice.terms.Die; drawn: number[] } | null> {
+		if (this.noDice) return null;
 		if (!this.options.canCrit || this.isCritical || this.options.forceMiss) return null;
 		const term = this.modifierMode
 			? this._modifierModeCritTerm()
@@ -758,6 +869,70 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 		this.refreshOutcome();
 		return { term, drawn: term.results.slice(before).map((r) => r.result) };
+	}
+
+	/**
+	 * Roll the crit dice this roll calls for and has not rolled: the d20 crit
+	 * die. A later change of the roll calls it again. Returns the dice it rolled.
+	 */
+	async settleCritDice(): Promise<number[]> {
+		const anyDie = await this._settleAnyDieCritDice();
+		return [...anyDie, ...(await settleCritDice(this, () => this._recalculateTotal()))];
+	}
+
+	/** With Feature Effects off: a row adds the crit dice of a rule, for later changes too. */
+	async addCritDiceTo(spec: CritDiceSpec): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
+		return addCritDiceTo(this, spec);
+	}
+
+	/** Roll the dice of `spec` as a line of their own. The dice it rolled. */
+	async addCritDice(spec: CritDiceSpec): Promise<number[]> {
+		return addCritDice(this, spec, () => this._recalculateTotal());
+	}
+
+	/** The rules whose crit dice are on this roll. */
+	critDiceKeys(): string[] {
+		return critDiceKeys(this);
+	}
+
+	/** One line per feature that added crit dice. */
+	critDiceLines(): CritDiceLine[] {
+		return critDiceLinesOf(this.terms);
+	}
+
+	/** Every die of this role goes to its max. The old faces, for `restoreRoleDice`. */
+	setRoleDiceToMax(role: string): number[] {
+		return setRoleDiceToMax(this, role, () => this._recalculateTotal());
+	}
+
+	/** The dice of this role get back the faces `setRoleDiceToMax` gave. */
+	restoreRoleDice(role: string, faces: readonly number[]): void {
+		restoreRoleDice(this, role, faces, () => this._recalculateTotal());
+	}
+
+	/** Take the crit dice of one rule off the roll: its use went elsewhere this turn. */
+	dropCritDice(key: string): void {
+		dropCritDice(this, key, () => this._recalculateTotal());
+	}
+
+	/** Reroll the first crit die as a d20, and what it starts. Null when there is none or it is one. */
+	async replaceCritDieWithD20(): Promise<{
+		term: foundry.dice.terms.Die;
+		drawn: number[];
+	} | null> {
+		return replaceCritDieWithD20(
+			this,
+			() => this._modifierModeCritTerm(),
+			() => this._recalculateTotal(),
+		);
+	}
+
+	/**
+	 * Make a standard crit Vicious after it is rolled: each crit die gets the
+	 * Vicious die. Null when the roll is no crit, or is Vicious.
+	 */
+	async makeVicious(): Promise<{ term: PrimaryDie; drawn: number[] } | null> {
+		return makeVicious(this, () => this._recalculateTotal());
 	}
 
 	/**
@@ -1130,12 +1305,17 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * evaluated roll changed.
 	 */
 	refreshOutcome(): void {
+		if (!this.options.maxDamage) this._readAnyDieCritsAgain();
 		const internals = this as unknown as {
 			_total: number;
 			_evaluateASTSync(node: unknown): number;
 		};
 		internals._total = internals._evaluateASTSync(CONFIG.Dice.parser.toAST(this.terms));
 		this.excludedPrimaryDieValue = 0;
+		if (this.options.maxDamage) {
+			this._finalizeMaxDamage();
+			return;
+		}
 		this.isCritical = this.options.canCrit ? undefined : false;
 		this.isMiss = this.options.canMiss ? undefined : false;
 

@@ -8,4 +8,6 @@ export interface RerollPick {
 	value?: number | null;
 	/** The stat the player picked for the new roll. */
 	stat?: string | null;
+	/** The dice the player picked, for a rule that rerolls several. */
+	dice?: DieRef[] | null;
 }

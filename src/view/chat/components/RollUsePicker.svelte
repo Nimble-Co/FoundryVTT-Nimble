@@ -11,6 +11,7 @@
 		primaryOutcome = null,
 		primaryDieBonuses = [],
 		onpick,
+		onseveral,
 		onvalue,
 		onstat,
 		oncancel,
@@ -42,6 +43,8 @@
 		{primaryOutcome}
 		use={picking.entry.use ?? 'reroll'}
 		rolling={picking.rolling}
+		several={picking.several ?? null}
+		onconfirm={onseveral}
 		{onpick}
 		{oncancel}
 	/>

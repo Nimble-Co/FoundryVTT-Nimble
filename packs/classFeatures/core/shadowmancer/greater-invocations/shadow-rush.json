@@ -20,7 +20,37 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "srNoteMinionDies",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "One shadow minion deals its max, then dies. Use this once per minion and remove that minion.",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "srMaxDamageNode1",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "12",
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "srFullDamageOut1",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "srMaxDamageNode1"
+							}
+						]
+					},
+					"canCrit": false,
+					"canMiss": false
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

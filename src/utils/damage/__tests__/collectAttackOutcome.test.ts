@@ -17,6 +17,8 @@ function change(overrides: Partial<AttackOutcomeChange> = {}): AttackOutcomeChan
 		critRange: 0,
 		forcedCrit: null,
 		anyDieCrits: false,
+		critD20: false,
+		viciousCrits: false,
 		chargePoolIdentifier: '',
 		...overrides,
 	};
@@ -207,5 +209,56 @@ describe('collectAttackOutcome', () => {
 		expect(rule.changeFor).toHaveBeenCalledWith(
 			expect.objectContaining({ side: 'yourAttacks', damageTypes: ['slashing'] }),
 		);
+	});
+});
+
+describe('rules that change the crit dice', () => {
+	const hero = (overrides: Partial<AttackOutcomeChange>) => ({
+		rules: [
+			{
+				type: 'attackOutcome',
+				changeFor: ({ side }: { side: string }) =>
+					side === 'yourAttacks' ? change({ label: 'Epic Criticals', ...overrides }) : null,
+			},
+		],
+	});
+	const target = (overrides: Partial<AttackOutcomeChange>) => ({
+		rules: [
+			{
+				type: 'attackOutcome',
+				changeFor: ({ side }: { side: string }) =>
+					side === 'attacksAgainstYou' ? change({ label: 'Hollow Bones', ...overrides }) : null,
+			},
+		],
+	});
+	const collect = (attacker: object, targetActor: object | null, canCrit = true) =>
+		collectAttackOutcome({
+			attacker,
+			target: targetActor,
+			delivery: 'melee',
+			itemUuid: null,
+			canCrit,
+			canMiss: true,
+		} as never).options;
+
+	it('give the d20 crit die, with the feature for the tag', () => {
+		const options = collect(hero({ critD20: true }), null);
+
+		expect(options.critD20).toBe(true);
+		expect(options.outcomeSources?.critD20).toEqual(['Epic Criticals']);
+	});
+
+	it('make a crit Vicious from a rule on the target', () => {
+		const options = collect({ rules: [] }, target({ viciousCrits: true }));
+
+		expect(options.explosionStyle).toBe('vicious');
+		expect(options.outcomeSources?.vicious).toEqual(['Hollow Bones']);
+	});
+
+	it('give nothing to a roll that cannot crit', () => {
+		const options = collect(hero({ critD20: true }), target({ viciousCrits: true }), false);
+
+		expect(options.critD20).toBeUndefined();
+		expect(options.explosionStyle).toBeUndefined();
 	});
 });

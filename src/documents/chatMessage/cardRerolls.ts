@@ -17,6 +17,7 @@ import {
 	rejectIncomingAttackReaction,
 } from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
+	ChangeableDie,
 	IncomingReactionEntry,
 	KeepChoiceRoll,
 	PendingKeep,
@@ -24,7 +25,10 @@ import type {
 	RerollKept,
 	RerollRecord,
 	RollChange,
+	RollEffect,
 } from '#utils/incomingReactions/incomingReactionEntry.js';
+import { CRIT_BONUS_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
+import localize from '#utils/localize.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
@@ -35,13 +39,21 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { payRerollCost, refundRerollCost } from '#utils/reroll/rerollCost.js';
+import {
+	canPayRerollCost,
+	costForDice,
+	payRerollCost,
+	refundRerollCost,
+} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
 	diceForRule,
 	diceToPick,
+	effectFor,
+	offerBonusFor,
 	rerollableFor,
+	severalDiceFor,
 } from '#utils/reroll/rerollDieChoice.js';
 import {
 	type AutomaticReroll,
@@ -54,7 +66,7 @@ import {
 	type RerollRollContext,
 	type RerollRollOutcome,
 	type RerollRuleLike,
-	rollUseOf,
+	rollUseOfRule,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -72,14 +84,29 @@ import {
 	resultChangesOf,
 	standingResultChanges,
 } from '#utils/rolls/resultChanges.js';
+import { rollSaveWithOwner } from '#utils/rolls/rollSaveWithOwner.js';
+import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
-import type { DamageRoll } from '../../dice/DamageRoll.js';
+import { soleTarget } from '#utils/tokens/soleTarget.js';
+import { DamageRoll } from '../../dice/DamageRoll.js';
 import type { DieRef, PickableDie } from '../../dice/oneDieReroll.js';
+import {
+	dualWieldEntry,
+	dualWieldRecord,
+	keepChoiceOfWeapon,
+	otherWeaponOf,
+} from '../../utils/damage/dualWield.js';
 import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
 interface NewRollUse extends Partial<RerollStepInput<unknown>> {
 	failedLog: string;
+}
+
+function changeableDieOf(rule: RerollRuleLike): ChangeableDie {
+	const die = rule.die as string | undefined;
+	if (die === 'pickedDie' || die === 'critBonusDie') return die;
+	return 'primaryDie';
 }
 
 /** The roll with its new attack unable to miss, whichever dice the rule rerolls. */
@@ -355,6 +382,43 @@ export class CardRerolls {
 			if (rolling && messageId) broadcastRerollRolling(messageId, null);
 			throw error;
 		}
+	}
+
+	/** A whole reroll of a dual wield attack rolls the other weapon too: the choice comes again. */
+	async #offerOtherWeaponAgain(rollTarget: RerollRollTarget, actor: Actor.Implementation) {
+		const target = rollTarget.findRoll();
+		const current = target?.current?.();
+		const next = current ? otherWeaponOf(current as never) : null;
+		if (!target || !current || !next) return;
+
+		const roll = new DamageRoll(next.formula, actor.getRollData() as never, next.options as never);
+		await roll.evaluate();
+		const input = {
+			actorUuid: actor.uuid ?? '',
+			itemUuid: (next.options.dualWieldSelf as { itemUuid: string }).itemUuid,
+			label: localize('NIMBLE.rollWindow.dualWield.name'),
+		};
+		const entry = dualWieldEntry(input) as IncomingReactionEntry;
+		await this.#host.update({
+			system: { incomingReactions: [...this.#host.incomingReactions(), entry] },
+		} as Record<string, unknown>);
+		await this.#waitForKeep(
+			entry,
+			{
+				...target,
+				diceToThrow: () => roll,
+				keepChoice: (each: unknown) => keepChoiceOfWeapon(each as never),
+				shownTotal: undefined,
+			},
+			{
+				status: 'done',
+				roll,
+				reroll: dualWieldRecord({ ...input, entryId: entry.id }),
+				discardedCritTriggers: false,
+				refund: async () => {},
+			},
+			actor.uuid ?? '',
+		);
 	}
 
 	/** The reroll result waiting for a player to choose, or null. */
@@ -636,6 +700,25 @@ export class CardRerolls {
 	}
 
 	/**
+	 * The dice a player picks for a `reroll` entry whose rule rerolls several, the
+	 * most they can pick, and the mana of each die. Null for another rule.
+	 */
+	severalDiceToPick(
+		entry: IncomingReactionEntry,
+	): { dice: PickableDie[]; max: number; manaPerDie: number } | null {
+		const target = this.#rerollTarget();
+		const found = target?.findRoll();
+		if (!target || !found) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		if (!usable.ok || !usable.rule.maxDiceCount) return null;
+		const dice = diceToPick(found);
+		const cost = usable.rule.rollUseCost;
+		let max = Math.min(usable.rule.maxDiceCount, dice.length);
+		while (max > 1 && cost && !canPayRerollCost(usable.actor, costForDice(cost, max))) max -= 1;
+		return { dice, max, manaPerDie: cost?.manaCost ?? 0 };
+	}
+
+	/**
 	 * The stats a player picks from for a `reroll` entry whose rule uses another
 	 * stat. Null when the rule uses none.
 	 */
@@ -672,11 +755,7 @@ export class CardRerolls {
 		const change: DieChange = usable.rule.dieChange ?? { mode: 'set', value: 0 };
 		return {
 			setsValue: change.mode === 'set',
-			dice: diceForRule(
-				found,
-				usable.rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
-				change,
-			),
+			dice: diceForRule(found, changeableDieOf(usable.rule), change),
 		};
 	}
 
@@ -731,7 +810,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		pick: RerollPick,
 	): Promise<void> {
-		const { die = null, value = null, stat = null } = pick;
+		const { die = null, value = null, stat = null, dice = null } = pick;
 		const reject = (reasonKey: string) =>
 			rejectIncomingAttackReaction({
 				messageId: this.#host.id() ?? '',
@@ -773,16 +852,38 @@ export class CardRerolls {
 				reject,
 			);
 		}
-		if (rollUseOf(usable.rule.type) === 'crit') {
+		if (rollUseOfRule(usable.rule) === 'crit') {
 			return this.#applyMakeCrit(rollTarget, found, entry, usable, forceHeroicReaction, reject);
 		}
-		if (rollUseOf(usable.rule.type) === 'result') {
+		if (usable.rule.rollEffect === 'critDiceSave') {
+			return this.#postCritDiceSave(rollTarget, entry, usable, reject);
+		}
+		if (usable.rule.rollEffect) {
+			return this.#applyRollEffect(
+				rollTarget,
+				found,
+				entry,
+				usable,
+				usable.rule.rollEffect,
+				forceHeroicReaction,
+				reject,
+			);
+		}
+		if (rollUseOfRule(usable.rule) === 'result') {
 			return this.#applyResultChange(rollTarget, entry, usable, forceHeroicReaction, reject);
 		}
 		const rollKind = rollTarget.context().roll.kind;
 		const modifier = cannotFailModifier(usable.rule);
 		const cannotMiss = rollKind === 'attack' ? modifier : null;
-		const rolled = rerollableFor(cannotMiss ? withCannotMiss(found) : found, usable.rule.die, die);
+		const maxDice = usable.rule.maxDiceCount ?? null;
+		if (maxDice !== null && (!dice?.length || dice.length > maxDice)) {
+			return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
+		}
+		const base = cannotMiss ? withCannotMiss(found) : found;
+		const rolled =
+			maxDice !== null && dice
+				? severalDiceFor(base, dice)
+				: rerollableFor(base, usable.rule.die, die);
 		if (!rolled) return reject('NIMBLE.chat.incomingReactions.rerollPickADie');
 		const target = usable.rule.usesAnotherStat
 			? rolled.withStat?.(rolled, stat ?? '', usable.rule.relatedStat)
@@ -803,6 +904,7 @@ export class CardRerolls {
 			entry,
 			rollKind,
 			rollChanges: await this.#newRollChanges(usable.rule, rollKind),
+			...(dice?.length ? { dieCount: dice.length } : {}),
 			payer: usable.actor,
 			replaced: target.replaced,
 			previousResult: target.previousResult,
@@ -815,12 +917,15 @@ export class CardRerolls {
 			place: async (done) => {
 				await this.#addGrants(done, usable.rule, rollTarget);
 				if (chooserUuid) return this.#waitForKeep(entry, target, done, chooserUuid);
-				return this.#placeReroll(entry, target, done.roll, {
+				await this.#placeReroll(entry, target, done.roll, {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
 					...(cannotFail ? { resultChange: cannotFailChange(entry, cannotFail) } : {}),
 				});
+				if ((usable.rule.die ?? 'wholeRoll') === 'wholeRoll') {
+					await this.#offerOtherWeaponAgain(rollTarget, usable.actor);
+				}
 			},
 		});
 		if (result.status === 'done') await this.#applyGrants(result.reroll, usable.rule);
@@ -856,12 +961,7 @@ export class CardRerolls {
 		}
 		const change: DieChange =
 			dieChange.mode === 'set' ? { ...dieChange, value: value ?? 0 } : dieChange;
-		const target = changeableFor(
-			found,
-			rule.die === 'pickedDie' ? 'pickedDie' : 'primaryDie',
-			die,
-			change,
-		);
+		const target = changeableFor(found, changeableDieOf(rule), die, change);
 		if (!target) return void reject('NIMBLE.chat.incomingReactions.changePickADie');
 
 		const systemData = this.#host.system() as unknown as { discardedCritTriggers?: boolean };
@@ -963,6 +1063,93 @@ export class CardRerolls {
 		}
 		if (result.status === 'failed') {
 			console.error(failedLog, result.error);
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+	}
+
+	/**
+	 * Use a row that does by hand what its feature does by itself with Feature
+	 * Effects on: pay its cost, then change the roll and put it on the card as a
+	 * reroll is put there. The cost is given back when the change cannot be made.
+	 */
+	async #applyRollEffect(
+		rollTarget: RerollRollTarget,
+		found: RerollableRoll,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		effect: RollEffect,
+		forceHeroicReaction: boolean,
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const target =
+			effect === 'offerBonus' && usable.rule.offerBonus
+				? offerBonusFor(found, usable.rule.offerBonus.primaryDie)
+				: effectFor(found, effect, usable.rule.critDiceSpec ?? null);
+		return this.#applyNewRoll(rollTarget, target, entry, usable, forceHeroicReaction, reject, {
+			effect,
+			...(effect === 'offerBonus' && usable.rule.offerBonus?.damage
+				? {
+						rollChanges: [
+							{
+								kind: 'extraDamage' as const,
+								key: `${usable.rule.id}`,
+								value: usable.rule.offerBonus.damage,
+								label: usable.rule.offerBonus.label,
+							},
+						],
+					}
+				: {}),
+			failedLog: 'Nimble | A roll effect failed; its cost is given back.',
+		});
+	}
+
+	/**
+	 * Spend a use and post the target's save on a normal save card. The result
+	 * of that card changes this card later (see `critDiceSave`). The use is given
+	 * back when the save cannot be made.
+	 */
+	async #postCritDiceSave(
+		rollTarget: RerollRollTarget,
+		entry: IncomingReactionEntry,
+		usable: { rule: RerollRuleLike; actor: Actor.Implementation },
+		reject: (reasonKey: string) => unknown,
+	): Promise<void> {
+		const { rule, actor } = usable;
+		const context = rollTarget.context();
+		const target = soleTarget(context.targets, {
+			firstDecides: context.firstTargetDecides,
+		})?.actor as unknown as Parameters<typeof rollSaveWithOwner>[0] | null;
+		const saveKey = rule.saveType;
+		if (!target?.rollSavingThrowToChat || !saveKey) {
+			return void reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const cost = rule.rollUseCost;
+		const paid = cost ? await payRerollCost(actor, cost) : null;
+		if (cost && !paid) return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
+		try {
+			const made = await rollSaveWithOwner(target, saveKey, {
+				dc: resolveSaveNodeDC(rule.saveDC, actor as never),
+				cardFlags: {
+					critDiceSave: {
+						attackMessageId: this.#host.id(),
+						role: CRIT_BONUS_ROLE,
+						actorUuid: actor.uuid,
+						chargePoolIdentifier: cost?.chargePoolIdentifier ?? '',
+					},
+				},
+			});
+			// The window was closed: no save, so the use comes back with no error.
+			if (!made) {
+				if (cost && paid) await refundRerollCost(actor, cost, paid);
+				return;
+			}
+			await this.#host.update({
+				system: { incomingReactions: this.#withEntryUsed(entry) },
+			} as Record<string, unknown>);
+		} catch (error) {
+			if (cost && paid) await refundRerollCost(actor, cost, paid);
+			console.error('Nimble | A save for crit dice failed; its cost is given back.', error);
 			return void reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 	}

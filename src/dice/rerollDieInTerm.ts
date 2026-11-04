@@ -7,6 +7,8 @@ interface DieResultLike {
 	discarded?: boolean;
 	exploded?: boolean;
 	provenance?: string;
+	/** The size of this die when it is not the term's. */
+	faces?: number;
 }
 
 /** An evaluated dice term, as a one-die reroll reads and changes it. */
@@ -30,6 +32,11 @@ interface DieNode {
 }
 
 const MAX_EXPLOSIONS = 100;
+
+/** The size of a die of `term`. */
+function dieFaces(result: DieResultLike, term: { faces: number }): number {
+	return result.faces ?? term.faces;
+}
 
 function isActive(result: DieResultLike): boolean {
 	return result.active !== false && result.discarded !== true;
@@ -142,8 +149,8 @@ async function rerollDieInTerm(
 	if (!picked) throw new Error(`The dice term has no result ${index}.`);
 
 	const drawn: number[] = [];
-	const roll = async () => {
-		const value = await draw(term.faces);
+	const roll = async (faces: number = term.faces) => {
+		const value = await draw(faces);
 		drawn.push(value);
 		return value;
 	};
@@ -154,7 +161,7 @@ async function rerollDieInTerm(
 		const stayed = roots.find((root) => isActive(root.result));
 		if (stayed) stayed.result.result = bonus.base;
 	}
-	picked.result.result = await roll();
+	picked.result.result = await roll(dieFaces(picked.result, term));
 	cutExplosion(picked);
 
 	const keep = roots.includes(picked) ? keepRule(term.modifiers) : null;
@@ -178,7 +185,8 @@ async function rerollDieInTerm(
 		(root) => root !== picked && !keptBefore.has(root) && isActive(root.result),
 	);
 	for (const node of [picked, ...newlyKept]) {
-		await explodeAtMax(node, term.faces, style, roll, node === stays ? critFace : term.faces);
+		const from = node === stays ? critFace : dieFaces(node.result, term);
+		await explodeAtMax(node, term.faces, style, () => roll(), from);
 	}
 
 	term.results = flattenDieTree(roots, style);
@@ -251,7 +259,10 @@ async function changeDieInTerm(
 
 	picked.result.result = value;
 	cutExplosion(picked);
-	const from = picked === roots.find((root) => isActive(root.result)) ? critFace : term.faces;
+	const from =
+		picked === roots.find((root) => isActive(root.result))
+			? critFace
+			: dieFaces(picked.result, term);
 	await explodeAtMax(
 		picked,
 		term.faces,
@@ -271,6 +282,7 @@ async function changeDieInTerm(
 export {
 	changeDieInTerm,
 	type DieTermLike,
+	dieFaces,
 	type ExplosionStyle,
 	type KeptDieBonus,
 	isActive,

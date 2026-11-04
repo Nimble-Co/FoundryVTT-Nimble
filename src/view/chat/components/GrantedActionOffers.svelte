@@ -12,7 +12,7 @@
 		name?: string;
 		isOwner?: boolean;
 		items?: Iterable<OfferRecipientItem>;
-		activateItem?: (id: string) => Promise<unknown>;
+		activateItem?: (id: string, options?: Record<string, unknown>) => Promise<unknown>;
 	}
 
 	interface OfferRecipientItem {
@@ -107,7 +107,9 @@
 			const actor = getRecipientActor(offer);
 			if (!actor?.activateItem) return;
 
-			const activationCard = await actor.activateItem(itemId);
+			const activationCard = await actor.activateItem(itemId, {
+				offerSourceUuid: offer.sourceItemUuid,
+			});
 			if (!activationCard) return;
 
 			await requestGrantedActionOfferUse({

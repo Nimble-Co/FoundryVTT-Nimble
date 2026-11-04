@@ -5,7 +5,9 @@ import {
 	type RecoveryTriggerChange,
 	rerollRecoveryChange,
 } from '../chargePool/chargePoolReroll.js';
+import { clearTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import { spendCritDiceUses } from '../damage/collectCritDice.js';
 import {
 	appendExtraDamageToRoll,
 	appendFlavoredBonusToRoll,
@@ -19,9 +21,12 @@ import { getPools as getDicePools } from '../dicePool/dicePoolSync.js';
 import type { DicePoolState } from '../dicePool/types.js';
 import {
 	type AttackOutcomeView,
+	CRIT_BONUS_ROLE,
 	type IncomingReactionEntry,
 	type RollChange,
+	termsHaveCritD20,
 	termsHaveDieAtMax,
+	termsHaveRole,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { resultChangesOf } from '../rolls/resultChanges.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
@@ -39,12 +44,27 @@ import { withoutCannotMiss } from './rerollOptions.js';
 import type { PreparedReroll, RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
 import { ROLL_STATS, statsInFormula, swapStatInFormula } from './rollStat.js';
 
+function critDiceKeysOf(serialized: DamageRoll.SerializedData): string[] {
+	const keys = critDiceLinesKeys(serialized.terms);
+	return [...new Set(keys)];
+}
+
+function critDiceLinesKeys(terms: unknown): string[] {
+	return ((terms ?? []) as Array<{ options?: { critDiceKey?: string } }>).flatMap((term) =>
+		term?.options?.critDiceKey ? [term.options.critDiceKey] : [],
+	);
+}
+
 /** The fields of an activation card's system data that a reroll reads. */
 interface DamageCardSystem {
 	targets?: string[];
 	isCritical?: boolean;
 	isMiss?: boolean;
-	activation?: { effects: unknown[]; [key: string]: unknown };
+	activation?: {
+		effects: unknown[];
+		targets?: { singleTargetAttack?: boolean };
+		[key: string]: unknown;
+	};
 	incomingReactions?: IncomingReactionEntry[];
 	rollChanges?: RollChange[];
 	damageApplied?: boolean;
@@ -104,7 +124,14 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 }
 
 type RollOptionsView = {
-	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	options?: {
+		canCrit?: unknown;
+		forcedCrit?: unknown;
+		maxDamage?: unknown;
+		explosionStyle?: unknown;
+		isVicious?: unknown;
+		offerSource?: string;
+	} | null;
 	terms?: readonly unknown[];
 	originalFormula?: string;
 	formula?: string;
@@ -140,6 +167,8 @@ function damageRollContext(
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
+	const upcastSteps =
+		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -147,18 +176,27 @@ function damageRollContext(
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
+		...(card.system().activation?.targets?.singleTargetAttack === true
+			? { firstTargetDecides: true }
+			: {}),
 		roll: {
 			kind: 'attack',
 			delivery: card.delivery(),
 			...(itemUuid ? { itemUuid } : {}),
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
+			...(upcastSteps > 0 ? { upcastSteps } : {}),
+			...(rolled?.options?.offerSource ? { offerSource: rolled.options.offerSource } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,
 			isMiss: outcome.isMiss,
 			critStays: outcome.isCritical === true && rolled?.options?.forcedCrit === 'always',
 			canCrit: rolled?.options?.canCrit === true,
+			noDice: rolled?.options?.maxDamage !== undefined,
+			vicious: rolled?.options?.explosionStyle === 'vicious' || rolled?.options?.isVicious === true,
+			hasCritD20: termsHaveCritD20(rolled?.terms),
+			hasCritBonusDice: termsHaveRole(rolled?.terms, CRIT_BONUS_ROLE),
 			anyDieAtMax: termsHaveDieAtMax(rolled?.terms),
 		},
 		forcedMiss,
@@ -329,6 +367,16 @@ async function preparePrimaryDamage(
 	const { activation, nodes, damageNode } = found;
 	const serialized = damageNode.roll as unknown as DamageRoll.SerializedData;
 
+	const oldKeys =
+		serialized && typeof DamageRoll.fromData === 'function' ? critDiceKeysOf(serialized) : [];
+	const usedElsewhere = (newRoll.critDiceKeys?.() ?? []).filter((key) => {
+		const spec = newRoll.options.critDice?.find((each) => each.key === key);
+		return (
+			!oldKeys.includes(key) && spec?.oncePerTurn && usedThisTurn(card.attacker() as Actor, key)
+		);
+	});
+	for (const key of usedElsewhere) newRoll.dropCritDice(key);
+
 	const forcedMiss = newRoll.options.forceMiss === true;
 	const carried = await carryFoldedSpendsAcrossReroll(
 		newRoll.toJSON() as Record<string, unknown>,
@@ -339,6 +387,10 @@ async function preparePrimaryDamage(
 	const roll = appendExtraDamageToRoll(carried.roll, extraDamageChanges(card, added));
 	damageNode.discardedRoll = serialized;
 	damageNode.roll = roll;
+	const keptWeapon = newRoll.options?.dualWieldSelf;
+	if (keptWeapon?.damageType) {
+		(damageNode as { damageType?: string }).damageType = keptWeapon.damageType;
+	}
 	activation.effects = reconstructEffectsTree(nodes) as unknown[];
 
 	const rollsSource = replaceDamageRollInRollsSource(card.rollsSource(), roll);
@@ -366,6 +418,11 @@ async function preparePrimaryDamage(
 				},
 			});
 			await card.followChargeRecovery(recoveryChange);
+			const actor = card.attacker() as Actor | null;
+			for (const key of oldKeys) {
+				if (!newRoll.critDiceKeys?.().includes(key)) await clearTurnUse(actor, key);
+			}
+			await spendCritDiceUses(actor, newRoll);
 		},
 	};
 }

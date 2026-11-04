@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import type { MaxDamageChoice } from '#types/maxDamage.d.ts';
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
@@ -9,6 +10,10 @@
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
 	import localize from '../../utils/localize.js';
+	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
+	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
+	import LessManaField from './components/LessManaField.svelte';
+	import MaxDamageField from './components/MaxDamageField.svelte';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
@@ -21,6 +26,15 @@
 
 	// Initialize state
 	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
+	const offers = maxDamageOffers(
+		untrack(() => actor),
+		{ type: 'spell', system: untrack(() => spell) },
+	);
+	let maxDamageChoice = $state<MaxDamageChoice | null>(null);
+	const offersLessMana = untrack(() =>
+		offersLessManaFor(actor as never, { system: spell } as never),
+	);
+	let lessMana = $state(false);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -258,6 +272,8 @@
 			primaryDieValue,
 			primaryDieModifier,
 			rollHidden: shouldRollBeHidden,
+			maxDamage: maxDamageChoice,
+			lessMana,
 			upcast: canUpcast
 				? {
 						manaToSpend,
@@ -288,6 +304,9 @@
 	{/if}
 
 	<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+
+	<MaxDamageField {offers} bind:choice={maxDamageChoice} />
+	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
 	<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 

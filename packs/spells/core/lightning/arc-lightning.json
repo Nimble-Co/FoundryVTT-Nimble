@@ -79,7 +79,8 @@
 			"showDescription": true,
 			"targets": {
 				"count": 2,
-				"restrictions": ""
+				"restrictions": "",
+				"singleTargetAttack": true
 			},
 			"template": {
 				"length": 1,

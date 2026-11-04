@@ -20,7 +20,11 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 		parts.push(localize('NIMBLE.chat.incomingReactions.costUsesLeft', { count: String(usesLeft) }));
 	}
 	if (cost.manaCost > 0) {
-		parts.push(localize('NIMBLE.ui.heroicActions.mana', { cost: String(cost.manaCost) }));
+		parts.push(
+			cost.perDie
+				? localize('NIMBLE.chat.incomingReactions.costManaPerDie', { cost: String(cost.manaCost) })
+				: localize('NIMBLE.ui.heroicActions.mana', { cost: String(cost.manaCost) }),
+		);
 	}
 	if (cost.woundCost > 0) {
 		const key =
@@ -31,6 +35,9 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
 	}
 	if ((cost.actionCost ?? 0) > 0) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costAction'));
+	}
+	if (cost.turnUseKey) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.costOncePerTurn'));
 	}
 	if (cost.heroicReaction) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costHeroicReaction'));

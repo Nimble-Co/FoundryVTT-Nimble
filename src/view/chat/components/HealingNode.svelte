@@ -75,6 +75,19 @@
 	{/if}
 </div>
 
+{#if node.maxDamageBy}
+	<div
+		class="healing-max-damage"
+		data-tooltip={localize('NIMBLE.chat.incomingReactions.outcomeTags.maxDamageTooltip', {
+			feature: node.maxDamageBy,
+		})}
+	>
+		{localize('NIMBLE.chat.incomingReactions.outcomeTags.maxHealing', {
+			feature: node.maxDamageBy,
+		})}
+	</div>
+{/if}
+
 {#if canInteract}
 	<div class="healing-actions">
 		{#if isApplied}
@@ -128,6 +141,12 @@
 {/if}
 
 <style lang="scss">
+	.healing-max-damage {
+		margin-block-start: 0.25rem;
+		font-size: var(--nimble-xs-text);
+		font-weight: 600;
+	}
+
 	.roll {
 		display: grid;
 		grid-template-areas:

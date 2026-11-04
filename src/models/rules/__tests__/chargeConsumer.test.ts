@@ -30,6 +30,16 @@ describe('ChargeConsumerRule', () => {
 			});
 		});
 
+		it('spends a charge on each use until the rule allows a use with none', () => {
+			const schema = ChargeConsumerRule.defineSchema() as any;
+			const { allowFree } = schema;
+
+			expect(allowFree.initial).toBe(false);
+			expect(allowFree.options.label).toBe('NIMBLE.rules.chargeConsumer.allowFree.label');
+			expect(allowFree.options.showWhen({ costMode: 'fixed' })).toBe(true);
+			expect(allowFree.options.showWhen({ costMode: 'variable' })).toBe(false);
+		});
+
 		it('shows the ceiling only where it applies', () => {
 			const schema = ChargeConsumerRule.defineSchema() as any;
 			const { showWhen } = schema.maxCost.options;

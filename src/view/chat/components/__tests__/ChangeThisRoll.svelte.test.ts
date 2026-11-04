@@ -27,6 +27,7 @@ function control(card: never, count = 2) {
 		opensPicker: vi.fn(() => false),
 		useEntry: vi.fn(async () => undefined),
 		pickDie: vi.fn(async () => undefined),
+		pickSeveral: vi.fn(async () => undefined),
 		pickValue: vi.fn(async () => undefined),
 		pickStat: vi.fn(async () => undefined),
 		cancelPick: vi.fn(() => null),
@@ -34,6 +35,26 @@ function control(card: never, count = 2) {
 }
 
 describe('createChangeThisRollState', () => {
+	it('passes the picked dice on', () => {
+		const pickSeveral = vi.fn(async () => undefined);
+		const state = createChangeThisRollState(message({}), () => ({
+			count: 1,
+			picking: null,
+			opensPicker: vi.fn(() => true),
+			useEntry: vi.fn(async () => undefined),
+			pickDie: vi.fn(async () => undefined),
+			pickSeveral,
+			pickValue: vi.fn(async () => undefined),
+			pickStat: vi.fn(async () => undefined),
+			cancelPick: vi.fn(() => null),
+		}));
+		const dice = [{ term: 0, result: 0 }] as never[];
+
+		state.pickSeveral(dice);
+
+		expect(pickSeveral).toHaveBeenCalledWith(dice);
+	});
+
 	it('counts the rows the user can click', () => {
 		expect(control(message({}), 3).count).toBe(3);
 	});

@@ -6,7 +6,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "poolDieToMax",
+				"disabled": false,
+				"id": "avengerDiceToMax",
+				"identifier": "",
+				"label": "Avenger",
+				"predicate": {},
+				"priority": 7,
+				"poolIdentifier": "judgment",
+				"trigger": "onWound",
+				"reach": 4
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "avengerFreeMoves",
+				"identifier": "",
+				"label": "Avenger",
+				"predicate": {},
+				"priority": 8,
+				"trigger": "afterPoolDiceToMax",
+				"poolIdentifier": "",
+				"distance": "floor(@speed / 2)",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": "",
+				"whisper": false
+			},
+			{
+				"type": "diceConsumer",
+				"disabled": false,
+				"id": "avengerConsumer1",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "judgment",
+				"poolScope": "item",
+				"mode": "manual",
+				"cost": "1",
+				"bonusOnAttackDelivery": null,
+				"effectFormula": null,
+				"effectType": "generic",
+				"selectionOutcome": "maximize"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

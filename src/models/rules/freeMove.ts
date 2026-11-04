@@ -23,6 +23,7 @@ const TRIGGERS = [
 	'onInitiativeRolled',
 	'onTurnStart',
 	'onCritReceived',
+	'afterPoolDiceToMax',
 ] as const;
 
 type FreeMoveTrigger = (typeof TRIGGERS)[number];
@@ -229,6 +230,14 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!identifier || identifier !== context.poolIdentifier) return;
 		const pool = context.poolLabel || identifier;
 		await this.#offer(localize('NIMBLE.rules.freeMove.reasons.onPoolGain', { pool }));
+	}
+
+	/** A rule of this item raised pool dice, or would with some held. */
+	async offerAfterPoolDice(): Promise<void> {
+		if (!this.item.isEmbedded || !this.test() || this.trigger !== 'afterPoolDiceToMax') return;
+		await this.#offer(
+			localize('NIMBLE.rules.freeMove.reasons.afterPoolDiceToMax', { item: this.item.name }),
+		);
 	}
 
 	async #offer(reason: string, contextToken: TokenDocument | null = null): Promise<void> {

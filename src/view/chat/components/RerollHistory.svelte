@@ -12,6 +12,8 @@
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
 
 	const OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
+		maxDamage: 'fa-angles-up',
+		critDice: 'fa-dice-d20',
 		crit: 'fa-burst',
 		cannotMiss: 'fa-bullseye',
 		noOutcome: 'fa-ban',

@@ -5,12 +5,14 @@
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { cardPrimaryRoll } from './components/attackOutcomeTags.ts';
 	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
@@ -96,6 +98,9 @@
 
 	<GrantedActionOffers />
 
+	{#if !cardPrimaryRoll(messageDocument.reactive.system)}
+		<ChaosButton />
+	{/if}
 	<IncomingReactionPrompts place="options" />
 
 	<ChargeConsumptionNode />

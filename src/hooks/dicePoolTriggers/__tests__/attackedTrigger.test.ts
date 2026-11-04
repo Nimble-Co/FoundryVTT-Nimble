@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTestGlobals } from '../../../../tests/helpers.js';
 import {
 	type CombatDefeatSyncTestGlobals,
@@ -106,5 +106,130 @@ describe('registerAttackedTriggerHooks', () => {
 			threw = true;
 		}
 		expect(threw).toBe(false);
+	});
+
+	describe('from the attack card', () => {
+		const hero = { uuid: 'Actor.hero', id: 'hero', type: 'character' };
+		const speaker = { actor: 'monster' };
+		const damage = { type: 'damage', roll: { class: 'DamageRoll' }, on: {} };
+
+		function attackCard(targets: string[], flag?: string[]) {
+			const flags: Record<string, unknown> = flag ? { attackedActors: flag } : {};
+			return {
+				id: 'card',
+				type: 'feature',
+				speaker,
+				system: { targets, isMiss: true, activation: { effects: [damage] } },
+				getFlag: (_scope: string, key: string) => flags[key],
+				setFlag: vi.fn(async (_scope: string, key: string, value: unknown) => {
+					flags[key] = value;
+				}),
+			};
+		}
+
+		async function register() {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerAttackedTriggerHooks } = await import('../attackedTrigger.js');
+			registerAttackedTriggerHooks();
+			return callbacks;
+		}
+
+		afterEach(() => vi.unstubAllGlobals());
+
+		const flush = () => new Promise((resolve) => setTimeout(resolve));
+		const attacked = () =>
+			vi
+				.mocked(applyRefillToActorIfEligible)
+				.mock.calls.filter(([, trigger]) => trigger === 'onAttacked');
+
+		beforeEach(() => {
+			vi.stubGlobal('fromUuidSync', (uuid: string) =>
+				uuid === 'Token.hero' ? { actor: hero } : null,
+			);
+			(game as unknown as { user: object }).user = { id: 'gm', isGM: true };
+		});
+
+		it('fires for a target of an attack that misses, with no damage applied', async () => {
+			const callbacks = await register();
+
+			callbacks.get('createChatMessage')?.(attackCard(['Token.hero']));
+			await flush();
+
+			expect(attacked()).toEqual([[hero, 'onAttacked']]);
+		});
+
+		it('does not fire again for a reroll of the same card', async () => {
+			const callbacks = await register();
+			const card = attackCard(['Token.hero']);
+
+			callbacks.get('createChatMessage')?.(card);
+			await flush();
+			callbacks.get('updateChatMessage')?.(card);
+			await flush();
+
+			expect(attacked()).toHaveLength(1);
+		});
+
+		it('does not fire again when the damage of that card applies', async () => {
+			const callbacks = await register();
+			const card = attackCard(['Token.hero']);
+
+			callbacks.get('createChatMessage')?.(card);
+			await flush();
+			callbacks.get('nimble.damageApplied')?.({ targetActor: hero, card });
+			await flush();
+
+			expect(attacked()).toHaveLength(1);
+		});
+
+		it('fires for a target added to the card later', async () => {
+			const callbacks = await register();
+			const card = attackCard([]);
+
+			callbacks.get('createChatMessage')?.(card);
+			await flush();
+			expect(attacked()).toHaveLength(0);
+
+			card.system.targets = ['Token.hero'];
+			callbacks.get('updateChatMessage')?.(card);
+			await flush();
+
+			expect(attacked()).toHaveLength(1);
+		});
+
+		it('fires when damage applies to a creature that is not a target of the card', async () => {
+			const callbacks = await register();
+			const card = attackCard([]);
+
+			callbacks.get('createChatMessage')?.(card);
+			await flush();
+			callbacks.get('nimble.damageApplied')?.({ targetActor: hero, card });
+			await flush();
+
+			expect(attacked()).toHaveLength(1);
+			expect(card.setFlag).toHaveBeenLastCalledWith(expect.anything(), 'attackedActors', [
+				'Actor.hero',
+			]);
+		});
+
+		it('does not fire from an update of a card older than this event', async () => {
+			const callbacks = await register();
+
+			callbacks.get('updateChatMessage')?.(attackCard(['Token.hero']));
+			await flush();
+
+			expect(attacked()).toHaveLength(0);
+		});
+
+		it('does not fire for a card with no damage', async () => {
+			const callbacks = await register();
+			const card = attackCard(['Token.hero']);
+			card.system.activation.effects = [];
+
+			callbacks.get('createChatMessage')?.(card);
+			await flush();
+
+			expect(attacked()).toHaveLength(0);
+		});
 	});
 });

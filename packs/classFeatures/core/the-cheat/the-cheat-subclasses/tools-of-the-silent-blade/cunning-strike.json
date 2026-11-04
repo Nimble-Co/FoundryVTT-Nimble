@@ -6,13 +6,48 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "cunningStrikePoo",
+				"identifier": "cunning-strike",
+				"label": "Cunning Strike (2/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "2",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "critDiceSave",
+				"disabled": false,
+				"id": "cunningStrikeSav",
+				"identifier": "",
+				"label": "Cunning Strike",
+				"predicate": {},
+				"priority": 2,
+				"saveType": "strength",
+				"saveDC": "10+@intelligence",
+				"chargePoolIdentifier": "cunning-strike"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "1 Use",
+				"details": "",
 				"quantity": 1,
-				"type": "special",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,40 +55,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "ePNURkryI1sqKPP8",
-					"type": "savingThrow",
-					"savingThrowType": "strength",
-					"parentContext": null,
-					"parentNode": null,
-					"saveType": "strength",
-					"on": {
-						"passedSave": [
-							{
-								"id": "kinxaTHt0Wm3ADEr",
-								"type": "note",
-								"noteType": "general",
-								"text": "Regain 1 Use",
-								"parentContext": "passedSave",
-								"parentNode": "ePNURkryI1sqKPP8"
-							}
-						],
-						"failedSave": [
-							{
-								"id": "RZIR2ELTluJxgd84",
-								"type": "note",
-								"noteType": "general",
-								"text": "Sneak Attack do maximum amount of Damage",
-								"parentContext": "failedSave",
-								"parentNode": "ePNURkryI1sqKPP8"
-							}
-						]
-					},
-					"sharedRolls": [],
-					"saveDC": "10+@intelligence"
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

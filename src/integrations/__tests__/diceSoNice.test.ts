@@ -7,7 +7,7 @@ import {
 	DSN_PRIMARY_DIE_LABEL_COLOR_SETTING_KEY,
 	DSN_PRIMARY_DIE_STYLE_ENABLED_SETTING_KEY,
 } from '../../settings/diceSoNiceSettings.js';
-import { getPrimaryDieDiceOptions, PRIMARY_DIE_COLORSET } from '../diceSoNice.js';
+import { getPrimaryDieDiceOptions, PRIMARY_DIE_COLORSET, rollForDice3d } from '../diceSoNice.js';
 
 type SettingsMock = {
 	settings: { has: (id: string) => boolean };
@@ -96,5 +96,61 @@ describe('getPrimaryDieDiceOptions', () => {
 		installSettingsMock({});
 
 		expect(getPrimaryDieDiceOptions()?.dsnDamageTypeManaged).toBe(true);
+	});
+});
+
+describe('rollForDice3d', () => {
+	const result = (value: number, extra: object = {}) => ({ result: value, active: true, ...extra });
+	const term = (results: object[], faces = 6) =>
+		Object.assign(new foundry.dice.terms.Die({ number: 1, faces }), { results });
+
+	it('gives no roll of its own when each die is the size of its term', () => {
+		const roll = { dice: [term([result(6, { exploded: true }), result(2)])], total: 8 };
+
+		expect(rollForDice3d(roll as never)).toBeNull();
+	});
+
+	it('throws a d20 crit die as a d20, after the die that started it', () => {
+		const other = term([result(4)]);
+		const roll = {
+			dice: [term([result(6, { exploded: true }), result(13, { faces: 20 })]), other],
+			total: 23,
+		};
+
+		const split = rollForDice3d(roll as never);
+
+		expect(split?.total).toBe(23);
+		expect(
+			split?.dice.map((die) => [die.number, die.faces, die.results.map((each) => each.result)]),
+		).toEqual([
+			[1, 6, [6]],
+			[0, 20, [13]],
+			[1, 6, [4]],
+		]);
+	});
+
+	it('throws the dice a 20 starts at the size of the weapon', () => {
+		const roll = {
+			dice: [
+				term([result(6, { exploded: true }), result(20, { faces: 20, exploded: true }), result(3)]),
+			],
+			total: 29,
+		};
+
+		const split = rollForDice3d(roll as never);
+
+		expect(
+			split?.dice.map((die) => [die.number, die.faces, die.results.map((each) => each.result)]),
+		).toEqual([
+			[1, 6, [6]],
+			[0, 20, [20]],
+			[0, 6, [3]],
+		]);
+	});
+
+	it('keeps the ghost and secret marks of the roll', () => {
+		const roll = { dice: [term([result(13, { faces: 20 })])], total: 13, secret: true };
+
+		expect(rollForDice3d(roll as never)).toMatchObject({ secret: true });
 	});
 });

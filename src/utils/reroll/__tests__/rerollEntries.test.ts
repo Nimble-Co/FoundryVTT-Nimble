@@ -121,6 +121,31 @@ describe('collectRerollEntries', () => {
 		]);
 	});
 
+	describe('on a card with max damage', () => {
+		const NO_DICE = { ...HIT, noDice: true };
+		const rollerRule = (overrides: Partial<RerollRuleLike>) =>
+			rerollRule({ usedBy: 'roller', ...overrides });
+		const entriesWith = (rule: RerollRuleLike) =>
+			collectRerollEntries(context({ attacker: actor('Actor.attacker', [rule]), outcome: NO_DICE }))
+				.manual;
+
+		it('has no reroll row', () => {
+			expect(entriesWith(rollerRule({}))).toEqual([]);
+		});
+
+		it('has no die change row', () => {
+			expect(entriesWith(rollerRule({ type: 'changeDie' }))).toEqual([]);
+		});
+
+		it('has no Make It a Crit row', () => {
+			expect(entriesWith(rollerRule({ type: 'makeCrit' }))).toEqual([]);
+		});
+
+		it('keeps a row that changes a result', () => {
+			expect(entriesWith(rollerRule({ type: 'changeResult' }))).toHaveLength(1);
+		});
+	});
+
 	describe('a Make It a Crit rule', () => {
 		const makeCrit = () => rerollRule({ id: 'crit', type: 'makeCrit', usedBy: 'roller' });
 		const collect = (outcome: RerollRollContext['outcome']) =>
@@ -586,6 +611,46 @@ describe('target rules on a roll with two or more targets', () => {
 		expect(entry.use).toBe('result');
 		const miss = collectRerollEntries(context({ targets, outcome: { isMiss: true } })).manual;
 		expect(miss).toEqual([]);
+	});
+});
+
+describe('an item whose extra targets do not make it a Multi-target Attack', () => {
+	const seenOther = vi.fn();
+	const firstTargetRule = rerollRule({ id: 'first' });
+	const secondTargetRule = rerollRule({ id: 'second' });
+	const targets = [
+		{ tokenUuid: TOKEN, actor: actor('Actor.first', [firstTargetRule]) },
+		{ tokenUuid: OTHER_TOKEN, actor: actor('Actor.second', [secondTargetRule]) },
+	];
+
+	it('gives entries only from the rules of the first target', () => {
+		const { manual } = collectRerollEntries(context({ targets, firstTargetDecides: true }));
+
+		expect(manual.map((entry) => entry.ruleId)).toEqual(['first']);
+	});
+
+	it('lets a rule of the attacker read the first target', () => {
+		const attackerRule = rerollRule({
+			usedBy: 'roller',
+			offersUseOn: (use) => {
+				seenOther(use.other?.uuid);
+				return use.side === 'roller';
+			},
+		});
+
+		collectRerollEntries(
+			context({
+				attacker: actor('Actor.attacker', [attackerRule]),
+				targets,
+				firstTargetDecides: true,
+			}),
+		);
+
+		expect(seenOther).toHaveBeenCalledWith('Actor.first');
+	});
+
+	it('without the field, gives no entries from any target', () => {
+		expect(collectRerollEntries(context({ targets })).manual).toEqual([]);
 	});
 });
 
@@ -1209,5 +1274,92 @@ describe('a target in the Incapacitated group, with Feature Effects off', () => 
 			ok: false,
 			reason: 'unavailable',
 		});
+	});
+});
+
+describe('a rule that changes dice of the crit bonus role', () => {
+	const needsDice = rerollRule({ needsCritBonusDice: true, usedBy: 'roller' });
+	const rows = (outcome: object) =>
+		collectRerollEntries(context({ attacker: actor('Actor.attacker', [needsDice]), outcome }))
+			.manual;
+
+	it('shows on a roll with those dice in its terms', () => {
+		const withDice = { ...CRIT, terms: [{ options: { dieRole: 'critBonus' } }] };
+
+		expect(rows(withDice)).toHaveLength(1);
+	});
+
+	it('does not show on a roll without them', () => {
+		expect(rows({ ...CRIT, terms: [] })).toEqual([]);
+	});
+
+	it('does not show on a max damage roll', () => {
+		const maxed = {
+			...CRIT,
+			terms: [{ options: { dieRole: 'critBonus' } }],
+			options: { maxDamage: 'hit' },
+		};
+
+		expect(rows(maxed)).toEqual([]);
+	});
+});
+
+describe('a row that changes the crit dice, with Feature Effects off', () => {
+	const effectRule = (rollEffect: 'critD20' | 'viciousDie', usedBy: RerollSide = 'roller') =>
+		rerollRule({ type: 'attackOutcome', rollEffect, outcome: 'criticalHit', usedBy });
+	const rows = (rule: RerollRuleLike, outcome: object, side: RerollSide = 'roller') =>
+		collectRerollEntries(
+			context({
+				...(side === 'roller'
+					? { attacker: actor('Actor.attacker', [rule]) }
+					: { targets: [{ tokenUuid: TOKEN, actor: actor('Actor.target', [rule]) }] }),
+				outcome,
+			}),
+		).manual;
+
+	beforeEach(() => setToggles({ 'automation.applyRuleEffects': false }));
+
+	it('shows on a crit, with the effect on the entry', () => {
+		const [row] = rows(effectRule('critD20'), CRIT);
+
+		expect(row).toMatchObject({ use: 'effect', effect: 'critD20' });
+	});
+
+	it('stays on a crit that a Make It a Crit made sure', () => {
+		const [row] = rows(effectRule('critD20'), { ...CRIT, critStays: true });
+
+		expect(row).toMatchObject({ use: 'effect', effect: 'critD20' });
+	});
+
+	it('does not show on a hit', () => {
+		expect(rows(effectRule('critD20'), HIT)).toEqual([]);
+	});
+
+	it('Use a d20 goes away once a crit die is a d20', () => {
+		expect(rows(effectRule('critD20'), { ...CRIT, hasCritD20: true })).toEqual([]);
+	});
+
+	it('reads the crit dice from the terms of a roll', () => {
+		const withD20 = { ...CRIT, terms: [{ results: [{ result: 8 }, { result: 13, faces: 20 }] }] };
+
+		expect(rows(effectRule('critD20'), withD20)).toEqual([]);
+	});
+
+	it('reads the Vicious die from the options of a roll', () => {
+		const vicious = { ...CRIT, options: { explosionStyle: 'vicious' } };
+
+		expect(rows(effectRule('viciousDie', 'target'), vicious, 'target')).toEqual([]);
+	});
+
+	it('the Vicious die shows for the owner of the target', () => {
+		const [row] = rows(effectRule('viciousDie', 'target'), CRIT, 'target');
+
+		expect(row).toMatchObject({ side: 'target', effect: 'viciousDie' });
+	});
+
+	it('the Vicious die does not show on an attack that is Vicious', () => {
+		expect(rows(effectRule('viciousDie', 'target'), { ...CRIT, vicious: true }, 'target')).toEqual(
+			[],
+		);
 	});
 });

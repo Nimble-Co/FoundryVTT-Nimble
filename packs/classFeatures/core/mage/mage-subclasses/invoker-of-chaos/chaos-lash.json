@@ -66,6 +66,17 @@
 				"observerScope": "self",
 				"allyRadius": 6,
 				"message": ""
+			},
+			{
+				"type": "tableRoll",
+				"disabled": false,
+				"id": "chaos-lash-chaos",
+				"identifier": "",
+				"label": "Chaos Lash",
+				"predicate": {},
+				"priority": 4,
+				"table": "chaos",
+				"when": "onUse"
 			}
 		],
 		"activation": {

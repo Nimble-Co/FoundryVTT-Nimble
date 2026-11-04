@@ -125,6 +125,16 @@ The Brutal monster trait (GM:1894) changes primary die selection: "Treat the hig
 
 When `brutalPrimary` is true, the engine reassigns `primaryDie` to the die with the highest active non-discarded result after rolling. On ties, leftmost wins.
 
+### Max damage and crit dice options
+
+| Option | Meaning |
+|--------|---------|
+| `maxDamage: 'hit' \| 'crit'` | No die is rolled: every die gives its max (`maximize`), and the roll cannot miss. `crit` is a crit with no crit dice; `hit` cannot crit. `roll.noDice` is true. |
+| `critDice: CritDiceSpec[]` | Dice a crit adds as a line of their own (`settleCritDice`). They do not explode and are not Vicious. Each term has `dieRole` and `critDiceKey` in its options. A roll with no crit loses them. |
+| `critD20: boolean` | On a crit, the first crit die is a d20 (`replaceCritDieWithD20`). A 20 explodes with the die of the attack, in the roll's explosion style. |
+
+The d20 crit die is a result of the attack's own term with `faces: 20` on the result. The card reads `faces` to show the die, and `rollForDice3d` (`src/integrations/diceSoNice.ts`) gives it a term of its own so Dice So Nice throws a d20.
+
 ### AoE auto-flagging — `ItemActivationManager`
 
 Any item whose `activation.template.shape` is set (cone, circle, line, emanation, square) automatically gets `canCrit: false, canMiss: false`. No opt-in from the content author needed — define the activation template shape normally and it works.

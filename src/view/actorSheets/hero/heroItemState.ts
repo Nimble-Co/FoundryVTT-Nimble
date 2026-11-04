@@ -45,7 +45,8 @@ function poolsOf(actor: NimbleCharacter, item: Item, all: ChargePoolState[]): It
 
 function gateOf(item: Item, all: ChargePoolState[]): ChargeGateLike | null {
 	if (!isResourceSpendingAutomationEnabled()) return null;
-	const result = validateItemChargeConsumption(item);
+	// The sheet cannot know if the player ticks a use with no charge, so it does not block it.
+	const result = validateItemChargeConsumption(item, { freeUse: true });
 	if (result.ok || !result.failure) return null;
 	const { failure } = result;
 	const pool = all.find((entry) => entry.identifier === failure.poolIdentifier);

@@ -77,6 +77,11 @@ export const activation = () => ({
 				min: 1,
 				integer: true,
 			}),
+			singleTargetAttack: new fields.BooleanField({
+				required: true,
+				nullable: false,
+				initial: false,
+			}),
 			restrictions: new fields.StringField({
 				required: true,
 				initial: '',

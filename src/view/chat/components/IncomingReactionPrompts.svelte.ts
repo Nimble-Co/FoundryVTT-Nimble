@@ -268,6 +268,16 @@ export function createIncomingReactionPromptsState(
 	function rerollPicker(entry: IncomingReactionEntry): IncomingReactionPicking | null {
 		const stats = message?.rerollStatsToPick?.(entry) ?? null;
 		if (stats?.length) return { entry, dice: [], stats, rolling: null, sent: false };
+		const several = message?.severalDiceToPick?.(entry) ?? null;
+		if (several) {
+			return {
+				entry,
+				dice: several.dice,
+				rolling: null,
+				sent: false,
+				several: { max: several.max, manaPerDie: several.manaPerDie },
+			};
+		}
 		const dice = message?.rerollDiceToPick?.(entry) ?? null;
 		return dice && dice.length > 1 ? { entry, dice, rolling: null, sent: false } : null;
 	}
@@ -316,6 +326,7 @@ export function createIncomingReactionPromptsState(
 		die: PickableDie | null,
 		value: number | null = null,
 		stat: string | null = null,
+		dice: readonly PickableDie[] | null = null,
 	): Promise<boolean> {
 		const forceHeroicReaction = await confirmRerollHeroicReaction(entry);
 		if (forceHeroicReaction === null) return false;
@@ -329,6 +340,7 @@ export function createIncomingReactionPromptsState(
 				...(die ? { die: { term: die.term, result: die.result } } : {}),
 				...(value === null ? {} : { value }),
 				...(stat === null ? {} : { stat }),
+				...(dice ? { dice: dice.map(({ term, result }) => ({ term, result })) } : {}),
 			},
 		});
 		return true;
@@ -358,6 +370,23 @@ export function createIncomingReactionPromptsState(
 			return;
 		}
 		await sendPicked(die, null);
+	}
+
+	async function pickSeveral(dice: PickableDie[]): Promise<void> {
+		const current = picking;
+		if (!current || current.rolling || busy || dice.length === 0) return;
+		busy = true;
+		try {
+			picking = { ...current, rolling: dice[0] };
+			const sent = await sendReroll(current.entry, null, null, null, dice);
+			picking = sent && picking ? { ...picking, sent: true } : null;
+		} catch (error) {
+			picking = null;
+			console.error('Nimble | Failed to use a chat card reaction', error);
+			ui.notifications?.error(localize('NIMBLE.chat.incomingReactions.useFailed'));
+		} finally {
+			busy = false;
+		}
 	}
 
 	async function pickValue(value: number): Promise<void> {
@@ -427,6 +456,7 @@ export function createIncomingReactionPromptsState(
 		opensPicker,
 		useEntry,
 		pickDie,
+		pickSeveral,
 		pickValue,
 		pickStat,
 		cancelPick,

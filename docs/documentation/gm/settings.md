@@ -69,6 +69,8 @@ Want the system to carry as much as possible? Leave every Automation toggle **on
 Prefer to stay hands-on? Open Configure Automation and turn **off** Feature Effects (conditions become one-click suggestions on chat cards instead), plus any other toggle you'd rather track yourself, such as Costs or Action Spending. Leave **off** Auto-Add Character To Combat On Initiative Roll and Auto-Track Token Adjacency. Consider turning **on** Hide Rolls by Default on your own client so GM rolls stay behind the screen. The system still rolls the dice and does the math. It just asks before changing anything.
 :::
 
+**Show Chaos Table rolls** is for a hero with Force of Chaos. It is off by default, because the book keeps the table secret: the player sees only the number, and you get the text in a whisper. Turn it on to show the text to all. See [The Chaos Table](../playing/dice-and-chat.md#the-chaos-table).
+
 ## 3D dice
 
 If your table uses the **Dice So Nice** module, the **Configure 3D Dice** button in the system settings tab opens a window where each player chooses how the primary die of their damage rolls looks. The primary die is drawn in its own colors so it reads apart from the rest of the pool, and the colors travel with the roll: everyone at the table sees the roller's choice, not their own.

@@ -198,6 +198,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 		effects: Record<string, unknown>[];
 		targets: {
 			count: number;
+			singleTargetAttack: boolean;
 			restrictions: string;
 			attackType: '' | 'reach' | 'range';
 			distance: number;

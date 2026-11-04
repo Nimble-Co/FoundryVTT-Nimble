@@ -311,6 +311,7 @@ describe('registerIncomingReactionSocketListener', () => {
 			die: null,
 			value: null,
 			stat: null,
+			dice: null,
 		});
 	});
 

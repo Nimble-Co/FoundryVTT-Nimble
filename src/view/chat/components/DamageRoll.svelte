@@ -1,6 +1,9 @@
 <script>
+	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import { rerollJustLanded, rollingRerollOf } from '#utils/reroll/rerollRolling.svelte.ts';
+	import { critDiceLinesOf } from '../../../dice/critDiceLines.js';
+	import ChaosButton from './ChaosButton.svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';
@@ -59,6 +62,7 @@
 	let landed = $derived(!!nodeId && rerollJustLanded(messageDocument.id, nodeId));
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
+	let critDiceLines = $derived(critDiceLinesOf(roll?.terms));
 	let multiplier = $derived(getDamageMultiplier(outcome));
 	let secondaryInfo = $derived(getSecondaryInformation(outcome, ignoreArmor, rollOptions).trim());
 </script>
@@ -100,3 +104,23 @@
 		showRollDetails={false}
 	/>
 {/if}
+
+<ChaosButton />
+
+{#each critDiceLines as line, index (index)}
+	<p class="nimble-crit-dice-line" data-tooltip={line.values.join(' + ')}>
+		<i class="fa-solid fa-dice" aria-hidden="true"></i>
+		{localize('NIMBLE.chat.incomingReactions.critDiceLine', {
+			feature: line.label,
+			total: String(line.total),
+		})}
+	</p>
+{/each}
+
+<style>
+	.nimble-crit-dice-line {
+		margin: 0.25rem 0 0;
+		font-size: var(--nimble-sm-text);
+		font-weight: 600;
+	}
+</style>

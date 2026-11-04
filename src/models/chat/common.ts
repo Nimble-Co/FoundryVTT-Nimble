@@ -173,7 +173,19 @@ export const incomingReactions = () => ({
 				initial: 'reroll',
 				choices: [...ROLL_USES],
 			}),
+			effect: new fields.StringField({ required: false, nullable: true, initial: null }),
 			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			useIndex: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+			}),
+			needsCritBonusDice: new fields.BooleanField({
+				required: false,
+				nullable: false,
+				initial: false,
+			}),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			leftOut: new fields.SchemaField(
@@ -266,6 +278,8 @@ const rerollRecord = () =>
 		previous: rerollDieResult(),
 		next: rerollDieResult(),
 		usesLeft: new fields.NumberField({ required: true, nullable: true, initial: null }),
+		noActionLeft: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+		severalDice: new fields.ArrayField(new fields.ObjectField(), { required: false }),
 		woundsGained: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -290,6 +304,7 @@ const rerollRecord = () =>
 			initial: 'reroll',
 			choices: [...ROLL_USES],
 		}),
+		effect: new fields.StringField({ required: false, nullable: true, initial: null }),
 		change: new fields.SchemaField(
 			{
 				mode: new fields.StringField({
@@ -362,6 +377,7 @@ const rerollGrant = () =>
 const keepChoiceRoll = () =>
 	new fields.SchemaField({
 		total: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		label: new fields.StringField({ required: false, nullable: false, initial: '' }),
 		outcome: new fields.StringField({
 			required: true,
 			nullable: true,

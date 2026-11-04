@@ -1,3 +1,4 @@
+import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
@@ -7,13 +8,18 @@ import {
 	type AttackOutcomeView,
 	canBecomeCrit,
 	critStays,
+	hasCritBonusDice,
+	hasCritD20Die,
 	hasDieAtMax,
+	hasNoDice,
 	type IncomingReactionEntry,
+	isViciousAttack,
 	type RerollDie,
 	type RerollKeep,
 	type RerollLeftOut,
 	type RerollSide,
 	type RerollTrigger,
+	type RollEffect,
 	type RollUse,
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
@@ -27,6 +33,9 @@ const CHANGE_DIE_RULE_TYPE = 'changeDie';
 const MAKE_CRIT_RULE_TYPE = 'makeCrit';
 const CHANGE_RESULT_RULE_TYPE = 'changeResult';
 const ATTACK_OUTCOME_RULE_TYPE = 'attackOutcome';
+const CRIT_DICE_RULE_TYPE = 'critDice';
+const CRIT_DICE_SAVE_RULE_TYPE = 'critDiceSave';
+const OFFER_ATTACK_BONUS_RULE_TYPE = 'offerAttackBonus';
 const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
 
 /**
@@ -34,7 +43,10 @@ const INCAPACITATED_TARGET_RULE_ID = 'incapacitatedTarget';
  * Effects off, an Attack Outcome rule that gives a crit is a Make It a Crit button.
  */
 function isRollUseRule(type: string | undefined): boolean {
-	if (type === ATTACK_OUTCOME_RULE_TYPE) return !isRuleAutomationEnabled();
+	if (type === ATTACK_OUTCOME_RULE_TYPE || type === CRIT_DICE_RULE_TYPE) {
+		return !isRuleAutomationEnabled();
+	}
+	if (type === CRIT_DICE_SAVE_RULE_TYPE || type === OFFER_ATTACK_BONUS_RULE_TYPE) return true;
 	return (
 		type === REROLL_RULE_TYPE ||
 		type === CHANGE_DIE_RULE_TYPE ||
@@ -51,11 +63,19 @@ function rollUseOf(type: string | undefined): RollUse | undefined {
 	return undefined;
 }
 
+/** What an entry of this rule does: a row with an effect, or what the rule type says. */
+function rollUseOfRule(rule: RerollRuleLike): RollUse | undefined {
+	return rule.rollEffect ? 'effect' : rollUseOf(rule.type);
+}
+
 /** A roll use as the outcome gate reads it. */
 interface RollUseGate {
 	use?: RollUse;
+	effect?: RollEffect;
 	/** A crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
+	/** A use that changes dice of the crit bonus role needs a roll that has them. */
+	needsCritBonusDice?: boolean;
 }
 
 /** Structural view of a `reroll` rule, so this module needs no rule import. */
@@ -96,6 +116,21 @@ interface RerollRuleLike {
 	dieChange?: DieChange;
 	/** A Change a Result rule: what one use does, or null when its formula gives no number. */
 	resultUseFor?: (roller: ResultCardView['roller'], card?: ResultCardView) => ResultUse | null;
+	/** With Feature Effects off, what the row of this rule does to the roll. */
+	rollEffect?: RollEffect;
+	/** The most dice a player can pick for one use; null is one die. */
+	maxDiceCount?: number | null;
+	/** How many rows the rule gives this roll. Absent is one. */
+	rowsOn?(context: { roll: RollToReroll }): number;
+	/** With the effect `offerBonus`: what the row adds. */
+	offerBonus?: { label: string; damage: number; primaryDie: number };
+	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
+	saveType?: string;
+	saveDC?: string;
+	/** With the effect `critDice`: the dice the row adds. */
+	critDiceSpec?: CritDiceSpec;
+	/** A rule that changes dice of the crit bonus role. */
+	needsCritBonusDice?: boolean;
 	/** An Attack Outcome rule as a button: its crit also needs a die at its max. */
 	critNeedsDieAtMax?: boolean;
 	cardHintFor?: (context: {
@@ -155,6 +190,8 @@ interface RerollRollContext {
 	attacker: RerollingActor | null | undefined;
 	/** The roll's targets in card order. With two or more, no target's rules give entries. */
 	targets: RerollTarget[];
+	/** The item's extra targets do not count: only the first target's rules are read. */
+	firstTargetDecides?: boolean;
 	/** Creatures that may use an ally-side reroll. Absent means none. */
 	allies?: RerollAlly[];
 	roll: RollToReroll;
@@ -200,9 +237,14 @@ function rollUseTriggerMatches(
 	outcome: AttackOutcomeView,
 	gate: RollUseGate = {},
 ): boolean {
+	if (hasNoDice(outcome) && gate.use !== 'result') return false;
+	if (gate.effect === 'viciousDie' && isViciousAttack(outcome)) return false;
+	if (gate.effect === 'critD20' && hasCritD20Die(outcome)) return false;
 	if (gate.use === 'crit' && !canBecomeCrit(outcome)) return false;
 	if (gate.needsDieAtMax && !hasDieAtMax(outcome)) return false;
-	if (trigger === 'criticalHit' && critStays(outcome)) return false;
+	if (gate.needsCritBonusDice && !hasCritBonusDice(outcome)) return false;
+	if (gate.effect === 'critDice' && hasCritBonusDice(outcome)) return false;
+	if (trigger === 'criticalHit' && !gate.effect && critStays(outcome)) return false;
 	return rerollTriggerMatches(trigger, outcome);
 }
 
@@ -234,10 +276,12 @@ function runsByItself(
 }
 
 function gateOf(rule: RerollRuleLike): RollUseGate {
-	const use = rollUseOf(rule.type);
+	const use = rollUseOfRule(rule);
 	return {
 		...(use ? { use } : {}),
+		...(rule.rollEffect ? { effect: rule.rollEffect } : {}),
 		...(rule.critNeedsDieAtMax === true ? { needsDieAtMax: true } : {}),
+		...(rule.needsCritBonusDice === true ? { needsCritBonusDice: true } : {}),
 	};
 }
 
@@ -267,7 +311,7 @@ interface RerollUser {
  */
 function otherCreature(side: RerollSide, context: RerollRollContext): RerollingActor | null {
 	if (side === 'target') return context.attacker ?? null;
-	return soleTarget(context.targets)?.actor ?? null;
+	return soleTarget(context.targets, { firstDecides: context.firstTargetDecides })?.actor ?? null;
 }
 
 /** Who can use a rule on each side of this roll. */
@@ -295,8 +339,14 @@ function leftOutFor(rule: RerollRuleLike, ally: RerollAlly): RerollLeftOut | nul
 }
 
 /** On a roll with two or more targets, only a rule about one target's damage gives an entry. */
-function fitsTargetCount(rule: RerollRuleLike, side: RerollSide, targets: number): boolean {
-	return side !== 'target' || targets < 2 || rule.change === 'noDamage';
+function fitsTargetCount(
+	rule: RerollRuleLike,
+	side: RerollSide,
+	context: RerollRollContext,
+	targetTokenUuid: string | null,
+): boolean {
+	if (side !== 'target' || context.targets.length < 2 || rule.change === 'noDamage') return true;
+	return context.firstTargetDecides === true && context.targets[0]?.tokenUuid === targetTokenUuid;
 }
 
 /**
@@ -324,35 +374,39 @@ function collectRerollEntries(context: RerollRollContext): {
 				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
 			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
-				if (!fitsTargetCount(rule, side, context.targets.length)) continue;
+				if (!fitsTargetCount(rule, side, context, targetTokenUuid)) continue;
 				if (rule.offersUseOn?.({ side, roll: context.roll, other }) !== true) continue;
 				const trigger = isAttack ? (triggerOf(rule) ?? 'always') : 'always';
 				const gate = gateOf(rule);
 				if (!outcomeAllows(trigger, outcome, gate)) continue;
 				const hint = rule.cardHintFor?.({ side, roll: context.roll, other }) ?? '';
 
-				const entry: IncomingReactionEntry = {
-					id: foundry.utils.randomID(),
-					kind: 'reroll',
-					source: 'rule',
-					actorUuid,
-					tokenUuid,
-					targetTokenUuid,
-					side,
-					label: ruleLabel(rule),
-					ruleId: rule.id ?? '',
-					itemUuid: rule.item?.uuid ?? '',
-					used: false,
-					outcomeTrigger: trigger,
-					oncePerRoll: rule.oncePerRoll === true,
-					...gate,
-					...(hint ? { hint } : {}),
-					...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
-					...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
-				};
+				const rows = Math.max(1, rule.rowsOn?.({ roll: context.roll }) ?? 1);
+				for (let useIndex = 0; useIndex < rows; useIndex += 1) {
+					const entry: IncomingReactionEntry = {
+						id: foundry.utils.randomID(),
+						kind: 'reroll',
+						source: 'rule',
+						actorUuid,
+						tokenUuid,
+						targetTokenUuid,
+						side,
+						label: ruleLabel(rule),
+						ruleId: rule.id ?? '',
+						itemUuid: rule.item?.uuid ?? '',
+						used: false,
+						outcomeTrigger: trigger,
+						oncePerRoll: rule.oncePerRoll === true,
+						...gate,
+						...(hint ? { hint } : {}),
+						...(rule.usesAnotherStat === true ? { anotherStat: true } : {}),
+						...(ally ? { leftOut: leftOutFor(rule, ally) } : {}),
+						...(rows > 1 ? { useIndex } : {}),
+					};
 
-				if (!ally && runsByItself(rule, actor, context)) result.automatic.push({ entry, rule });
-				else result.manual.push(entry);
+					if (!ally && runsByItself(rule, actor, context)) result.automatic.push({ entry, rule });
+					else result.manual.push(entry);
+				}
 			}
 		}
 	}
@@ -374,9 +428,10 @@ function offerStands(entry: IncomingReactionEntry, roll: RerollRollOutcome): boo
 
 /** One `reroll` rule on one actor, so a rule is not added or run twice on a card. */
 function rerollRuleKey(
-	entry: Pick<IncomingReactionEntry, 'actorUuid' | 'itemUuid' | 'ruleId'>,
+	entry: Pick<IncomingReactionEntry, 'actorUuid' | 'itemUuid' | 'ruleId' | 'useIndex'>,
 ): string {
-	return `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
+	const base = `${entry.actorUuid}|${entry.itemUuid}|${entry.ruleId}`;
+	return entry.useIndex ? `${base}|${entry.useIndex}` : base;
 }
 
 function rerollRuleKeys(entries: IncomingReactionEntry[]): Set<string> {
@@ -477,13 +532,13 @@ function usableRerollEntry(
 	if (rule.oncePerRoll === true && ruleUsedOnCard(entry, cardEntries)) return UNAVAILABLE;
 	const other = otherCreature(entry.side, context);
 	// A rule that reads the card keeps its entry stamped, so the row comes back with the result.
-	const readsCard = !isAttack || rollUseOf(rule.type) === 'result';
+	const readsCard = !isAttack || rollUseOfRule(rule) === 'result';
 	const gate = {
 		side: entry.side,
 		roll: context.roll,
 		other,
 		...(readsCard && context.card ? { card: context.card } : {}),
-		...(rollUseOf(rule.type) === 'result' ? { targetTokenUuid: entry.targetTokenUuid } : {}),
+		...(rollUseOfRule(rule) === 'result' ? { targetTokenUuid: entry.targetTokenUuid } : {}),
 	};
 	if (rule.offersUseOn?.(gate) !== true) return UNAVAILABLE;
 	const { outcome, forcedMiss } = attackOutcome(context);
@@ -499,6 +554,7 @@ export {
 	collectRerollEntries,
 	findRerollRule,
 	isRollUseRule,
+	rollUseOfRule,
 	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,
 	offerStands,

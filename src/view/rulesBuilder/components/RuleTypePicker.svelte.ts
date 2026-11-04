@@ -10,6 +10,15 @@ interface PickerEntry {
 }
 
 const RULE_ICONS: Record<string, string> = {
+	critDice: 'fa-solid fa-dice-d6',
+	critDiceSave: 'fa-solid fa-person-falling',
+	maxDamage: 'fa-solid fa-angles-up',
+	offerAttackBonus: 'fa-solid fa-handshake-angle',
+	poolDieToMax: 'fa-solid fa-arrow-up-9-1',
+	tableRoll: 'fa-solid fa-hat-wizard',
+	tableRollOptions: 'fa-solid fa-dice',
+	initiativeMana: 'fa-solid fa-bolt-lightning',
+	initiativeManaRerollOnes: 'fa-solid fa-rotate',
 	abilityBonus: 'fa-solid fa-dumbbell',
 	actionCost: 'fa-solid fa-stopwatch',
 	actionDelta: 'fa-solid fa-plus-minus',

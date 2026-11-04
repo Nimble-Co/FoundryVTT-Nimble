@@ -6,7 +6,30 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackOutcome",
+				"disabled": false,
+				"identifier": "",
+				"predicate": {},
+				"priority": 1,
+				"cannotMiss": false,
+				"critRange": 0,
+				"forceCrit": "none",
+				"anyDieCrits": false,
+				"critD20": true,
+				"viciousCrits": false,
+				"attackDelivery": "any",
+				"attackSource": "any",
+				"thisItemOnly": false,
+				"exceptItemIdentifier": "",
+				"otherCreature": {},
+				"chargePoolIdentifier": "",
+				"id": "5VmRtOHbOkMuWZMs",
+				"label": "Epic Criticals",
+				"side": "yourAttacks"
+			}
+		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you roll for critical hit damage, you may replace one die with a d20. [M]</span></p>",
 		"boonType": "epic"
 	},

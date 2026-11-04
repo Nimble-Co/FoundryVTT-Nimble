@@ -2,6 +2,7 @@ import type { AttackOutcomeSources, ForcedCritKind } from '#types/attackOutcome.
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { actorRules } from '../actor/actorRules.js';
 import type { AttackDelivery } from './attackDelivery.js';
 import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
 
@@ -40,15 +41,15 @@ interface AttackOutcome {
 		critRange?: number;
 		forcedCrit?: ForcedCritKind;
 		anyDieCrits?: boolean;
+		critD20?: boolean;
+		explosionStyle?: 'vicious';
 		outcomeSources?: Partial<AttackOutcomeSources>;
 	};
 	charges: string[];
 }
 
 function rulesOf(owner: RuleOwner | null | undefined): AttackOutcomeRuleLike[] {
-	const rules = owner?.rules;
-	if (!rules || typeof (rules as Iterable<unknown>)[Symbol.iterator] !== 'function') return [];
-	return Array.from(rules as Iterable<AttackOutcomeRuleLike>).filter(
+	return actorRules<AttackOutcomeRuleLike>(owner).filter(
 		(rule) => rule?.type === 'attackOutcome' && typeof rule.changeFor === 'function',
 	);
 }
@@ -69,6 +70,8 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 		critRange: [],
 		forcedCrit: [],
 		anyDieCrits: [],
+		critD20: [],
+		vicious: [],
 	};
 	const charges: string[] = [];
 	let critRange = 0;
@@ -108,6 +111,14 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 				sources.anyDieCrits.push(change.label);
 				gives = true;
 			}
+			if (input.canCrit && automatic && change.critD20) {
+				sources.critD20?.push(change.label);
+				gives = true;
+			}
+			if (input.canCrit && automatic && change.viciousCrits) {
+				sources.vicious?.push(change.label);
+				gives = true;
+			}
 			if (gives && change.chargePoolIdentifier) charges.push(change.chargePoolIdentifier);
 		}
 	}
@@ -127,6 +138,8 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 	if (critRange > 0) options.critRange = critRange;
 	if (forcedCrit) options.forcedCrit = forcedCrit;
 	if (sources.anyDieCrits.length > 0) options.anyDieCrits = true;
+	if (sources.critD20?.length) options.critD20 = true;
+	if (sources.vicious?.length) options.explosionStyle = 'vicious';
 	const named = Object.entries(sources).filter(([, labels]) => labels.length > 0);
 	if (named.length > 0) options.outcomeSources = Object.fromEntries(named);
 	return { options, charges };

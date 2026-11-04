@@ -12,7 +12,14 @@ import type { StatChoice } from '#types/rollStat.d.ts';
 export type IncomingReactionPlace = 'roll' | 'checkRoll' | 'options';
 
 /** The kinds of use, in the order Change This Roll lists them. */
-export type ReactionVerb = 'reroll' | 'change' | 'crit' | 'result' | 'addDamage' | 'interpose';
+export type ReactionVerb =
+	| 'reroll'
+	| 'change'
+	| 'crit'
+	| 'effect'
+	| 'result'
+	| 'addDamage'
+	| 'interpose';
 
 export interface IncomingReactionPromptsProps {
 	place: IncomingReactionPlace;
@@ -36,6 +43,8 @@ export interface IncomingReactionPicking {
 	setsValue?: boolean;
 	/** The die whose new value the player picks. */
 	valueDie?: PickableDie | null;
+	/** A rule that rerolls several dice: the most the player picks, and the mana of each. */
+	several?: { max: number; manaPerDie: number };
 	/** A reroll with another stat: the stats the player picks from. */
 	stats?: StatChoice[];
 }

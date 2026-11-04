@@ -14,6 +14,9 @@ const DICE_WAIT_LIMIT = 10_000;
  */
 export const SKIP_DICE_SO_NICE = { 'flags.dice-so-nice.skip': true } as const;
 
+/** The same, as a part of a new message's `flags`. */
+export const NO_DICE_SO_NICE_FLAGS = { 'dice-so-nice': { skip: true } } as const;
+
 /**
  * Throw Dice So Nice's dice for a roll that was written onto an existing chat
  * message.

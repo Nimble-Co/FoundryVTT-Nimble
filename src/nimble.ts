@@ -2,6 +2,9 @@ import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
+import { registerChaosOnCritHooks } from './hooks/chaosOnCrit.js';
+import { registerChaosOnUseHooks } from './hooks/chaosOnUse.js';
+import { registerChaosWhisperHooks } from './hooks/chaosWhisper.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerHealedTriggerHooks } from './hooks/chargePoolTriggers/healedTrigger.js';
 import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
@@ -16,9 +19,11 @@ import registerPendingActionDeltaFold from './hooks/combatantHooks/pendingAction
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { registerConditionExpiryHooks } from './hooks/conditionExpiry.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
+import { registerCritDiceSaveHooks } from './hooks/critDiceSave.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
 import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedTrigger.js';
 import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encounterEndTrigger.js';
+import { registerPoolDieToMaxTriggerHooks } from './hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
 import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnTrigger.js';
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
@@ -41,12 +46,14 @@ import registerModuleIntegrations from './integrations/index.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
 import { registerCustomConditionSettings } from './settings/registerCustomConditionSettings.js';
 import { registerMarkLifecycleHooks } from './utils/actor/markLifecycle.js';
+import { registerCardActionQuery } from './utils/chat/cardActions.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
 	getCombatManaGrantForCombat,
 	getCombatManaGrantMap,
 } from '#utils/actor/combatManaRules.js';
+import { endInitiativeMana } from '#utils/combat/initiativeManaRoll.js';
 import { injectViteHmrClient } from '#utils/viteHmr.js';
 
 async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
@@ -57,6 +64,8 @@ async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
 		const actor = combatant.actor;
 		if (!actor || actor.type !== 'character') return acc;
 		if (!actor.isOwner) return acc;
+
+		acc.push(endInitiativeMana(actor as never, combatId));
 
 		const manaGrant = getCombatManaGrantForCombat(actor, combatId);
 		if (manaGrant <= 0) return acc;
@@ -147,6 +156,7 @@ registerKillTriggerHooks();
 registerBloodiedTriggerHooks();
 registerInitiativeTriggerHooks();
 registerAttackedTriggerHooks();
+registerPoolDieToMaxTriggerHooks();
 registerDiscardedCritTriggerHooks();
 registerDicePoolTurnTriggerHooks();
 registerPoolGainMessageHooks();
@@ -161,6 +171,11 @@ registerMinionGroupTokenActions();
 registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerSaveResolvedHooks();
+registerCritDiceSaveHooks();
+registerCardActionQuery();
+registerChaosOnCritHooks();
+registerChaosOnUseHooks();
+registerChaosWhisperHooks();
 registerModuleIntegrations();
 
 // Refresh tokens when combat ends to remove turn indicators

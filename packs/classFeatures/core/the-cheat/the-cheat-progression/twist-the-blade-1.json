@@ -6,7 +6,44 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"disabled": false,
+				"predicate": {},
+				"priority": 1,
+				"rolls": [
+					"attack"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"die": "critBonusDie",
+				"change": "set",
+				"amount": 1,
+				"addsBonusOnSet": false,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"oncePerRoll": false,
+				"cardHint": "",
+				"cardHintWhen": {},
+				"type": "changeDie",
+				"id": "twistTheBladePay",
+				"identifier": "twist-the-blade",
+				"label": "Twist the Blade",
+				"yieldsTo": "twist-the-blade-free",
+				"actionCost": 1,
+				"actionReportOnly": true,
+				"oncePerTurn": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

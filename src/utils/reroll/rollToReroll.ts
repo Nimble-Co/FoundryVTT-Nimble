@@ -19,6 +19,10 @@ type RollToReroll =
 			damageTypes?: readonly string[];
 			/** The stats the attack's formula has. */
 			stats?: readonly string[];
+			/** The identifier of the item whose offer row made this attack. */
+			offerSource?: string;
+			/** The upcast steps of the spell. */
+			upcastSteps?: number;
 	  }
 	| { kind: CheckRollKind; key: string };
 

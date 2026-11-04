@@ -6,7 +6,25 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"disabled": false,
+				"identifier": "",
+				"predicate": {},
+				"priority": 1,
+				"chargePoolIdentifier": "beastshift",
+				"chargeCost": 1,
+				"type": "maxDamage",
+				"id": "p8okGDnuRuS92SKT",
+				"label": "Stormborn",
+				"use": "damage",
+				"schools": [
+					"wind"
+				],
+				"givesCrit": true,
+				"tempHpChoice": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

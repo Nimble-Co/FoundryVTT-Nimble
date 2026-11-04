@@ -20,6 +20,13 @@ function schema() {
 			hint: 'NIMBLE.rules.grantActivation.activationType.hint',
 			choices: [...GRANTED_ACTIVATION_TYPES],
 		}),
+		includesUser: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.grantActivation.includesUser.label',
+			hint: 'NIMBLE.rules.grantActivation.includesUser.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantActivation' }),
 	};
 }
@@ -53,7 +60,12 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	}
 
 	override tooltipInfo(): string {
-		return super.tooltipInfo(new Map([['activationType', '"weaponAttack"']]));
+		return super.tooltipInfo(
+			new Map([
+				['activationType', '"weaponAttack"'],
+				['includesUser', 'boolean'],
+			]),
+		);
 	}
 }
 

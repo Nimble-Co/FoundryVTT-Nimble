@@ -1,4 +1,5 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import { dieRoleOf, isCritD20Result } from '../../dice/critDiceLines.js';
 
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
@@ -24,15 +25,26 @@ export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
 
 /** What a `reroll` entry does: roll again, change a die, make the attack a crit, or change the result. */
-export const ROLL_USES = ['reroll', 'change', 'crit', 'result'] as const;
+export const ROLL_USES = ['reroll', 'change', 'crit', 'result', 'effect'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
+
+/** What a row does when its feature changes the roll by itself with Feature Effects on. */
+export const ROLL_EFFECTS = [
+	'critD20',
+	'viciousDie',
+	'critDice',
+	'critDiceSave',
+	'offerBonus',
+	'dualWield',
+] as const;
+export type RollEffect = (typeof ROLL_EFFECTS)[number];
 
 /** How a Change a Result rule changes the result of a roll. */
 export const RESULT_CHANGES = ['succeed', 'setTotal', 'add', 'noDamage', 'countsAsNat20'] as const;
 export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
-export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
+export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'> | 'critBonusDie';
 
 /** How a Change a Die rule changes the die: set it to a face, or add a number. */
 export const DIE_CHANGE_MODES = ['set', 'add'] as const;
@@ -54,12 +66,26 @@ export type DieOutcome = (typeof DIE_OUTCOMES)[number] | null;
 export interface AttackOutcomeView {
 	isCritical?: boolean;
 	isMiss?: boolean;
+	/** No die was rolled, so nothing can reroll or change one. */
+	noDice?: boolean;
+	/** The crit dice are Vicious. */
+	vicious?: boolean;
+	/** A crit die of the roll is a d20. */
+	hasCritD20?: boolean;
+	/** The roll has dice of the crit bonus role. */
+	hasCritBonusDice?: boolean;
 	/** A Forced Crit that always applies: no reroll or change takes the crit away. */
 	critStays?: boolean;
 	/** False when the roll cannot crit. Absent: read from `options`, else it can. */
 	canCrit?: boolean;
 	/** The options of a rolled attack, when the view is the roll. */
-	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
+	options?: {
+		canCrit?: unknown;
+		forcedCrit?: unknown;
+		maxDamage?: unknown;
+		explosionStyle?: unknown;
+		isVicious?: unknown;
+	} | null;
 	/** A die of the roll is at its max. Absent: read from `terms`. */
 	anyDieAtMax?: boolean;
 	/** The terms of a rolled attack, when the view is the roll. */
@@ -74,6 +100,7 @@ export function termsHaveDieAtMax(terms: readonly unknown[] | null | undefined):
 			results?: Array<{ result: number; active?: boolean; discarded?: boolean }>;
 		};
 		return (
+			!dieRoleOf(die) &&
 			typeof die?.faces === 'number' &&
 			Array.isArray(die.results) &&
 			die.results.some((r) => r.active !== false && !r.discarded && r.result === die.faces)
@@ -86,6 +113,28 @@ export function hasDieAtMax(view: AttackOutcomeView): boolean {
 	return view.anyDieAtMax ?? termsHaveDieAtMax(view.terms);
 }
 
+/** Whether the attack rolled dice. A max damage roll has none. */
+export function hasNoDice(view: AttackOutcomeView): boolean {
+	return view.noDice ?? view.options?.maxDamage !== undefined;
+}
+
+/** Whether the crit dice of the attack are Vicious. */
+export function isViciousAttack(view: AttackOutcomeView): boolean {
+	return (
+		view.vicious ?? (view.options?.explosionStyle === 'vicious' || view.options?.isVicious === true)
+	);
+}
+
+/** Whether a crit die of the attack is a d20. */
+export function hasCritD20Die(view: AttackOutcomeView): boolean {
+	return view.hasCritD20 ?? termsHaveCritD20(view.terms);
+}
+
+/** Whether the attack has dice of the crit bonus role. */
+export function hasCritBonusDice(view: AttackOutcomeView): boolean {
+	return view.hasCritBonusDice ?? termsHaveRole(view.terms, CRIT_BONUS_ROLE);
+}
+
 /** Whether the attack is a crit that no reroll or change takes away. */
 export function critStays(view: AttackOutcomeView): boolean {
 	if (view.isCritical !== true) return false;
@@ -96,6 +145,21 @@ export function critStays(view: AttackOutcomeView): boolean {
 export function canBecomeCrit(view: AttackOutcomeView): boolean {
 	if (view.isCritical === true) return false;
 	return (view.canCrit ?? view.options?.canCrit) !== false;
+}
+
+/** The die role of the dice a rule adds. */
+export const CRIT_BONUS_ROLE = 'critBonus';
+
+/** These terms have dice with this role. */
+export function termsHaveRole(terms: readonly unknown[] | undefined, role: string): boolean {
+	return (terms ?? []).some((term) => dieRoleOf(term) === role);
+}
+
+/** A crit die of these terms is a d20. */
+export function termsHaveCritD20(terms: readonly unknown[] | undefined): boolean {
+	return (terms ?? []).some((term) =>
+		((term as { results?: unknown[] }).results ?? []).some(isCritD20Result),
+	);
 }
 
 /** Does the attack's outcome satisfy a trigger? */
@@ -161,8 +225,14 @@ export interface IncomingReactionEntry {
 	oncePerRoll?: boolean;
 	/** reroll only: `change` for a Change a Die rule, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
+	/** What a row with the use `effect` does. */
+	effect?: RollEffect;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
+	/** One of several rows of the same rule on this roll. */
+	useIndex?: number;
+	/** A use that changes dice of the crit bonus role needs a roll that has them. */
+	needsCritBonusDice?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
 	/** reroll only: the player picks another stat for the new roll. */
@@ -214,6 +284,10 @@ export interface RerollRecord {
 	next: RerollDieResult | null;
 	/** Charges left in the feature's charge pool, or null when it has none */
 	usesLeft: number | null;
+	/** Each die of a reroll of several dice. */
+	severalDice?: Array<{ faces: number; previous: number; next: number }>;
+	/** The rule's action could not be paid: the use went on, and the card says so. */
+	noActionLeft?: boolean;
 	woundsGained: number;
 	/** Which result a player kept, when the rule let them choose. */
 	kept?: RerollKept | null;
@@ -229,6 +303,8 @@ export interface RerollRecord {
 	automatic?: boolean;
 	/** `change` for a die a Change a Die rule changed, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
+	/** What a line with the use `effect` did. */
+	effect?: RollEffect;
 	/** A change only: how the die changed. `value` is 0 for a set value. */
 	change?: DieChange | null;
 	/** The stat the player picked for the new roll. Empty when the stat stayed. */
@@ -273,6 +349,8 @@ export interface KeepChoiceRoll {
 	total: number;
 	/** Null for a roll that has no hit or miss, such as a save. */
 	outcome: (typeof KEEP_OUTCOMES)[number] | null;
+	/** The weapon of this result, on a dual wield attack. */
+	label?: string;
 }
 
 /**

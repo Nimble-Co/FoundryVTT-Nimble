@@ -12,6 +12,7 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
+import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
@@ -271,8 +272,16 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			this as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 			options,
 		);
-		const { activation, rolls, rollHidden, incomingReactions, rerollHistory, primaryDieBonuses } =
-			await manager.getData();
+		const {
+			activation,
+			rolls,
+			rollHidden,
+			incomingReactions,
+			rerollHistory,
+			primaryDieBonuses,
+			noDiceThrown,
+			dualWieldKeep,
+		} = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -296,6 +305,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			isCritical,
 			isMiss,
 			targets: Array.from(game.user?.targets ?? []),
+			freeUse: manager.freeUse,
 		});
 		if (!allowed) return null;
 
@@ -328,6 +338,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
 				rolls,
 				flags: {
+					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
 					[SYSTEM_ID]: {
 						itemId: this.id,
 						itemUuid: this.uuid,
@@ -343,7 +354,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					actorType: this.actor?.type ?? '',
 					activation,
 					image: this.img || 'icons/svg/item-bag.svg',
-					incomingReactions: incomingReactions ?? [],
+					incomingReactions: [
+						...(incomingReactions ?? []),
+						...(dualWieldKeep ? [dualWieldKeep.entry] : []),
+					],
+					...(dualWieldKeep ? { pendingKeep: dualWieldKeep.pendingKeep } : {}),
 					rerolls: rerollHistory?.rerolls ?? [],
 					rollChanges: rerollHistory?.rollChanges ?? [],
 					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
@@ -371,6 +386,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			isMiss,
 			discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 			targets: Array.from(game.user?.targets ?? []),
+			freeUse: manager.freeUse,
 		});
 	}
 

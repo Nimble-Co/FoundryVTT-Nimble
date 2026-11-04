@@ -9,6 +9,7 @@ import {
 } from '../chargePool/ruleChargeGate.js';
 import { getCombatantCurrentActions } from '../combat/combatTurnActions.js';
 import { isCombatStarted } from '../combat/isCombatStarted.js';
+import { clearTurnUse, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import { requestCombatantActionDelta } from '../combat/requestCombatantActionDelta.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
@@ -26,6 +27,12 @@ interface RerollCost {
 	heroicReaction: HeroicReactionKey | '';
 	/** Actions a hero spends in combat. Absent is none. */
 	actionCost?: number;
+	/** The mana, charges and Wounds are per die the player picks. */
+	perDie?: boolean;
+	/** With no action left the use still goes on, and the card says so. */
+	actionReportOnly?: boolean;
+	/** The rule can be used once per turn of any creature. */
+	turnUseKey?: string;
 }
 
 /** What was actually charged, so a failed reroll can give it back. */
@@ -41,6 +48,10 @@ interface PaidRerollCost {
 	} | null;
 	/** Actions spent: now on the hero's own turn, else from their next turn. */
 	action: { combatId: string; combatantId: string; amount: number; now: boolean } | null;
+	/** The action cost could not be paid, and the rule only reports that. */
+	noActionLeft?: boolean;
+	/** A 1/turn use was spent. */
+	turnUse?: boolean;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -122,7 +133,8 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 		return false;
 	}
 	if (cost.woundCost > 0 && !canGainWounds(actor, cost.woundCost)) return false;
-	return canSpendActions(actor, actionCostOf(cost));
+	if (cost.turnUseKey && usedThisTurn(actor, cost.turnUseKey)) return false;
+	return cost.actionReportOnly === true || canSpendActions(actor, actionCostOf(cost));
 }
 
 /** On the hero's own turn the actions must be there; off it, the next turn has fewer. */
@@ -141,7 +153,8 @@ function rerollCostCharges(cost: RerollCost): boolean {
 		cost.chargePoolIdentifier.trim() !== '' ||
 		cost.manaCost > 0 ||
 		cost.woundCost > 0 ||
-		actionCostOf(cost) > 0
+		actionCostOf(cost) > 0 ||
+		!!cost.turnUseKey
 	);
 }
 
@@ -232,6 +245,7 @@ async function refundRerollCost(
 		} as Record<string, unknown>);
 	}
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
+	if (paid.turnUse && cost.turnUseKey) await clearTurnUse(actor, cost.turnUseKey);
 	if (paid.action) await changeActions(paid.action, paid.action.amount);
 	if (paid.heroicReaction) await refundHeroicReaction(paid.heroicReaction);
 }
@@ -267,9 +281,19 @@ async function payRerollCost(
 
 	const actions = actionCostOf(cost);
 	if (actions > 0) {
-		const spent = await spendActions(actor, actions);
-		if (spent === false) return fail();
-		paid.action = spent;
+		if (cost.actionReportOnly && !canSpendActions(actor, actions)) {
+			paid.noActionLeft = true;
+		} else {
+			const spent = await spendActions(actor, actions);
+			if (spent === false) return fail();
+			paid.action = spent;
+		}
+	}
+
+	if (cost.turnUseKey) {
+		if (usedThisTurn(actor, cost.turnUseKey)) return fail();
+		await markTurnUse(actor, cost.turnUseKey);
+		paid.turnUse = true;
 	}
 
 	if (cost.chargePoolIdentifier.trim()) {
@@ -299,11 +323,66 @@ async function payRerollCost(
 	return paid;
 }
 
+/**
+ * Give back the part of a per-die payment for dice that did not roll. Gives the
+ * payment that is still paid.
+ */
+async function refundSkippedDice(
+	actor: RerollPayer,
+	cost: RerollCost,
+	paid: PaidRerollCost,
+	dieCount: number,
+	skipped: number,
+): Promise<PaidRerollCost> {
+	const part = (amount: number) => (amount / dieCount) * skipped;
+	await refundRerollCost(actor, cost, {
+		...paid,
+		charges: part(paid.charges),
+		mana: part(paid.mana),
+		wounds: part(paid.wounds),
+		heroicReaction: null,
+		action: null,
+		turnUse: false,
+	});
+	return {
+		...paid,
+		charges: paid.charges - part(paid.charges),
+		mana: paid.mana - part(paid.mana),
+		wounds: paid.wounds - part(paid.wounds),
+	};
+}
+
+/** The cost of a use on this many dice. */
+function costForDice(cost: RerollCost, count: number): RerollCost {
+	if (!cost.perDie) return cost;
+	return {
+		...cost,
+		manaCost: cost.manaCost * count,
+		chargeCost: cost.chargeCost * count,
+		woundCost: cost.woundCost * count,
+	};
+}
+
+/** A cost of one charge of `pool`, and nothing with no pool. */
+function chargeOnlyCost(pool = ''): RerollCost {
+	return {
+		chargePoolIdentifier: pool,
+		chargeCost: 1,
+		manaCost: 0,
+		woundCost: 0,
+		heroicReaction: '',
+		actionCost: 0,
+	};
+}
+
 export {
+	chargeOnlyCost,
+	costForDice,
 	canPayRerollCost,
 	findActorCombatant,
 	payRerollCost,
 	refundRerollCost,
+	refundSkippedDice,
 	rerollCostCharges,
 	rerollUsesLeft,
 	type PaidRerollCost,

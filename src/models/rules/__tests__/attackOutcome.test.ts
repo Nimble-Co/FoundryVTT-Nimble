@@ -108,6 +108,8 @@ describe('AttackOutcomeRule', () => {
 			critRange: 1,
 			forcedCrit: 'always',
 			anyDieCrits: false,
+			critD20: false,
+			viciousCrits: false,
 			chargePoolIdentifier: '',
 		});
 	});

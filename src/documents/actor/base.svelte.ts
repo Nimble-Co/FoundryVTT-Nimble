@@ -982,6 +982,9 @@ class NimbleBaseActor<
 			options.dc,
 		);
 		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls, options.dc);
+		if (options.cardFlags) {
+			foundry.utils.mergeObject(chatData as object, { flags: { [SYSTEM_ID]: options.cardFlags } });
+		}
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);

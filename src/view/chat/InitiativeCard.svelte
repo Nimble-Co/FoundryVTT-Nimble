@@ -3,6 +3,7 @@
 
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
+	import InitiativeManaLine from './components/InitiativeManaLine.svelte';
 
 	import localize from '#utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
@@ -23,4 +24,5 @@
 	data-card-type="check"
 >
 	<CheckCardRolls {messageDocument} label={localize('NIMBLE.chat.initiative.label')} {note} />
+	<InitiativeManaLine messageDocument={messageDocument as never} />
 </article>
