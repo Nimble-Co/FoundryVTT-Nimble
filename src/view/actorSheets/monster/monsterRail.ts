@@ -1,7 +1,7 @@
 import type { SaveKeyType } from '#types/saveKey.js';
+import { signedNumber } from '#utils/signedNumber.ts';
 import { MOVEMENT_ICONS, MOVEMENT_ORDER } from '../shared/movement.ts';
 import { portraitOf } from '../shared/portrait.ts';
-import { signedNumber } from '../shared/signedNumber.ts';
 import type { MonsterArmor, MonsterConfigureTarget, MonsterIntent } from './monsterIntent.ts';
 import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
 

@@ -38,7 +38,7 @@
 				"extraDamage": "",
 				"automatic": false,
 				"discardedCritTriggers": false,
-				"oncePerAttack": false
+				"oncePerRoll": false
 			}
 		],
 		"activation": {

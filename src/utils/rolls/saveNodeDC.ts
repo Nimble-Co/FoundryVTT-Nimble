@@ -1,0 +1,41 @@
+/** Unless otherwise noted, the DC for effects a hero causes. */
+const HERO_SAVE_DC_FORMULA = '10+@key';
+
+interface ItemUser {
+	type: string;
+	getRollData(): Record<string, unknown>;
+}
+
+function hasKeyStat(rollData: Record<string, unknown>): boolean {
+	return typeof rollData.key === 'number' && Number.isFinite(rollData.key);
+}
+
+/**
+ * The DC of a save node for the creature that used the item, or null. An empty
+ * field gives a hero with a key stat the hero DC, and anything else no DC.
+ */
+function resolveSaveNodeDC(saveDC: number | string | null | undefined, itemUser: ItemUser | null) {
+	const rollData = itemUser?.getRollData() ?? {};
+	const written = saveDC ? String(saveDC).trim() : '';
+	if (!written && (itemUser?.type !== 'character' || !hasKeyStat(rollData))) return null;
+
+	const formula = written || HERO_SAVE_DC_FORMULA;
+	try {
+		const value = Roll.safeEval(Roll.replaceFormulaData(formula, rollData));
+		return typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : null;
+	} catch (error) {
+		console.warn(`Nimble | Could not work out the save DC formula "${formula}".`, error);
+		return null;
+	}
+}
+
+/** A save node's DC field with `amount` added. An empty field starts from the hero DC. */
+function addToSaveDC(saveDC: number | string | null | undefined, amount: number): number | string {
+	const written = String(saveDC ?? '').trim();
+	if (!written) return `${HERO_SAVE_DC_FORMULA}+${amount}`;
+
+	const number = Number(written);
+	return Number.isNaN(number) ? `${written}+${amount}` : number + amount;
+}
+
+export { addToSaveDC, resolveSaveNodeDC };

@@ -187,9 +187,7 @@ async function rerollOneDie<TRoll extends OneDieRoll>(
 	dropped: number | null;
 	thrown: foundry.dice.Roll;
 }> {
-	const copy = foundry.dice.Roll.fromData(
-		foundry.utils.deepClone(roll.toJSON()) as never,
-	) as unknown as TRoll;
+	const copy = cloneRoll(roll);
 	const term = copy.terms[ref.term];
 	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
 
@@ -250,9 +248,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	next: number;
 	thrown: foundry.dice.Roll | null;
 }> {
-	const copy = foundry.dice.Roll.fromData(
-		foundry.utils.deepClone(roll.toJSON()) as never,
-	) as unknown as TRoll;
+	const copy = cloneRoll(roll);
 	const term = copy.terms[ref.term];
 	if (!isDieTerm(term)) throw new Error(`The roll has no dice term ${ref.term}.`);
 	const result = term.results[ref.result];
@@ -290,6 +286,12 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 	};
 }
 
+function cloneRoll<TRoll extends OneDieRoll>(roll: TRoll): TRoll {
+	return foundry.dice.Roll.fromData(
+		foundry.utils.deepClone(roll.toJSON()) as never,
+	) as unknown as TRoll;
+}
+
 /**
  * Make an evaluated roll a crit that stays. The old roll is not changed: the
  * new roll is a copy with the crit dice rolled. `thrown` holds only those, or
@@ -298,9 +300,7 @@ async function changeOneDie<TRoll extends OneDieRoll>(
 async function makeRollCrit<TRoll extends OneDieRoll>(
 	roll: TRoll,
 ): Promise<{ roll: TRoll; faces: number; next: number | null; thrown: foundry.dice.Roll | null }> {
-	const copy = foundry.dice.Roll.fromData(
-		foundry.utils.deepClone(roll.toJSON()) as never,
-	) as unknown as TRoll;
+	const copy = cloneRoll(roll);
 	const made = await copy.makeCritical?.();
 	if (!made || !isDieTerm(made.term)) throw new Error('The roll cannot be made a crit.');
 	const ref = primaryDieRef(copy);

@@ -1,15 +1,18 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
-import type { ChoiceMenuItem } from './ChoiceMenu.d.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { StatChoice } from '#types/rollStat.d.ts';
 
 /**
- * Where on the card the prompts render. `roll` is inside the roll section:
- * the buttons that change the roll and the last reroll. `options` is after
- * Apply Damage: every other card button. A one-line roll splits `roll` in two:
- * `rollButton` is the reroll icon in the roll row, `rollHistory` the reroll
- * lines under it.
+ * Where on the card the prompts render. `roll` is inside the damage section of
+ * an attack: the history and Change This Roll with all its rows. `checkRoll` is
+ * the same under the first roll of a check card, with only the rows that change
+ * the roll. `options` is after Apply Damage: the lines of used entries, and the
+ * rows that do not change the roll when the card has no `roll` place.
  */
-export type IncomingReactionPlace = 'roll' | 'rollButton' | 'rollHistory' | 'options';
+export type IncomingReactionPlace = 'roll' | 'checkRoll' | 'options';
+
+/** The kinds of use, in the order Change This Roll lists them. */
+export type ReactionVerb = 'reroll' | 'change' | 'crit' | 'result' | 'addDamage' | 'interpose';
 
 export interface IncomingReactionPromptsProps {
 	place: IncomingReactionPlace;
@@ -33,6 +36,8 @@ export interface IncomingReactionPicking {
 	setsValue?: boolean;
 	/** The die whose new value the player picks. */
 	valueDie?: PickableDie | null;
+	/** A reroll with another stat: the stats the player picks from. */
+	stats?: StatChoice[];
 }
 
 /** Entries whose request is out, so their buttons stay hidden until it comes back. */
@@ -42,18 +47,27 @@ export interface HeldIncomingReactions {
 	release(entryId: string): void;
 }
 
+/** The words of one row of Change This Roll. */
+export interface IncomingReactionRow {
+	verb: string;
+	/** "with Lucky". Empty when no feature gives the row. */
+	withFeature: string;
+	/** Empty when the row costs nothing the card knows about. */
+	cost: string;
+	/** A short note under the words. Empty when the entry has none. */
+	note: string;
+	/** The row as a sentence, for the screen reader. */
+	sentence: string;
+}
+
 /** The words and icons the card shows for an entry. */
 export interface IncomingReactionText {
 	reactingActor(entry: IncomingReactionEntry): Actor.Implementation | null;
 	documentName(uuid: string): string;
 	featureName(entry: IncomingReactionEntry): string;
-	/** The full sentence: "Reroll with Lucky". */
-	label(entry: IncomingReactionEntry): string;
-	/** The short name in a verb's menu: "Lucky". */
-	menuName(entry: IncomingReactionEntry): string;
-	/** The entry in a menu: its short name, cost and full sentence. */
-	menuItem(entry: IncomingReactionEntry): ChoiceMenuItem;
+	/** The name the dice pool window shows for a spend offer. */
+	spendLabel(entry: IncomingReactionEntry): string;
+	row(entry: IncomingReactionEntry): IncomingReactionRow;
 	icon(entry: IncomingReactionEntry): string;
-	cost(entry: IncomingReactionEntry): string;
 	usedAttribution(entry: IncomingReactionEntry): string;
 }

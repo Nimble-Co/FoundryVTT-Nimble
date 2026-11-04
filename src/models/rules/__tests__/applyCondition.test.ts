@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const hooksCall = vi.fn().mockReturnValue(true);
 const hooksCallAll = vi.fn();
@@ -8,6 +8,7 @@ const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
+import { SYSTEM_ID } from '#system';
 import { ApplyConditionRule, type ApplyConditionTrigger } from '../applyCondition.js';
 
 interface MockActiveEffect {
@@ -16,11 +17,14 @@ interface MockActiveEffect {
 	/** What `updateSource` has folded in, standing for the effect's own source data. */
 	sourceData: Record<string, unknown>;
 	updateSource(data: Record<string, unknown>): void;
+	id?: string;
+	getFlag?(scope: string, key: string): unknown;
 }
 
 interface MockActor {
 	statuses: Set<string>;
 	effects: MockActiveEffect[];
+	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 }
 
 interface MockItem {
@@ -65,7 +69,43 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 }
 
 function createMockActor(): MockActor {
-	return { statuses: new Set<string>(), effects: [] };
+	const actor: MockActor = {
+		statuses: new Set<string>(),
+		effects: [],
+		deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
+			actor.effects = actor.effects.filter((effect) => !ids.includes(effect.id ?? ''));
+		}),
+	};
+	return actor;
+}
+
+/** Effects on the actor, the way a condition from another source or a by-hand toggle sits there. */
+function addEffect(actor: MockActor, condition: string, id: string): MockActiveEffect {
+	const effect: MockActiveEffect = {
+		id,
+		condition,
+		statuses: new Set([condition]),
+		sourceData: {},
+		updateSource: () => {},
+		getFlag: () => undefined,
+	};
+	actor.effects.push(effect);
+	return effect;
+}
+
+function saveResolved(
+	rule: ApplyConditionRule,
+	actor: MockActor,
+	outcome: 'pass' | 'fail' | 'unknown',
+	messageId = 'card-1',
+) {
+	type Context = Parameters<ApplyConditionRule['onSaveResolved']>[0];
+	return rule.onSaveResolved({
+		actor: actor as unknown as Context['actor'],
+		saveType: 'strength',
+		outcome,
+		messageId,
+	});
 }
 
 function createMockItem(actor: MockActor): MockItem {
@@ -153,8 +193,12 @@ describe('ApplyConditionRule', () => {
 		});
 
 		createEffect.mockImplementation(
-			async (effect: MockActiveEffect, { parent }: { parent: unknown }) => {
+			async (effect: MockActiveEffect, { parent }: { parent: MockActor }) => {
 				appliedEffects.push({ target: parent, effect });
+				effect.id = `effect-${appliedEffects.length}`;
+				effect.getFlag = (scope, key) =>
+					(effect.sourceData[`flags.${scope}`] as Record<string, unknown> | undefined)?.[key];
+				parent.effects.push(effect);
 				return effect;
 			},
 		);
@@ -313,23 +357,203 @@ describe('ApplyConditionRule', () => {
 				ownerActor,
 			);
 
-			await rule.onSaveResolved({
-				actor: ownerActor as unknown as Parameters<
-					ApplyConditionRule['onSaveResolved']
-				>[0]['actor'],
-				saveType: 'strength',
-				outcome: 'pass',
-			});
+			await saveResolved(rule, ownerActor, 'pass');
 			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 
-			await rule.onSaveResolved({
-				actor: ownerActor as unknown as Parameters<
-					ApplyConditionRule['onSaveResolved']
-				>[0]['actor'],
-				saveType: 'strength',
-				outcome: 'fail',
-			});
+			await saveResolved(rule, ownerActor, 'fail');
 			expect(conditionsAppliedTo(ownerActor)).toEqual(['prone']);
+		});
+	});
+
+	describe('onSaveFail, when the same card later reports a success', () => {
+		function createSaveRule(actor: MockActor, overrides: Partial<ApplyConditionSource> = {}) {
+			return createApplyConditionRule(
+				{ condition: 'prone', trigger: 'onSaveFail', ...overrides },
+				actor,
+			);
+		}
+
+		it('stores the card, the item and the condition on the effect', async () => {
+			const actor = createMockActor();
+			await saveResolved(createSaveRule(actor), actor, 'fail');
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				saveFailSource: { messageId: 'card-1', itemUuid: 'test-item-uuid', condition: 'prone' },
+			});
+		});
+
+		it('removes the condition it added from that card', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			expect(actor.effects).toHaveLength(1);
+
+			await saveResolved(rule, actor, 'pass');
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		describe('with Feature Effects off', () => {
+			const globals = globalThis as unknown as { game: { settings?: unknown } };
+			let saved: unknown;
+
+			beforeEach(() => {
+				saved = globals.game.settings;
+			});
+
+			afterEach(() => {
+				globals.game.settings = saved;
+			});
+
+			it('still gets the save result, to take back its own condition', () => {
+				expect(ApplyConditionRule.alwaysDispatchedEvents).toContain('onSaveResolved');
+			});
+
+			it('adds nothing on a fail, and removes its condition on a success', async () => {
+				const actor = createMockActor();
+				const rule = createSaveRule(actor);
+				await saveResolved(rule, actor, 'fail');
+				expect(actor.effects).toHaveLength(1);
+
+				globals.game.settings = { get: () => false };
+				await saveResolved(rule, actor, 'pass');
+				expect(actor.effects).toHaveLength(0);
+
+				await saveResolved(rule, actor, 'fail', 'card-2');
+				expect(actor.effects).toHaveLength(0);
+			});
+		});
+
+		it('removes the condition it added when the result stops being known', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			expect(actor.effects).toHaveLength(1);
+
+			await saveResolved(rule, actor, 'unknown');
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		it('leaves a condition of another kind from another source alone', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+			addEffect(actor, 'dazed', 'other');
+
+			await saveResolved(rule, actor, 'fail');
+			await saveResolved(rule, actor, 'pass');
+
+			expect(actor.effects.map((effect) => effect.id)).toEqual(['other']);
+		});
+
+		it('does not remove a condition the actor already had', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+			addEffect(actor, 'prone', 'held-before');
+
+			await saveResolved(rule, actor, 'fail');
+			expect(conditionsAppliedTo(actor)).toEqual([]);
+
+			await saveResolved(rule, actor, 'pass');
+			expect(actor.effects.map((effect) => effect.id)).toEqual(['held-before']);
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('does not remove a same-kind condition gained after this one was taken off', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			actor.effects = [];
+			addEffect(actor, 'prone', 'by-hand');
+
+			await saveResolved(rule, actor, 'pass');
+			expect(actor.effects.map((effect) => effect.id)).toEqual(['by-hand']);
+		});
+
+		it('does not remove what it added from another card', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail', 'card-1');
+			await saveResolved(rule, actor, 'pass', 'card-2');
+
+			expect(actor.effects).toHaveLength(1);
+		});
+
+		it('does not remove what another rule added from the same card', async () => {
+			const actor = createMockActor();
+			const first = createSaveRule(actor);
+			const second = createSaveRule(actor, { condition: 'dazed' });
+
+			await saveResolved(first, actor, 'fail');
+			await saveResolved(second, actor, 'fail');
+			await saveResolved(first, actor, 'pass');
+
+			expect(actor.effects.map((effect) => effect.condition)).toEqual(['dazed']);
+		});
+
+		it('removes it through a rule built again after a reload, with a new id', async () => {
+			const actor = createMockActor();
+
+			await saveResolved(createSaveRule(actor, { id: 'before-reload' }), actor, 'fail');
+			await saveResolved(createSaveRule(actor, { id: 'after-reload' }), actor, 'pass');
+
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		it('does not remove what a rule of another item added from the same card', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+			await saveResolved(rule, actor, 'fail');
+
+			const otherRule = createSaveRule(actor);
+			Object.defineProperty(otherRule, 'item', {
+				get: () => ({ ...createMockItem(actor), uuid: 'other-item-uuid' }),
+			});
+			await saveResolved(otherRule, actor, 'pass');
+
+			expect(actor.effects).toHaveLength(1);
+		});
+
+		it('adds the condition again when the card fails again', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			await saveResolved(rule, actor, 'pass');
+			await saveResolved(rule, actor, 'fail');
+
+			expect(actor.effects.map((effect) => effect.condition)).toEqual(['prone']);
+		});
+
+		it('removes its condition even after the rule was disabled', async () => {
+			const actor = createMockActor();
+			const rule = createSaveRule(actor);
+
+			await saveResolved(rule, actor, 'fail');
+			rule.disabled = true;
+			await saveResolved(rule, actor, 'pass');
+
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		it('applies nothing on a failed save while the rule is disabled', async () => {
+			const actor = createMockActor();
+
+			await saveResolved(createSaveRule(actor, { disabled: true }), actor, 'fail');
+
+			expect(actor.effects).toHaveLength(0);
+		});
+
+		it('ignores a save of another actor', async () => {
+			const owner = createMockActor();
+			const other = createMockActor();
+
+			await saveResolved(createSaveRule(owner), other, 'fail');
+
+			expect(owner.effects).toHaveLength(0);
+			expect(other.effects).toHaveLength(0);
 		});
 	});
 

@@ -1,7 +1,7 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
+import { signedNumber } from '#utils/signedNumber.ts';
 import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
-import { signedNumber } from '../shared/signedNumber.ts';
 import type { HeroConfigureTarget, HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext, RolledValue } from './heroSource.ts';
 import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';

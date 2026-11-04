@@ -1,5 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { ScalingDelta, UpcastResult } from '#types/spellScaling.js';
+import { addToSaveDC } from '../rolls/saveNodeDC.js';
 import { stepFormulaDieSize } from './stepFormulaDieSize.js';
 
 export interface UpcastContext {
@@ -315,7 +316,7 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 			// Find saving throw effect
 			const saveNode = findEffectNode(activationData.effects, 'savingThrow', delta.targetEffectId);
 			if (saveNode && delta.value) {
-				saveNode.saveDC = (saveNode.saveDC || 0) + delta.value * upcastSteps;
+				saveNode.saveDC = addToSaveDC(saveNode.saveDC, delta.value * upcastSteps);
 			}
 			break;
 		}

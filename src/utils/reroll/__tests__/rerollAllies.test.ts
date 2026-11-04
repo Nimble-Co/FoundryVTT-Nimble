@@ -41,6 +41,45 @@ describe('scanRerollAllies', () => {
 		]);
 	});
 
+	it('lists a creature with an ally-side Change a Result rule', () => {
+		const roller = token('roller', { actor: actor('Actor.roller', { rules: [] }) });
+		const friend = token('friend', {
+			actor: actor('Actor.friend', { rules: [{ type: 'changeResult', usedBy: 'ally' }] }),
+		});
+		scene(roller, friend);
+		expect(scanRerollAllies(roller, spaces(2))).toEqual([
+			{ tokenUuid: friend.uuid, actor: friend.actor, isAlly: true, spaces: 2 },
+		]);
+	});
+
+	it.each(['changeDie', 'makeCrit', 'reroll', 'changeResult'])(
+		'lists a creature whose only ally-side rule is %s',
+		(type) => {
+			const roller = token('roller', { actor: actor('Actor.roller', { rules: [] }) });
+			const friend = token('friend', {
+				actor: actor('Actor.friend', { rules: [{ type, usedBy: 'ally' }] }),
+			});
+			scene(roller, friend);
+			expect(scanRerollAllies(roller, spaces(2)).map((ally) => ally.tokenUuid)).toEqual([
+				friend.uuid,
+			]);
+		},
+	);
+
+	it('skips a creature with a rule that is no roll use, or not for an ally', () => {
+		const roller = token('roller', { actor: actor('Actor.roller', { rules: [] }) });
+		scene(
+			roller,
+			token('pool', {
+				actor: actor('Actor.pool', { rules: [{ type: 'chargePool', usedBy: 'ally' }] }),
+			}),
+			token('own', {
+				actor: actor('Actor.own', { rules: [{ type: 'changeDie', usedBy: 'roller' }] }),
+			}),
+		);
+		expect(scanRerollAllies(roller, spaces(2))).toEqual([]);
+	});
+
 	it('skips hidden tokens, tokens without an actor, the one who rolled, and creatures without an ally reroll', () => {
 		const roller = token('roller');
 		scene(

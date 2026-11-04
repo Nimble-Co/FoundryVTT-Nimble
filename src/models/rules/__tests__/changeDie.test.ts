@@ -77,7 +77,7 @@ describe('ChangeDieRule', () => {
 			'outcome',
 			'otherCreature',
 			'actionCost',
-			'oncePerAttack',
+			'oncePerRoll',
 		]) {
 			expect(schema[name], name).toBeTruthy();
 		}
@@ -92,10 +92,14 @@ describe('ChangeDieRule', () => {
 		}
 	});
 
+	it('lists no field in its tooltip that it does not have', () => {
+		expect(makeRule().tooltipInfo()).not.toContain('relatedStat');
+	});
+
 	it('uses its own words where the Reroll words say reroll', () => {
 		const label = (name: string) => (schema[name]?.options ?? schema[name])?.label;
 		expect(label('rolls')).toBe('NIMBLE.rules.changeDie.rolls.label');
-		expect(label('oncePerAttack')).toBe('NIMBLE.rules.changeDie.oncePerAttack.label');
+		expect(label('oncePerRoll')).toBe('NIMBLE.rules.changeDie.oncePerRoll.label');
 		expect(label('usedBy')).toBe('NIMBLE.rules.reroll.usedBy.label');
 	});
 
@@ -134,6 +138,12 @@ describe('ChangeDieRule', () => {
 			mode: 'add',
 			value: 1,
 		});
+	});
+
+	it('does not offer Initiative as a roll', () => {
+		const choices = (ChangeDieRule.defineSchema() as unknown as Record<string, any>).rolls.element
+			.choices;
+		expect(Object.keys(choices)).not.toContain('initiative');
 	});
 
 	it('offers on the rolls and side it names, through the shared part', () => {

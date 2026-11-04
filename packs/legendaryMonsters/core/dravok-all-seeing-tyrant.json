@@ -706,7 +706,7 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
+							"saveType": "strength",
 							"saveDC": "16",
 							"on": {
 								"passedSave": [

@@ -73,7 +73,12 @@
 			"name": "Glowing Grass"
 		},
 		"Gnatbane Weapon": {
-			"name": "Gnatbane Weapon"
+			"name": "Gnatbane Weapon",
+			"rules": {
+				"Nq7tR2vKxW9pLm3B": {
+					"label": "Gnatbane Weapon"
+				}
+			}
 		},
 		"Golden Urn": {
 			"name": "Golden Urn"

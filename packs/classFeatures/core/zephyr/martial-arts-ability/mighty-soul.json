@@ -6,7 +6,41 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "ySP1fwHfTNcx5yzg",
+				"identifier": "",
+				"label": "Mighty Soul",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"save"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "add",
+				"formula": "@strength",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "failed",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 1,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

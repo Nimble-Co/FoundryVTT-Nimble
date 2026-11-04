@@ -30,6 +30,7 @@ import {
 import { getActorWoundsValueAndMax } from '../utils/actor/actorResources.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
+import { keyedQueue } from '../utils/keyedQueue.js';
 
 const DYING_STATUS_ID = 'dying';
 
@@ -65,7 +66,8 @@ interface NimbleDiscardedCritTriggeredPayload {
 interface NimbleSavePayload {
 	actor: ActorWithRules;
 	saveType: string;
-	outcome: 'pass' | 'fail';
+	outcome: 'pass' | 'fail' | 'unknown';
+	messageId: string;
 }
 
 interface NimbleRestPayload {
@@ -275,13 +277,21 @@ function handleActorUpdate(
 	}
 }
 
+const saveResultQueues = keyedQueue();
+
+/** The results of one card go to the rules one at a time, so a pass finds the effect of its fail. */
 function handleSaveResolved(payload: NimbleSavePayload): void {
 	const context: SaveResolvedContext = {
 		actor: payload.actor as unknown as SaveResolvedContext['actor'],
 		saveType: payload.saveType,
 		outcome: payload.outcome,
+		messageId: payload.messageId,
 	};
-	void dispatch(payload.actor, 'onSaveResolved', context);
+	void saveResultQueues.run(payload.messageId, () =>
+		dispatch(payload.actor, 'onSaveResolved', context).catch((error) =>
+			console.warn('Nimble | ruleEventDispatch onSaveResolved failed', error),
+		),
+	);
 }
 
 function handleRest(payload: NimbleRestPayload): void {

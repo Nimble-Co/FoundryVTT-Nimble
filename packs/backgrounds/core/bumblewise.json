@@ -6,7 +6,42 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "cSMaPn3InzEqIPCr",
+				"identifier": "",
+				"label": "Bumblewise",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"save",
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "will",
+				"change": "countsAsNat20",
+				"formula": "",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "always",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"description": "<p>(Req. 0 or negative WIL at character creation.) A result of 1 or less on any WIL-related roll counts as a natural 20 (WIL save, Naturecraft, Perception, Influence, or Insight check).</p>"
 	},
 	"effects": [],

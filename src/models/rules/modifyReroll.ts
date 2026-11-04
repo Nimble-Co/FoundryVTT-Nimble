@@ -38,6 +38,13 @@ function schema() {
 				widget: 'diceFormula',
 			}),
 		),
+		cannotFail: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.modifyReroll.cannotFail.label',
+			hint: 'NIMBLE.rules.modifyReroll.cannotFail.hint',
+		}),
 		actionsForRoller: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -94,7 +101,7 @@ class ModifyRerollRule extends NimbleBaseRule<ModifyRerollRule.Schema> {
 		{
 			label: 'NIMBLE.rules.modifyReroll.form.roll.label',
 			hint: 'NIMBLE.rules.modifyReroll.form.roll.hint',
-			fields: ['rollModeChange', 'extraDamage'],
+			fields: ['rollModeChange', 'extraDamage', 'cannotFail'],
 		},
 		{
 			label: 'NIMBLE.rules.modifyReroll.form.creatures.label',
@@ -106,6 +113,7 @@ class ModifyRerollRule extends NimbleBaseRule<ModifyRerollRule.Schema> {
 	declare rerollIdentifier: string;
 	declare rollModeChange: number;
 	declare extraDamage: string;
+	declare cannotFail: boolean;
 	declare actionsForRoller: number;
 	declare tempHp: string;
 	declare tempHpWithin: number;
@@ -123,6 +131,7 @@ class ModifyRerollRule extends NimbleBaseRule<ModifyRerollRule.Schema> {
 				['rerollIdentifier', 'string'],
 				['rollModeChange', '-1 | 0 | 1'],
 				['extraDamage', 'string'],
+				['cannotFail', 'boolean'],
 				['actionsForRoller', 'number'],
 				['tempHp', 'string'],
 				['tempHpWithin', 'number'],

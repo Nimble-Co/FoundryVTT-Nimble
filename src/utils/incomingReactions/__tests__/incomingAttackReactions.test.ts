@@ -7,6 +7,7 @@ interface MockMessage {
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
 	resolveRerollReaction: ReturnType<typeof vi.fn>;
 	resolveKeepChoice: ReturnType<typeof vi.fn>;
+	resolveResultRemoval: ReturnType<typeof vi.fn>;
 }
 
 type TestGlobals = {
@@ -33,6 +34,7 @@ function createMessage(entries: Array<{ id: string; kind: string }>): MockMessag
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
 		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
 		resolveKeepChoice: vi.fn().mockResolvedValue(undefined),
+		resolveResultRemoval: vi.fn().mockResolvedValue(undefined),
 	};
 }
 
@@ -85,10 +87,37 @@ describe('requestIncomingAttackReaction', () => {
 			'gm-user',
 			false,
 			false,
-			null,
-			null,
+			{},
 		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('carries the picked stat to the reroll, also through the socket', async () => {
+		const { requestIncomingAttackReaction } = await loadModule();
+		const message = createMessage([{ id: 'entry-1', kind: 'reroll' }]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			pick: { stat: 'dexterity' },
+		});
+
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, false, {
+			stat: 'dexterity',
+		});
+
+		setUser({ id: 'player-1', isGM: false });
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			pick: { stat: 'will' },
+		});
+		expect(globals().game.socket.emit).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.objectContaining({ stat: 'will' }),
+		);
 	});
 
 	it('does nothing, and does not throw, for a legacy forceReroll entry', async () => {
@@ -134,8 +163,7 @@ describe('requestIncomingAttackReaction', () => {
 			'gm-user',
 			false,
 			true,
-			null,
-			null,
+			{},
 		);
 	});
 
@@ -146,7 +174,7 @@ describe('requestIncomingAttackReaction', () => {
 		await requestIncomingAttackReaction({
 			messageId: 'message-1',
 			entryId: 'entry-1',
-			die: { term: 0, result: 1 },
+			pick: { die: { term: 0, result: 1 } },
 		});
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
@@ -159,7 +187,11 @@ describe('requestIncomingAttackReaction', () => {
 		const { requestIncomingAttackReaction } = await loadModule();
 		setUser({ id: 'player-1', isGM: false });
 
-		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1', value: 8 });
+		await requestIncomingAttackReaction({
+			messageId: 'message-1',
+			entryId: 'entry-1',
+			pick: { value: 8 },
+		});
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			'system.nimble',
@@ -275,14 +307,11 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
-			'entry-1',
-			'player-1',
-			true,
-			false,
-			null,
-			null,
-		);
+		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false, {
+			die: null,
+			value: null,
+			stat: null,
+		});
 	});
 
 	it('gives the GM the die a player picked, and drops a pick that is not a die', async () => {
@@ -303,7 +332,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request({ term: '2', result: 0 }));
 		await flushAsync();
 
-		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4]);
+		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4].die);
 		expect(dice).toEqual([{ term: 2, result: 0 }, null, null]);
 	});
 
@@ -326,7 +355,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request('7'));
 		await flushAsync();
 
-		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[5]);
+		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[4].value);
 		expect(faces).toEqual([7, null, null, null]);
 	});
 
@@ -590,5 +619,44 @@ describe('requestKeepChoice', () => {
 
 		expect(message.resolveKeepChoice).toHaveBeenCalledTimes(1);
 		expect(message.resolveKeepChoice).toHaveBeenCalledWith('new', 'player-1', true);
+	});
+});
+
+describe('requestResultRemoval', () => {
+	it('removes the line directly for a GM', async () => {
+		const { requestResultRemoval } = await loadModule();
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestResultRemoval('message-1', 'line-1');
+
+		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'gm-user', false);
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('asks the primary GM for a player, as a socket request', async () => {
+		const { requestResultRemoval, registerIncomingReactionSocketListener } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+		await requestResultRemoval('message-1', 'line-1');
+		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
+		expect(payload).toEqual({
+			type: 'resultRemoval',
+			messageId: 'message-1',
+			lineId: 'line-1',
+			userId: 'player-1',
+		});
+
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+		registerIncomingReactionSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+		listener(payload);
+		listener({ ...payload, lineId: undefined });
+		for (let i = 0; i < 4; i++) await Promise.resolve();
+
+		expect(message.resolveResultRemoval).toHaveBeenCalledTimes(1);
+		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'player-1', true);
 	});
 });

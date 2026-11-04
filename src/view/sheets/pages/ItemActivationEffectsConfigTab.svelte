@@ -493,7 +493,7 @@
 
 						<TagGroup
 							options={savingThrowOptions}
-							selectedOptions={[node.saveType]}
+							selectedOptions={[node.saveType ?? node.savingThrowType]}
 							toggleOption={(value) => updateEffectNode(document, effects, node, 'saveType', value)}
 						/>
 					</div>
@@ -506,11 +506,14 @@
 						</header>
 
 						<input
-							type="number"
-							value={node.saveDC}
+							type="text"
+							value={node.saveDC ?? ''}
 							onchange={({ target }) =>
 								updateEffectNode(document, effects, node, 'saveDC', target.value)}
 						/>
+						<small class="nimble-hint"
+							>{localize('NIMBLE.activationEffects.customSaveDCHint')}</small
+						>
 					</label>
 				</div>
 			</div>

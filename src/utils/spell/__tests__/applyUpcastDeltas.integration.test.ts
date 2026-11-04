@@ -319,7 +319,7 @@ describe('Spell Data Integration Tests', () => {
 			expect(result.upcastResult.upcastSteps).toBe(1);
 			const saveNode = findNodeById(result.activationData.effects, 'JeRAFUXZteYotazu');
 			expect(saveNode).not.toBeNull();
-			expect(saveNode.saveDC).toBe(1); // 0 + 1*1
+			expect(saveNode.saveDC).toBe('10+@key+1');
 		});
 
 		it('Gangrenous Burst - addFlatDamage +10 on nested damage', () => {
@@ -345,7 +345,7 @@ describe('Spell Data Integration Tests', () => {
 			expect(result.upcastResult.upcastSteps).toBe(1);
 			const saveNode = findNodeById(result.activationData.effects, 'xFH2PgXT97EPr8jr');
 			expect(saveNode).not.toBeNull();
-			expect(saveNode.saveDC).toBe(1);
+			expect(saveNode.saveDC).toBe('10+@key+1');
 
 			const dmgNode = findNodeById(result.activationData.effects, 'UYavQJvOx4gcSfbg');
 			expect(dmgNode).not.toBeNull();

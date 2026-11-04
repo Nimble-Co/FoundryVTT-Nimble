@@ -55,10 +55,14 @@ describe('MakeCritRule', () => {
 		for (const name of ['chargePoolIdentifier', 'chargeCost', 'cardHint']) {
 			expect(schema[name], name).toBeTruthy();
 		}
-		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep', 'oncePerAttack']) {
+		for (const name of ['rolls', 'saves', 'skills', 'abilities', 'die', 'keep', 'oncePerRoll']) {
 			expect(schema[name], name).toBeUndefined();
 		}
 		expect(schema.type?.initial).toBe('makeCrit');
+	});
+
+	it('lists no field in its tooltip that it does not have', () => {
+		expect(makeRule().tooltipInfo()).not.toContain('relatedStat');
 	});
 
 	it('uses its own words where the Reroll words say reroll', () => {

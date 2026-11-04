@@ -5,10 +5,10 @@ import {
 	BUILT_IN_HEROIC_REACTIONS,
 	type BuiltInHeroicReaction,
 } from '#utils/incomingReactions/heroicActions.js';
+import { signedNumber } from '#utils/signedNumber.ts';
 import { firstSentence, plainText } from '../shared/plainText.ts';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
-import { signedNumber } from '../shared/signedNumber.ts';
 import type { SheetReactionId } from './heroIntent.ts';
 import {
 	actionCost,

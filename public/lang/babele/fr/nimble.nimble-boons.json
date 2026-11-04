@@ -80,7 +80,18 @@
 		},
 		"Epic Resistance": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">1/encounter. Whenever you would suffer damage or fail a save you can choose not to instead. [M]</span></p>",
-			"name": "Epic Resistance"
+			"name": "Epic Resistance",
+			"rules": {
+				"BS32rk4U5NJvGJlm": {
+					"label": "Epic Resistance"
+				},
+				"CO1rhY2LhawIMRf5": {
+					"label": "Epic Resistance (1/encounter)"
+				},
+				"MMf8pIZFk0RjPEYa": {
+					"label": "Epic Resistance"
+				}
+			}
 		},
 		"Epic Senses": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain Blindsight 6 or Darkvision 16. [M]</span></p>",

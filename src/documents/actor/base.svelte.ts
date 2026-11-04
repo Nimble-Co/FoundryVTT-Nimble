@@ -24,6 +24,7 @@ import {
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
+import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -888,8 +889,9 @@ class NimbleBaseActor<
 			roll,
 			{ kind: 'abilityCheck', key: abilityKey },
 			rollMode ?? 0,
+			options.dc,
 		);
-		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls);
+		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, rerolls, options.dc);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -945,6 +947,7 @@ class NimbleBaseActor<
 	async prepareAbilityCheckChatCardData(
 		abilityKey: AbilityKeyType,
 		rerolls: CheckCardRerollData<Roll<Record<string, unknown>>>,
+		dc: number | null = null,
 	) {
 		return {
 			author: game.user?.id,
@@ -956,6 +959,7 @@ class NimbleBaseActor<
 				actorType: this.type,
 				permissions: this.permission,
 				abilityKey,
+				dc,
 				...rerolls.system,
 			},
 		};
@@ -975,8 +979,9 @@ class NimbleBaseActor<
 			roll,
 			{ kind: 'save', key: saveKey },
 			rollMode ?? 0,
+			options.dc,
 		);
-		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls);
+		const chatData = await this.prepareSavingThrowChatCardData(saveKey, rerolls, options.dc);
 
 		ChatMessage.applyMode(chatData as Record<string, unknown>, toMessageMode(visibilityMode));
 		return createCheckCard(chatData, rerolls);
@@ -1002,9 +1007,21 @@ class NimbleBaseActor<
 			toMessageMode(rollData.visibilityMode),
 		);
 
+		const combatant = game.combat?.getCombatantByActor(this.id ?? '') ?? null;
+		Object.assign(
+			chatData,
+			await initiativeCardData({
+				actor: this,
+				actorName: this.name,
+				roll,
+				combatId: combatant ? (game.combat?.id ?? null) : null,
+				combatantId: combatant?.id ?? null,
+				foldedActionDelta: 0,
+			}),
+		);
+
 		const message = (await ChatMessage.create(chatData)) ?? null;
 
-		const combatant = game.combat?.getCombatantByActor(this.id ?? '') ?? null;
 		if (combatant) {
 			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch
 			Hooks.callAll(systemHookName('initiativeRolled'), {
@@ -1092,6 +1109,7 @@ class NimbleBaseActor<
 	async prepareSavingThrowChatCardData(
 		saveKey: SaveKeyType,
 		rerolls: CheckCardRerollData<NimbleRoll | Roll<Record<string, unknown>>>,
+		dc: number | null = null,
 	) {
 		return {
 			author: game.user?.id,
@@ -1103,6 +1121,7 @@ class NimbleBaseActor<
 				actorType: this.type,
 				permissions: this.permission,
 				saveKey,
+				dc,
 				...rerolls.system,
 			},
 		};

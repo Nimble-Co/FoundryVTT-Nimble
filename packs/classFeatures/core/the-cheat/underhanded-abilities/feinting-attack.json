@@ -63,7 +63,7 @@
 				"woundCost": 0,
 				"heroicReaction": "",
 				"actionCost": 0,
-				"oncePerAttack": false,
+				"oncePerRoll": false,
 				"cardHint": "Your 2nd miss this round",
 				"cardHintWhen": {}
 			}

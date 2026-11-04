@@ -6,7 +6,25 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyReroll",
+				"disabled": false,
+				"id": "5fElW6xNozwt69SJ",
+				"identifier": "",
+				"label": "I'm So Famous!: Songweaver's Inspiration cannot fail",
+				"predicate": {},
+				"priority": 1,
+				"suppressActivationCard": "auto",
+				"rerollIdentifier": "songweavers-inspiration",
+				"rollModeChange": 0,
+				"extraDamage": "",
+				"cannotFail": true,
+				"actionsForRoller": 0,
+				"tempHp": "",
+				"tempHpWithin": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

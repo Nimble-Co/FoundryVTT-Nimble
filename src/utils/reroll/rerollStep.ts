@@ -8,7 +8,7 @@ import type {
 import { payRerollCost, refundRerollCost, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
-import type { RerollRollKind } from './rollToReroll.js';
+import type { RollUseKind } from './rollToReroll.js';
 
 /** The roll a reroll replaces. A live roll and a serialized one both fit. */
 interface ReplacedRoll {
@@ -57,7 +57,7 @@ interface RerollStepInput<TRoll> {
 	/** Roll changes of Modify Reroll rules that this card has not applied yet. */
 	rollChanges?: readonly RollChange[];
 	/** The kind of roll being rerolled; attack changes apply only to an attack. */
-	rollKind: RerollRollKind;
+	rollKind: RollUseKind;
 	/** Reads the new roll's kept die. By default, the primary die of a damage roll. */
 	readNewDie?: (roll: TRoll) => RolledDie;
 	/** An earlier reroll of this roll kept the crit triggers. */
@@ -69,6 +69,10 @@ interface RerollStepInput<TRoll> {
 	change?: DieChange;
 	/** A Make It a Crit rule's use. */
 	makesCrit?: boolean;
+	/** The stat the player picked for the new roll. */
+	stat?: string;
+	/** The feature that made the new attack unable to miss. */
+	cannotMissBy?: string;
 	/** Puts the new roll in place. A throw here gives the cost back too. */
 	place?: (done: RerollStepDone<TRoll>) => Promise<void>;
 }
@@ -154,6 +158,8 @@ async function rerollWithRule<TRoll>(
 				...(input.automatic ? { automatic: true } : {}),
 				...(input.change ? { use: 'change' as const, change: input.change } : {}),
 				...(input.makesCrit ? { use: 'crit' as const } : {}),
+				...(input.stat ? { stat: input.stat } : {}),
+				...(input.cannotMissBy ? { cannotMissBy: input.cannotMissBy } : {}),
 			},
 			discardedCritTriggers:
 				input.earlierCritTriggers || (rule.discardedCritTriggers === true && previousWasCritical),

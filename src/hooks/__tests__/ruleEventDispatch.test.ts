@@ -568,16 +568,70 @@ describe('ruleEventDispatch', () => {
 			expect(rule.onInitiativeRolled).toHaveBeenCalledTimes(1);
 		});
 
+		it('handles the results of one card one at a time', async () => {
+			const order: string[] = [];
+			const finish = new Map<string, () => void>();
+			const rule = createMockRule();
+			rule.onSaveResolved = vi.fn(
+				async ({ outcome, messageId }: { outcome: string; messageId: string }) => {
+					order.push(`start ${outcome}`);
+					if (outcome === 'fail') {
+						await new Promise<void>((resolve) => finish.set(messageId, resolve));
+					}
+					order.push(`end ${outcome}`);
+				},
+			);
+			const actor = { rules: [rule] };
+			const handler = handlers.get('nimble.saveResolved');
+
+			handler?.({ actor, saveType: 'strength', outcome: 'fail', messageId: 'card' });
+			handler?.({ actor, saveType: 'strength', outcome: 'pass', messageId: 'card' });
+			handler?.({ actor, saveType: 'strength', outcome: 'fail', messageId: 'other' });
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(order).toEqual(['start fail', 'start fail']);
+
+			finish.get('card')?.();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(order).toEqual(['start fail', 'start fail', 'end fail', 'start pass', 'end pass']);
+			finish.get('other')?.();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		});
+
+		it('keeps the queue of a card going after an error', async () => {
+			const rule = createMockRule();
+			const broken = {
+				get rules(): never {
+					throw new Error('no rules');
+				},
+			};
+			const actor = { rules: [rule] };
+			const handler = handlers.get('nimble.saveResolved');
+			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+			handler?.({ actor: broken, saveType: 'strength', outcome: 'fail', messageId: 'error-card' });
+			handler?.({ actor, saveType: 'strength', outcome: 'pass', messageId: 'error-card' });
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+			warn.mockRestore();
+		});
+
 		it('dispatches onSaveResolved', async () => {
 			const rule = createMockRule();
 			const actor = { rules: [rule] };
 
 			const handler = handlers.get('nimble.saveResolved');
-			handler?.({ actor, saveType: 'strength', outcome: 'fail' });
+			handler?.({ actor, saveType: 'strength', outcome: 'fail', messageId: 'card' });
 			await Promise.resolve();
 			await Promise.resolve();
 
 			expect(rule.onSaveResolved).toHaveBeenCalledTimes(1);
+			expect(rule.onSaveResolved).toHaveBeenCalledWith({
+				actor,
+				saveType: 'strength',
+				outcome: 'fail',
+				messageId: 'card',
+			});
 		});
 	});
 

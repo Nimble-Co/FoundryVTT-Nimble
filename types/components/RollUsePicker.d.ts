@@ -10,5 +10,6 @@ export interface RollUsePickerProps {
 	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
 	onpick: (die: PickableDie) => void;
 	onvalue: (value: number) => void;
+	onstat: (stat: string) => void;
 	oncancel: () => void;
 }

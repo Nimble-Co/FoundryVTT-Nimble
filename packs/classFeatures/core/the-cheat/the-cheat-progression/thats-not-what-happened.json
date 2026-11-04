@@ -62,7 +62,7 @@
 				"woundCost": 0,
 				"heroicReaction": "",
 				"actionCost": 1,
-				"oncePerAttack": false,
+				"oncePerRoll": false,
 				"cardHint": "",
 				"cardHintWhen": {}
 			}

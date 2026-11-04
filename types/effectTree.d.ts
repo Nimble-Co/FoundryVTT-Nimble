@@ -135,7 +135,8 @@ export type HealingNode = {
 export type SavingThrowNode = {
 	id: string;
 	type: 'savingThrow';
-	saveDC?: number;
+	/** A number or a formula. Empty: see `resolveSaveNodeDC`. */
+	saveDC?: number | string;
 	/** @deprecated Use savingThrowType instead */
 	saveType?: 'strength' | 'dexterity' | 'intelligence' | 'will';
 	savingThrowType: 'strength' | 'dexterity' | 'intelligence' | 'will';

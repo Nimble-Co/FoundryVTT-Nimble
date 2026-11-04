@@ -6,6 +6,7 @@ import {
 	REROLL_LEFT_OUT_REASONS,
 	REROLL_SIDES,
 	REROLL_TRIGGERS,
+	RESULT_CHANGES,
 	ROLL_USES,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 
@@ -23,6 +24,11 @@ export const metadata = () => ({
 export const roller = () => ({
 	actorUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
 	tokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
+});
+
+/** The DC a check is made against, when its source gives one. */
+export const checkDC = () => ({
+	dc: new fields.NumberField({ required: false, nullable: true, initial: null }),
 });
 
 /** Whether the activated item made its user concentrate. */
@@ -159,7 +165,7 @@ export const incomingReactions = () => ({
 				initial: null,
 				choices: [...REROLL_SIDES],
 			}),
-			oncePerAttack: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			oncePerRoll: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			// reroll only: a Change a Die entry changes a die, a Make It a Crit entry makes a crit.
 			use: new fields.StringField({
 				required: false,
@@ -169,6 +175,7 @@ export const incomingReactions = () => ({
 			}),
 			needsDieAtMax: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			hint: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+			anotherStat: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 			leftOut: new fields.SchemaField(
 				{
 					reason: new fields.StringField({
@@ -215,6 +222,17 @@ export const incomingReactions = () => ({
 		{ required: true, nullable: false, initial: [] },
 	),
 });
+
+/** Gives the reaction rows of an old card the names the schema uses now. */
+export function migrateIncomingReactions(source: Record<string, unknown>): void {
+	const entries = source.incomingReactions;
+	if (!Array.isArray(entries)) return;
+	for (const entry of entries as Record<string, unknown>[]) {
+		if (!entry || typeof entry !== 'object' || !('oncePerAttack' in entry)) continue;
+		entry.oncePerRoll ??= entry.oncePerAttack;
+		delete entry.oncePerAttack;
+	}
+}
 
 const rerollDieResult = () =>
 	new fields.SchemaField(
@@ -289,6 +307,13 @@ const rerollRecord = () =>
 			},
 			{ required: false, nullable: true, initial: null },
 		),
+		stat: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+		cannotMissBy: new fields.StringField({
+			required: false,
+			nullable: false,
+			blank: true,
+			initial: '',
+		}),
 	});
 
 const rollChange = () =>
@@ -378,6 +403,58 @@ export const damageBack = () => ({
 		}),
 		{ required: false, nullable: false, initial: [] },
 	),
+});
+
+const resultChange = () =>
+	new fields.SchemaField({
+		id: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		lineId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		entryId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		itemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		change: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'succeed',
+			choices: [...RESULT_CHANGES],
+		}),
+		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		stat: new fields.StringField({ required: true, nullable: false, blank: true, initial: '' }),
+		retired: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		before: new fields.NumberField({ required: true, nullable: true, initial: null }),
+		chargePoolIdentifier: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+		}),
+		paid: new fields.SchemaField({
+			charges: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+			mana: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+			wounds: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		}),
+		automatic: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+		targetTokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),
+	});
+
+/** The Change a Result clicks on a check card, in order. A card posted before them has none. */
+export const resultChanges = () => ({
+	resultChanges: new fields.ArrayField(resultChange(), {
+		required: false,
+		nullable: false,
+		initial: [],
+	}),
+});
+
+/**
+ * The no-damage changes on an attack card, and whether its damage is applied:
+ * a change can be taken back only before that.
+ */
+export const attackResultChanges = () => ({
+	...resultChanges(),
+	damageApplied: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 });
 
 export const rerollHistory = () => ({

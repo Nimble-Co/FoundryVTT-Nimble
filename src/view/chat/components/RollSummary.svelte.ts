@@ -1,5 +1,4 @@
 import type { RollSummaryOptions } from '#types/components/RollSummary.d.ts';
-
 import localize from '#utils/localize.ts';
 
 import { primaryDieBonusText } from './primaryDieBonusText.ts';

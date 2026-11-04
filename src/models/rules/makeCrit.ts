@@ -10,7 +10,7 @@ function schema() {
 	const shared = RollUseRule.rollUseSchemaParts('makeCrit');
 	const { usedBy, reach } = shared.roll;
 	// The crit stays for the card, so one attack can use the rule only once.
-	const { oncePerAttack: _oncePerAttack, ...cost } = shared.cost;
+	const { oncePerRoll: _oncePerRoll, ...cost } = shared.cost;
 
 	return {
 		usedBy,

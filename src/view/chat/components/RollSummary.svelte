@@ -9,11 +9,12 @@
 	const {
 		label,
 		subheading,
+		checkResult = null,
+		note = null,
 		tooltip,
 		total,
 		options,
 		showRollDetails,
-		action,
 		rolling = null,
 		landed = false,
 	}: RollSummaryProps = $props();
@@ -29,7 +30,7 @@
 	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
-<div class="roll" class:roll--no-subheading={!subheading}>
+<div class="roll" class:roll--no-subheading={!subheading && !checkResult && !note}>
 	<div
 		class="roll__total"
 		data-tooltip={expanded || rolling ? null : tooltip}
@@ -46,10 +47,6 @@
 
 	<h3 class="roll__label">{label}</h3>
 
-	{#if action}
-		<div class="roll__action">{@render action()}</div>
-	{/if}
-
 	{#if tooltip}
 		<button
 			class="nimble-button roll-expand"
@@ -62,7 +59,33 @@
 		</button>
 	{/if}
 
-	{#if subheading}
+	{#if checkResult || note}
+		<span class="roll__subheading roll__subheading--pieces">
+			<!-- Hidden while the dice are in the air, so they cannot tell the result early. -->
+			{#if note}
+				<span class:roll__note--hidden={rolling}>{note}</span>
+			{/if}
+
+			{#if checkResult}
+				<span
+					class="roll__result"
+					class:roll__result--failed={checkResult.result === 'failed'}
+					class:roll__result--succeeded={checkResult.result === 'succeeded'}
+					class:roll__result--hidden={rolling}
+				>
+					<i
+						class={checkResult.result === 'failed' ? 'fa-solid fa-xmark' : 'fa-solid fa-check'}
+						aria-hidden="true"
+					></i>
+					{checkResult.label}
+				</span>
+			{/if}
+
+			{#if subheading}
+				<span>{subheading}</span>
+			{/if}
+		</span>
+	{:else if subheading}
 		<span class="roll__subheading">
 			{subheading}
 		</span>
@@ -120,22 +143,6 @@
 			grid-template-areas: 'rollResult rollLabel expandButton';
 		}
 
-		// The action column is there only when the action rendered something.
-		&:has(> .roll__action > :global(*)) {
-			grid-template-areas:
-				'rollResult rollLabel rollAction expandButton'
-				'rollResult subHeading rollAction expandButton';
-			grid-template-columns: max-content 1fr max-content max-content;
-		}
-
-		&--no-subheading:has(> .roll__action > :global(*)) {
-			grid-template-areas: 'rollResult rollLabel rollAction expandButton';
-		}
-
-		&__action {
-			display: contents;
-		}
-
 		.roll-expand {
 			grid-area: expandButton;
 			display: flex;
@@ -178,6 +185,37 @@
 			line-height: 1;
 			color: var(--nimble-medium-text-color);
 			font-weight: 500;
+
+			// The line wraps between its pieces and never inside one.
+			&--pieces {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.25rem 0.5rem;
+
+				> span {
+					white-space: nowrap;
+				}
+			}
+		}
+
+		&__result {
+			font-weight: 700;
+
+			&--failed {
+				color: var(--nimble-roll-failure-color);
+			}
+
+			&--succeeded {
+				color: var(--nimble-roll-success-color);
+			}
+
+			&--hidden {
+				visibility: hidden;
+			}
+		}
+
+		&__note--hidden {
+			visibility: hidden;
 		}
 
 		&__total {

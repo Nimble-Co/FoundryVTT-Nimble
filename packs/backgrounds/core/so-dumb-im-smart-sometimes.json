@@ -83,7 +83,7 @@
 				"extraDamage": "",
 				"automatic": false,
 				"discardedCritTriggers": false,
-				"oncePerAttack": false
+				"oncePerRoll": false
 			},
 			{
 				"type": "reroll",
@@ -103,7 +103,7 @@
 				"skills": [],
 				"abilities": [],
 				"usedBy": "roller",
-				"outcome": "always",
+				"outcome": "failed",
 				"attackDelivery": "any",
 				"chargePoolIdentifier": "so-dumb-im-smart-sometimes-save",
 				"chargeCost": 1,
@@ -115,7 +115,7 @@
 				"extraDamage": "",
 				"automatic": false,
 				"discardedCritTriggers": false,
-				"oncePerAttack": false
+				"oncePerRoll": false
 			}
 		],
 		"description": "<p>(Req. 0 or negative INT at character creation.) </p><p>Reroll an INT-related skill check, 1/day. </p><p>Reroll a failed INT save with advantage, 1/Safe Rest.</p>"

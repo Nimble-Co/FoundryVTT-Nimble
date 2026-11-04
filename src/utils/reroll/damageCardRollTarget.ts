@@ -1,4 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { RollStat, StatChoice } from '#types/rollStat.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	type RecoveryTriggerChange,
@@ -22,17 +23,21 @@ import {
 	type RollChange,
 	termsHaveDieAtMax,
 } from '../incomingReactions/incomingReactionEntry.js';
+import { resultChangesOf } from '../rolls/resultChanges.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../treeManipulation/reconstructEffectsTree.js';
 import { alliesOnCard } from './rerollAllies.js';
 import {
+	collectRerollEntries,
 	offerStands,
 	type RerollAlly,
 	type RerollingActor,
 	type RerollRollContext,
 	type RerollRollOutcome,
 } from './rerollEntries.js';
+import { withoutCannotMiss } from './rerollOptions.js';
 import type { PreparedReroll, RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
+import { ROLL_STATS, statsInFormula, swapStatInFormula } from './rollStat.js';
 
 /** The fields of an activation card's system data that a reroll reads. */
 interface DamageCardSystem {
@@ -42,6 +47,7 @@ interface DamageCardSystem {
 	activation?: { effects: unknown[]; [key: string]: unknown };
 	incomingReactions?: IncomingReactionEntry[];
 	rollChanges?: RollChange[];
+	damageApplied?: boolean;
 }
 
 /** The activation card the damage-card roll target reads and writes. */
@@ -100,7 +106,19 @@ function isForcedMiss(found: PrimaryDamageRoll | null): boolean {
 type RollOptionsView = {
 	options?: { canCrit?: unknown; forcedCrit?: unknown } | null;
 	terms?: readonly unknown[];
+	originalFormula?: string;
+	formula?: string;
 } | null;
+
+/** The formula of the card's primary attack, with its stat parts unresolved. */
+function attackFormula(rolled: RollOptionsView | undefined, node?: EffectNode | null): string {
+	return (
+		rolled?.originalFormula ??
+		(node as { formula?: string } | null)?.formula ??
+		rolled?.formula ??
+		''
+	);
+}
 
 /**
  * A damage card's roll with this outcome, as the reroll gate sees it. The
@@ -119,9 +137,9 @@ function damageRollContext(
 			: findPrimaryDamageRoll(card.system())?.damageNode.roll
 	) as RollOptionsView | undefined;
 	const itemUuid = card.itemUuid?.() ?? null;
-	const damageType = (
-		findPrimaryDamageRoll(card.system())?.damageNode as { damageType?: string } | undefined
-	)?.damageType;
+	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
+	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
+	const stats = statsInFormula(attackFormula(rolled, primaryNode));
 	return {
 		attacker: card.attacker(),
 		allies,
@@ -134,6 +152,7 @@ function damageRollContext(
 			delivery: card.delivery(),
 			...(itemUuid ? { itemUuid } : {}),
 			...(damageType ? { damageTypes: [damageType] } : {}),
+			...(stats.length > 0 ? { stats } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,
@@ -144,6 +163,26 @@ function damageRollContext(
 		},
 		forcedMiss,
 	};
+}
+
+/** The stat a new attack swaps out: the rule's stat when the formula has it, else its first. */
+function statToSwap(formula: string, limit: string | undefined): RollStat | null {
+	const stats = statsInFormula(formula);
+	return stats.find((stat) => stat === limit) ?? stats[0] ?? null;
+}
+
+function attackStatChoices(
+	previous: DamageRoll.SerializedData,
+	limit: string | undefined,
+): StatChoice[] {
+	const formula = previous.originalFormula ?? previous.formula ?? '';
+	const from = statToSwap(formula, limit);
+	if (!from) return [];
+	const data = (previous.data ?? {}) as Record<string, unknown>;
+	return ROLL_STATS.flatMap((stat) => {
+		const mod = data[stat];
+		return stat !== from && typeof mod === 'number' ? [{ stat, mod }] : [];
+	});
 }
 
 /**
@@ -340,6 +379,17 @@ function primaryDamageReroll(
 		slot: found.damageNode.id,
 		replaced: previous,
 		previousResult: primaryDieResult(previous),
+		statChoices: (limit) => attackStatChoices(previous, limit),
+		withStat: (target, stat, limit) => {
+			if (!attackStatChoices(previous, limit).some((choice) => choice.stat === stat)) return null;
+			const formula = previous.originalFormula ?? previous.formula ?? '';
+			const from = statToSwap(formula, limit);
+			if (!from) return null;
+			return {
+				...target,
+				replaced: { ...target.replaced, originalFormula: swapStatInFormula(formula, from, stat) },
+			};
+		},
 		// The new roll keeps the data of the roll it replaces.
 		makeRoll: async (formula, options) => {
 			const roll = new DamageRoll(
@@ -351,14 +401,19 @@ function primaryDamageReroll(
 			return roll;
 		},
 		// Without its folded spends and extra damage: the reroll folds them in again.
-		current: () =>
-			DamageRoll.fromData(
+		current: () => {
+			const roll = DamageRoll.fromData(
 				removeFlavoredBonusesFromRoll(
 					foundry.utils.deepClone(previous) as unknown as Record<string, unknown>,
 					(card.system().incomingReactions ?? []).filter(isFoldedSpend).length +
 						extraDamageChanges(card).length,
 				) as unknown as DamageRoll.SerializedData,
-			),
+			);
+			roll.options = withoutCannotMiss(
+				roll.options as unknown as Record<string, unknown>,
+			) as unknown as typeof roll.options;
+			return roll;
+		},
 		keepChoice: (roll, added) => {
 			const shown = roll as { total?: number; isCritical?: boolean; isMiss?: boolean };
 			const folded = (card.system().incomingReactions ?? [])
@@ -392,7 +447,15 @@ function damageCardRollTarget(card: DamageCard): RerollRollTarget<DamageRoll> {
 	return {
 		context: () => {
 			const system = card.system();
-			return damageRollContext(card, system, isForcedMiss(findPrimaryDamageRoll(system)));
+			return {
+				...damageRollContext(card, system, isForcedMiss(findPrimaryDamageRoll(system))),
+				card: {
+					total: 0,
+					changes: resultChangesOf(system),
+					roller: card.attacker(),
+					damageApplied: system.damageApplied === true,
+				},
+			};
 		},
 		findRoll: () => {
 			const found = findPrimaryDamageRoll(card.system());
@@ -401,4 +464,23 @@ function damageCardRollTarget(card: DamageCard): RerollRollTarget<DamageRoll> {
 	};
 }
 
-export { damageCardRollTarget, damageRollContext, type DamageCard };
+/**
+ * The target-side no-damage entries `targets` give this card. The stamp at the roll
+ * knows no target on an area or a roll with two or more targets, and targets can come later.
+ */
+function noDamageEntries(card: DamageCard, targets: readonly string[]): IncomingReactionEntry[] {
+	const system = card.system();
+	const found = findPrimaryDamageRoll(system);
+	if (!found) return [];
+	const context = damageRollContext(card, system, isForcedMiss(found));
+	const entries = collectRerollEntries({
+		...context,
+		targets: targets.map((tokenUuid) => ({
+			tokenUuid,
+			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
+		})),
+	}).manual;
+	return entries.filter((entry) => entry.side === 'target' && entry.use === 'result');
+}
+
+export { damageCardRollTarget, damageRollContext, noDamageEntries, type DamageCard };

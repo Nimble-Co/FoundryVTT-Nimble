@@ -2048,6 +2048,7 @@ describe('NimbleCombat', () => {
 		let resolveEvaluate: (() => void) | undefined;
 		const initiativeRoll = {
 			total: 17,
+			terms: [],
 			evaluate: vi.fn(
 				() =>
 					new Promise((resolve) => {
@@ -2160,6 +2161,7 @@ describe('NimbleCombat', () => {
 
 		const initiativeRoll = {
 			total: 15,
+			terms: [],
 			evaluate: vi.fn().mockResolvedValue(null),
 			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
 		};
@@ -2233,6 +2235,7 @@ describe('NimbleCombat', () => {
 
 		const initiativeRoll = {
 			total: 19,
+			terms: [],
 			evaluate: vi.fn().mockResolvedValue(null),
 			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
 		};
@@ -2314,6 +2317,7 @@ describe('NimbleCombat', () => {
 
 		const initiativeRoll = {
 			total: 18,
+			terms: [],
 			evaluate: vi.fn().mockResolvedValue(null),
 			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
 		};

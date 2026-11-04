@@ -3,6 +3,7 @@ import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import {
@@ -56,6 +57,7 @@ import type { IncomingReactionEntry } from '../utils/incomingReactions/incomingR
 import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
+import { statsInFormula } from '../utils/reroll/rollStat.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
 	applyUpcastDeltas,
@@ -103,7 +105,7 @@ function collectPrimaryDieBonuses(
 		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
 		if (value === 0) continue;
 		lines.push({
-			label: rule.label || rule.item?.name || '',
+			label: ruleLabel(rule),
 			value,
 			itemUuid: rule.item?.uuid ?? '',
 		});
@@ -377,7 +379,11 @@ class ItemActivationManager {
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
 			this.actor as OfferingActor,
-			{ delivery: this.#getAttackDelivery(), itemUuid: this.#item.uuid },
+			{
+				delivery: this.#getAttackDelivery(),
+				itemUuid: this.#item.uuid,
+				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
+			},
 		);
 
 		// Hold what the dialog spent until the caller clears the preUseItem gate.
@@ -403,6 +409,12 @@ class ItemActivationManager {
 	 * How this activation reaches its target, read off `activationData` rather
 	 * than off the item so it reflects any upcast the manager already applied.
 	 */
+	#firstDamageFormula(): string {
+		const nodes = flattenEffectsTree(this.activationData?.effects ?? []);
+		const node = nodes.find((each) => each.type === 'damage') as { formula?: string } | undefined;
+		return node?.formula ?? '';
+	}
+
 	#getAttackDelivery(): AttackDelivery {
 		return attackDeliveryFromAttackType(this.activationData?.targets?.attackType);
 	}

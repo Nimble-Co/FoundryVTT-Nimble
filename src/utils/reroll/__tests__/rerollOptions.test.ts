@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { prepareReroll } from '../rerollOptions.js';
+import { cannotMissOptions, prepareReroll, withoutCannotMiss } from '../rerollOptions.js';
 
 describe('prepareReroll', () => {
 	it('drops the set primary die value and computed values', () => {
@@ -86,5 +86,23 @@ describe('prepareReroll', () => {
 				{ extraDamage: '  ', rollModeChange: 0, primaryDieBonus: 0 },
 			),
 		).toEqual({ formula: '1d8', options: { rollMode: 0 } });
+	});
+});
+
+describe('cannotMissOptions', () => {
+	it('stops the new attack from missing, for that roll only', () => {
+		const options = cannotMissOptions({ canMiss: true, rollMode: 1 });
+		expect(options).toEqual({ canMiss: false, canMissBefore: true, rollMode: 1 });
+		expect(prepareReroll('1d8', options).options).toEqual({ canMiss: true, rollMode: 1 });
+	});
+
+	it('keeps a roll that could not miss before as it was', () => {
+		const options = cannotMissOptions({ canMiss: false });
+		expect(withoutCannotMiss(options)).toEqual({ canMiss: false });
+	});
+
+	it('does not stack on a second use', () => {
+		const twice = cannotMissOptions(cannotMissOptions({ canMiss: true }));
+		expect(twice).toEqual({ canMiss: false, canMissBefore: true });
 	});
 });

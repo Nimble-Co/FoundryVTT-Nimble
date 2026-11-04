@@ -97,4 +97,20 @@ describe('Targets', () => {
 		expect(archerRow?.querySelector('.nimble-movement-chip')).toBeNull();
 		expect(archerRow?.classList.contains('nimble-target--moves')).toBe(false);
 	});
+
+	it('shows that a target takes no damage, for that target only and for every user', async () => {
+		const message = createMessage();
+		Object.assign(message.reactive, {
+			noDamageSourceFor: (uuid: string) => (uuid === GOBLIN_TOKEN ? 'Epic Resistance' : null),
+		});
+		const { container } = render(TargetsTestHarness, { props: { messageDocument: message } });
+		await vi.waitFor(() => {
+			expect(container.querySelectorAll('.nimble-card').length).toBe(2);
+		});
+		const badges = container.querySelectorAll('[data-badge-kind="noDamage"]');
+		expect(badges.length).toBe(1);
+		expect(badges[0].textContent?.trim()).toBe('No Damage');
+		expect(badges[0].getAttribute('data-tooltip')).toContain('Epic Resistance');
+		expect(badges[0].closest('.nimble-card')?.textContent).toContain('Goblin Cutthroat');
+	});
 });

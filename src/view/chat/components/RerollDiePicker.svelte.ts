@@ -4,6 +4,7 @@ import type { RollUse } from '#utils/incomingReactions/incomingReactionEntry.ts'
 import localize from '#utils/localize.js';
 import type { PickableDie } from '../../../dice/oneDieReroll.js';
 import { claimEscape } from './claimEscape.ts';
+import { rovingFocusIndex } from './rovingFocusIndex.ts';
 
 /**
  * The word under a die: the Primary Die and a dropped die always say what
@@ -40,7 +41,7 @@ export function dieLabel(
 export function createRerollDiePickerState(
 	getProps: () => Pick<RerollDiePickerProps, 'dice' | 'oncancel' | 'rolling'>,
 ) {
-	const elements = $state<{ dice: HTMLButtonElement[] }>({ dice: [] });
+	const elements = $state<{ root?: HTMLElement; dice: HTMLButtonElement[] }>({ dice: [] });
 
 	/** Focus the Primary Die, else the first die, when the picker opens. */
 	async function focusFirst() {
@@ -48,7 +49,7 @@ export function createRerollDiePickerState(
 		const dice = getProps().dice;
 		const primary = dice.findIndex((die) => die.role === 'primary');
 		const first = elements.dice[primary === -1 ? 0 : primary];
-		first?.scrollIntoView?.({ block: 'nearest' });
+		elements.root?.scrollIntoView?.({ block: 'nearest' });
 		first?.focus({ preventScroll: true });
 	}
 
@@ -56,14 +57,7 @@ export function createRerollDiePickerState(
 		if (getProps().rolling) return;
 		const current = elements.dice.indexOf(event.target as HTMLButtonElement);
 		const last = getProps().dice.length - 1;
-		const next = {
-			ArrowRight: current >= last ? 0 : current + 1,
-			ArrowDown: current >= last ? 0 : current + 1,
-			ArrowLeft: current <= 0 ? last : current - 1,
-			ArrowUp: current <= 0 ? last : current - 1,
-			Home: 0,
-			End: last,
-		}[event.key];
+		const next = rovingFocusIndex(event.key, current, last, 'both');
 
 		if (next !== undefined && current !== -1) {
 			event.preventDefault();

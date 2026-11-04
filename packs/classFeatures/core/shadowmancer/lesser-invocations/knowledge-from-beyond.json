@@ -6,7 +6,44 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "changeResult",
+				"disabled": false,
+				"id": "vYi8Br93KP1oNgm1",
+				"identifier": "",
+				"label": "Knowledge from Beyond",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [
+					"insight",
+					"arcana"
+				],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "",
+				"change": "succeed",
+				"formula": "",
+				"onlyIfLower": false,
+				"otherCreature": {},
+				"outcome": "failed",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 1,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -1,3 +1,4 @@
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
@@ -8,6 +9,8 @@ export interface CardOfferContext {
 	delivery: AttackDelivery;
 	/** The item the attack is made with, when it has one. */
 	itemUuid?: string | null;
+	/** The stats the attack's formula has. */
+	stats?: readonly string[];
 }
 
 interface CardOfferRuleLike {
@@ -55,7 +58,7 @@ export function collectPoolSpendCardOffers(
 			actorUuid,
 			tokenUuid: null,
 			targetTokenUuid: null,
-			label: rule.label || rule.item?.name || '',
+			label: ruleLabel(rule),
 			ruleId: rule.id ?? '',
 			itemUuid: rule.item?.uuid ?? '',
 			used: false,

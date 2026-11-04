@@ -1,11 +1,13 @@
 import { activation } from '../item/common.js';
 import {
 	appliedHealing,
+	attackResultChanges,
 	concentration,
 	damageBack,
 	grantedActionOffers,
 	incomingReactions,
 	metadata,
+	migrateIncomingReactions,
 	movementOffers,
 	primaryDieBonuses,
 	rerollHistory,
@@ -41,6 +43,7 @@ declare namespace NimbleObjectCardData {
 		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof rerollHistory> &
+		ReturnType<typeof attackResultChanges> &
 		ReturnType<typeof primaryDieBonuses> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
@@ -65,6 +68,7 @@ class NimbleObjectCardData extends foundry.abstract.TypeDataModel<
 			...grantedActionOffers(),
 			...incomingReactions(),
 			...rerollHistory(),
+			...attackResultChanges(),
 			...primaryDieBonuses(),
 			...damageBack(),
 			...movementOffers(),
@@ -72,6 +76,11 @@ class NimbleObjectCardData extends foundry.abstract.TypeDataModel<
 			...metadata(),
 			...targets(),
 		};
+	}
+
+	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
+		migrateIncomingReactions(source);
+		return super.migrateData(source);
 	}
 }
 

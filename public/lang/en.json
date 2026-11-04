@@ -552,9 +552,20 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
+			"checkResult": {
+				"failed": "Failed",
+				"failedWithDC": "Failed - DC {dc}",
+				"succeeded": "Succeeded",
+				"succeededWithDC": "Succeeded - DC {dc}"
+			},
 			"concentrationApplied": "Concentration Applied",
 			"concentrationFailed": "The concentration condition could not be applied to the caster.",
 			"healing": "Healing",
+			"initiative": {
+				"label": "Initiative",
+				"startWithOneAction": "Start with 1 action",
+				"startWithActions": "Start with {count} actions"
+			},
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
 			"undo": "Undo",
@@ -666,7 +677,6 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"incomingReactions": {
-				"heading": "Options",
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
 				"rerolledBy": "Attack rerolled by {label}",
@@ -683,26 +693,43 @@
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"poolSpendNote": "{label}: +{amount} damage ({pool}: {faces})",
 				"useFailed": "That reaction could not be completed.",
-				"rerollWith": "Reroll with {feature}",
-				"changeWith": "Change the die with {feature}",
-				"critWith": "Make the attack a crit with {feature}",
 				"incapacitatedCause": "target {condition}",
 				"incapacitatedFeature": "Target {condition}",
-				"rerollAgain": "Reroll again with {feature}",
-				"rerollChoose": "Choose a feature to reroll with",
 				"rerollWithCost": "{label} ({cost})",
 				"verbs": {
 					"reroll": "Reroll",
-					"change": "Change die",
-					"crit": "Make crit"
+					"rerollAgain": "Reroll Again",
+					"change": "Change Die",
+					"crit": "Make It a Crit",
+					"result": "Change Result",
+					"succeed": "Succeed Instead",
+					"setTotal": "Change to {value}",
+					"add": "Add {amount}",
+					"anotherStat": "Reroll With Another Stat",
+					"noDamage": "No Damage",
+					"countsAsNat20": "Count as a Natural 20"
 				},
-				"verbCount": "{verb}: {count} features",
+				"resultChange": {
+					"succeeded": "Succeeded Instead",
+					"changed": "Changed {before} to {value}",
+					"added": "Added {amount}",
+					"addedWithWound": "Added {amount}, Gained 1 Wound",
+					"addedWithWounds": "Added {amount}, Gained {count} Wounds",
+					"sum": "{sum} = {total}",
+					"changedTo": "{from} changed to {to}",
+					"remove": "Remove",
+					"removeLine": "Remove: {line}",
+					"noDamage": "No Damage for {target}",
+					"countsAsNat20": "Counts as a Natural 20",
+					"countsAsNat20Sum": "Rolled {rolled}, counts as 20 {modifier}"
+				},
+				"changeThisRoll": {
+					"label": "Change This Roll",
+					"count": "({count})",
+					"withFeature": "with {feature}",
+					"sentence": "{verb} with {feature}"
+				},
 				"withNote": "{text}. {note}",
-				"rollMenu": {
-					"change": "Change a die",
-					"crit": "Make it a crit",
-					"choose": "Choose a feature to reroll or change the die"
-				},
 				"rerollHistoryPlain": "Rerolled with {feature}",
 				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
 				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
@@ -750,7 +777,11 @@
 					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
 					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
 					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
-					"offAction": "Feature Effects is off. Give the action by hand."
+					"offAction": "Feature Effects is off. Give the action by hand.",
+					"stat": "With {stat}",
+					"statTooltip": "{feature} rerolled with {stat} in place of the first stat.",
+					"cannotMiss": "Cannot miss",
+					"cannotMissTooltip": "With {feature}, the new attack cannot miss."
 				},
 				"keepResult": "Keep {total}",
 				"keepWaiting": "{name} keeps {old} or {new}.",
@@ -763,8 +794,9 @@
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",
 				"rerollWoundsGained": "Wounds gained: {count}",
-				"costWound": "{count} Wound",
-				"costWounds": "{count} Wounds",
+				"costUsesLeft": "{count} left",
+				"costWound": "Gain {count} Wound",
+				"costWounds": "Gain {count} Wounds",
 				"costHeroicReaction": "Heroic Reaction",
 				"costAction": "1 action",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
@@ -809,6 +841,10 @@
 					"lowest": "{value} (lowest)",
 					"highest": "{value} (highest)",
 					"confirm": "Set to {value}"
+				},
+				"rerollPickAStat": "Pick the stat to reroll with.",
+				"pickStat": {
+					"title": "Pick a stat to reroll with {feature}"
 				}
 			}
 		},
@@ -1554,6 +1590,7 @@
 			"attackOutcome": "Attack Outcome",
 			"chargeConsumer": "Charge Consumer",
 			"changeDie": "Change a Die",
+			"changeResult": "Change a Result",
 			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
 			"concentrationTrack": "Concentration Track",
@@ -2251,6 +2288,10 @@
 						"label": "What do creatures gain?",
 						"hint": "Creatures gain these each time the reroll is used."
 					}
+				},
+				"cannotFail": {
+					"label": "Cannot fail",
+					"hint": "On a save or a check, the new roll succeeds, with no choice of result. On an attack, the new roll cannot miss, and it is a crit only if the die makes it a crit. It counts on each use that is clicked."
 				}
 			},
 			"modifyToggle": {
@@ -2498,7 +2539,7 @@
 				}
 			},
 			"attackOutcome": {
-				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make crit button on the card.",
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
 				"form": {
 					"changes": "What changes?",
 					"onlyAttacks": "On which attacks?",
@@ -2622,9 +2663,51 @@
 				"chargeCost": {
 					"hint": "How many charges one use takes from the pool."
 				},
-				"oncePerAttack": {
-					"label": "Only once per attack",
-					"hint": "The feature can change a die of the same attack only once, even with uses left."
+				"oncePerRoll": {
+					"label": "Only once per roll",
+					"hint": "The feature can change a die of the same attack, save or check only once, even with uses left."
+				}
+			},
+			"changeResult": {
+				"description": "Changes the result of a roll after it is made: a save, a check or Initiative succeeds, its total becomes a formula, or a formula goes on its total. A target can take no damage from an attack. A low result can count as a natural 20 by itself. The player can take a clicked change back and gets its uses, Mana and Wounds back.",
+				"rolls": {
+					"label": "Which roll can it change?",
+					"choices": {
+						"initiative": "Initiative"
+					}
+				},
+				"change": {
+					"label": "How does it change the result?",
+					"hint": "The roll on the card stays what the dice gave. A reroll takes a change of a total or a success off, and its cost stays paid. No damage needs Attack as the roll and The target as who can use it. A natural 20 is for saves and skill checks, costs nothing and needs no click; with Feature Effects off it is a row.",
+					"choices": {
+						"succeed": "It succeeds",
+						"setTotal": "Set the total to a formula",
+						"add": "Add a formula to the total",
+						"noDamage": "The target takes no damage",
+						"countsAsNat20": "A result of 1 or less counts as a natural 20"
+					}
+				},
+				"formula": {
+					"label": "Formula",
+					"hint": "A number or a formula with no dice, read from the one who rolled, such as 10+@intelligence or @strength. A formula that is only one stat shows that stat on the row, such as Add +3 STR."
+				},
+				"onlyIfLower": {
+					"label": "Only if the total is lower",
+					"hint": "The row shows only when the total on the card is below the formula's value."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The row does not show when the pool is empty."
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"outcome": {
+					"label": "The first roll is",
+					"hint": "With A failed roll, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell.",
+					"choices": {
+						"failed": "A failed roll",
+						"always": "Any result"
+					}
 				}
 			},
 			"primaryDieBonus": {
@@ -2707,13 +2790,14 @@
 				},
 				"outcome": {
 					"label": "The first roll is",
-					"hint": "A hit includes a crit.",
+					"hint": "A hit includes a crit. A failed roll is a miss on an attack. On a save or a check, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell. The other choices are for attacks only.",
 					"choices": {
 						"always": "Any result",
 						"hit": "A hit",
 						"criticalHit": "A crit",
 						"nonCriticalHit": "A hit that is not a crit",
-						"miss": "A miss"
+						"miss": "A miss",
+						"failed": "A failed roll"
 					}
 				},
 				"attackDelivery": {
@@ -2793,9 +2877,20 @@
 						"one": "1 action"
 					}
 				},
-				"oncePerAttack": {
-					"label": "Only once per attack",
-					"hint": "The feature can reroll the same attack only once, even with uses left."
+				"oncePerRoll": {
+					"label": "Only once per roll",
+					"hint": "The feature can reroll the same attack, save or check only once, even with uses left."
+				},
+				"relatedStat": {
+					"label": "Related to a stat",
+					"hint": "Limits the rule to the save of that stat, the skills of that stat, the ability check of that stat, and an attack whose formula has that stat.",
+					"choices": {
+						"any": "Any stat"
+					}
+				},
+				"useAnotherStat": {
+					"label": "Use another stat",
+					"hint": "A click on the row shows the other three stats, and the player picks one for the new roll. On a save it uses that stat's save modifier. On a skill check it swaps the stat part and keeps the other bonuses. On an attack it swaps the stat in the formula; an attack with no stat in its formula gets no row."
 				}
 			}
 		},
@@ -3819,7 +3914,9 @@
 			"flat": "{label} (-{value})",
 			"flatGeneric": "damage reduction (-{value})",
 			"banked": "damage reduction (-{value})",
-			"bankedSource": "{source} (-{value})"
+			"bankedSource": "{source} (-{value})",
+			"badgeNoDamage": "No Damage",
+			"noDamage": "This target takes no damage from this attack, with {source}."
 		},
 		"chatEffects": {
 			"noEffect": "No Effect"
@@ -3874,6 +3971,7 @@
 				"self": "The one who uses it (given by itself)"
 			},
 			"customSaveDC": "Custom Save DC",
+			"customSaveDCHint": "A number or a formula against the data of the creature that uses this. When empty, a hero uses 10+@key and a monster has no DC.",
 			"sharedRolls": "Shared Rolls",
 			"none": "None",
 			"statusCondition": "Status Condition",

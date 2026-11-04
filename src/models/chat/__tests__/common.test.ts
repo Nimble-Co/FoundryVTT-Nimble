@@ -8,6 +8,7 @@ import type {
 import {
 	grantedActionOffers,
 	incomingReactions,
+	migrateIncomingReactions,
 	movementOffers,
 	rerollHistory,
 } from '../common.js';
@@ -121,10 +122,11 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			itemUuid: 'Actor.a.Item.i',
 			used: false,
 			side: 'target',
-			oncePerAttack: false,
+			oncePerRoll: false,
 			use: 'change',
 			needsDieAtMax: false,
 			hint: 'Your 2nd miss this round',
+			anotherStat: false,
 			rerollTrigger: 'always',
 			rerollWithDisadvantage: false,
 			outcomeTrigger: 'always',
@@ -163,6 +165,8 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 			automatic: true,
 			use: 'change',
 			change: { mode: 'add', value: 1 },
+			stat: 'dexterity',
+			cannotMissBy: 'A feature',
 		};
 		expect(Object.keys(rerollFields()).sort()).toEqual(Object.keys(record).sort());
 		const die = (rerollFields().previous as { fields: Fields }).fields;
@@ -191,5 +195,27 @@ describe('incomingReactions and rerollHistory schema factories', () => {
 		expect(
 			(rerollHistory().rerolls as unknown as { options: { initial: unknown } }).options.initial,
 		).toEqual([]);
+	});
+});
+
+describe('migrateIncomingReactions', () => {
+	it('gives a row of an old card its once-per-roll limit under the new name', () => {
+		const source = {
+			incomingReactions: [
+				{ id: 'old', oncePerAttack: true },
+				{ id: 'new', oncePerRoll: false },
+			],
+		};
+		migrateIncomingReactions(source);
+		expect(source.incomingReactions).toEqual([
+			{ id: 'old', oncePerRoll: true },
+			{ id: 'new', oncePerRoll: false },
+		]);
+	});
+
+	it('does nothing to a card with no rows', () => {
+		const source = { dc: 12 };
+		migrateIncomingReactions(source);
+		expect(source).toEqual({ dc: 12 });
 	});
 });

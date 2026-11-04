@@ -2,7 +2,7 @@ import type { SaveKeyType } from '#types/saveKey.d.ts';
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
 import localize from '../utils/localize.js';
 
-async function rollSavingThrowForSelectedTokens(saveKey: SaveKeyType) {
+async function rollSavingThrowForSelectedTokens(saveKey: SaveKeyType, dc: number | null) {
 	const actors = (canvas?.tokens?.controlled ?? [])
 		.map((token) => token.actor as NimbleBaseActor | null)
 		.filter((actor) => actor !== null);
@@ -12,7 +12,7 @@ async function rollSavingThrowForSelectedTokens(saveKey: SaveKeyType) {
 		return;
 	}
 
-	for (const actor of actors) await actor.rollSavingThrowToChat(saveKey);
+	for (const actor of actors) await actor.rollSavingThrowToChat(saveKey, { dc });
 }
 
 function onClick(event: MouseEvent) {
@@ -23,7 +23,10 @@ function onClick(event: MouseEvent) {
 	if (!saveKey) return;
 
 	event.preventDefault();
-	void rollSavingThrowForSelectedTokens(saveKey);
+	void rollSavingThrowForSelectedTokens(
+		saveKey,
+		button?.dataset.dc ? Number(button.dataset.dc) : null,
+	);
 }
 
 export default function activateEnricherListeners() {

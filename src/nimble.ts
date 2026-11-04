@@ -35,6 +35,7 @@ import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
+import { registerSaveResolvedHooks } from './hooks/saveResolved.js';
 import setup from './hooks/setup.js';
 import registerModuleIntegrations from './integrations/index.js';
 import { runDevFlagRebrandPreInit } from './migration/devFlagRebrand.js';
@@ -159,6 +160,7 @@ registerArmedMovementOfferIndex();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
 registerRuleEventDispatch();
+registerSaveResolvedHooks();
 registerModuleIntegrations();
 
 // Refresh tokens when combat ends to remove turn indicators

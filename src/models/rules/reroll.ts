@@ -5,9 +5,9 @@ import {
 	type RerollKeep,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
-import type { RerollRollKind } from '../../utils/reroll/rollToReroll.js';
+import type { RollUseKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
-import { choiceLabels, RollUseRule } from './_rollUseRule.js';
+import { choiceLabels, type RollUseContext, RollUseRule } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -16,7 +16,12 @@ const CRIT_OUTCOMES = new Set(['always', 'hit', 'criticalHit']);
 
 // A reroll that needs a choice from someone can never happen by itself.
 function nobodyChooses(data: Record<string, unknown>): boolean {
-	return data.usedBy !== 'ally' && data.die !== 'pickedDie' && (data.keep ?? 'new') === 'new';
+	return (
+		data.usedBy !== 'ally' &&
+		data.die !== 'pickedDie' &&
+		(data.keep ?? 'new') === 'new' &&
+		data.useAnotherStat !== true
+	);
 }
 
 const forAttacks = (data: Record<string, unknown>) =>
@@ -40,6 +45,7 @@ function schema() {
 
 	return {
 		...shared.roll,
+		...shared.related,
 		die: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -56,6 +62,16 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.keep.label',
 			hint: 'NIMBLE.rules.reroll.keep.hint',
 		}),
+		useAnotherStat: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.reroll.useAnotherStat.label',
+				hint: 'NIMBLE.rules.reroll.useAnotherStat.hint',
+				showWhen: wholeRoll,
+			}),
+		),
 		...shared.when,
 		...shared.cost,
 		rollModeChange: new fields.NumberField(
@@ -134,8 +150,8 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.reroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [
-		RollUseRule.rollFormGroup(),
-		...RollUseRule.useFormGroups([{ fields: ['die', 'keep'] }]),
+		RollUseRule.rollFormGroup(['relatedStat']),
+		...RollUseRule.useFormGroups([{ fields: ['die', 'keep', 'useAnotherStat'] }]),
 		{
 			label: 'NIMBLE.rules.reroll.form.changes.label',
 			hint: 'NIMBLE.rules.reroll.form.changes.hint',
@@ -152,6 +168,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 	declare extraDamage: string;
 	declare die: RerollDie;
 	declare keep: RerollKeep;
+	declare useAnotherStat: boolean;
 
 	static override defineSchema(): RerollRule.Schema {
 		return {
@@ -164,6 +181,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				...RollUseRule.rollUseTooltipTypes(),
+				['relatedStat', 'string'],
 				['automatic', 'boolean'],
 				['discardedCritTriggers', 'boolean'],
 				['rollModeChange', 'number'],
@@ -171,6 +189,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 				['extraDamage', 'string'],
 				['die', 'string'],
 				['keep', 'string'],
+				['useAnotherStat', 'boolean'],
 			]),
 		);
 	}
@@ -180,11 +199,22 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		return this.automatic === true && nobodyChooses(this as unknown as Record<string, unknown>);
 	}
 
+	/** Whether the player picks another stat for the new roll. Only a whole roll has a stat part. */
+	get usesAnotherStat(): boolean {
+		return this.useAnotherStat === true && (this.die ?? 'wholeRoll') === 'wholeRoll';
+	}
+
+	override offersUseOn(context: RollUseContext): boolean {
+		if (!super.offersUseOn(context)) return false;
+		const { roll } = context;
+		return !this.usesAnotherStat || roll.kind !== 'attack' || (roll.stats?.length ?? 0) > 0;
+	}
+
 	/**
 	 * The changes this rule adds to the new roll. Extra damage reads this
 	 * rule's actor. Only an attack gets the attack changes.
 	 */
-	rerollChanges(kind: RerollRollKind): RerollChanges {
+	rerollChanges(kind: RollUseKind): RerollChanges {
 		if ((this.die ?? 'wholeRoll') !== 'wholeRoll') {
 			return { rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' };
 		}

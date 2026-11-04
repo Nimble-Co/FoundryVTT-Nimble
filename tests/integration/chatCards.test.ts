@@ -90,7 +90,7 @@ describe('chat message cards', () => {
 		}
 	});
 
-	test('roll cards: abilityCheck, savingThrow, skillCheck', async () => {
+	test('roll cards: abilityCheck, savingThrow, skillCheck, initiative', async () => {
 		actor = (await Actor.create({ name: TEST_ACTOR_NAME, type: 'character' }))!;
 
 		await expectCardRendered(
@@ -104,6 +104,10 @@ describe('chat message cards', () => {
 		await expectCardRendered(
 			await (actor as any).rollSkillCheckToChat('perception', { skipRollDialog: true }),
 			'skillCheck',
+		);
+		await expectCardRendered(
+			await (actor as any).rollInitiativeToChat({ skipRollDialog: true }),
+			'initiative',
 		);
 	}, 60_000);
 

@@ -5,6 +5,7 @@ import NimbleAssessActionCard from '../view/chat/AssessActionCard.svelte';
 import NimbleChargeAdjustmentCard from '../view/chat/ChargeAdjustmentCard.svelte';
 import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
 import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
+import NimbleInitiativeCard from '../view/chat/InitiativeCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
 import NimbleMinionGroupAttackCard from '../view/chat/MinionGroupAttackCard.svelte';
 import NimbleMoveActionCard from '../view/chat/MoveActionCard.svelte';
@@ -98,6 +99,7 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleObjectCard
 		| typeof NimbleFeatureCard
 		| typeof NimbleFieldRestCard
+		| typeof NimbleInitiativeCard
 		| typeof NimbleMoveActionCard
 		| typeof NimbleMovementOfferCard
 		| typeof NimbleMovementTriggerCard
@@ -124,6 +126,9 @@ export default function renderChatMessageHTML(message, html) {
 			break;
 		case 'fieldRest':
 			component = NimbleFieldRestCard;
+			break;
+		case 'initiative':
+			component = NimbleInitiativeCard;
 			break;
 		case 'object':
 			component = NimbleObjectCard;

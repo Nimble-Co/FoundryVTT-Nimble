@@ -325,9 +325,9 @@ describe('rerollAgainRecords', () => {
 });
 
 describe('"Reroll again" for a once-per-attack rule', () => {
-	function pendingAfterReroll(oncePerAttack: boolean) {
-		const used = entry({ id: 'used', used: true, oncePerAttack });
-		const entries = withNewRerollEntries([used], [entry({ id: 'new', oncePerAttack })]);
+	function pendingAfterReroll(oncePerRoll: boolean) {
+		const used = entry({ id: 'used', used: true, oncePerRoll });
+		const entries = withNewRerollEntries([used], [entry({ id: 'new', oncePerRoll })]);
 		return entries.filter((candidate) => !candidate.used);
 	}
 

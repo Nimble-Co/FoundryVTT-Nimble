@@ -10,6 +10,7 @@
 			"name": "+1 Max Combat Die"
 		},
 		"A People Person": {
+			"description": "<p>You've met many people in your travels; some have even agreed to come to your aid should you need it. Choose 2 friends you know: you can temporarily summon them via song (1/Safe Rest each).</p>",
 			"name": "A People Person"
 		},
 		"Abhorrent Speech": {
@@ -141,7 +142,12 @@
 		},
 		"Beguiling Influence": {
 			"description": "<p>(1/day) You may reroll an Influence check.</p>",
-			"name": "Beguiling Influence"
+			"name": "Beguiling Influence",
+			"rules": {
+				"GDYnjVhtzNdh9YzW": {
+					"label": "Beguiling Influence (1/Safe Rest)"
+				}
+			}
 		},
 		"Blazing Speed": {
 			"description": "<p>Gain +2 speed while using Windstep. After you cease movement with Windstep, enemies you passed through take STR+DEX fire damage. You may have Smoldering enemies take double, ending the condition.</p>",
@@ -165,7 +171,12 @@
 		},
 		"Blood Sight": {
 			"description": "<p>(1/day) You may reroll an Examination check. Additionally, you can detect traces of blood on a surface, even after it has been cleaned.</p>",
-			"name": "Blood Sight"
+			"name": "Blood Sight",
+			"rules": {
+				"xWhxCrLYXis3Ia61": {
+					"label": "Blood Sight (1/Safe Rest)"
+				}
+			}
 		},
 		"Bloodlust": {
 			"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>",
@@ -216,7 +227,21 @@
 		},
 		"Bring the Pain": {
 			"description": "<p>(1/round) You may turn any melee attack against you into a crit. Whenever you are crit, reduce the damage by half. The attacker takes the same amount of damage you took (ignoring armor). You may suffer 1 Wound to double the damage the enemy takes.</p>",
-			"name": "Bring the Pain"
+			"name": "Bring the Pain",
+			"rules": {
+				"CeQ4Kxcng0Bc4J0S": {
+					"label": "Bring the Pain (1/round)"
+				},
+				"fAvRAbLBKktaoyPE": {
+					"label": "Bring the Pain"
+				},
+				"l5Qs4BESH8O0oEtv": {
+					"label": "Bring the Pain"
+				},
+				"xG4hNc7RqT2mWk9D": {
+					"label": "Bring the Pain"
+				}
+			}
 		},
 		"Burning Soul": {
 			"description": "<p>Double any fire damage you deal.</p>",
@@ -235,12 +260,41 @@
 			"name": "Chain Reaction"
 		},
 		"Chaos Lash": {
+			"costDetails": "when an enemy moves adjacent to you",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
-			"name": "Chaos Lash"
+			"name": "Chaos Lash",
+			"rules": {
+				"chaos-lash-trigger": {
+					"label": "Chaos Lash"
+				},
+				"chaos-lash-use-pool": {
+					"label": "Chaos Lash use"
+				}
+			}
 		},
 		"Cheat!": {
 			"description": "<p>You're a well–rounded cheater. Gain the following abilities:</p><p>• <em>(1/round)</em> You may either Move or Hide for free. </p><p>• (1/day) You may change any skill check to 10+INT. </p><p>• If you roll less than 10 on Initiative, you may change it to 10 instead.</p><p>• You may gain advantage on skill checks while playing any games, competitions, or placing wagers. If you're caught though… </p>",
-			"name": "Cheat!"
+			"name": "Cheat!",
+			"rules": {
+				"3dT1X6L8FsDqVgdo": {
+					"label": "Free Move or Hide (1/round)"
+				},
+				"Bl3K1BHzBF6U2uJf": {
+					"label": "Cheat!"
+				},
+				"hpY3i8MUHqyyXeef": {
+					"label": "Cheat!"
+				},
+				"IcKe27NHzAsdT0T0": {
+					"label": "Playing a game, competing, or placing a wager"
+				},
+				"mih21mwjz6ehjN61": {
+					"label": "Cheat!: 10+INT skill check (1/Safe Rest)"
+				},
+				"zEpqjsJl49AcfRyH": {
+					"label": "Free Move or Hide"
+				}
+			}
 		},
 		"Chord of Chaos": {
 			"description": "<p>(1/encounter) Action: You may move ALL creatures within hearing of your song up to 3 spaces as long as they do not move into an obviously dangerous place.</p>",
@@ -248,7 +302,18 @@
 		},
 		"Chorus of Champions": {
 			"description": "<p><em>(1/encounter)</em> <strong>Free Reaction</strong>: Give all party members 1 action.</p>",
-			"name": "Chorus of Champions"
+			"name": "Chorus of Champions",
+			"rules": {
+				"o0rWADa7dscg4q66": {
+					"label": "Chorus of Champions"
+				},
+				"oVuhOT9lfMaJyHTq": {
+					"label": "Chorus of Champions"
+				},
+				"rwu9fnvv1Zt3eSqc": {
+					"label": "Chorus of Champions (1/encounter)"
+				}
+			}
 		},
 		"Climber": {
 			"description": "<p>Can walk across walls and ceilings; ignores difficult terrain.</p>",
@@ -290,6 +355,9 @@
 			"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
 			"name": "Coordinated Strike!",
 			"rules": {
+				"coordinated-strike-advance-free-move": {
+					"label": "Advance!"
+				},
 				"coordinated-strike-ally-attack": {
 					"label": "Coordinated Strike"
 				},
@@ -356,7 +424,18 @@
 		},
 		"Deathbringer's Touch": {
 			"description": "<p>Your first melee attack each round against a Bloodied creature is an automatic critical hit. Your Lifebinding Spirit deals additional damage equal to your STR.</p>",
-			"name": "Deathbringer's Touch"
+			"name": "Deathbringer's Touch",
+			"rules": {
+				"bP8wGf3SrZ6nVa1J": {
+					"label": "Deathbringer's Touch: Lifebinding Spirit"
+				},
+				"F9Kwl2GVpi4DGehy": {
+					"label": "Deathbringer's Touch"
+				},
+				"s3SVWInS9sbuvsKC": {
+					"label": "Deathbringer's Touch (1/round)"
+				}
+			}
 		},
 		"Deathless Rage": {
 			"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
@@ -514,7 +593,12 @@
 		},
 		"Ethereal Projection": {
 			"description": "<p>(1/day) By meditating for at least 10 minutes, you can project an ethereal version of yourself up to 30 ft. away, passing through solid objects or barriers. You see through your projection's eyes, and it is visible to other creatures as a translucent version of yourself. It cannot interact physically with the environment but can move freely within the distance limit and lasts for up to 10 minutes.</p>",
-			"name": "Ethereal Projection"
+			"name": "Ethereal Projection",
+			"rules": {
+				"oC9XGyyteDByPTkd": {
+					"label": "Ethereal Projection (1/Safe Rest)"
+				}
+			}
 		},
 		"Experienced Commander.": {
 			"description": "<p>Your Coordinated Strike may target 1 additional ally. Gain +1 use of Coordinated Strike/Safe Rest.</p>",
@@ -540,7 +624,12 @@
 		},
 		"Exploit Weakness": {
 			"description": "<p>Action: Make a contested INT check against an enemy. If you win, you can use Vicious Opportunist against them, even if they are not Distracted. This lasts for 1 minute or until you use this ability against another target. </p>",
-			"name": "Exploit Weakness"
+			"name": "Exploit Weakness",
+			"rules": {
+				"5Xb6IGjRFlB8K4SB": {
+					"label": "Exploit Weakness"
+				}
+			}
 		},
 		"Explorer of the Wilds": {
 			"description": "<p>+2 speed; gain a climbing speed.</p>",
@@ -584,7 +673,15 @@
 		},
 		"Feinting Attack": {
 			"description": "<p>If you miss for the 2nd time in a single round, you may change the primary die roll to any result instead. </p>",
-			"name": "Feinting Attack"
+			"name": "Feinting Attack",
+			"rules": {
+				"hD0YqPJG3dHETk9y": {
+					"label": "Feinting Attack"
+				},
+				"ss6MY4JTCKmO4MjC": {
+					"label": "Feinting Attack (1/round)"
+				}
+			}
 		},
 		"Field Medic": {
 			"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>",
@@ -609,7 +706,12 @@
 		},
 		"Fire in my Bones": {
 			"description": "<p>Your Songweaver's Inspiration also grants your target 1 additional action.</p>",
-			"name": "Fire in my Bones"
+			"name": "Fire in my Bones",
+			"rules": {
+				"6rJVNCnwFNiKH5D1": {
+					"label": "Fire in my Bones: +1 action for the one who rolled"
+				}
+			}
 		},
 		"Firebrand": {
 			"description": "<p>When you roll Initiative you may cast Enchant Weapon for free (can be upcast as normal by spending additional mana).</p>",
@@ -670,7 +772,12 @@
 		},
 		"Forager": {
 			"description": "<p>Gain advantage on skill checks to find food and water in the wild.</p>",
-			"name": "Forager"
+			"name": "Forager",
+			"rules": {
+				"9jrjpKpM5T57Wa7r": {
+					"label": "Finding food and water in the wild"
+				}
+			}
 		},
 		"Force of Chaos": {
 			"description": "<p>Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p>",
@@ -689,6 +796,7 @@
 			"name": "Gaze of Two Minds"
 		},
 		"Gift from the Master": {
+			"description": "<p>Choose 1 Greater Shadow Invocation.</p><hr><p>Level 6: Choose a 2nd Greater Shadow Invocation.</p><p>Level 9: Choose a 3rd Greater Shadow Invocation.</p><p>Level 14: Choose a 4th Greater Shadow Invocation.</p><p>Level 18: Choose a 5th Greater Shadow Invocation.</p>",
 			"name": "Gift from the Master"
 		},
 		"Glacial Resilience": {
@@ -709,7 +817,12 @@
 		},
 		"Gran Gran (NOT a hag)": {
 			"description": "<p>When resting, you may summon her for 1 hour to soothe your wounds (and hassle you for not eating enough). She bakes and hands out pastries equal to your WIL+INT. Eating one recovers one mana, Hit Die, or Wound. Eat them while they're warm! They expire in 10 minutes.</p>",
-			"name": "Gran Gran (NOT a hag)"
+			"name": "Gran Gran (NOT a hag)",
+			"rules": {
+				"2VLypaGH3xEXkYTI": {
+					"label": "Gran Gran (1/Safe Rest)"
+				}
+			}
 		},
 		"Grease Trap": {
 			"costDetails": "Enemy moves adjacent to you",
@@ -747,7 +860,18 @@
 		"Heads I Win, Tails You Lose": {
 			"costDetails": "1 Use",
 			"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
-			"name": "Heads I Win, Tails You Lose"
+			"name": "Heads I Win, Tails You Lose",
+			"rules": {
+				"2i7Yf6hCi1N9nB93": {
+					"label": "Heads I Win, Tails You Lose"
+				},
+				"QXFhwkP6x084VaKU": {
+					"label": "Heads I Win, Tails You Lose"
+				},
+				"YwEYD5uLtdIlEv9g": {
+					"label": "Heads I Win, Tails You Lose (1/encounter)"
+				}
+			}
 		},
 		"Healing Salve": {
 			"description": "<p>Action: Heal yourself or an adjacent creature WIL d6 HP. Only you or another experienced Herbalist may administer these, and they expire whenever you Safe Rest.</p>",
@@ -772,7 +896,15 @@
 		},
 		"Heroic Ballad": {
 			"description": "<p>+2 max Songweaver's Inspiration charges. When used to reroll an ally's attack, your Songweaver's Inspiration also grants them +WIL damage on the attack.</p>",
-			"name": "Heroic Ballad"
+			"name": "Heroic Ballad",
+			"rules": {
+				"3sarD7NY2XSbU6Ws": {
+					"label": "Heroic Ballad: +WIL damage on a rerolled attack"
+				},
+				"WsahvMpr5UZttmr1": {
+					"label": "Heroic Ballad: +2 max Songweaver's Inspiration charges"
+				}
+			}
 		},
 		"Hold the Line!": {
 			"costDetails": "when an ally drops to 0 HP",
@@ -840,7 +972,12 @@
 		"I'm So Famous!": {
 			"costDetails": "An ally makes a roll",
 			"description": "<p>+1 to any 2 of your stats. Your Songweaver's Inspiration cannot fail (your target succeeds).</p>",
-			"name": "I'm So Famous!"
+			"name": "I'm So Famous!",
+			"rules": {
+				"5fElW6xNozwt69SJ": {
+					"label": "I'm So Famous!: Songweaver's Inspiration cannot fail"
+				}
+			}
 		},
 		"I'm the Patron Now!": {
 			"description": "<p>Summon 2 shadow minions for free when you roll Initiative.</p>",
@@ -870,6 +1007,10 @@
 			"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon, add WIL d8 fire damage.</p>",
 			"name": "Incendiary Shot"
 		},
+		"Inerrant Strike": {
+			"description": "<p>Reroll a missed attack, add 1 to the Primary Die, and deal extra damage equal to a roll of your Combat Die.</p>",
+			"name": "Inerrant Strike"
+		},
 		"Inerrant Strike.": {
 			"description": "<p>Reroll a missed attack, add 1 to the Primary Die, and deal extra damage equal to a roll of your Combat Die.</p>",
 			"name": "Inerrant Strike."
@@ -880,11 +1021,24 @@
 		},
 		"Inspiring Anthem": {
 			"description": "<p>(1/encounter) Action: Grant all friendly Dying creatures who can hear you 1 HP and 1 action.</p>",
-			"name": "Inspiring Anthem"
+			"name": "Inspiring Anthem",
+			"rules": {
+				"inspiring-anthem-action": {
+					"label": "Inspiring Anthem"
+				},
+				"inspiring-anthem-encounter-pool": {
+					"label": "Inspiring Anthem (1/encounter)"
+				}
+			}
 		},
 		"Inspiring Presence": {
 			"description": "<p>Whenever you use Songweaver's Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p>",
-			"name": "Inspiring Presence"
+			"name": "Inspiring Presence",
+			"rules": {
+				"twYeLI5LqpF3fUsS": {
+					"label": "Inspiring Presence: WIL temp HP to allies within 12 spaces"
+				}
+			}
 		},
 		"Intensifying Fury": {
 			"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Your Fury Dice are now d6s</p><p>Level 9: Your Fury Dice are now d8s</p><p>Level 13: Your Fury Dice are now d10s</p><p>Level 17: Your Fury Dice are now d12s</p>",
@@ -952,7 +1106,12 @@
 		},
 		"Keen Sight": {
 			"description": "<p>Advantage on Perception checks.</p>",
-			"name": "Keen Sight"
+			"name": "Keen Sight",
+			"rules": {
+				"6QGM2txygKfA7mpY": {
+					"label": "Keen Sight"
+				}
+			}
 		},
 		"Keeper of Life & Death": {
 			"description": "<p>You know Radiant and Necrotic cantrips.</p>",
@@ -972,7 +1131,12 @@
 		},
 		"Knowledge from Beyond": {
 			"description": "<p>Whenever you fail an Insight or Arcana check, you may suffer 1 Wound to succeed instead.</p>",
-			"name": "Knowledge from Beyond"
+			"name": "Knowledge from Beyond",
+			"rules": {
+				"vYi8Br93KP1oNgm1": {
+					"label": "Knowledge from Beyond"
+				}
+			}
 		},
 		"Large - Alpha Protector": {
 			"description": "<p>Damage from the first attack against you each round is halved.</p>",
@@ -1022,7 +1186,12 @@
 		},
 		"Linos, the Everfriendly": {
 			"description": "<p>Summon a legendary flying (but friendly) creature to take you and your party wherever you need to go. He may request a very large amount of food as payment.</p>",
-			"name": "Linos, the Everfriendly"
+			"name": "Linos, the Everfriendly",
+			"rules": {
+				"eHJc9uFX6uiWsM7z": {
+					"label": "Linos (1/Safe Rest)"
+				}
+			}
 		},
 		"Low Blow": {
 			"description": "<p>When you Sneak Attack, you may spend 2 additional actions to Incapacitate your target for their next turn on a failed STR save (DC 10+INT). Save or fail, they are Taunted by you until you drop to 0 HP. </p>",
@@ -1033,11 +1202,23 @@
 			"name": "Lunging Strike"
 		},
 		"Lyrical Weaponry": {
+			"description": "<p>Choose 1 ability from the Lyrical Weaponry list.</p><hr><p>Level 9: Choose a 2nd ability from the Lyrical Weaponry list.</p><p>Level 13: Choose a 3rd ability from the Lyrical Weaponry list.</p><p>Level 17: Choose a 4th ability from the Lyrical Weaponry list.</p>",
 			"name": "Lyrical Weaponry"
 		},
 		"Mal, the Malevolent Imp": {
 			"description": "<p>Summon a tiny fiend for 1 night. He can find out dangerous information you have no right to know! Or “take care” of a problem with only the slightest chance of things going wrong. Make an Influence check to convince him to help you (advantage if you ask him to do something he would find mischievous or fun; with disadvantage if it is something he would find good or menial).</p>",
-			"name": "Mal, the Malevolent Imp"
+			"name": "Mal, the Malevolent Imp",
+			"rules": {
+				"AAZ7pMGQy4wSDIQW": {
+					"label": "Mal (1/Safe Rest)"
+				},
+				"GfWNqmSyh3ljqYGQ": {
+					"label": "Asking Mal for something good or menial"
+				},
+				"wpfu7QzwM3ZOYTvB": {
+					"label": "Asking Mal for something mischievous or fun"
+				}
+			}
 		},
 		"Mana and Radiant Spellcasting": {
 			"description": "<p>You know Radiant cantrips, tier 1 Radiant spells, and gain a mana pool. Your mana pool is equal to WIL + LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2 Spells. You may now cast tier 2 spells and upcast spells at tier 2.</p><p>Level 6: Tier 3 Spells. You may now cast tier 3 spells and upcast spells at tier 3.</p><p>Level 8: Tier 4 Spells. You may now cast tier 4 spells and upcast spells at tier 4.</p><p>Level 10: Tier 5 Spells. You may now cast tier 5 spells and upcast spells at tier 5.</p><p>Level 13: Tier 6 Spells. You may now cast tier 6 spells and upcast spells at tier 6.</p><p>Level 17: Tier 7 Spells. You may now cast tier 7 spells and upcast spells at tier 7.</p>",
@@ -1048,6 +1229,7 @@
 			"name": "Mana and Unlock Tier 1 Spells"
 		},
 		"Martial Arts Ability": {
+			"description": "<p>Choose a Martial Arts Ability.</p><hr><p>Level 6: Choose a 2nd Martial Arts Ability.</p><p>Level 8: Choose a 3rd Martial Arts Ability.</p><p>Level 10: Choose a 4th Martial Arts Ability.</p><p>Level 12: Choose a 5th Martial Arts Ability.</p><p>Level 14: Choose a 6th Martial Arts Ability.</p><p>Level 16: Choose a 7th Martial Arts Ability.</p><p>Level 18: Choose an 8th Martial Arts Ability.</p>",
 			"name": "Martial Arts Ability"
 		},
 		"Martyr Spawn": {
@@ -1094,11 +1276,24 @@
 		},
 		"Master of Radiance": {
 			"description": "<p>Choose 1 Radiant Utility Spell.</p><hr><p>Level 11: Choose a 2nd Radiant Utility Spell</p>",
-			"name": "Master of Radiance"
+			"name": "Master of Radiance",
+			"rules": {
+				"master-radiance-radiant-l11": {
+					"label": "Master of Radiance (2): Radiant Utility Spell"
+				},
+				"master-radiance-radiant-l7": {
+					"label": "Master of Radiance: Radiant Utility Spell"
+				}
+			}
 		},
 		"Master of Storm": {
 			"description": "<p>You can concentrate on 1 lightning spell and 1 wind spell at the same time. (1/Safe Rest) You can cast Ride the Lightning for 0 mana.</p>",
-			"name": "Master of Storm"
+			"name": "Master of Storm",
+			"rules": {
+				"master-of-storm-concentration-tracks": {
+					"label": "Master of Storm: lightning and wind concentrate separately"
+				}
+			}
 		},
 		"Master of Storms": {
 			"description": "<p>You know cantrips from the Lightning and Wind schools.</p>",
@@ -1158,7 +1353,12 @@
 		},
 		"Mighty Soul": {
 			"description": "<p>You cannot be moved against your will. Whenever you would fail a saving throw, you may gain a Wound in order to add your STR to the result you rolled. You may repeat this any number of times.</p>",
-			"name": "Mighty Soul"
+			"name": "Mighty Soul",
+			"rules": {
+				"ySP1fwHfTNcx5yzg": {
+					"label": "Mighty Soul"
+				}
+			}
 		},
 		"Misdirection": {
 			"description": "<p>Gain INT armor. </p><p>Whenever you Defend, you may halve the damage instead. </p>",
@@ -1200,7 +1400,12 @@
 		},
 		"My Life, for My Friends": {
 			"description": "<p>You can Interpose for free.</p>",
-			"name": "My Life, for My Friends"
+			"name": "My Life, for My Friends",
+			"rules": {
+				"o4qFJ7V9yf2E7Qrl": {
+					"label": "My Life, for My Friends"
+				}
+			}
 		},
 		"Nemesis": {
 			"description": "<p>+1 to any 2 of your stats. Your Hunter's Mark can target any number of creatures simultaneously.</p>",
@@ -1276,7 +1481,15 @@
 		},
 		"Paragon of Virtue": {
 			"description": "<p>Advantage on Influence checks to convince someone when you are forthrightly telling the truth, disadvantage when misleading.</p>",
-			"name": "Paragon of Virtue"
+			"name": "Paragon of Virtue",
+			"rules": {
+				"J7Fuc9p4b5DK318m": {
+					"label": "Misleading"
+				},
+				"KVe65ndJ6XU7BU8u": {
+					"label": "Forthrightly telling the truth"
+				}
+			}
 		},
 		"Peerless Hunter": {
 			"description": "<p>You can Defend against your quarry for free.</p>",
@@ -1315,7 +1528,12 @@
 		"Pocket Sand": {
 			"costDetails": "1 Use",
 			"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
-			"name": "Pocket Sand"
+			"name": "Pocket Sand",
+			"rules": {
+				"MVE6XSpb5pjS6tzS": {
+					"label": "Pocket Sand (2/encounter)"
+				}
+			}
 		},
 		"Powerful Healer": {
 			"description": "<p>(WIL times/Safe Rest) Whenever you would roll dice to heal damage, you may instead heal the max amount you could roll, or give that many temp HP.</p>",
@@ -1356,11 +1574,24 @@
 		"Quick Wit": {
 			"costDetails": "An ally makes a roll",
 			"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver's Inspiration (these expire at the end of combat if left unused).</p>",
-			"name": "Quick Wit"
+			"name": "Quick Wit",
+			"rules": {
+				"nskpz8ZTiVDUmFTE": {
+					"label": "Quick Wit: regain 2 uses of Songweaver's Inspiration on Initiative"
+				}
+			}
 		},
 		"Quickstrike": {
 			"description": "<p>When you Interpose, you may first make an unarmed strike against the enemy for free.</p>",
-			"name": "Quickstrike"
+			"name": "Quickstrike",
+			"rules": {
+				"1HKRLtUhQxrFwUJY": {
+					"label": "Quickstrike (once per round)"
+				},
+				"EXXA4m4drUjXLrSo": {
+					"label": "Quickstrike"
+				}
+			}
 		},
 		"Radiant Aura": {
 			"description": "<p>Action: End any single harmful condition or effect on yourself or another willing creature within your aura. You may use this ability WIL times/Safe Rest.</p>",
@@ -1480,9 +1711,11 @@
 			"name": "Roll & Strike"
 		},
 		"Sacred Decree": {
+			"description": "<p>Learn 1 Sacred Decree.</p><hr><p>Level 6: Learn a 2nd Sacred Decree.</p><p>Level 9: Learn a 3rd Sacred Decree.</p><p>Level 12: Learn a 4th Sacred Decree.</p><p>Level 14: Learn a 5th Sacred Decree.</p><p>Level 16: Learn a 6th Sacred Decree.</p>",
 			"name": "Sacred Decree"
 		},
 		"Sacred Graces": {
+			"description": "<p>Choose 2 Sacred Graces.</p><hr><p>Level 9: Choose a 3rd Sacred Grace.</p><p>Level 13: Choose a 4th Sacred Grace.</p>",
 			"name": "Sacred Graces"
 		},
 		"Savage Arsenal": {
@@ -1499,7 +1732,12 @@
 		},
 		"Searing Light": {
 			"description": "<p>(WIL times/Safe Rest) Action: Heal or Inflict grievous injuries:</p><p>• Heal WIL d8 HP to a Dying creature within Reach 6. OR:</p><p>• Inflict WIL d8 radiant damage to an undead or Bloodied enemy within Reach 6.</p>",
-			"name": "Searing Light"
+			"name": "Searing Light",
+			"rules": {
+				"XT0h4EYadjuZKMUT": {
+					"label": "Searing Light"
+				}
+			}
 		},
 		"Serve": {
 			"description": "<p>After spending a day tending to a sacred place or serving others during a Safe Rest, you may choose different Shepherd options available to you.</p>",
@@ -1584,11 +1822,21 @@
 		},
 		"Skilled Tracker": {
 			"description": "<p>You have advantage on skill checks to track creatures</p>",
-			"name": "Skilled Tracker"
+			"name": "Skilled Tracker",
+			"rules": {
+				"HWumOYrtF2r6J2lz": {
+					"label": "Tracking a creature"
+				}
+			}
 		},
 		"Slashing": {
 			"description": "<p>Your attacks with slashing weapons cannot miss unarmored enemies. </p>",
-			"name": "Slashing"
+			"name": "Slashing",
+			"rules": {
+				"s7OVWCh9Vq1JPqkv": {
+					"label": "Slashing"
+				}
+			}
 		},
 		"Small - Go for the Throat!": {
 			"description": "<p>(1/encounter) Costs 1 TotH charge: Your companion attacks your quarry for 1d4+LVL damage for free (ignoring armor). </p><hr><p>Level 11: 2/encounter, 1/round. </p><p>Level 15: 3/encounter, 1/round.</p>",
@@ -1623,13 +1871,19 @@
 		"Songweaver's Inspiration": {
 			"costDetails": "An ally makes a roll",
 			"description": "<p><em>(2×WIL times/Safe Rest)</em> <strong>Free Reaction</strong>: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
-			"name": "Songweaver's Inspiration"
+			"name": "Songweaver's Inspiration",
+			"rules": {
+				"6sqyzYbuyfK8ZMFY": {
+					"label": "Songweaver's Inspiration (2×WIL/Safe Rest)"
+				}
+			}
 		},
 		"Soul Reaper": {
 			"description": "<p>When you use Searing Light to harm an enemy, make a 2nd enemy within range take the same amount of damage (ignoring armor).</p>",
 			"name": "Soul Reaper"
 		},
 		"Spell Shaper": {
+			"description": "<p>You gain the ability to enhance your spells with powerful effects by spending additional mana. Choose 2 Spellshaper abilities. You may use 1/turn.</p><hr><p>Level 9: Choose 1 additional Spellshaper ability.</p><p>Level 13: Choose 1 additional Spellshaper ability.</p>",
 			"name": "Spell Shaper"
 		},
 		"Stand Fast, Friends!": {
@@ -1642,11 +1896,24 @@
 		},
 		"Steel Will": {
 			"description": "<p>(1/Safe Rest) Whenever you would fail a save, you may succeed instead. Whenever you roll a 1 on an Elemental Surge die, you may reroll it once.</p>",
-			"name": "Steel Will"
+			"name": "Steel Will",
+			"rules": {
+				"cHqRdj1yLggWXMPL": {
+					"label": "Steel Will"
+				},
+				"zTiDDLUsYbobOvbi": {
+					"label": "Steel Will (1/Safe Rest)"
+				}
+			}
 		},
 		"Stompy": {
 			"description": "<p>3 actions: Summon a huge hill giant for 1 round. As he enters the battlefield adjacent to you, use</p><p><strong>Stompy's Stomp</strong>: Make a DC 10 Influence check. On a success, he moves 6 spaces in a direction you choose; on a failure, he moves towards YOU instead (\"YOU NOT FRIEND!\"). He deals everything in his path damage equal to LVL+Influence check. ANY creature within 6 spaces of Stompy can use this ability once instead of an attack.</p>",
-			"name": "Stompy"
+			"name": "Stompy",
+			"rules": {
+				"ywF1Arf2sHg8iSQA": {
+					"label": "Stompy (1/Safe Rest)"
+				}
+			}
 		},
 		"Stone's Resilience": {
 			"description": "<p>Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p>",
@@ -1663,7 +1930,21 @@
 		},
 		"Stormborn (1)": {
 			"description": "<p>Gain resistance to lightning damage. (1/day) You may gain advantage on a Naturecraft check or Concentration check.</p>",
-			"name": "Stormborn (1)"
+			"name": "Stormborn (1)",
+			"rules": {
+				"eS3yIvNidajuZFNn": {
+					"label": "Using Stormborn to hold Concentration (1/Safe Rest)"
+				},
+				"ET9hTDp0Q8Z2T7Lj": {
+					"label": "Using Stormborn (1/Safe Rest)"
+				},
+				"mVO2vS0NGRfibjKU": {
+					"label": "Stormborn"
+				},
+				"Z7ZxALcnyd6l3Yfl": {
+					"label": "Stormborn (1/Safe Rest)"
+				}
+			}
 		},
 		"Stormborn (2)": {
 			"description": "<p>Instead of rolling dice, deal the max damage of a Wind spell by spending a charge of your Beastshift feature. Whenever you end Beastshift, you may cast a cantrip for free.</p>",
@@ -1741,7 +2022,15 @@
 		},
 		"Sweet Talk": {
 			"description": "<p>You may gain advantage on all Influence checks with NPCs you've just met for the first time. This lasts until you fail an Influence check with them or until you meet a 2nd time. You have disadvantage on Influence checks with them after you use this ability (until you get back on their good side). </p>",
-			"name": "Sweet Talk"
+			"name": "Sweet Talk",
+			"rules": {
+				"loy2dA3ngmIEphzU": {
+					"label": "An NPC you have just met (until you fail a check with them or meet again)"
+				},
+				"y5EICRH40pAkITTY": {
+					"label": "An NPC you already Sweet Talked (until you get back on their good side)"
+				}
+			}
 		},
 		"Swift Feet": {
 			"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>",
@@ -1769,12 +2058,20 @@
 		},
 		"Swift Fists": {
 			"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules).</p>",
-			"name": "Swift Fists"
+			"name": "Swift Fists",
+			"rules": {
+				"Emjgw5cUztNbvzu5": {
+					"label": "Swift Fists"
+				}
+			}
 		},
 		"Swift Fury": {
 			"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p>",
 			"name": "Swift Fury",
 			"rules": {
+				"swift-fury-free-move": {
+					"label": "Swift Fury"
+				},
 				"swift-fury-gain-message": {
 					"label": "Swift Fury"
 				}
@@ -1786,7 +2083,12 @@
 		},
 		"Talented Researcher": {
 			"description": "<p>Gain advantage on Arcana or Lore checks when you have access to a large amount of books and time to study them.</p>",
-			"name": "Talented Researcher"
+			"name": "Talented Researcher",
+			"rules": {
+				"ooL7uIbWUtIyO0LR": {
+					"label": "With many books and time to study them"
+				}
+			}
 		},
 		"Taunting Strike": {
 			"description": "<p>(1/turn) You may Taunt a creature you hit until the end of their next turn.</p>",
@@ -1821,9 +2123,18 @@
 		},
 		"THAT'S Not What Happened!": {
 			"description": "<p><em>(1/Safe Rest)</em> Action: After a Distracted enemy attacks you, you may change the Primary Die roll to whatever you like (changing the die to the minimum value counts as a miss).</p>",
-			"name": "THAT'S Not What Happened!"
+			"name": "THAT'S Not What Happened!",
+			"rules": {
+				"kDkMrmZLXxa3TTuJ": {
+					"label": "THAT'S Not What Happened! (1/Safe Rest)"
+				},
+				"PDi96dVPqpzRW3ty": {
+					"label": "THAT'S Not What Happened!"
+				}
+			}
 		},
 		"The Pact is Sealed": {
+			"description": "<p>Choose a subclass and 1 Lesser Shadow Invocation.</p><hr><p>Level 8: Choose a 2nd Lesser Shadow Invocation.</p><p>Level 11: Choose a 3rd Lesser Shadow Invocation.</p>",
 			"name": "The Pact is Sealed"
 		},
 		"Thieves' Cant": {
@@ -1840,7 +2151,12 @@
 		},
 		"Thunderous Steps": {
 			"description": "<p>After moving at least 4 spaces while Raging, you may deal STR Bludgeoning damage to all adjacent creatures where you stop.</p>",
-			"name": "Thunderous Steps"
+			"name": "Thunderous Steps",
+			"rules": {
+				"thunderous-steps-trigger": {
+					"label": "Thunderous Steps"
+				}
+			}
 		},
 		"Titan's Fury": {
 			"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>",
@@ -1895,6 +2211,7 @@
 			}
 		},
 		"Underhanded Abilities": {
+			"description": "<p>Choose an Underhanded Ability.</p><hr><p>Level 6: Choose a 2nd Underhanded Ability.</p><p>Level 8: Choose a 3rd Underhanded Ability.</p><p>Level 10: Choose a 4th Underhanded Ability.</p><p>Level 12: Choose a 5th Underhanded Ability.</p><p>Level 14: Choose a 6th Underhanded Ability.</p><p>Level 16: Choose a 7th Underhanded Ability.</p><p>Level 18: Choose an 8th Underhanded Ability.</p>",
 			"name": "Underhanded Abilities"
 		},
 		"Unending Judgment": {
@@ -1908,15 +2225,33 @@
 		},
 		"Unerring Judgment": {
 			"description": "<p>Increase your primary die rolls on melee attacks by 1 whenever you have Judgment Dice.</p>",
-			"name": "Unerring Judgment"
+			"name": "Unerring Judgment",
+			"rules": {
+				"c9Vx64ablxbBlJzU": {
+					"label": "Unerring Judgment"
+				}
+			}
 		},
 		"Unfailing Courage": {
 			"description": "<p>Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver's Inspiration allows your target to roll with advantage.</p>",
-			"name": "Unfailing Courage"
+			"name": "Unfailing Courage",
+			"rules": {
+				"4YjGB75w2y11LUoO": {
+					"label": "Unfailing Courage: the reroll has advantage"
+				}
+			}
 		},
 		"Unleash the Beast": {
 			"description": "<p>(1/encounter) When you miss, you can crit instead.</p>",
-			"name": "Unleash the Beast"
+			"name": "Unleash the Beast",
+			"rules": {
+				"0DVaSFFND56WNfwt": {
+					"label": "Unleash the Beast"
+				},
+				"VTwxihHZ4HZOIq78": {
+					"label": "Unleash the Beast (1/encounter)"
+				}
+			}
 		},
 		"Unparalleled Survivalist": {
 			"description": "<p>Gain +WIL armor. When you attack with a ranged weapon, you may first move half your speed for free.</p>",
@@ -1980,7 +2315,15 @@
 		},
 		"Vicious Opportunist": {
 			"description": "<p><em>(1/turn)</em> When you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like (changing it to the max value counts as a crit). </p><hr><p>Distracted. A target is Distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
-			"name": "Vicious Opportunist"
+			"name": "Vicious Opportunist",
+			"rules": {
+				"fSZR3ZQdBfmyLG3n": {
+					"label": "Vicious Opportunist"
+				},
+				"rx3oOrQaWNVWae4a": {
+					"label": "Vicious Opportunist (1/turn)"
+				}
+			}
 		},
 		"Vital Rejuvenation": {
 			"description": "<p>When you receive healing for the first time on a turn, you may heal another target within 6 spaces HP equal to your STR.</p>",
@@ -2016,7 +2359,12 @@
 		},
 		"Whispers of the Grave": {
 			"description": "<p><em>(1/day)</em> You can ask a dead creature 3 yes/no questions. It can never be questioned this way again.</p>",
-			"name": "Whispers of the Grave"
+			"name": "Whispers of the Grave",
+			"rules": {
+				"eeRTBbdxdy5WERm5": {
+					"label": "Whispers of the Grave (1/Safe Rest)"
+				}
+			}
 		},
 		"Wild Endurance": {
 			"description": "<p>Gain 1 Thrill of the Hunt charge at the start of your turns.</p>",

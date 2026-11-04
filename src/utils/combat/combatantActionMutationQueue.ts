@@ -1,3 +1,5 @@
+import { keyedQueue } from '../keyedQueue.js';
+
 type CombatantActionMutationParams<T> = {
 	combat: Combat;
 	combatantId: string | null | undefined;
@@ -15,7 +17,7 @@ type CombatantActionMutationQueue = {
 	clearForCombat: (combatId: string | null | undefined) => void;
 };
 
-const pendingCombatantActionMutations = new Map<string, Promise<void>>();
+const pendingCombatantActionMutations = keyedQueue();
 
 function getCombatDocumentId(combat: Combat): string {
 	const combatId = combat.id ?? combat._id ?? '';
@@ -35,36 +37,21 @@ function getCombatantActionMutationKey(params: {
 async function waitForCombatant(params: WaitForCombatantMutationParams): Promise<void> {
 	const mutationKey = getCombatantActionMutationKey(params);
 	if (!mutationKey) return;
-	await (pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve());
+	await pendingCombatantActionMutations.settled(mutationKey);
 }
 
 function clearForCombat(combatId: string | null | undefined): void {
 	const normalizedCombatId = String(combatId ?? '').trim();
 	if (!normalizedCombatId) return;
 	const keyPrefix = `${normalizedCombatId}:`;
-	for (const mutationKey of pendingCombatantActionMutations.keys()) {
-		if (!mutationKey.startsWith(keyPrefix)) continue;
-		pendingCombatantActionMutations.delete(mutationKey);
-	}
+	pendingCombatantActionMutations.forget((mutationKey) => mutationKey.startsWith(keyPrefix));
 }
 
 function queue<T>(params: CombatantActionMutationParams<T>): Promise<T> {
 	const mutationKey = getCombatantActionMutationKey(params);
 	if (!mutationKey) return params.mutation();
 
-	const previousMutation = pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve();
-	const mutationPromise = previousMutation.catch(() => undefined).then(() => params.mutation());
-	const queuePromise = mutationPromise.then(
-		() => undefined,
-		() => undefined,
-	);
-	pendingCombatantActionMutations.set(mutationKey, queuePromise);
-	void queuePromise.finally(() => {
-		if (pendingCombatantActionMutations.get(mutationKey) === queuePromise) {
-			pendingCombatantActionMutations.delete(mutationKey);
-		}
-	});
-	return mutationPromise;
+	return pendingCombatantActionMutations.run(mutationKey, () => params.mutation());
 }
 
 export const combatantActionMutationQueue: CombatantActionMutationQueue = {

@@ -55,6 +55,7 @@ Stuck on how to build something? Find an official item that does something simil
 | A class, subclass, ancestry, background, or boon | [Character Options](character-options.md) |
 | Clickable roll buttons inside descriptions | [Inline Roll Buttons](enrichers.md) |
 | Automatic effects on any of the above | [Rules Builder](../rules-builder/index.md) |
+| A feature that changes the result of a save or a check after the roll | [Change a Result](../reference/rules-triggers.md#change-a-result) |
 | A rule that only applies sometimes | [Conditions (the Condition box)](../rules-builder/predicates.md) |
 | Values that scale, like `@level` | [Formulas](../rules-builder/formulas.md) |
 

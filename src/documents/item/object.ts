@@ -1,6 +1,8 @@
 import type { ItemActivationManager } from '#managers/ItemActivationManager.js';
 import enrichDocumentHTML from '#utils/documents/enrichDocumentHTML.js';
 import localize from '#utils/localize.js';
+import { keptD20 } from '#utils/reroll/checkRollOfCard.js';
+import { checkResult } from '#utils/rolls/checkResult.js';
 import toMessageMode from '#utils/rolls/toMessageMode.js';
 import { getSpellScrollData } from '#utils/spell/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
@@ -378,7 +380,7 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 						skillKey: 'arcana',
 						options?: Record<string, unknown>,
 					) => Promise<{
-						roll: { total?: number | null } | null;
+						roll: { total?: number | null; terms?: unknown[] } | null;
 						rollData: { visibilityMode?: string } | null;
 					}>;
 			  })
@@ -397,7 +399,13 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 		});
 		if (!roll) return 'cancelled';
 
-		const succeeded = (roll.total ?? 0) >= SPELL_SCROLL_ARCANA_DC;
+		const succeeded =
+			checkResult({
+				kind: 'skillCheck',
+				total: roll.total ?? 0,
+				keptD20: keptD20(roll.terms ?? []),
+				dc: SPELL_SCROLL_ARCANA_DC,
+			}) === 'succeeded';
 
 		const chatData = {
 			speaker: ChatMessage.getSpeaker({ actor: this.actor }),

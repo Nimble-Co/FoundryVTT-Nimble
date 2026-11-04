@@ -41,7 +41,13 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="nimble-reroll-picker" role="group" aria-labelledby={titleId} onkeydown={onKeydown}>
+<div
+	bind:this={elements.root}
+	class="nimble-reroll-picker"
+	role="group"
+	aria-labelledby={titleId}
+	onkeydown={onKeydown}
+>
 	<div class="nimble-reroll-picker__head">
 		<i class="nimble-reroll-picker__icon {REACTION_VERB_ICONS[use]}" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-picker__title">{title}</span>
@@ -84,7 +90,6 @@
 
 <style lang="scss">
 	.nimble-reroll-picker {
-		grid-column: 1 / -1;
 		display: flex;
 		flex-direction: column;
 		gap: 0.375rem;

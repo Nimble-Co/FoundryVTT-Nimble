@@ -67,32 +67,56 @@ An attack or spell card is built from a few recurring pieces:
 - **Targets.** Tokens targeted when the roll was made are listed on the card. Buttons in this section let you add the currently selected or currently targeted tokens as targets, or remove targets, so a GM can fix up targeting after the roll. Hostile targets are highlighted so it's obvious when you're about to damage the wrong side.
 - **Save prompts.** If the item forces a saving throw, the card shows the save with a d20 button: select the tokens that need to save and click it to roll the save for each of them. The card lists what happens on a failed and a successful save.
 - **Condition buttons.** Conditions the item inflicts appear as buttons. Click one to apply the condition to all selected tokens. See [Conditions](conditions.md).
-- **Rerolls and changes.** Under the roll, before **Apply Damage**, the card shows one button for each thing that features can do to the roll: **Reroll** and **Change die**. When two or more features give the same button, the button shows how many. A click on a button always opens a menu, also when only one feature gives it, so you see the feature and its uses before you spend one. In the menu, the features are under the name of each character, and the cost of each feature is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click a feature to use it. Hover a feature to read the full sentence, for example "Reroll with Unstoppable Brutality (1 Wound)". The arrow keys move through the menu, and Escape closes it. Some features show a short note under their name, such as a limit that the table checks. A feature is gone from the menu when it has no uses left, and a button is gone when no feature gives it. See [Changing a die](#changing-a-die) for the **Change die** button. After a reroll, the roll shows one line for each reroll of the last action: the reroll you made and each reroll that happened by itself after it, in roll order, the first at the top. Each line names the feature that rerolled, for example "Pocket Sand", and shows the old Primary Die, paler, with an arrow to the new one. Hover the line to read it as a sentence, for example "Rerolled with Pocket Sand". A reroll that happened by itself, with no click, starts with an **Automatic** tag, and its sentence says so, for example "Rerolled automatically by Warding Bond". This is also true for a reroll that happened before the card was posted, and features that add to a reroll also add to an automatic one. A crit die is green and a miss die is red. A smaller line under it tells who used it, the uses left and any Wounds gained. When a feature can reroll again, it stays in the **Reroll** menu, and its sentence starts with "Reroll again with". The lines of that feature then keep only what the menu and the card's header do not already say. Each new use from a menu starts a new list. With Dice So Nice on, the roll on the card turns into a tumbling die while the dice are in the air, for everyone at the table, and the new result shows when they land. When the feature keeps the triggers of a crit it rerolled and the new roll misses, the target's when-crit abilities trigger at once. When the new roll hits, they trigger when the damage is applied. They trigger one time for each card.
-- **Options.** Other features that act on the card appear after **Apply Damage**, under an **Options** heading. They use the same buttons and menus as rerolls: one **Add Damage** button and one **Interpose** button, each with a menu of the features under each character's name. Defensive ones belong to whoever was attacked, such as an Interpose to take a hit for an ally. Offensive ones belong to the attacker: a feature that spends dice to add damage, like the Berserker's Death Blow, shows in the **Add Damage** menu once the attack lands the way the feature needs. Each feature can be used once per card. Once used, the card records what it did so the table can see where the extra damage came from.
+- **Rerolls and changes.** See [Change This Roll](#change-this-roll) for how to use them. After a reroll, the roll shows one line for each reroll of the last action: the reroll you made and each reroll that happened by itself after it, in roll order, the first at the top. Each line names the feature that rerolled, for example "Pocket Sand", and shows the old Primary Die, paler, with an arrow to the new one. Hover the line to read it as a sentence, for example "Rerolled with Pocket Sand". A reroll that happened by itself, with no click, starts with an **Automatic** tag, and its sentence says so, for example "Rerolled automatically by Warding Bond". This is also true for a reroll that happened before the card was posted, and features that add to a reroll also add to an automatic one. A crit die is green and a miss die is red. A smaller line under it tells who used it, the uses left and any Wounds gained. When a feature can reroll again, it keeps its row, and the row says **Reroll Again**. The lines of that feature then keep only what the row and the card's header do not already say. Each new use from a row starts a new list. With Dice So Nice on, the roll on the card turns into a tumbling die while the dice are in the air, for everyone at the table, and the new result shows when they land. When the feature keeps the triggers of a crit it rerolled and the new roll misses, the target's when-crit abilities trigger at once. When the new roll hits, they trigger when the damage is applied. They trigger one time for each card.
+- **Other features that act on the card.** They are rows of **Change This Roll** too: **Add Damage** and **Interpose**. Defensive ones belong to whoever was attacked, such as an Interpose to take a hit for an ally. Offensive ones belong to the attacker: a feature that spends dice to add damage, like the Berserker's Death Blow, shows as a row once the attack lands the way the feature needs. Each feature can be used once per card. Once used, the card records what it did after **Apply Damage**, so the table can see where the extra damage came from.
 
 A player sees only the features of the characters they own. The GM sees all of them.
 
 ![An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt](/images/documentation/condition-chatcard-with-button.png)
 
+## The result of a save or check
+
+When a save, skill check or ability check has a known DC, the small line under its name tells the result, such as "Failed - DC 14" or "Succeeded - DC 14". A total that meets the DC succeeds. On a save or a skill check, a natural 1 always fails and a natural 20 always succeeds, so the card says "Failed" or "Succeeded" also with no DC. With no DC and no natural 1 or 20, the card tells no result: compare the total at the table. The line only reports. It applies no damage and no effect by itself. A feature of the creature that made the save can react to a failed save with the Apply Condition rule. If the same card later says Succeeded, that condition goes away again. A condition from another source stays.
+
+## Change This Roll
+
+All roll cards (attack, save, skill check and ability check) have one control for what features can do to the roll. It is a full-width button under the roll, **Change This Roll (3)**. The number tells how many rows you can click. You see only the rows that you can click, so a user with none sees no button and a plain card. On an attack card, these include rows for the one who was attacked and for allies.
+
+The button opens the rows. It opens by itself when a save or check card says **Failed**, and on an attack that misses. On a card that says **Succeeded**, on an attack that hits, and on a card with no result, it starts closed. You can open or close it at any time, and it stays as you left it when the card updates.
+
+Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make It a Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
+
+With the keyboard, Enter or Space works the button. The arrow keys, Home and End move through the rows, and Escape closes them and goes back to the button. When a row goes away after you use it, the focus goes to the button. When the last row goes away, the focus goes to the card.
+
 ## Rerolling a save or check
 
-A save, skill check or ability check card is one line, so its rerolls and changes use a small button at the right end of the roll. Only the owner of the one who rolled, the owner of an ally with such a feature, and the GM see it.
-
-A click on the button always opens a short menu, also when only one feature gives it, so you see the feature and its cost before you spend a use. The features are under the headings **Reroll** and **Change a die**, each with its cost at the right. Click one to use it. The arrow keys move through the menu, and Escape closes it. With one feature, hover the button to see it and its cost, for example "Reroll with Unstoppable Brutality (1 Wound)".
+Only the owner of the one who rolled, the owner of an ally with such a feature, and the GM see the rerolls and changes of a save, skill check or ability check card. They are in [Change This Roll](#change-this-roll), under the roll.
 
 A change that sets a value opens the value picker in place, on the line of the roll. See [Changing a die](#changing-a-die).
 
-The button shows only while a feature can be used on the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. While the Dice So Nice dice are in the air, the roll on the card is a tumbling d20, as on an attack card. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before this version show no button.
+A row shows only while a feature can be used on the roll and has a use left. It comes back or goes away by itself when the character's uses, Mana or Wounds change. While the Dice So Nice dice are in the air, the roll on the card is a tumbling d20, as on an attack card. After a reroll, the same lines as on an attack card show under the roll, with the old d20 and the new one. Cards posted before rerolls show no button.
+
+Some rows are only for a failed roll. When the card says **Succeeded**, such a row goes away, and it comes back when the result goes back to **Failed**. When the card has no DC, it has no result, so the row shows and you decide.
+
+### Rerolling with another stat
+
+Some features reroll with another stat. The row says **Reroll With Another Stat**. Click it to open the three other stats under the row, with their modifiers, for example **DEX +2**, **INT +0** and **WIL −1**. Click a stat to reroll, or click **Cancel** or press Escape to close the stats and go back to the row. No other menu opens. The new roll keeps the advantage or disadvantage of the first roll.
+
+- **A save** uses the save modifier of the new stat.
+- **A skill or ability check** swaps the stat part and keeps the other bonuses.
+- **An attack** swaps the stat part of the formula. An attack with no stat part has no row.
+
+The reroll line has a tag, such as **With DEX**. The card keeps its name, so a STR save that was rerolled with DEX still says STR.
 
 ## Rerolls from an ally
 
-Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's feature shows in the menu on the ally's card, under the character's name, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll or change buttons.
+Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's feature shows as a row on the ally's card, under the character's name, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll or change rows.
 
-When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under the options, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card.
+When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under **Change This Roll**, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card.
 
 ### Rerolling one die
 
-Some features reroll one die and keep the others. When the player picks the die, a click on the feature opens the dice of the roll, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice and go back to the buttons. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown. With manual dice entry on in Foundry's Dice Configuration, the new die and each explosion die are asked for, as for a whole reroll. A player's reroll is rolled on the GM's client, so the GM's dice settings apply to it.
+Some features reroll one die and keep the others. When the player picks the die, a click on the row opens the dice of the roll under it, with the Primary Die marked. Click a die to reroll it, or click **Cancel** or press Escape to close the dice and go back to the row. The arrow keys move between the dice. On a save or a check rolled with advantage or disadvantage, you can also pick the d20 that was dropped. The roll then keeps the highest or lowest again and works out the hit, the crit and the total again. A Primary Die that rolls its maximum explodes, and one that no longer rolls its maximum loses its explosion dice. With Dice So Nice on, only the rerolled die is thrown. With manual dice entry on in Foundry's Dice Configuration, the new die and each explosion die are asked for, as for a whole reroll. A player's reroll is rolled on the GM's client, so the GM's dice settings apply to it.
 
 ### Keeping either result
 
@@ -107,11 +131,13 @@ Some features add to another feature's reroll, such as the Songweaver's Unfailin
 - **Actions,** for example **Wren +1 action:** the one who rolled gains them at once. Only a hero in combat gains actions. Otherwise the tag says why no action was given.
 - **Temp HP,** for example **3 temp HP to 2 creatures** or **3 temp HP to Wren:** the one who rolled and their allies near the feature's owner gain temp HP. Click the tag to see who. Temp HP does not add up, so each creature keeps the larger amount: a creature that already has as much temp HP or more keeps its own. The list tells both amounts, for example "Bram keeps 5, not 3" or "Tam had 1, now has 3". The rules let each creature choose which amount it keeps, so a player who wants the other amount changes it on the sheet. When the owner has no token on the scene, nobody gains temp HP.
 
+- **Cannot fail:** on a save or a check, the new roll succeeds. The history says **Succeeded Instead** with the feature, with no **Remove**. No **Keep** buttons show. On an attack, the reroll line has a **Cannot miss** tag, and the attack hits. It is a crit only when the die makes a crit.
+
 Advantage and extra damage count one time for each attack, however many times the reroll is used. Actions and temp HP come with each use. They are given when the reroll is used, not when a result is kept. With **Feature Effects** off in the Automation settings, the action and temp HP tags are dashed, with a hand, and a note under them says what to give by hand.
 
 ## Changing a die
 
-Some features put a new value on one die that was already rolled. No die is rolled again. On an attack card they are in the **Change die** menu. On a save or check card they are under the **Change a die** heading. The feature decides which die it changes: the Primary Die, or one die that you pick. On a save or a check, the Primary Die is the d20. The feature also decides how it changes the die: it sets the die to a value that you pick, or it adds a number.
+Some features put a new value on one die that was already rolled. No die is rolled again. They are **Change Die** rows in [Change This Roll](#change-this-roll). The feature decides which die it changes: the Primary Die, or one die that you pick. On a save or a check, the Primary Die is the d20. The feature also decides how it changes the die: it sets the die to a value that you pick, or it adds a number.
 
 **Set to a value.** Click the feature. If the feature lets you pick the die, the dice of the roll open first: click the die to change. Then the value picker opens. It shows the old die, an arrow, and the new value between a **-** and a **+** button. You can also type a value from 1 to the die's max. The arrow keys move the value up or down. The **1 (lowest)** button goes to 1, and the highest button goes to the max, for example **8 (highest)** on a d8. Click **Set to 8** (the button shows the value) or press Enter to change the die. Click **Cancel** or press Escape to close the picker.
 
@@ -136,6 +162,42 @@ An added change moves the face that the die shows, as it is. A later reroll of t
 
 After a set with a feature that makes the set value final, a Primary Die bonus line on the card shows "+1 bonus not added". Its tooltip says why.
 
+## Changing a result
+
+Some features change the result of a save, a skill check, an ability check or [Initiative](#the-initiative-card), after the roll. One changes what an attack does to its target. They are rows of [Change This Roll](#change-this-roll). A row shows also when the card knows no DC, because the system cannot tell if the roll failed. The dice on the card do not change. Open the dice to see what they gave.
+
+- **Succeed Instead** with Elusive. The card says **Succeeded**, or **Succeeded - DC 14** with a DC. The total stays. The row goes away while the change stands. The other rows stay under the closed button, because a reroll can still replace the result. The history line says **Succeeded Instead** with Elusive.
+- **Change to 10** with Cheat!. The total becomes that number. The history line says **Changed 7 to 10** with Cheat!. The row does not show when the total is already that number. Some features show the row only when the total is below that number.
+- **Add +3 STR** with Mighty Soul. The number goes on the total. A negative number shows as **Add −1 STR**, and lowers the total. The row stays, so you can click it again while you can pay its cost. You can click it to gain your last Wound. Repeated clicks make one history line that grows: **Added +6 STR, Gained 2 Wounds** with Mighty Soul.
+
+A box above the history shows how the total came from the roll, such as **7 + 3 + 3 = 13** or **7 changed to 13**. It shows only when the total is different from the roll.
+
+A known DC is read again after each change, and the small line under the name follows it. A natural 1 on a save or a skill check still fails after an add, and a natural 20 still succeeds. A change to a number replaces the roll, so only that number and the DC count. When the card goes to **Succeeded** on a save, a condition that the save added goes away again.
+
+**Counts as a natural 20.** Some features count a total of 1 or less as a natural 20. This happens by itself and costs nothing, and the dice on the card do not change. The total is 20 plus the modifier of the roll, and the save or check succeeds. The box says **Rolled 1, counts as 20 − 1 = 19**. The history says **Counts as a Natural 20** with Bumblewise, with no **Remove**. It is read again after a reroll. With **Feature Effects** off in the Automation settings, a row **Count as a Natural 20** shows instead, and you click it.
+
+**No damage.** Some features let the target of an attack take no damage from it. After a hit, the target's owner and the GM see a row, for example **No Damage** with Epic Resistance, with its uses left. Click it, and that target takes no damage from any part of this attack when you click **Apply Damage**. The other targets take their damage as usual. The target shows a **No Damage** tag on the card. The history says **No Damage for** the target **with** the feature. **Remove** gives the cost back until the damage is applied.
+
+**Remove.** Each of these lines has a **Remove** button, for the user who can click the row and for the GM. A click takes that change off the card and reads the result again. The uses, Mana and Wounds it cost come back. An action or a Heroic Reaction stays spent. A line that grew removes all its clicks and gives back all its Wounds. The other changes stay in their order, and the total is worked out again. Rerolls and changes of a die have no **Remove**. A change that happened by itself has none, and neither does **No Damage** after the damage is applied.
+
+**A reroll replaces the result.** The new roll is the new total, and the added, set and succeed changes come off. Their costs stay paid, and any Wounds stay. Their lines stay in the history, with no **Remove**. The box starts again from the new roll. A change of a die is not a new roll, so the changes stay on the total.
+
+## The Initiative card
+
+An Initiative roll posts a card in the same layout as a check card. The small line under the name tells how many actions a hero starts combat with: **Start with 1 action**, **Start with 2 actions** or **Start with 3 actions**. A total of 10 or more gives 2. A total of 20 or more, or a natural 20, gives 3. A monster's card does not show this line. While the dice of a reroll are in the air, the line is hidden, so it cannot tell the result early. Initiative has no DC, so the card never says Failed or Succeeded. Initiative messages that were posted before this card stay as they were.
+
+A feature can change the total with a row of [Change This Roll](#change-this-roll), such as **Change to 10** with Cheat!. The right side of the row tells the gain, **Start with 2 actions**, when the feature has no other cost to show. The button stays closed until you click it. A row with **Only if the total is lower** does not show at that total or above it. A change to a number replaces the roll, so a natural 20 does not count after it. An added number keeps the natural 20. The history line says **Changed 7 to 10** with Cheat!.
+
+The change also goes to the combat tracker, for the combat and the combatant that made the roll:
+
+- The combatant's Initiative becomes the new total, and the starting actions follow it.
+- If you did not spend your actions yet, your current actions become the new number.
+- If you click later, the difference between the old and the new number goes on your current actions. Current actions never go below 0.
+- An action adjustment that waits for your next refill stays waiting.
+- **Remove** does the reverse, and gives the cost back.
+
+The change stays on the card only, and the tracker does not change, when that combat or combatant is gone, when the roll was made outside a combat, or when the combatant has a different Initiative now (a new roll, or a number the GM set by hand).
+
 ## Why an attack is a crit, or a hit
 
 A feature can change how the roll is read. When the die does not explain the result, a tag at the roll names the cause:
@@ -143,13 +205,13 @@ A feature can change how the roll is read. When the die does not explain the res
 - **"Crit: Deathbringer's Touch"** when a feature made a face below the max a crit. The tag does not show when the die rolled its max.
 - **"Cannot miss: Slashing"** when a feature made a miss face a hit.
 
-**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make crit** button for the one who attacked.
+**Incapacitated targets.** A melee hit against an Incapacitated, Paralyzed, Petrified, Stunned or Unconscious creature is a crit. The tag says "Crit: target Stunned". A miss stays a miss, and a roll that cannot crit stays that way. With **Feature Effects** off, the card has a free **Make It a Crit** row for the one who attacked.
 
 The expanded roll details mark a Primary Die face that is a crit or a miss in the same way.
 
 ## Making an attack a crit
 
-Some features let a creature make an attack a crit after the roll. The card has a **Make crit** button, with a menu of the features as on **Reroll**. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
+Some features let a creature make an attack a crit after the roll. The card has a **Make It a Crit** row in [Change This Roll](#change-this-roll). The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a later reroll or change alters only the damage dice. A line in the card's history tells who made the crit.
 
 The button does not show on an attack that is already a crit, an attack on 2 or more targets, an area attack, or a roll that cannot crit.
 
@@ -159,7 +221,7 @@ Some features give damage back to the one who attacked. When the GM applies the 
 
 ## Rerolls and changes that cost an action
 
-Some rerolls and changes cost 1 action. The menu shows "1 action" as the cost. Only a hero in combat spends the action:
+Some rerolls and changes cost 1 action. The row shows "1 action" as the cost. Only a hero in combat spends the action:
 
 - **On your own turn,** you spend the action at once. With no actions left, the feature does not show.
 - **Off your turn,** your next turn starts with 1 fewer action.
@@ -168,7 +230,7 @@ This is not a Heroic Reaction, so there is no limit of 1 for each round. Out of 
 
 ## Spending dice from a card
 
-A feature that adds damage when an attack lands puts itself in the **Add Damage** menu on that attack's card rather than asking you to run it separately. Click **Add Damage**, click the feature, pick which dice to spend, and confirm: the bonus is added to the attack's own damage total, so the number in the roll box goes up and the GM still clicks **Apply Damage** exactly once.
+A feature that adds damage when an attack lands puts an **Add Damage** row on that attack's card rather than asking you to run it separately. Click the row, pick which dice to spend, and confirm: the bonus is added to the attack's own damage total, so the number in the roll box goes up and the GM still clicks **Apply Damage** exactly once.
 
 This matters for more than convenience. Applying the bonus as a second, separate hit would make the target's armor, resistances and damage reduction count twice against one attack, which is why the card folds it in instead. Because the feature only appears when the attack landed the way the feature requires, a feature that works only on a critical hit will not offer itself on an ordinary hit.
 

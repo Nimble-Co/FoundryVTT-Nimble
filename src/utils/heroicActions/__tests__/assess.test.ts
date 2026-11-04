@@ -10,8 +10,13 @@ import {
 import { ASSESS_DC } from '../../assessOptions.js';
 import { runAssess } from '../assess.js';
 
-function actorRolling(total: number | null) {
-	const rollSkillCheck = vi.fn().mockResolvedValue({ roll: total === null ? null : { total } });
+function d20Roll(total: number, d20: number) {
+	return { total, terms: [{ faces: 20, results: [{ result: d20, active: true }] }] };
+}
+
+function actorRolling(total: number | null, d20 = 10) {
+	const roll = total === null ? null : d20Roll(total, d20);
+	const rollSkillCheck = vi.fn().mockResolvedValue({ roll });
 	return { actor: createHeroicCharacter({ rollSkillCheck }), rollSkillCheck };
 }
 
@@ -37,7 +42,7 @@ describe('runAssess', () => {
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				type: 'assessAction',
-				rolls: [{ total: ASSESS_DC }],
+				rolls: [d20Roll(ASSESS_DC, 10)],
 				system: expect.objectContaining({
 					skillKey: 'insight',
 					dc: ASSESS_DC,
@@ -64,6 +69,19 @@ describe('runAssess', () => {
 					targetName: null,
 				}),
 			}),
+		);
+	});
+
+	it.each([
+		['fails on a natural 1, whatever the total', 13, 1, false],
+		['succeeds on a natural 20, whatever the total', 11, 20, true],
+	])('%s', async (_name, total, d20, isSuccess) => {
+		const { actor } = actorRolling(total, d20);
+
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({ system: expect.objectContaining({ isSuccess }) }),
 		);
 	});
 

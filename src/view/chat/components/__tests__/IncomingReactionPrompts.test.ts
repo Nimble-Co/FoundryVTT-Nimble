@@ -107,6 +107,8 @@ function createMessage(
 ) {
 	const message = {
 		id: 'message-1',
+		// The card draws its damage section, so all rows sit at the roll.
+		effectNodes: [[{ type: 'damage' }]] as { type: string }[][],
 		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
 		system: { incomingReactions: entries, rerolls },
 		reactive: null as unknown,
@@ -137,7 +139,7 @@ let previousFromUuidSync: unknown;
 let previousGameUser: unknown;
 let previousUi: unknown;
 let previousHooks: unknown;
-let rejectionListener: ((payload: unknown) => void) | null = null;
+let rejectionListeners: ((payload: unknown) => void)[] = [];
 
 beforeEach(() => {
 	const g = globalThis as Record<string, any>;
@@ -148,7 +150,7 @@ beforeEach(() => {
 
 	spendDialogMock().instances.length = 0;
 	spendDialogMock().selection = null;
-	rejectionListener = null;
+	rejectionListeners = [];
 	vi.clearAllMocks();
 	requestIncomingAttackReaction.mockResolvedValue(true);
 
@@ -162,7 +164,7 @@ beforeEach(() => {
 	g.ui = { notifications: { warn: vi.fn(), error: vi.fn() } };
 	g.Hooks = {
 		on: vi.fn((_hook: string, listener: (payload: unknown) => void) => {
-			rejectionListener = listener;
+			rejectionListeners.push(listener);
 			return 1;
 		}),
 		off: vi.fn(),
@@ -182,51 +184,72 @@ const optionsPlace = () => within(screen.getByTestId('options-place'));
 
 type Place = ReturnType<typeof rollPlace>;
 
-/** Opens the menu of a verb button. */
-async function openVerb(place: Place, verb: RegExp | string): Promise<void> {
-	await fireEvent.click(place.getByRole('button', { name: verb }));
+const controlButton = (place: Place) => place.getByRole('button', { name: /^Change This Roll/ });
+
+/** Opens Change This Roll. It can be open already: its state stays per message id. */
+async function openControl(place: Place): Promise<void> {
+	const button = controlButton(place);
+	if (button.getAttribute('aria-expanded') !== 'true') await fireEvent.click(button);
 }
 
-/** Opens the menu of a verb button and clicks a feature in it. */
-async function useFeature(
-	place: Place,
-	verb: RegExp | string,
-	feature: RegExp | string,
-): Promise<void> {
-	await openVerb(place, verb);
-	await fireEvent.click(place.getByRole('menuitem', { name: feature }));
+/** Opens Change This Roll and clicks a row in it. */
+async function useFeature(place: Place, row: RegExp | string): Promise<void> {
+	await openControl(place);
+	await fireEvent.click(place.getByRole('button', { name: row }));
 }
 
-function menuHeadings(root: HTMLElement): string[] {
-	return [...root.querySelectorAll('.nimble-choice-menu__heading')].map(
+function actorHeadings(root: HTMLElement): string[] {
+	return [...root.querySelectorAll('.nimble-change-roll__actor')].map(
 		(heading) => heading.textContent?.trim() ?? '',
 	);
 }
 
+const rowsOf = (root: HTMLElement) => [
+	...root.querySelectorAll<HTMLButtonElement>('.nimble-change-roll__row'),
+];
+
+const rowWords = (row: HTMLElement) => row.textContent?.replace(/\s+/g, ' ').trim();
+
 describe('IncomingReactionPrompts', () => {
-	it('puts a rule-granted Interpose under Options, with the actor name above it', async () => {
+	it('puts a rule-granted Interpose in the control at the roll, with the actor name above it', async () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: { messageDocument: createMessage([createEntry()]) },
 		});
 
-		await openVerb(optionsPlace(), 'Interpose');
+		await openControl(rollPlace());
 
-		const item = optionsPlace().getByRole('menuitem', { name: 'Interpose: Aura of Refuge' });
-		expect(item.textContent?.trim()).toBe('Aura of Refuge');
-		expect(menuHeadings(screen.getByTestId('options-place'))).toEqual(['Sir Brannon']);
-		expect(screen.getByTestId('roll-place').textContent?.trim()).toBe('');
+		const row = rollPlace().getByRole('button', { name: 'Interpose with Aura of Refuge' });
+		expect(rowWords(row)).toBe('Interpose with Aura of Refuge');
+		expect(actorHeadings(screen.getByTestId('roll-place'))).toEqual(['Sir Brannon']);
+		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 	});
 
-	it('shows the Heroic Reaction cost on the baseline Interpose button', async () => {
+	it('puts the rows that do not change the roll under the card when it has no damage section', async () => {
+		const message = createMessage([
+			createEntry(),
+			createEntry({ id: 'reroll', kind: 'reroll', label: 'Pocket Sand' }),
+		]);
+		message.effectNodes = [];
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		// The test renders the roll place too; a real card with no damage section does not.
+		await openControl(optionsPlace());
+
+		expect(rowsOf(screen.getByTestId('options-place')).map(rowWords)).toEqual([
+			'Interpose with Aura of Refuge',
+		]);
+	});
+
+	it('shows the Heroic Reaction cost on the baseline Interpose row, with no feature', async () => {
 		render(IncomingReactionPromptsTestHarness, {
 			props: { messageDocument: createMessage([createEntry({ source: 'baseline', label: '' })]) },
 		});
 
-		await openVerb(optionsPlace(), 'Interpose');
+		await openControl(rollPlace());
 
-		const item = optionsPlace().getByRole('menuitem');
-		expect(item.textContent).toContain('Interpose');
-		expect(item.textContent).toContain('Heroic Reaction');
+		const [row] = rowsOf(screen.getByTestId('roll-place'));
+		expect(rowWords(row)).toBe('Interpose Heroic Reaction');
+		expect(row.getAttribute('aria-label')).toBe('Interpose (Heroic Reaction)');
 	});
 
 	it('tells a change of the die at the roll: set on the arrow and the crit tag', () => {
@@ -386,9 +409,10 @@ describe('IncomingReactionPrompts', () => {
 			},
 		});
 
-		expect(screen.getAllByRole('button')).toHaveLength(1);
-		await openVerb(optionsPlace(), 'Interpose');
-		expect(optionsPlace().getByRole('menuitem').textContent).toContain('Aura of Refuge');
+		await openControl(rollPlace());
+		expect(rowsOf(screen.getByTestId('roll-place')).map(rowWords)).toEqual([
+			'Interpose with Aura of Refuge',
+		]);
 	});
 
 	it('renders an attribution line instead of a button for used entries', () => {
@@ -429,11 +453,11 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await openVerb(optionsPlace(), 'Add Damage');
+			await openControl(rollPlace());
 
-			const item = optionsPlace().getByRole('menuitem', { name: 'Add Damage: Death Blow' });
-			expect(item.textContent?.trim()).toBe('Death Blow');
-			expect(item.textContent).not.toContain('Sir Brannon');
+			const row = rollPlace().getByRole('button', { name: 'Add Damage with Death Blow' });
+			expect(rowWords(row)).toBe('Add Damage with Death Blow');
+			expect(row.textContent).not.toContain('Sir Brannon');
 		});
 
 		it('attributes a used spend with its amount, pool and faces', () => {
@@ -467,7 +491,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
 
 			const [actor, poolId, ruleId, itemId] = spendDialogMock().instances[0].args;
@@ -486,7 +510,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 
 			await vi.waitFor(() =>
 				expect((globalThis as Record<string, any>).ui.notifications.warn).toHaveBeenCalledWith(
@@ -504,11 +528,11 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
 
 			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
-			expect(screen.queryByRole('button')).toBeTruthy();
+			expect(controlButton(rollPlace())).toBeTruthy();
 		});
 
 		it('holds the button once a pick is handed off, so it cannot be spent twice', async () => {
@@ -521,7 +545,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 
 			await vi.waitFor(() =>
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
@@ -540,12 +564,13 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
 
-			rejectionListener?.({ messageId: 'message-1', entryId: 'spend-1' });
+			for (const listener of rejectionListeners)
+				listener({ messageId: 'message-1', entryId: 'spend-1' });
 
-			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeTruthy());
+			await vi.waitFor(() => expect(controlButton(rollPlace())).toBeTruthy());
 		});
 
 		it('ignores a refusal aimed at a different card', async () => {
@@ -555,10 +580,12 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(optionsPlace(), 'Add Damage', /Death Blow/);
+			await useFeature(rollPlace(), /Add Damage with Death Blow/);
 			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
 
-			rejectionListener?.({ messageId: 'another-message', entryId: 'spend-1' });
+			for (const listener of rejectionListeners) {
+				listener({ messageId: 'another-message', entryId: 'spend-1' });
+			}
 
 			await Promise.resolve();
 			expect(screen.queryByRole('button')).toBeNull();
@@ -634,79 +661,88 @@ describe('IncomingReactionPrompts', () => {
 			]);
 		}
 
-		/** The creature names in the open Reroll menu. */
+		/** The creature names over the rows. */
 		async function groupNames(): Promise<string[]> {
-			const roll = screen.getByTestId('roll-place');
-			if (!roll.querySelector('[role="menu"]')) await openVerb(rollPlace(), /^Reroll/);
-			return menuHeadings(roll);
+			await openControl(rollPlace());
+			return actorHeadings(screen.getByTestId('roll-place'));
 		}
 
-		it('shows a Reroll button that opens the feature, in the roll section', async () => {
+		it('shows a row with the verb, the feature and no menu, in the roll section', async () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: createMessage([rerollEntry()]) },
 			});
 
-			expect(rollPlace().getByRole('button').textContent?.trim()).toBe('Reroll');
-			await openVerb(rollPlace(), 'Reroll');
+			await openControl(rollPlace());
 
-			const item = rollPlace().getByRole('menuitem', { name: 'Reroll with Pocket Sand' });
-			expect(item.textContent?.trim()).toBe('Pocket Sand');
+			const row = rollPlace().getByRole('button', { name: 'Reroll with Pocket Sand' });
+			expect(row.querySelector('.nimble-change-roll__verb')?.textContent).toBe('Reroll');
+			expect(row.querySelector('.nimble-change-roll__feature')?.textContent).toBe(
+				'with Pocket Sand',
+			);
+			expect(row.querySelector('i')).toBeNull();
+			expect(rollPlace().queryByRole('menu')).toBeNull();
 			expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
 		});
 
-		it('puts the features in the menu under the name of each actor', async () => {
+		it('puts the rows under the name of each actor', async () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: twoActorMessage() },
 			});
 
 			expect(await groupNames()).toEqual(['Wren', 'Bram']);
-			const groups = screen.getByTestId('roll-place').querySelectorAll('[role="group"]');
-			expect(within(groups[0] as HTMLElement).getAllByRole('menuitem')).toHaveLength(2);
-			expect(within(groups[1] as HTMLElement).getAllByRole('menuitem')).toHaveLength(1);
-			for (const item of rollPlace().getAllByRole('menuitem')) {
-				expect(item.textContent).not.toContain('Wren');
-				expect(item.textContent).not.toContain('Bram');
+			const wren = rollPlace().getByRole('group', { name: 'Wren' });
+			const bram = rollPlace().getByRole('group', { name: 'Bram' });
+			expect(rowsOf(wren)).toHaveLength(2);
+			expect(rowsOf(bram)).toHaveLength(1);
+			for (const row of rowsOf(screen.getByTestId('roll-place'))) {
+				expect(row.textContent).not.toContain('Wren');
+				expect(row.textContent).not.toContain('Bram');
 			}
 		});
 
-		it('shows a player only the features of the actors they own', async () => {
+		it('shows a player only the features of the actors they own, and counts only those', async () => {
 			(globalThis as Record<string, any>).game.user = { isGM: false, id: 'player' };
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: twoActorMessage() },
 			});
 
-			expect(rollPlace().getByRole('button', { name: 'Reroll: 2 features' })).toBeTruthy();
 			expect(await groupNames()).toEqual(['Wren']);
-			expect(rollPlace().getAllByRole('menuitem')).toHaveLength(2);
+			expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(2);
+			await fireEvent.click(controlButton(rollPlace()));
+			expect(controlButton(rollPlace()).textContent?.replace(/\s+/g, ' ').trim()).toBe(
+				'Change This Roll (2)',
+			);
 		});
 
-		it('shows the GM every feature', async () => {
+		it('shows the GM every feature, and counts them all', async () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: twoActorMessage() },
 			});
 
-			expect(rollPlace().getByRole('button', { name: 'Reroll: 3 features' })).toBeTruthy();
 			expect(await groupNames()).toEqual(['Wren', 'Bram']);
-			expect(rollPlace().getAllByRole('menuitem')).toHaveLength(3);
+			expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(3);
+			await fireEvent.click(controlButton(rollPlace()));
+			expect(controlButton(rollPlace()).textContent?.replace(/\s+/g, ' ').trim()).toBe(
+				'Change This Roll (3)',
+			);
 		});
 
-		it('shows the cost at the right of the feature, and in its full sentence', async () => {
+		it('shows the cost at the right of the row, and in its full sentence', async () => {
 			rerollCost.woundCost = 1;
 			rerollCost.heroicReaction = 'defend';
 			render(IncomingReactionPromptsTestHarness, {
 				props: { messageDocument: createMessage([rerollEntry()]) },
 			});
 
-			await openVerb(rollPlace(), 'Reroll');
+			await openControl(rollPlace());
 
-			const item = rollPlace().getByRole('menuitem');
-			expect(item.querySelector('.nimble-choice-menu__cost')?.textContent).toBe(
-				'1 Wound, Heroic Reaction',
+			const [row] = rowsOf(screen.getByTestId('roll-place'));
+			expect(row.querySelector('.nimble-change-roll__cost')?.textContent).toBe(
+				'Gain 1 Wound, Heroic Reaction',
 			);
-			expect(item.getAttribute('aria-label')).toBe(
-				'Reroll with Pocket Sand (1 Wound, Heroic Reaction)',
+			expect(row.getAttribute('aria-label')).toBe(
+				'Reroll with Pocket Sand (Gain 1 Wound, Heroic Reaction)',
 			);
-			expect(item.dataset.tooltip).toBe(item.getAttribute('aria-label'));
 		});
 
 		it('shows the note of the entry under the feature, and in its sentence', async () => {
@@ -715,155 +751,269 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([entry]) },
 			});
 
-			await openVerb(rollPlace(), 'Reroll');
+			await openControl(rollPlace());
 
-			const item = rollPlace().getByRole('menuitem');
-			expect(item.querySelector('.nimble-choice-menu__note')?.textContent).toBe(
+			const [row] = rowsOf(screen.getByTestId('roll-place'));
+			expect(row.querySelector('.nimble-change-roll__note')?.textContent).toBe(
 				'Your 2nd miss this round',
 			);
-			expect(item.getAttribute('aria-label')).toBe(
+			expect(row.getAttribute('aria-label')).toBe(
 				'Reroll with Pocket Sand. Your 2nd miss this round',
 			);
 		});
 
-		describe('the verb buttons', () => {
-			function verbMessage() {
-				return createMessage([
-					rerollEntry({ id: 'wren-reroll', actorUuid: 'Actor.wren' }),
+		describe('the control', () => {
+			let messageNumber = 0;
+
+			/** A message of its own: the open state stays per message id. */
+			function controlMessage(system: Record<string, unknown> = {}) {
+				const message = createMessage([
 					rerollEntry({ id: 'wren-change', actorUuid: 'Actor.wren', use: 'change' }),
+					rerollEntry({ id: 'wren-reroll', actorUuid: 'Actor.wren' }),
 					rerollEntry({ id: 'bram-reroll', actorUuid: 'Actor.bram' }),
 				]);
+				message.id = `control-message-${(messageNumber += 1)}`;
+				Object.assign(message.system, system);
+				return message;
 			}
 
-			it('shows one button per verb, with the count when two or more features give it', () => {
+			it('starts closed: one button with the count and a down arrow, and no rows', () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
 
-				const buttons = rollPlace().getAllByRole('button');
-				expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
-					'Reroll: 2 features',
-					'Change die',
-				]);
-				expect(buttons[0].querySelector('.nimble-reaction-verb__count')?.textContent).toBe('2');
-				expect(buttons[1].querySelector('.nimble-reaction-verb__count')).toBeNull();
-				expect(buttons[1].querySelector('.fa-pen')).toBeTruthy();
+				const button = controlButton(rollPlace());
+				expect(rollPlace().getAllByRole('button')).toEqual([button]);
+				expect(button.textContent?.replace(/\s+/g, ' ').trim()).toBe('Change This Roll (3)');
+				expect(button.getAttribute('aria-expanded')).toBe('false');
+				expect(button.querySelector('.fa-angle-down')).toBeTruthy();
 			});
 
-			it('opens the menu on a click, also for one feature, and uses nothing', async () => {
+			it('opens on a click with an up arrow and no count, and uses nothing', async () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
-				const change = rollPlace().getByRole('button', { name: 'Change die' });
+				const button = controlButton(rollPlace());
 
-				await fireEvent.click(change);
+				await fireEvent.click(button);
 
-				expect(change.getAttribute('aria-expanded')).toBe('true');
-				expect(change.getAttribute('aria-controls')).toBe(
-					rollPlace().getByRole('menu').getAttribute('id'),
+				expect(button.getAttribute('aria-expanded')).toBe('true');
+				expect(button.querySelector('.fa-angle-up')).toBeTruthy();
+				expect(button.textContent?.replace(/\s+/g, ' ').trim()).toBe('Change This Roll');
+				expect(button.getAttribute('aria-controls')).toBe(
+					rollPlace().getByRole('group', { name: 'Change This Roll' }).getAttribute('id'),
 				);
-				expect(
-					rollPlace().getByRole('menuitem', { name: 'Change the die with Pocket Sand' }),
-				).toBeTruthy();
 				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 			});
 
-			it('uses the feature clicked in the menu, and closes the menu', async () => {
+			it('lists the rows of one actor by verb, whatever the order on the card', async () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
 
-				await useFeature(rollPlace(), 'Change die', /Change the die/);
+				await openControl(rollPlace());
+
+				expect(rowsOf(screen.getByTestId('roll-place')).map(rowWords)).toEqual([
+					'Reroll with Pocket Sand',
+					'Change Die with Pocket Sand',
+					'Reroll with Pocket Sand',
+				]);
+			});
+
+			it('opens by itself on an attack that misses, and takes no focus', () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: controlMessage({ isMiss: true }) },
+				});
+
+				expect(controlButton(rollPlace()).getAttribute('aria-expanded')).toBe('true');
+				expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(3);
+				expect(document.activeElement).toBe(document.body);
+			});
+
+			it('starts closed on a hit and on a crit', () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: controlMessage({ isMiss: false, isCritical: true }) },
+				});
+
+				expect(controlButton(rollPlace()).getAttribute('aria-expanded')).toBe('false');
+			});
+
+			it('stays closed through a new draw of the card when the user closed it', async () => {
+				const message = controlMessage({ isMiss: true });
+				const first = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+				await fireEvent.click(controlButton(rollPlace()));
+				first.unmount();
+
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				expect(controlButton(rollPlace()).getAttribute('aria-expanded')).toBe('false');
+			});
+
+			it('uses the row clicked, and the other rows stay', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: controlMessage() },
+				});
+
+				await useFeature(rollPlace(), /Change Die with/);
 				for (let i = 0; i < 4; i++) await Promise.resolve();
 
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
 					expect.objectContaining({ entryId: 'wren-change' }),
 				);
-				expect(rollPlace().queryByRole('menu')).toBeNull();
+				await vi.waitFor(() => expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(2));
 			});
 
-			it('shows Make crit after Change die, and uses it with no die to pick', async () => {
-				const message = createMessage([
-					rerollEntry({ id: 'wren-change', actorUuid: 'Actor.wren', use: 'change' }),
+			it('shows Make It a Crit and uses it with no die to pick', async () => {
+				const message = controlMessage();
+				message.system.incomingReactions = [
 					rerollEntry({ id: 'wren-crit', actorUuid: 'Actor.wren', use: 'crit' }),
-				]);
+					rerollEntry({ id: 'wren-change', actorUuid: 'Actor.wren', use: 'change' }),
+				];
 				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
-				const buttons = rollPlace().getAllByRole('button');
-				expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
-					'Change die',
-					'Make crit',
+				await openControl(rollPlace());
+				expect(rowsOf(screen.getByTestId('roll-place')).map(rowWords)).toEqual([
+					'Change Die with Pocket Sand',
+					'Make It a Crit with Pocket Sand',
 				]);
-				expect(buttons[1].querySelector('.fa-burst')).toBeTruthy();
 
-				await useFeature(rollPlace(), 'Make crit', 'Make the attack a crit with Pocket Sand');
+				await fireEvent.click(rollPlace().getByRole('button', { name: /Make It a Crit with/ }));
 				for (let i = 0; i < 4; i++) await Promise.resolve();
 
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
 					expect.objectContaining({ entryId: 'wren-crit' }),
 				);
-				expect(requestIncomingAttackReaction).not.toHaveBeenCalledWith(
-					expect.objectContaining({ die: expect.anything() }),
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
+					expect.objectContaining({ pick: {} }),
 				);
 			});
 
-			it('opens one menu at a time, and a second click closes it', async () => {
+			it('moves through the rows with the arrow keys, from the button and across the actors', async () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
+				await openControl(rollPlace());
+				const button = controlButton(rollPlace());
+				const rows = rowsOf(screen.getByTestId('roll-place'));
 
-				await openVerb(rollPlace(), /^Reroll/);
-				await openVerb(rollPlace(), 'Change die');
-				expect(rollPlace().getAllByRole('menu')).toHaveLength(1);
-				expect(rollPlace().getAllByRole('menuitem')).toHaveLength(1);
-
-				await openVerb(rollPlace(), 'Change die');
-				expect(rollPlace().queryByRole('menu')).toBeNull();
+				await fireEvent.keyDown(button, { key: 'ArrowDown' });
+				expect(document.activeElement).toBe(rows[0]);
+				await fireEvent.keyDown(rows[0], { key: 'ArrowDown' });
+				expect(document.activeElement).toBe(rows[1]);
+				await fireEvent.keyDown(rows[1], { key: 'ArrowDown' });
+				expect(document.activeElement).toBe(rows[2]);
+				await fireEvent.keyDown(rows[2], { key: 'ArrowDown' });
+				expect(document.activeElement).toBe(rows[0]);
+				await fireEvent.keyDown(rows[0], { key: 'ArrowUp' });
+				expect(document.activeElement).toBe(rows[2]);
+				await fireEvent.keyDown(rows[2], { key: 'Home' });
+				expect(document.activeElement).toBe(rows[0]);
+				await fireEvent.keyDown(rows[0], { key: 'End' });
+				expect(document.activeElement).toBe(rows[2]);
 			});
 
-			it('puts the focus on the first feature, and the arrow keys go across the actors', async () => {
+			it('closes on Escape, keeps the Escape from Foundry, and gives the focus to the button', async () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
-				});
-				await openVerb(rollPlace(), /^Reroll/);
-				await Promise.resolve();
-				const [wren, bram] = rollPlace().getAllByRole('menuitem');
-
-				expect(document.activeElement).toBe(wren);
-				await fireEvent.keyDown(wren, { key: 'ArrowDown' });
-				expect(document.activeElement).toBe(bram);
-				await fireEvent.keyDown(bram, { key: 'ArrowDown' });
-				expect(document.activeElement).toBe(wren);
-				await fireEvent.keyDown(wren, { key: 'End' });
-				expect(document.activeElement).toBe(bram);
-			});
-
-			it('closes on Escape, keeps the Escape from Foundry, and gives the focus back', async () => {
-				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
 				const onWindowKeydown = vi.fn();
 				window.addEventListener('keydown', onWindowKeydown);
-				await openVerb(rollPlace(), /^Reroll/);
-				await Promise.resolve();
+				await openControl(rollPlace());
 
-				await fireEvent.keyDown(rollPlace().getAllByRole('menuitem')[0], { key: 'Escape' });
+				await fireEvent.keyDown(rowsOf(screen.getByTestId('roll-place'))[0], { key: 'Escape' });
 				window.removeEventListener('keydown', onWindowKeydown);
 
-				expect(rollPlace().queryByRole('menu')).toBeNull();
+				expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(0);
 				expect(onWindowKeydown).not.toHaveBeenCalled();
-				expect(document.activeElement).toBe(rollPlace().getByRole('button', { name: /^Reroll/ }));
+				expect(document.activeElement).toBe(controlButton(rollPlace()));
 			});
 
-			it('closes when the player clicks outside the menu', async () => {
+			it('leaves Escape to Foundry when it is closed', async () => {
 				render(IncomingReactionPromptsTestHarness, {
-					props: { messageDocument: verbMessage() },
+					props: { messageDocument: controlMessage() },
 				});
-				await openVerb(rollPlace(), /^Reroll/);
+				const onWindowKeydown = vi.fn();
+				window.addEventListener('keydown', onWindowKeydown);
+
+				await fireEvent.keyDown(controlButton(rollPlace()), { key: 'Escape' });
+				window.removeEventListener('keydown', onWindowKeydown);
+
+				expect(onWindowKeydown).toHaveBeenCalledTimes(1);
+			});
+
+			it('stays open on a click outside', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: controlMessage() },
+				});
+				await openControl(rollPlace());
 
 				await fireEvent.pointerDown(document.body);
 
-				expect(rollPlace().queryByRole('menu')).toBeNull();
+				expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(3);
+			});
+
+			it('gives the focus to the button when the row clicked goes and others stay', async () => {
+				render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: controlMessage() },
+				});
+				await openControl(rollPlace());
+				const row = rollPlace().getByRole('button', { name: /Change Die with/ });
+				row.focus();
+
+				await fireEvent.click(row);
+
+				await vi.waitFor(() => expect(document.activeElement).toBe(controlButton(rollPlace())));
+			});
+
+			it('gives the focus to the card when the last row goes', async () => {
+				const message = controlMessage();
+				message.system.incomingReactions = [rerollEntry({ id: 'only', actorUuid: 'Actor.wren' })];
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+				await openControl(rollPlace());
+				const [row] = rowsOf(screen.getByTestId('roll-place'));
+				row.focus();
+
+				await fireEvent.click(row);
+
+				const card = screen.getByTestId('card');
+				await vi.waitFor(() => expect(document.activeElement).toBe(card));
+				expect(rollPlace().queryByRole('button')).toBeNull();
+			});
+
+			it('gives the focus to the card in a new draw, after the last row went', async () => {
+				const message = controlMessage();
+				message.system.incomingReactions = [rerollEntry({ id: 'only', actorUuid: 'Actor.wren' })];
+				const first = render(IncomingReactionPromptsTestHarness, {
+					props: { messageDocument: message },
+				});
+				await openControl(rollPlace());
+				await fireEvent.click(rowsOf(screen.getByTestId('roll-place'))[0]);
+				await vi.waitFor(() => expect(requestIncomingAttackReaction).toHaveBeenCalled());
+				first.unmount();
+				message.system.incomingReactions = [
+					rerollEntry({ id: 'only', actorUuid: 'Actor.wren', used: true }),
+				];
+
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+				expect(document.activeElement).toBe(screen.getByTestId('card'));
+			});
+
+			it('takes no focus from where the user moved it', async () => {
+				const message = controlMessage();
+				message.system.incomingReactions = [rerollEntry({ id: 'only', actorUuid: 'Actor.wren' })];
+				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+				await openControl(rollPlace());
+				const elsewhere = document.body.appendChild(document.createElement('input'));
+				elsewhere.focus();
+
+				await fireEvent.click(rowsOf(screen.getByTestId('roll-place'))[0]);
+				await vi.waitFor(() => expect(rollPlace().queryByRole('button')).toBeNull());
+
+				expect(document.activeElement).toBe(elsewhere);
+				elsewhere.remove();
 			});
 		});
 
@@ -883,11 +1033,11 @@ describe('IncomingReactionPrompts', () => {
 			});
 
 			async function costText(): Promise<string> {
-				await openVerb(rollPlace(), 'Reroll');
+				await openControl(rollPlace());
 				return (
 					screen
 						.getByTestId('roll-place')
-						.querySelector('.nimble-choice-menu__cost')
+						.querySelector('.nimble-change-roll__cost')
 						?.textContent?.trim() ?? ''
 				);
 			}
@@ -921,7 +1071,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([rerollEntry()]) },
 			});
 
-			await useFeature(rollPlace(), 'Reroll', /Pocket Sand/);
+			await useFeature(rollPlace(), /Pocket Sand/);
 			await Promise.resolve();
 			await Promise.resolve();
 
@@ -929,6 +1079,7 @@ describe('IncomingReactionPrompts', () => {
 				messageId: 'message-1',
 				entryId: 'reroll-entry',
 				forceHeroicReaction: false,
+				pick: {},
 			});
 		});
 
@@ -945,14 +1096,17 @@ describe('IncomingReactionPrompts', () => {
 				for (let i = 0; i < 4; i++) await Promise.resolve();
 			}
 
-			it('opens the dice in place of the button, and sends the die the player clicks', async () => {
+			it('opens the dice under the row, and sends the die the player clicks', async () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
 				});
 
-				await useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				await useFeature(rollPlace(), /Reroll with Pocket Sand/);
 
-				expect(rollPlace().getByText('Pick a die to reroll')).toBeTruthy();
+				const row = rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ });
+				const title = rollPlace().getByText('Pick a die to reroll');
+				expect(row.getAttribute('aria-expanded')).toBe('true');
+				expect(row.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 				expect(rollPlace().queryByRole('menu')).toBeNull();
 				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 
@@ -963,7 +1117,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 2, result: 0 },
+					pick: { die: { term: 2, result: 0 } },
 				});
 				expect(rollPlace().getByText('Rerolling with Pocket Sand')).toBeTruthy();
 			});
@@ -973,7 +1127,7 @@ describe('IncomingReactionPrompts', () => {
 					props: { messageDocument: pickerMessage([pool, primary]) },
 				});
 
-				await useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				await useFeature(rollPlace(), /Reroll with Pocket Sand/);
 				await settle();
 
 				const primaryButton = rollPlace().getByRole('button', { name: 'Reroll the 1 (Primary)' });
@@ -984,7 +1138,7 @@ describe('IncomingReactionPrompts', () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
 				});
-				const open = () => useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				const open = () => useFeature(rollPlace(), /Reroll with Pocket Sand/);
 
 				await open();
 				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
@@ -998,12 +1152,12 @@ describe('IncomingReactionPrompts', () => {
 				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
 			});
 
-			it('gives the focus back to the Reroll button on Cancel or Escape', async () => {
+			it('gives the focus back to the row on Cancel or Escape', async () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
 				});
-				const opener = () => rollPlace().getByRole('button', { name: 'Reroll' });
-				const open = () => useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				const opener = () => rollPlace().getByRole('button', { name: /Reroll with Pocket Sand/ });
+				const open = () => useFeature(rollPlace(), /Reroll with Pocket Sand/);
 
 				await open();
 				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
@@ -1022,7 +1176,7 @@ describe('IncomingReactionPrompts', () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
 				});
-				await useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				await useFeature(rollPlace(), /Reroll with Pocket Sand/);
 
 				await fireEvent.keyDown(rollPlace().getByRole('button', { name: 'Cancel' }), {
 					key: 'Escape',
@@ -1035,7 +1189,7 @@ describe('IncomingReactionPrompts', () => {
 				render(IncomingReactionPromptsTestHarness, {
 					props: { messageDocument: pickerMessage([primary, pool]) },
 				});
-				await useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				await useFeature(rollPlace(), /Reroll with Pocket Sand/);
 				await settle();
 
 				await fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowRight' });
@@ -1053,12 +1207,12 @@ describe('IncomingReactionPrompts', () => {
 					props: { messageDocument: pickerMessage([pool]) },
 				});
 
-				await useFeature(rollPlace(), 'Reroll', /Reroll with Pocket Sand/);
+				await useFeature(rollPlace(), /Reroll with Pocket Sand/);
 				await settle();
 
 				expect(rollPlace().queryByText('Pick a die to reroll')).toBeNull();
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.objectContaining({ die: { term: 2, result: 0 } }),
+					expect.objectContaining({ pick: { die: { term: 2, result: 0 } } }),
 				);
 			});
 		});
@@ -1076,7 +1230,7 @@ describe('IncomingReactionPrompts', () => {
 				for (let i = 0; i < 4; i++) await Promise.resolve();
 			}
 
-			const openChange = () => useFeature(rollPlace(), 'Change die', /Change the die/);
+			const openChange = () => useFeature(rollPlace(), /Change Die with/);
 			const valueInput = () =>
 				rollPlace().getByRole('spinbutton', { name: 'New value, 1 to 8' }) as HTMLInputElement;
 
@@ -1106,8 +1260,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 0, result: 0 },
-					value: 8,
+					pick: { die: { term: 0, result: 0 }, value: 8 },
 				});
 			});
 
@@ -1150,7 +1303,7 @@ describe('IncomingReactionPrompts', () => {
 				await settle();
 
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.objectContaining({ die: { term: 0, result: 0 }, value: 6 }),
+					expect.objectContaining({ pick: { die: { term: 0, result: 0 }, value: 6 } }),
 				);
 			});
 
@@ -1183,7 +1336,7 @@ describe('IncomingReactionPrompts', () => {
 					messageId: 'message-1',
 					entryId: 'reroll-entry',
 					forceHeroicReaction: false,
-					die: { term: 0, result: 0 },
+					pick: { die: { term: 0, result: 0 } },
 				});
 			});
 
@@ -1198,7 +1351,9 @@ describe('IncomingReactionPrompts', () => {
 
 				expect(rollPlace().queryByText('Pick a value')).toBeNull();
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith(
-					expect.not.objectContaining({ value: expect.anything() }),
+					expect.objectContaining({
+						pick: expect.not.objectContaining({ value: expect.anything() }),
+					}),
 				);
 			});
 
@@ -1208,7 +1363,7 @@ describe('IncomingReactionPrompts', () => {
 				});
 				const onWindowKeydown = vi.fn();
 				window.addEventListener('keydown', onWindowKeydown);
-				const opener = () => rollPlace().getByRole('button', { name: 'Change die' });
+				const opener = () => rollPlace().getByRole('button', { name: /Change Die with/ });
 
 				await openChange();
 				await fireEvent.click(rollPlace().getByRole('button', { name: 'Cancel' }));
@@ -1298,7 +1453,7 @@ describe('IncomingReactionPrompts', () => {
 				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });
 			}
 
-			it('shows the GM one quiet line, and Add gives the reroll its button', async () => {
+			it('shows the GM one quiet line, and Add gives the reroll its row', async () => {
 				const message = leftOutMessage();
 				render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
@@ -1439,7 +1594,7 @@ describe('IncomingReactionPrompts', () => {
 			expect(lines[1].querySelector('.nimble-die-face')).toBeNull();
 		});
 
-		it('keeps the well under the history line while another reroll can still be used', () => {
+		it('keeps the control under the history line while another reroll can still be used', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {
 					messageDocument: createMessage(
@@ -1451,10 +1606,12 @@ describe('IncomingReactionPrompts', () => {
 
 			const roll = screen.getByTestId('roll-place');
 			const history = roll.querySelector('.nimble-roll-changes__history');
-			const well = roll.querySelector('.nimble-roll-changes__well');
+			const control = roll.querySelector('.nimble-change-roll');
 			expect(history?.textContent).toContain('Rerolled with Pocket Sand');
-			expect(well?.querySelector('button')?.textContent?.trim()).toBe('Reroll');
-			expect(history?.compareDocumentPosition(well as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+			expect(control?.querySelector('button')?.textContent).toContain('Change This Roll');
+			expect(history?.compareDocumentPosition(control as Node)).toBe(
+				Node.DOCUMENT_POSITION_FOLLOWING,
+			);
 		});
 
 		it('leaves out the name of the one who rolled, which the card header shows', async () => {
@@ -1490,7 +1647,7 @@ describe('IncomingReactionPrompts', () => {
 			expect(rollPlace().queryByText(/Used by/)).toBeNull();
 		});
 
-		it('says "Reroll again" when the last feature can reroll again', async () => {
+		it('says "Reroll Again" when the last feature can reroll again', async () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {
 					messageDocument: createMessage(
@@ -1500,10 +1657,10 @@ describe('IncomingReactionPrompts', () => {
 				},
 			});
 
-			await openVerb(rollPlace(), 'Reroll');
-			const item = rollPlace().getByRole('menuitem', { name: 'Reroll again with Pocket Sand' });
-			expect(item.textContent?.trim()).toBe('Pocket Sand');
-			expect(menuHeadings(screen.getByTestId('roll-place'))).toEqual(['Wren']);
+			await openControl(rollPlace());
+			const row = rollPlace().getByRole('button', { name: 'Reroll Again with Pocket Sand' });
+			expect(rowWords(row)).toBe('Reroll Again with Pocket Sand');
+			expect(actorHeadings(screen.getByTestId('roll-place'))).toEqual(['Wren']);
 			expect(rollPlace().queryByText(/Used by|Uses left/)).toBeNull();
 		});
 
@@ -1548,13 +1705,59 @@ describe('IncomingReactionPrompts', () => {
 				},
 			});
 
-			await openVerb(rollPlace(), /^Reroll/);
-			await openVerb(optionsPlace(), /^Interpose/);
+			await openControl(rollPlace());
 			expect(container.querySelectorAll('button').length).toBeGreaterThan(4);
 			// Em dash, en dash and middle dot, by code point.
 			for (const mark of [0x2014, 0x2013, 0xb7].map((code) => String.fromCodePoint(code))) {
 				expect(container.textContent).not.toContain(mark);
 			}
 		});
+	});
+});
+
+describe('IncomingReactionPrompts with No Damage', () => {
+	const noDamageChange = {
+		id: 'click-1',
+		lineId: 'click-1',
+		entryId: 'entry-1',
+		itemUuid: 'Item.res',
+		ruleId: 'rule-1',
+		label: 'Epic Resistance',
+		actorUuid: 'Actor.protector',
+		change: 'noDamage',
+		value: 0,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+		targetTokenUuid: 'Scene.s.Token.victim',
+	};
+
+	it('offers a row that tells what it does', () => {
+		const entry = { ...createEntry({ id: 'entry-1', kind: 'reroll' }), use: 'result' };
+		const message = createMessage([entry as ReturnType<typeof createEntry>]);
+		Object.assign(message, { resultUseOf: () => ({ change: 'noDamage', value: 0, stat: '' }) });
+
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+		expect(rollPlace().getByRole('button', { name: /No Damage with/ })).toBeTruthy();
+	});
+
+	it('tells the target at the roll, with a Remove until the damage is applied', () => {
+		const message = createMessage([]);
+		Object.assign(message.system, { resultChanges: [noDamageChange] });
+
+		const first = render(IncomingReactionPromptsTestHarness, {
+			props: { messageDocument: message },
+		});
+		expect(screen.getByTestId('roll-place').textContent).toContain('No Damage for Sir Brannon');
+		expect(rollPlace().queryByRole('button', { name: /^Remove/ })).toBeTruthy();
+		first.unmount();
+
+		Object.assign(message.system, { damageApplied: true });
+		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+		expect(screen.getByTestId('roll-place').textContent).toContain('No Damage for Sir Brannon');
+		expect(rollPlace().queryByRole('button', { name: /^Remove/ })).toBeNull();
 	});
 });

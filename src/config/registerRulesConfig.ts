@@ -5,6 +5,7 @@ import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
+import { ChangeResultRule } from '../models/rules/changeResult.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
@@ -67,6 +68,7 @@ export default function registerRulesConfig() {
 		attackOutcome: 'NIMBLE.ruleTypes.attackOutcome',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
 		changeDie: 'NIMBLE.ruleTypes.changeDie',
+		changeResult: 'NIMBLE.ruleTypes.changeResult',
 		chargePool: 'NIMBLE.ruleTypes.chargePool',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		concentrationTrack: 'NIMBLE.ruleTypes.concentrationTrack',
@@ -128,6 +130,7 @@ export default function registerRulesConfig() {
 		attackOutcome: AttackOutcomeRule,
 		chargeConsumer: ChargeConsumerRule,
 		changeDie: ChangeDieRule,
+		changeResult: ChangeResultRule,
 		chargePool: ChargePoolRule,
 		combatMana: CombatManaRule,
 		concentrationTrack: ConcentrationTrackRule,

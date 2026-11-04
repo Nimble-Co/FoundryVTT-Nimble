@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { modifyRerollChanges } from '../modifyReroll.js';
+import { cannotFailModifier, modifyRerollChanges } from '../modifyReroll.js';
 
 type RuleConfig = Record<string, unknown>;
 
@@ -101,5 +101,20 @@ describe('modifyRerollChanges', () => {
 		expect(modifyRerollChanges(inspiration(rules), 'attack', applied).map((c) => c.kind)).toEqual([
 			'extraDamage',
 		]);
+	});
+});
+
+describe('cannotFailModifier', () => {
+	it('finds the rule that says the reroll cannot fail', () => {
+		const rule = modifier({ cannotFail: true }, "I'm So Famous!");
+		expect(cannotFailModifier(inspiration([modifier(), rule]))).toBe(rule);
+	});
+
+	it('finds none when no rule says it, or the rule is off', () => {
+		expect(cannotFailModifier(inspiration([modifier()]))).toBeNull();
+		const off = modifier({ cannotFail: true, disabled: true });
+		expect(cannotFailModifier(inspiration([off]))).toBeNull();
+		const notNow = modifier({ cannotFail: true, appliesTo: () => false });
+		expect(cannotFailModifier(inspiration([notNow]))).toBeNull();
 	});
 });

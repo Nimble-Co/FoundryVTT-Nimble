@@ -1,13 +1,15 @@
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResultChange } from '#types/resultChange.d.ts';
 import { NimbleRoll } from '../../../dice/NimbleRoll.js';
 import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
 import {
 	type CheckCard,
 	checkCardRerollData,
 	checkCardRollTarget,
-	checkRollOfCard,
 	createCheckCard,
 } from '../checkCardRollTarget.js';
+import { checkRollOfCard } from '../checkRollOfCard.js';
 import type { RerollingActor, RerollRuleLike } from '../rerollEntries.js';
 import { prepareReroll } from '../rerollOptions.js';
 
@@ -43,6 +45,7 @@ function makeCard(overrides: Partial<CheckCard> = {}, serialized = serializedSav
 		roller: () => ({ uuid: 'Actor.roller' }),
 		rollsSource: () => [JSON.stringify(serialized)],
 		incomingReactions: () => [],
+		resultChanges: () => [],
 		update: vi.fn(async (_changes: Record<string, unknown>) => undefined),
 		...overrides,
 	} satisfies CheckCard;
@@ -115,6 +118,13 @@ describe('checkCardRollTarget', () => {
 		const context = checkCardRollTarget(makeCard()).context();
 
 		expect(context).toEqual({
+			card: {
+				total: 12,
+				changes: [],
+				roller: { uuid: 'Actor.roller' },
+				result: null,
+				rollModifier: 3,
+			},
 			attacker: { uuid: 'Actor.roller' },
 			targets: [],
 			allies: [],
@@ -164,6 +174,80 @@ describe('checkCardRollTarget', () => {
 			options: { rollMode: 2 },
 		});
 		expect(found?.previousResult).toBe(9);
+	});
+
+	describe('with Change a Result clicks', () => {
+		const add = {
+			id: 'a',
+			lineId: 'a',
+			change: 'add',
+			value: 3,
+			retired: false,
+			before: null,
+		} as unknown as ResultChange;
+
+		function written(card: ReturnType<typeof makeCard>) {
+			return (card.update as unknown as Mock).mock.calls[0]?.[0] as {
+				system: Record<string, unknown>;
+			};
+		}
+
+		async function place(card: ReturnType<typeof makeCard>, use?: 'change') {
+			rollD20(17);
+			const found = checkCardRollTarget(card).findRoll();
+			if (!found) throw new Error('no roll');
+			const roll = await found.makeRoll('1d20 + 3[Will]', {});
+			const prepared = await found.prepare(roll, []);
+			await prepared.write({
+				incomingReactions: [],
+				rerolls: [{ ...(use ? { use } : {}) } as never],
+				rollChanges: [],
+				discardedCritTriggers: false,
+			});
+		}
+
+		it('gives the live gate the total with the clicks on it, and the roller', () => {
+			const roller = { uuid: 'Actor.roller' };
+			const card = makeCard({ roller: () => roller, resultChanges: () => [add, add] });
+
+			expect(checkCardRollTarget(card).context().card).toEqual({
+				total: 18,
+				changes: [add, add],
+				roller,
+				result: null,
+				rollModifier: 3,
+			});
+		});
+
+		it('shows the total with the clicks on it as the old result of a keep', () => {
+			const found = checkCardRollTarget(makeCard({ resultChanges: () => [add] })).findRoll();
+
+			expect(found?.shownTotal?.()).toBe(15);
+		});
+
+		it('retires the clicks when a new roll is placed', async () => {
+			const card = makeCard({ resultChanges: () => [add] });
+
+			await place(card);
+
+			expect(written(card).system.resultChanges).toEqual([{ ...add, retired: true, before: 12 }]);
+		});
+
+		it('keeps the clicks when a change of a die is placed', async () => {
+			const card = makeCard({ resultChanges: () => [add] });
+
+			await place(card, 'change');
+
+			expect(written(card).system).not.toHaveProperty('resultChanges');
+		});
+
+		it('writes no clicks on a card with none', async () => {
+			const card = makeCard();
+
+			await place(card);
+
+			expect(written(card).system).not.toHaveProperty('resultChanges');
+		});
 	});
 
 	it('finds no roll on a card with none', () => {
@@ -530,5 +614,264 @@ describe('checkCardRerollData', () => {
 
 		expect(data.roll.formula).toBe('2d20khn + 3[Will]');
 		expect(data.system.rollMode).toBe(1);
+	});
+});
+
+describe('a check card that knows its DC', () => {
+	it('gives the gate the result, read again when the card changes', () => {
+		const roll = { ...serializedSave(), total: 12 };
+		let total = 12;
+		const card = makeCard({
+			dc: () => 14,
+			rollsSource: () => [JSON.stringify({ ...roll, total })],
+		});
+		expect(checkCardRollTarget(card).context().card?.result).toBe('failed');
+		total = 15;
+		expect(checkCardRollTarget(card).context().card?.result).toBe('succeeded');
+	});
+
+	it('gives no result when there is no DC', () => {
+		const context = checkCardRollTarget(makeCard()).context();
+		expect(context.card?.result).toBeNull();
+	});
+
+	it('gives the modifier of the roll: the total less the kept die', () => {
+		const context = checkCardRollTarget(makeCard()).context();
+		expect(context.card?.rollModifier).toBe(3);
+	});
+});
+
+describe('the other stats of a check', () => {
+	const rollData = {
+		strength: 1,
+		dexterity: 2,
+		intelligence: 0,
+		will: 3,
+		strengthSave: 4,
+		dexteritySave: -1,
+		intelligenceSave: 0,
+		willSave: 5,
+	};
+	const roller = () => ({ uuid: 'Actor.roller', getRollData: () => rollData });
+
+	function save(formula: string) {
+		return makeCard({ roller: roller }, serializedSave(formula));
+	}
+
+	it('lists the save modifiers of the three other stats on a save', () => {
+		const found = checkCardRollTarget(save('1d20 + 5[Will Mod]')).findRoll();
+		expect(found?.statChoices?.()).toEqual([
+			{ stat: 'strength', mod: 4 },
+			{ stat: 'dexterity', mod: -1 },
+			{ stat: 'intelligence', mod: 0 },
+		]);
+	});
+
+	it('moves the save modifier to the new stat and keeps the other bonuses and the roll mode', () => {
+		const card = makeCard(
+			{ roller: roller, rollMode: () => 1 },
+			serializedSave('1d20 + 5[Will Mod] + 2[Bless]'),
+		);
+		const found = checkCardRollTarget(card).findRoll();
+		if (!found?.withStat) throw new Error('No stat swap');
+		const swapped = found.withStat(found, 'strength');
+
+		expect(swapped?.replaced.formula).toBe('1d20 + 4[Strength Mod] + 2[Bless]');
+		expect(swapped?.replaced.options).toMatchObject({ statUsed: 'strength', rollMode: 1 });
+	});
+
+	it('swaps the stat part of a skill and keeps its other bonuses', () => {
+		const card = makeCard(
+			{ roll: { kind: 'skillCheck', key: 'might' }, roller: roller },
+			serializedSave('1d20 + 3[Might Mod] + 2[Bless]'),
+		);
+		const found = checkCardRollTarget(card).findRoll();
+		if (!found?.withStat) throw new Error('No stat swap');
+		const choices = found.statChoices?.().map((choice) => choice.stat);
+		expect(choices).toEqual(['dexterity', 'intelligence', 'will']);
+
+		// Might is a strength skill worth 3 here: strength 1 becomes dexterity 2, so 1 more.
+		const swapped = found.withStat(found, 'dexterity');
+		expect(swapped?.replaced.formula).toBe('1d20 + 4[Might Mod] + 2[Bless]');
+	});
+
+	it('refuses the stat in use, and one the roller has no value for', () => {
+		const found = checkCardRollTarget(save('1d20 + 5[Will Mod]')).findRoll();
+		if (!found?.withStat) throw new Error('No stat swap');
+		expect(found.withStat(found, 'will')).toBeNull();
+		expect(found.withStat(found, 'charisma')).toBeNull();
+	});
+
+	it('reads the stat a first swap picked on a second swap', () => {
+		const serialized = {
+			...serializedSave('1d20 + 4[Strength Mod]'),
+			options: { statUsed: 'strength' },
+		};
+		const card = makeCard({ roller: roller }, serialized);
+		const found = checkCardRollTarget(card).findRoll();
+		expect(found?.statChoices?.().map((choice) => choice.stat)).toEqual([
+			'dexterity',
+			'intelligence',
+			'will',
+		]);
+	});
+
+	it('has no stat to pick on Initiative', () => {
+		const card = makeCard({ roll: { kind: 'initiative', key: '' } as never, roller: roller });
+		expect(checkCardRollTarget(card).findRoll()?.statChoices?.()).toEqual([]);
+	});
+});
+
+describe('a rule that counts a low roll as a natural 20', () => {
+	const naturalRule = (relatedTo = 'will') => ({
+		...rerollRule(),
+		type: 'changeResult',
+		id: 'nat',
+		offersUseOn: vi.fn(() => false),
+		countsAsNat20On: (roll: { key?: string }) => roll.key === relatedTo,
+	});
+	const lowRoll = (formula = '1d20 - 2[Will]') => {
+		const roll = new NimbleRoll(formula, { respondentId: 'Actor.roller' });
+		(roll.terms[0] as unknown as { results: unknown[] }).results = [{ result: 2, active: true }];
+		Object.defineProperty(roll, 'total', { value: 0, configurable: true });
+		return roll;
+	};
+
+	beforeEach(() => {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => true,
+		};
+	});
+
+	it('writes an automatic change when the card is posted, and the dice stay', async () => {
+		const rule = naturalRule();
+		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [rule] };
+
+		const result = await checkCardRerollData(roller, lowRoll(), WILL_SAVE, 0);
+
+		expect(result.system.resultChanges).toEqual([
+			expect.objectContaining({ change: 'countsAsNat20', value: 18, automatic: true }),
+		]);
+		expect(result.system.resultChanges?.[0].paid).toEqual({ charges: 0, mana: 0, wounds: 0 });
+		expect(result.roll.total).toBe(0);
+	});
+
+	it('writes nothing for another stat', async () => {
+		const roller: RerollingActor = {
+			uuid: 'Actor.roller',
+			isOwner: true,
+			rules: [naturalRule('strength')],
+		};
+		const result = await checkCardRerollData(roller, lowRoll(), WILL_SAVE, 0);
+		expect(result.system.resultChanges).toBeUndefined();
+	});
+
+	it('writes nothing with Feature Effects off', async () => {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => false,
+		};
+		const roller: RerollingActor = { uuid: 'Actor.roller', isOwner: true, rules: [naturalRule()] };
+		const result = await checkCardRerollData(roller, lowRoll(), WILL_SAVE, 0);
+		expect(result.system.resultChanges).toBeUndefined();
+	});
+
+	it('is read again on a new roll and on a change of a die', async () => {
+		const rule = naturalRule();
+		const roller = { uuid: 'Actor.roller', rules: [rule] };
+		const old = {
+			id: 'old',
+			lineId: 'old',
+			change: 'countsAsNat20',
+			value: 18,
+			automatic: true,
+			retired: false,
+			paid: { charges: 0, mana: 0, wounds: 0 },
+		} as unknown as ResultChange;
+		const card = makeCard({
+			roller: () => roller,
+			resultChanges: () => [old],
+		});
+		const found = checkCardRollTarget(card).findRoll();
+		const prepared = await found?.prepare(lowRoll(), []);
+		await prepared?.write({
+			incomingReactions: [],
+			rerolls: [{ use: 'change' }],
+			rollChanges: [],
+		} as never);
+
+		const written = (card.update as Mock).mock.calls[0][0].system.resultChanges as ResultChange[];
+		expect(written.filter((change) => !change.retired)).toEqual([
+			expect.objectContaining({ change: 'countsAsNat20', value: 18, automatic: true }),
+		]);
+		expect(written.map((change) => change.id)).not.toContain('old');
+	});
+
+	it('keeps a success that a reroll made by itself on a change of a die', async () => {
+		const succeeded = {
+			id: 'sure',
+			lineId: 'sure',
+			change: 'succeed',
+			value: 0,
+			automatic: true,
+			retired: false,
+			paid: { charges: 0, mana: 0, wounds: 0 },
+		} as unknown as ResultChange;
+		const card = makeCard({
+			roller: () => ({ uuid: 'Actor.roller', rules: [] }),
+			resultChanges: () => [succeeded],
+		});
+		const prepared = await checkCardRollTarget(card).findRoll()?.prepare(lowRoll(), []);
+		await prepared?.write({
+			incomingReactions: [],
+			rerolls: [{ use: 'change' }],
+			rollChanges: [],
+		} as never);
+
+		const { system } = (card.update as Mock).mock.calls[0][0];
+		expect(system.resultChanges ?? [succeeded]).toEqual([succeeded]);
+	});
+
+	it('shows the counted total as the new result of a keep', () => {
+		const card = makeCard({ roller: () => ({ uuid: 'Actor.roller', rules: [naturalRule()] }) });
+		const found = checkCardRollTarget(card).findRoll();
+		expect(found?.keepChoice?.(lowRoll() as never).total).toBe(18);
+	});
+});
+
+describe('an automatic reroll for a failed check', () => {
+	const failedRule = () =>
+		rerollRule({ rerollsByItself: true, outcome: 'failed', id: 'failed-rule' });
+	const roller = (rule: RerollRuleLike): RerollingActor => ({
+		uuid: 'Actor.roller',
+		isOwner: true,
+		rules: [rule],
+	});
+
+	beforeEach(() => {
+		(globalThis as unknown as { game: { settings: unknown } }).game.settings = {
+			get: () => true,
+		};
+	});
+
+	it('runs at posting on a known failure', async () => {
+		rollD20(15);
+		const result = await checkCardRerollData(roller(failedRule()), postedRoll(), WILL_SAVE, 0, 14);
+		expect(result.system.rerolls).toHaveLength(1);
+	});
+
+	it('stays a row when the check succeeded', async () => {
+		const roll = postedRoll();
+		Object.defineProperty(roll, 'total', { value: 9, configurable: true });
+		const result = await checkCardRerollData(roller(failedRule()), roll, WILL_SAVE, 0, 5);
+		expect(result.system.rerolls).toEqual([]);
+		expect(result.system.incomingReactions).toEqual([
+			expect.objectContaining({ ruleId: 'failed-rule', used: false }),
+		]);
+	});
+
+	it('stays a row when no DC gives a result', async () => {
+		const result = await checkCardRerollData(roller(failedRule()), postedRoll(), WILL_SAVE, 0);
+		expect(result.system.rerolls).toEqual([]);
+		expect(result.system.incomingReactions[0]).toMatchObject({ used: false });
 	});
 });

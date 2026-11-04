@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { GrantedActivationType } from '../../models/rules/grantActivation.js';
+import { ruleLabel } from '../actor/actorRules.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 
 /**
@@ -91,7 +92,7 @@ export function collectGrantedActionOffers(
 			offersByKey.set(key, {
 				id: foundry.utils.randomID(),
 				targetActorUuid,
-				label: rule.label || item.name || '',
+				label: ruleLabel({ label: rule.label, item }),
 				activationType: rule.activationType ?? 'weaponAttack',
 				ruleId: rule.id ?? '',
 				sourceItemUuid: item.uuid ?? '',

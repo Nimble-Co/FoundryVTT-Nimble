@@ -6,7 +6,71 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "iqcMj0xQDJkaXAuK",
+				"identifier": "wily-underdog",
+				"label": "Wily Underdog (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "reroll",
+				"disabled": false,
+				"id": "nPT6RmDpSm2VYzRF",
+				"identifier": "",
+				"label": "Wily Underdog",
+				"predicate": {},
+				"priority": 2,
+				"suppressActivationCard": "auto",
+				"rolls": [
+					"attack",
+					"save",
+					"skillCheck"
+				],
+				"saves": [],
+				"skills": [],
+				"abilities": [],
+				"usedBy": "roller",
+				"reach": 0,
+				"relatedStat": "strength",
+				"die": "wholeRoll",
+				"keep": "new",
+				"useAnotherStat": true,
+				"otherCreature": {},
+				"outcome": "failed",
+				"attackDelivery": "any",
+				"chargePoolIdentifier": "wily-underdog",
+				"chargeCost": 1,
+				"manaCost": 0,
+				"woundCost": 0,
+				"heroicReaction": "",
+				"actionCost": 0,
+				"oncePerRoll": false,
+				"rollModeChange": 0,
+				"primaryDieBonus": 0,
+				"extraDamage": "",
+				"automatic": false,
+				"discardedCritTriggers": false,
+				"cardHint": "",
+				"cardHintWhen": {}
+			}
+		],
 		"description": "<p>(Req. 0 or negative STR at character creation.) Reroll a failed STR-related roll (e.g., STR attack, STR save, Might check) and use another stat instead, 1/day.</p>"
 	},
 	"effects": [],

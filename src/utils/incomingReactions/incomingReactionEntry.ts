@@ -2,9 +2,17 @@ import type { DieChange } from '#types/dieChange.d.ts';
 
 /**
  * When an outcome-gated offer or reroll applies, given how the attack landed.
- * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit.
+ * `hit` includes crits; `nonCriticalHit` is a hit that is not a crit. `failed` is
+ * a miss on an attack, and on a check a result the card knows is not a success.
  */
-export const REROLL_TRIGGERS = ['always', 'hit', 'criticalHit', 'nonCriticalHit', 'miss'] as const;
+export const REROLL_TRIGGERS = [
+	'always',
+	'hit',
+	'criticalHit',
+	'nonCriticalHit',
+	'miss',
+	'failed',
+] as const;
 export type RerollTrigger = (typeof REROLL_TRIGGERS)[number];
 
 /** The side of a roll a `reroll` entry is for. */
@@ -15,9 +23,13 @@ export type RerollSide = (typeof REROLL_SIDES)[number];
 export const REROLL_DICE = ['wholeRoll', 'primaryDie', 'pickedDie'] as const;
 export type RerollDie = (typeof REROLL_DICE)[number];
 
-/** What a `reroll` entry does: roll again, change a die, or make the attack a crit. */
-export const ROLL_USES = ['reroll', 'change', 'crit'] as const;
+/** What a `reroll` entry does: roll again, change a die, make the attack a crit, or change the result. */
+export const ROLL_USES = ['reroll', 'change', 'crit', 'result'] as const;
 export type RollUse = (typeof ROLL_USES)[number];
+
+/** How a Change a Result rule changes the result of a roll. */
+export const RESULT_CHANGES = ['succeed', 'setTotal', 'add', 'noDamage', 'countsAsNat20'] as const;
+export type ResultChangeKind = (typeof RESULT_CHANGES)[number];
 
 /** The dice a Change a Die rule can change. */
 export type ChangeableDie = Exclude<RerollDie, 'wholeRoll'>;
@@ -99,6 +111,7 @@ export function rerollTriggerMatches(
 		case 'nonCriticalHit':
 			return !view.isMiss && !view.isCritical;
 		case 'miss':
+		case 'failed':
 			return !!view.isMiss;
 		default:
 			return true; // 'always'
@@ -145,13 +158,15 @@ export interface IncomingReactionEntry {
 	/** reroll only: the side of the roll the entry was stamped for */
 	side?: RerollSide;
 	/** reroll only: the rule gives no new entry after it is used on this card */
-	oncePerAttack?: boolean;
+	oncePerRoll?: boolean;
 	/** reroll only: `change` for a Change a Die rule, `crit` for Make It a Crit. Absent is `reroll`. */
 	use?: RollUse;
 	/** reroll only: a crit use that also needs a die of the roll at its max. */
 	needsDieAtMax?: boolean;
 	/** reroll only: the rule's note under the feature on the card. */
 	hint?: string;
+	/** reroll only: the player picks another stat for the new roll. */
+	anotherStat?: boolean;
 	/** Ally-side reroll only: why the scan left it out. Null when it counts. */
 	leftOut?: RerollLeftOut | null;
 	/** Legacy `forceReroll` field. Old cards hold it; nothing reads it. */
@@ -216,6 +231,10 @@ export interface RerollRecord {
 	use?: RollUse;
 	/** A change only: how the die changed. `value` is 0 for a set value. */
 	change?: DieChange | null;
+	/** The stat the player picked for the new roll. Empty when the stat stayed. */
+	stat?: string;
+	/** The feature that made the new attack unable to miss. Empty for none. */
+	cannotMissBy?: string;
 }
 
 /**

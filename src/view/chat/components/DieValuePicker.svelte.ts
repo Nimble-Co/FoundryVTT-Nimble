@@ -5,7 +5,7 @@ import { claimEscape } from './claimEscape.ts';
 export function createDieValuePickerState(
 	getProps: () => Pick<DieValuePickerProps, 'die' | 'feature' | 'sending' | 'onpick' | 'oncancel'>,
 ) {
-	const elements = $state<{ input?: HTMLInputElement }>({});
+	const elements = $state<{ root?: HTMLElement; input?: HTMLInputElement }>({});
 	// Starts at the die's own value, so the player always picks one.
 	let typed = $state<number | null>(getProps().die.value);
 
@@ -52,8 +52,8 @@ export function createDieValuePickerState(
 	}
 
 	function focusInput() {
-		const { input } = elements;
-		input?.scrollIntoView?.({ block: 'nearest' });
+		const { root, input } = elements;
+		root?.scrollIntoView?.({ block: 'nearest' });
 		input?.focus({ preventScroll: true });
 		input?.select();
 	}

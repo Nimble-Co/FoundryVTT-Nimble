@@ -85,7 +85,7 @@ function makeRule(
 		manaCost: 0,
 		woundCost: 0,
 		heroicReaction: '',
-		oncePerAttack: false,
+		oncePerRoll: false,
 		disabled: false,
 		id: 'rule-1',
 		label: '',
@@ -109,6 +109,10 @@ function makeRule(
 const TARGET_MELEE = { side: 'target', roll: { kind: 'attack', delivery: 'melee' } } as const;
 
 describe('RerollRule', () => {
+	it('lists the related stat in its tooltip', () => {
+		expect(makeRule().rule.tooltipInfo()).toContain('relatedStat');
+	});
+
 	beforeEach(() => {
 		setToggles({});
 	});
@@ -147,7 +151,7 @@ describe('RerollRule', () => {
 			expect(schema.manaCost?.initial).toBe(0);
 			expect(schema.woundCost?.initial).toBe(0);
 			expect(schema.heroicReaction?.initial).toBe('');
-			expect(schema.oncePerAttack?.initial).toBe(false);
+			expect(schema.oncePerRoll?.initial).toBe(false);
 			expect(schema.saves?.initial).toEqual([]);
 			expect(schema.skills?.initial).toEqual([]);
 			expect(schema.abilities?.initial).toEqual([]);
@@ -181,6 +185,7 @@ describe('RerollRule', () => {
 				'criticalHit',
 				'nonCriticalHit',
 				'miss',
+				'failed',
 			]);
 			expect(Object.keys(schema.attackDelivery?.choices ?? {})).toEqual(['any', 'melee', 'ranged']);
 			expect(Object.keys(schema.heroicReaction?.choices ?? {})).toEqual([
@@ -230,7 +235,11 @@ describe('RerollRule', () => {
 			expect(showWhen({})).toBe(false);
 		});
 
-		it.each(['outcome', 'attackDelivery', 'primaryDieBonus', 'extraDamage', 'oncePerAttack'])(
+		it('shows oncePerRoll for every roll, because it limits a save or a check too', () => {
+			expect(schema.oncePerRoll?.options?.showWhen).toBeUndefined();
+		});
+
+		it.each(['attackDelivery', 'primaryDieBonus', 'extraDamage'])(
 			'shows %s only when attack is among the rolls',
 			(name) => {
 				const showWhen = schema[name]?.options?.showWhen as (
@@ -240,6 +249,10 @@ describe('RerollRule', () => {
 				expect(showWhen({ rolls: ['save'] })).toBe(false);
 			},
 		);
+
+		it('shows outcome for every roll, because failed reads a save or a check', () => {
+			expect(schema.outcome?.options?.showWhen).toBeUndefined();
+		});
 
 		it('bounds the numbers', () => {
 			expect(schema.rollModeChange).toMatchObject({ min: -1, max: 1, integer: true });
@@ -658,5 +671,105 @@ describe('RerollRule', () => {
 				extraDamage: '',
 			});
 		});
+	});
+});
+
+describe('RerollRule outcome failed, on a check card', () => {
+	const SAVE = { kind: 'save', key: 'strength' } as const;
+	const onCard = (rule: RerollRule, result: 'failed' | 'succeeded' | null) =>
+		rule.offersUseOn({
+			side: 'roller',
+			roll: SAVE,
+			card: { total: 7, changes: [], roller: null, result },
+		});
+
+	it('shows on a known failure and with no result, and hides on a known success', () => {
+		const { rule } = makeRule({ rolls: ['save'], usedBy: 'roller', outcome: 'failed' });
+		expect(onCard(rule, 'failed')).toBe(true);
+		expect(onCard(rule, null)).toBe(true);
+		expect(onCard(rule, 'succeeded')).toBe(false);
+	});
+
+	it('comes back when the result changes, and shows when the entry is stamped', () => {
+		const { rule } = makeRule({ rolls: ['save'], usedBy: 'roller', outcome: 'failed' });
+		expect(onCard(rule, 'succeeded')).toBe(false);
+		expect(onCard(rule, 'failed')).toBe(true);
+		expect(rule.offersUseOn({ side: 'roller', roll: SAVE })).toBe(true);
+	});
+
+	it('leaves a rule for any result alone', () => {
+		const { rule } = makeRule({ rolls: ['save'], usedBy: 'roller', outcome: 'always' });
+		expect(onCard(rule, 'succeeded')).toBe(true);
+	});
+});
+
+describe('RerollRule relatedStat', () => {
+	const attack = (stats: string[]) => ({ kind: 'attack', delivery: 'melee', stats }) as const;
+
+	it('limits the rule to the save, the skills and the attacks of that stat', () => {
+		const { rule } = makeRule({
+			rolls: ['attack', 'save', 'skillCheck', 'abilityCheck'],
+			usedBy: 'roller',
+			relatedStat: 'strength',
+		});
+		const offered = (roll: Parameters<RerollRule['offersUseOn']>[0]['roll']) =>
+			rule.offersUseOn({ side: 'roller', roll });
+		expect(offered({ kind: 'save', key: 'strength' })).toBe(true);
+		expect(offered({ kind: 'save', key: 'will' })).toBe(false);
+		expect(offered({ kind: 'skillCheck', key: 'might' })).toBe(true);
+		expect(offered({ kind: 'skillCheck', key: 'stealth' })).toBe(false);
+		expect(offered({ kind: 'abilityCheck', key: 'strength' })).toBe(true);
+		expect(offered(attack(['strength']))).toBe(true);
+		expect(offered(attack(['dexterity']))).toBe(false);
+		expect(offered(attack([]))).toBe(false);
+	});
+
+	it('empty is any roll', () => {
+		const { rule } = makeRule({ rolls: ['attack', 'save'], usedBy: 'roller', relatedStat: '' });
+		expect(rule.offersUseOn({ side: 'roller', roll: { kind: 'save', key: 'will' } })).toBe(true);
+		expect(rule.offersUseOn({ side: 'roller', roll: attack([]) })).toBe(true);
+	});
+});
+
+describe('RerollRule useAnotherStat', () => {
+	const schema = RerollRule.defineSchema() as unknown as Record<
+		string,
+		{ initial?: unknown; options?: { showWhen?: (data: Record<string, unknown>) => boolean } }
+	>;
+
+	it('is off by default, and asked only for a reroll of the whole roll', () => {
+		expect(schema.useAnotherStat?.initial).toBe(false);
+		const shows = schema.useAnotherStat?.options?.showWhen;
+		expect(shows?.({ die: 'wholeRoll' })).toBe(true);
+		expect(shows?.({ die: 'pickedDie' })).toBe(false);
+	});
+
+	it('counts only for a reroll of the whole roll', () => {
+		expect(makeRule({ useAnotherStat: true, die: 'wholeRoll' }).rule.usesAnotherStat).toBe(true);
+		expect(makeRule({ useAnotherStat: true, die: 'primaryDie' }).rule.usesAnotherStat).toBe(false);
+		expect(makeRule({ useAnotherStat: false, die: 'wholeRoll' }).rule.usesAnotherStat).toBe(false);
+	});
+
+	it('gives no row on an attack with no stat in its formula', () => {
+		const { rule } = makeRule({
+			rolls: ['attack'],
+			usedBy: 'roller',
+			useAnotherStat: true,
+			die: 'wholeRoll',
+		});
+		const roll = (stats: string[]) => ({ kind: 'attack', delivery: 'melee', stats }) as const;
+		expect(rule.offersUseOn({ side: 'roller', roll: roll(['strength']) })).toBe(true);
+		expect(rule.offersUseOn({ side: 'roller', roll: roll([]) })).toBe(false);
+	});
+
+	it('never rerolls by itself: the player has a choice', () => {
+		const { rule } = makeRule({
+			automatic: true,
+			useAnotherStat: true,
+			usedBy: 'roller',
+			die: 'wholeRoll',
+			keep: 'new',
+		});
+		expect(rule.rerollsByItself).toBe(false);
 	});
 });
