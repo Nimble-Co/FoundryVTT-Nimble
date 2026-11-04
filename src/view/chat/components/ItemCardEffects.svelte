@@ -6,6 +6,7 @@
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
 	import LatchedMissButton from './LatchedMissButton.svelte';
 	import DamageBackLines from './DamageBackLines.svelte';
+	import DefendReactions from './DefendReactions.svelte';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
 
 	// Provide getNodeComponent via context to avoid circular dependencies
@@ -15,6 +16,7 @@
 	let messageDocument = getContext('messageDocument');
 
 	let nodes = messageDocument?.effectNodes ?? [];
+	const firstDamageGroup = nodes.find((group) => group.length && isDamageGroup(group));
 </script>
 
 {#each nodes as nodeGroup}
@@ -39,6 +41,10 @@
 				<IncomingReactionPrompts place="roll" />
 
 				<DamageBackLines />
+
+				{#if nodeGroup === firstDamageGroup}
+					<DefendReactions />
+				{/if}
 
 				{#if game.user?.isGM}
 					<section class="nimble-effect">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { defendFor } from '#utils/defend/defendRecords.js';
 	import type {
 		DamageModifierKind,
 		NimbleChatMessage,
@@ -238,6 +239,14 @@
 
 					{#if token?.actor?.type !== 'character'}
 						{@html getArmorIcon(token)}
+					{:else if defendFor(messageDocument?.reactive?.system, token.uuid ?? '')}
+						{@const defend = defendFor(messageDocument?.reactive?.system, token.uuid ?? '')}
+						<i
+							class="nimble-armor-icon nimble-target-defended fa-solid fa-shield-halved"
+							data-tooltip={localize('NIMBLE.chat.defend.defendedTooltip', {
+								armor: String(defend?.armorApplies ? defend.armor : 0),
+							})}
+						></i>
 					{/if}
 
 					<button
@@ -402,5 +411,9 @@
 	.nimble-target-list > .nimble-target--moves {
 		--nimble-card-content-grid: 'img title badges move armor button';
 		--nimble-card-column-dimensions: 1.75rem 1fr auto auto 1rem 2rem;
+	}
+
+	.nimble-target-defended {
+		color: var(--nimble-roll-success-color);
 	}
 </style>
