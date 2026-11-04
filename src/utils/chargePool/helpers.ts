@@ -516,7 +516,10 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 function getChargeConsumers(
 	actor: CharacterActorLike,
 	item: RuleBackedItem,
-	{ includeVariable = false, free = false }: { includeVariable?: boolean; free?: boolean } = {},
+	{
+		includeVariable = false,
+		freeUse = false,
+	}: { includeVariable?: boolean; freeUse?: boolean } = {},
 ): ChargeConsumerState[] {
 	const rules = item.rules;
 	if (!rules) return [];
@@ -540,7 +543,7 @@ function getChargeConsumers(
 		const variable = consumerRule.costMode === 'variable';
 		if (variable && !includeVariable) continue;
 		const allowFree = !variable && consumerRule.allowFree === true;
-		if (free && allowFree) continue;
+		if (freeUse && allowFree) continue;
 
 		const poolScope = toChargePoolScope(consumerRule.poolScope);
 		const cost = resolveFormulaToInteger(actor, consumerRule.cost);

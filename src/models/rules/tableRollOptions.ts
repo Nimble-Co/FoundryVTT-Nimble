@@ -1,9 +1,20 @@
+import type { RollTable } from '#types/chaos.d.ts';
+import { CHAOS_TABLE, ROLL_TABLES } from '../../utils/chaos/rollTables.js';
+import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 	return {
+		table: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: CHAOS_TABLE,
+			choices: choiceLabels('tableRollOptions', 'table', ROLL_TABLES),
+			label: 'NIMBLE.rules.tableRollOptions.table.label',
+			hint: 'NIMBLE.rules.tableRollOptions.table.hint',
+		}),
 		rollTwice: new fields.BooleanField({
 			required: true,
 			nullable: false,
@@ -39,6 +50,7 @@ declare namespace TableRollOptionsRule {
 
 /** What a table roll can do: roll twice, choose with a use, or roll with advantage. */
 class TableRollOptionsRule extends NimbleBaseRule<TableRollOptionsRule.Schema> {
+	declare table: RollTable;
 	declare rollTwice: boolean;
 	declare chooseChargePool: string;
 	declare advantage: boolean;
@@ -56,6 +68,7 @@ class TableRollOptionsRule extends NimbleBaseRule<TableRollOptionsRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
+				['table', 'string'],
 				['rollTwice', 'boolean'],
 				['chooseChargePool', 'string'],
 				['advantage', 'boolean'],

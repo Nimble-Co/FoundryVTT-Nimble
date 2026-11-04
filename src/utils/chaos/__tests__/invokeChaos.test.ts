@@ -41,11 +41,12 @@ const force = { type: 'tableRoll', table: 'chaos', when: 'lessManaOrCrit', invok
 const lash = { type: 'tableRoll', table: 'chaos', when: 'onUse', invokesChaos: true };
 const thrive = {
 	type: 'tableRollOptions',
+	table: 'chaos',
 	applies: true,
 	rollTwice: true,
 	chooseChargePool: 'thrive',
 };
-const master = { type: 'tableRollOptions', applies: true, advantage: true };
+const master = { type: 'tableRollOptions', table: 'chaos', applies: true, advantage: true };
 
 const hero = (...rules: unknown[]) => ({
 	uuid: 'Actor.hero',
@@ -151,6 +152,20 @@ describe('a Chaos Table roll', () => {
 
 		expect(vi.mocked(foundry.dice.Roll).mock.calls[0][0]).toBe('2d20kh');
 		expect(created[0].system.rolls[0]).toMatchObject({ value: 15, dropped: 3 });
+	});
+
+	it('options of another table do not change a roll on this one', async () => {
+		diceAre([15]);
+
+		await invokeChaos(hero({ ...master, table: 'other' }));
+
+		expect(vi.mocked(foundry.dice.Roll).mock.calls[0][0]).toBe('1d20');
+	});
+
+	it('rolls nothing for a hero with no table roll rule', async () => {
+		await invokeChaos({ ...hero(), rules: [] });
+
+		expect(created).toHaveLength(0);
 	});
 
 	describe('with Thrive in Chaos', () => {

@@ -1851,12 +1851,12 @@ describe('a charge consumer that allows a use with no charge', () => {
 	const itemOf = (actor: MockActor) => actor.items.contents[0] as unknown as Item.Implementation;
 
 	it('offers the use with no charge only when the rule allows it', () => {
-		const free = beastshift(1);
+		const allowed = beastshift(1);
 		const paid = beastshift(1, false);
 
-		expect(itemOffersFreeUse(free as unknown as CharacterActorLike, itemOf(free) as never)).toBe(
-			true,
-		);
+		expect(
+			itemOffersFreeUse(allowed as unknown as CharacterActorLike, itemOf(allowed) as never),
+		).toBe(true);
 		expect(itemOffersFreeUse(paid as unknown as CharacterActorLike, itemOf(paid) as never)).toBe(
 			false,
 		);
@@ -1866,13 +1866,13 @@ describe('a charge consumer that allows a use with no charge', () => {
 		const actor = beastshift(0);
 
 		expect(validateItemChargeConsumption(itemOf(actor)).ok).toBe(false);
-		expect(validateItemChargeConsumption(itemOf(actor), { free: true }).ok).toBe(true);
+		expect(validateItemChargeConsumption(itemOf(actor), { freeUse: true }).ok).toBe(true);
 	});
 
 	it('spends no charge on a use with no charge', async () => {
 		const actor = beastshift(2);
 
-		const result = await consumeOnResolvedItemUse(itemOf(actor), { free: true });
+		const result = await consumeOnResolvedItemUse(itemOf(actor), { freeUse: true });
 
 		expect(result.ok).toBe(true);
 		expect(result.consumption).toEqual([]);

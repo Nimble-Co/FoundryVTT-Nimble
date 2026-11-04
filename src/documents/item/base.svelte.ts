@@ -1,12 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { OfferActor, OfferCard } from '#types/movement.js';
-import {
-	CHAOS_INVOKED_FLAG,
-	CHAOS_TICKED_FLAG,
-	invokeChaos,
-	onUseTableOf,
-} from '#utils/chaos/invokeChaos.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
@@ -230,15 +224,6 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				source: this.actor as unknown as OfferActor | null,
 			});
 		}
-		const chaosTable = suppressCard ? null : onUseTableOf(this);
-		const chaosRollsNow = !!chaosTable && isRuleAutomationEnabled();
-		if (chaosTable) {
-			foundry.utils.setProperty(
-				chatData as object,
-				`flags.${SYSTEM_ID}.${chaosRollsNow ? CHAOS_INVOKED_FLAG : CHAOS_TICKED_FLAG}`,
-				true,
-			);
-		}
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
@@ -259,12 +244,6 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			 */
 			// @ts-expect-error - nimble.useItem is custom
 			Hooks.callAll(systemHookName('useItem'), this, chatCard, hookContext);
-		}
-
-		if (chatCard && chaosRollsNow && chaosTable && this.actor) {
-			await invokeChaos(this.actor as never, chatCard.id, chaosTable).catch((error) =>
-				console.error('Nimble | Could not invoke Chaos.', error),
-			);
 		}
 
 		if (chatCard) {

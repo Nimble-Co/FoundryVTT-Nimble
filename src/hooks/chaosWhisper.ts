@@ -9,7 +9,8 @@ const TOLD_FLAG = 'chaosGmTold';
 interface ChaosCardLike {
 	id?: string | null;
 	type?: string;
-	system?: Partial<ChaosCardSystem> & { actorName?: string };
+	system?: Omit<Partial<ChaosCardSystem>, 'table'> &
+		Pick<ChaosCardSystem, 'table'> & { actorName?: string };
 	getFlag(scope: string, key: string): unknown;
 	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 }
@@ -27,7 +28,7 @@ export async function whisperFinishedChaosCard(card: ChaosCardLike): Promise<voi
 	const rolls = card.system.rolls ?? [];
 	const kept = card.system.kept;
 	const standing = typeof kept === 'number' ? rolls.slice(kept, kept + 1) : rolls;
-	await whisperChaosRollsToGm(card.system.actorName ?? '', standing, card.system.table ?? 'chaos');
+	await whisperChaosRollsToGm(card.system.actorName ?? '', standing, card.system.table);
 }
 
 let registered = false;

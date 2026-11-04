@@ -158,7 +158,7 @@ type ChargeContext = {
 	isMiss?: boolean;
 	isCritical?: boolean;
 	/** The player ticked a use with no charge: consumers that allow it spend nothing. */
-	free?: boolean;
+	freeUse?: boolean;
 };
 
 type ChargeValidationFailure = {

@@ -12,15 +12,13 @@ import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import localize from '../localize.js';
 import { canPayRerollCost, chargeOnlyCost } from '../reroll/rerollCost.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
+import { TABLE_NAMES } from './rollTables.js';
 
 /** The flag of a card that already invoked Chaos. */
 export const CHAOS_INVOKED_FLAG = 'chaosInvoked';
 
 /** The flag of a card whose tick waits for the button, with Feature Effects off. */
 export const CHAOS_TICKED_FLAG = 'chaosTicked';
-
-/** The name of each table in the tables compendium. */
-const TABLE_NAMES: Record<RollTable, string> = { chaos: 'Chaos Table' };
 
 interface ChaosActor {
 	uuid?: string;
@@ -33,14 +31,30 @@ interface ChaosActor {
 
 interface ChaosRuleLike {
 	type?: string;
-	table?: RollTable;
-	when?: TableRollWhen;
-	invokesChaos?: boolean;
-	applies?: boolean;
-	rollTwice?: boolean;
-	advantage?: boolean;
-	chooseChargePool?: string;
 }
+
+interface TableRollRuleLike {
+	type: 'tableRoll';
+	table: RollTable;
+	when: TableRollWhen;
+	invokesChaos: boolean;
+}
+
+interface TableRollOptionsRuleLike {
+	type: 'tableRollOptions';
+	table: RollTable;
+	applies: boolean;
+	rollTwice: boolean;
+	advantage: boolean;
+	chooseChargePool: string;
+}
+
+const isTableRoll = (rule: ChaosRuleLike | null | undefined): rule is TableRollRuleLike =>
+	rule?.type === 'tableRoll';
+
+const isTableRollOptions = (
+	rule: ChaosRuleLike | null | undefined,
+): rule is TableRollOptionsRuleLike => rule?.type === 'tableRollOptions';
 
 interface TableResultLike {
 	range?: number[];
@@ -55,7 +69,7 @@ function chaosRules(actor: ChaosActor | null | undefined): ChaosRuleLike[] {
 /** Whether this hero invokes Chaos with the spell tick for 1 less mana and on a crit. */
 export function canInvokeChaos(actor: ChaosActor | null | undefined): boolean {
 	return chaosRules(actor).some(
-		(rule) => rule?.type === 'tableRoll' && rule.when !== 'onUse' && rule.invokesChaos,
+		(rule) => isTableRoll(rule) && rule.when !== 'onUse' && rule.invokesChaos,
 	);
 }
 
@@ -64,23 +78,27 @@ export function onUseTableOf(
 	item: { rules?: { values(): Iterable<unknown> } } | null | undefined,
 ): RollTable | null {
 	for (const rule of (item?.rules?.values() ?? []) as Iterable<ChaosRuleLike>) {
-		if (rule?.type === 'tableRoll' && rule.when === 'onUse' && rule.invokesChaos) {
-			return rule.table ?? 'chaos';
-		}
+		if (isTableRoll(rule) && rule.when === 'onUse' && rule.invokesChaos) return rule.table;
 	}
 	return null;
 }
 
-function options(actor: ChaosActor | null | undefined) {
-	const table =
-		chaosRules(actor).find((rule) => rule?.type === 'tableRoll' && rule.invokesChaos)?.table ??
-		'chaos';
+/** The table of the hero's first table roll rule that applies, or null. */
+function tableOf(actor: ChaosActor | null | undefined): RollTable | null {
+	const rule = chaosRules(actor).find(
+		(candidate): candidate is TableRollRuleLike => isTableRoll(candidate) && candidate.invokesChaos,
+	);
+	return rule?.table ?? null;
+}
+
+/** What the hero's table roll options do to a roll on this table. */
+function options(actor: ChaosActor | null | undefined, table: RollTable) {
 	const rules = chaosRules(actor).filter(
-		(rule) => rule?.type === 'tableRollOptions' && rule.applies,
+		(rule): rule is TableRollOptionsRuleLike =>
+			isTableRollOptions(rule) && rule.table === table && rule.applies,
 	);
 	const twice = rules.find((rule) => rule.rollTwice);
 	return {
-		table,
 		rollTwice: !!twice,
 		pool: twice?.chooseChargePool ?? '',
 		advantage: rules.some((rule) => rule.advantage),
@@ -148,14 +166,15 @@ function usesOfPool(actor: ChaosActor, pool: string): number {
 
 /**
  * Each table roll has its own card. A hero who can roll twice picks before the roll.
- * With no `table`, the hero's table roll rule names it.
+ * With no `table`, the hero's table roll rule names it; with no such rule, nothing rolls.
  */
 export async function invokeChaos(
 	actor: ChaosActor,
 	attackMessageId: string | null = null,
-	table: RollTable = options(actor).table,
+	table: RollTable | null = tableOf(actor),
 ): Promise<void> {
-	const { rollTwice, pool, advantage } = options(actor);
+	if (!table) return;
+	const { rollTwice, pool, advantage } = options(actor, table);
 	const rolls = rollTwice ? [] : [await rollOnTable(table, advantage)];
 	await ChatMessage.create({
 		author: game.user?.id,
@@ -189,7 +208,7 @@ export async function chooseChaosRoll(
 	if (system.status !== 'choosing') return;
 	if (choice === 'choose') {
 		if (system.chooseUses < 1 || !actor) return;
-		const spent = await spendRuleCharge(actor as never, options(actor).pool);
+		const spent = await spendRuleCharge(actor as never, options(actor, system.table).pool);
 		if (spent === false) return;
 	}
 	const rolls = [await rollOnTable(system.table, system.advantage)];

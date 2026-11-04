@@ -37,6 +37,7 @@
 				"label": "Thrive in Chaos",
 				"predicate": {},
 				"priority": 2,
+				"table": "chaos",
 				"rollTwice": true,
 				"chooseChargePool": "thrive-in-chaos",
 				"advantage": false

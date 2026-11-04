@@ -1,8 +1,7 @@
 import type { RollTable, TableRollWhen } from '#types/chaos.d.ts';
+import { CHAOS_TABLE, ROLL_TABLES } from '../../utils/chaos/rollTables.js';
 import { choiceLabels } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
-
-const ROLL_TABLES: readonly RollTable[] = ['chaos'];
 
 const TABLE_ROLL_WHEN: readonly TableRollWhen[] = ['lessManaOrCrit', 'onUse'];
 
@@ -12,7 +11,7 @@ function schema() {
 		table: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'chaos',
+			initial: CHAOS_TABLE,
 			choices: choiceLabels('tableRoll', 'table', ROLL_TABLES),
 			label: 'NIMBLE.rules.tableRoll.table.label',
 			hint: 'NIMBLE.rules.tableRoll.table.hint',

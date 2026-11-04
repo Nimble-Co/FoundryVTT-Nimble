@@ -15,6 +15,7 @@
 				"label": "Master of Chaos",
 				"predicate": {},
 				"priority": 1,
+				"table": "chaos",
 				"rollTwice": false,
 				"chooseChargePool": "",
 				"advantage": true

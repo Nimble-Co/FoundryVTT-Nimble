@@ -2757,7 +2757,12 @@
 				}
 			},
 			"tableRollOptions": {
-				"description": "What a table roll can do.",
+				"description": "What a roll on its table can do.",
+				"table": {
+					"label": "Table",
+					"hint": "The table whose rolls these options change.",
+					"choices": { "chaos": "Chaos Table" }
+				},
 				"rollTwice": {
 					"label": "Roll twice",
 					"hint": "The Chaos card shows buttons before the roll."

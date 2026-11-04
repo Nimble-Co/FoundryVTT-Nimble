@@ -1,3 +1,4 @@
+import { CHAOS_TABLE, ROLL_TABLES } from '../../utils/chaos/rollTables.js';
 import { metadata } from './common.js';
 
 const { fields } = foundry.data;
@@ -5,7 +6,12 @@ const { fields } = foundry.data;
 const chaosCardSchema = () => ({
 	actorUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	/** The table of the `tableRoll` rule. */
-	table: new fields.StringField({ required: true, nullable: false, initial: 'chaos' }),
+	table: new fields.StringField({
+		required: true,
+		nullable: false,
+		initial: CHAOS_TABLE,
+		choices: [...ROLL_TABLES],
+	}),
 	/** The attack card that invoked Chaos. Null for a cast with no attack. */
 	attackMessageId: new fields.StringField({ required: false, nullable: true, initial: null }),
 	status: new fields.StringField({

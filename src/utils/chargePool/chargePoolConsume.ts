@@ -22,10 +22,10 @@ import type {
 	RuleBackedItem,
 } from './types.js';
 
-/** With `free`, a consumer that allows a use with no charge asks for none. */
+/** With `freeUse`, a consumer that allows a use with no charge asks for none. */
 function validateItemChargeConsumption(
 	item: Item | null | undefined,
-	{ free = false }: { free?: boolean } = {},
+	{ freeUse = false }: { freeUse?: boolean } = {},
 ): ChargeValidationResult {
 	if (!item) return { ok: true };
 	const ruleBackedItem = item as RuleBackedItem;
@@ -52,7 +52,7 @@ function validateItemChargeConsumption(
 	const pools = buildEffectiveChargePoolMap(actor);
 	// Variable consumers are validated too, against their minimum: an item whose
 	// only cost is "spend any amount" still has nothing to do on an empty pool.
-	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true, free });
+	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true, freeUse });
 
 	// Summed per pool, not checked one consumer at a time: costs that each fit
 	// alone can still overdraw the pool together, and the two kinds are deducted
@@ -133,7 +133,9 @@ async function consumeOnResolvedItemUse(
 	if (!isCharacterActor(actor)) return { ok: true };
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
-	const consumers = getChargeConsumers(actor, ruleBackedItem, { free: context.free === true });
+	const consumers = getChargeConsumers(actor, ruleBackedItem, {
+		freeUse: context.freeUse === true,
+	});
 
 	const consumption: ChargeConsumptionDetail[] = [];
 	const consumptionByPoolId = new Map<string, ChargeConsumptionDetail>();

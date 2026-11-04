@@ -266,12 +266,12 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 
 		const item = createCharacterItem();
 		hooks.get('nimble.preUseItem')?.(item, { freeUse: true });
-		expect(validateItemChargeConsumptionMock).toHaveBeenCalledWith(item, { free: true });
+		expect(validateItemChargeConsumptionMock).toHaveBeenCalledWith(item, { freeUse: true });
 
 		hooks.get('nimble.useItem')?.(item, null, { freeUse: true });
 		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(
 			item,
-			expect.objectContaining({ free: true }),
+			expect.objectContaining({ freeUse: true }),
 		);
 	});
 

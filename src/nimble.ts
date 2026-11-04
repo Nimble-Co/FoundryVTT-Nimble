@@ -3,6 +3,7 @@ import { handleAutomaticConditionApplication } from './hooks/automaticConditions
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerChaosOnCritHooks } from './hooks/chaosOnCrit.js';
+import { registerChaosOnUseHooks } from './hooks/chaosOnUse.js';
 import { registerChaosWhisperHooks } from './hooks/chaosWhisper.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
 import { registerHealedTriggerHooks } from './hooks/chargePoolTriggers/healedTrigger.js';
@@ -173,6 +174,7 @@ registerSaveResolvedHooks();
 registerCritDiceSaveHooks();
 registerCardActionQuery();
 registerChaosOnCritHooks();
+registerChaosOnUseHooks();
 registerChaosWhisperHooks();
 registerModuleIntegrations();
 
