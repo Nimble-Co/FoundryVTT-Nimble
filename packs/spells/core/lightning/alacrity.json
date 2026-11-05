@@ -5,7 +5,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "diXRXhoyvEcsGt88",
+				"identifier": "",
+				"label": "Alacrity",
+				"predicate": {},
+				"priority": 1,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "After damage, gain Charged, then teleport anywhere within Range (4, +4 for each upcast).",
+				"useItem": true,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

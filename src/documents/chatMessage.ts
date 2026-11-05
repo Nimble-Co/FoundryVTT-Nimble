@@ -23,6 +23,11 @@ import {
 	foldBonusIntoPrimaryDamage,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
+import {
+	type DefendEffect,
+	damageAppliedTo,
+	defendEffectsOf,
+} from '#utils/defend/defendRecords.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
@@ -172,6 +177,9 @@ function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
 	}
 	return covered;
 }
+
+/** A Defend's effect on one token's damage: its armor, or the full effect. */
+type DefendDamage = number | Partial<DefendEffect>;
 
 interface DamageApplicationPlan {
 	hasTargets: boolean;
@@ -588,6 +596,8 @@ interface ResolvedDamageForActor {
 interface PendingFlatReduction {
 	damageTypes: unknown;
 	onlyCrits?: boolean;
+	/** Armor: damage "ignoring armor" goes past it. */
+	isArmor?: boolean;
 	remaining: number;
 	modifier: DamageModifier;
 }
@@ -633,6 +643,7 @@ function spendFlatReductions(
 		if (remainingDamage <= 0) break;
 		if (reduction.remaining <= 0) continue;
 		if (!reductionApplies(reduction, options)) continue;
+		if (reduction.isArmor && options.ignoreArmor === true) continue;
 
 		const used = Math.min(remainingDamage, reduction.remaining);
 		reduction.remaining -= used;
@@ -657,8 +668,22 @@ function resolveDamageForActor(
 	actor: Actor.Implementation,
 	packets: DamagePacket[],
 	availableBank = getBankedDamageReduction(actor),
+	defend: DefendDamage = 0,
 ): ResolvedDamageForActor {
+	const { armor: defendArmor = 0, halve = false } =
+		typeof defend === 'number' ? { armor: defend } : defend;
 	const pendingReductions = collectAttackFlatReductions(actor);
+	if (defendArmor > 0 && !halve) {
+		pendingReductions.unshift({
+			damageTypes: [],
+			isArmor: true,
+			remaining: Math.floor(defendArmor),
+			modifier: {
+				kind: 'reduction',
+				label: localize('NIMBLE.chat.defend.armorModifier', { value: String(defendArmor) }),
+			},
+		});
+	}
 	const bankedEntries = getBankedDamageReductionEntries(actor);
 
 	let remainingBank = availableBank;
@@ -670,7 +695,8 @@ function resolveDamageForActor(
 
 	for (const { value, options } of packets) {
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
-		const beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
+		let beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
+		if (halve) beforeReduction = Math.ceil(beforeReduction * 0.5);
 		const heldVulnerability = heldVulnerabilityTo(actor, options.damageType);
 		if (heldVulnerability && beforeReduction > 0) {
 			usedVulnerabilities.set(heldVulnerability.effectId, heldVulnerability);
@@ -697,6 +723,8 @@ function resolveDamageForActor(
 		// Name a flat reduction on the packets it actually spent against, since
 		// it was subtracted from the attack rather than from every packet.
 		modifiers.push(...reduced.spent);
+		if (halve)
+			modifiers.push({ kind: 'reduction', label: localize('NIMBLE.chat.defend.halfModifier') });
 		if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
 
 		components.push({
@@ -720,6 +748,7 @@ function buildDamageApplicationPlan(params: {
 	targets: string[];
 	packets: DamagePacket[];
 	noDamageTargets?: ReadonlyMap<string, unknown>;
+	defendEffects?: ReadonlyMap<string, DefendEffect>;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
@@ -731,7 +760,8 @@ function buildDamageApplicationPlan(params: {
 		if (!actor) continue;
 
 		// Before any reduction: this target's bank stays for an attack that hurts it.
-		if (params.noDamageTargets?.has(uuid)) {
+		const defend = params.defendEffects?.get(uuid);
+		if (params.noDamageTargets?.has(uuid) || defend?.zero) {
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -743,7 +773,7 @@ function buildDamageApplicationPlan(params: {
 		// only consumed when the attack would otherwise deal damage — immunity or
 		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
-		const resolved = resolveDamageForActor(actor, params.packets, availableBank);
+		const resolved = resolveDamageForActor(actor, params.packets, availableBank, defend);
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
@@ -1127,12 +1157,14 @@ class NimbleChatMessage extends ChatMessage {
 
 	/**
 	 * The card's rows once these targets give it a new no-damage row. Empty when no
-	 * row is new, or for a card type that has no field for them.
+	 * row is new, or for a card type that has no field for them. A minion group
+	 * card shows no such rows.
 	 */
 	#noDamageRowChanges(targets: readonly string[]): {
 		incomingReactions?: IncomingReactionEntry[];
 	} {
 		if (targets.length === 0 || !cardSchemaHas(this.type, 'incomingReactions')) return {};
+		if (this.isMinionGroupAttackCard()) return {};
 		const current = this.#incomingReactionEntries();
 		const entries = this.#rerolls.withNoDamageEntries(targets, current);
 		return entries.length === current.length ? {} : { incomingReactions: entries };
@@ -1297,6 +1329,7 @@ class NimbleChatMessage extends ChatMessage {
 			targets,
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
+			defendEffects: defendEffectsOf(systemData),
 		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
@@ -1386,6 +1419,7 @@ class NimbleChatMessage extends ChatMessage {
 					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
 		await this.#markDamageApplied();
+		await this.#markDamageAppliedTo(targets);
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1401,6 +1435,18 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			);
 		}
+	}
+
+	/** A Defend closes for a target once its damage is applied. */
+	async #markDamageAppliedTo(targets: string[]): Promise<void> {
+		const system = this.system as unknown as { damageAppliedTo?: unknown };
+		if (!Array.isArray(system.damageAppliedTo)) return;
+		const applied = damageAppliedTo(system);
+		const added = targets.filter((uuid) => !applied.has(uuid));
+		if (added.length < 1) return;
+		await this.update({
+			'system.damageAppliedTo': [...applied, ...added],
+		} as Record<string, unknown>);
 	}
 
 	/** A no-damage row or its Remove ends here, so only a card that has one keeps the record. */
@@ -1440,6 +1486,7 @@ class NimbleChatMessage extends ChatMessage {
 			targets,
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
+			defendEffects: defendEffectsOf(systemData),
 		});
 		if (!damageApplicationPlan.hasTargets) return true;
 		// A pending banked reduction is spent by clicking Apply even when it
@@ -1461,6 +1508,10 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#collectApplicableDamageRolls(): Array<{ value: number; options: DamageApplyOptions }> {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
+		if (this.isMinionGroupAttackCard()) {
+			const total = Math.max(0, Math.floor(Number(this.system.totalDamage ?? 0)));
+			return [{ value: total, options: { outcome: total > 0 ? 'fullDamage' : 'noDamage' } }];
+		}
 		const system = this.system as unknown as ActivationCardSystemData;
 		const isMiss = system.isMiss === true;
 
@@ -1520,8 +1571,9 @@ class NimbleChatMessage extends ChatMessage {
 
 		// Deliberately the same resolver `applyAllDamage` runs, so the number this
 		// previews and the number the GM removes cannot drift apart.
-		const { components, total } = resolveDamageForActor(actor, damageRolls);
-		if (noDamageTargetsOf(this.system).has(targetUuid)) {
+		const defend = defendEffectsOf(this.system).get(targetUuid);
+		const { components, total } = resolveDamageForActor(actor, damageRolls, undefined, defend);
+		if (noDamageTargetsOf(this.system).has(targetUuid) || defend?.zero) {
 			return {
 				total: 0,
 				components: components.map((component) => ({
@@ -1532,6 +1584,25 @@ class NimbleChatMessage extends ChatMessage {
 			};
 		}
 		return { components, total };
+	}
+
+	/**
+	 * What this card's damage removes from a token's actor with a Defend of
+	 * `defend` (armor, or the full effect). The token does not have to be a
+	 * target yet: an Interpose makes the hero the new target.
+	 */
+	previewDamageFor(tokenUuid: string, defend: DefendDamage = 0): number | null {
+		if (!this.isActivationCard()) return null;
+		const packets = this.#applicableDamagePackets();
+		if (packets.length < 1) return null;
+		const actor = (fromUuidSync(tokenUuid) as TokenDocument | null)?.actor as
+			| Actor.Implementation
+			| null
+			| undefined;
+		if (!actor) return null;
+		if (noDamageTargetsOf(this.system).has(tokenUuid)) return 0;
+		if (typeof defend !== 'number' && defend.zero) return 0;
+		return resolveDamageForActor(actor, packets, undefined, defend).total;
 	}
 
 	/** A missed attack as a hit on this creature: its defenses read the same damage. */
@@ -2144,7 +2215,9 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				targets,
 				// The protector is a new target, with its own no-damage row.
-				incomingReactions: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
+				incomingReactions: this.isMinionGroupAttackCard()
+					? updatedEntries
+					: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

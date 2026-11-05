@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+	import type { AttackOutcomeTag } from '#types/attackOutcome.d.ts';
 	import type { RerollHistoryProps } from '#types/components/RerollHistory.d.ts';
 
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
-	import type { AttackOutcomeTag } from './attackOutcomeTags.ts';
 	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
@@ -58,6 +58,7 @@
 			<span
 				class="nimble-reroll-tag"
 				class:nimble-reroll-tag--none={tag.kind === 'noOutcome'}
+				class:nimble-reroll-tag--crit={tag.kind === 'crit'}
 				data-tooltip={tag.tooltip}
 			>
 				<i class="fa-solid {OUTCOME_TAG_ICONS[tag.kind]}" aria-hidden="true"></i>
@@ -180,6 +181,7 @@
 							class="nimble-reroll-tag"
 							class:nimble-reroll-tag--off={tag.off}
 							class:nimble-reroll-tag--none={tag.kind === 'noAction'}
+							class:nimble-reroll-tag--crit={tag.kind === 'crit' && !tag.off}
 							data-tooltip={tag.tooltip}
 						>
 							<i class="fa-solid {tag.off ? 'fa-hand' : TAG_ICONS[tag.kind]}" aria-hidden="true"

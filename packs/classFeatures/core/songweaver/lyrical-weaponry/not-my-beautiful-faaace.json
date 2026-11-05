@@ -6,7 +6,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "mcaaktqnJSyDrSv9",
+				"identifier": "not-my-beautiful-faaace",
+				"label": "Not My Beautiful Faaace! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "uy2Urru5Jnh9RPqZ",
+				"identifier": "",
+				"label": "Not My Beautiful Faaace!",
+				"predicate": {},
+				"priority": 2,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "The attacker makes a WIL save: on a fail they choose another target in range (if there is none, the attack fails; fail by 5+: they attack themselves); on a save they attack you with disadvantage.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "not-my-beautiful-faaace",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -39,6 +39,7 @@
 			"secret": ""
 		},
 		"identified": true,
+		"armorType": "",
 		"objectType": "armor",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",

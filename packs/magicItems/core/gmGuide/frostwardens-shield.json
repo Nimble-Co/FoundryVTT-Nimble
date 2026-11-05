@@ -39,7 +39,7 @@
 			"secret": ""
 		},
 		"identified": true,
-		"objectType": "armor",
+		"objectType": "shield",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
 		"objectSizeType": "slots",

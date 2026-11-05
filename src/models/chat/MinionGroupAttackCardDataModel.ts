@@ -1,4 +1,11 @@
-import { appliedHealing, damageBack, metadata, targets } from './common.js';
+import {
+	appliedHealing,
+	damageBack,
+	defends,
+	incomingReactions,
+	metadata,
+	targets,
+} from './common.js';
 
 const { fields } = foundry.data;
 
@@ -45,6 +52,8 @@ declare namespace NimbleMinionGroupAttackCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof appliedHealing> &
 		ReturnType<typeof damageBack> &
+		ReturnType<typeof defends> &
+		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof minionGroupAttackCardSchema> &
 		ReturnType<typeof targets>;
@@ -62,6 +71,8 @@ class NimbleMinionGroupAttackCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...appliedHealing(),
 			...damageBack(),
+			...defends(),
+			...incomingReactions(),
 			...metadata(),
 			...targets(),
 			...minionGroupAttackCardSchema(),

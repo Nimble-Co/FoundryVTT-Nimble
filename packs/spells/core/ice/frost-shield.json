@@ -5,7 +5,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "XGIXtJzj3BVrqyoq",
+				"identifier": "",
+				"label": "Frost Shield",
+				"predicate": {},
+				"priority": 1,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Remove these temp HP at the start of your next turn.",
+				"useItem": true,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

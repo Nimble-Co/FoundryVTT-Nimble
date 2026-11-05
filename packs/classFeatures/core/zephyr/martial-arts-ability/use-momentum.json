@@ -6,7 +6,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "8C6ebqtL1402M9gy",
+				"identifier": "",
+				"label": "Use Momentum",
+				"predicate": {},
+				"priority": 1,
+				"way": "withDefend",
+				"attackDelivery": "melee",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "If you take no damage, you may swap places with the attacker and choose another target now within the attack's reach; that target is hit instead.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

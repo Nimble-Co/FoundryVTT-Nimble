@@ -75,11 +75,48 @@ An attack or spell card is built from a few recurring pieces:
 - **Save prompts.** If the item forces a saving throw, the card shows the save with a d20 button: select the tokens that need to save and click it to roll the save for each of them. The card lists what happens on a failed and a successful save.
 - **Condition buttons.** Conditions the item inflicts appear as buttons. Click one to apply the condition to all selected tokens. See [Conditions](conditions.md).
 - **Rerolls and changes.** See [Change This Roll](#change-this-roll) for how to use them. After a reroll, the roll shows one line for each reroll of the last action: the reroll you made and each reroll that happened by itself after it, in roll order, the first at the top. Each line names the feature that rerolled, for example "Pocket Sand", and shows the old Primary Die, paler, with an arrow to the new one. Hover the line to read it as a sentence, for example "Rerolled with Pocket Sand". A reroll that happened by itself, with no click, starts with an **Automatic** tag, and its sentence says so, for example "Rerolled automatically by Warding Bond". This is also true for a reroll that happened before the card was posted, and features that add to a reroll also add to an automatic one. A crit die is green and a miss die is red. A smaller line under it tells who used it, the uses left and any Wounds gained. When a feature can reroll again, it keeps its row, and the row says **Reroll Again**. The lines of that feature then keep only what the row and the card's header do not already say. Each new use from a row starts a new list. With Dice So Nice on, the roll on the card turns into a tumbling die while the dice are in the air, for everyone at the table, and the new result shows when they land. When the feature keeps the triggers of a crit it rerolled and the new roll misses, the target's when-crit abilities trigger at once. When the new roll hits, they trigger when the damage is applied. They trigger one time for each card.
-- **Other features that act on the card.** They are rows of **Change This Roll** too: **Add Damage** and **Interpose**. Defensive ones belong to whoever was attacked, such as an Interpose to take a hit for an ally. Offensive ones belong to the attacker: a feature that spends dice to add damage, like the Berserker's Death Blow, shows as a row once the attack lands the way the feature needs. Each feature can be used once per card. Once used, the card records what it did after **Apply Damage**, so the table can see where the extra damage came from.
+- **Reactions.** On an attack that hits a hero, the heroes who can Defend or Interpose get a button. See [Defend and Interpose](#defend-and-interpose).
+- **Other features that act on the card.** They are rows of **Change This Roll** too, such as **Add Damage**. Offensive ones belong to the attacker: a feature that spends dice to add damage, like the Berserker's Death Blow, shows as a row once the attack lands the way the feature needs. Each feature can be used once per card. Once used, the card records what it did after **Apply Damage**, so the table can see where the extra damage came from.
 
 A player sees only the features of the characters they own. The GM sees all of them.
 
 ![An attack chat card showing a damage total, the Apply Damage button, a targets list, and a saving throw prompt](/images/documentation/condition-chatcard-with-button.png)
+
+## Defend and Interpose
+
+In a combat that has started, an attack card that hits a hero has a **Reactions** section under the damage. It has one button for each hero who can react: each hero the attack hits, and each ally who can Interpose for them. Interpose is there only when the attack has one target. The GM sees all the buttons. A player sees only their own heroes. A player with one hero there gets one wide **React as** button with the hero's name.
+
+The button opens the Defend window. Its heading tells the attack, the hero it hits and the damage, for example "Fire Breath hits Pip for 14". Each row is one thing you can do, with its cost and the damage you take:
+
+- **Defend**: for a hero the attack hits. The cost shows the actions and your Armor. The damage you take shows the damage without the Defend, struck through, and the damage after your Armor.
+- **Interpose**: for an ally within 2 spaces of the hero, or within the range of an Interpose feature. You become the target and take the full damage. Move the tokens yourself.
+- **Interpose and Defend**: you become the target and your Armor comes off the damage.
+
+Pick a row, then click the button at the bottom. **Cancel** does nothing. When the reaction is already spent, you have no actions left, or it is your turn, a window asks one time if you want to use it anyway. Defend costs 1 more action when you wear armor or a shield that you are not proficient with.
+
+After a Defend, the hero's target row shows a green shield and the damage after the Armor. **Apply Damage** takes the Armor off one time for the whole attack. Damage that ignores armor keeps its full value. Vulnerable damage doubles first, and then the Armor comes off. Until the damage is applied, the GM has two buttons on that target row:
+
+- **The shield**: click it when the damage cannot be avoided, at the GM's discretion. The shield goes grey and no Armor comes off. Click it again to take the Armor off again.
+- **Undo** (the arrow): takes the Defend back and gives back the reaction and the actions it spent.
+
+A hero's button goes away when their damage is applied. On a minion group attack, one Defend covers the whole attack, so the Armor comes off the total. A creature that is Latched On cannot be Defended or Interposed against: the GM sees a line that says so, and no buttons show.
+
+The **Defend**, **Interpose** and **Interpose and Defend** buttons on the character sheet and on the hotbar open the same window, on the newest attack card of the combat that the hero can still react to. With no such card, they post the reaction card as before.
+
+### When you Defend
+
+Features that do something when you Defend show in the window too:
+
+- **When you Defend** ticks show under the rows, for example Pocket Sand, Decoy or Misdirection. A tick works only with a row that Defends. Tick as many as you want; the damage you take changes with each tick. They go in a fixed order: the attack misses or you take no damage, then half the damage or the Armor, then the rest. Half the damage replaces the Armor and rounds up.
+- **Free Defend** rows Defend with no action, for example Slipstream or a "Reaction: Defend for free" spell. A spell row casts the spell, with its own mana and action. A free Defend still uses your Defend for the round; when it is already used, a window asks first.
+- **A second Defend**: with a feature such as Shield Expert, the Defend rows say so when your Defend is already used this round. No window asks.
+- **A Defend for the whole round** (Whirling Defense) gives a row on each later attack on you until your next turn, with nothing more to spend.
+
+What a tick costs (charges, mana, Wounds) is spent when you click the button. A tick that uses a feature's reroll (Pocket Sand) rerolls the attack after the Defend; its row does not show under Change This Roll. A condition on the attacker (Pocket Sand blinds) is put on by the GM's client. A move, an attack back or damage back is not done for you: the card shows a line, for example "Decoy: Move up to half your speed away.", and the table does it.
+
+A feature that reacts when an ally Defends (Exploit) gives its hero a button on the card after an ally within range Defends. The button spends the cost and adds the feature's line.
+
+When the GM turns the shield off for damage that cannot be avoided, half the damage stops too; a miss or no damage stays. The shield on the target row names the features used. **Undo** also gives back what each feature spent. A reroll and a condition stay; the GM removes a condition by hand.
 
 ## The result of a save or check
 
@@ -91,7 +128,7 @@ All roll cards (attack, save, skill check and ability check) have one control fo
 
 The button opens the rows. It opens by itself when a save or check card says **Failed**, and on an attack that misses. On a card that says **Succeeded**, on an attack that hits, and on a card with no result, it starts closed. You can open or close it at any time, and it stays as you left it when the card updates.
 
-Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make It a Crit** with Vicious Opportunist, **Add Damage** with Death Blow or **Interpose**. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
+Each row is one button, for example **Reroll** with Lucky, **Change Die** with Soothsayer, **Succeed Instead** with Elusive, **Make It a Crit** with Vicious Opportunist or **Add Damage** with Death Blow. The cost is at the right (uses left, Mana, Wounds, 1 action or a Heroic Reaction). Click the row to use the feature. The button alone never uses anything, so you see the feature and its cost before you spend a use. When a row needs a choice, the choice opens under the row: a die to pick or a value to set. When a character other than the one who rolled gives rows, their name is above them. Some rows show a short note, such as a limit that the table checks. A row is gone when the feature has no uses left.
 
 With the keyboard, Enter or Space works the button. The arrow keys, Home and End move through the rows, and Escape closes them and goes back to the button. When a row goes away after you use it, the focus goes to the button. When the last row goes away, the focus goes to the card.
 
@@ -119,7 +156,7 @@ The reroll line has a tag, such as **With DEX**. The card keeps its name, so a S
 
 Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's feature shows as a row on the ally's card, under the character's name, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll or change rows.
 
-When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under **Change This Roll**, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card.
+When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under **Change This Roll**, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card. An enemy of the creature that rolls is never in this list: a Friendly token is not listed for a Hostile roll, and a Hostile token is not listed for a Friendly roll.
 
 ### Rerolling one die
 

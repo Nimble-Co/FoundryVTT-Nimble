@@ -6,7 +6,72 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "HIUdTt9kgX1kiwGB",
+				"identifier": "small-protect-me",
+				"label": "Protect Me! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "Obigq1Gp606QEymF",
+				"identifier": "",
+				"label": "Protect Me! (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "small-protect-me",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "y6Yt3UfuhJSFwcqO",
+				"identifier": "",
+				"label": "Protect Me!",
+				"predicate": {},
+				"priority": 3,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "miss",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Move up to half your speed away.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "small-protect-me",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -112,6 +112,7 @@ function createOpportunityActor(sheetState: Record<string, unknown>) {
 			items: [weapon],
 		},
 		items: {
+			contents: [weapon],
 			get: vi.fn().mockReturnValue(weapon),
 		},
 		activateItem: vi.fn().mockResolvedValue({ ok: true }),

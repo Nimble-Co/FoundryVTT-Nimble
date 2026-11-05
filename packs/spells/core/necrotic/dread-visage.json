@@ -6,7 +6,34 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "Gcv5akLtl98FABuV",
+				"identifier": "",
+				"label": "Dread Visage",
+				"predicate": {},
+				"priority": 1,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Frighten melee attackers; deal 1d12 damage (+2 for each upcast) to each one that attacks you this round.",
+				"useItem": true,
+				"upcastArmor": 2,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

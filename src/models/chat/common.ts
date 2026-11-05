@@ -492,6 +492,76 @@ export const attackResultChanges = () => ({
 	damageApplied: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 });
 
+/**
+ * The heroes who Defended this attack, and the targets its damage was applied
+ * to. A Defend removes the hero's armor from the damage when it is applied, and
+ * closes for a target once that target's damage is applied.
+ */
+export const defends = () => ({
+	defends: new fields.ArrayField(
+		new fields.SchemaField({
+			id: new fields.StringField({ required: true, nullable: false }),
+			tokenUuid: new fields.StringField({ required: true, nullable: false }),
+			actorUuid: new fields.StringField({ required: true, nullable: false }),
+			armor: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
+			armorApplies: new fields.BooleanField({ required: true, nullable: false, initial: true }),
+			label: new fields.StringField({ required: false, nullable: false, initial: '' }),
+			userId: new fields.StringField({ required: false, nullable: false, initial: '' }),
+			combatantId: new fields.StringField({ required: false, nullable: false, initial: '' }),
+			previousActions: new fields.NumberField({
+				required: false,
+				nullable: true,
+				initial: null,
+				integer: true,
+			}),
+			reactionKeys: new fields.ArrayField(new fields.StringField({ required: true }), {
+				required: false,
+				nullable: false,
+				initial: [],
+			}),
+			outcome: new fields.StringField({
+				required: false,
+				nullable: false,
+				initial: 'none',
+				choices: ['none', 'miss', 'noDamage', 'halve'],
+			}),
+			armorBonus: new fields.NumberField({
+				required: false,
+				nullable: false,
+				initial: 0,
+				integer: true,
+			}),
+			options: new fields.ArrayField(new fields.ObjectField(), {
+				required: false,
+				nullable: false,
+				initial: [],
+			}),
+			reminders: new fields.ArrayField(new fields.StringField({ required: true }), {
+				required: false,
+				nullable: false,
+				initial: [],
+			}),
+			attackerConditions: new fields.ArrayField(new fields.StringField({ required: true }), {
+				required: false,
+				nullable: false,
+				initial: [],
+			}),
+			way: new fields.StringField({
+				required: false,
+				nullable: false,
+				initial: 'action',
+				choices: ['action', 'free', 'extra', 'round'],
+			}),
+		}),
+		{ required: false, nullable: false, initial: [] },
+	),
+	damageAppliedTo: new fields.ArrayField(new fields.StringField({ required: true }), {
+		required: false,
+		nullable: false,
+		initial: [],
+	}),
+});
+
 export const rerollHistory = () => ({
 	rerolls: new fields.ArrayField(rerollRecord(), { required: false, nullable: false, initial: [] }),
 	// Roll changes of Modify Reroll rules this card applied; each counts once per card.

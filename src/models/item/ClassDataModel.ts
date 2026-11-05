@@ -25,7 +25,7 @@ const schema = () => ({
 			required: true,
 			nullable: false,
 			initial: '',
-			options: ['cloth', 'leader', 'mail', 'plate', 'shield'],
+			options: ['cloth', 'leather', 'mail', 'plate', 'shield'],
 		}),
 		{ required: true, initial: [], nullable: false },
 	),

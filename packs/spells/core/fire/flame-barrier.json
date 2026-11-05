@@ -5,7 +5,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "fxPm2H5vTCF1CSl3",
+				"identifier": "",
+				"label": "Flame Barrier",
+				"predicate": {},
+				"priority": 1,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Until the start of your next turn, deal KEY damage (+KEY for each upcast, ignoring armor) to each melee attacker against you and give them Smoldering.",
+				"useItem": true,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

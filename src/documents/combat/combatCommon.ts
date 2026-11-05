@@ -1,5 +1,6 @@
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
+import { collectRedirectCandidates } from '../../utils/incomingReactions/incomingAttackModifiers.js';
 import { getTargetTokenUuid } from '../../utils/tokens/tokenTargetLookup.js';
 import {
 	getCombatantBaseActionCurrent,
@@ -138,6 +139,13 @@ function mapSkippedGroupAttackMembers(skippedMembers: MinionGroupAttackSkippedMe
 	}));
 }
 
+/** Interpose is offered against an attack on one target, as on other attack cards. */
+function interposeOffersFor(targetUuids: string[], totalDamage: number) {
+	if (targetUuids.length !== 1 || totalDamage <= 0) return [];
+	const token = (fromUuidSync(targetUuids[0] ?? '') as TokenDocument | null)?.object;
+	return token ? collectRedirectCandidates(token as Token.Implementation) : [];
+}
+
 export function buildNcsGroupAttackChatData(params: {
 	groupLabel: string | null;
 	targetTokenIds: string[];
@@ -175,6 +183,7 @@ export function buildNcsGroupAttackChatData(params: {
 			rows: mapGroupAttackRows(params.rollEntries),
 			skippedMembers: mapSkippedGroupAttackMembers(params.skippedMembers),
 			unsupportedWarnings: [...params.unsupportedWarnings],
+			incomingReactions: interposeOffersFor(targetUuids, params.totalDamage),
 		},
 		content: '',
 		type: 'minionGroupAttack',

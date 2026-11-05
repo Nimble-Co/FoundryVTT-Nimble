@@ -35,6 +35,22 @@
 		}));
 	}
 
+	const BODY_ARMOR_TYPES = ['cloth', 'leather', 'mail', 'plate'];
+
+	function getArmorTypeOptions() {
+		return BODY_ARMOR_TYPES.map((key) => ({
+			label: localize(CONFIG.NIMBLE.armorTypes[key]),
+			value: key,
+		}));
+	}
+
+	/** A second click on the picked type clears it. */
+	function updateArmorType(newSelection) {
+		item.update({
+			'system.armorType': item.reactive.system.armorType === newSelection ? '' : newSelection,
+		});
+	}
+
 	function updateObjectType(newSelection) {
 		item.update({
 			'system.objectType': newSelection,
@@ -199,6 +215,24 @@
 					toggleOption={updateObjectType}
 				/>
 			</div>
+
+			{#if objectType === 'armor'}
+				<div class="nimble-field nimble-field--column">
+					<span class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.objectSheet.armorType')}
+						<i
+							class="nimble-field__hint-icon fa-solid fa-circle-info"
+							data-tooltip={localize('NIMBLE.objectSheet.armorTypeHint')}
+						></i>
+					</span>
+
+					<TagGroup
+						options={getArmorTypeOptions()}
+						selectedOptions={[item.reactive.system.armorType]}
+						toggleOption={updateArmorType}
+					/>
+				</div>
+			{/if}
 
 			<div class="nimble-field nimble-field--column">
 				<span class="nimble-heading" data-heading-variant="field"> Object Size Type </span>

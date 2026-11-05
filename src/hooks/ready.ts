@@ -9,6 +9,10 @@ import {
 	migrateLegacyDiagonalSetting,
 } from '../settings/adjacencySettings.js';
 import {
+	checkGridDiagonals,
+	registerGridDiagonalsCheckHooks,
+} from '../settings/gridDiagonalsCheck.js';
+import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
@@ -16,6 +20,7 @@ import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffec
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
+import { registerDefendSocketListener } from '../utils/defend/defendRequests.js';
 import { registerIncomingReactionSocketListener } from '../utils/incomingReactions/incomingAttackReactions.js';
 import { registerRerollRollingHook } from '../utils/reroll/rerollRolling.svelte.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
@@ -71,6 +76,7 @@ export default async function ready() {
 	registerGrantedActionOfferSocketListener();
 	registerMovementOffers();
 	registerIncomingReactionSocketListener();
+	registerDefendSocketListener();
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
@@ -100,7 +106,10 @@ export default async function ready() {
 
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
-	migrateLegacyDiagonalSetting().catch((error) => console.error(error));
+	migrateLegacyDiagonalSetting()
+		.then(() => checkGridDiagonals())
+		.catch((error) => console.error(error));
+	registerGridDiagonalsCheckHooks();
 	registerMinionGroupTokenActions();
 	registerDicePoolSpendRequestRouter();
 

@@ -5,7 +5,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "VCtxw6I2hp6I39VU",
+				"identifier": "reflective-aura",
+				"label": "Reflective Aura (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "eKw4d9ZWn3ujCmLf",
+				"identifier": "",
+				"label": "Reflective Aura",
+				"predicate": {},
+				"priority": 2,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "@key",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Deal KEY damage back to the attacker.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "reflective-aura",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"description": "<p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>"
 	},
 	"effects": [],

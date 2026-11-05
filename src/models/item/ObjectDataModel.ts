@@ -36,6 +36,12 @@ const schema = () => ({
 	 * have not been migrated keep this empty and behave unchanged.
 	 */
 	weaponType: new fields.StringField({ required: true, initial: '', nullable: false }),
+	/**
+	 * Cloth, leather, mail or plate, for armor. A Defend in armor the wearer is
+	 * not proficient with costs 1 more action. Empty means no check. A shield
+	 * is always the shield type.
+	 */
+	armorType: new fields.StringField({ required: true, initial: '', nullable: false }),
 	price: new fields.SchemaField({
 		value: new fields.NumberField({
 			required: true,
@@ -185,6 +191,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 	};
 	declare identified: boolean;
 	declare objectType: string;
+	declare armorType: string;
 	declare weaponType: string;
 	declare price: {
 		value: number;

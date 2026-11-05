@@ -547,7 +547,7 @@ describe('the rerolls of a posted check', () => {
 			tokens: [
 				rollerToken,
 				placed('bard', allyActor('Actor.bard'), 1),
-				placed('foe', allyActor('Actor.foe'), -1),
+				placed('stranger', allyActor('Actor.stranger'), 0),
 			],
 		};
 		for (const token of scene.tokens) Object.assign(token, { parent: scene });
@@ -568,7 +568,7 @@ describe('the rerolls of a posted check', () => {
 			}),
 			expect.objectContaining({
 				side: 'ally',
-				actorUuid: 'Actor.foe',
+				actorUuid: 'Actor.stranger',
 				leftOut: { reason: 'disposition' },
 			}),
 		]);

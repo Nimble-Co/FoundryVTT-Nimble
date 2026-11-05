@@ -15,6 +15,31 @@
 				"predicate": {},
 				"priority": 1,
 				"value": "-2"
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "lk7RBQKI7wYot3ND",
+				"identifier": "",
+				"label": "Planeshift",
+				"predicate": {},
+				"priority": 2,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "noDamage",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 1
 			}
 		],
 		"description": "<p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>"

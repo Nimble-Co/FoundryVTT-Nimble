@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import { registerGridDiagonalsKeptSetting } from './gridDiagonalsCheck.js';
 
 export const ADJACENCY_SYNC_SETTING_KEY = 'autoTrackTokenAdjacency';
 export const ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY = 'adjacencyIncludesDiagonals';
@@ -30,6 +31,7 @@ export function registerAdjacencySettings(): void {
 	);
 
 	registerAdjacencyIncludesDiagonalsSetting();
+	registerGridDiagonalsKeptSetting();
 }
 
 export function getAdjacencySyncEnabled(): boolean {
@@ -39,7 +41,8 @@ export function getAdjacencySyncEnabled(): boolean {
 }
 
 // Legacy. Adjacency now follows Foundry's own Grid Diagonals world setting, which offers the
-// three options the rulebook gives. The key stays registered, hidden, so a stored value can be
+// three options the rulebook gives (Equidistant, Rectilinear, Alternating 1/2/1). The key
+// stays registered, hidden, so a stored value can be
 // carried over once.
 function registerAdjacencyIncludesDiagonalsSetting(): void {
 	game.settings.register(
@@ -84,7 +87,7 @@ export async function migrateLegacyDiagonalSetting(): Promise<void> {
 		await game.settings.set(
 			'core',
 			'gridDiagonals' as 'rollMode',
-			CONST.GRID_DIAGONALS.ILLEGAL as never,
+			CONST.GRID_DIAGONALS.RECTILINEAR as never,
 		);
 		ui.notifications?.info(
 			game.i18n.localize('NIMBLE.settings.adjacencyIncludesDiagonals.migrated'),

@@ -7,6 +7,8 @@ import type {
 import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResultChange } from '#types/resultChange.d.ts';
+import { rerollIsUsedByDefend } from '#utils/defend/defendOptions.js';
+import { cardTakesDefends } from '#utils/defend/defendRecords.js';
 import {
 	requestIncomingAttackReaction,
 	requestResultRemoval,
@@ -84,7 +86,20 @@ export function createIncomingReactionPromptsState(
 
 	// Old cards can still hold the legacy `forceReroll` kind. Nothing resolves a
 	// waiting one, and a used one wrote no reroll record, so it keeps its old line.
-	const entries = $derived(storedEntries.filter((entry) => entry.kind !== 'forceReroll'));
+	// An attack card that takes Defends offers Interpose, and a reroll a Defend
+	// option uses, in the Defend window.
+	const takesDefends = $derived(cardTakesDefends(message?.reactive?.system));
+	const entries = $derived(
+		storedEntries.filter(
+			(entry) =>
+				entry.kind !== 'forceReroll' &&
+				(entry.kind !== 'redirectToSelf' || entry.used || !takesDefends) &&
+				(entry.kind !== 'reroll' ||
+					entry.used ||
+					!takesDefends ||
+					!rerollIsUsedByDefend(entry.itemUuid)),
+		),
+	);
 	const legacyRerollLines = $derived(
 		showsHistory
 			? storedEntries

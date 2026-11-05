@@ -702,6 +702,52 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
+			"defend": {
+				"reactions": "Reactions",
+				"reactAs": "React as {name}",
+				"windowTitle": "{name}: Reactions",
+				"heading": "{attack} hits {name} for {damage}",
+				"headingNoDamage": "{attack} hits {name}",
+				"actionsNone": "No action",
+				"actionsOne": "1 action",
+				"actionsMany": "{count} actions",
+				"defendCost": "{actions}. Armor {armor}.",
+				"interposeFor": "Interpose for {name}",
+				"interposeForAndDefend": "Interpose for {name} and Defend",
+				"confirmDefend": "Defend",
+				"confirmInterpose": "Interpose",
+				"confirmBoth": "Interpose and Defend",
+				"youTake": "you take",
+				"defendedTooltip": "Defended: Armor {armor}",
+				"armorApplies": "Armor applies",
+				"armorOnHint": "Armor {armor} comes off. Click if this damage cannot be avoided.",
+				"armorOffHint": "No Armor comes off. Click to take off Armor {armor}.",
+				"undoLabel": "Undo Defend",
+				"undoHint": "Take back this Defend and give back what it spent.",
+				"cannotBeDefended": "Cannot be Defended or Interposed",
+				"armorModifier": "Defend: armor {value}",
+				"halfModifier": "Defend: half damage",
+				"freeCost": "No action. Armor {armor}.",
+				"itemCost": "Uses {item}, with its own cost. Armor {armor}.",
+				"extraNote": "{label}: a second Defend this round.",
+				"roundTitle": "Defended this round ({label})",
+				"roundCost": "Nothing more to spend. Armor {armor}.",
+				"interposeAndFree": "Interpose and Defend ({label})",
+				"whenYouDefend": "When you Defend",
+				"tickNeedsDefend": "Pick a row that Defends to use this.",
+				"nothingToDo": "There is nothing to do against this attack.",
+				"cannotPay": "{label}: its cost could not be paid.",
+				"rerollNotFound": "{label}: no reroll for this attack on the card.",
+				"allyUse": "{label}: {name} Defended",
+				"optionsUsed": "With: {labels}",
+				"refused": {
+					"noCard": "This card cannot take a Defend.",
+					"notTarget": "That hero is not a target of this attack.",
+					"applied": "The damage is already applied.",
+					"already": "That hero already Defended this attack.",
+					"noGm": "A GM must be online to Defend."
+				}
+			},
 			"incomingReactions": {
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
@@ -1419,6 +1465,8 @@
 			"misc": "Miscellaneous"
 		},
 		"objectSheet": {
+			"armorType": "Armor Type",
+			"armorTypeHint": "A Defend in armor you are not proficient with costs 1 more action. With no type, this is not checked.",
 			"price": "Price"
 		},
 		"prompts": {
@@ -1704,6 +1752,7 @@
 			"initiativeMana": "Initiative Mana",
 			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
 			"damageBack": "Damage Back",
+			"defendOption": "Defend Option",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -2729,6 +2778,92 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool that gives 1 charge each time the rule changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
+				}
+			},
+			"defendOption": {
+				"description": "Something this hero can do with a Defend. With Defend is a tick under the Defend rows of the Defend window. Free Defend is a row of its own. Second Defend lets the hero Defend one more time each round. When an Ally Defends is a button on the attack card for this hero.",
+				"way": {
+					"label": "Shows as",
+					"hint": "With Defend: a tick the player can add to a Defend. Free Defend: a row that Defends with no action; it still uses the Defend for the round. Second Defend: the hero can Defend one more time each round, until their next turn begins. When an Ally Defends: a button after an ally within range Defends.",
+					"choices": {
+						"withDefend": "With Defend",
+						"freeDefend": "Free Defend",
+						"extraDefend": "Second Defend",
+						"allyDefends": "When an Ally Defends"
+					}
+				},
+				"attackDelivery": {
+					"label": "Attacks",
+					"hint": "Which attacks this works against."
+				},
+				"outcome": {
+					"label": "Damage",
+					"hint": "The attack misses and No damage: the hero takes no damage. Halve: the hero takes half the damage, in place of the armor.",
+					"choices": {
+						"none": "Armor only",
+						"miss": "The attack misses",
+						"noDamage": "No damage",
+						"halve": "Halve"
+					}
+				},
+				"armorBonus": {
+					"label": "More armor",
+					"hint": "A formula for the armor this Defend adds, for example @key. Empty adds none."
+				},
+				"useReroll": {
+					"label": "Use this item's reroll",
+					"hint": "Rerolls the attack with this item's Reroll rule. Its Change This Roll row does not show on the card."
+				},
+				"attackerCondition": {
+					"label": "Condition on the attacker",
+					"hint": "The attacker gets this condition.",
+					"choices": {
+						"none": "None"
+					}
+				},
+				"reminder": {
+					"label": "Reminder",
+					"hint": "A line on the attack card for what the table does, for example a move or an attack back."
+				},
+				"useItem": {
+					"label": "Use this item",
+					"hint": "The row uses this item, with its own costs, for example a spell's mana and action."
+				},
+				"actionCost": {
+					"label": "Actions",
+					"hint": "The actions one use spends in combat."
+				},
+				"upcastArmor": {
+					"label": "More armor per upcast",
+					"hint": "The armor this Defend adds for each step the item is upcast."
+				},
+				"withInterpose": {
+					"label": "Only when you Interpose",
+					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend."
+				},
+				"wholeRound": {
+					"label": "Every attack this round",
+					"hint": "This Defend also covers each later attack on the hero this round, with nothing more to spend."
+				},
+				"range": {
+					"label": "Range (spaces)",
+					"hint": "How near the ally who Defends must be."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The charges one use spends. Empty spends none."
+				},
+				"chargeCost": {
+					"label": "Charges",
+					"hint": "How many charges one use spends."
+				},
+				"manaCost": {
+					"label": "Mana",
+					"hint": "The mana one use spends."
+				},
+				"woundCost": {
+					"label": "Wounds",
+					"hint": "The Wounds one use gives the hero."
 				}
 			},
 			"damageBack": {
@@ -4823,7 +4958,14 @@
 			"adjacencyIncludesDiagonals": {
 				"name": "Adjacency Includes Diagonals (Legacy)",
 				"hint": "Superseded by Foundry's Grid Diagonals core setting. A stored value is carried over once and has no other effect.",
-				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting (diagonals are not adjacent). Reload for it to take effect."
+				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting as Rectilinear (2): diagonals are not adjacent. Reload for it to take effect."
+			},
+			"gridDiagonalsCheck": {
+				"title": "Grid Diagonals",
+				"illegal": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. Tokens cannot move diagonally, and a diagonal space counts as 2 spaces. Ranges such as Interpose (2 spaces) and Reach do not get to a diagonal space that looks near.</p><p>The book's default is that diagonals are adjacent: <strong>Equidistant (1)</strong>. If your table does not treat diagonals as adjacent, use <strong>Rectilinear (2)</strong>. Then tokens can move diagonally, and each diagonal step costs 2 spaces.</p>",
+				"notInBook": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. This is not one of the book's rules for diagonal spaces. It gives a part of a space, which Nimble rounds, so ranges such as Interpose and Reach can give results that you do not expect.</p><p>The book gives three rules: diagonals are adjacent, <strong>Equidistant (1)</strong>, which is the default; diagonals are not adjacent, <strong>Rectilinear (2)</strong>; or every other diagonal is adjacent, <strong>Alternating (1/2/1)</strong> or <strong>Alternating (2/1/2)</strong>.</p>",
+				"use": "Use {value}",
+				"keep": "Keep {value}"
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",

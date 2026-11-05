@@ -1,4 +1,5 @@
 import type { ReactionPanelStateOptions } from '../../../../types/components/ReactionPanel.d.ts';
+import { openDefendWindowOnNewestCard } from '../../../utils/defend/openDefendWindow.js';
 import showReactionConfirmation from '../../../utils/incomingReactions/showReactionConfirmation.js';
 import localize from '../../../utils/localize.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/tokens/targeting.js';
@@ -35,6 +36,12 @@ export function createInterposePanelState(options: ReactionPanelStateOptions) {
 	});
 
 	async function handleInterpose(): Promise<void> {
+		if (
+			(await openDefendWindowOnNewestCard(getActor() as Actor.Implementation, 'interpose')) !== null
+		) {
+			return;
+		}
+
 		const isDisabled = getReactionDisabled();
 
 		if (isDisabled) {
