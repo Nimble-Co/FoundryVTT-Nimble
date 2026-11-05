@@ -167,4 +167,27 @@ describe('Defend armor on an attack card', () => {
 		await message.applyAllDamage();
 		expect(hero.applyDamage).toHaveBeenCalledWith(14);
 	});
+
+	it('takes the armor off a minion group attack once, for the total', async () => {
+		const hero = createHero();
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+		const message = new NimbleChatMessage({
+			type: 'minionGroupAttack',
+			system: {
+				targets: [TOKEN],
+				totalDamage: 9,
+				rows: [],
+				defends: [
+					{ id: 'd1', tokenUuid: TOKEN, actorUuid: 'Actor.hero', armor: 4, armorApplies: true },
+				],
+				damageAppliedTo: [],
+			},
+		} as unknown as ChatMessage.CreateData);
+		Object.assign(message, { update: vi.fn().mockResolvedValue(undefined) });
+
+		expect(message.previewDamageFor(TOKEN, 0)).toBe(9);
+		expect(message.previewDamageFor(TOKEN, 4)).toBe(5);
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+		expect(hero.applyDamage).toHaveBeenCalledWith(5);
+	});
 });

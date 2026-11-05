@@ -58,8 +58,13 @@ function armorOf(actor: Actor.Implementation): number {
 }
 
 function cardName(card: NimbleChatMessage): string {
-	const system = card.system as { name?: string; spellName?: string } | undefined;
-	return (system?.name || system?.spellName || card.flavor || '').replace(/[.\s]+$/, '');
+	const system = card.system as
+		| { name?: string; spellName?: string; groupLabel?: string; actorName?: string }
+		| undefined;
+	const name = card.isMinionGroupAttackCard()
+		? system?.groupLabel || system?.actorName
+		: system?.name || system?.spellName || card.flavor;
+	return (name || '').replace(/[.\s]+$/, '');
 }
 
 function costOf(actor: Actor.Implementation, keys: HeroicReactionKey[]): number {

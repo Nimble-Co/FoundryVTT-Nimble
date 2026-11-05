@@ -1158,12 +1158,14 @@ class NimbleChatMessage extends ChatMessage {
 
 	/**
 	 * The card's rows once these targets give it a new no-damage row. Empty when no
-	 * row is new, or for a card type that has no field for them.
+	 * row is new, or for a card type that has no field for them. A minion group
+	 * card shows no such rows.
 	 */
 	#noDamageRowChanges(targets: readonly string[]): {
 		incomingReactions?: IncomingReactionEntry[];
 	} {
 		if (targets.length === 0 || !cardSchemaHas(this.type, 'incomingReactions')) return {};
+		if (this.isMinionGroupAttackCard()) return {};
 		const current = this.#incomingReactionEntries();
 		const entries = this.#rerolls.withNoDamageEntries(targets, current);
 		return entries.length === current.length ? {} : { incomingReactions: entries };
@@ -1507,6 +1509,10 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	#collectApplicableDamageRolls(): Array<{ value: number; options: DamageApplyOptions }> {
 		const entries: Array<{ value: number; options: DamageApplyOptions }> = [];
+		if (this.isMinionGroupAttackCard()) {
+			const total = Math.max(0, Math.floor(Number(this.system.totalDamage ?? 0)));
+			return [{ value: total, options: { outcome: total > 0 ? 'fullDamage' : 'noDamage' } }];
+		}
 		const system = this.system as unknown as ActivationCardSystemData;
 		const isMiss = system.isMiss === true;
 
@@ -2213,7 +2219,9 @@ class NimbleChatMessage extends ChatMessage {
 			system: {
 				targets,
 				// The protector is a new target, with its own no-damage row.
-				incomingReactions: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
+				incomingReactions: this.isMinionGroupAttackCard()
+					? updatedEntries
+					: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

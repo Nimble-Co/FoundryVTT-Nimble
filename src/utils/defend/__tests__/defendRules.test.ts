@@ -75,6 +75,8 @@ describe('defendReactors', () => {
 	it('lists nobody on a miss, or on a card that cannot take a Defend', () => {
 		expect(defendReactors(card({ isMiss: true }))).toEqual([]);
 		expect(defendReactors(card({ defends: undefined }))).toEqual([]);
+		expect(defendReactors(card({ totalDamage: 0 }))).toEqual([]);
+		expect(defendReactors(card({ totalDamage: 6 }))).toHaveLength(1);
 	});
 
 	it('drops a hero whose damage is applied, unless they Defended', () => {

@@ -50,9 +50,12 @@ export function defendReactors(card: DefendCardLike): DefendReactor[] {
 	const system = card.system as {
 		targets?: string[];
 		isMiss?: boolean;
+		totalDamage?: number;
 		incomingReactions?: IncomingReactionEntry[];
 	};
 	if (!cardTakesDefends(system) || system.isMiss === true) return [];
+	// A minion group card stores its total; every member missed when it is 0.
+	if (typeof system.totalDamage === 'number' && system.totalDamage <= 0) return [];
 
 	const applied = damageAppliedTo(system);
 	const reactors = new Map<string, DefendReactor>();
