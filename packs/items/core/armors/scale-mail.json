@@ -51,6 +51,7 @@
 			"secret": ""
 		},
 		"identified": true,
+		"armorType": "mail",
 		"objectType": "armor",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
