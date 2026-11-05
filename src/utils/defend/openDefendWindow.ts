@@ -11,7 +11,11 @@ import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
 } from '../incomingReactions/getHeroicReactionUsageState.js';
-import type { HeroicReactionKey } from '../incomingReactions/heroicActions.js';
+import {
+	getHeroicReactionAvailability,
+	getHeroicReactionLabel,
+	type HeroicReactionKey,
+} from '../incomingReactions/heroicActions.js';
 import { requestIncomingAttackReaction } from '../incomingReactions/incomingAttackReactions.js';
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
@@ -149,9 +153,34 @@ export function defendWindowData(
 	};
 }
 
+/**
+ * One confirm for every reaction the choice spends, when it bends a limit (spent,
+ * no actions, own turn). Returns whether to force the spend, or null for no.
+ */
+async function confirmLimits(
+	combat: ReactionCombat | null,
+	combatant: Combatant.Implementation | null,
+	keys: HeroicReactionKey[],
+): Promise<{ force: boolean } | null> {
+	if (!combat?.started || !combatant || keys.length < 1) return { force: false };
+	const usage = getHeroicReactionUsageState({ combat, combatant, reactionKeys: keys });
+	if (usage.blockedReason === null) return { force: false };
+	if (!isSoftBlockedReason(usage.blockedReason)) return null;
+	const spent = keys.filter((key) => !getHeroicReactionAvailability(combatant, key));
+	const confirmed = await showReactionConfirmation({
+		reactionName: keys.map(getHeroicReactionLabel).join(' & '),
+		spentReactionNames: spent.map(getHeroicReactionLabel).join(' & '),
+		noActions: usage.blockedReason === 'noActions',
+		hasSpentReactions: spent.length > 0,
+		isActiveTurn: usage.blockedReason === 'activeTurn',
+	});
+	return confirmed ? { force: true } : null;
+}
+
 async function spendDefend(
 	combat: ReactionCombat | null,
 	combatant: Combatant.Implementation | null,
+	force: boolean,
 ): Promise<{ previousActions: number | null } | null> {
 	if (!combat?.started || !combat.useHeroicReactions || !combatant?.id) {
 		return { previousActions: null };
@@ -159,22 +188,12 @@ async function spendDefend(
 	const previousActions = Number(
 		foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0,
 	);
-	if (await combat.useHeroicReactions(combatant.id, ['defend'])) return { previousActions };
-
-	const usage = getHeroicReactionUsageState({ combat, combatant, reactionKeys: ['defend'] });
-	if (!isSoftBlockedReason(usage.blockedReason)) return null;
-	const label = localize('NIMBLE.ui.heroicActions.reactionLabels.defend');
-	const confirmed = await showReactionConfirmation({
-		reactionName: label,
-		spentReactionNames: label,
-		noActions: usage.blockedReason === 'noActions',
-		hasSpentReactions: usage.blockedReason === 'spent',
-		isActiveTurn: usage.blockedReason === 'activeTurn',
-	});
-	if (!confirmed) return null;
-	return (await combat.useHeroicReactions(combatant.id, ['defend'], { force: true }))
-		? { previousActions }
-		: null;
+	const used = await combat.useHeroicReactions(
+		combatant.id,
+		['defend'],
+		force ? { force: true } : undefined,
+	);
+	return used ? { previousActions } : null;
 }
 
 /** Wait until the card lists the token as a target (the GM writes an Interpose). */
@@ -232,27 +251,36 @@ export async function openDefendWindow(
 	if (!choice || (!choice.defend && !choice.interposeEntryId)) return false;
 
 	const combat = (game.combat ?? null) as ReactionCombat | null;
-	let defendedToken = reactor.targetTokenUuid;
+	const entry = choice.interposeEntryId
+		? reactor.interposes.find((each) => each.id === choice.interposeEntryId)
+		: null;
+	if (choice.interposeEntryId && !entry) return false;
+	const defendedToken = entry ? entry.tokenUuid || null : reactor.targetTokenUuid;
+	const combatant = combatantOf(combat, actor, defendedToken);
+	const keys: HeroicReactionKey[] = [
+		...(entry?.source === 'baseline' ? (['interpose'] as const) : []),
+		...(choice.defend ? (['defend'] as const) : []),
+	];
+	const limits = await confirmLimits(combat, combatant, keys);
+	if (!limits) return false;
 
-	if (choice.interposeEntryId) {
-		const entry = reactor.interposes.find((each) => each.id === choice.interposeEntryId);
-		if (!entry) return false;
-		if (entry.source === 'baseline' && !(await spendBaselineInterpose(entry))) return false;
+	if (entry) {
+		if (entry.source === 'baseline' && !(await spendBaselineInterpose(entry, limits))) {
+			return false;
+		}
 		const sent = await requestIncomingAttackReaction({
 			messageId: card.id ?? '',
 			entryId: entry.id,
 		});
 		if (!sent) return false;
-		defendedToken = entry.tokenUuid || null;
 		if (!choice.defend) return true;
 		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
 	}
 
-	if (!choice.defend || !defendedToken) return Boolean(choice.interposeEntryId);
+	if (!choice.defend || !defendedToken) return Boolean(entry);
 
-	const combatant = combatantOf(combat, actor, defendedToken);
-	const paid = await spendDefend(combat, combatant);
-	if (!paid) return Boolean(choice.interposeEntryId);
+	const paid = await spendDefend(combat, combatant, limits.force);
+	if (!paid) return Boolean(entry);
 
 	await requestDefend({
 		messageId: card.id ?? '',

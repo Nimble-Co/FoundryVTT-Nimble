@@ -11,9 +11,12 @@ import localize from '../../../utils/localize.js';
  * the combat's reaction bookkeeping (with the usual already-spent
  * confirmation) before relaying the redirect. Rule-granted offers leave
  * their cost to the granting feature. Outside combat there is nothing to
- * spend.
+ * spend. With `force`, the caller has already confirmed a bent limit.
  */
-export async function spendBaselineInterpose(entry: IncomingReactionEntry): Promise<boolean> {
+export async function spendBaselineInterpose(
+	entry: IncomingReactionEntry,
+	options: { force?: boolean } = {},
+): Promise<boolean> {
 	const combat = game.combat as
 		| (Combat & {
 				useHeroicReactions?: (
@@ -32,6 +35,9 @@ export async function spendBaselineInterpose(entry: IncomingReactionEntry): Prom
 		? (combat.combatants.find((c) => c.tokenId === tokenDoc.id) ?? null)
 		: null;
 	if (!combatant?.id) return true;
+	if (options.force) {
+		return combat.useHeroicReactions(combatant.id, ['interpose'], { force: true });
+	}
 
 	const used = await combat.useHeroicReactions(combatant.id, ['interpose']);
 	if (used) return true;
