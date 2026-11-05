@@ -6,7 +6,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "3o31NiGWAprxPZLG",
+				"identifier": "",
+				"label": "Decoy",
+				"predicate": {},
+				"priority": 1,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "miss",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Move up to half your speed away.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "thrill-of-the-hunt",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

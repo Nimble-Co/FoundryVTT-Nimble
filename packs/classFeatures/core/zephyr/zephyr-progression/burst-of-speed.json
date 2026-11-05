@@ -6,7 +6,85 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "0LC1CfBCCPWhE36H",
+				"identifier": "burst-of-speed",
+				"label": "Bursts of Speed",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@dexterity, 0)",
+				"dieSize": null,
+				"initial": "zero",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "max(@dexterity, 0)"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "set",
+						"value": "0"
+					}
+				]
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "sQ7cBD08i6iX6DFr",
+				"identifier": "",
+				"label": "Slipstream",
+				"predicate": {},
+				"priority": 2,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "miss",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "burst-of-speed",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "vdHGRNYUnBIJ7mRG",
+				"identifier": "",
+				"label": "Whirling Defense",
+				"predicate": {},
+				"priority": 3,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": true,
+				"range": 2,
+				"chargePoolIdentifier": "burst-of-speed",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

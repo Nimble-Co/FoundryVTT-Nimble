@@ -58,6 +58,31 @@
 				"automatic": false,
 				"discardedCritTriggers": false,
 				"oncePerRoll": true
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "gku1RZDrb18nEnP3",
+				"identifier": "",
+				"label": "Pocket Sand",
+				"predicate": {},
+				"priority": 3,
+				"way": "withDefend",
+				"attackDelivery": "melee",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": true,
+				"attackerCondition": "blinded",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
 			}
 		],
 		"activation": {

@@ -17,6 +17,31 @@
 				"priority": 1,
 				"formula": "@intelligence",
 				"mode": "add"
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "qyjZ5OZioqa7feoq",
+				"identifier": "",
+				"label": "Misdirection",
+				"predicate": {},
+				"priority": 2,
+				"way": "withDefend",
+				"attackDelivery": "any",
+				"outcome": "halve",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
 			}
 		],
 		"activation": {

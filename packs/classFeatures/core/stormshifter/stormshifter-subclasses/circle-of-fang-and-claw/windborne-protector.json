@@ -6,7 +6,55 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "fIEaN6Yjhx9LAsqx",
+				"identifier": "windborne-protector",
+				"label": "Windborne Protector (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "96SZke2oF2L2FVGu",
+				"identifier": "",
+				"label": "Windborne Protector",
+				"predicate": {},
+				"priority": 2,
+				"way": "freeDefend",
+				"attackDelivery": "any",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"attackerCondition": "",
+				"reminder": "Shift into a Fearsome Beast; you may Interpose from up to 12 spaces away.",
+				"useItem": false,
+				"withInterpose": true,
+				"wholeRound": false,
+				"range": 2,
+				"chargePoolIdentifier": "windborne-protector",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 2,
+				"woundCost": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
