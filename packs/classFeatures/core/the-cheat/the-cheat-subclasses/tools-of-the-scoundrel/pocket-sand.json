@@ -73,6 +73,7 @@
 				"armorBonus": "",
 				"useReroll": true,
 				"attackerCondition": "blinded",
+				"attackerConditionEnds": "attackerTurn",
 				"reminder": "",
 				"useItem": false,
 				"withInterpose": false,

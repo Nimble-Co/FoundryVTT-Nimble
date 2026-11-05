@@ -57,6 +57,7 @@
 				"chargePoolIdentifier": "burst-of-speed",
 				"chargeCost": 1,
 				"actionCost": 0,
+				"oncePerTurn": true,
 				"manaCost": 0,
 				"woundCost": 0
 			},
@@ -82,6 +83,7 @@
 				"chargePoolIdentifier": "burst-of-speed",
 				"chargeCost": 1,
 				"actionCost": 0,
+				"oncePerTurn": true,
 				"manaCost": 0,
 				"woundCost": 0
 			}
