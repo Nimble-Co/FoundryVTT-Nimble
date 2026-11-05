@@ -40,6 +40,7 @@ import {
 	type DamageCard,
 	damageCardRollTarget,
 	damageRollContext,
+	interposeEntries,
 	noDamageEntries,
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
@@ -751,6 +752,16 @@ export class CardRerolls {
 	): IncomingReactionEntry[] {
 		if (!this.#host.isActivationCard()) return entries;
 		return withNewRerollEntries(entries, noDamageEntries(this.#damageCard(), targets));
+	}
+
+	/** After an Interpose: these entries with the rows the new target and the other targets get. */
+	withInterposeEntries(
+		targets: readonly string[],
+		newTarget: string,
+		entries: IncomingReactionEntry[],
+	): IncomingReactionEntry[] {
+		if (!this.#host.isActivationCard()) return entries;
+		return withNewRerollEntries(entries, interposeEntries(this.#damageCard(), targets, newTarget));
 	}
 
 	/**

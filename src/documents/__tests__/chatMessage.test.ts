@@ -2567,6 +2567,36 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
 	});
 
+	it("gives the protector its own target-side rerolls, as the attack's new target", async () => {
+		const lucky = {
+			type: 'reroll',
+			id: 'lucky',
+			outcome: 'always',
+			offersUseOn: (context: { side: string }) => context.side === 'target',
+		};
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.scene.Token.protector'
+				? { actor: { ...protectorActor, uuid: 'Actor.protector', rules: [lucky] } }
+				: null,
+		);
+		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { incomingReactions: ReactionEntryFixture[] };
+		};
+		expect(updatePayload.system.incomingReactions).toContainEqual(
+			expect.objectContaining({
+				kind: 'reroll',
+				ruleId: 'lucky',
+				side: 'target',
+				targetTokenUuid: 'Scene.scene.Token.protector',
+				used: false,
+			}),
+		);
+	});
+
 	it('moves the open Movement Offers from the old target to the protector', async () => {
 		const RollGlobal = Roll as unknown as Record<string, unknown>;
 		const saved = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };

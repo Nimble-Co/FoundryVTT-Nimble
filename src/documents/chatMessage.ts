@@ -2225,10 +2225,10 @@ class NimbleChatMessage extends ChatMessage {
 		await this.update({
 			system: {
 				targets,
-				// The protector is a new target, with its own no-damage row.
+				// The protector is the new target, with its own target-side rows.
 				incomingReactions: this.isMinionGroupAttackCard()
 					? updatedEntries
-					: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
+					: this.#rerolls.withInterposeEntries(targets, entry.tokenUuid, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

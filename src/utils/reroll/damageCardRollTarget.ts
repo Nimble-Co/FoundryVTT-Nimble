@@ -522,23 +522,47 @@ function damageCardRollTarget(card: DamageCard): RerollRollTarget<DamageRoll> {
 	};
 }
 
-/**
- * The target-side no-damage entries `targets` give this card. The stamp at the roll
- * knows no target on an area or a roll with two or more targets, and targets can come later.
- */
-function noDamageEntries(card: DamageCard, targets: readonly string[]): IncomingReactionEntry[] {
+/** The target-side entries `targets` give this card's roll. */
+function targetSideEntries(card: DamageCard, targets: readonly string[]): IncomingReactionEntry[] {
 	const system = card.system();
 	const found = findPrimaryDamageRoll(system);
 	if (!found) return [];
 	const context = damageRollContext(card, system, isForcedMiss(found));
-	const entries = collectRerollEntries({
+	return collectRerollEntries({
 		...context,
 		targets: targets.map((tokenUuid) => ({
 			tokenUuid,
 			actor: (fromUuidSync(tokenUuid) as { actor?: RerollingActor | null } | null)?.actor,
 		})),
-	}).manual;
-	return entries.filter((entry) => entry.side === 'target' && entry.use === 'result');
+	}).manual.filter((entry) => entry.side === 'target');
 }
 
-export { damageCardRollTarget, damageRollContext, noDamageEntries, type DamageCard };
+/**
+ * The target-side no-damage entries `targets` give this card. The stamp at the roll
+ * knows no target on an area or a roll with two or more targets, and targets can come later.
+ */
+function noDamageEntries(card: DamageCard, targets: readonly string[]): IncomingReactionEntry[] {
+	return targetSideEntries(card, targets).filter((entry) => entry.use === 'result');
+}
+
+/**
+ * After an Interpose: the no-damage entries of `targets`, and every target-side
+ * entry of the new target, who was not a target when the roll was made.
+ */
+function interposeEntries(
+	card: DamageCard,
+	targets: readonly string[],
+	newTarget: string,
+): IncomingReactionEntry[] {
+	return targetSideEntries(card, targets).filter(
+		(entry) => entry.use === 'result' || entry.targetTokenUuid === newTarget,
+	);
+}
+
+export {
+	damageCardRollTarget,
+	damageRollContext,
+	interposeEntries,
+	noDamageEntries,
+	type DamageCard,
+};
