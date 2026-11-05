@@ -1,28 +1,28 @@
 import type ChoiceDialog from '#documents/dialogs/ChoiceDialog.svelte.js';
 
-/** One way to Defend, as the window lists it. */
-export interface DefendWay {
+/** One thing the hero can do against the attack, as the window lists it. */
+export interface DefendOption {
 	id: string;
-	name: string;
-	note: string;
+	title: string;
+	/** What it costs: actions, and the armor a Defend uses. */
+	cost: string;
+	/** The confirm button's label when this row is picked. */
+	confirm: string;
+	/** Damage the hero takes without a Defend, when this row has one. */
+	before: number | null;
+	/** Damage the hero takes after this row. */
+	takes: number | null;
+	defend: boolean;
+	interposeEntryId: string | null;
 }
 
 export interface DefendWindowData {
-	heroName: string;
 	heading: string;
-	/** The attack hits this hero, so they can Defend without an Interpose. */
-	isTarget: boolean;
-	ways: DefendWay[];
-	interposes: Array<{ entryId: string; label: string; note: string }>;
-	/** Why Defend is spent or costs more, or empty. */
-	blockedNote: string;
-	/** Damage the hero takes, keyed `<defend 0|1>:<interpose entry id>`. */
-	takes: Record<string, number | null>;
+	options: DefendOption[];
 }
 
 export interface DefendChoice {
 	defend: boolean;
-	wayId: string;
 	interposeEntryId: string | null;
 }
 

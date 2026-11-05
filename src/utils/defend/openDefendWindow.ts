@@ -1,18 +1,25 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import ChoiceDialog from '#documents/dialogs/ChoiceDialog.svelte.js';
-import type { DefendChoice, DefendWindowData } from '#types/components/DefendDialog.d.ts';
+import type {
+	DefendChoice,
+	DefendOption,
+	DefendWindowData,
+} from '#types/components/DefendDialog.d.ts';
 import { spendBaselineInterpose } from '../../view/chat/components/spendBaselineInterpose.js';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
 } from '../incomingReactions/getHeroicReactionUsageState.js';
+import type { HeroicReactionKey } from '../incomingReactions/heroicActions.js';
 import { requestIncomingAttackReaction } from '../incomingReactions/incomingAttackReactions.js';
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
 import { type DefendReactor, defendReactors } from './defendReactors.js';
 import { requestDefend } from './defendRequests.js';
+
+const TEXT = 'NIMBLE.chat.defend';
 
 type ReactionCombat = Combat & {
 	useHeroicReactions?: (
@@ -51,7 +58,14 @@ function armorOf(actor: Actor.Implementation): number {
 
 function cardName(card: NimbleChatMessage): string {
 	const system = card.system as { name?: string; spellName?: string } | undefined;
-	return system?.name || system?.spellName || card.flavor || '';
+	return (system?.name || system?.spellName || card.flavor || '').replace(/[.\s]+$/, '');
+}
+
+function costOf(actor: Actor.Implementation, keys: HeroicReactionKey[]): number {
+	return resolveHeroicReactionActionCost(
+		actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
+		keys,
+	);
 }
 
 /** What the window shows for one hero. Exported for tests. */
@@ -60,82 +74,72 @@ export function defendWindowData(
 	reactor: DefendReactor,
 ): DefendWindowData {
 	const { actor } = reactor;
-	const combat = game.combat ?? null;
-	const combatant = combatantOf(combat, actor, reactor.targetTokenUuid);
-	const usage =
-		combat && combatant
-			? getHeroicReactionUsageState({ combat, combatant, reactionKeys: ['defend'] })
-			: null;
 	const armor = armorOf(actor);
-	const cost = resolveHeroicReactionActionCost(
-		actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
-		['defend'],
-	);
-	const heroToken =
-		reactor.targetTokenUuid ??
-		reactor.interposes.find((entry) => entry.tokenUuid)?.tokenUuid ??
-		null;
+	const defendCost = costOf(actor, ['defend']);
+	const options: DefendOption[] = [];
 
-	const takes: Record<string, number | null> = {};
-	const key = (defend: boolean, entryId: string) => `${defend ? 1 : 0}:${entryId}`;
 	if (reactor.targetTokenUuid) {
-		takes[key(false, '')] = card.previewDamageFor(reactor.targetTokenUuid, 0);
-		takes[key(true, '')] = card.previewDamageFor(reactor.targetTokenUuid, armor);
+		const before = card.previewDamageFor(reactor.targetTokenUuid, 0);
+		options.push({
+			id: 'defend',
+			title: localize(`${TEXT}.confirmDefend`),
+			cost: localize(`${TEXT}.defendCost`, {
+				actions: actionsText(defendCost),
+				armor: String(armor),
+			}),
+			confirm: localize(`${TEXT}.confirmDefend`),
+			before,
+			takes: card.previewDamageFor(reactor.targetTokenUuid, armor),
+			defend: true,
+			interposeEntryId: null,
+		});
 	}
+
+	const named = reactor.interposes.length > 1;
 	for (const entry of reactor.interposes) {
-		const token = entry.tokenUuid || heroToken;
-		if (!token) continue;
-		takes[key(false, entry.id)] = card.previewDamageFor(token, 0);
-		takes[key(true, entry.id)] = card.previewDamageFor(token, armor);
+		const name = nameOfToken(entry.targetTokenUuid);
+		const interposeCost = entry.source === 'baseline' ? costOf(actor, ['interpose']) : 0;
+		const token = entry.tokenUuid || reactor.targetTokenUuid;
+		const before = token ? card.previewDamageFor(token, 0) : null;
+		options.push({
+			id: `interpose:${entry.id}`,
+			title: named
+				? localize(`${TEXT}.interposeFor`, { name })
+				: localize(`${TEXT}.confirmInterpose`),
+			cost: actionsText(interposeCost),
+			confirm: localize(`${TEXT}.confirmInterpose`),
+			before: null,
+			takes: before,
+			defend: false,
+			interposeEntryId: entry.id,
+		});
+		options.push({
+			id: `both:${entry.id}`,
+			title: named
+				? localize(`${TEXT}.interposeForAndDefend`, { name })
+				: localize(`${TEXT}.confirmBoth`),
+			cost: localize(`${TEXT}.defendCost`, {
+				actions: actionsText(interposeCost + defendCost),
+				armor: String(armor),
+			}),
+			confirm: localize(`${TEXT}.confirmBoth`),
+			before,
+			takes: token ? card.previewDamageFor(token, armor) : null,
+			defend: true,
+			interposeEntryId: entry.id,
+		});
 	}
 
-	const blocked = usage && !usage.canUse ? usage.blockedReason : null;
-	const blockedNote =
-		blocked === 'spent' || blocked === 'noActions' || blocked === 'activeTurn'
-			? localize(`NIMBLE.chat.defend.blocked.${blocked}`)
-			: '';
-
+	const hitToken = reactor.targetTokenUuid ?? reactor.interposes[0]?.targetTokenUuid ?? null;
+	const hitDamage = hitToken ? card.previewDamageFor(hitToken, 0) : null;
 	const attack = cardName(card);
-	const ownDamage = reactor.targetTokenUuid ? takes[key(false, '')] : null;
+	const name = nameOfToken(hitToken);
 	return {
-		heroName: actor.name ?? '',
 		heading:
-			reactor.targetTokenUuid && ownDamage !== null && ownDamage !== undefined
-				? localize('NIMBLE.chat.defend.heading', {
-						attack,
-						name: actor.name ?? '',
-						damage: String(ownDamage),
-					})
-				: localize('NIMBLE.chat.defend.headingProtector', { attack }),
-		isTarget: reactor.targetTokenUuid !== null,
-		ways: [
-			{
-				id: 'defend',
-				name: localize('NIMBLE.chat.defend.plainDefend'),
-				note: localize('NIMBLE.chat.defend.plainDefendNote', {
-					actions: actionsText(cost),
-					armor: String(armor),
-				}),
-			},
-		],
-		interposes: reactor.interposes.map((entry) => ({
-			entryId: entry.id,
-			label: localize('NIMBLE.chat.defend.interposeFor', {
-				name: nameOfToken(entry.targetTokenUuid),
-			}),
-			note: localize('NIMBLE.chat.defend.interposeNote', {
-				actions: actionsText(
-					entry.source === 'baseline'
-						? resolveHeroicReactionActionCost(
-								actor as unknown as Parameters<typeof resolveHeroicReactionActionCost>[0],
-								['interpose'],
-							)
-						: 0,
-				),
-			}),
-		})),
-		blockedNote,
-		takes,
+			hitDamage === null
+				? localize(`${TEXT}.headingNoDamage`, { attack, name })
+				: localize(`${TEXT}.heading`, { attack, name, damage: String(hitDamage) }),
+		options,
 	};
 }
 

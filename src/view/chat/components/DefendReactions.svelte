@@ -45,16 +45,18 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 	const open = $derived(inCombat ? reactors.filter((reactor) => !reactor.defend) : []);
 	const done = $derived(reactors.filter((reactor) => reactor.defend));
 	const applied = $derived(damageAppliedTo(card.system));
+	const solo = $derived(!isGM && open.length === 1);
 
-	let busy = $state(false);
+	let opening = $state<string | null>(null);
 
 	async function react(actor: Actor.Implementation) {
-		if (busy) return;
-		busy = true;
+		const key = actor.uuid ?? '';
+		if (opening === key) return;
+		opening = key;
 		try {
 			await openDefendWindow(messageDocument, actor);
 		} finally {
-			busy = false;
+			if (opening === key) opening = null;
 		}
 	}
 
@@ -110,23 +112,22 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 		{/each}
 
 		{#if open.length > 0}
-			{#if isGM || open.length > 1}
-				<p class="nimble-defend__label">{localize(`${TEXT}.reactions`)}</p>
+			{#if !solo}
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize(`${TEXT}.reactions`)}
+				</h3>
 			{/if}
-			<div
-				class="nimble-defend__heroes"
-				class:nimble-defend__heroes--one={!isGM && open.length === 1}
-			>
+			<div class="nimble-defend__heroes" class:nimble-defend__heroes--solo={solo}>
 				{#each open as reactor (reactor.actor.uuid)}
 					<button
 						class="nimble-defend__hero"
 						type="button"
-						disabled={busy}
+						disabled={opening === reactor.actor.uuid}
 						onclick={() => react(reactor.actor)}
 					>
 						<img src={reactor.actor.img || 'icons/svg/mystery-man.svg'} alt="" />
 						<span>
-							{!isGM && open.length === 1
+							{solo
 								? localize(`${TEXT}.reactAs`, { name: reactor.actor.name ?? '' })
 								: reactor.actor.name}
 						</span>
@@ -141,8 +142,8 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 	.nimble-defend {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.375rem 0.5rem 0;
+		gap: 0.375rem;
+		padding: 0.5rem 0.5rem 0;
 
 		&__blocked {
 			margin: 0;
@@ -152,19 +153,12 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 			color: var(--nimble-medium-text-color);
 		}
 
-		&__label {
-			margin: 0.125rem 0 0;
-			font-size: var(--nimble-xs-text);
-			font-weight: 800;
-			color: var(--nimble-medium-text-color);
-		}
-
 		&__heroes {
 			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-			gap: 0.25rem;
+			grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+			gap: 0.375rem;
 
-			&--one {
+			&--solo {
 				grid-template-columns: 1fr;
 			}
 		}
@@ -173,30 +167,25 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 		&__chip {
 			display: flex;
 			align-items: center;
-			gap: 0.375rem;
-			width: 100%;
-			height: auto;
-			min-height: 32px;
 			margin: 0;
-			padding: 0 0.375rem;
 			font-family: var(--nimble-primary-font);
-			font-size: var(--nimble-sm-text);
-			font-weight: 800;
-			line-height: 1.1;
+			line-height: 1;
 			color: inherit;
 			background: transparent;
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 3px;
+			border: 1px solid var(--nimble-card-border-color);
 			box-shadow: none;
 			cursor: pointer;
+			transition:
+				background-color 0.15s ease,
+				border-color 0.15s ease;
 
 			&:hover:not(:disabled) {
 				color: inherit;
-				background: var(--nimble-card-border-color);
+				background: color-mix(in srgb, currentColor 8%, transparent);
 			}
 
 			&:focus-visible {
-				outline: 2px solid var(--nimble-dark-text-color);
+				outline: 2px solid currentColor;
 				outline-offset: 1px;
 			}
 
@@ -206,24 +195,31 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 			}
 		}
 
-		&__hero img {
-			flex: none;
-			width: 20px;
-			height: 20px;
-			border: 0;
-			border-radius: 50%;
-			object-fit: cover;
-		}
-
-		&__hero span {
-			min-width: 0;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		&__heroes--one &__hero {
+		&__hero {
 			justify-content: center;
+			gap: 0.5rem;
+			width: 100%;
+			height: 2.25rem;
+			padding: 0 0.625rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 900;
+			border-radius: 4px;
+
+			img {
+				flex: none;
+				width: 1.375rem;
+				height: 1.375rem;
+				border: 0;
+				border-radius: 50%;
+				object-fit: cover;
+			}
+
+			span {
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
 		}
 
 		&__line {
@@ -254,8 +250,7 @@ window, and a line for each Defend made, with the GM's armor toggle and Undo.
 
 		&__chip {
 			flex: none;
-			width: auto;
-			min-height: 22px;
+			height: 1.375rem;
 			padding: 0 0.5rem;
 			gap: 0.25rem;
 			font-size: var(--nimble-xs-text);
