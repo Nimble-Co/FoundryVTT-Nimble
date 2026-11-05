@@ -103,6 +103,21 @@ A hero's button goes away when their damage is applied. On a minion group attack
 
 The **Defend**, **Interpose** and **Interpose and Defend** buttons on the character sheet and on the hotbar open the same window, on the newest attack card of the combat that the hero can still react to. With no such card, they post the reaction card as before.
 
+### When you Defend
+
+Features that do something when you Defend show in the window too:
+
+- **When you Defend** ticks show under the rows, for example Pocket Sand, Decoy or Misdirection. A tick works only with a row that Defends. Tick as many as you want; the damage you take changes with each tick. They go in a fixed order: the attack misses or you take no damage, then half the damage or the Armor, then the rest. Half the damage replaces the Armor and rounds up.
+- **Free Defend** rows Defend with no action, for example Slipstream or a "Reaction: Defend for free" spell. A spell row casts the spell, with its own mana and action. A free Defend still uses your Defend for the round; when it is already used, a window asks first.
+- **A second Defend**: with a feature such as Shield Expert, the Defend rows say so when your Defend is already used this round. No window asks.
+- **A Defend for the whole round** (Whirling Defense) gives a row on each later attack on you until your next turn, with nothing more to spend.
+
+What a tick costs (charges, mana, Wounds) is spent when you click the button. A tick that uses a feature's reroll (Pocket Sand) rerolls the attack after the Defend; its row does not show under Change This Roll. A condition on the attacker (Pocket Sand blinds) is put on by the GM's client. A move, an attack back or damage back is not done for you: the card shows a line, for example "Decoy: Move up to half your speed away.", and the table does it.
+
+A feature that reacts when an ally Defends (Exploit) gives its hero a button on the card after an ally within range Defends. The button spends the cost and adds the feature's line.
+
+The shield on the target row names the features used. **Undo** also gives back what each feature spent. A reroll and a condition stay; the GM removes a condition by hand.
+
 ## The result of a save or check
 
 When a save, skill check or ability check has a known DC, the small line under its name tells the result, such as "Failed - DC 14" or "Succeeded - DC 14". A total that meets the DC succeeds. On a save or a skill check, a natural 1 always fails and a natural 20 always succeeds, so the card says "Failed" or "Succeeded" also with no DC. With no DC and no natural 1 or 20, the card tells no result: compare the total at the table. The line only reports. It applies no damage and no effect by itself. A feature of the creature that made the save can react to a failed save with the Apply Condition rule. If the same card later says Succeeded, that condition goes away again. A condition from another source stays.
