@@ -8,7 +8,13 @@ function makeRule(config: Record<string, unknown> = {}) {
 		getDomain: () => new Set<string>(),
 		getRollData: () => ({ key: 3, auraReach: 6 }),
 	};
-	const item = { isEmbedded: true, actor, name: 'Feature', getDomain: () => new Set<string>() };
+	const item = {
+		isEmbedded: true,
+		actor,
+		name: 'Feature',
+		uuid: 'Actor.hero.Item.burst',
+		getDomain: () => new Set<string>(),
+	};
 	const rule = new DefendOptionRule({ type: 'defendOption' } as never, {
 		parent: item as unknown as foundry.abstract.DataModel.Any,
 		strict: false,
@@ -72,5 +78,13 @@ describe('DefendOptionRule', () => {
 		expect(makeRule({ range: '@auraReach' }).resolveRange()).toBe(6);
 		expect(makeRule({ range: '4' }).resolveRange()).toBe(4);
 		expect(makeRule({ range: '' }).resolveRange()).toBe(1);
+	});
+
+	it('limits a once-per-turn option with one key for every option on its item', () => {
+		const slipstream = makeRule({ oncePerTurn: true }).optionCost;
+		const whirl = makeRule({ id: 'other', oncePerTurn: true }).optionCost;
+		expect(slipstream.turnUseKey).toBe('Actor.hero.Item.burst:defendOption');
+		expect(whirl.turnUseKey).toBe(slipstream.turnUseKey);
+		expect(makeRule().optionCost.turnUseKey).toBeUndefined();
 	});
 });

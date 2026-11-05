@@ -77,6 +77,15 @@ describe('defendOptionEffect', () => {
 		expect(effect.attackerConditions).toEqual(['blinded']);
 		expect(effect.wholeRound).toBe(true);
 	});
+
+	it('lists the conditions that end at the start of the attacker next turn', () => {
+		const effect = defendOptionEffect([
+			rule({ attackerCondition: 'blinded', attackerConditionEnds: 'attackerTurn' }),
+			rule({ attackerCondition: 'frightened' }),
+		] as unknown as DefendRules);
+		expect(effect.attackerConditions).toEqual(['blinded', 'frightened']);
+		expect(effect.conditionsEndOnAttackerTurn).toEqual(['blinded']);
+	});
 });
 
 describe('defendOptionsOf', () => {

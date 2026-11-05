@@ -78,6 +78,7 @@ function request(fields: Record<string, unknown> = {}) {
 		options: [],
 		reminders: [],
 		attackerConditions: [],
+		conditionsEndOnAttackerTurn: [],
 		way: 'action' as const,
 		wholeRound: false,
 		...fields,
@@ -133,6 +134,17 @@ describe('Defend options on the card', () => {
 		await requestDefend(request({ attackerConditions: ['blinded'] }));
 
 		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', { sourceActor: pip });
+	});
+
+	it('ends a condition at the start of the attacker next turn when the option says so', async () => {
+		await requestDefend(
+			request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+		);
+
+		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', {
+			sourceActor: pip,
+			duration: { rounds: 1 },
+		});
 	});
 
 	it('gives back what each option paid on Undo', async () => {

@@ -42,6 +42,8 @@ export interface DefendRecord {
 	reminders: string[];
 	/** The GM puts these conditions on the attacker. */
 	attackerConditions: string[];
+	/** Of those, the ones that end at the start of the attacker's next turn. */
+	conditionsEndOnAttackerTurn: string[];
 	/** How the Defend was paid. */
 	way: DefendRecordWay;
 }
@@ -83,6 +85,9 @@ export function defendsOf(system: unknown): DefendRecord[] {
 			: [],
 		attackerConditions: Array.isArray(record.attackerConditions)
 			? record.attackerConditions.filter((id) => typeof id === 'string')
+			: [],
+		conditionsEndOnAttackerTurn: Array.isArray(record.conditionsEndOnAttackerTurn)
+			? record.conditionsEndOnAttackerTurn.filter((id) => typeof id === 'string')
 			: [],
 		way: DEFEND_RECORD_WAYS.includes(record.way) ? record.way : 'action',
 	}));

@@ -29,6 +29,7 @@ export interface DefendOptionEffect {
 	armorBonus: number;
 	reminders: string[];
 	attackerConditions: string[];
+	conditionsEndOnAttackerTurn: string[];
 	wholeRound: boolean;
 }
 
@@ -80,6 +81,13 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 		}),
 		attackerConditions: [
 			...new Set(rules.map((rule) => rule.attackerCondition).filter((id) => !!id)),
+		],
+		conditionsEndOnAttackerTurn: [
+			...new Set(
+				rules
+					.filter((rule) => rule.attackerCondition && rule.attackerConditionEnds === 'attackerTurn')
+					.map((rule) => rule.attackerCondition),
+			),
 		],
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};

@@ -2845,6 +2845,22 @@
 					"label": "Actions",
 					"hint": "The actions one use spends in combat."
 				},
+				"oncePerTurn": {
+					"label": "Once per turn",
+					"hint": "One use each turn, of any creature. The options on the same item share it."
+				},
+				"alsoInterpose": {
+					"label": "Also when you Interpose",
+					"hint": "The reroll also works with an Interpose and no Defend."
+				},
+				"attackerConditionEnds": {
+					"label": "Condition ends",
+					"hint": "When the condition on the attacker ends.",
+					"choices": {
+						"none": "When removed",
+						"attackerTurn": "At the start of the attacker's next turn"
+					}
+				},
 				"upcastArmor": {
 					"label": "More armor per upcast",
 					"hint": "The armor this Defend adds for each step the item is upcast."
