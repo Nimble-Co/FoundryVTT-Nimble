@@ -94,10 +94,10 @@ The button opens the Defend window. Its heading tells the attack, the hero it hi
 
 Pick a row, then click the button at the bottom. **Cancel** does nothing. When the reaction is already spent, you have no actions left, or it is your turn, a window asks one time if you want to use it anyway. Defend costs 1 more action when you wear armor or a shield that you are not proficient with.
 
-After a Defend, the card says who Defended and how the damage changes, for example "Pip Defended 14 to 11", and the hero's target row shows a shield. **Apply Damage** takes the Armor off one time for the whole attack. Damage that ignores armor keeps its full value. Vulnerable damage doubles first, and then the Armor comes off. Until the damage is applied, the GM has two buttons on that line:
+After a Defend, the hero's target row shows a green shield and the damage after the Armor. **Apply Damage** takes the Armor off one time for the whole attack. Damage that ignores armor keeps its full value. Vulnerable damage doubles first, and then the Armor comes off. Until the damage is applied, the GM has two buttons on that target row:
 
-- **Armor applies**: on at the start. Turn it off when the damage cannot be avoided, at the GM's discretion.
-- **Undo**: takes the Defend back and gives back the reaction and the actions it spent.
+- **The shield**: click it when the damage cannot be avoided, at the GM's discretion. The shield goes grey and no Armor comes off. Click it again to take the Armor off again.
+- **Undo** (the arrow): takes the Defend back and gives back the reaction and the actions it spent.
 
 A hero's button goes away when their damage is applied. On a minion group attack, one Defend covers the whole attack, so the Armor comes off the total. A creature that is Latched On cannot be Defended or Interposed against: the GM sees a line that says so, and no buttons show.
 

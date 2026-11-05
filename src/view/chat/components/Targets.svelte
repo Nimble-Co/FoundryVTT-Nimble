@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { defendFor } from '#utils/defend/defendRecords.js';
+	import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
+	import { setDefendArmorApplies, undoDefend } from '#utils/defend/defendRequests.js';
 	import type {
 		DamageModifierKind,
 		NimbleChatMessage,
@@ -165,9 +166,18 @@
 					: null}
 				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
 				{@const mark = targetMarks.markOn(token as never)}
+				{@const defend =
+					token?.actor?.type === 'character'
+						? defendFor(messageDocument?.reactive?.system, token.uuid ?? '')
+						: null}
+				{@const defendControls =
+					!!defend &&
+					game.user?.isGM === true &&
+					!damageAppliedTo(messageDocument?.reactive?.system).has(token.uuid ?? '')}
 				<li
 					class="nimble-card"
 					class:nimble-target--moves={movementChips.length > 0 || !!mark}
+					class:nimble-target--defend={defendControls}
 					onmouseenter={() => tokenHoverIn(token.object)}
 					onmouseleave={() => tokenHoverOut(token.object)}
 				>
@@ -239,12 +249,48 @@
 
 					{#if token?.actor?.type !== 'character'}
 						{@html getArmorIcon(token)}
-					{:else if defendFor(messageDocument?.reactive?.system, token.uuid ?? '')}
-						{@const defend = defendFor(messageDocument?.reactive?.system, token.uuid ?? '')}
+					{:else if defend && defendControls}
+						<span class="nimble-target-defend">
+							<button
+								class="nimble-button nimble-target-defend__armor"
+								class:nimble-target-defend__armor--off={!defend.armorApplies}
+								data-button-variant="icon"
+								type="button"
+								aria-pressed={defend.armorApplies}
+								aria-label={localize('NIMBLE.chat.defend.armorApplies')}
+								data-tooltip={localize(
+									defend.armorApplies
+										? 'NIMBLE.chat.defend.armorOnHint'
+										: 'NIMBLE.chat.defend.armorOffHint',
+									{ armor: String(defend.armor) },
+								)}
+								onclick={() =>
+									setDefendArmorApplies(messageDocument.id ?? '', defend.id, !defend.armorApplies)}
+							>
+								<i
+									class="fa-solid {defend.armorApplies ? 'fa-shield-halved' : 'fa-shield'}"
+									aria-hidden="true"
+								></i>
+							</button>
+							<button
+								class="nimble-button"
+								data-button-variant="icon"
+								type="button"
+								aria-label={localize('NIMBLE.chat.defend.undoLabel')}
+								data-tooltip={localize('NIMBLE.chat.defend.undoHint')}
+								onclick={() => undoDefend(messageDocument.id ?? '', defend.id)}
+							>
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+							</button>
+						</span>
+					{:else if defend}
 						<i
-							class="nimble-armor-icon nimble-target-defended fa-solid fa-shield-halved"
+							class="nimble-armor-icon nimble-target-defended fa-solid"
+							class:fa-shield-halved={defend.armorApplies}
+							class:fa-shield={!defend.armorApplies}
+							class:nimble-target-defended--off={!defend.armorApplies}
 							data-tooltip={localize('NIMBLE.chat.defend.defendedTooltip', {
-								armor: String(defend?.armorApplies ? defend.armor : 0),
+								armor: String(defend.armorApplies ? defend.armor : 0),
 							})}
 						></i>
 					{/if}
@@ -413,7 +459,51 @@
 		--nimble-card-column-dimensions: 1.75rem 1fr auto auto 1rem 2rem;
 	}
 
+	// A GM row with the Defend controls gets a wider armor column.
+	.nimble-target-list > .nimble-target--defend {
+		--nimble-card-column-dimensions: 1.75rem 1fr auto auto 2rem;
+	}
+
+	.nimble-target-list > .nimble-target--moves.nimble-target--defend {
+		--nimble-card-column-dimensions: 1.75rem 1fr auto auto auto 2rem;
+	}
+
 	.nimble-target-defended {
 		color: var(--nimble-roll-success-color);
+
+		&--off {
+			color: var(--nimble-medium-text-color);
+			opacity: 0.6;
+		}
+	}
+
+	.nimble-target-defend {
+		--nimble-button-font-size: var(--nimble-sm-text);
+
+		grid-area: armor;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+
+		.nimble-button {
+			grid-area: auto;
+		}
+
+		// The chat card's button rule sets the button color, so the icon carries it.
+		.nimble-target-defend__armor {
+			--nimble-button-opacity: 1;
+
+			i {
+				color: var(--nimble-roll-success-color);
+			}
+		}
+
+		.nimble-target-defend__armor--off {
+			--nimble-button-opacity: 0.65;
+
+			i {
+				color: var(--nimble-medium-text-color);
+			}
+		}
 	}
 </style>
