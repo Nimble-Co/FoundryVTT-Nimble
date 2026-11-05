@@ -89,7 +89,7 @@ In a combat that has started, an attack card that hits a hero has a **Reactions*
 The button opens the Defend window. Its heading tells the attack, the hero it hits and the damage, for example "Fire Breath hits Pip for 14". Each row is one thing you can do, with its cost and the damage you take:
 
 - **Defend**: for a hero the attack hits. The cost shows the actions and your Armor. The damage you take shows the damage without the Defend, struck through, and the damage after your Armor.
-- **Interpose**: for an ally within 2 spaces of the hero, or within the range of an Interpose feature. You become the target and take the full damage. Move the tokens yourself.
+- **Interpose**: for an ally within 2 spaces of the hero, or within the range of an Interpose feature. You become the target and take the full damage. Move the tokens yourself. As the new target, you get your own rows under Change This Roll, such as a reroll that a feature gives the target.
 - **Interpose and Defend**: you become the target and your Armor comes off the damage.
 
 Pick a row, then click the button at the bottom. **Cancel** does nothing. When the reaction is already spent, you have no actions left, or it is your turn, a window asks one time if you want to use it anyway. Defend costs 1 more action when you wear armor or a shield that you are not proficient with.
@@ -107,12 +107,14 @@ The **Defend**, **Interpose** and **Interpose and Defend** buttons on the charac
 
 Features that do something when you Defend show in the window too:
 
-- **When you Defend** ticks show under the rows, for example Pocket Sand, Decoy or Misdirection. A tick works only with a row that Defends. Tick as many as you want; the damage you take changes with each tick. They go in a fixed order: the attack misses or you take no damage, then half the damage or the Armor, then the rest. Half the damage replaces the Armor and rounds up.
+- **When you Defend** ticks show under the rows, for example Pocket Sand, Decoy or Misdirection. Most ticks work only with a row that Defends. A tick that cannot go with the row you picked is gray. Tick as many as you want; the damage you take changes with each tick. They go in a fixed order: the attack misses or you take no damage, then half the damage or the Armor, then the rest. Half the damage replaces the Armor and rounds up.
 - **Free Defend** rows Defend with no action, for example Slipstream or a "Reaction: Defend for free" spell. A spell row casts the spell, with its own mana and action. A free Defend still uses your Defend for the round; when it is already used, a window asks first.
 - **A second Defend**: with a feature such as Shield Expert, the Defend rows say so when your Defend is already used this round. No window asks.
 - **A Defend for the whole round** (Whirling Defense) gives a row on each later attack on you until your next turn, with nothing more to spend.
 
-What a tick costs (charges, mana, Wounds) is spent when you click the button. A tick that uses a feature's reroll (Pocket Sand) rerolls the attack after the Defend; its row does not show under Change This Roll. A condition on the attacker (Pocket Sand blinds) is put on by the GM's client. A move, an attack back or damage back is not done for you: the card shows a line, for example "Decoy: Move up to half your speed away.", and the table does it.
+What a tick costs (charges, mana, Wounds) is spent when you click the button. A tick that uses a feature's reroll (Pocket Sand) rerolls the attack after the Defend; its row does not show under Change This Roll. With Interpose and Defend, the reroll comes when you become the target. When the attack does not give that reroll, a warning tells you and the tick is not used. Some ticks also go with Interpose alone, for example Fearsome: "Whenever you Interpose or Defend". A condition on the attacker (Pocket Sand blinds) is put on by the GM's client; it can end by itself at the start of the attacker's next turn. A move, an attack back or damage back is not done for you: the card shows a line, for example "Decoy: Move up to half your speed away.", and the table does it.
+
+A feature that is "1/turn" (Burst of Speed) has one use each turn, of any creature, for all its rows. When it is already used this turn, its rows do not show.
 
 A feature that reacts when an ally Defends (Exploit) gives its hero a button on the card after an ally within range Defends. The button spends the cost and adds the feature's line.
 

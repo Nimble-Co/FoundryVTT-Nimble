@@ -9,16 +9,16 @@ The Defend Option rule is something the owner can do with a Defend. It shows in 
 
 **Damage** sets what the Defend does to the damage: the attack misses or no damage (the owner takes none), or half the damage in place of the Armor (rounds up). **More armor** adds a formula to the Armor. With several options on one Defend, the order is fixed: a miss or no damage, then half or the Armor, then the rest.
 
-**Use this item's reroll** rerolls the attack with the Reroll rule of the same item, after the Defend. That Reroll rule then shows only in the Defend window, not under Change This Roll. **Condition on the attacker** puts a condition on the attacker. **Reminder** is a line on the card for what the table does, such as a move or an attack back. **Every attack this round** makes the Defend cover each later attack on the owner until their next turn, with nothing more to spend.
+**Use this item's reroll** rerolls the attack with the Reroll rule of the same item, after the Defend. That Reroll rule then shows only in the Defend window, not under Change This Roll. Give that Reroll rule **Used by** → `Target`: with Interpose and Defend, the owner becomes the target and the reroll comes then. **Also when you Interpose** lets the tick go with an Interpose alone. **Condition on the attacker** puts a condition on the attacker. **Condition ends** → `At the start of the attacker's next turn` takes it off by itself. **Reminder** is a line on the card for what the table does, such as a move or an attack back. **Every attack this round** makes the Defend cover each later attack on the owner until their next turn, with nothing more to spend.
 
 **Only when the attacker is** tests the creature that made the attack. It sees the attacker's `target:` tags and the marks the owner put on it, so `target:quarry` means "against my quarry".
 
-The cost (charges, actions, mana, Wounds, and **Expend a dice pool**) is spent when the player confirms. **Expend a dice pool** expends every die of that pool and needs at least one die. **Undo** on the target row gives it back.
+The cost (charges, actions, mana, Wounds, and **Expend a dice pool**) is spent when the player confirms. **Expend a dice pool** expends every die of that pool and needs at least one die. **Once per turn** gives one use each turn, of any creature; all the Defend Options on the same item share it. **Undo** on the target row gives it back.
 
 **Example: Pocket Sand.** When you Defend against a melee attack, Blind the attacker and force them to reroll the attack.
 
 - A **Reroll** rule for the reroll with disadvantage and its charges
-- A **Defend Option** rule: **Shows as** → `With Defend`, **Attacks** → `Melee`, **Use this item's reroll** → on, **Condition on the attacker** → `Blinded`
+- A **Defend Option** rule: **Shows as** → `With Defend`, **Attacks** → `Melee`, **Use this item's reroll** → on, **Condition on the attacker** → `Blinded`, **Condition ends** → `At the start of the attacker's next turn`
 
 **Example: Exploit.** Reaction (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your aura to Interpose.
 
