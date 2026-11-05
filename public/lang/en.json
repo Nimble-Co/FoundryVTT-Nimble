@@ -734,7 +734,7 @@
 				"roundCost": "Nothing more to spend. Armor {armor}.",
 				"interposeAndFree": "Interpose and Defend ({label})",
 				"whenYouDefend": "When you Defend",
-				"tickNeedsDefend": "Pick a row that Defends to use this.",
+				"tickNeedsDefend": "The row you picked cannot use this.",
 				"nothingToDo": "There is nothing to do against this attack.",
 				"cannotPay": "{label}: its cost could not be paid.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",

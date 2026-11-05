@@ -164,9 +164,27 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 	const rows = new Map<string, RowPlan>();
 	const actionWay: DefendRecordWay = extra ? 'extra' : 'action';
 	const freePicks = defendOptionsOf(actor, card, 'freeDefend');
+	const tickPicks = defendOptionsOf(actor, card, 'withDefend');
+	const keysOf = (picks: DefendOptionPick[]) => picks.map((pick) => pick.key);
+	// A tick that rerolls needs its reroll on the card. An Interpose makes the
+	// hero a target, so after one the reroll can come.
+	const defendTicks = keysOf(
+		tickPicks.filter(
+			(pick) =>
+				!pick.rule.useReroll ||
+				!!cardRerollFor(card, pick.rule.item?.uuid, reactor.targetTokenUuid),
+		),
+	);
+	const bothTicks = keysOf(tickPicks);
+	const interposeTicks = keysOf(
+		tickPicks.filter((pick) => pick.rule.useReroll && pick.rule.alsoInterpose),
+	);
 
 	const addRow = (
-		option: Omit<DefendOption, 'takes' | 'note'> & { note?: string },
+		option: Omit<DefendOption, 'takes' | 'note' | 'tickIds'> & {
+			note?: string;
+			tickIds?: string[];
+		},
 		plan: RowPlan,
 	) => {
 		const takes = option.defend
@@ -174,7 +192,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 			: plan.token
 				? card.previewDamageFor(plan.token, 0)
 				: null;
-		options.push({ note: '', ...option, takes });
+		options.push({ note: '', tickIds: [], ...option, takes });
 		rows.set(option.id, plan);
 	};
 	const freeCost = (pick: DefendOptionPick) =>
@@ -197,7 +215,6 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				confirm: localize(`${TEXT}.confirmDefend`),
 				before: card.previewDamageFor(reactor.targetTokenUuid, 0),
 				defend: true,
-				takesTicks: false,
 				interposeEntryId: null,
 			},
 			{ way: 'round', token: reactor.targetTokenUuid, pick: null, whole },
@@ -218,7 +235,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				confirm: localize(`${TEXT}.confirmDefend`),
 				before,
 				defend: true,
-				takesTicks: true,
+				tickIds: defendTicks,
 				interposeEntryId: null,
 			},
 			{ way: actionWay, token: reactor.targetTokenUuid, pick: null, whole: null },
@@ -232,7 +249,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 					confirm: localize(`${TEXT}.confirmDefend`),
 					before,
 					defend: true,
-					takesTicks: true,
+					tickIds: defendTicks,
 					interposeEntryId: null,
 				},
 				{ way: 'free', token: reactor.targetTokenUuid, pick, whole: null },
@@ -256,7 +273,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				confirm: localize(`${TEXT}.confirmInterpose`),
 				before: null,
 				defend: false,
-				takesTicks: false,
+				tickIds: interposeTicks,
 				interposeEntryId: entry.id,
 			},
 			{ way: 'action', token, pick: null, whole: null },
@@ -275,7 +292,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				confirm: localize(`${TEXT}.confirmBoth`),
 				before,
 				defend: true,
-				takesTicks: true,
+				tickIds: bothTicks,
 				interposeEntryId: entry.id,
 			},
 			{ way: actionWay, token, pick: null, whole: null },
@@ -291,7 +308,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 					confirm: localize(`${TEXT}.confirmBoth`),
 					before,
 					defend: true,
-					takesTicks: true,
+					tickIds: bothTicks,
 					interposeEntryId: entry.id,
 				},
 				{ way: 'free', token, pick, whole: null },
@@ -299,17 +316,10 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 		}
 	}
 
-	// A tick that rerolls needs its reroll on the card: no reroll, no use.
-	const tickPicks = defendOptionsOf(actor, card, 'withDefend').filter(
-		(pick) =>
-			!pick.rule.useReroll ||
-			!!cardRerollFor(
-				card,
-				pick.rule.item?.uuid,
-				reactor.targetTokenUuid ?? reactor.interposes[0]?.tokenUuid,
-			),
+	const shown = new Set(options.flatMap((option) => option.tickIds));
+	const ticks = new Map(
+		tickPicks.filter((pick) => shown.has(pick.key)).map((pick) => [pick.key, pick]),
 	);
-	const ticks = new Map(tickPicks.map((pick) => [pick.key, pick]));
 	const hitToken = reactor.targetTokenUuid ?? reactor.interposes[0]?.targetTokenUuid ?? null;
 	const hitDamage = hitToken ? card.previewDamageFor(hitToken, 0) : null;
 	const attack = cardName(card);
@@ -323,7 +333,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 					? localize(`${TEXT}.headingNoDamage`, { attack, name })
 					: localize(`${TEXT}.heading`, { attack, name, damage: String(hitDamage) }),
 			options,
-			ticks: tickPicks.map((pick) => ({
+			ticks: [...ticks.values()].map((pick) => ({
 				id: pick.key,
 				label: pick.label,
 				detail: tickDetail(pick),
@@ -333,7 +343,9 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				const option = options.find((each) => each.id === optionId);
 				if (!row || !option) return null;
 				if (!option.defend) return option.takes;
-				const picked = option.takesTicks ? tickIds.flatMap((id) => ticks.get(id) ?? []) : [];
+				const picked = tickIds
+					.filter((id) => option.tickIds.includes(id))
+					.flatMap((id) => ticks.get(id) ?? []);
 				return damageAfter(card, row.token, armor, effectOf(row, picked));
 			},
 		},
@@ -458,6 +470,11 @@ async function markDefendUsed(
 	]);
 }
 
+/** The card as the GM last wrote it. */
+function currentCard(card: NimbleChatMessage): NimbleChatMessage {
+	return (game.messages?.get(card.id ?? '') as NimbleChatMessage | undefined) ?? card;
+}
+
 /** Use the card's reroll of the option's item, for the Defended token. */
 async function useOptionReroll(
 	card: NimbleChatMessage,
@@ -465,11 +482,7 @@ async function useOptionReroll(
 	token: string,
 	quiet = false,
 ): Promise<void> {
-	const entry = cardRerollFor(
-		game.messages?.get(card.id ?? '') ?? card,
-		pick.rule.item?.uuid,
-		token,
-	);
+	const entry = cardRerollFor(currentCard(card), pick.rule.item?.uuid, token);
 	if (!entry) {
 		if (!quiet) ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
 		return;
@@ -527,6 +540,9 @@ export async function openDefendWindow(
 	const option = choice ? data.options.find((each) => each.id === choice.optionId) : undefined;
 	if (!choice || !row || !option || (!option.defend && !option.interposeEntryId)) return false;
 
+	const tickPicks = choice.ticks
+		.filter((id) => option.tickIds.includes(id))
+		.flatMap((id) => plan.ticks.get(id) ?? []);
 	const combat = (game.combat ?? null) as ReactionCombat | null;
 	const entry = option.interposeEntryId
 		? reactor.interposes.find((each) => each.id === option.interposeEntryId)
@@ -552,8 +568,14 @@ export async function openDefendWindow(
 			entryId: entry.id,
 		});
 		if (!sent) return false;
-		if (!option.defend) return true;
+		if (!option.defend && tickPicks.length < 1) return true;
 		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
+		if (!option.defend) {
+			for (const pick of tickPicks) {
+				if (defendedToken) await useOptionReroll(card, pick, defendedToken);
+			}
+			return true;
+		}
 	}
 
 	if (!option.defend || !defendedToken) return Boolean(entry);
@@ -582,10 +604,13 @@ export async function openDefendWindow(
 		reactionKeys = ['defend'];
 	}
 
-	const tickPicks = option.takesTicks ? choice.ticks.flatMap((id) => plan.ticks.get(id) ?? []) : [];
 	const usedTicks: DefendOptionPick[] = [];
 	for (const pick of tickPicks) {
 		if (pick.rule.useReroll) {
+			if (!cardRerollFor(currentCard(card), pick.rule.item?.uuid, defendedToken)) {
+				ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
+				continue;
+			}
 			uses.push(defendOptionUse(actor, pick));
 			usedTicks.push(pick);
 			continue;

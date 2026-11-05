@@ -14,10 +14,10 @@ the damage the hero takes with it.
 	let optionId = $state(untrack(() => data.picked ?? data.options[0]?.id ?? ''));
 	let tickIds = $state<string[]>([]);
 	const picked = $derived(data.options.find((option) => option.id === optionId));
-	const ticksOn = $derived(picked?.takesTicks === true);
+	const rowTicks = $derived(picked?.tickIds ?? []);
 
 	function takesFor(option: (typeof data.options)[number]): number | null {
-		return option.takesTicks ? data.takesWith(option.id, tickIds) : option.takes;
+		return option.tickIds.length > 0 ? data.takesWith(option.id, tickIds) : option.takes;
 	}
 
 	function onConfirm() {
@@ -26,7 +26,7 @@ the damage the hero takes with it.
 			optionId: picked.id,
 			defend: picked.defend,
 			interposeEntryId: picked.interposeEntryId,
-			ticks: ticksOn ? [...tickIds] : [],
+			ticks: tickIds.filter((id) => rowTicks.includes(id)),
 		});
 	}
 </script>
@@ -71,12 +71,13 @@ the damage the hero takes with it.
 		<section class="ticks">
 			<h5 class="lb">{localize('NIMBLE.chat.defend.whenYouDefend')}</h5>
 			{#each data.ticks as tick (tick.id)}
+				{@const on = rowTicks.includes(tick.id)}
 				<label
 					class="check tick"
-					class:tick--off={!ticksOn}
-					data-tooltip={ticksOn ? null : localize('NIMBLE.chat.defend.tickNeedsDefend')}
+					class:tick--off={!on}
+					data-tooltip={on ? null : localize('NIMBLE.chat.defend.tickNeedsDefend')}
 				>
-					<input type="checkbox" value={tick.id} disabled={!ticksOn} bind:group={tickIds} />
+					<input type="checkbox" value={tick.id} disabled={!on} bind:group={tickIds} />
 					<span class="tick__text">
 						<b>{tick.label}</b>
 						{#if tick.detail}
