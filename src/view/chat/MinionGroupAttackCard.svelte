@@ -7,6 +7,7 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import DamageBackLines from './components/DamageBackLines.svelte';
 	import DefendReactions from './components/DefendReactions.svelte';
+	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import Targets from './components/Targets.svelte';
 
 	interface MinionGroupAttackRow {
@@ -227,6 +228,8 @@
 			</button>
 		{/if}
 	</section>
+
+	<IncomingReactionPrompts place="options" />
 </article>
 
 <style lang="scss">
