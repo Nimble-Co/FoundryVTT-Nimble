@@ -22,6 +22,7 @@
 				"attackerCondition": "",
 				"reminder": "Deal radiant damage back to the attacker equal to the damage you blocked (ignoring armor).",
 				"useItem": true,
+				"upcastArmor": 5,
 				"withInterpose": false,
 				"wholeRound": false,
 				"range": 2,

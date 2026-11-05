@@ -20,7 +20,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"attackerCondition": "",
-				"reminder": "Until the start of your next turn, deal KEY damage (ignoring armor) to each melee attacker against you and give them Smoldering.",
+				"reminder": "Until the start of your next turn, deal KEY damage (+KEY for each upcast, ignoring armor) to each melee attacker against you and give them Smoldering.",
 				"useItem": true,
 				"withInterpose": false,
 				"wholeRound": false,

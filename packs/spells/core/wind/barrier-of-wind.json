@@ -52,6 +52,7 @@
 				"attackerCondition": "",
 				"reminder": "Give each later ranged attack against you disadvantage this round.",
 				"useItem": true,
+				"upcastArmor": 3,
 				"withInterpose": false,
 				"wholeRound": false,
 				"range": 2,
