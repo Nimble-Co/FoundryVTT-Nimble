@@ -31,7 +31,7 @@ On the **Config** tab, the **Object Type** row offers five kinds. The choice cha
 | Kind | What it unlocks |
 | :--- | :--- |
 | **Weapon** | A whole **Weapon Configuration** section with weapon properties (see step 3). |
-| **Armor** | No extra fields. Protection is added on the **Rules** tab (see the armor section below). In the inventory, the item gets a shield-shaped equip toggle. |
+| **Armor** | An **Armor Type** row: Cloth, Leather, Mail or Plate. Protection is added on the **Rules** tab (see the armor section below). In the inventory, the item gets a shield-shaped equip toggle. |
 | **Shield** | Same as armor. Carrying a shield also lets rules elsewhere in the system detect "this character has a shield". |
 | **Consumable** | Behaves like other items, but healing effects on consumables benefit from any "healing potion bonus" rules the drinker has. |
 | **Miscellaneous** | Everything else: tools, trinkets, wands. A wand is just a miscellaneous object with an activation. |
@@ -192,9 +192,14 @@ Open the **Chain Shirt** from the compendium and look at its **Rules** tab: one 
 To build your own armor:
 
 1. Create an Object and set the Object Type to **Armor** (or **Shield**).
-2. On the **Rules** tab, click **Open Rules Builder** and add an **Armor Class** rule with your formula and mode.
+2. For armor, pick its **Armor Type**. Click the picked type again to clear it.
+3. On the **Rules** tab, click **Open Rules Builder** and add an **Armor Class** rule with your formula and mode.
 
 Equipping matters: the equip toggle in the character's inventory switches all of an item's rules on or off. Unequipped armor protects no one.
+
+::: warning Defend and armor proficiency
+A hero who wears armor or a shield that their armor proficiencies do not include pays 1 more action to Defend. The armor's **Armor Type** gives the check; a shield is always the Shield type. Armor with no armor type is not checked, so armor you make by hand works for everyone until you pick a type.
+:::
 
 ![The Rules tab of the Chain Shirt compendium item, showing the Armor Class rule card](/images/documentation/chain-shirt-item.png)
 

@@ -1453,6 +1453,8 @@
 			"misc": "Miscellaneous"
 		},
 		"objectSheet": {
+			"armorType": "Armor Type",
+			"armorTypeHint": "A Defend in armor you are not proficient with costs 1 more action. With no type, this is not checked.",
 			"price": "Price"
 		},
 		"prompts": {
