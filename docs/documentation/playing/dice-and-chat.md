@@ -119,7 +119,7 @@ The reroll line has a tag, such as **With DEX**. The card keeps its name, so a S
 
 Some features let a character reroll an ally's roll, such as the Songweaver's Inspiration and the gnome's Optimistic. When an ally makes a roll, the character's feature shows as a row on the ally's card, under the character's name, for the character's owner and the GM. Two player characters are always allies. For other tokens, the token disposition decides. A feature with a Reach shows only when its token is within that many spaces of the ally's token when the roll is made. An attack with an area has no reroll or change rows.
 
-When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under **Change This Roll**, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card.
+When a disposition or a Reach kept an ally's reroll off a card, the GM sees one quiet line under **Change This Roll**, for example "1 ally reroll left out". Open it to see each reroll and why it was left out. Click **Add** to give the ally's owner the feature on that card. An enemy of the creature that rolls is never in this list: a Friendly token is not listed for a Hostile roll, and a Hostile token is not listed for a Friendly roll.
 
 ### Rerolling one die
 

@@ -56,6 +56,13 @@ function countsAsAlly(roller: ScannedToken, other: ScannedToken): boolean {
 	return areAllies(roller as unknown as TokenDocument, other as unknown as TokenDocument);
 }
 
+/** A Friendly token and a Hostile one are on opposite sides, so neither is a setup fault. */
+function areEnemies(roller: ScannedToken, other: ScannedToken): boolean {
+	const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
+	const sides = [roller.disposition, other.disposition];
+	return sides.includes(FRIENDLY) && sides.includes(HOSTILE);
+}
+
 /**
  * The creatures on the roller's scene that have an ally-side reroll, with
  * whether they count as an ally and how many spaces away they are. Measured
@@ -73,10 +80,12 @@ function scanRerollAllies(
 		const actor = token.actor;
 		if (!actor || token.hidden || token.uuid === rollerToken.uuid) continue;
 		if (actor.uuid === rollerActorUuid || !hasAllyReroll(actor)) continue;
+		const isAlly = countsAsAlly(rollerToken, token);
+		if (!isAlly && areEnemies(rollerToken, token)) continue;
 		allies.push({
 			tokenUuid: token.uuid,
 			actor,
-			isAlly: countsAsAlly(rollerToken, token),
+			isAlly,
 			spaces: measure(rollerToken, token),
 		});
 	}

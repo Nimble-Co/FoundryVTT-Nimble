@@ -108,14 +108,22 @@ describe('scanRerollAllies', () => {
 		]);
 	});
 
-	it('lists a creature that is not an ally by disposition as not an ally', () => {
+	it('lists a neutral creature as not an ally, and leaves an enemy out', () => {
 		const roller = token('roller');
 		scene(
 			roller,
 			token('neutral', { disposition: NEUTRAL }),
 			token('foe', { disposition: HOSTILE }),
 		);
-		expect(scanRerollAllies(roller, spaces(1)).map((ally) => ally.isAlly)).toEqual([false, false]);
+		expect(
+			scanRerollAllies(roller, spaces(1)).map((ally) => [ally.tokenUuid, ally.isAlly]),
+		).toEqual([['Scene.s.Token.neutral', false]]);
+	});
+
+	it('leaves out a friendly creature when a hostile one rolls', () => {
+		const roller = token('roller', { disposition: HOSTILE });
+		scene(roller, token('hero', { disposition: FRIENDLY }));
+		expect(scanRerollAllies(roller, spaces(1))).toEqual([]);
 	});
 
 	it('finds nothing without a token for the one who rolled', () => {
