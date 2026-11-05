@@ -116,7 +116,7 @@ What a tick costs (charges, mana, Wounds) is spent when you click the button. A 
 
 A feature that reacts when an ally Defends (Exploit) gives its hero a button on the card after an ally within range Defends. The button spends the cost and adds the feature's line.
 
-The shield on the target row names the features used. **Undo** also gives back what each feature spent. A reroll and a condition stay; the GM removes a condition by hand.
+When the GM turns the shield off for damage that cannot be avoided, half the damage stops too; a miss or no damage stays. The shield on the target row names the features used. **Undo** also gives back what each feature spent. A reroll and a condition stay; the GM removes a condition by hand.
 
 ## The result of a save or check
 
