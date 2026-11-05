@@ -19,6 +19,8 @@ export interface DefendOption {
 export interface DefendWindowData {
 	heading: string;
 	options: DefendOption[];
+	/** The row picked when the window opens. The first row when not set. */
+	picked?: string;
 }
 
 export interface DefendChoice {

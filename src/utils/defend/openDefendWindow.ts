@@ -18,6 +18,7 @@ import showReactionConfirmation from '../incomingReactions/showReactionConfirmat
 import localize from '../localize.js';
 import { type DefendReactor, defendReactors } from './defendReactors.js';
 import { requestDefend } from './defendRequests.js';
+import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
 
 const TEXT = 'NIMBLE.chat.defend';
 
@@ -196,15 +197,25 @@ function waitForTarget(
 	});
 }
 
-/** Open the Defend window for one hero on an attack card, then do what the player picked. */
+function firstOf(data: DefendWindowData, way: DefendWay): string | undefined {
+	const prefix = way === 'defend' ? 'defend' : `${way}:`;
+	return data.options.find((option) => option.id.startsWith(prefix))?.id;
+}
+
+/**
+ * Open the Defend window for one hero on an attack card, then do what the player
+ * picked. `way` picks its first row. Returns true when the hero reacted.
+ */
 export async function openDefendWindow(
 	card: NimbleChatMessage,
 	actor: Actor.Implementation,
-): Promise<void> {
+	way: DefendWay | null = null,
+): Promise<boolean> {
 	const reactor = defendReactors(card as never).find((each) => each.actor.uuid === actor.uuid);
-	if (!reactor || reactor.defend) return;
+	if (!reactor || reactor.defend) return false;
 
 	const data = defendWindowData(card, reactor);
+	if (way) data.picked = firstOf(data, way);
 	const dialog = new ChoiceDialog<DefendChoice>(actor, {
 		component: DefendDialog,
 		icon: 'fa-solid fa-shield-halved',
@@ -213,29 +224,30 @@ export async function openDefendWindow(
 	});
 	await dialog.render(true);
 	const choice = await dialog.promise;
-	if (!choice || (!choice.defend && !choice.interposeEntryId)) return;
+	if (!choice || (!choice.defend && !choice.interposeEntryId)) return false;
 
 	const combat = (game.combat ?? null) as ReactionCombat | null;
 	let defendedToken = reactor.targetTokenUuid;
 
 	if (choice.interposeEntryId) {
 		const entry = reactor.interposes.find((each) => each.id === choice.interposeEntryId);
-		if (!entry) return;
-		if (entry.source === 'baseline' && !(await spendBaselineInterpose(entry))) return;
+		if (!entry) return false;
+		if (entry.source === 'baseline' && !(await spendBaselineInterpose(entry))) return false;
 		const sent = await requestIncomingAttackReaction({
 			messageId: card.id ?? '',
 			entryId: entry.id,
 		});
-		if (!sent) return;
+		if (!sent) return false;
 		defendedToken = entry.tokenUuid || null;
-		if (choice.defend && defendedToken && !(await waitForTarget(card, defendedToken))) return;
+		if (!choice.defend) return true;
+		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
 	}
 
-	if (!choice.defend || !defendedToken) return;
+	if (!choice.defend || !defendedToken) return Boolean(choice.interposeEntryId);
 
 	const combatant = combatantOf(combat, actor, defendedToken);
 	const paid = await spendDefend(combat, combatant);
-	if (!paid) return;
+	if (!paid) return Boolean(choice.interposeEntryId);
 
 	await requestDefend({
 		messageId: card.id ?? '',
@@ -247,4 +259,21 @@ export async function openDefendWindow(
 		previousActions: paid.previousActions,
 		reactionKeys: ['defend'],
 	});
+	return true;
+}
+
+/**
+ * Open the Defend window on the newest attack card of the running combat where the
+ * hero can react in that way. Returns null when there is no such card.
+ */
+export async function openDefendWindowOnNewestCard(
+	actor: Actor.Implementation,
+	way: DefendWay,
+): Promise<boolean | null> {
+	const combat = game.combat;
+	if (!combat?.started) return null;
+	const since = Number(foundry.utils.getProperty(combat, '_stats.createdTime') ?? 0);
+	const cards = (game.messages?.contents ?? []) as unknown as NimbleChatMessage[];
+	const card = newestDefendCard(cards, actor, way, since);
+	return card ? openDefendWindow(card, actor, way) : null;
 }

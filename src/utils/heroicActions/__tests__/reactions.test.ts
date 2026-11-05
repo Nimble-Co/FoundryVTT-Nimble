@@ -9,6 +9,7 @@ import {
 } from '../../../../tests/fixtures/heroicActions.js';
 
 const rollUnarmedStrikeMock = vi.fn();
+const openOnNewestCardMock = vi.fn();
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let reactions: typeof import('../reactions.ts');
@@ -16,6 +17,9 @@ let reactions: typeof import('../reactions.ts');
 beforeAll(async () => {
 	vi.resetModules();
 	vi.doMock('../unarmedStrike.js', () => ({ rollUnarmedStrike: rollUnarmedStrikeMock }));
+	vi.doMock('#utils/defend/openDefendWindow.js', () => ({
+		openDefendWindowOnNewestCard: openOnNewestCardMock,
+	}));
 	reactions = await import('../reactions.ts');
 });
 
@@ -34,11 +38,31 @@ describe('heroic reactions', () => {
 	beforeEach(() => {
 		restore = resetHeroicGlobals();
 		rollUnarmedStrikeMock.mockReset();
+		openOnNewestCardMock.mockReset().mockResolvedValue(null);
 	});
 
 	afterEach(() => restore());
 
 	describe('useChatReaction', () => {
+		it('opens the Defend window on the newest attack card, and posts no Defend card', async () => {
+			const { actor, useHeroicReactions } = inCombat();
+			openOnNewestCardMock.mockResolvedValue(true);
+
+			expect(await reactions.useChatReaction(actor, 'interposeAndDefend')).toBe(true);
+
+			expect(openOnNewestCardMock).toHaveBeenCalledWith(actor, 'both');
+			expect(useHeroicReactions).not.toHaveBeenCalled();
+			expect(ChatMessage.create).not.toHaveBeenCalled();
+		});
+
+		it('does not open the Defend window for Help', async () => {
+			const { actor } = inCombat();
+
+			await reactions.useChatReaction(actor, 'help');
+
+			expect(openOnNewestCardMock).not.toHaveBeenCalled();
+		});
+
 		it('uses Defend and posts the defend card with the armor value', async () => {
 			const { actor, combatant, useHeroicReactions } = inCombat();
 

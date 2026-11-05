@@ -11,7 +11,7 @@ the damage the hero takes with it.
 
 	let { dialog, data }: DefendDialogProps = $props();
 
-	let optionId = $state(untrack(() => data.options[0]?.id ?? ''));
+	let optionId = $state(untrack(() => data.picked ?? data.options[0]?.id ?? ''));
 	const picked = $derived(data.options.find((option) => option.id === optionId));
 
 	function onConfirm() {

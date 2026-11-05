@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
+import type { DefendWay } from '#utils/defend/newestDefendCard.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
@@ -213,14 +214,28 @@ async function executeChatReaction(
 	return true;
 }
 
+const DEFEND_WAYS: Partial<Record<ChatReactionId, DefendWay>> = {
+	defend: 'defend',
+	interpose: 'interpose',
+	interposeAndDefend: 'both',
+};
+
 /**
- * Uses a chat-card reaction (Defend, Interpose, both, or Help): confirms a soft
- * block, marks the reaction spent and posts its cards. Returns true when used.
+ * Uses a chat-card reaction (Defend, Interpose, both, or Help). Defend and
+ * Interpose open the Defend window on the newest attack card they can answer.
+ * Without such a card, it confirms a soft block, marks the reaction spent and
+ * posts its cards. Returns true when used.
  */
 export async function useChatReaction(
 	actor: NimbleCharacter,
 	reaction: ChatReactionId,
 ): Promise<boolean> {
+	const way = DEFEND_WAYS[reaction];
+	if (way) {
+		const { openDefendWindowOnNewestCard } = await import('#utils/defend/openDefendWindow.js');
+		const reacted = await openDefendWindowOnNewestCard(actor as Actor.Implementation, way);
+		if (reacted !== null) return reacted;
+	}
 	return executeChatReaction(actor, REACTION_CONFIGS[reaction]);
 }
 
