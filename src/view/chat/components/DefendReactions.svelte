@@ -1,7 +1,8 @@
 <!--
 @component
 The heroes who can react to an attack: one button each that opens the Defend
-window. A Defend made shows on the hero's target row.
+window. A Defend made shows on the hero's target row; its reminder lines and the
+buttons for allies who react to it show here.
 -->
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
@@ -11,6 +12,12 @@ window. A Defend made shows on the hero's target row.
 		canReactFor,
 		defendReactors,
 	} from '#utils/defend/defendReactors.js';
+	import {
+		type AllyDefendOffer,
+		allyDefendOffers,
+		useAllyDefendOffer,
+	} from '#utils/defend/allyDefendOffers.js';
+	import { defendsOf } from '#utils/defend/defendRecords.js';
 	import { openDefendWindow } from '#utils/defend/openDefendWindow.js';
 	import localize from '#utils/localize.js';
 
@@ -41,7 +48,12 @@ window. A Defend made shows on the hero's target row.
 		blocked ? [] : defendReactors(card).filter((reactor) => canReactFor(reactor.actor)),
 	);
 	const open = $derived(inCombat ? reactors.filter((reactor) => !reactor.defend) : []);
-	const solo = $derived(!isGM && open.length === 1);
+	const reminders = $derived(defendsOf(card.system).flatMap((defend) => defend.reminders));
+	const allyOffers = $derived(inCombat && !blocked ? allyDefendOffers(card) : []);
+	const solo = $derived(
+		!isGM && open.length === 1 && reminders.length === 0 && allyOffers.length === 0,
+	);
+	const showSection = $derived(open.length > 0 || reminders.length > 0 || allyOffers.length > 0);
 
 	let opening = $state<string | null>(null);
 
@@ -55,11 +67,21 @@ window. A Defend made shows on the hero's target row.
 			if (opening === key) opening = null;
 		}
 	}
+
+	async function useAlly(offer: AllyDefendOffer) {
+		if (opening === offer.key) return;
+		opening = offer.key;
+		try {
+			await useAllyDefendOffer(messageDocument.id ?? '', offer);
+		} finally {
+			if (opening === offer.key) opening = null;
+		}
+	}
 </script>
 
 {#if blocked && isGM}
 	<p class="nimble-defend__blocked">{localize(`${TEXT}.cannotBeDefended`)}</p>
-{:else if open.length > 0}
+{:else if showSection}
 	<section class="nimble-defend" aria-label={localize(`${TEXT}.reactions`)}>
 		{#if !solo}
 			<h3 class="nimble-heading" data-heading-variant="section">
@@ -82,7 +104,23 @@ window. A Defend made shows on the hero's target row.
 					</span>
 				</button>
 			{/each}
+			{#each allyOffers as offer (offer.key)}
+				<button
+					class="nimble-defend__hero"
+					type="button"
+					disabled={opening === offer.key}
+					onclick={() => useAlly(offer)}
+				>
+					<img src={offer.actor.img || 'icons/svg/mystery-man.svg'} alt="" />
+					<span>
+						{localize(`${TEXT}.allyUse`, { label: offer.pick.label, name: offer.defenderName })}
+					</span>
+				</button>
+			{/each}
 		</div>
+		{#each reminders as line, index (index)}
+			<p class="nimble-defend__reminder">{line}</p>
+		{/each}
 	</section>
 {/if}
 
@@ -99,6 +137,17 @@ window. A Defend made shows on the hero's target row.
 			font-size: var(--nimble-xs-text);
 			font-weight: 700;
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__reminder {
+			margin: 0;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			line-height: 1.3;
+		}
+
+		&__heroes:empty {
+			display: none;
 		}
 
 		&__heroes {

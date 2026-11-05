@@ -1,3 +1,18 @@
+import type { PaidRerollCost, RerollCost } from '../reroll/rerollCost.js';
+
+export type DefendOutcome = 'none' | 'miss' | 'noDamage' | 'halve';
+
+/** A Defend option the hero used, with what it cost so an undo can give it back. */
+export interface DefendOptionUse {
+	/** The hero who used and paid for it. */
+	actorUuid: string;
+	ruleId: string;
+	itemUuid: string;
+	label: string;
+	cost: RerollCost | null;
+	paid: PaidRerollCost | null;
+}
+
 /** One hero's Defend against an attack card, as the card stores it. */
 export interface DefendRecord {
 	id: string;
@@ -14,7 +29,28 @@ export interface DefendRecord {
 	/** Actions before the Defend was paid, so an undo can give them back. */
 	previousActions: number | null;
 	reactionKeys: string[];
+	/** From the Defend options: the attack misses, no damage, or half in place of the armor. */
+	outcome: DefendOutcome;
+	/** Armor the Defend options add. */
+	armorBonus: number;
+	options: DefendOptionUse[];
+	/** Lines for the table: what the hero may do now. */
+	reminders: string[];
+	/** The GM puts these conditions on the attacker. */
+	attackerConditions: string[];
+	/** How the Defend was paid. */
+	way: DefendRecordWay;
 }
+
+/**
+ * `action`: the Defend reaction and its action; `free`: the reaction only;
+ * `extra`: a second Defend this round; `round`: covered by a Defend that lasts
+ * the round.
+ */
+export type DefendRecordWay = 'action' | 'free' | 'extra' | 'round';
+const WAYS: readonly DefendRecordWay[] = ['action', 'free', 'extra', 'round'];
+
+const OUTCOMES: readonly DefendOutcome[] = ['none', 'miss', 'noDamage', 'halve'];
 
 function isDefendRecord(value: unknown): value is DefendRecord {
 	const record = value as Partial<DefendRecord> | null;
@@ -37,7 +73,39 @@ export function defendsOf(system: unknown): DefendRecord[] {
 		combatantId: record.combatantId ?? '',
 		previousActions: record.previousActions ?? null,
 		reactionKeys: Array.isArray(record.reactionKeys) ? record.reactionKeys : [],
+		outcome: OUTCOMES.includes(record.outcome) ? record.outcome : 'none',
+		armorBonus: Math.max(0, Math.floor(Number(record.armorBonus) || 0)),
+		options: Array.isArray(record.options) ? record.options : [],
+		reminders: Array.isArray(record.reminders)
+			? record.reminders.filter((line) => typeof line === 'string')
+			: [],
+		attackerConditions: Array.isArray(record.attackerConditions)
+			? record.attackerConditions.filter((id) => typeof id === 'string')
+			: [],
+		way: WAYS.includes(record.way) ? record.way : 'action',
 	}));
+}
+
+/** What a Defend does to its token's damage from this card. */
+export interface DefendEffect {
+	armor: number;
+	zero: boolean;
+	halve: boolean;
+}
+
+/**
+ * Per Defended token: the armor that comes off, or no damage, or half. "Armor
+ * applies" off stops the armor and the halving; a miss stays.
+ */
+export function defendEffectsOf(system: unknown): Map<string, DefendEffect> {
+	const effects = new Map<string, DefendEffect>();
+	for (const defend of defendsOf(system)) {
+		const zero = defend.outcome === 'miss' || defend.outcome === 'noDamage';
+		const halve = defend.armorApplies && defend.outcome === 'halve';
+		const armor = defend.armorApplies && !halve ? defend.armor + defend.armorBonus : 0;
+		effects.set(defend.tokenUuid, { armor, zero, halve });
+	}
+	return effects;
 }
 
 export function defendFor(system: unknown, tokenUuid: string): DefendRecord | null {

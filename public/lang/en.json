@@ -726,6 +726,19 @@
 				"undoHint": "Take back this Defend and give back what it spent.",
 				"cannotBeDefended": "Cannot be Defended or Interposed",
 				"armorModifier": "Defend: armor {value}",
+				"halfModifier": "Defend: half damage",
+				"freeCost": "No action. Armor {armor}.",
+				"itemCost": "Uses {item}, with its own cost. Armor {armor}.",
+				"extraNote": "{label}: a second Defend this round.",
+				"roundTitle": "Defended this round ({label})",
+				"roundCost": "Nothing more to spend. Armor {armor}.",
+				"interposeAndFree": "Interpose and Defend ({label})",
+				"whenYouDefend": "When you Defend",
+				"tickNeedsDefend": "Pick a row that Defends to use this.",
+				"cannotPay": "{label}: its cost could not be paid.",
+				"rerollNotFound": "{label}: no reroll for this attack on the card.",
+				"allyUse": "{label}: {name} Defended",
+				"optionsUsed": "With: {labels}",
 				"refused": {
 					"noCard": "This card cannot take a Defend.",
 					"notTarget": "That hero is not a target of this attack.",
@@ -1738,6 +1751,7 @@
 			"initiativeMana": "Initiative Mana",
 			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
 			"damageBack": "Damage Back",
+			"defendOption": "Defend Option",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -2763,6 +2777,86 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool that gives 1 charge each time the rule changes an attack. Leave empty for no limit. The rule does not run when the pool is empty."
+				}
+			},
+			"defendOption": {
+				"description": "Something this hero can do with a Defend. With Defend, it is a tick under the Defend rows of the Defend window. Free Defend and Second Defend are rows of their own. When an Ally Defends is a button on the attack card for this hero.",
+				"way": {
+					"label": "Shows as",
+					"hint": "With Defend: a tick the player can add to a Defend. Free Defend: a row that Defends with no action; it still uses the Defend for the round. Second Defend: a row when the Defend is already used this round. When an Ally Defends: a button after an ally within range Defends.",
+					"choices": {
+						"withDefend": "With Defend",
+						"freeDefend": "Free Defend",
+						"extraDefend": "Second Defend",
+						"allyDefends": "When an Ally Defends"
+					}
+				},
+				"attackDelivery": {
+					"label": "Attacks",
+					"hint": "Which attacks this works against."
+				},
+				"outcome": {
+					"label": "Damage",
+					"hint": "The attack misses and No damage: the hero takes no damage. Halve: the hero takes half the damage, in place of the armor.",
+					"choices": {
+						"none": "Armor only",
+						"miss": "The attack misses",
+						"noDamage": "No damage",
+						"halve": "Halve"
+					}
+				},
+				"armorBonus": {
+					"label": "More armor",
+					"hint": "A formula for the armor this Defend adds, for example @key. Empty adds none."
+				},
+				"useReroll": {
+					"label": "Use this item's reroll",
+					"hint": "Rerolls the attack with this item's Reroll rule. Its Change This Roll row does not show on the card."
+				},
+				"attackerCondition": {
+					"label": "Condition on the attacker",
+					"hint": "The attacker gets this condition.",
+					"none": "None"
+				},
+				"reminder": {
+					"label": "Reminder",
+					"hint": "A line on the attack card for what the table does, for example a move or an attack back."
+				},
+				"useItem": {
+					"label": "Use this item",
+					"hint": "The row uses this item, with its own costs, for example a spell's mana and action."
+				},
+				"actionCost": {
+					"label": "Actions",
+					"hint": "The actions one use spends in combat."
+				},
+				"withInterpose": {
+					"label": "Only when you Interpose",
+					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend."
+				},
+				"wholeRound": {
+					"label": "Every attack this round",
+					"hint": "This Defend also covers each later attack on the hero this round, with nothing more to spend."
+				},
+				"range": {
+					"label": "Range (spaces)",
+					"hint": "How near the ally who Defends must be."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The charges one use spends. Empty spends none."
+				},
+				"chargeCost": {
+					"label": "Charges",
+					"hint": "How many charges one use spends."
+				},
+				"manaCost": {
+					"label": "Mana",
+					"hint": "The mana one use spends."
+				},
+				"woundCost": {
+					"label": "Wounds",
+					"hint": "The Wounds one use gives the hero."
 				}
 			},
 			"damageBack": {

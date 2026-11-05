@@ -13,15 +13,26 @@ import {
 } from '../incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
+	getHeroicReactionAvailabilityUpdate,
 	getHeroicReactionLabel,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
 import { requestIncomingAttackReaction } from '../incomingReactions/incomingAttackReactions.js';
+import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
+import {
+	type DefendOptionPick,
+	defendOptionEffect,
+	defendOptionsOf,
+	defendOptionUse,
+	payDefendOption,
+} from './defendOptions.js';
 import { type DefendReactor, defendReactors } from './defendReactors.js';
-import { requestDefend } from './defendRequests.js';
+import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRecords.js';
+import { refundUses, requestDefend } from './defendRequests.js';
+import { extraDefendUsed, type WholeRoundDefend, wholeRoundDefendOf } from './defendRound.js';
 import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
 
 const TEXT = 'NIMBLE.chat.defend';
@@ -78,31 +89,153 @@ function costOf(actor: Actor.Implementation, keys: HeroicReactionKey[]): number 
 	);
 }
 
-/** What the window shows for one hero. Exported for tests. */
-export function defendWindowData(
+/** A row's own part of the Defend: what it spends and the option it is. */
+interface RowPlan {
+	way: DefendRecordWay;
+	token: string | null;
+	pick: DefendOptionPick | null;
+	/** The Defend that lasts the round, for a `round` row. */
+	whole: WholeRoundDefend | null;
+}
+
+interface WindowPlan {
+	data: DefendWindowData;
+	rows: Map<string, RowPlan>;
+	ticks: Map<string, DefendOptionPick>;
+}
+
+function defendSpent(combatant: Combatant.Implementation | null): boolean {
+	return (
+		!!combatant &&
+		game.combat?.started === true &&
+		!getHeroicReactionAvailability(combatant, 'defend')
+	);
+}
+
+function effectOf(
+	row: RowPlan | undefined,
+	tickPicks: DefendOptionPick[],
+): ReturnType<typeof defendOptionEffect> {
+	if (row?.whole) {
+		return {
+			outcome: row.whole.outcome as DefendOutcome,
+			armorBonus: row.whole.armorBonus,
+			reminders: [],
+			attackerConditions: [],
+			wholeRound: false,
+		};
+	}
+	const rules = [...(row?.pick ? [row.pick.rule] : []), ...tickPicks.map((pick) => pick.rule)];
+	return defendOptionEffect(rules);
+}
+
+function damageAfter(
 	card: NimbleChatMessage,
-	reactor: DefendReactor,
-): DefendWindowData {
+	token: string | null,
+	armor: number,
+	effect: ReturnType<typeof defendOptionEffect>,
+): number | null {
+	if (!token) return null;
+	return card.previewDamageFor(token, {
+		armor: armor + effect.armorBonus,
+		zero: effect.outcome === 'miss' || effect.outcome === 'noDamage',
+		halve: effect.outcome === 'halve',
+	});
+}
+
+function tickDetail(pick: DefendOptionPick): string {
+	return (pick.rule.reminder ?? '').trim();
+}
+
+/** What the window shows for one hero, and what each row does. Exported for tests. */
+export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor): WindowPlan {
 	const { actor } = reactor;
 	const armor = armorOf(actor);
 	const defendCost = costOf(actor, ['defend']);
+	const combatant = combatantOf(game.combat ?? null, actor, reactor.targetTokenUuid);
+	const extra =
+		defendSpent(combatant) && !extraDefendUsed(actor, combatant?.id)
+			? (defendOptionsOf(actor, card, 'extraDefend')[0] ?? null)
+			: null;
+	const extraNote = extra ? localize(`${TEXT}.extraNote`, { label: extra.label }) : '';
 	const options: DefendOption[] = [];
+	const rows = new Map<string, RowPlan>();
+	const actionWay: DefendRecordWay = extra ? 'extra' : 'action';
+	const freePicks = defendOptionsOf(actor, card, 'freeDefend');
+
+	const addRow = (
+		option: Omit<DefendOption, 'takes' | 'note'> & { note?: string },
+		plan: RowPlan,
+	) => {
+		const takes = option.defend
+			? damageAfter(card, plan.token, armor, effectOf(plan, []))
+			: plan.token
+				? card.previewDamageFor(plan.token, 0)
+				: null;
+		options.push({ note: '', ...option, takes });
+		rows.set(option.id, plan);
+	};
+	const freeCost = (pick: DefendOptionPick) =>
+		pick.rule.useItem
+			? localize(`${TEXT}.itemCost`, {
+					item: pick.rule.item?.name ?? pick.label,
+					armor: String(armor),
+				})
+			: localize(`${TEXT}.freeCost`, { armor: String(armor) });
+
+	const whole = reactor.targetTokenUuid ? wholeRoundDefendOf(actor, combatant?.id) : null;
+	if (whole && reactor.targetTokenUuid) {
+		addRow(
+			{
+				id: 'round',
+				title: localize(`${TEXT}.roundTitle`, {
+					label: whole.label || localize(`${TEXT}.confirmDefend`),
+				}),
+				cost: localize(`${TEXT}.roundCost`, { armor: String(armor) }),
+				confirm: localize(`${TEXT}.confirmDefend`),
+				before: card.previewDamageFor(reactor.targetTokenUuid, 0),
+				defend: true,
+				takesTicks: false,
+				interposeEntryId: null,
+			},
+			{ way: 'round', token: reactor.targetTokenUuid, pick: null, whole },
+		);
+	}
 
 	if (reactor.targetTokenUuid) {
 		const before = card.previewDamageFor(reactor.targetTokenUuid, 0);
-		options.push({
-			id: 'defend',
-			title: localize(`${TEXT}.confirmDefend`),
-			cost: localize(`${TEXT}.defendCost`, {
-				actions: actionsText(defendCost),
-				armor: String(armor),
-			}),
-			confirm: localize(`${TEXT}.confirmDefend`),
-			before,
-			takes: card.previewDamageFor(reactor.targetTokenUuid, armor),
-			defend: true,
-			interposeEntryId: null,
-		});
+		addRow(
+			{
+				id: 'defend',
+				title: localize(`${TEXT}.confirmDefend`),
+				cost: localize(`${TEXT}.defendCost`, {
+					actions: actionsText(defendCost),
+					armor: String(armor),
+				}),
+				note: extraNote,
+				confirm: localize(`${TEXT}.confirmDefend`),
+				before,
+				defend: true,
+				takesTicks: true,
+				interposeEntryId: null,
+			},
+			{ way: actionWay, token: reactor.targetTokenUuid, pick: null, whole: null },
+		);
+		for (const pick of freePicks.filter((each) => !each.rule.withInterpose)) {
+			addRow(
+				{
+					id: `free:${pick.key}`,
+					title: pick.label,
+					cost: freeCost(pick),
+					confirm: localize(`${TEXT}.confirmDefend`),
+					before,
+					defend: true,
+					takesTicks: true,
+					interposeEntryId: null,
+				},
+				{ way: 'free', token: reactor.targetTokenUuid, pick, whole: null },
+			);
+		}
 	}
 
 	const named = reactor.interposes.length > 1;
@@ -111,46 +244,97 @@ export function defendWindowData(
 		const interposeCost = entry.source === 'baseline' ? costOf(actor, ['interpose']) : 0;
 		const token = entry.tokenUuid || reactor.targetTokenUuid;
 		const before = token ? card.previewDamageFor(token, 0) : null;
-		options.push({
-			id: `interpose:${entry.id}`,
-			title: named
-				? localize(`${TEXT}.interposeFor`, { name })
-				: localize(`${TEXT}.confirmInterpose`),
-			cost: actionsText(interposeCost),
-			confirm: localize(`${TEXT}.confirmInterpose`),
-			before: null,
-			takes: before,
-			defend: false,
-			interposeEntryId: entry.id,
-		});
-		options.push({
-			id: `both:${entry.id}`,
-			title: named
-				? localize(`${TEXT}.interposeForAndDefend`, { name })
-				: localize(`${TEXT}.confirmBoth`),
-			cost: localize(`${TEXT}.defendCost`, {
-				actions: actionsText(interposeCost + defendCost),
-				armor: String(armor),
-			}),
-			confirm: localize(`${TEXT}.confirmBoth`),
-			before,
-			takes: token ? card.previewDamageFor(token, armor) : null,
-			defend: true,
-			interposeEntryId: entry.id,
-		});
+		addRow(
+			{
+				id: `interpose:${entry.id}`,
+				title: named
+					? localize(`${TEXT}.interposeFor`, { name })
+					: localize(`${TEXT}.confirmInterpose`),
+				cost: actionsText(interposeCost),
+				confirm: localize(`${TEXT}.confirmInterpose`),
+				before: null,
+				defend: false,
+				takesTicks: false,
+				interposeEntryId: entry.id,
+			},
+			{ way: 'action', token, pick: null, whole: null },
+		);
+		addRow(
+			{
+				id: `both:${entry.id}`,
+				title: named
+					? localize(`${TEXT}.interposeForAndDefend`, { name })
+					: localize(`${TEXT}.confirmBoth`),
+				cost: localize(`${TEXT}.defendCost`, {
+					actions: actionsText(interposeCost + defendCost),
+					armor: String(armor),
+				}),
+				note: extraNote,
+				confirm: localize(`${TEXT}.confirmBoth`),
+				before,
+				defend: true,
+				takesTicks: true,
+				interposeEntryId: entry.id,
+			},
+			{ way: actionWay, token, pick: null, whole: null },
+		);
+		for (const pick of freePicks.filter((each) => each.rule.withInterpose)) {
+			addRow(
+				{
+					id: `freeboth:${pick.key}:${entry.id}`,
+					title: named
+						? `${localize(`${TEXT}.interposeForAndDefend`, { name })} (${pick.label})`
+						: localize(`${TEXT}.interposeAndFree`, { label: pick.label }),
+					cost: `${actionsText(interposeCost)}. ${freeCost(pick)}`,
+					confirm: localize(`${TEXT}.confirmBoth`),
+					before,
+					defend: true,
+					takesTicks: true,
+					interposeEntryId: entry.id,
+				},
+				{ way: 'free', token, pick, whole: null },
+			);
+		}
 	}
 
+	const tickPicks = defendOptionsOf(actor, card, 'withDefend');
+	const ticks = new Map(tickPicks.map((pick) => [pick.key, pick]));
 	const hitToken = reactor.targetTokenUuid ?? reactor.interposes[0]?.targetTokenUuid ?? null;
 	const hitDamage = hitToken ? card.previewDamageFor(hitToken, 0) : null;
 	const attack = cardName(card);
 	const name = nameOfToken(hitToken);
 	return {
-		heading:
-			hitDamage === null
-				? localize(`${TEXT}.headingNoDamage`, { attack, name })
-				: localize(`${TEXT}.heading`, { attack, name, damage: String(hitDamage) }),
-		options,
+		rows,
+		ticks,
+		data: {
+			heading:
+				hitDamage === null
+					? localize(`${TEXT}.headingNoDamage`, { attack, name })
+					: localize(`${TEXT}.heading`, { attack, name, damage: String(hitDamage) }),
+			options,
+			ticks: tickPicks.map((pick) => ({
+				id: pick.key,
+				label: pick.label,
+				detail: tickDetail(pick),
+			})),
+			takesWith: (optionId, tickIds) => {
+				const row = rows.get(optionId);
+				const option = options.find((each) => each.id === optionId);
+				if (!row || !option) return null;
+				if (!option.defend) return option.takes;
+				const picked = option.takesTicks ? tickIds.flatMap((id) => ticks.get(id) ?? []) : [];
+				return damageAfter(card, row.token, armor, effectOf(row, picked));
+			},
+		},
 	};
+}
+
+/** What the window shows for one hero. Exported for tests. */
+export function defendWindowData(
+	card: NimbleChatMessage,
+	reactor: DefendReactor,
+): DefendWindowData {
+	return defendWindowPlan(card, reactor).data;
 }
 
 /**
@@ -222,8 +406,64 @@ function waitForTarget(
 }
 
 function firstOf(data: DefendWindowData, way: DefendWay): string | undefined {
-	const prefix = way === 'defend' ? 'defend' : `${way}:`;
-	return data.options.find((option) => option.id.startsWith(prefix))?.id;
+	if (way === 'defend')
+		return data.options.find((option) => option.id === 'round' || option.id === 'defend')?.id;
+	return data.options.find((option) => option.id.startsWith(`${way}:`))?.id;
+}
+
+/** Use the Defend reaction with no action: a free Defend still uses the Defend for the round. */
+async function useDefendFree(
+	combat: ReactionCombat | null,
+	combatant: Combatant.Implementation | null,
+): Promise<boolean> {
+	if (!combat?.started || !combatant?.id) return true;
+	if (defendSpent(combatant)) {
+		const confirmed = await showReactionConfirmation({
+			reactionName: getHeroicReactionLabel('defend'),
+			spentReactionNames: getHeroicReactionLabel('defend'),
+			noActions: false,
+			hasSpentReactions: true,
+			isActiveTurn: false,
+		});
+		if (!confirmed) return false;
+	}
+	await combat.updateEmbeddedDocuments('Combatant', [
+		{ _id: combatant.id, ...getHeroicReactionAvailabilityUpdate('defend', false) },
+	]);
+	return true;
+}
+
+/** Use the card's reroll of the option's item, for the Defended token. */
+async function useOptionReroll(
+	card: NimbleChatMessage,
+	pick: DefendOptionPick,
+	token: string,
+): Promise<void> {
+	const itemUuid = pick.rule.item?.uuid ?? '';
+	const entries =
+		(game.messages?.get(card.id ?? '')?.system as { incomingReactions?: IncomingReactionEntry[] })
+			?.incomingReactions ?? [];
+	const entry = entries.find(
+		(each) =>
+			each.kind === 'reroll' &&
+			!each.used &&
+			each.itemUuid === itemUuid &&
+			(!each.targetTokenUuid || each.targetTokenUuid === token),
+	);
+	if (!entry) {
+		ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
+		return;
+	}
+	await requestIncomingAttackReaction({ messageId: card.id ?? '', entryId: entry.id });
+}
+
+/** Use the row's item (a spell: its own mana and action). False when the player stops. */
+async function useRowItem(actor: Actor.Implementation, pick: DefendOptionPick): Promise<boolean> {
+	const itemId = pick.rule.item?.id;
+	if (!itemId) return false;
+	const activate = (actor as { activateItem?: (id: string) => Promise<unknown> }).activateItem;
+	const result = await activate?.call(actor, itemId);
+	return !!result;
 }
 
 /**
@@ -238,7 +478,8 @@ export async function openDefendWindow(
 	const reactor = defendReactors(card as never).find((each) => each.actor.uuid === actor.uuid);
 	if (!reactor || reactor.defend) return false;
 
-	const data = defendWindowData(card, reactor);
+	const plan = defendWindowPlan(card, reactor);
+	const { data } = plan;
 	if (way) data.picked = firstOf(data, way);
 	const dialog = new ChoiceDialog<DefendChoice>(actor, {
 		component: DefendDialog,
@@ -248,18 +489,21 @@ export async function openDefendWindow(
 	});
 	await dialog.render(true);
 	const choice = await dialog.promise;
-	if (!choice || (!choice.defend && !choice.interposeEntryId)) return false;
+	const row = choice ? plan.rows.get(choice.optionId) : undefined;
+	const option = choice ? data.options.find((each) => each.id === choice.optionId) : undefined;
+	if (!choice || !row || !option || (!option.defend && !option.interposeEntryId)) return false;
 
 	const combat = (game.combat ?? null) as ReactionCombat | null;
-	const entry = choice.interposeEntryId
-		? reactor.interposes.find((each) => each.id === choice.interposeEntryId)
+	const entry = option.interposeEntryId
+		? reactor.interposes.find((each) => each.id === option.interposeEntryId)
 		: null;
-	if (choice.interposeEntryId && !entry) return false;
+	if (option.interposeEntryId && !entry) return false;
 	const defendedToken = entry ? entry.tokenUuid || null : reactor.targetTokenUuid;
 	const combatant = combatantOf(combat, actor, defendedToken);
+	const paysDefend = option.defend && (row.way === 'action' || row.way === 'extra');
 	const keys: HeroicReactionKey[] = [
 		...(entry?.source === 'baseline' ? (['interpose'] as const) : []),
-		...(choice.defend ? (['defend'] as const) : []),
+		...(paysDefend && row.way === 'action' ? (['defend'] as const) : []),
 	];
 	const limits = await confirmLimits(combat, combatant, keys);
 	if (!limits) return false;
@@ -273,25 +517,77 @@ export async function openDefendWindow(
 			entryId: entry.id,
 		});
 		if (!sent) return false;
-		if (!choice.defend) return true;
+		if (!option.defend) return true;
 		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
 	}
 
-	if (!choice.defend || !defendedToken) return Boolean(entry);
+	if (!option.defend || !defendedToken) return Boolean(entry);
 
-	const paid = await spendDefend(combat, combatant, limits.force);
-	if (!paid) return Boolean(entry);
+	const uses: DefendOptionUse[] = [];
+	let previousActions: number | null = null;
+	let reactionKeys: string[] = [];
+	if (paysDefend) {
+		const paid = await spendDefend(combat, combatant, limits.force || row.way === 'extra');
+		if (!paid) return Boolean(entry);
+		previousActions = paid.previousActions;
+		reactionKeys = ['defend'];
+	} else if (row.way === 'free' && row.pick) {
+		if (row.pick.rule.useItem) {
+			if (!(await useRowItem(actor, row.pick))) return Boolean(entry);
+			uses.push(defendOptionUse(actor, row.pick));
+		} else {
+			const use = await payDefendOption(actor, row.pick);
+			if (!use) return Boolean(entry);
+			uses.push(use);
+		}
+		if (!(await useDefendFree(combat, combatant))) {
+			await refundUses(uses);
+			return Boolean(entry);
+		}
+		reactionKeys = ['defend'];
+	}
 
+	const tickPicks = option.takesTicks ? choice.ticks.flatMap((id) => plan.ticks.get(id) ?? []) : [];
+	const usedTicks: DefendOptionPick[] = [];
+	for (const pick of tickPicks) {
+		if (pick.rule.useReroll) {
+			uses.push(defendOptionUse(actor, pick));
+			usedTicks.push(pick);
+			continue;
+		}
+		const use = await payDefendOption(actor, pick);
+		if (!use) continue;
+		uses.push(use);
+		usedTicks.push(pick);
+	}
+
+	const effect = row.whole
+		? effectOf(row, [])
+		: defendOptionEffect([
+				...(row.pick ? [row.pick.rule] : []),
+				...usedTicks.map((pick) => pick.rule),
+			]);
 	await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,
 		actorUuid: actor.uuid ?? '',
 		armor: armorOf(actor),
-		label: '',
+		label: row.whole?.label ?? row.pick?.label ?? '',
 		combatantId: combatant?.id ?? '',
-		previousActions: paid.previousActions,
-		reactionKeys: ['defend'],
+		previousActions,
+		reactionKeys,
+		outcome: effect.outcome,
+		armorBonus: effect.armorBonus,
+		options: uses,
+		reminders: effect.reminders,
+		attackerConditions: effect.attackerConditions,
+		way: row.way,
+		wholeRound: effect.wholeRound,
 	});
+
+	for (const pick of usedTicks.filter((each) => each.rule.useReroll)) {
+		await useOptionReroll(card, pick, defendedToken);
+	}
 	return true;
 }
 

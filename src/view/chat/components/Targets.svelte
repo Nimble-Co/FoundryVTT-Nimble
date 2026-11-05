@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
+	import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
 	import { setDefendArmorApplies, undoDefend } from '#utils/defend/defendRequests.js';
 	import type {
 		DamageModifierKind,
@@ -31,6 +31,16 @@
 
 	function addTargetedTokensAsTargets() {
 		messageDocument.addTargetedTokensAsTargets();
+	}
+
+	/** The armor a Defend takes off, and the options it was made with. */
+	function defendTip(defend: DefendRecord, key: string): string {
+		const tip = localize(key, { armor: String(defend.armor + defend.armorBonus) });
+		const labels = [...new Set([defend.label, ...defend.options.map((use) => use.label)])].filter(
+			(label) => !!label,
+		);
+		if (labels.length < 1) return tip;
+		return `${tip} ${localize('NIMBLE.chat.defend.optionsUsed', { labels: labels.join(', ') })}`;
 	}
 
 	function getArmorIcon(token: TokenDocument.Implementation) {
@@ -258,11 +268,11 @@
 								type="button"
 								aria-pressed={defend.armorApplies}
 								aria-label={localize('NIMBLE.chat.defend.armorApplies')}
-								data-tooltip={localize(
+								data-tooltip={defendTip(
+									defend,
 									defend.armorApplies
 										? 'NIMBLE.chat.defend.armorOnHint'
 										: 'NIMBLE.chat.defend.armorOffHint',
-									{ armor: String(defend.armor) },
 								)}
 								onclick={() =>
 									setDefendArmorApplies(messageDocument.id ?? '', defend.id, !defend.armorApplies)}
@@ -289,9 +299,9 @@
 							class:fa-shield-halved={defend.armorApplies}
 							class:fa-shield={!defend.armorApplies}
 							class:nimble-target-defended--off={!defend.armorApplies}
-							data-tooltip={localize('NIMBLE.chat.defend.defendedTooltip', {
-								armor: String(defend.armorApplies ? defend.armor : 0),
-							})}
+							data-tooltip={defend.armorApplies
+								? defendTip(defend, 'NIMBLE.chat.defend.defendedTooltip')
+								: localize('NIMBLE.chat.defend.defendedTooltip', { armor: '0' })}
 						></i>
 					{/if}
 

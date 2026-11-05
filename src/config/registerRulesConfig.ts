@@ -19,6 +19,7 @@ import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageMultiplierRule } from '../models/rules/damageMultiplier.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
+import { DefendOptionRule } from '../models/rules/defendOption.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
@@ -92,6 +93,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		damageBack: 'NIMBLE.ruleTypes.damageBack',
+		defendOption: 'NIMBLE.ruleTypes.defendOption',
 		damageReduction: 'NIMBLE.ruleTypes.damageReduction',
 		dyingActionLimit: 'NIMBLE.ruleTypes.dyingActionLimit',
 		freeMove: 'NIMBLE.ruleTypes.freeMove',
@@ -170,6 +172,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
 		damageBack: DamageBackRule,
+		defendOption: DefendOptionRule,
 		damageReduction: DamageReductionRule,
 		dyingActionLimit: DyingActionLimitRule,
 		freeMove: FreeMoveRule,

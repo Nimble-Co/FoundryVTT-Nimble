@@ -70,7 +70,7 @@ function packet(id: string, damageType: string, total: number, ignoreArmor = fal
 
 function card(
 	packets: ReturnType<typeof packet>[],
-	defend: { armor: number; armorApplies?: boolean } | null,
+	defend: { armor: number; armorApplies?: boolean; outcome?: string; armorBonus?: number } | null,
 ) {
 	const message = new NimbleChatMessage({
 		type: 'spell',
@@ -92,6 +92,8 @@ function card(
 							combatantId: 'c1',
 							previousActions: 3,
 							reactionKeys: ['defend'],
+							outcome: defend.outcome ?? 'none',
+							armorBonus: defend.armorBonus ?? 0,
 						},
 					]
 				: [],
@@ -189,5 +191,52 @@ describe('Defend armor on an attack card', () => {
 		expect(message.previewDamageFor(TOKEN, 4)).toBe(5);
 		await message.applyDamage(9, { outcome: 'fullDamage' });
 		expect(hero.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	describe('Defend options', () => {
+		it('deals no damage when the Defend makes the attack miss', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+			const message = card([packet('a', 'slashing', 17)], { armor: 3, outcome: 'miss' });
+
+			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(0);
+			expect(message.previewDamageFor(TOKEN, { armor: 3, zero: true })).toBe(0);
+			await message.applyAllDamage();
+			expect(hero.applyDamage).not.toHaveBeenCalled();
+		});
+
+		it('halves the damage, rounded up, in place of the armor', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+			const message = card([packet('a', 'slashing', 17)], { armor: 3, outcome: 'halve' });
+
+			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(9);
+			expect(message.previewDamageFor(TOKEN, { armor: 3, halve: true })).toBe(9);
+			await message.applyAllDamage();
+			expect(hero.applyDamage).toHaveBeenCalledWith(9);
+		});
+
+		it('takes the whole damage when the GM turns the armor off on a halving Defend', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+
+			await card([packet('a', 'slashing', 17)], {
+				armor: 3,
+				outcome: 'halve',
+				armorApplies: false,
+			}).applyAllDamage();
+
+			expect(hero.applyDamage).toHaveBeenCalledWith(17);
+		});
+
+		it('adds the option armor to the hero armor', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+			const message = card([packet('a', 'slashing', 17)], { armor: 3, armorBonus: 2 });
+
+			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(12);
+			await message.applyAllDamage();
+			expect(hero.applyDamage).toHaveBeenCalledWith(12);
+		});
 	});
 });
