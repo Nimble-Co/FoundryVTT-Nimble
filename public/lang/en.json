@@ -4857,7 +4857,14 @@
 			"adjacencyIncludesDiagonals": {
 				"name": "Adjacency Includes Diagonals (Legacy)",
 				"hint": "Superseded by Foundry's Grid Diagonals core setting. A stored value is carried over once and has no other effect.",
-				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting (diagonals are not adjacent). Reload for it to take effect."
+				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting as Rectilinear (2): diagonals are not adjacent. Reload for it to take effect."
+			},
+			"gridDiagonalsCheck": {
+				"title": "Grid Diagonals",
+				"illegal": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. Tokens cannot move diagonally, and a diagonal space counts as 2 spaces. Ranges such as Interpose (2 spaces) and Reach do not get to a diagonal space that looks near.</p><p>The book's default is that diagonals are adjacent: <strong>Equidistant (1)</strong>. If your table does not treat diagonals as adjacent, use <strong>Rectilinear (2)</strong>. Then tokens can move diagonally, and each diagonal step costs 2 spaces.</p>",
+				"notInBook": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. This is not one of the book's rules for diagonal spaces. It gives a part of a space, which Nimble rounds, so ranges such as Interpose and Reach can give results that you do not expect.</p><p>The book gives three rules: diagonals are adjacent, <strong>Equidistant (1)</strong>, which is the default; diagonals are not adjacent, <strong>Rectilinear (2)</strong>; or every other diagonal is adjacent, <strong>Alternating (1/2/1)</strong> or <strong>Alternating (2/1/2)</strong>.</p>",
+				"use": "Use {value}",
+				"keep": "Keep {value}"
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules (Legacy)",

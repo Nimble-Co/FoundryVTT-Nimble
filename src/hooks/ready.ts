@@ -9,6 +9,10 @@ import {
 	migrateLegacyDiagonalSetting,
 } from '../settings/adjacencySettings.js';
 import {
+	checkGridDiagonals,
+	registerGridDiagonalsCheckHooks,
+} from '../settings/gridDiagonalsCheck.js';
+import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
@@ -102,7 +106,10 @@ export default async function ready() {
 
 	combatStateGuards();
 	if (getAdjacencySyncEnabled()) registerAdjacencySync();
-	migrateLegacyDiagonalSetting().catch((error) => console.error(error));
+	migrateLegacyDiagonalSetting()
+		.then(() => checkGridDiagonals())
+		.catch((error) => console.error(error));
+	registerGridDiagonalsCheckHooks();
 	registerMinionGroupTokenActions();
 	registerDicePoolSpendRequestRouter();
 

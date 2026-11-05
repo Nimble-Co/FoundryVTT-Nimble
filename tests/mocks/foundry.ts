@@ -109,6 +109,15 @@ export const globalFoundryMocks = {
 		call: vi.fn(),
 	},
 	CONST: {
+		GRID_DIAGONALS: {
+			EQUIDISTANT: 0,
+			EXACT: 1,
+			APPROXIMATE: 2,
+			RECTILINEAR: 3,
+			ALTERNATING_1: 4,
+			ALTERNATING_2: 5,
+			ILLEGAL: 6,
+		},
 		TOKEN_DISPOSITIONS: {
 			SECRET: -2,
 			HOSTILE: -1,
@@ -572,6 +581,7 @@ export const foundryApiMocks = {
 			},
 			DialogV2: {
 				confirm: vi.fn(),
+				wait: vi.fn(),
 			},
 		},
 		ux: {
