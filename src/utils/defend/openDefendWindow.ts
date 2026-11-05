@@ -18,11 +18,11 @@ import {
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
 import { requestIncomingAttackReaction } from '../incomingReactions/incomingAttackReactions.js';
-import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
 import {
+	cardRerollFor,
 	type DefendOptionPick,
 	defendOptionEffect,
 	defendOptionsOf,
@@ -297,7 +297,16 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 		}
 	}
 
-	const tickPicks = defendOptionsOf(actor, card, 'withDefend');
+	// A tick that rerolls needs its reroll on the card: no reroll, no use.
+	const tickPicks = defendOptionsOf(actor, card, 'withDefend').filter(
+		(pick) =>
+			!pick.rule.useReroll ||
+			!!cardRerollFor(
+				card,
+				pick.rule.item?.uuid,
+				reactor.targetTokenUuid ?? reactor.interposes[0]?.tokenUuid,
+			),
+	);
 	const ticks = new Map(tickPicks.map((pick) => [pick.key, pick]));
 	const hitToken = reactor.targetTokenUuid ?? reactor.interposes[0]?.targetTokenUuid ?? null;
 	const hitDamage = hitToken ? card.previewDamageFor(hitToken, 0) : null;
@@ -439,16 +448,10 @@ async function useOptionReroll(
 	pick: DefendOptionPick,
 	token: string,
 ): Promise<void> {
-	const itemUuid = pick.rule.item?.uuid ?? '';
-	const entries =
-		(game.messages?.get(card.id ?? '')?.system as { incomingReactions?: IncomingReactionEntry[] })
-			?.incomingReactions ?? [];
-	const entry = entries.find(
-		(each) =>
-			each.kind === 'reroll' &&
-			!each.used &&
-			each.itemUuid === itemUuid &&
-			(!each.targetTokenUuid || each.targetTokenUuid === token),
+	const entry = cardRerollFor(
+		game.messages?.get(card.id ?? '') ?? card,
+		pick.rule.item?.uuid,
+		token,
 	);
 	if (!entry) {
 		ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
@@ -585,7 +588,10 @@ export async function openDefendWindow(
 		wholeRound: effect.wholeRound,
 	});
 
-	for (const pick of usedTicks.filter((each) => each.rule.useReroll)) {
+	const rerolls = [...(row.pick ? [row.pick] : []), ...usedTicks].filter(
+		(each) => each.rule.useReroll,
+	);
+	for (const pick of rerolls) {
 		await useOptionReroll(card, pick, defendedToken);
 	}
 	return true;

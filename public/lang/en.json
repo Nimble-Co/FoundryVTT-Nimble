@@ -2780,10 +2780,10 @@
 				}
 			},
 			"defendOption": {
-				"description": "Something this hero can do with a Defend. With Defend, it is a tick under the Defend rows of the Defend window. Free Defend and Second Defend are rows of their own. When an Ally Defends is a button on the attack card for this hero.",
+				"description": "Something this hero can do with a Defend. With Defend is a tick under the Defend rows of the Defend window. Free Defend is a row of its own. Second Defend lets the hero Defend one more time each round. When an Ally Defends is a button on the attack card for this hero.",
 				"way": {
 					"label": "Shows as",
-					"hint": "With Defend: a tick the player can add to a Defend. Free Defend: a row that Defends with no action; it still uses the Defend for the round. Second Defend: a row when the Defend is already used this round. When an Ally Defends: a button after an ally within range Defends.",
+					"hint": "With Defend: a tick the player can add to a Defend. Free Defend: a row that Defends with no action; it still uses the Defend for the round. Second Defend: the hero can Defend one more time each round, until their next turn begins. When an Ally Defends: a button after an ally within range Defends.",
 					"choices": {
 						"withDefend": "With Defend",
 						"freeDefend": "Free Defend",

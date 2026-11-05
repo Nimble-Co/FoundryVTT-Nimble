@@ -1,6 +1,7 @@
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
+import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
 import { canPayRerollCost, payRerollCost } from '../reroll/rerollCost.js';
 import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
@@ -73,6 +74,27 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 		],
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};
+}
+
+/** The unused card reroll of an item for a token, which a Defend option can use. */
+export function cardRerollFor(
+	card: AttackCardLike,
+	itemUuid: string | null | undefined,
+	tokenUuid: string | null | undefined,
+): IncomingReactionEntry | null {
+	if (!itemUuid) return null;
+	const entries =
+		(card.system as { incomingReactions?: IncomingReactionEntry[] } | null)?.incomingReactions ??
+		[];
+	return (
+		entries.find(
+			(entry) =>
+				entry.kind === 'reroll' &&
+				!entry.used &&
+				entry.itemUuid === itemUuid &&
+				(!entry.targetTokenUuid || !tokenUuid || entry.targetTokenUuid === tokenUuid),
+		) ?? null
+	);
 }
 
 /** Whether a Defend option uses this item's reroll, so the reroll waits for the Defend window. */
