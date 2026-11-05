@@ -7,6 +7,7 @@ import type {
 } from '#types/components/DefendDialog.d.ts';
 import { spendBaselineInterpose } from '../../view/chat/components/spendBaselineInterpose.js';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
+import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
@@ -31,7 +32,7 @@ import {
 } from './defendOptions.js';
 import { type DefendReactor, defendReactors } from './defendReactors.js';
 import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRecords.js';
-import { refundUses, requestDefend } from './defendRequests.js';
+import { requestDefend } from './defendRequests.js';
 import { extraDefendUsed, type WholeRoundDefend, wholeRoundDefendOf } from './defendRound.js';
 import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
 
@@ -420,26 +421,40 @@ function firstOf(data: DefendWindowData, way: DefendWay): string | undefined {
 	return data.options.find((option) => option.id.startsWith(`${way}:`))?.id;
 }
 
-/** Use the Defend reaction with no action: a free Defend still uses the Defend for the round. */
-async function useDefendFree(
+/**
+ * The confirm for a Defend that is not paid the normal way: a free Defend when
+ * the Defend is used this round (Core:1470), or a second Defend with no action
+ * left. Asked before anything is paid.
+ */
+async function confirmOtherDefend(
+	actor: Actor.Implementation,
+	combatant: Combatant.Implementation | null,
+	way: DefendRecordWay,
+): Promise<boolean> {
+	if (!game.combat?.started || !combatant) return true;
+	const spent = way === 'free' && defendSpent(combatant);
+	const actions = Number(foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0);
+	const noActions = way === 'extra' && actions < costOf(actor, ['defend']);
+	if (!spent && !noActions) return true;
+	const name = getHeroicReactionLabel('defend');
+	return showReactionConfirmation({
+		reactionName: name,
+		spentReactionNames: spent ? name : '',
+		noActions,
+		hasSpentReactions: spent,
+		isActiveTurn: false,
+	});
+}
+
+/** A free Defend still uses the Defend for the round. */
+async function markDefendUsed(
 	combat: ReactionCombat | null,
 	combatant: Combatant.Implementation | null,
-): Promise<boolean> {
-	if (!combat?.started || !combatant?.id) return true;
-	if (defendSpent(combatant)) {
-		const confirmed = await showReactionConfirmation({
-			reactionName: getHeroicReactionLabel('defend'),
-			spentReactionNames: getHeroicReactionLabel('defend'),
-			noActions: false,
-			hasSpentReactions: true,
-			isActiveTurn: false,
-		});
-		if (!confirmed) return false;
-	}
+): Promise<void> {
+	if (!combat?.started || !combatant?.id) return;
 	await combat.updateEmbeddedDocuments('Combatant', [
 		{ _id: combatant.id, ...getHeroicReactionAvailabilityUpdate('defend', false) },
 	]);
-	return true;
 }
 
 /** Use the card's reroll of the option's item, for the Defended token. */
@@ -447,6 +462,7 @@ async function useOptionReroll(
 	card: NimbleChatMessage,
 	pick: DefendOptionPick,
 	token: string,
+	quiet = false,
 ): Promise<void> {
 	const entry = cardRerollFor(
 		game.messages?.get(card.id ?? '') ?? card,
@@ -454,19 +470,29 @@ async function useOptionReroll(
 		token,
 	);
 	if (!entry) {
-		ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
+		if (!quiet) ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
 		return;
 	}
 	await requestIncomingAttackReaction({ messageId: card.id ?? '', entryId: entry.id });
 }
 
-/** Use the row's item (a spell: its own mana and action). False when the player stops. */
-async function useRowItem(actor: Actor.Implementation, pick: DefendOptionPick): Promise<boolean> {
+/**
+ * Use the row's item (a spell: its own mana and action). Returns how many steps
+ * it was upcast, or null when the player stops.
+ */
+async function useRowItem(
+	actor: Actor.Implementation,
+	pick: DefendOptionPick,
+): Promise<number | null> {
 	const itemId = pick.rule.item?.id;
-	if (!itemId) return false;
+	if (!itemId) return null;
 	const activate = (actor as { activateItem?: (id: string) => Promise<unknown> }).activateItem;
-	const result = await activate?.call(actor, itemId);
-	return !!result;
+	const result = (await activate?.call(actor, itemId)) as
+		| { system?: { upcast?: { upcastSteps?: number } | null } }
+		| null
+		| undefined;
+	if (!result) return null;
+	return Math.max(0, Math.floor(Number(result.system?.upcast?.upcastSteps) || 0));
 }
 
 /**
@@ -492,6 +518,10 @@ export async function openDefendWindow(
 	});
 	await dialog.render(true);
 	const choice = await dialog.promise;
+	if (choice && !game.user?.isGM && !getPrimaryActiveGmId()) {
+		ui.notifications?.warn(localize('NIMBLE.chat.defend.refused.noGm'));
+		return false;
+	}
 	const row = choice ? plan.rows.get(choice.optionId) : undefined;
 	const option = choice ? data.options.find((each) => each.id === choice.optionId) : undefined;
 	if (!choice || !row || !option || (!option.defend && !option.interposeEntryId)) return false;
@@ -510,6 +540,7 @@ export async function openDefendWindow(
 	];
 	const limits = await confirmLimits(combat, combatant, keys);
 	if (!limits) return false;
+	if (option.defend && !(await confirmOtherDefend(actor, combatant, row.way))) return false;
 
 	if (entry) {
 		if (entry.source === 'baseline' && !(await spendBaselineInterpose(entry, limits))) {
@@ -529,6 +560,7 @@ export async function openDefendWindow(
 	const uses: DefendOptionUse[] = [];
 	let previousActions: number | null = null;
 	let reactionKeys: string[] = [];
+	let upcastArmor = 0;
 	if (paysDefend) {
 		const paid = await spendDefend(combat, combatant, limits.force || row.way === 'extra');
 		if (!paid) return Boolean(entry);
@@ -536,17 +568,16 @@ export async function openDefendWindow(
 		reactionKeys = ['defend'];
 	} else if (row.way === 'free' && row.pick) {
 		if (row.pick.rule.useItem) {
-			if (!(await useRowItem(actor, row.pick))) return Boolean(entry);
+			const steps = await useRowItem(actor, row.pick);
+			if (steps === null) return Boolean(entry);
+			upcastArmor = steps * Math.max(0, Number(row.pick.rule.upcastArmor) || 0);
 			uses.push(defendOptionUse(actor, row.pick));
 		} else {
 			const use = await payDefendOption(actor, row.pick);
 			if (!use) return Boolean(entry);
 			uses.push(use);
 		}
-		if (!(await useDefendFree(combat, combatant))) {
-			await refundUses(uses);
-			return Boolean(entry);
-		}
+		await markDefendUsed(combat, combatant);
 		reactionKeys = ['defend'];
 	}
 
@@ -580,7 +611,7 @@ export async function openDefendWindow(
 		previousActions,
 		reactionKeys,
 		outcome: effect.outcome,
-		armorBonus: effect.armorBonus,
+		armorBonus: effect.armorBonus + upcastArmor,
 		options: uses,
 		reminders: effect.reminders,
 		attackerConditions: effect.attackerConditions,
@@ -591,8 +622,10 @@ export async function openDefendWindow(
 	const rerolls = [...(row.pick ? [row.pick] : []), ...usedTicks].filter(
 		(each) => each.rule.useReroll,
 	);
+	// A free row works without its reroll (the attack may not offer it); a tick
+	// shows only when the reroll is on the card.
 	for (const pick of rerolls) {
-		await useOptionReroll(card, pick, defendedToken);
+		await useOptionReroll(card, pick, defendedToken, pick === row.pick);
 	}
 	return true;
 }

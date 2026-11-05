@@ -1,8 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { checkGridDiagonals, diagonalProblem } from '../gridDiagonalsCheck.js';
+import { SYSTEM_ID } from '#system';
+import {
+	checkGridDiagonals,
+	diagonalProblem,
+	GRID_DIAGONALS_KEPT_SETTING_KEY,
+} from '../gridDiagonalsCheck.js';
 
+// Foundry v14 CONST.GRID_DIAGONALS
+const GRID_DIAGONALS = {
+	EQUIDISTANT: 0,
+	EXACT: 1,
+	APPROXIMATE: 2,
+	RECTILINEAR: 3,
+	ALTERNATING_1: 4,
+	ALTERNATING_2: 5,
+	ILLEGAL: 6,
+};
+Object.assign(CONST, { GRID_DIAGONALS });
 const { EQUIDISTANT, EXACT, APPROXIMATE, RECTILINEAR, ALTERNATING_1, ALTERNATING_2, ILLEGAL } =
-	CONST.GRID_DIAGONALS;
+	GRID_DIAGONALS;
+const KEPT = `${SYSTEM_ID}.${GRID_DIAGONALS_KEPT_SETTING_KEY}`;
 
 type Globals = {
 	game: {
@@ -22,7 +39,7 @@ function globals() {
 function world(diagonals: number, kept: number | null = null) {
 	const values: Record<string, unknown> = {
 		'core.gridDiagonals': diagonals,
-		'nimble.gridDiagonalsKept': kept ?? -1,
+		[KEPT]: kept ?? -1,
 	};
 	globals().game.settings = {
 		get: vi.fn((scope: string, key: string) => values[`${scope}.${key}`]),
@@ -63,6 +80,7 @@ describe('checkGridDiagonals', () => {
 		vi.clearAllMocks();
 		globals().game.user.isGM = true;
 		globals().foundry.utils.debouncedReload = vi.fn();
+		globals().foundry.applications.api.DialogV2.wait = vi.fn();
 	});
 
 	it('asks the GM about Illegal, with Equidistant, Rectilinear and Keep', async () => {
@@ -83,13 +101,16 @@ describe('checkGridDiagonals', () => {
 		expect(buttonsOf(0)).toEqual(['equidistant', 'keep']);
 	});
 
-	it('sets the picked rule and reloads', async () => {
+	it('sets the picked rule and reloads every client', async () => {
 		const values = world(ILLEGAL);
+		const emit = vi.fn();
+		Object.assign(globals().game, { socket: { emit } });
 		dialog().mockResolvedValue('rectilinear');
 
 		await checkGridDiagonals();
 
 		expect(values['core.gridDiagonals']).toBe(RECTILINEAR);
+		expect(emit).toHaveBeenCalledWith('reload');
 		expect(globals().foundry.utils.debouncedReload).toHaveBeenCalled();
 	});
 
@@ -100,7 +121,7 @@ describe('checkGridDiagonals', () => {
 		await checkGridDiagonals();
 		await checkGridDiagonals();
 		expect(dialog()).toHaveBeenCalledTimes(1);
-		expect(values['nimble.gridDiagonalsKept']).toBe(ILLEGAL);
+		expect(values[KEPT]).toBe(ILLEGAL);
 
 		values['core.gridDiagonals'] = EXACT;
 		await checkGridDiagonals();
@@ -114,7 +135,7 @@ describe('checkGridDiagonals', () => {
 		await checkGridDiagonals();
 
 		expect(values['core.gridDiagonals']).toBe(ILLEGAL);
-		expect(values['nimble.gridDiagonalsKept']).toBe(-1);
+		expect(values[KEPT]).toBe(-1);
 	});
 
 	it('asks nothing for a book rule, or of a player', async () => {

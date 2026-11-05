@@ -735,6 +735,7 @@
 				"interposeAndFree": "Interpose and Defend ({label})",
 				"whenYouDefend": "When you Defend",
 				"tickNeedsDefend": "Pick a row that Defends to use this.",
+				"nothingToDo": "There is nothing to do against this attack.",
 				"cannotPay": "{label}: its cost could not be paid.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",
 				"allyUse": "{label}: {name} Defended",
@@ -2816,7 +2817,9 @@
 				"attackerCondition": {
 					"label": "Condition on the attacker",
 					"hint": "The attacker gets this condition.",
-					"none": "None"
+					"choices": {
+						"none": "None"
+					}
 				},
 				"reminder": {
 					"label": "Reminder",
@@ -2829,6 +2832,10 @@
 				"actionCost": {
 					"label": "Actions",
 					"hint": "The actions one use spends in combat."
+				},
+				"upcastArmor": {
+					"label": "More armor per upcast",
+					"hint": "The armor this Defend adds for each step the item is upcast."
 				},
 				"withInterpose": {
 					"label": "Only when you Interpose",

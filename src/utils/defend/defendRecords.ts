@@ -1,6 +1,10 @@
+import {
+	DEFEND_OPTION_OUTCOMES,
+	type DefendOptionOutcome,
+} from '../../models/rules/defendOption.js';
 import type { PaidRerollCost, RerollCost } from '../reroll/rerollCost.js';
 
-export type DefendOutcome = 'none' | 'miss' | 'noDamage' | 'halve';
+export type DefendOutcome = DefendOptionOutcome;
 
 /** A Defend option the hero used, with what it cost so an undo can give it back. */
 export interface DefendOptionUse {
@@ -48,9 +52,7 @@ export interface DefendRecord {
  * the round.
  */
 export type DefendRecordWay = 'action' | 'free' | 'extra' | 'round';
-const WAYS: readonly DefendRecordWay[] = ['action', 'free', 'extra', 'round'];
-
-const OUTCOMES: readonly DefendOutcome[] = ['none', 'miss', 'noDamage', 'halve'];
+export const DEFEND_RECORD_WAYS: readonly DefendRecordWay[] = ['action', 'free', 'extra', 'round'];
 
 function isDefendRecord(value: unknown): value is DefendRecord {
 	const record = value as Partial<DefendRecord> | null;
@@ -73,7 +75,7 @@ export function defendsOf(system: unknown): DefendRecord[] {
 		combatantId: record.combatantId ?? '',
 		previousActions: record.previousActions ?? null,
 		reactionKeys: Array.isArray(record.reactionKeys) ? record.reactionKeys : [],
-		outcome: OUTCOMES.includes(record.outcome) ? record.outcome : 'none',
+		outcome: DEFEND_OPTION_OUTCOMES.includes(record.outcome) ? record.outcome : 'none',
 		armorBonus: Math.max(0, Math.floor(Number(record.armorBonus) || 0)),
 		options: Array.isArray(record.options) ? record.options : [],
 		reminders: Array.isArray(record.reminders)
@@ -82,7 +84,7 @@ export function defendsOf(system: unknown): DefendRecord[] {
 		attackerConditions: Array.isArray(record.attackerConditions)
 			? record.attackerConditions.filter((id) => typeof id === 'string')
 			: [],
-		way: WAYS.includes(record.way) ? record.way : 'action',
+		way: DEFEND_RECORD_WAYS.includes(record.way) ? record.way : 'action',
 	}));
 }
 

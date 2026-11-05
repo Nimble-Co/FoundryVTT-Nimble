@@ -5,16 +5,6 @@ export const GRID_DIAGONALS_KEPT_SETTING_KEY = 'gridDiagonalsKept';
 
 const TEXT = 'NIMBLE.settings.gridDiagonalsCheck';
 
-const CORE_LABELS: Record<number, string> = {
-	0: 'SETTINGS.GridDiagonalsEquidistant',
-	1: 'SETTINGS.GridDiagonalsExact',
-	2: 'SETTINGS.GridDiagonalsApproximate',
-	3: 'SETTINGS.GridDiagonalsRectilinear',
-	4: 'SETTINGS.GridDiagonalsAlternating1',
-	5: 'SETTINGS.GridDiagonalsAlternating2',
-	6: 'SETTINGS.GridDiagonalsIllegal',
-};
-
 type DiagonalProblem = 'illegal' | 'notInBook';
 
 /**
@@ -50,8 +40,15 @@ async function setSetting(scope: string, key: string, value: number): Promise<vo
 	await game.settings.set(scope as 'core', key as 'rollMode', value as never);
 }
 
+/** Core's own label for a Grid Diagonals value, from its registered setting. */
 function coreLabel(value: number): string {
-	return game.i18n?.localize?.(CORE_LABELS[value] ?? '') ?? CORE_LABELS[value] ?? String(value);
+	const registered = (
+		game.settings as unknown as {
+			settings?: Map<string, { type?: { choices?: Record<number, string> } }>;
+		}
+	).settings?.get('core.gridDiagonals');
+	const key = registered?.type?.choices?.[value];
+	return key ? localize(key) : String(value);
 }
 
 /** Show the GM a popup when Grid Diagonals is set to a value that Nimble ranges handle badly. */
@@ -89,6 +86,8 @@ export async function checkGridDiagonals(): Promise<void> {
 		choice === 'equidistant' ? EQUIDISTANT : choice === 'rectilinear' ? RECTILINEAR : null;
 	if (rule === null) return;
 	await setSetting('core', 'gridDiagonals', rule);
+	// As core does for a world setting that needs a reload: every client reloads.
+	(game.socket as { emit?: (event: string) => void } | undefined)?.emit?.('reload');
 	foundry.utils.debouncedReload?.();
 }
 

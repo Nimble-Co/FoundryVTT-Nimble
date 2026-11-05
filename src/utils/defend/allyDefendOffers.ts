@@ -1,3 +1,5 @@
+import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
+import localize from '../localize.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
 import { type DefendOptionPick, defendOptionsOf, payDefendOption } from './defendOptions.js';
 import { damageAppliedTo, defendsOf } from './defendRecords.js';
@@ -57,6 +59,10 @@ export async function useAllyDefendOffer(
 	messageId: string,
 	offer: AllyDefendOffer,
 ): Promise<boolean> {
+	if (!game.user?.isGM && !getPrimaryActiveGmId()) {
+		ui.notifications?.warn(localize('NIMBLE.chat.defend.refused.noGm'));
+		return false;
+	}
 	const use = await payDefendOption(offer.actor, offer.pick);
 	if (!use) return false;
 	const text = (offer.pick.rule.reminder ?? '').trim();

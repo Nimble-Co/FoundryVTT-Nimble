@@ -6,119 +6,58 @@ buttons for allies who react to it show here.
 -->
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+
 	import { getContext } from 'svelte';
-	import {
-		attackCannotBeDefended,
-		canReactFor,
-		defendReactors,
-	} from '#utils/defend/defendReactors.js';
-	import {
-		type AllyDefendOffer,
-		allyDefendOffers,
-		useAllyDefendOffer,
-	} from '#utils/defend/allyDefendOffers.js';
-	import { defendsOf } from '#utils/defend/defendRecords.js';
-	import { openDefendWindow } from '#utils/defend/openDefendWindow.js';
 	import localize from '#utils/localize.js';
+	import { createDefendReactionsState } from './DefendReactions.svelte.ts';
 
-	const TEXT = 'NIMBLE.chat.defend';
 	const messageDocument = getContext<NimbleChatMessage>('messageDocument');
-	const isGM = game.user?.isGM === true;
-
-	const card = $derived({
-		system: messageDocument?.reactive?.system,
-		speaker: messageDocument?.speaker,
-	});
-	const COMBAT_HOOKS = [
-		'createCombat',
-		'updateCombat',
-		'deleteCombat',
-		'renderCombatTracker',
-	] as const;
-	let combatVersion = $state(0);
-	$effect(() => {
-		const ids = COMBAT_HOOKS.map((hook) => [hook, Hooks.on(hook, () => combatVersion++)] as const);
-		return () => {
-			for (const [hook, id] of ids) Hooks.off(hook, id);
-		};
-	});
-	const inCombat = $derived(combatVersion >= 0 && game.combat?.started === true);
-	const blocked = $derived(attackCannotBeDefended(card));
-	const reactors = $derived(
-		blocked ? [] : defendReactors(card).filter((reactor) => canReactFor(reactor.actor)),
-	);
-	const open = $derived(inCombat ? reactors.filter((reactor) => !reactor.defend) : []);
-	const reminders = $derived(defendsOf(card.system).flatMap((defend) => defend.reminders));
-	const allyOffers = $derived(inCombat && !blocked ? allyDefendOffers(card) : []);
-	const solo = $derived(
-		!isGM && open.length === 1 && reminders.length === 0 && allyOffers.length === 0,
-	);
-	const showSection = $derived(open.length > 0 || reminders.length > 0 || allyOffers.length > 0);
-
-	let opening = $state<string | null>(null);
-
-	async function react(actor: Actor.Implementation) {
-		const key = actor.uuid ?? '';
-		if (opening === key) return;
-		opening = key;
-		try {
-			await openDefendWindow(messageDocument, actor);
-		} finally {
-			if (opening === key) opening = null;
-		}
-	}
-
-	async function useAlly(offer: AllyDefendOffer) {
-		if (opening === offer.key) return;
-		opening = offer.key;
-		try {
-			await useAllyDefendOffer(messageDocument.id ?? '', offer);
-		} finally {
-			if (opening === offer.key) opening = null;
-		}
-	}
+	const reactions = createDefendReactionsState(() => messageDocument);
 </script>
 
-{#if blocked && isGM}
-	<p class="nimble-defend__blocked">{localize(`${TEXT}.cannotBeDefended`)}</p>
-{:else if showSection}
-	<section class="nimble-defend" aria-label={localize(`${TEXT}.reactions`)}>
-		{#if !solo}
+{#if reactions.blocked && reactions.isGM}
+	<p class="nimble-defend__blocked">{localize('NIMBLE.chat.defend.cannotBeDefended')}</p>
+{:else if reactions.showSection}
+	<section class="nimble-defend" aria-label={localize('NIMBLE.chat.defend.reactions')}>
+		{#if !reactions.solo}
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize(`${TEXT}.reactions`)}
+				{localize('NIMBLE.chat.defend.reactions')}
 			</h3>
 		{/if}
-		<div class="nimble-defend__heroes" class:nimble-defend__heroes--solo={solo}>
-			{#each open as reactor (reactor.actor.uuid)}
+		<div class="nimble-defend__heroes" class:nimble-defend__heroes--solo={reactions.solo}>
+			{#each reactions.open as reactor (reactor.actor.uuid)}
 				<button
 					class="nimble-defend__hero"
 					type="button"
-					disabled={opening === reactor.actor.uuid}
-					onclick={() => react(reactor.actor)}
+					disabled={reactions.opening === reactor.actor.uuid}
+					onclick={() => reactions.react(reactor.actor)}
 				>
 					<img src={reactor.actor.img || 'icons/svg/mystery-man.svg'} alt="" />
 					<span>
-						{solo
-							? localize(`${TEXT}.reactAs`, { name: reactor.actor.name ?? '' })
+						{reactions.solo
+							? localize('NIMBLE.chat.defend.reactAs', { name: reactor.actor.name ?? '' })
 							: reactor.actor.name}
 					</span>
 				</button>
 			{/each}
-			{#each allyOffers as offer (offer.key)}
+			{#each reactions.allyOffers as offer (offer.key)}
 				<button
 					class="nimble-defend__hero"
 					type="button"
-					disabled={opening === offer.key}
-					onclick={() => useAlly(offer)}
+					disabled={reactions.opening === offer.key}
+					onclick={() => reactions.useAlly(offer)}
 				>
 					<img src={offer.actor.img || 'icons/svg/mystery-man.svg'} alt="" />
 					<span>
-						{localize(`${TEXT}.allyUse`, { label: offer.pick.label, name: offer.defenderName })}
+						{localize('NIMBLE.chat.defend.allyUse', {
+							label: offer.pick.label,
+							name: offer.defenderName,
+						})}
 					</span>
 				</button>
 			{/each}
 		</div>
-		{#each reminders as line, index (index)}
+		{#each reactions.reminders as line}
 			<p class="nimble-defend__reminder">{line}</p>
 		{/each}
 	</section>
@@ -189,9 +128,7 @@ buttons for allies who react to it show here.
 				cursor: default;
 				opacity: 0.6;
 			}
-		}
 
-		&__hero {
 			justify-content: center;
 			gap: 0.5rem;
 			width: 100%;

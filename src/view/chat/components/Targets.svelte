@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
-	import { setDefendArmorApplies, undoDefend } from '#utils/defend/defendRequests.js';
 	import type {
 		DamageModifierKind,
 		NimbleChatMessage,
@@ -8,6 +6,8 @@
 	} from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
+	import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
+	import { setDefendArmorApplies, undoDefend } from '#utils/defend/defendRequests.js';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';

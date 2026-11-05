@@ -36,7 +36,7 @@ the damage the hero takes with it.
 	icon="fa-solid fa-shield-halved"
 	rollIcon="fa-solid fa-shield-halved"
 	rollLabel={picked?.confirm ?? ''}
-	rollDisabledReason=""
+	rollDisabledReason={picked ? '' : localize('NIMBLE.chat.defend.nothingToDo')}
 	oncancel={() => dialog.close()}
 	onroll={onConfirm}
 >

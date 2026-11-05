@@ -79,7 +79,9 @@ beforeEach(() => {
 		user: { id: 'gm', isGM: true },
 		messages: { get: () => card },
 		combat: null,
+		i18n: { localize: (key: string) => key, format: (key: string) => key },
 	};
+	Object.assign(globals, { ui: { notifications: { warn: vi.fn() } } });
 });
 
 describe('Defend options on the card', () => {
@@ -133,5 +135,32 @@ describe('Defend options on the card', () => {
 		expect(after?.reminders).toEqual(['Exploit: an enemy Interposes.']);
 		expect(refundCost).toHaveBeenCalledTimes(1);
 		expect(refundCost).toHaveBeenCalledWith(bram, use.cost, use.paid);
+	});
+
+	it('gives back what a refused Defend paid', async () => {
+		card.system.targets = [];
+
+		expect(await requestDefend(request({ options: [paidUse] }))).toBe(false);
+
+		expect(refundCost).toHaveBeenCalledWith(pip, paidUse.cost, paidUse.paid);
+	});
+
+	it('keeps what a second Defend for the same hero paid: the first Defend holds it', async () => {
+		await requestDefend(request());
+
+		expect(await requestDefend(request({ options: [paidUse] }))).toBe(false);
+
+		expect(refundCost).not.toHaveBeenCalled();
+	});
+
+	it('does not undo a Defend after its damage is applied', async () => {
+		await requestDefend(request({ options: [paidUse] }));
+		const [record] = card.system.defends as { id: string }[];
+		card.system.damageAppliedTo = [TOKEN];
+
+		await undoDefend('m1', record?.id ?? '');
+
+		expect(refundCost).not.toHaveBeenCalled();
+		expect(card.system.defends).toHaveLength(1);
 	});
 });

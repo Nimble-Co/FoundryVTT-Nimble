@@ -18,6 +18,7 @@ const isWay =
 	(...ways: DefendOptionWay[]) =>
 	(data: Record<string, unknown>) =>
 		ways.includes(data.way as DefendOptionWay);
+const onOwnDefend = isWay('withDefend', 'freeDefend', 'extraDefend');
 
 function schema() {
 	const { fields } = foundry.data;
@@ -46,7 +47,7 @@ function schema() {
 				choices: choiceLabels('defendOption', 'outcome', DEFEND_OPTION_OUTCOMES),
 				label: key('outcome', 'label'),
 				hint: key('outcome', 'hint'),
-				showWhen: (data: Record<string, unknown>) => data.way !== 'allyDefends',
+				showWhen: onOwnDefend,
 			}),
 		),
 		armorBonus: new fields.StringField(
@@ -56,7 +57,7 @@ function schema() {
 				initial: '',
 				label: key('armorBonus', 'label'),
 				hint: key('armorBonus', 'hint'),
-				showWhen: (data: Record<string, unknown>) => data.way !== 'allyDefends',
+				showWhen: onOwnDefend,
 			}),
 		),
 		useReroll: new fields.BooleanField(
@@ -66,7 +67,7 @@ function schema() {
 				initial: false,
 				label: key('useReroll', 'label'),
 				hint: key('useReroll', 'hint'),
-				showWhen: (data: Record<string, unknown>) => data.way !== 'allyDefends',
+				showWhen: onOwnDefend,
 			}),
 		),
 		attackerCondition: new fields.StringField({
@@ -77,7 +78,7 @@ function schema() {
 			label: key('attackerCondition', 'label'),
 			hint: key('attackerCondition', 'hint'),
 			choices: (): Record<string, string> => ({
-				'': 'NIMBLE.rules.defendOption.attackerCondition.none',
+				'': 'NIMBLE.rules.defendOption.attackerCondition.choices.none',
 				...CONFIG.NIMBLE.conditions,
 			}),
 		}),
@@ -96,6 +97,19 @@ function schema() {
 				label: key('useItem', 'label'),
 				hint: key('useItem', 'hint'),
 				showWhen: isWay('freeDefend'),
+			}),
+		),
+		upcastArmor: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: key('upcastArmor', 'label'),
+				hint: key('upcastArmor', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					data.way === 'freeDefend' && data.useItem === true,
 			}),
 		),
 		withInterpose: new fields.BooleanField(
@@ -205,6 +219,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare attackerCondition: string;
 	declare reminder: string;
 	declare useItem: boolean;
+	declare upcastArmor: number;
 	declare withInterpose: boolean;
 	declare wholeRound: boolean;
 	declare range: number;
@@ -253,10 +268,4 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	}
 }
 
-export {
-	DEFEND_OPTION_OUTCOMES,
-	DEFEND_OPTION_WAYS,
-	DefendOptionRule,
-	type DefendOptionOutcome,
-	type DefendOptionWay,
-};
+export { DEFEND_OPTION_OUTCOMES, DefendOptionRule, type DefendOptionOutcome, type DefendOptionWay };
