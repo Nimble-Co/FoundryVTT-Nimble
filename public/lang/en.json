@@ -2852,7 +2852,7 @@
 				},
 				"alsoInterpose": {
 					"label": "Also when you Interpose",
-					"hint": "The reroll also works with an Interpose and no Defend."
+					"hint": "The tick also goes with an Interpose and no Defend. Its cost, reroll and reminder work; what it does to the Defend does not."
 				},
 				"attackerConditionEnds": {
 					"label": "Condition ends",

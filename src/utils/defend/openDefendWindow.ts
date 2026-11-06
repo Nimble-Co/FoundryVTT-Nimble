@@ -184,9 +184,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 		),
 	);
 	const bothTicks = keysOf(tickPicks);
-	const interposeTicks = keysOf(
-		tickPicks.filter((pick) => pick.rule.useReroll && pick.rule.alsoInterpose),
-	);
+	const interposeTicks = keysOf(tickPicks.filter((pick) => pick.rule.alsoInterpose));
 
 	const addRow = (
 		option: Omit<DefendOption, 'takes' | 'note' | 'tickIds'> & {
@@ -499,6 +497,30 @@ async function useOptionReroll(
 }
 
 /**
+ * The ticks that go with an Interpose and no Defend: each pays its cost or uses
+ * its reroll, and its reminder shows to the player. No Defend record holds them.
+ */
+async function useInterposeTicks(
+	card: NimbleChatMessage,
+	actor: Actor.Implementation,
+	picks: DefendOptionPick[],
+	token: string | null,
+): Promise<void> {
+	const used: DefendOptionPick[] = [];
+	for (const pick of picks) {
+		if (pick.rule.useReroll) {
+			if (token) await useOptionReroll(card, pick, token);
+			used.push(pick);
+		} else if (await payDefendOption(actor, pick)) {
+			used.push(pick);
+		}
+	}
+	for (const line of defendOptionEffect(used.map((pick) => pick.rule)).reminders) {
+		ui.notifications?.info(line);
+	}
+}
+
+/**
  * Use the row's item (a spell: its own mana and action). Returns how many steps
  * it was upcast, or null when the player stops.
  */
@@ -579,9 +601,7 @@ export async function openDefendWindow(
 		if (!option.defend && tickPicks.length < 1) return true;
 		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
 		if (!option.defend) {
-			for (const pick of tickPicks) {
-				if (defendedToken) await useOptionReroll(card, pick, defendedToken);
-			}
+			await useInterposeTicks(card, actor, tickPicks, defendedToken);
 			return true;
 		}
 	}

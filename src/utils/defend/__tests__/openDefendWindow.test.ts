@@ -190,6 +190,13 @@ describe('defendWindowPlan', () => {
 			expect(tickIds('both:interpose-1')).toEqual(['Item.fearsome:fearsome']);
 		});
 
+		it('goes with an Interpose alone also when it does not reroll', () => {
+			const { data } = interposePlan([rule({ id: 'bunny', alsoInterpose: true })]);
+			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;
+
+			expect(tickIds('interpose:interpose-1')).toEqual(['Item.bunny:bunny']);
+		});
+
 		it('goes with only an Interpose and a Defend when the option does not say "also when you Interpose"', () => {
 			const { data } = interposePlan([rule({ id: 'pocket', useReroll: true })]);
 			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;

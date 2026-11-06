@@ -83,8 +83,7 @@ function schema() {
 				initial: false,
 				label: key('alsoInterpose', 'label'),
 				hint: key('alsoInterpose', 'hint'),
-				showWhen: (data: Record<string, unknown>) =>
-					data.way === 'withDefend' && data.useReroll === true,
+				showWhen: isWay('withDefend'),
 			}),
 		),
 		attackerCondition: new fields.StringField({
