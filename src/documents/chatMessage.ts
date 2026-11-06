@@ -1418,8 +1418,7 @@ class NimbleChatMessage extends ChatMessage {
 					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
 					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
-		await this.#markDamageApplied();
-		await this.#markDamageAppliedTo(targets);
+		await this.#markDamageApplied(targets);
 
 		if (
 			systemData.discardedCritTriggers === true &&
@@ -1437,26 +1436,28 @@ class NimbleChatMessage extends ChatMessage {
 		}
 	}
 
-	/** A Defend closes for a target once its damage is applied. */
-	async #markDamageAppliedTo(targets: string[]): Promise<void> {
-		const system = this.system as unknown as { damageAppliedTo?: unknown };
-		if (!Array.isArray(system.damageAppliedTo)) return;
-		const applied = damageAppliedTo(system);
-		const added = targets.filter((uuid) => !applied.has(uuid));
-		if (added.length < 1) return;
-		await this.update({
-			'system.damageAppliedTo': [...applied, ...added],
-		} as Record<string, unknown>);
-	}
-
-	/** A no-damage row or its Remove ends here, so only a card that has one keeps the record. */
-	async #markDamageApplied(): Promise<void> {
-		const system = this.system as unknown as { damageApplied?: boolean };
-		if (system.damageApplied === true) return;
-		const hasNoDamage =
-			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
-			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
-		if (hasNoDamage) await this.update({ 'system.damageApplied': true } as Record<string, unknown>);
+	/**
+	 * One queued write: a Defend closes for each target, and a card with a
+	 * no-damage row or a Remove keeps the record that its damage is applied.
+	 */
+	async #markDamageApplied(targets: string[]): Promise<void> {
+		await queueReactionWrite(this.id ?? '', async () => {
+			const system = this.system as unknown as {
+				damageApplied?: boolean;
+				damageAppliedTo?: unknown;
+			};
+			const update: Record<string, unknown> = {};
+			if (Array.isArray(system.damageAppliedTo)) {
+				const applied = damageAppliedTo(system);
+				const added = targets.filter((uuid) => !applied.has(uuid));
+				if (added.length > 0) update['system.damageAppliedTo'] = [...applied, ...added];
+			}
+			const hasNoDamage =
+				resultChangesOf(system).some((change) => change.change === 'noDamage') ||
+				this.#incomingReactionEntries().some((entry) => entry.use === 'result');
+			if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
+			if (Object.keys(update).length > 0) await this.update(update);
+		});
 	}
 
 	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {

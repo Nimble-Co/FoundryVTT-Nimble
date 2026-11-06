@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 type TestGlobals = {
@@ -73,6 +74,7 @@ function card(
 	defend: { armor: number; armorApplies?: boolean; outcome?: string; armorBonus?: number } | null,
 ) {
 	const message = new NimbleChatMessage({
+		_id: 'attackcard000001',
 		type: 'spell',
 		system: {
 			targets: [TOKEN],
@@ -191,6 +193,34 @@ describe('Defend armor on an attack card', () => {
 		expect(message.previewDamageFor(TOKEN, 4)).toBe(5);
 		await message.applyDamage(9, { outcome: 'fullDamage' });
 		expect(hero.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('marks the target applied after a Defend write in flight, in one card write', async () => {
+		const hero = createHero();
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+		const message = card([packet('a', 'slashing', 10)], { armor: 4 });
+		const order: string[] = [];
+		let release = () => {};
+		const inFlight = queueReactionWrite(message.id ?? '', async () => {
+			await new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			order.push('defend write');
+		});
+		vi.mocked(message.update).mockImplementation(async () => {
+			order.push('applied mark');
+			return message;
+		});
+
+		const applied = message.applyAllDamage();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(order).toEqual([]);
+		release();
+		await Promise.all([inFlight, applied]);
+
+		expect(order).toEqual(['defend write', 'applied mark']);
+		expect(message.update).toHaveBeenCalledTimes(1);
+		expect(message.update).toHaveBeenCalledWith({ 'system.damageAppliedTo': [TOKEN] });
 	});
 
 	describe('Defend options', () => {
