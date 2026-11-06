@@ -217,7 +217,7 @@ describe('resolveRerollReaction', () => {
 		const { rule } = setupWorld();
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'target',
@@ -246,7 +246,7 @@ describe('resolveRerollReaction', () => {
 		const showForRoll = vi.fn().mockResolvedValue(true);
 		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		delete (globals().game as { dice3d?: unknown }).dice3d;
 		expect(showForRoll).toHaveBeenCalledTimes(1);
@@ -268,7 +268,7 @@ describe('resolveRerollReaction', () => {
 		);
 		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
 
-		const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+		const rerolled = message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 		try {
 			await vi.waitFor(() => expect(showForRoll).toHaveBeenCalled());
 			expect(message.update).not.toHaveBeenCalled();
@@ -313,7 +313,7 @@ describe('resolveRerollReaction', () => {
 				),
 			);
 
-			const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+			const rerolled = message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 			try {
 				await vi.waitFor(() => expect(rollingRerollOf('message-1')).not.toBeNull());
 				expect(rollingRerollOf('message-1')).toEqual({ slot: 'damage-node', faces: 6 });
@@ -335,7 +335,7 @@ describe('resolveRerollReaction', () => {
 			message.update.mockRejectedValueOnce(new Error('write failed'));
 			const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			consoleError.mockRestore();
 			expect(rollingRerollOf('message-1')).toBeNull();
@@ -350,7 +350,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld();
 			const { message, emit } = rollingMessage();
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(emit).not.toHaveBeenCalled();
 			expect(rollingRerollOf('message-1')).toBeNull();
@@ -364,7 +364,7 @@ describe('resolveRerollReaction', () => {
 		const message = createMessage();
 		const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const rolled = evaluate.mock.contexts[0] as DamageRoll;
 		evaluate.mockRestore();
@@ -379,7 +379,7 @@ describe('resolveRerollReaction', () => {
 		message.update.mockRejectedValueOnce(new Error('write failed'));
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		consoleError.mockRestore();
 		expect(target.system.attributes.wounds.value).toBe(0);
@@ -390,7 +390,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld({ rollUseCost: { ...FREE, manaCost: 1 } });
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -405,7 +405,7 @@ describe('resolveRerollReaction', () => {
 		});
 		const message = createMessage({ isCritical: false });
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(target.system.attributes.wounds.value).toBe(0);
@@ -420,7 +420,7 @@ describe('resolveRerollReaction', () => {
 			entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
 		});
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(target.system.attributes.wounds.value).toBe(0);
@@ -433,7 +433,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld();
 		const message = createMessage({ forceMiss: true });
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -449,7 +449,7 @@ describe('resolveRerollReaction', () => {
 			],
 		});
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).toHaveBeenCalledTimes(1);
 	});
@@ -459,7 +459,7 @@ describe('resolveRerollReaction', () => {
 		target.testUserPermission.mockReturnValue(false);
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'player-1', true);
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'player-1', true);
 
 		expect(message.update).not.toHaveBeenCalled();
 	});
@@ -469,7 +469,7 @@ describe('resolveRerollReaction', () => {
 		globals().game.user.isGM = false;
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 	});
@@ -478,7 +478,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld();
 		const message = createMessage({ entries: [rerollEntry({ used: true })] });
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 	});
@@ -488,7 +488,7 @@ describe('resolveRerollReaction', () => {
 		target.rules = [{ ...rule, item: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const entries = updatePayload(message).system.incomingReactions;
 		expect(entries).toHaveLength(2);
@@ -510,7 +510,7 @@ describe('resolveRerollReaction', () => {
 			{ entryId: 'earlier-action', itemUuid: 'Item.old' },
 		];
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(updatePayload(message).system.rerolls).toEqual([
 			expect.objectContaining({ entryId: 'entry-1' }),
@@ -521,7 +521,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld();
 		const message = createMessage({ isCritical: true });
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const payload = updatePayload(message) as ReturnType<typeof updatePayload> & {
 			system: { isMiss: boolean };
@@ -557,7 +557,7 @@ describe('resolveRerollReaction', () => {
 			],
 		});
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(updatePayload(message).system.incomingReactions.map((entry) => entry.id)).toEqual([
 			'entry-1',
@@ -604,7 +604,7 @@ describe('resolveRerollReaction', () => {
 			},
 		];
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const payload = message.update.mock.calls[0][0] as { system: { movementOffers: unknown[] } };
 		expect(payload.system.movementOffers).toEqual([]);
@@ -621,8 +621,8 @@ describe('resolveRerollReaction', () => {
 		});
 
 		await Promise.all([
-			message.resolveRerollReaction('entry-1', 'gm-user'),
-			message.resolveRerollReaction('entry-2', 'gm-user'),
+			message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user'),
+			message.cardRerolls.resolveRerollReaction('entry-2', 'gm-user'),
 		]);
 
 		expect(message.update).toHaveBeenCalledTimes(2);
@@ -647,7 +647,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld(ruleOverrides);
 		const message = createMessage({ entries });
 
-		await message.resolveRerollReaction(
+		await message.cardRerolls.resolveRerollReaction(
 			entryId ?? 'entry-1',
 			userId ?? 'gm-user',
 			viaSocket ?? false,
@@ -661,7 +661,7 @@ describe('resolveRerollReaction', () => {
 		const message = createMessage();
 		(message.system.activation as { effects: unknown[] }).effects = [];
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -673,7 +673,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld({ die: 'pickedDie' });
 		const message = createMessage();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -693,7 +693,7 @@ describe('resolveRerollReaction', () => {
 			const { rule } = setupWorld(change('set'));
 			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
 			expect(rule.offersUseOn).toHaveBeenCalled();
@@ -731,7 +731,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld(change('add', 'pickedDie'));
 			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
 			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -781,7 +781,7 @@ describe('resolveRerollReaction', () => {
 			}) as never);
 
 			try {
-				await message.resolveRerollReaction('entry-1', 'gm-user');
+				await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 				return spy.mock.calls.length;
 			} finally {
 				spy.mockRestore();
@@ -853,7 +853,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld(makeCrit);
 			const message = createMessage({ entries: [rerollEntry({ use: 'crit' })] });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
 			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -868,7 +868,7 @@ describe('resolveRerollReaction', () => {
 				.effects[0];
 			Object.assign(node.roll.options, { canCrit: true });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
 		});
@@ -928,7 +928,7 @@ describe('resolveRerollReaction', () => {
 			const message = createMessage();
 			const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			const rolled = evaluate.mock.contexts[0] as DamageRoll;
 			evaluate.mockRestore();
@@ -964,7 +964,7 @@ describe('resolveRerollReaction', () => {
 			withModifiers(world, ballad());
 			const message = createMessage();
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			const payload = updatePayload(message);
 			expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
@@ -978,7 +978,7 @@ describe('resolveRerollReaction', () => {
 			const message = createMessage();
 			(message.system as Record<string, unknown>).rollChanges = [balladChange];
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(foldedBonuses(updatePayload(message).rolls[0])).toEqual([3]);
 		});
@@ -1011,7 +1011,7 @@ describe('resolveRerollReaction', () => {
 					discardedCritTriggers: false,
 				};
 
-				await message.resolveKeepChoice(choice, 'gm-user');
+				await message.cardRerolls.resolveKeepChoice(choice, 'gm-user');
 
 				const payload = updatePayload(message);
 				expect(foldedBonuses(payload.rolls[0])).toEqual([3]);
@@ -1081,7 +1081,7 @@ describe('resolveRerollReaction', () => {
 				const combatant = placeOnScene(world);
 				const message = createMessage();
 
-				await message.resolveRerollReaction('entry-1', 'gm-user');
+				await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 				expect(world.attacker.applyHealing).toHaveBeenCalledWith(3, 'tempHealing');
 				expect(world.target.applyHealing).not.toHaveBeenCalled();
@@ -1106,7 +1106,7 @@ describe('resolveRerollReaction', () => {
 				placeOnScene(world, 'none');
 				const message = createMessage();
 
-				await message.resolveRerollReaction('entry-1', 'gm-user');
+				await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 				const rerolls = (updatePayload(message).system as Record<string, unknown>).rerolls as Array<
 					Record<string, unknown>
@@ -1130,7 +1130,7 @@ describe('resolveRerollReaction', () => {
 				const message = createMessage();
 
 				try {
-					await message.resolveRerollReaction('entry-1', 'gm-user');
+					await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 				} finally {
 					settings.settings = previous;
 				}
@@ -1152,7 +1152,7 @@ describe('resolveRerollReaction', () => {
 				const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
 				try {
-					await message.resolveRerollReaction('entry-1', 'gm-user');
+					await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 				} finally {
 					error.mockRestore();
 				}
@@ -1176,7 +1176,7 @@ describe('resolveRerollReaction', () => {
 			];
 			const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			const rolled = evaluate.mock.contexts[0] as DamageRoll;
 			evaluate.mockRestore();
@@ -1222,7 +1222,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld({ keep: 'ownerChooses' });
 			const message = createMessage();
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			const payload = updatePayload(message) as unknown as {
 				rolls?: unknown;
@@ -1247,7 +1247,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld({ keep: 'rollerChooses' });
 			const message = createMessage();
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(updatePayload(message).system).toMatchObject({
 				pendingKeep: { chooserUuid: 'Actor.attacker' },
@@ -1258,7 +1258,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld();
 			const message = waitingMessage();
 
-			await message.resolveKeepChoice('old', 'gm-user');
+			await message.cardRerolls.resolveKeepChoice('old', 'gm-user');
 
 			expect(message.update).toHaveBeenCalledTimes(1);
 			const payload = updatePayload(message);
@@ -1276,7 +1276,7 @@ describe('resolveRerollReaction', () => {
 				target.rules = [{ ...rule, item: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
 				const message = waitingMessage();
 
-				await message.resolveKeepChoice(choice, 'gm-user');
+				await message.cardRerolls.resolveKeepChoice(choice, 'gm-user');
 
 				const entries = updatePayload(message).system.incomingReactions as Array<
 					Record<string, unknown>
@@ -1292,7 +1292,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld();
 			const message = waitingMessage();
 
-			await message.resolveKeepChoice('new', 'gm-user');
+			await message.cardRerolls.resolveKeepChoice('new', 'gm-user');
 
 			const payload = updatePayload(message);
 			expect(JSON.parse(payload.rolls[0])).toMatchObject({ total: 11 });
@@ -1307,7 +1307,7 @@ describe('resolveRerollReaction', () => {
 			target.testUserPermission = vi.fn(() => false);
 			const message = waitingMessage();
 
-			await message.resolveKeepChoice('new', 'player-1', true);
+			await message.cardRerolls.resolveKeepChoice('new', 'player-1', true);
 
 			expect(message.update).not.toHaveBeenCalled();
 		});
@@ -1328,7 +1328,7 @@ describe('resolveRerollReaction', () => {
 			const message = waitingMessage();
 			(message.system.incomingReactions as unknown[]).push(rerollEntry({ id: 'entry-2' }));
 
-			await message.resolveRerollReaction('entry-2', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-2', 'gm-user');
 
 			expect(message.update).not.toHaveBeenCalled();
 			expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
@@ -1439,7 +1439,7 @@ describe('resolveRerollReaction', () => {
 			writesApply(message);
 			const evaluate = rollOutcomes(true, false);
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			expect(evaluate.rolled.count).toBe(2);
@@ -1470,7 +1470,7 @@ describe('resolveRerollReaction', () => {
 			writesApply(message);
 			const evaluate = rollOutcomes(true, false);
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			expect(message.system.rerolls).toEqual([
@@ -1490,7 +1490,7 @@ describe('resolveRerollReaction', () => {
 			writesApply(message);
 			const evaluate = rollOutcomes(true, true, true);
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			expect(evaluate.rolled.count).toBe(2);
@@ -1510,7 +1510,7 @@ describe('resolveRerollReaction', () => {
 			writesApply(message);
 			const evaluate = rollOutcomes(true, false);
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			settings.settings = previousSettings;
@@ -1576,7 +1576,7 @@ describe('resolveRerollReaction', () => {
 			writesApply(message);
 			const evaluate = rollOutcomes(true, false);
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			expect(
@@ -1689,7 +1689,7 @@ describe('resolveRerollReaction', () => {
 			withCritPool(world, 1);
 			const message = createMessage({ isCritical: true, flags: ATTACK_FLAGS });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(focus(world)).toBe(0);
 			expect(message.update).toHaveBeenCalledTimes(2);
@@ -1704,7 +1704,7 @@ describe('resolveRerollReaction', () => {
 				flags: { chargeRecoveryGiven: CRIT_GAVE_ONE, chargeRecoveryDomain: ['attack:melee'] },
 			});
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(focus(world)).toBe(0);
 		});
@@ -1714,7 +1714,7 @@ describe('resolveRerollReaction', () => {
 			withCritPool(world, 1);
 			const message = createMessage({ isCritical: true, flags: ATTACK_FLAGS });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(focus(world)).toBe(1);
 			expect(message.update).toHaveBeenCalledTimes(1);
@@ -1732,7 +1732,7 @@ describe('resolveRerollReaction', () => {
 					return this as never;
 				});
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			evaluate.mockRestore();
 			expect(focus(world)).toBe(2);
@@ -1773,7 +1773,7 @@ describe('resolveRerollReaction', () => {
 				},
 			});
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(focus(world)).toBe(0);
 			expect(message.update).toHaveBeenCalledTimes(2);
@@ -1803,7 +1803,7 @@ describe('resolveRerollReaction', () => {
 				},
 			});
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(message.update.mock.calls[1][0]).toEqual({ 'flags.nimble.chargeRecoveryGiven': [] });
 		});
@@ -1813,7 +1813,7 @@ describe('resolveRerollReaction', () => {
 			withCritPool(world, 1);
 			const message = createMessage({ isCritical: true });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(focus(world)).toBe(1);
 			expect(message.update).toHaveBeenCalledTimes(1);
@@ -1825,7 +1825,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld({ discardedCritTriggers: false });
 			const message = createMessage({ discardedCritTriggers: true });
 
-			await message.resolveRerollReaction('entry-1', 'gm-user');
+			await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 			expect(updatePayload(message).system.discardedCritTriggers).toBe(true);
 		});
@@ -1874,7 +1874,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 		setupWorld({ usesAnotherStat: true, die: 'wholeRoll' });
 		const message = messageWithStat();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user', false, false, {
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user', false, false, {
 			stat: 'dexterity',
 		});
 
@@ -1891,7 +1891,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 		});
 		const message = messageWithStat();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(target.update).not.toHaveBeenCalled();
@@ -1925,7 +1925,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 		const message = messageWithStat({ canMiss: true, canCrit: true });
 		const evaluate = vi.spyOn(DamageRoll.prototype, 'evaluate');
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const rolled = evaluate.mock.contexts[0] as DamageRoll;
 		evaluate.mockRestore();
@@ -1942,7 +1942,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 		const message = messageWithStat({ canMiss: true, canCrit: true });
 		(message.system as Record<string, unknown>).isMiss = isMiss;
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		const { system } = updatePayload(message) as { system: { pendingKeep?: unknown } };
 		expect(Boolean(system.pendingKeep)).toBe(waits);

@@ -677,7 +677,7 @@ describe('rollDeferredDamage', () => {
 			(globals.game as { users: unknown }).users = {
 				get: vi.fn((id: string) => ({ isGM: id === 'gm-user', id })),
 			};
-			await message.resolveRerollReaction(entry.id, 'gm-user');
+			await message.cardRerolls.resolveRerollReaction(entry.id, 'gm-user');
 
 			expect(pool.focus()).toBe(1);
 			expect(given(message)).toEqual(HIT_GAVE_ONE);

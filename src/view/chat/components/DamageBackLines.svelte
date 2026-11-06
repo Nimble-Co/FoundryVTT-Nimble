@@ -33,7 +33,7 @@
 	}
 
 	const use = (record: DamageBackRecord, action: DamageBackAction) =>
-		requestDamageBack(messageDocument.id ?? '', record.id, action);
+		requestDamageBack({ messageId: messageDocument.id ?? '', recordId: record.id, action });
 </script>
 
 {#each records as record (record.id)}

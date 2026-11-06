@@ -14,11 +14,14 @@ import {
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
 import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffects.js';
+import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
-import { registerDefendSocketListener } from '../utils/defend/defendRequests.js';
-import { registerIncomingReactionSocketListener } from '../utils/incomingReactions/incomingAttackReactions.js';
+// Their modules define the card operations and notices the socket listener runs.
+import '../utils/defend/defendRequests.js';
+import '../utils/incomingReactions/incomingAttackReactions.js';
+import '../utils/reroll/broadcastRerollRolling.js';
 import { registerRerollRollingHook } from '../utils/reroll/rerollRolling.svelte.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
@@ -73,8 +76,7 @@ export default async function ready() {
 	registerCombatTurnSocketListener();
 	registerGrantedActionOfferSocketListener();
 	registerMovementOffers();
-	registerIncomingReactionSocketListener();
-	registerDefendSocketListener();
+	registerCardSocketListener();
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();

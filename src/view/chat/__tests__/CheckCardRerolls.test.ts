@@ -712,7 +712,10 @@ describe('rerolls on check cards', () => {
 
 			await fireEvent.click(removeButton() as HTMLElement);
 
-			expect(requestResultRemoval).toHaveBeenCalledWith('message-1', 'click-1');
+			expect(requestResultRemoval).toHaveBeenCalledWith({
+				messageId: 'message-1',
+				lineId: 'click-1',
+			});
 			expect(removeButton()?.hasAttribute('disabled')).toBe(true);
 		});
 

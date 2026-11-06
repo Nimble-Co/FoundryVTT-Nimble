@@ -195,7 +195,7 @@ function lastEntry(card: Card, rule: string): IncomingReactionEntry {
 }
 
 const click = (card: Card, rule: string) =>
-	card.resolveRerollReaction(lastEntry(card, rule).id, 'gm-user');
+	card.cardRerolls.resolveRerollReaction(lastEntry(card, rule).id, 'gm-user');
 
 const shownTotal = (card: Card) => resultTotal(7, card.system.resultChanges);
 
@@ -314,7 +314,7 @@ describe('No Damage on an attack card', () => {
 		await click(card, 'res');
 		const { lineId } = card.system.resultChanges[0];
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toEqual([]);
 		expect(pool.current).toBe(1);
@@ -326,7 +326,7 @@ describe('No Damage on an attack card', () => {
 		const { lineId } = card.system.resultChanges[0];
 		Object.assign(card.system, { damageApplied: true });
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toHaveLength(1);
 		expect(pool.current).toBe(0);
@@ -357,7 +357,7 @@ describe('a change made by itself', () => {
 		} as ResultChange;
 		card.system.resultChanges = [change];
 
-		await card.resolveResultRemoval('nat', 'gm-user');
+		await card.cardRerolls.resolveResultRemoval('nat', 'gm-user');
 
 		expect(card.system.resultChanges).toEqual([change]);
 		expect(globals().ui.notifications.warn).toHaveBeenCalled();
@@ -415,7 +415,7 @@ describe('a rule for a failed roll, on both paths of the gate', () => {
 		const { card, stamped, evaluate } = world();
 		card.system.resultChanges = [succeeded];
 
-		await card.resolveRerollReaction(stamped.id, 'gm-user');
+		await card.cardRerolls.resolveRerollReaction(stamped.id, 'gm-user');
 
 		expect(evaluate).not.toHaveBeenCalled();
 		expect(card.system.rerolls).toEqual([]);
@@ -490,7 +490,7 @@ describe('Modify Reroll: cannot fail, on a save card', () => {
 		await click(card, 'insp');
 		const [line] = card.system.resultChanges;
 
-		await card.resolveResultRemoval(line.lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(line.lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toHaveLength(1);
 	});
@@ -697,7 +697,7 @@ describe('Remove on a Change a Result line', () => {
 		expect(roller.system.resources.mana.current).toBe(3);
 		expect(result(card)).toBe('succeeded');
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toEqual([]);
 		expect(roller.system.resources.mana.current).toBe(5);
@@ -711,7 +711,7 @@ describe('Remove on a Change a Result line', () => {
 		);
 		expect(result(card)).toBe('succeeded');
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(shownTotal(card)).toBe(7);
 		expect(roller.system.attributes.wounds.value).toBe(0);
@@ -727,7 +727,7 @@ describe('Remove on a Change a Result line', () => {
 		expect(roller.system.attributes.wounds.value).toBe(2);
 		expect(result(card)).toBe('succeeded');
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toEqual([]);
 		expect(roller.system.attributes.wounds.value).toBe(0);
@@ -754,7 +754,7 @@ describe('Remove on a Change a Result line', () => {
 		expect(pool.current).toBe(0);
 		expect(card.system.resultChanges[0].paid.charges).toBe(1);
 
-		await card.resolveResultRemoval(card.system.resultChanges[0].lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(card.system.resultChanges[0].lineId, 'gm-user');
 
 		expect(pool.current).toBe(1);
 		expect(result(card)).toBe('failed');
@@ -772,7 +772,7 @@ describe('Remove on a Change a Result line', () => {
 		expect(shownTotal(card)).toBe(10);
 		const firstSet = card.system.resultChanges[0];
 
-		await card.resolveResultRemoval(card.system.resultChanges[2].lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(card.system.resultChanges[2].lineId, 'gm-user');
 
 		expect(card.system.resultChanges.map((change) => change.change)).toEqual(['setTotal', 'add']);
 		expect(card.system.resultChanges[0].id).toBe(firstSet.id);
@@ -802,7 +802,7 @@ describe('Remove on a Change a Result line', () => {
 		await click(card, 'soul');
 		expect(card.system.incomingReactions.filter((e) => !e.used)).toEqual([]);
 
-		await card.resolveResultRemoval(card.system.resultChanges[0].lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(card.system.resultChanges[0].lineId, 'gm-user');
 
 		expect(card.system.incomingReactions.filter((e) => !e.used)).toHaveLength(1);
 	});
@@ -810,17 +810,17 @@ describe('Remove on a Change a Result line', () => {
 	it('lets the owner of the actor remove over the socket, not another player', async () => {
 		const { card, lineId } = await cardWith({ change: 'succeed', value: 0, stat: '' }, FREE);
 
-		await card.resolveResultRemoval(lineId, 'stranger', true);
+		await card.cardRerolls.resolveResultRemoval(lineId, 'stranger', true);
 		expect(card.system.resultChanges).toHaveLength(1);
 
-		await card.resolveResultRemoval(lineId, 'owner', true);
+		await card.cardRerolls.resolveResultRemoval(lineId, 'owner', true);
 		expect(card.system.resultChanges).toEqual([]);
 	});
 
 	it('does not believe a socket request that claims a GM', async () => {
 		const { card, lineId } = await cardWith({ change: 'succeed', value: 0, stat: '' }, FREE);
 
-		await card.resolveResultRemoval(lineId, 'gm-user', true);
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user', true);
 
 		expect(card.system.resultChanges).toHaveLength(1);
 	});
@@ -829,7 +829,7 @@ describe('Remove on a Change a Result line', () => {
 		const { card, lineId } = await cardWith({ change: 'succeed', value: 0, stat: '' }, FREE);
 		globals().game.user = { isGM: false, id: 'owner' };
 
-		await card.resolveResultRemoval(lineId, 'owner');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'owner');
 
 		expect(card.system.resultChanges).toHaveLength(1);
 	});
@@ -840,8 +840,8 @@ describe('Remove on a Change a Result line', () => {
 			{ ...FREE, manaCost: 2 },
 		);
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(roller.system.resources.mana.current).toBe(5);
 	});
@@ -907,7 +907,7 @@ describe('a reroll on a card with changes', () => {
 		const lineId = card.system.resultChanges[0].lineId;
 		await click(card, 'lucky');
 
-		await card.resolveResultRemoval(lineId, 'gm-user');
+		await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 		expect(card.system.resultChanges).toHaveLength(1);
 		expect(roller.system.attributes.wounds.value).toBe(1);

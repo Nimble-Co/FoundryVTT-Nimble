@@ -1,9 +1,9 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type { HeldIncomingReactions } from '#types/components/IncomingReactionPrompts.d.ts';
 import {
-	INCOMING_REACTION_REJECTED_HOOK,
-	type IncomingReactionRejection,
-} from '#utils/incomingReactions/incomingAttackReactions.js';
+	CARD_REQUEST_REJECTED_HOOK,
+	type CardRequestRejection,
+} from '#utils/chat/cardOperations.js';
 
 /**
  * Offers whose request has been handed off but whose result has not come
@@ -37,14 +37,14 @@ export function createHeldIncomingReactions(
 
 	$effect(() => {
 		const hooksApi = Hooks as unknown as {
-			on: (hook: string, listener: (rejection: IncomingReactionRejection) => void) => number;
+			on: (hook: string, listener: (rejection: CardRequestRejection) => void) => number;
 			off: (hook: string, id: number) => void;
 		};
-		const hookId = hooksApi.on(INCOMING_REACTION_REJECTED_HOOK, (rejection) => {
+		const hookId = hooksApi.on(CARD_REQUEST_REJECTED_HOOK, (rejection) => {
 			if (rejection.messageId !== message?.id) return;
-			release(rejection.entryId);
+			if (rejection.entryId) release(rejection.entryId);
 		});
-		return () => hooksApi.off(INCOMING_REACTION_REJECTED_HOOK, hookId);
+		return () => hooksApi.off(CARD_REQUEST_REJECTED_HOOK, hookId);
 	});
 
 	return {

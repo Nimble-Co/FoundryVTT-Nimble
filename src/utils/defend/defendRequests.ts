@@ -1,14 +1,13 @@
 import { SYSTEM_ID } from '#system';
 import applyConditionToActor, { type ConditionStart } from '../actor/applyConditionToActor.js';
+import { defineCardOperation, rejectCardRequest } from '../chat/cardOperations.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
-import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
-import localize from '../localize.js';
 import { refundRerollCost } from '../reroll/rerollCost.js';
 import {
 	cardTakesDefends,
@@ -24,21 +23,11 @@ import {
 	type WholeRoundDefend,
 } from './defendRound.js';
 
-const DEFEND_SOCKET_NAME = `system.${SYSTEM_ID}`;
-const DEFEND_REQUEST_TYPE = 'defendRequest';
-const DEFEND_REJECTED_TYPE = 'defendRejected';
-const DEFEND_ALLY_USE_TYPE = 'defendAllyUse';
-
 export type DefendRequest = Omit<DefendRecord, 'id' | 'armorApplies' | 'userId'> & {
 	messageId: string;
 	/** The Defend covers every attack on the hero until their own turn begins. */
 	wholeRound: boolean;
 };
-
-interface DefendRequestMessage extends DefendRequest {
-	type: typeof DEFEND_REQUEST_TYPE;
-	userId: string;
-}
 
 /** An ally's option used on a hero's Defend (a reaction when an ally Defends). */
 export interface DefendAllyUse {
@@ -46,17 +35,6 @@ export interface DefendAllyUse {
 	defendId: string;
 	use: DefendOptionUse;
 	reminder: string;
-}
-
-interface DefendAllyUseMessage extends DefendAllyUse {
-	type: typeof DEFEND_ALLY_USE_TYPE;
-	userId: string;
-}
-
-interface DefendRejectedMessage {
-	type: typeof DEFEND_REJECTED_TYPE;
-	userId: string;
-	reasonKey: string;
 }
 
 type DefendCard = ChatMessage.Implementation & {
@@ -196,105 +174,48 @@ async function writeAllyUse(request: DefendAllyUse): Promise<boolean> {
 	return true;
 }
 
+/** The request of a socket payload: the payload without its routing fields. */
+function requestOf<T>(raw: Record<string, unknown>): T | null {
+	const { type: _type, userId: _userId, ...request } = raw;
+	return typeof request.messageId === 'string' && request.messageId ? (request as T) : null;
+}
+
 /**
  * Put an ally's option on a hero's Defend. The cost is paid before; a refused
  * write gives it back.
  */
-export async function requestDefendAllyUse(request: DefendAllyUse): Promise<boolean> {
-	const userId = game.user?.id;
-	if (!userId) return false;
-	if (game.user?.isGM) {
+export const requestDefendAllyUse = defineCardOperation<DefendAllyUse>({
+	type: 'defendAllyUse',
+	noGmKey: 'NIMBLE.chat.defend.refused.noGm',
+	parse: (raw) => requestOf<DefendAllyUse>(raw),
+	run: async (request) => {
 		let written = false;
 		await queueReactionWrite(request.messageId, async () => {
 			written = await writeAllyUse(request);
+			if (!written) await refundUses([request.use]);
 		});
-		if (!written) await refundUses([request.use]);
 		return written;
-	}
-	if (!getPrimaryActiveGmId()) {
-		ui.notifications?.warn(localize('NIMBLE.chat.defend.refused.noGm'));
-		return false;
-	}
-	emit({ type: DEFEND_ALLY_USE_TYPE, userId, ...request });
-	return true;
-}
-
-async function handleAllyUse(payload: DefendAllyUseMessage): Promise<void> {
-	if ((game.user?.id ?? null) !== getPrimaryActiveGmId()) return;
-	const { type: _type, userId: _userId, ...request } = payload;
-	await queueReactionWrite(request.messageId, async () => {
-		if (!(await writeAllyUse(request))) await refundUses([request.use]);
-	});
-}
-
-function emit(payload: DefendRequestMessage | DefendRejectedMessage | DefendAllyUseMessage): void {
-	const socket = game.socket as
-		| { emit?: (eventName: string, payload: unknown) => void }
-		| undefined;
-	socket?.emit?.(DEFEND_SOCKET_NAME, payload);
-}
+	},
+});
 
 /**
- * Write a Defend to an attack card. A chat message is updatable only by its
- * author or a GM, so a player's request goes to the primary active GM.
- * Returns false when the request could not be sent or was refused here.
+ * Write a Defend to an attack card. A refused Defend gives back what it spent,
+ * and the one who asked is told why.
  */
-export async function requestDefend(request: DefendRequest): Promise<boolean> {
-	const userId = game.user?.id;
-	if (!userId) return false;
-
-	if (game.user?.isGM) {
-		let refusal: string | null = null;
-		await queueReactionWrite(request.messageId, async () => {
-			refusal = await writeDefend(request, userId);
+export const requestDefend = defineCardOperation<DefendRequest>({
+	type: 'defendRequest',
+	noGmKey: 'NIMBLE.chat.defend.refused.noGm',
+	parse: (raw) => requestOf<DefendRequest>(raw),
+	run: async (request, { userId }) => {
+		const refusal = await queueReactionWrite(request.messageId, async () => {
+			const refused = await writeDefend(request, userId);
+			if (refused) await refundRefused(refused, request);
+			return refused;
 		});
-		if (refusal) {
-			ui.notifications?.warn(localize(refusal));
-			await refundRefused(refusal, request);
-		}
+		if (refusal) rejectCardRequest({ messageId: request.messageId, userId, reasonKey: refusal });
 		return !refusal;
-	}
-
-	if (!getPrimaryActiveGmId()) {
-		ui.notifications?.warn(localize('NIMBLE.chat.defend.refused.noGm'));
-		return false;
-	}
-	emit({ type: DEFEND_REQUEST_TYPE, userId, ...request });
-	return true;
-}
-
-async function handleDefendRequest(payload: DefendRequestMessage): Promise<void> {
-	if ((game.user?.id ?? null) !== getPrimaryActiveGmId()) return;
-	const { type: _type, userId, ...request } = payload;
-	await queueReactionWrite(request.messageId, async () => {
-		const refusal = await writeDefend(request, userId);
-		if (!refusal) return;
-		await refundRefused(refusal, request);
-		emit({ type: DEFEND_REJECTED_TYPE, userId, reasonKey: refusal });
-	});
-}
-
-let registered = false;
-
-export function registerDefendSocketListener(): void {
-	if (registered) return;
-	registered = true;
-	const socket = game.socket as
-		| { on?: (eventName: string, listener: (payload: unknown) => void) => void }
-		| undefined;
-	socket?.on?.(DEFEND_SOCKET_NAME, (payload) => {
-		const message = payload as Partial<
-			DefendRequestMessage | DefendRejectedMessage | DefendAllyUseMessage
-		> | null;
-		if (message?.type === DEFEND_REQUEST_TYPE) {
-			void handleDefendRequest(message as DefendRequestMessage);
-		} else if (message?.type === DEFEND_ALLY_USE_TYPE) {
-			void handleAllyUse(message as DefendAllyUseMessage);
-		} else if (message?.type === DEFEND_REJECTED_TYPE && message.userId === game.user?.id) {
-			ui.notifications?.warn(localize((message as DefendRejectedMessage).reasonKey));
-		}
-	});
-}
+	},
+});
 
 /** GM only: the "Armor applies" toggle of one Defend. */
 export async function setDefendArmorApplies(

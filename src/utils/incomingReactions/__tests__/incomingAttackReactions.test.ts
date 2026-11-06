@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-type ReactionModule = typeof import('../incomingAttackReactions.js');
+type ReactionModule = typeof import('../incomingAttackReactions.js') &
+	typeof import('#utils/chat/cardOperations.js') &
+	typeof import('../../reroll/broadcastRerollRolling.js');
 
 interface MockMessage {
 	system: { incomingReactions: Array<{ id: string; kind: string }> };
 	resolveRedirectReaction: ReturnType<typeof vi.fn>;
-	resolveRerollReaction: ReturnType<typeof vi.fn>;
-	resolveKeepChoice: ReturnType<typeof vi.fn>;
-	resolveResultRemoval: ReturnType<typeof vi.fn>;
+	cardRerolls: {
+		resolveRerollReaction: ReturnType<typeof vi.fn>;
+		resolveKeepChoice: ReturnType<typeof vi.fn>;
+		resolveResultRemoval: ReturnType<typeof vi.fn>;
+	};
+	cardDamageBack: { resolve: ReturnType<typeof vi.fn> };
 }
 
 type TestGlobals = {
@@ -32,9 +37,12 @@ function createMessage(entries: Array<{ id: string; kind: string }>): MockMessag
 	return {
 		system: { incomingReactions: entries },
 		resolveRedirectReaction: vi.fn().mockResolvedValue(undefined),
-		resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
-		resolveKeepChoice: vi.fn().mockResolvedValue(undefined),
-		resolveResultRemoval: vi.fn().mockResolvedValue(undefined),
+		cardRerolls: {
+			resolveRerollReaction: vi.fn().mockResolvedValue(undefined),
+			resolveKeepChoice: vi.fn().mockResolvedValue(undefined),
+			resolveResultRemoval: vi.fn().mockResolvedValue(undefined),
+		},
+		cardDamageBack: { resolve: vi.fn().mockResolvedValue(undefined) },
 	};
 }
 
@@ -55,11 +63,15 @@ function setMessages(messagesById: Record<string, MockMessage>): void {
 	};
 }
 
-// The module keeps a "listener already registered" flag at module scope, so
-// every test needs a fresh module instance to register its own socket spy.
+// cardOperations keeps a "listener already registered" flag and the operations
+// map at module scope, so every test needs fresh instances of both modules: the
+// operations then register on the fresh map, and the listener on this socket spy.
 async function loadModule(): Promise<ReactionModule> {
 	vi.resetModules();
-	return import('../incomingAttackReactions.js');
+	const cardOperations = await import('#utils/chat/cardOperations.js');
+	const reactions = await import('../incomingAttackReactions.js');
+	const rolling = await import('../../reroll/broadcastRerollRolling.js');
+	return { ...cardOperations, ...reactions, ...rolling };
 }
 
 beforeEach(() => {
@@ -82,7 +94,7 @@ describe('requestIncomingAttackReaction', () => {
 			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
 		).resolves.toBe(true);
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+		expect(message.cardRerolls.resolveRerollReaction).toHaveBeenCalledWith(
 			'entry-1',
 			'gm-user',
 			false,
@@ -104,9 +116,15 @@ describe('requestIncomingAttackReaction', () => {
 			pick: { stat: 'dexterity' },
 		});
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false, false, {
-			stat: 'dexterity',
-		});
+		expect(message.cardRerolls.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'gm-user',
+			false,
+			false,
+			{
+				stat: 'dexterity',
+			},
+		);
 
 		setUser({ id: 'player-1', isGM: false });
 		await requestIncomingAttackReaction({
@@ -116,7 +134,7 @@ describe('requestIncomingAttackReaction', () => {
 		});
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			expect.any(String),
-			expect.objectContaining({ stat: 'will' }),
+			expect.objectContaining({ pick: { stat: 'will' } }),
 		);
 	});
 
@@ -130,7 +148,7 @@ describe('requestIncomingAttackReaction', () => {
 			requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' }),
 		).resolves.toBe(true);
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
 	});
 
@@ -143,7 +161,7 @@ describe('requestIncomingAttackReaction', () => {
 		await requestIncomingAttackReaction({ messageId: 'message-1', entryId: 'entry-1' });
 
 		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'gm-user', false);
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('routes a reroll entry to resolveRerollReaction with the heroic reaction answer', async () => {
@@ -158,7 +176,7 @@ describe('requestIncomingAttackReaction', () => {
 			forceHeroicReaction: true,
 		});
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith(
+		expect(message.cardRerolls.resolveRerollReaction).toHaveBeenCalledWith(
 			'entry-1',
 			'gm-user',
 			false,
@@ -179,7 +197,7 @@ describe('requestIncomingAttackReaction', () => {
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			'system.nimble',
-			expect.objectContaining({ die: { term: 0, result: 1 } }),
+			expect.objectContaining({ pick: { die: { term: 0, result: 1 } } }),
 		);
 	});
 
@@ -195,7 +213,7 @@ describe('requestIncomingAttackReaction', () => {
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith(
 			'system.nimble',
-			expect.objectContaining({ value: 8 }),
+			expect.objectContaining({ pick: { value: 8 } }),
 		);
 	});
 
@@ -234,7 +252,7 @@ describe('requestIncomingAttackReaction', () => {
 			entryId: 'entry-1',
 			userId: 'player-1',
 		});
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('returns false for a non-GM user when no GM is active', async () => {
@@ -258,10 +276,10 @@ describe('requestIncomingAttackReaction', () => {
 	});
 });
 
-describe('registerIncomingReactionSocketListener', () => {
+describe('registerCardSocketListener', () => {
 	async function registerAndGetListener(): Promise<(payload: unknown) => void> {
-		const { registerIncomingReactionSocketListener } = await loadModule();
-		registerIncomingReactionSocketListener();
+		const { registerCardSocketListener } = await loadModule();
+		registerCardSocketListener();
 
 		const socketOn = globals().game.socket.on;
 		expect(socketOn).toHaveBeenCalledWith('system.nimble', expect.any(Function));
@@ -289,7 +307,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		).not.toThrow();
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
 	});
 
@@ -307,12 +325,18 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).toHaveBeenCalledWith('entry-1', 'player-1', true, false, {
-			die: null,
-			value: null,
-			stat: null,
-			dice: null,
-		});
+		expect(message.cardRerolls.resolveRerollReaction).toHaveBeenCalledWith(
+			'entry-1',
+			'player-1',
+			true,
+			false,
+			{
+				die: null,
+				value: null,
+				stat: null,
+				dice: null,
+			},
+		);
 	});
 
 	it('gives the GM the die a player picked, and drops a pick that is not a die', async () => {
@@ -325,7 +349,7 @@ describe('registerIncomingReactionSocketListener', () => {
 			messageId: 'message-1',
 			entryId: 'entry-1',
 			userId: 'player-1',
-			die,
+			pick: { die },
 		});
 
 		listener(request({ term: 2, result: 0 }));
@@ -333,7 +357,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request({ term: '2', result: 0 }));
 		await flushAsync();
 
-		const dice = message.resolveRerollReaction.mock.calls.map((call) => call[4].die);
+		const dice = message.cardRerolls.resolveRerollReaction.mock.calls.map((call) => call[4].die);
 		expect(dice).toEqual([{ term: 2, result: 0 }, null, null]);
 	});
 
@@ -347,7 +371,7 @@ describe('registerIncomingReactionSocketListener', () => {
 			messageId: 'message-1',
 			entryId: 'entry-1',
 			userId: 'player-1',
-			value,
+			pick: { value },
 		});
 
 		listener(request(7));
@@ -356,7 +380,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener(request('7'));
 		await flushAsync();
 
-		const faces = message.resolveRerollReaction.mock.calls.map((call) => call[4].value);
+		const faces = message.cardRerolls.resolveRerollReaction.mock.calls.map((call) => call[4].value);
 		expect(faces).toEqual([7, null, null, null]);
 	});
 
@@ -375,7 +399,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		await flushAsync();
 
 		expect(message.resolveRedirectReaction).toHaveBeenCalledWith('entry-1', 'player-1', true);
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('ignores requests of a different type', async () => {
@@ -392,7 +416,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 		expect(message.resolveRedirectReaction).not.toHaveBeenCalled();
 	});
 
@@ -410,7 +434,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('only executes on the primary active GM client', async () => {
@@ -428,7 +452,7 @@ describe('registerIncomingReactionSocketListener', () => {
 		});
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('ignores malformed payloads missing required fields', async () => {
@@ -442,13 +466,13 @@ describe('registerIncomingReactionSocketListener', () => {
 		listener('not-an-object');
 		await flushAsync();
 
-		expect(message.resolveRerollReaction).not.toHaveBeenCalled();
+		expect(message.cardRerolls.resolveRerollReaction).not.toHaveBeenCalled();
 	});
 
 	it('registers the socket listener only once per module instance', async () => {
-		const { registerIncomingReactionSocketListener } = await loadModule();
-		registerIncomingReactionSocketListener();
-		registerIncomingReactionSocketListener();
+		const { registerCardSocketListener } = await loadModule();
+		registerCardSocketListener();
+		registerCardSocketListener();
 
 		expect(globals().game.socket.on).toHaveBeenCalledTimes(1);
 	});
@@ -526,8 +550,8 @@ describe('the rolling reroll die', () => {
 
 	it('shows the die another client threw, on any client', async () => {
 		setUser({ id: 'player-1', isGM: false });
-		const { registerIncomingReactionSocketListener } = await loadModule();
-		registerIncomingReactionSocketListener();
+		const { registerCardSocketListener } = await loadModule();
+		registerCardSocketListener();
 		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
 
 		listener({ type: 'rerollRolling', messageId: 'message-1', roll: D20 });
@@ -542,8 +566,8 @@ describe('the rolling reroll die', () => {
 		{ messageId: 'message-1', roll: { slot: 'check' } },
 		{ messageId: 'message-1', roll: { slot: 7, faces: 20 } },
 	])('ignores a malformed signal %o', async (payload) => {
-		const { registerIncomingReactionSocketListener } = await loadModule();
-		registerIncomingReactionSocketListener();
+		const { registerCardSocketListener } = await loadModule();
+		registerCardSocketListener();
 		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
 
 		listener({ type: 'rerollRolling', ...payload });
@@ -552,7 +576,7 @@ describe('the rolling reroll die', () => {
 	});
 });
 
-describe('rejectIncomingAttackReaction', () => {
+describe('rejectCardRequest', () => {
 	const rejection = {
 		messageId: 'message-1',
 		entryId: 'entry-1',
@@ -561,10 +585,10 @@ describe('rejectIncomingAttackReaction', () => {
 	};
 
 	it('relays to the requesting client when the refusal happened elsewhere', async () => {
-		const { rejectIncomingAttackReaction } = await loadModule();
+		const { rejectCardRequest } = await loadModule();
 		setUser({ id: 'gm-user', isGM: true });
 
-		rejectIncomingAttackReaction(rejection);
+		rejectCardRequest(rejection);
 
 		expect(globals().game.socket.emit).toHaveBeenCalledWith('system.nimble', {
 			type: 'incomingAttackReactionRejected',
@@ -574,10 +598,10 @@ describe('rejectIncomingAttackReaction', () => {
 	});
 
 	it('shows a GM their own refusal without a socket round trip', async () => {
-		const { rejectIncomingAttackReaction } = await loadModule();
+		const { rejectCardRequest } = await loadModule();
 		setUser({ id: 'gm-user', isGM: true });
 
-		rejectIncomingAttackReaction({ ...rejection, userId: 'gm-user' });
+		rejectCardRequest({ ...rejection, userId: 'gm-user' });
 
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledTimes(1);
@@ -593,12 +617,12 @@ describe('requestKeepChoice', () => {
 
 		await requestKeepChoice({ messageId: 'message-1', choice: 'old' });
 
-		expect(message.resolveKeepChoice).toHaveBeenCalledWith('old', 'gm-user', false);
+		expect(message.cardRerolls.resolveKeepChoice).toHaveBeenCalledWith('old', 'gm-user', false);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
 
 	it('asks the GM for a player, and the GM keeps only a known choice', async () => {
-		const { requestKeepChoice, registerIncomingReactionSocketListener } = await loadModule();
+		const { requestKeepChoice, registerCardSocketListener } = await loadModule();
 		setUser({ id: 'player-1', isGM: false });
 		await requestKeepChoice({ messageId: 'message-1', choice: 'new' });
 		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
@@ -612,14 +636,14 @@ describe('requestKeepChoice', () => {
 		const message = createMessage([]);
 		setMessages({ 'message-1': message });
 		setUser({ id: 'gm-user', isGM: true });
-		registerIncomingReactionSocketListener();
+		registerCardSocketListener();
 		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
 		listener(payload);
 		listener({ ...payload, choice: 'both' });
 		for (let i = 0; i < 4; i++) await Promise.resolve();
 
-		expect(message.resolveKeepChoice).toHaveBeenCalledTimes(1);
-		expect(message.resolveKeepChoice).toHaveBeenCalledWith('new', 'player-1', true);
+		expect(message.cardRerolls.resolveKeepChoice).toHaveBeenCalledTimes(1);
+		expect(message.cardRerolls.resolveKeepChoice).toHaveBeenCalledWith('new', 'player-1', true);
 	});
 });
 
@@ -630,16 +654,20 @@ describe('requestResultRemoval', () => {
 		setMessages({ 'message-1': message });
 		setUser({ id: 'gm-user', isGM: true });
 
-		await requestResultRemoval('message-1', 'line-1');
+		await requestResultRemoval({ messageId: 'message-1', lineId: 'line-1' });
 
-		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'gm-user', false);
+		expect(message.cardRerolls.resolveResultRemoval).toHaveBeenCalledWith(
+			'line-1',
+			'gm-user',
+			false,
+		);
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
 
 	it('asks the primary GM for a player, as a socket request', async () => {
-		const { requestResultRemoval, registerIncomingReactionSocketListener } = await loadModule();
+		const { requestResultRemoval, registerCardSocketListener } = await loadModule();
 		setUser({ id: 'player-1', isGM: false });
-		await requestResultRemoval('message-1', 'line-1');
+		await requestResultRemoval({ messageId: 'message-1', lineId: 'line-1' });
 		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
 		expect(payload).toEqual({
 			type: 'resultRemoval',
@@ -651,13 +679,68 @@ describe('requestResultRemoval', () => {
 		const message = createMessage([]);
 		setMessages({ 'message-1': message });
 		setUser({ id: 'gm-user', isGM: true });
-		registerIncomingReactionSocketListener();
+		registerCardSocketListener();
 		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
 		listener(payload);
 		listener({ ...payload, lineId: undefined });
 		for (let i = 0; i < 4; i++) await Promise.resolve();
 
-		expect(message.resolveResultRemoval).toHaveBeenCalledTimes(1);
-		expect(message.resolveResultRemoval).toHaveBeenCalledWith('line-1', 'player-1', true);
+		expect(message.cardRerolls.resolveResultRemoval).toHaveBeenCalledTimes(1);
+		expect(message.cardRerolls.resolveResultRemoval).toHaveBeenCalledWith(
+			'line-1',
+			'player-1',
+			true,
+		);
+	});
+});
+
+describe('requestDamageBack', () => {
+	it('deals the damage directly for a GM', async () => {
+		const { requestDamageBack } = await loadModule();
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestDamageBack({ messageId: 'message-1', recordId: 'record-1', action: 'double' });
+
+		expect(message.cardDamageBack.resolve).toHaveBeenCalledWith(
+			'record-1',
+			'double',
+			'gm-user',
+			false,
+		);
+		expect(globals().game.socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('asks the primary GM for a player, and the GM runs only a known action', async () => {
+		const { requestDamageBack, registerCardSocketListener } = await loadModule();
+		setUser({ id: 'player-1', isGM: false });
+		await requestDamageBack({ messageId: 'message-1', recordId: 'record-1', action: 'deal' });
+		const payload = globals().game.socket.emit?.mock.calls[0]?.[1];
+		expect(payload).toEqual({
+			type: 'damageBack',
+			messageId: 'message-1',
+			recordId: 'record-1',
+			action: 'deal',
+			userId: 'player-1',
+		});
+
+		const message = createMessage([]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+		registerCardSocketListener();
+		const listener = globals().game.socket.on?.mock.calls[0]?.[1] as (payload: unknown) => void;
+		listener(payload);
+		listener({ ...payload, action: 'triple' });
+		listener({ ...payload, recordId: '' });
+		for (let i = 0; i < 4; i++) await Promise.resolve();
+
+		expect(message.cardDamageBack.resolve).toHaveBeenCalledTimes(1);
+		expect(message.cardDamageBack.resolve).toHaveBeenCalledWith(
+			'record-1',
+			'deal',
+			'player-1',
+			true,
+		);
 	});
 });

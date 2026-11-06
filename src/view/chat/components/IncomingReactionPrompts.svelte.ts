@@ -247,7 +247,7 @@ export function createIncomingReactionPromptsState(
 		held.hold(line.id);
 		control.expectFocusLoss(line.id);
 		try {
-			await requestResultRemoval(message?.id ?? '', line.id);
+			await requestResultRemoval({ messageId: message?.id ?? '', lineId: line.id });
 		} catch (error) {
 			held.release(line.id);
 			console.error('Nimble | Failed to remove a change of a result', error);

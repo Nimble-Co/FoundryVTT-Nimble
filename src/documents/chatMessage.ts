@@ -5,7 +5,6 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
-import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
@@ -46,6 +45,7 @@ import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
+import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
@@ -53,14 +53,10 @@ import {
 } from '../utils/damage/bankedDamageReduction.js';
 import { sendCritBack } from '../utils/damage/critBack.js';
 import { applyHitConditions } from '../utils/damage/hitCondition.js';
-import {
-	type PoolSpendSelection,
-	rejectIncomingAttackReaction,
-} from '../utils/incomingReactions/incomingAttackReactions.js';
+import type { PoolSpendSelection } from '../utils/incomingReactions/incomingAttackReactions.js';
 import {
 	type IncomingReactionEntry,
 	type PendingKeep,
-	type RerollKept,
 	type RerollRecord,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
@@ -69,7 +65,6 @@ import { resultChangesOf, standingResultChanges } from '../utils/rolls/resultCha
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import {
 	CardDamageBack,
-	type DamageBackAction,
 	type DamageBackCard,
 	type DamageBackRecord,
 } from './chatMessage/cardDamageBack.js';
@@ -852,7 +847,8 @@ class NimbleChatMessage extends ChatMessage {
 
 	#subscribe: ReturnType<typeof createSubscriber>;
 
-	#damageBack = new CardDamageBack({
+	/** Damage Back on this card. */
+	readonly cardDamageBack = new CardDamageBack({
 		id: () => this.id,
 		// Not `speakerActor`: it falls back to the author's character.
 		attacker: () =>
@@ -863,7 +859,8 @@ class NimbleChatMessage extends ChatMessage {
 		update: (changes) => this.update(changes),
 	});
 
-	#rerolls = new CardRerolls({
+	/** Rerolls, roll changes and kept results on this card. */
+	readonly cardRerolls = new CardRerolls({
 		id: () => this.id,
 		type: () => this.type,
 		system: () => this.system,
@@ -904,7 +901,7 @@ class NimbleChatMessage extends ChatMessage {
 					}
 				}
 
-				if (this.#rerolls.waitsOnRerollActor((triggeringDocument as { uuid?: string }).uuid)) {
+				if (this.cardRerolls.waitsOnRerollActor((triggeringDocument as { uuid?: string }).uuid)) {
 					requiresUpdate = true;
 				}
 
@@ -915,7 +912,7 @@ class NimbleChatMessage extends ChatMessage {
 			const updateItemHook = Hooks.on('updateItem', (triggeringDocument, _change, options) => {
 				if ((options as { diff?: boolean }).diff === false) return;
 				const parent = (triggeringDocument as { parent?: { uuid?: string } | null }).parent;
-				if (this.#rerolls.waitsOnRerollActor(parent?.uuid)) update();
+				if (this.cardRerolls.waitsOnRerollActor(parent?.uuid)) update();
 			});
 
 			const updateChatMessageHook = Hooks.on(
@@ -1166,7 +1163,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (targets.length === 0 || !cardSchemaHas(this.type, 'incomingReactions')) return {};
 		if (this.isMinionGroupAttackCard()) return {};
 		const current = this.#incomingReactionEntries();
-		const entries = this.#rerolls.withNoDamageEntries(targets, current);
+		const entries = this.cardRerolls.withNoDamageEntries(targets, current);
 		return entries.length === current.length ? {} : { incomingReactions: entries };
 	}
 
@@ -1249,7 +1246,7 @@ class NimbleChatMessage extends ChatMessage {
 		const critTriggers = systemData.discardedCritTriggers === true;
 		const recoveryChange = rerollRecoveryChange(systemData, outcome, critTriggers);
 		const isPrimaryRoll = isPrimaryDeferredRoll(patched.activation, nodeId);
-		const rerolls = isPrimaryRoll ? this.#rerolls.deferredRollRerolls(roll) : null;
+		const rerolls = isPrimaryRoll ? this.cardRerolls.deferredRollRerolls(roll) : null;
 		await this.update({
 			rolls: patched.rolls,
 			...SKIP_DICE_SO_NICE,
@@ -1261,9 +1258,9 @@ class NimbleChatMessage extends ChatMessage {
 			},
 		} as Record<string, unknown>);
 
-		await this.#rerolls.followChargeRecovery(recoveryChange);
+		await this.cardRerolls.followChargeRecovery(recoveryChange);
 		if (rerolls) {
-			await this.#rerolls.runAutomaticReroll({
+			await this.cardRerolls.runAutomaticReroll({
 				automatic: rerolls.automatic,
 				entries: rerolls.entries,
 				discardedCritTriggers: critTriggers,
@@ -1412,7 +1409,7 @@ class NimbleChatMessage extends ChatMessage {
 		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
 			| DamageRoll
 			| undefined;
-		await this.#damageBack.afterDamage(hurt, {
+		await this.cardDamageBack.afterDamage(hurt, {
 			isCritical: systemData.isCritical === true,
 			critDiceTotal: attackRoll?.critDiceTotal ?? 0,
 		});
@@ -1836,17 +1833,7 @@ class NimbleChatMessage extends ChatMessage {
 		const entry = this.#incomingReactionEntries().find((e) => e.id === entryId);
 		if (!entry || entry.used || entry.kind !== kind) return null;
 
-		const requestingUser = game.users?.get(requestingUserId) ?? null;
-		if (!requestingUser) return null;
-		if (viaSocket && requestingUser.isGM) return null;
-		if (!requestingUser.isGM) {
-			const reactingActor = fromUuidSync(entry.actorUuid) as Actor.Implementation | null;
-			const isOwner = reactingActor?.testUserPermission?.(
-				requestingUser,
-				CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
-			);
-			if (!isOwner) return null;
-		}
+		if (!mayActFor(entry.actorUuid, { userId: requestingUserId, viaSocket })) return null;
 
 		if (entry.source === 'rule' && entry.itemUuid) {
 			const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
@@ -1882,84 +1869,43 @@ class NimbleChatMessage extends ChatMessage {
 
 	/** The reroll result waiting for a player to choose, or null. */
 	pendingKeep(): PendingKeep | null {
-		return this.#rerolls.pendingKeep();
-	}
-
-	/** Deal damage given back, or pay a Wound to double it. Primary GM only. */
-	resolveDamageBack(
-		recordId: string,
-		action: DamageBackAction,
-		requestingUserId: string,
-		viaSocket = false,
-	): Promise<void> {
-		return this.#damageBack.resolve(recordId, action, requestingUserId, viaSocket);
-	}
-
-	/** Keep the new roll or the old one of the reroll that waits on this card. Primary GM only. */
-	resolveKeepChoice(
-		choice: RerollKept,
-		requestingUserId: string,
-		viaSocket = false,
-	): Promise<void> {
-		return this.#rerolls.resolveKeepChoice(choice, requestingUserId, viaSocket);
+		return this.cardRerolls.pendingKeep();
 	}
 
 	/** Whether a `reroll` entry on this card passes every gate again on this client. */
 	canStillUseReroll(entry: IncomingReactionEntry): boolean {
-		return this.#rerolls.canStillUseReroll(entry);
+		return this.cardRerolls.canStillUseReroll(entry);
 	}
 
 	/** Give an ally reroll the scan left out its button on this card. GM only. */
 	addLeftOutReroll(entryId: string): Promise<void> {
-		return this.#rerolls.addLeftOutReroll(entryId);
+		return this.cardRerolls.addLeftOutReroll(entryId);
 	}
 
 	severalDiceToPick(
 		entry: IncomingReactionEntry,
 	): { dice: PickableDie[]; max: number; manaPerDie: number } | null {
-		return this.#rerolls.severalDiceToPick(entry);
+		return this.cardRerolls.severalDiceToPick(entry);
 	}
 
 	/** The dice a player picks from for a `reroll` entry, or null when it rerolls no picked die. */
 	rerollDiceToPick(entry: IncomingReactionEntry): PickableDie[] | null {
-		return this.#rerolls.rerollDiceToPick(entry);
+		return this.cardRerolls.rerollDiceToPick(entry);
 	}
 
 	/** The die, and whether a value is picked, for a `change` entry; null for a reroll entry. */
 	changeToPick(entry: IncomingReactionEntry): { setsValue: boolean; dice: PickableDie[] } | null {
-		return this.#rerolls.changeToPick(entry);
+		return this.cardRerolls.changeToPick(entry);
 	}
 
 	/** The stats a player picks from for a `reroll` entry, or null when it uses no other stat. */
 	rerollStatsToPick(entry: IncomingReactionEntry): StatChoice[] | null {
-		return this.#rerolls.rerollStatsToPick(entry);
-	}
-
-	/** Use a Reroll or Change a Die rule's entry on this card. Primary GM only. */
-	resolveRerollReaction(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket = false,
-		forceHeroicReaction = false,
-		pick: RerollPick = {},
-	): Promise<void> {
-		return this.#rerolls.resolveRerollReaction(
-			entryId,
-			requestingUserId,
-			viaSocket,
-			forceHeroicReaction,
-			pick,
-		);
+		return this.cardRerolls.rerollStatsToPick(entry);
 	}
 
 	/** What a Change a Result entry does now, for its row. */
 	resultUseOf(entry: IncomingReactionEntry): ResultUse | null {
-		return this.#rerolls.resultUseOf(entry);
-	}
-
-	/** Take a Change a Result line off this card and give back its cost. Primary GM only. */
-	resolveResultRemoval(lineId: string, requestingUserId: string, viaSocket = false): Promise<void> {
-		return this.#rerolls.resolveResultRemoval(lineId, requestingUserId, viaSocket);
+		return this.cardRerolls.resultUseOf(entry);
 	}
 
 	/** How this card's attack is delivered. */
@@ -2025,7 +1971,7 @@ class NimbleChatMessage extends ChatMessage {
 		// the GM's client, so a bare `return` would leave the spending player
 		// watching their button come back unexplained when its hold lapses.
 		const reject = (reasonKey: string) =>
-			rejectIncomingAttackReaction({
+			rejectCardRequest({
 				messageId: this.id ?? '',
 				entryId,
 				userId: requestingUserId,
@@ -2235,7 +2181,7 @@ class NimbleChatMessage extends ChatMessage {
 				// The protector is the new target, with its own target-side rows.
 				incomingReactions: this.isMinionGroupAttackCard()
 					? updatedEntries
-					: this.#rerolls.withInterposeEntries(targets, entry.tokenUuid, updatedEntries),
+					: this.cardRerolls.withInterposeEntries(targets, entry.tokenUuid, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

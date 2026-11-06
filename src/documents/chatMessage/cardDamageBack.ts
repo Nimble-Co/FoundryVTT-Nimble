@@ -1,6 +1,6 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
+import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
-import { rejectIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import { payRerollCost } from '#utils/reroll/rerollCost.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
@@ -129,7 +129,7 @@ export class CardDamageBack {
 		viaSocket: boolean,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
-			rejectIncomingAttackReaction({
+			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId: recordId,
 				userId: requestingUserId,
@@ -140,7 +140,7 @@ export class CardDamageBack {
 		const actor = record
 			? (fromUuidSync(record.actorUuid as `Actor.${string}`) as Actor.Implementation | null)
 			: null;
-		if (!record || !actor || !this.#mayUse(actor, requestingUserId, viaSocket)) {
+		if (!record || !actor || !mayActFor(actor, { userId: requestingUserId, viaSocket })) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 		const canUse =
@@ -161,12 +161,5 @@ export class CardDamageBack {
 					: candidate,
 			),
 		});
-	}
-
-	#mayUse(actor: Actor.Implementation, requestingUserId: string, viaSocket: boolean): boolean {
-		const user = game.users?.get(requestingUserId) ?? null;
-		if (!user) return false;
-		if (user.isGM) return !viaSocket;
-		return actor.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 }
