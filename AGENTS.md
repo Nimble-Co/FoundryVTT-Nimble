@@ -99,7 +99,7 @@ These are mandatory implementation constraints, not slogans.
 | Sheet components | `src/view/sheets/` |
 | Dialogs | `src/view/dialogs/` |
 | Stores | `src/stores/` |
-| Utilities | `src/utils/<area>/`: `actor`, `chaos`, `chargePool`, `classProgression`, `combat`, `damage`, `dicePool`, `documents`, `heroicActions`, `incomingReactions`, `minions`, `movement`, `optionSwap`, `reroll`, `rolls`, `spell`, `tokens`, `treeManipulation`. Only small helpers with no area stay at the root of `src/utils/`. |
+| Utilities | `src/utils/<area>/`: `actor`, `chaos`, `chargePool`, `chat`, `classProgression`, `combat`, `damage`, `defend`, `demandControl`, `dicePool`, `documents`, `heldChange`, `heroicActions`, `incomingReactions`, `minions`, `movement`, `optionSwap`, `reroll`, `rolls`, `spell`, `tokens`, `treeManipulation`. Only small helpers with no area stay at the root of `src/utils/`. |
 | Document classes | `src/documents/` |
 | Data models | `src/models/` |
 | Managers | `src/managers/` |

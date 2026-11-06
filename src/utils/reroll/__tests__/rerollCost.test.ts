@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import {
 	canPayRerollCost,
 	findActorCombatant,
@@ -473,11 +474,14 @@ describe('rerollCost', () => {
 	});
 
 	describe('dice pool cost', () => {
+		type StoredPool = { faces: number[]; max: number; dieSize: string };
 		function judgmentActor(faces: number[]) {
 			const item = {
 				id: 'item-judgment',
 				name: 'Radiant Judgment',
-				flags: { nimble: { dicePools: { judgment: { faces, max: 3, dieSize: 'd6' } } } },
+				flags: {
+					[SYSTEM_ID]: { dicePools: { judgment: { faces, max: 3, dieSize: 'd6' } as StoredPool } },
+				},
 				rules: new Map([
 					[
 						'rule-1',
@@ -496,11 +500,8 @@ describe('rerollCost', () => {
 					],
 				]),
 				update: vi.fn(async (changes: Record<string, unknown>) => {
-					const pools = changes['flags.nimble.dicePools'] as Record<
-						string,
-						typeof item.flags.nimble.dicePools.judgment
-					>;
-					item.flags.nimble.dicePools.judgment = { ...pools.judgment };
+					const pools = changes[`flags.${SYSTEM_ID}.dicePools`] as Record<string, StoredPool>;
+					item.flags[SYSTEM_ID].dicePools.judgment = { ...pools.judgment };
 				}),
 			};
 			const actor = {
@@ -522,11 +523,11 @@ describe('rerollCost', () => {
 		it('expends every die of the pool, and gives them back', async () => {
 			const { item, asActor } = judgmentActor([4, 6]);
 			const paid = await payRerollCost(asActor, expend);
-			expect(item.flags.nimble.dicePools.judgment.faces).toEqual([]);
+			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([]);
 			if (!paid) throw new Error('expected the cost to be paid');
 
 			await refundRerollCost(asActor, expend, paid);
-			expect(item.flags.nimble.dicePools.judgment.faces).toEqual([4, 6]);
+			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([4, 6]);
 		});
 	});
 });
