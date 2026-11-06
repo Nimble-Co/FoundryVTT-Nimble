@@ -1,24 +1,13 @@
 import type { AttackOutcomeSources, ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { RuleOf } from '#types/ruleTypes.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
-import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { rulesOfType } from '../actor/actorRules.js';
 import localize from '../localize.js';
 import type { AttackDelivery } from './attackDelivery.js';
 import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
-
-interface AttackOutcomeRuleLike {
-	type?: string;
-	changeFor?(context: {
-		side: 'yourAttacks' | 'attacksAgainstYou';
-		delivery: AttackDelivery | null;
-		other: OtherCreature | null | undefined;
-		itemUuid: string | null | undefined;
-		damageTypes?: readonly string[];
-	}): AttackOutcomeChange | null;
-}
 
 interface RuleOwner {
 	rules?: unknown;
@@ -77,7 +66,7 @@ interface AttackOutcome {
 	charges: AttackOutcomeCharge[];
 }
 
-function rulesOf(owner: RuleOwner | null | undefined): AttackOutcomeRuleLike[] {
+function rulesOf(owner: RuleOwner | null | undefined): RuleOf<'attackOutcome'>[] {
 	return rulesOfType(owner, 'attackOutcome');
 }
 

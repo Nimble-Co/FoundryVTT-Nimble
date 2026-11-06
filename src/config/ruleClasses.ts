@@ -29,7 +29,7 @@ import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
-import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
+import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
