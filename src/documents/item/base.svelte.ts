@@ -263,6 +263,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		return chatCard;
 	}
 
+	/**
+	 * Use the item: roll, ask the `preUseItem` gate, pay, post the card and fire
+	 * `useItem`. The one order for every item kind; a kind changes it only
+	 * through the protected steps below.
+	 */
 	async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
@@ -286,6 +291,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			return null;
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
+		const useContext = { freeUse: manager.freeUse, ...this._useContext(manager) };
 
 		/**
 		 * A hook event that fires before an item is used.
@@ -305,23 +311,24 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			isCritical,
 			isMiss,
 			targets: Array.from(game.user?.targets ?? []),
-			freeUse: manager.freeUse,
+			...useContext,
 		});
 		if (!allowed) return null;
 
-		// Pool-node side effects run only after the gate allowed the use.
+		if (!(await this._payForUse(manager))) return null;
+
+		// Pool-node side effects run only after the gate allowed the use and it is paid for.
 		await manager.applyDeferredPoolNodes();
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
 
-		// Get targets - if none selected, default to the actor's own token for healing items (like potions)
 		let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
 		const hasHealingEffect = activation.effects?.some(
 			(effect: { type: string }) => effect.type === 'healing',
 		);
-		if (targets.length === 0 && this.actor && hasHealingEffect) {
+		if (targets.length === 0 && this.actor && hasHealingEffect && this._healsSelfWithNoTarget()) {
 			const actorTokens = this.actor.getActiveTokens();
 			if (actorTokens.length > 0) {
 				targets = [actorTokens[0].document.uuid];
@@ -371,7 +378,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				},
 				type: 'base',
 			},
-			await this.prepareChatCardData(options),
+			await this.prepareChatCardData(options, manager),
 		);
 
 		if (shouldHide) {
@@ -380,19 +387,43 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			(chatData as Record<string, unknown>).whisper = gmUsers;
 		}
 
-		return this._createActivationCard(chatData, rolls, activation, {
+		const card = await this._createActivationCard(chatData, rolls, activation, {
 			rolls,
 			isCritical,
 			isMiss,
 			discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
 			targets: Array.from(game.user?.targets ?? []),
-			freeUse: manager.freeUse,
+			...useContext,
 		});
+		await this._afterUse(card, manager);
+		return card;
 	}
+
+	/** What this kind adds to the `preUseItem` and `useItem` hook context. */
+	protected _useContext(_manager: ItemActivationManager): Record<string, unknown> {
+		return {};
+	}
+
+	/** Pay what this kind costs to use, after the gate allows it. False stops the use. */
+	protected async _payForUse(_manager: ItemActivationManager): Promise<boolean> {
+		return true;
+	}
+
+	/** Whether a healing use with no target picked heals the user, as a potion does. */
+	protected _healsSelfWithNoTarget(): boolean {
+		return true;
+	}
+
+	/** Runs after the card is posted, or after a rule suppressed it (`card` is null). */
+	protected async _afterUse(
+		_card: ChatMessage | null,
+		_manager: ItemActivationManager,
+	): Promise<void> {}
 
 	/** Override in subclasses to add custom chat card data */
 	async prepareChatCardData(
 		_options: ItemActivationManager.ActivationOptions,
+		_manager?: ItemActivationManager,
 	): Promise<Record<string, unknown>> {
 		return {};
 	}
