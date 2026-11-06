@@ -1,6 +1,6 @@
 import type { MeasurableTokenDocument } from '#types/movement.js';
 import { woundsGained } from '#utils/actor/actorHpChangePaths.js';
-import { actorRules } from '#utils/actor/actorRules.js';
+import { actorRules, rulesOfType } from '#utils/actor/actorRules.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
@@ -26,8 +26,8 @@ interface FreeMoveRuleLike {
 type RuleActor = { rules?: Iterable<unknown>; type?: string; uuid?: string };
 
 function poolDieRules(actor: RuleActor | null | undefined, trigger: string) {
-	return actorRules<PoolDieToMaxRuleLike>(actor).filter(
-		(rule) => rule?.type === 'poolDieToMax' && rule.trigger === trigger && rule.appliesTo?.(),
+	return rulesOfType(actor, 'poolDieToMax').filter(
+		(rule) => rule.trigger === trigger && rule.appliesTo?.(),
 	);
 }
 

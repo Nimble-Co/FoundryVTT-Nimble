@@ -16,7 +16,7 @@ When creating a new rule type, name it after *what it does* (`speedBonus`, `gran
 ## Architecture
 
 - **Base class**: `NimbleBaseRule` (`src/models/rules/base.ts`) extends `foundry.abstract.DataModel`.
-- **Registration**: `src/config/registerRulesConfig.ts` maps type strings to classes in `CONFIG.NIMBLE.ruleDataModels` and to i18n labels in `CONFIG.NIMBLE.ruleTypes`.
+- **Registration**: `RULE_CLASSES` in `src/config/ruleClasses.ts` maps type strings to classes (`CONFIG.NIMBLE.ruleDataModels`). `registerRulesConfig.ts` derives the i18n label keys (`CONFIG.NIMBLE.ruleTypes`, always `NIMBLE.ruleTypes.<type>`). The class carries its own `group`, `description` and `icon`. `rulesOfType(actor, type)` (`src/utils/actor/actorRules.ts`) reads the rules of one type, typed as their class.
 - **Storage**: Plain objects in `item.system.rules` (an `ArrayField` of `ObjectField`). Each entry has `id`, `type`, `disabled`, `priority`, `predicate`, plus type-specific fields.
 - **Instantiation**: `RulesManager` (`src/managers/RulesManager.ts`) is created per item in `prepareBaseData()`. It looks up the class from `CONFIG.NIMBLE.ruleDataModels` and instantiates it with the item as parent.
 

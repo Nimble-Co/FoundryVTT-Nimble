@@ -1,18 +1,11 @@
 import { SYSTEM_ID } from '#system';
+import type { RuleOf } from '#types/ruleTypes.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { actorRules, ruleLabel } from '../actor/actorRules.js';
+import { ruleLabel, rulesOfType } from '../actor/actorRules.js';
 import localize from '../localize.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 
 const SENT_FLAG = 'critBackSent';
-
-interface CritBackRule {
-	type?: string;
-	disabled?: boolean;
-	test?(): boolean;
-	item?: { id?: string | null; name?: string } | null;
-	label?: string;
-}
 
 interface AttackingItem {
 	id?: string | null;
@@ -34,15 +27,14 @@ interface Card {
 	setFlag?(scope: string, key: string, value: unknown): Promise<unknown>;
 }
 
-function critBackRule(actor: unknown, item: { id?: string | null } | null): CritBackRule | null {
+function critBackRule(
+	actor: unknown,
+	item: { id?: string | null } | null,
+): RuleOf<'critBack'> | null {
 	if (!item) return null;
 	return (
-		actorRules<CritBackRule>(actor as { rules?: unknown } | null).find(
-			(rule) =>
-				rule?.type === 'critBack' &&
-				!rule.disabled &&
-				rule.item?.id === item.id &&
-				rule.test?.() !== false,
+		rulesOfType(actor as { rules?: unknown } | null, 'critBack').find(
+			(rule) => !rule.disabled && rule.item?.id === item.id && rule.appliesTo(),
 		) ?? null
 	);
 }

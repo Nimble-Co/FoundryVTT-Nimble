@@ -48,8 +48,9 @@ what each change does and why, which the PR title never does.
 
 Never take a count from a commit message. Check it:
 
-- Rule types: `grep -c "NIMBLE.ruleTypes\." src/config/registerRulesConfig.ts` on both ends of
-  the range. Count the registry, not files in `src/models/rules/` (that directory contains
+- Rule types: count the entries of `RULE_CLASSES` in `src/config/ruleClasses.ts`
+  (`grep -cE "^\s+\w+: \w+Rule,$" src/config/ruleClasses.ts`) on both ends of the range. Before
+  that file existed, count `grep -c "NIMBLE.ruleTypes\." src/config/registerRulesConfig.ts`. Count the registry, not files in `src/models/rules/` (that directory contains
   base classes and helpers that are not rule types).
 - Schema version: `grep LATEST_SCHEMA_VERSION src/migration/MigrationRunnerBase.ts`
 - Content claims: read the pack JSON. To see which features actually carry automation, count

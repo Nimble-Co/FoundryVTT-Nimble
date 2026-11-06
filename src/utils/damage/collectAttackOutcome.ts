@@ -3,7 +3,7 @@ import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import type { AttackOutcomeChange } from '../../models/rules/attackOutcome.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { actorRules } from '../actor/actorRules.js';
+import { rulesOfType } from '../actor/actorRules.js';
 import localize from '../localize.js';
 import type { AttackDelivery } from './attackDelivery.js';
 import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
@@ -78,9 +78,7 @@ interface AttackOutcome {
 }
 
 function rulesOf(owner: RuleOwner | null | undefined): AttackOutcomeRuleLike[] {
-	return actorRules<AttackOutcomeRuleLike>(owner).filter(
-		(rule) => rule?.type === 'attackOutcome' && typeof rule.changeFor === 'function',
-	);
+	return rulesOfType(owner, 'attackOutcome');
 }
 
 /**

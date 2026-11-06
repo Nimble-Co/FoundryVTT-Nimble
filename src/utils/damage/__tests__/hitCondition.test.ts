@@ -12,7 +12,7 @@ async function load() {
 const rule = (overrides: Record<string, unknown>) => ({
 	type: 'hitCondition',
 	item: { id: 'bite' },
-	test: () => true,
+	appliesTo: () => true,
 	condition: 'held',
 	when: 'hit',
 	recipient: 'target',

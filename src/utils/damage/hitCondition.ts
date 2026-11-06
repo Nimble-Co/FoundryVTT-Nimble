@@ -1,22 +1,12 @@
 import { SYSTEM_ID } from '#system';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { actorRules } from '../actor/actorRules.js';
+import { rulesOfType } from '../actor/actorRules.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '../actor/applyConditionToActor.js';
 
 const HELD_CREATURE_FLAG = 'heldCreature';
-
-interface HitConditionRule {
-	type?: string;
-	disabled?: boolean;
-	test?(): boolean;
-	item?: { id?: string | null } | null;
-	condition?: string;
-	when?: 'hit' | 'crit';
-	recipient?: 'target' | 'self';
-}
 
 type Creature = ConditionTargetActor & {
 	uuid?: string | null;
@@ -49,9 +39,9 @@ export async function applyHitConditions(input: {
 	const automatic = isRuleAutomationEnabled();
 	const context = { sourceItem: item, sourceActor: attacker };
 
-	for (const rule of actorRules<HitConditionRule>(attacker)) {
-		if (rule?.type !== 'hitCondition' || rule.disabled || !rule.condition) continue;
-		if (rule.item?.id !== item.id || rule.test?.() === false) continue;
+	for (const rule of rulesOfType(attacker, 'hitCondition')) {
+		if (rule.disabled || !rule.condition) continue;
+		if (rule.item?.id !== item.id || !rule.appliesTo()) continue;
 		if (rule.when === 'crit' && !isCritical) continue;
 
 		if (rule.recipient === 'self') {

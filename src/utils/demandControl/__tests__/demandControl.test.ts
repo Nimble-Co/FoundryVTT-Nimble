@@ -18,7 +18,7 @@ import {
 
 const globals = globalThis as unknown as Record<string, any>;
 
-const CONTROL_RULE = { type: 'optionWindow', optionSet: 'control' };
+const CONTROL_RULE = { type: 'optionWindow', optionSet: 'control', appliesTo: () => true };
 
 function hero(state?: object, extra: object = {}) {
 	let stored = state;
@@ -212,7 +212,7 @@ describe('LOSE CONTROL and ELEMENTAL AFFLICTION', () => {
 describe('the row on a save card', () => {
 	const owner = (cardRow: boolean, isOwner = true) => ({
 		isOwner,
-		rules: [{ type: 'optionWindow', cardRow }],
+		rules: [{ type: 'optionWindow', cardRow, appliesTo: () => true }],
 	});
 	const card = (result: string, flags: Record<string, unknown> = { causedBy: 'Actor.mage' }) => ({
 		flags: { nimble: flags },

@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attackRows, sendCritBack, useCritBack } from '../critBack.js';
 
 const globals = globalThis as unknown as Record<string, any>;
-const rule = { type: 'critBack', label: 'Final Takedown', item: { id: 'ft' }, test: () => true };
+const rule = {
+	type: 'critBack',
+	label: 'Final Takedown',
+	item: { id: 'ft' },
+	appliesTo: () => true,
+};
 const hero = { name: 'Rook', rules: [rule] };
 const item = { id: 'ft' };
 const living = { uuid: 'Actor.a', name: 'Ogre', system: { attributes: { hp: { value: 3 } } } };

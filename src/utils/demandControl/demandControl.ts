@@ -1,11 +1,7 @@
 import { SYSTEM_ID } from '#system';
-import type {
-	ControlAffliction,
-	ControlChoice,
-	ControlOption,
-	OptionSet,
-} from '#types/optionWindow.d.ts';
-import { actorRules } from '#utils/actor/actorRules.js';
+import type { ControlAffliction, ControlChoice, ControlOption } from '#types/optionWindow.d.ts';
+import type { RuleOf } from '#types/ruleTypes.d.ts';
+import { rulesOfType } from '#utils/actor/actorRules.js';
 import applyConditionToActor from '#utils/actor/applyConditionToActor.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import localize from '#utils/localize.js';
@@ -24,20 +20,6 @@ interface ControlState {
 	chosen: ControlOption[];
 	round?: string;
 	reactionRound?: string;
-}
-
-interface ControlRuleLike {
-	type?: string;
-	disabled?: boolean;
-	test?(): boolean;
-	optionSet: OptionSet;
-	opensOnUse?: boolean;
-	oncePerRound?: boolean;
-	cardRow?: boolean;
-	ignoresDisadvantage?: boolean;
-	triggerTwice?: boolean;
-	label?: string;
-	item?: { name?: string } | null;
 }
 
 interface ControlActor {
@@ -60,10 +42,8 @@ interface ControlActor {
 const stateOf = (actor: ControlActor): ControlState =>
 	(actor.getFlag?.(SYSTEM_ID, FLAG) as ControlState | undefined) ?? { chosen: [] };
 
-export function controlRules(actor: ControlActor | null | undefined): ControlRuleLike[] {
-	return actorRules<ControlRuleLike>(actor).filter(
-		(rule) => rule?.type === 'optionWindow' && !rule.disabled && rule.test?.() !== false,
-	);
+export function controlRules(actor: ControlActor | null | undefined): RuleOf<'optionWindow'>[] {
+	return rulesOfType(actor, 'optionWindow').filter((rule) => !rule.disabled && rule.appliesTo());
 }
 
 /** The options of the window, from the option set of the actor's rule; none with no rule. */
