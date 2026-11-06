@@ -1,21 +1,9 @@
 name: Deploy Docs
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/**'
-      # Inputs to the generated reference pages (pnpm docs:generate)
-      - 'src/models/rules/**'
-      - 'src/models/actor/**'
-      - 'src/settings/**'
-      - 'src/config.ts'
-      - 'src/config/**'
-      - 'src/hooks/init.ts'
-      - 'src/hooks/i18nInit.ts'
-      - 'public/lang/en.json'
-      - 'scripts/docs/**'
-      - 'vitest.docsGen.config.mts'
+  # Stable releases only. A pre-release does not start a deploy.
+  release:
+    types: [released]
 
   workflow_dispatch:
 
