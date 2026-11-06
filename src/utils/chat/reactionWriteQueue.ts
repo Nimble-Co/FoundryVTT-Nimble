@@ -30,6 +30,6 @@ const reactionWriteQueues = keyedQueue();
  * *different* entries resolving at once is exactly the case an entry-level
  * lock misses.
  */
-export function queueReactionWrite(messageId: string, task: () => Promise<void>): Promise<void> {
+export function queueReactionWrite<T>(messageId: string, task: () => Promise<T>): Promise<T> {
 	return reactionWriteQueues.run(messageId, task);
 }

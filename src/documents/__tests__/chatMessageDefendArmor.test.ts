@@ -236,6 +236,36 @@ describe('Defend armor on an attack card', () => {
 		expect(message.update).toHaveBeenCalledWith({ 'system.damageAppliedTo': [TOKEN] });
 	});
 
+	it('runs a Defend write that arrives during the apply after the target is marked applied', async () => {
+		const hero = createHero();
+		let finishDamage = () => {};
+		hero.applyDamage.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finishDamage = resolve;
+				}),
+		);
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+		const message = card([packet('a', 'slashing', 10)], { armor: 4 });
+		vi.mocked(message.update).mockImplementation(async (changes) => {
+			Object.assign(message.system, {
+				damageAppliedTo: (changes as Record<string, unknown>)['system.damageAppliedTo'],
+			});
+			return message;
+		});
+
+		const applied = message.applyAllDamage();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		let seenApplied: unknown = null;
+		const lateDefend = queueReactionWrite(message.id ?? '', async () => {
+			seenApplied = (message.system as { damageAppliedTo?: unknown }).damageAppliedTo;
+		});
+		finishDamage();
+		await Promise.all([applied, lateDefend]);
+
+		expect(seenApplied).toEqual([TOKEN]);
+	});
+
 	describe('Defend options', () => {
 		it('deals no damage when the Defend makes the attack miss', async () => {
 			const hero = createHero();

@@ -1320,7 +1320,8 @@ class NimbleChatMessage extends ChatMessage {
 		);
 	}
 
-	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
+	/** Apply the damage to each target and mark them applied. Null when nothing was applied. */
+	async #applyDamageToTargets(packets: DamagePacket[]) {
 		// The public entry points already gated on `isActivationCard()`; that
 		// narrowing does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -1333,7 +1334,7 @@ class NimbleChatMessage extends ChatMessage {
 		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
-			return;
+			return null;
 		}
 
 		// Banked one-shot reductions are spent by this application even when they
@@ -1344,7 +1345,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		if (damageApplicationPlan.applicableTargets.length < 1) {
 			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
-			return;
+			return null;
 		}
 
 		const sourceActorId = this.speaker?.actor;
@@ -1393,6 +1394,19 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
+		await this.#markDamageApplied(targets);
+		return { damageApplicationPlan, hurt, sourceActor, sourceItem };
+	}
+
+	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
+		// The plan reads the Defends, so a Defend request waits until the targets are marked applied.
+		const applied = await queueReactionWrite(this.id ?? '', () =>
+			this.#applyDamageToTargets(packets),
+		);
+		if (!applied) return;
+		const { damageApplicationPlan, hurt, sourceActor, sourceItem } = applied;
+		const systemData = this.system as unknown as ActivationCardSystemData;
+
 		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
 			| DamageRoll
 			| undefined;
@@ -1418,8 +1432,6 @@ class NimbleChatMessage extends ChatMessage {
 					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
 					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
-		await this.#markDamageApplied(targets);
-
 		if (
 			systemData.discardedCritTriggers === true &&
 			systemData.discardedCritTriggersFired !== true
@@ -1437,27 +1449,25 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * One queued write: a Defend closes for each target, and a card with a
-	 * no-damage row or a Remove keeps the record that its damage is applied.
+	 * One write: a Defend closes for each target, and a card with a no-damage
+	 * row or a Remove keeps the record that its damage is applied.
 	 */
 	async #markDamageApplied(targets: string[]): Promise<void> {
-		await queueReactionWrite(this.id ?? '', async () => {
-			const system = this.system as unknown as {
-				damageApplied?: boolean;
-				damageAppliedTo?: unknown;
-			};
-			const update: Record<string, unknown> = {};
-			if (Array.isArray(system.damageAppliedTo)) {
-				const applied = damageAppliedTo(system);
-				const added = targets.filter((uuid) => !applied.has(uuid));
-				if (added.length > 0) update['system.damageAppliedTo'] = [...applied, ...added];
-			}
-			const hasNoDamage =
-				resultChangesOf(system).some((change) => change.change === 'noDamage') ||
-				this.#incomingReactionEntries().some((entry) => entry.use === 'result');
-			if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
-			if (Object.keys(update).length > 0) await this.update(update);
-		});
+		const system = this.system as unknown as {
+			damageApplied?: boolean;
+			damageAppliedTo?: unknown;
+		};
+		const update: Record<string, unknown> = {};
+		if (Array.isArray(system.damageAppliedTo)) {
+			const applied = damageAppliedTo(system);
+			const added = targets.filter((uuid) => !applied.has(uuid));
+			if (added.length > 0) update['system.damageAppliedTo'] = [...applied, ...added];
+		}
+		const hasNoDamage =
+			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
+			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
+		if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
+		if (Object.keys(update).length > 0) await this.update(update);
 	}
 
 	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {
