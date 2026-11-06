@@ -605,10 +605,18 @@ export class CardRerolls {
 	 * undo the reroll before it.
 	 */
 	async runAutomaticReroll(placed: PlacedReroll): Promise<void> {
-		const rollTarget = this.#rerollTarget();
-		if (!rollTarget) return;
+		if (!nextAutomaticReroll(placed.automatic, placed.entries, placed.outcome)) return;
+		let rollTarget: RerollRollTarget | null;
+		let context: ReturnType<RerollRollTarget['context']>;
+		try {
+			rollTarget = this.#rerollTarget();
+			if (!rollTarget) return;
+			context = rollTarget.context();
+		} catch (error) {
+			console.error('Nimble | An automatic reroll failed.', error);
+			return;
+		}
 		let card = placed;
-		const context = rollTarget.context();
 		await chainAutomaticRerolls<unknown, RerollableRoll>({
 			rollKind: context.roll.kind,
 			roller: context.attacker,

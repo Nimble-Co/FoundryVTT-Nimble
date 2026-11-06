@@ -392,3 +392,49 @@ describe('a client that is not a GM', () => {
 		expect(host.update).not.toHaveBeenCalled();
 	});
 });
+
+describe('the automatic Rerolls after a placed roll', () => {
+	function unreadableCard(entries: IncomingReactionEntry[]) {
+		const host = makeAttackCard(entries, makeRoller());
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn(() => {
+				throw new Error('bad uuid');
+			}),
+		);
+		return host;
+	}
+
+	const placed = (automatic: unknown[], entries: IncomingReactionEntry[]) => ({
+		automatic,
+		entries,
+		discardedCritTriggers: false,
+		outcome: { outcome: { isCritical: false, isMiss: false }, forcedMiss: false },
+	});
+
+	it('reads nothing when no automatic Reroll is next', async () => {
+		const host = unreadableCard([]);
+
+		await expect(
+			new CardRerolls(host).runAutomaticReroll(placed([], []) as never),
+		).resolves.toBeUndefined();
+		expect(fromUuidSync).not.toHaveBeenCalled();
+	});
+
+	it('logs, and does not throw, when the roll cannot be read for the next automatic Reroll', async () => {
+		const roller = makeRoller();
+		const rule = makeRule(roller, 'reroll', { automatic: true });
+		const entry = entryFor(rule);
+		const host = unreadableCard([]);
+
+		await expect(
+			new CardRerolls(host).runAutomaticReroll(placed([{ entry, rule }], []) as never),
+		).resolves.toBeUndefined();
+		expect(fromUuidSync).toHaveBeenCalled();
+		expect(console.error).toHaveBeenCalledWith(
+			'Nimble | An automatic reroll failed.',
+			expect.any(Error),
+		);
+		expect(host.update).not.toHaveBeenCalled();
+	});
+});
