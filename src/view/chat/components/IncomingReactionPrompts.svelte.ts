@@ -230,9 +230,7 @@ export function createIncomingReactionPromptsState(
 	 * waits, and no damage stands once the damage is applied.
 	 */
 	function canRemoveResult(actorUuid: string, change: ResultChange): boolean {
-		if (resultRemovalRefusal(message?.reactive?.system, change)) return false;
-		if (game.user?.isGM) return true;
-		return (fromUuidSync(actorUuid) as Actor.Implementation | null)?.isOwner === true;
+		return !resultRemovalRefusal(message?.reactive?.system, change) && mayActHere(actorUuid);
 	}
 
 	async function removeResultLine(line: ResultChangeLine): Promise<void> {
