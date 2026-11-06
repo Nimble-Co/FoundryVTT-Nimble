@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -13,6 +13,11 @@ const TOKEN = 'Scene.scene.Token.token';
 function globals() {
 	return globalThis as unknown as TestGlobals;
 }
+
+const SAVED_GLOBALS = ['fromUuidSync', 'Hooks'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
+const isGMBefore = globals().game.user.isGM;
 
 function createHero(config: { vulnerabilities?: string[]; damageReductions?: object[] } = {}) {
 	const actor = {
@@ -111,6 +116,14 @@ describe('Defend armor on an attack card', () => {
 		vi.clearAllMocks();
 		globals().game.user.isGM = true;
 		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	afterEach(() => {
+		for (const [key, descriptor] of SAVED_GLOBALS) {
+			if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+			else Reflect.deleteProperty(globalThis, key);
+		}
+		globals().game.user.isGM = isGMBefore;
 	});
 
 	it('takes the armor off the damage once for the whole attack', async () => {
@@ -242,6 +255,20 @@ describe('Defend armor on an attack card', () => {
 
 			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(9);
 			expect(message.previewDamageFor(TOKEN, { armor: 3, halve: true })).toBe(9);
+			await message.applyAllDamage();
+			expect(hero.applyDamage).toHaveBeenCalledWith(9);
+		});
+
+		it('halves the damage and leaves out the option armor on a halving Defend', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+			const message = card([packet('a', 'slashing', 17)], {
+				armor: 3,
+				outcome: 'halve',
+				armorBonus: 2,
+			});
+
+			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(9);
 			await message.applyAllDamage();
 			expect(hero.applyDamage).toHaveBeenCalledWith(9);
 		});

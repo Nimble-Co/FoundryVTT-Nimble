@@ -1,7 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { roundMarkHolds } from '../defendRound.js';
 
 type Globals = { game: Record<string, unknown> };
+
+const SAVED_GLOBALS = ['game'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
 
 function setCombat(round: number, turn: number) {
 	(globalThis as unknown as Globals).game = {
@@ -17,6 +21,13 @@ function setCombat(round: number, turn: number) {
 
 describe('roundMarkHolds', () => {
 	beforeEach(() => setCombat(2, 0));
+
+	afterEach(() => {
+		for (const [key, descriptor] of SAVED_GLOBALS) {
+			if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+			else Reflect.deleteProperty(globalThis, key);
+		}
+	});
 
 	it('holds until the hero turn begins, in this round or the next', () => {
 		const mark = { combatId: 'combat', round: 2, turn: 0 };
@@ -35,8 +46,11 @@ describe('roundMarkHolds', () => {
 		expect(roundMarkHolds(mark, 'pip')).toBe(false);
 	});
 
-	it('does not hold in another combat, or with no mark', () => {
+	it('does not hold in another combat', () => {
 		expect(roundMarkHolds({ combatId: 'old', round: 2, turn: 0 }, 'pip')).toBe(false);
+	});
+
+	it('does not hold with no mark', () => {
 		expect(roundMarkHolds(null, 'pip')).toBe(false);
 	});
 });

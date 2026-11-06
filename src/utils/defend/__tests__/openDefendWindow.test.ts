@@ -1,9 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defendWindowPlan } from '../openDefendWindow.js';
 
 const TOKEN = 'Scene.s.Token.pip';
 
 type Globals = { fromUuidSync: ReturnType<typeof vi.fn>; game: Record<string, unknown> };
+
+const SAVED_GLOBALS = ['game', 'fromUuidSync'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
 
 function rule(fields: Record<string, unknown>) {
 	return {
@@ -47,7 +51,9 @@ function hero(rules: unknown[]) {
 	};
 }
 
-/** 17 damage: armor comes off, half rounds up, a miss is 0. */
+const DAMAGE = 17;
+
+/** Mirrors the card: armor comes off, a halve takes half rounded up in place of armor, a miss is 0. */
 const card = {
 	id: 'm1',
 	flavor: 'Club',
@@ -55,10 +61,10 @@ const card = {
 	isMinionGroupAttackCard: () => false,
 	previewDamageFor: vi.fn(
 		(_token: string, defend: number | { armor?: number; zero?: boolean; halve?: boolean }) => {
-			if (typeof defend === 'number') return 17 - defend;
+			if (typeof defend === 'number') return DAMAGE - defend;
 			if (defend.zero) return 0;
-			if (defend.halve) return 9;
-			return 17 - (defend.armor ?? 0);
+			if (defend.halve) return Math.ceil(DAMAGE / 2);
+			return DAMAGE - (defend.armor ?? 0);
 		},
 	),
 };
@@ -83,25 +89,60 @@ beforeEach(() => {
 	};
 });
 
-describe('defendWindowPlan', () => {
-	it('lists the "When you Defend" ticks, and the damage follows them', () => {
-		const { data } = plan([
-			rule({ id: 'misdirection', outcome: 'halve' }),
-			rule({ id: 'infusion', bonus: 4 }),
-			rule({ id: 'decoy', outcome: 'miss' }),
-		]);
+afterEach(() => {
+	for (const [key, descriptor] of SAVED_GLOBALS) {
+		if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+		else Reflect.deleteProperty(globalThis, key);
+	}
+});
 
-		expect(data.ticks.map((tick) => tick.id)).toEqual([
-			'Item.misdirection:misdirection',
-			'Item.infusion:infusion',
-			'Item.decoy:decoy',
-		]);
+const MISDIRECTION = 'Item.misdirection:misdirection';
+const INFUSION = 'Item.infusion:infusion';
+const DECOY = 'Item.decoy:decoy';
+
+function planWithDefendTicks() {
+	return plan([
+		rule({ id: 'misdirection', outcome: 'halve' }),
+		rule({ id: 'infusion', bonus: 4 }),
+		rule({ id: 'decoy', outcome: 'miss' }),
+	]);
+}
+
+describe('defendWindowPlan', () => {
+	it('lists the "When you Defend" ticks', () => {
+		const { data } = planWithDefendTicks();
+
+		expect(data.ticks.map((tick) => tick.id)).toEqual([MISDIRECTION, INFUSION, DECOY]);
+	});
+
+	it('takes the hero armor off the damage with no tick', () => {
+		const { data } = planWithDefendTicks();
+
 		expect(data.takesWith('defend', [])).toBe(14);
-		expect(data.takesWith('defend', ['Item.infusion:infusion'])).toBe(10);
-		expect(data.takesWith('defend', ['Item.misdirection:misdirection'])).toBe(9);
-		expect(data.takesWith('defend', ['Item.misdirection:misdirection', 'Item.decoy:decoy'])).toBe(
-			0,
-		);
+	});
+
+	it('adds the armor bonus of a tick to the hero armor', () => {
+		const { data } = planWithDefendTicks();
+
+		expect(data.takesWith('defend', [INFUSION])).toBe(10);
+	});
+
+	it('halves the damage on a halving tick', () => {
+		const { data } = planWithDefendTicks();
+
+		expect(data.takesWith('defend', [MISDIRECTION])).toBe(9);
+	});
+
+	it('halves the damage in place of the armor when an armor bonus is also ticked', () => {
+		const { data } = planWithDefendTicks();
+
+		expect(data.takesWith('defend', [MISDIRECTION, INFUSION])).toBe(9);
+	});
+
+	it('takes no damage when a tick makes the attack miss', () => {
+		const { data } = planWithDefendTicks();
+
+		expect(data.takesWith('defend', [MISDIRECTION, DECOY])).toBe(0);
 	});
 
 	it('gives a free Defend its own row, with its own effect', () => {

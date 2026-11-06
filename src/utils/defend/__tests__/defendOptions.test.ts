@@ -41,16 +41,24 @@ function card(attackType: string | null) {
 }
 
 describe('defendOptionEffect', () => {
-	it('uses the fixed order: a miss wins over halve, and halve over armor only', () => {
+	it('picks a miss over halve and armor only', () => {
 		const effect = defendOptionEffect([
 			rule({ outcome: 'halve' }),
 			rule({ outcome: 'miss' }),
 			rule({ outcome: 'none' }),
 		] as unknown as DefendRules);
 		expect(effect.outcome).toBe('miss');
-		expect(defendOptionEffect([rule({ outcome: 'halve' })] as unknown as DefendRules).outcome).toBe(
-			'halve',
-		);
+	});
+
+	it('picks halve over armor only', () => {
+		const effect = defendOptionEffect([
+			rule({ outcome: 'none' }),
+			rule({ outcome: 'halve' }),
+		] as unknown as DefendRules);
+		expect(effect.outcome).toBe('halve');
+	});
+
+	it('picks armor only with no options', () => {
 		expect(defendOptionEffect([]).outcome).toBe('none');
 	});
 

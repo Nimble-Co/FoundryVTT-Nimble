@@ -239,4 +239,25 @@ describe('resolveHeroicReactionActionCost', () => {
 			expect(resolveHeroicReactionActionCost(actor, ['defend'])).toBe(1);
 		});
 	});
+
+	describe('armor worn without proficiency', () => {
+		function heroInMailWithLeatherProficiency() {
+			return {
+				type: 'character',
+				rules: [],
+				items: [
+					{ type: 'object', system: { objectType: 'armor', armorType: 'mail', equipped: true } },
+				],
+				system: { proficiencies: { armor: new Set(['leather']) } },
+			};
+		}
+
+		it('costs 1 more action for Defend only', () => {
+			const actor = heroInMailWithLeatherProficiency();
+
+			expect(resolveHeroicReactionActionCost(actor, ['defend'])).toBe(2);
+			expect(resolveHeroicReactionActionCost(actor, ['interpose'])).toBe(1);
+			expect(resolveHeroicReactionActionCost(actor, ['interpose', 'defend'])).toBe(3);
+		});
+	});
 });

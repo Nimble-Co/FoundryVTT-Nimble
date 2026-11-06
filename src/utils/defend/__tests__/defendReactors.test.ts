@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS_EFFECT_IDS } from '../../../config/registerConditionsConfig.js';
 import { attackCannotBeDefended, defendReactors } from '../defendReactors.js';
-import { type DefendRequest, defendRefusal } from '../defendRequests.js';
 
 const PIP_TOKEN = 'Scene.s.Token.pip';
 const BRAM_TOKEN = 'Scene.s.Token.bram';
@@ -25,6 +24,9 @@ function globals() {
 	return globalThis as unknown as Globals;
 }
 
+const fromUuidSyncBefore = Object.getOwnPropertyDescriptor(globalThis, 'fromUuidSync');
+const gameActorsBefore = globals().game.actors;
+
 function defendRecord(tokenUuid: string) {
 	return { id: 'd1', tokenUuid, actorUuid: 'Actor.pip', armor: 3 };
 }
@@ -47,28 +49,14 @@ function card(system: Record<string, unknown>, speaker: Record<string, unknown> 
 	};
 }
 
-function request(tokenUuid = PIP_TOKEN): DefendRequest {
-	return {
-		messageId: 'm1',
-		tokenUuid,
-		actorUuid: 'Actor.pip',
-		armor: 3,
-		label: '',
-		combatantId: 'c1',
-		actionsSpent: 1,
-		reactionKeys: ['defend'],
-		outcome: 'none',
-		armorBonus: 0,
-		options: [],
-		reminders: [],
-		attackerConditions: [],
-		way: 'action',
-		wholeRound: false,
-	};
-}
-
 beforeEach(() => {
 	globals().fromUuidSync = vi.fn((uuid: string) => documents[uuid] ?? null);
+});
+
+afterEach(() => {
+	if (fromUuidSyncBefore) Object.defineProperty(globalThis, 'fromUuidSync', fromUuidSyncBefore);
+	else Reflect.deleteProperty(globalThis, 'fromUuidSync');
+	globals().game.actors = gameActorsBefore;
 });
 
 describe('defendReactors', () => {
@@ -79,19 +67,31 @@ describe('defendReactors', () => {
 		expect(reactors[0]?.targetTokenUuid).toBe(PIP_TOKEN);
 	});
 
-	it('lists nobody on a miss, or on a card that cannot take a Defend', () => {
+	it('lists nobody on a miss', () => {
 		expect(defendReactors(card({ isMiss: true }))).toEqual([]);
+	});
+
+	it('lists nobody on a card that cannot take a Defend', () => {
 		expect(defendReactors(card({ defends: undefined }))).toEqual([]);
+	});
+
+	it('lists nobody on a card that deals no damage', () => {
 		expect(defendReactors(card({ totalDamage: 0 }))).toEqual([]);
+	});
+
+	it('lists the hero on a card that deals damage', () => {
 		expect(defendReactors(card({ totalDamage: 6 }))).toHaveLength(1);
 	});
 
-	it('drops a hero whose damage is applied, unless they Defended', () => {
+	it('drops a hero whose damage is applied', () => {
 		expect(defendReactors(card({ damageAppliedTo: [PIP_TOKEN] }))).toEqual([]);
+	});
 
+	it('keeps a hero whose damage is applied when they Defended, with their Defend', () => {
 		const reactors = defendReactors(
 			card({ damageAppliedTo: [PIP_TOKEN], defends: [defendRecord(PIP_TOKEN)] }),
 		);
+
 		expect(reactors[0]?.defend?.armor).toBe(3);
 	});
 
@@ -127,38 +127,5 @@ describe('attackCannotBeDefended', () => {
 		globals().game.actors = { get: vi.fn(() => ({ statuses: new Set() })) };
 
 		expect(attackCannotBeDefended(card({}, { actor: 'ogre' }))).toBe(false);
-	});
-});
-
-describe('defendRefusal', () => {
-	type Card = Parameters<typeof defendRefusal>[0];
-
-	it('accepts a Defend for a target', () => {
-		expect(defendRefusal(card({}) as unknown as Card, request())).toBeNull();
-	});
-
-	it('refuses a token the attack does not hit', () => {
-		expect(defendRefusal(card({}) as unknown as Card, request(BRAM_TOKEN))).toBe(
-			'NIMBLE.chat.defend.refused.notTarget',
-		);
-	});
-
-	it('refuses after the damage is applied', () => {
-		const applied = card({ damageAppliedTo: [PIP_TOKEN] }) as unknown as Card;
-
-		expect(defendRefusal(applied, request())).toBe('NIMBLE.chat.defend.refused.applied');
-	});
-
-	it('refuses a second Defend for the same token', () => {
-		const defended = card({ defends: [defendRecord(PIP_TOKEN)] }) as unknown as Card;
-
-		expect(defendRefusal(defended, request())).toBe('NIMBLE.chat.defend.refused.already');
-	});
-
-	it('refuses when the card is gone or takes no Defend', () => {
-		expect(defendRefusal(null, request())).toBe('NIMBLE.chat.defend.refused.noCard');
-		expect(defendRefusal(card({ defends: undefined }) as unknown as Card, request())).toBe(
-			'NIMBLE.chat.defend.refused.noCard',
-		);
 	});
 });

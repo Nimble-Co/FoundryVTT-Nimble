@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Setup loads these modules before a hoisted mock could apply.
 const near = new Set<string>();
@@ -43,6 +43,10 @@ type Globals = {
 	canvas: unknown;
 };
 
+const SAVED_GLOBALS = ['game', 'fromUuidSync', 'canvas'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
+
 function card(fields: Record<string, unknown> = {}) {
 	return {
 		system: {
@@ -66,6 +70,13 @@ beforeEach(() => {
 		users: { activeGM: { id: 'gm', isGM: true, active: true }, contents: [] },
 		i18n: { localize: (key: string) => key, format: (key: string) => key },
 	};
+});
+
+afterEach(() => {
+	for (const [key, descriptor] of SAVED_GLOBALS) {
+		if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+		else Reflect.deleteProperty(globalThis, key);
+	}
 });
 
 describe('allyDefendOffers', () => {
