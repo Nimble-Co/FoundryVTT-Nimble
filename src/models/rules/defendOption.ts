@@ -13,6 +13,8 @@ const DEFEND_OPTION_WAYS = ['withDefend', 'freeDefend', 'extraDefend', 'allyDefe
 const DEFEND_OPTION_OUTCOMES = ['none', 'miss', 'noDamage', 'halve'] as const;
 
 type DefendOptionWay = (typeof DEFEND_OPTION_WAYS)[number];
+/** When a condition the option puts on the attacker ends: '' when removed by hand. */
+type AttackerConditionEnds = '' | 'attackerTurn';
 type DefendOptionOutcome = (typeof DEFEND_OPTION_OUTCOMES)[number];
 
 const key = (field: string, part: 'label' | 'hint') => `NIMBLE.rules.defendOption.${field}.${part}`;
@@ -267,7 +269,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare useReroll: boolean;
 	declare alsoInterpose: boolean;
 	declare attackerCondition: string;
-	declare attackerConditionEnds: '' | 'attackerTurn';
+	declare attackerConditionEnds: AttackerConditionEnds;
 	declare reminder: string;
 	declare useItem: boolean;
 	declare upcastArmor: number;
@@ -331,4 +333,10 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	}
 }
 
-export { DEFEND_OPTION_OUTCOMES, DefendOptionRule, type DefendOptionOutcome, type DefendOptionWay };
+export {
+	DEFEND_OPTION_OUTCOMES,
+	DefendOptionRule,
+	type AttackerConditionEnds,
+	type DefendOptionOutcome,
+	type DefendOptionWay,
+};

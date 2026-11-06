@@ -735,7 +735,7 @@
 				"interposeAndFree": "Interpose and Defend ({label})",
 				"whenYouDefend": "When you Defend",
 				"whenYouInterposeOrDefend": "When you Interpose or Defend",
-				"tickNeedsDefend": "The row you picked cannot use this.",
+				"tickNotForRow": "The row you picked cannot use this.",
 				"nothingToDo": "There is nothing to do against this attack.",
 				"cannotPay": "{label}: its cost could not be paid.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",
@@ -2847,7 +2847,7 @@
 					"hint": "The actions one use spends in combat."
 				},
 				"oncePerTurn": {
-					"label": "Once per turn",
+					"label": "1/turn",
 					"hint": "One use each turn, of any creature. The options on the same item share it."
 				},
 				"alsoInterpose": {
