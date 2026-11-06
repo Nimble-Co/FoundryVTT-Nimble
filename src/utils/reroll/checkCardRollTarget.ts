@@ -16,8 +16,8 @@ import {
 	retireResultChanges,
 	standingResultChanges,
 } from '../rolls/resultChanges.js';
+import { chainAutomaticRerolls } from './automaticRerolls.js';
 import { type CheckRoll, keptD20 } from './checkRollOfCard.js';
-import { newRollChanges } from './modifyReroll.js';
 import { alliesOnCard, rollerTokenOf, scanRerollAllies } from './rerollAllies.js';
 import {
 	collectRerollEntries,
@@ -28,8 +28,6 @@ import {
 	withNewRerollEntries,
 } from './rerollEntries.js';
 import type { RerollableRoll, RerollRollTarget } from './rerollRollTarget.js';
-import { rerollWithRule } from './rerollStep.js';
-import { applyGrants, grantsForUse } from './rerollUseGrants.js';
 import { moveLabelledModifier, ROLL_STATS } from './rollStat.js';
 
 type RollClass = new (
@@ -389,38 +387,21 @@ async function collectCheckRerolls(input: {
 		return found.automatic.filter(({ rule }) => rule.outcome !== 'failed' || failed);
 	};
 
-	let next = nextAutomaticReroll(runnableRerolls(), stamped, context);
-	while (next) {
-		const target = checkReroll(liveRollSource(roll), input.rollMode);
-		const added = await newRollChanges(next.rule, input.check.kind, rollChanges);
-		const result = await rerollWithRule({
-			rule: next.rule,
-			entry: next.entry,
-			rollKind: input.check.kind,
-			rollChanges: added,
-			automatic: true,
-			payer: next.rule.actor as Actor | null | undefined,
-			replaced: target.replaced,
-			previousResult: target.previousResult,
-			makeRoll: target.makeRoll,
-			readNewDie: target.readNewDie,
-			earlierCritTriggers: false,
-		});
-		if (result.status === 'failed') {
-			console.error('Nimble | An automatic reroll failed.', result.error);
-		}
-		if (result.status !== 'done') break;
-
-		const grants = await grantsForUse(next.rule, input.roller);
-		if (grants.length > 0) result.reroll.grants = grants;
-		roll = result.roll;
-		rerolls.push(result.reroll);
-		rollChanges.push(...added);
-		refunds.unshift(result.refund);
-		await applyGrants(grants, next.rule.item?.uuid ?? '');
-		stamped.push({ ...next.entry, used: true });
-		next = nextAutomaticReroll(runnableRerolls(), stamped, context);
-	}
+	await chainAutomaticRerolls<AnyRoll, ReturnType<typeof checkReroll>>({
+		rollKind: input.check.kind,
+		roller: input.roller,
+		next: () => nextAutomaticReroll(runnableRerolls(), stamped, context),
+		target: () => checkReroll(liveRollSource(roll), input.rollMode),
+		appliedRollChanges: () => rollChanges,
+		earlierCritTriggers: () => false,
+		place: async (done, next, _target, added) => {
+			roll = done.roll;
+			rerolls.push(done.reroll);
+			rollChanges.push(...added);
+			refunds.unshift(done.refund);
+			stamped.push({ ...next.entry, used: true });
+		},
+	});
 
 	const natural = naturalChangeFor(input.roller, input.check, roll);
 	const ran = new Set(stamped.map((entry) => entry.id));

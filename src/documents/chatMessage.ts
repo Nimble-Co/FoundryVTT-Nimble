@@ -1263,9 +1263,11 @@ class NimbleChatMessage extends ChatMessage {
 
 		await this.#rerolls.followChargeRecovery(recoveryChange);
 		if (rerolls) {
-			await this.#rerolls.runAutomaticReroll(rerolls.automatic, rerolls.entries, critTriggers, {
-				outcome,
-				forcedMiss: false,
+			await this.#rerolls.runAutomaticReroll({
+				automatic: rerolls.automatic,
+				entries: rerolls.entries,
+				discardedCritTriggers: critTriggers,
+				outcome: { outcome, forcedMiss: false },
 			});
 		}
 	}
