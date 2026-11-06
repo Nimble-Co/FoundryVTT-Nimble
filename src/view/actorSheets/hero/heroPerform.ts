@@ -7,7 +7,6 @@ import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
-import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
@@ -23,9 +22,9 @@ import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reac
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
-import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
-import { endEffect, removeEffect, setCondition } from '../shared/effectActions.ts';
+import { isSheetIntent } from '../shared/sheetIntent.ts';
+import { performSheetIntent } from '../shared/sheetPerform.ts';
 import { combatantOf, mayAddAction } from './heroActions.ts';
 import type {
 	HeroConfigureTarget,
@@ -211,13 +210,11 @@ export interface HeroPerformSheet {
 export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformSheet): HeroPerform {
 	const document = actor as unknown as Actor.Implementation;
 	return async (intent: HeroIntent): Promise<void> => {
+		if (isSheetIntent(intent)) {
+			await performSheetIntent(actor, intent);
+			return;
+		}
 		switch (intent.kind) {
-			case 'setHp':
-				await actor.setCurrentHP(intent.value);
-				return;
-			case 'setTempHp':
-				await actor.setTempHP(intent.value);
-				return;
 			case 'setWounds':
 				await actor.update({ 'system.attributes.wounds.value': intent.value } as Record<
 					string,
@@ -239,9 +236,6 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 			case 'editHitDice':
 				await actor.editCurrentHitDice();
 				return;
-			case 'setPoolCharges':
-				await adjustPool(document, intent.poolId, 'set', intent.value);
-				return;
 			case 'rollPoolCharge':
 				await rollChargeDie(document, intent.poolId, { flavor: intent.label });
 				return;
@@ -253,12 +247,6 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'configure':
 				await configure(actor, intent.target);
-				return;
-			case 'rename':
-				await actor.update({ name: intent.name });
-				return;
-			case 'changePortrait':
-				await updateDocumentImage(document, { shiftKey: intent.skipTokenizer });
 				return;
 			case 'levelUp':
 				await actor.triggerLevelUp();
@@ -301,29 +289,17 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 			case 'rollAbilityCheck':
 				await actor.rollAbilityCheckToChat(intent.ability);
 				return;
-			case 'rollSave':
-				await actor.rollSavingThrowToChat(intent.save);
-				return;
 			case 'rollSkill':
 				await actor.rollSkillCheckToChat(intent.skill);
 				return;
-			case 'activate':
-				await actor.activateItem(intent.itemId);
-				return;
 			case 'endToggle':
 				await endToggle(actor, intent.itemId, intent.ruleId);
-				return;
-			case 'openItem':
-				await actor.items.get(intent.itemId)?.sheet?.render(true);
 				return;
 			case 'createItem':
 				await actor.createItem({
 					name: localize(NEW_ITEM_NAMES[intent.itemType]),
 					type: intent.itemType,
 				} as Item.CreateData);
-				return;
-			case 'deleteItem':
-				await actor.deleteItem(intent.itemId);
 				return;
 			case 'toggleEquip':
 				await (
@@ -337,23 +313,11 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				if (intent.containerId) await actor.storeItemInContainer(intent.itemId, intent.containerId);
 				else await actor.removeItemFromContainer(intent.itemId);
 				return;
-			case 'endEffect':
-				await endEffect(document, intent.effectId);
-				return;
-			case 'removeEffect':
-				await removeEffect(document, intent.effectId, intent.itemId);
-				return;
-			case 'setCondition':
-				await setCondition(document, intent.conditionId, intent.active);
-				return;
 			case 'setDetail':
 				await actor.update({ [`system.details.${intent.detail}`]: intent.value } as Record<
 					string,
 					unknown
 				>);
-				return;
-			case 'setFlag':
-				await actor.setFlag(SYSTEM_ID as 'core', intent.flag as never, intent.value as never);
 				return;
 			case 'setField':
 				await actor.update({ [SETTINGS_FIELDS[intent.field]]: intent.value } as Record<
@@ -381,12 +345,6 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 					console.error('Character JSON export failed:', error);
 					ui.notifications?.error(localize('NIMBLE.jsonExport.error'));
 				}
-				return;
-			case 'setCurrency':
-				await actor.update({ [`system.currency.${intent.coin}`]: intent.value } as Record<
-					string,
-					unknown
-				>);
 				return;
 			case 'setSpellsBy':
 				await actor.setFlag(SYSTEM_ID as 'core', 'spellsBy' as never, intent.value as never);

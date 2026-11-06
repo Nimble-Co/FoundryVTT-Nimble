@@ -136,7 +136,7 @@ function actorLike(actor: NimbleCharacter): HeroActorLike {
 			includeCurrencyBulk: flags?.includeCurrencyBulk !== false,
 			automaticallyExecuteAvailableMacros: flags?.automaticallyExecuteAvailableMacros !== false,
 		},
-		items: source.items.map((item) => itemLike(item, actor)),
+		items: source.items.map((item) => itemLike(item)),
 		// item effects live on their item, so `actor.effects` alone would leave them out
 		effects: [...actor.allApplicableEffects()].map((effect) =>
 			effectLike(effect as EffectDocument),

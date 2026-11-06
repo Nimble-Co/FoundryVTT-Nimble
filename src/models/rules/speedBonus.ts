@@ -51,6 +51,9 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	declare value: string;
 	declare movementType: MovementType | null;
 
+	/** The bonus this rule added in the last data preparation, which the sheet shows. */
+	declare appliedAmount: number | undefined;
+
 	static override defineSchema(): SpeedBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -92,6 +95,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
+		this.appliedAmount = value;
 		const actorSystem = actor as object as ActorSystem;
 
 		if (this.movementType !== null) {
