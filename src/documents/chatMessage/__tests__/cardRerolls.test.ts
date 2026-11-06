@@ -14,8 +14,8 @@ const COST = {
 };
 const PAID = { charges: 1, mana: 2, wounds: 1, heroicReaction: null };
 
-const payRerollCost = vi.fn();
-const refundRerollCost = vi.fn();
+const payCost = vi.fn();
+const giveBack = vi.fn();
 const keepAmount = vi.fn();
 const rollSaveWithOwner = vi.fn();
 const rejectCardRequest = vi.fn();
@@ -209,23 +209,17 @@ function rejectedWith() {
 beforeEach(async () => {
 	vi.unstubAllGlobals();
 	vi.resetModules();
-	for (const mock of [
-		payRerollCost,
-		refundRerollCost,
-		keepAmount,
-		rollSaveWithOwner,
-		rejectCardRequest,
-	]) {
+	for (const mock of [payCost, giveBack, keepAmount, rollSaveWithOwner, rejectCardRequest]) {
 		mock.mockReset();
 	}
-	payRerollCost.mockResolvedValue(PAID);
+	payCost.mockResolvedValue(PAID);
 	vi.spyOn(console, 'error').mockImplementation(() => {});
 	globals().game.user = { isGM: true, id: 'gm-user' };
 
-	vi.doMock('#utils/reroll/rerollCost.js', async (importOriginal) => ({
+	vi.doMock('#utils/cost/costLedger.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
-		payRerollCost,
-		refundRerollCost,
+		payCost,
+		giveBack,
 	}));
 	vi.doMock('#utils/heldChange/heldChange.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
@@ -256,7 +250,7 @@ describe('Keep Amount row', () => {
 
 		await use(host, entry, true);
 
-		expect(payRerollCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
+		expect(payCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
 	});
 
 	it('keeps the card damage total and marks the entry used', async () => {
@@ -275,14 +269,14 @@ describe('Keep Amount row', () => {
 
 		await use(host, entry);
 
-		expect(refundRerollCost).toHaveBeenCalledWith(roller, COST, PAID);
+		expect(giveBack).toHaveBeenCalledWith(roller, COST, PAID);
 		expect(rejectedWith()).toEqual(['NIMBLE.chat.incomingReactions.useFailed']);
 		expect(host.update).not.toHaveBeenCalled();
 	});
 
 	it('rejects with rerollCostUnpaid and keeps nothing when the cost is not paid', async () => {
 		const { entry, host } = world();
-		payRerollCost.mockResolvedValue(null);
+		payCost.mockResolvedValue(null);
 
 		await use(host, entry);
 
@@ -313,7 +307,7 @@ describe('Crit Dice save row', () => {
 
 		await use(host, entry, true);
 
-		expect(payRerollCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
+		expect(payCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
 	});
 
 	it('asks the sole target for the save and marks the entry used', async () => {
@@ -332,7 +326,7 @@ describe('Crit Dice save row', () => {
 
 		await use(host, entry);
 
-		expect(refundRerollCost).toHaveBeenCalledWith(roller, COST, PAID);
+		expect(giveBack).toHaveBeenCalledWith(roller, COST, PAID);
 		expect(entryOn(host, entry.id)?.used).toBe(false);
 		expect(host.update).not.toHaveBeenCalled();
 		expect(rejectCardRequest).not.toHaveBeenCalled();
@@ -356,7 +350,7 @@ describe('Change a Result row', () => {
 
 		await use(host, entry, true);
 
-		expect(payRerollCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
+		expect(payCost).toHaveBeenCalledWith(roller, COST, { forceHeroicReaction: true });
 	});
 
 	it('writes one result change that carries the paid charges, mana and wounds', async () => {
@@ -388,7 +382,7 @@ describe('a client that is not a GM', () => {
 
 		await use(host, entry, true);
 
-		expect(payRerollCost).not.toHaveBeenCalled();
+		expect(payCost).not.toHaveBeenCalled();
 		expect(host.update).not.toHaveBeenCalled();
 	});
 });

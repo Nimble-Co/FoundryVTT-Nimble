@@ -1,4 +1,5 @@
 import type { DieChange } from '#types/dieChange.d.ts';
+import { giveBack, giveBackPart, payCost } from '../cost/costLedger.js';
 import type {
 	IncomingReactionEntry,
 	RerollDieResult,
@@ -6,13 +7,7 @@ import type {
 	RollChange,
 	RollEffect,
 } from '../incomingReactions/incomingReactionEntry.js';
-import {
-	costForDice,
-	payRerollCost,
-	refundRerollCost,
-	refundSkippedDice,
-	rerollUsesLeft,
-} from './rerollCost.js';
+import { costForDice, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
 import type { RollUseKind } from './rollToReroll.js';
@@ -128,10 +123,10 @@ async function rerollWithRule<TRoll>(
 ): Promise<RerollStepOutcome<TRoll>> {
 	const { rule, entry, payer, replaced } = input;
 	const cost = rule.rollUseCost ? costForDice(rule.rollUseCost, input.dieCount ?? 1) : undefined;
-	let paid = cost ? await payRerollCost(payer, cost, input.payOptions) : null;
+	let paid = cost ? await payCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
 	const refund = async () => {
-		if (cost && paid) await refundRerollCost(payer, cost, paid);
+		if (cost && paid) await giveBack(payer, cost, paid);
 	};
 
 	try {
@@ -153,7 +148,7 @@ async function rerollWithRule<TRoll>(
 		const die = input.readNewDie ? input.readNewDie(roll) : primaryDieOf(rolled);
 		const skipped = (input.dieCount ?? 0) - (die.several?.length ?? input.dieCount ?? 0);
 		if (cost?.perDie && paid && skipped > 0) {
-			paid = await refundSkippedDice(payer, cost, paid, input.dieCount ?? 1, skipped);
+			paid = await giveBackPart(payer, cost, paid, input.dieCount ?? 1, skipped);
 		}
 		const previousWasCritical = replaced.isCritical === true;
 		const done: RerollStepDone<TRoll> = {

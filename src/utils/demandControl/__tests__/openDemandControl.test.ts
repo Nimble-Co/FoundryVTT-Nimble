@@ -36,9 +36,8 @@ async function open(choice: object, paid: object | null = {}, actor = hero()) {
 			woundCost: 0,
 			heroicReaction: '',
 		}),
-		payRerollCost,
-		refundRerollCost: refund,
 	}));
+	vi.doMock('../../cost/costLedger.js', () => ({ payCost: payRerollCost, giveBack: refund }));
 	const { openDemandControl } = await import('../openDemandControl.js');
 	const { chosenOptions, reactionUsedThisRound } = await import('../demandControl.js');
 	await openDemandControl(actor);
@@ -62,6 +61,7 @@ describe('openDemandControl with the Reaction tick', () => {
 		globals.ChatMessage = savedChatMessage;
 		vi.doUnmock('#documents/dialogs/ChoiceDialog.svelte.js');
 		vi.doUnmock('../../reroll/rerollCost.js');
+		vi.doUnmock('../../cost/costLedger.js');
 	});
 
 	it('pays 1 action and uses up no heroic reaction', async () => {

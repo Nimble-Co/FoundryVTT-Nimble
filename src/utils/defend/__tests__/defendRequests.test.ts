@@ -6,7 +6,7 @@ const applyCondition = vi.fn();
 const refundCost = vi.fn();
 vi.resetModules();
 vi.doMock('../../actor/applyConditionToActor.js', () => ({ default: applyCondition }));
-vi.doMock('../../reroll/rerollCost.js', () => ({ refundRerollCost: refundCost }));
+vi.doMock('../../cost/costLedger.js', () => ({ giveBack: refundCost }));
 const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await import(
 	'../defendRequests.js'
 );

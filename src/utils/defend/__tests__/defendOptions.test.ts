@@ -6,8 +6,8 @@ const canPay = vi.fn(() => true);
 vi.resetModules();
 vi.doMock('../../reroll/rerollCost.js', () => ({
 	canPayRerollCost: canPay,
-	payRerollCost: vi.fn(),
 }));
+vi.doMock('../../cost/costLedger.js', () => ({ payCost: vi.fn() }));
 const { defendOptionEffect, defendOptionsOf, tickCost } = await import('../defendOptions.js');
 
 function rule(fields: Record<string, unknown> = {}) {

@@ -15,6 +15,7 @@ import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/charge
 import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
+import { giveBack, payCost } from '#utils/cost/costLedger.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
@@ -44,13 +45,7 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import {
-	canPayRerollCost,
-	costForDice,
-	type PaidRerollCost,
-	payRerollCost,
-	refundRerollCost,
-} from '#utils/reroll/rerollCost.js';
+import { canPayRerollCost, costForDice, type PaidRerollCost } from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -1113,20 +1108,20 @@ export class CardRerolls {
 	): Promise<boolean> {
 		const { rule, actor } = usable;
 		const cost = rule.rollUseCost;
-		const paid = cost ? await payRerollCost(actor, cost, { forceHeroicReaction }) : null;
+		const paid = cost ? await payCost(actor, cost, { forceHeroicReaction }) : null;
 		if (cost && !paid) {
 			reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 			return false;
 		}
-		const giveBack = async () => {
-			if (cost && paid) await refundRerollCost(actor, cost, paid);
+		const givePaidBack = async () => {
+			if (cost && paid) await giveBack(actor, cost, paid);
 		};
 		try {
 			if (await act(paid)) return true;
-			await giveBack();
+			await givePaidBack();
 			return false;
 		} catch (error) {
-			await giveBack();
+			await givePaidBack();
 			console.error(failedLog, error);
 			reject('NIMBLE.chat.incomingReactions.useFailed');
 			return false;
@@ -1367,7 +1362,7 @@ export class CardRerolls {
 		for (const change of line) {
 			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
 			if (!actor) continue;
-			await refundRerollCost(
+			await giveBack(
 				actor,
 				{
 					chargePoolIdentifier: change.chargePoolIdentifier,

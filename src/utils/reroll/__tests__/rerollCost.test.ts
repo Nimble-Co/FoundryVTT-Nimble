@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { giveBack, payCost } from '../../cost/costLedger.js';
 import {
 	canPayRerollCost,
 	findActorCombatant,
-	payRerollCost,
 	type RerollCost,
-	refundRerollCost,
 	rerollCostCharges,
 	rerollUsesLeft,
 } from '../rerollCost.js';
@@ -213,10 +212,10 @@ describe('rerollCost', () => {
 		});
 	});
 
-	describe('payRerollCost', () => {
+	describe('payCost', () => {
 		it('spends charges, mana and Wounds', async () => {
 			const { actor, item, asActor } = makeActor({ charges: 2, mana: 3, wounds: 1 });
-			const paid = await payRerollCost(
+			const paid = await payCost(
 				asActor,
 				cost({ chargePoolIdentifier: 'sand', manaCost: 2, woundCost: 1 }),
 			);
@@ -229,10 +228,7 @@ describe('rerollCost', () => {
 
 		it('refuses, and gives back what it charged, when the Wounds would pass the maximum', async () => {
 			const { actor, item, asActor } = makeActor({ charges: 2, wounds: 5, maxWounds: 6 });
-			const paid = await payRerollCost(
-				asActor,
-				cost({ chargePoolIdentifier: 'sand', woundCost: 2 }),
-			);
+			const paid = await payCost(asActor, cost({ chargePoolIdentifier: 'sand', woundCost: 2 }));
 			expect(paid).toBeNull();
 			expect(item.flags.nimble.chargePools.sand.current).toBe(2);
 			expect(actor.system.attributes.wounds.value).toBe(5);
@@ -240,10 +236,7 @@ describe('rerollCost', () => {
 
 		it('gives back what it charged when a later part cannot be paid', async () => {
 			const { actor, item, asActor } = makeActor({ charges: 2, mana: 0 });
-			const paid = await payRerollCost(
-				asActor,
-				cost({ chargePoolIdentifier: 'sand', manaCost: 1 }),
-			);
+			const paid = await payCost(asActor, cost({ chargePoolIdentifier: 'sand', manaCost: 1 }));
 
 			expect(paid).toBeNull();
 			expect(item.flags.nimble.chargePools.sand.current).toBe(2);
@@ -252,18 +245,13 @@ describe('rerollCost', () => {
 
 		it('refuses when the pool is empty', async () => {
 			const { asActor } = makeActor({ charges: 0 });
-			await expect(
-				payRerollCost(asActor, cost({ chargePoolIdentifier: 'sand' })),
-			).resolves.toBeNull();
+			await expect(payCost(asActor, cost({ chargePoolIdentifier: 'sand' }))).resolves.toBeNull();
 		});
 
 		it('charges nothing while resource spending automation is off', async () => {
 			setToggles({ 'automation.resourceSpending': false });
 			const { actor, item, asActor } = makeActor({ charges: 0, wounds: 0 });
-			const paid = await payRerollCost(
-				asActor,
-				cost({ chargePoolIdentifier: 'sand', woundCost: 1 }),
-			);
+			const paid = await payCost(asActor, cost({ chargePoolIdentifier: 'sand', woundCost: 1 }));
 
 			expect(paid).toEqual({ charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null });
 			expect(item.update).not.toHaveBeenCalled();
@@ -274,7 +262,7 @@ describe('rerollCost', () => {
 			setToggles({ 'automation.resourceSpending': false });
 			const { actor, asActor } = makeActor({ wounds: 0 });
 			const combat = makeCombat(asActor);
-			const paid = await payRerollCost(asActor, cost({ heroicReaction: 'defend', woundCost: 1 }));
+			const paid = await payCost(asActor, cost({ heroicReaction: 'defend', woundCost: 1 }));
 
 			expect(combat.useHeroicReactions).toHaveBeenCalledWith('combatant-1', ['defend'], {
 				force: false,
@@ -287,7 +275,7 @@ describe('rerollCost', () => {
 		it('uses the heroic reaction in combat', async () => {
 			const { asActor } = makeActor();
 			const combat = makeCombat(asActor);
-			const paid = await payRerollCost(asActor, cost({ heroicReaction: 'defend' }), {
+			const paid = await payCost(asActor, cost({ heroicReaction: 'defend' }), {
 				forceHeroicReaction: true,
 			});
 
@@ -305,13 +293,13 @@ describe('rerollCost', () => {
 		it('refuses when the combat refuses the heroic reaction', async () => {
 			const { asActor } = makeActor();
 			makeCombat(asActor, false);
-			await expect(payRerollCost(asActor, cost({ heroicReaction: 'defend' }))).resolves.toBeNull();
+			await expect(payCost(asActor, cost({ heroicReaction: 'defend' }))).resolves.toBeNull();
 		});
 
 		it('costs no heroic reaction out of combat', async () => {
 			const { asActor } = makeActor();
 			testGlobals.game.combat = null;
-			await expect(payRerollCost(asActor, cost({ heroicReaction: 'defend' }))).resolves.toEqual({
+			await expect(payCost(asActor, cost({ heroicReaction: 'defend' }))).resolves.toEqual({
 				charges: 0,
 				mana: 0,
 				wounds: 0,
@@ -321,7 +309,7 @@ describe('rerollCost', () => {
 		});
 	});
 
-	describe('refundRerollCost', () => {
+	describe('giveBack', () => {
 		it('gives back charges, mana, Wounds and the heroic reaction', async () => {
 			const { actor, item, asActor } = makeActor({ charges: 2, mana: 3, wounds: 1 });
 			const combat = makeCombat(asActor);
@@ -331,10 +319,10 @@ describe('rerollCost', () => {
 				woundCost: 1,
 				heroicReaction: 'defend',
 			});
-			const paid = await payRerollCost(asActor, full);
+			const paid = await payCost(asActor, full);
 			if (!paid) throw new Error('expected the cost to be paid');
 
-			await refundRerollCost(asActor, full, paid);
+			await giveBack(asActor, full, paid);
 
 			expect(item.flags.nimble.chargePools.sand.current).toBe(2);
 			expect(actor.system.resources.mana.current).toBe(3);
@@ -352,11 +340,11 @@ describe('rerollCost', () => {
 			const { asActor } = makeActor();
 			const combat = makeCombat(asActor);
 			const reaction = cost({ heroicReaction: 'defend' });
-			const paid = await payRerollCost(asActor, reaction);
+			const paid = await payCost(asActor, reaction);
 			if (!paid) throw new Error('expected the cost to be paid');
 			combat.combatant.system.actions.base.current = 0;
 
-			await refundRerollCost(asActor, reaction, paid);
+			await giveBack(asActor, reaction, paid);
 
 			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 				{
@@ -399,31 +387,31 @@ describe('rerollCost', () => {
 		it("spends an action now on the owner's own turn, and gives it back", async () => {
 			const { asActor } = makeActor();
 			const combatant = makeActionCombat(asActor, { ownTurn: true, actions: 2 });
-			const paid = await payRerollCost(asActor, action);
+			const paid = await payCost(asActor, action);
 			expect(combatant.system.actions.base.current).toBe(1);
 			expect(combatant.system.actions.pendingDelta).toBe(0);
 			if (!paid) throw new Error('expected the cost to be paid');
-			await refundRerollCost(asActor, action, paid);
+			await giveBack(asActor, action, paid);
 			expect(combatant.system.actions.base.current).toBe(2);
 		});
 
 		it("takes an action from the next turn off the owner's turn, and gives it back", async () => {
 			const { asActor } = makeActor();
 			const combatant = makeActionCombat(asActor, { ownTurn: false, actions: 3 });
-			const paid = await payRerollCost(asActor, action);
+			const paid = await payCost(asActor, action);
 			expect(combatant.system.actions.base.current).toBe(3);
 			expect(combatant.system.actions.pendingDelta).toBe(-1);
 			if (!paid) throw new Error('expected the cost to be paid');
-			await refundRerollCost(asActor, action, paid);
+			await giveBack(asActor, action, paid);
 			expect(combatant.system.actions.pendingDelta).toBe(0);
 		});
 
 		it('spends nothing out of combat or with spending off', async () => {
 			const { asActor } = makeActor();
-			expect(await payRerollCost(asActor, action)).toMatchObject({ action: null });
+			expect(await payCost(asActor, action)).toMatchObject({ action: null });
 			const combatant = makeActionCombat(asActor, { ownTurn: true, actions: 2 });
 			setToggles({ 'automation.resourceSpending': false });
-			await payRerollCost(asActor, action);
+			await payCost(asActor, action);
 			expect(combatant.update).not.toHaveBeenCalled();
 		});
 	});
@@ -522,11 +510,11 @@ describe('rerollCost', () => {
 
 		it('expends every die of the pool, and gives them back', async () => {
 			const { item, asActor } = judgmentActor([4, 6]);
-			const paid = await payRerollCost(asActor, expend);
+			const paid = await payCost(asActor, expend);
 			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([]);
 			if (!paid) throw new Error('expected the cost to be paid');
 
-			await refundRerollCost(asActor, expend, paid);
+			await giveBack(asActor, expend, paid);
 			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([4, 6]);
 		});
 	});

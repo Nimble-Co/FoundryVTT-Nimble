@@ -1,7 +1,7 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
-import { payRerollCost } from '#utils/reroll/rerollCost.js';
+import { payCost } from '#utils/cost/costLedger.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 /** Damage a creature gave back to the one who attacked it, as the card shows it. */
@@ -150,7 +150,7 @@ export class CardDamageBack {
 		const attacker = fromUuidSync(record.attackerUuid as `Actor.${string}`) as AttackerLike | null;
 		if (!attacker) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
-		if (action === 'double' && !(await payRerollCost(actor, WOUND_COST))) {
+		if (action === 'double' && !(await payCost(actor, WOUND_COST))) {
 			return reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
 		}
 		await attacker.applyDamage?.(record.amount);

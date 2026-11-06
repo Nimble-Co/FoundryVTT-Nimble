@@ -2,7 +2,8 @@ import ChoiceDialog from '#documents/dialogs/ChoiceDialog.svelte.js';
 import type { ControlChoice, ControlOption } from '#types/optionWindow.d.ts';
 import localize from '#utils/localize.js';
 import DemandControlDialogComponent from '../../view/dialogs/DemandControlDialog.svelte';
-import { chargeOnlyCost, payRerollCost, refundRerollCost } from '../reroll/rerollCost.js';
+import { giveBack, payCost } from '../cost/costLedger.js';
+import { chargeOnlyCost } from '../reroll/rerollCost.js';
 import { applyControlChoice, recordChoice, recordReaction } from './demandControl.js';
 
 interface OpenOptions {
@@ -31,13 +32,13 @@ export async function openDemandControl(
 	const choice = await ask(actor, options);
 	if (!choice) return;
 	const cost = { ...chargeOnlyCost(''), actionCost: 1 };
-	const paid = choice.asReaction ? await payRerollCost(actor as never, cost) : null;
+	const paid = choice.asReaction ? await payCost(actor as never, cost) : null;
 	if (choice.asReaction && !paid) {
 		ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.rerollCostUnpaid'));
 		return;
 	}
 	if (!(await applyControlChoice(actor, choice))) {
-		if (paid) await refundRerollCost(actor as never, cost, paid);
+		if (paid) await giveBack(actor as never, cost, paid);
 		return;
 	}
 	if (paid) await recordReaction(actor);
