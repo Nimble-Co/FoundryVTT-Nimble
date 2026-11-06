@@ -8,10 +8,7 @@ import {
 	getAdjacencySyncEnabled,
 	migrateLegacyDiagonalSetting,
 } from '../settings/adjacencySettings.js';
-import {
-	checkGridDiagonals,
-	registerGridDiagonalsCheckHooks,
-} from '../settings/gridDiagonalsCheck.js';
+import { checkGridDiagonals } from '../settings/gridDiagonalsCheck.js';
 import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
@@ -29,6 +26,7 @@ import registerAdjacencySync from './combatantHooks/adjacencySync.js';
 import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerDicePoolSpendRequestRouter from './dicePoolSpendRequestRouter.js';
+import { registerGridDiagonalsCheckHooks } from './gridDiagonalsCheck.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 import registerMovementOffers from './movementOffers.js';
 
