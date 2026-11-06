@@ -5,6 +5,7 @@ import type {
 	DefendOption,
 	DefendWindowData,
 } from '#types/components/DefendDialog.d.ts';
+import { rerollCostParts } from '../../view/chat/components/incomingReactionCost.js';
 import { spendBaselineInterpose } from '../../view/chat/components/spendBaselineInterpose.js';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
@@ -29,6 +30,7 @@ import {
 	defendOptionsOf,
 	defendOptionUse,
 	payDefendOption,
+	tickCost,
 } from './defendOptions.js';
 import { type DefendReactor, defendReactors } from './defendReactors.js';
 import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRecords.js';
@@ -145,8 +147,14 @@ function damageAfter(
 	});
 }
 
-function tickDetail(pick: DefendOptionPick): string {
-	return (pick.rule.reminder ?? '').trim();
+function tickDetail(
+	actor: Actor.Implementation,
+	pick: DefendOptionPick,
+	card: NimbleChatMessage,
+	token: string | null,
+): string {
+	const cost = rerollCostParts(tickCost(pick.rule, card, token), actor).join(', ');
+	return [cost, (pick.rule.reminder ?? '').trim()].filter(Boolean).join('. ');
 }
 
 /** What the window shows for one hero, and what each row does. Exported for tests. */
@@ -336,7 +344,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 			ticks: [...ticks.values()].map((pick) => ({
 				id: pick.key,
 				label: pick.label,
-				detail: tickDetail(pick),
+				detail: tickDetail(actor, pick, card, reactor.targetTokenUuid),
 			})),
 			takesWith: (optionId, tickIds) => {
 				const row = rows.get(optionId);

@@ -1,12 +1,15 @@
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
 import localize from '#utils/localize.js';
-import { rerollCostCharges, rerollUsesLeft } from '#utils/reroll/rerollCost.js';
+import { type RerollCost, rerollCostCharges, rerollUsesLeft } from '#utils/reroll/rerollCost.js';
 import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
-function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[] {
-	const cost = findRerollRule(entry)?.rollUseCost;
+/** What a cost takes from its actor, as short parts for one line. */
+export function rerollCostParts(
+	cost: RerollCost | null | undefined,
+	actor: Actor | null,
+): string[] {
 	if (!cost || !rerollCostCharges(cost)) return [];
 	if (!isResourceSpendingAutomationEnabled()) {
 		return cost.heroicReaction
@@ -50,7 +53,9 @@ function rerollCost(entry: IncomingReactionEntry, actor: Actor | null): string[]
  * Empty when the row costs nothing the card knows about.
  */
 export function getIncomingReactionCost(entry: IncomingReactionEntry, actor: Actor | null): string {
-	if (entry.kind === 'reroll') return rerollCost(entry, actor).join(', ');
+	if (entry.kind === 'reroll') {
+		return rerollCostParts(findRerollRule(entry)?.rollUseCost, actor).join(', ');
+	}
 	if (entry.kind === 'redirectToSelf' && entry.source === 'baseline') {
 		return localize('NIMBLE.chat.incomingReactions.costHeroicReaction');
 	}
