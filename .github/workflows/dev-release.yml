@@ -54,7 +54,7 @@ jobs:
     - name: Compute dev version
       id: dev_version
       run: |
-        base_version=$(node -p "require('./package.json').version")
+        base_version=$(git tag --merged HEAD --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -m1 -e '-')
         short_sha=$(echo "${{ github.sha }}" | cut -c1-7)
         dev_version="${base_version}-dev.${{ github.run_number }}+${short_sha}"
         echo "version=${dev_version}" >> "$GITHUB_OUTPUT"
