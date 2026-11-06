@@ -1128,7 +1128,7 @@ const PACK_ITEMS: PackItemSpec[] = [
 	},
 ];
 
-function toPackOrSpellSourceId(sourceId: string | undefined): string | undefined {
+function toCurrentPackSourceId(sourceId: string | undefined): string | undefined {
 	const packId = toPackSourceId(sourceId);
 	return packId?.startsWith(LEGACY_SPELL_PREFIX)
 		? `${SPELL_PREFIX}${packId.slice(LEGACY_SPELL_PREFIX.length)}`
@@ -1193,7 +1193,7 @@ class Migration075MaxAndDice extends MigrationBase {
 	}
 
 	#match(source: any): PackItemSpec | undefined {
-		const sourceId = toPackOrSpellSourceId(this.getSourceId(source));
+		const sourceId = toCurrentPackSourceId(this.getSourceId(source));
 		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
