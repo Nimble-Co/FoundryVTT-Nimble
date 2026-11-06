@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { CostReceipt } from '#types/costReceipt.d.ts';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
@@ -12,6 +13,7 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
+import { giveBack, receiptOf } from '../../utils/cost/costLedger.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
 /** The card types whose schema carries `system.concentration`. */
@@ -315,86 +317,96 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		});
 		if (!allowed) return null;
 
-		if (!(await this._payForUse(manager))) return null;
+		const receipt = await this._payForUse(manager);
+		if (!receipt) return null;
 
-		// Pool-node side effects run only after the gate allowed the use and it is paid for.
-		await manager.applyDeferredPoolNodes();
+		let card: ChatMessage | null;
+		try {
+			// Pool-node side effects run only after the gate allowed the use and it is paid for.
+			await manager.applyDeferredPoolNodes();
 
-		// Only allow hiding rolls for GM users rolling for non-PC actors
-		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
-		const shouldHide = rollHidden && canHideRoll;
+			// Only allow hiding rolls for GM users rolling for non-PC actors
+			const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
+			const shouldHide = rollHidden && canHideRoll;
 
-		let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
-		const hasHealingEffect = activation.effects?.some(
-			(effect: { type: string }) => effect.type === 'healing',
-		);
-		if (targets.length === 0 && this.actor && hasHealingEffect && this._healsSelfWithNoTarget()) {
-			const actorTokens = this.actor.getActiveTokens();
-			if (actorTokens.length > 0) {
-				targets = [actorTokens[0].document.uuid];
+			let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
+			const hasHealingEffect = activation.effects?.some(
+				(effect: { type: string }) => effect.type === 'healing',
+			);
+			if (targets.length === 0 && this.actor && hasHealingEffect && this._healsSelfWithNoTarget()) {
+				const actorTokens = this.actor.getActiveTokens();
+				if (actorTokens.length > 0) {
+					targets = [actorTokens[0].document.uuid];
+				}
 			}
-		}
 
-		const chatData = foundry.utils.mergeObject(
-			{
-				author: game.user?.id,
-				flavor: `${this.actor?.name}: ${this.name}`,
-				speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-				// Roll-less activations (descriptive features) post a card without dice audio
-				sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
-				rolls,
-				flags: {
-					...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
-					[SYSTEM_ID]: {
-						itemId: this.id,
-						itemUuid: this.uuid,
-						actorId: this.actor?.id,
-						tokenUuid: this.actor?.token?.uuid,
-						...(manager.chargeConsumption.length > 0
-							? { chargeConsumption: manager.chargeConsumption }
-							: {}),
+			const chatData = foundry.utils.mergeObject(
+				{
+					author: game.user?.id,
+					flavor: `${this.actor?.name}: ${this.name}`,
+					speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+					style: CONST.CHAT_MESSAGE_STYLES.OTHER,
+					// Roll-less activations (descriptive features) post a card without dice audio
+					sound: rolls.length > 0 ? CONFIG.sounds.dice : null,
+					rolls,
+					flags: {
+						...(noDiceThrown ? NO_DICE_SO_NICE_FLAGS : {}),
+						[SYSTEM_ID]: {
+							itemId: this.id,
+							itemUuid: this.uuid,
+							actorId: this.actor?.id,
+							tokenUuid: this.actor?.token?.uuid,
+							...(manager.chargeConsumption.length > 0
+								? { chargeConsumption: manager.chargeConsumption }
+								: {}),
+						},
 					},
+					system: {
+						actorName: this.actor?.name ?? '',
+						actorType: this.actor?.type ?? '',
+						activation,
+						image: this.img || 'icons/svg/item-bag.svg',
+						incomingReactions: [
+							...(incomingReactions ?? []),
+							...(dualWieldKeep ? [dualWieldKeep.entry] : []),
+						],
+						...(dualWieldKeep ? { pendingKeep: dualWieldKeep.pendingKeep } : {}),
+						rerolls: rerollHistory?.rerolls ?? [],
+						rollChanges: rerollHistory?.rollChanges ?? [],
+						discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+						primaryDieBonuses: primaryDieBonuses ?? [],
+						isCritical,
+						isMiss,
+						permissions: this.permission,
+						rollMode: options.rollMode ?? 0,
+						targets,
+					},
+					type: 'base',
 				},
-				system: {
-					actorName: this.actor?.name ?? '',
-					actorType: this.actor?.type ?? '',
-					activation,
-					image: this.img || 'icons/svg/item-bag.svg',
-					incomingReactions: [
-						...(incomingReactions ?? []),
-						...(dualWieldKeep ? [dualWieldKeep.entry] : []),
-					],
-					...(dualWieldKeep ? { pendingKeep: dualWieldKeep.pendingKeep } : {}),
-					rerolls: rerollHistory?.rerolls ?? [],
-					rollChanges: rerollHistory?.rollChanges ?? [],
-					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-					primaryDieBonuses: primaryDieBonuses ?? [],
-					isCritical,
-					isMiss,
-					permissions: this.permission,
-					rollMode: options.rollMode ?? 0,
-					targets,
-				},
-				type: 'base',
-			},
-			await this.prepareChatCardData(options, manager),
-		);
+				await this.prepareChatCardData(options, manager),
+			);
 
-		if (shouldHide) {
-			// Whisper to GM users only
-			const gmUsers = game.users?.filter((u) => u.isGM).map((u) => u.id) ?? [];
-			(chatData as Record<string, unknown>).whisper = gmUsers;
+			if (shouldHide) {
+				// Whisper to GM users only
+				const gmUsers = game.users?.filter((u) => u.isGM).map((u) => u.id) ?? [];
+				(chatData as Record<string, unknown>).whisper = gmUsers;
+			}
+
+			card = await this._createActivationCard(chatData, rolls, activation, {
+				rolls,
+				isCritical,
+				isMiss,
+				discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+				targets: Array.from(game.user?.targets ?? []),
+				...useContext,
+			});
+		} catch (error) {
+			// The use did not happen, so it costs nothing.
+			await giveBack(this.actor, receipt).catch((refundError) =>
+				console.error('Nimble | Could not give back the cost of a failed use.', refundError),
+			);
+			throw error;
 		}
-
-		const card = await this._createActivationCard(chatData, rolls, activation, {
-			rolls,
-			isCritical,
-			isMiss,
-			discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-			targets: Array.from(game.user?.targets ?? []),
-			...useContext,
-		});
 		await this._afterUse(card, manager);
 		return card;
 	}
@@ -404,9 +416,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		return {};
 	}
 
-	/** Pay what this kind costs to use, after the gate allows it. False stops the use. */
-	protected async _payForUse(_manager: ItemActivationManager): Promise<boolean> {
-		return true;
+	/** Pay what this kind costs to use, after the gate allows it. Null stops the use. */
+	protected async _payForUse(_manager: ItemActivationManager): Promise<CostReceipt | null> {
+		return receiptOf();
 	}
 
 	/** Whether a healing use with no target picked heals the user, as a potion does. */

@@ -20,8 +20,8 @@ function hero() {
 
 async function open(choice: object, paid: object | null = {}, actor = hero()) {
 	vi.resetModules();
-	const payRerollCost = vi.fn(async () => paid);
-	const refund = vi.fn(async () => undefined);
+	const payCost = vi.fn(async () => paid);
+	const giveBack = vi.fn(async () => undefined);
 	vi.doMock('#documents/dialogs/ChoiceDialog.svelte.js', () => ({
 		default: class {
 			promise = Promise.resolve(choice);
@@ -36,13 +36,12 @@ async function open(choice: object, paid: object | null = {}, actor = hero()) {
 			woundCost: 0,
 			heroicReaction: '',
 		}),
-		payRerollCost,
-		refundRerollCost: refund,
 	}));
+	vi.doMock('../../cost/costLedger.js', () => ({ payCost, giveBack }));
 	const { openDemandControl } = await import('../openDemandControl.js');
 	const { chosenOptions, reactionUsedThisRound } = await import('../demandControl.js');
 	await openDemandControl(actor);
-	return { actor, payRerollCost, refund, chosenOptions, reactionUsedThisRound };
+	return { actor, payCost, giveBack, chosenOptions, reactionUsedThisRound };
 }
 
 describe('openDemandControl with the Reaction tick', () => {
@@ -62,15 +61,16 @@ describe('openDemandControl with the Reaction tick', () => {
 		globals.ChatMessage = savedChatMessage;
 		vi.doUnmock('#documents/dialogs/ChoiceDialog.svelte.js');
 		vi.doUnmock('../../reroll/rerollCost.js');
+		vi.doUnmock('../../cost/costLedger.js');
 	});
 
 	it('pays 1 action and uses up no heroic reaction', async () => {
-		const { actor, payRerollCost, reactionUsedThisRound } = await open({
+		const { actor, payCost, reactionUsedThisRound } = await open({
 			option: 'no',
 			asReaction: true,
 		});
 
-		expect(payRerollCost).toHaveBeenCalledWith(
+		expect(payCost).toHaveBeenCalledWith(
 			actor,
 			expect.objectContaining({ actionCost: 1, heroicReaction: '' }),
 		);
@@ -78,9 +78,9 @@ describe('openDemandControl with the Reaction tick', () => {
 	});
 
 	it('pays nothing with no tick', async () => {
-		const { actor, payRerollCost, reactionUsedThisRound } = await open({ option: 'no' });
+		const { actor, payCost, reactionUsedThisRound } = await open({ option: 'no' });
 
-		expect(payRerollCost).not.toHaveBeenCalled();
+		expect(payCost).not.toHaveBeenCalled();
 		expect(reactionUsedThisRound(actor)).toBe(false);
 	});
 
@@ -97,13 +97,13 @@ describe('openDemandControl with the Reaction tick', () => {
 
 	it('gives the action back and records nothing when the cantrip window is closed', async () => {
 		const actor = hero();
-		const { chosenOptions, reactionUsedThisRound, refund } = await open(
+		const { chosenOptions, reactionUsedThisRound, giveBack } = await open(
 			{ option: 'iInsist', cantripId: 'a', asReaction: true },
 			{},
 			actor,
 		);
 
-		expect(refund).toHaveBeenCalled();
+		expect(giveBack).toHaveBeenCalled();
 		expect(chosenOptions(actor)).toEqual([]);
 		expect(reactionUsedThisRound(actor)).toBe(false);
 	});

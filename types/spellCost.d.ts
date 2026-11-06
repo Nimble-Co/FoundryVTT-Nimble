@@ -85,4 +85,6 @@ export interface SpellCostOutcome {
 	/** The pool's current value when the cast would overdraw it. */
 	available?: number;
 	failure?: SpellCostFailure;
+	/** What the spend took from Mana or the pool. Absent when nothing was taken. */
+	spent?: number;
 }

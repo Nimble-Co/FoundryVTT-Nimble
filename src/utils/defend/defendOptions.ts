@@ -2,10 +2,11 @@ import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
+import { payCost } from '../cost/costLedger.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { canPayRerollCost, payRerollCost, type RerollCost } from '../reroll/rerollCost.js';
+import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
 import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
 import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
@@ -161,7 +162,7 @@ export async function payDefendOption(
 	pick: DefendOptionPick,
 ): Promise<DefendOptionUse | null> {
 	const cost = pick.rule.optionCost;
-	const paid = await payRerollCost(actor, cost);
+	const paid = await payCost(actor, cost);
 	if (!paid) {
 		ui.notifications?.warn(localize('NIMBLE.chat.defend.cannotPay', { label: pick.label }));
 		return null;

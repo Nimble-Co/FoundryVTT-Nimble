@@ -3,12 +3,12 @@ import applyConditionToActor, { type ConditionStart } from '../actor/applyCondit
 import { defineCardOperation, rejectCardRequest } from '../chat/cardOperations.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
+import { giveBack } from '../cost/costLedger.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
-import { refundRerollCost } from '../reroll/rerollCost.js';
 import {
 	cardTakesDefends,
 	type DefendOptionUse,
@@ -260,7 +260,7 @@ export async function refundUses(uses: readonly DefendOptionUse[]): Promise<void
 	for (const use of uses) {
 		if (!use.cost || !use.paid) continue;
 		const actor = fromUuidSync(use.actorUuid) as Actor.Implementation | null;
-		if (actor) await refundRerollCost(actor, use.cost, use.paid);
+		if (actor) await giveBack(actor, { cost: use.cost, paid: use.paid });
 	}
 }
 

@@ -1,8 +1,8 @@
+import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
 import { markEffectNodesForRemoval } from './markEffectNodesForRemoval.js';
 import { reconstructEffectsTree } from './reconstructEffectsTree.js';
-import type { EffectNode } from '#types/effectTree.js';
 
 export async function deleteEffectNode(
 	document: NimbleBaseItem,

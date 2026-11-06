@@ -157,6 +157,24 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		expect(ui.notifications?.error).toHaveBeenCalledTimes(1);
 	});
 
+	it('gives the Mana back when the card fails to post', async () => {
+		setResourceSpendingAutomation(true);
+		const spellLike = createSpellLike({ tier: 2, currentMana: 5 });
+		const mana = spellLike.actor.system.resources.mana;
+		spellLike.actor.update.mockImplementation(async (changes: Record<string, number>) => {
+			mana.current = changes['system.resources.mana.current'];
+		});
+		const failure = new Error('card failed');
+		spellLike._createActivationCard.mockRejectedValue(failure);
+
+		await expect(activateSpell(spellLike)).rejects.toBe(failure);
+
+		expect(spellLike.actor.update.mock.calls).toEqual([
+			[{ 'system.resources.mana.current': 3 }],
+			[{ 'system.resources.mana.current': 5 }],
+		]);
+	});
+
 	it('never deducts mana for a cantrip even with resource-spending automation on', async () => {
 		setResourceSpendingAutomation(true);
 		const spellLike = createSpellLike({ tier: 0, currentMana: 5 });
