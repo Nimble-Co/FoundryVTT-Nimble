@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellCostActorLike, SpellLike as SpellCostSpellLike } from '#types/spellCost.d.ts';
 import { ItemActivationManager } from '../../../managers/ItemActivationManager.js';
 import { resolveSpellCost } from '../../../utils/spell/spellCost.js';
+import { NimbleBaseItem } from '../base.svelte.js';
 import { NimbleSpellItem } from '../spell.js';
 
 interface SpellLike {
@@ -55,6 +56,8 @@ async function activateSpell(spellLike: SpellLike): Promise<void> {
 	// The stubbed manager resolves the cost for whichever spell is being
 	// activated, so name it here rather than as a side effect of building one.
 	activatingSpell = spellLike;
+	// The spell's own steps (its cost, its hook context) come from its prototype.
+	Object.setPrototypeOf(spellLike, NimbleSpellItem.prototype);
 	await NimbleSpellItem.prototype.activate.call(spellLike as unknown as NimbleSpellItem, {});
 }
 
@@ -161,5 +164,62 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		await activateSpell(spellLike);
 
 		expect(spellLike.actor.update).not.toHaveBeenCalled();
+	});
+
+	it('gives the hooks the upcast and the free use, as every item use does', async () => {
+		setResourceSpendingAutomation(false);
+		const spellLike = createSpellLike({ tier: 0, currentMana: 5 });
+
+		await activateSpell(spellLike);
+
+		const preUse = (Hooks.call as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[2];
+		expect(preUse).toMatchObject({ freeUse: false });
+		expect(preUse).toHaveProperty('upcast');
+		const useContext = spellLike._createActivationCard.mock.calls[0][3];
+		expect(useContext).toMatchObject({ freeUse: false });
+		expect(useContext).toHaveProperty('upcast');
+	});
+
+	it('targets no one for a healing spell with no target picked', async () => {
+		setResourceSpendingAutomation(false);
+		vi.mocked(ItemActivationManager.prototype.getData).mockResolvedValue({
+			activation: { effects: [{ type: 'healing' }] },
+			rolls: [],
+			rollHidden: false,
+			incomingReactions: [],
+		} as never);
+		const spellLike = createSpellLike({ tier: 0, currentMana: 5 });
+		const getActiveTokens = vi.fn(() => [{ document: { uuid: 'Token.caster' } }]);
+		Object.assign(spellLike.actor, { getActiveTokens });
+
+		await activateSpell(spellLike);
+
+		const chatData = spellLike._createActivationCard.mock.calls[0][0] as {
+			system: { targets: string[] };
+		};
+		expect(chatData.system.targets).toEqual([]);
+		expect(getActiveTokens).not.toHaveBeenCalled();
+	});
+
+	it('still targets the user for a healing item that is not a spell', async () => {
+		setResourceSpendingAutomation(false);
+		vi.mocked(ItemActivationManager.prototype.getData).mockResolvedValue({
+			activation: { effects: [{ type: 'healing' }] },
+			rolls: [],
+			rollHidden: false,
+			incomingReactions: [],
+		} as never);
+		const potionLike = createSpellLike({ tier: 0, currentMana: 5 });
+		Object.assign(potionLike.actor, {
+			getActiveTokens: vi.fn(() => [{ document: { uuid: 'Token.caster' } }]),
+		});
+		Object.setPrototypeOf(potionLike, NimbleBaseItem.prototype);
+
+		await NimbleBaseItem.prototype.activate.call(potionLike as unknown as NimbleBaseItem, {});
+
+		const chatData = potionLike._createActivationCard.mock.calls[0][0] as {
+			system: { targets: string[] };
+		};
+		expect(chatData.system.targets).toEqual(['Token.caster']);
 	});
 });
