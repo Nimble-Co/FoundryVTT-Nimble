@@ -449,6 +449,24 @@ describe('_populateDerivedTags — self / target state tags', () => {
 			expect(stowed.has('target:armor:none')).toBe(true);
 		});
 
+		function shieldItem(equipped: boolean) {
+			return {
+				isType: (t: string) => t === 'object',
+				identifier: 'iron-shield',
+				system: { objectType: 'shield', equipped },
+				rules: new Map(),
+			};
+		}
+
+		it('gives self:shield only for an equipped shield', () => {
+			const held = runCharacterPopulate([shieldItem(true) as unknown as ItemStub]);
+			expect(held.has('self:shield')).toBe(true);
+			expect(held.has('self:noShield')).toBe(false);
+			const stowed = runCharacterPopulate([shieldItem(false) as unknown as ItemStub]);
+			expect(stowed.has('self:shield')).toBe(false);
+			expect(stowed.has('self:noShield')).toBe(true);
+		});
+
 		it('adds subclass:<identifier> for each subclass item', () => {
 			const tags = runCharacterPopulate([
 				makeItemStub('subclass', 'path-of-the-mountainheart'),

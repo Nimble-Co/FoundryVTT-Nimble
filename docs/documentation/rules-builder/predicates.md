@@ -26,7 +26,7 @@ These are the tag families that exist:
 | `ancestry:dwarf` | The character's ancestry, by identifier. |
 | `background:soldier` | The character's background, by identifier. |
 | `armor:equipped` / `armor:unarmored` | Whether the character is wearing anything that actually provides armor. Exactly one of these is always present. |
-| `self:shield` / `self:noShield` | Whether the character carries a shield. |
+| `self:shield` / `self:noShield` | Whether the character has a shield equipped. A shield that is only carried counts as no shield. |
 | `strength:3`, `dexterity:1`, `intelligence:0`, `will:4` | The character's current stat modifiers. Some rule types apply before stat modifiers are computed; the builder shows a warning when a condition on these tags cannot work for the chosen rule type. |
 | `proficiency:armor:...`, `proficiency:weapon:...`, `proficiency:language:...` | Each proficiency the character has. |
 | `self:emberChargePool:2` | How many charges a charge pool currently holds, one tag per pool, named after the pool's identifier. |
