@@ -1,15 +1,10 @@
+import type { AutomaticRerollTarget } from '#types/automaticReroll.d.ts';
 import type { RollChange } from '../incomingReactions/incomingReactionEntry.js';
 import { newRollChanges } from './modifyReroll.js';
 import type { AutomaticReroll, RerollingActor } from './rerollEntries.js';
-import { type RerollStepDone, type RerollStepInput, rerollWithRule } from './rerollStep.js';
+import { type RerollStepDone, rerollWithRule } from './rerollStep.js';
 import { applyGrants, grantsForUse } from './rerollUseGrants.js';
 import type { RollUseKind } from './rollToReroll.js';
-
-/** The roll an automatic Reroll replaces, and how to make its new roll. */
-type AutomaticRerollTarget<TRoll> = Pick<
-	RerollStepInput<TRoll>,
-	'replaced' | 'previousResult' | 'makeRoll' | 'readNewDie'
->;
 
 /** Where a chain of automatic Rerolls reads its roll and puts each new one. */
 interface AutomaticRerollChain<TRoll, TTarget extends AutomaticRerollTarget<TRoll>> {
@@ -74,4 +69,4 @@ async function chainAutomaticRerolls<TRoll, TTarget extends AutomaticRerollTarge
 	}
 }
 
-export { type AutomaticRerollChain, type AutomaticRerollTarget, chainAutomaticRerolls };
+export { chainAutomaticRerolls };

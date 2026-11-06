@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AutomaticRerollTarget } from '#types/automaticReroll.d.ts';
 import type {
 	IncomingReactionEntry,
 	RerollRecord,
 } from '../../incomingReactions/incomingReactionEntry.js';
-import { type AutomaticRerollTarget, chainAutomaticRerolls } from '../automaticRerolls.js';
+import { chainAutomaticRerolls } from '../automaticRerolls.js';
 import type { AutomaticReroll, RerollRuleLike } from '../rerollEntries.js';
 
 const testGlobals = globalThis as unknown as {

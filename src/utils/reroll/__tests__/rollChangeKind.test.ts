@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RerollRuleLike } from '../rerollEntries.js';
-import { rollChangeKindOf } from '../rollChangeKind.js';
+import { type RerollRuleLike, rollChangeKindOf } from '../rerollEntries.js';
 
 describe('rollChangeKindOf', () => {
 	it.each<[RerollRuleLike, string]>([

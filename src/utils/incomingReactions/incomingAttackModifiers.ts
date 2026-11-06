@@ -1,8 +1,9 @@
+import type { AutomaticRerollTarget } from '#types/automaticReroll.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { IncomingAttackModifier } from '../../models/rules/modifyIncomingAttack.js';
 import { appendExtraDamageToRoll } from '../damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../damage/missThreshold.js';
-import { type AutomaticRerollTarget, chainAutomaticRerolls } from '../reroll/automaticRerolls.js';
+import { chainAutomaticRerolls } from '../reroll/automaticRerolls.js';
 import { rollerTokenOf, scanRerollAllies } from '../reroll/rerollAllies.js';
 import {
 	type AutomaticReroll,

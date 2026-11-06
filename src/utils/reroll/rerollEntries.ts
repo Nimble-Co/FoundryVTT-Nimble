@@ -75,6 +75,27 @@ function rollUseOfRule(rule: RerollRuleLike): RollUse | undefined {
 	return rule.rollEffect ? 'effect' : rollUseOf(rule.type);
 }
 
+/** What using a Change This Roll row does. The GM runs the row by this kind alone. */
+function rollChangeKindOf(
+	rule: RerollRuleLike,
+):
+	| 'reroll'
+	| 'change'
+	| 'crit'
+	| 'result'
+	| 'effect'
+	| 'critDiceSave'
+	| 'keepAmount'
+	| 'optionWindow' {
+	const use = rollUseOfRule(rule);
+	if (use !== 'effect') return use ?? 'reroll';
+	const effect = rule.rollEffect;
+	if (effect === 'critDiceSave' || effect === 'keepAmount' || effect === 'optionWindow') {
+		return effect;
+	}
+	return 'effect';
+}
+
 /** A roll use as the outcome gate reads it. */
 interface RollUseGate {
 	use?: RollUse;
@@ -561,6 +582,7 @@ export {
 	collectRerollEntries,
 	findRerollRule,
 	isRollUseRule,
+	rollChangeKindOf,
 	rollUseOfRule,
 	MAKE_CRIT_RULE_TYPE,
 	nextAutomaticReroll,

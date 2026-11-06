@@ -73,6 +73,7 @@ import {
 	type RerollRollContext,
 	type RerollRollOutcome,
 	type RerollRuleLike,
+	rollChangeKindOf,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -85,7 +86,6 @@ import {
 	rerollWithRule,
 } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
-import { rollChangeKindOf } from '#utils/reroll/rollChangeKind.js';
 import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
 import {
 	newResultChange,
@@ -352,14 +352,7 @@ export class CardRerolls {
 			discardedCritTriggers: history.discardedCritTriggers,
 			outcome: prepared.context,
 		};
-		if (options.chain !== false) {
-			await this.runAutomaticReroll(
-				placed.automatic,
-				placed.entries,
-				placed.discardedCritTriggers,
-				placed.outcome,
-			);
-		}
+		if (options.chain !== false) await this.runAutomaticReroll(placed);
 		return placed;
 	}
 
@@ -611,20 +604,10 @@ export class CardRerolls {
 	 * as at roll time. Runs after the card is written; a failure here does not
 	 * undo the reroll before it.
 	 */
-	async runAutomaticReroll(
-		automatic: AutomaticReroll[],
-		entries: IncomingReactionEntry[],
-		earlierCritTriggers: boolean,
-		roll: RerollRollOutcome,
-	): Promise<void> {
+	async runAutomaticReroll(placed: PlacedReroll): Promise<void> {
 		const rollTarget = this.#rerollTarget();
 		if (!rollTarget) return;
-		let card: PlacedReroll = {
-			automatic,
-			entries,
-			discardedCritTriggers: earlierCritTriggers,
-			outcome: roll,
-		};
+		let card = placed;
 		const context = rollTarget.context();
 		await chainAutomaticRerolls<unknown, RerollableRoll>({
 			rollKind: context.roll.kind,
