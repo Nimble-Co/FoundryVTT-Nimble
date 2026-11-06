@@ -322,7 +322,7 @@ describe('rerollCost', () => {
 			const paid = await payCost(asActor, full);
 			if (!paid) throw new Error('expected the cost to be paid');
 
-			await giveBack(asActor, full, paid);
+			await giveBack(asActor, { cost: full, paid: paid });
 
 			expect(item.flags.nimble.chargePools.sand.current).toBe(2);
 			expect(actor.system.resources.mana.current).toBe(3);
@@ -344,7 +344,7 @@ describe('rerollCost', () => {
 			if (!paid) throw new Error('expected the cost to be paid');
 			combat.combatant.system.actions.base.current = 0;
 
-			await giveBack(asActor, reaction, paid);
+			await giveBack(asActor, { cost: reaction, paid: paid });
 
 			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 				{
@@ -391,7 +391,7 @@ describe('rerollCost', () => {
 			expect(combatant.system.actions.base.current).toBe(1);
 			expect(combatant.system.actions.pendingDelta).toBe(0);
 			if (!paid) throw new Error('expected the cost to be paid');
-			await giveBack(asActor, action, paid);
+			await giveBack(asActor, { cost: action, paid: paid });
 			expect(combatant.system.actions.base.current).toBe(2);
 		});
 
@@ -402,7 +402,7 @@ describe('rerollCost', () => {
 			expect(combatant.system.actions.base.current).toBe(3);
 			expect(combatant.system.actions.pendingDelta).toBe(-1);
 			if (!paid) throw new Error('expected the cost to be paid');
-			await giveBack(asActor, action, paid);
+			await giveBack(asActor, { cost: action, paid: paid });
 			expect(combatant.system.actions.pendingDelta).toBe(0);
 		});
 
@@ -514,7 +514,7 @@ describe('rerollCost', () => {
 			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([]);
 			if (!paid) throw new Error('expected the cost to be paid');
 
-			await giveBack(asActor, expend, paid);
+			await giveBack(asActor, { cost: expend, paid: paid });
 			expect(item.flags[SYSTEM_ID].dicePools.judgment.faces).toEqual([4, 6]);
 		});
 	});

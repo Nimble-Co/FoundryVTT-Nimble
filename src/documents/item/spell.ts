@@ -1,10 +1,11 @@
 import { SYSTEM_ID } from '#system';
+import type { CostReceipt } from '#types/costReceipt.d.ts';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
 import { CHAOS_INVOKED_FLAG, CHAOS_TICKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { type CostReceipt, noCostReceipt } from '../../utils/cost/costLedger.js';
+import { receiptOf } from '../../utils/cost/costLedger.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
@@ -45,7 +46,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 	 * class-declared pool, and honours the resource spending automation setting.
 	 */
 	protected override async _payForUse(manager: ItemActivationManager): Promise<CostReceipt | null> {
-		if (this.system.tier <= 0 || !this.actor) return noCostReceipt();
+		if (this.system.tier <= 0 || !this.actor) return receiptOf();
 		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
 		const payment = await paySpellCost(this.actor, spellCost, {
 			confirmOverdraft: (available) =>
@@ -56,7 +57,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					damage: previewOverdraftDamage(this.actor!, spellCost),
 				}),
 		});
-		if (payment.paid) return payment.receipt ?? noCostReceipt();
+		if (payment.paid) return payment.receipt ?? receiptOf();
 		if (payment.failure) {
 			const messageKeys: Record<SpellCostFailure['code'], string> = {
 				poolMissing: 'NIMBLE.charges.notifications.poolMissing',

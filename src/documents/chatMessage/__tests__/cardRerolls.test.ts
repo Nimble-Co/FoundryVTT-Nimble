@@ -269,7 +269,7 @@ describe('Keep Amount row', () => {
 
 		await use(host, entry);
 
-		expect(giveBack).toHaveBeenCalledWith(roller, COST, PAID);
+		expect(giveBack).toHaveBeenCalledWith(roller, { cost: COST, paid: PAID });
 		expect(rejectedWith()).toEqual(['NIMBLE.chat.incomingReactions.useFailed']);
 		expect(host.update).not.toHaveBeenCalled();
 	});
@@ -326,7 +326,7 @@ describe('Crit Dice save row', () => {
 
 		await use(host, entry);
 
-		expect(giveBack).toHaveBeenCalledWith(roller, COST, PAID);
+		expect(giveBack).toHaveBeenCalledWith(roller, { cost: COST, paid: PAID });
 		expect(entryOn(host, entry.id)?.used).toBe(false);
 		expect(host.update).not.toHaveBeenCalled();
 		expect(rejectCardRequest).not.toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { CostReceipt } from '#types/costReceipt.d.ts';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
@@ -12,7 +13,7 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
-import { type CostReceipt, giveBack, noCostReceipt } from '../../utils/cost/costLedger.js';
+import { giveBack, receiptOf } from '../../utils/cost/costLedger.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
 /** The card types whose schema carries `system.concentration`. */
@@ -401,7 +402,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			});
 		} catch (error) {
 			// The use did not happen, so it costs nothing.
-			await giveBack(this.actor, receipt.cost, receipt.paid);
+			await giveBack(this.actor, receipt).catch((refundError) =>
+				console.error('Nimble | Could not give back the cost of a failed use.', refundError),
+			);
 			throw error;
 		}
 		await this._afterUse(card, manager);
@@ -415,7 +418,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 	/** Pay what this kind costs to use, after the gate allows it. Null stops the use. */
 	protected async _payForUse(_manager: ItemActivationManager): Promise<CostReceipt | null> {
-		return noCostReceipt();
+		return receiptOf();
 	}
 
 	/** Whether a healing use with no target picked heals the user, as a potion does. */

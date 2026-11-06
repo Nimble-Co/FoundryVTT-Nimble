@@ -260,7 +260,7 @@ export async function refundUses(uses: readonly DefendOptionUse[]): Promise<void
 	for (const use of uses) {
 		if (!use.cost || !use.paid) continue;
 		const actor = fromUuidSync(use.actorUuid) as Actor.Implementation | null;
-		if (actor) await giveBack(actor, use.cost, use.paid);
+		if (actor) await giveBack(actor, { cost: use.cost, paid: use.paid });
 	}
 }
 

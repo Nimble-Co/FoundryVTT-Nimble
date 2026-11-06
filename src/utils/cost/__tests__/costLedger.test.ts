@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { giveBack, noCostReceipt, payCost, spendMana } from '../costLedger.js';
+import { giveBack, payCost, receiptOf, spendMana } from '../costLedger.js';
 
 const testGlobals = globalThis as unknown as {
 	game: { settings?: { get: ReturnType<typeof vi.fn> } };
@@ -48,7 +48,7 @@ describe('cost ledger', () => {
 
 		const paid = await payCost(actor as never, cost);
 		expect(actor.system.resources.mana.current).toBe(2);
-		await giveBack(actor as never, cost, paid!);
+		await giveBack(actor as never, { cost, paid: paid! });
 
 		expect(actor.system.resources.mana.current).toBe(5);
 	});
@@ -62,9 +62,7 @@ describe('cost ledger', () => {
 
 	it('gives back nothing for a use that cost nothing', async () => {
 		const actor = caster(5);
-		const { cost, paid } = noCostReceipt();
-
-		await giveBack(actor as never, cost, paid);
+		await giveBack(actor as never, receiptOf());
 
 		expect(actor.update).not.toHaveBeenCalled();
 	});

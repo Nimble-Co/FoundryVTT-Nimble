@@ -36,8 +36,10 @@ export async function spendSpellCost(
 	if (!validation.ok) return validation;
 
 	if (cost.type === 'mana') {
-		await spendMana(actor as never, cost.amount);
-		return { ok: true, overdrawn: false, spent: cost.amount };
+		if (await spendMana(actor as never, cost.amount)) {
+			return { ok: true, overdrawn: false, spent: cost.amount };
+		}
+		return validateSpellCost(actor, cost);
 	}
 
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));

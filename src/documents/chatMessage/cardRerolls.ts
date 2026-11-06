@@ -1114,7 +1114,7 @@ export class CardRerolls {
 			return false;
 		}
 		const givePaidBack = async () => {
-			if (cost && paid) await giveBack(actor, cost, paid);
+			if (cost && paid) await giveBack(actor, { cost, paid });
 		};
 		try {
 			if (await act(paid)) return true;
@@ -1362,17 +1362,16 @@ export class CardRerolls {
 		for (const change of line) {
 			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
 			if (!actor) continue;
-			await giveBack(
-				actor,
-				{
+			await giveBack(actor, {
+				cost: {
 					chargePoolIdentifier: change.chargePoolIdentifier,
 					chargeCost: change.paid.charges,
 					manaCost: change.paid.mana,
 					woundCost: change.paid.wounds,
 					heroicReaction: '',
 				},
-				{ ...change.paid, heroicReaction: null, action: null },
-			);
+				paid: { ...change.paid, heroicReaction: null, action: null },
+			});
 		}
 	}
 }

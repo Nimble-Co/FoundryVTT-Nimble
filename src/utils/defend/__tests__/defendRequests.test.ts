@@ -3,10 +3,10 @@ import type { DefendOptionUse } from '../defendRecords.js';
 
 // Setup loads these modules before a hoisted mock could apply.
 const applyCondition = vi.fn();
-const refundCost = vi.fn();
+const giveBack = vi.fn();
 vi.resetModules();
 vi.doMock('../../actor/applyConditionToActor.js', () => ({ default: applyCondition }));
-vi.doMock('../../cost/costLedger.js', () => ({ giveBack: refundCost }));
+vi.doMock('../../cost/costLedger.js', () => ({ giveBack: giveBack }));
 const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await import(
 	'../defendRequests.js'
 );
@@ -88,7 +88,7 @@ function request(fields: Record<string, unknown> = {}) {
 beforeEach(() => {
 	card = makeCard();
 	applyCondition.mockReset();
-	refundCost.mockReset();
+	giveBack.mockReset();
 	const globals = globalThis as unknown as Globals;
 	globals.fromUuidSync = vi.fn(
 		(uuid: string) => ({ 'Actor.pip': pip, 'Actor.bram': bram })[uuid] ?? null,
@@ -212,7 +212,7 @@ describe('Defend options on the card', () => {
 
 		await undoDefend('m1', record?.id ?? '');
 
-		expect(refundCost).toHaveBeenCalledWith(pip, paidUse.cost, paidUse.paid);
+		expect(giveBack).toHaveBeenCalledWith(pip, { cost: paidUse.cost, paid: paidUse.paid });
 		expect(card.system.defends).toEqual([]);
 	});
 
@@ -249,7 +249,7 @@ describe('Defend options on the card', () => {
 		const [after] = card.system.defends as { options: unknown[]; reminders: string[] }[];
 		expect(after?.options).toEqual([ally.use]);
 		expect(after?.reminders).toEqual(['Exploit: an enemy Interposes.']);
-		expect(refundCost).not.toHaveBeenCalled();
+		expect(giveBack).not.toHaveBeenCalled();
 	});
 
 	it('refuses the same ally option a second time and gives back what it paid', async () => {
@@ -261,8 +261,8 @@ describe('Defend options on the card', () => {
 		const [after] = card.system.defends as { options: unknown[]; reminders: string[] }[];
 		expect(after?.options).toEqual([ally.use]);
 		expect(after?.reminders).toEqual(['Exploit: an enemy Interposes.']);
-		expect(refundCost).toHaveBeenCalledTimes(1);
-		expect(refundCost).toHaveBeenCalledWith(bram, ally.use.cost, ally.use.paid);
+		expect(giveBack).toHaveBeenCalledTimes(1);
+		expect(giveBack).toHaveBeenCalledWith(bram, { cost: ally.use.cost, paid: ally.use.paid });
 	});
 
 	it('gives back what a refused Defend paid', async () => {
@@ -270,7 +270,7 @@ describe('Defend options on the card', () => {
 
 		expect(await requestDefend(request({ options: [paidUse] }))).toBe(false);
 
-		expect(refundCost).toHaveBeenCalledWith(pip, paidUse.cost, paidUse.paid);
+		expect(giveBack).toHaveBeenCalledWith(pip, { cost: paidUse.cost, paid: paidUse.paid });
 	});
 
 	it('keeps what a second Defend for the same hero paid: the first Defend holds it', async () => {
@@ -278,7 +278,7 @@ describe('Defend options on the card', () => {
 
 		expect(await requestDefend(request({ options: [paidUse] }))).toBe(false);
 
-		expect(refundCost).not.toHaveBeenCalled();
+		expect(giveBack).not.toHaveBeenCalled();
 	});
 
 	it('does not undo a Defend after its damage is applied', async () => {
@@ -288,7 +288,7 @@ describe('Defend options on the card', () => {
 
 		await undoDefend('m1', record?.id ?? '');
 
-		expect(refundCost).not.toHaveBeenCalled();
+		expect(giveBack).not.toHaveBeenCalled();
 		expect(card.system.defends).toHaveLength(1);
 	});
 });

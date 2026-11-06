@@ -38,7 +38,7 @@ export async function openDemandControl(
 		return;
 	}
 	if (!(await applyControlChoice(actor, choice))) {
-		if (paid) await giveBack(actor as never, cost, paid);
+		if (paid) await giveBack(actor as never, { cost: cost, paid: paid });
 		return;
 	}
 	if (paid) await recordReaction(actor);

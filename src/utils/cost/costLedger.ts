@@ -1,3 +1,4 @@
+import type { CostReceipt } from '#types/costReceipt.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { refundRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
@@ -20,26 +21,24 @@ import {
 	type PaidRerollCost,
 	poolToExpend,
 	type RerollCost,
-	type RerollPayer,
 } from '../reroll/rerollCost.js';
 
-/** What one use paid, kept to give it back later in the same flow. */
-interface CostReceipt {
-	cost: RerollCost;
-	paid: PaidRerollCost;
-}
+type RerollPayer = Actor | null | undefined;
 
-/** The receipt of a use that cost nothing. */
-function noCostReceipt(): CostReceipt {
+/** The receipt of Mana or pool charges a use took. With no amount, the use cost nothing. */
+function receiptOf(
+	taken: { mana?: number; charges?: number; chargePoolIdentifier?: string } = {},
+): CostReceipt {
+	const { mana = 0, charges = 0, chargePoolIdentifier = '' } = taken;
 	return {
 		cost: {
-			chargePoolIdentifier: '',
-			chargeCost: 0,
-			manaCost: 0,
+			chargePoolIdentifier,
+			chargeCost: charges,
+			manaCost: mana,
 			woundCost: 0,
 			heroicReaction: '',
 		},
-		paid: nothingPaid(),
+		paid: { ...nothingPaid(), mana, charges },
 	};
 }
 
@@ -148,7 +147,7 @@ async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReac
 }
 
 /** Give back what `payCost` charged. */
-async function giveBack(actor: RerollPayer, cost: RerollCost, paid: PaidRerollCost): Promise<void> {
+async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promise<void> {
 	if (paid.wounds > 0) {
 		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
 		if (wounds) {
@@ -182,7 +181,7 @@ async function payCost(
 ): Promise<PaidRerollCost | null> {
 	const paid = nothingPaid();
 	const fail = async () => {
-		await giveBack(actor, cost, paid);
+		await giveBack(actor, { cost, paid });
 		return null;
 	};
 
@@ -250,20 +249,22 @@ async function payCost(
  */
 async function giveBackPart(
 	actor: RerollPayer,
-	cost: RerollCost,
-	paid: PaidRerollCost,
+	{ cost, paid }: CostReceipt,
 	dieCount: number,
 	skipped: number,
 ): Promise<PaidRerollCost> {
 	const part = (amount: number) => (amount / dieCount) * skipped;
-	await giveBack(actor, cost, {
-		...paid,
-		charges: part(paid.charges),
-		mana: part(paid.mana),
-		wounds: part(paid.wounds),
-		heroicReaction: null,
-		action: null,
-		turnUse: false,
+	await giveBack(actor, {
+		cost,
+		paid: {
+			...paid,
+			charges: part(paid.charges),
+			mana: part(paid.mana),
+			wounds: part(paid.wounds),
+			heroicReaction: null,
+			action: null,
+			turnUse: false,
+		},
 	});
 	return {
 		...paid,
@@ -273,4 +274,4 @@ async function giveBackPart(
 	};
 }
 
-export { type CostReceipt, giveBack, giveBackPart, noCostReceipt, nothingPaid, payCost, spendMana };
+export { giveBack, giveBackPart, payCost, receiptOf, spendMana };

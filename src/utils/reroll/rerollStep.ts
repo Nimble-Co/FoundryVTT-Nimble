@@ -126,7 +126,7 @@ async function rerollWithRule<TRoll>(
 	let paid = cost ? await payCost(payer, cost, input.payOptions) : null;
 	if (cost && !paid) return { status: 'unpaid' };
 	const refund = async () => {
-		if (cost && paid) await giveBack(payer, cost, paid);
+		if (cost && paid) await giveBack(payer, { cost: cost, paid: paid });
 	};
 
 	try {
@@ -148,7 +148,7 @@ async function rerollWithRule<TRoll>(
 		const die = input.readNewDie ? input.readNewDie(roll) : primaryDieOf(rolled);
 		const skipped = (input.dieCount ?? 0) - (die.several?.length ?? input.dieCount ?? 0);
 		if (cost?.perDie && paid && skipped > 0) {
-			paid = await giveBackPart(payer, cost, paid, input.dieCount ?? 1, skipped);
+			paid = await giveBackPart(payer, { cost: cost, paid: paid }, input.dieCount ?? 1, skipped);
 		}
 		const previousWasCritical = replaced.isCritical === true;
 		const done: RerollStepDone<TRoll> = {

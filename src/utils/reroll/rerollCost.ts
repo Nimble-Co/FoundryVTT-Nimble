@@ -187,5 +187,4 @@ export {
 	rerollUsesLeft,
 	type PaidRerollCost,
 	type RerollCost,
-	type RerollPayer,
 };
