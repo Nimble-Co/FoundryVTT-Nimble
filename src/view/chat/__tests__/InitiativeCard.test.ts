@@ -100,8 +100,14 @@ function createMessage(system: Record<string, unknown> = {}, d20 = 5, total = 7)
 		},
 		rolls: [{ total, dice: [], terms: [{ faces: 20, results: [{ result: d20, active: true }] }] }],
 		reactive: null as unknown,
-		canStillUseReroll: vi.fn(() => true),
-		resultUseOf: vi.fn(() => ({ change: 'setTotal', value: 10, stat: '' })),
+		cardRerolls: {
+			canStillUseReroll: vi.fn(() => true),
+			resultUseOf: vi.fn(() => ({ change: 'setTotal', value: 10, stat: '' })),
+			rerollDiceToPick: vi.fn(() => null),
+			severalDiceToPick: vi.fn(() => null),
+			changeToPick: vi.fn(() => null),
+			rerollStatsToPick: vi.fn(() => null),
+		},
 		delete: vi.fn(),
 	};
 	message.reactive = message;
@@ -249,7 +255,7 @@ describe('Change This Roll on an Initiative card', () => {
 
 	it('has no control when the card says the row cannot apply', () => {
 		const message = createMessage();
-		message.canStillUseReroll.mockReturnValue(false);
+		message.cardRerolls.canStillUseReroll.mockReturnValue(false);
 		renderCard(message);
 
 		expect(controlButton()).toBeNull();

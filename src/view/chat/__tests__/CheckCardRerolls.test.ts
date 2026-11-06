@@ -123,7 +123,15 @@ function createMessage(system: Record<string, unknown> = {}) {
 		},
 		rolls: [{ total: 6, terms: [], formula: '1d20' }],
 		reactive: null as unknown,
-		canStillUseReroll: vi.fn(() => true),
+		cardRerolls: {
+			canStillUseReroll: vi.fn(() => true),
+			rerollDiceToPick: vi.fn(() => null),
+			severalDiceToPick: vi.fn(() => null),
+			changeToPick: vi.fn(() => null),
+			rerollStatsToPick: vi.fn(() => null),
+			resultUseOf: vi.fn(() => null),
+			addLeftOutReroll: vi.fn(async () => undefined),
+		} as Record<string, unknown> & { canStillUseReroll: ReturnType<typeof vi.fn> },
 		delete: vi.fn(),
 	};
 	message.reactive = message;
@@ -244,10 +252,10 @@ describe('rerolls on check cards', () => {
 
 	it('shows no control when the card says the reroll can no longer be used', () => {
 		const message = createMessage();
-		message.canStillUseReroll.mockReturnValue(false);
+		message.cardRerolls.canStillUseReroll.mockReturnValue(false);
 		renderSave(message);
 
-		expect(message.canStillUseReroll).toHaveBeenCalledWith(
+		expect(message.cardRerolls.canStillUseReroll).toHaveBeenCalledWith(
 			expect.objectContaining({ id: 'entry-brutality' }),
 		);
 		expect(controlButton()).toBeNull();
@@ -302,7 +310,8 @@ describe('rerolls on check cards', () => {
 	});
 
 	it('gives the focus back to the row when the die picker closes', async () => {
-		const message = Object.assign(createMessage(), {
+		const message = createMessage();
+		Object.assign(message.cardRerolls, {
 			rerollDiceToPick: vi.fn(() => [
 				{ term: 0, result: 0, faces: 20, value: 6, role: 'primary' },
 				{ term: 0, result: 1, faces: 20, value: 3, role: 'dropped' },
@@ -428,9 +437,11 @@ describe('rerolls on check cards', () => {
 		const d20 = { term: 0, result: 0, faces: 20, value: 6, role: 'kept' };
 
 		function changeMessage(incomingReactions: unknown[]) {
-			return Object.assign(createMessage({ incomingReactions }), {
+			const message = createMessage({ incomingReactions });
+			Object.assign(message.cardRerolls, {
 				changeToPick: vi.fn(() => ({ setsValue: true, dice: [d20] })),
 			});
+			return message;
 		}
 
 		it('lists the rerolls first, then the changes, with no icons', async () => {
@@ -516,7 +527,8 @@ describe('rerolls on check cards', () => {
 			const message = createMessage({
 				incomingReactions: [rerollEntry({ anotherStat: true })],
 			});
-			Object.assign(message, { id, rerollStatsToPick: vi.fn(() => STATS) });
+			Object.assign(message, { id });
+			Object.assign(message.cardRerolls, { rerollStatsToPick: vi.fn(() => STATS) });
 			return message;
 		}
 
@@ -618,7 +630,8 @@ describe('rerolls on check cards', () => {
 			const message = createMessage({
 				incomingReactions: [{ ...entry, ruleId: 'rule-seer', itemUuid: 'Item.seer' }],
 			});
-			Object.assign(message, { id: `row-${words}`, resultUseOf: vi.fn(() => use) });
+			Object.assign(message, { id: `row-${words}` });
+			Object.assign(message.cardRerolls, { resultUseOf: vi.fn(() => use) });
 			renderSave(message);
 			await openControl();
 

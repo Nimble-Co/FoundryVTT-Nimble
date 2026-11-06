@@ -276,13 +276,13 @@ describe('a reroll on a save card', () => {
 		setupWorld();
 		const message = createSaveCard();
 
-		expect(message.canStillUseReroll(entry() as never)).toBe(true);
+		expect(message.cardRerolls.canStillUseReroll(entry() as never)).toBe(true);
 	});
 
 	it('gives a card posted before rerolls nothing to use', () => {
 		setupWorld();
 		const message = createSaveCard({ actorUuid: null, tokenUuid: null, incomingReactions: [] });
 
-		expect(message.canStillUseReroll(entry() as never)).toBe(false);
+		expect(message.cardRerolls.canStillUseReroll(entry() as never)).toBe(false);
 	});
 });

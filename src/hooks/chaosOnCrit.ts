@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import { CHAOS_INVOKED_FLAG, canInvokeChaos, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
+import { pendingKeepOf } from '#utils/rolls/cardRollState.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 interface AttackCard {
@@ -22,7 +23,7 @@ const invoked = new Set<string>();
 
 export async function invokeChaosOnCrit(card: AttackCard): Promise<void> {
 	if (!card.id || card.system?.isCritical !== true || !isRuleAutomationEnabled()) return;
-	if (card.system.pendingKeep) return;
+	if (pendingKeepOf(card.system)) return;
 	if (invoked.has(card.id) || card.getFlag(SYSTEM_ID, CHAOS_INVOKED_FLAG)) return;
 	if (!isAttackAuthorClient(card)) return;
 	const actor = ChatMessage.getSpeakerActor(card.speaker as never);

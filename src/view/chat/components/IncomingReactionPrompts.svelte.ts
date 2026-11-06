@@ -17,9 +17,9 @@ import {
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
-	PendingKeep,
 	RerollRecord,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import { pendingKeepOf, resultRemovalRefusal } from '#utils/rolls/cardRollState.ts';
 import { resultChangesOf } from '#utils/rolls/resultChanges.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
@@ -72,9 +72,9 @@ export function createIncomingReactionPromptsState(
 	);
 	const text = createIncomingReactionText(
 		() => rerolls,
-		(entry) => message?.resultUseOf?.(entry) ?? null,
+		(entry) => message?.cardRerolls.resultUseOf(entry) ?? null,
 		(entry) => {
-			const use = entry.use === 'result' ? message?.resultUseOf?.(entry) : null;
+			const use = entry.use === 'result' ? message?.cardRerolls.resultUseOf(entry) : null;
 			return use && message?.reactive ? initiativeRowGain(message.reactive, use) : '';
 		},
 	);
@@ -168,12 +168,7 @@ export function createIncomingReactionPromptsState(
 	const bonusNotAdded = $derived(
 		primaryDieBonusNotAdded(primaryRoll?.options, rerolls, text.documentName),
 	);
-	const pendingKeep = $derived(
-		showsHistory
-			? ((message?.reactive?.system as { pendingKeep?: PendingKeep | null } | undefined)
-					?.pendingKeep ?? null)
-			: null,
-	);
+	const pendingKeep = $derived(showsHistory ? pendingKeepOf(message?.reactive?.system) : null);
 	const pendingLine = $derived(
 		pendingKeep
 			? rerollHistoryLines({
@@ -226,7 +221,7 @@ export function createIncomingReactionPromptsState(
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
 		if (!mayActHere(text.reactingActor(entry))) return false;
 		// A reroll the card no longer allows (outcome, side, cost) is hidden.
-		if (entry.kind === 'reroll') return message?.canStillUseReroll(entry) ?? false;
+		if (entry.kind === 'reroll') return message?.cardRerolls.canStillUseReroll(entry) ?? false;
 		return true;
 	}
 
@@ -235,9 +230,7 @@ export function createIncomingReactionPromptsState(
 	 * waits, and no damage stands once the damage is applied.
 	 */
 	function canRemoveResult(actorUuid: string, change: ResultChange): boolean {
-		if (pendingKeep) return false;
-		const system = message?.reactive?.system as { damageApplied?: boolean } | undefined;
-		if (change.change === 'noDamage' && system?.damageApplied === true) return false;
+		if (resultRemovalRefusal(message?.reactive?.system, change)) return false;
 		if (game.user?.isGM) return true;
 		return (fromUuidSync(actorUuid) as Actor.Implementation | null)?.isOwner === true;
 	}
@@ -287,9 +280,9 @@ export function createIncomingReactionPromptsState(
 	}
 
 	function rerollPicker(entry: IncomingReactionEntry): IncomingReactionPicking | null {
-		const stats = message?.rerollStatsToPick?.(entry) ?? null;
+		const stats = message?.cardRerolls.rerollStatsToPick(entry) ?? null;
 		if (stats?.length) return { entry, dice: [], stats, rolling: null, sent: false };
-		const several = message?.severalDiceToPick?.(entry) ?? null;
+		const several = message?.cardRerolls.severalDiceToPick(entry) ?? null;
 		if (several) {
 			return {
 				entry,
@@ -299,13 +292,13 @@ export function createIncomingReactionPromptsState(
 				several: { max: several.max, manaPerDie: several.manaPerDie },
 			};
 		}
-		const dice = message?.rerollDiceToPick?.(entry) ?? null;
+		const dice = message?.cardRerolls.rerollDiceToPick(entry) ?? null;
 		return dice && dice.length > 1 ? { entry, dice, rolling: null, sent: false } : null;
 	}
 
 	/** A change picks its die, then its value when the rule sets one; an add with one die goes at once. */
 	function changePicker(entry: IncomingReactionEntry): IncomingReactionPicking | null {
-		const pick = message?.changeToPick?.(entry) ?? null;
+		const pick = message?.cardRerolls.changeToPick(entry) ?? null;
 		const dice = pick?.dice ?? [];
 		if (!pick || !(dice.length > 1 || (pick.setsValue && dice.length === 1))) return null;
 		return {
@@ -329,7 +322,7 @@ export function createIncomingReactionPromptsState(
 			picking = opened;
 			return;
 		}
-		await sendReroll(entry, message?.rerollDiceToPick?.(entry)?.[0] ?? null);
+		await sendReroll(entry, message?.cardRerolls.rerollDiceToPick(entry)?.[0] ?? null);
 	}
 
 	async function useChange(entry: IncomingReactionEntry): Promise<void> {
@@ -338,7 +331,7 @@ export function createIncomingReactionPromptsState(
 			picking = opened;
 			return;
 		}
-		await sendReroll(entry, message?.changeToPick?.(entry)?.dice[0] ?? null);
+		await sendReroll(entry, message?.cardRerolls.changeToPick(entry)?.dice[0] ?? null);
 	}
 
 	/** Ask for the reroll or change. False when the player said no to the heroic reaction. */

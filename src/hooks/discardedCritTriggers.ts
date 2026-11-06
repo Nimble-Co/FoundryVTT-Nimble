@@ -1,5 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import { isActiveGM } from '../utils/isActiveGM.js';
+import { owesCritTriggers } from '../utils/rolls/cardRollState.js';
 
 /** The card fields that decide whether a discarded crit still owes its targets the crit triggers. */
 interface DiscardedCritCardSystem {
@@ -34,11 +35,7 @@ interface DiscardedCritTriggeredPayload {
  * A roll that hits fires them when its damage applies.
  */
 function owesTargetCritTriggers(system: DiscardedCritCardSystem | undefined): boolean {
-	return (
-		system?.discardedCritTriggers === true &&
-		system.discardedCritTriggersFired !== true &&
-		system.isMiss === true
-	);
+	return owesCritTriggers(system) && system?.isMiss === true;
 }
 
 function targetActorsOf(system: DiscardedCritCardSystem): Actor[] {

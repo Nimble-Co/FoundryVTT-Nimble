@@ -103,7 +103,7 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 			}),
 			detail: name ? localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name }) : null,
 			retired: first.retired,
-			canRemove: !first.retired && !first.automatic && input.canRemove(first.actorUuid, first),
+			canRemove: input.canRemove(first.actorUuid, first),
 		};
 	});
 }
