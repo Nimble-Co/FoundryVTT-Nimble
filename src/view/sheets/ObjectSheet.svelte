@@ -35,10 +35,8 @@
 		}));
 	}
 
-	const BODY_ARMOR_TYPES = ['cloth', 'leather', 'mail', 'plate'];
-
 	function getArmorTypeOptions() {
-		return BODY_ARMOR_TYPES.map((key) => ({
+		return CONFIG.NIMBLE.bodyArmorTypes.map((key) => ({
 			label: localize(CONFIG.NIMBLE.armorTypes[key]),
 			value: key,
 		}));
