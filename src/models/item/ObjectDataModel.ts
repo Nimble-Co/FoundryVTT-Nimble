@@ -232,13 +232,13 @@ class NimbleObjectData extends NimbleBaseItemData<
 		};
 	}
 
-	/** An armor type outside the list loads as blank, and a shield as the shield type. */
+	/** A shield loads as the shield type; another type outside the body armor types loads as blank. */
 	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
 		if (source.objectType === 'shield') {
 			source.armorType = 'shield';
 		} else if (typeof source.armorType === 'string') {
 			const armorType = source.armorType.trim().toLowerCase();
-			source.armorType = Object.hasOwn(CONFIG.NIMBLE.armorTypes, armorType) ? armorType : '';
+			source.armorType = CONFIG.NIMBLE.bodyArmorTypes.includes(armorType) ? armorType : '';
 		}
 		return NimbleBaseItemData.migrateData(source);
 	}

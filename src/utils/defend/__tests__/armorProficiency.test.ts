@@ -32,4 +32,8 @@ describe('wearsArmorWithoutProficiency', () => {
 	it('does not check armor that has no type', () => {
 		expect(wearsArmorWithoutProficiency(hero([armor('armor')], []))).toBe(false);
 	});
+
+	it('does not read body armor tagged as a shield as the shield type', () => {
+		expect(wearsArmorWithoutProficiency(hero([armor('armor', 'shield')], ['mail']))).toBe(false);
+	});
 });

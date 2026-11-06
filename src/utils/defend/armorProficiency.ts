@@ -12,8 +12,9 @@ interface ArmorWearer {
 /** The armor type of a worn armor or shield, or '' when the item does not say. */
 export function armorTypeOf(item: ArmorObject): string {
 	if (item.system?.objectType === 'shield') return 'shield';
-	if (item.system?.objectType === 'armor') return item.system.armorType ?? '';
-	return '';
+	if (item.system?.objectType !== 'armor') return '';
+	const armorType = item.system.armorType ?? '';
+	return CONFIG.NIMBLE.bodyArmorTypes.includes(armorType) ? armorType : '';
 }
 
 /**
