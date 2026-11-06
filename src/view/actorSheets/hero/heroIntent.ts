@@ -1,7 +1,7 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
-import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { ChatReactionId } from '#utils/heroicActions/reactions.js';
+import type { SheetIntent } from '../shared/sheetIntent.ts';
 import type { HeroDetail } from './heroBioTab.ts';
 import type { SpellsBy } from './heroSource.ts';
 /** The flags of the character that the Settings tab sets. */
@@ -44,20 +44,16 @@ export type HeroConfigureTarget =
 export type SheetReactionId = Exclude<ChatReactionId, 'interposeAndDefend'>;
 
 export type HeroIntent =
-	| { kind: 'setHp'; value: number }
-	| { kind: 'setTempHp'; value: number }
+	| SheetIntent<HeroSettingsFlag>
 	| { kind: 'setWounds'; value: number }
 	| { kind: 'setMana'; value: number }
 	| { kind: 'setHitDice'; value: number }
 	| { kind: 'rollHitDice' }
 	| { kind: 'editHitDice' }
-	| { kind: 'setPoolCharges'; poolId: string; value: number }
 	| { kind: 'rollPoolCharge'; poolId: string; label: string }
 	| { kind: 'rollIntoDicePool'; poolId: string; label: string }
 	| { kind: 'setDiceFaces'; poolId: string; faces: number[] }
 	| { kind: 'configure'; target: HeroConfigureTarget }
-	| { kind: 'rename'; name: string }
-	| { kind: 'changePortrait'; skipTokenizer: boolean }
 	| { kind: 'levelUp' }
 	| { kind: 'revertLevelUp' }
 	| { kind: 'correctLevels' }
@@ -67,22 +63,13 @@ export type HeroIntent =
 	| { kind: 'addAction' }
 	| { kind: 'endTurn' }
 	| { kind: 'rollAbilityCheck'; ability: AbilityKeyType }
-	| { kind: 'rollSave'; save: SaveKeyType }
 	| { kind: 'rollSkill'; skill: SkillKeyType }
-	| { kind: 'activate'; itemId: string }
 	| { kind: 'endToggle'; itemId: string; ruleId: string }
-	| { kind: 'openItem'; itemId: string }
 	| { kind: 'createItem'; itemType: 'spell' | 'object' | 'feature' }
-	| { kind: 'deleteItem'; itemId: string }
 	| { kind: 'toggleEquip'; itemId: string }
 	| { kind: 'setQuantity'; itemId: string; value: number }
 	| { kind: 'storeIn'; itemId: string; containerId: string }
-	| { kind: 'setCurrency'; coin: string; value: number }
-	| { kind: 'endEffect'; effectId: string }
-	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
-	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
-	| { kind: 'setFlag'; flag: HeroSettingsFlag; value: boolean | number }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
 	| { kind: 'setInspiration'; value: boolean }
 	| { kind: 'dropItem'; data: Record<string, unknown>; containerId: string | null }

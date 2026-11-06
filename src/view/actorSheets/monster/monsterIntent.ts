@@ -1,4 +1,4 @@
-import type { SaveKeyType } from '#types/saveKey.js';
+import type { SheetIntent } from '../shared/sheetIntent.ts';
 
 /** The flags of the monster that the Settings tab sets. */
 export type MonsterSettingsFlag =
@@ -26,24 +26,11 @@ export interface MonsterSortUpdate {
  * `perform` is the only place that acts on them.
  */
 export type MonsterIntent =
-	| { kind: 'setHp'; value: number }
-	| { kind: 'setTempHp'; value: number }
+	| SheetIntent<MonsterSettingsFlag>
 	| { kind: 'setMaxHp'; value: number }
-	| { kind: 'rename'; name: string }
-	| { kind: 'changePortrait'; skipTokenizer: boolean }
 	| { kind: 'setArmor'; armor: MonsterArmor }
 	| { kind: 'configure'; target: MonsterConfigureTarget }
 	| { kind: 'createFeature' }
-	| { kind: 'deleteItem'; itemId: string }
-	| { kind: 'setPoolCharges'; poolId: string; value: number }
-	| { kind: 'rollSave'; save: SaveKeyType }
-	| { kind: 'activate'; itemId: string }
-	| { kind: 'openItem'; itemId: string }
-	| { kind: 'reorder'; updates: MonsterSortUpdate[] }
-	| { kind: 'endEffect'; effectId: string }
-	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
-	| { kind: 'setCondition'; conditionId: string; active: boolean }
-	| { kind: 'setFlag'; flag: MonsterSettingsFlag; value: boolean | number }
-	| { kind: 'setCurrency'; coin: string; value: number };
+	| { kind: 'reorder'; updates: MonsterSortUpdate[] };
 
 export type MonsterPerform = (intent: MonsterIntent) => void | Promise<void>;

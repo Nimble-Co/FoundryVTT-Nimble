@@ -76,11 +76,13 @@ An intent is plain data that says what the user asks for, for example `{ kind: '
 
 `hero/heroIntent.ts` has the `HeroIntent` union. `hero/heroPerform.ts` has `createHeroPerform(actor)`, the dispatcher. It is the only place with side effects: actor methods, `actor.update`, dialogs, pool helpers and combat helpers. Its `switch` has a `never` check, so a new intent kind does not compile until `perform` handles it.
 
+The intents that both sheets act on in the same way (HP, temporary HP, name, portrait, delete, pool charges, a save, activate, open, the effect actions, a settings flag, currency) are `SheetIntent` in `shared/sheetIntent.ts`. `HeroIntent` and `MonsterIntent` include it, and each `perform` hands them to `performSheetIntent` (`shared/sheetPerform.ts`) before its own `switch`.
+
 To add an intent:
 
-1. Add the kind to `HeroIntent`.
-2. Handle it in `createHeroPerform`.
-3. Add a test in `hero/__tests__/heroPerform.test.ts` that checks the Foundry call or the dialog.
+1. Add the kind to `HeroIntent`, or to `SheetIntent` (and its kind list) when both sheets act on it in the same way.
+2. Handle it in `createHeroPerform`, or in `performSheetIntent`.
+3. Add a test in `hero/__tests__/heroPerform.test.ts` that checks the Foundry call or the dialog (for a shared intent, also in `monster/__tests__/monsterPerform.test.ts`).
 4. Give the intent from the view function that has the control.
 
 UI state is not an intent. The tab, edit mode, the open rows (`openRows`; on a tab where the text starts open, the closed rows in `closedRows`), the open choice step, the ConfirmBar that asks and the row to flash are in `SheetUiState` (`shared/sheetUiState.ts`). A section changes that state through the functions in that file (`showTab`, `setEditing`, `askConfirm`, `closeConfirm`, `toggleRow`, `setOpenRows`, `toggleClosedRow`, `setClosedRows`, `toggleChoice`, `closeChoice`, `revealIn`), not with an assignment in its template. Svelte warns when a nested component writes to a prop that its parent did not bind.
@@ -124,7 +126,7 @@ The character sheet opens at 720 x 850. Below 560 px it changes to the narrow fo
 - `MonsterSheetApplication.svelte.ts` has the `MonsterSheet` class. It opens at 660 x 650; below 560 px it changes to the narrow form (a header with the HP, the rail without the portrait, and a strip of tabs). With the client setting "Open NPC sheets narrow" (`src/settings/actorSheetSettings.ts`) on, it opens 390 px wide.
 - The root logic (the width, the views of the tab that shows, Expand all) is in `monsterSheetState.svelte.ts`, not `MonsterSheet.svelte.ts`, for the reason in "Drops" above.
 
-Both sheets build the Effects tab from `shared/`: `effectLists.ts` (the lists, the count on the tab, the duration words), `effectsTab.ts` (the rows, their intents and the condition grid), `effectActions.ts` (End, Remove, a condition on or off) and `ConditionGrid.svelte`. `shared/documentLikes.ts` turns items, effects and conditions into their `*Like` types and registers the redraw hooks. `shared/textEnricher.svelte.ts` enriches the notes and the open descriptions. `shared/SheetPortrait.svelte` is the portrait with its image offsets and scale.
+Both sheets build the Effects tab from `shared/`: `effectLists.ts` (the lists, the count on the tab, the duration words), `effectsTab.ts` (the rows, their intents and the condition grid), `effectActions.ts` (End, Remove, a condition on or off) and `ConditionGrid.svelte`. `shared/documentLikes.ts` turns items, effects and conditions into their `*Like` types and registers the redraw hooks. A rule's `amount` is the one the rule applied in data preparation (`appliedAmount`, set by the speed bonus rule); the adapter does not work a formula out again. `shared/textEnricher.svelte.ts` enriches the notes and the open descriptions. `shared/SheetPortrait.svelte` is the portrait with its image offsets and scale.
 
 ## Parts and sections
 
