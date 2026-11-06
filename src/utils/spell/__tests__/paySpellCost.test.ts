@@ -135,7 +135,8 @@ describe('paySpellCost', () => {
 			},
 		);
 
-		expect(payment).toEqual({ paid: true });
+		expect(payment).toMatchObject({ paid: true, receipt: { paid: { charges: 1 } } });
+		expect(payment.overdrawn).toBeUndefined();
 		expect(actor.applyDamage).not.toHaveBeenCalled();
 		expect(flags.nimble.chargePools['pilfered-power'].current).toBe(2);
 	});
@@ -146,7 +147,7 @@ describe('paySpellCost', () => {
 
 		const payment = await paySpellCost(actor, poolCost(), { confirmOverdraft: () => false });
 
-		expect(payment).toEqual({ paid: true });
+		expect(payment).toMatchObject({ paid: true, receipt: { paid: { charges: 0 } } });
 		expect(item.update).not.toHaveBeenCalled();
 	});
 });

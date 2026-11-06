@@ -3,6 +3,7 @@ import type {
 	SpellCostActorLike,
 	SpellCostFailure,
 } from '#types/spellCost.d.ts';
+import { type CostReceipt, nothingPaid } from '../cost/costLedger.js';
 import { applyOverdraftConsequence } from './spellCost.js';
 import { spendSpellCost } from './spendSpellCost.js';
 import { validateSpellCost } from './validateSpellCost.js';
@@ -18,6 +19,26 @@ export interface SpellCostPayment {
 	overdrawn?: boolean;
 	/** Damage the overdraft consequence dealt, if any. */
 	damage?: number;
+	/** What the cast took, to give back when it does not happen. Set when paid. */
+	receipt?: CostReceipt;
+}
+
+/** The Mana or the pool charges a spend took, as the cost ledger gives them back. */
+function receiptOf(cost: ResolvedSpellCost, spent: number): CostReceipt {
+	const paid = nothingPaid();
+	const isPool = cost.type === 'pool';
+	if (cost.type === 'mana') paid.mana = spent;
+	if (isPool) paid.charges = spent;
+	return {
+		cost: {
+			chargePoolIdentifier: isPool ? cost.poolIdentifier : '',
+			chargeCost: isPool ? spent : 0,
+			manaCost: cost.type === 'mana' ? spent : 0,
+			woundCost: 0,
+			heroicReaction: '',
+		},
+		paid,
+	};
 }
 
 /**
@@ -47,8 +68,9 @@ export async function paySpellCost(
 	const outcome = await spendSpellCost(actor, cost);
 	if (!outcome.ok) return { paid: false, failure: outcome.failure };
 
-	if (!outcome.overdrawn) return { paid: true };
+	const receipt = receiptOf(cost, outcome.spent ?? 0);
+	if (!outcome.overdrawn) return { paid: true, receipt };
 
 	const damage = await applyOverdraftConsequence(actor, cost);
-	return { paid: true, overdrawn: true, damage };
+	return { paid: true, overdrawn: true, damage, receipt };
 }

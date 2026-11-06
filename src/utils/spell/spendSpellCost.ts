@@ -11,6 +11,7 @@ import {
 	findChargePoolByIdentifier,
 	persistChargePoolMap,
 } from '../chargePool/helpers.js';
+import { spendMana } from '../cost/costLedger.js';
 import { asChargePoolActor } from './asChargePoolActor.js';
 import { validateSpellCost } from './validateSpellCost.js';
 
@@ -35,11 +36,8 @@ export async function spendSpellCost(
 	if (!validation.ok) return validation;
 
 	if (cost.type === 'mana') {
-		const currentMana = actor?.system?.resources?.mana?.current ?? 0;
-		await actor.update?.({
-			'system.resources.mana.current': Math.max(0, currentMana - cost.amount),
-		});
-		return { ok: true, overdrawn: false };
+		await spendMana(actor as never, cost.amount);
+		return { ok: true, overdrawn: false, spent: cost.amount };
 	}
 
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
@@ -75,5 +73,9 @@ export async function spendSpellCost(
 		reason: 'consume',
 	});
 
-	return { ok: true, overdrawn: validation.overdrawn };
+	return {
+		ok: true,
+		overdrawn: validation.overdrawn,
+		spent: previousValue - poolEntry.pool.current,
+	};
 }

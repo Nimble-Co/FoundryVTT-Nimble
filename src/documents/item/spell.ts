@@ -4,6 +4,7 @@ import { CHAOS_INVOKED_FLAG, CHAOS_TICKED_FLAG, invokeChaos } from '#utils/chaos
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { type CostReceipt, noCostReceipt } from '../../utils/cost/costLedger.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
@@ -43,8 +44,8 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 	 * tier actually cast. The seam decides whether the cost is mana or a
 	 * class-declared pool, and honours the resource spending automation setting.
 	 */
-	protected override async _payForUse(manager: ItemActivationManager): Promise<boolean> {
-		if (this.system.tier <= 0 || !this.actor) return true;
+	protected override async _payForUse(manager: ItemActivationManager): Promise<CostReceipt | null> {
+		if (this.system.tier <= 0 || !this.actor) return noCostReceipt();
 		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
 		const payment = await paySpellCost(this.actor, spellCost, {
 			confirmOverdraft: (available) =>
@@ -55,7 +56,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 					damage: previewOverdraftDamage(this.actor!, spellCost),
 				}),
 		});
-		if (payment.paid) return true;
+		if (payment.paid) return payment.receipt ?? noCostReceipt();
 		if (payment.failure) {
 			const messageKeys: Record<SpellCostFailure['code'], string> = {
 				poolMissing: 'NIMBLE.charges.notifications.poolMissing',
@@ -71,7 +72,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				}),
 			);
 		}
-		return false;
+		return null;
 	}
 
 	/** A healing spell with no target picked heals no one: the caster picks the target. */

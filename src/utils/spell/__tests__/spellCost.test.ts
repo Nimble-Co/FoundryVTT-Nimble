@@ -417,7 +417,7 @@ describe('spendSpellCost', () => {
 
 		const outcome = await spendSpellCost(actor, { type: 'mana', amount: 3 });
 
-		expect(outcome).toEqual({ ok: true, overdrawn: false });
+		expect(outcome).toEqual({ ok: true, overdrawn: false, spent: 3 });
 		expect(actor.update).toHaveBeenCalledWith({ 'system.resources.mana.current': 2 });
 	});
 
@@ -438,7 +438,7 @@ describe('spendSpellCost', () => {
 
 		const outcome = await spendSpellCost(actor, cost);
 
-		expect(outcome).toEqual({ ok: true, overdrawn: false });
+		expect(outcome).toEqual({ ok: true, overdrawn: false, spent: 1 });
 		const stored = classItem.flags.nimble.chargePools['stolen-power'] as { current: number };
 		expect(stored.current).toBe(2);
 	});
@@ -453,7 +453,7 @@ describe('spendSpellCost', () => {
 
 		const outcome = await spendSpellCost(actor, cost);
 
-		expect(outcome).toEqual({ ok: true, overdrawn: true });
+		expect(outcome).toEqual({ ok: true, overdrawn: true, spent: 0 });
 		const stored = classItem.flags.nimble.chargePools['stolen-power'] as { current: number };
 		expect(stored.current).toBe(0);
 	});
