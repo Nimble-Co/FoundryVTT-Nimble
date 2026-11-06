@@ -131,15 +131,15 @@ The system integrates deeply with FoundryVTT through:
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Ensure you're on the `dev` branch: `git checkout dev`
-3. Create a feature branch from `dev`: `git checkout -b feature/your-feature`
+2. Ensure you're on the `main` branch: `git checkout main`
+3. Create a feature branch from `main`: `git checkout -b feature/your-feature`
 4. Make your changes and ensure tests pass
 5. Run checks before committing: `pnpm check`
 6. Commit your changes: `git commit -am 'Add some feature'`
 7. Push to the branch: `git push origin feature/your-feature`
-8. Submit a pull request **against the `dev` branch**
+8. Submit a pull request **against the `main` branch**
 
-> **Note:** All development work should branch from `dev` and all pull requests should target `dev`. The `main` branch is reserved for releases.
+> **Note:** All development work should branch from `main` and all pull requests should target `main`. A merge into `main` does not release anything. A release is made from a tag, see the [Release Guide](docs/RELEASE_GUIDE.md).
 
 ### Development Guidelines
 

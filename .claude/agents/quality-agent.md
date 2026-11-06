@@ -44,7 +44,7 @@ Migrations are **in-system TypeScript**, not standalone scripts. They live in `s
 - `MigrationBase.ts` — the contract. Override only the hooks you need: `updateActor`, `updateItem`, `updateEffect`, `updateToken`, `updateScene`, `updateTable`, `updateJournalEntry`, `updateMacro`, `updateUser`, or a whole-world `migrate()`. Set `requiresFlush = true` when later migrations must see your writes.
 - `MigrationList.ts` / `MigrationRunner.ts` — discovery and execution.
 
-Adding one: pick the next unused version number, write the class, export it from `migrations/index.ts`, and add a test. **Check for a numbering collision against `origin/dev` before you commit** — parallel branches have claimed the same number before. Migrations transform existing user worlds, so they must be idempotent and must not throw on data that is already migrated or partially shaped.
+Adding one: pick the next unused version number, write the class, export it from `migrations/index.ts`, and add a test. **Check for a numbering collision against `origin/main` before you commit** — parallel branches have claimed the same number before. Migrations transform existing user worlds, so they must be idempotent and must not throw on data that is already migrated or partially shaped.
 
 The legacy one-shot `scripts/migrate-*.mjs` files transform pack JSON at author time. They are not world migrations; do not add new ones without being asked.
 

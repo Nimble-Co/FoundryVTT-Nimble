@@ -110,7 +110,7 @@ reviews:
     - path: "src/migration/**"
       instructions: |
         World data migrations.
-        - CI requires that the number of `Migration*.ts` files equals `LATEST_SCHEMA_VERSION` in `MigrationRunnerBase.ts`. Numbers are contiguous. A new migration uses the highest number on `dev` plus 1 and is exported from `migrations/index.ts`. Flag gaps and reserved numbers.
+        - CI requires that the number of `Migration*.ts` files equals `LATEST_SCHEMA_VERSION` in `MigrationRunnerBase.ts`. Numbers are contiguous. A new migration uses the highest number on `main` plus 1 and is exported from `migrations/index.ts`. Flag gaps and reserved numbers.
         - A migration must be idempotent and must not throw on data that is already migrated or only partly shaped. Check what happens when the target data already exists: when the pack version of that data changed, the migration updates it. It does not skip it.
         - A migration whose writes a later migration must see sets `requiresFlush = true`.
         - Match embedded copies by compendium source id, with a name fallback. Use `toSnapshotId` and the helpers in `src/migration/compendiumSourceId.ts`. Do not copy them. Stored ids can start with `Compendium.nimble.` or `Compendium.nimble-dev.`.
@@ -180,8 +180,8 @@ reviews:
       - name: Base branch
         mode: warning
         instructions: >-
-          Pass if the PR targets `dev` or a feature branch (a stacked PR). Fail
-          if the PR targets `main` and is not a release merge from `dev`.
+          Pass if the PR targets `main` or a feature branch (a stacked PR). Fail
+          if the PR targets `dev`, which is retired.
       - name: User docs
         mode: warning
         instructions: >-

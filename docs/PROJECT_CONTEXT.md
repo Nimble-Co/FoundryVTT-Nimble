@@ -85,7 +85,7 @@ Comprehensive style guide at `STYLE_GUIDE.md`. Read it before writing code. Key 
 ## Development Workflow Rules
 
 - **Commit message format** — Conventional Commits: `type(scope): description`. Types: `feat`, `fix`, `chore`, `docs`. Scope is optional but preferred (e.g., `sheets`, `hooks`, `svelte`).
-- **Branch strategy** — `main` is the release branch. `dev` is the working branch. Feature branches merge into `dev` via PR.
+- **Branch strategy** — `main` is the working branch. Feature branches merge into `main` via PR. A release is a GitHub release made from a tag on `main` (`pnpm release`). A merge into `main` releases nothing.
 - **PR references** — Include issue/PR numbers in commit messages (e.g., `(#361)`).
 - **Pre-push validation** — Lefthook runs biome check, type-check, and vitest on push. Fix issues before pushing — don't bypass with `--no-verify`.
 - **Worktree support** — `pnpm worktree:setup` and `pnpm worktree:cleanup` scripts are available for parallel development in git worktrees.

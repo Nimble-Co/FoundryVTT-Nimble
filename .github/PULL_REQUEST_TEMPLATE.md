@@ -17,7 +17,7 @@
 ## Checklist
 
 - [ ] Added or updated unit tests
-- [ ] PR targets the `dev` branch
+- [ ] PR targets the `main` branch
 - [ ] `pnpm check` passes (format, lint, circular deps, type-check, tests)
 - [ ] No hardcoded user-facing strings (used `localize()`)
 - [ ] Tested in Foundry with no console errors
