@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import applyConditionToActor from '../actor/applyConditionToActor.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
+import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
@@ -95,7 +96,7 @@ async function writeDefend(request: DefendRequest, userId: string): Promise<stri
 		label: request.label,
 		userId,
 		combatantId: request.combatantId,
-		previousActions: request.previousActions,
+		actionsSpent: request.actionsSpent,
 		reactionKeys: request.reactionKeys,
 		outcome: request.outcome,
 		armorBonus: Math.max(0, Math.floor(request.armorBonus)),
@@ -332,8 +333,14 @@ async function refundDefend(record: DefendRecord): Promise<void> {
 	);
 	const update: Record<string, unknown> = { _id: combatant.id };
 	for (const key of keys) Object.assign(update, getHeroicReactionAvailabilityUpdate(key, true));
-	if (record.previousActions !== null) {
-		update['system.actions.base.current'] = record.previousActions;
+	if (record.actionsSpent) {
+		Object.assign(
+			update,
+			buildCombatantActionDeltaUpdate(combatant, {
+				currentDelta: record.actionsSpent,
+				pendingDelta: 0,
+			}),
+		);
 	}
 	await combat.updateEmbeddedDocuments('Combatant', [update]);
 }

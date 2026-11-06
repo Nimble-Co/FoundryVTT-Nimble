@@ -92,7 +92,7 @@ function card(
 							label: '',
 							userId: 'u1',
 							combatantId: 'c1',
-							previousActions: 3,
+							actionsSpent: 1,
 							reactionKeys: ['defend'],
 							outcome: defend.outcome ?? 'none',
 							armorBonus: defend.armorBonus ?? 0,

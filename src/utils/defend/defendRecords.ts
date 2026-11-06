@@ -30,8 +30,8 @@ export interface DefendRecord {
 	label: string;
 	userId: string;
 	combatantId: string;
-	/** Actions before the Defend was paid, so an undo can give them back. */
-	previousActions: number | null;
+	/** Actions the Defend spent, so an undo can give back those and no more. */
+	actionsSpent: number | null;
 	reactionKeys: string[];
 	/** From the Defend options: the attack misses, no damage, or half in place of the armor. */
 	outcome: DefendOutcome;
@@ -73,7 +73,7 @@ export function defendsOf(system: unknown): DefendRecord[] {
 		label: record.label ?? '',
 		userId: record.userId ?? '',
 		combatantId: record.combatantId ?? '',
-		previousActions: record.previousActions ?? null,
+		actionsSpent: record.actionsSpent ?? null,
 		reactionKeys: Array.isArray(record.reactionKeys) ? record.reactionKeys : [],
 		outcome: DEFEND_OPTION_OUTCOMES.includes(record.outcome) ? record.outcome : 'none',
 		armorBonus: Math.max(0, Math.floor(Number(record.armorBonus) || 0)),

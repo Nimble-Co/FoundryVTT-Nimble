@@ -10,7 +10,10 @@ import {
 import { getCombatantCurrentActions } from '../combat/combatTurnActions.js';
 import { isCombatStarted } from '../combat/isCombatStarted.js';
 import { clearTurnUse, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
-import { requestCombatantActionDelta } from '../combat/requestCombatantActionDelta.js';
+import {
+	buildCombatantActionDeltaUpdate,
+	requestCombatantActionDelta,
+} from '../combat/requestCombatantActionDelta.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	type HeroicReactionKey,
@@ -44,7 +47,7 @@ interface PaidRerollCost {
 		combatId: string;
 		combatantId: string;
 		key: HeroicReactionKey;
-		previousActions: number;
+		actionsSpent: number;
 	} | null;
 	/** Actions spent: now on the hero's own turn, else from their next turn. */
 	action: { combatId: string; combatantId: string; amount: number; now: boolean } | null;
@@ -167,16 +170,16 @@ async function spendHeroicReaction(
 	const combat = found?.combat as unknown as HeroicReactionCombat | undefined;
 	if (!found?.combatant.id || !combat?.useHeroicReactions) return null;
 
-	const previousActions = Number(
-		foundry.utils.getProperty(found.combatant, 'system.actions.base.current') ?? 0,
-	);
+	const actions = () =>
+		Number(foundry.utils.getProperty(found.combatant, 'system.actions.base.current') ?? 0);
+	const before = actions();
 	const used = await combat.useHeroicReactions(found.combatant.id, [key], { force });
 	if (!used) return false;
 	return {
 		combatId: combat.id ?? '',
 		combatantId: found.combatant.id,
 		key,
-		previousActions,
+		actionsSpent: Math.max(0, before - actions()),
 	};
 }
 
@@ -213,10 +216,19 @@ function changeActions(paid: NonNullable<PaidRerollCost['action']>, delta: numbe
 async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReaction']>) {
 	const combat = game.combat as unknown as HeroicReactionCombat | null;
 	if (!combat || (combat.id ?? '') !== paid.combatId) return;
+	const combatant = (game.combat?.combatants.get(paid.combatantId) ??
+		null) as Combatant.Implementation | null;
+	const actions =
+		combatant && paid.actionsSpent > 0
+			? buildCombatantActionDeltaUpdate(combatant, {
+					currentDelta: paid.actionsSpent,
+					pendingDelta: 0,
+				})
+			: null;
 	await combat.updateEmbeddedDocuments?.('Combatant', [
 		{
 			_id: paid.combatantId,
-			'system.actions.base.current': paid.previousActions,
+			...actions,
 			...getHeroicReactionAvailabilityUpdate(paid.key, true),
 		},
 	]);

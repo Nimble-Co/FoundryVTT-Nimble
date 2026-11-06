@@ -375,19 +375,19 @@ async function spendDefend(
 	combat: ReactionCombat | null,
 	combatant: Combatant.Implementation | null,
 	force: boolean,
-): Promise<{ previousActions: number | null } | null> {
+): Promise<{ actionsSpent: number | null } | null> {
 	if (!combat?.started || !combat.useHeroicReactions || !combatant?.id) {
-		return { previousActions: null };
+		return { actionsSpent: null };
 	}
-	const previousActions = Number(
-		foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0,
-	);
+	const actions = () =>
+		Number(foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0);
+	const before = actions();
 	const used = await combat.useHeroicReactions(
 		combatant.id,
 		['defend'],
 		force ? { force: true } : undefined,
 	);
-	return used ? { previousActions } : null;
+	return used ? { actionsSpent: Math.max(0, before - actions()) } : null;
 }
 
 /** Wait until the card lists the token as a target (the GM writes an Interpose). */
@@ -558,13 +558,13 @@ export async function openDefendWindow(
 	if (!option.defend || !defendedToken) return Boolean(entry);
 
 	const uses: DefendOptionUse[] = [];
-	let previousActions: number | null = null;
+	let actionsSpent: number | null = null;
 	let reactionKeys: string[] = [];
 	let upcastArmor = 0;
 	if (paysDefend) {
 		const paid = await spendDefend(combat, combatant, limits.force || row.way === 'extra');
 		if (!paid) return Boolean(entry);
-		previousActions = paid.previousActions;
+		actionsSpent = paid.actionsSpent;
 		reactionKeys = ['defend'];
 	} else if (row.way === 'free' && row.pick) {
 		if (row.pick.rule.useItem) {
@@ -608,7 +608,7 @@ export async function openDefendWindow(
 		armor: armorOf(actor),
 		label: row.whole?.label ?? row.pick?.label ?? '',
 		combatantId: combatant?.id ?? '',
-		previousActions,
+		actionsSpent,
 		reactionKeys,
 		outcome: effect.outcome,
 		armorBonus: effect.armorBonus + upcastArmor,

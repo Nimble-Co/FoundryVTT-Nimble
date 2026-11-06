@@ -55,7 +55,7 @@ function request(tokenUuid = PIP_TOKEN): DefendRequest {
 		armor: 3,
 		label: '',
 		combatantId: 'c1',
-		previousActions: 3,
+		actionsSpent: 1,
 		reactionKeys: ['defend'],
 		outcome: 'none',
 		armorBonus: 0,

@@ -54,7 +54,7 @@ function request(fields: Record<string, unknown> = {}) {
 		armor: 3,
 		label: '',
 		combatantId: '',
-		previousActions: null,
+		actionsSpent: null,
 		reactionKeys: [],
 		outcome: 'none' as const,
 		armorBonus: 0,
@@ -114,6 +114,31 @@ describe('Defend options on the card', () => {
 
 		expect(refundCost).toHaveBeenCalledWith(pip, paidUse.cost, paidUse.paid);
 		expect(card.system.defends).toEqual([]);
+	});
+
+	it("gives back only the Defend's action on Undo, not actions spent after it", async () => {
+		const hero = {
+			id: 'c1',
+			type: 'character',
+			system: { actions: { base: { current: 1, max: 3 } } },
+		};
+		const combat = {
+			combatants: { get: (id: string) => (id === 'c1' ? hero : undefined) },
+			updateEmbeddedDocuments: vi.fn(),
+		};
+		(globalThis as unknown as Globals).game.combat = combat;
+		await requestDefend(request({ combatantId: 'c1', actionsSpent: 1, reactionKeys: ['defend'] }));
+		const [record] = card.system.defends as { id: string }[];
+
+		await undoDefend('m1', record?.id ?? '');
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'c1',
+				'system.actions.heroic.defendAvailable': true,
+				'system.actions.base.current': 2,
+			},
+		]);
 	});
 
 	it('adds an ally option once, with its reminder line', async () => {

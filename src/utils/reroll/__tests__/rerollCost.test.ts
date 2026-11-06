@@ -81,15 +81,23 @@ function makeActor(
 function makeCombat(actor: unknown, used = true) {
 	const combatant = {
 		id: 'combatant-1',
+		type: 'character',
 		actor,
-		system: { actions: { base: { current: 3 } } },
+		system: { actions: { base: { current: 3, max: 3 } } },
 	};
 	const combat = {
 		id: 'combat-1',
 		started: true,
 		round: 1,
-		combatants: { find: (predicate: (c: unknown) => boolean) => [combatant].find(predicate) },
-		useHeroicReactions: vi.fn(async () => used),
+		combatants: {
+			find: (predicate: (c: unknown) => boolean) => [combatant].find(predicate),
+			get: (id: string) => (id === combatant.id ? combatant : undefined),
+		},
+		combatant,
+		useHeroicReactions: vi.fn(async () => {
+			if (used) combatant.system.actions.base.current -= 1;
+			return used;
+		}),
 		updateEmbeddedDocuments: vi.fn(async () => undefined),
 	};
 	testGlobals.game.combat = combat;
@@ -289,7 +297,7 @@ describe('rerollCost', () => {
 				combatId: 'combat-1',
 				combatantId: 'combatant-1',
 				key: 'defend',
-				previousActions: 3,
+				actionsSpent: 1,
 			});
 		});
 
@@ -334,6 +342,25 @@ describe('rerollCost', () => {
 				{
 					_id: 'combatant-1',
 					'system.actions.base.current': 3,
+					'system.actions.heroic.defendAvailable': true,
+				},
+			]);
+		});
+
+		it('gives back only the actions the heroic reaction spent, not later spends', async () => {
+			const { asActor } = makeActor();
+			const combat = makeCombat(asActor);
+			const reaction = cost({ heroicReaction: 'defend' });
+			const paid = await payRerollCost(asActor, reaction);
+			if (!paid) throw new Error('expected the cost to be paid');
+			combat.combatant.system.actions.base.current = 0;
+
+			await refundRerollCost(asActor, reaction, paid);
+
+			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+				{
+					_id: 'combatant-1',
+					'system.actions.base.current': 1,
 					'system.actions.heroic.defendAvailable': true,
 				},
 			]);
