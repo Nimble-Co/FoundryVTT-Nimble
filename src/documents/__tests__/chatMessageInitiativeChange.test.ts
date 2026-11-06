@@ -131,9 +131,9 @@ function createCard(system: Record<string, unknown> = {}, d20 = 5, total = 7) {
 }
 
 const click = (card: ReturnType<typeof createCard>) =>
-	card.resolveRerollReaction('entry-cheat', 'gm-user');
+	card.cardRerolls.resolveRerollReaction('entry-cheat', 'gm-user');
 const removeChange = (card: ReturnType<typeof createCard>) =>
-	card.resolveResultRemoval(
+	card.cardRerolls.resolveResultRemoval(
 		(card.system as unknown as { resultChanges: ResultChange[] }).resultChanges[0].lineId,
 		'gm-user',
 	);

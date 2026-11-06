@@ -571,7 +571,7 @@ describe('resolveRerollReaction with a folded card-side spend', () => {
 		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
 
-		await message.resolveRerollReaction('reroll-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('reroll-1', 'gm-user');
 
 		// The mock rebuild totals 0, so the whole total is the carried bonus
 		const roll = rerolledRoll(message);
@@ -598,7 +598,7 @@ describe('resolveRerollReaction with a folded card-side spend', () => {
 		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
 
-		await message.resolveRerollReaction('reroll-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(0);
 
@@ -622,7 +622,7 @@ describe('resolveRerollReaction with a folded card-side spend', () => {
 		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'hit' })]);
 
-		await message.resolveRerollReaction('reroll-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(0);
 		expect(rerolledEntries(message)[1]).toMatchObject({ used: true, usedAmount: 18 });
@@ -635,7 +635,7 @@ describe('resolveRerollReaction with a folded card-side spend', () => {
 		useRerollWorld(actor);
 		const message = createMessage([rerollEntry(), spentEntry({ outcomeTrigger: 'criticalHit' })]);
 
-		await message.resolveRerollReaction('reroll-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('reroll-1', 'gm-user');
 
 		expect(rerolledRoll(message).total).toBe(18);
 		expect(actor._item.update).not.toHaveBeenCalled();

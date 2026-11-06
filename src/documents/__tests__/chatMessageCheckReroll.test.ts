@@ -161,7 +161,7 @@ describe('a reroll on a save card', () => {
 		const { roller, rule } = setupWorld();
 		const message = createSaveCard();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(rule.offersUseOn).toHaveBeenCalledWith({
 			side: 'roller',
@@ -194,7 +194,7 @@ describe('a reroll on a save card', () => {
 		const showForRoll = vi.fn().mockResolvedValue(true);
 		(globals().game as { dice3d?: unknown }).dice3d = { showForRoll };
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		delete (globals().game as { dice3d?: unknown }).dice3d;
 		expect(showForRoll).toHaveBeenCalledTimes(1);
@@ -220,7 +220,7 @@ describe('a reroll on a save card', () => {
 		game.dice3d = { showForRoll, isEnabled: () => true };
 		game.socket = { emit };
 
-		const rerolled = message.resolveRerollReaction('entry-1', 'gm-user');
+		const rerolled = message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 		try {
 			await vi.waitFor(() => expect(rollingRerollOf('message-1')).not.toBeNull());
 			expect(rollingRerollOf('message-1')).toEqual({ slot: 'check', faces: 20 });
@@ -242,7 +242,7 @@ describe('a reroll on a save card', () => {
 		setupWorld();
 		const message = createSaveCard();
 
-		await message.resolveRerollReaction('entry-1', 'player-1', true);
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'player-1', true);
 
 		expect(message.update).toHaveBeenCalledTimes(1);
 	});
@@ -252,7 +252,7 @@ describe('a reroll on a save card', () => {
 		roller.testUserPermission.mockReturnValue(false);
 		const message = createSaveCard();
 
-		await message.resolveRerollReaction('entry-1', 'player-1', true);
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'player-1', true);
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(roller.system.attributes.wounds.value).toBe(0);
@@ -263,7 +263,7 @@ describe('a reroll on a save card', () => {
 		rule.offersUseOn.mockReturnValue(false);
 		const message = createSaveCard();
 
-		await message.resolveRerollReaction('entry-1', 'gm-user');
+		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
 
 		expect(message.update).not.toHaveBeenCalled();
 		expect(roller.system.attributes.wounds.value).toBe(0);

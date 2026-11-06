@@ -12,15 +12,12 @@ import {
 } from '#utils/chargePool/chargePoolReroll.js';
 import { spentPoolIdsOf } from '#utils/chargePool/itemUseRecovery.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
+import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
-import {
-	broadcastRerollRolling,
-	rejectIncomingAttackReaction,
-} from '#utils/incomingReactions/incomingAttackReactions.js';
 import type {
 	ChangeableDie,
 	IncomingReactionEntry,
@@ -35,6 +32,7 @@ import type {
 import { CRIT_BONUS_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
 import localize from '#utils/localize.js';
 import { chainAutomaticRerolls } from '#utils/reroll/automaticRerolls.js';
+import { broadcastRerollRolling } from '#utils/reroll/broadcastRerollRolling.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
@@ -490,13 +488,13 @@ export class CardRerolls {
 		const pending = this.pendingKeep();
 		if (!pending) return;
 		const reject = (reasonKey: string) =>
-			rejectIncomingAttackReaction({
+			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId: pending.entryId,
 				userId: requestingUserId,
 				reasonKey,
 			});
-		if (!this.#mayActFor(pending.chooserUuid, requestingUserId, viaSocket)) {
+		if (!mayActFor(pending.chooserUuid, { userId: requestingUserId, viaSocket })) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 
@@ -550,15 +548,6 @@ export class CardRerolls {
 		if (keep === 'ownerChooses') return entry.actorUuid;
 		if (keep === 'rollerChooses') return rollTarget.context().attacker?.uuid ?? '';
 		return '';
-	}
-
-	/** A GM, or a player who owns the actor. A GM's request may not come over the socket. */
-	#mayActFor(actorUuid: string, requestingUserId: string, viaSocket: boolean): boolean {
-		const user = game.users?.get(requestingUserId) ?? null;
-		if (!user) return false;
-		if (user.isGM) return !viaSocket;
-		const actor = fromUuidSync(actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		return actor?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
 	}
 
 	/** The roll changes of Modify Reroll rules this card has applied. */
@@ -852,7 +841,7 @@ export class CardRerolls {
 		pick: RerollPick,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
-			rejectIncomingAttackReaction({
+			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId,
 				userId: requestingUserId,
@@ -1329,7 +1318,7 @@ export class CardRerolls {
 		viaSocket: boolean,
 	): Promise<void> {
 		const reject = (reasonKey: string) =>
-			rejectIncomingAttackReaction({
+			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId: lineId,
 				userId: requestingUserId,
@@ -1341,7 +1330,7 @@ export class CardRerolls {
 		const first = line[0];
 		if (!first) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		if (this.pendingKeep()) return reject('NIMBLE.chat.incomingReactions.keepFirst');
-		if (!this.#mayActFor(first.actorUuid, requestingUserId, viaSocket)) {
+		if (!mayActFor(first.actorUuid, { userId: requestingUserId, viaSocket })) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 		if (first.automatic || !this.#canStillRemove(first)) {

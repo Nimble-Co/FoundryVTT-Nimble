@@ -18,7 +18,7 @@ const payRerollCost = vi.fn();
 const refundRerollCost = vi.fn();
 const keepAmount = vi.fn();
 const rollSaveWithOwner = vi.fn();
-const rejectIncomingAttackReaction = vi.fn();
+const rejectCardRequest = vi.fn();
 
 let CardRerolls: typeof CardRerollsClass;
 
@@ -203,7 +203,7 @@ function entryOn(host: FakeHost, id: string) {
 }
 
 function rejectedWith() {
-	return rejectIncomingAttackReaction.mock.calls.map(([rejection]) => rejection.reasonKey);
+	return rejectCardRequest.mock.calls.map(([rejection]) => rejection.reasonKey);
 }
 
 beforeEach(async () => {
@@ -214,7 +214,7 @@ beforeEach(async () => {
 		refundRerollCost,
 		keepAmount,
 		rollSaveWithOwner,
-		rejectIncomingAttackReaction,
+		rejectCardRequest,
 	]) {
 		mock.mockReset();
 	}
@@ -232,9 +232,9 @@ beforeEach(async () => {
 		keepAmount,
 	}));
 	vi.doMock('#utils/rolls/rollSaveWithOwner.js', () => ({ rollSaveWithOwner }));
-	vi.doMock('#utils/incomingReactions/incomingAttackReactions.js', async (importOriginal) => ({
+	vi.doMock('#utils/chat/cardOperations.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
-		rejectIncomingAttackReaction,
+		rejectCardRequest,
 	}));
 	({ CardRerolls } = await import('../cardRerolls.js'));
 });
@@ -335,7 +335,7 @@ describe('Crit Dice save row', () => {
 		expect(refundRerollCost).toHaveBeenCalledWith(roller, COST, PAID);
 		expect(entryOn(host, entry.id)?.used).toBe(false);
 		expect(host.update).not.toHaveBeenCalled();
-		expect(rejectIncomingAttackReaction).not.toHaveBeenCalled();
+		expect(rejectCardRequest).not.toHaveBeenCalled();
 	});
 });
 

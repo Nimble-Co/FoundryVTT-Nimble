@@ -6,6 +6,7 @@
 	} from '#documents/chatMessage/cardDamageBack.ts';
 
 	import { getContext } from 'svelte';
+	import { mayActHere } from '#utils/chat/cardOperations.js';
 	import { requestDamageBack } from '#utils/incomingReactions/incomingAttackReactions.js';
 	import localize from '../../../utils/localize.js';
 
@@ -16,11 +17,7 @@
 	);
 
 	function canUse(record: DamageBackRecord): boolean {
-		if (game.user?.isGM) return true;
-		const actor = fromUuidSync(record.actorUuid as `Actor.${string}`) as {
-			isOwner?: boolean;
-		} | null;
-		return actor?.isOwner === true;
+		return mayActHere(record.actorUuid);
 	}
 
 	function textOf(record: DamageBackRecord): string {
@@ -33,7 +30,7 @@
 	}
 
 	const use = (record: DamageBackRecord, action: DamageBackAction) =>
-		requestDamageBack(messageDocument.id ?? '', record.id, action);
+		requestDamageBack({ messageId: messageDocument.id ?? '', recordId: record.id, action });
 </script>
 
 {#each records as record (record.id)}
