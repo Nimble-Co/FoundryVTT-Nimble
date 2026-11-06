@@ -7,44 +7,7 @@
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';
-
-	function getDamageMultiplier(damageOutcome = 'fullDamage') {
-		if (damageOutcome === 'fullDamage') return 1;
-		if (damageOutcome === 'halfDamage') return 0.5;
-		if (damageOutcome === 'noDamage') return 1; // Show actual roll value for misses
-		return 0;
-	}
-
-	function withMultiplierText(info, damageMultiplier) {
-		if (damageMultiplier === 1) return info;
-		const text = localize('NIMBLE.rules.damageMultiplier.onCard', {
-			multiplier: String(damageMultiplier),
-		});
-		return `${info} ${text}`;
-	}
-
-	function getRollModeSummary(rollMode) {
-		if (rollMode >= 1) return `Advantage x ${rollMode}`;
-		if (rollMode <= -1) return `Disadvantage x ${Math.abs(rollMode)}`;
-		return '';
-	}
-
-	function getSecondaryInformation(outcome, ignoreArmor, rollOptions) {
-		const rollModeSummary = getRollModeSummary(rollOptions.rollMode);
-
-		// For misses, don't include "No Damage" - the card header shows "Miss"
-		if (outcome === 'noDamage') {
-			if (ignoreArmor) return `${rollModeSummary} (Ignores Armor)`.trim();
-			return rollModeSummary;
-		}
-		if (outcome === 'fullDamage' && ignoreArmor) return `${rollModeSummary} (Ignores Armor)`;
-		if (outcome === 'halfDamage') {
-			if (ignoreArmor) return `${rollModeSummary} (Half Damage, Ignores Armor)`;
-			return `${rollModeSummary} (Half Damage)`;
-		}
-
-		return rollModeSummary;
-	}
+	import { damageOutcomeMultiplier, damageRollCaption } from './damageRollCaption.ts';
 
 	// A roll written onto the card after the fact serializes `options: {}`, so a
 	// present-and-non-zero test is the only one that keeps the details block from
@@ -79,12 +42,14 @@
 	let label = $derived(damageTypes[damageType] ?? '');
 	let critDiceLines = $derived(critDiceLinesOf(roll?.terms));
 	let shownMultiplier = $derived(outcome === 'noDamage' ? 1 : damageMultiplier);
-	let multiplier = $derived(getDamageMultiplier(outcome) * shownMultiplier);
+	let multiplier = $derived(damageOutcomeMultiplier(outcome) * shownMultiplier);
 	let secondaryInfo = $derived(
-		withMultiplierText(
-			getSecondaryInformation(outcome, ignoreArmor, rollOptions),
-			shownMultiplier,
-		).trim(),
+		damageRollCaption({
+			outcome,
+			ignoreArmor,
+			rollMode: rollOptions.rollMode,
+			damageMultiplier: shownMultiplier,
+		}),
 	);
 </script>
 
