@@ -40,7 +40,7 @@ export function allyDefendOffers(card: AllyCardLike): AllyDefendOffer[] {
 				const used = record.options.some(
 					(use) => use.actorUuid === actor.uuid && use.ruleId === pick.rule.id,
 				);
-				if (used || !areWithinSpaces(token, defender, Math.max(1, pick.rule.range))) continue;
+				if (used || !areWithinSpaces(token, defender, pick.rule.resolveRange())) continue;
 				offers.push({
 					key: `${record.id}:${actor.uuid}:${pick.key}`,
 					defendId: record.id,

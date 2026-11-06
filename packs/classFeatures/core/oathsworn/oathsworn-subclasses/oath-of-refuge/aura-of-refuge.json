@@ -29,7 +29,17 @@
 				"predicate": {},
 				"priority": 1,
 				"modifier": "redirectToSelf",
-				"range": 4
+				"range": "@auraReach"
+			},
+			{
+				"type": "auraReach",
+				"disabled": false,
+				"id": "oqaNrOFY2lNPOB4z",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "4"
 			}
 		],
 		"activation": {

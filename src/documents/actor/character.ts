@@ -310,6 +310,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Reset armor components so afterPrepareData() rules always start from a clean slate.
 		// Without this, removing an ancestry then re-adding it leaves stale entries in the array.
 		this.system.attributes.armor.components = [];
+		this.system.attributes.auraReach = 0;
 
 		super.prepareDerivedData();
 
@@ -416,12 +417,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			this.tags.add('target:armor:none');
 		}
 
-		// Shield status tag — character-only. Monsters/NPCs don't have an equipment
-		// system, so predicates using self:shield / self:noShield only apply to PCs.
+		// Character-only: monsters have no equipment, so self:shield and
+		// self:noShield only apply to PCs. A shield that is not equipped is no shield.
 		const hasShield = this.items.some((item) => {
 			if (!item.isType('object')) return false;
 			const objectItem = item as unknown as NimbleObjectItem;
-			return objectItem.system.objectType === 'shield';
+			return objectItem.system.objectType === 'shield' && objectItem.system.equipped === true;
 		});
 		this.tags.add(hasShield ? 'self:shield' : 'self:noShield');
 	}
@@ -1290,6 +1291,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		data.level = this.levels.character ?? 1;
 
 		data.pools = getChargePoolRollData(this);
+
+		data.auraReach = this.system.attributes?.auraReach ?? 0;
 
 		// NOTE: Pool max bonuses (e.g. "+1 Max Combat Die") are applied directly in the
 		// charge-pool max computation (see getChargePoolDefinitions), which sums the

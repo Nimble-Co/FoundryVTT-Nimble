@@ -20,13 +20,12 @@ function schema() {
 			label: 'NIMBLE.rules.modifyIncomingAttack.modifier.label',
 			hint: 'NIMBLE.rules.modifyIncomingAttack.modifier.hint',
 		}),
-		range: new fields.NumberField(
+		range: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
-				initial: 2,
-				min: 1,
-				integer: true,
+				initial: '2',
+				widget: 'formula',
 				label: 'NIMBLE.rules.modifyIncomingAttack.range.label',
 				hint: 'NIMBLE.rules.modifyIncomingAttack.range.hint',
 				showWhen: (data: Record<string, unknown>) => data.modifier === 'redirectToSelf',
@@ -75,7 +74,7 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 	static override description = 'NIMBLE.rules.modifyIncomingAttack.description';
 
 	declare modifier: IncomingAttackModifier;
-	declare range: number;
+	declare range: string;
 	declare missThreshold: number;
 
 	static override defineSchema(): ModifyIncomingAttackRule.Schema {
@@ -85,11 +84,18 @@ class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.S
 		};
 	}
 
+	/** The spaces of a redirect, from the formula; at least 1. */
+	resolveRange(): number {
+		const formula = String(this.range ?? '').trim();
+		const value = formula ? Number(this.resolveFormula(formula)) : 0;
+		return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
+	}
+
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
 				['modifier', 'string'],
-				['range', 'number'],
+				['range', 'string'],
 				['missThreshold', 'number'],
 			]),
 		);

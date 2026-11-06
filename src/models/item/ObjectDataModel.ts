@@ -41,7 +41,13 @@ const schema = () => ({
 	 * not proficient with costs 1 more action. Empty means no check. A shield
 	 * is always the shield type.
 	 */
-	armorType: new fields.StringField({ required: true, initial: '', nullable: false }),
+	armorType: new fields.StringField({
+		required: true,
+		initial: '',
+		nullable: false,
+		blank: true,
+		choices: () => Object.keys(CONFIG.NIMBLE.armorTypes),
+	}),
 	price: new fields.SchemaField({
 		value: new fields.NumberField({
 			required: true,
@@ -224,6 +230,17 @@ class NimbleObjectData extends NimbleBaseItemData<
 			...activation(),
 			...schema(),
 		};
+	}
+
+	/** A shield loads as the shield type; another type outside the body armor types loads as blank. */
+	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
+		if (source.objectType === 'shield') {
+			source.armorType = 'shield';
+		} else if (typeof source.armorType === 'string') {
+			const armorType = source.armorType.trim().toLowerCase();
+			source.armorType = CONFIG.NIMBLE.bodyArmorTypes.includes(armorType) ? armorType : '';
+		}
+		return NimbleBaseItemData.migrateData(source);
 	}
 }
 

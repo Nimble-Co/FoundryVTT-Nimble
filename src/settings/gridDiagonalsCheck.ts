@@ -90,13 +90,3 @@ export async function checkGridDiagonals(): Promise<void> {
 	(game.socket as { emit?: (event: string) => void } | undefined)?.emit?.('reload');
 	foundry.utils.debouncedReload?.();
 }
-
-/** Check again when a GM changes Grid Diagonals, before the reload it asks for. */
-export function registerGridDiagonalsCheckHooks(): void {
-	const onSetting = (setting: { key?: string }) => {
-		if (setting?.key !== 'core.gridDiagonals') return;
-		checkGridDiagonals().catch((error) => console.error(error));
-	};
-	Hooks.on('createSetting', onSetting);
-	Hooks.on('updateSetting', onSetting);
-}

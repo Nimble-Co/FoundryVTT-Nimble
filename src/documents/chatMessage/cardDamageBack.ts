@@ -1,8 +1,8 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
+import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { rejectIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
 import { payRerollCost } from '#utils/reroll/rerollCost.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { queueReactionWrite } from './reactionWriteQueue.js';
 
 /** Damage a creature gave back to the one who attacked it, as the card shows it. */
 export interface DamageBackRecord {

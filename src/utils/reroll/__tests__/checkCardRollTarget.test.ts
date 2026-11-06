@@ -157,7 +157,7 @@ describe('checkCardRollTarget', () => {
 		const card = makeCard({
 			incomingReactions: () => [
 				allyEntry('a'),
-				allyEntry('b', { actorUuid: 'Actor.foe', leftOut: { reason: 'disposition' } }),
+				allyEntry('b', { actorUuid: 'Actor.neutral', leftOut: { reason: 'disposition' } }),
 			],
 		});
 

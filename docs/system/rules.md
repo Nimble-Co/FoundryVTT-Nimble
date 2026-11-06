@@ -230,12 +230,12 @@ The `damageBonus` rule has an optional `targetCondition` field — a predicate e
 When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
 
 ::: tip
-`targetCondition` is only available on `damageBonus`. The rule types that use a roll on an attack (`reroll`, `changeDie`) and `primaryDieBonus` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+`targetCondition` is only available on `damageBonus`. The rule types that use a roll on an attack (`reroll`, `changeDie`), `primaryDieBonus` and `defendOption` have `otherCreature` instead, see [The other creature: `ruleOtherCreatureMatches`](#the-other-creature-ruleothercreaturematches). Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
 :::
 
 ### The other creature: `ruleOtherCreatureMatches`
 
-`ruleOtherCreatureMatches(rule, raw, other)` (`src/models/rules/_otherCreatureMatches.ts`) is the one test for every "only when the other creature is" field. The rule's actor is the owner, and its item gives the item tags. It is used by `RollUseRule#offersUseOn` (`otherCreature`), `RollUseRule#cardHintFor` (`cardHintWhen`) and `PrimaryDieBonusRule#bonusFor` (`otherCreature`).
+`ruleOtherCreatureMatches(rule, raw, other)` (`src/models/rules/_otherCreatureMatches.ts`) is the one test for every "only when the other creature is" field. The rule's actor is the owner, and its item gives the item tags. It is used by `RollUseRule#offersUseOn` (`otherCreature`), `RollUseRule#cardHintFor` (`cardHintWhen`), `PrimaryDieBonusRule#bonusFor` (`otherCreature`) and `defendOptionsOf` (`otherCreature`, where the other creature is the attacker).
 
 - An empty predicate passes. A set predicate fails when `other` is null or absent, for example an attack with no target.
 - The domain is `buildTargetDomain(owner, other)`: the other creature's `target:*` tags (`getTargetDomain()`) plus the marks the owner put on it (`target:<flagKey>`).

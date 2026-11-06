@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { flushAsync } from '../../../tests/helpers.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import localize from '../../utils/localize.js';
 import { rollingRerollOf, stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
-import { queueReactionWrite } from '../chatMessage/reactionWriteQueue.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 /**

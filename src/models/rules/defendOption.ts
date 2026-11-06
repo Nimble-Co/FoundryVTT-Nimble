@@ -1,8 +1,10 @@
+import type { Predicate } from '../../etc/Predicate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDeliveryFilter,
 } from '../../utils/damage/attackDelivery.js';
 import type { RerollCost } from '../../utils/reroll/rerollCost.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -38,6 +40,10 @@ function schema() {
 			choices: choiceLabels('reroll', 'attackDelivery', ATTACK_DELIVERY_FILTERS),
 			label: key('attackDelivery', 'label'),
 			hint: key('attackDelivery', 'hint'),
+		}),
+		otherCreature: new PredicateField({
+			label: key('otherCreature', 'label'),
+			hint: key('otherCreature', 'hint'),
 		}),
 		outcome: new fields.StringField(
 			withWidget({
@@ -132,15 +138,14 @@ function schema() {
 				showWhen: isWay('withDefend', 'freeDefend'),
 			}),
 		),
-		range: new fields.NumberField(
+		range: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
-				initial: 2,
-				min: 1,
-				integer: true,
+				initial: '2',
 				label: key('range', 'label'),
 				hint: key('range', 'hint'),
+				widget: 'formula',
 				showWhen: isWay('allyDefends'),
 			}),
 		),
@@ -165,6 +170,16 @@ function schema() {
 				hint: key('chargeCost', 'hint'),
 				showWhen: (data: Record<string, unknown>) =>
 					typeof data.chargePoolIdentifier === 'string' && data.chargePoolIdentifier.trim() !== '',
+			}),
+		),
+		dicePoolIdentifier: new fields.StringField(
+			withWidget({
+				required: false,
+				nullable: false,
+				initial: '',
+				label: key('dicePoolIdentifier', 'label'),
+				hint: key('dicePoolIdentifier', 'hint'),
+				widget: 'dicePoolPicker',
 			}),
 		),
 		actionCost: new fields.NumberField({
@@ -213,6 +228,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 
 	declare way: DefendOptionWay;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare otherCreature: Predicate;
 	declare outcome: DefendOptionOutcome;
 	declare armorBonus: string;
 	declare useReroll: boolean;
@@ -222,9 +238,10 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare upcastArmor: number;
 	declare withInterpose: boolean;
 	declare wholeRound: boolean;
-	declare range: number;
+	declare range: string;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
+	declare dicePoolIdentifier: string;
 	declare actionCost: number;
 	declare manaCost: number;
 	declare woundCost: number;
@@ -241,6 +258,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		return {
 			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
 			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
+			dicePoolIdentifier: this.dicePoolIdentifier ?? '',
 			manaCost: Math.max(0, Number(this.manaCost) || 0),
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			actionCost: Math.max(0, Number(this.actionCost) || 0),
@@ -254,6 +272,13 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		if (!formula) return 0;
 		const value = Number(this.resolveFormula(formula));
 		return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+	}
+
+	/** The spaces from the ally who Defends, from the formula; at least 1. */
+	resolveRange(): number {
+		const formula = String(this.range ?? '').trim();
+		const value = formula ? Number(this.resolveFormula(formula)) : 0;
+		return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 	}
 
 	override tooltipInfo(): string {

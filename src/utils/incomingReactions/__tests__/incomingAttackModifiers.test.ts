@@ -35,7 +35,7 @@ interface MockRule {
 	label?: string;
 	modifier?: 'disadvantage' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
 	missThreshold?: number;
-	range?: number;
+	resolveRange?: () => number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
@@ -58,13 +58,16 @@ interface MockToken {
 	isAllyOfTarget: boolean;
 }
 
-function createRule(overrides: Partial<MockRule> = {}): MockRule {
+function createRule({
+	range = 2,
+	...overrides
+}: Partial<MockRule> & { range?: number } = {}): MockRule {
 	return {
 		type: 'modifyIncomingAttack',
 		id: 'rule-1',
 		label: 'Test Rule',
 		modifier: 'disadvantage',
-		range: 2,
+		resolveRange: () => range,
 		item: { name: 'Test Item', uuid: 'Item.test-item' },
 		appliesTo: () => true,
 		...overrides,

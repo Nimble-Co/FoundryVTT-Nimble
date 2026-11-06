@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 type TestGlobals = {
@@ -12,6 +13,11 @@ const TOKEN = 'Scene.scene.Token.token';
 function globals() {
 	return globalThis as unknown as TestGlobals;
 }
+
+const SAVED_GLOBALS = ['fromUuidSync', 'Hooks'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
+const isGMBefore = globals().game.user.isGM;
 
 function createHero(config: { vulnerabilities?: string[]; damageReductions?: object[] } = {}) {
 	const actor = {
@@ -73,6 +79,7 @@ function card(
 	defend: { armor: number; armorApplies?: boolean; outcome?: string; armorBonus?: number } | null,
 ) {
 	const message = new NimbleChatMessage({
+		_id: 'attackcard000001',
 		type: 'spell',
 		system: {
 			targets: [TOKEN],
@@ -90,7 +97,7 @@ function card(
 							label: '',
 							userId: 'u1',
 							combatantId: 'c1',
-							previousActions: 3,
+							actionsSpent: 1,
 							reactionKeys: ['defend'],
 							outcome: defend.outcome ?? 'none',
 							armorBonus: defend.armorBonus ?? 0,
@@ -109,6 +116,14 @@ describe('Defend armor on an attack card', () => {
 		vi.clearAllMocks();
 		globals().game.user.isGM = true;
 		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+	});
+
+	afterEach(() => {
+		for (const [key, descriptor] of SAVED_GLOBALS) {
+			if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+			else Reflect.deleteProperty(globalThis, key);
+		}
+		globals().game.user.isGM = isGMBefore;
 	});
 
 	it('takes the armor off the damage once for the whole attack', async () => {
@@ -193,6 +208,64 @@ describe('Defend armor on an attack card', () => {
 		expect(hero.applyDamage).toHaveBeenCalledWith(5);
 	});
 
+	it('marks the target applied after a Defend write in flight, in one card write', async () => {
+		const hero = createHero();
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+		const message = card([packet('a', 'slashing', 10)], { armor: 4 });
+		const order: string[] = [];
+		let release = () => {};
+		const inFlight = queueReactionWrite(message.id ?? '', async () => {
+			await new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			order.push('defend write');
+		});
+		vi.mocked(message.update).mockImplementation(async () => {
+			order.push('applied mark');
+			return message;
+		});
+
+		const applied = message.applyAllDamage();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(order).toEqual([]);
+		release();
+		await Promise.all([inFlight, applied]);
+
+		expect(order).toEqual(['defend write', 'applied mark']);
+		expect(message.update).toHaveBeenCalledTimes(1);
+		expect(message.update).toHaveBeenCalledWith({ 'system.damageAppliedTo': [TOKEN] });
+	});
+
+	it('runs a Defend write that arrives during the apply after the target is marked applied', async () => {
+		const hero = createHero();
+		let finishDamage = () => {};
+		hero.applyDamage.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finishDamage = resolve;
+				}),
+		);
+		globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+		const message = card([packet('a', 'slashing', 10)], { armor: 4 });
+		vi.mocked(message.update).mockImplementation(async (changes) => {
+			Object.assign(message.system, {
+				damageAppliedTo: (changes as Record<string, unknown>)['system.damageAppliedTo'],
+			});
+			return message;
+		});
+
+		const applied = message.applyAllDamage();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		let seenApplied: unknown = null;
+		const lateDefend = queueReactionWrite(message.id ?? '', async () => {
+			seenApplied = (message.system as { damageAppliedTo?: unknown }).damageAppliedTo;
+		});
+		finishDamage();
+		await Promise.all([applied, lateDefend]);
+
+		expect(seenApplied).toEqual([TOKEN]);
+	});
+
 	describe('Defend options', () => {
 		it('deals no damage when the Defend makes the attack miss', async () => {
 			const hero = createHero();
@@ -212,6 +285,20 @@ describe('Defend armor on an attack card', () => {
 
 			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(9);
 			expect(message.previewDamageFor(TOKEN, { armor: 3, halve: true })).toBe(9);
+			await message.applyAllDamage();
+			expect(hero.applyDamage).toHaveBeenCalledWith(9);
+		});
+
+		it('halves the damage and leaves out the option armor on a halving Defend', async () => {
+			const hero = createHero();
+			globals().fromUuidSync = vi.fn().mockReturnValue({ actor: hero });
+			const message = card([packet('a', 'slashing', 17)], {
+				armor: 3,
+				outcome: 'halve',
+				armorBonus: 2,
+			});
+
+			expect(message.getDamageBreakdownForTarget(TOKEN)?.total).toBe(9);
 			await message.applyAllDamage();
 			expect(hero.applyDamage).toHaveBeenCalledWith(9);
 		});

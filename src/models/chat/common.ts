@@ -508,7 +508,7 @@ export const defends = () => ({
 			label: new fields.StringField({ required: false, nullable: false, initial: '' }),
 			userId: new fields.StringField({ required: false, nullable: false, initial: '' }),
 			combatantId: new fields.StringField({ required: false, nullable: false, initial: '' }),
-			previousActions: new fields.NumberField({
+			actionsSpent: new fields.NumberField({
 				required: false,
 				nullable: true,
 				initial: null,

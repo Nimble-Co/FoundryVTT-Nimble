@@ -12,6 +12,7 @@ import {
 } from '#utils/chargePool/chargePoolReroll.js';
 import { spentPoolIdsOf } from '#utils/chargePool/itemUseRecovery.js';
 import type { ChargeConsumptionDetail, ChargeRecoveryGiven } from '#utils/chargePool/types.js';
+import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
@@ -100,7 +101,6 @@ import {
 	keepChoiceOfWeapon,
 	otherWeaponOf,
 } from '../../utils/damage/dualWield.js';
-import { inFlightSpendOffers, queueReactionWrite } from './reactionWriteQueue.js';
 
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
 interface NewRollUse extends Partial<RerollStepInput<unknown>> {

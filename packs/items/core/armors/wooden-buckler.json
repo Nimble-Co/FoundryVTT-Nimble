@@ -52,6 +52,7 @@
 		},
 		"identified": true,
 		"objectType": "shield",
+		"armorType": "shield",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
 		"objectSizeType": "slots",

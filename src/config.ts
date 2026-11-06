@@ -271,6 +271,9 @@ const armorTypes = {
 	shield: 'NIMBLE.armorTypes.shield',
 };
 
+/** The armor types a worn armor item can have (Core Rules, Armor). A shield is the shield type. */
+const bodyArmorTypes = ['cloth', 'leather', 'mail', 'plate'];
+
 const armorTypesPlural = {
 	leather: 'NIMBLE.armorTypes.leather',
 	mail: 'NIMBLE.armorTypes.mail',
@@ -1058,6 +1061,7 @@ const NIMBLE = {
 	actorTypeBanners,
 	armorTypes,
 	armorTypesPlural,
+	bodyArmorTypes,
 	boonTypes,
 	actorImport,
 	characterCreation,

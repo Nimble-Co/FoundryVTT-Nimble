@@ -1,15 +1,19 @@
+import type { OtherCreature } from '#types/otherCreature.d.ts';
+import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
 import { canPayRerollCost, payRerollCost } from '../reroll/rerollCost.js';
+import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
 import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
 const RULE_TYPE = 'defendOption';
 
 interface AttackCardLike {
 	system?: unknown;
+	speaker?: DefendCardLike['speaker'];
 }
 
 /** A Defend option one hero can use against one attack card. */
@@ -41,6 +45,10 @@ export function defendOptionsOf(
 	way: DefendOptionWay,
 ): DefendOptionPick[] {
 	const delivery = cardDelivery(card);
+	const attacker = speakerActorOf({
+		system: card.system,
+		speaker: card.speaker,
+	}) as OtherCreature | null;
 	return actorRules<DefendOptionRule>(actor as { rules?: unknown } | null)
 		.filter(
 			(rule) =>
@@ -48,6 +56,7 @@ export function defendOptionsOf(
 				rule.way === way &&
 				rule.appliesTo() &&
 				matchesAttackDelivery(rule.attackDelivery, delivery) &&
+				ruleOtherCreatureMatches(rule, rule.otherCreature, attacker) &&
 				(rule.useItem || canPayRerollCost(actor, rule.optionCost)),
 		)
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));

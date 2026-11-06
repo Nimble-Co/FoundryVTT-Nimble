@@ -6,7 +6,29 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "2jVESm2CSajGf7M0",
+				"identifier": "",
+				"label": "Windborne: +1 Burst of Speed when you roll Initiative",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "burst-of-speed",
+				"dieSize": null,
+				"maxDelta": null,
+				"addRefills": [
+					{
+						"trigger": "encounterStart",
+						"mode": "add",
+						"value": "1",
+						"predicate": {}
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

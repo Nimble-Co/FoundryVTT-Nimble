@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newestDefendCard } from '../newestDefendCard.js';
 
 const PIP_TOKEN = 'Scene.s.Token.pip';
@@ -34,10 +34,21 @@ const interposeForPip = {
 
 const hero = (actor: typeof pip) => actor as unknown as Actor.Implementation;
 
+const SAVED_GLOBALS = ['fromUuidSync'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
+
 beforeEach(() => {
 	(globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn(
 		(uuid: string) => documents[uuid] ?? null,
 	);
+});
+
+afterEach(() => {
+	for (const [key, descriptor] of SAVED_GLOBALS) {
+		if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+		else Reflect.deleteProperty(globalThis, key);
+	}
 });
 
 describe('newestDefendCard', () => {
@@ -66,6 +77,11 @@ describe('newestDefendCard', () => {
 
 		expect(newestDefendCard(cards, hero(bram), 'interpose', 0)?.id).toBe('with');
 		expect(newestDefendCard(cards, hero(bram), 'both', 0)?.id).toBe('with');
+	});
+
+	it('finds no card to Defend for a hero the attacks do not hit', () => {
+		const cards = [card('with', 10, { incomingReactions: [interposeForPip] }), card('without', 20)];
+
 		expect(newestDefendCard(cards, hero(bram), 'defend', 0)).toBeNull();
 	});
 });

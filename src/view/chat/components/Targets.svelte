@@ -6,12 +6,11 @@
 	} from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
-	import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
 	import { setDefendArmorApplies, undoDefend } from '#utils/defend/defendRequests.js';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
-	import { createTargetMarksState } from './Targets.svelte.ts';
+	import { createTargetDefendsState, createTargetMarksState } from './Targets.svelte.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 
@@ -31,16 +30,6 @@
 
 	function addTargetedTokensAsTargets() {
 		messageDocument.addTargetedTokensAsTargets();
-	}
-
-	/** The armor a Defend takes off, and the options it was made with. */
-	function defendTip(defend: DefendRecord, key: string): string {
-		const tip = localize(key, { armor: String(defend.armor + defend.armorBonus) });
-		const labels = [...new Set([defend.label, ...defend.options.map((use) => use.label)])].filter(
-			(label) => !!label,
-		);
-		if (labels.length < 1) return tip;
-		return `${tip} ${localize('NIMBLE.chat.defend.optionsUsed', { labels: labels.join(', ') })}`;
 	}
 
 	function getArmorIcon(token: TokenDocument.Implementation) {
@@ -132,6 +121,7 @@
 	const tracking = isMovementOffersAutomationEnabled();
 	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
 	const targetMarks = createTargetMarksState(messageDocument as never);
+	const targetDefends = createTargetDefendsState(() => messageDocument?.reactive?.system);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
@@ -176,14 +166,8 @@
 					: null}
 				{@const movementChips = movementChipsFor(messageDocument, token?.uuid ?? '', { tracking })}
 				{@const mark = targetMarks.markOn(token as never)}
-				{@const defend =
-					token?.actor?.type === 'character'
-						? defendFor(messageDocument?.reactive?.system, token.uuid ?? '')
-						: null}
-				{@const defendControls =
-					!!defend &&
-					game.user?.isGM === true &&
-					!damageAppliedTo(messageDocument?.reactive?.system).has(token.uuid ?? '')}
+				{@const defend = targetDefends.defendOn(token)}
+				{@const defendControls = targetDefends.controlsFor(defend, token)}
 				<li
 					class="nimble-card"
 					class:nimble-target--moves={movementChips.length > 0 || !!mark}
@@ -268,7 +252,7 @@
 								type="button"
 								aria-pressed={defend.armorApplies}
 								aria-label={localize('NIMBLE.chat.defend.armorApplies')}
-								data-tooltip={defendTip(
+								data-tooltip={targetDefends.tip(
 									defend,
 									defend.armorApplies
 										? 'NIMBLE.chat.defend.armorOnHint'
@@ -300,7 +284,7 @@
 							class:fa-shield={!defend.armorApplies}
 							class:nimble-target-defended--off={!defend.armorApplies}
 							data-tooltip={defend.armorApplies
-								? defendTip(defend, 'NIMBLE.chat.defend.defendedTooltip')
+								? targetDefends.tip(defend, 'NIMBLE.chat.defend.defendedTooltip')
 								: localize('NIMBLE.chat.defend.defendedTooltip', { armor: '0' })}
 						></i>
 					{/if}

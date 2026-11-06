@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Setup loads these modules before a hoisted mock could apply.
 const near = new Set<string>();
@@ -22,7 +22,7 @@ vi.doMock('../defendOptions.js', () => ({
 const { allyDefendOffers, useAllyDefendOffer } = await import('../allyDefendOffers.js');
 
 const PIP = 'Scene.s.Token.pip';
-const exploit = { id: 'ex', range: 4, reminder: 'Force an enemy to Interpose.' };
+const exploit = { id: 'ex', resolveRange: () => 4, reminder: 'Force an enemy to Interpose.' };
 
 function token(id: string, actorUuid: string, owner = true, rules: unknown[] = []) {
 	return {
@@ -42,6 +42,10 @@ type Globals = {
 	game: Record<string, unknown>;
 	canvas: unknown;
 };
+
+const SAVED_GLOBALS = ['game', 'fromUuidSync', 'canvas'].map(
+	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+);
 
 function card(fields: Record<string, unknown> = {}) {
 	return {
@@ -66,6 +70,13 @@ beforeEach(() => {
 		users: { activeGM: { id: 'gm', isGM: true, active: true }, contents: [] },
 		i18n: { localize: (key: string) => key, format: (key: string) => key },
 	};
+});
+
+afterEach(() => {
+	for (const [key, descriptor] of SAVED_GLOBALS) {
+		if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+		else Reflect.deleteProperty(globalThis, key);
+	}
 });
 
 describe('allyDefendOffers', () => {

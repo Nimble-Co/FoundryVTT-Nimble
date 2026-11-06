@@ -801,6 +801,12 @@ function generateFormulaReferencePage(): void {
 		[statShortcuts.join(', '), 'Stat modifiers.', 'Yes', ''],
 		[saveShortcuts.join(', '), 'Saving throw modifiers.', 'Yes', 'Late'],
 		[skillShortcuts.join(', '), 'Skill modifiers.', 'Yes', ''],
+		[
+			'`@auraReach`',
+			"The Reach of the hero's aura: the sum of their **Aura Reach** rules, 0 with no aura.",
+			'Yes',
+			'',
+		],
 	].map((row) => `| ${row.map(cell).join(' | ')} |`);
 
 	const ruleTypes: Record<string, string> = NIMBLE.ruleTypes;

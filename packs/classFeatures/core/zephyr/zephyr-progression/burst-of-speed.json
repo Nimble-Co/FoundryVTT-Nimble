@@ -16,16 +16,17 @@
 				"predicate": {},
 				"priority": 1,
 				"scope": "item",
-				"max": "max(@dexterity, 0)",
+				"max": "99",
 				"dieSize": null,
 				"initial": "zero",
 				"hidden": false,
 				"showAsResource": true,
+				"hideMax": true,
 				"recoveries": [
 					{
 						"trigger": "encounterStart",
-						"mode": "refresh",
-						"value": "max(@dexterity, 0)"
+						"mode": "set",
+						"value": "@dexterity"
 					},
 					{
 						"trigger": "encounterEnd",

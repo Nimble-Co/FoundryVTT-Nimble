@@ -26,7 +26,7 @@ These are the tag families that exist:
 | `ancestry:dwarf` | The character's ancestry, by identifier. |
 | `background:soldier` | The character's background, by identifier. |
 | `armor:equipped` / `armor:unarmored` | Whether the character is wearing anything that actually provides armor. Exactly one of these is always present. |
-| `self:shield` / `self:noShield` | Whether the character carries a shield. |
+| `self:shield` / `self:noShield` | Whether the character has a shield equipped. A shield that is only carried counts as no shield. |
 | `strength:3`, `dexterity:1`, `intelligence:0`, `will:4` | The character's current stat modifiers. Some rule types apply before stat modifiers are computed; the builder shows a warning when a condition on these tags cannot work for the chosen rule type. |
 | `proficiency:armor:...`, `proficiency:weapon:...`, `proficiency:language:...` | Each proficiency the character has. |
 | `self:emberChargePool:2` | How many charges a charge pool currently holds, one tag per pool, named after the pool's identifier. |
@@ -106,7 +106,7 @@ Add several rows to combine requirements: a row for `level` is at least `5` *and
 
 ## Conditions about the target
 
-Everything above tests the character *carrying* the item. Some rule types can also test the other creature of an attack: the **Damage Bonus** rule has a separate **Target condition** box, checked against the target when the attack lands. The **Primary Die Bonus** rule has **Only when the target is**. The **Reroll** and **Change a Die** rules have **Only when the other creature is**: the target, or the one who rolled when the target uses the rule. They also have **Show the note only when**, for their note on the card.
+Everything above tests the character *carrying* the item. Some rule types can also test the other creature of an attack: the **Damage Bonus** rule has a separate **Target condition** box, checked against the target when the attack lands. The **Primary Die Bonus** rule has **Only when the target is**. The **Reroll** and **Change a Die** rules have **Only when the other creature is**: the target, or the one who rolled when the target uses the rule. They also have **Show the note only when**, for their note on the card. The **Defend Option** rule has **Only when the attacker is**: the creature that made the attack the hero Defends against, so `target:quarry` there means the hero's own quarry made the attack.
 
 The target tags are `target:bloodied`, `target:concentrating`, and one tag for each other condition, such as `target:distracted`. The size and armor tags work too: `target:size:tiny`, `target:armor:none`. A creature that the owner marked with a **Mark Target** rule also has `target:<flag key>`, such as `target:quarry`, but only for the owner who marked it. **Only when the other creature is**, **Only when the target is** and **Show the note only when** also see the owner's own tags, such as `feature:supreme-execution`, so one test can say "the target is Distracted, or I have this feature". Write such an "or" with `$or` in the raw JSON view, for example `{ "$or": ["target:distracted", "feature:supreme-execution"] }`.
 
