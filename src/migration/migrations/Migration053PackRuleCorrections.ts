@@ -1,9 +1,7 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 /** The Savage Awareness rule the pack now ships, id included, so migrated copies behave identically. */
 const SAVAGE_AWARENESS_RULE: RuleSource = {
@@ -240,7 +238,7 @@ class Migration053PackRuleCorrections extends MigrationBase {
 		if (source?.type !== 'feature') return undefined;
 
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return FEATURES.find((spec) => spec.sourceId === sourceId);
 		}
 

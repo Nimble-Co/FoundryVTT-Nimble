@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -17,9 +17,7 @@ interface PackItemSpec {
 	rules: RuleSource[];
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
 const MAGIC_ITEM_PREFIX = 'Compendium.nimble.nimble-magic-items.Item.';
 const SPELL_PREFIX = 'Compendium.nimble.nimble-spells.Item.';
 
@@ -473,13 +471,6 @@ const PACK_ITEMS: PackItemSpec[] = [
 	},
 ];
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 /**
  * Gives copies of the items whose attacks now have Attack Outcome, Make It a
  * Crit and Damage Back rules what the pack now ships: the rules, an identifier
@@ -516,7 +507,7 @@ class Migration073AttackOutcomes extends MigrationBase {
 
 	#match(source: any): PackItemSpec | undefined {
 		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
 

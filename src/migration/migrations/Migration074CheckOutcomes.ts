@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -27,9 +27,7 @@ interface PackItemSpec {
 	saveChange?: SaveChange;
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
 const ANCESTRY_BONUS_PREFIX = 'Compendium.nimble.nimble-ancestry-bonuses.Item.';
 const BACKGROUND_PREFIX = 'Compendium.nimble.nimble-backgrounds.Item.';
 const BOON_PREFIX = 'Compendium.nimble.nimble-boons.Item.';
@@ -678,13 +676,6 @@ const DEATH_RAY_SAVE: SaveChange = {
 	to: 'strength',
 };
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 function deepEquals(left: unknown, right: unknown): boolean {
 	if (left === right) return true;
 
@@ -783,7 +774,7 @@ class Migration074CheckOutcomes extends MigrationBase {
 
 	#match(source: any): PackItemSpec | undefined {
 		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
 
@@ -799,7 +790,7 @@ class Migration074CheckOutcomes extends MigrationBase {
 	#isDravok(actor: any): boolean {
 		if (!actor) return false;
 		const sourceId = toSnapshotId(this.getSourceId(actor));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) return sourceId === DRAVOK.sourceId;
+		if (isCompendiumId(sourceId)) return sourceId === DRAVOK.sourceId;
 		return (
 			String(actor.name ?? '')
 				.trim()

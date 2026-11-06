@@ -1,7 +1,5 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 const LAY_ON_HANDS_SOURCE_ID = 'Compendium.nimble.nimble-class-features.Item.Ddm1A7P01CcmPrim';
 const LAY_ON_HANDS_NAME = 'Lay on Hands';
@@ -71,7 +69,7 @@ class Migration048LayOnHandsPool extends MigrationBase {
 		if (source.type !== 'feature') return;
 
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		const isLayOnHands = sourceId?.startsWith(COMPENDIUM_PREFIX)
+		const isLayOnHands = isCompendiumId(sourceId)
 			? sourceId === LAY_ON_HANDS_SOURCE_ID
 			: source.name === LAY_ON_HANDS_NAME;
 		if (!isLayOnHands) return;

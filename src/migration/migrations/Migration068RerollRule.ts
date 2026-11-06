@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -26,9 +26,7 @@ interface PackItemSpec {
 	name?: { from: string; to: string };
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
 const ANCESTRY_BONUS_PREFIX = 'Compendium.nimble.nimble-ancestry-bonuses.Item.';
 
 /** Keys only the removed forced reroll mode had. */
@@ -196,13 +194,6 @@ const PACK_ITEMS: PackItemSpec[] = [
 	},
 ];
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 function withoutKeys(rule: RuleSource, keys: string[]): RuleSource {
 	return Object.fromEntries(Object.entries(rule).filter(([key]) => !keys.includes(key)));
 }
@@ -296,7 +287,7 @@ class Migration068RerollRule extends MigrationBase {
 
 	#match(source: any): PackItemSpec | undefined {
 		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId && spec.type === source.type);
 		}
 

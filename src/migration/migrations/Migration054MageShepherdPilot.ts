@@ -1,7 +1,5 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -235,7 +233,7 @@ class Migration054MageShepherdPilot extends MigrationBase {
 	 */
 	#match(source: any): ItemSpec | undefined {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return ITEMS.find((spec) => spec.sourceId === sourceId && spec.type === source.type);
 		}
 

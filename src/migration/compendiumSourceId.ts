@@ -39,3 +39,22 @@ export function toInstalledId(snapshotId: string): string {
 		? `${INSTALLED_PREFIX}${snapshotId.slice(SNAPSHOT_PREFIX.length)}`
 		: snapshotId;
 }
+
+/** Where every class feature lives. */
+const FEATURE_PREFIX = `${SNAPSHOT_PREFIX}nimble-class-features.Item.`;
+
+/** The class feature pack under the name it carried before the rename, still stored on old copies. */
+const LEGACY_FEATURE_PREFIX = `${SNAPSHOT_PREFIX}class-features.Item.`;
+
+/** The snapshot id of a stored source id, with an old class feature pack id moved to the current pack. */
+export function toPackSourceId(sourceId: string | undefined): string | undefined {
+	const snapshotId = toSnapshotId(sourceId);
+	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
+		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
+		: snapshotId;
+}
+
+/** Whether a source id names a compendium entry. A copy without one is matched by its name. */
+export function isCompendiumId(sourceId: string | undefined): boolean {
+	return sourceId?.startsWith('Compendium.') === true;
+}

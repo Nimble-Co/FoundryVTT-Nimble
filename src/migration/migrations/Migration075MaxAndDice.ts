@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -25,9 +25,7 @@ interface PackItemSpec {
 	writes?: FieldWrite[];
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
 const ANCESTRY_BONUS_PREFIX = 'Compendium.nimble.nimble-ancestry-bonuses.Item.';
 const BOON_PREFIX = 'Compendium.nimble.nimble-boons.Item.';
 const SPELL_PREFIX = 'Compendium.nimble.nimble-spells.Item.';
@@ -1130,14 +1128,11 @@ const PACK_ITEMS: PackItemSpec[] = [
 	},
 ];
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	if (snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)) {
-		return `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`;
-	}
-	return snapshotId?.startsWith(LEGACY_SPELL_PREFIX)
-		? `${SPELL_PREFIX}${snapshotId.slice(LEGACY_SPELL_PREFIX.length)}`
-		: snapshotId;
+function toPackOrSpellSourceId(sourceId: string | undefined): string | undefined {
+	const packId = toPackSourceId(sourceId);
+	return packId?.startsWith(LEGACY_SPELL_PREFIX)
+		? `${SPELL_PREFIX}${packId.slice(LEGACY_SPELL_PREFIX.length)}`
+		: packId;
 }
 
 function deepEquals(left: unknown, right: unknown): boolean {
@@ -1198,8 +1193,8 @@ class Migration075MaxAndDice extends MigrationBase {
 	}
 
 	#match(source: any): PackItemSpec | undefined {
-		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		const sourceId = toPackOrSpellSourceId(this.getSourceId(source));
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
 

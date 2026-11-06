@@ -1,20 +1,8 @@
-import { toSnapshotId } from './compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from './compendiumSourceId.js';
 import { MigrationBase } from './MigrationBase.js';
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 /** Where every class feature the checklist passes touch lives. */
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-
-/** The same pack under the name it carried before the rename, still stored on old copies. */
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
-
-function toFeatureSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 type EffectSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -166,8 +154,8 @@ abstract class ChecklistMigrationBase extends MigrationBase {
 	 * pair a world copy keeps.
 	 */
 	#matchFeature(source: any): FeatureSpec | undefined {
-		const sourceId = toFeatureSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		const sourceId = toPackSourceId(this.getSourceId(source));
+		if (isCompendiumId(sourceId)) {
 			return this.features.find((feature) => feature.sourceId === sourceId);
 		}
 

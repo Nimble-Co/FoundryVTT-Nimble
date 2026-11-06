@@ -1,9 +1,7 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type Node = Record<string, unknown> & { id?: unknown; type?: unknown };
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 const CLASS_IDENTIFIER = 'commander';
 
@@ -110,7 +108,7 @@ class Migration055CommanderChecklist extends MigrationBase {
 	 */
 	#matches(source: any, feature: { sourceId: string; name: string }): boolean {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) return sourceId === feature.sourceId;
+		if (isCompendiumId(sourceId)) return sourceId === feature.sourceId;
 
 		if (source.system?.class !== CLASS_IDENTIFIER) return false;
 		const name = typeof source.name === 'string' ? source.name.trim().toLowerCase() : '';

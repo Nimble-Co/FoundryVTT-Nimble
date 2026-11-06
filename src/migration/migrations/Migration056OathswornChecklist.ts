@@ -1,7 +1,6 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
 const CLASS_IDENTIFIER = 'oathsworn';
 
@@ -236,7 +235,7 @@ class Migration056OathswornChecklist extends MigrationBase {
 	 */
 	#matchFeature(source: any): FeatureSpec | undefined {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return FEATURES.find((feature) => feature.sourceId === sourceId);
 		}
 
@@ -291,7 +290,7 @@ class Migration056OathswornChecklist extends MigrationBase {
 
 	#fixOathOfVengeance(source: any): void {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		const matches = sourceId?.startsWith(COMPENDIUM_PREFIX)
+		const matches = isCompendiumId(sourceId)
 			? sourceId === OATH_OF_VENGEANCE_SOURCE_ID
 			: source.system?.parentClass === CLASS_IDENTIFIER &&
 				typeof source.name === 'string' &&
