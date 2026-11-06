@@ -7,6 +7,7 @@ import type {
 import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResultChange } from '#types/resultChange.d.ts';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 import { rerollIsUsedByDefend } from '#utils/defend/defendOptions.js';
 import { cardTakesDefends } from '#utils/defend/defendRecords.js';
 import {
@@ -223,8 +224,7 @@ export function createIncomingReactionPromptsState(
 	});
 
 	function canUseEntry(entry: IncomingReactionEntry): boolean {
-		const actor = text.reactingActor(entry);
-		if (!game.user?.isGM && !actor?.isOwner) return false;
+		if (!mayActHere(text.reactingActor(entry))) return false;
 		// A reroll the card no longer allows (outcome, side, cost) is hidden.
 		if (entry.kind === 'reroll') return message?.canStillUseReroll(entry) ?? false;
 		return true;

@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { CardRequestRejection } from '#types/cardRequestRejection.d.ts';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
 
@@ -33,15 +34,6 @@ interface CardOperation<TPayload> {
 	run(payload: TPayload, requester: CardRequester): Promise<unknown>;
 	/** Shown to a player when no GM is connected to run the operation. */
 	noGmKey?: string;
-}
-
-/** Why the GM refused, as a localization key the asking client renders. */
-interface CardRequestRejection {
-	messageId: string;
-	/** The row or record that was refused, when there is one. */
-	entryId?: string;
-	userId: string;
-	reasonKey: string;
 }
 
 type SocketPayload = Record<string, unknown> & { type?: unknown; userId?: unknown };
@@ -95,6 +87,13 @@ function mayActFor(actor: object | string | null, requester: CardRequester): boo
 	const found = typeof actor === 'string' ? fromUuidSync(actor as `Actor.${string}`) : actor;
 	const owned = found as { testUserPermission?: (user: User, level: number) => boolean } | null;
 	return owned?.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) === true;
+}
+
+/** The same rule for this client's own user: whether it shows a control that acts for the actor. */
+function mayActHere(actor: { isOwner?: boolean } | string | null | undefined): boolean {
+	if (game.user?.isGM) return true;
+	const found = typeof actor === 'string' ? fromUuidSync(actor as `Actor.${string}`) : actor;
+	return (found as { isOwner?: boolean } | null | undefined)?.isOwner === true;
 }
 
 function deliverRejection(rejection: CardRequestRejection): void {
@@ -161,11 +160,9 @@ function registerCardSocketListener(): void {
 
 export {
 	CARD_REQUEST_REJECTED_HOOK,
-	type CardOperation,
-	type CardRequester,
-	type CardRequestRejection,
 	defineCardOperation,
 	mayActFor,
+	mayActHere,
 	onCardNotice,
 	registerCardSocketListener,
 	rejectCardRequest,

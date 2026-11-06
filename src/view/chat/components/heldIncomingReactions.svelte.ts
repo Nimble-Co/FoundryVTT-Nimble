@@ -1,9 +1,7 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import type { CardRequestRejection } from '#types/cardRequestRejection.d.ts';
 import type { HeldIncomingReactions } from '#types/components/IncomingReactionPrompts.d.ts';
-import {
-	CARD_REQUEST_REJECTED_HOOK,
-	type CardRequestRejection,
-} from '#utils/chat/cardOperations.js';
+import { CARD_REQUEST_REJECTED_HOOK } from '#utils/chat/cardOperations.js';
 
 /**
  * Offers whose request has been handed off but whose result has not come

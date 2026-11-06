@@ -414,3 +414,23 @@ describe('mayActFor', () => {
 		expect(mayActFor(actorOwnedBy('ghost'), { userId: 'ghost', viaSocket: true })).toBe(false);
 	});
 });
+
+describe('mayActHere', () => {
+	it('shows a GM every control', async () => {
+		setUsers(GM, GM.id);
+		const { mayActHere } = await loadModule();
+
+		expect(mayActHere(null)).toBe(true);
+	});
+
+	it('shows a player the controls of the actors they own, by actor or uuid', async () => {
+		setUsers(PLAYER, GM.id, [PLAYER]);
+		globalThis.fromUuidSync = vi.fn(() => ({ isOwner: true })) as never;
+		const { mayActHere } = await loadModule();
+
+		expect(mayActHere({ isOwner: true })).toBe(true);
+		expect(mayActHere({ isOwner: false })).toBe(false);
+		expect(mayActHere('Actor.hero')).toBe(true);
+		expect(mayActHere(null)).toBe(false);
+	});
+});
