@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
+	import { pendingKeepOf } from '#utils/rolls/cardRollState.ts';
 	import { hasDispositionTarget } from '#utils/treeManipulation/hasDispositionTarget.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
@@ -42,10 +43,7 @@
 	}
 
 	// A reroll whose result a player still chooses holds the damage.
-	const waitsForKeep = $derived(
-		!!(messageDocument?.reactive as unknown as { system?: { pendingKeep?: unknown } } | undefined)
-			?.system?.pendingKeep,
-	);
+	const waitsForKeep = $derived(!!pendingKeepOf(messageDocument?.reactive?.system));
 	const applyDamageLabel = $derived(
 		localize(waitsForKeep ? 'NIMBLE.chat.incomingReactions.keepFirst' : 'NIMBLE.chat.applyDamage'),
 	);

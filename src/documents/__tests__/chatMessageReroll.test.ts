@@ -707,7 +707,7 @@ describe('resolveRerollReaction', () => {
 			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
 
 			// The test roll has no dice; diceForRule has its own tests.
-			expect(message.changeToPick(rerollEntry({ use: 'change' }) as never)).toEqual({
+			expect(message.cardRerolls.changeToPick(rerollEntry({ use: 'change' }) as never)).toEqual({
 				setsValue: true,
 				dice: [],
 			});
@@ -717,14 +717,16 @@ describe('resolveRerollReaction', () => {
 			setupWorld(change('add'));
 			const message = createMessage({ entries: [rerollEntry({ use: 'change' })] });
 
-			expect(message.changeToPick(rerollEntry({ use: 'change' }) as never)?.setsValue).toBe(false);
+			expect(
+				message.cardRerolls.changeToPick(rerollEntry({ use: 'change' }) as never)?.setsValue,
+			).toBe(false);
 		});
 
 		it('gives no change to pick for a reroll entry', () => {
 			setupWorld();
 			const message = createMessage();
 
-			expect(message.changeToPick(rerollEntry() as never)).toBeNull();
+			expect(message.cardRerolls.changeToPick(rerollEntry() as never)).toBeNull();
 		});
 
 		it('refuses a change of a picked die when no die was picked', async () => {
@@ -878,7 +880,7 @@ describe('resolveRerollReaction', () => {
 		setupWorld();
 		const message = createMessage();
 
-		expect(message.rerollDiceToPick(rerollEntry() as never)).toBeNull();
+		expect(message.cardRerolls.rerollDiceToPick(rerollEntry() as never)).toBeNull();
 	});
 
 	describe('Modify Reroll rules of the reroll owner', () => {
@@ -1318,7 +1320,7 @@ describe('resolveRerollReaction', () => {
 			const other = rerollEntry({ id: 'entry-2' });
 			(message.system.incomingReactions as unknown[]).push(other);
 
-			expect(message.canStillUseReroll(other as never)).toBe(false);
+			expect(message.cardRerolls.canStillUseReroll(other as never)).toBe(false);
 			expect(message.canApplyAllDamage()).toBe(false);
 			expect(message.canApplyDamage(5)).toBe(false);
 		});
@@ -1350,7 +1352,7 @@ describe('resolveRerollReaction', () => {
 			setupWorld();
 			const message = createMessage({ entries: [rerollEntry(), leftOut()] });
 
-			await message.addLeftOutReroll('pip');
+			await message.cardRerolls.addLeftOutReroll('pip');
 
 			expect(updatePayload(message).system.incomingReactions).toEqual([
 				expect.objectContaining({ id: 'entry-1' }),
@@ -1363,7 +1365,7 @@ describe('resolveRerollReaction', () => {
 			globals().game.user = { isGM: false, id: 'player-1' };
 			const message = createMessage({ entries: [leftOut()] });
 
-			await message.addLeftOutReroll('pip');
+			await message.cardRerolls.addLeftOutReroll('pip');
 
 			expect(message.update).not.toHaveBeenCalled();
 		});
@@ -1591,21 +1593,21 @@ describe('resolveRerollReaction', () => {
 			setupWorld();
 			const message = createMessage();
 
-			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(true);
+			expect(message.cardRerolls.canStillUseReroll(rerollEntry() as never)).toBe(true);
 		});
 
 		it('is false when the outcome no longer matches the rule', () => {
 			setupWorld({ outcome: 'criticalHit' });
 			const message = createMessage({ isCritical: false });
 
-			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+			expect(message.cardRerolls.canStillUseReroll(rerollEntry() as never)).toBe(false);
 		});
 
 		it('is false when the rule no longer offers the reroll', () => {
 			setupWorld({ offersUseOn: vi.fn(() => false) });
 			const message = createMessage();
 
-			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+			expect(message.cardRerolls.canStillUseReroll(rerollEntry() as never)).toBe(false);
 		});
 
 		it('is false for a once per attack rule when the card has a used entry of it', () => {
@@ -1614,16 +1616,18 @@ describe('resolveRerollReaction', () => {
 				entries: [rerollEntry({ id: 'entry-0', used: true }), rerollEntry()],
 			});
 
-			expect(message.canStillUseReroll(rerollEntry() as never)).toBe(false);
+			expect(message.cardRerolls.canStillUseReroll(rerollEntry() as never)).toBe(false);
 		});
 
 		it('is false for a used entry and for a roll that misses by force', () => {
 			setupWorld();
 
-			expect(createMessage().canStillUseReroll(rerollEntry({ used: true }) as never)).toBe(false);
-			expect(createMessage({ forceMiss: true }).canStillUseReroll(rerollEntry() as never)).toBe(
-				false,
-			);
+			expect(
+				createMessage().cardRerolls.canStillUseReroll(rerollEntry({ used: true }) as never),
+			).toBe(false);
+			expect(
+				createMessage({ forceMiss: true }).cardRerolls.canStillUseReroll(rerollEntry() as never),
+			).toBe(false);
 		});
 	});
 
@@ -1866,7 +1870,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 	it('lists the other stats for the row', () => {
 		setupWorld({ usesAnotherStat: true, die: 'wholeRoll' });
 		const message = messageWithStat();
-		const stats = message.rerollStatsToPick(rerollEntry() as never);
+		const stats = message.cardRerolls.rerollStatsToPick(rerollEntry() as never);
 		expect(stats?.map((choice) => choice.stat)).toEqual(['dexterity', 'intelligence', 'will']);
 	});
 

@@ -51,7 +51,7 @@ export function createLeftOutRerollsState(message: NimbleChatMessage | undefined
 		if (adding) return;
 		adding = true;
 		try {
-			await message?.addLeftOutReroll(entry.id);
+			await message?.cardRerolls.addLeftOutReroll(entry.id);
 		} catch (error) {
 			console.error('Nimble | Failed to add a left-out reroll', error);
 			ui.notifications?.error(localize('NIMBLE.chat.incomingReactions.useFailed'));

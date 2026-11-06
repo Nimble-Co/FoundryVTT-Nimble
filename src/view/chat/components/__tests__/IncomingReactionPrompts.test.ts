@@ -112,7 +112,15 @@ function createMessage(
 		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
 		system: { incomingReactions: entries, rerolls },
 		reactive: null as unknown,
-		canStillUseReroll: vi.fn(() => true),
+		cardRerolls: {
+			canStillUseReroll: vi.fn(() => true),
+			rerollDiceToPick: vi.fn(() => null),
+			severalDiceToPick: vi.fn(() => null),
+			changeToPick: vi.fn(() => null),
+			rerollStatsToPick: vi.fn(() => null),
+			resultUseOf: vi.fn(() => null),
+			addLeftOutReroll: vi.fn(async () => undefined),
+		} as Record<string, unknown> & { canStillUseReroll: ReturnType<typeof vi.fn> },
 	};
 	message.reactive = message;
 	return message;
@@ -1089,7 +1097,8 @@ describe('IncomingReactionPrompts', () => {
 
 			function pickerMessage(dice: unknown[]) {
 				const message = createMessage([rerollEntry()]);
-				return Object.assign(message, { rerollDiceToPick: vi.fn(() => dice) });
+				Object.assign(message.cardRerolls, { rerollDiceToPick: vi.fn(() => dice) });
+				return message;
 			}
 
 			async function settle() {
@@ -1223,7 +1232,8 @@ describe('IncomingReactionPrompts', () => {
 
 			function changeMessage(setsValue: boolean, dice: unknown[]) {
 				const message = createMessage([rerollEntry({ use: 'change' })]);
-				return Object.assign(message, { changeToPick: vi.fn(() => ({ setsValue, dice })) });
+				Object.assign(message.cardRerolls, { changeToPick: vi.fn(() => ({ setsValue, dice })) });
+				return message;
 			}
 
 			async function settle() {
@@ -1450,7 +1460,8 @@ describe('IncomingReactionPrompts', () => {
 						leftOut: { reason: 'reach', spaces: 7, reach: 6 },
 					} as EntryOptions),
 				]);
-				return Object.assign(message, { addLeftOutReroll: vi.fn(async () => undefined) });
+				Object.assign(message.cardRerolls, { addLeftOutReroll: vi.fn(async () => undefined) });
+				return message;
 			}
 
 			it('shows the GM one quiet line, and Add gives the reroll its row', async () => {
@@ -1461,7 +1472,7 @@ describe('IncomingReactionPrompts', () => {
 				expect(rollPlace().getByText('7 spaces away, Reach 6')).toBeTruthy();
 				await fireEvent.click(rollPlace().getByRole('button', { name: /^Add Pocket Sand/ }));
 
-				expect(message.addLeftOutReroll).toHaveBeenCalledWith('pip');
+				expect(message.cardRerolls.addLeftOutReroll).toHaveBeenCalledWith('pip');
 			});
 
 			it('stays open when the card renders again', async () => {
@@ -1491,10 +1502,10 @@ describe('IncomingReactionPrompts', () => {
 
 		it('asks the card whether each reroll can still be used, and hides it when not', () => {
 			const message = createMessage([rerollEntry()]);
-			message.canStillUseReroll.mockReturnValue(false);
+			message.cardRerolls.canStillUseReroll.mockReturnValue(false);
 			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
-			expect(message.canStillUseReroll).toHaveBeenCalledWith(
+			expect(message.cardRerolls.canStillUseReroll).toHaveBeenCalledWith(
 				expect.objectContaining({ id: 'reroll-entry' }),
 			);
 			expect(screen.queryByRole('button')).toBeNull();
@@ -1737,7 +1748,9 @@ describe('IncomingReactionPrompts with No Damage', () => {
 	it('offers a row that tells what it does', () => {
 		const entry = { ...createEntry({ id: 'entry-1', kind: 'reroll' }), use: 'result' };
 		const message = createMessage([entry as ReturnType<typeof createEntry>]);
-		Object.assign(message, { resultUseOf: () => ({ change: 'noDamage', value: 0, stat: '' }) });
+		Object.assign(message.cardRerolls, {
+			resultUseOf: () => ({ change: 'noDamage', value: 0, stat: '' }),
+		});
 
 		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 

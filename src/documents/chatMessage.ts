@@ -5,8 +5,6 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
-import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
-import type { StatChoice } from '#types/rollStat.d.ts';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
@@ -40,7 +38,6 @@ import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnima
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import type { PickableDie } from '../dice/oneDieReroll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
@@ -56,12 +53,12 @@ import { applyHitConditions } from '../utils/damage/hitCondition.js';
 import type { PoolSpendSelection } from '../utils/incomingReactions/incomingAttackReactions.js';
 import {
 	type IncomingReactionEntry,
-	type PendingKeep,
 	type RerollRecord,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
-import { resultChangesOf, standingResultChanges } from '../utils/rolls/resultChanges.js';
+import { noDamageTargetsOf, owesCritTriggers } from '../utils/rolls/cardRollState.js';
+import { resultChangesOf } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import {
 	CardDamageBack,
@@ -161,17 +158,6 @@ export interface TargetDamageBreakdown {
 }
 
 export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
-
-/** The target tokens the card's standing no-damage changes cover, with what names each. */
-function noDamageTargetsOf(system: unknown): Map<string, ResultChange> {
-	const covered = new Map<string, ResultChange>();
-	for (const change of standingResultChanges(resultChangesOf(system))) {
-		if (change.change === 'noDamage' && change.targetTokenUuid) {
-			covered.set(change.targetTokenUuid, change);
-		}
-	}
-	return covered;
-}
 
 /** A Defend's effect on one token's damage: its armor, or the full effect. */
 type DefendDamage = number | Partial<DefendEffect>;
@@ -1277,7 +1263,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async applyDamage(value: number, options?: DamageApplyOptions): Promise<void> {
 		if (!this.isActivationCard()) return;
-		if (!game.user?.isGM || this.pendingKeep()) return;
+		if (!game.user?.isGM || this.cardRerolls.pendingKeep()) return;
 
 		if (options?.outcome === 'noDamage') {
 			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
@@ -1301,7 +1287,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async applyAllDamage(): Promise<void> {
 		if (!this.isActivationCard()) return;
-		if (!game.user?.isGM || this.pendingKeep()) return;
+		if (!game.user?.isGM || this.cardRerolls.pendingKeep()) return;
 
 		const packets = this.#applicableDamagePackets();
 		if (packets.length < 1) {
@@ -1431,10 +1417,7 @@ class NimbleChatMessage extends ChatMessage {
 					? `Scene.${this.speaker.scene}.Token.${this.speaker.token}`
 					: (sourceActor?.getActiveTokens?.()[0]?.document?.uuid ?? null),
 		});
-		if (
-			systemData.discardedCritTriggers === true &&
-			systemData.discardedCritTriggersFired !== true
-		) {
+		if (owesCritTriggers(systemData)) {
 			await this.update({ 'system.discardedCritTriggersFired': true } as Record<string, unknown>);
 		}
 
@@ -1470,7 +1453,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {
-		if (!this.isActivationCard() || this.pendingKeep()) return false;
+		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return false;
 		if (options?.outcome === 'noDamage') return false;
 
 		const damage = Math.floor(Number(value));
@@ -1481,7 +1464,7 @@ class NimbleChatMessage extends ChatMessage {
 
 	/** Whether the card's single Apply Damage control should be live. */
 	canApplyAllDamage(): boolean {
-		if (!this.isActivationCard() || this.pendingKeep()) return false;
+		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return false;
 
 		const packets = this.#applicableDamagePackets();
 		if (packets.length < 1) return false;
@@ -1865,47 +1848,6 @@ class NimbleChatMessage extends ChatMessage {
 		return this.#incomingReactionEntries().map((e) =>
 			predicate(e) ? { ...e, used: true, ...patch } : e,
 		);
-	}
-
-	/** The reroll result waiting for a player to choose, or null. */
-	pendingKeep(): PendingKeep | null {
-		return this.cardRerolls.pendingKeep();
-	}
-
-	/** Whether a `reroll` entry on this card passes every gate again on this client. */
-	canStillUseReroll(entry: IncomingReactionEntry): boolean {
-		return this.cardRerolls.canStillUseReroll(entry);
-	}
-
-	/** Give an ally reroll the scan left out its button on this card. GM only. */
-	addLeftOutReroll(entryId: string): Promise<void> {
-		return this.cardRerolls.addLeftOutReroll(entryId);
-	}
-
-	severalDiceToPick(
-		entry: IncomingReactionEntry,
-	): { dice: PickableDie[]; max: number; manaPerDie: number } | null {
-		return this.cardRerolls.severalDiceToPick(entry);
-	}
-
-	/** The dice a player picks from for a `reroll` entry, or null when it rerolls no picked die. */
-	rerollDiceToPick(entry: IncomingReactionEntry): PickableDie[] | null {
-		return this.cardRerolls.rerollDiceToPick(entry);
-	}
-
-	/** The die, and whether a value is picked, for a `change` entry; null for a reroll entry. */
-	changeToPick(entry: IncomingReactionEntry): { setsValue: boolean; dice: PickableDie[] } | null {
-		return this.cardRerolls.changeToPick(entry);
-	}
-
-	/** The stats a player picks from for a `reroll` entry, or null when it uses no other stat. */
-	rerollStatsToPick(entry: IncomingReactionEntry): StatChoice[] | null {
-		return this.cardRerolls.rerollStatsToPick(entry);
-	}
-
-	/** What a Change a Result entry does now, for its row. */
-	resultUseOf(entry: IncomingReactionEntry): ResultUse | null {
-		return this.cardRerolls.resultUseOf(entry);
 	}
 
 	/** How this card's attack is delivered. */

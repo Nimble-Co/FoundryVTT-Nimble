@@ -404,11 +404,11 @@ describe('a rule for a failed roll, on both paths of the gate', () => {
 
 	it('shows on the client on a failure, goes away on a success, and comes back', () => {
 		const { card, stamped } = world();
-		expect(card.canStillUseReroll(stamped)).toBe(true);
+		expect(card.cardRerolls.canStillUseReroll(stamped)).toBe(true);
 		card.system.resultChanges = [succeeded];
-		expect(card.canStillUseReroll(stamped)).toBe(false);
+		expect(card.cardRerolls.canStillUseReroll(stamped)).toBe(false);
 		card.system.resultChanges = [];
-		expect(card.canStillUseReroll(stamped)).toBe(true);
+		expect(card.cardRerolls.canStillUseReroll(stamped)).toBe(true);
 	});
 
 	it('is refused by the GM on a success, and the entry stays', async () => {
@@ -644,7 +644,7 @@ describe('Change a Result on a save card', () => {
 
 		await click(card, 'soul');
 		rule.offersUseOn.mockClear();
-		expect(card.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
+		expect(card.cardRerolls.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
 
 		expect(rule.offersUseOn).toHaveBeenCalledWith(
 			expect.objectContaining({ card: expect.objectContaining({ total: 10, roller }) }),

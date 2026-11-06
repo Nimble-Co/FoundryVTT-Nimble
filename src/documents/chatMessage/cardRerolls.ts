@@ -85,6 +85,7 @@ import {
 } from '#utils/reroll/rerollStep.js';
 import { applyGrants, grantsForUse } from '#utils/reroll/rerollUseGrants.js';
 import type { RollUseKind } from '#utils/reroll/rollToReroll.js';
+import { pendingKeepOf, resultRemovalRefusal } from '#utils/rolls/cardRollState.js';
 import {
 	newResultChange,
 	resultChangesOf,
@@ -447,9 +448,7 @@ export class CardRerolls {
 
 	/** The reroll result waiting for a player to choose, or null. */
 	pendingKeep(): PendingKeep | null {
-		return (
-			(this.#host.system() as unknown as { pendingKeep?: PendingKeep | null }).pendingKeep ?? null
-		);
+		return pendingKeepOf(this.#host.system());
 	}
 
 	/**
@@ -1329,13 +1328,12 @@ export class CardRerolls {
 		const line = standingResultChanges(changes).filter((change) => change.lineId === lineId);
 		const first = line[0];
 		if (!first) return reject('NIMBLE.chat.incomingReactions.useFailed');
-		if (this.pendingKeep()) return reject('NIMBLE.chat.incomingReactions.keepFirst');
+		const refusal = resultRemovalRefusal(this.#host.system(), first);
+		if (refusal === 'NIMBLE.chat.incomingReactions.keepFirst') return reject(refusal);
 		if (!mayActFor(first.actorUuid, { userId: requestingUserId, viaSocket })) {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
-		if (first.automatic || !this.#canStillRemove(first)) {
-			return reject('NIMBLE.chat.incomingReactions.useFailed');
-		}
+		if (refusal) return reject(refusal);
 
 		const removed = new Set(line.map((change) => change.id));
 		const remaining = changes.filter((change) => !removed.has(change.id));
@@ -1362,12 +1360,6 @@ export class CardRerolls {
 				unknown
 			>);
 		}
-	}
-
-	/** No damage for a target stands once the card's damage is applied. */
-	#canStillRemove(change: ResultChange): boolean {
-		if (change.change !== 'noDamage') return true;
-		return (this.#host.system() as { damageApplied?: boolean }).damageApplied !== true;
 	}
 
 	/** Uses, Mana and Wounds go back. An action or a heroic reaction stays spent. */

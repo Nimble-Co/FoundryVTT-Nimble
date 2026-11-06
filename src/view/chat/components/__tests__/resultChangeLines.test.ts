@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ResultChange } from '#types/resultChange.d.ts';
+import { resultRemovalRefusal } from '#utils/rolls/cardRollState.ts';
 import {
 	resultAmount,
 	resultChangeLines,
@@ -34,7 +35,8 @@ function linesOf(changes: ResultChange[], rollTotal = 7, canRemove = true) {
 		rollTotal,
 		speakerUuid: 'Actor.hero',
 		documentName: (uuid) => ({ 'Item.soul': 'Mighty Soul', 'Actor.ally': 'Pip' })[uuid],
-		canRemove: () => canRemove,
+		canRemove: (_actorUuid: string, change: ResultChange) =>
+			canRemove && resultRemovalRefusal({}, change) === null,
 	});
 }
 
@@ -93,7 +95,7 @@ describe('resultChangeLines', () => {
 				rollTotal: 1,
 				speakerUuid: 'Actor.hero',
 				documentName,
-				canRemove: () => true,
+				canRemove: (_actorUuid, change) => resultRemovalRefusal({}, change) === null,
 			})[0];
 		expect(lines(true).sentence).toBe('Counts as a Natural 20 with Bumblewise');
 		expect(lines(true).canRemove).toBe(false);
