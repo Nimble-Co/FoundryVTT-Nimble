@@ -481,19 +481,19 @@ function currentCard(card: NimbleChatMessage): NimbleChatMessage {
 	return (game.messages?.get(card.id ?? '') as NimbleChatMessage | undefined) ?? card;
 }
 
-/** Use the card's reroll of the option's item, for the Defended token. */
+/** Use the card's reroll of the option's item, for the Defended token. Returns whether it was sent. */
 async function useOptionReroll(
 	card: NimbleChatMessage,
 	pick: DefendOptionPick,
 	token: string,
 	quiet = false,
-): Promise<void> {
+): Promise<boolean> {
 	const entry = cardRerollFor(currentCard(card), pick.rule.item?.uuid, token);
 	if (!entry) {
 		if (!quiet) ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
-		return;
+		return false;
 	}
-	await requestIncomingAttackReaction({ messageId: card.id ?? '', entryId: entry.id });
+	return requestIncomingAttackReaction({ messageId: card.id ?? '', entryId: entry.id });
 }
 
 /**
@@ -509,8 +509,7 @@ async function useInterposeTicks(
 	const used: DefendOptionPick[] = [];
 	for (const pick of picks) {
 		if (pick.rule.useReroll) {
-			if (token) await useOptionReroll(card, pick, token);
-			used.push(pick);
+			if (token && (await useOptionReroll(card, pick, token))) used.push(pick);
 		} else if (await payDefendOption(actor, pick)) {
 			used.push(pick);
 		}
@@ -599,7 +598,10 @@ export async function openDefendWindow(
 		});
 		if (!sent) return false;
 		if (!option.defend && tickPicks.length < 1) return true;
-		if (defendedToken && !(await waitForTarget(card, defendedToken))) return true;
+		if (defendedToken && !(await waitForTarget(card, defendedToken))) {
+			ui.notifications?.warn(localize(`${TEXT}.interposeNotOnCard`));
+			return true;
+		}
 		if (!option.defend) {
 			await useInterposeTicks(card, actor, tickPicks, defendedToken);
 			return true;

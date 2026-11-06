@@ -739,6 +739,7 @@
 				"nothingToDo": "There is nothing to do against this attack.",
 				"cannotPay": "{label}: its cost could not be paid.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",
+				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
 				"refused": {
