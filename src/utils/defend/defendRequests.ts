@@ -135,14 +135,31 @@ async function conditionAttacker(card: DefendCard, record: DefendRecord): Promis
 	if (record.attackerConditions.length < 1) return;
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	const source = fromUuidSync(record.actorUuid) as Actor.Implementation | null;
+	const start = attackerTurnStart(card);
 	for (const condition of record.attackerConditions) {
-		// Applied on the attacker's turn, one round ends it as their next turn starts.
 		const endsOnTheirTurn = record.conditionsEndOnAttackerTurn.includes(condition);
 		await applyConditionToActor(attacker as never, condition, {
 			sourceActor: (source ?? undefined) as never,
-			...(endsOnTheirTurn ? { duration: { rounds: 1 } } : {}),
+			...(endsOnTheirTurn ? { duration: { rounds: 1 }, ...(start ? { start } : {}) } : {}),
 		});
 	}
+}
+
+/**
+ * Where a one-round duration counts from so it ends as the attacker's next turn
+ * starts: their combatant, and a round back when their turn is still to come.
+ */
+function attackerTurnStart(card: DefendCard): { combatant: string; round: number } | null {
+	const combat = game.combat;
+	if (!combat?.started) return null;
+	const token = card.speaker?.token;
+	const combatant = token
+		? combat.combatants.find((each) => each.tokenId === token)
+		: combat.combatants.find((each) => each.actorId === card.speaker?.actor);
+	if (!combatant?.id) return null;
+	const index = combat.turns.findIndex((each) => each.id === combatant.id);
+	const round = Number(combat.round) || 0;
+	return { combatant: combatant.id, round: index > Number(combat.turn) ? round - 1 : round };
 }
 
 async function writeAllyUse(request: DefendAllyUse): Promise<boolean> {

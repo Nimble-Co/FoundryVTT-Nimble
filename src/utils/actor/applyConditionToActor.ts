@@ -56,6 +56,11 @@ export interface ApplyConditionOptions {
 	sourceActor?: ConditionSourceDocument | null;
 	/** Combat duration to stamp on the created effect. */
 	duration?: ConditionDuration | null;
+	/**
+	 * Where the duration counts from, when not the current turn. A `turnStart`
+	 * end comes as this combatant's turn starts.
+	 */
+	start?: { combatant: string; round: number } | null;
 	/** Opaque context forwarded verbatim to both condition hooks. */
 	rule?: unknown;
 	/** System flags stamped on the created effect, under the system's flag scope. */
@@ -179,6 +184,7 @@ async function createConditionEffect(
 	if (origin) patch.origin = origin;
 	const duration = buildDurationPatch(options.duration);
 	if (duration) patch.duration = duration;
+	if (duration && options.start) patch.start = options.start;
 	if (options.systemFlags) patch[`flags.${SYSTEM_ID}`] = options.systemFlags;
 	if (Object.keys(patch).length > 0) effect.updateSource(patch);
 

@@ -147,6 +147,49 @@ describe('Defend options on the card', () => {
 		});
 	});
 
+	describe('in a combat, the end counts from the attacker turn', () => {
+		const ogreCombatant = { id: 'c-ogre', actorId: 'ogre', tokenId: 'ogre-token' };
+		const pipCombatant = { id: 'c-pip', actorId: 'pip', tokenId: 'pip-token' };
+
+		function combat(turns: unknown[], turn: number) {
+			return {
+				started: true,
+				round: 3,
+				turn,
+				turns,
+				combatants: { find: (fn: (c: unknown) => boolean) => turns.find(fn) },
+			};
+		}
+
+		async function blindOn(turns: unknown[], turn: number) {
+			(globalThis as unknown as Globals).game.combat = combat(turns, turn);
+			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
+			await requestDefend(
+				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+			);
+			return applyCondition.mock.calls[0]?.[2];
+		}
+
+		it('on the attacker turn: one round from now', async () => {
+			expect(await blindOn([ogreCombatant, pipCombatant], 0)).toMatchObject({
+				duration: { rounds: 1 },
+				start: { combatant: 'c-ogre', round: 3 },
+			});
+		});
+
+		it('when the attacker has gone this round: one round from now', async () => {
+			expect(await blindOn([ogreCombatant, pipCombatant], 1)).toMatchObject({
+				start: { combatant: 'c-ogre', round: 3 },
+			});
+		});
+
+		it('when the attacker turn is still to come this round: at that turn', async () => {
+			expect(await blindOn([pipCombatant, ogreCombatant], 0)).toMatchObject({
+				start: { combatant: 'c-ogre', round: 2 },
+			});
+		});
+	});
+
 	it('gives back what each option paid on Undo', async () => {
 		await requestDefend(request({ options: [paidUse] }));
 		const [record] = card.system.defends as { id: string }[];

@@ -189,6 +189,18 @@ describe('applyConditionToActor duration', () => {
 		expect(effect.sourceData.duration).toEqual({ value: 3, units: 'rounds', expiry: 'turnStart' });
 	});
 
+	it('counts the duration from the start it is given', async () => {
+		const effect = createFakeEffect();
+		fromStatusEffect.mockResolvedValue(effect);
+
+		await applyConditionToActor(createTargetActor(), 'blinded', {
+			duration: { rounds: 1 },
+			start: { combatant: 'c-ogre', round: 2 },
+		});
+
+		expect(effect.sourceData.start).toEqual({ combatant: 'c-ogre', round: 2 });
+	});
+
 	it('gives a seconds duration the same turn start expiry core gives any numeric duration', async () => {
 		const effect = createFakeEffect();
 		fromStatusEffect.mockResolvedValue(effect);
