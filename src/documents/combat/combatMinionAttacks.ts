@@ -7,12 +7,8 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import {
-	firstTargetActor,
-	heldChangesForAttack,
-	mustAttackOtherChange,
-	spendHeldChanges,
-} from '../../utils/heldChange/heldChange.js';
+import { heldChangesOf } from '../../utils/heldChange/attackHeldPlan.js';
+import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import {
 	getCurrentUserTargetTokenIds,
@@ -257,21 +253,21 @@ async function rollSingleMinionAttack(params: {
 			typeof resolvedActionContext.actor.getRollData === 'function'
 				? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
 				: {};
-		const held = heldChangesForAttack({
+		const held = heldChangesOf({
 			attacker: resolvedActionContext.actor as never,
 			target: params.targetActor,
 			area: false,
+			attack: true,
 		});
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
 			canCrit: false,
 			canMiss: true,
 			rollMode: 0,
 			primaryDieValue: 0,
-			primaryDieModifier: held.reduce((sum, change) => sum + change.value, 0),
+			primaryDieModifier: held.primaryDieBonus,
 		});
 		await damageRoll.evaluate();
-		const mustAttack = mustAttackOtherChange(resolvedActionContext.actor as never);
-		await spendHeldChanges([...held, ...(mustAttack ? [mustAttack] : [])]);
+		await held.spend();
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -282,8 +278,8 @@ async function rollSingleMinionAttack(params: {
 				selectedAction: resolvedActionContext.selectedAction,
 				formula,
 				damageRoll,
-				held,
-				mustAttackLabel: mustAttack?.label,
+				held: held.primaryDie,
+				mustAttackLabel: held.mustAttackOther?.label,
 			}),
 			actionUpdate: {
 				_id: resolvedActionContext.memberId,

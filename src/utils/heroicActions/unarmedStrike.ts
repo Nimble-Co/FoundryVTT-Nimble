@@ -18,14 +18,8 @@ import {
 import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
-import {
-	firstTargetActor,
-	heldChangesForAttack,
-	ignoreDisadvantageChange,
-	keptAmountFor,
-	mustAttackOtherChange,
-	spendHeldChanges,
-} from '#utils/heldChange/heldChange.js';
+import { heldChangesOf } from '#utils/heldChange/attackHeldPlan.js';
+import { firstTargetActor, keptAmountFor } from '#utils/heldChange/heldChange.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -34,10 +28,7 @@ import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers
 import localize from '#utils/localize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
-import {
-	keptAmountRollOptions,
-	removeDisadvantage,
-} from '../../managers/itemActivation/keptAmountActivation.js';
+import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
@@ -137,13 +128,16 @@ export async function rollUnarmedStrike(
 		damageTypes: ['bludgeoning'],
 	});
 
-	const held = heldChangesForAttack({
+	const keptAmount = keptAmountFor(actor, unarmedItem);
+	const kept = result.keptAmount === false ? null : keptAmount;
+	const held = heldChangesOf({
 		attacker: actor,
 		target: firstTargetActor(),
 		area: false,
-		ignoresNegative: !!ignoreDisadvantageChange(actor),
+		attack: true,
+		kept,
+		keptToEnd: keptAmount,
 	});
-	const heldBonus = held.reduce((sum, change) => sum + change.value, 0);
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 		canCrit: canCrit && !multiTarget,
@@ -154,7 +148,7 @@ export async function rollUnarmedStrike(
 			: {}),
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
-		primaryDieModifier: (Number(result.primaryDieModifier) || 0) + heldBonus,
+		primaryDieModifier: (Number(result.primaryDieModifier) || 0) + held.primaryDieBonus,
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
 		...(canCrit && !multiTarget
@@ -177,17 +171,7 @@ export async function rollUnarmedStrike(
 			incomingAttackPlan.appliedEntries;
 	}
 
-	const keptAmount = keptAmountFor(actor, unarmedItem);
-	const kept = result.keptAmount === false ? null : keptAmount;
-	const heldIgnore = kept ? null : ignoreDisadvantageChange(actor);
-	if (heldIgnore) removeDisadvantage(rollOptions);
-	const mustAttack = mustAttackOtherChange(actor);
-	if (mustAttack) {
-		rollOptions.outcomeSources = {
-			...rollOptions.outcomeSources,
-			mustAttackOther: [mustAttack.label],
-		};
-	}
+	held.applyToRoll(rollOptions);
 	const firstRoll = new DamageRoll(
 		kept ? String(kept.value) : rollFormula,
 		actor.getRollData(),
@@ -245,11 +229,7 @@ export async function rollUnarmedStrike(
 			image: unarmedItem.img,
 			permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 			rollMode,
-			primaryDieBonuses: (kept ? [] : held).map((change) => ({
-				label: change.label,
-				value: change.value,
-				itemUuid: '',
-			})),
+			primaryDieBonuses: held.bonusLines(),
 			name,
 			description: '',
 			featureType: 'feature',
@@ -277,12 +257,7 @@ export async function rollUnarmedStrike(
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);
-	await spendHeldChanges([
-		...(kept ? [] : held),
-		...(heldIgnore ? [heldIgnore] : []),
-		...(keptAmount ? [keptAmount] : []),
-		...(mustAttack ? [mustAttack] : []),
-	]);
+	await held.spend();
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll)) {
 		await spendRuleCharge(actor, identifier);
