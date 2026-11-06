@@ -1,4 +1,4 @@
-import { SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -1414,7 +1414,7 @@ class Migration077DefendOptions extends MigrationBase {
 				(spec) => spec.type === source.type && spec.sourceId.endsWith(`.Item.${documentId}`),
 			);
 		}
-		if (toSnapshotId(sourceId)?.startsWith('Compendium.')) return undefined;
+		if (isCompendiumId(toSnapshotId(sourceId))) return undefined;
 
 		const name = typeof source.name === 'string' ? source.name.trim().toLowerCase() : '';
 		return PACK_ITEMS.find(

@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -13,10 +13,7 @@ interface PackItemSpec {
 	rules: RuleSource[];
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
-
 const PACK_ITEMS: PackItemSpec[] = [
 	{
 		sourceId: `${FEATURE_PREFIX}SAsHW8p9yrwDrxUg`,
@@ -236,13 +233,6 @@ const PACK_ITEMS: PackItemSpec[] = [
 	},
 ];
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 /**
  * Gives copies of Vicious Opportunist, THAT'S Not What Happened!, Feinting
  * Attack, Unerring Judgment and Exploit Weakness the rules the pack now ships,
@@ -278,7 +268,7 @@ class Migration072ChangeDie extends MigrationBase {
 
 	#match(source: any): PackItemSpec | undefined {
 		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
 

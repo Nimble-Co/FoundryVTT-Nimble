@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -34,10 +34,7 @@ interface MonsterSpec {
 	items: (ItemChanges & { name: string })[];
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
-const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
-
+const _FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
 const PACK_ITEMS: PackItemSpec[] = [
 	{
 		sourceId: 'Compendium.nimble.nimble-class-features.Item.ucJYSFE6x1a7G3Ko',
@@ -1884,11 +1881,8 @@ class Migration076StoredResults extends MigrationBase {
 	}
 
 	#match(source: any): PackItemSpec | undefined {
-		const snapshotId = toSnapshotId(this.getSourceId(source));
-		const sourceId = snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-			? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-			: snapshotId;
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		const sourceId = toPackSourceId(this.getSourceId(source));
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId);
 		}
 
@@ -1908,9 +1902,7 @@ class Migration076StoredResults extends MigrationBase {
 			.trim()
 			.toLowerCase();
 		const monster = MONSTERS.find((spec) =>
-			sourceId?.startsWith(COMPENDIUM_PREFIX)
-				? spec.sourceId === sourceId
-				: spec.name === actorName,
+			isCompendiumId(sourceId) ? spec.sourceId === sourceId : spec.name === actorName,
 		);
 		const name = String(source.name ?? '')
 			.trim()

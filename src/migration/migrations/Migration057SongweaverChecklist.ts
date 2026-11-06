@@ -1,7 +1,6 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
 const CLASS_IDENTIFIER = 'songweaver';
 
@@ -558,7 +557,7 @@ class Migration057SongweaverChecklist extends MigrationBase {
 	 */
 	#matchFeature(source: any): FeatureSpec | undefined {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return FEATURES.find((feature) => feature.sourceId === sourceId);
 		}
 

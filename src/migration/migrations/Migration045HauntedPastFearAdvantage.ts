@@ -1,7 +1,5 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 const HAUNTED_PAST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.TfYvarCWkHj2qVfa';
 
@@ -58,7 +56,7 @@ class Migration045HauntedPastFearAdvantage extends MigrationBase {
 	#isHauntedPast(item: any): boolean {
 		if (item?.type !== 'background') return false;
 		const sourceId = toSnapshotId(this.getSourceId(item));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) return sourceId === HAUNTED_PAST_SOURCE_ID;
+		if (isCompendiumId(sourceId)) return sourceId === HAUNTED_PAST_SOURCE_ID;
 		return item?.name === 'Haunted Past';
 	}
 

@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -34,10 +34,7 @@ interface FeatureSpec {
 	cost?: { from: CostSource; to: CostSource };
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
-
 const SWIFT_FURY_RULES: RuleSource[] = [
 	{
 		type: 'freeMove',
@@ -275,13 +272,6 @@ const FEATURES: FeatureSpec[] = [
 	},
 ];
 
-function toFeatureSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 /** A copy made before a field existed reads as the default the schema fills in. */
 function sameCost(stored: any, wanted: CostSource): boolean {
 	return (
@@ -330,8 +320,8 @@ class Migration067MovementPilots extends MigrationBase {
 	}
 
 	#match(source: any): FeatureSpec | undefined {
-		const sourceId = toFeatureSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		const sourceId = toPackSourceId(this.getSourceId(source));
+		if (isCompendiumId(sourceId)) {
 			return FEATURES.find((spec) => spec.sourceId === sourceId);
 		}
 

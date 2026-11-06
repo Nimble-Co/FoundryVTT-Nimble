@@ -1,7 +1,5 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
-
-const COMPENDIUM_PREFIX = 'Compendium.';
 
 const SURVIVALIST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.qKknqLqzT7BReZul';
 
@@ -60,7 +58,7 @@ class Migration047SurvivalistPoisonSave extends MigrationBase {
 	#isSurvivalist(item: any): boolean {
 		if (item?.type !== 'background') return false;
 		const sourceId = toSnapshotId(this.getSourceId(item));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) return sourceId === SURVIVALIST_SOURCE_ID;
+		if (isCompendiumId(sourceId)) return sourceId === SURVIVALIST_SOURCE_ID;
 		return item?.name === 'Survivalist';
 	}
 

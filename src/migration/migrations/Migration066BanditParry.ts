@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 interface BanditSpec {
@@ -85,7 +85,7 @@ class Migration066BanditParry extends MigrationBase {
 
 	#matchBandit(parent: any): BanditSpec | undefined {
 		const sourceId = toSnapshotId(this.getSourceId(parent));
-		if (sourceId?.startsWith('Compendium.')) {
+		if (isCompendiumId(sourceId)) {
 			return BANDITS.find((bandit) => bandit.actorSourceId === sourceId);
 		}
 

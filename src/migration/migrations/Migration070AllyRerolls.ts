@@ -1,4 +1,4 @@
-import { toSnapshotId } from '../compendiumSourceId.js';
+import { isCompendiumId, toPackSourceId, toSnapshotId } from '../compendiumSourceId.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
@@ -17,9 +17,7 @@ interface PackItemSpec {
 	rules: RuleSource[];
 }
 
-const COMPENDIUM_PREFIX = 'Compendium.';
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
-const LEGACY_FEATURE_PREFIX = 'Compendium.nimble.class-features.Item.';
 const ANCESTRY_BONUS_PREFIX = 'Compendium.nimble.nimble-ancestry-bonuses.Item.';
 
 function reroll(fields: Record<string, unknown>): RuleSource {
@@ -245,13 +243,6 @@ function attackChildren(nodeId: string, ids: NonNullable<DamageNodeSpec['childId
 	};
 }
 
-function toPackSourceId(sourceId: string | undefined): string | undefined {
-	const snapshotId = toSnapshotId(sourceId);
-	return snapshotId?.startsWith(LEGACY_FEATURE_PREFIX)
-		? `${FEATURE_PREFIX}${snapshotId.slice(LEGACY_FEATURE_PREFIX.length)}`
-		: snapshotId;
-}
-
 /**
  * Gives copies of Songweaver's Inspiration and Optimistic the pool and the ally
  * reroll the pack now ships. A pack rule is added unless a rule with its id is
@@ -325,7 +316,7 @@ class Migration070AllyRerolls extends MigrationBase {
 
 	#matchDamageNodeItem(source: any): DamageNodeSpec | undefined {
 		const sourceId = toSnapshotId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (sourceId && isCompendiumId(sourceId)) {
 			const match = PACK_SOURCE_ID.exec(sourceId);
 			return DAMAGE_NODE_ITEMS.find(
 				(spec) => spec.pack === match?.[1] && spec.itemId === match[2] && spec.type === source.type,
@@ -343,7 +334,7 @@ class Migration070AllyRerolls extends MigrationBase {
 
 	#match(source: any): PackItemSpec | undefined {
 		const sourceId = toPackSourceId(this.getSourceId(source));
-		if (sourceId?.startsWith(COMPENDIUM_PREFIX)) {
+		if (isCompendiumId(sourceId)) {
 			return PACK_ITEMS.find((spec) => spec.sourceId === sourceId && spec.type === source.type);
 		}
 
