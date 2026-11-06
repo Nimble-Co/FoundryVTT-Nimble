@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import applyConditionToActor from '../actor/applyConditionToActor.js';
+import applyConditionToActor, { type ConditionStart } from '../actor/applyConditionToActor.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
@@ -149,9 +149,9 @@ async function conditionAttacker(card: DefendCard, record: DefendRecord): Promis
  * Where a one-round duration counts from so it ends as the attacker's next turn
  * starts: their combatant, and a round back when their turn is still to come.
  */
-function attackerTurnStart(card: DefendCard): { combatant: string; round: number } | null {
+function attackerTurnStart(card: DefendCard): ConditionStart | null {
 	const combat = game.combat;
-	if (!combat?.started) return null;
+	if (!combat?.started || !combat.id) return null;
 	const token = card.speaker?.token;
 	const combatant = token
 		? combat.combatants.find((each) => each.tokenId === token)
@@ -159,7 +159,14 @@ function attackerTurnStart(card: DefendCard): { combatant: string; round: number
 	if (!combatant?.id) return null;
 	const index = combat.turns.findIndex((each) => each.id === combatant.id);
 	const round = Number(combat.round) || 0;
-	return { combatant: combatant.id, round: index > Number(combat.turn) ? round - 1 : round };
+	return {
+		combat: combat.id,
+		combatant: combatant.id,
+		initiative: combatant.initiative ?? null,
+		round: index > Number(combat.turn) ? round - 1 : round,
+		turn: Math.max(0, index),
+		time: game.time?.worldTime ?? 0,
+	};
 }
 
 async function writeAllyUse(request: DefendAllyUse): Promise<boolean> {

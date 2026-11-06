@@ -49,6 +49,16 @@ interface ConditionSourceDocument {
 	uuid?: string | null;
 }
 
+/** An effect's combat start, in the core shape. */
+export interface ConditionStart {
+	combat: string;
+	combatant: string;
+	initiative: number | null;
+	round: number;
+	turn: number;
+	time: number;
+}
+
 export interface ApplyConditionOptions {
 	/** The feature, spell or object that caused the condition, when there is one. */
 	sourceItem?: ConditionSourceDocument | null;
@@ -60,7 +70,7 @@ export interface ApplyConditionOptions {
 	 * Where the duration counts from, when not the current turn. A `turnStart`
 	 * end comes as this combatant's turn starts.
 	 */
-	start?: { combatant: string; round: number } | null;
+	start?: ConditionStart | null;
 	/** Opaque context forwarded verbatim to both condition hooks. */
 	rule?: unknown;
 	/** System flags stamped on the created effect, under the system's flag scope. */

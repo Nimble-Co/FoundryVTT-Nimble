@@ -153,6 +153,7 @@ describe('Defend options on the card', () => {
 
 		function combat(turns: unknown[], turn: number) {
 			return {
+				id: 'combat-1',
 				started: true,
 				round: 3,
 				turn,
@@ -173,7 +174,7 @@ describe('Defend options on the card', () => {
 		it('on the attacker turn: one round from now', async () => {
 			expect(await blindOn([ogreCombatant, pipCombatant], 0)).toMatchObject({
 				duration: { rounds: 1 },
-				start: { combatant: 'c-ogre', round: 3 },
+				start: { combat: 'combat-1', combatant: 'c-ogre', round: 3, turn: 0 },
 			});
 		});
 
