@@ -1,3 +1,4 @@
+import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
@@ -61,14 +62,12 @@ import {
 	setPoolFaces,
 } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
+import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
-	heldChangesForAttack,
-	ignoreDisadvantageChange,
 	isAttackRoll,
 	keptAmountEndedBy,
 	keptAmountFor,
-	mustAttackOtherChange,
 	spendHeldChanges,
 } from '../utils/heldChange/heldChange.js';
 import {
@@ -277,10 +276,7 @@ class ItemActivationManager {
 	#attackOutcomeCharges: AttackOutcomeCharge[] = [];
 
 	/** The Held Changes this attack uses, which the roll spends. */
-	#heldChanges: HeldChange[] = [];
-
-	/** The Held Change that takes disadvantage out of this roll. */
-	#heldIgnore: HeldChange | null = null;
+	#heldPlan: AttackHeldPlan | null = null;
 
 	/** The kept amount this attack uses in place of a roll. */
 	#keptAmount: HeldChange | null = null;
@@ -290,8 +286,6 @@ class ItemActivationManager {
 
 	/** What the tick of a damage multiplier gave this use. */
 	#damageMultiplier = 1;
-
-	#mustAttackOther: HeldChange | null = null;
 
 	/**
 	 * Charge spends named in the activation dialog, held until the caller has
@@ -725,25 +719,16 @@ class ItemActivationManager {
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
-					this.#heldIgnore =
-						isAttack && !this.#keptAmount && !this.#maxDamage && !this.#options.ignoreDisadvantage
-							? ignoreDisadvantageChange(this.actor)
-							: null;
-					this.#heldChanges = isAttack
-						? heldChangesForAttack({
-								attacker: this.actor,
-								target: firstTargetActor(),
-								area: isAoE,
-								ignoresNegative: !!this.#heldIgnore,
-							})
-						: [];
-					this.#primaryDieBonuses.push(
-						...this.#heldChanges.map((held) => ({
-							label: held.label,
-							value: held.value,
-							itemUuid: '',
-						})),
-					);
+					this.#heldPlan = attackHeldPlanOf({
+						attacker: this.actor,
+						target: firstTargetActor(),
+						area: isAoE,
+						attack: isAttack,
+						kept: this.#keptAmount,
+						keptToEnd: this.#keptAmountToEnd,
+						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
+					});
+					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
 					const offerSource = this.#offerSource();
 					const offerBonuses = collectOfferBonuses(
 						this.actor as { rules?: unknown } | null,
@@ -827,20 +812,12 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
-					if (this.#options.ignoreDisadvantage || this.#heldIgnore) {
-						removeDisadvantage(damageOptions);
-					}
+					if (this.#options.ignoreDisadvantage) removeDisadvantage(damageOptions);
 					if (this.#options.grantedCannotMiss) {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
 					if (this.#options.grantedCrit) grantCrit(damageOptions, this.#options.grantedCrit);
-					this.#mustAttackOther = mustAttackOtherChange(this.actor);
-					if (this.#mustAttackOther) {
-						damageOptions.outcomeSources = {
-							...damageOptions.outcomeSources,
-							mustAttackOther: [this.#mustAttackOther.label],
-						};
-					}
+					this.#heldPlan.applyToRoll(damageOptions);
 					if (attackOutcome.options.ignoreArmor) node.ignoreArmor = true;
 					const kept = this.#keptAmount;
 					roll = new dependencies.DamageRoll(
@@ -855,7 +832,7 @@ class ItemActivationManager {
 					// A formula with no die has no Primary Die to add to.
 					if (!(roll as DamageRoll).primaryDie) {
 						this.#primaryDieBonuses = [];
-						this.#heldChanges = [];
+						this.#heldPlan = this.#heldPlan.withoutPrimaryDie();
 					}
 
 					foundDamageRoll = true;
@@ -1228,15 +1205,9 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		await spendHeldChanges([
-			...this.#heldChanges,
-			...(this.#heldIgnore ? [this.#heldIgnore] : []),
-			...(this.#keptAmountToEnd ? [this.#keptAmountToEnd] : []),
-			...(this.#mustAttackOther ? [this.#mustAttackOther] : []),
-		]);
-		this.#mustAttackOther = null;
-		this.#heldChanges = [];
-		this.#heldIgnore = null;
+		if (this.#heldPlan) await this.#heldPlan.spend();
+		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
+		this.#heldPlan = null;
 		this.#keptAmountToEnd = null;
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
 		if (this.#dualWield) await markDualWieldUse(this.actor as never);
