@@ -48,6 +48,7 @@ declare namespace HitDiceAdvantageRule {
 class HitDiceAdvantageRule extends NimbleBaseRule<HitDiceAdvantageRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.hitDiceAdvantage.description';
+	static override icon = 'fa-solid fa-dice-d20';
 
 	declare condition: string;
 

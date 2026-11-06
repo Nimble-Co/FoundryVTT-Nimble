@@ -41,6 +41,7 @@ declare namespace AbilityBonusRule {
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.abilityBonus.description';
+	static override icon = 'fa-solid fa-dumbbell';
 
 	static override defineSchema(): AbilityBonusRule.Schema {
 		return {

@@ -45,6 +45,7 @@ declare namespace ItemGrantRule {
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.grantItem.description';
+	static override icon = 'fa-solid fa-gift';
 
 	declare allowDuplicate: boolean;
 

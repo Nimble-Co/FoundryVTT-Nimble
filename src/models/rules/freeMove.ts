@@ -135,6 +135,7 @@ interface SceneTokens {
 class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.freeMove.description';
+	static override icon = 'fa-solid fa-person-running';
 
 	// The Movement Offers toggle gates these cards, not rule automation.
 	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = [

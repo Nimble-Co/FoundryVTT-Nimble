@@ -102,6 +102,7 @@ declare namespace DamageBonusRule {
 class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.damageBonus.description';
+	static override icon = 'fa-solid fa-explosion';
 
 	declare value: string;
 	// `damageType` is inferred from the schema's `choices` (the keys of

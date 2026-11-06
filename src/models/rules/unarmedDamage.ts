@@ -24,6 +24,7 @@ declare namespace UnarmedDamageRule {
 class UnarmedDamageRule extends NimbleBaseRule<UnarmedDamageRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.unarmedDamage.description';
+	static override icon = 'fa-solid fa-hand-fist';
 
 	declare value: string;
 

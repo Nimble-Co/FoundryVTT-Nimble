@@ -63,6 +63,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.critDiceSave.description';
+	static override icon = 'fa-solid fa-person-falling';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['saveType', 'saveDC'] },
 		{

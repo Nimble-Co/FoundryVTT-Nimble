@@ -34,6 +34,7 @@ declare namespace ArmorClassRule {
 class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.armorClass.description';
+	static override icon = 'fa-solid fa-shield-halved';
 
 	static override defineSchema(): ArmorClassRule.Schema {
 		return {

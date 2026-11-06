@@ -46,6 +46,7 @@ interface ActorSystem {
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.speedBonus.description';
+	static override icon = 'fa-solid fa-person-running';
 
 	declare value: string;
 	declare movementType: MovementType | null;

@@ -60,6 +60,7 @@ declare namespace SavingThrowRollModeRule {
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.savingThrowRollMode.description';
+	static override icon = 'fa-solid fa-dice-five';
 
 	static override defineSchema(): SavingThrowRollModeRule.Schema {
 		return {

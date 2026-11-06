@@ -43,6 +43,7 @@ class TableRollRule extends NimbleBaseRule<TableRollRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.tableRoll.description';
+	static override icon = 'fa-solid fa-hat-wizard';
 
 	static override defineSchema(): TableRollRule.Schema {
 		return {

@@ -31,6 +31,7 @@ class NoteRule extends NimbleBaseRule<NoteRule.Schema> {
 	// editor by Foundry field type, no widget hint needed.
 	static override group = 'notes';
 	static override description = 'NIMBLE.rules.note.description';
+	static override icon = 'fa-solid fa-note-sticky';
 
 	static override defineSchema(): NoteRule.Schema {
 		return {

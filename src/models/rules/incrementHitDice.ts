@@ -25,6 +25,7 @@ declare namespace IncrementHitDiceRule {
 class IncrementHitDiceRule extends NimbleBaseRule<IncrementHitDiceRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.incrementHitDice.description';
+	static override icon = 'fa-solid fa-up-long';
 
 	declare value: string;
 

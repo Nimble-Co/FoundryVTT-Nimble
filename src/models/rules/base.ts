@@ -190,6 +190,9 @@ abstract class NimbleBaseRule<
 
 	static description: string = '';
 
+	/** The Font Awesome icon of the rule type in the rules builder. */
+	static icon: string = 'fa-solid fa-cube';
+
 	/** Groups and order for the rules-builder form. Null keeps the flat field list. */
 	static formLayout: readonly RuleFormGroup[] | null = null;
 

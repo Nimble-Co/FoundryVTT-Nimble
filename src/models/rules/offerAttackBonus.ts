@@ -54,6 +54,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.offerAttackBonus.description';
+	static override icon = 'fa-solid fa-handshake-angle';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['offerSource', 'damage', 'primaryDie'] },
 	];

@@ -30,6 +30,7 @@ declare namespace HealingPotionBonusRule {
 class HealingPotionBonusRule extends NimbleBaseRule<HealingPotionBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.healingPotionBonus.description';
+	static override icon = 'fa-solid fa-flask-round-potion';
 
 	static override defineSchema(): HealingPotionBonusRule.Schema {
 		return {

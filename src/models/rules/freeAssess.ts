@@ -31,6 +31,7 @@ class FreeAssessRule extends NimbleBaseRule<FreeAssessRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.freeAssess.description';
+	static override icon = 'fa-solid fa-magnifying-glass';
 
 	static override defineSchema(): FreeAssessRule.Schema {
 		return {

@@ -25,6 +25,7 @@ declare namespace MaxWoundsRule {
 class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.maxWounds.description';
+	static override icon = 'fa-solid fa-droplet-slash';
 
 	static override defineSchema(): MaxWoundsRule.Schema {
 		return {

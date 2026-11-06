@@ -72,6 +72,7 @@ declare namespace ModifyIncomingAttackRule {
 class ModifyIncomingAttackRule extends NimbleBaseRule<ModifyIncomingAttackRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.modifyIncomingAttack.description';
+	static override icon = 'fa-solid fa-shield-slash';
 
 	declare modifier: IncomingAttackModifier;
 	declare range: string;

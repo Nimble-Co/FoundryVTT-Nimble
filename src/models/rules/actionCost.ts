@@ -116,6 +116,7 @@ interface ActionCostTargetItem {
 class ActionCostRule extends NimbleBaseRule<ActionCostRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.actionCost.description';
+	static override icon = 'fa-solid fa-stopwatch';
 
 	declare applies: ActionCostApplies;
 

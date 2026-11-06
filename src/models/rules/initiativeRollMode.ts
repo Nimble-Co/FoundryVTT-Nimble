@@ -32,6 +32,7 @@ declare namespace InitiativeRollModeRule {
 class InitiativeRollModeRule extends NimbleBaseRule<InitiativeRollModeRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.initiativeRollMode.description';
+	static override icon = 'fa-solid fa-dice';
 
 	declare value: number;
 	// `mode` is inferred from the schema's `choices` (`'set' | 'adjust'`).

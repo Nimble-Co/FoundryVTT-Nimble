@@ -20,6 +20,7 @@ declare namespace InitiativeManaRerollOnesRule {
 class InitiativeManaRerollOnesRule extends NimbleBaseRule<InitiativeManaRerollOnesRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.initiativeManaRerollOnes.description';
+	static override icon = 'fa-solid fa-rotate';
 
 	static override defineSchema(): InitiativeManaRerollOnesRule.Schema {
 		return {

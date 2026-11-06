@@ -47,6 +47,7 @@ declare namespace ConcentrationTrackRule {
 class ConcentrationTrackRule extends NimbleBaseRule<ConcentrationTrackRule.Schema> {
 	static override group = 'conditions';
 	static override description = 'NIMBLE.rules.concentrationTrack.description';
+	static override icon = 'fa-solid fa-brain';
 
 	declare schools: string[];
 
