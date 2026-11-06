@@ -92,7 +92,7 @@ export function monsterActorLike(actor: MonsterDocument): MonsterActorLike {
 			automaticallyExecuteAvailableMacros: flags?.automaticallyExecuteAvailableMacros !== false,
 		},
 		items: source.items.map((item) => ({
-			...itemLike(item, actor as unknown as Parameters<typeof itemLike>[1]),
+			...itemLike(item),
 			sort: (item as unknown as { sort?: number }).sort ?? 0,
 		})),
 		// item effects live on their item, so `actor.effects` alone would leave them out

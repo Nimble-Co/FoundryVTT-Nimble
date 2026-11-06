@@ -185,6 +185,26 @@ describe('SpeedBonusRule', () => {
 		});
 	});
 
+	describe('appliedAmount', () => {
+		it('keeps the bonus it added, for the sheet', () => {
+			const actor = createMockActor({ walk: 2, fly: 0, climb: 0, swim: 0, burrow: 0 });
+			const rule = createSpeedBonusRule({ value: '-5' }, actor);
+
+			rule.prePrepareData();
+
+			expect(rule.appliedAmount).toBe(-5);
+		});
+
+		it('keeps nothing when the predicate fails', () => {
+			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
+			const rule = createSpeedBonusRule({ value: '2', predicatePasses: false }, actor);
+
+			rule.prePrepareData();
+
+			expect(rule.appliedAmount).toBeUndefined();
+		});
+	});
+
 	describe('prePrepareData (numeric bonuses)', () => {
 		it('should apply positive numeric bonus to walk speed', () => {
 			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });

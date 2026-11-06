@@ -6,7 +6,6 @@ import { SYSTEM_ID } from '#system';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
 import type { ActorCondition } from '#view/dataPreparationHelpers/prepareActorConditions.js';
-import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import {
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
 	TOGGLE_EFFECT_RULE_ID_FLAG,
@@ -16,10 +15,6 @@ import { plainText } from './plainText.ts';
 import type { ConditionLike, EffectLike, ItemLike, RuleLike } from './sheetSource.ts';
 
 type AnyRecord = Record<string, unknown>;
-
-interface RollDataSource {
-	getRollData(): Parameters<typeof getDeterministicBonus>[1];
-}
 
 /** Item effects and the condition list are not on `actor.reactive`, so these hooks redraw them. */
 export const EFFECT_HOOKS = [
@@ -41,17 +36,16 @@ export function registerRedrawHooks(names: string[], listener: () => void): () =
 	};
 }
 
+/** The amount is the one the rule applied in data preparation; the sheet does not work it out again. */
 function ruleLike(
-	rule: AnyRecord & { appliesTo?: () => boolean; toObject?: () => AnyRecord },
-	actor: RollDataSource,
+	rule: AnyRecord & {
+		appliesTo?: () => boolean;
+		toObject?: () => AnyRecord;
+		appliedAmount?: number;
+	},
 ): RuleLike {
 	const fields = rule.toObject?.() ?? {};
-	const value = fields.value;
-	let amount: number | undefined;
-	if (typeof value === 'number') amount = value;
-	else if (typeof value === 'string' && value.trim()) {
-		amount = getDeterministicBonus(value, actor.getRollData()) ?? undefined;
-	}
+	const amount = typeof rule.appliedAmount === 'number' ? rule.appliedAmount : undefined;
 	return {
 		id: String(rule.id ?? ''),
 		type: String(rule.type ?? ''),
@@ -61,7 +55,7 @@ function ruleLike(
 	};
 }
 
-export function itemLike(item: Item, actor: RollDataSource): ItemLike {
+export function itemLike(item: Item): ItemLike {
 	const rules = (item as unknown as { rules?: Map<string, AnyRecord> }).rules;
 	return {
 		id: item.id ?? '',
@@ -70,7 +64,7 @@ export function itemLike(item: Item, actor: RollDataSource): ItemLike {
 		img: item.img ?? '',
 		type: item.type,
 		system: item.system as unknown as AnyRecord,
-		rules: rules ? [...rules.values()].map((rule) => ruleLike(rule, actor)) : [],
+		rules: rules ? [...rules.values()].map(ruleLike) : [],
 	};
 }
 
