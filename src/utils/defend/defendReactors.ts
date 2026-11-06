@@ -17,7 +17,7 @@ export interface DefendReactor {
 	defend: DefendRecord | null;
 }
 
-type DefendCardLike = {
+export type DefendCardLike = {
 	system: unknown;
 	speaker?: { scene?: string | null; token?: string | null; actor?: string | null } | null;
 };
@@ -27,7 +27,8 @@ function tokenActor(uuid: string): Actor.Implementation | null {
 		null) as Actor.Implementation | null;
 }
 
-function speakerActorOf(card: DefendCardLike): Actor.Implementation | null {
+/** The creature that made the attack on the card. */
+export function speakerActorOf(card: DefendCardLike): Actor.Implementation | null {
 	const speaker = card.speaker;
 	if (!speaker) return null;
 	const scene = speaker.scene ? game.scenes?.get(speaker.scene) : null;

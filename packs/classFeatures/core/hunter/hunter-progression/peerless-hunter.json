@@ -12,11 +12,16 @@
 				"disabled": false,
 				"id": "JBrZtb4I1Evl5ZDm",
 				"identifier": "",
-				"label": "Peerless Hunter (quarry)",
+				"label": "Peerless Hunter",
 				"predicate": {},
 				"priority": 1,
 				"way": "freeDefend",
 				"attackDelivery": "any",
+				"otherCreature": {
+					"$and": [
+						"target:quarry"
+					]
+				},
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,

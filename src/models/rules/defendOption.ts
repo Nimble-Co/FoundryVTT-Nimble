@@ -1,8 +1,10 @@
+import type { Predicate } from '../../etc/Predicate.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDeliveryFilter,
 } from '../../utils/damage/attackDelivery.js';
 import type { RerollCost } from '../../utils/reroll/rerollCost.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -38,6 +40,10 @@ function schema() {
 			choices: choiceLabels('reroll', 'attackDelivery', ATTACK_DELIVERY_FILTERS),
 			label: key('attackDelivery', 'label'),
 			hint: key('attackDelivery', 'hint'),
+		}),
+		otherCreature: new PredicateField({
+			label: key('otherCreature', 'label'),
+			hint: key('otherCreature', 'hint'),
 		}),
 		outcome: new fields.StringField(
 			withWidget({
@@ -213,6 +219,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 
 	declare way: DefendOptionWay;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare otherCreature: Predicate;
 	declare outcome: DefendOptionOutcome;
 	declare armorBonus: string;
 	declare useReroll: boolean;

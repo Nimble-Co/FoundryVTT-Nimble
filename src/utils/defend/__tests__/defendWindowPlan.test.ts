@@ -10,7 +10,11 @@ function rule(fields: Record<string, unknown>) {
 		id: String(fields.id),
 		type: 'defendOption',
 		label: String(fields.id),
-		item: { uuid: `Item.${String(fields.id)}`, name: String(fields.id) },
+		item: {
+			uuid: `Item.${String(fields.id)}`,
+			name: String(fields.id),
+			getDomain: () => new Set(),
+		},
 		way: 'withDefend',
 		attackDelivery: 'any',
 		outcome: 'none',
