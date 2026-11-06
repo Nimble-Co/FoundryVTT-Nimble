@@ -14,6 +14,10 @@ import {
 	buildCombatantActionDeltaUpdate,
 	requestCombatantActionDelta,
 } from '../combat/requestCombatantActionDelta.js';
+import { setPoolFaces } from '../dicePool/dicePoolRefill.js';
+import { getPools } from '../dicePool/dicePoolSync.js';
+import { normalizeIdentifier } from '../dicePool/helpers.js';
+import type { DicePoolState } from '../dicePool/types.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	type HeroicReactionKey,
@@ -36,6 +40,8 @@ interface RerollCost {
 	actionReportOnly?: boolean;
 	/** The rule can be used once per turn of any creature. */
 	turnUseKey?: string;
+	/** Every die of this dice pool is expended; it needs at least one. */
+	dicePoolIdentifier?: string;
 }
 
 /** What was actually charged, so a failed reroll can give it back. */
@@ -55,6 +61,8 @@ interface PaidRerollCost {
 	noActionLeft?: boolean;
 	/** A 1/turn use was spent. */
 	turnUse?: boolean;
+	/** The dice expended from a dice pool. */
+	dice?: { poolId: string; faces: number[] } | null;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -87,6 +95,14 @@ function findActorCombatant(
 		(candidate) => candidate.actor === actor || candidate.actor?.uuid === actor.uuid,
 	);
 	return combatant ? { combat, combatant } : null;
+}
+
+function poolToExpend(actor: RerollPayer, cost: RerollCost): DicePoolState | null {
+	const identifier = normalizeIdentifier(cost.dicePoolIdentifier);
+	if (!identifier) return null;
+	return (
+		getPools(actor).find((pool) => normalizeIdentifier(pool.identifier) === identifier) ?? null
+	);
 }
 
 /** Whether the actor can gain all of `amount` Wounds without going past the maximum. */
@@ -137,6 +153,7 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 	}
 	if (cost.woundCost > 0 && !canGainWounds(actor, cost.woundCost)) return false;
 	if (cost.turnUseKey && usedThisTurn(actor, cost.turnUseKey)) return false;
+	if (cost.dicePoolIdentifier?.trim() && !poolToExpend(actor, cost)?.faces.length) return false;
 	return cost.actionReportOnly === true || canSpendActions(actor, actionCostOf(cost));
 }
 
@@ -157,7 +174,8 @@ function rerollCostCharges(cost: RerollCost): boolean {
 		cost.manaCost > 0 ||
 		cost.woundCost > 0 ||
 		actionCostOf(cost) > 0 ||
-		!!cost.turnUseKey
+		!!cost.turnUseKey ||
+		!!cost.dicePoolIdentifier?.trim()
 	);
 }
 
@@ -257,6 +275,10 @@ async function refundRerollCost(
 		} as Record<string, unknown>);
 	}
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
+	if (paid.dice) {
+		const current = getPools(actor).find((pool) => pool.id === paid.dice?.poolId)?.faces ?? [];
+		await setPoolFaces(actor, paid.dice.poolId, [...current, ...paid.dice.faces], 'refund');
+	}
 	if (paid.turnUse && cost.turnUseKey) await clearTurnUse(actor, cost.turnUseKey);
 	if (paid.action) await changeActions(paid.action, paid.action.amount);
 	if (paid.heroicReaction) await refundHeroicReaction(paid.heroicReaction);
@@ -264,7 +286,7 @@ async function refundRerollCost(
 
 /**
  * Charge the cost of a reroll: the heroic reaction first, as the part most
- * likely to be refused, then actions, charges, mana and Wounds. When a part fails,
+ * likely to be refused, then actions, charges, dice, mana and Wounds. When a part fails,
  * the parts already charged are given back and null is returned. With
  * resource spending automation off, only the heroic reaction is spent, as
  * for every other heroic reaction.
@@ -312,6 +334,13 @@ async function payRerollCost(
 		const amount = Math.max(1, cost.chargeCost);
 		if (!(await spendRuleCharge(actor, cost.chargePoolIdentifier, amount))) return fail();
 		paid.charges = amount;
+	}
+
+	if (cost.dicePoolIdentifier?.trim()) {
+		const pool = poolToExpend(actor, cost);
+		if (!pool?.faces.length) return fail();
+		if (!(await setPoolFaces(actor, pool.id, []))) return fail();
+		paid.dice = { poolId: pool.id, faces: [...pool.faces] };
 	}
 
 	if (cost.manaCost > 0) {

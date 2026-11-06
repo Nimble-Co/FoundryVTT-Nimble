@@ -2796,6 +2796,10 @@
 					"label": "Attacks",
 					"hint": "Which attacks this works against."
 				},
+				"otherCreature": {
+					"label": "Only when the attacker is",
+					"hint": "Tests the creature that made the attack. Pick tags such as target:quarry, which only the hero who marked it sees. Empty means any attacker."
+				},
 				"outcome": {
 					"label": "Damage",
 					"hint": "The attack misses and No damage: the hero takes no damage. Halve: the hero takes half the damage, in place of the armor.",
@@ -2856,6 +2860,10 @@
 				"chargeCost": {
 					"label": "Charges",
 					"hint": "How many charges one use spends."
+				},
+				"dicePoolIdentifier": {
+					"label": "Expend a dice pool",
+					"hint": "One use expends every die of this dice pool, and needs at least one die in it. Undo gives the dice back."
 				},
 				"manaCost": {
 					"label": "Mana",

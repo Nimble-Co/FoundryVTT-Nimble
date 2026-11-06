@@ -173,6 +173,16 @@ function schema() {
 					typeof data.chargePoolIdentifier === 'string' && data.chargePoolIdentifier.trim() !== '',
 			}),
 		),
+		dicePoolIdentifier: new fields.StringField(
+			withWidget({
+				required: false,
+				nullable: false,
+				initial: '',
+				label: key('dicePoolIdentifier', 'label'),
+				hint: key('dicePoolIdentifier', 'hint'),
+				widget: 'dicePoolPicker',
+			}),
+		),
 		actionCost: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -232,6 +242,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare range: number;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
+	declare dicePoolIdentifier: string;
 	declare actionCost: number;
 	declare manaCost: number;
 	declare woundCost: number;
@@ -248,6 +259,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		return {
 			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
 			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
+			dicePoolIdentifier: this.dicePoolIdentifier ?? '',
 			manaCost: Math.max(0, Number(this.manaCost) || 0),
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			actionCost: Math.max(0, Number(this.actionCost) || 0),

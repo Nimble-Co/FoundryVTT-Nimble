@@ -471,4 +471,62 @@ describe('rerollCost', () => {
 			expect(findActorCombatant(null)).toBeNull();
 		});
 	});
+
+	describe('dice pool cost', () => {
+		function judgmentActor(faces: number[]) {
+			const item = {
+				id: 'item-judgment',
+				name: 'Radiant Judgment',
+				flags: { nimble: { dicePools: { judgment: { faces, max: 3, dieSize: 'd6' } } } },
+				rules: new Map([
+					[
+						'rule-1',
+						{
+							type: 'dicePool',
+							disabled: false,
+							id: 'judgment-pool-base',
+							identifier: 'judgment',
+							label: 'Judgment Dice',
+							scope: 'item',
+							dieSize: 'd6',
+							max: '3',
+							initial: 'zero',
+							refills: [],
+						},
+					],
+				]),
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					const pools = changes['flags.nimble.dicePools'] as Record<
+						string,
+						typeof item.flags.nimble.dicePools.judgment
+					>;
+					item.flags.nimble.dicePools.judgment = { ...pools.judgment };
+				}),
+			};
+			const actor = {
+				type: 'character',
+				flags: {},
+				getRollData: () => ({}),
+				items: { contents: [item] },
+				update: vi.fn(async () => undefined),
+			};
+			return { item, asActor: actor as unknown as Actor };
+		}
+		const expend = cost({ dicePoolIdentifier: 'judgment' });
+
+		it('needs at least one die in the pool', () => {
+			expect(canPayRerollCost(judgmentActor([4]).asActor, expend)).toBe(true);
+			expect(canPayRerollCost(judgmentActor([]).asActor, expend)).toBe(false);
+		});
+
+		it('expends every die of the pool, and gives them back', async () => {
+			const { item, asActor } = judgmentActor([4, 6]);
+			const paid = await payRerollCost(asActor, expend);
+			expect(item.flags.nimble.dicePools.judgment.faces).toEqual([]);
+			if (!paid) throw new Error('expected the cost to be paid');
+
+			await refundRerollCost(asActor, expend, paid);
+			expect(item.flags.nimble.dicePools.judgment.faces).toEqual([4, 6]);
+		});
+	});
 });
