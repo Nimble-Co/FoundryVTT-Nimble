@@ -39,6 +39,7 @@ declare namespace CombatManaRule {
 class CombatManaRule extends NimbleBaseRule<CombatManaRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.combatMana.description';
+	static override icon = 'fa-solid fa-droplet';
 
 	declare formula: string;
 	declare resource: string;

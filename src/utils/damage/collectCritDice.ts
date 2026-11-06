@@ -1,13 +1,8 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { actorRules } from '../actor/actorRules.js';
+import { rulesOfType } from '../actor/actorRules.js';
 import { markTurnUse } from '../combat/perTurnUse.js';
 import type { AttackDelivery } from './attackDelivery.js';
-
-interface CritDiceRuleLike {
-	type?: string;
-	specFor?(delivery: AttackDelivery | null): CritDiceSpec | null;
-}
 
 /** The crit dice of the attacker's rules for this attack. With Feature Effects off, a row adds them. */
 export function collectCritDice(
@@ -15,8 +10,8 @@ export function collectCritDice(
 	delivery: AttackDelivery | null,
 ): CritDiceSpec[] {
 	if (!isRuleAutomationEnabled() || !delivery) return [];
-	return actorRules<CritDiceRuleLike>(attacker).flatMap((rule) => {
-		const spec = rule?.type === 'critDice' ? rule.specFor?.(delivery) : null;
+	return rulesOfType(attacker, 'critDice').flatMap((rule) => {
+		const spec = rule.specFor(delivery);
 		return spec ? [spec] : [];
 	});
 }

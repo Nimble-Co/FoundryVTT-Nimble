@@ -11,7 +11,7 @@ Rules are **intentionally generic building blocks**, not named after specific fe
 ## Architecture (one-liner each)
 
 - **Base class**: `NimbleBaseRule` (`src/models/rules/base.ts`) extends `foundry.abstract.DataModel`.
-- **Registration**: `src/config/registerRulesConfig.ts` maps type strings to classes in `CONFIG.NIMBLE.ruleDataModels` and i18n labels in `CONFIG.NIMBLE.ruleTypes`.
+- **Registration**: `RULE_CLASSES` in `src/config/ruleClasses.ts` maps type strings to classes (`CONFIG.NIMBLE.ruleDataModels`). `registerRulesConfig.ts` derives the i18n label keys (`CONFIG.NIMBLE.ruleTypes`, always `NIMBLE.ruleTypes.<type>`). The class carries its own `group`, `description` and `icon`. `rulesOfType(actor, type)` (`src/utils/actor/actorRules.ts`) reads the rules of one type, typed as their class.
 - **Storage**: `item.system.rules` is an `ArrayField` of plain objects with `id`, `type`, `disabled`, `priority`, `predicate`, plus type-specific fields.
 - **Instantiation**: `RulesManager` (`src/managers/RulesManager.ts`) lives per-item; created in `prepareBaseData()`.
 
@@ -39,9 +39,9 @@ Rules are sorted by `priority` (lower runs first) before each hook fires.
 1. New file `src/models/rules/yourRule.ts` extending `NimbleBaseRule`
 2. Local `schema()` + override `defineSchema()` merging base + local
 3. Implement lifecycle hooks
-4. Register in `src/config/registerRulesConfig.ts` (both `ruleTypes` and `ruleDataModels`)
+4. Register the class in `RULE_CLASSES` (`src/config/ruleClasses.ts`); the label key is derived
 5. Add `NIMBLE.ruleTypes.<key>` and `NIMBLE.rules.<key>.description` to `en.json`
-6. Set `static group` (one of `bonuses` / `grants` / `triggers` / `resources` / `flavor`) and `static description`
+6. Set `static group` (one of `bonuses` / `grants` / `triggers` / `resources` / `flavor`), `static description` and `static icon` (a Font Awesome class; the default is a cube)
 7. Give every editable field a `label:` (and ideally a `hint:`) — without `label:`, the builder warns and ships English-only labels
 8. Use `withWidget()` for fields needing widget hints (`formula` / `diceFormula` / `documentUuid` / `predicate` / `templateString` / `richText` / `hidden`)
 9. Co-located test file `yourRule.test.ts`

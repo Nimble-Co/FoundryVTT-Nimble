@@ -43,6 +43,7 @@ interface ActorSystem {
 class ConditionImmunityRule extends NimbleBaseRule<ConditionImmunityRule.Schema> {
 	static override group = 'conditions';
 	static override description = 'NIMBLE.rules.conditionImmunity.description';
+	static override icon = 'fa-solid fa-shield-virus';
 
 	declare conditions: string[];
 

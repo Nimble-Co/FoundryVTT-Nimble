@@ -43,6 +43,7 @@ declare namespace SkillBonusRule {
 class SkillBonusRule extends NimbleBaseRule<SkillBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.skillBonus.description';
+	static override icon = 'fa-solid fa-screwdriver-wrench';
 
 	static override defineSchema(): SkillBonusRule.Schema {
 		return {

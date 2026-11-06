@@ -46,6 +46,7 @@ class HitConditionRule extends NimbleBaseRule<HitConditionRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.hitCondition.description';
+	static override icon = 'fa-solid fa-link';
 
 	static override defineSchema(): HitConditionRule.Schema {
 		return {

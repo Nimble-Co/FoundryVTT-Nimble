@@ -79,6 +79,7 @@ declare namespace ActionDeltaRule {
 class ActionDeltaRule extends NimbleBaseRule<ActionDeltaRule.Schema> {
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.actionDelta.description';
+	static override icon = 'fa-solid fa-plus-minus';
 
 	declare value: string;
 

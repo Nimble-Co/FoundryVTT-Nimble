@@ -34,6 +34,7 @@ declare namespace MaxHpBonusRule {
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.maxHpBonus.description';
+	static override icon = 'fa-solid fa-heart';
 
 	// The base class infers this from the presence of a `prePrepareData` method.
 	// This rule has none, but is read even earlier than that sweep, so it needs

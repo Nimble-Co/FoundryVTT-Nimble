@@ -47,6 +47,7 @@ declare namespace SkillRollModeRule {
 class SkillRollModeRule extends NimbleBaseRule<SkillRollModeRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.skillRollMode.description';
+	static override icon = 'fa-solid fa-dice-d20';
 
 	declare value: number;
 	declare skills: string[];

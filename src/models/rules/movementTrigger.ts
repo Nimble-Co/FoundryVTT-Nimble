@@ -152,6 +152,7 @@ declare namespace MovementTriggerRule {
 class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.movementTrigger.description';
+	static override icon = 'fa-solid fa-shoe-prints';
 
 	// Movement Tracking gates this card, not rule automation.
 	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = [

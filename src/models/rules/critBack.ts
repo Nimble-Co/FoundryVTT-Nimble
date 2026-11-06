@@ -18,6 +18,7 @@ declare namespace CritBackRule {
 class CritBackRule extends NimbleBaseRule<CritBackRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.critBack.description';
+	static override icon = 'fa-solid fa-reply';
 
 	static override defineSchema(): CritBackRule.Schema {
 		return {

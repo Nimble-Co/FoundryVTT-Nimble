@@ -35,6 +35,7 @@ declare namespace HoldOnTargetRule {
 class HoldOnTargetRule extends NimbleBaseRule<HoldOnTargetRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.holdOnTarget.description';
+	static override icon = 'fa-solid fa-hourglass-half';
 
 	static override defineSchema(): HoldOnTargetRule.Schema {
 		return {

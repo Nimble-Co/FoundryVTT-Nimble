@@ -29,6 +29,7 @@ declare namespace KeepAmountRule {
 class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.keepAmount.description';
+	static override icon = 'fa-solid fa-rotate';
 
 	static override defineSchema(): KeepAmountRule.Schema {
 		return {

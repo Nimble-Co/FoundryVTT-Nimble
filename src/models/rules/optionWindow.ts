@@ -56,6 +56,7 @@ class OptionWindowRule extends NimbleBaseRule<OptionWindowRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.optionWindow.description';
+	static override icon = 'fa-solid fa-hand';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['optionSet'] },
 		{ fields: ['opensOnUse', 'oncePerRound', 'ignoresDisadvantage'] },

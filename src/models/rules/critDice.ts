@@ -72,6 +72,7 @@ declare namespace CritDiceRule {
 class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.critDice.description';
+	static override icon = 'fa-solid fa-dice-d6';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['formula', 'dieRole', 'oncePerTurn'] },
 		{ fields: ['attackDelivery'] },

@@ -36,6 +36,7 @@ declare namespace DyingActionLimitRule {
 class DyingActionLimitRule extends NimbleBaseRule<DyingActionLimitRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.dyingActionLimit.description';
+	static override icon = 'fa-solid fa-skull';
 
 	declare value: string;
 

@@ -14,8 +14,8 @@ A rule is a data-driven effect stored as JSON in `item.system.rules[]`, instanti
 There are ~48 rule types in `src/models/rules/`. **Always read two or three existing rules close to the one you are adding** — they carry the current conventions, which move faster than any document. `src/models/rules/base.ts` is the contract; read the section you are overriding.
 
 ## Adding a rule — the five touch points
-1. `src/models/rules/<name>.ts` — the class, extending `NimbleBaseRule<Schema>`. Follow the `schema()` function + `declare namespace` + `static override defineSchema()` shape used by every sibling file. Set `static override group` and `static override description` so the rules builder can list it.
-2. `src/config/registerRulesConfig.ts` — add the import, an entry in `ruleTypes` (i18n key), and an entry in `ruleDataModels` (the class). The `type` field must match the registration key exactly.
+1. `src/models/rules/<name>.ts` — the class, extending `NimbleBaseRule<Schema>`. Follow the `schema()` function + `declare namespace` + `static override defineSchema()` shape used by every sibling file. Set `static override group`, `static override description` and `static override icon` so the rules builder can list it.
+2. `src/config/ruleClasses.ts` — add the import and an entry in `RULE_CLASSES` (the class). The i18n key `NIMBLE.ruleTypes.<type>` is derived. The `type` field must match the registration key exactly.
 3. `public/lang/en.json` — the `NIMBLE.ruleTypes.<name>` string, the `NIMBLE.rules.<name>.description` string that `static description` points to, and field labels and hints under `NIMBLE.rules.<name>.<field>`.
 4. `src/models/rules/__tests__/<name>.test.ts` — Vitest file in the `__tests__` folder.
 5. Documentation, when player- or homebrewer-visible behaviour changes (see the user-facing docs rule in CLAUDE.md).

@@ -43,6 +43,7 @@ declare namespace SavingThrowBonusRule {
 class SavingThrowBonusRule extends NimbleBaseRule<SavingThrowBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.savingThrowBonus.description';
+	static override icon = 'fa-solid fa-shield';
 
 	static override defineSchema(): SavingThrowBonusRule.Schema {
 		return {

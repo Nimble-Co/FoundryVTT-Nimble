@@ -43,6 +43,7 @@ class InitiativeManaRule extends NimbleBaseRule<InitiativeManaRule.Schema> {
 
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.initiativeMana.description';
+	static override icon = 'fa-solid fa-bolt-lightning';
 
 	static override defineSchema(): InitiativeManaRule.Schema {
 		return {

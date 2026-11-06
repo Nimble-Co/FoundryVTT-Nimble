@@ -41,7 +41,7 @@ Reference format: `Compendium.nimble.<compendium-id>.Item.<id>` (or `.Actor.<id>
 - `hitDieSize`: 4, 6, 8, 10, 12. `complexity`: 1-3.
 - `savingThrows.advantage` and `.disadvantage` must be different abilities.
 - Movement in **squares**, never feet.
-- Rule `type` must match a key registered in `src/config/registerRulesConfig.ts`. Rule `id`s are unique within an item's `rules[]`; they are either 16 random alphanumeric chars or a kebab-case slug.
+- Rule `type` must match a key of `RULE_CLASSES` in `src/config/ruleClasses.ts`. Rule `id`s are unique within an item's `rules[]`; they are either 16 random alphanumeric chars or a kebab-case slug.
 - Files are kebab-case; `name` is Title Case. `identifier` is usually empty; when set, it is a kebab-case slug.
 - **No em-dashes in authored pack prose.** Hard rule.
 

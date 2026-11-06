@@ -172,6 +172,7 @@ declare namespace RerollRule {
 class RerollRule extends RollUseRule<RerollRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.reroll.description';
+	static override icon = 'fa-solid fa-rotate-left';
 	static override formLayout: readonly RuleFormGroup[] = [
 		RollUseRule.rollFormGroup(['relatedStat']),
 		...RollUseRule.useFormGroups([

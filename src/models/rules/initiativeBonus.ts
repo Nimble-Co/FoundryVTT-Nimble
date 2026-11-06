@@ -25,6 +25,7 @@ declare namespace InitiativeBonusRule {
 class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.initiativeBonus.description';
+	static override icon = 'fa-solid fa-bolt';
 
 	declare value: string;
 

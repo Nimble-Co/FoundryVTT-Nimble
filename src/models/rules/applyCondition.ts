@@ -100,6 +100,7 @@ declare namespace ApplyConditionRule {
 class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.applyCondition.description';
+	static override icon = 'fa-solid fa-bolt-lightning';
 	// A success takes back the condition of a fail, also with Feature Effects off.
 	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onSaveResolved'];
 

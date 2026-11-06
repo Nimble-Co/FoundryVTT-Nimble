@@ -32,6 +32,7 @@ declare namespace MaxHitDiceRule {
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.maxHitDice.description';
+	static override icon = 'fa-solid fa-dice-d20';
 
 	declare dieSize: number;
 

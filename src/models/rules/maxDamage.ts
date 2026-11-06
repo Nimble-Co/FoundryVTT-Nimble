@@ -100,6 +100,7 @@ interface MaxDamageItem {
 class MaxDamageRule extends NimbleBaseRule<MaxDamageRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.maxDamage.description';
+	static override icon = 'fa-solid fa-angles-up';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['use', 'schools'] },
 		{ fields: ['givesCrit', 'tempHpChoice'] },

@@ -9,62 +9,6 @@ interface PickerEntry {
 	hasDevWarning: boolean;
 }
 
-const RULE_ICONS: Record<string, string> = {
-	critDice: 'fa-solid fa-dice-d6',
-	critDiceSave: 'fa-solid fa-person-falling',
-	damageMultiplier: 'fa-solid fa-xmark',
-	holdOnTarget: 'fa-solid fa-hourglass-half',
-	keepAmount: 'fa-solid fa-rotate',
-	critBack: 'fa-solid fa-reply',
-	freeAssess: 'fa-solid fa-magnifying-glass',
-	hitCondition: 'fa-solid fa-link',
-	optionWindow: 'fa-solid fa-hand',
-	maxDamage: 'fa-solid fa-angles-up',
-	offerAttackBonus: 'fa-solid fa-handshake-angle',
-	poolDieToMax: 'fa-solid fa-arrow-up-9-1',
-	tableRoll: 'fa-solid fa-hat-wizard',
-	tableRollOptions: 'fa-solid fa-dice',
-	initiativeMana: 'fa-solid fa-bolt-lightning',
-	initiativeManaRerollOnes: 'fa-solid fa-rotate',
-	abilityBonus: 'fa-solid fa-dumbbell',
-	actionCost: 'fa-solid fa-stopwatch',
-	actionDelta: 'fa-solid fa-plus-minus',
-	applyCondition: 'fa-solid fa-bolt-lightning',
-	armorClass: 'fa-solid fa-shield-halved',
-	chargeConsumer: 'fa-solid fa-arrow-down-from-line',
-	chargePool: 'fa-solid fa-battery-three-quarters',
-	combatMana: 'fa-solid fa-droplet',
-	concentrationTrack: 'fa-solid fa-brain',
-	conditionImmunity: 'fa-solid fa-shield-virus',
-	damageBonus: 'fa-solid fa-explosion',
-	dyingActionLimit: 'fa-solid fa-skull',
-	freeMove: 'fa-solid fa-person-running',
-	grantActivation: 'fa-solid fa-hand-point-right',
-	grantItem: 'fa-solid fa-gift',
-	grantProficiency: 'fa-solid fa-graduation-cap',
-	grantSpells: 'fa-solid fa-wand-magic-sparkles',
-	healingPotionBonus: 'fa-solid fa-flask-round-potion',
-	hitDiceAdvantage: 'fa-solid fa-dice-d20',
-	incrementHitDice: 'fa-solid fa-up-long',
-	initiativeBonus: 'fa-solid fa-bolt',
-	initiativeMessage: 'fa-solid fa-message',
-	initiativeRollMode: 'fa-solid fa-dice',
-	maxHitDice: 'fa-solid fa-dice-d20',
-	maxHpBonus: 'fa-solid fa-heart',
-	maximizeHitDice: 'fa-solid fa-arrow-up-from-bracket',
-	maxWounds: 'fa-solid fa-droplet-slash',
-	modifyIncomingAttack: 'fa-solid fa-shield-slash',
-	movementTrigger: 'fa-solid fa-shoe-prints',
-	note: 'fa-solid fa-note-sticky',
-	reroll: 'fa-solid fa-rotate-left',
-	savingThrowBonus: 'fa-solid fa-shield',
-	savingThrowRollMode: 'fa-solid fa-dice-five',
-	skillBonus: 'fa-solid fa-screwdriver-wrench',
-	skillRollMode: 'fa-solid fa-dice-d20',
-	speedBonus: 'fa-solid fa-person-running',
-	unarmedDamage: 'fa-solid fa-hand-fist',
-};
-
 const GROUP_META: Record<string, { label: string; icon: string }> = {
 	bonuses: { label: 'Bonuses', icon: 'fa-solid fa-plus' },
 	triggers: { label: 'Triggers', icon: 'fa-solid fa-bolt' },
@@ -81,7 +25,7 @@ export function createRuleTypePickerState() {
 		const buckets = new Map<string, PickerEntry[]>();
 
 		for (const [key, RuleClass] of Object.entries(ruleDataModels)) {
-			const Cls = RuleClass as unknown as { group?: string; description?: string };
+			const Cls = RuleClass as unknown as { group?: string; description?: string; icon?: string };
 			const group = Cls.group ?? 'unsorted';
 			const descriptionKey = Cls.description ?? '';
 			const localizedDescription = descriptionKey ? localize(descriptionKey) : '';
@@ -96,7 +40,7 @@ export function createRuleTypePickerState() {
 				label: localize(ruleTypes[key] ?? key),
 				group,
 				description: localizedDescription || descriptionKey,
-				icon: RULE_ICONS[key] ?? 'fa-solid fa-cube',
+				icon: Cls.icon ?? 'fa-solid fa-cube',
 				hasDevWarning,
 			};
 

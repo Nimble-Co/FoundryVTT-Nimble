@@ -47,6 +47,7 @@ declare namespace GrantProficiencyRule {
 class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.grantProficiency.description';
+	static override icon = 'fa-solid fa-graduation-cap';
 
 	declare proficiencyType: 'armor' | 'languages' | 'weapons';
 

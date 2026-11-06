@@ -58,6 +58,7 @@ class PoolDieToMaxRule extends NimbleBaseRule<PoolDieToMaxRule.Schema> {
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.poolDieToMax.description';
+	static override icon = 'fa-solid fa-arrow-up-9-1';
 
 	static override defineSchema(): PoolDieToMaxRule.Schema {
 		return {

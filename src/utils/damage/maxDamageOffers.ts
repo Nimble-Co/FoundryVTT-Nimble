@@ -1,6 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { MaxDamageChoice, MaxDamageOffer, MaxDamageRuleLike } from '#types/maxDamage.d.ts';
-import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
+import { ruleKey, ruleLabel, rulesOfType } from '../actor/actorRules.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 
 interface OfferActor {
@@ -12,7 +12,7 @@ interface OfferItem {
 }
 
 function rulesOf(actor: OfferActor | null | undefined): MaxDamageRuleLike[] {
-	return actorRules<MaxDamageRuleLike>(actor).filter((rule) => rule?.type === 'maxDamage');
+	return rulesOfType(actor, 'maxDamage');
 }
 
 const hasDice = (formula: unknown) => /\d*d\d/.test(String(formula ?? ''));
