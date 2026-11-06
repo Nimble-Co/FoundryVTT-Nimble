@@ -7,7 +7,7 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import { heldChangesOf } from '../../utils/heldChange/attackHeldPlan.js';
+import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import {
@@ -253,11 +253,13 @@ async function rollSingleMinionAttack(params: {
 			typeof resolvedActionContext.actor.getRollData === 'function'
 				? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
 				: {};
-		const held = heldChangesOf({
+		const held = attackHeldPlanOf({
 			attacker: resolvedActionContext.actor as never,
 			target: params.targetActor,
 			area: false,
 			attack: true,
+			// A minion group attack rolls with no disadvantage.
+			noDisadvantageToIgnore: true,
 		});
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
 			canCrit: false,

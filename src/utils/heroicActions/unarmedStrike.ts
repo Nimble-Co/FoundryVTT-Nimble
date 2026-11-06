@@ -18,7 +18,7 @@ import {
 import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
-import { heldChangesOf } from '#utils/heldChange/attackHeldPlan.js';
+import { attackHeldPlanOf } from '#utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, keptAmountFor } from '#utils/heldChange/heldChange.js';
 import {
 	applyPostRollIncomingBehavior,
@@ -130,7 +130,7 @@ export async function rollUnarmedStrike(
 
 	const keptAmount = keptAmountFor(actor, unarmedItem);
 	const kept = result.keptAmount === false ? null : keptAmount;
-	const held = heldChangesOf({
+	const held = attackHeldPlanOf({
 		attacker: actor,
 		target: firstTargetActor(),
 		area: false,

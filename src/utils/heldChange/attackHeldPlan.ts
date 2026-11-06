@@ -1,5 +1,5 @@
+import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
-import type { DamageRoll } from '../../dice/DamageRoll.js';
 import { removeDisadvantage } from '../../managers/itemActivation/keptAmountActivation.js';
 import {
 	heldChangesForAttack,
@@ -23,23 +23,6 @@ interface AttackHeldInput {
 	keptToEnd?: HeldChange | null;
 	/** The roll has no disadvantage of its own to take out (max damage, or it ignores it already). */
 	noDisadvantageToIgnore?: boolean;
-}
-
-/** What one attack uses of its Held Changes, and what it spends. */
-interface AttackHeldPlan {
-	/** The Primary Die changes the roll adds. Empty when the roll keeps an amount. */
-	primaryDie: HeldChange[];
-	primaryDieBonus: number;
-	ignoreDisadvantage: HeldChange | null;
-	mustAttackOther: HeldChange | null;
-	/** The Primary Die lines of the card. */
-	bonusLines(): { label: string; value: number; itemUuid: string }[];
-	/** Take disadvantage out and name who the attack must be against. */
-	applyToRoll(options: DamageRoll.Options & { rollModeSources?: number[] }): void;
-	/** The same plan for a roll that has no Primary Die to add to. */
-	withoutPrimaryDie(): AttackHeldPlan;
-	/** Remove what the attack spent. */
-	spend(): Promise<void>;
 }
 
 function planOf(
@@ -80,7 +63,7 @@ function planOf(
  * roll uses no Primary Die change and has no disadvantage to take out.
  * Ignoring disadvantage also ignores the negative Primary Die changes.
  */
-function heldChangesOf(input: AttackHeldInput): AttackHeldPlan {
+function attackHeldPlanOf(input: AttackHeldInput): AttackHeldPlan {
 	const kept = input.kept ?? null;
 	const ignoreDisadvantage =
 		input.attack && !kept && !input.noDisadvantageToIgnore
@@ -101,4 +84,4 @@ function heldChangesOf(input: AttackHeldInput): AttackHeldPlan {
 	);
 }
 
-export { type AttackHeldPlan, heldChangesOf };
+export { attackHeldPlanOf };

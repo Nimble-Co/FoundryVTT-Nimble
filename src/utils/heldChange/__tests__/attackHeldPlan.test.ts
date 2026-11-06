@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
-import { heldChangesOf } from '../attackHeldPlan.js';
+import { attackHeldPlanOf } from '../attackHeldPlan.js';
 
 const data = (overrides: Partial<HeldChangeData> = {}): HeldChangeData => ({
 	kind: 'primaryDie',
@@ -64,7 +64,7 @@ function spentIds(...holders: ReturnType<typeof creature>[]) {
 	);
 }
 
-describe('heldChangesOf', () => {
+describe('attackHeldPlanOf', () => {
 	it('adds the Primary Die changes and spends each change the attack used', async () => {
 		const attacker = creature('A', [ignore, mustAttack]);
 		const target = creature('T', [
@@ -73,7 +73,7 @@ describe('heldChangesOf', () => {
 		]);
 		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'A' ? attacker : target));
 
-		const plan = heldChangesOf({ attacker, target, area: false, attack: true });
+		const plan = attackHeldPlanOf({ attacker, target, area: false, attack: true });
 		const options: Record<string, any> = { rollMode: -1, rollModeSources: [-1, 1] };
 		plan.applyToRoll(options as never);
 		await plan.spend();
@@ -97,7 +97,7 @@ describe('heldChangesOf', () => {
 			holderUuid: 'A',
 		}));
 
-		const plan = heldChangesOf({
+		const plan = attackHeldPlanOf({
 			attacker,
 			target,
 			area: false,
@@ -115,7 +115,7 @@ describe('heldChangesOf', () => {
 	it('does not spend the ignore change on a roll with no disadvantage to take out', () => {
 		const attacker = creature('A', [ignore]);
 
-		const plan = heldChangesOf({
+		const plan = attackHeldPlanOf({
 			attacker,
 			target: null,
 			area: false,
@@ -130,7 +130,7 @@ describe('heldChangesOf', () => {
 		const attacker = creature('A', [ignore, mustAttack]);
 		const target = creature('T', [data()]);
 
-		const plan = heldChangesOf({ attacker, target, area: false, attack: false });
+		const plan = attackHeldPlanOf({ attacker, target, area: false, attack: false });
 
 		expect(plan.primaryDie).toEqual([]);
 		expect(plan.ignoreDisadvantage).toBeNull();
@@ -142,7 +142,12 @@ describe('heldChangesOf', () => {
 		const target = creature('T', [data()]);
 		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'A' ? attacker : target));
 
-		const plan = heldChangesOf({ attacker, target, area: false, attack: true }).withoutPrimaryDie();
+		const plan = attackHeldPlanOf({
+			attacker,
+			target,
+			area: false,
+			attack: true,
+		}).withoutPrimaryDie();
 		await plan.spend();
 
 		expect(plan.bonusLines()).toEqual([]);

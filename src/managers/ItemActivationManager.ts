@@ -1,3 +1,4 @@
+import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
@@ -61,7 +62,7 @@ import {
 	setPoolFaces,
 } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
-import { type AttackHeldPlan, heldChangesOf } from '../utils/heldChange/attackHeldPlan.js';
+import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	isAttackRoll,
@@ -718,7 +719,7 @@ class ItemActivationManager {
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
 							);
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
-					this.#heldPlan = heldChangesOf({
+					this.#heldPlan = attackHeldPlanOf({
 						attacker: this.actor,
 						target: firstTargetActor(),
 						area: isAoE,
