@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { SaveKeyType } from '#types/saveKey.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { endEffect, removeEffect, setCondition } from './effectActions.ts';
@@ -10,7 +11,7 @@ export interface SheetActor {
 	setTempHP(value: number): Promise<unknown>;
 	update(data: Record<string, unknown>): Promise<unknown>;
 	deleteItem(itemId: string): Promise<unknown>;
-	rollSavingThrowToChat(save: never): Promise<unknown>;
+	rollSavingThrowToChat(save: SaveKeyType): Promise<unknown>;
 	activateItem(itemId: string): Promise<unknown>;
 	items: { get(id: string): { sheet?: { render(force: boolean): unknown } | null } | undefined };
 	setFlag(scope: never, key: never, value: never): Promise<unknown>;
@@ -39,7 +40,7 @@ export async function performSheetIntent(actor: SheetActor, intent: SheetIntent)
 			await adjustPool(document, intent.poolId, 'set', intent.value);
 			return;
 		case 'rollSave':
-			await actor.rollSavingThrowToChat(intent.save as never);
+			await actor.rollSavingThrowToChat(intent.save);
 			return;
 		case 'activate':
 			await actor.activateItem(intent.itemId);

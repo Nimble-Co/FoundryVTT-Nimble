@@ -17,26 +17,27 @@ export type SheetIntent<Flag extends string = string> =
 	| { kind: 'setFlag'; flag: Flag; value: boolean | number }
 	| { kind: 'setCurrency'; coin: string; value: number };
 
-const SHEET_INTENT_KINDS: ReadonlySet<string> = new Set<SheetIntent['kind']>([
-	'setHp',
-	'setTempHp',
-	'rename',
-	'changePortrait',
-	'deleteItem',
-	'setPoolCharges',
-	'rollSave',
-	'activate',
-	'openItem',
-	'endEffect',
-	'removeEffect',
-	'setCondition',
-	'setFlag',
-	'setCurrency',
-]);
+/** Typed by the union, so a kind added to `SheetIntent` does not compile until it is here. */
+const SHEET_INTENT_KINDS: Record<SheetIntent['kind'], true> = {
+	setHp: true,
+	setTempHp: true,
+	rename: true,
+	changePortrait: true,
+	deleteItem: true,
+	setPoolCharges: true,
+	rollSave: true,
+	activate: true,
+	openItem: true,
+	endEffect: true,
+	removeEffect: true,
+	setCondition: true,
+	setFlag: true,
+	setCurrency: true,
+};
 
 /** Whether the shared perform acts on this intent. */
 export function isSheetIntent<T extends { kind: string }>(
 	intent: T,
 ): intent is Extract<T, { kind: SheetIntent['kind'] }> {
-	return SHEET_INTENT_KINDS.has(intent.kind);
+	return Object.hasOwn(SHEET_INTENT_KINDS, intent.kind);
 }

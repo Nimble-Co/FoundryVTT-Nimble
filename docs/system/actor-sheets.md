@@ -74,7 +74,7 @@ The root component calls each view function in a `$derived`. A `$derived` runs o
 
 An intent is plain data that says what the user asks for, for example `{ kind: 'setHp', value: 12 }` or `{ kind: 'configure', target: 'skills' }`. The views hold the intents for their controls. A control that you cannot use now has no intent: the view gives `null` and, where it helps, a reason in words.
 
-`hero/heroIntent.ts` has the `HeroIntent` union. `hero/heroPerform.ts` has `createHeroPerform(actor)`, the dispatcher. It is the only place with side effects: actor methods, `actor.update`, dialogs, pool helpers and combat helpers. Its `switch` has a `never` check, so a new intent kind does not compile until `perform` handles it.
+`hero/heroIntent.ts` has the `HeroIntent` union. `hero/heroPerform.ts` has `createHeroPerform(actor)`, the dispatcher. It and the shared `performSheetIntent` it calls are the only places with side effects: actor methods, `actor.update`, dialogs, pool helpers and combat helpers. Its `switch` has a `never` check, so a new intent kind does not compile until `perform` handles it.
 
 The intents that both sheets act on in the same way (HP, temporary HP, name, portrait, delete, pool charges, a save, activate, open, the effect actions, a settings flag, currency) are `SheetIntent` in `shared/sheetIntent.ts`. `HeroIntent` and `MonsterIntent` include it, and each `perform` hands them to `performSheetIntent` (`shared/sheetPerform.ts`) before its own `switch`.
 
