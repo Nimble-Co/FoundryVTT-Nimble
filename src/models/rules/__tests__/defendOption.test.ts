@@ -6,7 +6,7 @@ function makeRule(config: Record<string, unknown> = {}) {
 	const actor = {
 		uuid: 'Actor.hero',
 		getDomain: () => new Set<string>(),
-		getRollData: () => ({ key: 3 }),
+		getRollData: () => ({ key: 3, auraReach: 6 }),
 	};
 	const item = { isEmbedded: true, actor, name: 'Feature', getDomain: () => new Set<string>() };
 	const rule = new DefendOptionRule({ type: 'defendOption' } as never, {
@@ -60,10 +60,17 @@ describe('DefendOptionRule', () => {
 		expect(cost).toEqual({
 			chargePoolIdentifier: 'sand',
 			chargeCost: 1,
+			dicePoolIdentifier: '',
 			manaCost: 2,
 			woundCost: 1,
 			actionCost: 1,
 			heroicReaction: '',
 		});
+	});
+
+	it('resolves its range from the formula, and never less than 1', () => {
+		expect(makeRule({ range: '@auraReach' }).resolveRange()).toBe(6);
+		expect(makeRule({ range: '4' }).resolveRange()).toBe(4);
+		expect(makeRule({ range: '' }).resolveRange()).toBe(1);
 	});
 });

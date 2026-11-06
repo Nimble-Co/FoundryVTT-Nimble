@@ -39,7 +39,7 @@ interface RuleLike {
 	id?: string;
 	label?: string;
 	modifier?: IncomingAttackModifier;
-	range?: number;
+	resolveRange?: () => number;
 	missThreshold?: number;
 	item?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
@@ -282,7 +282,7 @@ function collectRedirectCandidates(targetToken: Token.Implementation): IncomingR
 		const redirectRules = getMatchingRules(actor).filter(
 			(rule) =>
 				rule.modifier === 'redirectToSelf' &&
-				areWithinSpaces(token, targetToken, rule.range ?? BASELINE_INTERPOSE_RANGE),
+				areWithinSpaces(token, targetToken, rule.resolveRange?.() ?? BASELINE_INTERPOSE_RANGE),
 		);
 
 		if (redirectRules.length > 0) {

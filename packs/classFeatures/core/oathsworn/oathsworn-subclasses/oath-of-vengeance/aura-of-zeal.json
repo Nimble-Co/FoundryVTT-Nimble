@@ -19,6 +19,16 @@
 				"poolIdentifier": "judgment",
 				"dieSize": null,
 				"maxDelta": "+1"
+			},
+			{
+				"type": "auraReach",
+				"disabled": false,
+				"id": "3CfxwwUrCYPwlmLI",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "4"
 			}
 		],
 		"activation": {

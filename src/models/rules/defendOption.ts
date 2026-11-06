@@ -138,15 +138,14 @@ function schema() {
 				showWhen: isWay('withDefend', 'freeDefend'),
 			}),
 		),
-		range: new fields.NumberField(
+		range: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
-				initial: 2,
-				min: 1,
-				integer: true,
+				initial: '2',
 				label: key('range', 'label'),
 				hint: key('range', 'hint'),
+				widget: 'formula',
 				showWhen: isWay('allyDefends'),
 			}),
 		),
@@ -239,7 +238,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare upcastArmor: number;
 	declare withInterpose: boolean;
 	declare wholeRound: boolean;
-	declare range: number;
+	declare range: string;
 	declare chargePoolIdentifier: string;
 	declare chargeCost: number;
 	declare dicePoolIdentifier: string;
@@ -273,6 +272,13 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		if (!formula) return 0;
 		const value = Number(this.resolveFormula(formula));
 		return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+	}
+
+	/** The spaces from the ally who Defends, from the formula; at least 1. */
+	resolveRange(): number {
+		const formula = String(this.range ?? '').trim();
+		const value = formula ? Number(this.resolveFormula(formula)) : 0;
+		return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 	}
 
 	override tooltipInfo(): string {

@@ -1,0 +1,3 @@
+The Aura Reach rule adds to the Reach of the owner's aura, in spaces. All of the owner's Aura Reach rules add up, and formulas read the total as `@auraReach` (0 with no aura). Rules that work "within your aura" use `@auraReach` as their range, so a feature that raises the Reach raises all of them.
+
+**Example: Oathsworn auras.** Aura of Zeal, Aura of Refuge and Aura of Suffering each have an Aura Reach rule with **Reach** → `4`. Improved Aura has one with **Reach** → `2`, so its hero's aura reaches 6 spaces. Aura of Refuge's Interpose (a **Modify Incoming Attack** rule) and Exploit (a **Defend Option** rule) have **Range** → `@auraReach`.

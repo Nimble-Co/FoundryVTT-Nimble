@@ -63,13 +63,11 @@ describe('ModifyIncomingAttackRule', () => {
 			expect(modifier.initial).toBe('disadvantage');
 		});
 
-		it('defaults range to 2 spaces with a minimum of 1', () => {
+		it('defaults range to a formula of 2 spaces', () => {
 			const schema = ModifyIncomingAttackRule.defineSchema();
-			const range = schema.range as unknown as { initial: number; min: number; integer: boolean };
+			const range = schema.range as unknown as { initial: string };
 
-			expect(range.initial).toBe(2);
-			expect(range.min).toBe(1);
-			expect(range.integer).toBe(true);
+			expect(range.initial).toBe('2');
 		});
 
 		it('only shows the range field for the redirectToSelf modifier', () => {

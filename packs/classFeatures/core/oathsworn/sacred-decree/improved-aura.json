@@ -6,7 +6,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "auraReach",
+				"disabled": false,
+				"id": "1Tqjn9nCIgw7xtTy",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "2"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

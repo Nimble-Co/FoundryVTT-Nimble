@@ -4,6 +4,7 @@ import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
+import { AuraReachRule } from '../models/rules/auraReach.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeResultRule } from '../models/rules/changeResult.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
@@ -82,6 +83,7 @@ export default function registerRulesConfig() {
 		actionDelta: 'NIMBLE.ruleTypes.actionDelta',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
+		auraReach: 'NIMBLE.ruleTypes.auraReach',
 		attackOutcome: 'NIMBLE.ruleTypes.attackOutcome',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
 		changeDie: 'NIMBLE.ruleTypes.changeDie',
@@ -161,6 +163,7 @@ export default function registerRulesConfig() {
 		actionDelta: ActionDeltaRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
+		auraReach: AuraReachRule,
 		attackOutcome: AttackOutcomeRule,
 		chargeConsumer: ChargeConsumerRule,
 		changeDie: ChangeDieRule,

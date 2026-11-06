@@ -520,6 +520,8 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 	// Schema-defined properties
 	declare abilities: Record<AbilityKeyType, AbilityData>;
 	declare attributes: {
+		/** Derived: the sum of the hero's Aura Reach rules, 0 with no aura. */
+		auraReach: number;
 		armor: {
 			baseValue: string;
 			components: ArmorComponent[];

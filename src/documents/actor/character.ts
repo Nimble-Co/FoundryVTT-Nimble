@@ -310,6 +310,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Reset armor components so afterPrepareData() rules always start from a clean slate.
 		// Without this, removing an ancestry then re-adding it leaves stale entries in the array.
 		this.system.attributes.armor.components = [];
+		this.system.attributes.auraReach = 0;
 
 		super.prepareDerivedData();
 
@@ -1290,6 +1291,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		data.level = this.levels.character ?? 1;
 
 		data.pools = getChargePoolRollData(this);
+
+		data.auraReach = this.system.attributes?.auraReach ?? 0;
 
 		// NOTE: Pool max bonuses (e.g. "+1 Max Combat Die") are applied directly in the
 		// charge-pool max computation (see getChargePoolDefinitions), which sums the

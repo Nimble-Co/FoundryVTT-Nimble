@@ -1707,6 +1707,7 @@
 			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
+			"auraReach": "Aura Reach",
 			"attackOutcome": "Attack Outcome",
 			"chargeConsumer": "Charge Consumer",
 			"changeDie": "Change a Die",
@@ -1857,6 +1858,13 @@
 				"mode": {
 					"label": "How to apply",
 					"hint": "Add: stack on top of current AC. Multiply: scale current AC. Override: replace current AC."
+				}
+			},
+			"auraReach": {
+				"description": "Add to the Reach of the hero's aura. Every Aura Reach rule on the hero adds up, and formulas read the total as @auraReach.",
+				"value": {
+					"label": "Reach",
+					"hint": "A number or formula, in spaces. A feature that gives the aura adds its Reach (for example 4); a feature that raises it adds the raise (for example 2)."
 				}
 			},
 			"chargeConsumer": {
@@ -2386,7 +2394,7 @@
 				},
 				"range": {
 					"label": "Range (spaces)",
-					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces."
+					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces. A number or formula, for example @auraReach for the hero's aura."
 				},
 				"missThreshold": {
 					"label": "Miss threshold",
@@ -2851,7 +2859,7 @@
 				},
 				"range": {
 					"label": "Range (spaces)",
-					"hint": "How near the ally who Defends must be."
+					"hint": "How near the ally who Defends must be. A number or formula, for example @auraReach for the hero's aura."
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
