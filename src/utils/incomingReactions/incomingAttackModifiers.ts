@@ -2,7 +2,7 @@ import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { IncomingAttackModifier } from '../../models/rules/modifyIncomingAttack.js';
 import { appendExtraDamageToRoll } from '../damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../damage/missThreshold.js';
-import { newRollChanges } from '../reroll/modifyReroll.js';
+import { type AutomaticRerollTarget, chainAutomaticRerolls } from '../reroll/automaticRerolls.js';
 import { rollerTokenOf, scanRerollAllies } from '../reroll/rerollAllies.js';
 import {
 	type AutomaticReroll,
@@ -13,8 +13,7 @@ import {
 	type RerollRollOutcome,
 	type RerollRuleLike,
 } from '../reroll/rerollEntries.js';
-import { type RerollHistory, rerollWithRule } from '../reroll/rerollStep.js';
-import { applyGrants, grantsForUse } from '../reroll/rerollUseGrants.js';
+import type { RerollHistory } from '../reroll/rerollStep.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
 import type {
 	IncomingReactionEntry,
@@ -147,36 +146,29 @@ async function applyPostRollIncomingBehavior<TRoll>(
 
 	if (asView(roll).originalFormula) {
 		const automatic = automaticRerollsOf(plan);
-		let next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
-		while (next) {
-			const replaced = asView(finalRoll);
-			const added = await newRollChanges(next.rule, 'attack', rollChanges);
-			const result = await rerollWithRule({
-				rule: next.rule,
-				entry: next.entry,
-				rollKind: 'attack',
-				rollChanges: added,
-				automatic: true,
-				payer: next.rule.actor as Actor | null | undefined,
-				replaced,
-				previousResult: replaced.primaryDieValue ?? null,
-				makeRoll: rebuildRoll,
-				earlierCritTriggers: discardedCritTriggers,
-			});
-			if (result.status === 'failed') throw result.error;
-			if (result.status !== 'done') break;
-
-			const grants = await grantsForUse(next.rule, plan.roller);
-			if (grants.length > 0) result.reroll.grants = grants;
-			discardedRoll = replaced.toJSON();
-			finalRoll = result.roll;
-			rerolls.push(result.reroll);
-			rollChanges.push(...added);
-			await applyGrants(grants, next.rule.item?.uuid ?? '');
-			discardedCritTriggers = result.discardedCritTriggers;
-			stampEntries.push({ ...next.entry, used: true });
-			next = nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll)));
-		}
+		await chainAutomaticRerolls<TRoll, AutomaticRerollTarget<TRoll>>({
+			rollKind: 'attack',
+			roller: plan.roller,
+			next: () => nextAutomaticReroll(automatic, stampEntries, rollOutcomeOf(asView(finalRoll))),
+			target: () => {
+				const replaced = asView(finalRoll);
+				return {
+					replaced,
+					previousResult: replaced.primaryDieValue ?? null,
+					makeRoll: rebuildRoll,
+				};
+			},
+			appliedRollChanges: () => rollChanges,
+			earlierCritTriggers: () => discardedCritTriggers,
+			place: async (done, next, _target, added) => {
+				discardedRoll = asView(finalRoll).toJSON();
+				finalRoll = done.roll;
+				rerolls.push(done.reroll);
+				rollChanges.push(...added);
+				discardedCritTriggers = done.discardedCritTriggers;
+				stampEntries.push({ ...next.entry, used: true });
+			},
+		});
 	}
 
 	if (rollChanges.some((change) => change.kind === 'extraDamage')) {

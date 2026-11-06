@@ -34,6 +34,7 @@ import type {
 } from '#utils/incomingReactions/incomingReactionEntry.js';
 import { CRIT_BONUS_ROLE } from '#utils/incomingReactions/incomingReactionEntry.js';
 import localize from '#utils/localize.js';
+import { chainAutomaticRerolls } from '#utils/reroll/automaticRerolls.js';
 import { type CheckCard, checkCardRollTarget } from '#utils/reroll/checkCardRollTarget.js';
 import { type CheckRoll, checkRollOfCard } from '#utils/reroll/checkRollOfCard.js';
 import {
@@ -167,6 +168,14 @@ interface CardReroll {
 	resultChange?: ResultChange;
 }
 
+/** The card after a new roll is put on it: what the next automatic Reroll reads. */
+interface PlacedReroll {
+	automatic: AutomaticReroll[];
+	entries: IncomingReactionEntry[];
+	discardedCritTriggers: boolean;
+	outcome: RerollRollOutcome;
+}
+
 /** What the reroll code reads and writes on its chat card. */
 export interface RerollCard {
 	id(): string | null;
@@ -286,15 +295,16 @@ export class CardRerolls {
 
 	/**
 	 * Put `newRoll` on the card in place of `target`; the second result stands.
-	 * `history` adds what the card shows about this reroll.
+	 * `history` adds what the card shows about this reroll. Then the automatic
+	 * Rerolls the new roll allows run, unless `chain` is false.
 	 */
 	async #placeReroll(
 		entry: IncomingReactionEntry,
 		target: RerollableRoll,
 		newRoll: unknown,
 		history: CardReroll,
-		options: { thrown?: boolean } = {},
-	): Promise<void> {
+		options: { thrown?: boolean; chain?: boolean } = {},
+	): Promise<PlacedReroll> {
 		const prepared = await target.prepare(
 			newRoll,
 			this.#withEntryUsed(entry),
@@ -327,12 +337,21 @@ export class CardRerolls {
 			if (rolling && messageId) broadcastRerollRolling(messageId, null);
 			throw error;
 		}
-		await this.runAutomaticReroll(
-			rerolls.automatic,
+		const placed: PlacedReroll = {
+			automatic: rerolls.automatic,
 			entries,
-			history.discardedCritTriggers,
-			prepared.context,
-		);
+			discardedCritTriggers: history.discardedCritTriggers,
+			outcome: prepared.context,
+		};
+		if (options.chain !== false) {
+			await this.runAutomaticReroll(
+				placed.automatic,
+				placed.entries,
+				placed.discardedCritTriggers,
+				placed.outcome,
+			);
+		}
+		return placed;
 	}
 
 	/** The dice the 3D dice throw for a new roll: all of it, some of it, or none (null). */
@@ -579,9 +598,9 @@ export class CardRerolls {
 	}
 
 	/**
-	 * Run the next automatic reroll the card's roll now allows, by the same
-	 * rule as the roll-time path. Runs after the card is written; a failure
-	 * here does not undo the reroll before it.
+	 * Run the automatic Rerolls the card's roll now allows, by the same chain
+	 * as at roll time. Runs after the card is written; a failure here does not
+	 * undo the reroll before it.
 	 */
 	async runAutomaticReroll(
 		automatic: AutomaticReroll[],
@@ -589,41 +608,39 @@ export class CardRerolls {
 		earlierCritTriggers: boolean,
 		roll: RerollRollOutcome,
 	): Promise<void> {
-		const next = nextAutomaticReroll(automatic, entries, roll);
-		if (!next) return;
-
-		try {
-			const rollTarget = this.#rerollTarget();
-			const found = rollTarget?.findRoll();
-			const target = found ? rerollableFor(found, next.rule.die) : null;
-			if (!rollTarget || !target) return;
-			const rollKind = rollTarget.context().roll.kind;
-			const result = await rerollWithRule({
-				rule: next.rule,
-				entry: next.entry,
-				rollKind,
-				rollChanges: await this.#newRollChanges(next.rule, rollKind),
-				automatic: true,
-				payer: next.rule.actor as Actor | null | undefined,
-				replaced: target.replaced,
-				previousResult: target.previousResult,
-				makeRoll: (formula, options, changes) => target.makeRoll(formula, options, changes),
-				readNewDie: target.readNewDie?.bind(target),
-				earlierCritTriggers,
-				place: async (done) => {
-					await this.#addGrants(done, next.rule, rollTarget);
-					return this.#placeReroll(next.entry, target, done.roll, {
+		const rollTarget = this.#rerollTarget();
+		if (!rollTarget) return;
+		let card: PlacedReroll = {
+			automatic,
+			entries,
+			discardedCritTriggers: earlierCritTriggers,
+			outcome: roll,
+		};
+		const context = rollTarget.context();
+		await chainAutomaticRerolls<unknown, RerollableRoll>({
+			rollKind: context.roll.kind,
+			roller: context.attacker,
+			next: () => nextAutomaticReroll(card.automatic, card.entries, card.outcome),
+			target: (next) => {
+				const found = this.#rerollTarget()?.findRoll();
+				return found ? rerollableFor(found, next.rule.die) : null;
+			},
+			appliedRollChanges: () => this.#rollChanges(),
+			earlierCritTriggers: () => card.discardedCritTriggers,
+			place: async (done, next, target) => {
+				card = await this.#placeReroll(
+					next.entry,
+					target,
+					done.roll,
+					{
 						reroll: done.reroll,
 						discardedCritTriggers: done.discardedCritTriggers,
 						list: 'append',
-					});
-				},
-			});
-			if (result.status === 'failed') throw result.error;
-			if (result.status === 'done') await this.#applyGrants(result.reroll, next.rule);
-		} catch (error) {
-			console.error('Nimble | An automatic reroll failed.', error);
-		}
+					},
+					{ chain: false },
+				);
+			},
+		});
 	}
 
 	/**
@@ -1010,12 +1027,13 @@ export class CardRerolls {
 			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
-			place: (done) =>
-				this.#placeReroll(entry, target, done.roll, {
+			place: async (done) => {
+				await this.#placeReroll(entry, target, done.roll, {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
-				}),
+				});
+			},
 		});
 		if (result.status === 'unpaid') {
 			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');
@@ -1084,12 +1102,13 @@ export class CardRerolls {
 			readNewDie: target.readNewDie?.bind(target),
 			earlierCritTriggers: systemData.discardedCritTriggers === true,
 			payOptions: { forceHeroicReaction },
-			place: (done) =>
-				this.#placeReroll(entry, target, done.roll, {
+			place: async (done) => {
+				await this.#placeReroll(entry, target, done.roll, {
 					reroll: done.reroll,
 					discardedCritTriggers: done.discardedCritTriggers,
 					list: 'new',
-				}),
+				});
+			},
 		});
 		if (result.status === 'unpaid') {
 			return void reject('NIMBLE.chat.incomingReactions.rerollCostUnpaid');

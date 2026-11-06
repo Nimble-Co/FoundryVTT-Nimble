@@ -1180,19 +1180,30 @@ describe('Reroll rules on the attack', () => {
 			expect(result.stampEntries).toEqual([]);
 		});
 
-		it('throws when the new roll fails', async () => {
+		it('keeps the first roll and logs when the new roll fails', async () => {
 			const entry = rerollEntry('always');
 			const rule = rerollRule({ automatic: true, rerollsByItself: true });
+			const first = makeRoll(false);
+			const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			await expect(
-				applyPostRollIncomingBehavior(
-					makeRoll(false),
+			try {
+				const result = await applyPostRollIncomingBehavior(
+					first,
 					plan({ autoRerollEntries: [entry], rerollRules: new Map([[entry.id, rule]]) }),
 					vi.fn(async () => {
 						throw new Error('roll failed');
 					}),
-				),
-			).rejects.toThrow('roll failed');
+				);
+
+				expect(result.roll).toBe(first);
+				expect(result.rerollHistory).toBeNull();
+				expect(logged).toHaveBeenCalledWith(
+					'Nimble | An automatic reroll failed.',
+					expect.any(Error),
+				);
+			} finally {
+				logged.mockRestore();
+			}
 		});
 
 		function automaticPlan(entries: ReturnType<typeof rerollEntry>[]) {
