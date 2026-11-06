@@ -46,7 +46,6 @@ export interface DefendChoice {
 }
 
 export interface DefendDialogProps {
-	actor: Actor.Implementation;
 	dialog: ChoiceDialog<DefendChoice>;
 	data: DefendWindowData;
 }
