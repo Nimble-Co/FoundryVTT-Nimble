@@ -2561,8 +2561,8 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 		};
 
 		expect(updatePayload.system.targets).toEqual([
-			'Scene.scene.Token.other',
 			'Scene.scene.Token.protector',
+			'Scene.scene.Token.other',
 		]);
 		expect(updatePayload.system.incomingReactions[0].used).toBe(true);
 	});
@@ -2594,6 +2594,75 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 				targetTokenUuid: 'Scene.scene.Token.protector',
 				used: false,
 			}),
+		);
+	});
+
+	it('puts the protector in the place of the protected target, so a first-target reroll comes to them', async () => {
+		const lucky = {
+			type: 'reroll',
+			id: 'lucky',
+			outcome: 'always',
+			offersUseOn: (context: { side: string }) => context.side === 'target',
+		};
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.scene.Token.protector'
+				? { actor: { ...protectorActor, uuid: 'Actor.protector', rules: [lucky] } }
+				: null,
+		);
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: ['Scene.scene.Token.victim', 'Scene.scene.Token.other'],
+		});
+		(message.system as unknown as { activation: Record<string, unknown> }).activation.targets = {
+			singleTargetAttack: true,
+		};
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { targets: string[]; incomingReactions: ReactionEntryFixture[] };
+		};
+		expect(updatePayload.system.targets[0]).toBe('Scene.scene.Token.protector');
+		expect(updatePayload.system.incomingReactions).toContainEqual(
+			expect.objectContaining({ ruleId: 'lucky', targetTokenUuid: 'Scene.scene.Token.protector' }),
+		);
+	});
+
+	it('moves a protector that is already a target into the place of the protected target', async () => {
+		const lucky = {
+			type: 'reroll',
+			id: 'lucky',
+			outcome: 'always',
+			offersUseOn: (context: { side: string }) => context.side === 'target',
+		};
+		reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.scene.Token.protector'
+				? { actor: { ...protectorActor, uuid: 'Actor.protector', rules: [lucky] } }
+				: null,
+		);
+		const message = createReactionMessage({
+			entries: [createRedirectEntry()],
+			targets: [
+				'Scene.scene.Token.victim',
+				'Scene.scene.Token.other',
+				'Scene.scene.Token.protector',
+			],
+		});
+		(message.system as unknown as { activation: Record<string, unknown> }).activation.targets = {
+			singleTargetAttack: true,
+		};
+
+		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+		const updatePayload = message.update.mock.calls[0][0] as {
+			system: { targets: string[]; incomingReactions: ReactionEntryFixture[] };
+		};
+		expect(updatePayload.system.targets).toEqual([
+			'Scene.scene.Token.protector',
+			'Scene.scene.Token.other',
+		]);
+		expect(updatePayload.system.incomingReactions).toContainEqual(
+			expect.objectContaining({ ruleId: 'lucky', targetTokenUuid: 'Scene.scene.Token.protector' }),
 		);
 	});
 
