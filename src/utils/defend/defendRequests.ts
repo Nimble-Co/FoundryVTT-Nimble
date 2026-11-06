@@ -159,11 +159,13 @@ function attackerTurnStart(card: DefendCard): ConditionStart | null {
 	if (!combatant?.id) return null;
 	const index = combat.turns.findIndex((each) => each.id === combatant.id);
 	const round = Number(combat.round) || 0;
+	// Out of the turn order, their next turn is also still to come.
+	const turnToCome = index < 0 || index > Number(combat.turn);
 	return {
 		combat: combat.id,
 		combatant: combatant.id,
 		initiative: combatant.initiative ?? null,
-		round: index > Number(combat.turn) ? round - 1 : round,
+		round: turnToCome ? round - 1 : round,
 		turn: Math.max(0, index),
 		time: game.time?.worldTime ?? 0,
 	};

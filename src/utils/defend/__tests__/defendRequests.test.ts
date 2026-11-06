@@ -184,6 +184,21 @@ describe('Defend options on the card', () => {
 			});
 		});
 
+		it('when the attacker is not in the turn order: at their next turn, when it comes', async () => {
+			const combatants = [ogreCombatant, pipCombatant];
+			(globalThis as unknown as Globals).game.combat = {
+				...combat([pipCombatant], 0),
+				combatants: { find: (fn: (c: unknown) => boolean) => combatants.find(fn) },
+			};
+			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
+			await requestDefend(
+				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+			);
+			expect(applyCondition.mock.calls[0]?.[2]).toMatchObject({
+				start: { combatant: 'c-ogre', round: 2 },
+			});
+		});
+
 		it('when the attacker turn is still to come this round: at that turn', async () => {
 			expect(await blindOn([pipCombatant, ogreCombatant], 0)).toMatchObject({
 				start: { combatant: 'c-ogre', round: 2 },
