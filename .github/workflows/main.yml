@@ -31,7 +31,7 @@ jobs:
         path: ~/.local/share/pnpm/store/v10
         key: pnpm-release-${{ github.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          pnpm-dev-
+          pnpm-main-
 
     - name: Install Dependencies
       run: pnpm install --frozen-lockfile

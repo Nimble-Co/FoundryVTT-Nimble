@@ -1,9 +1,9 @@
-name: Update Dev Cache
+name: Update Main Cache
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
       - 'pnpm-lock.yaml'
 
@@ -12,7 +12,7 @@ env:
 
 jobs:
   update-cache:
-    name: Update Dev Branch Cache
+    name: Update Main Branch Cache
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/pnpm/store/v10
-          key: pnpm-dev-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: pnpm-main-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -2,7 +2,7 @@ name: Nimble - Rolling Dev Release
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -38,9 +38,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.local/share/pnpm/store/v10
-        key: pnpm-dev-${{ github.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        key: pnpm-main-${{ github.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          pnpm-dev-
+          pnpm-main-
 
     - name: Install Dependencies
       run: pnpm install --frozen-lockfile
