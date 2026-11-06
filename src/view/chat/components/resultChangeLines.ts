@@ -131,7 +131,6 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 	for (const change of standingResultChanges(changes)) {
 		if (change.change === 'add') {
 			text += ` ${spacedSignedNumber(change.value)}`;
-			total += change.value;
 			openSum = true;
 		} else if (change.change === 'setTotal') {
 			closeSum();
@@ -139,16 +138,15 @@ function resultSumText(rollTotal: number, changes: readonly ResultChange[]): str
 				from: text,
 				to: totalWithTrueMinus(change.value),
 			});
-			total = change.value;
 		} else if (change.change === 'countsAsNat20') {
 			const modifier = change.value - NATURAL_20;
 			text = localize('NIMBLE.chat.incomingReactions.resultChange.countsAsNat20Sum', {
 				rolled: text,
 				modifier: spacedSignedNumber(modifier),
 			});
-			total = change.value;
 			openSum = true;
 		}
+		total = resultTotal(total, [change]);
 	}
 	closeSum();
 	return text;
