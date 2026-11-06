@@ -10,7 +10,8 @@ Write the release notes for the Nimble FoundryVTT system.
 
 ## Arguments
 
-- `$1` : git range, e.g. `main..dev`. **Default `main..dev`** if not given.
+- `$1` : git range, e.g. `0.10.0..origin/main`. **Default `<last stable tag>..origin/main`** if not given. Find the tag with
+  `git tag --merged origin/main --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -m1 -e '-'`.
 - `$2` : version, e.g. `0.9.0`. If not given, use `X.Y.Z` as a placeholder and say so at the end.
 - `$3` : pass `screenshots` to opt into capturing images. **Omitted means no screenshots.**
 

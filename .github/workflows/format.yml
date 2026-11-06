@@ -38,7 +38,7 @@ jobs:
           key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             pnpm-${{ github.head_ref }}-
-            pnpm-dev-
+            pnpm-main-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

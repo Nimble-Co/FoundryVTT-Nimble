@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
 /**
- * Generates the release body for the rolling `latest-dev` release, including
+ * Generates the release body for the rolling `latest-dev-1` release, including
  * a list of PRs merged since the previous dev build. CI-only: invoked by
  * .github/workflows/dev-release.yml.
  *
- *   - Looks up the previous dev-build SHA via `gh release view latest-dev`.
+ *   - Looks up the previous dev-build SHA via `gh release view latest-dev-1`.
  *   - Lists PRs (and any direct commits) in the range prev..HEAD.
  *   - Writes release-body.md ready for ncipollo/release-action `bodyFile:`.
  *
  * Failure modes:
- *   - No prior `latest-dev` release → skip changelog section entirely.
+ *   - No prior `latest-dev-1` release → skip changelog section entirely.
  *   - Empty SHA range → skip changelog section entirely.
  *   - Prev SHA not in history (force-push) → skip changelog section.
  *   - `gh pr view` fails for a PR → include PR with title from commit subject.
@@ -19,7 +19,7 @@
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
-const PREV_TAG = 'latest-dev';
+const PREV_TAG = 'latest-dev-1';
 const MAX_PRS = 50;
 
 const REPO = process.env.GITHUB_REPOSITORY ?? '';
@@ -144,7 +144,7 @@ function renderPrList(entries, truncatedCount) {
 
 function buildBody({ version, shortSha, sha, timestamp, manifestUrl, hasChanges, prListMarkdown }) {
 	const header = [
-		'Rolling development build from the `dev` branch. **Unstable — for testing only.**',
+		'Rolling development build from the `main` branch. **Unstable — for testing only.**',
 		'',
 		`- Version: \`${version}\``,
 		`- Commit: [\`${shortSha}\`](${REPO_URL}/commit/${sha})`,

@@ -15,7 +15,7 @@ This file provides guidance for AI assistants working on this codebase.
 - **Don't add new entry points**: All code must be reachable from `src/nimble.ts` via imports
 - **Don't modify test infrastructure**: `tests/setup.ts` and `tests/mocks/foundry.js` are stable shared infrastructure — fix your test, not the setup
 - **English localization only**: Agents may add or modify English source strings in `en.json` but must flag all changes for human review. Never generate, modify, or translate locale files for any other language.
-- **Base branch is `dev`**: When comparing against remote, creating PRs, or referencing the base branch, always use `dev` — never `main`.
+- **Base branch is `main`**: When comparing against remote, creating PRs, or referencing the base branch, always use `main`. The `dev` branch is retired.
 - **Never hardcode `'nimble'` as the system id**: Always import `SYSTEM_ID` from `#system` (or `SYSTEM_PATH` for `systems/<id>/...` asset paths). The dev rolling release rebuilds under a different system id (`nimble-dev`), and hardcoded `'nimble'` literals silently break flags, settings, sheet registration, and pack UUIDs in that build. This applies to:
   - **Flag scope:** `actor.setFlag(SYSTEM_ID, ...)`, `getFlag`, `unsetFlag`
   - **Flag paths:** `` `flags.${SYSTEM_ID}.X` `` (or use the existing `*RuleConfig.flagPath`/`flagScope` constants when applicable)

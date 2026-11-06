@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+This file stops at 0.10.0. The notes for later versions are on the [GitHub Releases page](https://github.com/Nimble-Co/FoundryVTT-Nimble/releases).
+
 ---
 
 ## [0.10.0] - 2026-10-07

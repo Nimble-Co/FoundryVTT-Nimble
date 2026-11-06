@@ -6,79 +6,68 @@ title: Release Guide
 
 Instructions for creating GitHub Releases for the Nimble FoundryVTT system.
 
+## What starts what
+
+| Event | What CI does |
+| --- | --- |
+| A PR is opened or updated | Checks, tests and the formatter run. |
+| A PR merges into `main` | The rolling dev build (`latest-dev-1`, system id `nimble-dev`) is rebuilt. Nothing is published to Foundry, and the docs are not deployed. |
+| A pre-release is published | `nimble.zip` and `system.json` are built and attached to the release. Nothing is published to Foundry, and the docs are not deployed. |
+| A release is published | The assets are built and attached, the version is published to the Foundry website, and the docs are deployed. |
+
+The tag is the only place the version is set. The release build writes the version and the
+download URL into `system.json` from the tag, so no commit bumps the version in
+`package.json` or `public/system.json`.
+
 ## Creating a Release
 
-### 1. Run Release Script
+### 1. Write the Release Notes
 
-From the `dev` branch, run the release script:
+Write the notes to `release-notes-X.Y.Z.md` in the project root (gitignored), with
+`/nimble-release-notes` or by hand. [Writing the Notes](#writing-the-notes) describes the content.
+
+### 2. Preview the Release
 
 ```bash
-pnpm release -- <major|minor|patch> --prod
+pnpm release <major|minor|patch>
 ```
 
-Without `--prod`, the script runs in dry-run mode (no git operations).
+The script reads the release tags on origin and shows the next version, the commit on
+`origin/main` it will tag, and the notes file. It changes nothing.
 
-The script will:
+### 3. Create the Release
 
-1. Bump the version in `package.json`, `package-lock.json`, and `public/system.json`
-2. Update the download URL in `system.json`
-3. Create a release commit (`chore(release): vX.Y.Z`)
-4. **Pause and wait for changelog entry**
-
-### 2. Create Changelog Entry
-
-While the script is paused, create a file named `changelog-X.Y.Z.md` (using the new version number) in the project root. Use **Keep a Changelog** format:
-
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
-### Added
-
-- [#123] Description of feature. @contributor
-
-### Fixed
-
-- [#124] Description of fix. @contributor
-
-### Changed
-
-- [#125] Description of change. @contributor
-
----
+```bash
+pnpm release <major|minor|patch> --prod
 ```
 
-Note: CHANGELOG.md uses different categories than GitHub Releases:
+This runs `gh release create X.Y.Z --target main --title VX.Y.Z --notes-file release-notes-X.Y.Z.md`.
+Pass `--notes <file>` to use a different notes file. You can also create the release on
+<https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/new>: type the new tag, target
+`main`, and paste the notes.
 
-| GitHub Release      | CHANGELOG.md |
-| ------------------- | ------------ |
-| Additions / Changes | Added        |
-| Fixes               | Fixed        |
-| System Data         | Changed      |
+## Beta Releases
 
-### 3. Confirm Changelog Ready
+```bash
+pnpm release <major|minor|patch> --beta --prod
+```
 
-When you've created the changelog file, confirm in the script prompt. The script will then:
+The script gives the next `X.Y.Z-beta.N` tag and creates the release as a pre-release. On
+the GitHub page, tick **Set as a pre-release**. A pre-release is never published to the
+Foundry website. To ship the stable version, create a new release with the tag `X.Y.Z`. Do
+not change a pre-release into a release, because the build takes the version from the tag.
 
-1. Prepend the changelog entry to `CHANGELOG.md`
-2. Remove the temporary `changelog-X.Y.Z.md` file
-3. Amend the release commit to include the changelog
-4. Push the `dev` branch to origin
-5. Checkout the `main` branch
-6. Merge `dev` into `main`
-7. Create a git tag for the version
-8. Push the `main` branch and the release tag to origin
+## Writing the Notes
 
-After running, you'll be on the `main` branch ready to create the GitHub release.
-
-### 4. Gather Changes
+### Gather Changes
 
 Get all commits since the last release tag:
 
 ```bash
-git log <previous-tag>..HEAD --pretty=format:"%s|%an" --reverse
+git log <previous-tag>..origin/main --pretty=format:"%s|%an" --reverse
 ```
 
-### 5. Categorize Changes
+### Categorize Changes
 
 Group commits into these categories:
 
@@ -93,7 +82,7 @@ Group commits into these categories:
 
 **Note:** A single PR may appear in multiple sections if it includes both code and data changes. For example, a PR that adds code to handle language selection AND adds language bonuses to ancestry data would appear in both Additions/Changes and System Data.
 
-### 6. Format
+### Format
 
 Each entry should follow this format:
 
@@ -105,7 +94,7 @@ Each entry should follow this format:
 - Use sentence case for description
 - Credit the contributor with @username at the end
 
-### 7. Release Notes Template
+### Release Notes Template
 
 ```markdown
 ## Version X.Y.Z
@@ -127,15 +116,9 @@ Each entry should follow this format:
 If you want to support further system development, please consider joining or tipping one of the contributors on their Patreon or Ko-fi page.
 ```
 
-### 8. Create GitHub Release
+## After the Release
 
-```bash
-gh release create X.Y.Z --title "VX.Y.Z" --notes-file <release-notes-file>
-```
-
-Or create via GitHub UI at: <https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/new>
-
-### 9. Post Discord Announcements
+### Post Discord Announcements
 
 Post release announcements to three Discord locations:
 
