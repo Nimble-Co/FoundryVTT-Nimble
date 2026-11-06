@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
-import { queueReactionWrite } from '../../documents/chatMessage/reactionWriteQueue.js';
 import applyConditionToActor from '../actor/applyConditionToActor.js';
+import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
 	getHeroicReactionAvailabilityUpdate,

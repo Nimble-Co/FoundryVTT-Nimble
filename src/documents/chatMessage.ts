@@ -8,6 +8,7 @@ import type { MovementOffer, OfferCard } from '#types/movement.js';
 import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
+import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackDelivery,
@@ -73,7 +74,6 @@ import {
 	type DamageBackRecord,
 } from './chatMessage/cardDamageBack.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
-import { inFlightSpendOffers, queueReactionWrite } from './chatMessage/reactionWriteQueue.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
