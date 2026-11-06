@@ -78,6 +78,7 @@ function request(fields: Record<string, unknown> = {}) {
 		options: [],
 		reminders: [],
 		attackerConditions: [],
+		conditionsEndOnAttackerTurn: [],
 		way: 'action' as const,
 		wholeRound: false,
 		...fields,
@@ -133,6 +134,76 @@ describe('Defend options on the card', () => {
 		await requestDefend(request({ attackerConditions: ['blinded'] }));
 
 		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', { sourceActor: pip });
+	});
+
+	it('ends a condition at the start of the attacker next turn when the option says so', async () => {
+		await requestDefend(
+			request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+		);
+
+		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', {
+			sourceActor: pip,
+			duration: { rounds: 1 },
+		});
+	});
+
+	describe('in a combat, the end counts from the attacker turn', () => {
+		const ogreCombatant = { id: 'c-ogre', actorId: 'ogre', tokenId: 'ogre-token' };
+		const pipCombatant = { id: 'c-pip', actorId: 'pip', tokenId: 'pip-token' };
+
+		function combat(turns: unknown[], turn: number) {
+			return {
+				id: 'combat-1',
+				started: true,
+				round: 3,
+				turn,
+				turns,
+				combatants: { find: (fn: (c: unknown) => boolean) => turns.find(fn) },
+			};
+		}
+
+		async function blindOn(turns: unknown[], turn: number) {
+			(globalThis as unknown as Globals).game.combat = combat(turns, turn);
+			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
+			await requestDefend(
+				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+			);
+			return applyCondition.mock.calls[0]?.[2];
+		}
+
+		it('on the attacker turn: one round from now', async () => {
+			expect(await blindOn([ogreCombatant, pipCombatant], 0)).toMatchObject({
+				duration: { rounds: 1 },
+				start: { combat: 'combat-1', combatant: 'c-ogre', round: 3, turn: 0 },
+			});
+		});
+
+		it('when the attacker has gone this round: one round from now', async () => {
+			expect(await blindOn([ogreCombatant, pipCombatant], 1)).toMatchObject({
+				start: { combatant: 'c-ogre', round: 3 },
+			});
+		});
+
+		it('when the attacker is not in the turn order: at their next turn, when it comes', async () => {
+			const combatants = [ogreCombatant, pipCombatant];
+			(globalThis as unknown as Globals).game.combat = {
+				...combat([pipCombatant], 0),
+				combatants: { find: (fn: (c: unknown) => boolean) => combatants.find(fn) },
+			};
+			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
+			await requestDefend(
+				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+			);
+			expect(applyCondition.mock.calls[0]?.[2]).toMatchObject({
+				start: { combatant: 'c-ogre', round: 2 },
+			});
+		});
+
+		it('when the attacker turn is still to come this round: at that turn', async () => {
+			expect(await blindOn([pipCombatant, ogreCombatant], 0)).toMatchObject({
+				start: { combatant: 'c-ogre', round: 2 },
+			});
+		});
 	});
 
 	it('gives back what each option paid on Undo', async () => {

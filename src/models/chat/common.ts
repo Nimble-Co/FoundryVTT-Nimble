@@ -546,6 +546,10 @@ export const defends = () => ({
 				nullable: false,
 				initial: [],
 			}),
+			conditionsEndOnAttackerTurn: new fields.ArrayField(
+				new fields.StringField({ required: true }),
+				{ required: false, nullable: false, initial: [] },
+			),
 			way: new fields.StringField({
 				required: false,
 				nullable: false,

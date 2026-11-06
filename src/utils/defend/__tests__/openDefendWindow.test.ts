@@ -157,4 +157,52 @@ describe('defendWindowPlan', () => {
 		const { data } = plan([rule({ id: 'paragon', way: 'freeDefend', withInterpose: true })]);
 		expect(data.options.map((option) => option.id)).toEqual(['defend']);
 	});
+
+	describe('a tick that uses a reroll', () => {
+		const fearsome = () => rule({ id: 'fearsome', useReroll: true, alsoInterpose: true });
+		const interpose = {
+			id: 'interpose-1',
+			source: 'baseline',
+			tokenUuid: TOKEN,
+			targetTokenUuid: 'Scene.s.Token.ally',
+		};
+
+		function interposePlan(rules: unknown[]) {
+			return defendWindowPlan(card as never, {
+				actor: hero(rules) as never,
+				targetTokenUuid: null,
+				interposes: [interpose] as never,
+				defend: null,
+			});
+		}
+
+		it('is not shown when its reroll is not on the card and no Interpose can bring it', () => {
+			const { data } = plan([fearsome()]);
+			expect(data.ticks).toEqual([]);
+		});
+
+		it('goes with an Interpose before its reroll is on the card', () => {
+			const { data } = interposePlan([fearsome()]);
+			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;
+
+			expect(data.ticks.map((tick) => tick.id)).toEqual(['Item.fearsome:fearsome']);
+			expect(tickIds('interpose:interpose-1')).toEqual(['Item.fearsome:fearsome']);
+			expect(tickIds('both:interpose-1')).toEqual(['Item.fearsome:fearsome']);
+		});
+
+		it('goes with an Interpose alone also when it does not reroll', () => {
+			const { data } = interposePlan([rule({ id: 'bunny', alsoInterpose: true })]);
+			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;
+
+			expect(tickIds('interpose:interpose-1')).toEqual(['Item.bunny:bunny']);
+		});
+
+		it('goes with only an Interpose and a Defend when the option does not say "also when you Interpose"', () => {
+			const { data } = interposePlan([rule({ id: 'pocket', useReroll: true })]);
+			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;
+
+			expect(tickIds('interpose:interpose-1')).toEqual([]);
+			expect(tickIds('both:interpose-1')).toEqual(['Item.pocket:pocket']);
+		});
+	});
 });

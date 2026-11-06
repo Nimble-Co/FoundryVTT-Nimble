@@ -2213,8 +2213,13 @@ class NimbleChatMessage extends ChatMessage {
 		// The caller has already gated on `isActivationCard()`; that narrowing does
 		// not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		const targets = (systemData.targets || []).filter((t) => t !== entry.targetTokenUuid);
-		if (!targets.includes(entry.tokenUuid)) targets.push(entry.tokenUuid);
+		// The protector takes the place of the protected target, also as the first target.
+		const protectorToken = entry.tokenUuid;
+		const before = systemData.targets || [];
+		const targets = before.filter((t) => t !== protectorToken);
+		const place = targets.indexOf(entry.targetTokenUuid ?? '');
+		if (place >= 0) targets[place] = protectorToken;
+		else targets.push(protectorToken);
 
 		// The ally is no longer the target, so every other offer tied to them
 		// is stale: other redirect offers, and their own reroll offers.
@@ -2225,10 +2230,10 @@ class NimbleChatMessage extends ChatMessage {
 		await this.update({
 			system: {
 				targets,
-				// The protector is a new target, with its own no-damage row.
+				// The protector is the new target, with its own target-side rows.
 				incomingReactions: this.isMinionGroupAttackCard()
 					? updatedEntries
-					: this.#rerolls.withNoDamageEntries(targets, updatedEntries),
+					: this.#rerolls.withInterposeEntries(targets, entry.tokenUuid, updatedEntries),
 				...this.#movementOfferChanges({ targets }),
 			},
 		} as Record<string, unknown>);

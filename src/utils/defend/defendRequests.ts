@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import applyConditionToActor from '../actor/applyConditionToActor.js';
+import applyConditionToActor, { type ConditionStart } from '../actor/applyConditionToActor.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
@@ -103,6 +103,7 @@ async function writeDefend(request: DefendRequest, userId: string): Promise<stri
 		options: request.options,
 		reminders: request.reminders,
 		attackerConditions: request.attackerConditions,
+		conditionsEndOnAttackerTurn: request.conditionsEndOnAttackerTurn,
 		way: request.way,
 	};
 	await card.update({
@@ -134,11 +135,40 @@ async function conditionAttacker(card: DefendCard, record: DefendRecord): Promis
 	if (record.attackerConditions.length < 1) return;
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	const source = fromUuidSync(record.actorUuid) as Actor.Implementation | null;
+	const start = attackerTurnStart(card);
 	for (const condition of record.attackerConditions) {
+		const endsOnTheirTurn = record.conditionsEndOnAttackerTurn.includes(condition);
 		await applyConditionToActor(attacker as never, condition, {
 			sourceActor: (source ?? undefined) as never,
+			...(endsOnTheirTurn ? { duration: { rounds: 1 }, ...(start ? { start } : {}) } : {}),
 		});
 	}
+}
+
+/**
+ * Where a one-round duration counts from so it ends as the attacker's next turn
+ * starts: their combatant, and a round back when their turn is still to come.
+ */
+function attackerTurnStart(card: DefendCard): ConditionStart | null {
+	const combat = game.combat;
+	if (!combat?.started || !combat.id) return null;
+	const token = card.speaker?.token;
+	const combatant = token
+		? combat.combatants.find((each) => each.tokenId === token)
+		: combat.combatants.find((each) => each.actorId === card.speaker?.actor);
+	if (!combatant?.id) return null;
+	const index = combat.turns.findIndex((each) => each.id === combatant.id);
+	const round = Number(combat.round) || 0;
+	// Out of the turn order, their next turn is also still to come.
+	const turnToCome = index < 0 || index > Number(combat.turn);
+	return {
+		combat: combat.id,
+		combatant: combatant.id,
+		initiative: combatant.initiative ?? null,
+		round: turnToCome ? round - 1 : round,
+		turn: Math.max(0, index),
+		time: game.time?.worldTime ?? 0,
+	};
 }
 
 async function writeAllyUse(request: DefendAllyUse): Promise<boolean> {

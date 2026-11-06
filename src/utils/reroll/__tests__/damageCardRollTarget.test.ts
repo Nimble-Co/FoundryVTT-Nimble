@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
-import { type DamageCard, damageCardRollTarget, noDamageEntries } from '../damageCardRollTarget.js';
+import {
+	type DamageCard,
+	damageCardRollTarget,
+	interposeEntries,
+	noDamageEntries,
+} from '../damageCardRollTarget.js';
 
 const TARGET_TOKEN = 'Scene.scene.Token.victim';
 
@@ -287,5 +292,52 @@ describe('noDamageEntries', () => {
 		const card = makeCard([damageNode(serializedRoll())]);
 		Object.assign(card.system(), { isMiss: true });
 		expect(noDamageEntries(card, ['Token.a'])).toEqual([]);
+	});
+});
+
+describe('interposeEntries', () => {
+	const offer = { offersUseOn: (context: { side: string }) => context.side === 'target' };
+	const noDamageRule = {
+		type: 'changeResult',
+		change: 'noDamage',
+		id: 'res',
+		item: { name: 'Epic Resistance', uuid: 'Item.res' },
+		attackTrigger: 'hit',
+		...offer,
+	};
+	const rerollRule = { type: 'reroll', id: 'lucky', outcome: 'always', ...offer };
+
+	beforeEach(() => {
+		const byUuid: Record<string, unknown> = {
+			'Token.other': { actor: { uuid: 'Actor.other', rules: [noDamageRule, rerollRule] } },
+			'Token.protector': { actor: { uuid: 'Actor.protector', rules: [noDamageRule, rerollRule] } },
+		};
+		(globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn(
+			(uuid: string) => byUuid[uuid] ?? null,
+		);
+	});
+
+	it('gives the new target every target-side row', () => {
+		const entries = interposeEntries(
+			makeCard([damageNode(serializedRoll())]),
+			['Token.protector'],
+			'Token.protector',
+		);
+		expect(entries.map((entry) => [entry.targetTokenUuid, entry.ruleId, entry.use])).toEqual([
+			['Token.protector', 'res', 'result'],
+			['Token.protector', 'lucky', undefined],
+		]);
+	});
+
+	it('gives the other targets only their no-damage rows', () => {
+		const entries = interposeEntries(
+			makeCard([damageNode(serializedRoll())]),
+			['Token.other', 'Token.protector'],
+			'Token.protector',
+		);
+		expect(entries.map((entry) => [entry.targetTokenUuid, entry.ruleId])).toEqual([
+			['Token.other', 'res'],
+			['Token.protector', 'res'],
+		]);
 	});
 });

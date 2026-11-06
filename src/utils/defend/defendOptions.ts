@@ -5,7 +5,7 @@ import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { canPayRerollCost, payRerollCost } from '../reroll/rerollCost.js';
+import { canPayRerollCost, payRerollCost, type RerollCost } from '../reroll/rerollCost.js';
 import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
 import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
@@ -29,6 +29,7 @@ export interface DefendOptionEffect {
 	armorBonus: number;
 	reminders: string[];
 	attackerConditions: string[];
+	conditionsEndOnAttackerTurn: string[];
 	wholeRound: boolean;
 }
 
@@ -57,7 +58,7 @@ export function defendOptionsOf(
 				rule.appliesTo() &&
 				matchesAttackDelivery(rule.attackDelivery, delivery) &&
 				ruleOtherCreatureMatches(rule, rule.otherCreature, attacker) &&
-				(rule.useItem || canPayRerollCost(actor, rule.optionCost)),
+				(rule.useItem || canPayRerollCost(actor, tickCost(rule, card))),
 		)
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));
 }
@@ -80,6 +81,13 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 		}),
 		attackerConditions: [
 			...new Set(rules.map((rule) => rule.attackerCondition).filter((id) => !!id)),
+		],
+		conditionsEndOnAttackerTurn: [
+			...new Set(
+				rules
+					.filter((rule) => rule.attackerCondition && rule.attackerConditionEnds === 'attackerTurn')
+					.map((rule) => rule.attackerCondition),
+			),
 		],
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};
@@ -104,6 +112,36 @@ export function cardRerollFor(
 				(!entry.targetTokenUuid || !tokenUuid || entry.targetTokenUuid === tokenUuid),
 		) ?? null
 	);
+}
+
+interface ItemRerollRule {
+	type?: string;
+	id?: string;
+	disabled?: boolean;
+	rolls?: string[];
+	rollUseCost?: RerollCost;
+}
+
+/**
+ * What one use of the option costs. A "When you Defend" tick that rerolls is
+ * paid by its item's Reroll rule, not by the option: the rule of the card's
+ * entry, else the item's Reroll rule for attacks.
+ */
+export function tickCost(
+	rule: DefendOptionRule,
+	card?: AttackCardLike | null,
+	tokenUuid?: string | null,
+): RerollCost {
+	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
+	const rules = (rule.item as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
+	const rerolls = [...(rules?.values() ?? [])].filter(
+		(each) => each.type === 'reroll' && !each.disabled,
+	);
+	const entryRuleId = card ? cardRerollFor(card, rule.item?.uuid, tokenUuid)?.ruleId : undefined;
+	const reroll =
+		rerolls.find((each) => entryRuleId && each.id === entryRuleId) ??
+		rerolls.find((each) => each.rolls?.includes('attack'));
+	return reroll?.rollUseCost ?? rule.optionCost;
 }
 
 /** Whether a Defend option uses this item's reroll, so the reroll waits for the Defend window. */

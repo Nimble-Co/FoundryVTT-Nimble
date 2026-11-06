@@ -15,8 +15,8 @@ export interface DefendOption {
 	/** Damage the hero takes after this row, with no ticks. */
 	takes: number | null;
 	defend: boolean;
-	/** The "When you Defend" ticks can go with this row. */
-	takesTicks: boolean;
+	/** The "When you Defend" ticks that can go with this row. */
+	tickIds: string[];
 	interposeEntryId: string | null;
 }
 

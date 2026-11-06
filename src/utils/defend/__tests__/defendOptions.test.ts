@@ -8,7 +8,7 @@ vi.doMock('../../reroll/rerollCost.js', () => ({
 	canPayRerollCost: canPay,
 	payRerollCost: vi.fn(),
 }));
-const { defendOptionEffect, defendOptionsOf } = await import('../defendOptions.js');
+const { defendOptionEffect, defendOptionsOf, tickCost } = await import('../defendOptions.js');
 
 function rule(fields: Record<string, unknown> = {}) {
 	return {
@@ -76,6 +76,15 @@ describe('defendOptionEffect', () => {
 		expect(effect.reminders).toEqual(['Decoy: Move half your speed.']);
 		expect(effect.attackerConditions).toEqual(['blinded']);
 		expect(effect.wholeRound).toBe(true);
+	});
+
+	it('lists the conditions that end at the start of the attacker next turn', () => {
+		const effect = defendOptionEffect([
+			rule({ attackerCondition: 'blinded', attackerConditionEnds: 'attackerTurn' }),
+			rule({ attackerCondition: 'frightened' }),
+		] as unknown as DefendRules);
+		expect(effect.attackerConditions).toEqual(['blinded', 'frightened']);
+		expect(effect.conditionsEndOnAttackerTurn).toEqual(['blinded']);
 	});
 });
 
@@ -146,5 +155,58 @@ describe('defendOptionsOf', () => {
 
 		expect(ids('ogre')).toEqual(['peerless']);
 		expect(ids('goblin')).toEqual([]);
+	});
+
+	it("checks a reroll tick against its item's Reroll cost, not the option's", () => {
+		const rerollCost = { manaCost: 1 };
+		const fearsome = rule({
+			id: 'fearsome',
+			useReroll: true,
+			optionCost: { manaCost: 0 },
+			item: {
+				uuid: 'Item.beast',
+				getDomain: () => new Set(),
+				rules: new Map([['r', { type: 'reroll', rolls: ['attack'], rollUseCost: rerollCost }]]),
+			},
+		});
+		canPay.mockImplementation(((_actor: unknown, cost: unknown) => cost !== rerollCost) as never);
+
+		expect(defendOptionsOf({ rules: [fearsome] } as never, card('reach'), 'withDefend')).toEqual(
+			[],
+		);
+	});
+});
+
+describe('tickCost', () => {
+	const saveCost = { manaCost: 2 };
+	const attackCost = { manaCost: 1 };
+	const fearsome = () =>
+		rule({
+			id: 'fearsome',
+			useReroll: true,
+			optionCost: { manaCost: 0 },
+			item: {
+				uuid: 'Item.beast',
+				getDomain: () => new Set(),
+				rules: new Map([
+					['save', { type: 'reroll', id: 'save', rolls: ['save'], rollUseCost: saveCost }],
+					['fear', { type: 'reroll', id: 'fear', rolls: ['attack'], rollUseCost: attackCost }],
+				]),
+			},
+		});
+
+	it('takes the cost of the Reroll rule that the card entry names', () => {
+		const attack = {
+			system: {
+				incomingReactions: [
+					{ kind: 'reroll', used: false, itemUuid: 'Item.beast', ruleId: 'fear' },
+				],
+			},
+		};
+		expect(tickCost(fearsome() as never, attack)).toBe(attackCost);
+	});
+
+	it('takes the cost of a Reroll rule for attacks when the card has no entry yet', () => {
+		expect(tickCost(fearsome() as never)).toBe(attackCost);
 	});
 });

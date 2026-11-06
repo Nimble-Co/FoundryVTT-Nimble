@@ -734,10 +734,12 @@
 				"roundCost": "Nothing more to spend. Armor {armor}.",
 				"interposeAndFree": "Interpose and Defend ({label})",
 				"whenYouDefend": "When you Defend",
-				"tickNeedsDefend": "Pick a row that Defends to use this.",
+				"whenYouInterposeOrDefend": "When you Interpose or Defend",
+				"tickNotForRow": "The row you picked cannot use this.",
 				"nothingToDo": "There is nothing to do against this attack.",
 				"cannotPay": "{label}: its cost could not be paid.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",
+				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
 				"refused": {
@@ -2844,6 +2846,22 @@
 				"actionCost": {
 					"label": "Actions",
 					"hint": "The actions one use spends in combat."
+				},
+				"oncePerTurn": {
+					"label": "1/turn",
+					"hint": "One use each turn, of any creature. The options on the same item share it."
+				},
+				"alsoInterpose": {
+					"label": "Also when you Interpose",
+					"hint": "The tick also goes with an Interpose and no Defend. Its cost, reroll and reminder work; what it does to the Defend does not."
+				},
+				"attackerConditionEnds": {
+					"label": "Condition ends",
+					"hint": "When the condition on the attacker ends.",
+					"choices": {
+						"none": "When removed",
+						"attackerTurn": "At the start of the attacker's next turn"
+					}
 				},
 				"upcastArmor": {
 					"label": "More armor per upcast",
