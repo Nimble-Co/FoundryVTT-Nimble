@@ -69,7 +69,13 @@ the damage the hero takes with it.
 
 	{#if data.ticks.length > 0}
 		<section class="ticks">
-			<h5 class="lb">{localize('NIMBLE.chat.defend.whenYouDefend')}</h5>
+			<h5 class="lb">
+				{localize(
+					data.options.some((option) => !option.defend && option.tickIds.length > 0)
+						? 'NIMBLE.chat.defend.whenYouInterposeOrDefend'
+						: 'NIMBLE.chat.defend.whenYouDefend',
+				)}
+			</h5>
 			{#each data.ticks as tick (tick.id)}
 				{@const on = rowTicks.includes(tick.id)}
 				<label
