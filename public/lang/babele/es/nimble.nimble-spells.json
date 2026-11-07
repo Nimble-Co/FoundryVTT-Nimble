@@ -2,7 +2,12 @@
 	"label": "Nimble Spells",
 	"entries": {
 		"Alacrity": {
-			"name": "Alacrity"
+			"name": "Alacrity",
+			"rules": {
+				"diXRXhoyvEcsGt88": {
+					"label": "Alacrity"
+				}
+			}
 		},
 		"Arc Lightning": {
 			"name": "Arc Lightning"
@@ -15,7 +20,12 @@
 		},
 		"Barrier of Wind": {
 			"costDetails": "When attacked at Range.",
-			"name": "Barrier of Wind"
+			"name": "Barrier of Wind",
+			"rules": {
+				"I2iE4FiQFEoTvUlj": {
+					"label": "Barrier of Wind"
+				}
+			}
 		},
 		"Beautify": {
 			"name": "Beautify"
@@ -52,7 +62,12 @@
 		},
 		"Dread Visage": {
 			"costDetails": "Attacked",
-			"name": "Dread Visage"
+			"name": "Dread Visage",
+			"rules": {
+				"Gcv5akLtl98FABuV": {
+					"label": "Dread Visage"
+				}
+			}
 		},
 		"Electrickery": {
 			"costDetails": "When an ally is attacked.",
@@ -88,7 +103,12 @@
 		},
 		"Flame Barrier": {
 			"costDetails": "Attacked",
-			"name": "Flame Barrier"
+			"name": "Flame Barrier",
+			"rules": {
+				"fxPm2H5vTCF1CSl3": {
+					"label": "Flame Barrier"
+				}
+			}
 		},
 		"Flame Dart": {
 			"name": "Flame Dart"
@@ -99,7 +119,12 @@
 		},
 		"Frost Shield": {
 			"costDetails": "When attacked",
-			"name": "Frost Shield"
+			"name": "Frost Shield",
+			"rules": {
+				"XGIXtJzj3BVrqyoq": {
+					"label": "Frost Shield"
+				}
+			}
 		},
 		"Gangrenous Burst": {
 			"costDetails": "Attacked",
@@ -189,12 +214,20 @@
 			"rules": {
 				"Hd4sYc8ZfG1uJb6E": {
 					"label": "Shatter"
+				},
+				"shatterPlusOnDie": {
+					"label": "Shatter"
 				}
 			}
 		},
 		"Shield of Justice": {
 			"costDetails": "Attacked",
-			"name": "Shield of Justice"
+			"name": "Shield of Justice",
+			"rules": {
+				"1Jort2PiuNH2yhip": {
+					"label": "Shield of Justice"
+				}
+			}
 		},
 		"Snowblind": {
 			"name": "Snowblind"

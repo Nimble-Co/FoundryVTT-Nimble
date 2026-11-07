@@ -3,7 +3,15 @@
 	"entries": {
 		"Bunny Legs": {
 			"description": "<p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>",
-			"name": "Bunny Legs"
+			"name": "Bunny Legs",
+			"rules": {
+				"9jawbVTzVkRToKJx": {
+					"label": "Bunny Legs"
+				},
+				"NheWBoxfGYk7zUeb": {
+					"label": "Bunny Legs (1/encounter)"
+				}
+			}
 		},
 		"Chaotic Surge": {
 			"description": "<p><strong>Chaotic Surge</strong> </p><p>Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p>",
@@ -60,6 +68,9 @@
 			"description": "<p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>",
 			"name": "Hollow Bones",
 			"rules": {
+				"4TzLGYOnMUHu5res": {
+					"label": "Hollow Bones"
+				},
 				"77PFA7AbSWEB2h30": {
 					"label": "Hollow Bones"
 				}
@@ -111,12 +122,23 @@
 			"rules": {
 				"fbhC9ohclITGwSq3": {
 					"label": "Planeshift"
+				},
+				"lk7RBQKI7wYot3ND": {
+					"label": "Planeshift"
 				}
 			}
 		},
 		"Reflective Aura": {
 			"description": "<p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>",
-			"name": "Reflective Aura"
+			"name": "Reflective Aura",
+			"rules": {
+				"eKw4d9ZWn3ujCmLf": {
+					"label": "Reflective Aura"
+				},
+				"VCtxw6I2hp6I39VU": {
+					"label": "Reflective Aura (1/encounter)"
+				}
+			}
 		},
 		"Relentless": {
 			"description": "<p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p>",

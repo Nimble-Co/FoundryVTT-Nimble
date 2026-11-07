@@ -39,7 +39,12 @@
 		},
 		"Apex Predator": {
 			"description": "<p>You may use your Primal Predator ability twice each encounter. Gain 1 Thrill of the Hunt charge when you roll Initiative.</p>",
-			"name": "Apex Predator"
+			"name": "Apex Predator",
+			"rules": {
+				"apexPredatorGain": {
+					"label": "Apex Predator"
+				}
+			}
 		},
 		"Arcane Command": {
 			"description": "<p>Your focus on the arcane causes you to lose access to Weapon Mastery and Combat Tactics, but you now gain INT mana when you roll Initiative (this mana is lost if unspent when combat ends). Whenever you could choose a Combat Tactic or Weapon Mastery, instead choose another Commander's Order or a tier 1 (or lower) spell from any spell school. Your Commander's Orders are also empowered with magical power:</p>",
@@ -109,7 +114,15 @@
 		},
 		"Avenger": {
 			"description": "<p>Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p>",
-			"name": "Avenger"
+			"name": "Avenger",
+			"rules": {
+				"avengerDiceToMax": {
+					"label": "Avenger"
+				},
+				"avengerFreeMoves": {
+					"label": "Avenger"
+				}
+			}
 		},
 		"Be Wild": {
 			"description": "<p>Whenever you spend a day with wild animals during a Safe Rest, you may choose different Stormshifter options available to you.</p>",
@@ -138,7 +151,12 @@
 		},
 		"Beastshift": {
 			"description": "<p>Action: You can transform into a harmless beast (squirrel, pigeon, etc.). While transformed, you can speak with animals. This form lasts until you drop to 0 HP, cast a spell, or if you end it on your turn for free. You have DEX Beastshift charges; they reset on a Safe Rest.</p>",
-			"name": "Beastshift"
+			"name": "Beastshift",
+			"rules": {
+				"9PUGbI3NijCBpU4K": {
+					"label": "Beastshift charges"
+				}
+			}
 		},
 		"Beguiling Influence": {
 			"description": "<p>(1/day) You may reroll an Influence check.</p>",
@@ -197,7 +215,15 @@
 		},
 		"Blur": {
 			"description": "<p>(1/encounter) When you Defend, you may first move up to half your speed away, taking no damage if you are now out of range or have Full Cover.</p>",
-			"name": "Blur"
+			"name": "Blur",
+			"rules": {
+				"8YwUjcLcQJIw3GVT": {
+					"label": "Blur"
+				},
+				"oEPKAJCnhBPhF8Kz": {
+					"label": "Blur (1/encounter)"
+				}
+			}
 		},
 		"Bodily Discipline": {
 			"description": "<p>You may spend 1 action to end any non-Wound condition on yourself.</p>",
@@ -249,7 +275,18 @@
 		},
 		"Burst of Speed": {
 			"description": "<p>When you roll Initiative, gain DEX Bursts of Speed to use during that encounter.</p><p>(1/turn) You may spend 1 Burst of Speed to use any of the following maneuvers for free:</p><p>• <strong>Slipstream</strong>. Defend, and the attack misses.</p><p>• <strong>Whirling Defense</strong>. Defend and apply your armor to every attack this round.</p><p>• <strong>Swiftstrike</strong>. Attack on your turn, and ignore disadvantage from Rushed Attacks.</p><p>• <strong>Windstep</strong>. Move on your turn, ignoring difficult terrain.</p>",
-			"name": "Burst of Speed"
+			"name": "Burst of Speed",
+			"rules": {
+				"0LC1CfBCCPWhE36H": {
+					"label": "Bursts of Speed"
+				},
+				"sQ7cBD08i6iX6DFr": {
+					"label": "Slipstream"
+				},
+				"vdHGRNYUnBIJ7mRG": {
+					"label": "Whirling Defense"
+				}
+			}
 		},
 		"Captain of Legions": {
 			"description": "<p>+1 to any 2 of your stats.</p><p>The first time each encounter you use Coordinated Strike, EVERY ally within 12 spaces gains +1 action (replaces Unparalleled Tactics).</p>",
@@ -264,6 +301,9 @@
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
 			"name": "Chaos Lash",
 			"rules": {
+				"chaos-lash-chaos": {
+					"label": "Chaos Lash"
+				},
 				"chaos-lash-trigger": {
 					"label": "Chaos Lash"
 				},
@@ -407,7 +447,15 @@
 		"Cunning Strike": {
 			"costDetails": "1 Use",
 			"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>",
-			"name": "Cunning Strike"
+			"name": "Cunning Strike",
+			"rules": {
+				"cunningStrikePoo": {
+					"label": "Cunning Strike (2/encounter)"
+				},
+				"cunningStrikeSav": {
+					"label": "Cunning Strike"
+				}
+			}
 		},
 		"Dark Benediction": {
 			"description": "<p>Fallen from the light, but not entirely. You lose access to the following Radiant spells: True Strike, Heal, and Warding Bond; and gain access to the following Necrotic spells: Entice, Shadowtrap, and Dread Visage. Whenever you can choose a Utility Spell, you may choose a Radiant or Necrotic one.</p>",
@@ -448,7 +496,12 @@
 		},
 		"Decoy": {
 			"description": "<p>When you Defend: The attack misses instead, and you can move up to half your speed away (where you really were all along!).</p>",
-			"name": "Decoy"
+			"name": "Decoy",
+			"rules": {
+				"3o31NiGWAprxPZLG": {
+					"label": "Decoy"
+				}
+			}
 		},
 		"Deep Knowledge": {
 			"description": "<p>Choose any tier 1 (or lower) spell and any Utility Spell.</p><hr><p>Level 7: Tier 2 or lower spell + any utility spell</p><p>Level 11: Tier 3 or lower spell + any utility spell</p><p>Level 15: Tier 4 or lower spell + any utility spell</p>",
@@ -469,7 +522,12 @@
 		},
 		"Deny Fate": {
 			"description": "<p>Whenever you miss with a spell or an effect you cause is saved against, you MUST Demand Control.</p>",
-			"name": "Deny Fate"
+			"name": "Deny Fate",
+			"rules": {
+				"denyFateCardRow0": {
+					"label": "Deny Fate"
+				}
+			}
 		},
 		"Devoted Acolyte": {
 			"description": "<p>Learn 2 of the following languages: Celestial, Draconic, Deep Speak, Infernal, or Primordial. Advantage on Lore checks related to those 2 languages.</p>",
@@ -535,7 +593,12 @@
 		},
 		"Elemental Destruction": {
 			"description": "<p>(1 or more mana) After you hit with a spell, you may spend 1 or more mana (up to your WIL) to reroll 1 die per mana spent.</p>",
-			"name": "Elemental Destruction"
+			"name": "Elemental Destruction",
+			"rules": {
+				"elementalDestroy": {
+					"label": "Elemental Destruction"
+				}
+			}
 		},
 		"Elemental Mastery": {
 			"description": "<p>Learn the Utility Spells from 1 spell school you know.</p><hr><p>Level 6: Learn the Utility Spells from a 2nd spell school you know.</p><p>Level 14: Learn the Utility Spells from a 3rd spell school you know.</p>",
@@ -547,7 +610,18 @@
 		},
 		"Elemental Surge": {
 			"description": "<p>A surge of adrenaline and your attunement with the elements grants you additional power as combat begins. When you roll Initiative, regain WIL mana (this expires at the end of combat if unused).</p><hr><p>Level 10: WIL+1d4 mana</p><p>Level 17: WIL+2d4 mana</p>",
-			"name": "Elemental Surge"
+			"name": "Elemental Surge",
+			"rules": {
+				"elementalSurge01": {
+					"label": "Elemental Surge"
+				},
+				"elementalSurge02": {
+					"label": "Elemental Surge"
+				},
+				"elementalSurge03": {
+					"label": "Elemental Surge"
+				}
+			}
 		},
 		"Elemental Transmutation": {
 			"description": "<p>(1 mana) Change the damage type of a spell to: Fire, Ice, Lightning, Necrotic, or Radiant.</p>",
@@ -611,7 +685,18 @@
 		},
 		"Expert Shifter": {
 			"description": "<p>Gain 1 additional use of Beastshift per Safe Rest.</p><hr><p>Level 9: +1 Beastshift per Safe Rest</p><p>Level 12: +1 Beastshift per Safe Rest</p>",
-			"name": "Expert Shifter"
+			"name": "Expert Shifter",
+			"rules": {
+				"3q04l3fn7f0s5jzV": {
+					"label": "Expert Shifter (2)"
+				},
+				"goOQbEwPwDVj1PvJ": {
+					"label": "Expert Shifter"
+				},
+				"Wa0PZ35pX1oKpEtb": {
+					"label": "Expert Shifter (3)"
+				}
+			}
 		},
 		"Exploding Soul": {
 			"description": "<p>(1/round) On your turn, you may suffer a Wound. Whenever you gain a Wound, deal STR+Wounds damage to any creatures you choose within 2 spaces (ignoring armor) and give them the Smoldering condition.</p>",
@@ -620,7 +705,12 @@
 		"Exploit": {
 			"costDetails": "whenever an ally within your aura Defends",
 			"description": "<p><strong>Reaction</strong> (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p>",
-			"name": "Exploit"
+			"name": "Exploit",
+			"rules": {
+				"yJYS8gmIOlNSVxz0": {
+					"label": "Exploit"
+				}
+			}
 		},
 		"Exploit Weakness": {
 			"description": "<p>Action: Make a contested INT check against an enemy. If you win, you can use Vicious Opportunist against them, even if they are not Distracted. This lasts for 1 minute or until you use this ability against another target. </p>",
@@ -669,7 +759,15 @@
 		},
 		"Fearsome Beast": {
 			"description": "<p><strong>(Large)</strong>. Transform into any Large beast. Gain DEX+LVL temp HP (until Beastshift ends), the Gore attack, and Fearsome. </p><p><strong>Gore</strong>. Action: 1d6+LVL damage, on hit: Gain LVL temp HP.</p><p><strong>Fearsome</strong>. Whenever you Interpose or Defend, you may spend 1 mana to force them to reroll the attack (you must choose either result).</p>",
-			"name": "Fearsome Beast"
+			"name": "Fearsome Beast",
+			"rules": {
+				"nryMD4SgvPmMNR2s": {
+					"label": "Fearsome"
+				},
+				"wY3SJTfKWw7Ga3px": {
+					"label": "Fearsome"
+				}
+			}
 		},
 		"Feinting Attack": {
 			"description": "<p>If you miss for the 2nd time in a single round, you may change the primary die roll to any result instead. </p>",
@@ -702,7 +800,15 @@
 		},
 		"Final Takedown": {
 			"description": "<p>Action: Spend 1 Thrill of the Hunt charge to make a melee attack against your Bloodied quarry. Turn it into a crit and double the damage of your Hunter's Mark. If they survive, they crit you back.</p>",
-			"name": "Final Takedown"
+			"name": "Final Takedown",
+			"rules": {
+				"finalTakedownBac": {
+					"label": "Final Takedown"
+				},
+				"finalTakedownCri": {
+					"label": "Final Takedown"
+				}
+			}
 		},
 		"Fire in my Bones": {
 			"description": "<p>Your Songweaver's Inspiration also grants your target 1 additional action.</p>",
@@ -781,11 +887,21 @@
 		},
 		"Force of Chaos": {
 			"description": "<p>Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p>",
-			"name": "Force of Chaos"
+			"name": "Force of Chaos",
+			"rules": {
+				"forceOfChaos0001": {
+					"label": "Force of Chaos"
+				}
+			}
 		},
 		"Force of Will": {
 			"description": "<p>(1/round) On your turn, you may Demand Control: Choose 1 option from the Control Table which you haven't chosen yet; resets when you roll Initiative, or when you have chosen all options once.</p>",
-			"name": "Force of Will"
+			"name": "Force of Will",
+			"rules": {
+				"forceOfWillOpens": {
+					"label": "Force of Will"
+				}
+			}
 		},
 		"Friend of Beasts": {
 			"description": "<p>Beasts will not attack you until you first harm them. You may transform into harmless beasts without spending a Beastshift charge.</p>",
@@ -809,7 +925,12 @@
 		},
 		"Glorious Paragon": {
 			"description": "<p>+1 to any 2 of your stats. Defend for free whenever you Interpose.</p>",
-			"name": "Glorious Paragon"
+			"name": "Glorious Paragon",
+			"rules": {
+				"QhNeWwHLuOc55b8f": {
+					"label": "Glorious Paragon"
+				}
+			}
 		},
 		"Glorious Reprieve": {
 			"description": "<p>You and allies in your aura cannot drop below 1 HP. Whenever this triggers, they gain 1 Wound instead (heroes still die at max Wounds).</p>",
@@ -827,7 +948,12 @@
 		"Grease Trap": {
 			"costDetails": "Enemy moves adjacent to you",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>",
-			"name": "Grease Trap"
+			"name": "Grease Trap",
+			"rules": {
+				"greaseTrapPool00": {
+					"label": "Grease Trap (1/encounter)"
+				}
+			}
 		},
 		"Greedy pact": {
 			"description": "<p>When you would take damage from Pilfer Power, make a STR save:</p><ul><li><p>1–9: Suffer damage as normal.</p></li><li><p>10–19: Suffer only 10 HP of damage. </p></li><li><p>20+: Suffer no damage and cast the spell as if it were 1 tier higher</p></li></ul>",
@@ -1089,7 +1215,12 @@
 		},
 		"Juggernaut": {
 			"description": "<p>When you use Coordinated Strike, you deal extra damage equal to your armor, and you can <strong>add 1 to your primary die.</strong></p>",
-			"name": "Juggernaut"
+			"name": "Juggernaut",
+			"rules": {
+				"juggernautOffer1": {
+					"label": "Juggernaut"
+				}
+			}
 		},
 		"Keen Eye, Steady Hand": {
 			"description": "<p>Add WIL to your ranged weapon damage.</p>",
@@ -1127,7 +1258,12 @@
 		},
 		"Kinetic Momentum": {
 			"description": "<p>Whenever you gain a Wound, gain a Burst of Speed.</p>",
-			"name": "Kinetic Momentum"
+			"name": "Kinetic Momentum",
+			"rules": {
+				"cNj73kQlm7iN3vNv": {
+					"label": "Kinetic Momentum: gain a Burst of Speed for each Wound"
+				}
+			}
 		},
 		"Knowledge from Beyond": {
 			"description": "<p>Whenever you fail an Insight or Arcana check, you may suffer 1 Wound to succeed instead.</p>",
@@ -1234,7 +1370,12 @@
 		},
 		"Martyr Spawn": {
 			"description": "<p>Whenever you Defend, you can sacrifice a shadow minion to take no damage.</p>",
-			"name": "Martyr Spawn"
+			"name": "Martyr Spawn",
+			"rules": {
+				"ov612oPGIDjKu0Qq": {
+					"label": "Martyr Spawn"
+				}
+			}
 		},
 		"Master Commander": {
 			"description": "<p>When you roll Initiative, regain 1 spent use of Coordinated Strike (it is lost if not spent during that encounter).</p><p>Attacks made from your Coordinated Strikes also now ignore disadvantage.</p><hr><p>Levels 5, 9, 13, 17: </p><p>Gain +1 use of Coordinated Strike per Safe Rest.</p>",
@@ -1256,7 +1397,12 @@
 		},
 		"Master of Chaos": {
 			"description": "<p>Whenever you Invoke Chaos, roll with advantage.</p>",
-			"name": "Master of Chaos"
+			"name": "Master of Chaos",
+			"rules": {
+				"masterOfChaos001": {
+					"label": "Master of Chaos"
+				}
+			}
 		},
 		"Master of Darkness": {
 			"description": "<p>Your Patron grants you knowledge of Necrotic cantrips and tier 1 spells.</p><hr><p>Level 5: Tier 2 Spells: You may now cast tier 2 spells all of your spells are cast at this tier.</p><p>Level 7: Tier 3 Spells. You may now cast tier 3 spells; all of your spells are cast at this tier.</p><p>Level 10: Tier 4 Spells. You may now cast tier 4 spells; all of your spells are cast at this tier.</p><p>Level 13: Tier 5 Spells. You may now cast tier 5 spells; all of your spells are cast at this tier.</p><p>Level 16: Tier 6 Spells. You may now cast tier 6 spells; all of your spells are cast at this tier.</p><p>Level 19: Tier 7 Spells. You may now cast tier 7 spells; all of your spells are cast at this tier.</p>",
@@ -1268,7 +1414,12 @@
 		},
 		"Master of Forms (2)": {
 			"description": "<p>You can Beastshift 2 additional times per Safe Rest. Choose 2 additional Chimeric Boons. Your Direbeast forms can have 3 at a time.</p>",
-			"name": "Master of Forms (2)"
+			"name": "Master of Forms (2)",
+			"rules": {
+				"masterOfForms2Pl": {
+					"label": "Master of Forms (2)"
+				}
+			}
 		},
 		"Master of Nightfrost": {
 			"description": "<p>Your Patron grants you knowledge of Ice spells. Gain the ability to breathe underwater. Your shadow minions become beings of nightfrost. Your shadow blast and minions can deal cold or necrotic damage, and whenever they would crit, you gain INT+LVL temp HP.</p>",
@@ -1325,7 +1476,12 @@
 		},
 		"Maximum Judgment": {
 			"description": "<p>Whenever you are attacked, set a Judgment Die to its max.</p>",
-			"name": "Maximum Judgment"
+			"name": "Maximum Judgment",
+			"rules": {
+				"maximumJudgment1": {
+					"label": "Maximum Judgment"
+				}
+			}
 		},
 		"Medium - Ferocious": {
 			"description": "<p>Whenever you or your companion crit your quarry, your companion attacks again for LVL damage (ignoring armor), and you can move up to 2 spaces for free. </p><hr><p>Level 7: 4 spaces. </p><p>Level 15: 6 spaces.</p>",
@@ -1337,7 +1493,12 @@
 		},
 		"Medium - Protect Me!": {
 			"description": "<p>When you Defend, your companion may first attack that creature for 1d4+LVL damage.</p>",
-			"name": "Medium - Protect Me!"
+			"name": "Medium - Protect Me!",
+			"rules": {
+				"CLmYUbqdoPRDkIMw": {
+					"label": "Protect Me!"
+				}
+			}
 		},
 		"Merciful Healing": {
 			"description": "<p>When an effect caused by you heals a Dying creature, they are healed for twice as much. (1/round) Your Lifebinding Spirit can act for free while you are Dying.</p>",
@@ -1362,7 +1523,12 @@
 		},
 		"Misdirection": {
 			"description": "<p>Gain INT armor. </p><p>Whenever you Defend, you may halve the damage instead. </p>",
-			"name": "Misdirection"
+			"name": "Misdirection",
+			"rules": {
+				"qyjZ5OZioqa7feoq": {
+					"label": "Misdirection"
+				}
+			}
 		},
 		"MORE BLOOD!": {
 			"description": "<p>Whenever an enemy crits you, gain 1 Fury Die.</p>",
@@ -1426,11 +1592,27 @@
 		},
 		"Not My Beautiful Faaace!": {
 			"description": "<p>(1/encounter) When you Defend, force the attacker to choose another target within range on a failed WIL save (if there is none, the attack fails). If they fail by 5 or more, they attack themselves as punishment for even thinking they could harm you! On save, they attack you with disadvantage.</p>",
-			"name": "Not My Beautiful Faaace!"
+			"name": "Not My Beautiful Faaace!",
+			"rules": {
+				"mcaaktqnJSyDrSv9": {
+					"label": "Not My Beautiful Faaace! (1/encounter)"
+				},
+				"uy2Urru5Jnh9RPqZ": {
+					"label": "Not My Beautiful Faaace!"
+				}
+			}
 		},
 		"Nullify": {
 			"description": "<p>(1/encounter) Ignore all disadvantage and other negative effects on your next action this turn, then Demand Control.</p>",
-			"name": "Nullify"
+			"name": "Nullify",
+			"rules": {
+				"nullifyOpensCont": {
+					"label": "Nullify"
+				},
+				"nullifyUsePool00": {
+					"label": "Nullify (1/encounter)"
+				}
+			}
 		},
 		"One with Shadows": {
 			"description": "<p>Action: When you are in an area of dim light or darkness, you may become Invisible until you move or attack.</p>",
@@ -1493,7 +1675,12 @@
 		},
 		"Peerless Hunter": {
 			"description": "<p>You can Defend against your quarry for free.</p>",
-			"name": "Peerless Hunter"
+			"name": "Peerless Hunter",
+			"rules": {
+				"JBrZtb4I1Evl5ZDm": {
+					"label": "Peerless Hunter"
+				}
+			}
 		},
 		"Perform!": {
 			"description": "<p>Whenever you perform in a place that inspires you, or exchange barbs with another competent wordsmith during a Safe Rest, you may choose different Songweaver options available to you.</p>",
@@ -1530,6 +1717,9 @@
 			"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
 			"name": "Pocket Sand",
 			"rules": {
+				"gku1RZDrb18nEnP3": {
+					"label": "Pocket Sand"
+				},
 				"MVE6XSpb5pjS6tzS": {
 					"label": "Pocket Sand (2/encounter)"
 				}
@@ -1537,7 +1727,15 @@
 		},
 		"Powerful Healer": {
 			"description": "<p>(WIL times/Safe Rest) Whenever you would roll dice to heal damage, you may instead heal the max amount you could roll, or give that many temp HP.</p>",
-			"name": "Powerful Healer"
+			"name": "Powerful Healer",
+			"rules": {
+				"2CJK6Truo6dfwSED": {
+					"label": "Powerful Healer"
+				},
+				"XXHoJSZEiXZVhMbG": {
+					"label": "Powerful Healer (WIL/Safe Rest)"
+				}
+			}
 		},
 		"Precise Casting": {
 			"description": "<p>(1+ mana) Choose 1 creature per mana spent to be unaffected by a spell you cast.</p>",
@@ -1643,7 +1841,12 @@
 		},
 		"Rampage": {
 			"description": "<p>(1/ turn) After you land a hit, you may treat your next attack this turn as if you rolled that same amount instead of rolling again.</p>",
-			"name": "Rampage"
+			"name": "Rampage",
+			"rules": {
+				"rampageKeepAmoun": {
+					"label": "Rampage"
+				}
+			}
 		},
 		"Reap": {
 			"description": "<p>When your Bonescythe crits, or kills a creature, summon a shadow minion for free.</p>",
@@ -1802,11 +2005,21 @@
 		},
 		"Sharpshooter": {
 			"description": "<p>Action: If you have not moved this turn and your quarry is 4 or more spaces away, attack them for double damage.</p>",
-			"name": "Sharpshooter"
+			"name": "Sharpshooter",
+			"rules": {
+				"sharpshootDouble": {
+					"label": "you have not moved this turn, and your quarry is 4 or more spaces away"
+				}
+			}
 		},
 		"Shield Expert": {
 			"description": "<p>While wearing a shield, you may Defend 2× each round. The first time each round you block all of the damage from an attack, you may make an opportunity attack against the attacker for free.</p>",
-			"name": "Shield Expert"
+			"name": "Shield Expert",
+			"rules": {
+				"xSFm1eDIZgnDrI2e": {
+					"label": "Shield Expert"
+				}
+			}
 		},
 		"Shield Wall": {
 			"description": "<p> Allies within 2 spaces gain ALL the benefits of the shield you have equipped.</p>",
@@ -1848,16 +2061,55 @@
 		},
 		"Small - Protect Me!": {
 			"description": "<p>(1/encounter) Whenever you Defend, your companion distracts the attacker, causing the attack to miss, and you move up to half your speed away. </p><hr><p>Level 7: 2/encounter.</p>",
-			"name": "Small - Protect Me!"
+			"name": "Small - Protect Me!",
+			"rules": {
+				"HIUdTt9kgX1kiwGB": {
+					"label": "Protect Me! (1/encounter)"
+				},
+				"Obigq1Gp606QEymF": {
+					"label": "Protect Me! (2/encounter)"
+				},
+				"y6Yt3UfuhJSFwcqO": {
+					"label": "Protect Me!"
+				}
+			}
 		},
 		"Snare Trap": {
 			"costDetails": "Enemy moves adjacent to you",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>",
-			"name": "Snare Trap"
+			"name": "Snare Trap",
+			"rules": {
+				"snareTrapPool000": {
+					"label": "Snare Trap (1/encounter)"
+				}
+			}
 		},
 		"Sneak Attack": {
 			"description": "<p><em>(1/turn)</em> When you crit, deal additional damage.</p><hr><p>Level 1: 1d6</p><p>Level 3: 1d8</p><p>Level 7: 2d8</p><p>Level 9: 2d10</p><p>Level 11: 2d12</p><p>Level 15: 2d20</p><p>Level 17: 3d20 </p>",
-			"name": "Sneak Attack"
+			"name": "Sneak Attack",
+			"rules": {
+				"sneakAttackDice1": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice2": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice3": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice4": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice5": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice6": {
+					"label": "Sneak Attack"
+				},
+				"sneakAttackDice7": {
+					"label": "Sneak Attack"
+				}
+			}
 		},
 		"Song of Domination": {
 			"description": "<p>(1/encounter) 2 actions: Play a bewitching tune, and all enemies within 6 spaces who hear it must make a WIL save. If they fail, you move them up to 6 spaces in any direction, and they cannot move on their next turn.</p>",
@@ -1899,6 +2151,9 @@
 			"name": "Steel Will",
 			"rules": {
 				"cHqRdj1yLggWXMPL": {
+					"label": "Steel Will"
+				},
+				"steelWillSurge01": {
 					"label": "Steel Will"
 				},
 				"zTiDDLUsYbobOvbi": {
@@ -1948,7 +2203,12 @@
 		},
 		"Stormborn (2)": {
 			"description": "<p>Instead of rolling dice, deal the max damage of a Wind spell by spending a charge of your Beastshift feature. Whenever you end Beastshift, you may cast a cantrip for free.</p>",
-			"name": "Stormborn (2)"
+			"name": "Stormborn (2)",
+			"rules": {
+				"p8okGDnuRuS92SKT": {
+					"label": "Stormborn"
+				}
+			}
 		},
 		"Stormcaller": {
 			"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Learn a 2nd Utility Spell from each spell school you know.</p>",
@@ -1994,7 +2254,12 @@
 		},
 		"Supreme Control": {
 			"description": "<p>Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
-			"name": "Supreme Control"
+			"name": "Supreme Control",
+			"rules": {
+				"supremeControlTw": {
+					"label": "Supreme Control"
+				}
+			}
 		},
 		"Supreme Execution": {
 			"description": "<p>When you attack with a blade, you do not require targets to be Distracted to trigger Vicious Opportunist.</p><hr><p>+1 to any 2 of your stats. </p>",
@@ -2143,11 +2408,24 @@
 		},
 		"Thrill of the Hunt": {
 			"description": "<p>Choose 2 Thrill of the Hunt abilities. Gain a charge to use these abilities during that encounter whenever:</p><ul><li><p>Your quarry dies.</p></li><li><p>You hit your quarry in melee or crit your quarry at range</p><hr><p>Choose an additional Thrill of the Hunt ability at levels 4, 6, 8, 12, and 14.</p></li></ul>",
-			"name": "Thrill of the Hunt"
+			"name": "Thrill of the Hunt",
+			"rules": {
+				"thrillOfTheHuntP": {
+					"label": "Thrill of the Hunt"
+				}
+			}
 		},
 		"Thrive in Chaos": {
 			"description": "<p>Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p>",
-			"name": "Thrive in Chaos"
+			"name": "Thrive in Chaos",
+			"rules": {
+				"thriveInChaos001": {
+					"label": "Thrive in Chaos (1/Safe Rest)"
+				},
+				"thriveInChaos002": {
+					"label": "Thrive in Chaos"
+				}
+			}
 		},
 		"Thunderous Steps": {
 			"description": "<p>After moving at least 4 spaces while Raging, you may deal STR Bludgeoning damage to all adjacent creatures where you stop.</p>",
@@ -2195,11 +2473,21 @@
 		},
 		"Twist the Blade (1)": {
 			"description": "<p>Action: Change one of your Sneak Attack dice to whatever you like.</p>",
-			"name": "Twist the Blade (1)"
+			"name": "Twist the Blade (1)",
+			"rules": {
+				"twistTheBladePay": {
+					"label": "Twist the Blade"
+				}
+			}
 		},
 		"Twist the Blade (2)": {
 			"description": "<p>(1/turn) Change one of your Sneak Attack dice to whatever you like, for free</p>",
-			"name": "Twist the Blade (2)"
+			"name": "Twist the Blade (2)",
+			"rules": {
+				"twistTheBladeFre": {
+					"label": "Twist the Blade"
+				}
+			}
 		},
 		"Unbreakable": {
 			"description": "<p><em>(1/encounter)</em> While Raging, if you would suffer your last Wound or other negative condition of your choice, you don't.</p>",
@@ -2287,7 +2575,12 @@
 		},
 		"Use Momentum": {
 			"description": "<p>Whenever you avoid all of the damage of a melee attack (whether it misses or you Defend), you may swap places with the attacker and then choose another target that is now within the attack's reach, and they are hit instead.</p>",
-			"name": "Use Momentum"
+			"name": "Use Momentum",
+			"rules": {
+				"8C6ebqtL1402M9gy": {
+					"label": "Use Momentum"
+				}
+			}
 		},
 		"Veilwalker's Blessing": {
 			"description": "<p><em>(1/Safe Rest)</em> <strong>Reaction</strong> (when you would drop to 0 HP): Drop to 1 HP instead and force an enemy within 6 spaces to make a STR save. On a failure, they become Bloodied, or if they are already Bloodied, they drop to 0 HP.</p>",
@@ -2311,7 +2604,12 @@
 		},
 		"Veteran Stalker": {
 			"description": "<p>Gain a Thrill of the Hunt charge whenever you are first Bloodied in an encounter and for every Wound you gain.</p>",
-			"name": "Veteran Stalker"
+			"name": "Veteran Stalker",
+			"rules": {
+				"veteranStalkerGa": {
+					"label": "Veteran Stalker"
+				}
+			}
 		},
 		"Vicious Opportunist": {
 			"description": "<p><em>(1/turn)</em> When you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like (changing it to the max value counts as a crit). </p><hr><p>Distracted. A target is Distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
@@ -2368,11 +2666,21 @@
 		},
 		"Wild Endurance": {
 			"description": "<p>Gain 1 Thrill of the Hunt charge at the start of your turns.</p>",
-			"name": "Wild Endurance"
+			"name": "Wild Endurance",
+			"rules": {
+				"wildEnduranceGai": {
+					"label": "Wild Endurance"
+				}
+			}
 		},
 		"Wild Instinct": {
 			"description": "<p><em>(1/round, costs 0 TotH charges if you have none.)</em> Assess for free, with advantage.</p>",
-			"name": "Wild Instinct"
+			"name": "Wild Instinct",
+			"rules": {
+				"wildInstinctAsse": {
+					"label": "Wild Instinct"
+				}
+			}
 		},
 		"Wind Spellcasting and...": {
 			"description": "<p>You know cantrips from the Wind school and 1 other school of your choice. You also know the cantrip Vicious Mockery:</p><p><strong>Vicious Mockery.</strong> (Wind cantrip) Action: Range: 12. Damage: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn. High Levels: +2 damage every 5 levels.</p>",
@@ -2395,12 +2703,25 @@
 		},
 		"Windborne": {
 			"description": "<p>+1 to any 2 of your stats. +1 additional burst of speed when you roll Initiative. Permanently gain 1 action (while Dying, you have a max of 2 actions).</p>",
-			"name": "Windborne"
+			"name": "Windborne",
+			"rules": {
+				"2jVESm2CSajGf7M0": {
+					"label": "Windborne: +1 Burst of Speed when you roll Initiative"
+				}
+			}
 		},
 		"Windborne Protector": {
 			"costDetails": "when an enemy attacks, spend 2 mana to shift into a Fearsome Beast",
 			"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong>: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p>",
-			"name": "Windborne Protector"
+			"name": "Windborne Protector",
+			"rules": {
+				"96SZke2oF2L2FVGu": {
+					"label": "Windborne Protector"
+				},
+				"fIEaN6Yjhx9LAsqx": {
+					"label": "Windborne Protector (1/encounter)"
+				}
+			}
 		},
 		"Windstrider": {
 			"description": "<p>If you move through the space of a willing creature while using Windstep, they can move with you and choose any space adjacent to your path of movement to end in.</p>",

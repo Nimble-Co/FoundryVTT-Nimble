@@ -78,11 +78,24 @@
 				},
 				"Last Stand": {
 					"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>",
-					"name": "Last Stand"
+					"name": "Last Stand",
+					"rules": {
+						"azrielLastStand0": {
+							"label": "Last Stand"
+						}
+					}
 				},
 				"PAIN!": {
 					"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>",
-					"name": "PAIN!"
+					"name": "PAIN!",
+					"rules": {
+						"azrielPainBack00": {
+							"label": "PAIN!"
+						},
+						"azrielPainVicio0": {
+							"label": "PAIN!"
+						}
+					}
 				}
 			},
 			"name": "Azriel, Lord of Pain & Flame"
@@ -182,7 +195,12 @@
 				},
 				"Terrible Maw": {
 					"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
-					"name": "Terrible Maw"
+					"name": "Terrible Maw",
+					"rules": {
+						"dravokTerribleMw": {
+							"label": "Terrible Maw"
+						}
+					}
 				},
 				"Weakness": {
 					"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>",
@@ -662,7 +680,12 @@
 				},
 				"Vulnerable Underbelly.": {
 					"description": "<p>Hits from Prone melee attackers auto crit on her.</p>",
-					"name": "Vulnerable Underbelly."
+					"name": "Vulnerable Underbelly.",
+					"rules": {
+						"scorpionUnderbel": {
+							"label": "Vulnerable Underbelly"
+						}
+					}
 				}
 			},
 			"name": "Scorpion Queen"

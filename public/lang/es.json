@@ -45,6 +45,7 @@
 			"conditionalBonus": {
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
+				"damageDoubled": "+{value} damage (doubled)",
 				"heading": "Conditional Bonuses",
 				"none": "None"
 			},
@@ -66,6 +67,7 @@
 			"canMiss": "Puede fallar",
 			"condition": "Estado",
 			"customSaveDC": "Custom Save DC",
+			"customSaveDCHint": "A number or a formula against the data of the creature that uses this. When empty, a hero uses 10+@key and a monster has no DC.",
 			"damage": "Daño",
 			"damageOutcome": "Resultado del daño",
 			"damageType": "Damage Type",
@@ -75,6 +77,7 @@
 			"deleteDamage": "Delete damage roll",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteHealing": "Delete healing roll",
+			"deleteMove": "Delete move",
 			"deleteNote": "Delete Note",
 			"effects": "Efectos",
 			"flavor": "Descripción",
@@ -82,8 +85,37 @@
 			"general": "General",
 			"halfDamage": "Daño mitad",
 			"healing": "Curación",
+			"healingRecipient": "Who gets it?",
+			"healingRecipients": {
+				"self": "The one who uses it (given by itself)",
+				"targets": "The targets"
+			},
 			"healingType": "Healing Type",
 			"ignoreArmor": "Ignore Armor",
+			"move": "Move",
+			"moveNode": {
+				"direction": "Direction",
+				"directions": {
+					"any": "Any",
+					"away": "Away",
+					"toward": "Toward"
+				},
+				"distance": "Distance (spaces)",
+				"distanceBySize": "Distance by size (optional)",
+				"distanceHint": "A formula against the data of the creature that uses this: @abilities.strength.mod is the Strength modifier of that creature. @speed is the walk speed of the creature that moves.",
+				"ignoreDifficultTerrain": "Ignore difficult terrain",
+				"kind": "Kind",
+				"kinds": {
+					"forced": "Forced Movement",
+					"free": "Move for free"
+				},
+				"recipient": "Who Moves",
+				"recipients": {
+					"self": "The creature that uses this",
+					"targets": "The targets"
+				},
+				"upTo": "Show the distance as \"up to\" (the creature can move less)"
+			},
 			"noAdditionalEffects": "Sin efectos adicionales",
 			"none": "None",
 			"note": "Nota",
@@ -209,6 +241,469 @@
 			"searchPlaceholder": "Buscar monstruos...",
 			"selectAll": "Seleccionar todo",
 			"successMessage": "{count} monstruo(s) correctamente importados"
+		},
+		"actorSheet": {
+			"hero": {
+				"actions": {
+					"assessSummary": "DC {dc} skill check",
+					"back": "Back",
+					"cancel": "Cancel",
+					"cast": "Cast {name}",
+					"chooseOne": "Choose one",
+					"chooseSkill": "Choose a skill",
+					"chooseUse": "{name}. You choose first",
+					"diceStep": "{label}: {pool}",
+					"equipHint": "Equip a weapon in the Inventory to attack with it.",
+					"groups": {
+						"features": "Features",
+						"heroic": "Heroic actions",
+						"reactions": "Reactions",
+						"spells": "Spells",
+						"weapons": "Weapons"
+					},
+					"noTarget": "No target",
+					"pickDice": "Pick the dice to spend",
+					"reactionsNote": {
+						"notYourTurn": "it is not your turn now",
+						"outOfCombat": "1 action each, when it is not your turn",
+						"yourTurn": "when it is not your turn, 1 action each"
+					},
+					"speed": "Speed {speed}",
+					"spend": "Spend",
+					"target": "Target: {name}",
+					"targets": "Targets: {names}"
+				},
+				"bio": {
+					"age": "Age",
+					"gender": "Gender",
+					"height": "Height",
+					"noNotes": "No notes yet. Turn on Edit to write them.",
+					"notSet": "Not set",
+					"notes": "Notes",
+					"weight": "Weight"
+				},
+				"core": {
+					"abilitiesAndSaves": "Abilities and saves",
+					"armor": "Armor",
+					"conditions": "Conditions",
+					"damage": "Damage",
+					"defense": "{label}: {types}",
+					"languages": "Languages",
+					"none": "None",
+					"proficiencies": "Proficiencies and defenses",
+					"save": "Save",
+					"saves": "Saves",
+					"skills": "Skills",
+					"speed": "Speed",
+					"speedBonus": "{amount} from {source}",
+					"speedValue": "{type} {value}",
+					"stats": "Stats",
+					"weapons": "Weapons"
+				},
+				"effects": {
+					"conditionsOn": "Conditions on you",
+					"inspiration": {
+						"description": "The GM grants Inspiration when a hero does something memorable. Spend it to reroll any single die. It ends after a Safe Rest.",
+						"lasts": "Until a Safe Rest",
+						"name": "Inspiration"
+					}
+				},
+				"features": {
+					"create": "Create Feature",
+					"exotic": "Exotic",
+					"facts": {
+						"boonType": "Type",
+						"level": "Level"
+					},
+					"newFeature": "New Feature",
+					"none": "No features",
+					"post": "Post {name} to chat",
+					"subclass": "Subclass"
+				},
+				"frame": {
+					"done": "Done",
+					"editing": "Editing.",
+					"editingHint": "Click an outlined part to configure it."
+				},
+				"inventory": {
+					"capacity": "{used} / {capacity}",
+					"coin": "{coin} coins",
+					"coinsLabel": "Coins",
+					"create": "Create Object",
+					"empty": "Empty",
+					"facts": {
+						"quantity": "Quantity",
+						"storedIn": "Stored in"
+					},
+					"loose": "Loose",
+					"newObject": "New Object",
+					"none": "No objects",
+					"overCapacity": "Over its capacity: {used} / {capacity}",
+					"overSlots": "You are over your inventory slot limit: {used} / {total}.",
+					"quantity": "x{count}",
+					"quantityOf": "Quantity of {name}",
+					"slots": "SLOTS {used} / {total}",
+					"slotsLabel": "Inventory slots",
+					"storeIn": "Store {name} in"
+				},
+				"meter": {
+					"dieLabel": "{label} die {number}: {face}",
+					"dieMenu": "Change one die",
+					"discard": "Discard",
+					"discardAll": "Discard all",
+					"discardAllQuestion": "Discard all {label}?",
+					"fromInitiative": "from Initiative",
+					"idleHint": "You get these when you roll Initiative",
+					"roll": "Roll",
+					"rollHitDiceHint": "Roll Hit Dice. This opens the Hit Dice window",
+					"rollOne": "Roll and spend one {label} die",
+					"setValue": "Set value",
+					"temporary": "+{count} temporary"
+				},
+				"rail": {
+					"armor": "Armor",
+					"armorTooltip": "Armor {value}",
+					"configureHp": "Configure Hit Points",
+					"edit": "Edit",
+					"editHint": "Edit the sheet: show where you configure your hero",
+					"endTurnQuestion": "You have actions left. End your turn?",
+					"hp": {
+						"bloodied": "Bloodied: at half HP or less.",
+						"dying": "Dying: at 0 HP. Taking damage while Dying causes 2 Wounds, a crit causes 3 instead.",
+						"healthy": "Hit Points"
+					},
+					"hpShort": "Hit Points",
+					"inspiration": {
+						"label": "Inspiration",
+						"off": "Grant Inspiration: the ability to reroll any single die, until a Safe Rest.",
+						"on": "Inspired: you can reroll any single die. It ends after a Safe Rest. Click to end it."
+					},
+					"label": "Hero",
+					"levelUpHint": "Level Up. This opens the Level Up window",
+					"levelUpMax": "You are at the highest level",
+					"levelUpNoClass": "Add a class to level up",
+					"metaLabel": "Configure Size",
+					"metaLevel": "Lv {level}",
+					"metaShort": "Size",
+					"metaSize": "Size: {size}",
+					"metaSubclass": "{line} - {subclass}",
+					"movementShort": "Movement",
+					"name": "Name",
+					"notYourTurn": "Not your turn",
+					"offTurnHint": "A reaction spends 1 action. You start your next turn with the actions that are left.",
+					"revertLevelUp": "Revert Last Level Up",
+					"speed": {
+						"burrow": "Burrow",
+						"climb": "Climb",
+						"fly": "Fly",
+						"swim": "Swim",
+						"walk": "Speed"
+					},
+					"speedTooltip": "{type} {value} spaces",
+					"stopEditing": "Stop editing",
+					"toggleWound": "Toggle wound {number}",
+					"yourTurn": "Your turn"
+				},
+				"settings": {
+					"bonusSlots": "Bonus Inventory Slots",
+					"currencyBulk": "Automatically Include Currency Bulk",
+					"groups": {
+						"bonuses": "Bonuses",
+						"image": "Actor Image Settings",
+						"inventory": "Inventory Settings",
+						"items": "Embedded Document Settings",
+						"needsAPlace": "Needs a place",
+						"skills": "Skill Settings",
+						"spells": "Spell Settings"
+					},
+					"hints": {
+						"bonusSlots": "Adds to your inventory slots (10 + STR).",
+						"currencyBulk": "Each 500 coins use 1 inventory slot.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"initiativeBonus": "A number or a formula that adds to your Initiative roll, for example 1d4.",
+						"passiveSkills": "Shows 10 + the modifier next to each skill on the Core tab.",
+						"runMacros": "When you use an item that has a macro, the macro runs.",
+						"spellTier": "Your class features and level set it. A number here replaces it until you reset it.",
+						"trackSlots": "Counts what you carry against your inventory slots.",
+						"woundsBonus": "Adds to your max wounds (6). Max wounds now: {max}."
+					},
+					"imageScale": "Scale (%)",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"initiativeBonus": "Initiative bonus",
+					"needsAPlaceHint": "These have no place on the new character sheet yet.",
+					"passiveSkills": "Show Passive Skill Scores",
+					"resetSpellTier": "Reset spell tier",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"spellTier": "Highest Unlocked Spell Tier",
+					"trackSlots": "Track Inventory Slots",
+					"woundsBonus": "Max wounds bonus"
+				},
+				"spells": {
+					"bySchool": "By school",
+					"byTier": "By tier",
+					"create": "Create Spell",
+					"groupBy": "Group the spells",
+					"newSpell": "New Spell",
+					"noSchool": "No school",
+					"none": "No spells"
+				},
+				"tabs": {
+					"actions": "Actions",
+					"bio": "Bio",
+					"core": "Core",
+					"effects": "Effects",
+					"effectsBadge": "{count} conditions and effects on you now",
+					"features": "Features",
+					"inventory": "Inventory",
+					"label": "Sheet tabs",
+					"settings": "Settings",
+					"spells": "Spells"
+				},
+				"turn": {
+					"keepPlaying": "Keep my turn",
+					"label": "Actions"
+				}
+			},
+			"monster": {
+				"abilities": {
+					"empty": "No abilities yet.",
+					"groups": {
+						"action": "Actions",
+						"bloodied": "Bloodied",
+						"feature": "Features",
+						"lastStand": "Last Stand"
+					},
+					"newFeature": "New Feature"
+				},
+				"effects": {
+					"conditionsOn": "Conditions"
+				},
+				"frame": {
+					"done": "Done",
+					"editing": "Editing.",
+					"editingHint": "Click an outlined part to configure it."
+				},
+				"notes": {
+					"label": "Notes",
+					"none": "No notes yet."
+				},
+				"rail": {
+					"armor": "Armor",
+					"armorTooltip": "Armor: {armor}",
+					"defenses": {
+						"immune": "Immune",
+						"resist": "Resist",
+						"vulnerable": "Vulnerable"
+					},
+					"defensesShort": "Defenses",
+					"edit": "Edit",
+					"editHint": "Edit the sheet: show where you configure the monster",
+					"hp": {
+						"bloodied": "Bloodied: at half HP or less.",
+						"healthy": "Hit Points"
+					},
+					"label": "Monster",
+					"meta": {
+						"flunky": "Level {level} {size} {type} Flunky",
+						"minion": "Level {level} {size} {type} Minion",
+						"npc": "Level {level} {size} {type}",
+						"soloMonster": "Level {level} Solo {size} {type}"
+					},
+					"metaLabel": "Configure the monster: level, type, size, defenses",
+					"metaShort": "Monster",
+					"minion": {
+						"label": "Minion",
+						"noCrit": "Cannot crit. Misses on a roll of 1.",
+						"noHp": "No HP. Any damage kills a minion."
+					},
+					"movementShort": "Movement",
+					"name": "Name",
+					"noDefenses": "No damage defenses",
+					"savesShort": "Saves",
+					"speed": {
+						"burrow": "Burrow",
+						"climb": "Climb",
+						"fly": "Fly",
+						"swim": "Swim",
+						"walk": "Speed"
+					},
+					"speedTooltip": "{type} {value} spaces",
+					"stopEditing": "Stop editing"
+				},
+				"settings": {
+					"coin": "{coin} coins",
+					"creatureType": "Creature type",
+					"groups": {
+						"coins": "Coins",
+						"image": "Actor Image Settings",
+						"items": "Embedded Document Settings",
+						"monster": "Monster"
+					},
+					"hints": {
+						"coins": "The coins that this creature carries.",
+						"imageScale": "Makes the portrait larger or smaller. 100 is the normal size.",
+						"imageX": "Moves the portrait left or right.",
+						"imageY": "Moves the portrait up or down.",
+						"monster": "To change these, turn on Edit and click Monster near the name.",
+						"runMacros": "When you use an item that has a macro, the macro runs."
+					},
+					"imageScale": "Scale (%)",
+					"imageX": "X-Offset (px)",
+					"imageY": "Y-Offset (px)",
+					"level": "Level",
+					"monsterType": "Monster type",
+					"runMacros": "Execute Item Macros on Item Activation",
+					"size": "Size"
+				},
+				"tabs": {
+					"abilities": "Abilities",
+					"effects": "Effects",
+					"effectsBadge": "{count} conditions and effects on the monster now",
+					"label": "NPC sheet tabs",
+					"notes": "Notes",
+					"settings": "Settings"
+				}
+			},
+			"parts": {
+				"abilityCard": {
+					"post": "Post {name} to chat",
+					"roll": "Roll {name}. This opens the roll window"
+				},
+				"confirmBar": {
+					"cancel": "Keep",
+					"confirm": "Delete"
+				},
+				"dicePool": {
+					"add": "Roll one more die",
+					"addLabel": "Roll one more {label} die",
+					"die": "d{die}",
+					"faces": "{label}: {faces}",
+					"none": "none",
+					"remove": "Remove the last die",
+					"removeLabel": "Remove the last {label} die"
+				},
+				"effectEntry": {
+					"duration": "How long it lasts",
+					"end": "End",
+					"endName": "{verb} {name}",
+					"endQuestion": "{verb} {name}?",
+					"hideText": "Hide the text of {name}",
+					"showText": "Show the text of {name}"
+				},
+				"expandAll": {
+					"collapse": "Collapse all",
+					"expand": "Expand all"
+				},
+				"inlineNumber": {
+					"hint": "{label}. Click and type a number."
+				},
+				"rollMode": {
+					"advantage": "Advantage × {count}",
+					"advantageButton": "Advantage",
+					"disadvantage": "Disadvantage × {count}",
+					"disadvantageButton": "Disadvantage",
+					"straight": "Straight Roll"
+				},
+				"row": {
+					"equip": "Equip",
+					"equipName": "Equip {name}",
+					"equipped": "Equipped",
+					"unequipName": "Put {name} away",
+					"use": "Use {name}"
+				},
+				"rowButton": {
+					"collapse": "Collapse description for {name}",
+					"configure": "Configure {name}",
+					"reveal": "Reveal description for {name}"
+				},
+				"rowCost": {
+					"action": "1 action",
+					"actions": "{count} actions",
+					"countBack": "{left} left. It comes back each {per}.",
+					"countLeft": "{left} left",
+					"free": "Free",
+					"mana": "Costs {amount} mana",
+					"usesBack": "{left} of {max} left. It comes back each {per}.",
+					"usesLeft": "{left} of {max} left"
+				},
+				"saveTile": {
+					"advantage": "Saves with {count} Advantage",
+					"disadvantage": "Saves with {count} Disadvantage",
+					"roll": "Roll {ability} save. {mode}",
+					"straight": "Rolls 1d20"
+				},
+				"sheetTabs": {
+					"label": "Sheet tabs",
+					"withBadge": "{label}: {badge}"
+				},
+				"vitalPlate": {
+					"current": "Current {label}",
+					"hp": "HP",
+					"maximum": "Maximum {label}",
+					"tempHp": "Temp HP"
+				}
+			},
+			"shared": {
+				"active": "ACTIVE",
+				"concentration": "Concentration",
+				"countBack": "{left} left. They come back each {per}.",
+				"countLeft": "{left} left.",
+				"damageType": "{type} damage",
+				"delete": "Delete",
+				"deleteName": "Delete {name}",
+				"deleteQuestion": "Delete {name}? It leaves the sheet.",
+				"effects": {
+					"active": "Active effects",
+					"allConditions": "All conditions",
+					"facts": {
+						"from": "From",
+						"lasts": "Lasts"
+					},
+					"fromItem": "From {name}",
+					"inactiveRound": "Ends after 1 round with no attack and no new use",
+					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
+					"noEffects": "No effects and no conditions.",
+					"otherConditions": "Other conditions",
+					"passive": "Passive effects",
+					"remove": "Remove",
+					"removeName": "Remove {name}",
+					"removeQuestion": "Remove {name}?",
+					"untilItEnds": "Until it ends"
+				},
+				"endName": "End {name}",
+				"facts": {
+					"cost": "Cost",
+					"damage": "Damage",
+					"range": "Range",
+					"uses": "Uses",
+					"when": "When"
+				},
+				"free": "Free",
+				"mana": "{cost} mana",
+				"per": {
+					"encounter": "encounter",
+					"fieldRest": "Field Rest",
+					"round": "round",
+					"safeRest": "Safe Rest",
+					"turn": "turn"
+				},
+				"range": "Range {distance}",
+				"reach": "Reach {distance}",
+				"reason": {
+					"cannotPay": "{pool} cannot pay for this use",
+					"noUsesUntil": "No uses left until the next {per}",
+					"notEnough": "Not enough {pool}",
+					"poolMissing": "Needs {pool}, and the hero has none",
+					"usedThis": "Used this {per}"
+				},
+				"used": "USED",
+				"usesBack": "{left} of {max} left. They come back each {per}.",
+				"usesLeft": "{left} of {max} left.",
+				"usesOf": "{pool} of {name}"
+			}
 		},
 		"ancestryBonusSelection": {
 			"cancelBrowsing": "Back",
@@ -395,9 +890,12 @@
 			"recoveryTrigger": {
 				"encounterEnd": "Encounter End",
 				"encounterStart": "Encounter Start",
+				"onAnyTurnStart": "Start of Each Creature's Turn",
 				"onBloodied": "Bloodied",
+				"onHealed": "Healed",
 				"onInitiativeRolled": "Initiative Rolled",
 				"onKill": "Kill",
+				"onMarkedDeath": "Marked creature dies",
 				"onTurnEnd": "Turn End",
 				"onTurnStart": "Turn Start",
 				"onWound": "Wounded"
@@ -410,6 +908,8 @@
 			"setToEmptyForPool": "Set {pool} to empty",
 			"setToMaxForPool": "Set {pool} to max",
 			"source": "Source",
+			"temporaryUses": "{count} temporary: spent first, gone when the encounter ends.",
+			"temporaryUsesFrom": "{count} temporary from {source}: spent first, gone when the encounter ends.",
 			"unknownItem": "Unknown Item"
 		},
 		"chat": {
@@ -427,6 +927,92 @@
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Aplicar daño",
 			"applyHealing": "Aplicar curación",
+			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"cardActionNeedsGm": "A GM must be online to do this.",
+			"chaos": {
+				"advantageDropped": "Advantage, other die {value}",
+				"keep": "Keep {value}",
+				"notKept": "Not kept",
+				"rollButton": "Roll on the Chaos Table",
+				"rollOnce": "Roll once",
+				"rollTwiceBoth": "Roll twice, both happen",
+				"rollTwiceChoose": "Roll twice, choose one (1/Safe Rest)",
+				"title": "Chaos Table",
+				"whisper": "The Chaos Table for {name}:"
+			},
+			"checkResult": {
+				"failed": "Failed",
+				"failedWithDC": "Failed - DC {dc}",
+				"succeeded": "Succeeded",
+				"succeededWithDC": "Succeeded - DC {dc}"
+			},
+			"concentrationApplied": "Concentration Applied",
+			"concentrationFailed": "The concentration condition could not be applied to the caster.",
+			"critBack": {
+				"attack": "Attack with {attack}",
+				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit."
+			},
+			"damageBack": {
+				"deal": "Deal {amount} damage",
+				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
+				"double": "Suffer 1 Wound: {amount} more damage",
+				"waiting": "{label}: {name} takes {amount} damage, ignoring armor (not dealt)"
+			},
+			"damageRoll": {
+				"advantage": "Advantage x {count}",
+				"disadvantage": "Disadvantage x {count}",
+				"halfDamage": "(Half Damage)",
+				"halfDamageIgnoresArmor": "(Half Damage, Ignores Armor)",
+				"ignoresArmor": "(Ignores Armor)"
+			},
+			"defend": {
+				"actionsMany": "{count} actions",
+				"actionsNone": "No action",
+				"actionsOne": "1 action",
+				"allyUse": "{label}: {name} Defended",
+				"armorApplies": "Armor applies",
+				"armorModifier": "Defend: armor {value}",
+				"armorOffHint": "No Armor comes off. Click to take off Armor {armor}.",
+				"armorOnHint": "Armor {armor} comes off. Click if this damage cannot be avoided.",
+				"cannotBeDefended": "Cannot be Defended or Interposed",
+				"cannotPay": "{label}: its cost could not be paid.",
+				"confirmBoth": "Interpose and Defend",
+				"confirmDefend": "Defend",
+				"confirmInterpose": "Interpose",
+				"defendCost": "{actions}. Armor {armor}.",
+				"defendedTooltip": "Defended: Armor {armor}",
+				"extraNote": "{label}: a second Defend this round.",
+				"freeCost": "No action. Armor {armor}.",
+				"halfModifier": "Defend: half damage",
+				"heading": "{attack} hits {name} for {damage}",
+				"headingNoDamage": "{attack} hits {name}",
+				"interposeAndFree": "Interpose and Defend ({label})",
+				"interposeFor": "Interpose for {name}",
+				"interposeForAndDefend": "Interpose for {name} and Defend",
+				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
+				"itemCost": "Uses {item}, with its own cost. Armor {armor}.",
+				"nothingToDo": "There is nothing to do against this attack.",
+				"optionsUsed": "With: {labels}",
+				"reactAs": "React as {name}",
+				"reactions": "Reactions",
+				"refused": {
+					"already": "That hero already Defended this attack.",
+					"applied": "The damage is already applied.",
+					"noCard": "This card cannot take a Defend.",
+					"noGm": "A GM must be online to Defend.",
+					"notTarget": "That hero is not a target of this attack."
+				},
+				"rerollNotFound": "{label}: no reroll for this attack on the card.",
+				"roundCost": "Nothing more to spend. Armor {armor}.",
+				"roundTitle": "Defended this round ({label})",
+				"tickNotForRow": "The row you picked cannot use this.",
+				"undoHint": "Take back this Defend and give back what it spent.",
+				"undoLabel": "Undo Defend",
+				"whenYouDefend": "When you Defend",
+				"whenYouInterposeOrDefend": "When you Interpose or Defend",
+				"windowTitle": "{name}: Reactions",
+				"youTake": "you take"
+			},
 			"grantedActionOffers": {
 				"currentTarget": "Target: {name}",
 				"heading": "Granted Actions",
@@ -442,9 +1028,120 @@
 			"healingUndone": "Curación cancelada",
 			"incomingReactions": {
 				"baselineInterpose": "Interpose (Heroic Reaction)",
+				"changeArrowSet": "set",
+				"changeHistory": "Changed with {feature}: {previous} became {next}",
+				"changeHistoryCrit": "Changed with {feature}: {previous} became {next}, a crit",
+				"changeHistoryMiss": "Changed with {feature}: {previous} became {next}, a miss",
+				"changePickADie": "Pick the die to change.",
+				"changePickAValue": "Pick the value to set the die to.",
+				"changeThisRoll": {
+					"count": "({count})",
+					"label": "Change This Roll",
+					"naturalOneFails": "A roll of 1 always fails",
+					"sentence": "{verb} with {feature}",
+					"withFeature": "with {feature}"
+				},
+				"costAction": "1 action",
+				"costHeroicReaction": "Heroic Reaction",
+				"costManaPerDie": "{cost} mana per die",
+				"costOncePerTurn": "1/turn",
+				"costUsesLeft": "{count} left",
+				"costWound": "Gain {count} Wound",
+				"costWounds": "Gain {count} Wounds",
+				"critDiceLine": "{feature}: +{total}",
+				"critHistory": "Made the attack a crit with {feature}",
+				"effectHistory": {
+					"critD20": "{feature} rerolled the first crit die as a d20.",
+					"critDice": "{feature} added its dice to the crit.",
+					"dualWield": "Dual wield",
+					"keepAmount": "Kept the amount",
+					"offerBonus": "Added the bonus",
+					"optionWindow": "Demanded Control",
+					"viciousDie": "{feature} made the crit Vicious."
+				},
 				"forceReroll": "Force Reroll",
 				"heading": "Options",
+				"incapacitatedCause": "target {condition}",
+				"incapacitatedFeature": "Target {condition}",
 				"interpose": "Interpose",
+				"keepFirst": "Keep a result first",
+				"keepOutcomes": {
+					"crit": "Critical Hit",
+					"hit": "Hit",
+					"miss": "Miss"
+				},
+				"keepResult": "Keep {total}",
+				"keepWaiting": "{name} keeps {old} or {new}.",
+				"leftOut": {
+					"add": "Add",
+					"addLabel": "Add {feature} for {name}",
+					"disposition": "{name}'s token is {disposition}, not {rollerDisposition}",
+					"feature": "{feature} ({name})",
+					"many": "{count} ally rerolls left out",
+					"notAlly": "{name}'s token is not marked as an ally",
+					"one": "1 ally reroll left out",
+					"reach": "{spaces} spaces away, Reach {reach}"
+				},
+				"noActionLeft": "No action left to spend.",
+				"outcomeTags": {
+					"cannotMiss": "Cannot miss: {feature}",
+					"cannotMissTooltip": "The die rolled {face}. It is a hit because of {feature}.",
+					"crit": "Crit: {cause}",
+					"critD20": "{feature}: d20 in place of a d{faces}",
+					"critD20Tooltip": "{feature} made the first crit die a d20.",
+					"critTooltip": "The die rolled {face}. It is a crit because of {cause}.",
+					"grantedCast": "{feature}: free, no disadvantage, cannot miss",
+					"grantedCastTooltip": "{feature} made this cast free. It ignores all disadvantage and cannot miss.",
+					"keptAmount": "No roll: {feature}",
+					"keptAmountTooltip": "{feature} kept the amount of an earlier hit. No die was rolled. It is a hit with no crit.",
+					"maxDamage": "Max damage: {feature}",
+					"maxDamageTooltip": "{feature} gave the max of the roll. No die was rolled.",
+					"maxHealing": "Max healing: {feature}",
+					"multiTargetTooltip": "The die rolled {face}. An attack on {count} targets cannot miss or crit.",
+					"mustAttackOther": "{feature}: must attack the closest other creature",
+					"mustAttackOtherTooltip": "{feature}: this attack must be against the closest other creature, chosen at random.",
+					"noCrit": "No crit: {count} targets",
+					"noMiss": "No miss: {count} targets",
+					"offerDamage": "Damage from {feature}",
+					"offerDamageTooltip": "{feature} adds this damage to the attack.",
+					"vicious": "Vicious: {feature}",
+					"viciousTooltip": "{feature} made this crit Vicious: each crit die rolls 1 more die."
+				},
+				"pickDie": {
+					"cancel": "Cancel",
+					"change": {
+						"die": "Change the {value}",
+						"dieWithRole": "Change the {value} ({role})",
+						"rolling": "Changing with {feature}",
+						"title": "Pick a die to change"
+					},
+					"die": "Reroll the {value}",
+					"dieWithRole": "Reroll the {value} ({role})",
+					"roles": {
+						"dropped": "Dropped",
+						"kept": "Kept",
+						"primary": "Primary"
+					},
+					"rolling": "Rerolling with {feature}",
+					"several": {
+						"confirm": "Reroll",
+						"count": "{count} of {max} dice"
+					},
+					"title": "Pick a die to reroll"
+				},
+				"pickStat": {
+					"title": "Pick a stat to reroll with {feature}"
+				},
+				"pickValue": {
+					"confirm": "Set to {value}",
+					"higher": "Higher",
+					"highest": "{value} (highest)",
+					"input": "New value, 1 to {max}",
+					"lower": "Lower",
+					"lowest": "{value} (lowest)",
+					"sending": "Changing with {feature}",
+					"title": "Pick a value"
+				},
 				"poolSpendConfirm": "Add to Damage",
 				"poolSpendEmpty": "No dice left in {label}.",
 				"poolSpendHint": "Choose the dice to spend for {label}. The result is added to this attack's damage.",
@@ -456,15 +1153,201 @@
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
 				"redirectedTo": "Attack redirected to {name}",
 				"redirectedToVia": "Attack redirected to {name} via {label}",
+				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
+				"rerollHistoryAutomatic": "Rerolled automatically by {feature}",
+				"rerollHistoryKept": "Rerolled with {feature}, kept {total}",
+				"rerollHistoryPlain": "Rerolled with {feature}",
+				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
+				"rerollPickADie": "Pick the die to reroll.",
+				"rerollPickAStat": "Pick the stat to reroll with.",
+				"rerollTags": {
+					"action": "{name} +{count} action",
+					"actions": "{name} +{count} actions",
+					"advantage": "Advantage",
+					"automatic": "Automatic",
+					"automaticTooltip": "{feature} rerolled by itself. Nobody clicked.",
+					"cannotMiss": "Cannot miss",
+					"cannotMissTooltip": "With {feature}, the new attack cannot miss.",
+					"crit": "Crit",
+					"critMadeTooltip": "{feature} made the attack a crit.",
+					"critTooltip": "{feature} made the die a crit.",
+					"disadvantage": "Disadvantage",
+					"extraDamage": "+{amount} {source}",
+					"extraDamageTooltip": "{source}: +{amount} damage, in the total.",
+					"miss": "Miss",
+					"missTooltip": "{feature} made the die a miss.",
+					"noActionNotACharacter": "No action: not a hero",
+					"noActionNotInCombat": "No action: not in combat",
+					"noActionTooltipNotACharacter": "{source} gives an action only to a hero.",
+					"noActionTooltipNotInCombat": "{source} gives an action only in combat.",
+					"offAction": "Feature Effects is off. Give the action by hand.",
+					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
+					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
+					"rollModeDropped": "{source}. Rolled {first} and {second}, kept {kept}.",
+					"stat": "With {stat}",
+					"statTooltip": "{feature} rerolled with {stat} in place of the first stat.",
+					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
+					"tempHpGain": "{names} gain {amount} temp HP.",
+					"tempHpGainOne": "{names} gains {amount} temp HP.",
+					"tempHpKeeps": "{name} keeps {had}, not {amount}.",
+					"tempHpMany": "{amount} temp HP to {count} creatures",
+					"tempHpNobody": "{amount} temp HP: nobody gains it",
+					"tempHpOne": "{amount} temp HP to {name}",
+					"tempHpReplaced": "{name} had {had}, now has {amount}.",
+					"tempHpToggle": "Show who gained temp HP"
+				},
+				"rerollUsedBy": "Used by {name}",
+				"rerollUsesLeft": "Uses left: {count}",
+				"rerollWithCost": "{label} ({cost})",
+				"rerollWoundsGained": "Wounds gained: {count}",
 				"rerolledBy": "Attack rerolled by {label}",
+				"resultChange": {
+					"actionKept": "Remove does not give back actions after the turn ends",
+					"added": "Added {amount}",
+					"addedWithWound": "Added {amount}, Gained 1 Wound",
+					"addedWithWounds": "Added {amount}, Gained {count} Wounds",
+					"changed": "Changed {before} to {value}",
+					"changedTo": "{from} changed to {to}",
+					"countsAsNat20": "Counts as a Natural 20",
+					"countsAsNat20Sum": "Rolled {rolled}, counts as 20 {modifier}",
+					"noDamage": "No Damage for {target}",
+					"reactionKept": "Remove does not give back the Heroic Reaction after the turn ends",
+					"remove": "Remove",
+					"removeLine": "Remove: {line}",
+					"succeeded": "Succeeded Instead",
+					"sum": "{sum} = {total}"
+				},
 				"spendPoolForDamage": "Add Damage",
-				"useFailed": "That reaction could not be completed."
+				"useFailed": "That reaction could not be completed.",
+				"verbs": {
+					"add": "Add {amount}",
+					"anotherStat": "Reroll With Another Stat",
+					"change": "Change Die",
+					"countsAsNat20": "Count as a Natural 20",
+					"crit": "Make It a Crit",
+					"effect": {
+						"critD20": "Use a d20",
+						"critDice": "Add the dice",
+						"critDiceSave": "Make them save",
+						"dualWield": "Dual wield",
+						"keepAmount": "Keep this amount",
+						"offerBonus": "Add the bonus",
+						"optionWindow": "Demand Control",
+						"viciousDie": "Add the Vicious die"
+					},
+					"noDamage": "No Damage",
+					"reroll": "Reroll",
+					"rerollAgain": "Reroll Again",
+					"result": "Change Result",
+					"setTotal": "Change to {value}",
+					"succeed": "Succeed Instead"
+				},
+				"withNote": "{text}. {note}"
+			},
+			"initiative": {
+				"initiativeMana": "{feature}: +{total} mana",
+				"initiativeManaRegain": "Regain mana",
+				"initiativeManaRerollOne": "Reroll a 1",
+				"initiativeManaRerolled": "{feature}: a {was} rolled again, now {value}",
+				"label": "Initiative",
+				"startWithActions": "Start with {count} actions",
+				"startWithOneAction": "Start with 1 action"
+			},
+			"movementOffers": {
+				"chip": {
+					"notMoved": "Not {passive}",
+					"notUsed": "Not used"
+				},
+				"directions": {
+					"any": "in any direction",
+					"away": "away from {source}",
+					"toward": "toward {source}"
+				},
+				"distanceAndDirection": "{distance} {direction}",
+				"forFree": {
+					"ignoringDifficultTerrain": "for free, ignoring difficult terrain",
+					"plain": "for free"
+				},
+				"kinds": {
+					"forced": "Forced Movement",
+					"free": "Move for free"
+				},
+				"noRecipient": "No creature to move.",
+				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
+				"sentences": "{first} {second}",
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"status": {
+					"forced": {
+						"failedSave": "Will be {passive} {motion} on a failed save.",
+						"lapsed": "Not {passive}. The turn ended first.",
+						"open": "Waiting to be {passive} {motion}.",
+						"otherSave": "Will be {passive} {motion}, depending on the save.",
+						"passedSave": "Will be {passive} {motion} on a passed save.",
+						"short": "{verb} {moved} of {offered}.",
+						"taken": "{verb} the full {offered}.",
+						"unused": "Not {passive}. The token was moved another way.",
+						"unusedAny": "Not moved by this effect. The token was moved another way."
+					},
+					"free": {
+						"failedSave": "Can move {motion} for free on a failed save.",
+						"lapsed": "Did not move for free. The turn ended first.",
+						"open": "Can move {motion} {forFree}.",
+						"otherSave": "Can move {motion} for free, depending on the save.",
+						"partial": "Moved {moved} of {offered} for free.",
+						"passedSave": "Can move {motion} for free on a passed save.",
+						"short": "Moved {moved} of {offered} for free before something blocked the path.",
+						"taken": "Moved the full {offered} for free.",
+						"unused": "Did not move for free. The token was moved another way."
+					}
+				},
+				"summary": {
+					"eachShowsSpaces": "Each creature shows its spaces.",
+					"forced": "{verb} {motion}.",
+					"forcedBare": "{verb}.",
+					"free": "Can move {motion} {forFree}.",
+					"freeBare": "Can move {forFree}."
+				},
+				"upTo": "up to {distance}",
+				"verbs": {
+					"any": {
+						"passive": "moved",
+						"past": "Moved"
+					},
+					"away": {
+						"passive": "pushed",
+						"past": "Pushed"
+					},
+					"toward": {
+						"passive": "pulled",
+						"past": "Pulled"
+					}
+				}
+			},
+			"movementTrigger": {
+				"movement": "{mover} moved {spaces}.",
+				"movementThisTurn": "{mover} moved {spaces}, {spacesThisTurn} this turn.",
+				"space": "{count} space",
+				"spaces": "{count} spaces",
+				"targets": "Creatures: {names}",
+				"unknownMover": "A creature",
+				"use": "Use {name}",
+				"useFailed": "Could not use {name}."
 			},
 			"noDamageToApply": "Sin daño que aplicar.",
 			"noHealingRecord": "No se ha encontrado registro de curación para cancelar",
 			"noTargetsSelected": "No hay objetivos seleccionados",
+			"primaryDieBonus": {
+				"dialog": "Add to Primary Die Result {value}",
+				"notAdded": "{value} bonus not added",
+				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added.",
+				"notAddedTooltip": "The die was set to a value. A set value is final, so this bonus is not added.",
+				"tag": "{value} to Primary Die",
+				"text": "{label}: {value} to the Primary Die"
+			},
 			"rollDamage": "Roll Damage",
 			"rollDamageFailed": "Could not roll this damage.",
+			"swallowedDamage": "{name} takes {amount} damage: Swallowed.",
 			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",
 			"undo": "Cancelar",
 			"undoHealing": "Cancelar curación"
@@ -476,6 +1359,8 @@
 			"addSelectedTokensAsTargets": "Añade los tokens seleccionados como objetivos",
 			"addTargetedTokensAsTargets": "Añade los tokens señalados como objetivos",
 			"damagePreview": "Damage this target will take (after armor and reductions)",
+			"endMark": "End the mark of {feature}",
+			"marked": "Marked",
 			"noTargetsSelected": "Objetivos no seleccionados",
 			"removeTarget": "Deseleccionar objetivo",
 			"targets": "Objetivos"
@@ -681,6 +1566,13 @@
 			"filterAll": "Todos",
 			"filterSpells": "Filtrar conjuros"
 		},
+		"concentration": {
+			"endPrompt": {
+				"all": "End All",
+				"content": "This caster is concentrating on more than one thing. Which should end?",
+				"title": "End Concentration"
+			}
+		},
 		"conditionDescriptions": {
 			"blinded": "<p>No puedes ver. Los ataques contra ti tienen ventaja, y tus ataques, desventaja.</p>",
 			"bloodied": "<p>A la mitad o menos de tus PG.</p>",
@@ -699,6 +1591,7 @@
 			"incapacitated": "<p>No puedes hacer nada. Los ataques contra ti tienen ventaja, y si un ataque cuerpo a cuerpo te impacta, es crítico.</p>",
 			"invisible": "<p>No pueden verte. Tienes ventaja en tus ataques, y los ataques contra ti, desventaja.</p>",
 			"lastStand": "<p>At 0 HP, the legendary monster is dying and gains dangerous new capabilities. They finally die after a small amount of additional damage.</p>",
+			"latched": "<p>You move where your target moves until either dies. Your attacks cannot miss. Attacks that miss you damage your target instead.</p>",
 			"marked": "<p>Marked as a quarry by another creature. That creature treats this one as a tracked target; any resulting bonuses come from the marker's own features, not this condition.</p>",
 			"paralyzed": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"petrified": "<p>Incapacitado. Tienes todas las ventajas y desventajas de una piedra. Eres inmune a la mayoría de los daños, excepto a explosiones violentas, picos u otras herramientas similares.</p>",
@@ -710,6 +1603,7 @@
 			"slowed": "<p>Tu Velocidad se reduce a la mitad en tu próximo turno.</p>",
 			"smoldering": "<p>Algunos conjuros de fuego pueden infligir el estado Quemado y crear efectos destructivos adicionales contra enemigos con este estado.</p>",
 			"stunned": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
+			"swallowed": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>",
 			"taunted": "<p>Desventaja en los ataques contra cualquier criatura que no sea la última que te provocó.</p>",
 			"unconscious": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"wounded": "<p>Tienes al menos 1 Herida (por lo general, un héroe muere al acumular 6 Heridas).</p>"
@@ -732,6 +1626,7 @@
 			"incapacitated": "Incapacitado",
 			"invisible": "Invisible",
 			"lastStand": "Last Stand",
+			"latched": "Latched",
 			"marked": "Marked",
 			"paralyzed": "Paralizado",
 			"petrified": "Petrificado",
@@ -743,9 +1638,47 @@
 			"slowed": "Ralentizado",
 			"smoldering": "Ardiente",
 			"stunned": "Aturdido",
+			"swallowed": "Swallowed",
 			"taunted": "Provocado",
 			"unconscious": "Inconsciente",
 			"wounded": "Herido"
+		},
+		"containerSlotCostModes": {
+			"half": "Half slot cost",
+			"ignore": "Ignore slot cost",
+			"none": "Normal slot cost",
+			"reduce": "Reduce slot cost"
+		},
+		"containers": {
+			"allowedObjectTypes": "Allowed Object Types",
+			"allowedObjectTypesHint": "Only objects of these types may be stored. Select none to allow anything.",
+			"capacity": "Capacity",
+			"capacityHint": "How many slots' worth of objects fit inside. Leave blank for no limit.",
+			"capacityUsage": "{used} / {capacity} slots stored",
+			"chooseContainer": "Where should {object} go?",
+			"chooseContainerTitle": "Store Object",
+			"deleteStocked": "Deleting {container} will empty it. The {count} objects inside go back into the inventory. Continue?",
+			"deleteStockedTitle": "Delete a container that holds objects",
+			"empty": "Nothing stored",
+			"enabled": "This Object Is A Container",
+			"enabledHint": "Objects can be dropped into this one, and this object's rule changes what they cost their carrier.",
+			"heading": "Container",
+			"quantityExceedsCapacity": "{container} has no room for that many of {object}.",
+			"rejection": {
+				"capacity": "{container} has no room left for {object}.",
+				"nested": "{object} is a container, and containers cannot be stored inside other containers.",
+				"nestedConfig": "{object} is stored in a container, so it cannot become one. Take it out first.",
+				"notAContainer": "{container} is not a container.",
+				"objectType": "{container} does not hold objects of that type."
+			},
+			"releaseFailed": "Could not empty {container}. The objects it held may still point at it.",
+			"requiresEquipped": "Only Apply While Equipped",
+			"slotCostMode": "Stored Object Slot Cost",
+			"slotCostReduction": "Slots Reduced By",
+			"storeObject": "Store {object} in a container",
+			"takeOut": "Take {object} out of {container}",
+			"unequipToStore": "Putting {object} into {container} will unequip it. Continue?",
+			"unequipToStoreTitle": "Unequip to store"
 		},
 		"creatureFeatures": {
 			"actionSequence": "Tras el turno de cada héroe, elige uno.",
@@ -772,6 +1705,7 @@
 		},
 		"damageModifiers": {
 			"badgeImmune": "IMM",
+			"badgeNoDamage": "No Damage",
 			"badgeReduction": "DR",
 			"badgeResistant": "RES",
 			"badgeVulnerable": "VUL",
@@ -782,6 +1716,7 @@
 			"flat": "{label} (-{value})",
 			"flatGeneric": "damage reduction (-{value})",
 			"immune": "immune to {type} (no damage)",
+			"noDamage": "This target takes no damage from this attack, with {source}.",
 			"resistanceGeneric": "resistance (half damage)",
 			"resistanceSource": "{label} (half damage)",
 			"resistant": "resistant to {type} (half damage)",
@@ -808,6 +1743,42 @@
 		},
 		"data": {
 			"total": "Total"
+		},
+		"demandControl": {
+			"asReaction": "Use your Reaction (1 action)",
+			"cantrip": "Cantrip",
+			"card": {
+				"elementalAffliction": "{creature} gains {condition}.",
+				"loseControl": "The GM chooses each option.",
+				"no": "{creature} cannot harm {protected} during its next turn."
+			},
+			"chosen": "Chosen",
+			"condition": "Condition",
+			"confirm": "Confirm",
+			"confirmCast": "Cast Spell",
+			"creature": "Creature",
+			"options": {
+				"elementalAffliction": {
+					"label": "ELEMENTAL AFFLICTION",
+					"text": "A creature within 12 spaces gains the Charged, Smoldering, or Slowed condition."
+				},
+				"iInsist": {
+					"label": "I INSIST",
+					"text": "Cast a cantrip for free, ignoring all disadvantage; it cannot miss."
+				},
+				"loseControl": {
+					"label": "LOSE CONTROL",
+					"text": "Do all of the above, but the GM chooses each time."
+				},
+				"no": {
+					"label": "NO",
+					"text": "A creature cannot harm a creature of your choice during its next turn."
+				}
+			},
+			"protected": "Creature it cannot harm",
+			"reactionUsed": "You used this Reaction this round.",
+			"title": "Demand Control",
+			"twice": "Do the option twice"
 		},
 		"devRebrand": {
 			"dialog": {
@@ -856,6 +1827,7 @@
 					"pickDiceToMaximize": "Pick a die to raise to its maximum",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
+					"spentNote": "Spent {count} {label} ({faces})",
 					"summary": "Selected {count} · sum {total}",
 					"toggleDie": "Toggle die (value: {value})"
 				}
@@ -965,6 +1937,15 @@
 			},
 			"title": "Dice Testbench"
 		},
+		"dieFace": {
+			"now": "Now {value}",
+			"nowCrit": "Now {value}, a crit",
+			"nowMiss": "Now {value}, a miss",
+			"rolling": "Rolling the dice",
+			"was": "Was {value}",
+			"wasCrit": "Was {value}, a crit",
+			"wasMiss": "Was {value}, a miss"
+		},
 		"durations": {
 			"action": "Acción",
 			"hour": "Hora",
@@ -1012,6 +1993,50 @@
 			"noBoons": "No epic boons available. You may need to create or import boon items.",
 			"selectBoon": "Select this boon",
 			"selectBoonAriaLabel": "Select {boonName}"
+		},
+		"featureGroupHeadings": {
+			"a-people-person": "A People Person",
+			"beastmaster": "Beastmaster",
+			"champion-of-the-bulwark": "Champion of the Bulwark",
+			"champion-of-the-vanguard": "Champion of the Vanguard",
+			"chimeric-boon": "Chimeric Boon",
+			"circle-of-fang-and-claw": "Circle of Fang and Claw",
+			"circle-of-sky-and-storm": "Circle of Sky and Storm",
+			"combat-tactics": "Combat Tactics",
+			"commanders-orders": "Commander's Orders",
+			"direbeast-form": "Direbeast Form",
+			"greater-invocations": "Greater Invocations",
+			"herald-of-courage": "Herald of Courage",
+			"herald-of-snark": "Herald of Snark",
+			"invoker-of-chaos": "Invoker of Chaos",
+			"invoker-of-control": "Invoker of Control",
+			"keeper-of-the-shadowpath": "Keeper of the Shadowpath",
+			"keeper-of-the-wildheart": "Keeper of the Wildheart",
+			"lesser-invocations": "Lesser Invocations",
+			"luminary-of-malice": "Luminary of Malice",
+			"luminary-of-mercy": "Luminary of Mercy",
+			"lyrical-weaponry": "Lyrical Weaponry",
+			"martial-arts-ability": "Martial Arts Ability",
+			"oath-of-refuge": "Oath of Refuge",
+			"oath-of-vengeance": "Oath of Vengeance",
+			"oathbreaker": "Oathbreaker",
+			"pact-of-the-abyssal-depths": "Pact of the Abyssal Depths",
+			"pact-of-the-red-dragon": "Pact of the Red Dragon",
+			"path-of-the-mountainheart": "Path of the Mountainheart",
+			"path-of-the-red-mist": "Path of the Red Mist",
+			"reaver": "Reaver",
+			"sacred-decree": "Sacred Decree",
+			"sacred-grace": "Sacred Grace",
+			"savage-arsenal": "Savage Arsenal",
+			"spellblade": "Spellblade",
+			"spellshaper": "Spellshaper",
+			"thrill-of-the-hunt": "Thrill of the Hunt",
+			"tools-of-the-scoundrel": "Tools of the Scoundrel",
+			"tools-of-the-silent-blade": "Tools of the Silent Blade",
+			"underhanded-abilities": "Underhanded Abilities",
+			"way-of-flame": "Way of Flame",
+			"way-of-pain": "Way of Pain",
+			"weapon-mastery": "Weapon Mastery"
 		},
 		"featureSheet": {
 			"selectionCountByLevel": "Selection Count By Level",
@@ -1064,7 +2089,22 @@
 		},
 		"healingTypes": {
 			"healing": "Curación",
-			"tempHealing": "Curación temporal"
+			"tempHealing": "Curación temporal",
+			"tempHealingNotGranted": "{name} keeps their own {temp} temp HP, which is not less than {amount}."
+		},
+		"heldChange": {
+			"keptOnCard": "{label}, next attack: {amount}",
+			"keptTick": "{label}: use {amount} and do not roll",
+			"line": {
+				"endsSource": "From {source}. This roll ends it.",
+				"ignoreDisadvantage": "{label}: ignore all disadvantage and any minus on the Primary Die",
+				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
+				"primaryDie": "{label}: {value} to Primary Die",
+				"spends": "From {source}. This roll spends it.",
+				"stays": "From {source}. It stays until its time ends.",
+				"wholeAmount": "{label}: {value}",
+				"wholeAmountEnds": "{label}: an area attack does not use {value}"
+			}
 		},
 		"hints": {
 			"characterCreationSkillPointAssignment": "Puedes asignar ahora 4 puntos de habilidad para aumentar los modificadores de tus habilidades.",
@@ -1091,11 +2131,16 @@
 			"heading": "Dado de Golpe",
 			"hitDiceSizeIncreased": "Todos los tamaños de los Dados de Golpe incrementan {steps} paso(s).",
 			"increaseBonusDie": "Incrementa bono en d{size}",
+			"invalidAddToRoll": "Add to Roll must be a number or a dice formula.",
+			"invalidSetPrimaryDie": "Set Primary Die Result must be from 1 to the size of the die.",
 			"max": "Máx",
 			"maxHitDice": "Dado de Golpe máximo",
 			"noBonusDice": "Sin bono de dado",
 			"noHitDiceYet": "Aún no hay Dados de Golpe.",
 			"primaryDieModifier": "Modificador del Dado Primario",
+			"primaryDieModifierBreakdown": "Primary Die: {sum} = {result}",
+			"primaryDieModifierBreakdownLowest": "Primary Die: {sum} = {result}, the lowest",
+			"primaryDieModifierBreakdownMax": "Primary Die: {sum} = {result}, the max",
 			"primaryDieValue": "Valor del Dado Primario",
 			"removeDie": "Elimina un d{size}",
 			"rollHitDice": "Tirar {count} {dieWord} de Golpe",
@@ -1121,6 +2166,10 @@
 			"totalFromRules": "Total de las reglas",
 			"totalMaxHp": "Máximo total de PG"
 		},
+		"inventory": {
+			"stowedSlotsRequired": "Slots When Stowed",
+			"stowedSlotsRequiredHint": "Slots this takes while it is not equipped. Worn armor takes 1 slot and the same armor packed away takes 2. Leave blank to cost the same either way."
+		},
 		"itemConfig": {
 			"acquireTargetsFromTemplate": "Adquirir objetivos de plantilla",
 			"activationOptions": "Activation Options",
@@ -1134,12 +2183,22 @@
 			},
 			"distance": "Distancia",
 			"duration": "Duración",
+			"singleTargetAttack": "Extra targets share one attack",
+			"singleTargetAttackHint": "The extra targets do not make this a Multi-target Attack: it can miss and crit, and the first target decides the rules that read the target.",
 			"skipRollDialog": "Skip the roll dialog (activate instantly)",
 			"skipRollDialogHint": "Always activate this item with default roll settings instead of opening the roll or upcast dialog. Holding Alt while activating inverts this setting for that activation.",
 			"target": "Objetivo",
 			"targetCount": "Cantidad de objetivos",
 			"targetRestrictions": "Restricciones de objetivos",
-			"targets": "Objetivos"
+			"targets": "Objetivos",
+			"weaponAttack": "Attack with a weapon",
+			"weaponAttackHint": "The roll window asks which equipped weapon. The damage node rolls the damage of that weapon, with its reach or range and its damage type.",
+			"weaponAttacks": {
+				"any": "Any equipped weapon",
+				"melee": "A melee weapon",
+				"none": "No, it has its own damage",
+				"ranged": "A ranged weapon"
+			}
 		},
 		"itemMacro": {
 			"command": "Comando"
@@ -1264,6 +2323,17 @@
 			"feature": "Rasgo",
 			"lastStand": "Último Aliento"
 		},
+		"movement": {
+			"actions": {
+				"forced": "Forced Movement",
+				"free": "Move for free"
+			},
+			"ruler": {
+				"forced": "Forced Movement: {spaces} of {limit}",
+				"free": "Move for free: {spaces} of {limit}",
+				"switchTo": "{key}: switch to {movement}"
+			}
+		},
 		"movementConfig": {
 			"gridSpacesNote": "Todas las medidas están en casillas.",
 			"spaces": "casillas",
@@ -1382,6 +2452,8 @@
 			"revealDescription": "Mostrar descripción para {name}"
 		},
 		"objectSheet": {
+			"armorType": "Armor Type",
+			"armorTypeHint": "A Defend in armor you are not proficient with costs 1 more action. With no type, this is not checked.",
 			"price": "Precio"
 		},
 		"objectSizeTypes": {
@@ -1515,11 +2587,13 @@
 			"configureAbilityScores": "Configurar atributos",
 			"configureArmorProficiencies": "Configurar competencia con armadura",
 			"configureDamageDefenses": "Configure Damage Defenses",
+			"configureItem": "Configure {name}",
 			"configureLanguageProficiencies": "Configurar competencia con idiomas",
 			"configureMovement": "Configurar movimiento",
 			"configureSavingThrows": "Configurar salvaciones",
 			"configureSkills": "Configurar habilidades",
 			"configureWeaponProficiencies": "Configurar competencia con armas",
+			"deleteItem": "Delete {name}",
 			"editRoll": "Editar tirada",
 			"equippedTooltip": "Equipped",
 			"fieldRest": "Descanso al Raso",
@@ -1564,34 +2638,95 @@
 			"disadvantage": "Dis ×{count}",
 			"normal": "Normal"
 		},
+		"rollWindow": {
+			"cancel": "Cancel",
+			"cancelHint": "Close. Nothing is spent",
+			"castAtTier": "Cast at tier",
+			"dualWield": {
+				"advantage": "Dual wield: gain advantage (1/round)",
+				"extraDie": "Which weapon gets the extra die?",
+				"name": "Dual wield",
+				"withOther": "Dual wield: also roll {other} and keep one (1/round)"
+			},
+			"freeUse": "Use without a charge",
+			"lessMana": "Spend 1 less mana",
+			"maxDamage": {
+				"damage": "Max damage ({feature})",
+				"healing": "Max healing ({feature})",
+				"noUses": "No uses left.",
+				"tempHp": "Give that many temp HP",
+				"withCost": "{text}: {count} use"
+			},
+			"noCharge": "{pool}: none left.",
+			"noWeapon": "Equip a weapon of this kind first.",
+			"roll": "Roll",
+			"rollMode": "Advantage and disadvantage",
+			"rollModeHelp": {
+				"advantage": "Roll {count} more {dice} and remove the lowest.",
+				"dice": "dice",
+				"die": "die",
+				"disadvantage": "Roll {count} more {dice} and remove the highest.",
+				"straight": "Each advantage cancels one disadvantage."
+			},
+			"rushedAttack": "Rushed Attack: this is attack {attack} of your turn, so the roll starts with Disadvantage × {count}. You can change it.",
+			"spendAction": "{count} action",
+			"spendActions": "{count} actions",
+			"spendBoth": "{first} and {second}",
+			"spends": "When you roll, it spends {cost}.",
+			"spendsCharge": "{pool}: this roll spends {count} ({left} left).",
+			"tierBase": "Tier {tier}, the base cost",
+			"tierUpcast": "Upcast to tier {tier}, {tier} mana",
+			"usedThisRound": "You used this in this round.",
+			"weapon": "Weapon"
+		},
 		"ruleTypes": {
 			"abilityBonus": "Bono de Atributo",
 			"actionCost": "Action Cost",
 			"actionDelta": "Action Adjustment",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Clase de armadura",
+			"attackOutcome": "Attack Outcome",
+			"auraReach": "Aura Reach",
+			"changeDie": "Change a Die",
+			"changeResult": "Change a Result",
 			"chargeConsumer": "Charge Consumer",
 			"chargePool": "Charge Pool",
 			"combatMana": "Maná de combate",
+			"concentrationTrack": "Concentration Track",
 			"conditionImmunity": "Condition Immunity",
 			"conditionalBonus": "Conditional Bonus",
+			"critBack": "Crit Back",
+			"critDice": "Crit Dice",
+			"critDiceSave": "Save for Max Crit Dice",
+			"damageBack": "Damage Back",
 			"damageBonus": "Damage Bonus",
+			"damageMultiplier": "Damage Multiplier Tick",
 			"damageReduction": "Damage Reduction",
+			"defendOption": "Defend Option",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
 			"dyingActionLimit": "Dying Action Limit",
+			"freeAssess": "Free Assess",
+			"freeMove": "Move for Free",
 			"grantActivation": "Grant Activation",
 			"grantItem": "Objeto",
 			"grantMovement": "Grant Movement",
 			"grantProficiency": "Competencia",
 			"grantSpells": "Spells",
 			"healingPotionBonus": "Bono de poción de curación",
+			"hitCondition": "Condition on a Hit",
 			"hitDiceAdvantage": "Ventaja en Dados de Golpe",
+			"holdOnTarget": "Hold a Change on the Target",
 			"incrementHitDice": "Incrementar Dado de Golpe",
 			"initiativeBonus": "Bono de iniciativa",
+			"initiativeMana": "Initiative Mana",
+			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
 			"initiativeMessage": "Mensaje de iniciativa",
 			"initiativeRollMode": "Modo de tirada de iniciativa",
+			"keepAmount": "Keep the Amount of a Hit",
+			"makeCrit": "Make It a Crit",
 			"markTarget": "Mark Target",
+			"maxDamage": "Max Damage",
 			"maxHitDice": "Dado de Golpe",
 			"maxHpBonus": "Puntos de golpe",
 			"maxWounds": "Heridas",
@@ -1600,11 +2735,18 @@
 			"modifyConsumer": "Modify Consumer",
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
+			"modifyReroll": "Modify Reroll",
 			"modifyToggle": "Modify Toggle",
+			"movementTrigger": "Movement Trigger",
 			"note": "Nota",
+			"offerAttackBonus": "Attack Bonus From a Row",
 			"optionSwap": "Option Swap",
+			"optionWindow": "Option Window",
+			"poolDieToMax": "Pool Die to Max",
 			"poolGainMessage": "Pool Gain Message",
 			"poolMaxBonus": "Pool Max Bonus",
+			"primaryDieBonus": "Primary Die Bonus",
+			"reroll": "Reroll",
 			"savingThrowBonus": "Bono de salvación",
 			"savingThrowRollMode": "Modo de tirada de salvación",
 			"situationalRollMode": "Situational Roll Mode",
@@ -1612,6 +2754,8 @@
 			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Bono de velocidad",
+			"tableRoll": "Table Roll",
+			"tableRollOptions": "Table Roll Options",
 			"toggleEffect": "Toggle Effect",
 			"unarmedDamage": "Daño sin armas"
 		},
@@ -1695,7 +2839,184 @@
 					"label": "How to apply"
 				}
 			},
+			"attackOutcome": {
+				"anyDieCrits": {
+					"hint": "Any die of the roll on its max makes the attack a crit on a hit. The crit rolls the Primary Die again.",
+					"label": "Any die at its max is a crit"
+				},
+				"attackSource": {
+					"choices": {
+						"any": "Any",
+						"spell": "Spell",
+						"weapon": "Weapon"
+					},
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both.",
+					"label": "Source"
+				},
+				"cannotMiss": {
+					"hint": "A miss face on the Primary Die is a hit.",
+					"label": "The attack cannot miss"
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool that gives 1 charge each time the rule changes an attack. Leave empty for no limit. The rule does not run when the pool is empty.",
+					"label": "Charge pool"
+				},
+				"critD20": {
+					"hint": "The first crit die of each crit of the attack is a d20. A 20 goes on with the die of the attack. With Feature Effects off, this is a row in Change This Roll.",
+					"label": "First crit die is a d20"
+				},
+				"critRange": {
+					"hint": "1 makes a d8 crit on a 7 or 8. Only the face the Primary Die keeps counts. The extra dice of a crit still roll again only on the max.",
+					"label": "Crit on this many less than the max"
+				},
+				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
+				"exceptItemIdentifier": {
+					"hint": "The identifier of an item whose attacks this rule ignores, such as a companion's attack. Empty ignores none.",
+					"label": "Not attacks with this item"
+				},
+				"forceCrit": {
+					"choices": {
+						"always": "Always, also on a 1",
+						"none": "No",
+						"onHit": "On a hit"
+					},
+					"hint": "The Primary Die keeps its face, and the crit rolls it again. On a hit: a miss stays a miss.",
+					"label": "Make the attack a crit"
+				},
+				"form": {
+					"changes": "What changes?",
+					"limit": "Limit (optional)",
+					"onlyAttacks": "On which attacks?",
+					"onlyWhileHint": "For example, only while Raging. To test the damage type of the attack, use attack:damageType:slashing."
+				},
+				"ignoreArmor": {
+					"hint": "The attack's damage ignores the target's armor.",
+					"label": "Ignores armor"
+				},
+				"otherCreature": {
+					"hint": "For your attacks, the target. For attacks against you, the one who attacks. With two or more targets, a rule with this set does not run.",
+					"label": "Only when the other creature is"
+				},
+				"side": {
+					"choices": {
+						"attacksAgainstYou": "Attacks against you",
+						"yourAttacks": "Your attacks"
+					},
+					"hint": "Your attacks, or the attacks other creatures make against you.",
+					"label": "Which attacks does it change?"
+				},
+				"thisItemOnly": {
+					"hint": "Only attacks made with the item that has this rule.",
+					"label": "Only attacks with this item"
+				},
+				"viciousCrits": {
+					"hint": "Each crit die of the attack rolls 1 more die. An attack that is Vicious stays as it is. With Feature Effects off, this is a row in Change This Roll.",
+					"label": "Crits are Vicious"
+				}
+			},
+			"auraReach": {
+				"description": "Add to the Reach of the hero's aura. Every Aura Reach rule on the hero adds up, and formulas read the total as @auraReach.",
+				"value": {
+					"hint": "A number or formula, in spaces. A feature that gives the aura adds its Reach (for example 4); a feature that raises it adds the raise (for example 2).",
+					"label": "Reach"
+				}
+			},
+			"changeDie": {
+				"addsBonusOnSet": {
+					"hint": "Off: the set value is the final face, so the max is a crit and 1 is a miss. On: a Primary Die bonus is added to the set value, up to the max.",
+					"label": "Add the Primary Die bonus to the set value"
+				},
+				"amount": {
+					"hint": "Added to the face the die shows. Use a negative number to take away. It cannot be 0.",
+					"label": "Number to add"
+				},
+				"change": {
+					"choices": {
+						"add": "Add a number",
+						"set": "Set it to a value the player picks"
+					},
+					"hint": "The die stays between 1 and its max.",
+					"label": "How does it change the die?"
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"description": "Lets the one who rolled, the target of an attack, or an ally change one die of an attack, a save or a check after it is made: set it to a value the player picks, or add a number to it. Crit and miss are worked out again.",
+				"die": {
+					"choices": {
+						"critBonusDie": "A die a crit adds",
+						"pickedDie": "One die the player picks",
+						"primaryDie": "The Primary Die"
+					},
+					"hint": "On a save or a check, the Primary Die is the d20. The player picks the die when they use it.",
+					"label": "Which die does it change?"
+				},
+				"oncePerRoll": {
+					"hint": "The feature can change a die of the same attack, save or check only once, even with uses left.",
+					"label": "Only once per roll"
+				},
+				"rolls": {
+					"label": "Which roll can it change?"
+				},
+				"rowPerUpcastStep": {
+					"hint": "The roll gets one row for each upcast step of the spell, and none with no upcast.",
+					"label": "One row per upcast step"
+				},
+				"yieldsTo": {
+					"hint": "The identifier of a rule of the same creature. While that rule can be used, this row does not show. Empty for none.",
+					"label": "Gives way to"
+				}
+			},
+			"changeResult": {
+				"change": {
+					"choices": {
+						"add": "Add a formula to the total",
+						"countsAsNat20": "A result of 1 or less counts as a natural 20",
+						"noDamage": "The target takes no damage",
+						"setTotal": "Set the total to a formula",
+						"succeed": "It succeeds"
+					},
+					"hint": "The roll on the card stays what the dice gave. A reroll takes a change of a total or a success off, and its cost stays paid. No damage needs Attack as the roll and The target as who can use it. A natural 20 is for saves and skill checks, costs nothing and needs no click; with Feature Effects off it is a row.",
+					"label": "How does it change the result?"
+				},
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The row does not show when the pool is empty."
+				},
+				"description": "Changes the result of a roll after it is made: a save, a check or Initiative succeeds, its total becomes a formula, or a formula goes on its total. A target can take no damage from an attack. A low result can count as a natural 20 by itself. The player can take a clicked change back and gets its uses, Mana and Wounds back.",
+				"formula": {
+					"hint": "A number or a formula with no dice, read from the one who rolled, such as 10+@intelligence or @strength. A formula that is only one stat shows that stat on the row, such as Add +3 STR.",
+					"label": "Formula"
+				},
+				"onlyIfLower": {
+					"hint": "The row shows only when the total on the card is below the formula's value.",
+					"label": "Only if the total is lower"
+				},
+				"outcome": {
+					"choices": {
+						"always": "Any result",
+						"failed": "A failed roll"
+					},
+					"hint": "With A failed roll, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell.",
+					"label": "The first roll is"
+				},
+				"rolls": {
+					"choices": {
+						"initiative": "Initiative"
+					},
+					"label": "Which roll can it change?"
+				}
+			},
 			"chargeConsumer": {
+				"allowFree": {
+					"hint": "The roll window gets a tick, off at first, to use the item and spend no charge, for a use that another feature makes free. The system changes nothing else of that use: what a free use does not give stays with the player.",
+					"label": "Use without a charge"
+				},
 				"cost": {
 					"hint": "Charges spent per activation. In variable mode this is the smallest amount the player may choose.",
 					"label": "Cost"
@@ -1724,6 +3045,10 @@
 					"hint": "Track and enforce the pool without showing it. Use this for a pool that only rate-limits or gates the feature, so it does not read as a second budget next to the pool the player actually spends.",
 					"label": "Hide from sheet"
 				},
+				"hideMax": {
+					"hint": "For a pool the book gives no cap. The maximum stays only as a limit, and the sheet and the card show the count alone.",
+					"label": "Show the count with no maximum"
+				},
 				"initial": {
 					"hint": "Whether the pool starts full or empty when first granted.",
 					"label": "Initial"
@@ -1738,6 +3063,22 @@
 					"mode": {
 						"hint": "How the value applies: \"add\" (gain N), \"set\" (set to N), or \"refresh\" (fill to max).",
 						"label": "Mode"
+					},
+					"needsFeatureEffects": {
+						"hint": "With Feature Effects off, this recovery does nothing. The player uses + and - on the pool.",
+						"label": "Needs Feature Effects"
+					},
+					"notWhenSpent": {
+						"hint": "A use that spends from this pool gains nothing from this recovery.",
+						"label": "Not from a use that spends"
+					},
+					"predicate": {
+						"hint": "Optional condition tested when the trigger fires (e.g. self: fullHp). Leave empty to always apply.",
+						"label": "Only while"
+					},
+					"temporary": {
+						"hint": "Only on a charge pool, with the Add mode. These uses are spent first. They go away when the encounter ends.",
+						"label": "Temporary uses"
 					},
 					"trigger": {
 						"hint": "Event that drives this recovery (rest type, encounter event, hit, etc.).",
@@ -1759,6 +3100,13 @@
 			},
 			"combatMana": {
 				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
+			},
+			"concentrationTrack": {
+				"description": "Track concentration on the named spell schools separately, so the actor can concentrate on one spell from each at the same time.",
+				"schools": {
+					"hint": "Each school named here gets a concentration of its own. Naming schools splits the caster's single concentration rather than adding one, so casting in a school no rule names ends every concentration they hold.",
+					"label": "Tracked separately"
+				}
 			},
 			"conditionImmunity": {
 				"conditions": {
@@ -1785,6 +3133,18 @@
 					"label": "Delivery"
 				},
 				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"doubleFor": {
+					"hint": "The attacks with an item in this list double the damage of this bonus.",
+					"label": "Doubled for",
+					"onlyNoArmor": {
+						"hint": "Doubled only when the target has no armor.",
+						"label": "Only with no armor"
+					},
+					"source": {
+						"hint": "The identifier of the item.",
+						"label": "Item identifier"
+					}
+				},
 				"source": {
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both.",
 					"label": "Source"
@@ -1792,6 +3152,61 @@
 				"targetCondition": {
 					"hint": "Predicate evaluated against the target's state at activation. The choice is only offered when the target matches, e.g. { \"$and\": [\"target:quarry\"] }.",
 					"label": "Target condition"
+				}
+			},
+			"critBack": {
+				"description": "After the damage of this item is applied, the GM gets a card for each creature that lives. The chosen attack is free, targets the owner and is a crit. With Feature Effects off, nothing happens by itself."
+			},
+			"critDice": {
+				"description": "A crit of the attack rolls these dice as a line of their own on the attack card. The dice do not explode and are not Vicious. With Feature Effects off, this is a row in Change This Roll.",
+				"dieRole": {
+					"choices": {
+						"critBonus": "Dice a crit adds"
+					},
+					"hint": "What other features call these dice.",
+					"label": "Name of the dice"
+				},
+				"formula": {
+					"hint": "The dice a crit rolls.",
+					"label": "Dice"
+				},
+				"oncePerTurn": {
+					"hint": "Once per turn of any creature. A new roll that takes the crit away gives the use back.",
+					"label": "1/turn"
+				}
+			},
+			"critDiceSave": {
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends a charge from. Leave empty for no limit.",
+					"label": "Charge pool"
+				},
+				"description": "A row in Change This Roll on an attack with dice a crit adds. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
+				"saveDC": {
+					"hint": "The DC of the save, as a formula of your stats.",
+					"label": "DC"
+				},
+				"saveType": {
+					"hint": "The save the target makes.",
+					"label": "Save"
+				}
+			},
+			"damageBack": {
+				"amount": {
+					"choices": {
+						"critDice": "The crit dice",
+						"taken": "The damage taken"
+					},
+					"hint": "The damage the owner took, or what the attack's crit dice came to.",
+					"label": "Amount"
+				},
+				"description": "When the owner takes damage from an attack (a crit, unless you turn off Only against crits), the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"onlyCrits": {
+					"hint": "Give damage back only when the attack is a crit.",
+					"label": "Only against crits"
+				},
+				"woundDoubles": {
+					"hint": "The owner can suffer 1 Wound to deal the amount one more time.",
+					"label": "A Wound doubles it"
 				}
 			},
 			"damageBonus": {
@@ -1804,6 +3219,10 @@
 					"label": "Delivery"
 				},
 				"description": "Add a flat, formula, or dice-expression bonus to damage dealt by attacks of a given delivery (melee/ranged) and source (weapon/spell).",
+				"itemIdentifier": {
+					"hint": "The identifier of the item, such as lifebinding-spirit. Empty is every item.",
+					"label": "Only attacks with this item"
+				},
 				"source": {
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both.",
 					"label": "Source"
@@ -1817,6 +3236,15 @@
 					"label": "Bonus"
 				}
 			},
+			"damageMultiplier": {
+				"description": "A tick in the roll window of this item that multiplies its damage. The label says when it applies. The player decides, and the system checks nothing.",
+				"multiplier": {
+					"hint": "A whole number, 2 or more. The tick starts off, and a roll with no window does not use it.",
+					"label": "Multiply the damage by"
+				},
+				"onCard": "x{multiplier} damage",
+				"tick": "x{multiplier} damage: {label}"
+			},
 			"damageReduction": {
 				"damageTypes": {
 					"hint": "Restrict to these damage types. Leave empty to reduce all incoming damage.",
@@ -1827,9 +3255,123 @@
 					"hint": "Flat subtracts the reduction value. Half halves the damage instead (resistance); halving applies once no matter how many matching sources the actor has.",
 					"label": "Mode"
 				},
+				"onlyCrits": {
+					"hint": "Reduce the damage only when the attack is a crit. All the damage of the crit is reduced.",
+					"label": "Only against crits"
+				},
 				"value": {
 					"hint": "A flat number (5) or formula (@abilities.str.mod). Dice expressions are not supported.",
 					"label": "Reduction"
+				}
+			},
+			"defendOption": {
+				"actionCost": {
+					"hint": "The actions one use spends in combat.",
+					"label": "Actions"
+				},
+				"alsoInterpose": {
+					"hint": "The tick also goes with an Interpose and no Defend. Its cost, reroll and reminder work; what it does to the Defend does not.",
+					"label": "Also when you Interpose"
+				},
+				"armorBonus": {
+					"hint": "A formula for the armor this Defend adds, for example @key. Empty adds none.",
+					"label": "More armor"
+				},
+				"attackDelivery": {
+					"hint": "Which attacks this works against.",
+					"label": "Attacks"
+				},
+				"attackerCondition": {
+					"choices": {
+						"none": "None"
+					},
+					"hint": "The attacker gets this condition.",
+					"label": "Condition on the attacker"
+				},
+				"attackerConditionEnds": {
+					"choices": {
+						"attackerTurn": "At the start of the attacker's next turn",
+						"none": "When removed"
+					},
+					"hint": "When the condition on the attacker ends.",
+					"label": "Condition ends"
+				},
+				"chargeCost": {
+					"hint": "How many charges one use spends.",
+					"label": "Charges"
+				},
+				"chargePoolIdentifier": {
+					"hint": "The charges one use spends. Empty spends none.",
+					"label": "Charge pool"
+				},
+				"description": "Something this hero can do with a Defend. With Defend is a tick under the Defend rows of the Defend window. Free Defend is a row of its own. Second Defend lets the hero Defend one more time each round. When an Ally Defends is a button on the attack card for this hero.",
+				"dicePoolIdentifier": {
+					"hint": "One use expends every die of this dice pool, and needs at least one die in it. Undo gives the dice back.",
+					"label": "Expend a dice pool"
+				},
+				"manaCost": {
+					"hint": "The mana one use spends.",
+					"label": "Mana"
+				},
+				"oncePerTurn": {
+					"hint": "One use each turn, of any creature. The options on the same item share it.",
+					"label": "1/turn"
+				},
+				"otherCreature": {
+					"hint": "Tests the creature that made the attack. Pick tags such as target:quarry, which only the hero who marked it sees. Empty means any attacker.",
+					"label": "Only when the attacker is"
+				},
+				"outcome": {
+					"choices": {
+						"halve": "Halve",
+						"miss": "The attack misses",
+						"noDamage": "No damage",
+						"none": "Armor only"
+					},
+					"hint": "The attack misses and No damage: the hero takes no damage. Halve: the hero takes half the damage, in place of the armor.",
+					"label": "Damage"
+				},
+				"range": {
+					"hint": "How near the ally who Defends must be. A number or formula, for example @auraReach for the hero's aura.",
+					"label": "Range (spaces)"
+				},
+				"reminder": {
+					"hint": "A line on the attack card for what the table does, for example a move or an attack back.",
+					"label": "Reminder"
+				},
+				"upcastArmor": {
+					"hint": "The armor this Defend adds for each step the item is upcast.",
+					"label": "More armor per upcast"
+				},
+				"useItem": {
+					"hint": "The row uses this item, with its own costs, for example a spell's mana and action.",
+					"label": "Use this item"
+				},
+				"useReroll": {
+					"hint": "Rerolls the attack with this item's Reroll rule. Its Change This Roll row does not show on the card.",
+					"label": "Use this item's reroll"
+				},
+				"way": {
+					"choices": {
+						"allyDefends": "When an Ally Defends",
+						"extraDefend": "Second Defend",
+						"freeDefend": "Free Defend",
+						"withDefend": "With Defend"
+					},
+					"hint": "With Defend: a tick the player can add to a Defend. Free Defend: a row that Defends with no action; it still uses the Defend for the round. Second Defend: the hero can Defend one more time each round, until their next turn begins. When an Ally Defends: a button after an ally within range Defends.",
+					"label": "Shows as"
+				},
+				"wholeRound": {
+					"hint": "This Defend also covers each later attack on the hero this round, with nothing more to spend.",
+					"label": "Every attack this round"
+				},
+				"withInterpose": {
+					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend.",
+					"label": "Only when you Interpose"
+				},
+				"woundCost": {
+					"hint": "The Wounds one use gives the hero.",
+					"label": "Wounds"
 				}
 			},
 			"diceConsumer": {
@@ -1874,6 +3416,12 @@
 					"hint": "When and how dice are added back to the pool. Add an entry per trigger.",
 					"label": "Refills",
 					"mode": {
+						"choices": {
+							"add": "Add",
+							"clear": "Empty the Pool",
+							"set": "Set",
+							"setIfEmpty": "Set When Empty"
+						},
 						"hint": "How the value applies: \"add\" (roll N new dice), \"set\" (rebuild pool to N), or \"refresh\" (fill to max).",
 						"label": "Mode"
 					},
@@ -1882,6 +3430,10 @@
 						"label": "Condition"
 					},
 					"trigger": {
+						"choices": {
+							"onAttacked": "Attacked",
+							"onCritReceived": "Hit by a Crit"
+						},
 						"hint": "Event that drives this refill (rest type, encounter event, taken damage, etc.).",
 						"label": "Trigger"
 					},
@@ -1907,12 +3459,70 @@
 					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
 				}
 			},
+			"freeAssess": {
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends a charge from.",
+					"label": "Charge pool"
+				},
+				"description": "Using the item opens Assess, free and with advantage. It spends a charge when there is one. With none, it costs nothing."
+			},
+			"freeMove": {
+				"chargePoolIdentifier": {
+					"hint": "Optional. When set, the rule lets the creature move for free only while this charge pool has a charge, and each card it posts spends 1 charge. Leave empty for no limit.",
+					"label": "Charge pool"
+				},
+				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
+				"direction": {
+					"hint": "any: in any direction. away: away from this creature. toward: toward this creature.",
+					"label": "Direction"
+				},
+				"distance": {
+					"hint": "How many spaces the creature can move. A formula: @speed is the speed of the creature that moves, and all other references use the data of this creature.",
+					"label": "Distance"
+				},
+				"ignoresDifficultTerrain": {
+					"hint": "When set, difficult terrain does not decrease the move.",
+					"label": "Ignores difficult terrain"
+				},
+				"poolIdentifier": {
+					"hint": "The dice pool that must gain dice (e.g. fury).",
+					"label": "Dice pool"
+				},
+				"reasons": {
+					"afterPoolDiceToMax": "{item} lets you move.",
+					"onActivation": "used {item}",
+					"onCritReceived": "took a critical hit",
+					"onInitiativeRolled": "rolled Initiative",
+					"onPoolGain": "gained {pool}",
+					"onTurnStart": "turn started"
+				},
+				"recipient": {
+					"hint": "Who can move for free. self: this creature. allies: each ally within the set number of spaces. selfAndAllies: this creature and each ally within that number of spaces.",
+					"label": "Recipient"
+				},
+				"trigger": {
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires.",
+					"label": "Trigger"
+				},
+				"whisper": {
+					"hint": "When set, only the feature's owner, the players whose creatures get the move, and the GM see the card. When not set, everyone sees it.",
+					"label": "Whisper the card"
+				},
+				"within": {
+					"hint": "The maximum number of spaces between this creature and an ally that can move for free. 0 means all allies on the scene.",
+					"label": "Allies within (spaces)"
+				}
+			},
 			"grantActivation": {
 				"activationType": {
 					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack.",
 					"label": "Granted activation"
 				},
-				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule."
+				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
+				"includesUser": {
+					"hint": "The user of the item gets an offer row too.",
+					"label": "Also for the user"
+				}
 			},
 			"grantItem": {
 				"allowDuplicate": {
@@ -1975,6 +3585,29 @@
 					"label": "Bonus"
 				}
 			},
+			"hitCondition": {
+				"condition": {
+					"hint": "The id of the condition.",
+					"label": "Condition"
+				},
+				"description": "When the damage of this item is applied, a creature gets a condition. A condition on the attacker also stores the creature that was hit. With Feature Effects off, the GM applies the condition by hand.",
+				"recipient": {
+					"choices": {
+						"self": "The attacker",
+						"target": "The target"
+					},
+					"hint": "The creature that was hit, or the attacker.",
+					"label": "Who gets it"
+				},
+				"when": {
+					"choices": {
+						"crit": "On a crit",
+						"hit": "On a hit"
+					},
+					"hint": "On any hit, or only on a crit.",
+					"label": "When"
+				}
+			},
 			"hitDiceAdvantage": {
 				"amount": {
 					"hint": "1 = normal advantage (roll 2, keep highest). 2 = advantage 2 (roll 3, keep highest).",
@@ -1990,6 +3623,21 @@
 					"label": "Applies To"
 				}
 			},
+			"holdOnTarget": {
+				"damageType": {
+					"hint": "The type of a one-use vulnerability, such as fire. With no type, the target holds no vulnerability.",
+					"label": "Damage type"
+				},
+				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.",
+				"heldKind": {
+					"choices": {
+						"mustAttackOther": "Next attack against the closest other creature",
+						"vulnerableOnce": "Vulnerable to the next damage of this type"
+					},
+					"hint": "A line on the next attack of the target, or a vulnerability that the next damage of one type ends.",
+					"label": "What the target holds"
+				}
+			},
 			"incrementHitDice": {
 				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",
 				"value": {
@@ -2001,6 +3649,20 @@
 				"value": {
 					"label": "Bonus"
 				}
+			},
+			"initiativeMana": {
+				"description": "Rolling Initiative gives mana that ends with the combat. The dice show on the Initiative card. With Feature Effects off, a button on the card gives the mana.",
+				"dice": {
+					"hint": "As 1d4. Leave empty for no dice.",
+					"label": "Dice"
+				},
+				"flat": {
+					"hint": "A formula, as @will.",
+					"label": "Flat mana"
+				}
+			},
+			"initiativeManaRerollOnes": {
+				"description": "Each 1 on an Initiative Mana die rolls again one time. With Feature Effects off, the card has a row for each 1."
 			},
 			"initiativeMessage": {
 				"description": "Display a message at initiative roll time. Supports `{value}` interpolation from a formula."
@@ -2014,8 +3676,31 @@
 					"label": "Roll mode value"
 				}
 			},
+			"keepAmount": {
+				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
+			},
+			"makeCrit": {
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool."
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The button does not show when the pool is empty."
+				},
+				"description": "Lets the one who rolled, the target of an attack, or an ally make an attack a crit after it is rolled. The Primary Die keeps its face and the crit dice are rolled. The crit stays for the card: a reroll or a change after it alters only the damage dice. It does not show on an attack with 2 or more targets, on an area attack, or on an attack that is already a crit.",
+				"outcome": {
+					"hint": "Any result also includes a miss. An attack that is a crit cannot be made a crit.",
+					"label": "The attack is"
+				},
+				"usedBy": {
+					"hint": "The one who rolled the attack, the creature the attack is against, or an ally of the one who rolled (a friendly creature, not yourself)."
+				}
+			},
 			"markTarget": {
 				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest; there is no time-based expiry.",
+				"endsAtEncounterEnd": {
+					"hint": "The marks end when the encounter ends. Taking the marker off a creature ends its mark at any time.",
+					"label": "Ends at the end of the encounter"
+				},
 				"flagKey": {
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry).",
 					"label": "Flag key"
@@ -2027,6 +3712,37 @@
 				"statusCondition": {
 					"hint": "Optional condition applied to each marked target as a visible marker. Leave blank for an invisible mark.",
 					"label": "Status condition"
+				}
+			},
+			"maxDamage": {
+				"chargeCost": {
+					"hint": "How many charges one use takes from the pool.",
+					"label": "Charges"
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit.",
+					"label": "Charge pool"
+				},
+				"description": "Lets a creature take the max of a roll in place of rolling it. No die is rolled, so the attack cannot miss and nothing can reroll or change its dice. It is a tick in the roll window.",
+				"givesCrit": {
+					"hint": "On one target, the attack is a hit and a crit with no extra dice: it ignores armor and runs its crit effects. On an area or on 2 or more targets it does not crit.",
+					"label": "It is also a crit"
+				},
+				"schools": {
+					"hint": "Only spells of these schools. Empty is any item.",
+					"label": "Spell schools"
+				},
+				"tempHpChoice": {
+					"hint": "The player can give that many temp HP in place of the healing.",
+					"label": "Temp HP choice"
+				},
+				"use": {
+					"choices": {
+						"damage": "The damage of an attack",
+						"healing": "Healing dice"
+					},
+					"hint": "Which roll gets its max.",
+					"label": "Roll"
 				}
 			},
 			"maxHitDice": {
@@ -2083,9 +3799,19 @@
 					"label": "Automatic"
 				},
 				"description": "Modify attacks made against this actor. Disadvantage, forced rerolls, and automatic misses apply when this actor is targeted; Redirect to Self offers this actor a reaction to swap in as the target when a nearby ally is attacked.",
+				"missThreshold": {
+					"hint": "The highest primary die result that counts as a miss against this actor. Attacks normally miss on a 1. Set 2 to make attacks miss on a 1 and a 2. If more than one rule applies, the highest value wins.",
+					"label": "Miss threshold"
+				},
 				"modifier": {
 					"hint": "Disadvantage and Auto Miss apply automatically to the attack roll. Force Reroll and Redirect to Self offer an interactive prompt on the attack card.",
 					"label": "Modifier"
+				},
+				"modifiers": {
+					"autoMiss": "Auto Miss",
+					"disadvantage": "Disadvantage",
+					"raiseMissThreshold": "Raise Miss Threshold",
+					"redirectToSelf": "Redirect to Self"
 				},
 				"range": {
 					"hint": "How far away a targeted ally can be for this actor to redirect the attack to themselves. The baseline heroic Interpose reaction covers 2 spaces.",
@@ -2103,7 +3829,10 @@
 			"modifyPool": {
 				"addRefills": {
 					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition.",
-					"label": "Additional refills"
+					"label": "Additional refills",
+					"mode": {
+						"hint": "How the value applies. On a dice pool: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die. On a charge pool: Add gains that many, Set sets the pool to that many, and Refill to max fills it. A charge pool ignores Set When Empty and Empty the Pool."
+					}
 				},
 				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
 				"dieSize": {
@@ -2127,6 +3856,47 @@
 					"label": "Pool type"
 				}
 			},
+			"modifyReroll": {
+				"actionsForRoller": {
+					"hint": "The one who rolled gains this many actions immediately. This applies only in combat and only to a hero.",
+					"label": "Actions for the one who rolled"
+				},
+				"cannotFail": {
+					"hint": "On a save or a check, the new roll succeeds, with no choice of result. On an attack, the new roll cannot miss, and it is a crit only if the die makes it a crit. It counts on each use that is clicked.",
+					"label": "Cannot fail"
+				},
+				"description": "Adds to a Reroll rule on this character. It can change the new roll. It can also give actions and temp HP each time the reroll is used.",
+				"extraDamage": {
+					"hint": "A formula, such as 1d6 or @will. It is added to the attack's damage when its result stands. Values such as @will come from this character.",
+					"label": "Extra damage"
+				},
+				"form": {
+					"creatures": {
+						"hint": "Creatures gain these each time the reroll is used.",
+						"label": "What do creatures gain?"
+					},
+					"roll": {
+						"hint": "These count one time per attack or check. Using the reroll again does not add them again.",
+						"label": "Changes to the new roll"
+					}
+				},
+				"rerollIdentifier": {
+					"hint": "Type the identifier of the Reroll rule to add to. That rule must be on this character.",
+					"label": "Reroll identifier"
+				},
+				"rollModeChange": {
+					"hint": "On the new roll. For a reroll of one die, that die is rolled two times.",
+					"label": "Advantage or disadvantage"
+				},
+				"tempHp": {
+					"hint": "The one who rolled and their allies gain this temp HP. This character does not gain it. A creature with more temp HP keeps its own. Values such as @will come from this character.",
+					"label": "Temp HP for the one who rolled and allies"
+				},
+				"tempHpWithin": {
+					"hint": "How many spaces a creature can be from this character's token. 0 is any distance. If this character has no token, no creature gains temp HP.",
+					"label": "Reach"
+				}
+			},
 			"modifyToggle": {
 				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
 				"suppressTurnOff": {
@@ -2138,12 +3908,84 @@
 					"label": "Toggle identifier"
 				},
 				"turnOn": {
+					"choices": {
+						"onActorDying": "When the creature starts dying",
+						"onCritReceived": "When the creature is crit",
+						"onTurnStart": "When its turn starts"
+					},
 					"hint": "Events on which the target toggle switches on automatically. This rule's condition gates the turn-on, so add one to restrict when it applies.",
 					"label": "Turn on automatically on"
 				}
 			},
+			"movementTrigger": {
+				"allyRadius": {
+					"hint": "The maximum number of spaces between this creature and a watched ally. 0 means all allies on the scene.",
+					"label": "Allies within (spaces)"
+				},
+				"creature": {
+					"hint": "selfMoved: the other creatures that the geometry is tested against. creatureMoved: the creatures whose Movement counts. enemy, ally, or any.",
+					"label": "Creature"
+				},
+				"defaultMessage": "You can use this item now.",
+				"description": "Post a chat card when a Movement in a started combat agrees with the conditions. The card lets the owner use this item.",
+				"event": {
+					"hint": "selfMoved: this creature moves. creatureMoved: a different creature moves.",
+					"label": "Event"
+				},
+				"geometry": {
+					"hint": "any: no position test. endsAdjacent: the Movement stops in the Reach of the creature. enteredReach: it goes into the Reach. leftReach: it goes out of the Reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started.",
+					"label": "Geometry"
+				},
+				"kinds": {
+					"hint": "The kinds of Movement that count: regular, free, and forced. By default all three count. A Teleport never counts.",
+					"label": "Movement kinds"
+				},
+				"message": {
+					"hint": "The text on the card, under the line that says who moved and how far. You can use {mover} (the creature that moved), {spaces} (the spaces of this Movement), {spacesMovedThisTurn} (all spaces moved this turn) and {targets} (the creatures that were found). Leave empty to use the default text.",
+					"label": "Message"
+				},
+				"minSpaces": {
+					"hint": "The Movement counts only when the creature moved this number of spaces or more.",
+					"label": "Minimum spaces"
+				},
+				"minTargets": {
+					"hint": "The number of creatures that must agree with the geometry.",
+					"label": "Minimum creatures"
+				},
+				"observerScope": {
+					"hint": "self: the geometry is tested against this creature only. selfOrAllyWithin: against this creature or an ally within the set number of spaces.",
+					"label": "Watched creatures"
+				},
+				"reach": {
+					"hint": "The Reach, in spaces, that the geometry tests use. Reach 1 is adjacent.",
+					"label": "Reach"
+				},
+				"spacesScope": {
+					"hint": "thisTurn: all spaces moved this turn. thisMovement: the spaces of this Movement only.",
+					"label": "Count spaces"
+				},
+				"whisper": {
+					"hint": "When set, only the feature's owner and the GM see the card. When not set, everyone sees it.",
+					"label": "Whisper the card"
+				}
+			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
+			},
+			"offerAttackBonus": {
+				"damage": {
+					"hint": "A formula. The damage has the type of the attack.",
+					"label": "Extra damage"
+				},
+				"description": "Extra damage and a Primary Die bonus on an attack made from the row of one item. With Feature Effects off, a row in Change This Roll adds them.",
+				"offerSource": {
+					"hint": "The identifier of the item whose row makes the attack.",
+					"label": "Item with the row"
+				},
+				"primaryDie": {
+					"hint": "It changes the die, so it can give a crit or make a miss a hit.",
+					"label": "Primary Die bonus"
+				}
 			},
 			"optionSwap": {
 				"description": "Offer the character a chance to swap class options they already picked, on a Safe Rest or Field Rest. The rule offers the swap; it cannot check whatever the feature asks the character to do in the fiction, so state that in the rule's label.",
@@ -2154,6 +3996,51 @@
 				"trigger": {
 					"hint": "The rest that offers the swap.",
 					"label": "Offered on"
+				}
+			},
+			"optionWindow": {
+				"cardRow": {
+					"hint": "A row on the owner's missed spell, and on a save card where a target saved against an effect of the owner.",
+					"label": "Row on a card"
+				},
+				"description": "Opens the window with the options of its option set. Chosen options are dimmed, and they reset at Initiative or when all were chosen.",
+				"ignoresDisadvantage": {
+					"hint": "Using this item takes out all disadvantage from the owner's next roll this turn.",
+					"label": "Ignore disadvantage"
+				},
+				"oncePerRound": {
+					"hint": "The window reports a second use in a round. It does not stop it.",
+					"label": "1/round"
+				},
+				"opensOnUse": {
+					"hint": "Using this item opens the window.",
+					"label": "Open when used"
+				},
+				"optionSet": {
+					"choices": {
+						"control": "Control Table"
+					},
+					"hint": "The options the window shows.",
+					"label": "Option set"
+				},
+				"triggerTwice": {
+					"hint": "The window has a tick to do the chosen option twice, and a tick to use it as a Reaction.",
+					"label": "Trigger twice"
+				}
+			},
+			"poolDieToMax": {
+				"description": "When the trigger fires, the lowest dice of a pool go to their max: one when the hero is attacked, one per Wound on a Wound.",
+				"poolIdentifier": {
+					"hint": "The identifier of the dice pool.",
+					"label": "Pool"
+				},
+				"reach": {
+					"hint": "An ally this near also fires the trigger. A number or formula, for example @auraReach for the hero's aura. 0 is the hero only.",
+					"label": "Reach for allies"
+				},
+				"trigger": {
+					"hint": "onAttacked: an attack against the hero. onWound: Wounds gained.",
+					"label": "Trigger"
 				}
 			},
 			"poolGainMessage": {
@@ -2180,6 +4067,213 @@
 				"poolIdentifier": {
 					"hint": "The identifier of the charge pool whose maximum is raised (e.g. combat-dice).",
 					"label": "Pool identifier"
+				}
+			},
+			"primaryDieBonus": {
+				"description": "Adds a number to the Primary Die of the owner's attack rolls, as \"Add to Primary Die Result\" in the attack dialog does. The die can become a crit or stop being a miss. A reroll keeps the number. Not on area attacks.",
+				"otherCreature": {
+					"hint": "Pick tags such as target:distracted. Empty means any target. With tags picked, an attack with no target gets nothing.",
+					"label": "Only when the target is"
+				},
+				"value": {
+					"hint": "A whole number or a formula, such as 1 or @level. It can be negative. The die stops at its max and at 1: the rest is lost.",
+					"label": "Add to the Primary Die"
+				}
+			},
+			"reroll": {
+				"abilities": {
+					"label": "Which abilities?"
+				},
+				"actionCost": {
+					"choices": {
+						"none": "None",
+						"one": "1 action"
+					},
+					"hint": "Only for a hero in combat. On their own turn, they spend the action now. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction, so it has no 1/round limit.",
+					"label": "Action cost"
+				},
+				"actionReportOnly": {
+					"hint": "With no action left, the use still goes on, and the card says so.",
+					"label": "No action is no block"
+				},
+				"attackDelivery": {
+					"choices": {
+						"any": "Any",
+						"melee": "Melee",
+						"ranged": "Ranged"
+					},
+					"hint": "Any is every attack, also an attack with no attack type, such as most spells.",
+					"label": "Attack type"
+				},
+				"attackSource": {
+					"hint": "Limit the rule to attacks with a weapon or attacks with a spell.",
+					"label": "Attack made with"
+				},
+				"automatic": {
+					"hint": "For text with no choice, such as \"the attack is rerolled\". The roll is made again at once, with no button. With Feature Effects off in Automation, a button shows instead. Not for an ally, a picked die, or a choice of result.",
+					"label": "Rerolls by itself"
+				},
+				"cardHint": {
+					"hint": "A short note under the feature on the card, such as a limit the table checks. Empty means no note.",
+					"label": "Note on the card"
+				},
+				"cardHintWhen": {
+					"hint": "Pick tags, as for \"Only when the other creature is\". Empty means on every roll.",
+					"label": "Show the note only when"
+				},
+				"chargeCost": {
+					"hint": "How many charges one reroll takes from the pool.",
+					"label": "Charges per use"
+				},
+				"chargePoolIdentifier": {
+					"hint": "The pool it spends charges from. Leave empty for no limit. The reroll button does not show when the pool is empty.",
+					"label": "Charge pool"
+				},
+				"description": "Lets the one who rolled, the target of an attack, or an ally reroll an attack, a save or a check, or one die of it.",
+				"die": {
+					"choices": {
+						"pickedDie": "One die the player picks",
+						"primaryDie": "The Primary Die",
+						"wholeRoll": "The whole roll"
+					},
+					"hint": "One die leaves the other dice as they are. The player picks the die when they use the reroll.",
+					"label": "Which dice does it reroll?"
+				},
+				"discardedCritTriggers": {
+					"hint": "When the first roll was a crit, abilities that react to a crit still react. Damage and effects follow the new roll.",
+					"label": "The discarded crit still triggers when-crit abilities"
+				},
+				"extraDamage": {
+					"hint": "A formula added to the damage of the new roll, such as 1d6 or @level. References read the owner of this feature.",
+					"label": "Extra damage"
+				},
+				"form": {
+					"changes": {
+						"hint": "The new roll keeps the first roll's advantage and disadvantage. A later reroll of the same attack, from any feature, keeps these changes too.",
+						"label": "Changes to the new roll (optional)"
+					},
+					"cost": {
+						"hint": "A use limit such as 1/Safe Rest is a charge pool on this item.",
+						"label": "Cost (optional)"
+					},
+					"onlyWhile": {
+						"hint": "For example, only while Raging.",
+						"label": "Only while"
+					},
+					"when": "When?"
+				},
+				"heroicReaction": {
+					"choices": {
+						"none": "None"
+					},
+					"hint": "Spent only in combat.",
+					"label": "Heroic Reaction it spends"
+				},
+				"keep": {
+					"choices": {
+						"new": "The new result",
+						"ownerChooses": "The owner of this feature keeps one",
+						"rollerChooses": "The one who rolled keeps one"
+					},
+					"hint": "When a player keeps a result, nothing that depends on the roll happens until they do.",
+					"label": "Which result stands?"
+				},
+				"manaCost": {
+					"hint": "0 is free.",
+					"label": "Mana per use"
+				},
+				"maxDice": {
+					"hint": "A formula. The player picks up to this many dice and confirms. Leave empty for one die.",
+					"label": "Most dice"
+				},
+				"noneMeansAny": "None picked means any.",
+				"oncePerRoll": {
+					"hint": "The feature can reroll the same attack, save or check only once, even with uses left.",
+					"label": "Only once per roll"
+				},
+				"oncePerTurn": {
+					"hint": "Once per turn of any creature. Outside combat there is no limit.",
+					"label": "1/turn"
+				},
+				"otherCreature": {
+					"hint": "The other creature is the target of the attack, or the one who rolled when the target uses this. Pick tags such as target:distracted. Empty means any creature. It cannot be used on a roll with no other creature.",
+					"label": "Only when the other creature is"
+				},
+				"outcome": {
+					"choices": {
+						"always": "Any result",
+						"criticalHit": "A crit",
+						"failed": "A failed roll",
+						"hit": "A hit",
+						"miss": "A miss",
+						"nonCriticalHit": "A hit that is not a crit"
+					},
+					"hint": "A hit includes a crit. A failed roll is a miss on an attack. On a save or a check, the row goes away when the card says Succeeded, and shows when the card knows no result, because the system cannot tell. The other choices are for attacks only.",
+					"label": "The first roll is"
+				},
+				"perDie": {
+					"hint": "The cost is for each die the player picks.",
+					"label": "Cost per die"
+				},
+				"primaryDieBonus": {
+					"hint": "A number added to the Primary Die of the new roll.",
+					"label": "Add to the Primary Die"
+				},
+				"reach": {
+					"hint": "How many spaces the ally can be from the one who rolled, measured when the roll is made. 0 is any distance.",
+					"label": "Reach"
+				},
+				"relatedStat": {
+					"choices": {
+						"any": "Any stat"
+					},
+					"hint": "Limits the rule to the save of that stat, the skills of that stat, the ability check of that stat, and an attack whose formula has that stat.",
+					"label": "Related to a stat"
+				},
+				"rollModeChange": {
+					"choices": {
+						"advantage": "One more advantage",
+						"disadvantage": "One more disadvantage",
+						"none": "None"
+					},
+					"hint": "Added to what the first roll had.",
+					"label": "Advantage or disadvantage"
+				},
+				"rolls": {
+					"choices": {
+						"abilityCheck": "Ability Check",
+						"attack": "Attack",
+						"save": "Save",
+						"skillCheck": "Skill Check"
+					},
+					"label": "Which roll can it reroll?"
+				},
+				"saves": {
+					"label": "Which saves?"
+				},
+				"skills": {
+					"label": "Which skills?"
+				},
+				"thisItemOnly": {
+					"hint": "The rule is only for attacks with the item that has it.",
+					"label": "This item only"
+				},
+				"useAnotherStat": {
+					"hint": "A click on the row shows the other three stats, and the player picks one for the new roll. On a save it uses that stat's save modifier. On a skill check it swaps the stat part and keeps the other bonuses. On an attack it swaps the stat in the formula; an attack with no stat in its formula gets no row.",
+					"label": "Use another stat"
+				},
+				"usedBy": {
+					"choices": {
+						"ally": "An ally",
+						"roller": "The one who rolled",
+						"target": "The target"
+					},
+					"hint": "The one who rolled, the creature an attack is against, or an ally of the one who rolled (a friendly creature, not yourself). On a save or a check there is no target.",
+					"label": "Who can use it?"
+				},
+				"woundCost": {
+					"hint": "Wounds the user gains. 0 is none.",
+					"label": "Wounds gained per use"
 				}
 			},
 			"savingThrowBonus": {
@@ -2282,6 +4376,46 @@
 					"label": "Bonus"
 				}
 			},
+			"tableRoll": {
+				"description": "A roll on the table. The system shows the table text only, and applies no effect.",
+				"table": {
+					"choices": {
+						"chaos": "Chaos Table"
+					},
+					"hint": "The table it rolls on.",
+					"label": "Table"
+				},
+				"when": {
+					"choices": {
+						"lessManaOrCrit": "The tick for 1 less mana on a spell, or a crit (one roll per attack)",
+						"onUse": "When this item is used"
+					},
+					"hint": "What makes the roll. The spell dialog gets the tick for 1 less mana only from the first choice.",
+					"label": "When"
+				}
+			},
+			"tableRollOptions": {
+				"advantage": {
+					"hint": "Each table roll has advantage.",
+					"label": "Advantage"
+				},
+				"chooseChargePool": {
+					"hint": "A use of this pool lets the player choose one of the two rolls.",
+					"label": "Pool to choose one"
+				},
+				"description": "What a roll on its table can do.",
+				"rollTwice": {
+					"hint": "The Chaos card shows buttons before the roll.",
+					"label": "Roll twice"
+				},
+				"table": {
+					"choices": {
+						"chaos": "Chaos Table"
+					},
+					"hint": "The table whose rolls these options change.",
+					"label": "Table"
+				}
+			},
 			"toggleEffect": {
 				"clearPoolsOnEnd": {
 					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'.",
@@ -2302,10 +4436,12 @@
 				"endReasons": {
 					"inactivity": "went {rounds} round(s) without attacking or re-activating",
 					"onActorDying": "started dying",
+					"onActorHealed": "was healed",
 					"onActorKilled": "died",
 					"onActorWounded": "took a wound",
 					"onEncounterEnd": "combat ended",
 					"onRest": "completed a rest",
+					"onRoundEnd": "round ended",
 					"onTurnEnd": "turn ended",
 					"onTurnStart": "turn started"
 				},
@@ -2322,6 +4458,17 @@
 					"label": "Tags"
 				},
 				"turnOff": {
+					"choices": {
+						"onActorDying": "When the creature starts dying",
+						"onActorHealed": "When the creature is healed",
+						"onActorKilled": "When the creature dies",
+						"onActorWounded": "When the creature gets a Wound",
+						"onEncounterEnd": "When the encounter ends",
+						"onRest": "After a rest",
+						"onRoundEnd": "When the round ends",
+						"onTurnEnd": "When its turn ends",
+						"onTurnStart": "When its turn starts"
+					},
 					"hint": "Events that automatically toggle the effect off.",
 					"label": "Turn off on"
 				}
@@ -2436,12 +4583,15 @@
 			"cardHeading": "Descanso Seguro",
 			"cardSubheading": "Recuperación total",
 			"dialogTitle": "{name}: Descanso Seguro",
+			"ends": "Ends",
 			"hitDice": "Dado de Golpe",
 			"hitDiceRecovered": "Dados de Golpe recuperados",
 			"hitDieRecovery": "+{amount} d{size}",
 			"hitPoints": "Puntos de golpe",
 			"hpRecovery": "+{amount} PG ({current} → {max})",
 			"hpRestored": "PG restaurados",
+			"inspiration": "Inspiration",
+			"inspirationEnded": "Inspiration Ended",
 			"mana": "Maná",
 			"manaRecovery": "+{amount} ({current} → {max})",
 			"manaRestored": "Maná recuperado",
@@ -2500,6 +4650,13 @@
 			"normal": "Normal",
 			"select": "Seleccionar {save}"
 		},
+		"savingThrowEnricher": {
+			"hint": "Left click to roll this save for each selected token.",
+			"label": "{save} save",
+			"labelWithDC": "DC {dc} {save} save",
+			"noTokensSelected": "No tokens are selected.",
+			"tag": "Save"
+		},
 		"savingThrows": {
 			"dexterity": "Destreza",
 			"intelligence": "Inteligencia",
@@ -2523,11 +4680,13 @@
 			},
 			"adjacencyIncludesDiagonals": {
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only).",
+				"migrated": "Nimble: your Adjacency Includes Diagonals choice was carried over to the core Grid Diagonals setting as Rectilinear (2): diagonals are not adjacent. Reload for it to take effect.",
 				"name": "Adjacency Includes Diagonals"
 			},
 			"applyRuleEffects": {
 				"hint": "Apply conditions, target marks, and automatic effect endings when feature rule triggers fire. When off, rules still surface on chat cards for manual application. Activating toggle effects (such as Rage) and spending pool dice always work.",
-				"name": "Apply Conditions and Effects from Rules"
+				"name": "Apply Conditions and Effects from Rules",
+				"off": "Off: the chat card shows a button for each one."
 			},
 			"autoAddCharacterToCombatOnInitiativeRoll": {
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat.",
@@ -2556,6 +4715,8 @@
 				"saved": "Automation settings saved.",
 				"sectionChat": "Chat",
 				"sectionCombat": "Combat",
+				"sectionFeaturesEffects": "Features and Effects",
+				"sectionMovement": "Movement",
 				"sectionResources": "Resources",
 				"sectionRulesEffects": "Rules & Effects",
 				"title": "Automation"
@@ -2750,6 +4911,13 @@
 				"hint": "Render the primary die of your damage rolls with a distinct appearance so it stands out from the rest of the dice.",
 				"name": "Distinct Primary Die"
 			},
+			"gridDiagonalsCheck": {
+				"illegal": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. Tokens cannot move diagonally, and a diagonal space counts as 2 spaces. Ranges such as Interpose (2 spaces) and Reach do not get to a diagonal space that looks near.</p><p>The book's default is that diagonals are adjacent: <strong>Equidistant (1)</strong>. If your table does not treat diagonals as adjacent, use <strong>Rectilinear (2)</strong>. Then tokens can move diagonally, and each diagonal step costs 2 spaces.</p>",
+				"keep": "Keep {value}",
+				"notInBook": "<p>The core Grid Diagonals setting is <strong>{value}</strong>. This is not one of the book's rules for diagonal spaces. It gives a part of a space, which Nimble rounds, so ranges such as Interpose and Reach can give results that you do not expect.</p><p>The book gives three rules: diagonals are adjacent, <strong>Equidistant (1)</strong>, which is the default; diagonals are not adjacent, <strong>Rectilinear (2)</strong>; or every other diagonal is adjacent, <strong>Alternating (1/2/1)</strong> or <strong>Alternating (2/1/2)</strong>.</p>",
+				"title": "Grid Diagonals",
+				"use": "Use {value}"
+			},
 			"healthStateSync": {
 				"hint": "Automatically apply and remove the Bloodied status when a combatant drops to or recovers above half hit points. Last Stand handling is always on.",
 				"name": "Health-State Sync"
@@ -2789,9 +4957,23 @@
 				"title": "Configure In-Game Languages",
 				"tooltip": "Tooltip"
 			},
+			"movementOffers": {
+				"hint": "A push, pull or move for free from a card makes the creature's next drag count as that move, and the ruler shows how far it can go.",
+				"name": "Pushes, Pulls and Moves for Free",
+				"off": "Off: the card shows the distance as text."
+			},
+			"movementTracking": {
+				"hint": "Counts the spaces each creature moves on its turn, so that features can react to a move.",
+				"name": "Movement Count",
+				"off": "Off: movement features do nothing."
+			},
 			"ncswEnabled": {
 				"hint": "Mostrar panel de sistema de combate durante el combate. Ayuda a los DJ asignar a los héroes como objetivos y hacer tiradas de ataque de lacayos, monstruos y monstruos legendarios.",
 				"name": "Habilitar sistema de combate"
+			},
+			"openNpcSheetsNarrow": {
+				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
+				"name": "Open NPC sheets narrow"
 			},
 			"resourceRecovery": {
 				"hint": "Automatically refill charges and dice pools from their recovery triggers, such as turn start, rests, wounds, kills, and encounter end.",
@@ -2799,7 +4981,12 @@
 			},
 			"resourceSpending": {
 				"hint": "Automatically deduct mana when casting spells and validate and consume charges when using items. When off, resource costs are not enforced and must be tracked manually.",
-				"name": "Resource Spending"
+				"name": "Resource Spending",
+				"off": "Off: only heroic reactions are spent. Track other costs by hand."
+			},
+			"showChaosTableRolls": {
+				"hint": "On: the table text is open on the Chaos card. Off: players see only the number, and the GM gets the text in a whisper. The book says the table is secret.",
+				"name": "Show Chaos Table rolls"
 			}
 		},
 		"sheets": {
@@ -2809,6 +4996,8 @@
 			"boon": "Hoja de dones de Nimble",
 			"class": "Hoja de clase de Nimble",
 			"feature": "Hoja de rasgos de Nimble",
+			"hero": "Character sheet (Hero)",
+			"monster": "NPC sheet (Monster)",
 			"monsterFeature": "Hoja de rasgos de monstruo de Nimble",
 			"npc": "Hoja de PNJ de Nimble",
 			"object": "Hoja de objetos de Nimble",
@@ -3146,6 +5335,13 @@
 			"capstoneDescription": "Selecciona 2 atributos para aumentar en +1 cada uno",
 			"header": "Mejora de atributo"
 		},
+		"subclassDrop": {
+			"alreadyHave": "You already have the \"{subclass}\" subclass.",
+			"levelTooLow": "You must be at least level 3 to select a subclass. You are currently level {level}.",
+			"missingClass": "The subclass \"{subclass}\" requires the {className} class.",
+			"replaceIntro": "You already have the {subclass} subclass.",
+			"replaceQuestion": "Do you want to replace it with {subclass}?"
+		},
 		"subclassSelection": {
 			"deselectSubclass": "Deselect this subclass",
 			"deselectSubclassAriaLabel": "Deselect {subclassName}",
@@ -3191,6 +5387,7 @@
 			},
 			"condition": "Estado",
 			"conditionDescriptionUnavailable": "<p>Sin descripción disponible.</p>",
+			"conditionReplacementLost": "A condition was removed to make room for a new one, and neither could be put back.",
 			"conditions": "Estados",
 			"conditionsFor": "Estados: {name}",
 			"confirmInsufficientActions": {
@@ -3262,6 +5459,9 @@
 					"spell": {
 						"description": "Canaliza energía mágica",
 						"label": "Lanzar un conjuro"
+					},
+					"unarmedStrike": {
+						"description": "Strike with your bare hands or feet"
 					}
 				},
 				"actionsHeader": "Acciones",
@@ -3292,7 +5492,10 @@
 					},
 					"dialogTitle": "Acción de Evaluar",
 					"failure": "Fallo",
+					"freeNoCharge": "Free, with advantage. You have no charges, so it costs nothing.",
+					"freeWithCharge": "Free, with advantage. It spends 1 charge.",
 					"header": "Evaluar",
+					"needsTarget": "Target one creature first.",
 					"noTargetsHint": "Apunta a un token en el escenario para seleccionarlo",
 					"rollToAssess": "Tirar {skill}",
 					"selectOption": "Selecciona una opción",

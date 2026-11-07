@@ -698,7 +698,12 @@
 			"items": {
 				"Bite/Swallow.": {
 					"description": "<p>1d4+40. On crit: Swallowed. (Swallowed. You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.)</p>",
-					"name": "Bite/Swallow."
+					"name": "Bite/Swallow.",
+					"rules": {
+						"swallowCondition": {
+							"label": "Bite/Swallow"
+						}
+					}
 				},
 				"Crush.": {
 					"description": "<p>Creatures in a 2×6 area take 50 damage on a failed DC 18 DEX save. (Creatures who fail can spend 1 Action to dive out of the way instead of taking this damage. They move half their speed and land Prone.) OR</p>",
@@ -720,11 +725,21 @@
 				},
 				"Latch On.": {
 					"description": "<p>1d12+10. On hit: Latched On.</p>",
-					"name": "Latch On."
+					"name": "Latch On.",
+					"rules": {
+						"latchOnCondition": {
+							"label": "Latch On"
+						}
+					}
 				},
 				"Latched On.": {
 					"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>",
-					"name": "Latched On."
+					"name": "Latched On.",
+					"rules": {
+						"latchedCannotMis": {
+							"label": "Latched On"
+						}
+					}
 				}
 			},
 			"name": "Greater Stirge"
@@ -1213,11 +1228,21 @@
 				},
 				"Latch On.": {
 					"description": "<p>1d4+2. On hit: Latched On.</p>",
-					"name": "Latch On."
+					"name": "Latch On.",
+					"rules": {
+						"latchOnCondition": {
+							"label": "Latch On"
+						}
+					}
 				},
 				"Latched On.": {
 					"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>",
-					"name": "Latched On."
+					"name": "Latched On.",
+					"rules": {
+						"latchedCannotMis": {
+							"label": "Latched On"
+						}
+					}
 				}
 			},
 			"name": "Stirge"
@@ -1307,7 +1332,12 @@
 				},
 				"Savage.": {
 					"description": "<p>Always crits when attacking a Grappled creature.</p>",
-					"name": "Savage."
+					"name": "Savage.",
+					"rules": {
+						"worgSavageRule00": {
+							"label": "Savage"
+						}
+					}
 				}
 			},
 			"name": "Worg"
