@@ -13,7 +13,7 @@ A dice pool holds rolled die faces, not a count: each die keeps the number it ca
 
 Each **Refill** entry says when dice come back and how many:
 
-- **Mode** Add rolls new dice up to the maximum, Set rebuilds the pool to exactly that many, Refill to max tops it up to full, Set When Empty only acts when the pool is empty, and Empty the Pool removes every die.
+- **Mode** **Add** rolls new dice up to the maximum, **Set** rebuilds the pool to exactly that many, **Refill to max** tops it up to full, **Set When Empty** only acts when the pool is empty, and **Empty the Pool** removes every die.
 - **Value** accepts formulas plus two pool-specific references: `@poolMax` and `@poolCurrent`. See [Formulas & References](../rules-builder/formulas.md).
 - **Condition** is optional and is checked at the moment the trigger fires, so state that changes mid-combat works correctly. `{ "self": "raging" }` on a Turn Start refill means the die only arrives on turns where the character is actually Raging.
 

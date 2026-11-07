@@ -28,7 +28,6 @@ function rollDetailsSection(formula: string, flavor: string, total, dice: string
 export default function prepareRollTooltipRollParts(roll) {
 	return roll.dice.reduce((acc, part) => {
 		const vicious = (part.results ?? []).filter(isViciousBonus);
-		const viciousCount = vicious.filter((die) => die.active !== false && !die.discarded).length;
 		const viciousTotal = vicious.reduce(
 			(sum, die) => (die.active !== false && !die.discarded ? sum + die.result : sum),
 			0,
@@ -47,7 +46,7 @@ export default function prepareRollTooltipRollParts(roll) {
 
 		if (vicious.length > 0) {
 			parts += rollDetailsSection(
-				`${viciousCount}d${part.faces}`,
+				`${vicious.length}d${part.faces}`,
 				localize('NIMBLE.properties.vicious'),
 				viciousTotal,
 				prepareRollTooltipViciousDiceResults(part),

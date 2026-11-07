@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import resolveItemActionCost from '../../../../utils/combat/resolveItemActionCost.js';
+import resolveItemActionCost from '#utils/combat/resolveItemActionCost.js';
 import {
 	costQuantityMin,
 	costTypeUpdate,
@@ -53,6 +53,16 @@ describe('reactionFlagUpdate', () => {
 		expect(resolveItemActionCost({ system: { activation: { cost: result } } })).toBe(0);
 	});
 
+	it('turns a time or special cost into a usual reaction of 1 action', () => {
+		for (const type of ['minute', 'hour', 'special', 'turn']) {
+			expect(reactionFlagUpdate(cost({ type, quantity: 10 }), true)).toEqual({
+				'system.activation.cost.isReaction': true,
+				'system.activation.cost.type': 'action',
+				'system.activation.cost.quantity': 1,
+			});
+		}
+	});
+
 	it('leaves the trigger details alone', () => {
 		const before = cost({ details: 'when Bloodied' });
 		expect(apply(before, reactionFlagUpdate(before, true)).details).toBe('when Bloodied');
@@ -73,10 +83,18 @@ describe('costTypeUpdate', () => {
 		});
 	});
 
-	it('writes other types on a reaction as picked, keeping the quantity', () => {
-		expect(
-			costTypeUpdate(cost({ type: 'action', quantity: 2, isReaction: true }), 'minute'),
-		).toEqual({ 'system.activation.cost.type': 'minute' });
+	it('ends the reaction when the author picks a type that is not an action', () => {
+		for (const type of ['minute', 'hour', 'special', 'turn']) {
+			expect(costTypeUpdate(cost({ type: 'action', quantity: 2, isReaction: true }), type)).toEqual(
+				{ 'system.activation.cost.type': type, 'system.activation.cost.isReaction': false },
+			);
+		}
+	});
+
+	it('keeps the reaction when the author picks action', () => {
+		expect(costTypeUpdate(cost({ type: 'action', isReaction: true }), 'action')).toEqual({
+			'system.activation.cost.type': 'action',
+		});
 	});
 });
 

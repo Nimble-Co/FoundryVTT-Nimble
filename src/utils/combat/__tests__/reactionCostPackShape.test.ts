@@ -23,8 +23,10 @@ function findNoneReactionCosts(node: unknown, at: string, hits: string[]): void 
 describe('reaction cost shape in packs', () => {
 	it('has no pack item with isReaction true and type none', () => {
 		const hits: string[] = [];
+		const files = globSync('packs/**/*.json');
+		expect(files.length).toBeGreaterThan(0);
 
-		for (const file of globSync('packs/**/*.json')) {
+		for (const file of files) {
 			const source = JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
 			findNoneReactionCosts(source, file, hits);
 		}

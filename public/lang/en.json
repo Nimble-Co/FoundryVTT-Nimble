@@ -2116,11 +2116,21 @@
 					"hint": "When and how dice are added back to the pool. Add an entry per trigger.",
 					"trigger": {
 						"label": "Trigger",
-						"hint": "Event that drives this refill (a rest, an encounter event, an attack against you, and so on)."
+						"hint": "Event that drives this refill (a rest, an encounter event, an attack against you, and so on).",
+						"choices": {
+							"onAttacked": "Attacked",
+							"onCritReceived": "Hit by a Crit"
+						}
 					},
 					"mode": {
 						"label": "Mode",
-						"hint": "How the value applies: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die."
+						"hint": "How the value applies: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die.",
+						"choices": {
+							"add": "Add",
+							"set": "Set",
+							"setIfEmpty": "Set When Empty",
+							"clear": "Empty the Pool"
+						}
 					},
 					"value": {
 						"label": "Value",
@@ -2617,22 +2627,6 @@
 				"movementType": {
 					"label": "Movement type (blank = walk)",
 					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
-				}
-			},
-			"poolRefill": {
-				"trigger": {
-					"choices": {
-						"onAttacked": "Attacked",
-						"onCritReceived": "Hit by a Crit"
-					}
-				},
-				"mode": {
-					"choices": {
-						"add": "Add",
-						"set": "Set",
-						"setIfEmpty": "Set When Empty",
-						"clear": "Empty the Pool"
-					}
 				}
 			},
 			"featureMessages": {
