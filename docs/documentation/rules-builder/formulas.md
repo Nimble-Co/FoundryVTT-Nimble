@@ -42,7 +42,7 @@ A few references are not read off the character sheet. They are filled in at the
 
 These combine with the sheet references above, so a spend can scale with both the dice chosen and the character: `(@strength + @dexterity) * @n` reduces damage by STR+DEX for every die spent, and `2 * @sum` doubles the total rolled.
 
-The pool references make a refill relative rather than fixed. A refill with mode `set` and value `@poolMax` fills the pool to whatever its current maximum is, which keeps working when a later feature raises that maximum.
+The pool references make a refill relative rather than fixed. A refill with the mode Set and value `@poolMax` fills the pool to whatever its current maximum is, which keeps working when a later feature raises that maximum.
 
 ::: warning
 An empty formula counts as 0. A formula the system can't understand shows an "Invalid roll formula" warning and the rule contributes nothing. See the debugging tips below.
