@@ -1,0 +1,323 @@
+{
+	"name": "Core Rules",
+	"pages": [
+		{
+			"_id": "tgoKK0GAz2eqY5sg",
+			"name": "Stats",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Heroes have 4 stats that impact their effectiveness in various tasks: 2 Key Stats crucial to their class and 2 Secondary Stats. The maximum a hero’s stat can typically go is +5.</p><p><strong>KEY.</strong> When an ability or spell references “KEY,” use one of your Key Stats. If a stat is listed before a die roll, roll a number of dice equal to the stat. For example, “WIL d8” means that if your WIL is 2, you roll 2d8 (two eight-sided dice).</p><h3>Strength (STR)</h3><p>Your raw physical power and resilience, endurance, and resistance to harm. Affects STR weapon damage, resistance to Wounds, HP recovery, Concentration, STR saves, carrying capacity,  grappling, and the Might skill.</p><h3>Dexterity (DEX)</h3><p>Your agility, reflexes, and precision with blades or bows. Affects DEX weapon damage, Initiative, DEX saves, Grappling, and can contribute to Armor, as well as the Stealth and Finesse skills.</p><h3>Intelligence (INT)</h3><p>Your Intelligence reflects knowledge and reasoning across fields like the arcane, tactics, or street smarts. Affects languages, spellcasting, use of wands, spell scrolls, INT saves, as well as the Arcana, Examination, and Lore skills.</p><h3>Will (WIL)</h3><p>Your force of personality, courage, and wisdom. Will shapes your interactions with both nature and society. Affects spellcasting and WIL saves, as well as the Insight, Influence, Naturecraft, and Perception skills.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "t4sbTNPpWbUQksli",
+			"name": "Skills",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Skills gauge how well your hero interacts with the world. Whenever you tell the GM what you are doing, they may ask you to use one of your skills.</p><h3>Arcana (INT)</h3><p>Your understanding of magical phenomena, spells, and enchantments. With Arcana, you can identify magical effects, decipher arcane symbols, and discern the properties of magical items. It also grants insights into the abilities and weaknesses of magical beings like Aberrations, Elementals, and Oozes.</p><h3>Examination (INT)</h3><p>Your aptitude for thorough analysis and deduction. Use Examination to diagnose injuries, determine causes of death, uncover clues, and unravel the workings of traps or mechanical devices. It also grants insights into the abilities and weaknesses of Constructs.</p><h3>Finesse (DEX)</h3><p>Your ability to use your hands and feet in careful ways. Use Finesse for activities such as picking locks, disarming traps, piloting vehicles, tinkering, card tricks, stealing or planting items,  climbing a mossy wall, or any other task that requires precise, careful movement.</p><h3>Influence (WIL)</h3><p>Your persuasiveness, charm, and ability to influence others through charisma or cunning. Use Influence to convince or deceive people, negotiate deals, build trust, win allies to your cause, or put on a captivating performance.</p><h3>Insight (WIL)</h3><p>Your ability to understand people and situations beyond the obvious. Use Insight to sense motives, detect lies, read hidden emotions, make sense of clues, and when faced with uncertainty—you can think ahead or just “get” what is happening. Insight can be used to retroactively change situations:</p><p><strong>Player:</strong> “Oh no! I forgot to buy rope back in town!”</p><p><strong>GM:</strong> “Give me an Insight check; maybe your hero would have thought about it.”</p><h3>Might (STR)</h3><p>Your ability to apply strength effectively. Use Might for lifting heavy objects, breaking through obstacles, climbing, swimming, jumping, or performing feats of strength.</p><h3>Lore (INT)</h3><p>Your understanding of the history of civilization, kingdoms, and religions. Use Lore to recall historical events and grasp the significance of cultural practices. It extends to knowledge of the abilities and behavior of Celestials, Dragons, Fey, Fiends, Giants, Humanoids, and Undead.</p><h3>Naturecraft (WIL)</h3><p>Your expertise in wilderness survival, navigation, tracking, and the handling of animals. Use Naturecraft to thrive in the wild, identify flora, fauna, and track creatures with precision. It encompasses knowledge of Beasts, Monstrosities, and Plants, providing insights into their behavior, habitats, and characteristics.</p><h3>Perception (WIL)</h3><p>Your overall ability to notice subtle details in your surroundings. Use Perception to spot hidden objects, detect secret passages, sense subtle environmental changes, and sense when you’re being followed or observed. It encompasses your ability to pick up on non-obvious cues, and hidden threats.</p><h3>Stealth (DEX)</h3><p>Your proficiency in staying unseen and moving quietly. Use Stealth to hide, slip past guards, evade detection, and move without drawing attention.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "5f03XCJaVEhDVPPW",
+			"name": "Skill Checks & Saves",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>When you want to affect the world (convince an NPC, spot a trap, pick a lock, etc.), the GM may call for a skill check. Roll 1d20 and add your skill (the max bonus a skill can ever have is +12). If the total meets or exceeds the Difficulty Challenge (DC), you succeed; otherwise, you fail. A roll of 1 always fails regardless of any other bonuses, while a roll of 20 always succeeds. The DC varies based on the task:</p><ul><li>Easy: Spotting a large Ogre crouched behind a small bush might be a DC 8 Perception check.</li><li>Medium: A hidden doorway behind a bookcase might be a DC 12 Examination check.</li><li>Challenging: Calming an injured Owlbear stuck in a trap may be a DC 15 Naturecraft check.</li><li>Very Difficult: Intuiting the true intentions of a trained Spy may be a DC 18 Insight check.</li><li>Extremely Difficult: Disarming an ancient legendary trap may be a DC 20+ Finesse check.</li></ul><h3>Saves</h3><p>When the world affects you, roll a save instead of a skill check. Roll 1d20 and add the relevant stat. A roll of 1 always fails, 20 always saves. You can choose to fail any save instead of rolling. • STR Save. When your overall fitness and physicality is tested. STR helps resist forced movement, restraint, poison, and extreme temperatures. • DEX Save. When your agility or speed is tested. DEX helps you dive for cover in an explosion or stay on your feet while running across icy terrain. • INT Save. When your intelligence is tested. INT helps you see though tricks and illusions. • WIL Save. When your courage or personality is tested. WIL helps you resist charm or fear effects.</p><h3>Heroes and Saves</h3><p>• Unless otherwise noted, the DC for effects a hero causes is 10+KEY. • When making saves, each hero has 1 advantaged save (+), 1 disadvantaged save (–), and 2 neutral saves.</p><p><strong>Example.</strong> A Berserker (STR+, INT–) would roll all of his STR saves with advantage and all of his INT saves with disadvantage (see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZQjOBEMTFhOssTAV.JournalEntryPage.289VekaOcMF8op94]{next page}).</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "Vkm1KpNl1iPZEmnd",
+			"name": "Size",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Some spells and abilities affect differently sized objects or creatures. For size, use the following guidelines:</p><ul><li>Tiny can be carried in a typical pocket (many can comfortably fit in 1 space).</li><li>Small can be carried in a backpack (2 can comfortably fit in 1 space).</li><li>Medium is the average human size (1 can comfortably fit in 1 space).</li><li>Large is roughly the size of a bear (1 can comfortably fit in a 2x2 area).</li><li>Huge is roughly the size of a small house (1 can comfortably fit in a 3x3 area).</li><li>Gargantuan can be as large as a castle keep (1 can fill a 4x4 area or greater).</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 400000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "289VekaOcMF8op94",
+			"name": "Advantage & Disadvantage",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>If you are ever in a favorable situation, the GM may allow you to roll with advantage. To do this, roll 1 additional die of the same type and remove the lowest (see examples below). Alternatively, if the situation is grim or your idea is a long shot, you may have to roll with disadvantage (removing the highest die instead).</p><p>If you have multiple instances of advantage or disadvantage, for each one, roll an extra die and remove the lowest (for advantage) or the highest (for disadvantage). Each instance of advantage cancels out one instance of disadvantage before you roll.</p><p><strong>Example 1.</strong> Greataxe (2d6) with advantage. Roll 1 additional die and remove the lowest. You hit! See attack rules on @UUID[Compendium.nimble.nimble-rules.JournalEntry.7oaOqkg5Sp05mR2s.JournalEntryPage.88BfZWt1WsX6hQd0]{pg. 13} for more.</p><p><strong>Example 2.</strong> Greataxe (2d6) with disadvantage 2. Roll 2 additional dice, remove the 2 highest. If there is a tie, always remove dice from left to right. You miss!</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 500000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "X8pgFflL0fe1D9Gr",
+			"name": "Hit Points & Dying",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Hit Points (HP) represent your ability to endure damage. Damage reduces your HP (which can’t go below 0). When reduced to 0 HP, gain 1 Wound; you also gain the <strong>Dying</strong> condition until you regain HP. While Dying, actions are limited to 1, Concentration is broken, and you are at risk of further serious harm:</p><ul><li>Attacking/casting spells causes <strong>1</strong> Wound unless you make a <strong>DC 10 STR save</strong>.</li><li>Taking damage while Dying causes <strong>2</strong> Wounds; a crit causes <strong>3</strong> instead.</li></ul><p><strong>Wounds</strong> Wounds are serious injuries you’ve taken; they are a long term gauge of how close you are to death. HP can usually be recovered quickly, but Wounds may take many days of resting to fully recover from (usually 1/Safe Rest).</p><p><strong>Death</strong> You die when you have taken 6 Wounds (unless you have an ability that changes this number). There are ways to revive a hero who has died, but they are rare and often come at a very steep cost.</p><p><strong>Temporary HP</strong> Some abilities or effects may grant temporary HP (temp HP); these are reduced first when taking damage. Temp HP do not combine: If a hero has temp HP and would gain more, they instead choose which amount to keep. They expire after a Safe Rest.</p><blockquote><p><strong>Gritty Dying Rules</strong></p><p>Optional rules for a more challenging or “old school” style of game: You can reduce the max number of Wounds heroes have. Anywhere from a max of 5 Wounds for slightly harder, all the way down to 1–2 Wounds for a very lethal game!</p><p>You can also have each Wound impose a cumulative –1 penalty to rolls: skill checks, saves, or even ALL rolls! (If you’re a real glutton for punishment.)</p></blockquote><h3>Hit Dice</h3><p>Hit Dice (HD) represent your ability to quickly recuperate from minor injuries and are spent to regain HP. Heroes start with a max of 1 Hit Die at level 1, and this limit increases by 1 each time they level up. Hit Dice are recovered during a Safe Rest (see @UUID[Compendium.nimble.nimble-rules.JournalEntry.ZDLldXZlTUPQdNW0.JournalEntryPage.tDb8Kp3Vcy71IMir]{“RESTING &amp; DOWNTIME” on page 16}).</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 600000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "k8KNiVoBdSx1bkPE",
+			"name": "Speed & Range",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>A character’s Speed is how fast they can move, which, unless otherwise noted, is 6. Often play is done on a grid with 1 inch squares or hexagons representing roughly 5 ft. or 1 meter each. So a hero with a speed of 6 can travel up to 6 spaces horizontally or diagonally.</p><p>You can move through spaces occupied by allies (or enemies as difficult terrain: half speed), as long as you don’t end movement in an occupied space.</p><blockquote><p><strong>Alternate Options</strong></p><p>For a quicker, more loose game, you can forego counting spaces and measure typical movement roughly from pinkie to thumb. Slightly less for players with large hands (or slower characters), a bit more for our tiny-handed friends (or faster characters).</p></blockquote><h3>Range &amp; Reach</h3><p>Certain abilities, weapons, and spells have a specified Range or Reach, which determines how far away your target can be affected. If none is specified, default to Reach 1.</p><ul><li>In Melee. If any enemy is adjacent to you, your Ranged attacks are made with disadvantage (Reach attacks are not so affected).</li><li>Long Range. You can gain disadvantage 1 to gain +2 Range on any Ranged attack (max +6).</li></ul><blockquote><p><strong>Abstracted Distances</strong></p><p>If preferred, you can use a more abstracted system of distance just as well. Use <strong>Close</strong>, <strong>Midrange</strong>, and <strong>Far</strong>. A move from Midrange can traverse to Close or Far. Close creatures can be affected Reach/Range 4; Midrange, up to 6; beyond that is Far. As always, the GM will adjudicate unclear situations and which creatures are affected by abilities with an area of effect.</p></blockquote><h3>Falling &amp; Forced Movement</h3><p>When a character is forcibly moved but stopped by an obstacle, they take <strong>1d6</strong> bludgeoning damage for every space this movement is shortened. If they hit another creature, both creatures split this damage. Falling inflicts <strong>1d6</strong> bludgeoning damage for every 10 ft. fallen (2 spaces).</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 700000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "X8vcz20tujVb4tIj",
+			"name": "Concentration, Cover & Grappling",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Some activities require Concentration to maintain. A character can only concentrate on one activity at a time. Whenever a character is <strong>crit</strong> while concentrating, they must make a <strong>DC 10 STR save</strong>. Failing this means Concentration is broken and the activity fails. Concentration is automatically broken whenever a character drops to 0 HP or is incapacitated.</p><h3>Cover &amp; Hiding</h3><p>A creature mostly obscured from line of sight (standing behind a tree, a larger ally, a knocked over table, in poor lighting, etc.) has <strong>Cover</strong> and imposes disadvantage on attacks against them. A creature completely obscured from view has <strong>Full Cover</strong> and cannot typically be targeted by an attack.</p><p>To hide in combat, you must have Cover from the creatures you are attempting to hide from and use an action to make a <strong>DC 15 Stealth</strong> check (if you have Full Cover, you succeed automatically). The first attack you make while hidden is made with advantage, then you are no longer hidden. If this attack kills the enemy and no other enemy can see you, you may remain hidden instead.</p><blockquote><p><strong>Monsters Are Smart!</strong></p><p>They may catch on to heroes using the same tactics over and over again!</p></blockquote><h3>Grappling</h3><p>You can attempt to grab another creature provided you are within Reach and have at least 1 arm free (or some other way to grab them). On a failed STR or DEX save (DC 10+STR or DEX), a target:</p><ul><li>your size or smaller, is Grappled.</li><li>larger than you, you gain the Riding condition.</li></ul><p>Forced movement (pushing a grappler away), incapacitation, or spending an action and succeeding on a STR or DEX save can end it.</p><p><strong>Restrained</strong> Functions like Grappled, but is caused by objects (e.g., chains, rope, roots) and ignores size restrictions. It can also be ended through any logical means, such as picking a lock or cutting/burning rope.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 800000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "fdNQ7XZhtGwRfokE",
+			"name": "Conditions",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Some attacks, traps, spells, or other effects can also inflict conditions—usually negative effects other than damage. Some conditions are temporary, lasting as little as a single round; others may last until cured in some way, and some can be ended by using an action to make an appropriate save.</p><ul><li><strong>Blinded.</strong> Can’t see. Attacks against you have advantage, and your attacks have disadvantage.</li><li><strong>Bloodied.</strong> At half HP or less.</li><li><strong>Charmed.</strong> Sees the charmer as an ally. Charmer has advantage on social interactions with you.</li><li><strong>Dazed.</strong> Heroes: lose 1 action; monsters: can perform one less action on their next turn.</li><li><strong>Dying.</strong> At 0 HP. Taking damage while dying causes 2 Wounds, a crit causes 3 instead.</li><li><strong>Frightened.</strong> Disadvantage on rolls when source of fear is nearby; speed halved when moving closer to it.</li><li><strong>Grappled/Restrained.</strong> Cannot move. Attacks against you have advantage.</li><li><strong>Hampered.</strong> Any creature with their actions or movement reduced (e.g., Dazed, Grappled, Prone, Difficult Terrain).</li><li><strong>Incapacitated.</strong> Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</li><li><strong>Invisible.</strong> Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</li><li><strong>Petrified.</strong> Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</li><li><strong>Poisoned.</strong> Disadvantage on rolls.</li><li><strong>Prone.</strong> Movement costs twice as much, and disadvantage on attacks. Melee attacks against you have advantage; Ranged have disadvantage. Spend 3 spaces of your Speed to stand up.</li><li><strong>Riding.</strong> You move with the creature you are riding. Any attacks that miss you, strike them.</li><li><strong>Slowed.</strong> Speed halved during your next turn.</li><li><strong>Taunted.</strong> Disadvantage on attacks except against the most recent taunter.</li><li><strong>Wounded.</strong> Has any Wounds (typically 6 Wounds and a hero is dead).</li><li><strong>Other Minor Statuses.</strong> Minor statuses (Smoldering, Charged, Distracted, etc.) do nothing on their own and end whenever combat does. Some spells and abilities have additional effects against such targets.</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 900000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "ZQjOBEMTFhOssTAV",
+	"sort": 200000
+}
