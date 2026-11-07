@@ -48,6 +48,11 @@ export const STATUS_EFFECT_IDS = {
 
 export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
 
+/** Points core's blindness (vision, detection, the blindness vision mode) at the Blinded condition. */
+export function registerSpecialStatusEffects() {
+	CONFIG.specialStatusEffects.BLIND = STATUS_EFFECT_IDS.blinded;
+}
+
 /** Every built-in ID required, any GM-supplied ID readable. */
 export type ConditionDictionary = Record<StatusEffectId, string> & Record<string, string>;
 
