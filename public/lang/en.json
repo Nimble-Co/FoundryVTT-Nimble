@@ -1620,6 +1620,7 @@
 			"fieldRest": "Field Rest"
 		},
 		"rulesBuilder": {
+			"windowTitle": "Rules Builder",
 			"choiceHasNoEffect": "{choice} (no effect here)",
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",

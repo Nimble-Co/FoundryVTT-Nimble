@@ -16,6 +16,8 @@ interface GenericDialogOptions {
 	resizable?: boolean;
 	/** Unique ID for singleton behavior - only one dialog with this ID can be open at a time */
 	uniqueId?: string;
+	/** Classes for the window, for example `nimble-window` for the frame of the new sheets */
+	classes?: string[];
 	/** Caller-supplied viewport position. When omitted, the dialog is centered horizontally near the top. */
 	position?: { top?: number; left?: number };
 }

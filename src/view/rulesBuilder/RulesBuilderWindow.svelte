@@ -8,6 +8,7 @@
 		createRulesBuilderWindowState,
 	} from '#view/rulesBuilder/RulesBuilderWindow.svelte.js';
 	import type { RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
+	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 
 	const { document: item }: RulesBuilderWindowProps = $props();
 
@@ -15,6 +16,13 @@
 </script>
 
 <section class="nimble-rules-builder-window">
+	<div class="nimble-rules-builder-window__head">
+		<WindowHead
+			title={localize('NIMBLE.rulesBuilder.windowTitle')}
+			sub={item.reactive.name}
+			icon="fa-solid fa-sliders"
+		/>
+	</div>
 	<header class="nimble-rules-builder-window__header">
 		<div class="nimble-rules-builder-window__header-left">
 			<button
@@ -107,9 +115,14 @@
 	.nimble-rules-builder-window {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 8px;
 		height: 100%;
 		min-height: 0;
+		color: var(--nimble-ui-ink);
+	}
+
+	.nimble-rules-builder-window__head {
+		padding: 12px 12px 0;
 	}
 
 	.nimble-rules-builder-window__header {
@@ -117,8 +130,7 @@
 		gap: 0.5rem;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.5rem;
-		border-bottom: 1px solid var(--nimble-card-border-color);
+		padding: 0 12px;
 	}
 
 	.nimble-rules-builder-window__header-left,
@@ -132,25 +144,27 @@
 		font-weight: 600;
 
 		&--open {
-			background: var(--nimble-selected-tag-background-color);
+			border-color: var(--nimble-ui-highlight);
+			background: var(--nimble-ui-hover);
 		}
 	}
 
 	.nimble-rules-builder-window__count {
-		color: var(--color-text-dark-secondary);
-		font-size: var(--nimble-sm-text);
+		color: var(--nimble-ui-ink-muted);
+		font-size: 0.75rem;
+		font-weight: 600;
 	}
 
 	.nimble-rules-builder-window__body {
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
-		padding: 0 0.5rem 0.5rem;
+		padding: 0 12px 12px;
 	}
 
 	.nimble-rules-builder-window__empty {
 		padding: 1.5rem 1rem;
-		color: var(--color-text-dark-secondary);
+		color: var(--nimble-ui-ink-muted);
 		text-align: center;
 		font-style: italic;
 	}
@@ -158,7 +172,7 @@
 	.nimble-rules-builder-window__list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 6px;
 		margin: 0;
 		padding: 0;
 		list-style: none;
