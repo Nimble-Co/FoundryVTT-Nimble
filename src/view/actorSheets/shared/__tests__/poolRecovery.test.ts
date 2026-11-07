@@ -9,7 +9,6 @@ describe('recoveryOf', () => {
 
 	it('reads a refill at the start of each creature turn as once a turn', () => {
 		expect(recoveryOf(['onAnyTurnStart'])).toBe('turn');
-		expect(recoveryOf(['onTurnStart', 'onAnyTurnStart'])).toBe('turn');
 	});
 
 	it('reads the encounter and the rests', () => {
@@ -21,6 +20,8 @@ describe('recoveryOf', () => {
 
 	it('gives the most frequent recovery when a pool has more than one', () => {
 		expect(recoveryOf(['safeRest', 'onTurnEnd'])).toBe('round');
+		expect(recoveryOf(['onTurnStart', 'onAnyTurnStart'])).toBe('turn');
+		expect(recoveryOf(['safeRest', 'onAnyTurnStart'])).toBe('turn');
 		expect(recoveryOf(['safeRest', 'fieldRest'])).toBe('fieldRest');
 	});
 
