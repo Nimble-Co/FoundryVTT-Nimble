@@ -13,17 +13,10 @@ const DIE_SIZES = Array.from(
 	new Set<string>([...DicePoolRuleConfig.dieSizes, ...ChargePoolRuleConfig.dieSizes]),
 );
 
-// One modifier serves both pool types, so the contributed-entry trigger list is
-// the union of both. The two subsystems do not offer the same triggers: only
-// dice pools refill on being attacked, and only charge pools recover on an
-// initiative roll or at the start of each creature's turn.
-//
-// Modes need no union: the charge modes are a subset of the dice ones. That
-// leaves two modes (`setIfEmpty`, `clear`) offered on a charge pool that charge
-// pools cannot perform; the mode hint says so. Both subsystems drop a
-// contributed entry whose trigger or mode they do not implement, so a
-// mismatched pick contributes nothing rather than doing something the author
-// did not ask for.
+// One modifier serves both pool types, so the stored trigger and mode lists are
+// the union of both; the builder offers only the target pool type's entries.
+// Both subsystems drop a contributed entry whose trigger or mode they do not
+// implement, so a mismatched stored pick contributes nothing.
 const REFILL_TRIGGERS = poolTriggerChoices(
 	Array.from(
 		new Set<string>([
@@ -33,6 +26,17 @@ const REFILL_TRIGGERS = poolTriggerChoices(
 	),
 );
 const REFILL_MODES = poolModeChoices(DicePoolRuleConfig.refillModes);
+
+const OFFERED_BY_POOL_TYPE = {
+	dice: { triggers: DicePoolRuleConfig.refillTriggers, modes: DicePoolRuleConfig.refillModes },
+	charge: {
+		triggers: ChargePoolRuleConfig.recoveryTriggers,
+		modes: ChargePoolRuleConfig.recoveryModes,
+	},
+} as const;
+
+const offeredFor = (rule: Record<string, unknown>) =>
+	OFFERED_BY_POOL_TYPE[rule.poolType === 'charge' ? 'charge' : 'dice'];
 
 type PoolType = (typeof POOL_TYPES)[number];
 
@@ -97,22 +101,28 @@ function schema() {
 		// trigger without editing the base pool rule.
 		addRefills: new fields.ArrayField(
 			new fields.SchemaField({
-				trigger: new fields.StringField({
-					required: true,
-					nullable: false,
-					initial: 'safeRest',
-					label: 'NIMBLE.rules.dicePool.refills.trigger.label',
-					hint: 'NIMBLE.rules.dicePool.refills.trigger.hint',
-					choices: REFILL_TRIGGERS,
-				}),
-				mode: new fields.StringField({
-					required: true,
-					nullable: false,
-					initial: 'add',
-					label: 'NIMBLE.rules.dicePool.refills.mode.label',
-					hint: 'NIMBLE.rules.modifyPool.addRefills.mode.hint',
-					choices: REFILL_MODES,
-				}),
+				trigger: new fields.StringField(
+					withWidget({
+						required: true,
+						nullable: false,
+						initial: 'safeRest',
+						label: 'NIMBLE.rules.dicePool.refills.trigger.label',
+						hint: 'NIMBLE.rules.dicePool.refills.trigger.hint',
+						choices: REFILL_TRIGGERS,
+						choicesFor: (rule: Record<string, unknown>) => offeredFor(rule).triggers,
+					}),
+				),
+				mode: new fields.StringField(
+					withWidget({
+						required: true,
+						nullable: false,
+						initial: 'add',
+						label: 'NIMBLE.rules.dicePool.refills.mode.label',
+						hint: 'NIMBLE.rules.modifyPool.addRefills.mode.hint',
+						choices: REFILL_MODES,
+						choicesFor: (rule: Record<string, unknown>) => offeredFor(rule).modes,
+					}),
+				),
 				value: new fields.StringField(
 					withWidget({
 						required: true,

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { AbilityBonusRule } from '../abilityBonus.js';
 import { ArmorClassRule } from '../armorClass.js';
@@ -168,6 +168,98 @@ describe('NimbleBaseRule', () => {
 			rule._warnOnLatePredicateKeys();
 
 			expect(warnSpy).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('unknown formula reference warning', () => {
+		class FormulaRule extends NimbleBaseRule {
+			resolve(formula: string) {
+				return this.resolveFormula(formula);
+			}
+		}
+
+		let rollData: Record<string, unknown>;
+
+		function createRule(name: string, isOwner = true, withActor = true) {
+			const actor = withActor ? { getRollData: () => rollData } : null;
+			const item = { uuid: `Actor.a.Item.${name}`, name, isOwner, actor };
+			const rule = new FormulaRule({} as never, {
+				parent: item as unknown as foundry.abstract.DataModel.Any,
+				strict: false,
+			}) as FormulaRule & { type: string; label: string };
+			rule.type = 'auraReach';
+			rule.label = 'Aura';
+			Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
+			return rule;
+		}
+
+		const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+		beforeEach(() => {
+			rollData = { auraReach: 2, abilities: { strength: { mod: 3 } } };
+			vi.mocked(ui.notifications.warn).mockClear();
+			vi.spyOn(console, 'warn').mockImplementation(() => {});
+		});
+
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it('warns the owner once about a reference the actor does not have', async () => {
+			const rule = createRule('Typo Once');
+			rule.resolve('@auraRech + 1');
+			rule.resolve('@auraRech + 1');
+			await flush();
+
+			expect(ui.notifications.warn).toHaveBeenCalledTimes(1);
+			const message = String(vi.mocked(ui.notifications.warn).mock.calls[0]?.[0]);
+			expect(message).toContain('Typo Once');
+			expect(message).toContain('@auraRech');
+		});
+
+		it('does not warn when every reference resolves, also with braces', async () => {
+			const rule = createRule('All Known');
+			rule.resolve('@auraReach + @{abilities.strength.mod}');
+			await flush();
+
+			expect(ui.notifications.warn).not.toHaveBeenCalled();
+		});
+
+		it('does not warn when the reference exists once data preparation ends', async () => {
+			const rule = createRule('Late Key');
+			delete rollData.auraReach;
+			rule.resolve('@auraReach');
+			rollData.auraReach = 2;
+			await flush();
+
+			expect(ui.notifications.warn).not.toHaveBeenCalled();
+		});
+
+		it('tells only a user who owns the item', async () => {
+			const rule = createRule('Not Owner', false);
+			rule.resolve('@auraRech');
+			await flush();
+
+			expect(ui.notifications.warn).not.toHaveBeenCalled();
+			expect(console.warn).toHaveBeenCalledTimes(1);
+		});
+
+		it('warns once for the copies of one item on unlinked tokens', async () => {
+			const first = createRule('Token Copy');
+			const second = createRule('Token Copy');
+			Object.assign(second.parent as object, { uuid: 'Scene.s.Token.t.Actor.a.Item.copy' });
+			first.resolve('@auraRech');
+			second.resolve('@auraRech');
+			await flush();
+
+			expect(ui.notifications.warn).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not warn for an item with no actor', async () => {
+			createRule('No Actor', true, false).resolve('@auraRech');
+			await flush();
+
+			expect(console.warn).not.toHaveBeenCalled();
 		});
 	});
 

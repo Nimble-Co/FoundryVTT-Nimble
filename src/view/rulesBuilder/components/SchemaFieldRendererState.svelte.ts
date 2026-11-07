@@ -9,6 +9,7 @@ import { isFieldShown } from './isFieldShown.js';
 interface FieldExtras {
 	widget?: string | ((data: Record<string, unknown>) => string);
 	documentTypes?: string[];
+	choicesFor?: (ruleData: Record<string, unknown>) => readonly string[];
 }
 type FieldWithOptions = { options?: FieldExtras };
 
@@ -33,6 +34,8 @@ export function createSchemaFieldRendererState(
 	getParentData: () => Record<string, unknown>,
 	getOnChange: () => (next: unknown) => void,
 	getName: () => string,
+	getRuleData: () => Record<string, unknown> = getParentData,
+	getValue: () => unknown = () => undefined,
 ) {
 	// A field may pick its widget from sibling values (see `WidgetResolver`),
 	// so resolve against the same data `showWhen` reads. Everything downstream
@@ -65,16 +68,29 @@ export function createSchemaFieldRendererState(
 		const raw = (getField() as unknown as { choices?: unknown }).choices;
 		if (raw == null) return null;
 		const evaluated = typeof raw === 'function' ? (raw as () => unknown)() : raw;
+		let entries: Array<[string, string]>;
 		if (Array.isArray(evaluated)) {
-			return (evaluated as string[]).map((v) => [v, v]);
-		}
-		if (evaluated && typeof evaluated === 'object') {
-			return Object.entries(evaluated as Record<string, string>).map(([key, label]) => [
+			entries = (evaluated as string[]).map((v) => [v, v]);
+		} else if (evaluated && typeof evaluated === 'object') {
+			entries = Object.entries(evaluated as Record<string, string>).map(([key, label]) => [
 				key,
 				typeof label === 'string' ? label : key,
 			]);
+		} else {
+			return null;
 		}
-		return null;
+
+		const choicesFor = (getField() as unknown as FieldWithOptions).options?.choicesFor;
+		if (typeof choicesFor !== 'function') return entries;
+		const offered = new Set(choicesFor(getRuleData()));
+		const current = getValue();
+		return entries.flatMap(([key, label]): Array<[string, string]> => {
+			if (offered.has(key)) return [[key, label]];
+			if (key !== current) return [];
+			return [
+				[key, localize('NIMBLE.rulesBuilder.choiceHasNoEffect', { choice: localize(label) })],
+			];
+		});
 	}
 
 	function emitNumber(event: Event) {
@@ -118,6 +134,9 @@ export function createSchemaFieldRendererState(
 		},
 		get documentTypes() {
 			return documentTypes;
+		},
+		get ruleData() {
+			return getRuleData();
 		},
 		get isHidden() {
 			return isHidden;

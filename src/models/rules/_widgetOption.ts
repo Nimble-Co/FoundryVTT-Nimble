@@ -52,6 +52,11 @@ export interface WidgetExtras {
 	widget?: WidgetHint | WidgetResolver;
 	showWhen?: (data: Record<string, unknown>) => boolean;
 	/**
+	 * The choices the builder offers for the whole rule's data, a subset of the
+	 * field's `choices`. A field inside a list row reads the rule, not the row.
+	 */
+	choicesFor?: (ruleData: Record<string, unknown>) => readonly string[];
+	/**
 	 * Restrict accepted drops on `widget: 'documentUuid'` fields. Each entry
 	 * is either a top-level type (`'Item'`) or a subtype path (`'Item.spell'`).
 	 */
@@ -84,6 +89,9 @@ function validateWidgetExtras(opts: WidgetExtras, label: string): void {
 	}
 	if (opts.showWhen !== undefined && typeof opts.showWhen !== 'function') {
 		console.warn(`Nimble | ${label}: showWhen must be a function.`);
+	}
+	if (opts.choicesFor !== undefined && typeof opts.choicesFor !== 'function') {
+		console.warn(`Nimble | ${label}: choicesFor must be a function.`);
 	}
 	if (opts.documentTypes !== undefined) {
 		if (!Array.isArray(opts.documentTypes)) {

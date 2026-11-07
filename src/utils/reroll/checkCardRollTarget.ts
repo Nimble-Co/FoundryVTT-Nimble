@@ -11,7 +11,7 @@ import type {
 import localize from '../localize.js';
 import { failsOnNaturalOne, resultOfCheckRoll } from '../rolls/checkResult.js';
 import {
-	naturalResultChange,
+	naturalResultChangeOfRoll,
 	resultTotal,
 	retireResultChanges,
 	standingResultChanges,
@@ -214,20 +214,6 @@ function storedRoll(json: string | undefined): { total: number; terms: unknown[]
 	}
 }
 
-/** The change a rule makes by itself on this new roll, if any. */
-function naturalChangeFor(
-	roller: RerollingActor | null,
-	check: CheckRoll,
-	roll: AnyRoll,
-): ResultChange | null {
-	return naturalResultChange({
-		roller,
-		roll: check,
-		rollTotal: Number(roll.total) || 0,
-		keptD20: keptD20(roll.terms as unknown[]),
-	});
-}
-
 const readsTheDie = (change: ResultChange) =>
 	change.automatic === true && change.change === 'countsAsNat20';
 
@@ -314,7 +300,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 				},
 				keepChoice: (roll) => ({
 					total:
-						naturalChangeFor(card.roller(), card.roll, roll as AnyRoll)?.value ??
+						naturalResultChangeOfRoll(card.roller(), card.roll, roll as AnyRoll)?.value ??
 						(Number((roll as { total?: number }).total) || 0),
 					outcome: null,
 				}),
@@ -322,7 +308,7 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 					context: context(),
 					entries,
 					write: async (changes) => {
-						const natural = naturalChangeFor(card.roller(), card.roll, roll);
+						const natural = naturalResultChangeOfRoll(card.roller(), card.roll, roll);
 						const resultChanges = changesAfterRoll(
 							card.resultChanges(),
 							storedRoll(card.rollsSource()[0]).total,
@@ -388,7 +374,7 @@ async function collectCheckRerolls(input: {
 				terms: roll.terms as unknown[],
 				changes: [],
 				dc: input.dc,
-			}) === 'failed' && !naturalChangeFor(input.roller, input.check, roll);
+			}) === 'failed' && !naturalResultChangeOfRoll(input.roller, input.check, roll);
 		return found.automatic.filter(({ rule }) => rule.outcome !== 'failed' || failed);
 	};
 
@@ -408,7 +394,7 @@ async function collectCheckRerolls(input: {
 		},
 	});
 
-	const natural = naturalChangeFor(input.roller, input.check, roll);
+	const natural = naturalResultChangeOfRoll(input.roller, input.check, roll);
 	const ran = new Set(stamped.map((entry) => entry.id));
 	const waitsForResult = found.automatic
 		.filter(({ rule, entry }) => rule.outcome === 'failed' && !ran.has(entry.id))

@@ -72,20 +72,31 @@ describe.each(RULES)('$name trigger and mode choices', ({ fields, triggers, mode
 	});
 });
 
-describe('Modify Pool mode hint', () => {
-	it('names the modes a charge pool ignores', () => {
-		const mode = entryFields(ModifyPoolRule.defineSchema(), 'addRefills').mode;
-		const choices = mode.choices as Record<string, string>;
-		const hint = langValue(mode.hint ?? '') as string;
-		const chargeIgnores = DicePoolRuleConfig.refillModes.filter(
-			(m) => !(ChargePoolRuleConfig.recoveryModes as readonly string[]).includes(m),
-		);
+describe('Modify Pool entry choices', () => {
+	type ChoicesFor = (rule: Record<string, unknown>) => readonly string[];
+	const offered = (field: unknown, poolType: string) => [
+		...(field as { options: { choicesFor: ChoicesFor } }).options.choicesFor({ poolType }),
+	];
 
-		expect(chargeIgnores).toEqual(['setIfEmpty', 'clear']);
-		expect(hint).toBeTypeOf('string');
-		for (const value of chargeIgnores) {
-			expect(hint).toContain(langValue(choices[value]) as string);
+	it('offers each pool type only the triggers and modes it performs', () => {
+		const { trigger, mode } = entryFields(ModifyPoolRule.defineSchema(), 'addRefills');
+
+		expect(offered(mode, 'charge')).toEqual([...ChargePoolRuleConfig.recoveryModes]);
+		expect(offered(mode, 'dice')).toEqual([...DicePoolRuleConfig.refillModes]);
+		expect(offered(trigger, 'charge')).toEqual([...ChargePoolRuleConfig.recoveryTriggers]);
+		expect(offered(trigger, 'dice')).toEqual([...DicePoolRuleConfig.refillTriggers]);
+	});
+
+	it('offers only stored values the field accepts', () => {
+		const { trigger, mode } = entryFields(ModifyPoolRule.defineSchema(), 'addRefills');
+		for (const [field, poolType] of [
+			[trigger, 'charge'],
+			[trigger, 'dice'],
+			[mode, 'charge'],
+			[mode, 'dice'],
+		] as const) {
+			const accepted = Object.keys(field.choices as Record<string, string>);
+			expect(accepted).toEqual(expect.arrayContaining(offered(field, poolType)));
 		}
-		expect(hint).toMatch(/charge pool ignores/i);
 	});
 });
