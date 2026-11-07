@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { ResultChange } from '#types/resultChange.d.ts';
 import { resultRemovalRefusal } from '#utils/rolls/cardRollState.ts';
 import {
@@ -209,5 +209,35 @@ describe('resultSumText', () => {
 		const retired = click({ retired: true, before: 7 });
 		expect(resultSumText(11, [retired])).toBeNull();
 		expect(resultSumText(11, [retired, click()])).toBe('11 + 3 = 14');
+	});
+});
+
+describe('the line of a Remove that keeps an action spent', () => {
+	const ACTION_KEPT = 'Remove does not give back actions after the turn ends';
+	const spentAction = {
+		charges: 0,
+		mana: 0,
+		wounds: 0,
+		action: { combatId: 'combat-1', combatantId: 'hero', amount: 1, now: true },
+		stamp: { combatId: 'combat-1', round: 1, turn: 0 },
+	};
+	const game = (globalThis as unknown as { game: { combat?: unknown } }).game;
+
+	afterEach(() => {
+		game.combat = undefined;
+	});
+
+	it('shows in a new turn, and not in the turn it was paid in', () => {
+		game.combat = { id: 'combat-1', round: 1, turn: 0 };
+		expect(linesOf([click({ paid: spentAction })])[0].note).toBeNull();
+
+		game.combat = { id: 'combat-1', round: 1, turn: 1 };
+		expect(linesOf([click({ paid: spentAction })])[0].note).toBe(ACTION_KEPT);
+	});
+
+	it('does not show on a line with no Remove, or one that cost no action', () => {
+		game.combat = { id: 'combat-1', round: 2, turn: 0 };
+		expect(linesOf([click({ paid: spentAction })], 7, false)[0].note).toBeNull();
+		expect(linesOf([click()])[0].note).toBeNull();
 	});
 });

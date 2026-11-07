@@ -1,3 +1,4 @@
+import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type {
 	IncomingReactionActorGroup,
@@ -8,6 +9,7 @@ import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts'
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResultChange } from '#types/resultChange.d.ts';
 import { mayActHere } from '#utils/chat/cardOperations.js';
+import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { rerollIsUsedByDefend } from '#utils/defend/defendOptions.js';
 import { cardTakesDefends } from '#utils/defend/defendRecords.js';
 import {
@@ -179,8 +181,11 @@ export function createIncomingReactionPromptsState(
 				})[0]
 			: null,
 	);
-	const resultLines = $derived(
-		getPlace() !== 'options'
+	// A line tells when Remove keeps an action spent, which a new turn changes.
+	const subscribeCombat = createSubscriber(registerCombatStateHooks);
+	const resultLines = $derived.by(() => {
+		subscribeCombat();
+		return getPlace() !== 'options'
 			? resultChangeLines({
 					changes: resultChanges,
 					rollTotal,
@@ -188,8 +193,8 @@ export function createIncomingReactionPromptsState(
 					documentName: text.documentName,
 					canRemove: canRemoveResult,
 				})
-			: [],
-	);
+			: [];
+	});
 	const resultSum = $derived(
 		getPlace() === 'checkRoll' ? resultSumText(rollTotal, resultChanges) : null,
 	);

@@ -49,6 +49,15 @@ interface PaidRerollCost {
 	turnUse?: boolean;
 	/** The dice expended from a dice pool. */
 	dice?: { poolId: string; faces: number[] } | null;
+	/** The combat round and turn when an action or a heroic reaction was paid. */
+	stamp?: TurnStamp | null;
+}
+
+/** A moment of a combat: an action or a heroic reaction comes back only in it. */
+interface TurnStamp {
+	combatId: string;
+	round: number;
+	turn: number | null;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -95,6 +104,32 @@ function actionPayer(
 	if (!found || found.combatant.type !== 'character') return null;
 	const now = (found.combat.combatant?.id ?? null) === found.combatant.id;
 	return { ...found, now };
+}
+
+/** The combat's round and turn now, or null with no combat. */
+function turnStampOf(combat: Combat | null | undefined): TurnStamp | null {
+	if (!combat) return null;
+	return { combatId: combat.id ?? '', round: Number(combat.round) || 0, turn: combat.turn ?? null };
+}
+
+/**
+ * Whether giving back `paid` keeps an action or a heroic reaction spent. They
+ * come back only in the combat, round and turn they were paid in. A record with
+ * no stamp keeps them.
+ */
+function keepsTurnCost(
+	paid: Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>,
+): boolean {
+	if (!paid.action && !paid.heroicReaction) return false;
+	const now = turnStampOf(game.combat);
+	const then = paid.stamp;
+	return !(
+		now &&
+		then &&
+		now.combatId === then.combatId &&
+		now.round === then.round &&
+		now.turn === then.turn
+	);
 }
 
 /** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
@@ -182,9 +217,12 @@ export {
 	costForDice,
 	canPayRerollCost,
 	findActorCombatant,
+	keepsTurnCost,
 	poolToExpend,
 	rerollCostCharges,
 	rerollUsesLeft,
+	turnStampOf,
 	type PaidRerollCost,
 	type RerollCost,
+	type TurnStamp,
 };

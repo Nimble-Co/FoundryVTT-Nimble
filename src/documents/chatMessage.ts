@@ -5,7 +5,11 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
-import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
+import {
+	inFlightSpendOffers,
+	queueFreshCardWrite,
+	queueReactionWrite,
+} from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackDelivery,
@@ -1115,27 +1119,28 @@ class NimbleChatMessage extends ChatMessage {
 	async #addTargets(newTargets: Token[]): Promise<ChatMessage | undefined> {
 		if (!this.isActivationCard()) return;
 
-		const systemData = this.system as ActivationCardSystemData;
-		const existingTargets = systemData.targets || [];
 		const added = newTargets.map((token) => token.document.uuid).filter((uuid) => uuid !== null);
-		const targets = [...new Set([...existingTargets, ...added])];
-
-		const write = () =>
-			this.update({
-				system: {
-					targets,
-					...this.#noDamageRowChanges(targets),
-					...this.#movementOfferChanges({ targets }),
-				},
-			} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
-		if (!this.#noDamageRowChanges(targets).incomingReactions) return write();
-
+		if (!this.#noDamageRowChanges(this.#targetsWith(added)).incomingReactions) {
+			return this.#writeAddedTargets(added);
+		}
 		// The whole list is written, so it waits for a write in flight on this client.
-		let updated: ChatMessage | undefined;
-		await queueReactionWrite(this.id ?? '', async () => {
-			updated = await write();
-		});
-		return updated;
+		return queueFreshCardWrite(this as NimbleChatMessage, (card) => card.#writeAddedTargets(added));
+	}
+
+	#targetsWith(added: readonly string[]): string[] {
+		const existing = (this.system as unknown as ActivationCardSystemData).targets || [];
+		return [...new Set([...existing, ...added])];
+	}
+
+	#writeAddedTargets(added: readonly string[]): Promise<ChatMessage | undefined> {
+		const targets = this.#targetsWith(added);
+		return this.update({
+			system: {
+				targets,
+				...this.#noDamageRowChanges(targets),
+				...this.#movementOfferChanges({ targets }),
+			},
+		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
 	/**

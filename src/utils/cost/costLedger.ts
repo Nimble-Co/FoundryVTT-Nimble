@@ -3,6 +3,7 @@ import { isResourceSpendingAutomationEnabled } from '../../settings/automationSe
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { refundRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { clearTurnUse, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
+import { queueCombatantMutationWithFreshDocument } from '../combat/queueCombatantMutationWithFreshDocument.js';
 import {
 	buildCombatantActionDeltaUpdate,
 	requestCombatantActionDelta,
@@ -18,9 +19,11 @@ import {
 	actionPayer,
 	canSpendActions,
 	findActorCombatant,
+	keepsTurnCost,
 	type PaidRerollCost,
 	poolToExpend,
 	type RerollCost,
+	turnStampOf,
 } from '../reroll/rerollCost.js';
 
 type RerollPayer = Actor | null | undefined;
@@ -126,27 +129,34 @@ function changeActions(paid: NonNullable<PaidRerollCost['action']>, delta: numbe
 }
 
 async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReaction']>) {
-	const combat = game.combat as unknown as HeroicReactionCombat | null;
+	const combat = game.combat ?? null;
 	if (!combat || (combat.id ?? '') !== paid.combatId) return;
-	const combatant = (game.combat?.combatants.get(paid.combatantId) ??
-		null) as Combatant.Implementation | null;
-	const actions =
-		combatant && paid.actionsSpent > 0
-			? buildCombatantActionDeltaUpdate(combatant, {
-					currentDelta: paid.actionsSpent,
-					pendingDelta: 0,
-				})
-			: null;
-	await combat.updateEmbeddedDocuments?.('Combatant', [
-		{
-			_id: paid.combatantId,
-			...actions,
-			...getHeroicReactionAvailabilityUpdate(paid.key, true),
+	await queueCombatantMutationWithFreshDocument({
+		combat,
+		combatantId: paid.combatantId,
+		mutation: async (combatant) => {
+			const actions =
+				paid.actionsSpent > 0
+					? buildCombatantActionDeltaUpdate(combatant, {
+							currentDelta: paid.actionsSpent,
+							pendingDelta: 0,
+						})
+					: null;
+			await (combat as unknown as HeroicReactionCombat).updateEmbeddedDocuments?.('Combatant', [
+				{
+					_id: paid.combatantId,
+					...actions,
+					...getHeroicReactionAvailabilityUpdate(paid.key, true),
+				},
+			]);
 		},
-	]);
+	});
 }
 
-/** Give back what `payCost` charged. */
+/**
+ * Give back what `payCost` charged. An action or a heroic reaction comes back
+ * only in the turn it was paid in (see `keepsTurnCost`).
+ */
 async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promise<void> {
 	if (paid.wounds > 0) {
 		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
@@ -163,6 +173,7 @@ async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promis
 		await setPoolFaces(actor, paid.dice.poolId, [...current, ...paid.dice.faces], 'refund');
 	}
 	if (paid.turnUse && cost.turnUseKey) await clearTurnUse(actor, cost.turnUseKey);
+	if (keepsTurnCost(paid)) return;
 	if (paid.action) await changeActions(paid.action, paid.action.amount);
 	if (paid.heroicReaction) await refundHeroicReaction(paid.heroicReaction);
 }
@@ -193,6 +204,7 @@ async function payCost(
 		);
 		if (spent === false) return null;
 		paid.heroicReaction = spent;
+		if (spent) paid.stamp = turnStampOf(game.combat);
 	}
 	if (!isResourceSpendingAutomationEnabled()) return paid;
 
@@ -204,6 +216,7 @@ async function payCost(
 			const spent = await spendActions(actor, actions);
 			if (spent === false) return fail();
 			paid.action = spent;
+			if (spent) paid.stamp ??= turnStampOf(game.combat);
 		}
 	}
 

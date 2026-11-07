@@ -18,6 +18,9 @@
 			{#if line.detail}
 				<span class="nimble-result-line__detail">{line.detail}</span>
 			{/if}
+			{#if line.note}
+				<span class="nimble-result-line__note">{line.note}</span>
+			{/if}
 		</p>
 		{#if line.canRemove}
 			<button
@@ -64,13 +67,15 @@
 		}
 
 		&__feature,
-		&__detail {
+		&__detail,
+		&__note {
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
 		}
 
-		&__detail {
+		&__detail,
+		&__note {
 			display: block;
 		}
 

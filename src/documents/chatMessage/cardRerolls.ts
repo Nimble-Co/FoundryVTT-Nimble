@@ -1244,6 +1244,9 @@ export class CardRerolls {
 						charges: paid?.charges ?? 0,
 						mana: paid?.mana ?? 0,
 						wounds: paid?.wounds ?? 0,
+						action: paid?.action ?? null,
+						heroicReaction: paid?.heroicReaction ?? null,
+						stamp: paid?.stamp ?? null,
 					},
 				});
 				await this.#host.update({
@@ -1357,7 +1360,10 @@ export class CardRerolls {
 		}
 	}
 
-	/** Uses, Mana and Wounds go back. An action or a heroic reaction stays spent. */
+	/**
+	 * Uses, Mana and Wounds go back. An action or a heroic reaction goes back only
+	 * in the turn it was paid in.
+	 */
 	async #giveBackResultCost(line: readonly ResultChange[]): Promise<void> {
 		for (const change of line) {
 			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
@@ -1370,7 +1376,11 @@ export class CardRerolls {
 					woundCost: change.paid.wounds,
 					heroicReaction: '',
 				},
-				paid: { ...change.paid, heroicReaction: null, action: null },
+				paid: {
+					...change.paid,
+					action: change.paid.action ?? null,
+					heroicReaction: change.paid.heroicReaction ?? null,
+				},
 			});
 		}
 	}

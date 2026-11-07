@@ -811,6 +811,8 @@
 					"changedTo": "{from} changed to {to}",
 					"remove": "Remove",
 					"removeLine": "Remove: {line}",
+					"actionKept": "Remove does not give back actions after the turn ends",
+					"reactionKept": "Remove does not give back the Heroic Reaction after the turn ends",
 					"noDamage": "No Damage for {target}",
 					"countsAsNat20": "Counts as a Natural 20",
 					"countsAsNat20Sum": "Rolled {rolled}, counts as 20 {modifier}"

@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ResultChange } from '#types/resultChange.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import type { IncomingReactionEntry } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { checkResultOfCard } from '../../utils/rolls/checkResult.js';
 import { resultTotal } from '../../utils/rolls/resultChanges.js';
+import { resultChangeLines } from '../../view/chat/components/resultChangeLines.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 const ROLLER = 'Actor.roller';
@@ -779,10 +780,153 @@ describe('Remove on a Change a Result line', () => {
 		expect(shownTotal(card)).toBe(13);
 	});
 
-	it('records only what Remove gives back: no action and no heroic reaction', async () => {
-		const { card } = await cardWith({ change: 'succeed', value: 0, stat: '' }, FREE);
+	describe('an action or a Heroic Reaction it cost', () => {
+		const succeed = { change: 'succeed', value: 0, stat: '' };
+		const ACTION_KEPT = 'Remove does not give back actions after the turn ends';
+		const REACTION_KEPT = 'Remove does not give back the Heroic Reaction after the turn ends';
 
-		expect(Object.keys(card.system.resultChanges[0].paid)).toEqual(['charges', 'mana', 'wounds']);
+		/** A started combat on the roller's turn. Its combatant writes its own updates. */
+		function heroCombat(roller: ReturnType<typeof makeRoller>) {
+			const hero = {
+				id: 'hero',
+				type: 'character',
+				actor: roller,
+				system: {
+					actions: {
+						base: { current: 3, max: 3 },
+						pendingDelta: 0,
+						heroic: { defendAvailable: true },
+					},
+				},
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					for (const [path, value] of Object.entries(changes)) {
+						foundry.utils.setProperty(hero, path, value);
+					}
+				}),
+			};
+			const combat = {
+				id: 'combat-1',
+				started: true,
+				round: 1,
+				turn: 0,
+				combatant: hero,
+				combatants: {
+					find: (predicate: (c: unknown) => boolean) => [hero].find(predicate),
+					get: (id: string) => (id === hero.id ? hero : undefined),
+				},
+				useHeroicReactions: vi.fn(async () => {
+					hero.system.actions.base.current -= 1;
+					hero.system.actions.heroic.defendAvailable = false;
+					return true;
+				}),
+				updateEmbeddedDocuments: vi.fn(
+					async (_type: string, [update]: Array<Record<string, unknown>>) => {
+						const { _id, ...changes } = update;
+						await hero.update(changes);
+					},
+				),
+			};
+			(globals().game as { combat?: unknown }).combat = combat;
+			return { hero, combat };
+		}
+
+		async function paidCard(cost: Record<string, unknown>) {
+			const roller = makeRoller();
+			const { hero, combat } = heroCombat(roller);
+			const rule = makeRule(roller, 'feature', succeed, cost);
+			setupWorld([rule], roller);
+			const card = createCard([entryFor('feature')]);
+			await click(card, 'feature');
+			const lineId = card.system.resultChanges[0].lineId;
+			return { card, roller, hero, combat, lineId };
+		}
+
+		const notes = (card: Card) =>
+			resultChangeLines({
+				changes: card.system.resultChanges,
+				rollTotal: 7,
+				speakerUuid: ROLLER,
+				documentName: () => '',
+				canRemove: () => true,
+			}).map((line) => line.note);
+
+		afterEach(() => {
+			(globals().game as { combat?: unknown }).combat = null;
+		});
+
+		it('records the combat round and turn it was paid in', async () => {
+			const { card } = await paidCard({ ...FREE, actionCost: 1 });
+
+			expect(card.system.resultChanges[0].paid).toMatchObject({
+				action: { combatId: 'combat-1', combatantId: 'hero', amount: 1, now: true },
+				stamp: { combatId: 'combat-1', round: 1, turn: 0 },
+			});
+		});
+
+		it('gives back the action in the same turn, on top of an action spent after it', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			expect(hero.system.actions.base.current).toBe(2);
+			hero.system.actions.base.current = 1;
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
+
+		it('gives back the Heroic Reaction and its action in the same turn, as a change', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, heroicReaction: 'defend' });
+			expect(hero.system.actions.base.current).toBe(2);
+			hero.system.actions.base.current = 1;
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(true);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
+
+		it('keeps the action spent after the turn changed, and the line says so', async () => {
+			const { card, roller, hero, combat, lineId } = await paidCard({
+				...FREE,
+				actionCost: 1,
+				manaCost: 2,
+			});
+			combat.turn = 1;
+			hero.update.mockClear();
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(roller.system.resources.mana.current).toBe(5);
+			expect(hero.system.actions.base.current).toBe(2);
+			expect(hero.update).not.toHaveBeenCalled();
+		});
+
+		it('keeps the Heroic Reaction spent in a new round, and the line says so', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, heroicReaction: 'defend' });
+			combat.round = 2;
+			expect(notes(card)).toEqual([REACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(false);
+			expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('gives back no action for a record with no stamp, and the line says so', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			const [change] = card.system.resultChanges;
+			const { stamp: _stamp, ...paid } = change.paid;
+			card.system.resultChanges = [{ ...change, paid }];
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
 	});
 
 	it('brings the entry back for a rule that could not pay before', async () => {

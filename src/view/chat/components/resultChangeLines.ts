@@ -2,6 +2,7 @@ import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts'
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 
 import localize from '#utils/localize.js';
+import { keepsTurnCost } from '#utils/reroll/rerollCost.ts';
 import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
 import { signedNumber, spacedSignedNumber } from '#utils/signedNumber.ts';
 
@@ -71,6 +72,16 @@ function lineVerb(
 	return addedVerb(resultAmount({ value, stat: first.stat }), wounds);
 }
 
+/** Why Remove keeps an action or a Heroic Reaction of these clicks spent, or null. */
+function keptCostNote(clicks: readonly ResultChange[]): string | null {
+	const kept = clicks.filter((click) => keepsTurnCost(click.paid));
+	if (kept.some((click) => click.paid.heroicReaction)) {
+		return localize('NIMBLE.chat.incomingReactions.resultChange.reactionKept');
+	}
+	if (kept.length > 0) return localize('NIMBLE.chat.incomingReactions.resultChange.actionKept');
+	return null;
+}
+
 /** The card's Change a Result lines, in the order of their first clicks. */
 function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 	const lines = new Map<string, { clicks: ResultChange[]; before: number }>();
@@ -86,6 +97,7 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 	return [...lines].map(([id, { clicks, before }]) => {
 		const [first] = clicks;
 		const verb = lineVerb(clicks, before, input.documentName);
+		const canRemove = input.canRemove(first.actorUuid, first);
 		const feature = (input.documentName(first.itemUuid) ?? '').trim() || first.label;
 		const name =
 			first.actorUuid === input.speakerUuid
@@ -103,7 +115,8 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 			}),
 			detail: name ? localize('NIMBLE.chat.incomingReactions.rerollUsedBy', { name }) : null,
 			retired: first.retired,
-			canRemove: input.canRemove(first.actorUuid, first),
+			canRemove,
+			note: canRemove ? keptCostNote(clicks) : null,
 		};
 	});
 }

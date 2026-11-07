@@ -469,6 +469,32 @@ const resultChange = () =>
 			charges: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 			mana: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 			wounds: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+			action: new fields.SchemaField(
+				{
+					combatId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					combatantId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					amount: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+					now: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
+			heroicReaction: new fields.SchemaField(
+				{
+					combatId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					combatantId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					key: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					actionsSpent: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
+			stamp: new fields.SchemaField(
+				{
+					combatId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					round: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+					turn: new fields.NumberField({ required: true, nullable: true, initial: null }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
 		}),
 		automatic: new fields.BooleanField({ required: false, nullable: false, initial: false }),
 		targetTokenUuid: new fields.StringField({ required: false, nullable: true, initial: null }),

@@ -15,6 +15,8 @@ export interface ResultChangeLine {
 	/** A new roll took it off: the line stays, with no Remove. */
 	retired: boolean;
 	canRemove: boolean;
+	/** Why Remove does not give back an action or a Heroic Reaction the line cost. */
+	note: string | null;
 }
 
 export interface ResultChangeLinesProps {

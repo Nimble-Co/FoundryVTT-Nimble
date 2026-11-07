@@ -33,3 +33,19 @@ const reactionWriteQueues = keyedQueue();
 export function queueReactionWrite<T>(messageId: string, task: () => Promise<T>): Promise<T> {
 	return reactionWriteQueues.run(messageId, task);
 }
+
+/**
+ * Queue a write of a whole field that another client can also write. `write`
+ * gets the card read again from the messages when its turn comes, and merges
+ * only this client's own change into it, so a write that landed while this one
+ * waited stays. A write that lands between that read and this write is lost.
+ */
+export function queueFreshCardWrite<Card extends { id: string | null }, T>(
+	card: Card,
+	write: (fresh: Card) => Promise<T>,
+): Promise<T> {
+	const id = card.id ?? '';
+	return queueReactionWrite(id, () =>
+		write((game.messages?.get(id) as unknown as Card | undefined) ?? card),
+	);
+}
