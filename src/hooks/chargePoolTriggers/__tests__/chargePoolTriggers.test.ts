@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTestGlobals } from '../../../../tests/helpers.js';
 import {
 	type CombatDefeatSyncTestGlobals,
@@ -290,6 +290,122 @@ describe('registerInitiativeTriggerHooks', () => {
 
 			await hook?.({ actor, combatant: rolledIn('combat-2') });
 			await vi.waitFor(() => expect(current()).toBe(4));
+		});
+
+		it('marks the combat only after the refill is written', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+			registerInitiativeTriggerHooks();
+			const hook = callbacks.get('nimble.initiativeRolled');
+			const { actor, item } = commander(0);
+			const actorUpdate = actor.update as ReturnType<typeof vi.fn>;
+
+			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await vi.waitFor(() => expect(actorUpdate).toHaveBeenCalled());
+
+			expect(item.update.mock.invocationCallOrder[0]).toBeLessThan(
+				actorUpdate.mock.invocationCallOrder[0],
+			);
+		});
+
+		it('leaves the combat not marked when the refill fails, so a second roll refills', async () => {
+			vi.spyOn(console, 'error').mockImplementation(() => {});
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+			registerInitiativeTriggerHooks();
+			const hook = callbacks.get('nimble.initiativeRolled');
+			const { actor, item, current } = commander(0);
+			item.update.mockRejectedValueOnce(new Error('write failed'));
+
+			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await vi.waitFor(() => expect(item.update).toHaveBeenCalledTimes(1));
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(
+				foundry.utils.getProperty(actor, 'flags.nimble.initiativeRecoveryCombat'),
+			).toBeUndefined();
+
+			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await vi.waitFor(() => expect(current()).toBe(2));
+		});
+
+		describe('when the combat starts', () => {
+			const user = () => globals().game.user as { isGM?: boolean };
+			const combatOf = (actor: Record<string, unknown>) => ({
+				id: 'combat-1',
+				combatants: { contents: [{ actor }] },
+			});
+
+			beforeEach(() => {
+				user().isGM = true;
+			});
+
+			afterEach(() => {
+				delete user().isGM;
+			});
+
+			it('refills a hero who did not get the refill in this combat yet', async () => {
+				const callbacks = createHookCapture(globals().Hooks.on);
+				const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+				registerInitiativeTriggerHooks();
+				const { actor, current } = commander(0);
+
+				callbacks.get('combatStart')?.(combatOf(actor), { round: 1, turn: 0 });
+
+				await vi.waitFor(() => expect(current()).toBe(2));
+			});
+
+			it('gives nothing more to a hero who rolled before the combat started', async () => {
+				const callbacks = createHookCapture(globals().Hooks.on);
+				const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+				registerInitiativeTriggerHooks();
+				const { actor, item, current } = commander(0);
+
+				await callbacks.get('nimble.initiativeRolled')?.({
+					actor,
+					combatant: rolledIn('combat-1'),
+				});
+				await vi.waitFor(() => expect(current()).toBe(2));
+				const writes = item.update.mock.calls.length;
+
+				callbacks.get('combatStart')?.(combatOf(actor), { round: 1, turn: 0 });
+				await new Promise((resolve) => setTimeout(resolve, 0));
+
+				expect(item.update).toHaveBeenCalledTimes(writes);
+				expect(current()).toBe(2);
+			});
+
+			it('gives nothing on a later roll to a hero refilled at combat start', async () => {
+				const callbacks = createHookCapture(globals().Hooks.on);
+				const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+				registerInitiativeTriggerHooks();
+				const { actor, item, current } = commander(0);
+
+				callbacks.get('combatStart')?.(combatOf(actor), { round: 1, turn: 0 });
+				await vi.waitFor(() => expect(current()).toBe(2));
+				const writes = item.update.mock.calls.length;
+
+				await callbacks.get('nimble.initiativeRolled')?.({
+					actor,
+					combatant: rolledIn('combat-1'),
+				});
+				await new Promise((resolve) => setTimeout(resolve, 0));
+
+				expect(item.update).toHaveBeenCalledTimes(writes);
+				expect(current()).toBe(2);
+			});
+
+			it('does nothing on a client that is not the active GM', async () => {
+				user().isGM = false;
+				const callbacks = createHookCapture(globals().Hooks.on);
+				const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
+				registerInitiativeTriggerHooks();
+				const { actor, item } = commander(0);
+
+				callbacks.get('combatStart')?.(combatOf(actor), { round: 1, turn: 0 });
+				await new Promise((resolve) => setTimeout(resolve, 0));
+
+				expect(item.update).not.toHaveBeenCalled();
+			});
 		});
 	});
 
