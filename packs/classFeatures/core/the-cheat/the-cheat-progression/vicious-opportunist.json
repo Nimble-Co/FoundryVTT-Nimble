@@ -41,14 +41,14 @@
 				"woundCost": 0,
 				"heroicReaction": "",
 				"actionCost": 0,
+				"oncePerTurn": true,
 				"oncePerRoll": false,
 				"cardHint": "If the target is not Distracted, attack with a blade (Supreme Execution)",
 				"cardHintWhen": {
 					"$and": [
 						"feature:supreme-execution"
 					]
-				},
-				"oncePerTurn": true
+				}
 			}
 		],
 		"activation": {

@@ -24,6 +24,11 @@
 						"trigger": "onAnyTurnStart",
 						"mode": "refresh",
 						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
 					}
 				]
 			},
