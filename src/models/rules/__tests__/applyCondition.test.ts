@@ -22,6 +22,7 @@ interface MockActiveEffect {
 }
 
 interface MockActor {
+	uuid: string;
 	statuses: Set<string>;
 	effects: MockActiveEffect[];
 	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
@@ -49,6 +50,7 @@ function lastAppliedEffect(): MockActiveEffect | undefined {
 
 interface ApplyConditionSource {
 	condition: string;
+	recipient?: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	duration?: { rounds?: number | null; turns?: number | null; seconds?: number | null };
 	disabled?: boolean;
@@ -62,14 +64,19 @@ interface ApplyConditionSource {
 
 interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
+	recipient: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	duration: { rounds: number | null; turns: number | null; seconds: number | null };
 	disabled: boolean;
 	label: string;
 }
 
+let nextActorId = 0;
+
 function createMockActor(): MockActor {
+	nextActorId += 1;
 	const actor: MockActor = {
+		uuid: `Actor.mock-${nextActorId}`,
 		statuses: new Set<string>(),
 		effects: [],
 		deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
@@ -119,6 +126,7 @@ function createApplyConditionRule(
 	const item = createMockItem(actor);
 	const sourceData = {
 		condition: config.condition,
+		recipient: config.recipient ?? 'target',
 		trigger: config.trigger,
 		duration: {
 			rounds: config.duration?.rounds ?? null,
@@ -142,6 +150,7 @@ function createApplyConditionRule(
 	) as ApplyConditionRuleTestInstance;
 
 	rule.condition = config.condition;
+	rule.recipient = config.recipient ?? 'target';
 	rule.trigger = config.trigger;
 	rule.duration = sourceData.duration;
 	rule.disabled = config.disabled ?? false;
@@ -295,6 +304,63 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed(buildItemUsedContext(otherActor, targetActor, { isCritical: true }));
 
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
+		it('applies the condition to the attacker when target is self', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
+
+			expect(conditionsAppliedTo(attackerActor)).toEqual(['latched']);
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
+		it('records the creature attacked as the link on a self-applied condition', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				linkedActorUuid: targetActor.uuid,
+			});
+		});
+
+		it('records the attacker as the link on a condition applied to the target', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'swallowed', recipient: 'target', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				linkedActorUuid: attackerActor.uuid,
+			});
+		});
+
+		it('still applies a self-targeted condition when there is no target to link to', async () => {
+			const attackerActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, null));
+
+			expect(conditionsAppliedTo(attackerActor)).toEqual(['latched']);
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
 		});
 
 		it('no-ops gracefully when targetActor is null', async () => {

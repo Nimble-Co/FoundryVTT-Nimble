@@ -1,10 +1,8 @@
 import type { AttackOutcomeSources, ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { RuleOf } from '#types/ruleTypes.d.ts';
-import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { rulesOfType } from '../actor/actorRules.js';
-import localize from '../localize.js';
 import type { AttackDelivery } from './attackDelivery.js';
 import { incapacitatedCause, incapacitatedConditionOf } from './incapacitatedTarget.js';
 import { DEFAULT_MISS_THRESHOLD } from './missThreshold.js';
@@ -140,12 +138,6 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 				charges.push({ identifier: change.chargePoolIdentifier, gave });
 			}
 		}
-	}
-
-	// The condition gives this itself: the creature has no item with a rule for it.
-	if (input.attacker?.statuses?.has(STATUS_EFFECT_IDS.swallowed)) {
-		if (input.canMiss) sources.cannotMiss.push(localize('NIMBLE.conditions.swallowed'));
-		ignoreArmor = true;
 	}
 
 	const condition =
