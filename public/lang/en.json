@@ -811,6 +811,8 @@
 					"changedTo": "{from} changed to {to}",
 					"remove": "Remove",
 					"removeLine": "Remove: {line}",
+					"actionKept": "Remove does not give back actions after the turn ends",
+					"reactionKept": "Remove does not give back the Heroic Reaction after the turn ends",
 					"noDamage": "No Damage for {target}",
 					"countsAsNat20": "Counts as a Natural 20",
 					"countsAsNat20Sum": "Rolled {rolled}, counts as 20 {modifier}"
@@ -819,7 +821,8 @@
 					"label": "Change This Roll",
 					"count": "({count})",
 					"withFeature": "with {feature}",
-					"sentence": "{verb} with {feature}"
+					"sentence": "{verb} with {feature}",
+					"naturalOneFails": "A roll of 1 always fails"
 				},
 				"withNote": "{text}. {note}",
 				"rerollHistoryPlain": "Rerolled with {feature}",
@@ -1963,11 +1966,11 @@
 					},
 					"mode": {
 						"label": "Mode",
-						"hint": "How the value applies: \"add\" (gain N), \"set\" (set to N), or \"refresh\" (fill to max)."
+						"hint": "How the value applies: Add gains that many, Set sets the pool to that many, and Refill to max fills it."
 					},
 					"value": {
 						"label": "Value",
-						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+						"hint": "Amount used by the mode. Flat or formula. Refill to max ignores it."
 					},
 					"predicate": {
 						"label": "Only while",
@@ -1983,7 +1986,7 @@
 					},
 					"temporary": {
 						"label": "Temporary uses",
-						"hint": "Only on a charge pool, with the \"add\" mode. These uses are spent first. They go away when the encounter ends."
+						"hint": "Only on a charge pool, with the Add mode. These uses are spent first. They go away when the encounter ends."
 					}
 				}
 			},
@@ -2116,15 +2119,25 @@
 					"hint": "When and how dice are added back to the pool. Add an entry per trigger.",
 					"trigger": {
 						"label": "Trigger",
-						"hint": "Event that drives this refill (rest type, encounter event, taken damage, etc.)."
+						"hint": "Event that drives this refill (a rest, an encounter event, an attack against you, and so on).",
+						"choices": {
+							"onAttacked": "Attacked",
+							"onCritReceived": "Hit by a Crit"
+						}
 					},
 					"mode": {
 						"label": "Mode",
-						"hint": "How the value applies: \"add\" (roll N new dice), \"set\" (rebuild pool to N), or \"refresh\" (fill to max)."
+						"hint": "How the value applies: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die.",
+						"choices": {
+							"add": "Add",
+							"set": "Set",
+							"setIfEmpty": "Set When Empty",
+							"clear": "Empty the Pool"
+						}
 					},
 					"value": {
 						"label": "Value",
-						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+						"hint": "Amount used by the mode. Flat or formula. Refill to max and Empty the Pool ignore it."
 					},
 					"predicate": {
 						"label": "Condition",
@@ -2435,7 +2448,10 @@
 				},
 				"addRefills": {
 					"label": "Additional refills",
-					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition."
+					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition.",
+					"mode": {
+						"hint": "How the value applies. On a dice pool: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die. On a charge pool: Add gains that many, Set sets the pool to that many, and Refill to max fills it. A charge pool ignores Set When Empty and Empty the Pool."
+					}
 				}
 			},
 			"modifyReroll": {

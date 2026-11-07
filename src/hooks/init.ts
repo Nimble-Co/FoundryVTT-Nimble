@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import { registerSpecialStatusEffects } from '../config/registerConditionsConfig.js';
 import { NIMBLE } from '../config.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
@@ -99,6 +100,8 @@ export default function init() {
 
 	// Register Nimble custom Die modifiers (khn / kln — leftmost-on-tie keep).
 	registerNimbleDieModifiers();
+
+	registerSpecialStatusEffects();
 
 	// Movement actions must exist before Foundry freezes CONFIG.Token.movement.actions in setup.
 	registerMovementActions();

@@ -87,12 +87,13 @@ export function createIncomingReactionText(
 		);
 	}
 
-	function row(entry: IncomingReactionEntry): IncomingReactionRow {
+	/** A reason the row cannot be used now takes the place of its note. */
+	function row(entry: IncomingReactionEntry, reason = ''): IncomingReactionRow {
 		const words = verb(entry);
 		// The baseline Interpose is no feature's.
 		const feature = entry.source === 'baseline' ? '' : featureName(entry) || entry.label;
 		const cost = getIncomingReactionCost(entry, reactingActor(entry)) || gainOf(entry);
-		const note = (entry.hint ?? '').trim();
+		const note = reason || (entry.hint ?? '').trim();
 		const label = feature
 			? localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', { verb: words, feature })
 			: words;

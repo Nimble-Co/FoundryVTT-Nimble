@@ -9,7 +9,7 @@ The Reroll rule lets a creature discard a roll and roll it again. By default the
 - **Charge pool** → `wily`
 - **Charges per use** → `1`
 
-The use limit is a Charge Pool rule on the same item, with the identifier `wily`, **Max charges** `1` and a recovery on `encounterEnd`. Each reroll takes one charge from it. When the pool is empty, the feature does not show. Only the first target of an attack can use a target reroll.
+The use limit is a Charge Pool rule on the same item, with the identifier `wily`, **Max charges** `1` and a recovery on Encounter End. Each reroll takes one charge from it. When the pool is empty, the feature does not show. Only the first target of an attack can use a target reroll.
 
 **Example: Unstoppable Brutality.** While Raging, you may gain 1 Wound to reroll any attack or save.
 
@@ -51,7 +51,7 @@ After a reroll, a feature with uses left keeps its row on the same card, and the
 - **Which result stands?** → `rollerChooses`
 - **Charge pool** → `songweavers-inspiration`
 
-The use limit is a Charge Pool rule with **Max charges** `max(2 * @will, 0)` and a recovery on `safeRest`.
+The use limit is a Charge Pool rule with **Max charges** `max(2 * @will, 0)` and a recovery on Safe Rest.
 
 **Example: Optimistic.** Allow an ally within 6 spaces to reroll any single die.
 

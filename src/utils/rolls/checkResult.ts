@@ -9,6 +9,13 @@ import {
 	standingResultChanges,
 } from './resultChanges.ts';
 
+const NATURAL_1_FAILS = 1;
+
+/** A save or a skill check: a natural 1 always fails and a natural 20 always succeeds. */
+function naturalDieSettles(kind: CheckRollKind): boolean {
+	return kind === 'save' || kind === 'skillCheck';
+}
+
 /**
  * The result of a check card, or null when nothing settles it. A total that
  * meets the DC succeeds. On a save or a skill check, a natural 1 fails and a
@@ -23,8 +30,8 @@ function checkResult(input: {
 	const { kind, total, keptD20, dc } = input;
 
 	if (kind === 'initiative') return null;
-	if (kind !== 'abilityCheck') {
-		if (keptD20 === 1) return 'failed';
+	if (naturalDieSettles(kind)) {
+		if (keptD20 === NATURAL_1_FAILS) return 'failed';
 		if (keptD20 === NATURAL_20) return 'succeeded';
 	}
 	if (typeof dc !== 'number') return null;
@@ -57,6 +64,26 @@ function resultOfCheckRoll(input: {
 	});
 }
 
+/**
+ * Whether the roll fails on its natural 1 whatever is added to it: a save or a
+ * skill check whose kept d20 is a 1, and no change on the card took that 1 off.
+ */
+function failsOnNaturalOne(input: {
+	kind: CheckRollKind;
+	terms: unknown[];
+	changes: readonly ResultChange[];
+}): boolean {
+	const { kind, terms, changes } = input;
+	if (!naturalDieSettles(kind)) return false;
+	const settled = standingResultChanges(changes).some(
+		(change) =>
+			change.change === 'succeed' ||
+			change.change === 'countsAsNat20' ||
+			change.change === 'setTotal',
+	);
+	return !settled && keptD20(terms) === NATURAL_1_FAILS;
+}
+
 /** The result of a card's first roll, or null when it is not a check card or nothing settles it. */
 function checkResultOfCard(
 	type: string,
@@ -75,4 +102,4 @@ function checkResultOfCard(
 	});
 }
 
-export { checkResult, checkResultOfCard, resultOfCheckRoll };
+export { checkResult, checkResultOfCard, failsOnNaturalOne, resultOfCheckRoll };

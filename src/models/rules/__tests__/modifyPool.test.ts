@@ -36,9 +36,11 @@ describe('ModifyPoolRule schema', () => {
 	it('offers the healed trigger on a contributed entry', () => {
 		const schema = ModifyPoolRule.defineSchema();
 		const fields = (
-			schema.addRefills as unknown as { element: { fields: { trigger: { choices: string[] } } } }
+			schema.addRefills as unknown as {
+				element: { fields: { trigger: { choices: Record<string, string> } } };
+			}
 		).element.fields;
 
-		expect(fields.trigger.choices).toContain('onHealed');
+		expect(Object.keys(fields.trigger.choices)).toContain('onHealed');
 	});
 });

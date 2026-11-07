@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ResultChange } from '#types/resultChange.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import type { IncomingReactionEntry } from '../../utils/incomingReactions/incomingReactionEntry.js';
 import { stopRerollRolling } from '../../utils/reroll/rerollRolling.svelte.js';
 import { checkResultOfCard } from '../../utils/rolls/checkResult.js';
 import { resultTotal } from '../../utils/rolls/resultChanges.js';
+import { resultChangeLines } from '../../view/chat/components/resultChangeLines.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 const ROLLER = 'Actor.roller';
@@ -96,6 +97,7 @@ function makeRule(
 	return {
 		type: 'changeResult',
 		id,
+		change: use.change,
 		disabled: false,
 		label: '',
 		item: { name: id, uuid: `Item.${id}` },
@@ -155,14 +157,14 @@ type Card = NimbleChatMessage & {
 };
 
 /** A save card whose `update` writes to the card, as the document does. */
-function createCard(entries: IncomingReactionEntry[], dc: number | null = 14): Card {
+function createCard(entries: IncomingReactionEntry[], dc: number | null = 14, d20 = 5): Card {
 	const roll = {
 		class: 'NimbleRoll',
 		formula: '1d20 + 2[Will]',
-		total: 7,
+		total: d20 + 2,
 		options: {},
 		data: {},
-		terms: [{ class: 'Die', faces: 20, number: 1, results: [{ result: 5, active: true }] }],
+		terms: [{ class: 'Die', faces: 20, number: 1, results: [{ result: d20, active: true }] }],
 	};
 	const message = new NimbleChatMessage({
 		type: 'savingThrow',
@@ -779,10 +781,227 @@ describe('Remove on a Change a Result line', () => {
 		expect(shownTotal(card)).toBe(13);
 	});
 
-	it('records only what Remove gives back: no action and no heroic reaction', async () => {
-		const { card } = await cardWith({ change: 'succeed', value: 0, stat: '' }, FREE);
+	describe('an action or a Heroic Reaction it cost', () => {
+		const succeed = { change: 'succeed', value: 0, stat: '' };
+		const ACTION_KEPT = 'Remove does not give back actions after the turn ends';
+		const REACTION_KEPT = 'Remove does not give back the Heroic Reaction after the turn ends';
 
-		expect(Object.keys(card.system.resultChanges[0].paid)).toEqual(['charges', 'mana', 'wounds']);
+		/** A started combat on the roller's turn. Its combatant writes its own updates. */
+		function heroCombat(roller: ReturnType<typeof makeRoller>) {
+			const hero = {
+				id: 'hero',
+				type: 'character',
+				actor: roller,
+				system: {
+					actions: {
+						base: { current: 3, max: 3 },
+						pendingDelta: 0,
+						heroic: { defendAvailable: true },
+					},
+				},
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					for (const [path, value] of Object.entries(changes)) {
+						foundry.utils.setProperty(hero, path, value);
+					}
+				}),
+			};
+			const combat = {
+				id: 'combat-1',
+				started: true,
+				round: 1,
+				turn: 0,
+				combatant: hero,
+				combatants: {
+					find: (predicate: (c: unknown) => boolean) => [hero].find(predicate),
+					get: (id: string) => (id === hero.id ? hero : undefined),
+				},
+				useHeroicReactions: vi.fn(async () => {
+					hero.system.actions.base.current -= 1;
+					hero.system.actions.heroic.defendAvailable = false;
+					return true;
+				}),
+				updateEmbeddedDocuments: vi.fn(
+					async (_type: string, [update]: Array<Record<string, unknown>>) => {
+						const { _id, ...changes } = update;
+						await hero.update(changes);
+					},
+				),
+			};
+			(globals().game as { combat?: unknown }).combat = combat;
+			return { hero, combat };
+		}
+
+		async function paidCard(
+			cost: Record<string, unknown>,
+			arrange: (combat: ReturnType<typeof heroCombat>['combat']) => void = () => {},
+		) {
+			const roller = makeRoller();
+			const { hero, combat } = heroCombat(roller);
+			arrange(combat);
+			const rule = makeRule(roller, 'feature', succeed, cost);
+			setupWorld([rule], roller);
+			const card = createCard([entryFor('feature')]);
+			await click(card, 'feature');
+			const lineId = card.system.resultChanges[0].lineId;
+			return { card, roller, hero, combat, lineId };
+		}
+
+		const notes = (card: Card) =>
+			resultChangeLines({
+				changes: card.system.resultChanges,
+				rollTotal: 7,
+				speakerUuid: ROLLER,
+				documentName: () => '',
+				canRemove: () => true,
+			}).map((line) => line.note);
+
+		afterEach(() => {
+			(globals().game as { combat?: unknown }).combat = null;
+		});
+
+		it('records the combat, the round and the combatant whose turn it is', async () => {
+			const { card } = await paidCard({ ...FREE, actionCost: 1 });
+
+			expect(card.system.resultChanges[0].paid).toMatchObject({
+				action: { combatId: 'combat-1', combatantId: 'hero', amount: 1, now: true },
+				stamp: { combatId: 'combat-1', round: 1, combatantId: 'hero' },
+			});
+		});
+
+		const solo = { id: 'solo', type: 'soloMonster' };
+		const ally = { id: 'ally', type: 'character' };
+
+		/** The solo monster's first turn of the round: it acts after each hero. */
+		function onSoloTurn(combat: ReturnType<typeof heroCombat>['combat']) {
+			Object.assign(combat, { turns: [combat.combatant, solo, ally, solo], turn: 1 });
+			Object.assign(combat, { combatant: solo });
+		}
+
+		it('gives back the action when a re-sort moved the turn index, and the turn is the same', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			Object.assign(combat, { turns: [solo, ally, hero, solo] });
+			combat.turn = 2;
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(3);
+		});
+
+		it("keeps the action spent in another combatant's turn of the same round", async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			Object.assign(combat, { combatant: { id: 'goblin' } });
+			hero.update.mockClear();
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(2);
+			expect(hero.update).not.toHaveBeenCalled();
+		});
+
+		it('reads the turn before the Remove moves the turn to another combatant', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			const write = card.update.getMockImplementation() as (changes: unknown) => Promise<void>;
+			card.update.mockImplementation(async (changes: unknown) => {
+				await write(changes);
+				Object.assign(combat, { combatant: { id: 'goblin' } });
+			});
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(3);
+		});
+
+		it("keeps the Heroic Reaction spent in a solo monster's earlier turn of the same round", async () => {
+			const { card, hero, combat, lineId } = await paidCard(
+				{ ...FREE, heroicReaction: 'defend' },
+				onSoloTurn,
+			);
+			combat.turn = 3;
+			expect(notes(card)).toEqual([REACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(false);
+		});
+
+		it('gives back the Heroic Reaction in the same turn of a solo monster', async () => {
+			const { card, hero, lineId } = await paidCard(
+				{ ...FREE, heroicReaction: 'defend' },
+				onSoloTurn,
+			);
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(true);
+		});
+
+		it('gives back the action in the same turn, on top of an action spent after it', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			expect(hero.system.actions.base.current).toBe(2);
+			hero.system.actions.base.current = 1;
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
+
+		it('gives back the Heroic Reaction and its action in the same turn, as a change', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, heroicReaction: 'defend' });
+			expect(hero.system.actions.base.current).toBe(2);
+			hero.system.actions.base.current = 1;
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(true);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
+
+		it('keeps the action spent in a new round, gives the Mana back, and the line says so', async () => {
+			const { card, roller, hero, combat, lineId } = await paidCard({
+				...FREE,
+				actionCost: 1,
+				manaCost: 2,
+			});
+			Object.assign(combat, { round: 2 });
+			hero.update.mockClear();
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(roller.system.resources.mana.current).toBe(5);
+			expect(hero.system.actions.base.current).toBe(2);
+			expect(hero.update).not.toHaveBeenCalled();
+		});
+
+		it('keeps the Heroic Reaction spent in a new round, and the line says so', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, heroicReaction: 'defend' });
+			combat.round = 2;
+			expect(notes(card)).toEqual([REACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(false);
+			expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('gives back no action for a record with no stamp, and the line says so', async () => {
+			const { card, hero, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			const [change] = card.system.resultChanges;
+			const { stamp: _stamp, ...paid } = change.paid;
+			card.system.resultChanges = [{ ...change, paid }];
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(card.system.resultChanges).toEqual([]);
+			expect(hero.system.actions.base.current).toBe(2);
+		});
 	});
 
 	it('brings the entry back for a rule that could not pay before', async () => {
@@ -924,5 +1143,100 @@ describe('a reroll on a card with changes', () => {
 		expect(old.retired).toBe(true);
 		expect(fresh.retired).toBe(false);
 		expect(fresh.lineId).not.toBe(old.lineId);
+	});
+});
+
+describe('an add on a roll that fails on its natural 1', () => {
+	const WOUND = { ...FREE, woundCost: 1 };
+	const addUse = { change: 'add', value: 3, stat: 'strength' };
+
+	function world(d20: number) {
+		const roller = makeRoller();
+		const soul = makeRule(roller, 'soul', addUse, WOUND);
+		const lucky = {
+			type: 'reroll',
+			id: 'lucky',
+			disabled: false,
+			label: '',
+			item: { name: 'Lucky', uuid: 'Item.lucky' },
+			actor: roller,
+			rollUseCost: FREE,
+			offersUseOn: vi.fn(() => true),
+			rerollChanges: vi.fn(() => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' })),
+		};
+		setupWorld([soul, lucky as never], roller);
+		const card = createCard([entryFor('soul'), { ...entryFor('lucky'), use: undefined }], 14, d20);
+		return { card, roller };
+	}
+
+	const naturalTwenty = {
+		id: 'nat',
+		lineId: 'nat',
+		entryId: '',
+		itemUuid: 'Item.nat',
+		ruleId: 'nat',
+		label: 'Bumblewise',
+		actorUuid: ROLLER,
+		change: 'countsAsNat20',
+		value: 21,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+		automatic: true,
+	} as ResultChange;
+
+	it('keeps the row on a natural 1 save, not usable, and the GM refuses it with no Wound paid', async () => {
+		const { card, roller } = world(1);
+		const soul = lastEntry(card, 'soul');
+
+		expect(card.cardRerolls.canStillUseReroll(soul)).toBe(false);
+		expect(card.cardRerolls.blockedReroll(soul)).toBe('naturalOne');
+
+		await click(card, 'soul');
+
+		expect(card.update).not.toHaveBeenCalled();
+		expect(card.system.resultChanges).toEqual([]);
+		expect(roller.system.attributes.wounds.value).toBe(0);
+	});
+
+	it('is usable on a failed save with a 5', () => {
+		const { card } = world(5);
+		const soul = lastEntry(card, 'soul');
+
+		expect(card.cardRerolls.canStillUseReroll(soul)).toBe(true);
+		expect(card.cardRerolls.blockedReroll(soul)).toBeNull();
+	});
+
+	it('is usable again when the 1 counts as a natural 20', () => {
+		const { card } = world(1);
+		card.system.resultChanges = [naturalTwenty];
+
+		expect(card.cardRerolls.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
+	});
+
+	it('is usable again after a reroll replaced the 1', async () => {
+		const { card } = world(1);
+		vi.spyOn(NimbleRoll.prototype, 'evaluate').mockImplementation(async function (
+			this: NimbleRoll,
+		) {
+			const die = (this.terms as unknown as Array<{ results?: unknown[] }>)[0];
+			die.results = [{ result: 6, active: true }];
+			return this as never;
+		});
+
+		await click(card, 'lucky');
+		stopRerollRolling(card.id ?? '', false);
+
+		expect(card.cardRerolls.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
+	});
+
+	it('leaves a reroll row on a natural 1 usable', () => {
+		const { card } = world(1);
+		const lucky = lastEntry(card, 'lucky');
+
+		expect(card.cardRerolls.canStillUseReroll(lucky)).toBe(true);
+		expect(card.cardRerolls.blockedReroll(lucky)).toBeNull();
 	});
 });

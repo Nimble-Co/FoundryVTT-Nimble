@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { giveBack, payCost, receiptOf, spendMana } from '../costLedger.js';
 
 const testGlobals = globalThis as unknown as {
-	game: { settings?: { get: ReturnType<typeof vi.fn> } };
+	game: {
+		settings?: { get: ReturnType<typeof vi.fn> };
+		combat?: unknown;
+		user?: { isGM: boolean };
+	};
 };
 
 function caster(current: number) {
@@ -65,5 +69,101 @@ describe('cost ledger', () => {
 		await giveBack(actor as never, receiptOf());
 
 		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	describe('an action or a heroic reaction', () => {
+		/** A hero in a started combat on their own turn. The combatant writes its own updates. */
+		function heroInCombat() {
+			const actor = { uuid: 'Actor.hero' };
+			const hero = {
+				id: 'hero',
+				type: 'character',
+				actor,
+				system: {
+					actions: {
+						base: { current: 3, max: 3 },
+						pendingDelta: 0,
+						heroic: { defendAvailable: true },
+					},
+				},
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					for (const [path, value] of Object.entries(changes)) {
+						foundry.utils.setProperty(hero, path, value);
+					}
+				}),
+			};
+			const combat = {
+				id: 'combat-1',
+				started: true,
+				round: 2,
+				turn: 1,
+				combatant: hero,
+				combatants: {
+					find: (predicate: (c: unknown) => boolean) => [hero].find(predicate),
+					get: (id: string) => (id === hero.id ? hero : undefined),
+				},
+				useHeroicReactions: vi.fn(async () => {
+					hero.system.actions.base.current -= 1;
+					hero.system.actions.heroic.defendAvailable = false;
+					return true;
+				}),
+				updateEmbeddedDocuments: vi.fn(
+					async (_type: string, [update]: Array<Record<string, unknown>>) => {
+						const { _id, ...changes } = update;
+						await hero.update(changes);
+					},
+				),
+			};
+			testGlobals.game.combat = combat;
+			testGlobals.game.user = { isGM: true };
+			return { actor: actor as never, hero, combat };
+		}
+
+		const action = { ...manaCost(0), actionCost: 1 };
+		const reaction = { ...manaCost(0), heroicReaction: 'defend' as const };
+
+		const user = testGlobals.game.user;
+		afterEach(() => {
+			testGlobals.game.combat = undefined;
+			testGlobals.game.user = user;
+		});
+
+		it('stamps the combat, the round, the combatant whose turn it is and the turn index', async () => {
+			const { actor } = heroInCombat();
+
+			expect((await payCost(actor, action))?.stamp).toEqual({
+				combatId: 'combat-1',
+				round: 2,
+				combatantId: 'hero',
+				turn: 1,
+			});
+			expect((await payCost(actor, reaction))?.stamp).toEqual({
+				combatId: 'combat-1',
+				round: 2,
+				combatantId: 'hero',
+				turn: 1,
+			});
+		});
+
+		it('gives back an action after another action is spent', async () => {
+			const { actor, hero } = heroInCombat();
+			const paid = await payCost(actor, action);
+			hero.system.actions.base.current = 1;
+
+			await giveBack(actor, { cost: action, paid: paid! });
+
+			expect(hero.system.actions.base.current).toBe(2);
+		});
+
+		it('gives back a heroic reaction and its action after another action is spent', async () => {
+			const { actor, hero } = heroInCombat();
+			const paid = await payCost(actor, reaction);
+			hero.system.actions.base.current = 0;
+
+			await giveBack(actor, { cost: reaction, paid: paid! });
+
+			expect(hero.system.actions.base.current).toBe(1);
+			expect(hero.system.actions.heroic.defendAvailable).toBe(true);
+		});
 	});
 });

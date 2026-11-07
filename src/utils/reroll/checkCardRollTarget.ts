@@ -9,7 +9,7 @@ import type {
 	RollChange,
 } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { resultOfCheckRoll } from '../rolls/checkResult.js';
+import { failsOnNaturalOne, resultOfCheckRoll } from '../rolls/checkResult.js';
 import {
 	naturalResultChange,
 	resultTotal,
@@ -272,6 +272,11 @@ function checkCardRollTarget(card: CheckCard): RerollRollTarget<AnyRoll> {
 					dc: card.dc?.(),
 				}),
 				rollModifier: kept === null ? 0 : stored.total - kept,
+				naturalOneFails: failsOnNaturalOne({
+					kind: card.roll.kind,
+					terms: stored.terms,
+					changes: card.resultChanges(),
+				}),
 			},
 		};
 	};

@@ -13,6 +13,6 @@ The fields are all optional; leave blank the ones you are not changing.
 - **Die size override** replaces the pool's die (`d4` to `d6` and so on). Dice already sitting in the pool keep the number they rolled.
 - **Max delta** is a signed formula added to the maximum: `+1`, `-1`, `+@level`.
 - **Minimum face** raises any die rolled into the pool that comes up below it. A value of `6` on a d12 pool means every new die is at least a 6. It applies to refills, activation rolls, and the initial fill, but not to a value typed in by hand on the sheet. When several modifiers set one, the highest wins.
-- **Additional refills** contributes refill entries to the target pool, in the same shape the pool's own refills use. This lets the feature that grants a new trigger carry it, instead of the original pool rule having to know about every later feature.
+- **Additional refills** contributes refill entries to the target pool, in the same shape the pool's own refills use. This lets the feature that grants a new trigger carry it, instead of the original pool rule having to know about every later feature. The **Mode** list shows every mode, but a charge pool ignores Set When Empty and Empty the Pool.
 
 The rule's own **Predicate** gates whether the modifier applies at all, so it is the right place for level gates. A condition that flips during play (like being Raging) belongs on the refill entry's own **Condition** instead, because that is checked when the trigger fires rather than when the pool is built.

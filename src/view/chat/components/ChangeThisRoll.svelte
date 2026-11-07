@@ -58,13 +58,16 @@
 						{/if}
 
 						{#each group.entries as entry (entry.id)}
-							{@const row = text.row(entry)}
+							{@const blockedReason = control.blockedReason(entry)}
+							{@const row = text.row(entry, blockedReason)}
 							{@const pickingHere = picking?.entry.id === entry.id ? picking : null}
 							<button
 								class="nimble-change-roll__row"
+								class:nimble-change-roll__row--blocked={!!blockedReason}
 								type="button"
 								data-entry-id={entry.id}
 								aria-label={row.sentence}
+								aria-disabled={blockedReason ? 'true' : undefined}
 								aria-expanded={pickingHere ? true : control.opensPicker(entry) ? false : undefined}
 								disabled={busy || !!picking?.rolling}
 								onclick={() => control.useEntry(entry)}
@@ -74,7 +77,12 @@
 									{#if row.withFeature}
 										<span class="nimble-change-roll__feature">{row.withFeature}</span>
 									{/if}
-									{#if row.note}
+									{#if blockedReason}
+										<span class="nimble-change-roll__note">
+											<i class="fa-solid fa-ban" aria-hidden="true"></i>
+											<span>{row.note}</span>
+										</span>
+									{:else if row.note}
 										<span class="nimble-change-roll__note">{row.note}</span>
 									{/if}
 								</span>
@@ -126,7 +134,7 @@
 			box-shadow: none;
 			cursor: pointer;
 
-			&:hover:not(:disabled) {
+			&:hover:not(:disabled, [aria-disabled='true']) {
 				color: inherit;
 				background: var(--nimble-card-border-color);
 			}
@@ -166,9 +174,9 @@
 
 		// The medium colour is under 4.5:1 on the hover fill in the light theme.
 		&__button:hover &__count,
-		&__row:hover:not(:disabled) &__feature,
-		&__row:hover:not(:disabled) &__note,
-		&__row:hover:not(:disabled) &__cost {
+		&__row:hover:not(:disabled, [aria-disabled='true']) &__feature,
+		&__row:hover:not(:disabled, [aria-disabled='true']) &__note,
+		&__row:hover:not(:disabled, [aria-disabled='true']) &__cost {
 			color: inherit;
 		}
 
@@ -225,6 +233,22 @@
 			font-variant-numeric: tabular-nums;
 			color: var(--nimble-medium-text-color);
 			white-space: nowrap;
+		}
+
+		// The reason keeps full contrast; only the words of the use are dimmed.
+		&__row--blocked {
+			cursor: not-allowed;
+
+			.nimble-change-roll__verb,
+			.nimble-change-roll__feature,
+			.nimble-change-roll__cost {
+				opacity: 0.55;
+			}
+
+			.nimble-change-roll__note {
+				font-weight: 500;
+				color: var(--nimble-dark-text-color);
+			}
 		}
 	}
 </style>

@@ -102,6 +102,7 @@ function createMessage(system: Record<string, unknown> = {}, d20 = 5, total = 7)
 		reactive: null as unknown,
 		cardRerolls: {
 			canStillUseReroll: vi.fn(() => true),
+			blockedReroll: vi.fn(() => null),
 			resultUseOf: vi.fn(() => ({ change: 'setTotal', value: 10, stat: '' })),
 			rerollDiceToPick: vi.fn(() => null),
 			severalDiceToPick: vi.fn(() => null),

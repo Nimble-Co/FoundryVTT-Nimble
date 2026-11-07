@@ -24,7 +24,7 @@ With **Feature Effects** off, "cannot miss" and the crit range still apply. A ru
 - **Only when the other creature is** → `target:bloodied`
 - **Charge pool** → `deathbringers-touch`
 
-The use limit is a Charge Pool rule with **Max charges** `1` and recoveries on `onTurnStart` and `encounterEnd`.
+The use limit is a Charge Pool rule with **Max charges** `1` and recoveries on Turn Start and Encounter End.
 
 **Example: Slashing.** Your attacks with slashing weapons cannot miss unarmored enemies.
 

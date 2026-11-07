@@ -364,7 +364,14 @@ describe('Change a Result row', () => {
 				change: 'add',
 				value: 2,
 				chargePoolIdentifier: 'pool',
-				paid: { charges: 1, mana: 2, wounds: 1 },
+				paid: {
+					charges: 1,
+					mana: 2,
+					wounds: 1,
+					action: null,
+					heroicReaction: null,
+					stamp: null,
+				},
 			}),
 		]);
 		expect(entryOn(host, entry.id)?.used).toBe(true);

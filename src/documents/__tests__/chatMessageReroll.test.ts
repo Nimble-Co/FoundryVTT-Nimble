@@ -2111,4 +2111,36 @@ describe('adding a target to a card', () => {
 		expect(entries.map((entry) => entry.id)).toContain('written');
 		expect(entries.filter((entry) => entry.targetTokenUuid === NEW_TOKEN)).toHaveLength(1);
 	});
+
+	it('keeps a GM write that lands while the new row waits, and adds only its own target', async () => {
+		const GM_TOKEN = 'Scene.scene.Token.gm';
+		noDamageWorld(NEW_TOKEN);
+		const message = createMessage({ entries: [] });
+		Object.assign(message, { id: 'gm-write-card' });
+		let finishWrite = () => {};
+		const inFlight = queueReactionWrite(
+			'gm-write-card',
+			() =>
+				new Promise<void>((resolve) => {
+					finishWrite = resolve;
+				}),
+		);
+
+		const adding = addTarget(message);
+		await flushAsync();
+		// The GM's update reaches this client while the player's write waits.
+		Object.assign(message.system, {
+			targets: [GM_TOKEN],
+			incomingReactions: [rerollEntry({ id: 'gm-used', used: true })],
+		});
+		finishWrite();
+		await inFlight;
+		await adding;
+
+		expect(message.update).toHaveBeenCalledTimes(1);
+		expect(writtenSystem(message).targets).toEqual([GM_TOKEN, NEW_TOKEN]);
+		const entries = writtenSystem(message).incomingReactions as Array<Record<string, unknown>>;
+		expect(entries.find((entry) => entry.id === 'gm-used')).toMatchObject({ used: true });
+		expect(entries.filter((entry) => entry.targetTokenUuid === NEW_TOKEN)).toHaveLength(1);
+	});
 });
