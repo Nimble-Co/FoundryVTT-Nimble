@@ -56,7 +56,12 @@
 		},
 		"Epic Criticals": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Whenever you roll for critical hit damage, you may replace one die with a d20. [M]</span></p>",
-			"name": "Epic Criticals"
+			"name": "Epic Criticals",
+			"rules": {
+				"5VmRtOHbOkMuWZMs": {
+					"label": "Epic Criticals"
+				}
+			}
 		},
 		"Epic Defense": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your shields gain +3 Armor. [M]</span></p>",
