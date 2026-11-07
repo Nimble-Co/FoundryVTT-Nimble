@@ -1,6 +1,6 @@
 <!--
 @component
-The Core tab: the things that you roll (abilities, saves, skills) and the proficiencies and defenses.
+The Core tab: the things that you roll (abilities, saves, skills), the speeds, and the proficiencies and defenses.
 A roll mode from rules shows its mark next to the number. In edit mode the rolls rest and the outlines open the configure windows.
 -->
 <script lang="ts">
@@ -9,9 +9,10 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	import GroupHeading from '../../parts/GroupHeading.svelte';
 	import RollModeMark from './RollModeMark.svelte';
 
-	let { view, editing, perform, skillColumns }: HeroCoreTabProps = $props();
+	let { view, editing, perform, columns }: HeroCoreTabProps = $props();
 
-	const skillRows = $derived(Math.ceil(view.skills.length / skillColumns));
+	const skillRows = $derived(Math.ceil(view.skills.length / columns));
+	const speedRows = $derived(Math.ceil(view.speeds.length / columns));
 </script>
 
 <div class="core" class:editing>
@@ -85,7 +86,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		{/if}
 		<div
 			class="skills"
-			style:grid-template-columns="repeat({skillColumns}, 1fr)"
+			style:grid-template-columns="repeat({columns}, 1fr)"
 			style:grid-template-rows="repeat({skillRows}, auto)"
 		>
 			{#each view.skills as skill, index (skill.key)}
@@ -112,6 +113,33 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		</div>
 	</section>
 
+	<section class="zone-holder">
+		<GroupHeading label={view.text.speed} flush {editing} />
+		{#if editing}
+			<EditZone
+				short={view.text.speed}
+				label={view.text.configureMovement}
+				onclick={() => perform({ kind: 'configure', target: 'movement' })}
+			/>
+		{/if}
+		<div
+			class="speeds"
+			style:grid-template-columns="repeat({columns}, 1fr)"
+			style:grid-template-rows="repeat({speedRows}, auto)"
+		>
+			{#each view.speeds as speed, index (speed.type)}
+				<div class="speed" class:line={index % speedRows !== 0}>
+					<i class="speed-icon {speed.icon}" aria-hidden="true"></i>
+					<span class="name">{speed.label}</span>
+					<span class="value">
+						{#if speed.note}<small class="speed-note">{speed.note}</small>{/if}
+						<b>{speed.value}</b>
+					</span>
+				</div>
+			{/each}
+		</div>
+	</section>
+
 	<section>
 		<GroupHeading label={view.text.proficiencies} flush {editing} />
 		<dl class="proficiencies">
@@ -119,10 +147,7 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 				{@const configure = row.configure}
 				<div class="row zone-holder">
 					<dt>{row.label}</dt>
-					<dd>
-						{row.value}
-						{#if row.note}<em>{row.note}</em>{/if}
-					</dd>
+					<dd>{row.value}</dd>
 					{#if editing && configure}
 						<EditZone
 							inline
@@ -238,12 +263,14 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	.skill:hover {
 		background: var(--nimble-ui-hover);
 	}
-	.skills {
+	.skills,
+	.speeds {
 		display: grid;
 		grid-auto-flow: column;
 		gap: 0 18px;
 	}
-	.skill {
+	.skill,
+	.speed {
 		display: grid;
 		grid-template-columns: 26px 1fr auto;
 		gap: 8px;
@@ -254,7 +281,8 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 		color: var(--nimble-ui-ink);
 	}
 	/* a line between two skills of a column: the eye goes from the name to the number at the far end */
-	.skill.line {
+	.skill.line,
+	.speed.line {
 		border-top: 1px solid var(--nimble-ui-soft);
 	}
 	.ability-label {
@@ -276,6 +304,27 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	.value small {
 		font-weight: 500;
 		color: var(--nimble-ui-ink-muted);
+	}
+	.speed-icon {
+		font-size: 0.688rem;
+		text-align: center;
+		color: var(--nimble-ui-ink-dim);
+	}
+	.speed .name,
+	.value .speed-note {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.value .speed-note {
+		font-size: 0.688rem;
+		font-weight: 700;
+		color: var(--nimble-ui-action);
+	}
+	.speed .value {
+		min-width: 0;
+		gap: 6px;
 	}
 	.proficiencies {
 		display: flex;
@@ -302,12 +351,6 @@ A roll mode from rules shows its mark next to the number. In edit mode the rolls
 	dd {
 		margin: 0;
 		color: var(--nimble-ui-ink-muted);
-	}
-	dd em {
-		margin-left: 6px;
-		font-style: normal;
-		font-weight: 700;
-		color: var(--nimble-ui-action);
 	}
 	button:disabled {
 		cursor: default;

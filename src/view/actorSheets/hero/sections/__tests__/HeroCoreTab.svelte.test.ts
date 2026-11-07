@@ -10,7 +10,7 @@ import HeroCoreTab from '../HeroCoreTab.svelte';
 function renderCore(editing = false) {
 	const perform = vi.fn();
 	const view = heroCoreTab(blankHero(), heroContext());
-	render(HeroCoreTab, { view, editing, perform, skillColumns: 2 });
+	render(HeroCoreTab, { view, editing, perform, columns: 2 });
 	return { perform };
 }
 

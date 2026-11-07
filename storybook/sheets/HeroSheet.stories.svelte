@@ -13,6 +13,7 @@
 		effectsHero,
 		featureHero,
 		heroContext,
+		heroItem,
 		heroTurn,
 		manaCaster,
 	} from '../../tests/fixtures/actorSheets/heroFixtures.ts';
@@ -28,9 +29,10 @@
 		tab: HeroTabId;
 		/**
 		 * blank: the hero of the Core stories (with pools: a caster); dicePool: Fury Dice; mana: a Mage;
-		 * containers: a backpack and gear; features: a level 3 Berserker; effects: Rage, Bless, Dazed
+		 * containers: a backpack and gear; features: a level 3 Berserker; effects: Rage, Bless, Dazed;
+		 * speeds: each movement type, a walking bonus and a fly bonus
 		 */
-		actor: 'blank' | 'dicePool' | 'mana' | 'containers' | 'features' | 'effects';
+		actor: 'blank' | 'dicePool' | 'mana' | 'containers' | 'features' | 'effects' | 'speeds';
 		/** both themes side by side */
 		both: boolean;
 		/** the hero has Inspiration */
@@ -69,7 +71,7 @@
 			},
 			actor: {
 				control: { type: 'select' },
-				options: ['blank', 'dicePool', 'mana', 'containers', 'features', 'effects'],
+				options: ['blank', 'dicePool', 'mana', 'containers', 'features', 'effects', 'speeds'],
 			},
 		},
 		parameters: { layout: 'fullscreen' },
@@ -126,6 +128,33 @@
 	});
 	const veteran = featureHero({ img: 'assets/classImages/berserker.webp' });
 	const raging = effectsHero({ img: 'assets/classImages/berserker.webp' });
+	const mover = blankHero({
+		img: 'assets/classImages/berserker.webp',
+		system: { attributes: { movement: { walk: 5, fly: 5, climb: 4, swim: 5, burrow: 5 } } },
+		items: [
+			...blankHero().items,
+			heroItem({
+				id: 'featureStout0001',
+				type: 'feature',
+				name: 'Stout',
+				rules: [{ id: 'stout', type: 'speedBonus', active: true, amount: -1, fields: {} }],
+			}),
+			heroItem({
+				id: 'featureWings0001',
+				type: 'feature',
+				name: 'Wings',
+				rules: [
+					{
+						id: 'wings',
+						type: 'speedBonus',
+						active: true,
+						amount: 2,
+						fields: { movementType: 'fly' },
+					},
+				],
+			}),
+		],
+	});
 
 	function actorOf(args: Args): HeroActorLike {
 		const actor = chosenActor(args);
@@ -143,6 +172,7 @@
 		if (args.actor === 'containers') return packer;
 		if (args.actor === 'features') return veteran;
 		if (args.actor === 'effects') return raging;
+		if (args.actor === 'speeds') return mover;
 		return args.pools ? caster : hero;
 	}
 </script>
@@ -238,6 +268,9 @@
 <Story name="Bio" args={{ tab: 'bio', actor: 'containers' }} {template} />
 <Story name="Settings" args={{ tab: 'settings' }} {template} />
 <Story name="Settings: edit mode" args={{ tab: 'settings', editing: true }} {template} />
+<Story name="Speeds" args={{ actor: 'speeds', both: true, width: 600 }} {template} />
+<Story name="Speeds: narrow" args={{ actor: 'speeds', width: 390 }} {template} />
+<Story name="Speeds: edit mode" args={{ actor: 'speeds', editing: true }} {template} />
 <Story
 	name="Inventory and Effects: both themes"
 	args={{ tab: 'inventory', actor: 'containers', both: true, width: 720 }}

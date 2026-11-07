@@ -5,6 +5,6 @@ export interface HeroCoreTabProps {
 	view: HeroCoreView;
 	editing: boolean;
 	perform: HeroPerform;
-	/** 2 or 3 columns of skills: the width of the tab decides */
-	skillColumns: number;
+	/** 2 or 3 columns of skills and speeds: the width of the tab decides */
+	columns: number;
 }

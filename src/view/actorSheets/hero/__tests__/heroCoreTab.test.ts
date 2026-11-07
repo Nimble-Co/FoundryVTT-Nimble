@@ -85,7 +85,7 @@ describe('heroCoreTab', () => {
 		expect(view.skills.find((s) => s.key === 'might')?.passive).toBe('12');
 	});
 
-	it('lists speed, languages, proficiencies and damage defenses, each with its window', () => {
+	it('lists languages, proficiencies and damage defenses, each with its window', () => {
 		const view = heroCoreTab(blankHero(), heroContext());
 
 		const CORE = 'NIMBLE.actorSheet.hero.core';
@@ -94,16 +94,15 @@ describe('heroCoreTab', () => {
 			{ intent: { kind: 'configure', target }, label: `NIMBLE.prompts.${prompt}` },
 		];
 		expect(view.proficiencies.map((p) => [p.label, p.configure])).toEqual([
-			row('speed', 'movement', 'configureMovement'),
 			row('languages', 'languages', 'configureLanguageProficiencies'),
 			row('armor', 'armorProficiencies', 'configureArmorProficiencies'),
 			row('weapons', 'weaponProficiencies', 'configureWeaponProficiencies'),
 			row('damage', 'damageDefenses', 'configureDamageDefenses'),
 		]);
-		expect(view.proficiencies[1].value).toBe('Common');
-		expect(view.proficiencies[2].value).toBe('NIMBLE.actorSheet.hero.core.none');
-		expect(view.proficiencies[3].value).toBe('All STR Weapons');
-		expect(view.proficiencies[4].value).toBe('NIMBLE.actorSheet.hero.core.none');
+		expect(view.proficiencies[0].value).toBe('Common');
+		expect(view.proficiencies[1].value).toBe('NIMBLE.actorSheet.hero.core.none');
+		expect(view.proficiencies[2].value).toBe('All STR Weapons');
+		expect(view.proficiencies[3].value).toBe('NIMBLE.actorSheet.hero.core.none');
 	});
 
 	it('lists each kind of damage defense that the hero has', () => {
@@ -112,7 +111,7 @@ describe('heroCoreTab', () => {
 				attributes: { damageResistances: ['fire', 'cold'], damageImmunities: ['poison'] },
 			},
 		});
-		const damage = heroCoreTab(hero, heroContext()).proficiencies[4];
+		const damage = heroCoreTab(hero, heroContext()).proficiencies[3];
 
 		expect(damage.value).toBe(
 			'NIMBLE.actorSheet.hero.core.defense {"label":"NIMBLE.npcDefenses.resistant","types":"Fire, Cold"}; ' +
@@ -120,7 +119,7 @@ describe('heroCoreTab', () => {
 		);
 	});
 
-	it('shows the speed of each movement type and the note of a speed bonus', () => {
+	it('gives each movement type that the hero has a speed row, with the bonus at its own type', () => {
 		const hero = blankHero({
 			system: { attributes: { movement: { walk: 8, fly: 4, climb: 0, swim: 0, burrow: 0 } } },
 			items: [
@@ -150,15 +149,27 @@ describe('heroCoreTab', () => {
 				},
 			],
 		});
-		const speed = heroCoreTab(hero, heroContext()).proficiencies[0];
+		const view = heroCoreTab(hero, heroContext());
 
-		expect(speed.value).toBe(
-			'NIMBLE.actorSheet.hero.core.speedValue {"type":"NIMBLE.movementTypes.walk","value":"8"}, ' +
-				'NIMBLE.actorSheet.hero.core.speedValue {"type":"NIMBLE.movementTypes.fly","value":"4"}',
-		);
-		expect(speed.note).toBe(
-			'NIMBLE.actorSheet.hero.core.speedBonus {"amount":"+2","source":"Swift Boots"}',
-		);
+		expect(view.text.speed).toBe('NIMBLE.actorSheet.hero.core.speed');
+		expect(view.text.configureMovement).toBe('NIMBLE.prompts.configureMovement');
+		expect(view.speeds).toEqual([
+			{
+				type: 'walk',
+				label: 'NIMBLE.movementTypes.walk',
+				icon: 'fa-solid fa-person-walking',
+				value: 8,
+				note: 'NIMBLE.actorSheet.hero.core.speedNote {"amount":"+2","source":"Swift Boots"}',
+			},
+			{
+				type: 'fly',
+				label: 'NIMBLE.movementTypes.fly',
+				icon: 'fa-solid fa-feather',
+				value: 4,
+				note: null,
+			},
+		]);
+		expect(view.proficiencies.some((p) => p.label.endsWith('.speed'))).toBe(false);
 	});
 
 	it('adds a Conditions line only for condition immunities', () => {

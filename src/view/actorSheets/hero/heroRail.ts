@@ -9,7 +9,7 @@ import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
-import { shownMovementTypes, speedBonuses } from './heroSpeed.ts';
+import { speedBonuses } from './heroSpeed.ts';
 
 export interface WoundsMeterView {
 	kind: 'wounds';
@@ -107,7 +107,6 @@ export type HeroMeterView =
 	| ChargesMeterView;
 
 export interface HeroSpeedView {
-	type: string;
 	label: string;
 	icon: string;
 	value: number;
@@ -172,7 +171,8 @@ export interface HeroRailView {
 	armor: { label: string; value: number; tooltip: string };
 	/** the seal on the portrait: a click gives or ends it */
 	inspiration: { on: boolean; label: string; tooltip: string; intent: HeroIntent };
-	speeds: HeroSpeedView[];
+	/** walking only; the Core tab shows each movement type */
+	speed: HeroSpeedView;
 	meters: HeroMeterView[];
 	initiative: {
 		label: string;
@@ -414,31 +414,29 @@ function poolMeters(context: HeroSheetContext): HeroMeterView[] {
 	return [...dice, ...charges];
 }
 
-function speeds(actor: HeroActorLike, context: HeroSheetContext): HeroSpeedView[] {
-	const { movement } = actor.system.attributes;
-	const allBonuses = speedBonuses(actor);
-	return shownMovementTypes(actor).map((type) => {
-		const bonuses = allBonuses.filter((bonus) => bonus.type === type);
-		const total = bonuses.reduce((sum, bonus) => sum + bonus.amount, 0);
-		const label = context.localize(`NIMBLE.movementTypes.${type}`);
-		const value = movement[type] ?? 0;
-		return {
-			type,
-			label: context.localize(`${RAIL}.speed.${type}`),
-			icon: MOVEMENT_ICONS[type],
-			value,
-			note: total ? signedNumber(total) : null,
-			tooltip: [
-				context.format(`${RAIL}.speedTooltip`, { type: label, value: String(value) }),
-				...bonuses.map((bonus) =>
-					context.format('NIMBLE.actorSheet.hero.core.speedBonus', {
-						amount: signedNumber(bonus.amount),
-						source: bonus.source,
-					}),
-				),
-			].join('. '),
-		};
-	});
+function speed(actor: HeroActorLike, context: HeroSheetContext): HeroSpeedView {
+	const value = actor.system.attributes.movement.walk ?? 0;
+	const bonuses = speedBonuses(actor).filter((bonus) => bonus.type === 'walk');
+	const total = bonuses.reduce((sum, bonus) => sum + bonus.amount, 0);
+	const label = context.localize(`${RAIL}.speed`);
+	return {
+		label,
+		icon: MOVEMENT_ICONS.walk,
+		value,
+		note: total ? signedNumber(total) : null,
+		tooltip: [
+			context.format(`${RAIL}.speedTooltip`, {
+				type: context.localize('NIMBLE.movementTypes.walk'),
+				value: String(value),
+			}),
+			...bonuses.map((bonus) =>
+				context.format(`${RAIL}.speedBonus`, {
+					amount: signedNumber(bonus.amount),
+					source: bonus.source,
+				}),
+			),
+		].join('. '),
+	};
 }
 
 function turn(context: HeroSheetContext): HeroTurnView | null {
@@ -555,7 +553,7 @@ export function heroRail(actor: HeroActorLike, context: HeroSheetContext): HeroR
 			tooltip: localize(`${RAIL}.inspiration.${inspired ? 'on' : 'off'}`),
 			intent: { kind: 'setInspiration', value: !inspired },
 		},
-		speeds: speeds(actor, context),
+		speed: speed(actor, context),
 		meters: [
 			woundsMeter(actor, context),
 			manaMeter(actor, context),

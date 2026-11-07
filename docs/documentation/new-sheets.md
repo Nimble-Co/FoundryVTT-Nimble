@@ -8,7 +8,7 @@ The new character sheet and the new NPC sheet are a preview. They are in the sys
 
 ## The new character sheet
 
-The new character sheet has a rail with your Hit Points, mana, wounds and Hit Dice, and eight tabs: Core, Actions, Features, Inventory, Spells, Effects, Bio and Settings. A click on a row uses the thing. The arrow at the start of a row shows its full text. The pen at the end opens its window. Turn on edit mode to configure the values of your character and to delete items.
+The new character sheet has a rail with your Hit Points, mana, wounds and Hit Dice, and eight tabs: Core, Actions, Features, Inventory, Spells, Effects, Bio and Settings. The rail shows your armor and your walking speed. The Speed group on the Core tab shows each movement type that you have, for example Fly and Climb, and the bonus that changes it. A click on a row uses the thing. The arrow at the start of a row shows its full text. The pen at the end opens its window. Turn on edit mode to configure the values of your character and to delete items.
 
 ### Inspiration
 
