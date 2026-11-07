@@ -1186,7 +1186,6 @@
 			"unconscious": "Unconscious",
 			"wounded": "Wounded",
 			"lastStand": "Last Stand",
-			"latchedOn": "Latched On",
 			"swallowed": "Swallowed"
 		},
 		"concentration": {
@@ -1230,7 +1229,6 @@
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
 			"unconscious": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>",
-			"latchedOn": "<p>You move where your target moves until either dies. Your attacks can't miss or be Defended/Interposed against. Attacks that miss you damage your target instead.</p>",
 			"swallowed": "<p>You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.</p>"
 		},
 		"currency": {

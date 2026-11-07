@@ -230,7 +230,7 @@ describe('prepareActorConditions', () => {
 		const result = prepareActorConditions(actor, { includeInactive: true });
 
 		expect(result.find((condition) => condition.id === 'swallowed')).toBeUndefined();
-		expect(result.find((condition) => condition.id === 'latchedOn')).toBeUndefined();
+		expect(result.find((condition) => condition.id === 'latched')).toBeUndefined();
 	});
 
 	it('still lists a monster-scoped condition the actor is already carrying', () => {
