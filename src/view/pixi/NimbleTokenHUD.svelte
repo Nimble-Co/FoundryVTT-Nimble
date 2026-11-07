@@ -64,6 +64,7 @@
 <div class="status-effects-container">
 	{#each statusEffects as effect}
 		<button
+			type="button"
 			class="condition-container"
 			class:active={activeStatuses.has(effect.id)}
 			onpointerdown={(e) => {
@@ -80,7 +81,7 @@
 	{/each}
 </div>
 
-<button class="clear-all-conditions" onclick={clearAll}>
+<button type="button" class="clear-all-conditions" onclick={clearAll}>
 	<i class="fa-solid fa-octagon-xmark"></i>
 	{localize('NIMBLE.ui.clearAll')}
 </button>
