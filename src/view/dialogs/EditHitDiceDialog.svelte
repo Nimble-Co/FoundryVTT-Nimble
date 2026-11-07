@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import localize from '#utils/localize.js';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type { NimbleClassItem } from '../../documents/item/class.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
@@ -378,7 +379,7 @@
 			>
 				d{displaySize}
 				{#if rawSize === rawClassDieSize}
-					<span class="hd-dropdown__badge">{game.i18n.localize('TYPES.Item.class')}</span>
+					<span class="hd-dropdown__badge">{localize('TYPES.Item.class')}</span>
 				{/if}
 			</button>
 		{/each}
@@ -395,8 +396,6 @@
 	.nimble-sheet__body {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		padding: 4px 12px 12px;
 	}
 
 	:global(.system-nimble .nimble-window) .nimble-sheet__body {

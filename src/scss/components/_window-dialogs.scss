@@ -64,7 +64,7 @@
 			border: 0;
 			background: var(--nimble-crimson);
 			font-size: 0.875rem;
-			color: #fff;
+			color: var(--nimble-ui-fill-ink);
 
 			&:hover {
 				filter: brightness(1.15);
