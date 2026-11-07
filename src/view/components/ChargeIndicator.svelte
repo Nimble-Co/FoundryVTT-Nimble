@@ -110,6 +110,7 @@
 			ConfigureChargesDialog,
 			{ document: actor, pools: poolsForItem },
 			{
+				classes: ['nimble-window'],
 				icon: 'fa-solid fa-bolt',
 				width,
 				uniqueId: `${actor.id}-charges-${itemId}`,
