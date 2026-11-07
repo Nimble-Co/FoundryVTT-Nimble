@@ -107,8 +107,8 @@
 		}
 	}
 
-	// The fields of the roll window
-	input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], .nimble-heading),
+	// The fields of the roll window. `data-look="plain"` keeps a field that looks like text.
+	input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], .nimble-heading, [data-look="plain"]),
 	select,
 	textarea {
 		height: 28px;
