@@ -49,6 +49,17 @@ interface PaidRerollCost {
 	turnUse?: boolean;
 	/** The dice expended from a dice pool. */
 	dice?: { poolId: string; faces: number[] } | null;
+	/** The combat turn when an action or a heroic reaction was paid. */
+	stamp?: TurnStamp | null;
+}
+
+/** A combat turn: the combat, the round, the combatant whose turn it is, and its turn index. */
+interface TurnStamp {
+	combatId: string;
+	round: number;
+	combatantId: string;
+	/** Absent on records from before the index was stored. */
+	turn?: number | null;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -95,6 +106,44 @@ function actionPayer(
 	if (!found || found.combatant.type !== 'character') return null;
 	const now = (found.combat.combatant?.id ?? null) === found.combatant.id;
 	return { ...found, now };
+}
+
+/** The combat's turn now, or null with no combat. */
+function turnStampOf(combat: Combat | null | undefined): TurnStamp | null {
+	if (!combat) return null;
+	return {
+		combatId: combat.id ?? '',
+		round: Number(combat.round) || 0,
+		combatantId: combat.combatant?.id ?? '',
+		turn: Number.isInteger(combat.turn) ? combat.turn : null,
+	};
+}
+
+/** Whether the combatant has more than one turn in a round, as a solo monster does. */
+function hasManyTurns(combat: Combat | null | undefined, combatantId: string): boolean {
+	const turns = (combat?.turns ?? []) as { id?: string | null }[];
+	return turns.filter((turn) => turn?.id === combatantId).length > 1;
+}
+
+/**
+ * Whether Remove keeps an action or a heroic reaction of `paid` spent. They come
+ * back only in the turn they were paid in. A record with no stamp keeps them.
+ * A combatant with many turns in a round must also be on the same turn index.
+ */
+function keepsTurnCost(
+	paid: Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>,
+): boolean {
+	if (!paid.action && !paid.heroicReaction) return false;
+	const now = turnStampOf(game.combat);
+	const then = paid.stamp;
+	return !(
+		now &&
+		then &&
+		now.combatId === then.combatId &&
+		now.round === then.round &&
+		now.combatantId === then.combatantId &&
+		(!hasManyTurns(game.combat, then.combatantId) || now.turn === then.turn)
+	);
 }
 
 /** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
@@ -182,9 +231,11 @@ export {
 	costForDice,
 	canPayRerollCost,
 	findActorCombatant,
+	keepsTurnCost,
 	poolToExpend,
 	rerollCostCharges,
 	rerollUsesLeft,
+	turnStampOf,
 	type PaidRerollCost,
 	type RerollCost,
 };

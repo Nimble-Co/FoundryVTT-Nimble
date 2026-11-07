@@ -11,7 +11,7 @@ import {
 	ignoreDisadvantageChange,
 	spendHeldIgnoreDisadvantage,
 } from '../heldChange/heldChange.js';
-import { assessSucceeds } from './assessResult.js';
+import { assessOutcome } from './assessResult.js';
 
 async function spendAssessAction(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();
@@ -83,7 +83,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		await spendHeldIgnoreDisadvantage(actor);
 	}
 
-	const isSuccess = assessSucceeds(roll);
+	const { isSuccess, countsAsNat20Feature } = assessOutcome(roll, actor, request.skillKey);
 	const resultKey = isSuccess ? option.successKey : option.failureKey;
 
 	const primaryDieChange = isSuccess
@@ -106,6 +106,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 			skillKey: request.skillKey,
 			dc: ASSESS_DC,
 			isSuccess,
+			countsAsNat20Feature,
 			optionTitle: localize(option.chatTitleKey),
 			resultMessage,
 			target: target ? target.document.uuid : null,

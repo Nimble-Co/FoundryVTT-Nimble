@@ -2,6 +2,12 @@
 	import { getContext } from 'svelte';
 
 	import localize from '#utils/localize.js';
+	import {
+		costQuantityMin,
+		costTypeUpdate,
+		reactionFlagUpdate,
+		showsCostQuantity,
+	} from './itemActivationCostUpdates.js';
 
 	const { activationCostTypes, durationTypes } = CONFIG.NIMBLE;
 
@@ -67,10 +73,10 @@
 			</header>
 
 			<div style="display: flex; align-items: center; gap: 0.5rem">
-				{#if ['action', 'minute', 'hour'].includes(activationCostType)}
+				{#if showsCostQuantity(activationCostType)}
 					<input
 						type="number"
-						min={activationCostType === 'action' ? 0 : 1}
+						min={costQuantityMin(activationCostType)}
 						value={activationCost}
 						onchange={({ target }) =>
 							document.update({
@@ -81,9 +87,7 @@
 
 				<select
 					onchange={({ target }) =>
-						document.update({
-							'system.activation.cost.type': target.value,
-						})}
+						document.update(costTypeUpdate(activationData.cost, target.value))}
 				>
 					{#each Object.entries(activationCostTypes) as [key, label]}
 						<option value={key} selected={key === activationCostType}>
@@ -99,9 +103,7 @@
 				type="checkbox"
 				checked={isReaction}
 				onchange={({ target }) => {
-					document.update({
-						'system.activation.cost.isReaction': target.checked,
-					});
+					document.update(reactionFlagUpdate(activationData.cost, target.checked));
 				}}
 			/>
 

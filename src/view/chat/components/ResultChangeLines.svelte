@@ -4,6 +4,9 @@
 	import localize from '#utils/localize.js';
 
 	let { sum = null, lines, held, onremove }: ResultChangeLinesProps = $props();
+
+	const uid = $props.id();
+	const noteId = (lineId: string) => `${uid}-${lineId}-note`;
 </script>
 
 {#if sum}
@@ -18,6 +21,9 @@
 			{#if line.detail}
 				<span class="nimble-result-line__detail">{line.detail}</span>
 			{/if}
+			{#if line.note}
+				<span class="nimble-result-line__note" id={noteId(line.id)}>{line.note}</span>
+			{/if}
 		</p>
 		{#if line.canRemove}
 			<button
@@ -26,6 +32,7 @@
 				aria-label={localize('NIMBLE.chat.incomingReactions.resultChange.removeLine', {
 					line: line.sentence,
 				})}
+				aria-describedby={line.note ? noteId(line.id) : undefined}
 				disabled={held.has(line.id)}
 				onclick={() => onremove(line)}
 			>
@@ -64,13 +71,15 @@
 		}
 
 		&__feature,
-		&__detail {
+		&__detail,
+		&__note {
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
 		}
 
-		&__detail {
+		&__detail,
+		&__note {
 			display: block;
 		}
 

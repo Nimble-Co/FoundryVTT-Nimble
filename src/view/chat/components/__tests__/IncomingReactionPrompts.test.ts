@@ -114,6 +114,7 @@ function createMessage(
 		reactive: null as unknown,
 		cardRerolls: {
 			canStillUseReroll: vi.fn(() => true),
+			blockedReroll: vi.fn(() => null),
 			rerollDiceToPick: vi.fn(() => null),
 			severalDiceToPick: vi.fn(() => null),
 			changeToPick: vi.fn(() => null),

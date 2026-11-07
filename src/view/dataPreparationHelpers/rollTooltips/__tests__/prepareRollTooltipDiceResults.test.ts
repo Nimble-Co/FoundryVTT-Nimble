@@ -2,21 +2,18 @@ import { PrimaryDie } from '../../../../dice/terms/PrimaryDie.js';
 import prepareRollTooltipDiceResults from '../prepareRollTooltipDiceResults.js';
 
 describe('prepareRollTooltipDiceResults', () => {
-	it('marks every primary-die result at or below the configured miss threshold', () => {
-		const html = prepareRollTooltipDiceResults({
-			faces: 8,
-			flavor: 'Primary Die',
-			options: { missThreshold: 2 },
-			results: [
-				{ result: 1, active: true },
-				{ result: 2, active: true },
-				{ result: 3, active: true },
-			],
-		});
+	it('marks a kept Primary Die face at or below the configured miss threshold', () => {
+		const html = (result: number) =>
+			prepareRollTooltipDiceResults({
+				faces: 8,
+				flavor: 'Primary Die',
+				options: { missThreshold: 2 },
+				results: [{ result, active: true }],
+			});
 
-		expect(html).toContain('nimble-die--min">1</li>');
-		expect(html).toContain('nimble-die--min">2</li>');
-		expect(html).not.toContain('nimble-die--min">3</li>');
+		expect(html(1)).toContain('nimble-die--min">1</li>');
+		expect(html(2)).toContain('nimble-die--min">2</li>');
+		expect(html(3)).not.toContain('nimble-die--min');
 	});
 
 	it('names the size of a die that is not the size of its term, and reads it at that size', () => {
@@ -104,5 +101,24 @@ describe('prepareRollTooltipDiceResults with a stored Primary Die', () => {
 		const term = new PrimaryDie({ number: 1, faces: 8, options: { forcedCrit: 'onHit' } });
 		term.results = [{ result: 3, active: true }];
 		expect(prepareRollTooltipDiceResults(term)).toContain('nimble-die--max">3</li>');
+	});
+});
+
+describe('prepareRollTooltipDiceResults with Vicious dice', () => {
+	it('leaves the Vicious dice off the Primary Die line', () => {
+		const html = prepareRollTooltipDiceResults({
+			faces: 4,
+			flavor: 'Primary Die',
+			options: {},
+			results: [
+				{ result: 4, active: true, exploded: true },
+				{ result: 2, active: true, provenance: 'viciousChain' },
+				{ result: 4, active: true, provenance: 'viciousBonus' },
+			],
+		});
+
+		expect(html).toBe(
+			'<li class="nimble-die nimble-die--4 nimble-die--max">4</li><li class="nimble-die nimble-die--4">2</li>',
+		);
 	});
 });

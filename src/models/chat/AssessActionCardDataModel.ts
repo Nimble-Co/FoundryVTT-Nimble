@@ -6,6 +6,7 @@ const assessActionCardSchema = () => ({
 	skillKey: new fields.StringField({ required: true, initial: '', nullable: false }),
 	dc: new fields.NumberField({ required: true, initial: 12, nullable: false, integer: true }),
 	isSuccess: new fields.BooleanField({ required: true, initial: false, nullable: false }),
+	countsAsNat20Feature: new fields.StringField({ required: false, initial: null, nullable: true }),
 	optionTitle: new fields.StringField({ required: true, initial: '', nullable: false }),
 	resultMessage: new fields.StringField({ required: true, initial: '', nullable: false }),
 	target: new fields.StringField({ required: false, initial: null, nullable: true }),

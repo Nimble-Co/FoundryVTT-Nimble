@@ -1,13 +1,14 @@
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { poolModeChoices, poolTriggerChoices } from './_poolChoices.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const DICE_POOL_SCOPES = [...DicePoolRuleConfig.scopes];
 const DICE_POOL_DIE_SIZES = [...DicePoolRuleConfig.dieSizes];
 const DICE_POOL_INITIAL_VALUES = [...DicePoolRuleConfig.initialModes];
-const DICE_REFILL_TRIGGERS = [...DicePoolRuleConfig.refillTriggers];
-const DICE_REFILL_MODES = [...DicePoolRuleConfig.refillModes];
+const DICE_REFILL_TRIGGERS = poolTriggerChoices(DicePoolRuleConfig.refillTriggers);
+const DICE_REFILL_MODES = poolModeChoices(DicePoolRuleConfig.refillModes);
 
 function schema() {
 	const { fields } = foundry.data;

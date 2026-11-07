@@ -5,6 +5,7 @@
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardHeader from './components/CardHeader.svelte';
+	import ResultChangeLines from './components/ResultChangeLines.svelte';
 	import RollSummary from './components/RollSummary.svelte';
 
 	const { messageDocument } = $props();
@@ -26,6 +27,32 @@
 	const resultMessage = $derived(system.resultMessage);
 	const target = $derived(system.target);
 	const targetName = $derived(system.targetName);
+	const countsAsNat20Feature = $derived(system.countsAsNat20Feature ?? null);
+
+	// The same line the skill check card shows for this change.
+	const causeLines = $derived.by(() => {
+		if (!countsAsNat20Feature) return [];
+		const verb = localize('NIMBLE.chat.incomingReactions.resultChange.countsAsNat20');
+		const feature = countsAsNat20Feature;
+		return [
+			{
+				id: 'countsAsNat20',
+				verb,
+				withFeature: localize('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', {
+					feature,
+				}),
+				sentence: localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', {
+					verb,
+					feature,
+				}),
+				detail: null,
+				retired: false,
+				canRemove: false,
+				note: null,
+			},
+		];
+	});
+	const noneHeld = { has: () => false, hold: () => {}, release: () => {} };
 
 	const label = $derived(
 		localize('NIMBLE.ui.heroicActions.assess.checkVsDC', {
@@ -103,6 +130,8 @@
 				total={roll.total}
 			/>
 		{/each}
+
+		<ResultChangeLines lines={causeLines} held={noneHeld} onremove={async () => {}} />
 
 		<small class="nimble-hint {hintClass}">
 			<i class="nimble-hint__icon {hintIcon}"></i>

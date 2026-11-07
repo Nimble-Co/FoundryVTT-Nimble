@@ -45,7 +45,12 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { canPayRerollCost, costForDice, type PaidRerollCost } from '#utils/reroll/rerollCost.js';
+import {
+	canPayRerollCost,
+	costForDice,
+	keepsTurnCost,
+	type PaidRerollCost,
+} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -67,6 +72,7 @@ import {
 	type RerollRollOutcome,
 	type RerollRuleLike,
 	rollChangeKindOf,
+	type UsableReroll,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -106,6 +112,12 @@ interface UsableRule {
 }
 
 type Reject = (reasonKey: string) => unknown;
+
+const REJECT_REASON_KEYS: Record<Extract<UsableReroll, { ok: false }>['reason'], string> = {
+	unavailable: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
+	forcedMiss: 'NIMBLE.chat.incomingReactions.useFailed',
+	naturalOne: 'NIMBLE.chat.incomingReactions.changeThisRoll.naturalOneFails',
+};
 
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
 interface NewRollUse extends Partial<RerollStepInput<unknown>> {
@@ -684,6 +696,18 @@ export class CardRerolls {
 		return usableRerollEntry(entry, target.context(), this.#host.incomingReactions()).ok;
 	}
 
+	/**
+	 * Why a `reroll` entry that does not pass `canStillUseReroll` still shows its
+	 * row, not usable: an add on a roll that fails on its natural 1. Else null.
+	 */
+	blockedReroll(entry: IncomingReactionEntry): 'naturalOne' | null {
+		if (entry.kind !== 'reroll' || entry.used || this.pendingKeep()) return null;
+		const target = this.#rerollTarget();
+		if (!target?.findRoll()) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		return !usable.ok && usable.reason === 'naturalOne' ? 'naturalOne' : null;
+	}
+
 	/** Give an ally reroll the scan left out its button on this card. GM only. */
 	async addLeftOutReroll(entryId: string): Promise<void> {
 		if (!game.user?.isGM) return;
@@ -854,13 +878,7 @@ export class CardRerolls {
 		// Every gate again, from the live rule and this card: the card's outcome,
 		// its targets and the actor's state can all change after stamping.
 		const usable = usableRerollEntry(entry, rollTarget.context(), this.#host.incomingReactions());
-		if (!usable.ok) {
-			return reject(
-				usable.reason === 'forcedMiss'
-					? 'NIMBLE.chat.incomingReactions.useFailed'
-					: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
-			);
-		}
+		if (!usable.ok) return reject(REJECT_REASON_KEYS[usable.reason]);
 		const found = rollTarget.findRoll();
 		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		const kind = rollChangeKindOf(usable.rule);
@@ -1244,6 +1262,9 @@ export class CardRerolls {
 						charges: paid?.charges ?? 0,
 						mana: paid?.mana ?? 0,
 						wounds: paid?.wounds ?? 0,
+						action: paid?.action ?? null,
+						heroicReaction: paid?.heroicReaction ?? null,
+						stamp: paid?.stamp ?? null,
 					},
 				});
 				await this.#host.update({
@@ -1330,6 +1351,8 @@ export class CardRerolls {
 		}
 		if (refusal) return reject(refusal);
 
+		// Read before an Initiative card re-sorts the combat.
+		const kept = new Set(line.filter((c) => keepsTurnCost(c.paid)).map((c) => c.id));
 		const removed = new Set(line.map((change) => change.id));
 		const remaining = changes.filter((change) => !removed.has(change.id));
 		await this.#host.update({
@@ -1338,7 +1361,7 @@ export class CardRerolls {
 		await this.#followInitiative(changes, remaining);
 
 		try {
-			await this.#giveBackResultCost(line);
+			await this.#giveBackResultCost(line, kept);
 		} catch (error) {
 			console.error('Nimble | The cost of a removed change could not be given back.', error);
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
@@ -1357,9 +1380,16 @@ export class CardRerolls {
 		}
 	}
 
-	/** Uses, Mana and Wounds go back. An action or a heroic reaction stays spent. */
-	async #giveBackResultCost(line: readonly ResultChange[]): Promise<void> {
+	/**
+	 * Uses, Mana and Wounds go back. An action or a heroic reaction goes back only
+	 * in the turn it was paid in.
+	 */
+	async #giveBackResultCost(
+		line: readonly ResultChange[],
+		kept: ReadonlySet<string>,
+	): Promise<void> {
 		for (const change of line) {
+			const keep = kept.has(change.id);
 			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
 			if (!actor) continue;
 			await giveBack(actor, {
@@ -1370,7 +1400,11 @@ export class CardRerolls {
 					woundCost: change.paid.wounds,
 					heroicReaction: '',
 				},
-				paid: { ...change.paid, heroicReaction: null, action: null },
+				paid: {
+					...change.paid,
+					action: keep ? null : (change.paid.action ?? null),
+					heroicReaction: keep ? null : (change.paid.heroicReaction ?? null),
+				},
 			});
 		}
 	}

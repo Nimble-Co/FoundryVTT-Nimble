@@ -88,7 +88,7 @@ function newResultChange(input: {
 
 /** The change a rule makes with no click: a low result counts as a natural 20. */
 function naturalResultChange(input: {
-	roller: { uuid?: string; rules?: unknown } | null | undefined;
+	roller: { uuid?: string | null; rules?: unknown } | null | undefined;
 	roll: RollToReroll;
 	rollTotal: number;
 	keptD20: number | null;

@@ -798,6 +798,14 @@ export const configStructure = {
 	},
 	Scene: {},
 	Token: {},
+	specialStatusEffects: {
+		DEFEATED: 'dead',
+		INVISIBLE: 'invisible',
+		BLIND: 'blind',
+		BURROW: 'burrow',
+		HOVER: 'hover',
+		FLY: 'fly',
+	} as Record<string, string>,
 	ActiveEffect: {
 		dataModels: {},
 	},

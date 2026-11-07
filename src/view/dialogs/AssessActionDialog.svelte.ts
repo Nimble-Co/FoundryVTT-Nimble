@@ -1,7 +1,7 @@
 import type { SkillKeyType } from '#types/skillKey.js';
 import type { NimbleCharacter } from '../../documents/actor/character.js';
 import { ASSESS_DC, assessOptions } from '../../utils/assessOptions.js';
-import { assessSucceeds } from '../../utils/heroicActions/assessResult.js';
+import { assessOutcome } from '../../utils/heroicActions/assessResult.js';
 import localize from '../../utils/localize.js';
 import {
 	getInvalidTargets,
@@ -108,7 +108,7 @@ export function createAssessDialogState(
 			await getDeductActionPip()();
 		}
 
-		const isSuccess = assessSucceeds(roll);
+		const { isSuccess, countsAsNat20Feature } = assessOutcome(roll, getDocument(), selectedSkill);
 		const resultKey = isSuccess ? option.successKey : option.failureKey;
 		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
 		const resultMessage = localize(resultKey, {
@@ -131,6 +131,7 @@ export function createAssessDialogState(
 				skillKey: selectedSkill,
 				dc: ASSESS_DC,
 				isSuccess,
+				countsAsNat20Feature,
 				optionTitle: localize(option.chatTitleKey),
 				resultMessage,
 				target: selectedTarget ? selectedTarget.document.uuid : null,
