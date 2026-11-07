@@ -158,6 +158,35 @@ describe('defendWindowPlan', () => {
 		expect(data.options.map((option) => option.id)).toEqual(['defend']);
 	});
 
+	describe('the cost of an Interpose', () => {
+		function interposeCost(source: 'baseline' | 'rule') {
+			const { data } = defendWindowPlan(card as never, {
+				actor: hero([]) as never,
+				targetTokenUuid: null,
+				interposes: [
+					{
+						id: 'interpose-1',
+						kind: 'redirectToSelf',
+						source,
+						actorUuid: 'Actor.pip',
+						tokenUuid: TOKEN,
+						targetTokenUuid: 'Scene.s.Token.ally',
+					},
+				] as never,
+				defend: null,
+			});
+			return data.options.find((option) => option.id === 'interpose:interpose-1')?.cost;
+		}
+
+		it('is 1 action for the baseline Interpose', () => {
+			expect(interposeCost('baseline')).toBe('NIMBLE.chat.defend.actionsOne');
+		});
+
+		it('is the same for an Interpose that a rule gives a longer range', () => {
+			expect(interposeCost('rule')).toBe('NIMBLE.chat.defend.actionsOne');
+		});
+	});
+
 	describe('a tick that uses a reroll', () => {
 		const fearsome = () => rule({ id: 'fearsome', useReroll: true, alsoInterpose: true });
 		const interpose = {

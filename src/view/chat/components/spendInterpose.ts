@@ -7,13 +7,31 @@ import showReactionConfirmation from '../../../utils/incomingReactions/showReact
 import localize from '../../../utils/localize.js';
 
 /**
- * Baseline Interpose costs the standard heroic reaction; spend it through
- * the combat's reaction bookkeeping (with the usual already-spent
- * confirmation) before relaying the redirect. Rule-granted offers leave
- * their cost to the granting feature. Outside combat there is nothing to
- * spend. With `force`, the caller has already confirmed a bent limit.
+ * A hero's Interpose costs the Heroic Reaction, also when a rule gives it a
+ * longer range (Core:492, Core:512). A rule Interpose of a monster is free.
  */
-export async function spendBaselineInterpose(
+export function paysForInterpose(
+	entry: IncomingReactionEntry,
+	actor?: { type?: string } | null,
+): boolean {
+	if (entry.kind !== 'redirectToSelf') return false;
+	if (entry.source === 'baseline') return true;
+	const owner =
+		actor !== undefined
+			? actor
+			: entry.actorUuid
+				? (fromUuidSync(entry.actorUuid) as { type?: string } | null)
+				: null;
+	return owner?.type === 'character';
+}
+
+/**
+ * Spend the Interpose through the combat's reaction bookkeeping (with the
+ * usual already-spent confirmation) before relaying the redirect. Outside
+ * combat there is nothing to spend. With `force`, the caller has already
+ * confirmed a bent limit.
+ */
+export async function spendInterpose(
 	entry: IncomingReactionEntry,
 	options: { force?: boolean } = {},
 ): Promise<boolean> {

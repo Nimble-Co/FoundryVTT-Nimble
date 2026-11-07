@@ -10,7 +10,7 @@ The **Modifier** picks what happens:
 
 - `disadvantage` gives the attack one level of disadvantage. Two matching rules give two levels. Advantage and disadvantage cancel one for one.
 - `autoMiss` turns the attack into a miss, even against attackers who normally cannot miss.
-- `redirectToSelf` offers an Interpose: when an ally within **Range (spaces)** is attacked, this character may swap in as the target.
+- `redirectToSelf` offers an Interpose: when an ally within **Range (spaces)** is attacked, this character may swap in as the target. It changes only the range: a hero still pays the Interpose (1 action, and only one Interpose each round).
 - `raiseMissThreshold` raises the primary die result that counts as a miss to **Miss threshold**. This is the bandit Parry trait: set it to `2` and attacks against the character miss on a 1 and a 2.
 
 `disadvantage`, `autoMiss`, and `raiseMissThreshold` apply on their own. `redirectToSelf` shows a button on the attack card that only the reacting player (or the GM) can use.

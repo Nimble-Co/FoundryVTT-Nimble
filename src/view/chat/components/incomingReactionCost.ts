@@ -4,6 +4,7 @@ import localize from '#utils/localize.js';
 import { type RerollCost, rerollCostCharges, rerollUsesLeft } from '#utils/reroll/rerollCost.js';
 import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
+import { paysForInterpose } from './spendInterpose.ts';
 
 /** What a cost takes from its actor, as short parts for one line. */
 export function rerollCostParts(
@@ -56,7 +57,7 @@ export function getIncomingReactionCost(entry: IncomingReactionEntry, actor: Act
 	if (entry.kind === 'reroll') {
 		return rerollCostParts(findRerollRule(entry)?.rollUseCost, actor).join(', ');
 	}
-	if (entry.kind === 'redirectToSelf' && entry.source === 'baseline') {
+	if (paysForInterpose(entry, actor)) {
 		return localize('NIMBLE.chat.incomingReactions.costHeroicReaction');
 	}
 	return '';
