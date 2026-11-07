@@ -295,8 +295,7 @@
 					"saves": "Saves",
 					"skills": "Skills",
 					"speed": "Speed",
-					"speedBonus": "{amount} from {source}",
-					"speedValue": "{type} {value}",
+					"speedNote": "{amount} {source}",
 					"stats": "Stats",
 					"weapons": "Weapons"
 				},
@@ -392,13 +391,8 @@
 					"notYourTurn": "Not your turn",
 					"offTurnHint": "A reaction spends 1 action. You start your next turn with the actions that are left.",
 					"revertLevelUp": "Revert Last Level Up",
-					"speed": {
-						"burrow": "Burrow",
-						"climb": "Climb",
-						"fly": "Fly",
-						"swim": "Swim",
-						"walk": "Speed"
-					},
+					"speed": "Speed",
+					"speedBonus": "{amount} from {source}",
 					"speedTooltip": "{type} {value} spaces",
 					"stopEditing": "Stop editing",
 					"toggleWound": "Toggle wound {number}",
