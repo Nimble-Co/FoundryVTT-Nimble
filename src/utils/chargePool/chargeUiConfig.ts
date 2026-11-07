@@ -14,6 +14,7 @@ const ChargeUiConfig = {
 		onHealed: 'NIMBLE.charges.recoveryTrigger.onHealed',
 		onTurnStart: 'NIMBLE.charges.recoveryTrigger.onTurnStart',
 		onTurnEnd: 'NIMBLE.charges.recoveryTrigger.onTurnEnd',
+		onAnyTurnStart: 'NIMBLE.charges.recoveryTrigger.onAnyTurnStart',
 		onKill: 'NIMBLE.charges.recoveryTrigger.onKill',
 		onBloodied: 'NIMBLE.charges.recoveryTrigger.onBloodied',
 		onMarkedDeath: 'NIMBLE.charges.recoveryTrigger.onMarkedDeath',

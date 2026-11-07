@@ -15,7 +15,7 @@ const DIE_SIZES = Array.from(
 // One modifier serves both pool types, so the contributed-entry trigger list is
 // the union of both. The two subsystems do not offer the same triggers: only
 // dice pools refill on being attacked, and only charge pools recover on an
-// initiative roll, which no modifier could reach before.
+// initiative roll or at the start of each creature's turn.
 //
 // Modes need no union: the charge modes are a subset of the dice ones. That
 // leaves two modes (`setIfEmpty`, `clear`) offered on a charge pool that charge

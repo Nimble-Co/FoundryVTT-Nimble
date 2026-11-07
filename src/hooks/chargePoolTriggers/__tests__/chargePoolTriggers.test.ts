@@ -144,6 +144,150 @@ describe('registerTurnTriggerHooks', () => {
 		}
 		expect(threw).toBe(false);
 	});
+
+	describe('pools that recover at the start of a turn', () => {
+		type PoolSpec = { identifier: string; trigger: string };
+
+		/** A pool write lands one tick later, as a server reply does. */
+		function createHeroWithPools(pools: PoolSpec[]) {
+			const stored: Record<string, { current: number; max: number; recoveries: [] }> = {};
+			for (const pool of pools) stored[pool.identifier] = { current: 0, max: 1, recoveries: [] };
+			const actor: Record<string, unknown> = {
+				uuid: 'Actor.hero',
+				type: 'character',
+				flags: { nimble: {} },
+				getRollData: () => ({}),
+				update: vi.fn(async () => {}),
+			};
+			const item = {
+				id: 'feature',
+				name: 'Feature',
+				actor,
+				flags: { nimble: { chargePools: stored } },
+				rules: new Map(
+					pools.map((pool, index) => [
+						String(index),
+						{
+							type: 'chargePool',
+							id: pool.identifier,
+							identifier: pool.identifier,
+							scope: 'item',
+							max: '1',
+							initial: 'max',
+							recoveries: [{ trigger: pool.trigger, mode: 'refresh', value: '1' }],
+						},
+					]),
+				),
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					const payload = structuredClone(changes['flags.nimble.chargePools']);
+					await new Promise((resolve) => setTimeout(resolve, 0));
+					Object.assign(stored, payload);
+				}),
+			};
+			actor.items = { contents: [item], get: () => item };
+			const current = (identifier: string) => stored[identifier].current;
+			return { actor, item, current };
+		}
+
+		function createCombatant(type: 'character' | 'npc', actor: unknown, id: string) {
+			return { id, type, actor } as unknown as Combatant.Implementation;
+		}
+
+		function createTurnOf(type: 'character' | 'npc', heroes: unknown[]) {
+			const monster = createCombatant('npc', { type: 'npc' }, 'combatant-npc');
+			const entries = heroes.map((actor, index) =>
+				createCombatant('character', actor, `combatant-hero-${index}`),
+			);
+			const combat = createMockCombat('combat-1', [...entries, monster], true, 1);
+			for (const entry of [...entries, monster]) Object.assign(entry, { parent: combat });
+			return type === 'npc' ? monster : entries[0];
+		}
+
+		async function registerTurnStart() {
+			vi.resetModules();
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerTurnTriggerHooks } = await import('../turnTrigger.js');
+			registerTurnTriggerHooks();
+			const start = callbacks.get('nimbleCombatTurnStart');
+			const end = callbacks.get('nimbleCombatTurnEnd');
+			expect(start).toBeDefined();
+			expect(end).toBeDefined();
+			return {
+				start: start as (combatant: unknown) => void,
+				end: end as (combatant: unknown) => void,
+			};
+		}
+
+		const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+		describe("at the start of another creature's turn", () => {
+			it('recovers a pool that recovers at the start of each turn', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'use', trigger: 'onAnyTurnStart' },
+				]);
+
+				hooks.start(createTurnOf('npc', [actor]));
+
+				await vi.waitFor(() => expect(current('use')).toBe(1));
+			});
+
+			it('does not recover a pool that recovers only on its own turn', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'use', trigger: 'onTurnStart' },
+				]);
+
+				hooks.start(createTurnOf('npc', [actor]));
+				await settle();
+
+				expect(current('use')).toBe(0);
+			});
+
+			it('recovers a hero with two combatants one time', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, item } = createHeroWithPools([
+					{ identifier: 'use', trigger: 'onAnyTurnStart' },
+				]);
+
+				hooks.start(createTurnOf('npc', [actor, actor]));
+				await settle();
+
+				expect(item.update).toHaveBeenCalledTimes(1);
+			});
+
+			it('does not recover at the end of a turn', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'use', trigger: 'onAnyTurnStart' },
+				]);
+
+				hooks.end(createTurnOf('npc', [actor]));
+				await settle();
+
+				expect(current('use')).toBe(0);
+			});
+		});
+
+		describe("at the start of the hero's own turn", () => {
+			it('recovers both its own turn pool and its each turn pool', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'use', trigger: 'onAnyTurnStart' },
+					{ identifier: 'own', trigger: 'onTurnStart' },
+				]);
+
+				hooks.start(createTurnOf('character', [actor]));
+
+				await vi.waitFor(() => {
+					expect(current('use')).toBe(1);
+					expect(current('own')).toBe(1);
+				});
+				await settle();
+				expect([current('use'), current('own')]).toEqual([1, 1]);
+			});
+		});
+	});
 });
 
 describe('registerKillTriggerHooks', () => {

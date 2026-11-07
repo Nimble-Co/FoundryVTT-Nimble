@@ -114,7 +114,7 @@ Features that do something when you Defend show in the window too:
 
 What a tick costs (charges, mana, Wounds) is spent when you click the button. A tick that uses a feature's reroll (Pocket Sand) rerolls the attack after the Defend; its row does not show under Change This Roll. With Interpose and Defend, the reroll comes when you become the target. When the attack does not give that reroll, a warning tells you and the tick is not used. Some ticks also go with Interpose alone, for example Fearsome ("Whenever you Interpose or Defend") and Bunny Legs ("Before Interposing"). With Interpose alone, the tick pays its cost or uses its reroll, and its line shows as a message to you; it does not change the damage. A condition on the attacker (Pocket Sand blinds) is put on by the GM's client; it can end by itself at the start of the attacker's next turn. A move, an attack back or damage back is not done for you: the card shows a line, for example "Decoy: Move up to half your speed away.", and the table does it.
 
-A feature that is "1/turn" (Burst of Speed) has one use each turn, of any creature, for all its rows. When it is already used this turn, its rows do not show.
+A feature that is "1/turn" (Burst of Speed, Vicious Opportunist) has one use each turn, of any creature, for all its rows. When it is already used this turn, its rows do not show.
 
 A feature that reacts when an ally Defends (Exploit) gives its hero a button on the card after an ally within range Defends. The button spends the cost and adds the feature's line.
 

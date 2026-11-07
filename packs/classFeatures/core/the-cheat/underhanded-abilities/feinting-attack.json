@@ -8,33 +8,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "chargePool",
-				"disabled": false,
-				"id": "ss6MY4JTCKmO4MjC",
-				"identifier": "feinting-attack",
-				"label": "Feinting Attack (1/round)",
-				"predicate": {},
-				"priority": 1,
-				"scope": "item",
-				"max": "1",
-				"dieSize": null,
-				"initial": "max",
-				"hidden": false,
-				"showAsResource": false,
-				"recoveries": [
-					{
-						"trigger": "onTurnStart",
-						"mode": "refresh",
-						"value": "1"
-					},
-					{
-						"trigger": "encounterEnd",
-						"mode": "refresh",
-						"value": "1"
-					}
-				]
-			},
-			{
 				"type": "changeDie",
 				"disabled": false,
 				"id": "hD0YqPJG3dHETk9y",
@@ -57,7 +30,7 @@
 				"otherCreature": {},
 				"outcome": "miss",
 				"attackDelivery": "any",
-				"chargePoolIdentifier": "feinting-attack",
+				"chargePoolIdentifier": "",
 				"chargeCost": 1,
 				"manaCost": 0,
 				"woundCost": 0,

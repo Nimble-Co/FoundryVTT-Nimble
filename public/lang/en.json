@@ -343,6 +343,7 @@
 				"deleteName": "Delete {name}",
 				"deleteQuestion": "Delete {name}? It leaves the sheet.",
 				"per": {
+					"turn": "turn",
 					"round": "round",
 					"encounter": "encounter",
 					"fieldRest": "Field Rest",
@@ -3474,6 +3475,7 @@
 				"onHealed": "Healed",
 				"onTurnStart": "Turn Start",
 				"onTurnEnd": "Turn End",
+				"onAnyTurnStart": "Start of Each Creature's Turn",
 				"onKill": "Kill",
 				"onBloodied": "Bloodied",
 				"onMarkedDeath": "Marked creature dies"

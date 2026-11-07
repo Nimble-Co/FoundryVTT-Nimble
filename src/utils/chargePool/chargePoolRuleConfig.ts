@@ -16,6 +16,7 @@ const ChargePoolRuleConfig = {
 		'onHealed',
 		'onTurnStart',
 		'onTurnEnd',
+		'onAnyTurnStart',
 		'onKill',
 		'onBloodied',
 		'onInitiativeRolled',

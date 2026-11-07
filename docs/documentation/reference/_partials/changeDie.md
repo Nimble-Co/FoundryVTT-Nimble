@@ -11,9 +11,9 @@ The other fields work as on the [Reroll](#reroll) rule: **Who can use it?**, **T
 - **The first roll is** → `hit`
 - **Attack type** → `melee`
 - **Only when the other creature is** → `{ "$or": ["target:distracted", "target:exploit-weakness", "feature:supreme-execution"] }`
-- **Charge pool** → `vicious-opportunist`
+- **1/turn** → on
 
-The use limit is a Charge Pool rule with **Max charges** `1` and recoveries on `onTurnStart` and `encounterEnd`. The test passes when the target is Distracted, when the owner marked the target with Exploit Weakness, or when the owner has the feature Supreme Execution. The item also has **Note on the card** `If the target is not Distracted, attack with a blade (Supreme Execution)`, with **Show the note only when** `feature:supreme-execution`. The system does not know if the weapon is a blade, so the note tells the player to check.
+The use limit is the **1/turn** field: one use in each turn of any creature, so a use on your turn does not block a use on the turn of an enemy. The test passes when the target is Distracted, when the owner marked the target with Exploit Weakness, or when the owner has the feature Supreme Execution. The item also has **Note on the card** `If the target is not Distracted, attack with a blade (Supreme Execution)`, with **Show the note only when** `feature:supreme-execution`. The system does not know if the weapon is a blade, so the note tells the player to check.
 
 **Example: THAT'S Not What Happened!** 1/Safe Rest, Action: after a Distracted enemy attacks you, you may change the Primary Die roll to whatever you like.
 
