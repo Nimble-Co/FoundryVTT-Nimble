@@ -77,3 +77,4 @@ export { Migration076StoredResults } from './Migration076StoredResults.js';
 export { Migration077DefendOptions } from './Migration077DefendOptions.js';
 export { Migration078DefendFollowups } from './Migration078DefendFollowups.js';
 export { Migration079InterposeTicks } from './Migration079InterposeTicks.js';
+export { Migration080WeaponTwoHandedOverride } from './Migration080WeaponTwoHandedOverride.js';

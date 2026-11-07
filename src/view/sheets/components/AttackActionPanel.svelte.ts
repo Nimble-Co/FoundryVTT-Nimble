@@ -6,6 +6,7 @@ import { rollUnarmedStrike } from '../../../utils/heroicActions/unarmedStrike.js
 import localize from '../../../utils/localize.js';
 import { evaluateFormula as evalFormula } from '../../../utils/rolls/evaluateFormula.js';
 import { stripHtml } from '../../../utils/stripHtml.js';
+import { getStrengthShortfall } from '../../../utils/weaponAttackLegality.js';
 
 /** System data for weapon items */
 interface WeaponSystemData {
@@ -137,6 +138,21 @@ export function createAttackPanelState(
 			.filter(Boolean);
 	}
 
+	/**
+	 * A Strength requirement the character does not meet is reported, never
+	 * enforced: the book leaves what an under-strength hero may do with the
+	 * weapon to the table, so the row says so and the GM rules on it.
+	 */
+	function getStrengthNotice(item: Item): string | null {
+		const shortfall = getStrengthShortfall(getActor().reactive, item as never);
+		if (!shortfall) return null;
+
+		return localize('NIMBLE.weapons.notices.strengthShortfall', {
+			required: String(shortfall.required),
+			current: String(shortfall.current),
+		});
+	}
+
 	function getItemDescription(item: Item): string {
 		const descData = getSystemData(item).description;
 		if (!descData) return '';
@@ -208,6 +224,7 @@ export function createAttackPanelState(
 			return attackFeatures;
 		},
 		sortItems,
+		getStrengthNotice,
 		getWeaponDamage,
 		getWeaponProperties,
 		getItemDescription,

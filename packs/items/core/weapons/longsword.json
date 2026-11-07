@@ -102,7 +102,7 @@
 			],
 			"strengthRequirement": {
 				"value": 2,
-				"overridesTwoHanded": false
+				"overridesTwoHanded": true
 			},
 			"thrownRange": 4
 		},

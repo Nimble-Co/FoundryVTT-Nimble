@@ -138,6 +138,7 @@
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
+					notice={state.getStrengthNotice(item)}
 					description={state.getItemDescription(item)}
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}
