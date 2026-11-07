@@ -7,6 +7,11 @@ describe('recoveryOf', () => {
 		expect(recoveryOf(['onTurnEnd'])).toBe('round');
 	});
 
+	it('reads a refill at the start of each creature turn as once a turn', () => {
+		expect(recoveryOf(['onAnyTurnStart'])).toBe('turn');
+		expect(recoveryOf(['onTurnStart', 'onAnyTurnStart'])).toBe('turn');
+	});
+
 	it('reads the encounter and the rests', () => {
 		expect(recoveryOf(['encounterStart'])).toBe('encounter');
 		expect(recoveryOf(['encounterEnd'])).toBe('encounter');

@@ -34,6 +34,7 @@ type CombatTrigger = 'encounterStart' | 'encounterEnd';
 type CombatEventTrigger =
 	| 'onTurnStart'
 	| 'onTurnEnd'
+	| 'onAnyTurnStart'
 	| 'onWound'
 	| 'onHealed'
 	| 'onKill'

@@ -1,7 +1,8 @@
 /** When the uses of a pool come back. Turn start and turn end both read "round". */
-export type PoolRecovery = 'round' | 'safeRest' | 'fieldRest' | 'encounter';
+export type PoolRecovery = 'turn' | 'round' | 'safeRest' | 'fieldRest' | 'encounter';
 
 const RECOVERY_ORDER: [PoolRecovery, string[]][] = [
+	['turn', ['onAnyTurnStart']],
 	['round', ['onTurnStart', 'onTurnEnd']],
 	['encounter', ['encounterStart', 'encounterEnd']],
 	['fieldRest', ['fieldRest']],

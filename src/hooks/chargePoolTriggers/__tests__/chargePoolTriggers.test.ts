@@ -144,6 +144,104 @@ describe('registerTurnTriggerHooks', () => {
 		}
 		expect(threw).toBe(false);
 	});
+
+	describe("at the start of another creature's turn", () => {
+		function hero(trigger: string) {
+			const pools: Record<string, unknown> = { use: { current: 0, max: 1, recoveries: [] } };
+			const actor: Record<string, unknown> = {
+				uuid: 'Actor.hero',
+				type: 'character',
+				flags: { nimble: {} },
+				getRollData: () => ({}),
+				update: vi.fn(async () => {}),
+			};
+			const item = {
+				id: 'feature',
+				name: 'Feature',
+				actor,
+				flags: { nimble: { chargePools: pools } },
+				rules: new Map([
+					[
+						'0',
+						{
+							type: 'chargePool',
+							id: 'pool',
+							identifier: 'use',
+							scope: 'item',
+							max: '1',
+							initial: 'max',
+							recoveries: [{ trigger, mode: 'refresh', value: '1' }],
+						},
+					],
+				]),
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					Object.assign(item.flags.nimble.chargePools, changes['flags.nimble.chargePools']);
+				}),
+			};
+			actor.items = { contents: [item], get: () => item };
+			const current = () => (item.flags.nimble.chargePools.use as { current: number }).current;
+			return { actor, item, current };
+		}
+
+		function monsterTurnWith(actor: Record<string, unknown>) {
+			const monster = { id: 'combatant-npc', type: 'npc', actor: { type: 'npc' } };
+			const combatants = [{ id: 'combatant-hero', type: 'character', actor }, monster];
+			return { ...monster, parent: { combatants: { contents: combatants } } };
+		}
+
+		async function turnStart() {
+			vi.resetModules();
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const { registerTurnTriggerHooks } = await import('../turnTrigger.js');
+			registerTurnTriggerHooks();
+			const hook = callbacks.get('nimbleCombatTurnStart');
+			expect(hook).toBeDefined();
+			return hook as (combatant: unknown) => void;
+		}
+
+		it('refills a pool that refills at the start of each creature turn', async () => {
+			const start = await turnStart();
+			const { actor, current } = hero('onAnyTurnStart');
+
+			start(monsterTurnWith(actor));
+
+			await vi.waitFor(() => expect(current()).toBe(1));
+		});
+
+		it('on its own turn, refills both its own turn pool and its each turn pool', async () => {
+			const start = await turnStart();
+			const { actor, item } = hero('onAnyTurnStart');
+			const pools = item.flags.nimble.chargePools;
+			pools.own = { current: 0, max: 1, recoveries: [] };
+			item.rules.set('1', {
+				type: 'chargePool',
+				id: 'own',
+				identifier: 'own',
+				scope: 'item',
+				max: '1',
+				initial: 'max',
+				recoveries: [{ trigger: 'onTurnStart', mode: 'refresh', value: '1' }],
+			});
+			const heroTurn = { ...monsterTurnWith(actor), type: 'character', actor };
+
+			start(heroTurn);
+
+			await vi.waitFor(() => {
+				const currents = Object.values(pools).map((pool) => (pool as { current: number }).current);
+				expect(currents).toEqual([1, 1]);
+			});
+		});
+
+		it('leaves a pool that refills only on its own turn', async () => {
+			const start = await turnStart();
+			const { actor, item } = hero('onTurnStart');
+
+			start(monsterTurnWith(actor));
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			expect(item.update).not.toHaveBeenCalled();
+		});
+	});
 });
 
 describe('registerKillTriggerHooks', () => {
