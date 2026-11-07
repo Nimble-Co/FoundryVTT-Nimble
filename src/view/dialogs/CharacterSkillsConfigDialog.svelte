@@ -173,233 +173,241 @@
 </section>
 
 <style lang="scss">
+	:global(.nimble-window) .nimble-sheet__body.nimble-sheet__body--skill-config {
+		padding: 4px 12px 12px;
+	}
+
 	.nimble-sheet__body--skill-config {
 		padding-block-end: 0.75rem;
 		padding-inline: 0.75rem;
+		font-family: var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
 	}
 
 	.nimble-skill-config-table {
 		width: 100%;
-		text-align: center;
-		vertical-align: middle;
+		margin: 0;
+		border: 0;
 		border-collapse: collapse;
+		border-spacing: 0;
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+		overflow: visible;
+		text-align: center;
 
-		thead {
-			background: hsla(0, 0%, 0%, 0.04);
-			border-bottom: 2px solid var(--nimble-card-border-color);
-
-			th {
-				padding: 0.5rem 0.5rem;
-				font-size: var(--nimble-xs-text);
-				font-weight: 700;
-				text-transform: uppercase;
-				letter-spacing: 0.04em;
-				color: var(--nimble-dark-text-color);
-				text-align: center;
-			}
+		thead,
+		tbody,
+		tr,
+		tr:nth-child(even),
+		tr:nth-child(odd) {
+			border: 0;
+			background: none;
+			color: var(--nimble-ui-ink);
+			text-shadow: none;
 		}
 
-		tbody tr {
-			border-bottom: 1px solid hsla(0, 0%, 0%, 0.05);
-
-			&:last-of-type {
-				border-bottom: none;
-			}
-
-			&:hover {
-				background: hsla(0, 0%, 0%, 0.02);
-			}
-		}
-
+		th,
 		td {
-			font-size: var(--nimble-md-text);
-			padding: 0.4rem 0.5rem;
-			text-align: center;
+			padding: 0 4px;
+			background: none;
+			vertical-align: middle;
 		}
 
-		&__col--skill {
+		thead th {
+			height: 26px;
+			padding-bottom: 5px;
+			border-bottom: 1px solid var(--nimble-ui-soft);
+			font-size: 0.688rem;
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			text-align: center;
+			color: var(--nimble-ui-ink-dim);
+		}
+
+		tbody th,
+		tbody td {
+			height: 30px;
+			border-bottom: 1px solid var(--nimble-ui-soft);
+			font-size: 0.813rem;
+			font-weight: 600;
+			color: var(--nimble-ui-ink);
+		}
+
+		tbody tr:last-child th,
+		tbody tr:last-child td {
+			border-bottom: 0;
+		}
+
+		thead th.nimble-skill-config-table__col--skill {
 			text-align: left;
 		}
 
 		&__skill-name {
 			text-align: left;
-			padding: 0.4rem 0.5rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			color: var(--nimble-dark-text-color);
+			white-space: nowrap;
 		}
 
-		&__total {
-			font-weight: 700;
+		tbody td.nimble-skill-config-table__total {
+			font-weight: 900;
 		}
 
-		&__change {
-			font-size: var(--nimble-md-text);
-			color: var(--nimble-medium-text-color);
+		tbody td.nimble-skill-config-table__change {
+			color: var(--nimble-ui-ink-muted);
+		}
 
-			&--positive {
-				color: hsl(145, 50%, 28%);
-				font-weight: 700;
-			}
+		tbody td.nimble-skill-config-table__change--positive {
+			font-weight: 700;
+			color: var(--nimble-ui-action);
 		}
 
 		&__controls {
-			display: flex;
-			gap: 0.3rem;
-			justify-content: center;
-			align-items: center;
+			white-space: nowrap;
+			text-align: center;
 		}
 	}
 
 	.nimble-skill-history {
-		margin-block-start: 0.75rem;
-		border: 2px solid var(--nimble-card-border-color);
-		border-radius: 6px;
+		margin: 0;
+		border: 0;
+		background: none;
 
 		&__header {
 			display: flex;
 			align-items: baseline;
-			gap: 0.6rem;
-			padding: 0.5rem 0.75rem;
-			background: hsla(0, 0%, 0%, 0.04);
-			border-bottom: 1px solid var(--nimble-card-border-color);
+			gap: 8px;
+			margin: 12px 0 4px;
+			padding: 0 0 5px;
+			border-bottom: 1px solid var(--nimble-ui-soft);
+			background: none;
 		}
 
 		&__header-title {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--nimble-dark-text-color);
+			letter-spacing: 0.1em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__header-subtitle {
-			font-size: var(--nimble-xs-text);
-			font-weight: 400;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 600;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__grid {
-			padding: 0.625rem 0.75rem 0.75rem;
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 0.5rem;
+			display: flex;
+			flex-direction: column;
+			padding: 0;
 		}
 
 		&__entry {
 			display: flex;
-			flex-direction: row;
 			align-items: center;
-			gap: 0.625rem;
-			padding: 0.625rem 0.75rem;
-			border-radius: 4px;
-			background: var(--nimble-card-background-color, transparent);
-			border: 1px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
-			box-shadow: var(--nimble-card-box-shadow);
+			gap: 14px;
+			min-height: 34px;
+			padding: 4px;
+			border: 0;
+			border-bottom: 1px solid var(--nimble-ui-soft);
+			border-radius: 0;
+			background: none;
+			box-shadow: none;
+
+			&:last-child {
+				border-bottom: 0;
+			}
+		}
+
+		&__entry--editing {
+			background: var(--nimble-ui-hover);
+			box-shadow: inset 2px 0 0 var(--nimble-ui-highlight);
 		}
 
 		&__level {
 			flex-shrink: 0;
-			font-size: var(--nimble-sm-text);
+			font-size: 0.813rem;
 			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: var(--nimble-medium-text-color);
+			color: var(--nimble-ui-ink);
 			white-space: nowrap;
 		}
 
 		&__changes {
-			flex: 1;
 			display: flex;
+			flex: 1;
 			flex-wrap: wrap;
-			justify-content: flex-end;
-			gap: 0.375rem;
+			gap: 4px;
 		}
 
 		&__chip {
 			display: inline-flex;
 			align-items: center;
-			gap: 0.35rem;
-			padding: 0.375rem 0.625rem;
-			border-radius: 4px;
-			border: 1px solid transparent;
-			box-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.06);
-
-			&--positive {
-				background: hsla(145, 50%, 40%, 0.08);
-				border-color: hsla(145, 50%, 40%, 0.22);
-			}
-
-			&--negative {
-				background: hsla(355, 55%, 52%, 0.07);
-				border-color: hsla(355, 55%, 52%, 0.18);
-			}
-		}
-
-		&__chip-name {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			gap: 4px;
+			padding: 0 5px;
+			border: 0;
+			border-radius: 3px;
+			background: none;
+			box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+			font-size: 0.656rem;
+			font-weight: 800;
+			line-height: 16px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-ui-ink);
+			white-space: nowrap;
 		}
 
 		&__chip-delta {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			min-width: 2ch;
-			text-align: center;
-
 			&--positive {
-				color: hsl(145, 50%, 28%);
+				color: var(--nimble-ui-action);
 			}
 
 			&--negative {
-				color: hsl(355, 55%, 42%);
+				color: var(--nimble-ui-vital);
 			}
 		}
 
 		&__chip-arrow {
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
-			opacity: 0.55;
-			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__chip-total {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
-			background: hsla(0, 0%, 0%, 0.07);
-			padding: 0.1rem 0.375rem;
-			border-radius: 3px;
 			font-variant-numeric: tabular-nums;
 		}
 
 		&__edit-btn {
-			flex-shrink: 0;
-			width: 1.5rem;
-			height: 1.5rem;
-			padding: 0;
-			border-radius: 3px;
-			border: 1px solid var(--nimble-card-border-color);
-			background: transparent;
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
-			cursor: pointer;
 			display: inline-flex;
+			flex-shrink: 0;
 			align-items: center;
 			justify-content: center;
+			width: 26px;
+			height: 26px;
+			min-height: 0;
+			margin: 0 0 0 auto;
+			padding: 0;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			background: none;
+			box-shadow: none;
+			font-size: 0.688rem;
+			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
+			cursor: pointer;
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover {
-				background: hsla(0, 0%, 0%, 0.05);
-				color: var(--nimble-dark-text-color);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
+				color: var(--nimble-ui-ink);
 			}
-		}
 
-		&__entry--editing {
-			border-color: hsl(220, 70%, 50%);
-			background: hsla(220, 70%, 50%, 0.06);
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
+			}
 		}
 	}
 
@@ -408,96 +416,120 @@
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			gap: 0.75rem;
-			padding: 0.5rem 0;
-			margin-block-end: 0.25rem;
-			border-bottom: 2px solid var(--nimble-card-border-color);
+			gap: 12px;
+			min-height: 34px;
+			margin: 0 0 4px;
+			padding: 4px 4px 0;
+			border: 0;
 		}
 
 		&__banner-info {
 			display: flex;
 			align-items: baseline;
-			gap: 0.625rem;
+			gap: 8px;
 		}
 
 		&__banner-title {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: var(--nimble-dark-text-color);
+			letter-spacing: 0.1em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__banner-points {
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
+			font-size: 0.75rem;
+			font-weight: 600;
+			color: var(--nimble-ui-ink-muted);
 
 			&--spent {
-				color: hsl(145, 50%, 28%);
-				font-weight: 600;
+				font-weight: 700;
+				color: var(--nimble-ui-action);
 			}
 		}
 
 		&__banner-actions {
 			display: flex;
-			gap: 0.375rem;
+			gap: 6px;
 		}
 
 		&__btn {
-			padding: 0.25rem 0.75rem;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			height: 26px;
+			min-height: 0;
+			margin: 0;
+			padding: 0 9px;
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
+			background: none;
+			box-shadow: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.75rem;
+			font-weight: 700;
+			line-height: 1;
+			color: var(--nimble-ui-ink);
+			white-space: nowrap;
 			cursor: pointer;
-			border: 1px solid transparent;
-			line-height: 1.4;
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
-			&--cancel {
-				background: transparent;
-				border-color: var(--nimble-card-border-color);
-				color: var(--nimble-medium-text-color);
-
-				&:hover {
-					background: hsla(0, 0%, 0%, 0.05);
-				}
+			&:hover:not(:disabled) {
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
 			}
 
-			&--save {
-				background: hsl(145, 50%, 35%);
-				color: hsl(145, 50%, 95%);
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
+			}
 
-				&:hover:not(:disabled) {
-					background: hsl(145, 50%, 30%);
-				}
-
-				&:disabled {
-					opacity: 0.4;
-					cursor: not-allowed;
-				}
+			&:disabled {
+				border-style: dashed;
+				background: none;
+				color: var(--nimble-ui-ink-muted);
+				cursor: not-allowed;
 			}
 		}
 
 		&__ctrl {
-			width: 1.5rem;
-			height: 1.5rem;
-			border-radius: 3px;
-			border: 1px solid var(--nimble-card-border-color);
-			background: transparent;
-			cursor: pointer;
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
+			width: 26px;
+			height: 26px;
+			min-height: 0;
+			margin: 0 1px;
+			padding: 0;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			background: none;
+			box-shadow: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.875rem;
+			font-weight: 700;
 			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
+			cursor: pointer;
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover:not(:disabled) {
-				background: hsla(0, 0%, 0%, 0.07);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
+				color: var(--nimble-ui-ink);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
 			}
 
 			&:disabled {
-				opacity: 0.25;
+				opacity: 0.4;
 				cursor: not-allowed;
 			}
 		}

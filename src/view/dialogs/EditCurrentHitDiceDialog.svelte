@@ -153,50 +153,63 @@
 </footer>
 
 <style lang="scss">
-	.nimble-edit-current-hd-dialog {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
+	:global(.nimble-window) .nimble-sheet__body.nimble-edit-current-hd-dialog {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		padding: 4px 12px 12px;
+	}
 
+	:global(.nimble-window)
+		.nimble-edit-current-hd-dialog
+		> section:first-child
+		> .nimble-section-header {
+		margin-top: 0;
+	}
+
+	.nimble-edit-current-hd-dialog {
 		&__dice-list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.625rem;
+			gap: 6px;
 		}
 
 		&__die-row {
 			display: grid;
 			grid-template-columns: auto 1fr auto;
 			align-items: center;
-			gap: 0.75rem;
-			padding: 0.625rem 0.75rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 6px;
+			gap: 12px;
+			padding: 5px 8px;
+			border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
+			border-radius: 4px;
 		}
 
 		&__die-label-group {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 0.125rem;
+			gap: 2px;
 			min-width: 3rem;
 		}
 
 		&__die-label {
-			font-weight: 700;
-			font-size: var(--nimble-lg-text);
-			color: var(--nimble-dark-text-color);
+			font-size: 0.875rem;
+			font-weight: 900;
+			letter-spacing: 0.06em;
 			text-align: center;
+			color: var(--nimble-bronze);
 		}
 
 		&__empty-badge {
-			font-size: 0.5625rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			padding: 0.0625rem 0.25rem;
-			background: hsl(0, 45%, 55%);
-			color: #fff;
+			padding: 0 5px;
 			border-radius: 3px;
+			box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+			font-size: 0.656rem;
+			font-weight: 800;
+			line-height: 16px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-ui-ink-muted);
 
 			&--hidden {
 				visibility: hidden;
@@ -207,117 +220,101 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.75rem;
+			gap: 8px;
 		}
 
-		&__control-btn {
+		&__control-btn,
+		&__max-btn {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 1.75rem;
-			height: 1.75rem;
-			padding: 0;
-			font-size: var(--nimble-sm-text);
-			background: var(--nimble-basic-button-background-color);
-			border: 1px solid var(--nimble-card-border-color);
+			height: 26px;
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
-			color: var(--nimble-dark-text-color);
+			background: none;
+			box-shadow: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: var(--nimble-ui-ink);
 			cursor: pointer;
-			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-			transition: all 0.15s ease;
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover:not(:disabled) {
-				background: hsl(45, 50%, 50%);
-				border-color: hsl(45, 50%, 40%);
-				color: #fff;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
 			}
 
-			&:active:not(:disabled) {
-				transform: translateY(1px);
-				box-shadow: none;
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
 			}
 
 			&:disabled {
-				opacity: 0.35;
-				cursor: not-allowed;
+				border-style: dashed;
+				background: none;
+				color: var(--nimble-ui-ink-muted);
+				cursor: default;
 			}
 		}
 
+		&__control-btn {
+			width: 26px;
+			padding: 0;
+
+			i {
+				font-size: 0.75rem;
+			}
+		}
+
+		&__max-btn {
+			padding: 0 9px;
+			white-space: nowrap;
+		}
+
 		&__value {
-			min-width: 2.5rem;
+			min-width: 2rem;
 			text-align: center;
-			font-size: var(--nimble-xl-text);
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
+			font-size: 1rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__max-group {
 			display: flex;
 			align-items: center;
-			gap: 0.625rem;
+			gap: 8px;
 		}
 
 		&__max-label {
-			font-size: var(--nimble-base-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__max-btn {
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
-			white-space: nowrap;
-			background: var(--nimble-basic-button-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			padding: 0.25rem 0.5rem;
-			border-radius: 4px;
-			cursor: pointer;
-			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-			transition: all 0.15s ease;
-
-			&:hover:not(:disabled) {
-				background: hsl(139, 45%, 45%);
-				border-color: hsl(139, 45%, 35%);
-				color: #fff;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-			}
-
-			&:active:not(:disabled) {
-				transform: translateY(1px);
-				box-shadow: none;
-			}
-
-			&:disabled {
-				opacity: 0.35;
-				cursor: default;
-			}
+			font-size: 0.813rem;
+			font-weight: 700;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__total {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			margin-block-start: 0.75rem;
-			padding: 0.625rem 0.75rem;
-			background: linear-gradient(to right, hsl(45, 45%, 40%), hsl(45, 50%, 50%));
-			border-radius: 6px;
+			margin-top: 8px;
+			padding: 6px 4px 0;
+			border-top: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__total-label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: hsl(45, 30%, 95%);
+			font-size: 0.75rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.03em;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__total-value {
-			font-size: var(--nimble-lg-text);
-			font-weight: 700;
-			color: #fff;
-			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+			font-size: 1.15rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 	}
 
