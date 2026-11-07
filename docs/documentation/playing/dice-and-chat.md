@@ -226,7 +226,7 @@ A known DC is read again after each change, and the small line under the name fo
 
 **Counts as a natural 20.** Some features count a total of 1 or less as a natural 20. This happens by itself and costs nothing, and the dice on the card do not change. The total is 20 plus the modifier of the roll, and the save or check succeeds. The box says **Rolled 1, counts as 20 − 1 = 19**. The history says **Counts as a Natural 20** with Bumblewise, with no **Remove**. It is read again after a reroll. With **Feature Effects** off in the Automation settings, a row **Count as a Natural 20** shows instead, and you click it.
 
-An Assess also reads **Counts as a Natural 20**. A total of 1 or less on a skill that the feature covers succeeds, for example Insight with Bumblewise. The Assess card has no row, so with **Feature Effects** off the card shows a failure, and the table settles the result.
+An Assess also reads **Counts as a Natural 20**. A total of 1 or less on a skill that the feature covers succeeds, for example Insight with Bumblewise. The card then says **Counts as a Natural 20** with Bumblewise. The Assess card has no row, so with **Feature Effects** off the card shows a failure, and the table settles the result.
 
 **No damage.** Some features let the target of an attack take no damage from it. After a hit, the target's owner and the GM see a row, for example **No Damage** with Epic Resistance, with its uses left. Click it, and that target takes no damage from any part of this attack when you click **Apply Damage**. The other targets take their damage as usual. The target shows a **No Damage** tag on the card. The history says **No Damage for** the target **with** the feature. **Remove** gives the cost back until the damage is applied.
 

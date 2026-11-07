@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { ChangeResultRule } from '../../../models/rules/changeResult.js';
-import { assessSucceeds } from '../assessResult.js';
+import { assessOutcome, assessSucceeds } from '../assessResult.js';
 
 const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
 
@@ -82,5 +82,19 @@ describe('assessSucceeds', () => {
 
 	it('succeeds on a natural 20 with a total of 11', () => {
 		expect(assessSucceeds(d20Roll(11, 20), null, 'might')).toBe(true);
+	});
+
+	it('names the feature when its natural 20 makes the Assess succeed', () => {
+		expect(assessOutcome(d20Roll(1, 3), bumblewiseHero(), 'insight')).toEqual({
+			isSuccess: true,
+			countsAsNat20Feature: 'Bumblewise',
+		});
+	});
+
+	it('names no feature when a rolled natural 20 makes the Assess succeed', () => {
+		expect(assessOutcome(d20Roll(-1, 20), bumblewiseHero(), 'insight')).toEqual({
+			isSuccess: true,
+			countsAsNat20Feature: null,
+		});
 	});
 });
