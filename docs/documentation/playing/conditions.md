@@ -14,6 +14,10 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 ![A chat card with a condition button, next to the token status panel showing named conditions](/images/documentation/condition-chatcard-with-button.png)
 
+## Blinded
+
+Blinded also uses Foundry's blindness. A Blinded token sees nothing past its own space, and it cannot see other tokens. Senses that are not sight still work. Fighting in the dark is Blinded in Nimble, so the GM applies it when a creature fights in the dark.
+
 ## Latched and Swallowed
 
 These two conditions come from monsters. The GM removes them by hand.
