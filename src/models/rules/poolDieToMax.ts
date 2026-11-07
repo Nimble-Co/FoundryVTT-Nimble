@@ -27,13 +27,12 @@ function schema() {
 			label: 'NIMBLE.rules.poolDieToMax.trigger.label',
 			hint: 'NIMBLE.rules.poolDieToMax.trigger.hint',
 		}),
-		reach: new fields.NumberField(
+		reach: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
-				integer: true,
-				min: 0,
-				initial: 0,
+				initial: '0',
+				widget: 'formula',
 				label: 'NIMBLE.rules.poolDieToMax.reach.label',
 				hint: 'NIMBLE.rules.poolDieToMax.reach.hint',
 				showWhen: (data: Record<string, unknown>) => data.trigger === 'onWound',
@@ -54,7 +53,7 @@ declare namespace PoolDieToMaxRule {
 class PoolDieToMaxRule extends NimbleBaseRule<PoolDieToMaxRule.Schema> {
 	declare poolIdentifier: string;
 	declare trigger: (typeof TRIGGERS)[number];
-	declare reach: number;
+	declare reach: string;
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.poolDieToMax.description';
@@ -72,9 +71,14 @@ class PoolDieToMaxRule extends NimbleBaseRule<PoolDieToMaxRule.Schema> {
 			new Map([
 				['poolIdentifier', 'string'],
 				['trigger', 'string'],
-				['reach', 'number'],
+				['reach', 'string'],
 			]),
 		);
+	}
+
+	/** The spaces from the hero to a wounded ally; 0 is the hero only. */
+	resolveReach(): number {
+		return this.resolveSpaces(this.reach, 0);
 	}
 
 	/** Raise the lowest `count` dice of the pool. */

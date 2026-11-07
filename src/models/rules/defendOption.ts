@@ -316,9 +316,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 
 	/** The spaces from the ally who Defends, from the formula; at least 1. */
 	resolveRange(): number {
-		const formula = String(this.range ?? '').trim();
-		const value = formula ? Number(this.resolveFormula(formula)) : 0;
-		return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
+		return this.resolveSpaces(this.range, 1);
 	}
 
 	override tooltipInfo(): string {

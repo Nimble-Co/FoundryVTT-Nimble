@@ -17,7 +17,7 @@
 				"priority": 7,
 				"poolIdentifier": "judgment",
 				"trigger": "onAttacked",
-				"reach": 0
+				"reach": "0"
 			},
 			{
 				"type": "diceConsumer",

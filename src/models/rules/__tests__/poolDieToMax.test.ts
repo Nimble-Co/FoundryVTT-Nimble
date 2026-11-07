@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { maximizePoolDie } = vi.hoisted(() => ({ maximizePoolDie: vi.fn(async () => undefined) }));
 
-async function make(data: object, parent: object = { isEmbedded: true, name: 'Feature' }) {
+async function make(
+	data: object,
+	parent: object = { isEmbedded: true, name: 'Feature' },
+	rollData: Record<string, number> = {},
+) {
 	vi.resetModules();
 	vi.doMock('#utils/dicePool/dicePoolRefill.js', () => ({ maximizePoolDie }));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', () => ({
@@ -15,7 +19,10 @@ async function make(data: object, parent: object = { isEmbedded: true, name: 'Fe
 	);
 	Object.assign(rule, data);
 	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
-	Object.defineProperty(rule, 'actor', { get: () => ({ uuid: 'Actor.a' }), configurable: true });
+	Object.defineProperty(rule, 'actor', {
+		get: () => ({ uuid: 'Actor.a', getRollData: () => rollData }),
+		configurable: true,
+	});
 	return rule;
 }
 
@@ -26,12 +33,31 @@ describe('Pool Die To Max rule', () => {
 		vi.doUnmock('#utils/dicePool/dicePoolSync.js');
 	});
 
+	it('resolves the reach from a formula, such as the aura reach', async () => {
+		const rule = await make({ reach: '@auraReach' }, undefined, { auraReach: 6 });
+		expect(rule.resolveReach()).toBe(6);
+	});
+
+	it('keeps a reach of 0 for the hero only', async () => {
+		const rule = await make({ reach: '0' });
+		expect(rule.resolveReach()).toBe(0);
+	});
+
+	it('never resolves a reach below 0', async () => {
+		const rule = await make({ reach: '-3' });
+		expect(rule.resolveReach()).toBe(0);
+	});
+
 	it('raises the given count of the named pool', async () => {
 		const rule = await make({ poolIdentifier: ' judgment ' });
 
 		await rule.raiseDice(2);
 
-		expect(maximizePoolDie).toHaveBeenCalledWith({ uuid: 'Actor.a' }, 'p1', 2);
+		expect(maximizePoolDie).toHaveBeenCalledWith(
+			expect.objectContaining({ uuid: 'Actor.a' }),
+			'p1',
+			2,
+		);
 	});
 
 	it('raises nothing for a pool the hero does not have', async () => {

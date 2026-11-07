@@ -65,7 +65,7 @@ export async function raisePoolDiceOnWounds(wounded: RuleActor, wounds: number):
 		if (!hero || hero.type !== 'character' || seen.has(hero.uuid)) continue;
 		seen.add(hero.uuid);
 		for (const rule of poolDieRules(hero, 'onWound')) {
-			const reach = Number(rule.reach) || 0;
+			const reach = rule.resolveReach?.() ?? 0;
 			if (reach > 0 && inReach(token, woundedToken, reach)) await useRule(rule, hero, wounds);
 		}
 	}

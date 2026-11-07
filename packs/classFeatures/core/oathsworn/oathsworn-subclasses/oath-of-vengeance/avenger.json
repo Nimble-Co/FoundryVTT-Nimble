@@ -17,7 +17,7 @@
 				"priority": 7,
 				"poolIdentifier": "judgment",
 				"trigger": "onWound",
-				"reach": 4
+				"reach": "@auraReach"
 			},
 			{
 				"type": "freeMove",

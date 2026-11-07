@@ -134,7 +134,7 @@ Clicking the pool opens its panel, which does two jobs:
 
 Features that open this panel do so when you use them: click the feature on the Features tab and the panel opens with that feature already selected. If your sheet is closed, it opens for you.
 
-Some features raise Judgment Dice by themselves, after the dice roll. Maximum Judgment raises the lowest die on each attack against you. Avenger raises one die per Wound on you or on an ally within Reach 4, then lets you move half your speed for free, also with no dice held. A hero or ally with no token on the scene has no effect. With Feature Effects off, you can use each of these items from the sheet and pick the die.
+Some features raise Judgment Dice by themselves, after the dice roll. Maximum Judgment raises the lowest die on each attack against you. Avenger raises one die per Wound on you or on an ally within your aura (Improved Aura makes it larger), then lets you move half your speed for free, also with no dice held. A hero or ally with no token on the scene has no effect. With Feature Effects off, you can use each of these items from the sheet and pick the die.
 
 ## Drag to the hotbar
 

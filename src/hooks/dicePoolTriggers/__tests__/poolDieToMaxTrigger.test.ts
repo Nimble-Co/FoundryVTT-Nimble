@@ -20,7 +20,7 @@ function hero(uuid: string, reachOfRule: number | null, order: string[] = []) {
 						{
 							type: 'poolDieToMax',
 							trigger: 'onWound',
-							reach: reachOfRule,
+							resolveReach: () => reachOfRule,
 							item,
 							appliesTo: () => true,
 							raiseDice: vi.fn(async (count: number) => {
@@ -106,6 +106,18 @@ describe('dice to max on Wounds', () => {
 		expect(order).toEqual([]);
 	});
 
+	it('uses the reach the rule resolves, such as a larger aura', async () => {
+		const order: string[] = [];
+		const avenger = hero('Actor.hero', 6, order);
+		const ally = { ...hero('Actor.ally', null), token: token(null, 6) };
+		Object.assign(ally.token, { parent: { tokens: [token(avenger, 0), ally.token] } });
+		const { raisePoolDiceOnWounds } = await load((a, b) => Math.abs(a.x - b.x));
+
+		await raisePoolDiceOnWounds(ally as never, 1);
+
+		expect(order).toEqual(['raise:1', 'move']);
+	});
+
 	it('does nothing for an ally with no token', async () => {
 		const order: string[] = [];
 		const { raisePoolDiceOnWounds } = await load(() => 0);
@@ -141,9 +153,13 @@ describe('the pack items of Judgment Dice', () => {
 		});
 	});
 
-	it('Avenger raises dice on Wounds in Reach 4, and moves half speed', () => {
+	it('Avenger raises dice on Wounds within the aura, and moves half speed', () => {
 		const rules = packRules('avenger.json');
-		expect(rules[0]).toMatchObject({ type: 'poolDieToMax', trigger: 'onWound', reach: 4 });
+		expect(rules[0]).toMatchObject({
+			type: 'poolDieToMax',
+			trigger: 'onWound',
+			reach: '@auraReach',
+		});
 		expect(rules[1]).toMatchObject({
 			type: 'freeMove',
 			trigger: 'afterPoolDiceToMax',
