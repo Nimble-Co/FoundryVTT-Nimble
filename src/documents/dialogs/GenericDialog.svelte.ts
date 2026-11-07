@@ -1,6 +1,7 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import type * as svelte from 'svelte';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import WindowShell from '#view/components/WindowShell.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -36,6 +37,9 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 
 	override root: svelte.Component<Record<string, never>>;
 
+	/** The dialog's own component. In the `nimble-window` frame, `root` is the shell round it. */
+	content: svelte.Component<Record<string, never>>;
+
 	#uniqueId: string | null = null;
 
 	constructor(
@@ -64,7 +68,10 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 			}) as DeepPartial<foundry.applications.api.ApplicationV2.Configuration>,
 		);
 
-		this.root = component;
+		this.content = component;
+		this.root = options.classes?.includes('nimble-window')
+			? (WindowShell as unknown as svelte.Component<Record<string, never>>)
+			: component;
 		this.data = data;
 		this.#uniqueId = options.uniqueId ?? null;
 

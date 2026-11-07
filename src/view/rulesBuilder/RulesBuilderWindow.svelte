@@ -8,7 +8,6 @@
 		createRulesBuilderWindowState,
 	} from '#view/rulesBuilder/RulesBuilderWindow.svelte.js';
 	import type { RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
-	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 
 	const { document: item }: RulesBuilderWindowProps = $props();
 
@@ -16,13 +15,6 @@
 </script>
 
 <section class="nimble-rules-builder-window">
-	<div class="nimble-rules-builder-window__head">
-		<WindowHead
-			title={localize('NIMBLE.rulesBuilder.windowTitle')}
-			sub={item.reactive.name}
-			icon="fa-solid fa-sliders"
-		/>
-	</div>
 	<header class="nimble-rules-builder-window__header">
 		<div class="nimble-rules-builder-window__header-left">
 			<button
@@ -116,13 +108,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		flex: 1;
 		height: 100%;
 		min-height: 0;
+		padding-top: 8px;
 		color: var(--nimble-ui-ink);
-	}
-
-	.nimble-rules-builder-window__head {
-		padding: 12px 12px 0;
 	}
 
 	.nimble-rules-builder-window__header {
