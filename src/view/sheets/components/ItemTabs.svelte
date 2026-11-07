@@ -3,20 +3,11 @@
 The tabs of an item window: the sheet tab bar (`SheetTabs`) for a `navigation` list of `{ name, tooltip, icon, component }`.
 -->
 <script lang="ts">
+	import type { ItemTabsProps } from '#types/components/ItemTabs.d.ts';
 	import localize from '#utils/localize.js';
 	import SheetTabs from '#view/actorSheets/parts/SheetTabs.svelte';
 
-	interface NavigationTab {
-		name: string;
-		tooltip: string;
-		icon: string;
-		display?: boolean;
-	}
-
-	let {
-		currentTab = $bindable(),
-		navigation,
-	}: { currentTab: NavigationTab; navigation: NavigationTab[] } = $props();
+	let { currentTab = $bindable(), navigation }: ItemTabsProps = $props();
 
 	const shown = $derived(navigation.filter((tab) => tab.display ?? true));
 	const tabs = $derived(

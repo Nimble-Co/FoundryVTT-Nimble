@@ -1,14 +1,18 @@
 import type { Snippet } from 'svelte';
 
-export interface WindowHeadProps {
+interface WindowHeadBase {
 	/** the name of the window; `name` replaces it with a field */
 	title?: string;
 	img?: string;
 	icon?: string;
 	/** a short line under the name */
 	sub?: string;
-	/** makes the tile a button, for example to change the image */
-	ontile?: (event: MouseEvent) => void;
-	tileLabel?: string;
 	name?: Snippet;
 }
+
+/** With `ontile` the tile is a button, for example to change the image, and needs a label. */
+export type WindowHeadProps = WindowHeadBase &
+	(
+		| { ontile: (event: MouseEvent) => void; tileLabel: string }
+		| { ontile?: undefined; tileLabel?: undefined }
+	);
