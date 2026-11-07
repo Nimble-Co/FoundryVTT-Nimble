@@ -95,7 +95,7 @@ describe('prepareRollTooltipRollParts with Vicious dice', () => {
 		expect(primary.total + viciousLine.total).toBe(part.total);
 	});
 
-	it('gives a Vicious die at its max no crit mark, and keeps the marks of the Primary Die', () => {
+	it('gives a Vicious die at its max no crit mark, and keeps the crit mark of the Primary Die', () => {
 		const [primary, viciousLine] = tooltip(
 			term('1d4', 4, [die(4, { exploded: true }), chain(1), vicious(4)]),
 		);
@@ -103,8 +103,15 @@ describe('prepareRollTooltipRollParts with Vicious dice', () => {
 		expect(viciousLine.dice).toEqual([{ result: 4, max: false, min: false }]);
 		expect(primary.dice).toEqual([
 			{ result: 4, max: true, min: false },
-			{ result: 1, max: false, min: true },
+			{ result: 1, max: false, min: false },
 		]);
+	});
+
+	// Only the first face of the Primary Die decides a miss; an exploded die only adds damage.
+	it('gives a 1 on an exploded die no miss mark', () => {
+		const [primary] = tooltip(term('1d6', 6, [die(6, { exploded: true }), chain(1)]));
+
+		expect(primary.dice.map((d) => d.min)).toEqual([false, false]);
 	});
 
 	it('gives a per-die Vicious term one Vicious line with all its Vicious dice', () => {

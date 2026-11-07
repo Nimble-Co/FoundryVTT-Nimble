@@ -35,11 +35,12 @@ export default function prepareRollTooltipDiceResults(
 		const { rerolled, discarded, result, faces: ownFaces } = die;
 		const isDiscarded = discarded || rerolled;
 		const dieFaces = ownFaces ?? faces;
-		// Only the kept face reads the crit face. A crit die crits on its max.
-		const critFace = !isDiscarded && !keptFaceFound ? critFaceOf(faces, options) : dieFaces;
+		// Only the kept face reads the crit face and the miss. A crit die crits on its max.
+		const isKeptFace = !isDiscarded && !keptFaceFound;
+		const critFace = isKeptFace ? critFaceOf(faces, options) : dieFaces;
 		if (!isDiscarded) keptFaceFound = true;
 		const isCritical = result >= critFace;
-		const isMiss = result <= missThreshold && !isCritical && !ownFaces;
+		const isMiss = isKeptFace && result <= missThreshold && !isCritical && !ownFaces;
 
 		let mark = '';
 		if (isPrimaryDie && isMiss && canMiss) mark = ' nimble-die--min';
