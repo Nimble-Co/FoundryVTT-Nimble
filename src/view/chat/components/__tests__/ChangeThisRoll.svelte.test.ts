@@ -23,6 +23,7 @@ function attack(system: Record<string, unknown>) {
 function control(card: never, count = 2) {
 	return createChangeThisRollState(card, () => ({
 		count,
+		blockedReason: vi.fn(() => ''),
 		picking: null,
 		opensPicker: vi.fn(() => false),
 		useEntry: vi.fn(async () => undefined),
@@ -39,6 +40,7 @@ describe('createChangeThisRollState', () => {
 		const pickSeveral = vi.fn(async () => undefined);
 		const state = createChangeThisRollState(message({}), () => ({
 			count: 1,
+			blockedReason: vi.fn(() => ''),
 			picking: null,
 			opensPicker: vi.fn(() => true),
 			useEntry: vi.fn(async () => undefined),

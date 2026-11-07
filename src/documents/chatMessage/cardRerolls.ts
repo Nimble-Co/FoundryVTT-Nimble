@@ -67,6 +67,7 @@ import {
 	type RerollRollOutcome,
 	type RerollRuleLike,
 	rollChangeKindOf,
+	type UsableReroll,
 	usableRerollEntry,
 	withNewRerollEntries,
 } from '#utils/reroll/rerollEntries.js';
@@ -106,6 +107,12 @@ interface UsableRule {
 }
 
 type Reject = (reasonKey: string) => unknown;
+
+const REJECT_REASON_KEYS: Record<Extract<UsableReroll, { ok: false }>['reason'], string> = {
+	unavailable: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
+	forcedMiss: 'NIMBLE.chat.incomingReactions.useFailed',
+	naturalOne: 'NIMBLE.chat.incomingReactions.changeThisRoll.naturalOneFails',
+};
 
 /** What a rule's use adds to its new roll, and the console text when that roll fails. */
 interface NewRollUse extends Partial<RerollStepInput<unknown>> {
@@ -684,6 +691,18 @@ export class CardRerolls {
 		return usableRerollEntry(entry, target.context(), this.#host.incomingReactions()).ok;
 	}
 
+	/**
+	 * Why a `reroll` entry that does not pass `canStillUseReroll` still shows its
+	 * row, not usable: an add on a roll that fails on its natural 1. Else null.
+	 */
+	blockedReroll(entry: IncomingReactionEntry): 'naturalOne' | null {
+		if (entry.kind !== 'reroll' || entry.used || this.pendingKeep()) return null;
+		const target = this.#rerollTarget();
+		if (!target?.findRoll()) return null;
+		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
+		return !usable.ok && usable.reason === 'naturalOne' ? 'naturalOne' : null;
+	}
+
 	/** Give an ally reroll the scan left out its button on this card. GM only. */
 	async addLeftOutReroll(entryId: string): Promise<void> {
 		if (!game.user?.isGM) return;
@@ -854,13 +873,7 @@ export class CardRerolls {
 		// Every gate again, from the live rule and this card: the card's outcome,
 		// its targets and the actor's state can all change after stamping.
 		const usable = usableRerollEntry(entry, rollTarget.context(), this.#host.incomingReactions());
-		if (!usable.ok) {
-			return reject(
-				usable.reason === 'forcedMiss'
-					? 'NIMBLE.chat.incomingReactions.useFailed'
-					: 'NIMBLE.chat.incomingReactions.rerollNoLongerAvailable',
-			);
-		}
+		if (!usable.ok) return reject(REJECT_REASON_KEYS[usable.reason]);
 		const found = rollTarget.findRoll();
 		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		const kind = rollChangeKindOf(usable.rule);

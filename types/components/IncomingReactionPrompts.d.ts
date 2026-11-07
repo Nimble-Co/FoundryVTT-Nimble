@@ -76,7 +76,8 @@ export interface IncomingReactionText {
 	featureName(entry: IncomingReactionEntry): string;
 	/** The name the dice pool window shows for a spend offer. */
 	spendLabel(entry: IncomingReactionEntry): string;
-	row(entry: IncomingReactionEntry): IncomingReactionRow;
+	/** `reason`: why the row cannot be used now. It replaces the note. */
+	row(entry: IncomingReactionEntry, reason?: string): IncomingReactionRow;
 	icon(entry: IncomingReactionEntry): string;
 	usedAttribution(entry: IncomingReactionEntry): string;
 }

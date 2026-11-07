@@ -244,11 +244,16 @@ interface AutomaticReroll {
 /** Whether a stamped entry can be used now, and from what. */
 type UsableReroll =
 	| { ok: true; rule: RerollRuleLike; actor: Actor.Implementation }
-	| { ok: false; reason: 'unavailable' | 'forcedMiss' };
+	| { ok: false; reason: 'unavailable' | 'forcedMiss' | 'naturalOne' };
 
 const UNAVAILABLE: UsableReroll = { ok: false, reason: 'unavailable' };
 
 const NO_OUTCOME: RerollRollOutcome = { outcome: null, forcedMiss: false };
+
+/** A change that only adds to the total cannot lift a roll that fails on its natural 1. */
+function onlyAddsToTotal(rule: RerollRuleLike): boolean {
+	return rollUseOfRule(rule) === 'result' && rule.change === 'add';
+}
 
 /** The roll's outcome as the gate reads it. A check has none. */
 function attackOutcome(context: RerollRollContext): RerollRollOutcome {
@@ -545,7 +550,8 @@ function isOnSide(entry: IncomingReactionEntry, side: RerollSide, context: Rerol
 
 /**
  * Check a stamped entry again from its live rule and the card's entries, on
- * the client that uses it. An entry with no side is not usable.
+ * the client that uses it. An entry with no side is not usable. An add on a roll
+ * that fails on its natural 1 keeps its row, but not usable: `naturalOne`.
  */
 function usableRerollEntry(
 	entry: IncomingReactionEntry,
@@ -574,6 +580,9 @@ function usableRerollEntry(
 		return UNAVAILABLE;
 	}
 	if (forcedMiss) return { ok: false, reason: 'forcedMiss' };
+	if (onlyAddsToTotal(rule) && context.card?.naturalOneFails === true) {
+		return { ok: false, reason: 'naturalOne' };
+	}
 	return { ok: true, rule, actor };
 }
 

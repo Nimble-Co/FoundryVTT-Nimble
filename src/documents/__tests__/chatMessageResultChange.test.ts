@@ -97,6 +97,7 @@ function makeRule(
 	return {
 		type: 'changeResult',
 		id,
+		change: use.change,
 		disabled: false,
 		label: '',
 		item: { name: id, uuid: `Item.${id}` },
@@ -156,14 +157,14 @@ type Card = NimbleChatMessage & {
 };
 
 /** A save card whose `update` writes to the card, as the document does. */
-function createCard(entries: IncomingReactionEntry[], dc: number | null = 14): Card {
+function createCard(entries: IncomingReactionEntry[], dc: number | null = 14, d20 = 5): Card {
 	const roll = {
 		class: 'NimbleRoll',
 		formula: '1d20 + 2[Will]',
-		total: 7,
+		total: d20 + 2,
 		options: {},
 		data: {},
-		terms: [{ class: 'Die', faces: 20, number: 1, results: [{ result: 5, active: true }] }],
+		terms: [{ class: 'Die', faces: 20, number: 1, results: [{ result: d20, active: true }] }],
 	};
 	const message = new NimbleChatMessage({
 		type: 'savingThrow',
@@ -1068,5 +1069,100 @@ describe('a reroll on a card with changes', () => {
 		expect(old.retired).toBe(true);
 		expect(fresh.retired).toBe(false);
 		expect(fresh.lineId).not.toBe(old.lineId);
+	});
+});
+
+describe('an add on a roll that fails on its natural 1', () => {
+	const WOUND = { ...FREE, woundCost: 1 };
+	const addUse = { change: 'add', value: 3, stat: 'strength' };
+
+	function world(d20: number) {
+		const roller = makeRoller();
+		const soul = makeRule(roller, 'soul', addUse, WOUND);
+		const lucky = {
+			type: 'reroll',
+			id: 'lucky',
+			disabled: false,
+			label: '',
+			item: { name: 'Lucky', uuid: 'Item.lucky' },
+			actor: roller,
+			rollUseCost: FREE,
+			offersUseOn: vi.fn(() => true),
+			rerollChanges: vi.fn(() => ({ rollModeChange: 0, primaryDieBonus: 0, extraDamage: '' })),
+		};
+		setupWorld([soul, lucky as never], roller);
+		const card = createCard([entryFor('soul'), { ...entryFor('lucky'), use: undefined }], 14, d20);
+		return { card, roller };
+	}
+
+	const naturalTwenty = {
+		id: 'nat',
+		lineId: 'nat',
+		entryId: '',
+		itemUuid: 'Item.nat',
+		ruleId: 'nat',
+		label: 'Bumblewise',
+		actorUuid: ROLLER,
+		change: 'countsAsNat20',
+		value: 21,
+		stat: '',
+		retired: false,
+		before: null,
+		chargePoolIdentifier: '',
+		paid: { charges: 0, mana: 0, wounds: 0 },
+		automatic: true,
+	} as ResultChange;
+
+	it('keeps the row on a natural 1 save, not usable, and the GM refuses it with no Wound paid', async () => {
+		const { card, roller } = world(1);
+		const soul = lastEntry(card, 'soul');
+
+		expect(card.cardRerolls.canStillUseReroll(soul)).toBe(false);
+		expect(card.cardRerolls.blockedReroll(soul)).toBe('naturalOne');
+
+		await click(card, 'soul');
+
+		expect(card.update).not.toHaveBeenCalled();
+		expect(card.system.resultChanges).toEqual([]);
+		expect(roller.system.attributes.wounds.value).toBe(0);
+	});
+
+	it('is usable on a failed save with a 5', () => {
+		const { card } = world(5);
+		const soul = lastEntry(card, 'soul');
+
+		expect(card.cardRerolls.canStillUseReroll(soul)).toBe(true);
+		expect(card.cardRerolls.blockedReroll(soul)).toBeNull();
+	});
+
+	it('is usable again when the 1 counts as a natural 20', () => {
+		const { card } = world(1);
+		card.system.resultChanges = [naturalTwenty];
+
+		expect(card.cardRerolls.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
+	});
+
+	it('is usable again after a reroll replaced the 1', async () => {
+		const { card } = world(1);
+		vi.spyOn(NimbleRoll.prototype, 'evaluate').mockImplementation(async function (
+			this: NimbleRoll,
+		) {
+			const die = (this.terms as unknown as Array<{ results?: unknown[] }>)[0];
+			die.results = [{ result: 6, active: true }];
+			return this as never;
+		});
+
+		await click(card, 'lucky');
+		stopRerollRolling(card.id ?? '', false);
+
+		expect(card.cardRerolls.canStillUseReroll(lastEntry(card, 'soul'))).toBe(true);
+	});
+
+	it('leaves a reroll row on a natural 1 usable', () => {
+		const { card } = world(1);
+		const lucky = lastEntry(card, 'lucky');
+
+		expect(card.cardRerolls.canStillUseReroll(lucky)).toBe(true);
+		expect(card.cardRerolls.blockedReroll(lucky)).toBeNull();
 	});
 });

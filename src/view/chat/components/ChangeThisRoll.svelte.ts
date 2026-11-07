@@ -15,8 +15,10 @@ const focusReturns = new Map<string, { entryId: string; until: number }>();
 const FOCUS_RETURN_DURATION = 10_000;
 
 interface ChangeThisRollInput {
-	/** The rows this user can click. */
+	/** The rows this user sees, also those that cannot be used now. */
 	count: number;
+	/** Why the row cannot be used now. Empty when it can. */
+	blockedReason: (entry: IncomingReactionEntry) => string;
 	picking: IncomingReactionPicking | null;
 	/** Whether a click on this row opens a choice under it. */
 	opensPicker: (entry: IncomingReactionEntry) => boolean;
@@ -131,7 +133,8 @@ export function createChangeThisRollState(
 	}
 
 	async function useEntry(entry: IncomingReactionEntry): Promise<void> {
-		const { picking, cancelPick, useEntry: use } = getInput();
+		const { picking, cancelPick, useEntry: use, blockedReason } = getInput();
+		if (blockedReason(entry)) return;
 		if (picking && !picking.rolling) {
 			cancelPick();
 			if (picking.entry.id === entry.id) return;
@@ -184,6 +187,7 @@ export function createChangeThisRollState(
 		onKeydown,
 		expectFocusLoss,
 		opensPicker: (entry: IncomingReactionEntry) => getInput().opensPicker(entry),
+		blockedReason: (entry: IncomingReactionEntry) => getInput().blockedReason(entry),
 		useEntry,
 		pickDie,
 		pickSeveral,

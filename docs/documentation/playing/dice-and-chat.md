@@ -126,7 +126,7 @@ When a save, skill check or ability check has a known DC, the small line under i
 
 ## Change This Roll
 
-All roll cards (attack, save, skill check and ability check) have one control for what features can do to the roll. It is a full-width button under the roll, **Change This Roll (3)**. The number tells how many rows you can click. You see only the rows that you can click, so a user with none sees no button and a plain card. On an attack card, these include rows for the one who was attacked and for allies.
+All roll cards (attack, save, skill check and ability check) have one control for what features can do to the roll. It is a full-width button under the roll, **Change This Roll (3)**. The number tells how many rows you see. You see only the rows that you can click, and an add that a natural 1 stops (see [Changing a result](#changing-a-result)), so a user with none sees no button and a plain card. On an attack card, these include rows for the one who was attacked and for allies.
 
 The button opens the rows. It opens by itself when a save or check card says **Failed**, and on an attack that misses. On a card that says **Succeeded**, on an attack that hits, and on a card with no result, it starts closed. You can open or close it at any time, and it stays as you left it when the card updates.
 
@@ -222,7 +222,7 @@ Some features change the result of a save, a skill check, an ability check or [I
 
 A box above the history shows how the total came from the roll, such as **7 + 3 + 3 = 13** or **7 changed to 13**. It shows only when the total is different from the roll.
 
-A known DC is read again after each change, and the small line under the name follows it. A natural 1 on a save or a skill check still fails after an add, and a natural 20 still succeeds. A change to a number replaces the roll, so only that number and the DC count. When the card goes to **Succeeded** on a save, a condition that the save added goes away again.
+A known DC is read again after each change, and the small line under the name follows it. A natural 1 on a save or a skill check still fails after an add, and a natural 20 still succeeds. So on a natural 1, an add row such as **Add +3 STR** with Mighty Soul stays in the list, but you cannot click it, and its note says **A roll of 1 always fails**. You can click it again after a reroll replaces the 1, or after a change makes the roll count as a natural 20. A change to a number replaces the roll, so only that number and the DC count. When the card goes to **Succeeded** on a save, a condition that the save added goes away again.
 
 **Counts as a natural 20.** Some features count a total of 1 or less as a natural 20. This happens by itself and costs nothing, and the dice on the card do not change. The total is 20 plus the modifier of the roll, and the save or check succeeds. The box says **Rolled 1, counts as 20 − 1 = 19**. The history says **Counts as a Natural 20** with Bumblewise, with no **Remove**. It is read again after a reroll. With **Feature Effects** off in the Automation settings, a row **Count as a Natural 20** shows instead, and you click it.
 

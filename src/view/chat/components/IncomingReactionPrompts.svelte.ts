@@ -120,18 +120,27 @@ export function createIncomingReactionPromptsState(
 		if (getPlace() === 'roll') return entries;
 		return entries.filter((entry) => changesTheRoll(entry) === (getPlace() === 'checkRoll'));
 	});
-	const pendingGroups = $derived.by(() => {
+	// The rows that show, and the reason of each that shows but cannot be used now.
+	const pendingRows = $derived.by(() => {
 		// A click or a Remove can bring a row back or take it away with no new entry.
 		void resultChanges;
-		return groupByActor(
-			rowEntries.filter(
-				(entry) =>
-					!entry.used &&
-					(!held.has(entry.id) || picking?.entry.id === entry.id) &&
-					canUseEntry(entry),
-			),
-		);
+		const shown: IncomingReactionEntry[] = [];
+		const blocked = new Map<string, string>();
+		for (const entry of rowEntries) {
+			if (entry.used || (held.has(entry.id) && picking?.entry.id !== entry.id)) continue;
+			const state = rowStateOf(entry);
+			if (state === 'hidden') continue;
+			if (state === 'naturalOne') {
+				blocked.set(
+					entry.id,
+					localize('NIMBLE.chat.incomingReactions.changeThisRoll.naturalOneFails'),
+				);
+			}
+			shown.push(entry);
+		}
+		return { shown, blocked };
 	});
+	const pendingGroups = $derived(groupByActor(pendingRows.shown));
 	const rowCount = $derived(
 		pendingGroups.reduce((total, group) => total + group.entries.length, 0),
 	);
@@ -223,11 +232,14 @@ export function createIncomingReactionPromptsState(
 		if (ownsControl) control.restoreFocus();
 	});
 
-	function canUseEntry(entry: IncomingReactionEntry): boolean {
-		if (!mayActHere(text.reactingActor(entry))) return false;
+	function rowStateOf(entry: IncomingReactionEntry): 'usable' | 'naturalOne' | 'hidden' {
+		if (!mayActHere(text.reactingActor(entry))) return 'hidden';
+		if (entry.kind !== 'reroll') return 'usable';
+		const cardRerolls = message?.cardRerolls;
+		if (!cardRerolls) return 'hidden';
+		if (cardRerolls.canStillUseReroll(entry)) return 'usable';
 		// A reroll the card no longer allows (outcome, side, cost) is hidden.
-		if (entry.kind === 'reroll') return message?.cardRerolls.canStillUseReroll(entry) ?? false;
-		return true;
+		return cardRerolls.blockedReroll(entry) ?? 'hidden';
 	}
 
 	/**
@@ -469,6 +481,7 @@ export function createIncomingReactionPromptsState(
 
 	const control = createChangeThisRollState(message, () => ({
 		count: rowCount,
+		blockedReason: (entry) => pendingRows.blocked.get(entry.id) ?? '',
 		picking,
 		opensPicker,
 		useEntry,

@@ -821,7 +821,8 @@
 					"label": "Change This Roll",
 					"count": "({count})",
 					"withFeature": "with {feature}",
-					"sentence": "{verb} with {feature}"
+					"sentence": "{verb} with {feature}",
+					"naturalOneFails": "A roll of 1 always fails"
 				},
 				"withNote": "{text}. {note}",
 				"rerollHistoryPlain": "Rerolled with {feature}",

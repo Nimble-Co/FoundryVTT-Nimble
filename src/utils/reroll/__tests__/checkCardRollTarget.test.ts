@@ -124,6 +124,7 @@ describe('checkCardRollTarget', () => {
 				roller: { uuid: 'Actor.roller' },
 				result: null,
 				rollModifier: 3,
+				naturalOneFails: false,
 			},
 			attacker: { uuid: 'Actor.roller' },
 			targets: [],
@@ -206,6 +207,16 @@ describe('checkCardRollTarget', () => {
 			});
 		}
 
+		it('tells the live gate a save that fails on its natural 1', () => {
+			const save = {
+				...serializedSave(),
+				total: 4,
+				terms: [d20Term([{ result: 1, active: true }])],
+			};
+
+			expect(checkCardRollTarget(makeCard({}, save)).context().card?.naturalOneFails).toBe(true);
+		});
+
 		it('gives the live gate the total with the clicks on it, and the roller', () => {
 			const roller = { uuid: 'Actor.roller' };
 			const card = makeCard({ roller: () => roller, resultChanges: () => [add, add] });
@@ -216,6 +227,7 @@ describe('checkCardRollTarget', () => {
 				roller,
 				result: null,
 				rollModifier: 3,
+				naturalOneFails: false,
 			});
 		});
 

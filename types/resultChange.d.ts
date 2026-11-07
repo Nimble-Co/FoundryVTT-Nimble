@@ -51,6 +51,8 @@ export interface ResultCardView {
 	result?: CheckResult | null;
 	/** The check roll's total without its d20. */
 	rollModifier?: number;
+	/** The kept d20 is a natural 1 that fails whatever is added. */
+	naturalOneFails?: boolean;
 	/** An attack card's damage is already applied. */
 	damageApplied?: boolean;
 }
