@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import prepareWeaponTooltipTags from './prepareWeaponTooltipTags.js';
+import prepareWeaponTooltipTags from '../prepareWeaponTooltipTags.js';
 
 beforeAll(() => {
 	// The shared Foundry mock does not carry `isEmpty`, which this helper guards with.

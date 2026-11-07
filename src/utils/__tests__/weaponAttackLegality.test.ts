@@ -4,7 +4,7 @@ import {
 	type EquipmentActor,
 	getStrengthShortfall,
 	type WeaponItem,
-} from './weaponAttackLegality.js';
+} from '../weaponAttackLegality.js';
 
 interface WeaponOptions {
 	objectType?: string;
