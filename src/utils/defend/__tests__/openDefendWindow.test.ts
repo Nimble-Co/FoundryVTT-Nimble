@@ -182,7 +182,7 @@ describe('defendWindowPlan', () => {
 			expect(interposeCost('baseline')).toBe('NIMBLE.chat.defend.actionsOne');
 		});
 
-		it('is the same for an Interpose that a rule gives a longer range', () => {
+		it('is 1 action for an Interpose that a rule gives a longer range', () => {
 			expect(interposeCost('rule')).toBe('NIMBLE.chat.defend.actionsOne');
 		});
 	});

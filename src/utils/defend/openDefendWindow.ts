@@ -6,7 +6,7 @@ import type {
 	DefendWindowData,
 } from '#types/components/DefendDialog.d.ts';
 import { rerollCostParts } from '../../view/chat/components/incomingReactionCost.js';
-import { paysForInterpose, spendInterpose } from '../../view/chat/components/spendInterpose.js';
+import { spendInterpose } from '../../view/chat/components/spendInterpose.ts';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
@@ -266,7 +266,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 	const named = reactor.interposes.length > 1;
 	for (const entry of reactor.interposes) {
 		const name = nameOfToken(entry.targetTokenUuid);
-		const interposeCost = paysForInterpose(entry, actor) ? costOf(actor, ['interpose']) : 0;
+		const interposeCost = costOf(actor, ['interpose']);
 		const token = entry.tokenUuid || reactor.targetTokenUuid;
 		const before = token ? card.previewDamageFor(token, 0) : null;
 		addRow(
@@ -581,7 +581,7 @@ export async function openDefendWindow(
 	const combatant = combatantOf(combat, actor, defendedToken);
 	const paysDefend = option.defend && (row.way === 'action' || row.way === 'extra');
 	const keys: HeroicReactionKey[] = [
-		...(entry && paysForInterpose(entry, actor) ? (['interpose'] as const) : []),
+		...(entry ? (['interpose'] as const) : []),
 		...(paysDefend && row.way === 'action' ? (['defend'] as const) : []),
 	];
 	const limits = await confirmLimits(combat, combatant, keys);
@@ -589,7 +589,7 @@ export async function openDefendWindow(
 	if (option.defend && !(await confirmOtherDefend(actor, combatant, row.way))) return false;
 
 	if (entry) {
-		if (paysForInterpose(entry, actor) && !(await spendInterpose(entry, limits))) {
+		if (!(await spendInterpose(entry, limits))) {
 			return false;
 		}
 		const sent = await requestIncomingAttackReaction({

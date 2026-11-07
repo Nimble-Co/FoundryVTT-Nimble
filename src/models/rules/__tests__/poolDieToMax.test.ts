@@ -33,7 +33,7 @@ describe('Pool Die To Max rule', () => {
 		vi.doUnmock('#utils/dicePool/dicePoolSync.js');
 	});
 
-	it('resolves the reach from a formula, such as the aura reach', async () => {
+	it('resolves the reach from a formula, such as the Reach of the aura', async () => {
 		const rule = await make({ reach: '@auraReach' }, undefined, { auraReach: 6 });
 		expect(rule.resolveReach()).toBe(6);
 	});
@@ -41,6 +41,11 @@ describe('Pool Die To Max rule', () => {
 	it('keeps a reach of 0 for the hero only', async () => {
 		const rule = await make({ reach: '0' });
 		expect(rule.resolveReach()).toBe(0);
+	});
+
+	it('rounds a reach down to whole spaces', async () => {
+		const rule = await make({ reach: '9 / 2' });
+		expect(rule.resolveReach()).toBe(4);
 	});
 
 	it('never resolves a reach below 0', async () => {

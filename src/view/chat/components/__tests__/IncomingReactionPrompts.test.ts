@@ -226,10 +226,37 @@ describe('IncomingReactionPrompts', () => {
 
 		await openControl(rollPlace());
 
-		const row = rollPlace().getByRole('button', { name: 'Interpose with Aura of Refuge' });
-		expect(rowWords(row)).toBe('Interpose with Aura of Refuge');
+		const row = rollPlace().getByRole('button', {
+			name: 'Interpose with Aura of Refuge (Heroic Reaction)',
+		});
+		expect(rowWords(row)).toBe('Interpose with Aura of Refuge Heroic Reaction');
 		expect(actorHeadings(screen.getByTestId('roll-place'))).toEqual(['Sir Brannon']);
 		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
+	});
+
+	it('spends the Interpose of a rule-granted Interpose before it is sent', async () => {
+		const g = globalThis as Record<string, any>;
+		const useHeroicReactions = vi.fn(async () => true);
+		g.game.combat = {
+			started: true,
+			useHeroicReactions,
+			combatants: { find: () => ({ id: 'combatant-protector' }) },
+		};
+		try {
+			render(IncomingReactionPromptsTestHarness, {
+				props: { messageDocument: createMessage([createEntry()]) },
+			});
+
+			await useFeature(rollPlace(), /Interpose with Aura of Refuge/);
+
+			await vi.waitFor(() => expect(requestIncomingAttackReaction).toHaveBeenCalled());
+			expect(useHeroicReactions).toHaveBeenCalledWith('combatant-protector', ['interpose']);
+			expect(useHeroicReactions.mock.invocationCallOrder[0]).toBeLessThan(
+				requestIncomingAttackReaction.mock.invocationCallOrder[0],
+			);
+		} finally {
+			delete g.game.combat;
+		}
 	});
 
 	it('puts the rows that do not change the roll under the card when it has no damage section', async () => {
@@ -244,7 +271,7 @@ describe('IncomingReactionPrompts', () => {
 		await openControl(optionsPlace());
 
 		expect(rowsOf(screen.getByTestId('options-place')).map(rowWords)).toEqual([
-			'Interpose with Aura of Refuge',
+			'Interpose with Aura of Refuge Heroic Reaction',
 		]);
 	});
 
@@ -419,7 +446,7 @@ describe('IncomingReactionPrompts', () => {
 
 		await openControl(rollPlace());
 		expect(rowsOf(screen.getByTestId('roll-place')).map(rowWords)).toEqual([
-			'Interpose with Aura of Refuge',
+			'Interpose with Aura of Refuge Heroic Reaction',
 		]);
 	});
 

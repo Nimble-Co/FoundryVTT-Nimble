@@ -7,29 +7,11 @@ import showReactionConfirmation from '../../../utils/incomingReactions/showReact
 import localize from '../../../utils/localize.js';
 
 /**
- * A hero's Interpose costs the Heroic Reaction, also when a rule gives it a
- * longer range (Core:492, Core:512). A rule Interpose of a monster is free.
- */
-export function paysForInterpose(
-	entry: IncomingReactionEntry,
-	actor?: { type?: string } | null,
-): boolean {
-	if (entry.kind !== 'redirectToSelf') return false;
-	if (entry.source === 'baseline') return true;
-	const owner =
-		actor !== undefined
-			? actor
-			: entry.actorUuid
-				? (fromUuidSync(entry.actorUuid) as { type?: string } | null)
-				: null;
-	return owner?.type === 'character';
-}
-
-/**
  * Spend the Interpose through the combat's reaction bookkeeping (with the
- * usual already-spent confirmation) before relaying the redirect. Outside
- * combat there is nothing to spend. With `force`, the caller has already
- * confirmed a bent limit.
+ * usual already-spent confirmation) before relaying the redirect. A rule that
+ * gives the Interpose a longer range does not change its cost (Core:492,
+ * Core:512). Outside combat there is nothing to spend. With `force`, the
+ * caller has already confirmed a bent limit.
  */
 export async function spendInterpose(
 	entry: IncomingReactionEntry,

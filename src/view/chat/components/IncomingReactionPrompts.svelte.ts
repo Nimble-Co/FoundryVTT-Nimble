@@ -38,7 +38,7 @@ import { sortByVerb } from './reactionVerbs.ts';
 import { requestPoolSpendOffer } from './requestPoolSpendOffer.ts';
 import { rerollAgainRecords, rerollHistoryLines } from './rerollHistoryLines.ts';
 import { resultChangeLines, resultSumText } from './resultChangeLines.ts';
-import { paysForInterpose, spendInterpose } from './spendInterpose.ts';
+import { spendInterpose } from './spendInterpose.ts';
 
 function changesTheRoll(entry: IncomingReactionEntry): boolean {
 	return entry.kind === 'reroll';
@@ -445,7 +445,7 @@ export function createIncomingReactionPromptsState(
 				return;
 			}
 
-			if (paysForInterpose(entry)) {
+			if (entry.kind === 'redirectToSelf') {
 				const spent = await spendInterpose(entry);
 				if (!spent) return;
 			}

@@ -3021,7 +3021,7 @@
 				},
 				"reach": {
 					"label": "Reach for allies",
-					"hint": "An ally this near also fires the trigger. A formula, such as @auraReach for the aura. 0 is the hero only."
+					"hint": "An ally this near also fires the trigger. A number or formula, for example @auraReach for the hero's aura. 0 is the hero only."
 				}
 			},
 			"offerAttackBonus": {
