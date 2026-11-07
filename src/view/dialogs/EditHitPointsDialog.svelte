@@ -186,7 +186,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		padding: 4px 12px 12px;
+		padding: 12px;
 	}
 
 	.nimble-sheet__footer {
@@ -289,6 +289,7 @@
 	}
 
 	.hp-levels {
+		margin-top: 8px;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;

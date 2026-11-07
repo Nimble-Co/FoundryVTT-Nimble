@@ -435,7 +435,7 @@
 
 <style lang="scss">
 	:global(.nimble-window) .nimble-sheet__body.nimble-sheet__body--save-config {
-		padding: 4px 12px 12px;
+		padding: 12px;
 	}
 
 	.nimble-save-config {
@@ -663,7 +663,7 @@
 			flex: none;
 			align-items: center;
 			justify-content: center;
-			width: 1.125rem;
+			width: 0.875rem;
 			height: 1.125rem;
 			min-height: 0;
 			margin: 0;

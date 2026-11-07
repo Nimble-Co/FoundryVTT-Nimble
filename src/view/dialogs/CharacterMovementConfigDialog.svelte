@@ -126,7 +126,7 @@
 
 <style lang="scss">
 	:global(.nimble-window) .nimble-sheet__body.nimble-movement-config {
-		padding: 4px 12px 12px;
+		padding: 12px;
 	}
 
 	.nimble-movement-config {

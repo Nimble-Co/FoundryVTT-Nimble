@@ -400,7 +400,11 @@
 
 	:global(.system-nimble .nimble-window) .nimble-sheet__body {
 		gap: 10px;
-		padding: 4px 12px 12px;
+		padding: 12px;
+	}
+
+	.hd-section--bonus {
+		margin-top: 10px;
 	}
 
 	.hd-header {

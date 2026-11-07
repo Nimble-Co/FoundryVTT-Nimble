@@ -638,7 +638,7 @@
 	}
 
 	:global(.nimble-window) .nimble-sheet__body.nimble-sheet__body--ability-score-config {
-		padding: 4px 12px 12px;
+		padding: 12px;
 		gap: 10px;
 	}
 

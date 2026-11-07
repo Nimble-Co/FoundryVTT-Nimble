@@ -252,13 +252,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		padding: 4px 12px 12px;
+		padding: 12px;
 		color: var(--nimble-ui-ink);
 	}
 
 	:global(.system-nimble .nimble-window) .nimble-configure-charges-dialog {
 		gap: 10px;
-		padding: 4px 12px 12px;
+		padding: 12px;
 	}
 
 	.charges-empty {

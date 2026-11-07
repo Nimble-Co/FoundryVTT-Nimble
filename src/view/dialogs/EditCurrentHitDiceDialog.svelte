@@ -157,7 +157,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		padding: 4px 12px 12px;
+		padding: 12px;
 	}
 
 	:global(.nimble-window)
@@ -179,24 +179,21 @@
 			grid-template-columns: auto 1fr auto;
 			align-items: center;
 			gap: 12px;
-			padding: 5px 8px;
-			border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
-			border-radius: 4px;
+			min-height: 40px;
+			padding: 4px;
+			border-bottom: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__die-label-group {
 			display: flex;
-			flex-direction: column;
 			align-items: center;
-			gap: 2px;
-			min-width: 3rem;
+			gap: 6px;
 		}
 
 		&__die-label {
 			font-size: 0.875rem;
 			font-weight: 900;
 			letter-spacing: 0.06em;
-			text-align: center;
 			color: color-mix(in srgb, var(--nimble-hit-dice-color) var(--nimble-ui-tone-mix), #000);
 		}
 

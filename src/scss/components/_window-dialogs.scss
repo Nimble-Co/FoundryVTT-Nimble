@@ -2,14 +2,37 @@
 
 .system-nimble .nimble-window {
 	.nimble-window__content > .nimble-sheet__body {
-		padding: 4px 12px 12px;
+		padding: 12px;
 		gap: 4px;
 	}
 
 	// A dialog whose component is a list of fields, with no body of its own
 	.nimble-window__content:has(> .nimble-field) {
-		gap: 10px;
-		padding: 4px 12px 12px;
+		gap: 4px;
+		padding: 12px;
+	}
+
+	// A section starts with more space above its heading than under it.
+	.nimble-window__content :is(.nimble-section-header, .nimble-sheet__body > header:not([class])) {
+		margin-block: 16px 6px;
+	}
+
+	.nimble-window__content
+		:is(
+			.nimble-sheet__body > :first-child,
+			.nimble-sheet__body > :first-child > :first-child,
+			.nimble-field:first-child > :first-child
+		):is(.nimble-section-header, header) {
+		margin-top: 0;
+	}
+
+	.nimble-window__content .nimble-field[data-field-variant="stacked"] + .nimble-field {
+		margin-top: 10px;
+	}
+
+	// The label of a field sits close to its control.
+	.nimble-window__content .nimble-field > .nimble-section-header:not(:has(> [data-heading-variant="section"])) {
+		margin-block: 0 6px;
 	}
 
 	// The label over a field, as in the roll window
@@ -31,7 +54,6 @@
 		--nimble-heading-size: 0.688rem;
 		--nimble-heading-color: var(--nimble-ui-ink-dim);
 
-		margin-block: 0 4px;
 		padding-bottom: 5px;
 		border-bottom: 1px solid var(--nimble-ui-soft);
 
@@ -40,7 +62,21 @@
 		}
 	}
 
-	// The sheet table fills its head and foot; in the window the surface shows through.
+	// The sheet table is a card with stripes; in the window it is rows on the surface.
+	.nimble-window__content table {
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+	}
+
+	.nimble-window__content table tr:nth-child(2n) {
+		background: none;
+	}
+
+	.nimble-window__content table tbody tr + tr {
+		border-top: 1px solid var(--nimble-ui-soft);
+	}
+
 	.nimble-window__content table :is(thead, tfoot) {
 		border: 0;
 		background: none;
