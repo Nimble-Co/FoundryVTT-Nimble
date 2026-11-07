@@ -53,11 +53,13 @@ interface PaidRerollCost {
 	stamp?: TurnStamp | null;
 }
 
-/** A combat turn: the combat, the round, and the combatant whose turn it is. */
+/** A combat turn: the combat, the round, the combatant whose turn it is, and its turn index. */
 interface TurnStamp {
 	combatId: string;
 	round: number;
 	combatantId: string;
+	/** Absent on records from before the index was stored. */
+	turn?: number | null;
 }
 
 type RerollPayer = Actor | null | undefined;
@@ -113,12 +115,20 @@ function turnStampOf(combat: Combat | null | undefined): TurnStamp | null {
 		combatId: combat.id ?? '',
 		round: Number(combat.round) || 0,
 		combatantId: combat.combatant?.id ?? '',
+		turn: Number.isInteger(combat.turn) ? combat.turn : null,
 	};
+}
+
+/** Whether the combatant has more than one turn in a round, as a solo monster does. */
+function hasManyTurns(combat: Combat | null | undefined, combatantId: string): boolean {
+	const turns = (combat?.turns ?? []) as { id?: string | null }[];
+	return turns.filter((turn) => turn?.id === combatantId).length > 1;
 }
 
 /**
  * Whether Remove keeps an action or a heroic reaction of `paid` spent. They come
  * back only in the turn they were paid in. A record with no stamp keeps them.
+ * A combatant with many turns in a round must also be on the same turn index.
  */
 function keepsTurnCost(
 	paid: Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>,
@@ -131,7 +141,8 @@ function keepsTurnCost(
 		then &&
 		now.combatId === then.combatId &&
 		now.round === then.round &&
-		now.combatantId === then.combatantId
+		now.combatantId === then.combatantId &&
+		(!hasManyTurns(game.combat, then.combatantId) || now.turn === then.turn)
 	);
 }
 

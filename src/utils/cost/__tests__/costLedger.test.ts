@@ -128,18 +128,20 @@ describe('cost ledger', () => {
 			testGlobals.game.user = user;
 		});
 
-		it('stamps the combat, the round and the combatant whose turn it is', async () => {
+		it('stamps the combat, the round, the combatant whose turn it is and the turn index', async () => {
 			const { actor } = heroInCombat();
 
 			expect((await payCost(actor, action))?.stamp).toEqual({
 				combatId: 'combat-1',
 				round: 2,
 				combatantId: 'hero',
+				turn: 1,
 			});
 			expect((await payCost(actor, reaction))?.stamp).toEqual({
 				combatId: 'combat-1',
 				round: 2,
 				combatantId: 'hero',
+				turn: 1,
 			});
 		});
 

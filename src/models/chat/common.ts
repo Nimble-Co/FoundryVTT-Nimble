@@ -492,6 +492,12 @@ const resultChange = () =>
 					combatId: new fields.StringField({ required: true, nullable: false, initial: '' }),
 					round: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 					combatantId: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					turn: new fields.NumberField({
+						required: false,
+						nullable: true,
+						initial: null,
+						integer: true,
+					}),
 				},
 				{ required: false, nullable: true, initial: null },
 			),

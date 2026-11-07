@@ -831,9 +831,13 @@ describe('Remove on a Change a Result line', () => {
 			return { hero, combat };
 		}
 
-		async function paidCard(cost: Record<string, unknown>) {
+		async function paidCard(
+			cost: Record<string, unknown>,
+			arrange: (combat: ReturnType<typeof heroCombat>['combat']) => void = () => {},
+		) {
 			const roller = makeRoller();
 			const { hero, combat } = heroCombat(roller);
+			arrange(combat);
 			const rule = makeRule(roller, 'feature', succeed, cost);
 			setupWorld([rule], roller);
 			const card = createCard([entryFor('feature')]);
@@ -864,8 +868,18 @@ describe('Remove on a Change a Result line', () => {
 			});
 		});
 
+		const solo = { id: 'solo', type: 'soloMonster' };
+		const ally = { id: 'ally', type: 'character' };
+
+		/** The solo monster's first turn of the round: it acts after each hero. */
+		function onSoloTurn(combat: ReturnType<typeof heroCombat>['combat']) {
+			Object.assign(combat, { turns: [combat.combatant, solo, ally, solo], turn: 1 });
+			Object.assign(combat, { combatant: solo });
+		}
+
 		it('gives back the action when a re-sort moved the turn index, and the turn is the same', async () => {
 			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			Object.assign(combat, { turns: [solo, ally, hero, solo] });
 			combat.turn = 2;
 			expect(notes(card)).toEqual([null]);
 
@@ -897,6 +911,31 @@ describe('Remove on a Change a Result line', () => {
 			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
 
 			expect(hero.system.actions.base.current).toBe(3);
+		});
+
+		it("keeps the Heroic Reaction spent in a solo monster's earlier turn of the same round", async () => {
+			const { card, hero, combat, lineId } = await paidCard(
+				{ ...FREE, heroicReaction: 'defend' },
+				onSoloTurn,
+			);
+			combat.turn = 3;
+			expect(notes(card)).toEqual([REACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(false);
+		});
+
+		it('gives back the Heroic Reaction in the same turn of a solo monster', async () => {
+			const { card, hero, lineId } = await paidCard(
+				{ ...FREE, heroicReaction: 'defend' },
+				onSoloTurn,
+			);
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.heroic.defendAvailable).toBe(true);
 		});
 
 		it('gives back the action in the same turn, on top of an action spent after it', async () => {
