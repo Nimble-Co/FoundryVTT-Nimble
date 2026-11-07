@@ -419,8 +419,8 @@
 	.nimble-field-hint {
 		display: block;
 		margin-top: 0.125rem;
-		color: var(--color-text-dark-secondary);
-		font-size: var(--nimble-xs-text);
+		color: var(--nimble-ui-ink-muted);
+		font-size: 0.75rem;
 	}
 
 	.nimble-string-list {
@@ -444,9 +444,8 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.375rem;
-			padding: 0.5rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-accent-color);
+			padding: 8px;
+			border: 1px solid var(--nimble-ui-line);
 			border-radius: 4px;
 		}
 	}
@@ -455,9 +454,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.5rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-accent-color);
+		padding: 8px;
+		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
 	}
 
@@ -467,15 +465,15 @@
 		gap: 0.125rem;
 
 		&__label {
-			font-size: var(--nimble-xs-text);
+			font-size: 0.75rem;
 			font-weight: 600;
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__hint {
 			margin-top: 0.0625rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
 			line-height: 1.3;
 		}
 

@@ -55,6 +55,7 @@
 
 		<input
 			class="nimble-rule-card__label"
+			data-look="plain"
 			type="text"
 			value={rule.label as string}
 			placeholder={state.ruleLabel}
@@ -73,6 +74,7 @@
 			<input
 				type="number"
 				class="nimble-rule-card__priority-input"
+				data-look="plain"
 				value={(rule.priority as number) ?? 1}
 				onchange={(e) => {
 					const num = parseInt((e.target as HTMLInputElement).value, 10);
@@ -289,12 +291,11 @@
 	.nimble-rule-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.625rem;
-		background: var(--nimble-card-background-color);
-		border: 1px solid var(--nimble-card-border-color);
+		gap: 8px;
+		padding: 6px 8px 10px 4px;
+		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
-		box-shadow: var(--nimble-box-shadow);
+		color: var(--nimble-ui-ink);
 
 		&--disabled {
 			opacity: 0.6;
@@ -306,12 +307,12 @@
 
 		&__header {
 			display: flex;
-			gap: 0.375rem;
+			gap: 8px;
 			align-items: center;
 		}
 
 		&__chevron {
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-dim);
 			flex-shrink: 0;
 		}
 
@@ -319,50 +320,67 @@
 			display: inline-flex;
 			gap: 0.25rem;
 			align-items: center;
-			padding: 0.125rem 0.375rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
-			background: var(--nimble-box-background-color);
-			border-radius: 4px;
+			font-size: 0.688rem;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__priority-label {
-			font-weight: 600;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.04em;
+			letter-spacing: 0.08em;
 		}
 
-		&__priority-input {
-			width: 3rem;
-			padding: 0 0.25rem;
-			font-size: var(--nimble-xs-text);
-			text-align: center;
-			background: var(--nimble-input-background-color);
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 3px;
+		.nimble-rule-card__priority-input {
+			width: 2.5rem;
+			height: 26px;
+			padding: 0 3px;
+			border: 0;
+			border-bottom: 1px dashed var(--nimble-ui-ring);
+			border-radius: 0;
+			background: none;
+			font-size: 0.875rem;
+			font-weight: 700;
+			text-align: right;
+			color: var(--nimble-ui-ink);
+
+			&:focus {
+				border-bottom: 1px solid var(--nimble-ui-highlight);
+				outline: none;
+			}
 		}
 
-		&__label {
+		.nimble-rule-card__label {
 			flex-grow: 1;
-			padding: 0.25rem 0.375rem;
-			font-weight: 600;
-			background: transparent;
-			border: 1px solid transparent;
-			border-radius: 4px;
+			min-width: 0;
+			height: 26px;
+			padding: 0 2px;
+			border: 0;
+			border-bottom: 1px dashed transparent;
+			border-radius: 0;
+			background: none;
+			font-size: 0.938rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 
-			&:focus,
 			&:hover {
-				background: var(--nimble-box-background-color);
-				border-color: var(--nimble-accent-color);
+				border-bottom-color: var(--nimble-ui-ring);
+			}
+
+			&:focus {
+				border-bottom: 1px solid var(--nimble-ui-highlight);
+				outline: none;
 			}
 		}
 
 		&__type {
-			padding: 0.125rem 0.375rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
-			background: var(--nimble-box-background-color);
-			border-radius: 4px;
+			padding: 0 5px;
+			border-radius: 3px;
+			box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+			font: 800 0.656rem/16px var(--nimble-primary-font);
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			white-space: nowrap;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__controls {
@@ -374,26 +392,26 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
+			padding-left: 30px;
 		}
 
 		&__empty {
 			margin: 0;
 			padding: 0.5rem;
-			color: var(--color-text-dark-secondary);
-			font-size: var(--nimble-sm-text);
+			color: var(--nimble-ui-ink-muted);
+			font-size: 0.75rem;
 			font-style: italic;
 			text-align: center;
 		}
 
 		&__advanced {
-			padding: 0.375rem 0.5rem;
-			background: var(--nimble-box-background-color);
-			border-radius: 4px;
+			padding: 4px 0;
 
 			summary {
 				cursor: pointer;
-				font-size: var(--nimble-sm-text);
-				font-weight: 600;
+				font-size: 0.813rem;
+				font-weight: 700;
+				color: var(--nimble-ui-ink-dim);
 			}
 
 			&-body {
