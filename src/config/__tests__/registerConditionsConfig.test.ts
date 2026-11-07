@@ -8,7 +8,7 @@ describe('registerSpecialStatusEffects', () => {
 		CONFIG.specialStatusEffects = original;
 	});
 
-	it("gives core's blindness the Blinded condition", () => {
+	it("gives core's blindness the Blinded condition and keeps the other special statuses", () => {
 		CONFIG.specialStatusEffects = {
 			DEFEATED: 'dead',
 			INVISIBLE: 'invisible',
@@ -17,19 +17,10 @@ describe('registerSpecialStatusEffects', () => {
 
 		registerSpecialStatusEffects();
 
-		expect(CONFIG.specialStatusEffects.BLIND).toBe(STATUS_EFFECT_IDS.blinded);
-	});
-
-	it('keeps the other special status effects', () => {
-		CONFIG.specialStatusEffects = {
+		expect(CONFIG.specialStatusEffects).toEqual({
 			DEFEATED: 'dead',
 			INVISIBLE: 'invisible',
-			BLIND: 'blind',
-		} as never;
-
-		registerSpecialStatusEffects();
-
-		expect(CONFIG.specialStatusEffects.DEFEATED).toBe('dead');
-		expect(CONFIG.specialStatusEffects.INVISIBLE).toBe('invisible');
+			BLIND: STATUS_EFFECT_IDS.blinded,
+		});
 	});
 });

@@ -16,7 +16,7 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 ## Blinded
 
-Blinded also uses Foundry's blindness. A Blinded token sees nothing past its own space, and it cannot see other tokens. Senses that are not sight still work. Fighting in the dark is Blinded in Nimble, so the GM applies it when a creature fights in the dark.
+Blinded uses Foundry's blindness. The vision of a Blinded token reaches only its own space, so through that token you see no other token. A detection mode that is not sight, which the GM adds to the token, still works. Nimble does not give Blindsight a detection mode. Fighting in the dark imposes Blinded, unless a light or Darkvision lets the creature see. The GM applies it.
 
 ## Latched and Swallowed
 
