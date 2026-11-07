@@ -18,7 +18,7 @@ export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSh
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-sheet', 'nimble-window'],
 		window: {
 			icon: 'fa-solid fa-building-columns',
 			resizable: true,

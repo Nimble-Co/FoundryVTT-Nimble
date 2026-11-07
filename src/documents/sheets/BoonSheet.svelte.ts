@@ -21,7 +21,7 @@ export default class BoonSheet extends SvelteApplicationMixin(
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-sheet', 'nimble-window'],
 		window: {
 			icon: 'fa-solid fa-hands-praying',
 			resizable: true,

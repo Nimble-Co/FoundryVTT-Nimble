@@ -21,7 +21,7 @@ export default class SpellSheet extends SvelteApplicationMixin(
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet', 'nimble-sheet--spell'],
+		classes: ['nimble-sheet', 'nimble-sheet--spell', 'nimble-window'],
 		window: {
 			icon: 'fa-solid fa-hand-sparkles',
 			resizable: true,
