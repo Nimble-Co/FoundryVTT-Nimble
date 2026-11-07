@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import shouldListCondition from './shouldListCondition.js';
+import shouldListCondition from '../shouldListCondition.js';
 
 describe('shouldListCondition', () => {
 	beforeEach(() => {
 		vi.stubGlobal('CONFIG', {
-			NIMBLE: { conditionScopes: { latchedOn: 'monster', swallowed: 'monster' } },
+			NIMBLE: { conditionScopes: { latched: 'monster', swallowed: 'monster' } },
 		});
 	});
 
@@ -22,14 +22,14 @@ describe('shouldListCondition', () => {
 	});
 
 	it('hides a monster-scoped condition the actor does not carry', () => {
-		expect(shouldListCondition('latchedOn')).toBe(false);
+		expect(shouldListCondition('latched')).toBe(false);
 	});
 
 	it('lists a monster-scoped condition the actor already carries, so it can be seen and cleared', () => {
-		expect(shouldListCondition('latchedOn', new Set(['latchedOn']))).toBe(true);
+		expect(shouldListCondition('latched', new Set(['latched']))).toBe(true);
 	});
 
 	it('still hides a monster-scoped condition when a different one is active', () => {
-		expect(shouldListCondition('swallowed', new Set(['latchedOn']))).toBe(false);
+		expect(shouldListCondition('swallowed', new Set(['latched']))).toBe(false);
 	});
 });
