@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	createCombatActorFixture,
 	createCombatantFixture,
-} from '../../../../tests/fixtures/combat.js';
-import { resolveMinimizedTrackerSummary } from './minimized.utils.js';
+} from '../../../../../tests/fixtures/combat.js';
+import { resolveMinimizedTrackerSummary } from '../minimized.utils.js';
 
 function createCharacterCombatant(options: { name?: string } = {}) {
 	return createCombatantFixture({
