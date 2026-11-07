@@ -8,7 +8,7 @@ vi.stubGlobal('game', {
 	packs: [],
 });
 
-import applyPackSortingModes from './packSortingModes.js';
+import applyPackSortingModes from '../packSortingModes.js';
 
 function makePack(id: string, flags: Record<string, unknown> = {}) {
 	return {

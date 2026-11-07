@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const PACK_DIR = path.resolve(
 	path.dirname(url.fileURLToPath(import.meta.url)),
-	'../packs/rules/core',
+	'../../packs/rules/core',
 );
 
 /** Chapter order as printed in the Nimble 2 Core Rules, 2.0.3. */
