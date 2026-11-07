@@ -166,7 +166,8 @@
 		}
 	}
 
-	input[type="checkbox"] {
+	// One class more than the sheet check box rule (vendor/foundry/input), which shows the core glyphs.
+	&.nimble-sheet input[type="checkbox"] {
 		position: relative;
 		flex: none;
 		width: 30px;
