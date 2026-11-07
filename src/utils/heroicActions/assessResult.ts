@@ -1,8 +1,7 @@
 import type { ResultChange } from '#types/resultChange.d.ts';
 import { ASSESS_DC } from '../assessOptions.js';
-import { keptD20 } from '../reroll/checkRollOfCard.js';
 import { resultOfCheckRoll } from '../rolls/checkResult.js';
-import { naturalResultChange } from '../rolls/resultChanges.js';
+import { naturalResultChangeOfRoll } from '../rolls/resultChanges.js';
 
 type AssessRoll = { total?: number | null; terms: unknown[] };
 type AssessRoller = { uuid?: string | null; rules?: unknown } | null | undefined;
@@ -43,12 +42,7 @@ export function assessOutcome(
 	roller: AssessRoller,
 	skillKey: string,
 ): AssessOutcome {
-	const natural = naturalResultChange({
-		roller,
-		roll: { kind: 'skillCheck', key: skillKey },
-		rollTotal: roll.total ?? 0,
-		keptD20: keptD20(roll.terms),
-	});
+	const natural = naturalResultChangeOfRoll(roller, { kind: 'skillCheck', key: skillKey }, roll);
 	const isSuccess = succeedsWith(roll, natural ? [natural] : []);
 	const decided = !!natural && isSuccess && !succeedsWith(roll, []);
 	return {

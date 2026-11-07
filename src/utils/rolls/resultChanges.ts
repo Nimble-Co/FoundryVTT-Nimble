@@ -2,6 +2,7 @@ import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
+import { keptD20 } from '../reroll/checkRollOfCard.js';
 import type { RollToReroll } from '../reroll/rollToReroll.js';
 
 const NATURAL_20 = 20;
@@ -118,10 +119,25 @@ function naturalResultChange(input: {
 	};
 }
 
+/** The change a rule of the roller makes by itself on this roll, if any. */
+function naturalResultChangeOfRoll(
+	roller: { uuid?: string | null; rules?: unknown } | null | undefined,
+	check: RollToReroll,
+	roll: { total?: number | null; terms: unknown[] },
+): ResultChange | null {
+	return naturalResultChange({
+		roller,
+		roll: check,
+		rollTotal: Number(roll.total) || 0,
+		keptD20: keptD20(roll.terms),
+	});
+}
+
 export {
 	LOW_RESULT,
 	NATURAL_20,
 	naturalResultChange,
+	naturalResultChangeOfRoll,
 	newResultChange,
 	resultChangesOf,
 	resultTotal,

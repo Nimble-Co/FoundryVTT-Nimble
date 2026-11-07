@@ -11,6 +11,13 @@ import {
 
 const NATURAL_1_FAILS = 1;
 
+/** A change that makes the roll succeed, whatever its dice. */
+const settlesSuccess = (change: ResultChange) =>
+	change.change === 'succeed' || change.change === 'countsAsNat20';
+
+/** A change that replaces the roll, so no natural 1 or 20 is left to read. */
+const replacesRoll = (change: ResultChange) => change.change === 'setTotal';
+
 /** A save or a skill check: a natural 1 always fails and a natural 20 always succeeds. */
 function naturalDieSettles(kind: CheckRollKind): boolean {
 	return kind === 'save' || kind === 'skillCheck';
@@ -53,13 +60,11 @@ function resultOfCheckRoll(input: {
 }): CheckResult | null {
 	const { kind, rollTotal, terms, changes, dc } = input;
 	const standing = standingResultChanges(changes);
-	if (standing.some((change) => change.change === 'succeed' || change.change === 'countsAsNat20')) {
-		return 'succeeded';
-	}
+	if (standing.some(settlesSuccess)) return 'succeeded';
 	return checkResult({
 		kind,
 		total: resultTotal(rollTotal, changes),
-		keptD20: standing.some((change) => change.change === 'setTotal') ? null : keptD20(terms),
+		keptD20: standing.some(replacesRoll) ? null : keptD20(terms),
 		dc,
 	});
 }
@@ -76,10 +81,7 @@ function failsOnNaturalOne(input: {
 	const { kind, terms, changes } = input;
 	if (!naturalDieSettles(kind)) return false;
 	const settled = standingResultChanges(changes).some(
-		(change) =>
-			change.change === 'succeed' ||
-			change.change === 'countsAsNat20' ||
-			change.change === 'setTotal',
+		(change) => settlesSuccess(change) || replacesRoll(change),
 	);
 	return !settled && keptD20(terms) === NATURAL_1_FAILS;
 }
