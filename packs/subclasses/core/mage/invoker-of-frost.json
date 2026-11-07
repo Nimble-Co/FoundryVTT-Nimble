@@ -1,0 +1,25 @@
+{
+	"folder": "5b9d52290963bc16",
+	"name": "Invoker of Frost",
+	"type": "subclass",
+	"img": "icons/magic/water/snowflake-ice-blue-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "frost",
+		"rules": [],
+		"description": "<p>LEVEL 3</p><p><strong>Crown of Ice.</strong> You can only cast Ice spells from now on. Choose 1 Fire or Lightning spell and treat it as an Ice spell.</p><p><strong>Aura of Cold.</strong> Adjacent enemies are Slowed. Your unused Frost Shield Temp HP last until the end of the encounter and can accumulate.</p><p>LEVEL 7</p><p><strong>Crystalline Aegis.</strong> When your Frost Shield Temp HP is lost, cast Shatter for free on an adjacent enemy. Choose 1 additional Lightning or Fire spell and treat it as an Ice spell.</p><p>LEVEL 11</p><p><strong>Bitter Cold.</strong> Your spells ignore the armor of creatures Hampered by you. Choose 1 additional Lightning or Fire spell and treat it as an Ice spell.</p><p>LEVEL 15</p><p><strong>Deep Freeze.</strong> Reduce the mana cost of all spells by 2 while you have any Temp HP from Frost Shield. Choose 1 additional Lightning or Fire spell and treat it as an Ice spell.</p>",
+		"parentClass": "mage",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.8.8",
+		"createdTime": 1761527184804,
+		"modifiedTime": 1761527184804,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "bEWmxrpD4wHsSzQ8"
+}
