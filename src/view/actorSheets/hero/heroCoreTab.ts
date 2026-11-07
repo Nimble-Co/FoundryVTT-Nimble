@@ -1,6 +1,7 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { signedNumber } from '#utils/signedNumber.ts';
+import { MOVEMENT_ICONS } from '../shared/movement.ts';
 import { type RollModeView, rollModeView } from '../shared/rollModeView.ts';
 import type { HeroConfigureTarget, HeroIntent } from './heroIntent.ts';
 import type { HeroActorLike, HeroSheetContext, RolledValue } from './heroSource.ts';
@@ -34,9 +35,16 @@ export interface HeroSkillView extends HeroRollView {
 export interface HeroProficiencyView {
 	label: string;
 	value: string;
-	/** a short note after the value: where a bonus comes from */
-	note: string | null;
 	configure: { intent: HeroIntent; label: string } | null;
+}
+
+export interface HeroCoreSpeedView {
+	type: string;
+	label: string;
+	icon: string;
+	value: number;
+	/** the bonuses to this type and their sources, for example `−1 Stout` */
+	note: string | null;
 }
 
 export interface HeroCoreView {
@@ -52,23 +60,38 @@ export interface HeroCoreView {
 		save: string;
 		skills: string;
 		configureSkills: string;
+		speed: string;
+		configureMovement: string;
 		proficiencies: string;
 	};
 	abilities: HeroAbilityView[];
 	skills: HeroSkillView[];
+	speeds: HeroCoreSpeedView[];
 	proficiencies: HeroProficiencyView[];
 }
 
 const CORE = 'NIMBLE.actorSheet.hero.core';
 
-function speedBonusNote(actor: HeroActorLike, context: HeroSheetContext): string | null {
-	const notes = speedBonuses(actor).map((bonus) =>
-		context.format(`${CORE}.speedBonus`, {
-			amount: signedNumber(bonus.amount),
-			source: bonus.source,
-		}),
-	);
-	return notes.length ? notes.join(', ') : null;
+function speeds(actor: HeroActorLike, context: HeroSheetContext): HeroCoreSpeedView[] {
+	const { movement } = actor.system.attributes;
+	const bonuses = speedBonuses(actor);
+	return shownMovementTypes(actor).map((type) => {
+		const notes = bonuses
+			.filter((bonus) => bonus.type === type)
+			.map((bonus) =>
+				context.format(`${CORE}.speedNote`, {
+					amount: signedNumber(bonus.amount),
+					source: bonus.source,
+				}),
+			);
+		return {
+			type,
+			label: context.localize(`NIMBLE.movementTypes.${type}`),
+			icon: MOVEMENT_ICONS[type],
+			value: movement[type] ?? 0,
+			note: notes.length ? notes.join(', ') : null,
+		};
+	});
 }
 
 function configureButton(
@@ -106,31 +129,14 @@ function damageDefenses(actor: HeroActorLike, context: HeroSheetContext): string
 }
 
 function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroProficiencyView[] {
-	const { localize, format, labels } = context;
-	const { movement } = actor.system.attributes;
+	const { localize, labels } = context;
 	const { languages, armor, weapons } = actor.system.proficiencies;
 	const byName = (a: string, b: string) => a.localeCompare(b);
 
-	const speed = shownMovementTypes(actor)
-		.map((type) =>
-			format(`${CORE}.speedValue`, {
-				type: localize(`NIMBLE.movementTypes.${type}`),
-				value: String(movement[type] ?? 0),
-			}),
-		)
-		.join(', ');
-
 	const rows: HeroProficiencyView[] = [
-		{
-			label: localize(`${CORE}.speed`),
-			value: speed,
-			note: speedBonusNote(actor, context),
-			configure: configureButton('movement', 'NIMBLE.prompts.configureMovement', context),
-		},
 		{
 			label: localize(`${CORE}.languages`),
 			value: listOrNone(languages.map((key) => labels.languages[key] ?? key).sort(byName), context),
-			note: null,
 			configure: configureButton(
 				'languages',
 				'NIMBLE.prompts.configureLanguageProficiencies',
@@ -140,7 +146,6 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 		{
 			label: localize(`${CORE}.armor`),
 			value: listOrNone(armor.map((key) => labels.armorTypes[key] ?? key).sort(byName), context),
-			note: null,
 			configure: configureButton(
 				'armorProficiencies',
 				'NIMBLE.prompts.configureArmorProficiencies',
@@ -150,7 +155,6 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 		{
 			label: localize(`${CORE}.weapons`),
 			value: listOrNone([...weapons], context),
-			note: null,
 			configure: configureButton(
 				'weaponProficiencies',
 				'NIMBLE.prompts.configureWeaponProficiencies',
@@ -160,7 +164,6 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 		{
 			label: localize(`${CORE}.damage`),
 			value: damageDefenses(actor, context),
-			note: null,
 			configure: configureButton(
 				'damageDefenses',
 				'NIMBLE.prompts.configureDamageDefenses',
@@ -177,7 +180,6 @@ function proficiencies(actor: HeroActorLike, context: HeroSheetContext): HeroPro
 				.map((id) => labels.conditions[id] ?? id)
 				.sort(byName)
 				.join(', '),
-			note: null,
 			configure: null,
 		});
 	}
@@ -200,6 +202,8 @@ export function heroCoreTab(actor: HeroActorLike, context: HeroSheetContext): He
 			save: localize(`${CORE}.save`),
 			skills: localize(`${CORE}.skills`),
 			configureSkills: localize('NIMBLE.prompts.configureSkills'),
+			speed: localize(`${CORE}.speed`),
+			configureMovement: localize('NIMBLE.prompts.configureMovement'),
 			proficiencies: localize(`${CORE}.proficiencies`),
 		},
 		abilities: (Object.entries(abilities) as [AbilityKeyType, RolledValue][]).map(
@@ -244,6 +248,7 @@ export function heroCoreTab(actor: HeroActorLike, context: HeroSheetContext): He
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name)),
+		speeds: speeds(actor, context),
 		proficiencies: proficiencies(actor, context),
 	};
 }

@@ -1,6 +1,6 @@
 <!--
 @component
-Armor and the speeds of the hero. In edit mode an EditZone on the speeds opens Configure Movement.
+Armor and the walking speed of the hero. In edit mode an EditZone on the speed opens Configure Movement.
 -->
 <script lang="ts">
 	import type { HeroStatsProps } from '#types/components/actorSheets/HeroStats.d.ts';
@@ -18,17 +18,15 @@ Armor and the speeds of the hero. In edit mode an EditZone on the speeds opens C
 		value={view.armor.value}
 		tooltip={view.armor.tooltip}
 	/>
-	<span class="speeds">
-		{#each view.speeds as speed (speed.type)}
-			<StatBox
-				variant="inline"
-				icon={speed.icon}
-				label={speed.label}
-				value={speed.value}
-				note={speed.note ?? undefined}
-				tooltip={speed.tooltip}
-			/>
-		{/each}
+	<span class="speed">
+		<StatBox
+			variant="inline"
+			icon={view.speed.icon}
+			label={view.speed.label}
+			value={view.speed.value}
+			note={view.speed.note ?? undefined}
+			tooltip={view.speed.tooltip}
+		/>
 		{#if editing}
 			<EditZone
 				short={view.text.movementShort}
@@ -49,11 +47,9 @@ Armor and the speeds of the hero. In edit mode an EditZone on the speeds opens C
 	.centered {
 		justify-content: center;
 	}
-	.speeds {
+	.speed {
 		position: relative;
 		display: inline-flex;
-		flex-wrap: wrap;
 		align-items: center;
-		gap: 2px 14px;
 	}
 </style>

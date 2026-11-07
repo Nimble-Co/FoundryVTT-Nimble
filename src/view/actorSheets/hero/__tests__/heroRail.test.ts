@@ -377,24 +377,41 @@ describe('heroRail', () => {
 	});
 
 	describe('armor and speed', () => {
-		it('shows armor, walking speed, and each other speed above 0 with its bonus note', () => {
+		it('shows armor and only the walking speed, with its bonus note', () => {
 			const hero = blankHero({
-				system: { attributes: { movement: { walk: 8, climb: 3 } } },
+				system: { attributes: { movement: { walk: 8, climb: 3, fly: 5 } } },
 				items: [
 					heroItem({
 						type: 'feature',
 						name: 'Swift',
 						rules: [{ id: 'r', type: 'speedBonus', active: true, amount: 2, fields: {} }],
 					}),
+					heroItem({
+						type: 'feature',
+						name: 'Wings',
+						rules: [
+							{
+								id: 'f',
+								type: 'speedBonus',
+								active: true,
+								amount: 1,
+								fields: { movementType: 'fly' },
+							},
+						],
+					}),
 				],
 			});
 			const view = heroRail(hero, heroContext());
 
 			expect(view.armor.value).toBe(2);
-			expect(view.speeds.map((s) => [s.type, s.value, s.note])).toEqual([
-				['walk', 8, '+2'],
-				['climb', 3, null],
-			]);
+			expect([view.speed.value, view.speed.note]).toEqual([8, '+2']);
+			expect(view.speed.tooltip).not.toContain('Wings');
+		});
+
+		it('shows the walking speed when it is 0', () => {
+			const hero = blankHero({ system: { attributes: { movement: { walk: 0, fly: 6 } } } });
+
+			expect(heroRail(hero, heroContext()).speed.value).toBe(0);
 		});
 	});
 });

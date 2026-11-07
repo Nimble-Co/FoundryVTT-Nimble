@@ -97,7 +97,7 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 				<EditBand {...frame.editBand} ondone={() => setEditing(ui, false)} />
 			{/if}
 			{#if core}
-				<HeroCoreTab view={core} editing={ui.editing} {perform} skillColumns={wideMain ? 3 : 2} />
+				<HeroCoreTab view={core} editing={ui.editing} {perform} columns={wideMain ? 3 : 2} />
 			{:else if actions}
 				<HeroActionsTab view={actions} {ui} {perform} columns={wideMain ? 2 : 1} />
 			{:else if features}
