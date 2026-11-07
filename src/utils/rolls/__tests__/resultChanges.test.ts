@@ -3,6 +3,7 @@ import type { ResultChange } from '#types/resultChange.d.ts';
 import { checkResultOfCard } from '../checkResult.js';
 import {
 	naturalResultChange,
+	naturalResultChangeOfRoll,
 	newResultChange,
 	resultChangesOf,
 	resultTotal,
@@ -145,6 +146,17 @@ describe('naturalResultChange', () => {
 	it('makes none with Feature Effects off: it is a row then', () => {
 		gameGlobal.game.settings = { get: () => false };
 		expect(naturalResultChange({ roller, roll: WILL, rollTotal: 1, keptD20: 1 })).toBeNull();
+	});
+
+	it('reads the total and the kept d20 off a roll', () => {
+		const d20 = (...results: Array<{ result: number; active?: boolean }>) => ({
+			faces: 20,
+			results,
+		});
+		const roll = { total: -1, terms: [d20({ result: 19, active: false }, { result: 2 })] };
+
+		expect(naturalResultChangeOfRoll(roller, WILL, roll)?.value).toBe(17);
+		expect(naturalResultChangeOfRoll(roller, WILL, { total: 1, terms: [] })).toBeNull();
 	});
 });
 
