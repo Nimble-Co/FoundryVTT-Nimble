@@ -1,13 +1,14 @@
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { poolModeChoices, poolTriggerChoices } from './_poolChoices.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const CHARGE_POOL_SCOPES = [...ChargePoolRuleConfig.scopes];
 const CHARGE_POOL_DIE_SIZES = [...ChargePoolRuleConfig.dieSizes];
 const CHARGE_POOL_INITIAL_VALUES = [...ChargePoolRuleConfig.initialModes];
-const CHARGE_RECOVERY_TRIGGERS = [...ChargePoolRuleConfig.recoveryTriggers];
-const CHARGE_RECOVERY_MODES = [...ChargePoolRuleConfig.recoveryModes];
+const CHARGE_RECOVERY_TRIGGERS = poolTriggerChoices(ChargePoolRuleConfig.recoveryTriggers);
+const CHARGE_RECOVERY_MODES = poolModeChoices(ChargePoolRuleConfig.recoveryModes);
 
 function schema() {
 	const { fields } = foundry.data;

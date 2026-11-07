@@ -1,6 +1,7 @@
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { poolModeChoices, poolTriggerChoices } from './_poolChoices.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -19,12 +20,19 @@ const DIE_SIZES = Array.from(
 //
 // Modes need no union: the charge modes are a subset of the dice ones. That
 // leaves two modes (`setIfEmpty`, `clear`) offered on a charge pool that charge
-// pools cannot perform. Both subsystems drop a contributed entry whose trigger
-// or mode they do not implement, so a mismatched pick contributes nothing
-// rather than doing something the author did not ask for.
-const REFILL_TRIGGERS = Array.from(
-	new Set<string>([...DicePoolRuleConfig.refillTriggers, ...ChargePoolRuleConfig.recoveryTriggers]),
+// pools cannot perform; the mode hint says so. Both subsystems drop a
+// contributed entry whose trigger or mode they do not implement, so a
+// mismatched pick contributes nothing rather than doing something the author
+// did not ask for.
+const REFILL_TRIGGERS = poolTriggerChoices(
+	Array.from(
+		new Set<string>([
+			...DicePoolRuleConfig.refillTriggers,
+			...ChargePoolRuleConfig.recoveryTriggers,
+		]),
+	),
 );
+const REFILL_MODES = poolModeChoices(DicePoolRuleConfig.refillModes);
 
 type PoolType = (typeof POOL_TYPES)[number];
 
@@ -102,8 +110,8 @@ function schema() {
 					nullable: false,
 					initial: 'add',
 					label: 'NIMBLE.rules.dicePool.refills.mode.label',
-					hint: 'NIMBLE.rules.dicePool.refills.mode.hint',
-					choices: [...DicePoolRuleConfig.refillModes],
+					hint: 'NIMBLE.rules.modifyPool.addRefills.mode.hint',
+					choices: REFILL_MODES,
 				}),
 				value: new fields.StringField(
 					withWidget({

@@ -246,7 +246,7 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		]);
 		expect(texts('.nimble-field-row__hint')).toEqual([
 			'Event that drives this recovery (rest type, encounter event, hit, etc.).',
-			'Only on a charge pool, with the "add" mode. These uses are spent first. They go away when the encounter ends.',
+			'Only on a charge pool, with the Add mode. These uses are spent first. They go away when the encounter ends.',
 		]);
 	});
 

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { PredicateField } from '../../fields/PredicateField.js';
 import { ChargePoolRule } from '../chargePool.js';
 
-type RecoveryFields = Record<string, { choices?: string[]; label?: string; hint?: string }>;
+type RecoveryFields = Record<
+	string,
+	{ choices?: Record<string, string>; label?: string; hint?: string }
+>;
 
 function recoveryFields(): RecoveryFields {
 	const schema = ChargePoolRule.defineSchema();
@@ -21,7 +24,7 @@ describe('ChargePoolRule', () => {
 		});
 
 		it('offers the healed trigger on a recovery', () => {
-			expect(recoveryFields().trigger.choices).toContain('onHealed');
+			expect(Object.keys(recoveryFields().trigger.choices ?? {})).toContain('onHealed');
 		});
 
 		it('gives each recovery an optional condition', () => {
