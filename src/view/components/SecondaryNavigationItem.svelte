@@ -14,6 +14,7 @@
 
 <li class="nimble-secondary-navigation-list__item">
 	<button
+		form=""
 		class="nimble-secondary-navigation-list__button"
 		class:nimble-secondary-navigation-list__button--active={isCurrentTab()}
 		type="button"
