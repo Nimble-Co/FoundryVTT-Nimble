@@ -147,6 +147,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 
 		if (this.isDiceExpression(this.value)) {
 			// Dice expression — store raw formula, don't resolve to a number
+			this.checkReferences(this.value);
 			this.pushToActorSystemArray<DamageBonusEntry>('damageBonuses', {
 				value: null,
 				formula: this.value,

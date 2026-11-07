@@ -1,9 +1,10 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { FormulaActor, FormulaCheckOptions } from '#types/formulaReferences.d.ts';
 import type { MovementRecord } from '#types/movement.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
-import localize from '#utils/localize.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
+import { checkFormulaReferences, ruleOwner } from '../../utils/rolls/formulaReferences.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { actorAccumulatorPaths } from './accumulatorRegistry.js';
@@ -14,17 +15,6 @@ import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 // Intentionally session-lifetime and never cleared: it only ever holds one entry
 // per distinct misconfigured rule, so it stays bounded by authored content.
 const warnedLatePredicateRules = new Set<string>();
-const warnedFormulaReferences = new Set<string>();
-
-const FORMULA_REFERENCE = /@{[-.\w]+}|@[-.\w]+/g;
-
-function findMissingReferences(formula: string, rollData: object): string[] {
-	const references = formula.match(FORMULA_REFERENCE) ?? [];
-	return references.filter(
-		(reference) => foundry.utils.getProperty(rollData, reference.replace(/^@{?|}?$/g, '')) == null,
-	);
-}
-
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {
 	getDomain(): Set<string>;
@@ -407,38 +397,23 @@ abstract class NimbleBaseRule<
 	}
 
 	protected resolveFormula(formula: string) {
-		const rollData = this.actor?.getRollData() ?? {};
-		if (
-			this.actor &&
-			typeof formula === 'string' &&
-			findMissingReferences(formula, rollData).length
-		) {
-			queueMicrotask(() => this.#warnMissingReferences(formula));
-		}
-		return getDeterministicBonus(formula, rollData);
+		return this.resolveFormulaFor(formula, this.actor);
 	}
 
-	/** Foundry reads an unknown `@` reference as 0; tell the homebrewer once it is still unknown after prep. */
-	#warnMissingReferences(formula: string): void {
-		const { actor, item } = this;
-		if (!actor) return;
-		// Keyed on the item name, so the copies on unlinked tokens warn once.
-		const missing = findMissingReferences(formula, actor.getRollData()).filter((reference) => {
-			const key = `${item?.name}:${this.type}:${reference}`;
-			if (warnedFormulaReferences.has(key)) return false;
-			warnedFormulaReferences.add(key);
-			return true;
-		});
-		if (!missing.length) return;
+	/** A formula read against the roll data of the given actor, such as the one who rolled. */
+	protected resolveFormulaFor(formula: string, actor: FormulaActor | null | undefined) {
+		const rollData = actor?.getRollData?.() ?? {};
+		this.checkReferences(formula, actor, { rollData });
+		return getDeterministicBonus(formula, rollData as NimbleRollData);
+	}
 
-		const message = localize('NIMBLE.rules.unknownFormulaReference', {
-			item: item?.name ?? '',
-			rule: this.label || this.type,
-			references: missing.join(', '),
-		});
-		// eslint-disable-next-line no-console
-		console.warn(`Nimble | ${message}`);
-		if (item?.isOwner) ui.notifications?.warn(message);
+	/** Warn the item owner about an `@` reference the actor has no value for. */
+	protected checkReferences(
+		formula: unknown,
+		actor: FormulaActor | null | undefined = this.actor,
+		options: FormulaCheckOptions = {},
+	): void {
+		checkFormulaReferences(formula, actor, ruleOwner(this), options);
 	}
 
 	/** A count of spaces from a formula, never below `minimum`. */

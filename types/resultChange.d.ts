@@ -46,7 +46,7 @@ export interface ResultCardView {
 	total: number;
 	changes: readonly ResultChange[];
 	/** Formulas read this creature's roll data. */
-	roller: { getRollData?: () => Record<string, unknown> } | null;
+	roller: { name?: string | null; getRollData?: () => Record<string, unknown> } | null;
 	/** A check card's result. Null or absent when the card cannot tell. */
 	result?: CheckResult | null;
 	/** The check roll's total without its d20. */

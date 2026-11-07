@@ -1,9 +1,11 @@
 import { SYSTEM_ID } from '#system';
+import type { FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { checkFormulaReferences, poolOwner, ruleOwner } from '../rolls/formulaReferences.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumerRuleLike,
@@ -271,15 +273,27 @@ function getChargePoolRollData(actor: CharacterActorLike): Record<string, { face
 	return pools;
 }
 
-function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+function resolveFormulaToInteger(
+	actor: CharacterActorLike,
+	formula: unknown,
+	owner?: FormulaOwner,
+): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
-	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const rollData = actor.getRollData();
+	if (owner) checkFormulaReferences(formula, actor, owner, { rollData });
+	const resolvedValue = getDeterministicBonus(formula, rollData as NimbleRollData);
 	return toFiniteNonNegativeInteger(resolvedValue);
 }
 
-function resolveSignedFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+function resolveSignedFormulaToInteger(
+	actor: CharacterActorLike,
+	formula: unknown,
+	owner?: FormulaOwner,
+): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
-	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const rollData = actor.getRollData();
+	if (owner) checkFormulaReferences(formula, actor, owner, { rollData });
+	const resolvedValue = getDeterministicBonus(formula, rollData as NimbleRollData);
 	const numeric = typeof resolvedValue === 'number' ? resolvedValue : Number(resolvedValue);
 	if (!Number.isFinite(numeric)) return 0;
 	return Math.trunc(numeric);
@@ -337,7 +351,10 @@ function applyModifiersToDefinition(
 			if (next !== null) dieSize = next;
 		}
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
-			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
+			max = Math.max(
+				0,
+				max + resolveSignedFormulaToInteger(actor, modifier.maxDelta, ruleOwner(modifier)),
+			);
 		}
 		// Contributed recovery entries append after the pool's own, so a feature
 		// can give an existing pool a new way to come back without the pool's own
@@ -436,7 +453,8 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			// rather than requiring the formula to reference @<pool>Bonus — keeps it correct even
 			// when an actor carries a stale embedded formula.
 			const max =
-				resolveFormulaToInteger(actor, poolRule.max) + getPoolMaxBonusTotal(actor, identifier);
+				resolveFormulaToInteger(actor, poolRule.max, ruleOwner(poolRule)) +
+				getPoolMaxBonusTotal(actor, identifier);
 			const id = buildChargePoolId(scope, identifier, sourceItemId);
 			const initial: ChargePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const recoveries = normalizeRecoveries(poolRule.recoveries);
@@ -554,7 +572,7 @@ function getChargeConsumers(
 		if (freeUse && allowFree) continue;
 
 		const poolScope = toChargePoolScope(consumerRule.poolScope);
-		const cost = resolveFormulaToInteger(actor, consumerRule.cost);
+		const cost = resolveFormulaToInteger(actor, consumerRule.cost, ruleOwner(consumerRule));
 		const maxCostFormula = typeof consumerRule.maxCost === 'string' ? consumerRule.maxCost : '';
 		const poolId = buildChargePoolId(poolScope, poolIdentifier, sourceItemId);
 		consumers.push({
@@ -564,7 +582,7 @@ function getChargeConsumers(
 			variable,
 			maxCost:
 				variable && maxCostFormula.trim().length > 0
-					? resolveFormulaToInteger(actor, maxCostFormula)
+					? resolveFormulaToInteger(actor, maxCostFormula, ruleOwner(consumerRule))
 					: null,
 			...(allowFree ? { allowFree } : {}),
 		});
@@ -706,7 +724,7 @@ function recoveredValue(
 ): number {
 	if (recovery.mode === 'refresh') return pool.max;
 
-	const value = resolveFormulaToInteger(actor, recovery.value);
+	const value = resolveFormulaToInteger(actor, recovery.value, poolOwner(actor, pool));
 	if (recovery.mode === 'set') return clampCurrentToMax(value, pool.max);
 	return clampCurrentToMax(pool.current + value, pool.max);
 }

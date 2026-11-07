@@ -5,6 +5,7 @@ import {
 	type NimbleDiceResource,
 	ResourceDataModels,
 } from '../models/item/components/ClassResourceDataModel.js';
+import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 
 type ResourceInstance = InstanceType<typeof NimbleBaseResource>;
 
@@ -110,7 +111,11 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 			try {
 				const doc = this.item.isEmbedded ? (this.item.parent ?? this.item) : this.item;
 				const rollDataSource = doc as { getRollData(): NimbleRollData };
-				value = getDeterministicBonus(rawValue as string, rollDataSource.getRollData(), {
+				const rollData = rollDataSource.getRollData();
+				if (this.item.isEmbedded) {
+					checkFormulaReferences(rawValue, this.item.parent, { item: this.item }, { rollData });
+				}
+				value = getDeterministicBonus(rawValue as string, rollData, {
 					strict: true,
 				});
 			} catch (_e) {

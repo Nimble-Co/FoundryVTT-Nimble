@@ -9,6 +9,7 @@ import {
 	getChargeConsumers,
 	getChargePoolMapFromActor,
 	getChargePoolRollData,
+	resolveFormulaToInteger,
 } from '../helpers.js';
 import type {
 	CharacterActorLike,
@@ -1022,5 +1023,21 @@ describe('getChargePoolRollData', () => {
 
 		expect(getChargePoolRollData(stale)).toEqual({ 'combat-dice': { faces: 6 } });
 		expect(getChargePoolRollData(stored)).toEqual({ 'combat-dice': { faces: 8 } });
+	});
+});
+
+describe('resolveFormulaToInteger', () => {
+	it('warns the owner of the pool rule about an unknown reference', async () => {
+		vi.mocked(ui.notifications.warn).mockClear();
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const actor = { name: 'Hero', getRollData: () => ({ level: 2 }) };
+		const owner = { item: { name: 'Lay on Hands', isOwner: true }, rule: 'Pool' };
+		resolveFormulaToInteger(actor as never, '@levl * 5', owner);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(vi.mocked(ui.notifications.warn).mock.calls.map((call) => call[0])).toEqual([
+			'Lay on Hands: the Pool rule formula uses @levl, which Hero does not have. Nimble counts it as 0.',
+		]);
+		vi.restoreAllMocks();
 	});
 });

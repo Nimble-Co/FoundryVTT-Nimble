@@ -1,6 +1,8 @@
 import { SYSTEM_ID } from '#system';
+import type { FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+import { checkFormulaReferences, ruleOwner } from '../rolls/formulaReferences.js';
 import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import type {
 	CharacterActorLike,
@@ -117,15 +119,27 @@ function dieSizeToMaxFace(dieSize: DieSize): number {
 	return Number(dieSize.slice(1));
 }
 
-function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+function resolveFormulaToInteger(
+	actor: CharacterActorLike,
+	formula: unknown,
+	owner?: FormulaOwner,
+): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
-	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const rollData = actor.getRollData();
+	if (owner) checkFormulaReferences(formula, actor, owner, { rollData });
+	const resolvedValue = getDeterministicBonus(formula, rollData as NimbleRollData);
 	return toFiniteNonNegativeInteger(resolvedValue);
 }
 
-function resolveSignedFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+function resolveSignedFormulaToInteger(
+	actor: CharacterActorLike,
+	formula: unknown,
+	owner?: FormulaOwner,
+): number {
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
-	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const rollData = actor.getRollData();
+	if (owner) checkFormulaReferences(formula, actor, owner, { rollData });
+	const resolvedValue = getDeterministicBonus(formula, rollData as NimbleRollData);
 	return toFiniteInteger(resolvedValue);
 }
 
@@ -326,7 +340,10 @@ function applyModifiersToDefinition(
 			dieSize = toDieSize(modifier.dieSize, dieSize);
 		}
 		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
-			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
+			max = Math.max(
+				0,
+				max + resolveSignedFormulaToInteger(actor, modifier.maxDelta, ruleOwner(modifier)),
+			);
 		}
 		// The highest floor among contributing modifiers wins.
 		if (typeof modifier.minFace === 'number' && Number.isFinite(modifier.minFace)) {
@@ -397,7 +414,7 @@ function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[]
 
 			const scope = toDicePoolScope(poolRule.scope);
 			const dieSize = toDieSize(poolRule.dieSize);
-			const max = resolveFormulaToInteger(actor, poolRule.max);
+			const max = resolveFormulaToInteger(actor, poolRule.max, ruleOwner(poolRule));
 			const id = buildDicePoolId(scope, identifier, sourceItemId);
 			const initial: DicePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const refills = normalizeRefills(poolRule.refills);

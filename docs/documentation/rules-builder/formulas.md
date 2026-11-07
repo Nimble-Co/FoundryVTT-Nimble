@@ -45,7 +45,7 @@ These combine with the sheet references above, so a spend can scale with both th
 The pool references make a refill relative rather than fixed. A refill with the mode Set and value `@poolMax` fills the pool to whatever its current maximum is, which keeps working when a later feature raises that maximum.
 
 ::: warning
-An empty formula counts as 0. A formula the system can't understand shows an "Invalid roll formula" warning and the rule contributes nothing. A reference the character does not have, such as a typo like `@leve`, counts as 0, and the item's owner gets a warning that names it. See the debugging tips below.
+An empty formula counts as 0. A formula the system can't understand shows an "Invalid roll formula" warning and the rule contributes nothing. A reference the creature does not have, such as a typo like `@leve`, counts as 0, and the item's owner gets one warning that names it. This holds for every formula in a rule or an item. Most formulas read the character who owns the item; a Change Result formula reads the creature who rolled. See the debugging tips below.
 :::
 
 ## Numbers vs. dice
@@ -76,7 +76,7 @@ The exception is the **Damage Bonus** rule. Its **Bonus** field recognizes dice 
 
 ## Debugging a formula
 
-1. **Watch for the warnings.** "Invalid roll formula" pops up when the sheet recalculates a formula it can't read, such as one with an unclosed parenthesis. A reference the character does not have, such as `@leve`, shows a warning with the item, the rule and the reference.
+1. **Watch for the warnings.** "Invalid roll formula" pops up when the sheet recalculates a formula it can't read, such as one with an unclosed parenthesis. A reference the creature does not have, such as `@leve`, shows a warning with the item, the rule, the reference and the creature it read.
 2. **Test with a plain number first.** If `2` works but `@will` doesn't, the reference is the problem.
 3. **Mind who's carrying the item.** `@level` and stat references resolve on the actor the item sits on. On a monster, most shortcuts other than `@level` and the saves resolve to nothing.
 4. **Dice doing nothing?** You've probably used dice in a field that needs a single number. Only Damage Bonus rolls dice; everywhere else, replace `1d4` with a flat value or a reference.

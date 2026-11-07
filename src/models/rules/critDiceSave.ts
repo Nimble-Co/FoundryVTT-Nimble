@@ -116,6 +116,10 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 	get rollUseCost(): RerollCost {
 		return chargeOnlyCost((this.chargePoolIdentifier ?? '').trim());
 	}
+
+	override afterPrepareData(): void {
+		if (this.item.isEmbedded) this.checkReferences(this.saveDC);
+	}
 }
 
 export { CritDiceSaveRule };

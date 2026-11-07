@@ -1,6 +1,7 @@
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
 import localize from '../localize.js';
+import { poolOwner } from '../rolls/formulaReferences.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
 	applyFaceFloor,
@@ -81,7 +82,7 @@ function resolveRefillValue(
 	const substituted = formula
 		.replace(POOL_MAX_TOKEN_PATTERN, String(pool.max))
 		.replace(POOL_CURRENT_TOKEN_PATTERN, String(pool.faces.length));
-	return resolveFormulaToInteger(actor, substituted);
+	return resolveFormulaToInteger(actor, substituted, poolOwner(actor, pool));
 }
 
 /**

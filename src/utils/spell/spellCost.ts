@@ -1,3 +1,4 @@
+import type { FormulaOwner } from '#types/formulaReferences.d.ts';
 import type {
 	ClassSpellcastingDeclaration,
 	ResolvedSpellCost,
@@ -26,7 +27,11 @@ function hasManaCapacity(actor: SpellCostActorLike): boolean {
 	return Math.max(mana?.max ?? 0, mana?.baseMax ?? 0) > 0;
 }
 
-type DeclaringClass = { identifier: string; spellcasting: ClassSpellcastingDeclaration };
+type DeclaringClass = {
+	identifier: string;
+	spellcasting: ClassSpellcastingDeclaration;
+	item: ClassItemLike;
+};
 
 type ClassItemLike = NonNullable<NonNullable<SpellCostActorLike['items']>['contents']>[number];
 
@@ -62,6 +67,7 @@ function getDeclaringClass(actor: SpellCostActorLike, spell: SpellLike): Declari
 
 	const declared = candidates
 		.map((item) => ({
+			item,
 			identifier: classIdentifier(item),
 			spellcasting: (item.system as { spellcasting?: ClassSpellcastingDeclaration } | undefined)
 				?.spellcasting,
@@ -112,7 +118,12 @@ export function createSpellCostResolver(
 		const formula = spellcasting?.cost?.amount ?? '1';
 		let amount = amountsByFormula.get(formula);
 		if (amount === undefined) {
-			amount = Math.max(0, resolveFormulaToInteger(asChargePoolActor(actor), formula));
+			amount = Math.max(
+				0,
+				resolveFormulaToInteger(asChargePoolActor(actor), formula, {
+					item: declaring?.item as FormulaOwner['item'],
+				}),
+			);
 			amountsByFormula.set(formula, amount);
 		}
 		pools ??= buildEffectiveChargePoolMap(asChargePoolActor(actor));

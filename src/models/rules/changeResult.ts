@@ -1,5 +1,4 @@
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	RESULT_CHANGES,
@@ -179,7 +178,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 	/** Runs while a card draws, so a formula the roller has no data for must not throw. */
 	private formulaValue(formula: string, roller: ResultCardView['roller']): number | null {
 		try {
-			return getDeterministicBonus(formula, (roller?.getRollData?.() ?? {}) as never);
+			return this.resolveFormulaFor(formula, roller);
 		} catch {
 			return null;
 		}

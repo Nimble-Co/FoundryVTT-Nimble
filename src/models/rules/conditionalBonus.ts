@@ -179,6 +179,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	resolveDamage(): ResolvedConditionalDamage {
 		if (!this.offersDamage()) return { value: null, formula: null };
 		if (DICE_PATTERN.test(this.damageBonus)) {
+			this.checkReferences(this.damageBonus);
 			return { value: null, formula: this.damageBonus };
 		}
 		const resolved = this.resolveFormula(this.damageBonus);

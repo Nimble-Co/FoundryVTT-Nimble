@@ -262,6 +262,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		}
 		const attackChanges = kind === 'attack' && this.rolls?.includes('attack') === true;
 		const formula = attackChanges ? (this.extraDamage ?? '').trim() : '';
+		if (formula) this.checkReferences(formula);
 		const extraDamage = formula
 			? Roll.replaceFormulaData(formula, this.actor?.getRollData() ?? {}, { missing: '0' })
 			: '';

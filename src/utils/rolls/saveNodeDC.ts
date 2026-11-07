@@ -1,8 +1,12 @@
+import { checkFormulaReferences } from './formulaReferences.js';
+
 /** Unless otherwise noted, the DC for effects a hero causes. */
 const HERO_SAVE_DC_FORMULA = '10+@key';
 
 interface ItemUser {
 	type: string;
+	name?: string | null;
+	isOwner?: boolean;
 	getRollData(): Record<string, unknown>;
 }
 
@@ -20,6 +24,7 @@ function resolveSaveNodeDC(saveDC: number | string | null | undefined, itemUser:
 	if (!written && (itemUser?.type !== 'character' || !hasKeyStat(rollData))) return null;
 
 	const formula = written || HERO_SAVE_DC_FORMULA;
+	checkFormulaReferences(formula, itemUser, {}, { rollData });
 	try {
 		const value = Roll.safeEval(Roll.replaceFormulaData(formula, rollData));
 		return typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : null;

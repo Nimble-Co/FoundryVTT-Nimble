@@ -41,6 +41,15 @@ const source = makeActor('large', 4, 3);
 const recipient = makeActor('medium', 7, -1);
 
 describe('resolveMoveDistance', () => {
+	it('gives no unknown reference warning for @speed, which it sets itself', async () => {
+		vi.mocked(ui.notifications.warn).mockClear();
+		const owned = { ...source, name: 'Hero', isOwner: true };
+		resolveMoveDistance({ distance: '@speed / 2', distanceBySize: {} }, owned, recipient);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(ui.notifications.warn).not.toHaveBeenCalled();
+	});
+
 	it('resolves @speed to the recipient walk speed', () => {
 		expect(resolveMoveDistance({ distance: '@speed', distanceBySize: {} }, source, recipient)).toBe(
 			7,

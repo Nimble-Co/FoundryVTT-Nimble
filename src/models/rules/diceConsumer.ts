@@ -252,6 +252,13 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 			poolScope: this.poolScope,
 		});
 	}
+
+	/** The dice count and their sum are filled in when the player spends dice. */
+	override afterPrepareData(): void {
+		if (!this.item.isEmbedded) return;
+		this.checkReferences(this.cost);
+		this.checkReferences(this.effectFormula, this.actor, { extraRollData: { n: 1, sum: 1 } });
+	}
 }
 
 export { DiceConsumerRule };
