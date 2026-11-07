@@ -24,6 +24,7 @@
 		field,
 		value,
 		parentData,
+		ruleData,
 		onChange,
 		name,
 		disabled = false,
@@ -37,6 +38,8 @@
 		() => parentData,
 		() => onChange,
 		() => name,
+		() => ruleData ?? parentData,
+		() => value,
 	);
 
 	state.setupUnknownWidgetWarning();
@@ -205,6 +208,7 @@
 					{#each arrValue as item, i (i)}
 						<div class="nimble-string-list__row">
 							<Self
+								ruleData={state.ruleData}
 								field={elementField}
 								value={item}
 								{parentData}
@@ -245,6 +249,7 @@
 				{#each arrValue as item, i (i)}
 					<div class="nimble-string-list__row">
 						<Self
+							ruleData={state.ruleData}
 							field={elementField}
 							value={item}
 							{parentData}
@@ -289,6 +294,7 @@
 								<span class="nimble-field-row__label">{childFieldLabel(childName, childField)}</span
 								>
 								<Self
+									ruleData={state.ruleData}
 									field={childField}
 									value={entry[childName]}
 									parentData={entry}
@@ -350,6 +356,7 @@
 				<div class="nimble-field-row">
 					<span class="nimble-field-row__label">{childFieldLabel(childName, childField)}</span>
 					<Self
+						ruleData={state.ruleData}
 						field={childField}
 						value={(value as Record<string, unknown> | undefined)?.[childName]}
 						parentData={(value as Record<string, unknown> | undefined) ?? {}}

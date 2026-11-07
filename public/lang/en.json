@@ -1616,6 +1616,7 @@
 			"fieldRest": "Field Rest"
 		},
 		"rulesBuilder": {
+			"choiceHasNoEffect": "{choice} (no effect here)",
 			"errorSchemaLoadBefore": "Could not load schema for rule type",
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
 			"ruleNotRunning": "This rule is not running:",
@@ -2449,9 +2450,9 @@
 				},
 				"addRefills": {
 					"label": "Additional refills",
-					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. Triggers and modes a pool type does not support are ignored, and a charge pool ignores a per-entry condition.",
+					"hint": "Entries this modifier contributes to the target pool, on top of the pool's own: refills on a dice pool, recoveries on a charge pool. The trigger and mode lists show only what the chosen pool type supports, and a charge pool ignores a per-entry condition.",
 					"mode": {
-						"hint": "How the value applies. On a dice pool: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die. On a charge pool: Add gains that many, Set sets the pool to that many, and Refill to max fills it. A charge pool ignores Set When Empty and Empty the Pool."
+						"hint": "How the value applies. On a dice pool: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die. On a charge pool: Add gains that many, Set sets the pool to that many, and Refill to max fills it."
 					}
 				}
 			},

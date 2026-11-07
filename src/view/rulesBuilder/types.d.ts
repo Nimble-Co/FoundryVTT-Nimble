@@ -30,6 +30,8 @@ export interface SchemaFieldRendererProps {
 	value: unknown;
 	/** Full rule data — used to evaluate `field.showWhen` against siblings. */
 	parentData: Record<string, unknown>;
+	/** The whole rule, for a field inside a list row or group. Defaults to `parentData`. */
+	ruleData?: Record<string, unknown>;
 	/** Emit a new value for this field. The parent merges it into the rule. */
 	onChange: (next: unknown) => void;
 	/** Field name (for label fallback and the inline-error block). */
