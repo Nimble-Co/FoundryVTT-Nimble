@@ -462,7 +462,7 @@
 		}
 
 		&__help {
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 			font-size: var(--nimble-sm-text);
 		}
 	}
@@ -475,13 +475,13 @@
 		&__label {
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__hint {
 			margin-top: 0.0625rem;
 			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 			line-height: 1.3;
 		}
 	}
