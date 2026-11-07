@@ -8,7 +8,7 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 	import type { RollWindowProps } from '#types/components/RollWindow.d.ts';
 	import localize from '#utils/localize.js';
 	import Button from '#view/actorSheets/parts/Button.svelte';
-	import RowTile from '#view/actorSheets/parts/RowTile.svelte';
+	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 
 	let {
 		title,
@@ -30,10 +30,7 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 </script>
 
 <div bind:this={root} class="roll-window">
-	<div class="head">
-		<RowTile {img} {icon} />
-		<b>{title}</b>
-	</div>
+	<WindowHead {title} {img} {icon} />
 	<div class="fields">
 		{@render children()}
 	</div>
@@ -64,21 +61,6 @@ Inside it you can use the classes `lb` (small heading), `fld` (a label with a fi
 		padding: 12px;
 		font-family: var(--nimble-primary-font);
 		color: var(--nimble-ui-ink);
-	}
-	.head {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-		min-height: 32px;
-		/* keeps the title clear of the close button */
-		padding-right: 26px;
-	}
-	.head b {
-		flex: 1;
-		min-width: 0;
-		font-size: 1.062rem;
-		font-weight: 900;
-		line-height: 1.1;
 	}
 	.fields {
 		display: flex;
