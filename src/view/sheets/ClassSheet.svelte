@@ -441,7 +441,10 @@
 		tileLabel={localize('NIMBLE.prompts.changeClassImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Class Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.class')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 

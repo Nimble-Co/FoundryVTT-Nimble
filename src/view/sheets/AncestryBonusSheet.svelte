@@ -92,7 +92,7 @@
 
 <header class="nimble-sheet__header nimble-window__head">
 	<WindowHead
-		img={item.reactive.img}
+		img={item.reactive.img ?? undefined}
 		tileLabel={localize('NIMBLE.prompts.changeAncestryBonusImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>

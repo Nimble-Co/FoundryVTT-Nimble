@@ -128,7 +128,10 @@
 		tileLabel={localize('NIMBLE.prompts.changeBoonImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Boon Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.boon')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 

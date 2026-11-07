@@ -179,7 +179,10 @@
 		tileLabel={localize('NIMBLE.prompts.changeAncestryImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Ancestry Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.ancestry')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 

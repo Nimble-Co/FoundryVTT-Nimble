@@ -86,7 +86,10 @@
 		tileLabel={localize('NIMBLE.prompts.changeBackgroundImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Background Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.background')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 

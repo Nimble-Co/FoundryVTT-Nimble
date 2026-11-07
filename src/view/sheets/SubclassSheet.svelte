@@ -98,7 +98,10 @@
 		tileLabel={localize('NIMBLE.prompts.changeSubclassImage')}
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Subclass Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.subclass')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 

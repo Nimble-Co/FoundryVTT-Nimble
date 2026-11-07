@@ -74,7 +74,10 @@
 		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
 		sub={metadata}
 	>
-		{#snippet name()}<ItemHeader {item} placeholder="Spell Name" />{/snippet}
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.spell')}
+			/>{/snippet}
 	</WindowHead>
 </header>
 
