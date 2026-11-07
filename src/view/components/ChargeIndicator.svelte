@@ -106,7 +106,7 @@
 		);
 
 		const dialog = GenericDialog.getOrCreate(
-			`${localize('NIMBLE.charges.configure')}: ${itemName}`,
+			`${itemName}: ${localize('NIMBLE.charges.configure')}`,
 			ConfigureChargesDialog,
 			{ document: actor, pools: poolsForItem },
 			{

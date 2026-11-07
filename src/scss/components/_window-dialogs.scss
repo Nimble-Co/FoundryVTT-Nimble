@@ -40,15 +40,11 @@
 		}
 	}
 
-	// Core fills table heads and rows; the window surface shows through.
-	table {
-		--table-background-color: transparent;
-		--table-header-bg-color: transparent;
-		--table-header-border-color: var(--nimble-ui-line);
-		--table-header-text-color: var(--nimble-ui-ink-dim);
-		--table-row-color-odd: transparent;
-		--table-row-color-even: transparent;
-		--table-row-color-highlight: var(--nimble-ui-hover);
+	// The sheet table fills its head and foot; in the window the surface shows through.
+	.nimble-window__content table :is(thead, tfoot) {
+		border: 0;
+		background: none;
+		color: var(--nimble-ui-ink);
 	}
 
 	.nimble-section-header[data-header-variant="monster-actions"] .nimble-button[data-button-variant="icon"] {
