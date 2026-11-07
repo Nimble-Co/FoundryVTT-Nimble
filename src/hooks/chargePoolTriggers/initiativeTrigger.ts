@@ -2,7 +2,6 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import { buildEffectiveChargePoolMap } from '#utils/chargePool/helpers.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
-import { isActiveGM } from '#utils/isActiveGM.js';
 import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
 
 const RECOVERED_COMBAT_FLAG = 'initiativeRecoveryCombat';
@@ -28,33 +27,34 @@ function refilledIn(actor: Actor.Implementation, combatId: string): boolean {
 	return refilled.has(`${combatId}:${actor.uuid}`) || stored === combatId;
 }
 
+function markCombat(actor: Actor.Implementation, combatId: string | null): Promise<unknown> {
+	return actor.update({
+		[`flags.${SYSTEM_ID}.${RECOVERED_COMBAT_FLAG}`]: combatId,
+	} as Actor.UpdateData);
+}
+
 async function refillOnce(actor: Actor.Implementation, combatId: string): Promise<void> {
 	const character = actor as unknown as CharacterActorLike;
 	if (!refillsOnInitiative(character) || refilledIn(actor, combatId)) return;
 	const key = `${combatId}:${actor.uuid}`;
 	refilled.add(key);
 	try {
+		await markCombat(actor, combatId);
 		await applyRecoveryToActorIfEligible(character, 'onInitiativeRolled');
 	} catch (error) {
 		refilled.delete(key);
 		console.error('Nimble | The Initiative refill failed', error);
-		return;
+		await markCombat(actor, null).catch(() => {});
 	}
-	await actor.update({
-		[`flags.${SYSTEM_ID}.${RECOVERED_COMBAT_FLAG}`]: combatId,
-	} as Actor.UpdateData);
 }
 
-function isRefillable(actor: unknown): actor is Actor.Implementation {
-	if (!actor || typeof actor !== 'object') return false;
-	return (
-		(actor as Actor.Implementation).type === 'character' && isResourceRecoveryAutomationEnabled()
-	);
+function isCharacter(actor: unknown): actor is Actor.Implementation {
+	return Boolean(actor) && (actor as Actor.Implementation).type === 'character';
 }
 
 function onInitiativeRolled(payload: { actor?: unknown; combatant?: unknown }): void {
 	const actor = payload?.actor;
-	if (!isRefillable(actor)) return;
+	if (!isCharacter(actor) || !isResourceRecoveryAutomationEnabled()) return;
 
 	const combatId = combatIdOf(payload.combatant);
 	if (combatId) {
@@ -64,12 +64,17 @@ function onInitiativeRolled(payload: { actor?: unknown; combatant?: unknown }): 
 	void applyRecoveryToActorIfEligible(actor as unknown as CharacterActorLike, 'onInitiativeRolled');
 }
 
-/** A hero whose Initiative the GM typed by hand fires no roll, so the refill comes at the start. */
+/**
+ * A GM who types an Initiative by hand fires no roll, so that hero gets the
+ * refill at the start. Foundry fires `combatStart` only on the client that
+ * starts the combat.
+ */
 function onCombatStart(combat: Combat): void {
-	if (!isActiveGM() || !combat?.id) return;
+	if (!combat?.id || !isResourceRecoveryAutomationEnabled()) return;
 	for (const combatant of combat.combatants.contents) {
 		const actor = combatant.actor;
-		if (isRefillable(actor)) void refillOnce(actor, combat.id);
+		if (combatant.initiative === null || !isCharacter(actor)) continue;
+		void refillOnce(actor, combat.id);
 	}
 }
 
@@ -79,7 +84,7 @@ function onCombatStart(combat: Combat): void {
  * that opt into recovery on this trigger (Commander Combat Dice: "When you
  * roll Initiative, gain STR Combat Dice") receive their recovery entry's
  * effect. Initiative rolled again in the same combat gives nothing. At combat
- * start, a hero who did not get the refill in that combat yet gets it.
+ * start, a hero with an Initiative who did not get the refill yet gets it.
  */
 export function registerInitiativeTriggerHooks(): void {
 	if (registered) return;

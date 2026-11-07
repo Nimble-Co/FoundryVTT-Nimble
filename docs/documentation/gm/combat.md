@@ -17,7 +17,7 @@ When combat begins, the system automatically:
 - Rolls initiative for every character who hasn't rolled yet.
 - Sets every monster's actions to full. Monsters don't roll initiative. They simply act after the characters.
 - Refreshes every character's heroic reactions.
-- Gives the "when you roll Initiative" uses (such as Burst of Speed or Combat Dice) to each character who has not had them in this combat yet. A character whose initiative you type by hand gets them here.
+- Gives the "when you roll Initiative" uses (such as Burst of Speed or Combat Dice) to each character whose initiative you typed by hand. A character who rolls gets them from the roll. Either way, a character gets them one time in each combat.
 
 A character's initiative roll decides how many actions they start their first round with, exactly as in the rulebook: a total of 20 or more, or a natural 20, grants 3 actions, 10 or more grants 2, and anything less grants 1. The tracker shows these as action pips on each character's card. The roll posts an [Initiative card](../playing/dice-and-chat.md#the-initiative-card) that tells the same number. When a feature changes the total on that card, the tracker follows it.
 
