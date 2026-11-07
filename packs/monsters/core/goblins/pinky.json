@@ -246,8 +246,8 @@
 					"acquireTargetsFromTemplate": false,
 					"cost": {
 						"details": "when Bloodied",
-						"quantity": 1,
-						"type": "none",
+						"quantity": 0,
+						"type": "action",
 						"isReaction": true
 					},
 					"duration": {
