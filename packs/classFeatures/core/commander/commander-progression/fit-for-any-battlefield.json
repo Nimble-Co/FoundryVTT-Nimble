@@ -27,7 +27,7 @@
 				"predicate": {},
 				"priority": 2,
 				"scope": "item",
-				"max": "@strength + @combatDiceBonus",
+				"max": "@strength",
 				"dieSize": "d6",
 				"initial": "zero",
 				"recoveries": [

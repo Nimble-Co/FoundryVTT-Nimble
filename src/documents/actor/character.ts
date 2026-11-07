@@ -56,6 +56,7 @@ import {
 } from '../../utils/reroll/checkCardRollTarget.js';
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
+import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
@@ -725,9 +726,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		let maxMana = actorData.resources.mana.baseMax;
 
+		const rollData = this.getRollData();
 		classes.forEach((cls) => {
 			const manaFormula = cls.system.mana.formula;
-			const resolvedValue = getDeterministicBonus(manaFormula, this.getRollData())!;
+			checkFormulaReferences(manaFormula, this, { item: cls }, { rollData });
+			const resolvedValue = getDeterministicBonus(manaFormula, rollData)!;
 			maxMana += resolvedValue;
 		});
 
@@ -991,6 +994,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			for (const cls of Object.values(this.classes ?? {})) {
 				const manaFormula = cls.system.mana.formula;
 				if (!manaFormula?.trim()) continue;
+				checkFormulaReferences(manaFormula, this, { item: cls });
 				const resolvedValue = getDeterministicBonus(manaFormula, this.getRollData()) ?? 0;
 				nextMaxMana += resolvedValue;
 			}

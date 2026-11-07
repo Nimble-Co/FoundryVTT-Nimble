@@ -80,6 +80,7 @@ import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffe
 import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
+import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
 	applyUpcastDeltas,
@@ -323,6 +324,11 @@ class ItemActivationManager {
 	 * @param item - The item being activated.
 	 * @param options - Configuration options for the activation.
 	 */
+	/** Warn about an unknown `@` reference in a formula of the item. `@spent` is set for this use. */
+	#checkNodeFormula(formula: string | undefined, spent: unknown): void {
+		checkFormulaReferences(formula, this.actor, { item: this.#item }, { extraRollData: { spent } });
+	}
+
 	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
 		this.#item = item;
 		this.#options = options;
@@ -683,6 +689,7 @@ class ItemActivationManager {
 					const isVicious = itemSystem.properties?.selected?.includes('vicious') ?? false;
 
 					// Use modified formula if provided
+					this.#checkNodeFormula(dialogData.rollFormula || node.formula, activationRollData.spent);
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
 					// Apply damage bonuses filtered by delivery, source, damage type, and target
@@ -845,6 +852,7 @@ class ItemActivationManager {
 						formula = this.#applyHealingBonus(formula, healingBonus);
 					}
 
+					this.#checkNodeFormula(node.formula, activationRollData.spent);
 					// The extra `spent` key widens the roll data past Roll's default
 					// EmptyObject parameter, which the two types will not narrow between.
 					roll = new Roll(formula, activationRollData) as unknown as Roll;

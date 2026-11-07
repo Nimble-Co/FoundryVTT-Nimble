@@ -5,6 +5,7 @@ import {
 	getRulesFromCompendiumSource,
 	sourceRuleCache,
 } from '../documents/itemSourceRules.js';
+import { checkFormulaReferences, ruleOwner } from '../rolls/formulaReferences.js';
 
 interface CombatManaRuleLike {
 	id?: string;
@@ -60,6 +61,7 @@ function isCombatEndClearRule(rule: CombatManaRuleLike): boolean {
 function fromRuleSource(
 	source: Record<string, unknown>,
 	actor: ActorWithCollections,
+	item: { name?: string; isOwner?: boolean },
 ): CombatManaRuleLike {
 	return {
 		id: source.id as string | undefined,
@@ -72,6 +74,12 @@ function fromRuleSource(
 		getGrantAmount: () => {
 			const formula = String(source.formula ?? '0');
 			const rollData = actor.getRollData?.() ?? {};
+			checkFormulaReferences(
+				formula,
+				actor,
+				ruleOwner({ item, label: String(source.label ?? ''), type: String(source.type ?? '') }),
+				{ rollData },
+			);
 			return Math.max(0, Number(getDeterministicBonus(formula, rollData as any) ?? 0));
 		},
 	};
@@ -142,6 +150,7 @@ export function getActorCombatManaRules(actor: Actor | null | undefined): Combat
 			uuid?: string;
 			type?: string;
 			name?: string;
+			isOwner?: boolean;
 			identifier?: string;
 			sourceId?: string;
 			_stats?: { compendiumSource?: string };
@@ -166,7 +175,7 @@ export function getActorCombatManaRules(actor: Actor | null | undefined): Combat
 
 		const ruleSources = itemWithRules.system?.rules ?? [];
 		for (const [ruleIndex, source] of ruleSources.entries()) {
-			const sourceRule = fromRuleSource(source, typedActor);
+			const sourceRule = fromRuleSource(source, typedActor, itemWithRules);
 			if (isCombatManaRuleType(sourceRule)) hasCombatManaDefinition = true;
 			if (!isCombatManaRule(sourceRule)) continue;
 			const ruleKey = `${itemKey}:${sourceRule.id ?? `source-${ruleIndex}`}`;
@@ -180,7 +189,7 @@ export function getActorCombatManaRules(actor: Actor | null | undefined): Combat
 		if (!hasCombatManaDefinition) {
 			const sourceRules = getRuleSourcesFromItemSource(itemWithRules);
 			for (const [ruleIndex, source] of sourceRules.entries()) {
-				const sourceRule = fromRuleSource(source, typedActor);
+				const sourceRule = fromRuleSource(source, typedActor, itemWithRules);
 				if (!isCombatManaRule(sourceRule)) continue;
 				const ruleKey = `${itemKey}:${sourceRule.id ?? `compendium-${ruleIndex}`}`;
 				if (seen.has(ruleKey)) continue;

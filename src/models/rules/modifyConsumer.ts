@@ -106,6 +106,12 @@ class ModifyConsumerRule extends NimbleBaseRule<ModifyConsumerRule.Schema> {
 			]),
 		);
 	}
+
+	/** The dice count and their sum are filled in when the player spends dice. */
+	override afterPrepareData(): void {
+		if (!this.item.isEmbedded) return;
+		this.checkReferences(this.appendFormula, this.actor, { extraRollData: { n: 1, sum: 1 } });
+	}
 }
 
 export { ModifyConsumerRule };

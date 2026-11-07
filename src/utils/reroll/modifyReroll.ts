@@ -1,4 +1,5 @@
 import type { RollChange } from '../incomingReactions/incomingReactionEntry.js';
+import { checkFormulaReferences, ruleOwner } from '../rolls/formulaReferences.js';
 import type { GrantModifier } from './rerollGrants.js';
 import type { RollUseKind } from './rollToReroll.js';
 
@@ -74,6 +75,7 @@ function modifyRerollChanges(
 		if (value !== 0) changes.push({ key: `${base}:rollMode`, kind: 'rollMode', label, value });
 		const formula = kind === 'attack' ? (modifier.extraDamage ?? '').trim() : '';
 		if (formula) {
+			checkFormulaReferences(formula, reroll.actor, ruleOwner(modifier));
 			changes.push({
 				key: `${base}:extraDamage`,
 				kind: 'extraDamage',
@@ -99,9 +101,14 @@ async function rollTotal(formula: string): Promise<number> {
 }
 
 /** A formula of a Modify Reroll rule worked out with its owner's values. */
-async function evaluateOwnerFormula(formula: string, owner: ModifierOwner | null | undefined) {
+async function evaluateOwnerFormula(
+	formula: string,
+	owner: ModifierOwner | null | undefined,
+	rule: ModifyRerollRuleLike,
+) {
 	const text = formula.trim();
 	if (!text) return 0;
+	checkFormulaReferences(text, owner, ruleOwner(rule));
 	return rollTotal(Roll.replaceFormulaData(text, owner?.getRollData?.() ?? {}, { missing: '0' }));
 }
 
@@ -113,7 +120,10 @@ async function grantModifiers(reroll: {
 	const modifiers: GrantModifier[] = [];
 	for (const modifier of modifyRerollRules(reroll)) {
 		const actions = Math.max(0, Math.trunc(Number(modifier.actionsForRoller) || 0));
-		const tempHp = Math.max(0, await evaluateOwnerFormula(modifier.tempHp ?? '', reroll.actor));
+		const tempHp = Math.max(
+			0,
+			await evaluateOwnerFormula(modifier.tempHp ?? '', reroll.actor, modifier),
+		);
 		if (actions < 1 && tempHp < 1) continue;
 		modifiers.push({
 			label: modifier.item?.name ?? '',

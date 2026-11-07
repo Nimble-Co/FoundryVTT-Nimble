@@ -9,6 +9,7 @@ import {
 	getChargeConsumers,
 	getChargePoolMapFromActor,
 	getChargePoolRollData,
+	resolveFormulaToInteger,
 } from '../helpers.js';
 import type {
 	CharacterActorLike,
@@ -981,17 +982,18 @@ describe('getChargePoolRollData', () => {
 		expect(getChargePoolRollData(actor)).toEqual({});
 	});
 
-	it('reads only stored state and never resolves pool formulas', () => {
+	it('reads the rule die size of a pool nothing stored yet, and never resolves pool formulas', () => {
 		const actor = createMockActor(
 			[
 				createMockItem('item-1', 'Feature', [
 					{ type: 'chargePool', identifier: 'combat-dice', max: '@level', dieSize: 'd6' },
+					{ type: 'modifyPool', poolType: 'charge', poolIdentifier: 'combat-dice', dieSize: 'd8' },
 				]),
 			],
 			{ level: 3 },
 		);
 
-		expect(getChargePoolRollData(actor)).toEqual({});
+		expect(getChargePoolRollData(actor)).toEqual({ 'combat-dice': { faces: 8 } });
 		expect(actor.getRollData).not.toHaveBeenCalled();
 	});
 
@@ -1022,5 +1024,21 @@ describe('getChargePoolRollData', () => {
 
 		expect(getChargePoolRollData(stale)).toEqual({ 'combat-dice': { faces: 6 } });
 		expect(getChargePoolRollData(stored)).toEqual({ 'combat-dice': { faces: 8 } });
+	});
+});
+
+describe('resolveFormulaToInteger', () => {
+	it('warns the owner of the pool rule about an unknown reference', async () => {
+		vi.mocked(ui.notifications.warn).mockClear();
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const actor = { name: 'Hero', getRollData: () => ({ level: 2 }) };
+		const owner = { item: { name: 'Lay on Hands', isOwner: true }, rule: 'Pool' };
+		resolveFormulaToInteger(actor as never, '@levl * 5', owner);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(vi.mocked(ui.notifications.warn).mock.calls.map((call) => call[0])).toEqual([
+			'Lay on Hands: the Pool rule formula uses @levl, which Hero does not have. Nimble counts it as 0.',
+		]);
+		vi.restoreAllMocks();
 	});
 });

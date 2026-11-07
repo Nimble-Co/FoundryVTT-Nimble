@@ -148,6 +148,10 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 	get rollUseCost(): RerollCost {
 		return chargeOnlyCost();
 	}
+
+	override afterPrepareData(): void {
+		if (this.item.isEmbedded) this.checkReferences(this.formula);
+	}
 }
 
 export { CritDiceRule };

@@ -58,6 +58,7 @@ import {
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
 import { noDamageTargetsOf, owesCritTriggers } from '../utils/rolls/cardRollState.js';
+import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import { resultChangesOf } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import {
@@ -1203,6 +1204,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		const speakerActorId = this.speaker?.actor;
 		const actor = speakerActorId ? (game.actors?.get(speakerActorId) ?? null) : null;
+		checkFormulaReferences(node.formula, actor, {});
 		const roll = new DamageRoll(
 			node.formula || '0',
 			(actor?.getRollData() ?? {}) as DamageRoll.Data,

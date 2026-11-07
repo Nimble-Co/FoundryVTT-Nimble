@@ -1,3 +1,4 @@
+import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
@@ -10,6 +11,7 @@ import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttac
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
+import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import {
 	getCurrentUserTargetTokenIds,
 	getTargetTokenName,
@@ -261,6 +263,12 @@ async function rollSingleMinionAttack(params: {
 			// A minion group attack rolls with no disadvantage.
 			noDisadvantageToIgnore: true,
 		});
+		checkFormulaReferences(
+			formula,
+			resolvedActionContext.actor as FormulaActor,
+			{ item: resolvedActionContext.selectedAction as FormulaOwner['item'] },
+			{ rollData },
+		);
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
 			canCrit: false,
 			canMiss: true,

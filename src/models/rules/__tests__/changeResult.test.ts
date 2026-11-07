@@ -223,6 +223,26 @@ describe('ChangeResultRule#resultUseFor', () => {
 		expect(makeRule({ change: 'add', formula: '@level' }).resultUseFor(roller)?.stat).toBe('');
 	});
 
+	it('warns the owner once about a reference the roller does not have', async () => {
+		vi.mocked(ui.notifications.warn).mockClear();
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const rule = makeRule(
+			{ change: 'add', formula: '@intelect' },
+			{ name: 'Typo Feature', isOwner: true },
+		);
+		const ally = { name: 'Ally', getRollData: () => ({ intelligence: 2 }) };
+		rule.resultUseFor(ally);
+		rule.resultUseFor(ally);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(ui.notifications.warn).toHaveBeenCalledTimes(1);
+		const message = String(vi.mocked(ui.notifications.warn).mock.calls[0]?.[0]);
+		expect(message).toContain('Typo Feature');
+		expect(message).toContain('Ally');
+		expect(message).toContain('@intelect');
+		warn.mockRestore();
+	});
+
 	it('keeps a negative value', () => {
 		const rule = makeRule({ change: 'add', formula: '@strength' });
 		expect(rule.resultUseFor({ getRollData: () => ({ strength: -1 }) })?.value).toBe(-1);
