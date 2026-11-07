@@ -59,6 +59,7 @@ function createRule(
 	(rule as unknown as { disabled: boolean }).disabled = sourceData.disabled;
 
 	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'actor', { get: () => actor, configurable: true });
 	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
 
 	return { rule, item, actor };
