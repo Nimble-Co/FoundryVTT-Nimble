@@ -7,33 +7,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "chargePool",
-				"disabled": false,
-				"id": "rx3oOrQaWNVWae4a",
-				"identifier": "vicious-opportunist",
-				"label": "Vicious Opportunist (1/turn)",
-				"predicate": {},
-				"priority": 1,
-				"scope": "item",
-				"max": "1",
-				"dieSize": null,
-				"initial": "max",
-				"hidden": false,
-				"showAsResource": false,
-				"recoveries": [
-					{
-						"trigger": "onTurnStart",
-						"mode": "refresh",
-						"value": "1"
-					},
-					{
-						"trigger": "encounterEnd",
-						"mode": "refresh",
-						"value": "1"
-					}
-				]
-			},
-			{
 				"type": "changeDie",
 				"disabled": false,
 				"id": "fSZR3ZQdBfmyLG3n",
@@ -62,7 +35,7 @@
 				},
 				"outcome": "hit",
 				"attackDelivery": "melee",
-				"chargePoolIdentifier": "vicious-opportunist",
+				"chargePoolIdentifier": "",
 				"chargeCost": 1,
 				"manaCost": 0,
 				"woundCost": 0,
@@ -74,7 +47,8 @@
 					"$and": [
 						"feature:supreme-execution"
 					]
-				}
+				},
+				"oncePerTurn": true
 			}
 		],
 		"activation": {
