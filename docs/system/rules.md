@@ -550,7 +550,7 @@ A recovery entry has `trigger`, `mode` and `value`, and can also set:
 
 A recovery entry (on `chargePool.recoveries` or `modifyPool.addRefills`) can set `temporary: true`. An `add` with it raises the pool's `temporary` count by what was really added (the add is still clamped to the max). `temporary` is part of the stored pool state and never above `current`. `persistChargePoolMap` spends temporary charges first: when a write lowers `current`, it lowers `temporary` by the same amount first, so every spend path gets the rule without knowing it. `applyEncounterRecovery(actor, 'encounterEnd')` takes the remaining temporary charges away before the pool's own `encounterEnd` recoveries.
 
-The `onInitiativeRolled` trigger runs once per actor per combat: `initiativeTrigger.ts` stores the combat id on the actor (`flags.<system>.initiativeRecoveryCombat`) and ignores a later Initiative roll in that combat.
+The `onInitiativeRolled` trigger runs once per actor per combat: `initiativeTrigger.ts` stores the combat id on the actor (`flags.<system>.initiativeRecoveryCombat`) and ignores a later Initiative roll in that combat. At `combatStart`, on the client that starts the combat, it also refills each character combatant that has an Initiative (typed by hand) and is not marked yet. The mark is written before the refill and cleared when the refill fails.
 
 ### Charge pool state tags
 

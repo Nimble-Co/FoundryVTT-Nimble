@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTestGlobals } from '../../../../tests/helpers.js';
 import {
 	type CombatDefeatSyncTestGlobals,
@@ -272,24 +272,129 @@ describe('registerInitiativeTriggerHooks', () => {
 		}
 
 		const rolledIn = (combatId: string) => ({ parent: { id: combatId } });
+		const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+		const markOf = (actor: Record<string, unknown>) =>
+			foundry.utils.getProperty(actor, 'flags.nimble.initiativeRecoveryCombat');
 
-		it('refills once per combat, however many times Initiative is rolled', async () => {
+		async function registeredHooks() {
 			const callbacks = createHookCapture(globals().Hooks.on);
 			const { registerInitiativeTriggerHooks } = await import('../initiativeTrigger.js');
 			registerInitiativeTriggerHooks();
-			const hook = callbacks.get('nimble.initiativeRolled');
+			const roll = callbacks.get('nimble.initiativeRolled');
+			const start = callbacks.get('combatStart');
+			expect(roll).toBeDefined();
+			expect(start).toBeDefined();
+			return {
+				roll: (actor: Record<string, unknown>, combatId = 'combat-1') =>
+					roll?.({ actor, combatant: rolledIn(combatId) }),
+				start: (actor: Record<string, unknown>, initiative: number | null) =>
+					start?.({ id: 'combat-1', combatants: { contents: [{ actor, initiative }] } }, {}),
+			};
+		}
+
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it('refills once per combat, however many times Initiative is rolled', async () => {
+			const hooks = await registeredHooks();
 			const { actor, item, current } = commander(0);
 
-			await hook?.({ actor, combatant: rolledIn('combat-1') });
+			await hooks.roll(actor);
 			await vi.waitFor(() => expect(current()).toBe(2));
 			const writes = item.update.mock.calls.length;
-			await hook?.({ actor, combatant: rolledIn('combat-1') });
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await hooks.roll(actor);
+			await settle();
 			expect(item.update).toHaveBeenCalledTimes(writes);
 			expect(current()).toBe(2);
 
-			await hook?.({ actor, combatant: rolledIn('combat-2') });
+			await hooks.roll(actor, 'combat-2');
 			await vi.waitFor(() => expect(current()).toBe(4));
+		});
+
+		describe('when the refill fails', () => {
+			async function failedRoll() {
+				vi.spyOn(console, 'error').mockImplementation(() => {});
+				const hooks = await registeredHooks();
+				const hero = commander(0);
+				hero.item.update.mockRejectedValueOnce(new Error('write failed'));
+				await hooks.roll(hero.actor);
+				await vi.waitFor(() => expect(console.error).toHaveBeenCalled());
+				return { hooks, ...hero };
+			}
+
+			it('does not mark the combat', async () => {
+				const { actor } = await failedRoll();
+
+				await vi.waitFor(() => expect(markOf(actor)).toBeNull());
+			});
+
+			it('refills on the next roll in that combat', async () => {
+				const { hooks, actor, current } = await failedRoll();
+				await settle();
+
+				await hooks.roll(actor);
+
+				await vi.waitFor(() => expect(current()).toBe(2));
+			});
+		});
+
+		describe('when the combat starts', () => {
+			it('refills a hero whose Initiative the GM typed by hand', async () => {
+				const hooks = await registeredHooks();
+				const { actor, current } = commander(0);
+
+				hooks.start(actor, 12);
+
+				await vi.waitFor(() => expect(current()).toBe(2));
+			});
+
+			it('leaves a hero with no Initiative to refill on the roll', async () => {
+				const hooks = await registeredHooks();
+				const { actor, item } = commander(0);
+
+				hooks.start(actor, null);
+				await settle();
+
+				expect(item.update).not.toHaveBeenCalled();
+			});
+
+			it('gives nothing more to a hero who rolled on this client before the start', async () => {
+				const hooks = await registeredHooks();
+				const { actor, item, current } = commander(0);
+				await hooks.roll(actor);
+				await vi.waitFor(() => expect(current()).toBe(2));
+				const writes = item.update.mock.calls.length;
+
+				hooks.start(actor, 12);
+				await settle();
+
+				expect(item.update).toHaveBeenCalledTimes(writes);
+			});
+
+			it('gives nothing to a hero whose mark names this combat', async () => {
+				const hooks = await registeredHooks();
+				const { actor, item } = commander(0);
+				foundry.utils.setProperty(actor, 'flags.nimble.initiativeRecoveryCombat', 'combat-1');
+
+				hooks.start(actor, 12);
+				await settle();
+
+				expect(item.update).not.toHaveBeenCalled();
+			});
+
+			it('gives nothing on a later roll to a hero refilled at the start', async () => {
+				const hooks = await registeredHooks();
+				const { actor, item, current } = commander(0);
+				hooks.start(actor, 12);
+				await vi.waitFor(() => expect(current()).toBe(2));
+				const writes = item.update.mock.calls.length;
+
+				await hooks.roll(actor);
+				await settle();
+
+				expect(item.update).toHaveBeenCalledTimes(writes);
+			});
 		});
 	});
 

@@ -35,18 +35,26 @@ function bursts(pools: ChargePoolMap): number {
 }
 
 describe('Burst of Speed pool', () => {
-	it('gains DEX Bursts when the encounter starts', () => {
+	it('gains DEX Bursts when the hero rolls Initiative', () => {
 		const actor = zephyr(['burst-of-speed.json']);
+		const pools = applyRecoveryTriggersToPools(actor, buildEffectiveChargePoolMap(actor), [
+			'onInitiativeRolled',
+		]);
+		expect(bursts(pools)).toBe(4);
+	});
+
+	it('gains no Bursts when the encounter starts', () => {
+		const actor = zephyr(['burst-of-speed.json', 'windborne.json']);
 		const pools = applyRecoveryTriggersToPools(actor, buildEffectiveChargePoolMap(actor), [
 			'encounterStart',
 		]);
-		expect(bursts(pools)).toBe(4);
+		expect(bursts(pools)).toBe(0);
 	});
 
 	it('gains 1 more with Windborne, and 1 for each Wound with Kinetic Momentum, past DEX', () => {
 		const actor = zephyr(['burst-of-speed.json', 'windborne.json', 'kinetic-momentum.json']);
 		let pools = applyRecoveryTriggersToPools(actor, buildEffectiveChargePoolMap(actor), [
-			'encounterStart',
+			'onInitiativeRolled',
 		]);
 		expect(bursts(pools)).toBe(5);
 		for (let wound = 0; wound < 3; wound++) {

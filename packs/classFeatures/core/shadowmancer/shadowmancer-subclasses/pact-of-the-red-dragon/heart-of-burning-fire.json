@@ -12,7 +12,7 @@
 				"disabled": false,
 				"id": "heart-of-burning-fire-initiative-regain",
 				"identifier": "",
-				"label": "Heart of Burning Fire: regain 1 use of Pilfered Power on initiative",
+				"label": "Heart of Burning Fire: regain 1 use of Pilfered Power when you roll Initiative",
 				"predicate": {},
 				"priority": 1,
 				"poolType": "charge",
@@ -21,9 +21,10 @@
 				"maxDelta": null,
 				"addRefills": [
 					{
-						"trigger": "encounterStart",
+						"trigger": "onInitiativeRolled",
 						"mode": "add",
 						"value": "1",
+						"temporary": true,
 						"predicate": {}
 					}
 				]

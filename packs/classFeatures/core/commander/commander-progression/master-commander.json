@@ -11,7 +11,7 @@
 				"disabled": false,
 				"id": "master-commander-initiative-regain",
 				"identifier": "",
-				"label": "Master Commander: regain 1 use of Coordinated Strike on initiative",
+				"label": "Master Commander: regain 1 use of Coordinated Strike when you roll Initiative",
 				"predicate": {},
 				"priority": 1,
 				"poolType": "charge",
@@ -20,9 +20,10 @@
 				"maxDelta": null,
 				"addRefills": [
 					{
-						"trigger": "encounterStart",
+						"trigger": "onInitiativeRolled",
 						"mode": "add",
 						"value": "1",
+						"temporary": true,
 						"predicate": {}
 					}
 				]
