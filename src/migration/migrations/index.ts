@@ -80,3 +80,4 @@ export { Migration079InterposeTicks } from './Migration079InterposeTicks.js';
 export { Migration080InitiativeRefills } from './Migration080InitiativeRefills.js';
 export { Migration081OncePerTurnUses } from './Migration081OncePerTurnUses.js';
 export { Migration082AvengerAuraReach } from './Migration082AvengerAuraReach.js';
+export { Migration083FreeReactionCost } from './Migration083FreeReactionCost.js';
