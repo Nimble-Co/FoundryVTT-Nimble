@@ -89,7 +89,7 @@ In a combat that has started, an attack card that hits a hero has a **Reactions*
 The button opens the Defend window. Its heading tells the attack, the hero it hits and the damage, for example "Fire Breath hits Pip for 14". Each row is one thing you can do, with its cost and the damage you take:
 
 - **Defend**: for a hero the attack hits. The cost shows the actions and your Armor. The damage you take shows the damage without the Defend, struck through, and the damage after your Armor.
-- **Interpose**: for an ally within 2 spaces of the hero, or within the range of an Interpose feature. You become the target and take the full damage. Move the tokens yourself. As the new target, you get your own rows under Change This Roll, such as a reroll that a feature gives the target.
+- **Interpose**: for an ally within 2 spaces of the hero, or within the range of an Interpose feature. A feature changes only the range: the Interpose still costs 1 action, and you can Interpose one time each round. You become the target and take the full damage. Move the tokens yourself. As the new target, you get your own rows under Change This Roll, such as a reroll that a feature gives the target.
 - **Interpose and Defend**: you become the target and your Armor comes off the damage.
 
 Pick a row, then click the button at the bottom. **Cancel** does nothing. When the reaction is already spent, you have no actions left, or it is your turn, a window asks one time if you want to use it anyway. Defend costs 1 more action when you wear armor or a shield that you are not proficient with.

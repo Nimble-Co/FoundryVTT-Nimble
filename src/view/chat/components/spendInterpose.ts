@@ -7,13 +7,13 @@ import showReactionConfirmation from '../../../utils/incomingReactions/showReact
 import localize from '../../../utils/localize.js';
 
 /**
- * Baseline Interpose costs the standard heroic reaction; spend it through
- * the combat's reaction bookkeeping (with the usual already-spent
- * confirmation) before relaying the redirect. Rule-granted offers leave
- * their cost to the granting feature. Outside combat there is nothing to
- * spend. With `force`, the caller has already confirmed a bent limit.
+ * Spend the Interpose through the combat's reaction bookkeeping (with the
+ * usual already-spent confirmation) before relaying the redirect. A rule that
+ * gives the Interpose a longer range does not change its cost (Core:492,
+ * Core:512). Outside combat there is nothing to spend. With `force`, the
+ * caller has already confirmed a bent limit.
  */
-export async function spendBaselineInterpose(
+export async function spendInterpose(
 	entry: IncomingReactionEntry,
 	options: { force?: boolean } = {},
 ): Promise<boolean> {

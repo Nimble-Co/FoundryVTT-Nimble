@@ -20,7 +20,7 @@ function hero(uuid: string, reachOfRule: number | null, order: string[] = []) {
 						{
 							type: 'poolDieToMax',
 							trigger: 'onWound',
-							reach: reachOfRule,
+							resolveReach: () => reachOfRule,
 							item,
 							appliesTo: () => true,
 							raiseDice: vi.fn(async (count: number) => {
@@ -141,9 +141,13 @@ describe('the pack items of Judgment Dice', () => {
 		});
 	});
 
-	it('Avenger raises dice on Wounds in Reach 4, and moves half speed', () => {
+	it('Avenger raises dice on Wounds within the Reach of the aura, and moves half speed', () => {
 		const rules = packRules('avenger.json');
-		expect(rules[0]).toMatchObject({ type: 'poolDieToMax', trigger: 'onWound', reach: 4 });
+		expect(rules[0]).toMatchObject({
+			type: 'poolDieToMax',
+			trigger: 'onWound',
+			reach: '@auraReach',
+		});
 		expect(rules[1]).toMatchObject({
 			type: 'freeMove',
 			trigger: 'afterPoolDiceToMax',

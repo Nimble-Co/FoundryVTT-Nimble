@@ -42,6 +42,11 @@ describe('getIncomingReactionCost', () => {
 		delete testGlobals.game.settings;
 	});
 
+	it('names the Heroic Reaction for an Interpose that a rule gives a longer range', () => {
+		const interpose = { kind: 'redirectToSelf', source: 'rule' } as IncomingReactionEntry;
+		expect(getIncomingReactionCost(interpose, null)).toBe('Heroic Reaction');
+	});
+
 	it('names the action a rule costs', () => {
 		testGlobals.game.settings = { get: () => true };
 		useRule(1);

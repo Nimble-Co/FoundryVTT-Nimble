@@ -400,6 +400,13 @@ abstract class NimbleBaseRule<
 		return value;
 	}
 
+	/** A count of spaces from a formula, never below `minimum`. */
+	protected resolveSpaces(formula: unknown, minimum: number): number {
+		const text = String(formula ?? '').trim();
+		const value = text ? Number(this.resolveFormula(text)) : 0;
+		return Number.isFinite(value) ? Math.max(minimum, Math.floor(value)) : minimum;
+	}
+
 	/** Matches dice notation: 1d6, 2d8+5, bare d20 — but not identifiers like "id6". */
 	static #DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
 

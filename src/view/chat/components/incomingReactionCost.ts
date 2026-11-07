@@ -56,7 +56,7 @@ export function getIncomingReactionCost(entry: IncomingReactionEntry, actor: Act
 	if (entry.kind === 'reroll') {
 		return rerollCostParts(findRerollRule(entry)?.rollUseCost, actor).join(', ');
 	}
-	if (entry.kind === 'redirectToSelf' && entry.source === 'baseline') {
+	if (entry.kind === 'redirectToSelf') {
 		return localize('NIMBLE.chat.incomingReactions.costHeroicReaction');
 	}
 	return '';
