@@ -982,17 +982,18 @@ describe('getChargePoolRollData', () => {
 		expect(getChargePoolRollData(actor)).toEqual({});
 	});
 
-	it('reads only stored state and never resolves pool formulas', () => {
+	it('reads the rule die size of a pool nothing stored yet, and never resolves pool formulas', () => {
 		const actor = createMockActor(
 			[
 				createMockItem('item-1', 'Feature', [
 					{ type: 'chargePool', identifier: 'combat-dice', max: '@level', dieSize: 'd6' },
+					{ type: 'modifyPool', poolType: 'charge', poolIdentifier: 'combat-dice', dieSize: 'd8' },
 				]),
 			],
 			{ level: 3 },
 		);
 
-		expect(getChargePoolRollData(actor)).toEqual({});
+		expect(getChargePoolRollData(actor)).toEqual({ 'combat-dice': { faces: 8 } });
 		expect(actor.getRollData).not.toHaveBeenCalled();
 	});
 

@@ -248,7 +248,8 @@ function addPoolDieFaces(
 }
 
 /**
- * Roll data for `@pools.<identifier>.faces`. Reads only the stored pool state,
+ * Roll data for `@pools.<identifier>.faces`. Reads the stored pool state, and
+ * the die size of a pool rule nothing stored yet. It resolves no formula,
  * because pool max formulas resolve against roll data and must not recurse.
  */
 function getChargePoolRollData(actor: CharacterActorLike): Record<string, { faces: number }> {
@@ -270,7 +271,27 @@ function getChargePoolRollData(actor: CharacterActorLike): Record<string, { face
 		}
 	}
 
+	addUnstoredPoolDieFaces(actor, pools);
 	return pools;
+}
+
+function addUnstoredPoolDieFaces(
+	actor: CharacterActorLike,
+	pools: Record<string, { faces: number }>,
+): void {
+	const modifiers = getChargePoolModifiers(actor);
+	for (const item of actor.items.contents) {
+		for (const rule of (item as RuleBackedItem).rules?.values() ?? []) {
+			if (rule.type !== 'chargePool' || rule.disabled) continue;
+			const poolRule = rule as ChargePoolRuleLike;
+			const identifier = normalizeIdentifier(poolRule.identifier || poolRule.id);
+			if (identifier.length < 1 || identifier in pools) continue;
+			const resized = (modifiers.get(identifier) ?? []).findLast((modifier) =>
+				Boolean(modifier.dieSize?.trim()),
+			);
+			addPoolDieFaces(pools, identifier, resized?.dieSize ?? poolRule.dieSize);
+		}
+	}
 }
 
 function resolveFormulaToInteger(
