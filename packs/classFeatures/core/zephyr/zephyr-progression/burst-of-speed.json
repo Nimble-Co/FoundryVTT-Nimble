@@ -24,7 +24,7 @@
 				"hideMax": true,
 				"recoveries": [
 					{
-						"trigger": "encounterStart",
+						"trigger": "onInitiativeRolled",
 						"mode": "set",
 						"value": "@dexterity"
 					},
