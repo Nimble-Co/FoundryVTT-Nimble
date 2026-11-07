@@ -38,7 +38,10 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	override root: svelte.Component<Record<string, never>>;
 
 	/** The dialog's own component. In the `nimble-window` frame, `root` is the shell round it. */
-	content: svelte.Component<Record<string, never>>;
+	readonly content: svelte.Component<Record<string, never>>;
+
+	/** The window title as state, so the head of the `nimble-window` frame follows `setTitle`. */
+	headTitle = $state('');
 
 	#uniqueId: string | null = null;
 
@@ -69,6 +72,7 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		);
 
 		this.content = component;
+		this.headTitle = title;
 		this.root = options.classes?.includes('nimble-window')
 			? (WindowShell as unknown as svelte.Component<Record<string, never>>)
 			: component;
@@ -141,6 +145,7 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	 */
 	setTitle(newTitle: string): void {
 		(this.options as { window: { title: string } }).window.title = newTitle;
+		this.headTitle = newTitle;
 	}
 
 	protected override async _prepareContext(
