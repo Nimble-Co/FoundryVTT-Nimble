@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RestrictSpellSchoolsRule } from './restrictSpellSchools.js';
+import { RestrictSpellSchoolsRule } from '../restrictSpellSchools.js';
 
 describe('RestrictSpellSchoolsRule', () => {
 	describe('schema', () => {

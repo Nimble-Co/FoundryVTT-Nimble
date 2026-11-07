@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { retagEffectsDamageType, schoolToDamageType } from './spellDamageType.ts';
+import { retagEffectsDamageType, schoolToDamageType } from '../spellDamageType.ts';
 
 describe('schoolToDamageType', () => {
 	it('maps elemental schools to their damage type (ice → cold)', () => {

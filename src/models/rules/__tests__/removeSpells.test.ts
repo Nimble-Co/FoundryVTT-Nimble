@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RemoveSpellsRule } from './removeSpells.js';
+import { RemoveSpellsRule } from '../removeSpells.js';
 
 describe('RemoveSpellsRule', () => {
 	describe('schema', () => {
