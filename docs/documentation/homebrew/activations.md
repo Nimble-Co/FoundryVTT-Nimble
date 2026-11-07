@@ -15,9 +15,9 @@ The **Activation** tab appears on objects, spells, features, and monster feature
 
 ## The Core sub-tab
 
-- **Output item description on activation**: when ticked, the item's description text is printed on the chat card.
+- **Output item description on activation**: when on, the item's description text is printed on the chat card.
 - **Activation Cost** is a number plus a unit: **Action**, **Minute**, **Hour**, **None**, **Special**, or **Turn**. The number field only appears for actions, minutes, and hours. Choosing **Special** reveals a free-text details field.
-- **Is Reaction** marks the activation as a reaction and reveals a **Reaction Trigger** text field ("when an enemy leaves your reach…"). A reaction always has the **Action** unit. The number is the action cost: **1** for a usual reaction, **0** for a free reaction. When you tick **Is Reaction** on a cost of **None**, the cost changes to **0 Action**, a free reaction. When you tick it on a **Minute**, **Hour**, **Special** or **Turn** cost, the cost changes to **1 Action**. On a reaction, **None** changes the cost to **0 Action**, and another unit that is not **Action** clears **Is Reaction**. When you clear **Is Reaction**, the cost stays as it is.
+- **Is Reaction** marks the activation as a reaction and reveals a **Reaction Trigger** text field ("when an enemy leaves your reach…"). A reaction always has the **Action** unit. The number is the action cost: **1** for a usual reaction, **0** for a free reaction. When you turn on **Is Reaction** on a cost of **None**, the cost changes to **0 Action**, a free reaction. When you turn it on for a **Minute**, **Hour**, **Special** or **Turn** cost, the cost changes to **1 Action**. On a reaction, **None** changes the cost to **0 Action**, and another unit that is not **Action** clears **Is Reaction**. When you turn off **Is Reaction**, the cost stays as it is.
 - **Duration**: a number plus a unit (**Action**, **Minute**, **Hour**, **None**, **Round**, **Turn**, **Special**), with a details field for special durations.
 
 ::: info Monster features are simpler
@@ -26,7 +26,7 @@ Monster feature sheets hide the Activation Cost section. A monster's action econ
 
 ## The Targets sub-tab
 
-- **AoE targeting (can't miss or crit)**: tick this for area effects. A template configuration appears where you pick a shape (circle, cone, emanation, line, or square) and its dimensions. Attacks resolved through a template share one roll across everyone caught in it, so they can neither miss nor critically hit.
+- **AoE targeting (can't miss or crit)**: turn this on for area effects. A template configuration appears where you pick a shape (circle, cone, emanation, line, or square) and its dimensions. Attacks resolved through a template share one roll across everyone caught in it, so they can neither miss nor critically hit.
 - **Target Count**: how many targets the item expects (hidden when AoE targeting is on).
 - **Target Restrictions**: free text shown to the user, such as "creatures that can hear you".
 
@@ -40,14 +40,14 @@ Effects are built as a tree. Click the **+** button next to **Effects** to add a
 
 ### Damage
 
-A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only. Three checkboxes refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
+A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only. Three switches refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
 
 **Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place; the message author and the GM can press it, and the result then behaves like any other damage packet. It appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
 
-The *first* damage entry in the list is special: it is the attack roll. It alone shows the **Can Miss** and **Can Crit** checkboxes, and its result decides whether the whole card reads as a hit, a miss, or a critical hit.
+The *first* damage entry in the list is special: it is the attack roll. It alone shows the **Can Miss** and **Can Crit** switches, and its result decides whether the whole card reads as a hit, a miss, or a critical hit.
 
 ::: info When crits are suppressed
-Even with Can Crit ticked, some attacks never crit: template (AoE) attacks, attacks made by minions and flunkies, and attacks with a weapon whose type the wielder is not proficient with.
+Even with Can Crit on, some attacks never crit: template (AoE) attacks, attacks made by minions and flunkies, and attacks with a weapon whose type the wielder is not proficient with.
 :::
 
 Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, a condition, a saving throw, or a note.
@@ -74,7 +74,7 @@ A condition entry picks one status condition from the system's list (Frightened,
 
 ### Move
 
-A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Tick **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts ticked for a move for free ("Can move up to 6 spaces for free.") and clear for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Tick it for a push or pull whose text says "up to"; clear it for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
+A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to"; turn it off for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
 
 ### Pool
 
@@ -88,7 +88,7 @@ Pool entries only take effect once the activation is allowed to proceed, so an i
 
 1. Create an Object, set Object Type to **Weapon**, and pick your weapon properties.
 2. On **Activation → Core**, set the cost to 1 **Action**.
-3. On **Activation → Effects**, add a **Damage** entry: formula `1d4+@dexterity`, type **Piercing**, **Can Miss** and **Can Crit** ticked.
+3. On **Activation → Effects**, add a **Damage** entry: formula `1d4+@dexterity`, type **Piercing**, **Can Miss** and **Can Crit** on.
 4. Under that entry's **On Hit** bucket, click **+** and add a **Damage Outcome** of **Full Damage**. This is the weapon's own damage landing.
 5. In the same **On Hit** bucket, add a second **Damage** entry: formula `1d6`, type **Cold**.
 
