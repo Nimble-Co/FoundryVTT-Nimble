@@ -125,13 +125,17 @@ function createMessage(system: Record<string, unknown> = {}) {
 		reactive: null as unknown,
 		cardRerolls: {
 			canStillUseReroll: vi.fn(() => true),
+			blockedReroll: vi.fn(() => null),
 			rerollDiceToPick: vi.fn(() => null),
 			severalDiceToPick: vi.fn(() => null),
 			changeToPick: vi.fn(() => null),
 			rerollStatsToPick: vi.fn(() => null),
 			resultUseOf: vi.fn(() => null),
 			addLeftOutReroll: vi.fn(async () => undefined),
-		} as Record<string, unknown> & { canStillUseReroll: ReturnType<typeof vi.fn> },
+		} as Record<string, unknown> & {
+			canStillUseReroll: ReturnType<typeof vi.fn>;
+			blockedReroll: ReturnType<typeof vi.fn>;
+		},
 		delete: vi.fn(),
 	};
 	message.reactive = message;
@@ -703,6 +707,64 @@ describe('rerolls on check cards', () => {
 			expect(document.querySelector('.roll__result--succeeded')?.textContent).toContain(
 				'Succeeded - DC 14',
 			);
+		});
+
+		describe('an add on a natural 1', () => {
+			const addUse = { change: 'add', value: 3, stat: 'strength' };
+
+			function naturalOneMessage(blocked: boolean) {
+				const { entry } = resultEntry(addUse);
+				const message = createMessage({
+					incomingReactions: [{ ...entry, ruleId: 'rule-seer', itemUuid: 'Item.seer' }],
+				});
+				Object.assign(message, { id: `natural-one-${blocked}` });
+				Object.assign(message.cardRerolls, { resultUseOf: vi.fn(() => addUse) });
+				message.cardRerolls.canStillUseReroll.mockReturnValue(!blocked);
+				message.cardRerolls.blockedReroll.mockReturnValue(blocked ? 'naturalOne' : null);
+				return message;
+			}
+
+			it('shows the row, not usable, with the reason in its note and its name', async () => {
+				renderSave(naturalOneMessage(true));
+				await openControl();
+
+				const [blockedRow] = rowsOf();
+				expect(blockedRow.getAttribute('aria-disabled')).toBe('true');
+				expect(blockedRow.hasAttribute('disabled')).toBe(false);
+				expect(blockedRow.classList).toContain('nimble-change-roll__row--blocked');
+				expect(blockedRow.querySelector('.nimble-change-roll__note')?.textContent?.trim()).toBe(
+					'A roll of 1 always fails',
+				);
+				expect(blockedRow.querySelector('.nimble-change-roll__note .fa-ban')).not.toBeNull();
+				expect(blockedRow.getAttribute('aria-label')).toBe(
+					'Add +3 STR with Soothsayer (Gain 1 Wound). A roll of 1 always fails',
+				);
+			});
+
+			it('does nothing on a click or Enter', async () => {
+				renderSave(naturalOneMessage(true));
+				await openControl();
+
+				const [blockedRow] = rowsOf();
+				await fireEvent.click(blockedRow);
+				await fireEvent.keyDown(blockedRow, { key: 'Enter' });
+				await settle();
+
+				expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
+			});
+
+			it('is a usable row when the card says it can be used', async () => {
+				renderSave(naturalOneMessage(false));
+				await openControl();
+
+				const [usableRow] = rowsOf();
+				expect(usableRow.hasAttribute('aria-disabled')).toBe(false);
+				expect(usableRow.querySelector('.nimble-change-roll__note')).toBeNull();
+				await fireEvent.click(usableRow);
+				await settle();
+
+				expect(requestIncomingAttackReaction).toHaveBeenCalled();
+			});
 		});
 
 		it('keeps a Succeeded card closed, with the other rows under the button', () => {

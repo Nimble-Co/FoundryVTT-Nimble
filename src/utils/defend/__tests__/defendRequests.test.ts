@@ -241,6 +241,54 @@ describe('Defend options on the card', () => {
 		]);
 	});
 
+	it('gives back the action an option paid on Undo in a later turn', async () => {
+		const ledger = await vi.importActual<typeof import('../../cost/costLedger.js')>(
+			'../../cost/costLedger.js',
+		);
+		giveBack.mockImplementation(ledger.giveBack);
+		const hero = {
+			id: 'c1',
+			type: 'character',
+			system: { actions: { base: { current: 1, max: 3 }, pendingDelta: 0 } },
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(hero, path, value);
+				}
+			}),
+		};
+		(globalThis as unknown as Globals).game.combat = {
+			id: 'combat-1',
+			round: 2,
+			combatant: { id: 'c2' },
+			combatants: { get: (id: string) => (id === 'c1' ? hero : undefined) },
+		};
+		const actionUse: DefendOptionUse = {
+			...paidUse,
+			cost: {
+				chargePoolIdentifier: '',
+				chargeCost: 0,
+				manaCost: 0,
+				woundCost: 0,
+				heroicReaction: '',
+				actionCost: 1,
+			},
+			paid: {
+				charges: 0,
+				mana: 0,
+				wounds: 0,
+				heroicReaction: null,
+				action: { combatId: 'combat-1', combatantId: 'c1', amount: 1, now: true },
+				stamp: { combatId: 'combat-1', round: 1, combatantId: 'c1' },
+			},
+		};
+		await requestDefend(request({ options: [actionUse] }));
+		const [record] = card.system.defends as { id: string }[];
+
+		await undoDefend('m1', record?.id ?? '');
+
+		expect(hero.system.actions.base.current).toBe(2);
+	});
+
 	it('adds an ally option with its reminder line', async () => {
 		const ally = await allyUseOnNewDefend();
 

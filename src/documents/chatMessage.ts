@@ -1115,27 +1115,30 @@ class NimbleChatMessage extends ChatMessage {
 	async #addTargets(newTargets: Token[]): Promise<ChatMessage | undefined> {
 		if (!this.isActivationCard()) return;
 
-		const systemData = this.system as ActivationCardSystemData;
-		const existingTargets = systemData.targets || [];
 		const added = newTargets.map((token) => token.document.uuid).filter((uuid) => uuid !== null);
-		const targets = [...new Set([...existingTargets, ...added])];
+		if (!this.#noDamageRowChanges(this.#targetsWith(added)).incomingReactions) {
+			return this.#writeAddedTargets(added);
+		}
+		// The queue orders writes on this client only. The task reads the card when it
+		// runs, so a GM write that lands while it waits stays. A write from another
+		// client between that read and this write can still be lost.
+		return queueReactionWrite(this.id ?? '', () => this.#writeAddedTargets(added));
+	}
 
-		const write = () =>
-			this.update({
-				system: {
-					targets,
-					...this.#noDamageRowChanges(targets),
-					...this.#movementOfferChanges({ targets }),
-				},
-			} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
-		if (!this.#noDamageRowChanges(targets).incomingReactions) return write();
+	#targetsWith(added: readonly string[]): string[] {
+		const existing = (this.system as unknown as ActivationCardSystemData).targets || [];
+		return [...new Set([...existing, ...added])];
+	}
 
-		// The whole list is written, so it waits for a write in flight on this client.
-		let updated: ChatMessage | undefined;
-		await queueReactionWrite(this.id ?? '', async () => {
-			updated = await write();
-		});
-		return updated;
+	#writeAddedTargets(added: readonly string[]): Promise<ChatMessage | undefined> {
+		const targets = this.#targetsWith(added);
+		return this.update({
+			system: {
+				targets,
+				...this.#noDamageRowChanges(targets),
+				...this.#movementOfferChanges({ targets }),
+			},
+		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
 	/**

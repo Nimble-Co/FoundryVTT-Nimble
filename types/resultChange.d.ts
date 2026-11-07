@@ -1,5 +1,6 @@
 import type { CheckResult } from './checkResult.d.ts';
 import type { ResultChangeKind } from '#utils/incomingReactions/incomingReactionEntry.ts';
+import type { PaidRerollCost } from '#utils/reroll/rerollCost.ts';
 
 /** What one use of a Change a Result rule does now. */
 export interface ResultUse {
@@ -28,8 +29,12 @@ export interface ResultChange extends ResultUse {
 	/** The total this change replaced, set when a new roll retires it. */
 	before: number | null;
 	chargePoolIdentifier: string;
-	/** What Remove gives back. */
-	paid: { charges: number; mana: number; wounds: number };
+	/**
+	 * What Remove gives back. An action or a heroic reaction goes back only in the
+	 * turn of its stamp. A record from before them has none of the three.
+	 */
+	paid: Pick<PaidRerollCost, 'charges' | 'mana' | 'wounds'> &
+		Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>;
 	/** Made with no click. It has no Remove. */
 	automatic?: boolean;
 	/** A no-damage change: the target it covers. */
@@ -46,6 +51,8 @@ export interface ResultCardView {
 	result?: CheckResult | null;
 	/** The check roll's total without its d20. */
 	rollModifier?: number;
+	/** The kept d20 is a natural 1 that fails whatever is added. */
+	naturalOneFails?: boolean;
 	/** An attack card's damage is already applied. */
 	damageApplied?: boolean;
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkResult, checkResultOfCard } from '../checkResult.ts';
+import type { ResultChange } from '#types/resultChange.d.ts';
+import { checkResult, checkResultOfCard, failsOnNaturalOne } from '../checkResult.ts';
 
 describe('checkResult', () => {
 	describe.each(['save', 'skillCheck', 'abilityCheck'] as const)('a %s with a DC', (kind) => {
@@ -86,5 +87,33 @@ describe('checkResultOfCard', () => {
 		).toBeNull();
 		expect(checkResultOfCard('chat', { dc: 14 }, roll(5, 8))).toBeNull();
 		expect(checkResultOfCard('savingThrow', { saveKey: 'dexterity' }, roll(5, 8))).toBeNull();
+	});
+});
+
+describe('failsOnNaturalOne', () => {
+	const d20 = (result: number) => [{ faces: 20, results: [{ result, active: true }] }];
+	const change = (kind: string, retired = false) =>
+		({ change: kind, value: 20, retired }) as unknown as ResultChange;
+
+	it.each(['save', 'skillCheck'] as const)('is true for a natural 1 on a %s', (kind) => {
+		expect(failsOnNaturalOne({ kind, terms: d20(1), changes: [] })).toBe(true);
+	});
+
+	it.each(['abilityCheck', 'initiative'] as const)('is false for a natural 1 on a %s', (kind) => {
+		expect(failsOnNaturalOne({ kind, terms: d20(1), changes: [] })).toBe(false);
+	});
+
+	it('is false for another kept d20', () => {
+		expect(failsOnNaturalOne({ kind: 'save', terms: d20(5), changes: [] })).toBe(false);
+	});
+
+	it.each(['countsAsNat20', 'setTotal', 'succeed'])('is false while a %s stands', (kind) => {
+		expect(failsOnNaturalOne({ kind: 'save', terms: d20(1), changes: [change(kind)] })).toBe(false);
+	});
+
+	it('is true again when a new roll retired the change', () => {
+		expect(
+			failsOnNaturalOne({ kind: 'save', terms: d20(1), changes: [change('countsAsNat20', true)] }),
+		).toBe(true);
 	});
 });
