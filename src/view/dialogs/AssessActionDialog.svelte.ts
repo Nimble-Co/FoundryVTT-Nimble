@@ -108,7 +108,7 @@ export function createAssessDialogState(
 			await getDeductActionPip()();
 		}
 
-		const isSuccess = assessSucceeds(roll);
+		const isSuccess = assessSucceeds(roll, getDocument(), selectedSkill);
 		const resultKey = isSuccess ? option.successKey : option.failureKey;
 		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
 		const resultMessage = localize(resultKey, {

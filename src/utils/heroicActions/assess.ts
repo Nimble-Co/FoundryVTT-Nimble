@@ -83,7 +83,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		await spendHeldIgnoreDisadvantage(actor);
 	}
 
-	const isSuccess = assessSucceeds(roll);
+	const isSuccess = assessSucceeds(roll, actor, request.skillKey);
 	const resultKey = isSuccess ? option.successKey : option.failureKey;
 
 	const primaryDieChange = isSuccess
