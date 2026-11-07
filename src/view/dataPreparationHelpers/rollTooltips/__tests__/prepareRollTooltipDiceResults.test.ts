@@ -106,3 +106,22 @@ describe('prepareRollTooltipDiceResults with a stored Primary Die', () => {
 		expect(prepareRollTooltipDiceResults(term)).toContain('nimble-die--max">3</li>');
 	});
 });
+
+describe('prepareRollTooltipDiceResults with Vicious dice', () => {
+	it('leaves the Vicious dice off the Primary Die line', () => {
+		const html = prepareRollTooltipDiceResults({
+			faces: 4,
+			flavor: 'Primary Die',
+			options: {},
+			results: [
+				{ result: 4, active: true, exploded: true },
+				{ result: 2, active: true, provenance: 'viciousChain' },
+				{ result: 4, active: true, provenance: 'viciousBonus' },
+			],
+		});
+
+		expect(html).toBe(
+			'<li class="nimble-die nimble-die--4 nimble-die--max">4</li><li class="nimble-die nimble-die--4">2</li>',
+		);
+	});
+});
