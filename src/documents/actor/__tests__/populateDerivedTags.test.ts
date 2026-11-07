@@ -46,16 +46,16 @@ function runPopulate(stub: ActorStub): Set<string> {
 describe('_populateDerivedTags — self / target state tags', () => {
 	describe('generic condition tags', () => {
 		it('emits a tag for every active status, so rules can gate on holding a condition', () => {
-			const tags = runPopulate(makeStub({ statuses: ['swallowed', 'latchedOn'] }));
+			const tags = runPopulate(makeStub({ statuses: ['swallowed', 'latched'] }));
 
 			expect(tags.has('self:condition:swallowed')).toBe(true);
-			expect(tags.has('self:condition:latchedOn')).toBe(true);
+			expect(tags.has('self:condition:latched')).toBe(true);
 		});
 
 		it('emits no condition tag for a status the actor does not have', () => {
 			const tags = runPopulate(makeStub({ statuses: ['swallowed'] }));
 
-			expect(tags.has('self:condition:latchedOn')).toBe(false);
+			expect(tags.has('self:condition:latched')).toBe(false);
 		});
 	});
 

@@ -155,8 +155,8 @@ describe('ConditionManager', () => {
 
 		it('publishes every registered condition, since an absent id cannot be applied at all', () => {
 			setConfiguredConditions(
-				{ blinded: 'Blinded', swallowed: 'Swallowed', latchedOn: 'Latched On' },
-				{ scopes: { swallowed: 'monster', latchedOn: 'monster' } },
+				{ blinded: 'Blinded', swallowed: 'Swallowed', latched: 'Latched' },
+				{ scopes: { swallowed: 'monster', latched: 'monster' } },
 			);
 			manager.initialize();
 			manager.configureStatusEffects();
