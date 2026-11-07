@@ -219,7 +219,7 @@ describe('the line of a Remove that keeps an action spent', () => {
 		mana: 0,
 		wounds: 0,
 		action: { combatId: 'combat-1', combatantId: 'hero', amount: 1, now: true },
-		stamp: { combatId: 'combat-1', round: 1, turn: 0 },
+		stamp: { combatId: 'combat-1', round: 1, combatantId: 'hero' },
 	};
 	const game = (globalThis as unknown as { game: { combat?: unknown } }).game;
 
@@ -228,15 +228,15 @@ describe('the line of a Remove that keeps an action spent', () => {
 	});
 
 	it('shows in a new turn, and not in the turn it was paid in', () => {
-		game.combat = { id: 'combat-1', round: 1, turn: 0 };
+		game.combat = { id: 'combat-1', round: 1, combatant: { id: 'hero' } };
 		expect(linesOf([click({ paid: spentAction })])[0].note).toBeNull();
 
-		game.combat = { id: 'combat-1', round: 1, turn: 1 };
+		game.combat = { id: 'combat-1', round: 1, combatant: { id: 'goblin' } };
 		expect(linesOf([click({ paid: spentAction })])[0].note).toBe(ACTION_KEPT);
 	});
 
 	it('does not show on a line with no Remove, or one that cost no action', () => {
-		game.combat = { id: 'combat-1', round: 2, turn: 0 };
+		game.combat = { id: 'combat-1', round: 2, combatant: { id: 'hero' } };
 		expect(linesOf([click({ paid: spentAction })], 7, false)[0].note).toBeNull();
 		expect(linesOf([click()])[0].note).toBeNull();
 	});

@@ -19,7 +19,6 @@ import {
 	actionPayer,
 	canSpendActions,
 	findActorCombatant,
-	keepsTurnCost,
 	type PaidRerollCost,
 	poolToExpend,
 	type RerollCost,
@@ -153,10 +152,7 @@ async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReac
 	});
 }
 
-/**
- * Give back what `payCost` charged. An action or a heroic reaction comes back
- * only in the turn it was paid in (see `keepsTurnCost`).
- */
+/** Give back what `payCost` charged. */
 async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promise<void> {
 	if (paid.wounds > 0) {
 		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
@@ -173,7 +169,6 @@ async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promis
 		await setPoolFaces(actor, paid.dice.poolId, [...current, ...paid.dice.faces], 'refund');
 	}
 	if (paid.turnUse && cost.turnUseKey) await clearTurnUse(actor, cost.turnUseKey);
-	if (keepsTurnCost(paid)) return;
 	if (paid.action) await changeActions(paid.action, paid.action.amount);
 	if (paid.heroicReaction) await refundHeroicReaction(paid.heroicReaction);
 }

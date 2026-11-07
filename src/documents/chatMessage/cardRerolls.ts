@@ -45,7 +45,12 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import { canPayRerollCost, costForDice, type PaidRerollCost } from '#utils/reroll/rerollCost.js';
+import {
+	canPayRerollCost,
+	costForDice,
+	keepsTurnCost,
+	type PaidRerollCost,
+} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -1346,6 +1351,8 @@ export class CardRerolls {
 		}
 		if (refusal) return reject(refusal);
 
+		// Read before an Initiative card re-sorts the combat.
+		const kept = new Set(line.filter((c) => keepsTurnCost(c.paid)).map((c) => c.id));
 		const removed = new Set(line.map((change) => change.id));
 		const remaining = changes.filter((change) => !removed.has(change.id));
 		await this.#host.update({
@@ -1354,7 +1361,7 @@ export class CardRerolls {
 		await this.#followInitiative(changes, remaining);
 
 		try {
-			await this.#giveBackResultCost(line);
+			await this.#giveBackResultCost(line, kept);
 		} catch (error) {
 			console.error('Nimble | The cost of a removed change could not be given back.', error);
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
@@ -1377,8 +1384,12 @@ export class CardRerolls {
 	 * Uses, Mana and Wounds go back. An action or a heroic reaction goes back only
 	 * in the turn it was paid in.
 	 */
-	async #giveBackResultCost(line: readonly ResultChange[]): Promise<void> {
+	async #giveBackResultCost(
+		line: readonly ResultChange[],
+		kept: ReadonlySet<string>,
+	): Promise<void> {
 		for (const change of line) {
+			const keep = kept.has(change.id);
 			const actor = fromUuidSync(change.actorUuid as `Actor.${string}`) as Actor | null;
 			if (!actor) continue;
 			await giveBack(actor, {
@@ -1391,8 +1402,8 @@ export class CardRerolls {
 				},
 				paid: {
 					...change.paid,
-					action: change.paid.action ?? null,
-					heroicReaction: change.paid.heroicReaction ?? null,
+					action: keep ? null : (change.paid.action ?? null),
+					heroicReaction: keep ? null : (change.paid.heroicReaction ?? null),
 				},
 			});
 		}

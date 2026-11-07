@@ -65,17 +65,22 @@ describe('assessSucceeds', () => {
 		expect(assessSucceeds(d20Roll(-1, 1), bumblewiseHero(), 'insight')).toBe(true);
 	});
 
-	it('fails on a natural 1 on a skill the rule does not cover', () => {
-		expect(assessSucceeds(d20Roll(1, 1), bumblewiseHero(), 'might')).toBe(false);
+	it('fails on a natural 1 with a total of 13 on a skill the rule does not cover', () => {
+		expect(assessSucceeds(d20Roll(13, 1), bumblewiseHero(), 'might')).toBe(false);
 	});
 
-	it('fails on a natural 1 with no such rule', () => {
-		expect(assessSucceeds(d20Roll(1, 1), { uuid: 'Actor.hero', rules: [] }, 'insight')).toBe(false);
+	it('fails on a natural 1 with a total of 13 with no such rule', () => {
+		expect(assessSucceeds(d20Roll(13, 1), { uuid: 'Actor.hero', rules: [] }, 'insight')).toBe(
+			false,
+		);
 	});
 
-	it('reads the total against the Assess DC and a natural 20 as a success', () => {
+	it('reads the total against the Assess DC', () => {
 		expect(assessSucceeds(d20Roll(12, 9), null, 'insight')).toBe(true);
 		expect(assessSucceeds(d20Roll(11, 9), null, 'insight')).toBe(false);
-		expect(assessSucceeds(d20Roll(18, 20), null, 'might')).toBe(true);
+	});
+
+	it('succeeds on a natural 20 with a total of 11', () => {
+		expect(assessSucceeds(d20Roll(11, 20), null, 'might')).toBe(true);
 	});
 });

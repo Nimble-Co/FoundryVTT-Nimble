@@ -855,13 +855,48 @@ describe('Remove on a Change a Result line', () => {
 			(globals().game as { combat?: unknown }).combat = null;
 		});
 
-		it('records the combat round and turn it was paid in', async () => {
+		it('records the combat, the round and the combatant whose turn it is', async () => {
 			const { card } = await paidCard({ ...FREE, actionCost: 1 });
 
 			expect(card.system.resultChanges[0].paid).toMatchObject({
 				action: { combatId: 'combat-1', combatantId: 'hero', amount: 1, now: true },
-				stamp: { combatId: 'combat-1', round: 1, turn: 0 },
+				stamp: { combatId: 'combat-1', round: 1, combatantId: 'hero' },
 			});
+		});
+
+		it('gives back the action when a re-sort moved the turn index, and the turn is the same', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			combat.turn = 2;
+			expect(notes(card)).toEqual([null]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(3);
+		});
+
+		it("keeps the action spent in another combatant's turn of the same round", async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			Object.assign(combat, { combatant: { id: 'goblin' } });
+			hero.update.mockClear();
+			expect(notes(card)).toEqual([ACTION_KEPT]);
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(2);
+			expect(hero.update).not.toHaveBeenCalled();
+		});
+
+		it('reads the turn before the Remove moves the turn to another combatant', async () => {
+			const { card, hero, combat, lineId } = await paidCard({ ...FREE, actionCost: 1 });
+			const write = card.update.getMockImplementation() as (changes: unknown) => Promise<void>;
+			card.update.mockImplementation(async (changes: unknown) => {
+				await write(changes);
+				Object.assign(combat, { combatant: { id: 'goblin' } });
+			});
+
+			await card.cardRerolls.resolveResultRemoval(lineId, 'gm-user');
+
+			expect(hero.system.actions.base.current).toBe(3);
 		});
 
 		it('gives back the action in the same turn, on top of an action spent after it', async () => {
@@ -887,13 +922,13 @@ describe('Remove on a Change a Result line', () => {
 			expect(hero.system.actions.base.current).toBe(2);
 		});
 
-		it('keeps the action spent after the turn changed, and the line says so', async () => {
+		it('keeps the action spent in a new round, gives the Mana back, and the line says so', async () => {
 			const { card, roller, hero, combat, lineId } = await paidCard({
 				...FREE,
 				actionCost: 1,
 				manaCost: 2,
 			});
-			combat.turn = 1;
+			Object.assign(combat, { round: 2 });
 			hero.update.mockClear();
 			expect(notes(card)).toEqual([ACTION_KEPT]);
 

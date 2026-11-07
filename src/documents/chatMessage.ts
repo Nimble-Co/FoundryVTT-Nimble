@@ -5,11 +5,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
-import {
-	inFlightSpendOffers,
-	queueFreshCardWrite,
-	queueReactionWrite,
-} from '#utils/chat/reactionWriteQueue.js';
+import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackDelivery,
@@ -1123,8 +1119,10 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.#noDamageRowChanges(this.#targetsWith(added)).incomingReactions) {
 			return this.#writeAddedTargets(added);
 		}
-		// The whole list is written, so it waits for a write in flight on this client.
-		return queueFreshCardWrite(this as NimbleChatMessage, (card) => card.#writeAddedTargets(added));
+		// The queue orders writes on this client only. The task reads the card when it
+		// runs, so a GM write that lands while it waits stays. A write from another
+		// client between that read and this write can still be lost.
+		return queueReactionWrite(this.id ?? '', () => this.#writeAddedTargets(added));
 	}
 
 	#targetsWith(added: readonly string[]): string[] {
