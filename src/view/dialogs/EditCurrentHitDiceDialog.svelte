@@ -197,7 +197,7 @@
 			font-weight: 900;
 			letter-spacing: 0.06em;
 			text-align: center;
-			color: var(--nimble-bronze);
+			color: color-mix(in srgb, var(--nimble-hit-dice-color) var(--nimble-ui-tone-mix), #000);
 		}
 
 		&__empty-badge {

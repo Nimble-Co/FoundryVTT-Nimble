@@ -292,7 +292,7 @@
 
 		&__icon {
 			font-size: 0.75rem;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__label {
@@ -300,7 +300,7 @@
 			font-weight: 900;
 			letter-spacing: 0.06em;
 			text-transform: uppercase;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__hidden-marker {

@@ -278,7 +278,7 @@
 			font-weight: 900;
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__value {
@@ -323,7 +323,7 @@
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
 			white-space: nowrap;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		input.hp-level-entry__input[data-look='plain'] {

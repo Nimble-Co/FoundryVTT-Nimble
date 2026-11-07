@@ -464,7 +464,7 @@
 		&__die {
 			font-size: 0.875rem;
 			font-weight: 900;
-			color: var(--nimble-hit-dice-color);
+			color: color-mix(in srgb, var(--nimble-hit-dice-color) var(--nimble-ui-tone-mix), #000);
 		}
 
 		&__value {
@@ -478,7 +478,7 @@
 			font-weight: 900;
 			letter-spacing: 0.06em;
 			text-transform: uppercase;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 	}
 
@@ -650,7 +650,7 @@
 			letter-spacing: 0.06em;
 			text-transform: uppercase;
 			white-space: nowrap;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__name {
@@ -675,7 +675,7 @@
 			font-size: 0.875rem;
 			font-weight: 900;
 			white-space: nowrap;
-			color: var(--nimble-hit-dice-color);
+			color: color-mix(in srgb, var(--nimble-hit-dice-color) var(--nimble-ui-tone-mix), #000);
 		}
 
 		&__controls {

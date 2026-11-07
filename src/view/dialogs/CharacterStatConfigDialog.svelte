@@ -1325,7 +1325,7 @@
 		.nimble-ability-score-list &__header .nimble-heading[data-heading-variant='section'] {
 			--nimble-heading-size: 0.688rem;
 			--nimble-heading-weight: 900;
-			--nimble-heading-color: var(--nimble-bronze);
+			--nimble-heading-color: var(--nimble-ui-ink-dim);
 			--nimble-heading-line-height: 1.2;
 
 			margin: 0;

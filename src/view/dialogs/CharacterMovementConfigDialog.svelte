@@ -166,7 +166,7 @@
 
 		&__icon {
 			font-size: 0.688rem;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__label {
@@ -174,7 +174,7 @@
 			font-weight: 900;
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__body {
@@ -276,7 +276,7 @@
 			font-weight: 900;
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
-			color: var(--nimble-bronze);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__total-value {
