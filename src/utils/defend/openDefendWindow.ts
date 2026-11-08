@@ -5,7 +5,7 @@ import type {
 	DefendOption,
 	DefendWindowData,
 } from '#types/components/DefendDialog.d.ts';
-import { rerollCostParts } from '../../view/chat/components/incomingReactionCost.js';
+import { useCostParts } from '../../view/chat/components/incomingReactionCost.js';
 import { spendInterpose } from '../../view/chat/components/spendInterpose.ts';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
@@ -153,7 +153,7 @@ function tickDetail(
 	card: NimbleChatMessage,
 	token: string | null,
 ): string {
-	const cost = rerollCostParts(tickCost(pick.rule, card, token), actor).join(', ');
+	const cost = useCostParts(tickCost(pick.rule, card, token), actor).join(', ');
 	return [cost, (pick.rule.reminder ?? '').trim()].filter(Boolean).join('. ');
 }
 

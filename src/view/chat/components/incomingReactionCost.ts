@@ -5,7 +5,7 @@ import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 /** What a cost takes from its actor, as short parts for one line. */
-export function rerollCostParts(cost: UseCost | null | undefined, actor: Actor | null): string[] {
+export function useCostParts(cost: UseCost | null | undefined, actor: Actor | null): string[] {
 	if (!cost || !useCostCharges(cost)) return [];
 	if (!isResourceSpendingAutomationEnabled()) {
 		return cost.heroicReaction
@@ -50,7 +50,7 @@ export function rerollCostParts(cost: UseCost | null | undefined, actor: Actor |
  */
 export function getIncomingReactionCost(entry: IncomingReactionEntry, actor: Actor | null): string {
 	if (entry.kind === 'reroll') {
-		return rerollCostParts(findRerollRule(entry)?.rollUseCost, actor).join(', ');
+		return useCostParts(findRerollRule(entry)?.rollUseCost, actor).join(', ');
 	}
 	if (entry.kind === 'redirectToSelf') {
 		return localize('NIMBLE.chat.incomingReactions.costHeroicReaction');

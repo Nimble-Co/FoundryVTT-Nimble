@@ -136,7 +136,7 @@ function makeActionCombat(actor: unknown, options: { ownTurn: boolean; actions?:
 	return combatant;
 }
 
-describe('rerollCost', () => {
+describe('useCost', () => {
 	beforeEach(() => setToggles({}));
 	afterEach(() => {
 		delete testGlobals.game.settings;
