@@ -291,8 +291,8 @@
 	.nimble-rule-card {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding: 6px 8px 10px 4px;
+		gap: 10px;
+		padding: 8px 12px 12px;
 		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
 		color: var(--nimble-ui-ink);
@@ -392,7 +392,6 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
-			padding-left: 30px;
 		}
 
 		&__empty {
@@ -405,7 +404,7 @@
 		}
 
 		&__advanced {
-			padding: 4px 0;
+			padding-top: 2px;
 
 			summary {
 				cursor: pointer;
