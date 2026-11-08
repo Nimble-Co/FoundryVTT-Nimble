@@ -10,7 +10,7 @@
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
-	import { createTargetDefendsState, createTargetMarksState } from './Targets.svelte.ts';
+	import { createTargetDefendsState, createTargetMarksState, defendTip } from './Targets.svelte.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 
@@ -252,7 +252,7 @@
 								type="button"
 								aria-pressed={defend.armorApplies}
 								aria-label={localize('NIMBLE.chat.defend.armorApplies')}
-								data-tooltip={targetDefends.tip(
+								data-tooltip={defendTip(
 									defend,
 									defend.armorApplies
 										? 'NIMBLE.chat.defend.armorOnHint'
@@ -284,7 +284,7 @@
 							class:fa-shield={!defend.armorApplies}
 							class:nimble-target-defended--off={!defend.armorApplies}
 							data-tooltip={defend.armorApplies
-								? targetDefends.tip(defend, 'NIMBLE.chat.defend.defendedTooltip')
+								? defendTip(defend, 'NIMBLE.chat.defend.defendedTooltip')
 								: localize('NIMBLE.chat.defend.defendedTooltip', { armor: '0' })}
 						></i>
 					{/if}

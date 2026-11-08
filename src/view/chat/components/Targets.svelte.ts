@@ -43,7 +43,7 @@ interface DefendRowToken {
 }
 
 /** The armor a Defend takes off, and the options it was made with. */
-function defendTip(defend: DefendRecord, key: string): string {
+export function defendTip(defend: DefendRecord, key: string): string {
 	const tip = localize(key, { armor: String(defend.armor + defend.armorBonus) });
 	const labels = [...new Set([defend.label, ...defend.options.map((use) => use.label)])].filter(
 		(label) => !!label,
@@ -67,6 +67,5 @@ export function createTargetDefendsState(getSystem: () => unknown) {
 		controlsFor(defend: DefendRecord | null, token: DefendRowToken | null | undefined): boolean {
 			return !!defend && game.user?.isGM === true && !applied.has(token?.uuid ?? '');
 		},
-		tip: defendTip,
 	};
 }
