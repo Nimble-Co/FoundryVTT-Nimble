@@ -1,4 +1,3 @@
-import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
@@ -11,11 +10,6 @@ import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
 import type { AttackerCondition, DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
 const RULE_TYPE = 'defendOption';
-
-interface AttackCardLike {
-	system?: unknown;
-	speaker?: DefendCardLike['speaker'];
-}
 
 /** A Defend option one hero can use against one attack card. */
 export interface DefendOptionPick {
@@ -33,7 +27,7 @@ export interface DefendOptionEffect {
 	wholeRound: boolean;
 }
 
-function cardDelivery(card: AttackCardLike) {
+function cardDelivery(card: DefendCardLike) {
 	const attackType = (card.system as { activation?: { targets?: { attackType?: string } } } | null)
 		?.activation?.targets?.attackType;
 	return attackDeliveryFromAttackType(attackType);
@@ -42,14 +36,11 @@ function cardDelivery(card: AttackCardLike) {
 /** The enabled Defend options of a way that fit this attack. Costs the hero cannot pay are left out. */
 export function defendOptionsOf(
 	actor: Actor.Implementation | null | undefined,
-	card: AttackCardLike,
+	card: DefendCardLike,
 	way: DefendOptionWay,
 ): DefendOptionPick[] {
 	const delivery = cardDelivery(card);
-	const attacker = speakerActorOf({
-		system: card.system,
-		speaker: card.speaker,
-	}) as OtherCreature | null;
+	const attacker = speakerActorOf(card);
 	return actorRules<DefendOptionRule>(actor as { rules?: unknown } | null)
 		.filter(
 			(rule) =>
@@ -103,7 +94,7 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 
 /** The unused card reroll of an item for a token, which a Defend option can use. */
 export function cardRerollFor(
-	card: AttackCardLike,
+	card: DefendCardLike,
 	itemUuid: string | null | undefined,
 	tokenUuid: string | null | undefined,
 ): IncomingReactionEntry | null {
@@ -137,7 +128,7 @@ interface ItemRerollRule {
  */
 export function tickCost(
 	rule: DefendOptionRule,
-	card?: AttackCardLike | null,
+	card?: DefendCardLike | null,
 	tokenUuid?: string | null,
 ): RerollCost {
 	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
