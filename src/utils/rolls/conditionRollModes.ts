@@ -1,20 +1,9 @@
-import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type {
+	ConditionCreature,
+	ConditionEffect,
+	ConditionRollMode,
+} from '#types/conditionRollMode.d.ts';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
-
-interface ConditionEffect {
-	statuses?: ReadonlySet<string>;
-	origin?: string | null;
-	disabled?: boolean;
-	_stats?: { createdTime?: number | null } | null;
-}
-
-interface Creature {
-	name?: string | null;
-	uuid?: string | null;
-	getDomain?(): Set<string>;
-	getTargetDomain?(): Set<string>;
-	effects?: Iterable<ConditionEffect>;
-}
 
 type AddLine = (
 	side: ConditionRollMode['side'],
@@ -26,9 +15,9 @@ type AddLine = (
 
 interface ConditionRollInput {
 	kind: 'attack' | 'check';
-	roller: Creature | null | undefined;
+	roller: ConditionCreature | null | undefined;
 	/** The attack's only target; null with no target or two or more, or an area. */
-	target?: Creature | null;
+	target?: ConditionCreature | null;
 	delivery?: AttackDelivery;
 }
 
@@ -68,7 +57,7 @@ const SELF_ROLL_STEPS: Array<[string, number]> = [
  * The uuid of the creature that caused the most recent Taunted, from the
  * effect's origin: an actor, or an item on one. Null when no creature is known.
  */
-function taunterUuid(roller: Creature | null | undefined): string | null {
+function taunterUuid(roller: ConditionCreature | null | undefined): string | null {
 	let latest: ConditionEffect | null = null;
 	for (const effect of roller?.effects ?? []) {
 		if (effect.disabled || !effect.statuses?.has('taunted')) continue;
@@ -80,7 +69,10 @@ function taunterUuid(roller: Creature | null | undefined): string | null {
 }
 
 /** Disadvantage on attacks except against the most recent taunter (Core:409). */
-function tauntedLine(roller: Creature | null | undefined, target: Creature | null | undefined) {
+function tauntedLine(
+	roller: ConditionCreature | null | undefined,
+	target: ConditionCreature | null | undefined,
+) {
 	const taunter = taunterUuid(roller);
 	if (!taunter || !target?.uuid) return { ask: 'taunter' as const };
 	return target.uuid === taunter ? null : {};

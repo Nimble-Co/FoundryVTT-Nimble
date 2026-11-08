@@ -135,14 +135,14 @@ export function createItemActivationConfigDialogState(
 	};
 	const conditionLinesFor = (weapon: { attackType: string } | null) =>
 		attackConditionLines(
-			actor as never,
+			actor,
 			weapon
 				? {
 						...itemSystem.activation,
 						targets: { ...itemSystem.activation?.targets, attackType: weapon.attackType },
 					}
 				: itemSystem.activation,
-			(firstTargetActor ?? null) as never,
+			firstTargetActor ?? null,
 			itemSystem.properties?.selected,
 		);
 	let conditionLines = $state(conditionLinesFor(weapons[0] ?? null));

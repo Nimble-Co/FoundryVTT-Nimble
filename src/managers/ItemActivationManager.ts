@@ -1232,7 +1232,7 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		await endUsedConditions(this.actor as never, this.#usedConditions);
+		await endUsedConditions(this.actor, this.#usedConditions);
 		this.#usedConditions = [];
 		if (this.#heldPlan) await this.#heldPlan.spend();
 		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
@@ -1685,8 +1685,8 @@ class ItemActivationManager {
 		const properties = (this.#item.system as { properties?: { selected?: string[] } }).properties;
 		return conditionRollModes({
 			kind: 'attack',
-			roller: this.actor as never,
-			target: area ? null : ((this.#getSoleTargetToken()?.actor ?? null) as never),
+			roller: this.actor,
+			target: area ? null : (this.#getSoleTargetToken()?.actor ?? null),
 			delivery: conditionDelivery(this.activationData?.targets?.attackType, properties?.selected),
 		}).filter((line) => line.on);
 	}

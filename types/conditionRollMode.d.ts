@@ -22,3 +22,21 @@ export interface ConditionRollMode {
  * slider can take part of a value, and an untick gives back only what the tick took.
  */
 export type AppliedTicks = Record<string, number>;
+
+/** An effect on a creature, as the condition lines read it. */
+export interface ConditionEffect {
+	statuses?: ReadonlySet<string>;
+	origin?: string | null;
+	disabled?: boolean;
+	_stats?: { createdTime?: number | null } | null;
+}
+
+/** A creature whose conditions change a roll: the one who rolls, or the target. */
+export interface ConditionCreature {
+	name?: string | null;
+	uuid?: string | null;
+	getDomain?(): Set<string>;
+	getTargetDomain?(): Set<string>;
+	effects?: Iterable<ConditionEffect>;
+	toggleStatusEffect?(statusId: string, options: { active: boolean }): Promise<unknown>;
+}

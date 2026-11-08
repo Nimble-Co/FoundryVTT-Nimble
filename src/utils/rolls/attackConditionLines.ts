@@ -1,4 +1,5 @@
-import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type { ConditionCreature, ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type { EffectNode } from '#types/effectTree.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 import { isAttackRoll } from '../heldChange/heldChange.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
@@ -11,19 +12,17 @@ interface WindowActivation {
 	effects?: unknown[];
 }
 
-type Creature = Parameters<typeof conditionRollModes>[0]['roller'];
-
 /**
  * The condition lines of an attack roll. None when the roll is not an
  * attack; no target lines for an area or with no sole target (Core:1403).
  */
 export function attackConditionLines(
-	roller: Creature,
+	roller: ConditionCreature | null | undefined,
 	activation: WindowActivation | null | undefined,
-	soleTarget: Creature,
+	soleTarget: ConditionCreature | null | undefined,
 	properties: readonly string[] = [],
 ): ConditionRollMode[] {
-	const damage = flattenEffectsTree((activation?.effects ?? []) as never).find(
+	const damage = flattenEffectsTree((activation?.effects ?? []) as EffectNode[]).find(
 		(node) => node.type === 'damage',
 	) as { canCrit?: boolean; canMiss?: boolean } | undefined;
 	if (!activation || !isAttackRoll(activation.targets?.attackType, damage)) return [];

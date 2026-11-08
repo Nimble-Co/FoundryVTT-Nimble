@@ -1,3 +1,4 @@
+import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import { DamageRoll } from '../../dice/DamageRoll.js';
@@ -237,7 +238,7 @@ async function rollSingleMinionAttack(params: {
 	member: Combatant.Implementation;
 	targetActor: Parameters<typeof heldChangesForAttack>[0]['target'];
 	/** The attack's only target, whose conditions change the roll mode. */
-	soleTargetActor: unknown;
+	soleTargetActor: ConditionCreature | null;
 	selectionsByMemberId: ReadonlyMap<string, string>;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
@@ -262,9 +263,9 @@ async function rollSingleMinionAttack(params: {
 				? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
 				: {};
 		const conditions = attackConditionLines(
-			resolvedActionContext.actor as never,
-			resolvedActionContext.selectedAction.system?.activation as never,
-			params.soleTargetActor as never,
+			resolvedActionContext.actor,
+			resolvedActionContext.selectedAction.system?.activation,
+			params.soleTargetActor,
 		).filter((line) => line.on);
 		const held = attackHeldPlanOf({
 			attacker: resolvedActionContext.actor as never,
@@ -297,7 +298,7 @@ async function rollSingleMinionAttack(params: {
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
 		await held.spend();
-		await endUsedConditions(resolvedActionContext.actor as never, conditions);
+		await endUsedConditions(resolvedActionContext.actor, conditions);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -510,8 +511,7 @@ async function collectMinionAttackRollData(params: {
 	const unsupportedWarnings = new Set<string>();
 	const rollEntries: MinionGroupAttackRollEntry[] = [];
 	const targetActor = firstTargetActor();
-	const soleTargetActor =
-		(soleTarget(game.user?.targets) as { actor?: unknown } | null)?.actor ?? null;
+	const soleTargetActor = soleTarget(game.user?.targets)?.actor ?? null;
 	for (const member of params.attackMembers) {
 		const rollOutcome = await rollSingleMinionAttack({
 			combat: params.combat,

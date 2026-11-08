@@ -1165,7 +1165,7 @@ class NimbleBaseActor<
 		build: (rollMode: number) => T,
 	): T & { conditionRollModes: ConditionRollMode[] } {
 		const applied = appliedConditionRollModes(
-			conditionRollModes({ kind: 'check', roller: this as never }),
+			conditionRollModes({ kind: 'check', roller: this }),
 			rollMode,
 		);
 		return { ...build(applied.rollMode), conditionRollModes: applied.lines };
