@@ -64,7 +64,7 @@
 		{#each stats as choice, index (choice.stat)}
 			<button
 				bind:this={buttons[index]}
-				class="nimble-reroll-stats__stat"
+				class="nimble-roll-control nimble-reroll-stats__stat"
 				type="button"
 				disabled={sending}
 				onclick={() => onpick(choice.stat)}
@@ -125,36 +125,11 @@
 		&__stat {
 			flex: 1;
 			width: auto;
-			height: auto;
 			min-height: 28px;
-			margin: 0;
 			padding: 0.1875rem 0.25rem;
-			font-family: var(--nimble-primary-font);
 			font-size: var(--nimble-sm-text);
 			font-weight: 800;
 			font-variant-numeric: tabular-nums;
-			line-height: 1.2;
-			color: inherit;
-			background: transparent;
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 3px;
-			box-shadow: none;
-			cursor: pointer;
-
-			&:hover:not(:disabled) {
-				color: inherit;
-				background: var(--nimble-card-border-color);
-			}
-
-			&:focus-visible {
-				outline: 2px solid var(--nimble-dark-text-color);
-				outline-offset: 1px;
-			}
-
-			&:disabled {
-				cursor: default;
-				opacity: 0.6;
-			}
 		}
 	}
 </style>

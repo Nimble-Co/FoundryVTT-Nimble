@@ -1,0 +1,28 @@
+// The bordered buttons that change a roll on a chat card. Each part sets its own size.
+button.nimble-roll-control {
+	height: auto;
+	margin: 0;
+	font-family: var(--nimble-primary-font);
+	line-height: 1.2;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--nimble-input-border-color);
+	border-radius: 3px;
+	box-shadow: none;
+	cursor: pointer;
+
+	&:hover:not(:disabled, [aria-disabled="true"]) {
+		color: inherit;
+		background: var(--nimble-card-border-color);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--nimble-dark-text-color);
+		outline-offset: 1px;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+}

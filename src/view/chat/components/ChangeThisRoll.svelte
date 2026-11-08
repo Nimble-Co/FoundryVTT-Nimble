@@ -22,7 +22,7 @@
 	<div class="nimble-change-roll" onkeydown={control.onKeydown}>
 		<button
 			bind:this={control.elements.toggle}
-			class="nimble-change-roll__button"
+			class="nimble-roll-control nimble-change-roll__button"
 			type="button"
 			aria-expanded={control.open}
 			aria-controls={control.open ? listId : undefined}
@@ -62,7 +62,7 @@
 							{@const row = text.row(entry, blockedReason)}
 							{@const pickingHere = picking?.entry.id === entry.id ? picking : null}
 							<button
-								class="nimble-change-roll__row"
+								class="nimble-roll-control nimble-change-roll__row"
 								class:nimble-change-roll__row--blocked={!!blockedReason}
 								type="button"
 								data-entry-id={entry.id}
@@ -122,32 +122,7 @@
 		&__button,
 		&__row {
 			width: 100%;
-			height: auto;
 			min-height: 28px;
-			margin: 0;
-			font-family: var(--nimble-primary-font);
-			line-height: 1.2;
-			color: inherit;
-			background: transparent;
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 3px;
-			box-shadow: none;
-			cursor: pointer;
-
-			&:hover:not(:disabled, [aria-disabled='true']) {
-				color: inherit;
-				background: var(--nimble-card-border-color);
-			}
-
-			&:focus-visible {
-				outline: 2px solid var(--nimble-dark-text-color);
-				outline-offset: 1px;
-			}
-
-			&:disabled {
-				cursor: default;
-				opacity: 0.6;
-			}
 		}
 
 		&__button {
