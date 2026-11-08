@@ -150,7 +150,7 @@
 			cursor: pointer;
 
 			&:focus-visible {
-				outline: 2px solid var(--nimble-input-border-color);
+				outline: 2px solid var(--nimble-control-border-color);
 				outline-offset: 1px;
 			}
 		}
@@ -184,11 +184,11 @@
 			&:hover:not(:disabled),
 			&:focus-visible {
 				background: var(--nimble-card-background-color);
-				border-color: var(--nimble-input-border-color);
+				border-color: var(--nimble-control-border-color);
 			}
 
 			&:focus-visible {
-				outline: 2px solid var(--nimble-input-border-color);
+				outline: 2px solid var(--nimble-control-border-color);
 				outline-offset: 1px;
 			}
 
@@ -199,8 +199,8 @@
 
 		&__die--picked {
 			background: var(--nimble-card-background-color);
-			border-color: var(--nimble-input-border-color);
-			box-shadow: inset 0 0 0 1px var(--nimble-input-border-color);
+			border-color: var(--nimble-control-border-color);
+			box-shadow: inset 0 0 0 1px var(--nimble-control-border-color);
 		}
 
 		&__several {

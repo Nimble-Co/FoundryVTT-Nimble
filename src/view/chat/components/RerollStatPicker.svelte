@@ -112,7 +112,7 @@
 			cursor: pointer;
 
 			&:focus-visible {
-				outline: 2px solid var(--nimble-input-border-color);
+				outline: 2px solid var(--nimble-control-border-color);
 				outline-offset: 1px;
 			}
 		}
