@@ -6,6 +6,7 @@ the damage the hero takes with it.
 <script lang="ts">
 	import type { DefendDialogProps } from '#types/components/DefendDialog.d.ts';
 	import { untrack } from 'svelte';
+	import { ticksOfRow } from '#utils/defend/ticksOfRow.js';
 	import localize from '#utils/localize.js';
 	import RollWindow from './components/RollWindow.svelte';
 
@@ -29,7 +30,7 @@ the damage the hero takes with it.
 			optionId: picked.id,
 			defend: picked.defend,
 			interposeEntryId: picked.interposeEntryId,
-			ticks: tickIds.filter((id) => rowTicks.includes(id)),
+			ticks: ticksOfRow(picked, tickIds),
 		});
 	}
 </script>

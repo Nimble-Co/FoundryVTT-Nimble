@@ -37,6 +37,7 @@ import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRe
 import { requestDefend } from './defendRequests.js';
 import { extraDefendUsed, type WholeRoundDefend, wholeRoundDefendOf } from './defendRound.js';
 import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
+import { ticksOfRow } from './ticksOfRow.js';
 
 const TEXT = 'NIMBLE.chat.defend';
 
@@ -348,9 +349,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				const option = options.find((each) => each.id === optionId);
 				if (!row || !option) return null;
 				if (!option.defend) return option.takes;
-				const picked = tickIds
-					.filter((id) => option.tickIds.includes(id))
-					.flatMap((id) => ticks.get(id) ?? []);
+				const picked = ticksOfRow(option, tickIds).flatMap((id) => ticks.get(id) ?? []);
 				return damageAfter(card, row.token, armor, effectOf(row, picked));
 			},
 		},
@@ -568,9 +567,7 @@ export async function openDefendWindow(
 	const option = choice ? data.options.find((each) => each.id === choice.optionId) : undefined;
 	if (!choice || !row || !option || (!option.defend && !option.interposeEntryId)) return false;
 
-	const tickPicks = choice.ticks
-		.filter((id) => option.tickIds.includes(id))
-		.flatMap((id) => plan.ticks.get(id) ?? []);
+	const tickPicks = ticksOfRow(option, choice.ticks).flatMap((id) => plan.ticks.get(id) ?? []);
 	const combat = (game.combat ?? null) as ReactionCombat | null;
 	const entry = option.interposeEntryId
 		? reactor.interposes.find((each) => each.id === option.interposeEntryId)
