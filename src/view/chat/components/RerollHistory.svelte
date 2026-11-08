@@ -9,6 +9,7 @@
 	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
+	import { createTagNotes } from './tagNotes.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
 
 	const OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
@@ -46,25 +47,52 @@
 		outcomeTags = [],
 	}: RerollHistoryProps = $props();
 
-	const keepChoice = createRerollHistoryState(
-		getContext<NimbleChatMessage>('messageDocument'),
-		() => ({ pendingKeep, held }),
-	);
+	const message = getContext<NimbleChatMessage>('messageDocument');
+	const keepChoice = createRerollHistoryState(message, () => ({ pendingKeep, held }));
+	const tagNotes = createTagNotes(message?.id ?? '');
 </script>
+
+{#snippet tagButton(
+	row: string,
+	id: string,
+	tag: { label: string; tooltip: string },
+	icon: string,
+	look: { off?: boolean; none?: boolean; crit?: boolean },
+)}
+	<button
+		type="button"
+		class="nimble-reroll-tag"
+		class:nimble-reroll-tag--off={look.off}
+		class:nimble-reroll-tag--none={look.none}
+		class:nimble-reroll-tag--crit={look.crit}
+		aria-expanded={tagNotes.openTag(row) === id}
+		data-tooltip={tag.tooltip}
+		onclick={() => tagNotes.toggle(row, id)}
+	>
+		<i class="fa-solid {icon}" aria-hidden="true"></i>
+		<span>{tag.label}</span>
+	</button>
+{/snippet}
+
+{#snippet tagNote(row: string, tags: { id: string; tooltip: string }[])}
+	{@const open = tags.find((tag) => tag.id === tagNotes.openTag(row))}
+	{#if open}
+		<p class="nimble-roll-changes__note">{open.tooltip}</p>
+	{/if}
+{/snippet}
 
 {#if outcomeTags.length > 0}
 	<div class="nimble-roll-changes__tags nimble-roll-changes__tags--outcome">
 		{#each outcomeTags as tag (tag.label)}
-			<span
-				class="nimble-reroll-tag"
-				class:nimble-reroll-tag--none={tag.kind === 'noOutcome'}
-				class:nimble-reroll-tag--crit={tag.kind === 'crit'}
-				data-tooltip={tag.tooltip}
-			>
-				<i class="fa-solid {OUTCOME_TAG_ICONS[tag.kind]}" aria-hidden="true"></i>
-				<span>{tag.label}</span>
-			</span>
+			{@render tagButton('outcome', tag.label, tag, OUTCOME_TAG_ICONS[tag.kind], {
+				none: tag.kind === 'noOutcome',
+				crit: tag.kind === 'crit',
+			})}
 		{/each}
+		{@render tagNote(
+			'outcome',
+			outcomeTags.map((tag) => ({ id: tag.label, tooltip: tag.tooltip })),
+		)}
 	</div>
 {/if}
 
@@ -100,22 +128,25 @@
 			<span aria-hidden="true">{bonus.label}</span>
 			<span class="nimble-roll-changes__spoken">{sentence}</span>
 		</p>
-		<span
-			class="nimble-reroll-tag"
-			class:nimble-reroll-tag--none={!!bonusNotAdded}
-			aria-hidden="true"
-		>
-			<i class="fa-solid {bonusNotAdded ? 'fa-ban' : 'fa-dice-d6'}"></i>
-			<span>
-				{localize(
+		{@render tagButton(
+			`bonus-${index}`,
+			'bonus',
+			{
+				label: localize(
 					bonusNotAdded
 						? 'NIMBLE.chat.primaryDieBonus.notAdded'
 						: 'NIMBLE.chat.primaryDieBonus.tag',
 					{ value },
-				)}
-			</span>
-		</span>
+				),
+				tooltip: sentence,
+			},
+			bonusNotAdded ? 'fa-ban' : 'fa-dice-d6',
+			{ none: !!bonusNotAdded },
+		)}
 	</div>
+	{#if tagNotes.openTag(`bonus-${index}`)}
+		<p class="nimble-roll-changes__note nimble-roll-changes__note--line">{sentence}</p>
+	{/if}
 {/each}
 
 {#each legacyLines as line (line.id)}
@@ -160,39 +191,22 @@
 		{#if line.tags.length > 0}
 			<div class="nimble-roll-changes__tags">
 				{#each line.tags as tag (tag.kind + tag.label)}
-					{#if tag.kind === 'tempHp' && line.tempHpNote}
-						{@const open = keepChoice.tempHpNoteOpen(key)}
-						<button
-							type="button"
-							class="nimble-reroll-tag nimble-reroll-tag--button"
-							class:nimble-reroll-tag--off={tag.off}
-							aria-expanded={open}
-							aria-label={`${tag.label}. ${localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpToggle')}`}
-							data-tooltip={tag.tooltip}
-							onclick={() => keepChoice.toggleTempHpNote(key)}
-						>
-							<i class="fa-solid {tag.off ? 'fa-hand' : TAG_ICONS[tag.kind]}" aria-hidden="true"
-							></i>
-							<span>{tag.label}</span>
-							<i class="fa-solid {open ? 'fa-angle-up' : 'fa-angle-down'}" aria-hidden="true"></i>
-						</button>
-					{:else}
-						<span
-							class="nimble-reroll-tag"
-							class:nimble-reroll-tag--off={tag.off}
-							class:nimble-reroll-tag--none={tag.kind === 'noAction'}
-							class:nimble-reroll-tag--crit={tag.kind === 'crit' && !tag.off}
-							data-tooltip={tag.tooltip}
-						>
-							<i class="fa-solid {tag.off ? 'fa-hand' : TAG_ICONS[tag.kind]}" aria-hidden="true"
-							></i>
-							<span>{tag.label}</span>
-						</span>
-					{/if}
+					{@render tagButton(
+						`line-${key}`,
+						tag.kind + tag.label,
+						tag,
+						tag.off ? 'fa-hand' : TAG_ICONS[tag.kind],
+						{
+							off: tag.off,
+							none: tag.kind === 'noAction',
+							crit: tag.kind === 'crit' && !tag.off,
+						},
+					)}
 				{/each}
-				{#if line.tempHpNote && keepChoice.tempHpNoteOpen(key)}
-					<p class="nimble-roll-changes__note">{line.tempHpNote}</p>
-				{/if}
+				{@render tagNote(
+					`line-${key}`,
+					line.tags.map((tag) => ({ id: tag.kind + tag.label, tooltip: tag.tooltip })),
+				)}
 				{#if line.offNote}
 					<p class="nimble-roll-changes__note">
 						<i class="fa-solid fa-hand" aria-hidden="true"></i>
@@ -300,6 +314,10 @@
 				margin-right: 0.25rem;
 				font-size: 0.75em;
 			}
+
+			&--line {
+				margin-left: calc(1em + 0.375rem);
+			}
 		}
 
 		&__history--reroll {
@@ -387,19 +405,29 @@
 		line-height: 1.4;
 		white-space: nowrap;
 		color: var(--nimble-card-text-color);
+		cursor: pointer;
 
 		> i {
 			font-size: 0.75em;
 			opacity: 0.7;
 		}
 
-		&--button {
-			cursor: pointer;
+		&:hover {
+			background: color-mix(in srgb, currentColor 14%, transparent);
+		}
 
-			&:focus-visible {
-				outline: 2px solid var(--nimble-card-text-color);
-				outline-offset: 1px;
-			}
+		&[aria-expanded='true'] {
+			border-color: color-mix(in srgb, currentColor 45%, transparent);
+			background: color-mix(in srgb, currentColor 18%, transparent);
+		}
+
+		&:focus {
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--nimble-card-text-color);
+			outline-offset: 1px;
 		}
 
 		&--crit > i {

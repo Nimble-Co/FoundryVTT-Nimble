@@ -69,7 +69,6 @@ describe('rerollHistoryLines', () => {
 			{
 				title: 'Pocket Sand',
 				tags: [],
-				tempHpNote: null,
 				offNote: null,
 				text: 'Rerolled with Pocket Sand',
 				detail: 'Wounds gained: 1',
@@ -83,7 +82,6 @@ describe('rerollHistoryLines', () => {
 			{
 				title: 'Warding Bond',
 				tags: [],
-				tempHpNote: null,
 				offNote: null,
 				text: 'Rerolled with Warding Bond',
 				detail: 'Used by Bram - Uses left: 2',
@@ -189,6 +187,12 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		]);
 	});
 
+	it('names the source of advantage when the dropped die is unknown', () => {
+		const [line] = lines([record({ changes: [courage] })]);
+
+		expect(line.tags[0].tooltip).toBe('Advantage, from Unfailing Courage.');
+	});
+
 	it('starts an automatic reroll with a tag that names the feature, and says so in the sentence', () => {
 		const [line] = lines([record({ automatic: true, changes: [courage] })]);
 
@@ -202,7 +206,7 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		expect(line.text).toBe('Rerolled automatically by Pocket Sand');
 	});
 
-	it('gives an action tag, a temp HP tag with its count, and the note that lists them', () => {
+	it('gives an action tag and a temp HP tag, each with a sentence that names the source', () => {
 		const [line] = lines([
 			record({
 				grants: [
@@ -215,17 +219,21 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		]);
 
 		expect(line.tags).toEqual([
-			{ kind: 'action', label: 'Wren +1 action', tooltip: 'Fire in my Bones', off: false },
+			{
+				kind: 'action',
+				label: 'Wren +1 action',
+				tooltip: 'Wren +1 action, from Fire in my Bones.',
+				off: false,
+			},
 			{
 				kind: 'tempHp',
 				label: '3 temp HP to 3 creatures',
-				tooltip: 'Inspiring Presence',
+				tooltip:
+					'3 temp HP to 3 creatures, from Inspiring Presence. Wren, Pip gain 3 temp HP. Tam had 1, now has 3. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
 				off: false,
 			},
 		]);
-		expect(line.tempHpNote).toBe(
-			'Wren, Pip gain 3 temp HP. Tam had 1, now has 3. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
-		);
+		expect(line).not.toHaveProperty('tempHpNote');
 		expect(line.offNote).toBeNull();
 	});
 
@@ -257,8 +265,11 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		])[0];
 
 		expect(one.tags[0].label).toBe('3 temp HP to Pip');
-		expect(one.tempHpNote).toBe('Pip gains 3 temp HP.');
+		expect(one.tags[0].tooltip).toBe('3 temp HP to Pip, from Inspiring Presence.');
 		expect(none.tags[0].label).toBe('3 temp HP: nobody gains it');
+		expect(none.tags[0].tooltip).toBe(
+			'3 temp HP: nobody gains it, from Inspiring Presence. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
+		);
 	});
 
 	it('marks the temp HP and action tags off, with one note, when Feature Effects is off', () => {

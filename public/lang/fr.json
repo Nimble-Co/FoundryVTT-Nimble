@@ -1187,8 +1187,7 @@
 					"tempHpMany": "{amount} temp HP to {count} creatures",
 					"tempHpNobody": "{amount} temp HP: nobody gains it",
 					"tempHpOne": "{amount} temp HP to {name}",
-					"tempHpReplaced": "{name} had {had}, now has {amount}.",
-					"tempHpToggle": "Show who gained temp HP"
+					"tempHpReplaced": "{name} had {had}, now has {amount}."
 				},
 				"rerollUsedBy": "Used by {name}",
 				"rerollUsesLeft": "Uses left: {count}",

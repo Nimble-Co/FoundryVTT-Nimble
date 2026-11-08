@@ -14,7 +14,7 @@ When you attack, the whole damage pool is rolled at once, but only one die decid
 - **Miss:** the primary die normally rolls a natural 1. Some targets can raise this threshold, causing other low primary-die results to miss too. The attack misses no matter what the bonus dice rolled.
 - **Advantage and disadvantage:** each level of advantage adds one extra die to the pool, and the lowest die is dropped before anything else is decided (disadvantage drops the highest instead). Advantage and disadvantage cancel each other out one-for-one, and only the leftover applies.
 - **Area attacks** (anything with a template shape, such as a cone, line, or circle) can neither crit nor miss: one shared roll applies to everyone in the area.
-- **Attacks on 2 or more targets** can neither crit nor miss either. One roll applies to all the targets, and the targets' own reactions do not apply. The card shows "No miss: 2 targets" when the die shows a miss face, and "No crit: 2 targets" when it shows its max. Other rolls show nothing.
+- **Attacks on 2 or more targets** can neither crit nor miss either. One roll applies to all the targets, and the targets' own reactions do not apply. The card shows "No miss: 2 targets" when the die shows a miss face, and "No crit: 2 targets" when it shows its max. Other rolls show nothing. Hover or click the tag to read why.
 - **No proficiency, no crit.** If a weapon requires a proficiency you don't have, you can still use it, but it won't crit. Minions never crit.
 
 Because advantage is resolved first, a natural 1 that gets dropped by advantage does *not* cause a miss. The primary die is whichever die survives the drop.
@@ -53,7 +53,7 @@ With advantage or disadvantage, the dice are rolled and dropped first. The set r
 
 When an ability rerolls the attack, the new roll does not keep **Set Primary Die Result**: its primary die is rolled again. It keeps **Add to Primary Die Result**, and the number is added to the new face.
 
-Some features add to the Primary Die of your attacks without the roll window. Such a feature adds its number in the same way as **Add to Primary Die Result**, and it adds to the number you type there. It can apply only to melee or only to ranged attacks, or only while a condition is true. A reroll keeps it. An area attack does not get it. The card shows one line at the roll for each of these features, with the feature's name and a tag such as **+1 to Primary Die**. Hover the line to read it as a sentence, for example "Unerring Judgment: +1 to the Primary Die".
+Some features add to the Primary Die of your attacks without the roll window. Such a feature adds its number in the same way as **Add to Primary Die Result**, and it adds to the number you type there. It can apply only to melee or only to ranged attacks, or only while a condition is true. A reroll keeps it. An area attack does not get it. The card shows one line at the roll for each of these features, with the feature's name and a tag such as **+1 to Primary Die**. Hover the line, or click the tag, to read it as a sentence, for example "Unerring Judgment: +1 to the Primary Die".
 
 Some features add a tick to the window:
 
@@ -174,12 +174,12 @@ Some features let a player keep the new result or the old one. After the dice ro
 
 ### Features that add to a reroll
 
-Some features add to another feature's reroll, such as the Songweaver's Unfailing Courage, Heroic Ballad, Fire in my Bones and Inspiring Presence on Songweaver's Inspiration. What they did shows as small tags under the reroll line. Hover a tag to see the feature.
+Some features add to another feature's reroll, such as the Songweaver's Unfailing Courage, Heroic Ballad, Fire in my Bones and Inspiring Presence on Songweaver's Inspiration. What they did shows as small tags under the reroll line. Hover a tag to read what it did as a sentence, with the feature that did it. On a touch screen, or with the keyboard, click the tag: the sentence opens under the tags, and a second click closes it. One sentence of a line shows at a time.
 
-- **Advantage** or **Disadvantage:** the reroll was rolled with it. On a reroll of one die, that die is rolled two times and the higher (or lower) stays. The tag's tooltip tells both results.
+- **Advantage** or **Disadvantage:** the reroll was rolled with it. On a reroll of one die, that die is rolled two times and the higher (or lower) stays. The tag's sentence tells both results.
 - **Extra damage,** for example **+3 Heroic Ballad:** added to the attack's damage when its result stands, also when a player keeps the old result. It is part of the total in the roll box and on the **Keep** buttons.
 - **Actions,** for example **Wren +1 action:** the one who rolled gains them at once. Only a hero in combat gains actions. Otherwise the tag says why no action was given.
-- **Temp HP,** for example **3 temp HP to 2 creatures** or **3 temp HP to Wren:** the one who rolled and their allies near the feature's owner gain temp HP. Click the tag to see who. Temp HP does not add up, so each creature keeps the larger amount: a creature that already has as much temp HP or more keeps its own. The list tells both amounts, for example "Bram keeps 5, not 3" or "Tam had 1, now has 3". The rules let each creature choose which amount it keeps, so a player who wants the other amount changes it on the sheet. When the owner has no token on the scene, nobody gains temp HP.
+- **Temp HP,** for example **3 temp HP to 2 creatures** or **3 temp HP to Wren:** the one who rolled and their allies near the feature's owner gain temp HP. The tag's sentence tells who. Temp HP does not add up, so each creature keeps the larger amount: a creature that already has as much temp HP or more keeps its own. The sentence tells both amounts, for example "Bram keeps 5, not 3" or "Tam had 1, now has 3". The rules let each creature choose which amount it keeps, so a player who wants the other amount changes it on the sheet. When the owner has no token on the scene, nobody gains temp HP.
 
 - **Cannot fail:** on a save or a check, the new roll succeeds. The history says **Succeeded Instead** with the feature, with no **Remove**. No **Keep** buttons show. On an attack, the reroll line has a **Cannot miss** tag, and the attack hits. It is a crit only when the die makes a crit.
 
