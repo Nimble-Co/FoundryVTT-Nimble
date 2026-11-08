@@ -34,6 +34,14 @@ interface Creature {
 	effects?: Iterable<ConditionEffect>;
 }
 
+type AddLine = (
+	side: ConditionRollMode['side'],
+	condition: string,
+	step: number,
+	name: string,
+	extra?: Partial<ConditionRollMode>,
+) => void;
+
 interface ConditionRollInput {
 	kind: 'attack' | 'check';
 	roller: Creature | null | undefined;
@@ -55,6 +63,12 @@ function targetSteps(delivery: AttackDelivery | undefined): Array<[string, numbe
 		['prone', prone],
 		['invisible', -1],
 	];
+}
+
+/** An attack that is neither melee nor ranged: both Prone lines, off, for the table to pick. */
+function proneWithNoDelivery(add: AddLine, name: string): void {
+	add('target', 'prone', 1, name, { key: 'target:prone:melee', on: false });
+	add('target', 'prone', -1, name, { key: 'target:prone:ranged', on: false });
 }
 
 /** The roller's own conditions (Core:389-421, GM:1906). Poisoned and Frightened change every roll. */
@@ -95,13 +109,8 @@ function conditionRollModes(input: ConditionRollInput): ConditionRollMode[] {
 	const lines: ConditionRollMode[] = [];
 	const target = input.kind === 'attack' ? input.target : null;
 	const targetTags = target?.getTargetDomain?.() ?? new Set<string>();
-	const add = (
-		side: ConditionRollMode['side'],
-		condition: string,
-		step: number,
-		name: string,
-		extra: Partial<ConditionRollMode> = {},
-	) => lines.push({ key: `${side}:${condition}`, condition, side, step, on: true, name, ...extra });
+	const add: AddLine = (side, condition, step, name, extra = {}) =>
+		lines.push({ key: `${side}:${condition}`, condition, side, step, on: true, name, ...extra });
 
 	const rollerTags = input.roller?.getDomain?.() ?? new Set<string>();
 	const rollerName = input.roller?.name ?? '';
@@ -125,10 +134,11 @@ function conditionRollModes(input: ConditionRollInput): ConditionRollMode[] {
 		add('self', 'despair', -1, rollerName, { ends: true });
 	}
 
+	const targetName = target?.name ?? '';
 	for (const [condition, step] of targetSteps(input.delivery)) {
-		if (step !== 0 && targetTags.has(`target:${condition}`)) {
-			add('target', condition, step, target?.name ?? '');
-		}
+		if (!targetTags.has(`target:${condition}`)) continue;
+		if (step !== 0) add('target', condition, step, targetName);
+		else proneWithNoDelivery(add, targetName);
 	}
 	return lines;
 }

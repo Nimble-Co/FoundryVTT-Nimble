@@ -60,16 +60,27 @@ describe('conditionRollModes', () => {
 		]);
 	});
 
-	it('gives a ranged attack on a Prone target disadvantage, and an attack with no delivery nothing', () => {
+	it('gives a ranged attack on a Prone target disadvantage', () => {
 		const target = creature('Goblin', ['prone']);
 		const roller = creature('Kael');
 
 		expect(
 			steps(conditionRollModes({ kind: 'attack', roller, target, delivery: 'ranged' })),
 		).toEqual(['target:prone:-1']);
-		expect(steps(conditionRollModes({ kind: 'attack', roller, target, delivery: null }))).toEqual(
-			[],
-		);
+	});
+
+	it('offers both Prone lines, off, when the attack is neither melee nor ranged', () => {
+		const lines = conditionRollModes({
+			kind: 'attack',
+			roller: creature('Kael'),
+			target: creature('Goblin', ['prone']),
+			delivery: null,
+		});
+
+		expect(lines.map((line) => [line.key, line.step, line.on])).toEqual([
+			['target:prone:melee', 1, false],
+			['target:prone:ranged', -1, false],
+		]);
 	});
 
 	it('reads no target condition with no sole target, and none on a check', () => {
