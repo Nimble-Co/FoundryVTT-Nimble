@@ -81,7 +81,6 @@ async function writeDefend(request: DefendRequest, userId: string): Promise<stri
 		options: request.options,
 		reminders: request.reminders,
 		attackerConditions: request.attackerConditions,
-		conditionsEndOnAttackerTurn: request.conditionsEndOnAttackerTurn,
 		way: request.way,
 	};
 	await card.update({
@@ -114,11 +113,10 @@ async function conditionAttacker(card: DefendCard, record: DefendRecord): Promis
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	const source = fromUuidSync(record.actorUuid) as Actor.Implementation | null;
 	const start = attackerTurnStart(card);
-	for (const condition of record.attackerConditions) {
-		const endsOnTheirTurn = record.conditionsEndOnAttackerTurn.includes(condition);
+	for (const { condition, endsOnAttackerTurn } of record.attackerConditions) {
 		await applyConditionToActor(attacker as never, condition, {
 			sourceActor: (source ?? undefined) as never,
-			...(endsOnTheirTurn ? { duration: { rounds: 1 }, ...(start ? { start } : {}) } : {}),
+			...(endsOnAttackerTurn ? { duration: { rounds: 1 }, ...(start ? { start } : {}) } : {}),
 		});
 	}
 }

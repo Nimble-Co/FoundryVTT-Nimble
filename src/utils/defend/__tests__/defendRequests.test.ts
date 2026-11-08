@@ -78,7 +78,6 @@ function request(fields: Record<string, unknown> = {}) {
 		options: [],
 		reminders: [],
 		attackerConditions: [],
-		conditionsEndOnAttackerTurn: [],
 		way: 'action' as const,
 		wholeRound: false,
 		...fields,
@@ -117,7 +116,7 @@ describe('Defend options on the card', () => {
 				armorBonus: 2,
 				options: [paidUse],
 				reminders: ['Pocket Sand: reroll.'],
-				attackerConditions: ['blinded'],
+				attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }],
 			}),
 		);
 
@@ -126,19 +125,21 @@ describe('Defend options on the card', () => {
 			outcome: 'halve',
 			armorBonus: 2,
 			reminders: ['Pocket Sand: reroll.'],
-			attackerConditions: ['blinded'],
+			attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }],
 		});
 	});
 
 	it('puts the option condition on the attacker', async () => {
-		await requestDefend(request({ attackerConditions: ['blinded'] }));
+		await requestDefend(
+			request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }] }),
+		);
 
 		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', { sourceActor: pip });
 	});
 
 	it('ends a condition at the start of the attacker next turn when the option says so', async () => {
 		await requestDefend(
-			request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+			request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
 		);
 
 		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', {
@@ -166,7 +167,7 @@ describe('Defend options on the card', () => {
 			(globalThis as unknown as Globals).game.combat = combat(turns, turn);
 			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
 			await requestDefend(
-				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+				request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
 			);
 			return applyCondition.mock.calls[0]?.[2];
 		}
@@ -192,7 +193,7 @@ describe('Defend options on the card', () => {
 			};
 			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
 			await requestDefend(
-				request({ attackerConditions: ['blinded'], conditionsEndOnAttackerTurn: ['blinded'] }),
+				request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
 			);
 			expect(applyCondition.mock.calls[0]?.[2]).toMatchObject({
 				start: { combatant: 'c-ogre', round: 2 },

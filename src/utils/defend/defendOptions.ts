@@ -8,7 +8,7 @@ import type { IncomingReactionEntry } from '../incomingReactions/incomingReactio
 import localize from '../localize.js';
 import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
 import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
-import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
+import type { AttackerCondition, DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
 const RULE_TYPE = 'defendOption';
 
@@ -29,8 +29,7 @@ export interface DefendOptionEffect {
 	outcome: DefendOutcome;
 	armorBonus: number;
 	reminders: string[];
-	attackerConditions: string[];
-	conditionsEndOnAttackerTurn: string[];
+	attackerConditions: AttackerCondition[];
 	wholeRound: boolean;
 }
 
@@ -64,6 +63,23 @@ export function defendOptionsOf(
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));
 }
 
+/** Each condition once; it ends on the attacker's turn when one of its options says so. */
+function attackerConditionsOf(rules: readonly DefendOptionRule[]): AttackerCondition[] {
+	const endsOnTurn = new Map<string, boolean>();
+	for (const rule of rules) {
+		if (!rule.attackerCondition) continue;
+		const ends = rule.attackerConditionEnds === 'attackerTurn';
+		endsOnTurn.set(
+			rule.attackerCondition,
+			(endsOnTurn.get(rule.attackerCondition) ?? false) || ends,
+		);
+	}
+	return [...endsOnTurn].map(([condition, endsOnAttackerTurn]) => ({
+		condition,
+		endsOnAttackerTurn,
+	}));
+}
+
 const OUTCOME_ORDER: readonly DefendOutcome[] = ['miss', 'noDamage', 'halve', 'none'];
 
 /**
@@ -80,16 +96,7 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 			const text = (rule.reminder ?? '').trim();
 			return text ? [`${ruleLabel(rule)}: ${text}`] : [];
 		}),
-		attackerConditions: [
-			...new Set(rules.map((rule) => rule.attackerCondition).filter((id) => !!id)),
-		],
-		conditionsEndOnAttackerTurn: [
-			...new Set(
-				rules
-					.filter((rule) => rule.attackerCondition && rule.attackerConditionEnds === 'attackerTurn')
-					.map((rule) => rule.attackerCondition),
-			),
-		],
+		attackerConditions: attackerConditionsOf(rules),
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};
 }

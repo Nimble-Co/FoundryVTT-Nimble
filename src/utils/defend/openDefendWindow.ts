@@ -125,7 +125,6 @@ function effectOf(
 			armorBonus: row.whole.armorBonus,
 			reminders: [],
 			attackerConditions: [],
-			conditionsEndOnAttackerTurn: [],
 			wholeRound: false,
 		};
 	}
@@ -671,7 +670,6 @@ export async function openDefendWindow(
 		options: uses,
 		reminders: effect.reminders,
 		attackerConditions: effect.attackerConditions,
-		conditionsEndOnAttackerTurn: effect.conditionsEndOnAttackerTurn,
 		way: row.way,
 		wholeRound: effect.wholeRound,
 	});

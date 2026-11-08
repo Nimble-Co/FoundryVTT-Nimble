@@ -17,6 +17,13 @@ export interface DefendOptionUse {
 	paid: PaidRerollCost | null;
 }
 
+/** A condition the GM puts on the attacker of a Defended attack. */
+export interface AttackerCondition {
+	condition: string;
+	/** It ends at the start of the attacker's next turn. */
+	endsOnAttackerTurn: boolean;
+}
+
 /** One hero's Defend against an attack card, as the card stores it. */
 export interface DefendRecord {
 	id: string;
@@ -41,9 +48,7 @@ export interface DefendRecord {
 	/** Lines for the table: what the hero may do now. */
 	reminders: string[];
 	/** The GM puts these conditions on the attacker. */
-	attackerConditions: string[];
-	/** Of those, the ones that end at the start of the attacker's next turn. */
-	conditionsEndOnAttackerTurn: string[];
+	attackerConditions: AttackerCondition[];
 	/** How the Defend was paid. */
 	way: DefendRecordWay;
 }
@@ -84,10 +89,12 @@ export function defendsOf(system: unknown): DefendRecord[] {
 			? record.reminders.filter((line) => typeof line === 'string')
 			: [],
 		attackerConditions: Array.isArray(record.attackerConditions)
-			? record.attackerConditions.filter((id) => typeof id === 'string')
-			: [],
-		conditionsEndOnAttackerTurn: Array.isArray(record.conditionsEndOnAttackerTurn)
-			? record.conditionsEndOnAttackerTurn.filter((id) => typeof id === 'string')
+			? record.attackerConditions
+					.filter((each) => typeof each?.condition === 'string')
+					.map((each) => ({
+						condition: each.condition,
+						endsOnAttackerTurn: each.endsOnAttackerTurn === true,
+					}))
 			: [],
 		way: DEFEND_RECORD_WAYS.includes(record.way) ? record.way : 'action',
 	}));

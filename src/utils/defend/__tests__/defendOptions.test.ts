@@ -74,7 +74,9 @@ describe('defendOptionEffect', () => {
 		] as unknown as DefendRules);
 		expect(effect.armorBonus).toBe(6);
 		expect(effect.reminders).toEqual(['Decoy: Move half your speed.']);
-		expect(effect.attackerConditions).toEqual(['blinded']);
+		expect(effect.attackerConditions).toEqual([
+			{ condition: 'blinded', endsOnAttackerTurn: false },
+		]);
 		expect(effect.wholeRound).toBe(true);
 	});
 
@@ -83,8 +85,10 @@ describe('defendOptionEffect', () => {
 			rule({ attackerCondition: 'blinded', attackerConditionEnds: 'attackerTurn' }),
 			rule({ attackerCondition: 'frightened' }),
 		] as unknown as DefendRules);
-		expect(effect.attackerConditions).toEqual(['blinded', 'frightened']);
-		expect(effect.conditionsEndOnAttackerTurn).toEqual(['blinded']);
+		expect(effect.attackerConditions).toEqual([
+			{ condition: 'blinded', endsOnAttackerTurn: true },
+			{ condition: 'frightened', endsOnAttackerTurn: false },
+		]);
 	});
 });
 
