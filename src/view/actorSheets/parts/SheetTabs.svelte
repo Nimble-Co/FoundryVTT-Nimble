@@ -48,8 +48,10 @@ The rail and the strip sit on the dark chrome (`nimble-chrome`).
 	aria-label={label ?? localize('NIMBLE.actorSheet.parts.sheetTabs.label')}
 >
 	{#each tabs as t (t.id)}
+		<!-- form="": not a control of the sheet form, so Foundry does not turn the tab off in a read-only sheet -->
 		<button
 			type="button"
+			form=""
 			role="tab"
 			class="nimble-u-reset-button t"
 			aria-selected={t.id === value}

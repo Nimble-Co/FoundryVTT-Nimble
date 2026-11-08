@@ -28,7 +28,7 @@ Spell sheets have no Rules tab. Passive bonuses belong on features and objects, 
 
 On the **Configuration** tab:
 
-- **Spell Properties**: toggle any of **Concentration**, **Range**, **Reach**, **Secret Spell**, and **Utility**. Selecting Range or Reach reveals the matching distance configuration. Marking a spell as **Utility** hides the tier and scaling sections entirely, because utility spells sit outside the tier system. Ticking **Concentration** is all it takes to make casting the spell apply the [Concentration condition](../playing/conditions.md#concentration) to the caster. Don't add a condition effect for it as well.
+- **Spell Properties**: toggle any of **Concentration**, **Range**, **Reach**, **Secret Spell**, and **Utility**. Selecting Range or Reach reveals the matching distance configuration. Marking a spell as **Utility** hides the tier and scaling sections entirely, because utility spells sit outside the tier system. Selecting **Concentration** is all it takes to make casting the spell apply the [Concentration condition](../playing/conditions.md#concentration) to the caster. Don't add a condition effect for it as well.
 - **Spell Tier**: **Cantrip** or **Tier 1** through **Tier 9**.
 - **Spell School**: **Fire**, **Ice**, **Lightning**, **Necrotic**, **Radiant**, or **Wind**, each with its icon.
 
@@ -49,7 +49,7 @@ The Configuration tab has a small code button in its top corner that swaps the f
 The spell's effect is a standard activation. For Emberlance:
 
 1. On **Activation → Core**, set the cost to 1 **Action**.
-2. On **Activation → Effects**, add a **Damage** entry: formula `2d8`, damage type **Fire**, with **Can Miss** and **Can Crit** ticked, and a **Damage Outcome** of Full Damage under **On Hit**.
+2. On **Activation → Effects**, add a **Damage** entry: formula `2d8`, damage type **Fire**, with **Can Miss** and **Can Crit** on, and a **Damage Outcome** of Full Damage under **On Hit**.
 
 Anything an item activation can do, a spell can do: saving throws with half-damage outcomes, conditions, templates for area spells, notes. All of it is covered on [Item Activations & Effects](activations.md). Configure it there, and it just works when the spell is cast.
 

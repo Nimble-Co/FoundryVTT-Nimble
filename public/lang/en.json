@@ -1025,6 +1025,16 @@
 			"tooltipHeading": "Ancestry Bonus",
 			"noDescriptionAvailable": "No description available."
 		},
+		"itemNamePlaceholder": {
+			"ancestry": "Ancestry Name",
+			"background": "Background Name",
+			"boon": "Boon Name",
+			"class": "Class Name",
+			"feature": "Feature Name",
+			"object": "Object Name",
+			"spell": "Spell Name",
+			"subclass": "Subclass Name"
+		},
 		"ancestryBonusSheet": {
 			"descriptionTab": "Description",
 			"configTab": "Config",

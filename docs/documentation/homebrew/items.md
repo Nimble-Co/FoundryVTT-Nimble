@@ -22,7 +22,7 @@ The item sheet opens with five tabs:
 - **Rules**: passive effects the item applies just by being carried and equipped. See [Rules Builder Basics](../rules-builder/index.md).
 - **Macro**: an advanced scripting slot; see [Macros](../gm/macros.md).
 
-![A freshly created Object item, with the five tab icons visible on the sheet edge](/images/documentation/fresh-object-item.png)
+![A freshly created Object item, with the five tabs visible under the name](/images/documentation/fresh-object-item.png)
 
 ## Step 2: Choose the kind of object
 
@@ -53,7 +53,7 @@ Below the object type you will find fields shared by every kind:
 
 ## Containers
 
-A **Container** section sits below the shared fields. Tick **This Object Is A Container** and the
+A **Container** section sits below the shared fields. Turn on **This Object Is A Container** and the
 object can hold others: boxes, chests, pouches, backpacks, bags, quivers, saddlebags. Players drag
 inventory items onto its row on the character sheet and the contents appear nested under it.
 
@@ -106,7 +106,7 @@ magical bags are the kind of 5th edition item people most often bring across:
 | Homebrew bag of holding or portable hole | Ignore slot cost | A **Capacity** if you want the bag to have a stated limit |
 | Homebrew handy haversack | Ignore slot cost | **Capacity** for the compartment total |
 | Bandolier that only holds weapons | Normal slot cost | **Allowed Object Types** set to Weapon |
-| Harness worn over armor | Whatever you decide it grants | **Only Apply While Equipped** ticked |
+| Harness worn over armor | Whatever you decide it grants | **Only Apply While Equipped** on |
 
 A homebrew bag of holding is the shortest worked example: leave the bag itself at one inventory
 slot, set **Stored Object Slot Cost** to **Ignore slot cost**, and everything dropped into it stops
@@ -116,7 +116,7 @@ one slot.
 Containers cannot be nested inside one another, so an object that is already stored cannot be
 turned into a container until it is taken out. Deleting a container that still holds something
 asks for confirmation first, then leaves its contents in the inventory, back at their own slot
-cost. Unticking **This Object Is A Container** does the same without asking: the contents come
+cost. Turning off **This Object Is A Container** does the same without asking: the contents come
 back out rather than being left pointing at a bag that no longer holds anything.
 
 Two more consequences worth knowing:
@@ -133,10 +133,10 @@ Two more consequences worth knowing:
 The compendium's **Large Sack** ships as a container on **Normal slot cost**. The rulebook says
 nothing about a sack reducing what you carry, so it organises the sheet without changing the
 numbers. Copies already in a world are not changed; drag a fresh one out of the compendium, or
-tick **This Object Is A Container** on the copy you have.
+turn on **This Object Is A Container** on the copy you have.
 
 **Quiver & Ammo** deliberately does not ship as a container. The rulebook says "In most games,
-there's no need to track ammo. If you have a quiver, you have enough arrows." Tick **This Object
+there's no need to track ammo. If you have a quiver, you have enough arrows." Turn on **This Object
 Is A Container** on your own copy if your table has chosen to count arrows.
 
 ## Step 3: Weapon properties
@@ -145,10 +145,10 @@ With **Weapon** selected, a **Weapon Configuration** section appears with a row 
 
 - **Range** adds a range configuration section.
 - **Reach** adds a reach configuration section.
-- **2-Handed** adds a **Strength Requirement** field, plus a checkbox for "Strength Requirement Overrides 2-Handed" (for weapons a strong character can wield in one hand).
+- **2-Handed** adds a **Strength Requirement** field, plus a switch for "Strength Requirement Overrides 2-Handed" (for weapons a strong character can wield in one hand).
 - **Thrown** adds a **Thrown Range** field.
 
-For the Flaming Longsword, toggle **2-Handed**, set the Strength Requirement to 2, and tick the override box, matching the ordinary longsword from the compendium.
+For the Flaming Longsword, toggle **2-Handed**, set the Strength Requirement to 2, and turn on the override, matching the ordinary longsword from the compendium.
 
 ![The Config tab of a weapon with the Weapon Configuration section expanded, 2-Handed selected, and the Strength Requirement fields visible](/images/documentation/weapon-config-tab.png)
 
@@ -160,7 +160,7 @@ The short version for our sword:
 
 1. On **Activation → Core**, set the Activation Cost to 1 **Action**.
 2. On **Activation → Targets**, describe the targeting (target count, restrictions).
-3. On **Activation → Effects**, add a **Damage** effect: formula `1d8+@strength`, damage type **Slashing**, with **Can Miss** and **Can Crit** ticked.
+3. On **Activation → Effects**, add a **Damage** effect: formula `1d8+@strength`, damage type **Slashing**, with **Can Miss** and **Can Crit** on.
 4. Add a second **Damage** effect for the magic: formula `1d6`, damage type **Fire**.
 
 That second damage entry is the whole "flaming" part. When a player clicks the sword, the chat card shows both the slashing roll and the fire roll, each with its own apply button. The Activation tab has much more depth (nested on-hit effects, saving throws, conditions), and it is covered step by step on [Item Activations & Effects](activations.md).
@@ -231,7 +231,7 @@ The **Description** tab holds three separate texts:
 - **Unidentified**: shown on the item's chat card in place of the real description while the item is flagged as unidentified. The item also carries an "unidentified name" used the same way.
 - **Secret Notes**: GM-only notes.
 
-Whether the description is printed on the chat card at all is controlled by the "Output item description on activation" checkbox on the **Activation → Core** tab.
+Whether the description is printed on the chat card at all is controlled by the "Output item description on activation" switch on the **Activation → Core** tab.
 
 Descriptions support [inline roll buttons](enrichers.md), so you can embed clickable dice and condition labels directly in the text.
 

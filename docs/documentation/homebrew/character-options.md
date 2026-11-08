@@ -22,7 +22,7 @@ The simplest full homebrew loop is an ancestry with one trait. Build **Mirefolk*
 
 1. In the **Items** sidebar, click **Create Item**, name it *Mirefolk*, and pick the **Ancestry** type.
 2. On the **Description** tab, write the trait the way players should read it: "*Marsh-born.* +1 max Wounds."
-3. On the **Config** tab you will find an **Identifier** field and an **Exotic Ancestry** checkbox. Tick the box if this ancestry belongs with the rare options rather than the common ones.
+3. On the **Config** tab you will find an **Identifier** field and an **Exotic Ancestry** switch. Turn it on if this ancestry belongs with the rare options rather than the common ones.
 4. On the **Rules** tab, click **Open Rules Builder** and add a **Maximum Wounds** rule: label it `Marsh-born`, value `1`.
 5. Drop the ancestry onto a test character and watch their maximum wounds go up by one. Drop a different ancestry on the same character and Mirefolk removes itself.
 

@@ -148,13 +148,16 @@
 	}
 
 	.nimble-rules-tab__count {
-		color: var(--color-text-dark-secondary);
-		font-size: var(--nimble-sm-text);
+		font-size: 0.688rem;
+		font-weight: 900;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--nimble-ui-ink-dim);
 	}
 
 	.nimble-rules-tab__empty {
 		padding: 1rem;
-		color: var(--color-text-dark-secondary);
+		color: var(--nimble-ui-ink-muted);
 		text-align: center;
 		font-style: italic;
 	}
@@ -162,7 +165,7 @@
 	.nimble-rules-tab__list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0;
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -182,12 +185,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.375rem;
-		padding: 0.375rem 0.5rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-accent-color);
+		justify-content: center;
+		min-height: 44px;
+		padding: 4px 4px 4px 6px;
 		border-radius: 4px;
-		font-size: var(--nimble-sm-text);
+		font-size: 0.875rem;
+		color: var(--nimble-ui-ink);
 		cursor: grab;
+		transition: background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+		&:hover {
+			background: var(--nimble-ui-hover);
+		}
 
 		&--disabled {
 			opacity: 0.55;
@@ -196,7 +205,7 @@
 
 	.nimble-rules-tab__row-main {
 		display: flex;
-		gap: 0.375rem;
+		gap: 8px;
 		align-items: center;
 	}
 
@@ -239,10 +248,10 @@
 		align-items: center;
 		min-width: 1.5rem;
 		padding: 0 0.25rem;
-		font-size: var(--nimble-xs-text);
-		font-weight: 600;
-		color: var(--color-text-dark-secondary);
-		background: var(--nimble-sheet-background, transparent);
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--nimble-ui-ink-muted);
+		background: var(--nimble-ui-well);
 		border-radius: 999px;
 	}
 
@@ -255,11 +264,14 @@
 	}
 
 	.nimble-rules-tab__type {
-		padding: 0.125rem 0.375rem;
-		font-size: var(--nimble-xs-text);
-		color: var(--color-text-dark-secondary);
-		background: var(--nimble-sheet-background, transparent);
-		border-radius: 4px;
+		padding: 0 5px;
+		font: 800 0.656rem/16px var(--nimble-primary-font);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: var(--nimble-ui-ink-muted);
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+		border-radius: 3px;
 	}
 
 	.nimble-rules-tab__badge {

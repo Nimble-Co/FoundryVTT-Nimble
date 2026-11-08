@@ -68,7 +68,7 @@ The Core tab groups features by these subtypes, and you can drag entries to reor
 Give the Bog Howler three features:
 
 1. **Ambush Instinct** (subtype Feature). Just a description: "The Bog Howler has advantage on checks to hide in swamp terrain."
-2. **Bite** (subtype Action). On its **Activation → Effects** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** ticked, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
+2. **Bite** (subtype Action). On its **Activation → Effects** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** on, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
 3. **Terrifying Howl** (subtype Action). Add a **Save** effect: Will save, with a **Condition** entry (Frightened) under **On Failed Save**.
 
 Activating features works like any item activation: click the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.

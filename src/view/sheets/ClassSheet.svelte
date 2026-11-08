@@ -11,7 +11,8 @@
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
-	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import ItemTabs from './components/ItemTabs.svelte';
+	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 
 	let { item, sheet }: ClassSheetProps = $props();
@@ -434,23 +435,20 @@
 	<ItemRulesTab></ItemRulesTab>
 {/snippet}
 
-<header class="nimble-sheet__header nimble-sheet__header--item">
-	<section class="nimble-icon">
-		<button
-			class="nimble-icon__button nimble-icon__button--bordered nimble-icon__button--small"
-			type="button"
-			aria-label={localize('NIMBLE.prompts.changeClassImage')}
-			data-tooltip="NIMBLE.prompts.changeClassImage"
-			onclick={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
-		>
-			<img class="nimble-icon__image" src={item.reactive.img} alt={item.reactive.name} />
-		</button>
-	</section>
-
-	<ItemHeader {item} placeholder="Class Name" />
+<header class="nimble-sheet__header nimble-window__head">
+	<WindowHead
+		img={item.reactive.img}
+		tileLabel={localize('NIMBLE.prompts.changeClassImage')}
+		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
+	>
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.class')}
+			/>{/snippet}
+	</WindowHead>
 </header>
 
-<PrimaryNavigation bind:currentTab {navigation} />
+<ItemTabs bind:currentTab {navigation} />
 
 {@render currentTab.component()}
 

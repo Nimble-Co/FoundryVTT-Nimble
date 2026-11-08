@@ -1,8 +1,10 @@
 <script lang="ts">
+	import localize from '#utils/localize.js';
 	import { setContext, untrack } from 'svelte';
 	import type { NimbleSpellItem } from '../../documents/item/spell.js';
 	import type SpellSheet from '../../documents/sheets/SpellSheet.svelte.js';
-	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import ItemTabs from './components/ItemTabs.svelte';
+	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 	import prepareSpellMetaData from '../dataPreparationHelpers/metaData/prepareSpellMetadata.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import ItemHeader from './components/ItemHeader.svelte';
@@ -65,31 +67,20 @@
 	);
 </script>
 
-<header class="nimble-sheet__header nimble-sheet__header--spell">
-	<section class="nimble-icon">
-		<button
-			class="nimble-icon__button nimble-icon__button--bordered nimble-icon__button--small"
-			type="button"
-			aria-label="NIMBLE.prompts.changeSpellImage"
-			data-tooltip="NIMBLE.prompts.changeSpellImage"
-			onclick={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
-		>
-			<img class="nimble-icon__image" src={item.reactive.img} alt={item.reactive.name} />
-		</button>
-	</section>
-
-	<ItemHeader {item} placeholder="Spell Name" />
-
-	<span class="nimble-spell-metadata">{metadata}</span>
+<header class="nimble-sheet__header nimble-window__head">
+	<WindowHead
+		img={item.reactive.img}
+		tileLabel={localize('NIMBLE.prompts.changeSpellImage')}
+		ontile={(event) => updateDocumentImage(item, { shiftKey: event.shiftKey })}
+		sub={metadata}
+	>
+		{#snippet name()}<ItemHeader
+				{item}
+				placeholder={localize('NIMBLE.itemNamePlaceholder.spell')}
+			/>{/snippet}
+	</WindowHead>
 </header>
 
-<PrimaryNavigation bind:currentTab {navigation} condenseNavigation={true} />
+<ItemTabs bind:currentTab {navigation} />
 
 <currentTab.component />
-
-<style lang="scss">
-	.nimble-spell-metadata {
-		grid-area: metadata;
-		font-weight: 500;
-	}
-</style>

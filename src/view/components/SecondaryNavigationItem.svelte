@@ -13,7 +13,9 @@
 </script>
 
 <li class="nimble-secondary-navigation-list__item">
+	<!-- form="": not a control of the sheet form, so Foundry does not turn the tab off in a read-only sheet -->
 	<button
+		form=""
 		class="nimble-secondary-navigation-list__button"
 		class:nimble-secondary-navigation-list__button--active={isCurrentTab()}
 		type="button"
