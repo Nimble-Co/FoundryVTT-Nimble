@@ -127,6 +127,65 @@ function buildRollChangeTags(record: RerollRecord): RerollTag[] {
 	});
 }
 
+/** The temp HP tag of the creatures that got one amount. */
+function tempHpTag(withTempHp: RerollGrant[]): RerollTag {
+	const amount = String(withTempHp[0].tempHp?.amount ?? 0);
+	const gainers = withTempHp.filter((grant) => grant.tempHp?.keeps === null);
+	const fresh = gainers.filter((grant) => !grant.tempHp?.had);
+	const label =
+		gainers.length === 0
+			? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpNobody', { amount })
+			: gainers.length === 1
+				? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpOne', {
+						amount,
+						name: gainers[0].name,
+					})
+				: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpMany', {
+						amount,
+						count: String(gainers.length),
+					});
+	const sources = [...new Set(withTempHp.map((grant) => grant.tempHp?.source ?? ''))];
+	const parts = [fromSource(label, sources.join(', '))];
+	// One gainer is named in the label already.
+	if (fresh.length > 0 && gainers.length > 1) {
+		parts.push(
+			localize(
+				`NIMBLE.chat.incomingReactions.rerollTags.${fresh.length === 1 ? 'tempHpGainOne' : 'tempHpGain'}`,
+				{ names: fresh.map((grant) => grant.name).join(', '), amount },
+			),
+		);
+	}
+	const replaced = gainers.filter((grant) => grant.tempHp?.had);
+	const kept = withTempHp.filter((grant) => grant.tempHp?.keeps !== null);
+	for (const grant of replaced) {
+		parts.push(
+			localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpReplaced', {
+				name: grant.name,
+				had: String(grant.tempHp?.had),
+				amount,
+			}),
+		);
+	}
+	for (const grant of kept) {
+		parts.push(
+			localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpKeeps', {
+				name: grant.name,
+				had: String(grant.tempHp?.had),
+				amount,
+			}),
+		);
+	}
+	if (replaced.length > 0 || kept.length > 0) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpChoice'));
+	}
+	return {
+		kind: 'tempHp',
+		label,
+		tooltip: parts.join(' '),
+		off: withTempHp.some((grant) => !grant.applied),
+	};
+}
+
 function buildGrantTags(grants: readonly RerollGrant[]): {
 	tags: RerollTag[];
 	offNote: string | null;
@@ -160,62 +219,9 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	}
 
 	const withTempHp = grants.filter((grant) => grant.tempHp);
-	const first = withTempHp[0]?.tempHp;
-	if (first) {
-		const amount = String(first.amount);
-		const gainers = withTempHp.filter((grant) => grant.tempHp?.keeps === null);
-		const fresh = gainers.filter((grant) => !grant.tempHp?.had);
-		const label =
-			gainers.length === 0
-				? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpNobody', { amount })
-				: gainers.length === 1
-					? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpOne', {
-							amount,
-							name: gainers[0].name,
-						})
-					: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpMany', {
-							amount,
-							count: String(gainers.length),
-						});
-		const parts = [fromSource(label, first.source)];
-		// One gainer is named in the label already.
-		if (fresh.length > 0 && gainers.length > 1) {
-			parts.push(
-				localize(
-					`NIMBLE.chat.incomingReactions.rerollTags.${fresh.length === 1 ? 'tempHpGainOne' : 'tempHpGain'}`,
-					{ names: fresh.map((grant) => grant.name).join(', '), amount },
-				),
-			);
-		}
-		const replaced = gainers.filter((grant) => grant.tempHp?.had);
-		const kept = withTempHp.filter((grant) => grant.tempHp?.keeps !== null);
-		for (const grant of replaced) {
-			parts.push(
-				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpReplaced', {
-					name: grant.name,
-					had: String(grant.tempHp?.had),
-					amount,
-				}),
-			);
-		}
-		for (const grant of kept) {
-			parts.push(
-				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpKeeps', {
-					name: grant.name,
-					had: String(grant.tempHp?.had),
-					amount,
-				}),
-			);
-		}
-		if (replaced.length > 0 || kept.length > 0) {
-			parts.push(localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpChoice'));
-		}
-		tags.push({
-			kind: 'tempHp',
-			label,
-			tooltip: parts.join(' '),
-			off: withTempHp.some((grant) => !grant.applied),
-		});
+	const amounts = [...new Set(withTempHp.map((grant) => grant.tempHp?.amount ?? 0))];
+	for (const amount of amounts) {
+		tags.push(tempHpTag(withTempHp.filter((grant) => grant.tempHp?.amount === amount)));
 	}
 
 	const offTempHp = withTempHp.some((grant) => !grant.applied);

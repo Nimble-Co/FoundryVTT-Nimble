@@ -271,6 +271,26 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		);
 	});
 
+	it('gives one temp HP tag per amount, each with its own creatures and source', () => {
+		const [line] = lines([
+			record({
+				grants: [
+					gain('Pip'),
+					gain('Wren', { tempHp: { amount: 5, had: 0, keeps: null, source: 'Battle Hymn' } }),
+					gain('Tam'),
+				],
+			}),
+		]);
+
+		expect(line.tags.map((tag) => [tag.label, tag.tooltip])).toEqual([
+			[
+				'3 temp HP to 2 creatures',
+				'3 temp HP to 2 creatures, from Inspiring Presence. Pip, Tam gain 3 temp HP.',
+			],
+			['5 temp HP to Wren', '5 temp HP to Wren, from Battle Hymn.'],
+		]);
+	});
+
 	it('marks the temp HP and action tags off, with one note, when Feature Effects is off', () => {
 		const [line] = lines([
 			record({
