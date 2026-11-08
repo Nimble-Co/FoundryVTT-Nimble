@@ -774,8 +774,7 @@ export class CardRerolls {
 		targets: readonly string[],
 		entries: IncomingReactionEntry[] = this.#host.incomingReactions(),
 	): IncomingReactionEntry[] {
-		if (!this.#host.isActivationCard()) return entries;
-		return withNewRerollEntries(entries, noDamageEntries(this.#damageCard(), targets));
+		return this.#withDamageCardEntries(entries, (card) => noDamageEntries(card, targets));
 	}
 
 	/** After an Interpose: these entries with the rows the new target and the other targets get. */
@@ -784,8 +783,17 @@ export class CardRerolls {
 		newTarget: string,
 		entries: IncomingReactionEntry[],
 	): IncomingReactionEntry[] {
+		return this.#withDamageCardEntries(entries, (card) =>
+			interposeEntries(card, targets, newTarget),
+		);
+	}
+
+	#withDamageCardEntries(
+		entries: IncomingReactionEntry[],
+		rowsOf: (card: DamageCard) => IncomingReactionEntry[],
+	): IncomingReactionEntry[] {
 		if (!this.#host.isActivationCard()) return entries;
-		return withNewRerollEntries(entries, interposeEntries(this.#damageCard(), targets, newTarget));
+		return withNewRerollEntries(entries, rowsOf(this.#damageCard()));
 	}
 
 	/**
