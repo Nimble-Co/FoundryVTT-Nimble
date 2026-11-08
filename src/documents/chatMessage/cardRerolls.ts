@@ -16,6 +16,12 @@ import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import { giveBack, payCost } from '#utils/cost/costLedger.js';
+import {
+	canPayUseCost,
+	costForDice,
+	keepsTurnCost,
+	type PaidUseCost,
+} from '#utils/cost/useCost.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
@@ -45,12 +51,6 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import {
-	canPayRerollCost,
-	costForDice,
-	keepsTurnCost,
-	type PaidRerollCost,
-} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -752,7 +752,7 @@ export class CardRerolls {
 		const dice = diceToPick(found);
 		const cost = usable.rule.rollUseCost;
 		let max = Math.min(usable.rule.maxDiceCount, dice.length);
-		while (max > 1 && cost && !canPayRerollCost(usable.actor, costForDice(cost, max))) max -= 1;
+		while (max > 1 && cost && !canPayUseCost(usable.actor, costForDice(cost, max))) max -= 1;
 		return { dice, max, manaPerDie: cost?.manaCost ?? 0 };
 	}
 
@@ -1130,7 +1130,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		reject: Reject,
 		failedLog: string,
-		act: (paid: PaidRerollCost | null) => Promise<boolean>,
+		act: (paid: PaidUseCost | null) => Promise<boolean>,
 	): Promise<boolean> {
 		const { rule, actor } = usable;
 		const cost = rule.rollUseCost;

@@ -4,8 +4,8 @@ import { SYSTEM_ID } from '#system';
 // Setup loads the cost module before a hoisted mock could apply.
 const canPay = vi.fn(() => true);
 vi.resetModules();
-vi.doMock('../../reroll/rerollCost.js', () => ({
-	canPayRerollCost: canPay,
+vi.doMock('../../cost/useCost.js', () => ({
+	canPayUseCost: canPay,
 }));
 vi.doMock('../../cost/costLedger.js', () => ({ payCost: vi.fn() }));
 const { defendOptionEffect, defendOptionsOf, tickCost } = await import('../defendOptions.js');

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { UseCost } from '../../cost/useCost.js';
 import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
-import type { RerollCost } from '../rerollCost.js';
 import type { RerollRuleLike } from '../rerollEntries.js';
 import { type ReplacedRoll, type RerollStepInput, rerollWithRule } from '../rerollStep.js';
 
@@ -8,7 +8,7 @@ const testGlobals = globalThis as unknown as {
 	game: { settings?: { get: (scope: string, key: string) => unknown }; combat?: unknown };
 };
 
-function cost(overrides: Partial<RerollCost> = {}): RerollCost {
+function cost(overrides: Partial<UseCost> = {}): UseCost {
 	return {
 		chargePoolIdentifier: '',
 		chargeCost: 1,

@@ -1,9 +1,9 @@
 import type { Predicate } from '../../etc/Predicate.js';
+import type { UseCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDeliveryFilter,
 } from '../../utils/damage/attackDelivery.js';
-import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -292,7 +292,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	}
 
 	/** What one use costs. No heroic reaction: the Defend pays for itself. */
-	get optionCost(): RerollCost {
+	get optionCost(): UseCost {
 		return {
 			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
 			chargeCost: Math.max(1, Number(this.chargeCost) || 1),

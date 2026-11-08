@@ -2,7 +2,7 @@ import {
 	DEFEND_OPTION_OUTCOMES,
 	type DefendOptionOutcome,
 } from '../../models/rules/defendOption.js';
-import type { PaidRerollCost, RerollCost } from '../reroll/rerollCost.js';
+import type { PaidUseCost, UseCost } from '../cost/useCost.js';
 
 export type DefendOutcome = DefendOptionOutcome;
 
@@ -13,8 +13,8 @@ export interface DefendOptionUse {
 	ruleId: string;
 	itemUuid: string;
 	label: string;
-	cost: RerollCost | null;
-	paid: PaidRerollCost | null;
+	cost: UseCost | null;
+	paid: PaidUseCost | null;
 }
 
 /** A condition the GM puts on the attacker of a Defended attack. */

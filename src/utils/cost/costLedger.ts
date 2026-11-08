@@ -19,13 +19,13 @@ import {
 	actionPayer,
 	canSpendActions,
 	findActorCombatant,
-	type PaidRerollCost,
+	type PaidUseCost,
 	poolToExpend,
-	type RerollCost,
 	turnStampOf,
-} from '../reroll/rerollCost.js';
+	type UseCost,
+} from './useCost.js';
 
-type RerollPayer = Actor | null | undefined;
+type CostPayer = Actor | null | undefined;
 
 /** The receipt of Mana or pool charges a use took. With no amount, the use cost nothing. */
 function receiptOf(
@@ -54,20 +54,20 @@ interface HeroicReactionCombat {
 	updateEmbeddedDocuments?: (type: 'Combatant', updates: Record<string, unknown>[]) => unknown;
 }
 
-function nothingPaid(): PaidRerollCost {
+function nothingPaid(): PaidUseCost {
 	return { charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null };
 }
 
-function manaOf(actor: RerollPayer): number {
+function manaOf(actor: CostPayer): number {
 	return Number(foundry.utils.getProperty(actor ?? {}, 'system.resources.mana.current') ?? 0);
 }
 
-async function writeMana(actor: RerollPayer, value: number): Promise<void> {
+async function writeMana(actor: CostPayer, value: number): Promise<void> {
 	await actor?.update({ 'system.resources.mana.current': value } as Record<string, unknown>);
 }
 
 /** Take `amount` Mana. Mana has no overdraft: with too little, nothing is taken and this is false. */
-async function spendMana(actor: RerollPayer, amount: number): Promise<boolean> {
+async function spendMana(actor: CostPayer, amount: number): Promise<boolean> {
 	if (amount <= 0) return true;
 	const current = manaOf(actor);
 	if (current < amount) return false;
@@ -76,10 +76,10 @@ async function spendMana(actor: RerollPayer, amount: number): Promise<boolean> {
 }
 
 async function spendHeroicReaction(
-	actor: RerollPayer,
+	actor: CostPayer,
 	key: HeroicReactionKey,
 	force: boolean,
-): Promise<PaidRerollCost['heroicReaction'] | false> {
+): Promise<PaidUseCost['heroicReaction'] | false> {
 	const found = findActorCombatant(actor);
 	const combat = found?.combat as unknown as HeroicReactionCombat | undefined;
 	if (!found?.combatant.id || !combat?.useHeroicReactions) return null;
@@ -98,9 +98,9 @@ async function spendHeroicReaction(
 }
 
 async function spendActions(
-	actor: RerollPayer,
+	actor: CostPayer,
 	amount: number,
-): Promise<PaidRerollCost['action'] | false> {
+): Promise<PaidUseCost['action'] | false> {
 	const payer = actionPayer(actor);
 	if (!payer?.combatant.id) return null;
 	if (!canSpendActions(actor, amount)) return false;
@@ -114,7 +114,7 @@ async function spendActions(
 	return done ? paid : false;
 }
 
-function changeActions(paid: NonNullable<PaidRerollCost['action']>, delta: number) {
+function changeActions(paid: NonNullable<PaidUseCost['action']>, delta: number) {
 	const combat = game.combat ?? null;
 	if (!combat || (combat.id ?? '') !== paid.combatId) return Promise.resolve(false);
 	return requestCombatantActionDelta({
@@ -127,7 +127,7 @@ function changeActions(paid: NonNullable<PaidRerollCost['action']>, delta: numbe
 	});
 }
 
-async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReaction']>) {
+async function refundHeroicReaction(paid: NonNullable<PaidUseCost['heroicReaction']>) {
 	const combat = game.combat ?? null;
 	if (!combat || (combat.id ?? '') !== paid.combatId) return;
 	await queueCombatantMutationWithFreshDocument({
@@ -153,7 +153,7 @@ async function refundHeroicReaction(paid: NonNullable<PaidRerollCost['heroicReac
 }
 
 /** Give back what `payCost` charged. */
-async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promise<void> {
+async function giveBack(actor: CostPayer, { cost, paid }: CostReceipt): Promise<void> {
 	if (paid.wounds > 0) {
 		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
 		if (wounds) {
@@ -181,10 +181,10 @@ async function giveBack(actor: RerollPayer, { cost, paid }: CostReceipt): Promis
  * for every other heroic reaction.
  */
 async function payCost(
-	actor: RerollPayer,
-	cost: RerollCost,
+	actor: CostPayer,
+	cost: UseCost,
 	options: { forceHeroicReaction?: boolean } = {},
-): Promise<PaidRerollCost | null> {
+): Promise<PaidUseCost | null> {
 	const paid = nothingPaid();
 	const fail = async () => {
 		await giveBack(actor, { cost, paid });
@@ -256,11 +256,11 @@ async function payCost(
  * payment that is still paid.
  */
 async function giveBackPart(
-	actor: RerollPayer,
+	actor: CostPayer,
 	{ cost, paid }: CostReceipt,
 	dieCount: number,
 	skipped: number,
-): Promise<PaidRerollCost> {
+): Promise<PaidUseCost> {
 	const part = (amount: number) => (amount / dieCount) * skipped;
 	await giveBack(actor, {
 		cost,

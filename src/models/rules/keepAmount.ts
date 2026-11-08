@@ -1,13 +1,9 @@
 import { ruleKey } from '../../utils/actor/actorRules.js';
+import { canPayUseCost, chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
 import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import {
-	canPayRerollCost,
-	chargeOnlyCost,
-	type RerollCost,
-} from '../../utils/reroll/rerollCost.js';
 import type { RollUseContext } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -42,7 +38,7 @@ class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 		if (!this.item.isEmbedded || !this.test()) return false;
 		if (!game.combat?.started) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack') return false;
-		return canPayRerollCost(this.actor as Actor | null, this.rollUseCost);
+		return canPayUseCost(this.actor as Actor | null, this.rollUseCost);
 	}
 
 	get rollEffect(): RollEffect {
@@ -57,7 +53,7 @@ class KeepAmountRule extends NimbleBaseRule<KeepAmountRule.Schema> {
 		return true;
 	}
 
-	get rollUseCost(): RerollCost {
+	get rollUseCost(): UseCost {
 		return { ...chargeOnlyCost(''), turnUseKey: ruleKey(this) };
 	}
 }

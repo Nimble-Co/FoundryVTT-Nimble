@@ -1,12 +1,8 @@
+import { canPayUseCost, chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
 import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import {
-	canPayRerollCost,
-	chargeOnlyCost,
-	type RerollCost,
-} from '../../utils/reroll/rerollCost.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -94,7 +90,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 	offersUseOn(context: RollUseContext): boolean {
 		if (!this.item.isEmbedded || !this.test()) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack' || !context.other) return false;
-		return canPayRerollCost(this.actor as Actor | null, this.rollUseCost);
+		return canPayUseCost(this.actor as Actor | null, this.rollUseCost);
 	}
 
 	get rollEffect(): RollEffect {
@@ -113,7 +109,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 		return true;
 	}
 
-	get rollUseCost(): RerollCost {
+	get rollUseCost(): UseCost {
 		return chargeOnlyCost((this.chargePoolIdentifier ?? '').trim());
 	}
 

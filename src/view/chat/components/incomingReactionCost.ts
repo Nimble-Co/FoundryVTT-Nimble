@@ -1,16 +1,12 @@
+import { costUsesLeft, type UseCost, useCostCharges } from '#utils/cost/useCost.js';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
-
 import localize from '#utils/localize.js';
-import { type RerollCost, rerollCostCharges, rerollUsesLeft } from '#utils/reroll/rerollCost.js';
 import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 
 /** What a cost takes from its actor, as short parts for one line. */
-export function rerollCostParts(
-	cost: RerollCost | null | undefined,
-	actor: Actor | null,
-): string[] {
-	if (!cost || !rerollCostCharges(cost)) return [];
+export function rerollCostParts(cost: UseCost | null | undefined, actor: Actor | null): string[] {
+	if (!cost || !useCostCharges(cost)) return [];
 	if (!isResourceSpendingAutomationEnabled()) {
 		return cost.heroicReaction
 			? [localize('NIMBLE.chat.incomingReactions.costHeroicReaction')]
@@ -18,7 +14,7 @@ export function rerollCostParts(
 	}
 
 	const parts: string[] = [];
-	const usesLeft = rerollUsesLeft(actor, cost);
+	const usesLeft = costUsesLeft(actor, cost);
 	if (usesLeft !== null) {
 		parts.push(localize('NIMBLE.chat.incomingReactions.costUsesLeft', { count: String(usesLeft) }));
 	}

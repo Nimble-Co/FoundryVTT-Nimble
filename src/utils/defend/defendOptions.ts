@@ -2,10 +2,10 @@ import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatch
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { payCost } from '../cost/costLedger.js';
+import { canPayUseCost, type UseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
 import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
 import type { AttackerCondition, DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
@@ -49,7 +49,7 @@ export function defendOptionsOf(
 				rule.appliesTo() &&
 				matchesAttackDelivery(rule.attackDelivery, delivery) &&
 				ruleOtherCreatureMatches(rule, rule.otherCreature, attacker) &&
-				(rule.useItem || canPayRerollCost(actor, tickCost(rule, card))),
+				(rule.useItem || canPayUseCost(actor, tickCost(rule, card))),
 		)
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));
 }
@@ -118,7 +118,7 @@ interface ItemRerollRule {
 	id?: string;
 	disabled?: boolean;
 	rolls?: string[];
-	rollUseCost?: RerollCost;
+	rollUseCost?: UseCost;
 }
 
 /**
@@ -130,7 +130,7 @@ export function tickCost(
 	rule: DefendOptionRule,
 	card?: DefendCardLike | null,
 	tokenUuid?: string | null,
-): RerollCost {
+): UseCost {
 	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
 	const rules = (rule.item as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
 	const rerolls = [...(rules?.values() ?? [])].filter(

@@ -1,8 +1,7 @@
 import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
-
+import { keepsTurnCost } from '#utils/cost/useCost.ts';
 import localize from '#utils/localize.js';
-import { keepsTurnCost } from '#utils/reroll/rerollCost.ts';
 import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
 import { signedNumber, spacedSignedNumber } from '#utils/signedNumber.ts';
 
