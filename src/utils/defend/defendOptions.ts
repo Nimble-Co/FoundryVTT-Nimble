@@ -1,3 +1,4 @@
+import type { AttackerCondition } from '#types/attackerCondition.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
@@ -7,7 +8,7 @@ import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/a
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
 import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
-import type { AttackerCondition, DefendOptionUse, DefendOutcome } from './defendRecords.js';
+import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
 
 const RULE_TYPE = 'defendOption';
 
