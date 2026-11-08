@@ -157,7 +157,7 @@
 	</div>
 {/each}
 
-{#snippet historyLine(line: RerollHistoryLine, key: number | 'pending', keptOld: boolean)}
+{#snippet historyLine(line: RerollHistoryLine, key: number, keptOld: boolean)}
 	<div class="nimble-roll-changes__reroll">
 		<div
 			class="nimble-roll-changes__history nimble-roll-changes__history--reroll"
@@ -225,7 +225,8 @@
 {/each}
 
 {#if pendingKeep && pendingLine}
-	{@render historyLine(pendingLine, 'pending', false)}
+	<!-- A kept reroll joins the end of the list, so its open tag stays open. -->
+	{@render historyLine(pendingLine, lines.length, false)}
 
 	{#if keepChoice.canKeep}
 		<div class="nimble-keep-choice">
