@@ -51,6 +51,7 @@ export class NimbleNPC extends NimbleBaseActor<'npc'> {
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,
 			{ actor: this },
+			{ classes: ['nimble-window'] },
 		);
 
 		this.#dialogs.metaConfig.setTitle(`${this.name}: Configuration`);
@@ -62,7 +63,7 @@ export class NimbleNPC extends NimbleBaseActor<'npc'> {
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-person-running', width: 600 },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-person-running', width: 600 },
 		);
 
 		this.#dialogs.configureMovement.setTitle(`${this.name}: Configure Movement Speeds`);

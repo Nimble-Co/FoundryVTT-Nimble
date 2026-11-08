@@ -173,6 +173,7 @@
 							{#if editingPoolId === pool.id}
 								<input
 									class="charge-pool-card__input"
+									data-look="plain"
 									type="number"
 									min="0"
 									max={pool.max}
@@ -244,78 +245,67 @@
 
 <style lang="scss">
 	.nimble-configure-charges-dialog {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
-		--nimble-charge-color-full: hsl(120, 45%, 40%);
-		--nimble-charge-color-empty: hsl(0, 55%, 50%);
-		--nimble-charge-color-partial: hsl(45, 70%, 40%);
-		--nimble-charge-action-max-color: hsl(120, 45%, 40%);
-		--nimble-charge-action-empty-color: hsl(0, 55%, 50%);
-		--nimble-charge-card-dark-background: hsl(220, 15%, 12%);
-		--nimble-charge-card-dark-border: hsl(220, 10%, 25%);
-		--nimble-charge-card-dark-icon: hsl(220, 10%, 60%);
-		--nimble-charge-card-dark-label: hsl(220, 10%, 80%);
-		--nimble-charge-card-dark-current: hsl(220, 15%, 8%);
-		--nimble-charge-card-dark-button-background: hsl(220, 15%, 18%);
-		--nimble-charge-card-dark-button-border: hsl(220, 10%, 30%);
-		--nimble-charge-card-dark-button-text: hsl(220, 10%, 75%);
-		--nimble-charge-card-dark-button-hover: hsl(220, 15%, 28%);
-		--nimble-charge-card-dark-button-hover-text: hsl(220, 10%, 90%);
-		--nimble-charge-card-dark-input: hsl(220, 15%, 10%);
-		--nimble-charge-card-dark-source-label: hsl(220, 10%, 55%);
-		--nimble-charge-card-dark-source-name: hsl(220, 10%, 70%);
-		--nimble-charge-card-dark-max-color: hsl(120, 45%, 60%);
-		--nimble-charge-card-dark-max-border: hsl(120, 45%, 50%);
-		--nimble-charge-card-dark-empty-color: hsl(0, 55%, 65%);
-		--nimble-charge-card-dark-empty-border: hsl(0, 55%, 55%);
+		--nimble-charge-color-full: var(--nimble-ui-action);
+		--nimble-charge-color-empty: var(--nimble-ui-vital);
+		--nimble-charge-color-partial: var(--nimble-ui-warn);
+
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 10px;
+		padding: 12px;
+		color: var(--nimble-ui-ink);
+	}
+
+	:global(.system-nimble .nimble-window) .nimble-configure-charges-dialog {
+		gap: 10px;
+		padding: 12px;
 	}
 
 	.charges-empty {
 		margin: 0;
-		padding: 1rem;
+		padding: 8px 4px;
 		text-align: center;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
-		font-style: italic;
+		font-size: 0.75rem;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.charges-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 8px;
 	}
 
 	.charge-pool-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.625rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 6px;
+		gap: 8px;
+		padding: 8px;
+		border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
+		border-radius: 4px;
+		font-family: var(--nimble-primary-font);
 
 		&__header {
 			display: flex;
 			align-items: center;
-			gap: 0.5rem;
+			gap: 6px;
 		}
 
 		&__icon {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			font-size: 0.688rem;
+			font-weight: 900;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__hidden-marker {
-			font-size: var(--nimble-xs-text, 0.7rem);
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			color: var(--nimble-ui-ink-dim);
 			cursor: help;
 		}
 
@@ -323,47 +313,65 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.5rem;
-			padding: 0.375rem;
-			background: var(--nimble-input-background-color);
-			border-radius: 4px;
+			gap: 8px;
 		}
 
 		&__value {
-			font-size: var(--nimble-lg-text);
-			font-weight: 700;
 			min-width: 4rem;
 			text-align: center;
 
 			&--button {
+				height: 26px;
+				margin: 0;
+				padding: 0 3px;
+				border: 0;
+				border-bottom: 1px dashed var(--nimble-ui-ring);
+				border-radius: 0;
 				background: none;
-				border: none;
-				padding: 0;
-				cursor: pointer;
+				box-shadow: none;
+				font-family: var(--nimble-primary-font);
+				font-size: 1rem;
+				font-weight: 900;
 				color: inherit;
-				font-size: inherit;
-				font-weight: inherit;
+				cursor: text;
 
 				&:hover {
-					text-decoration: underline;
+					border-bottom-color: var(--nimble-ui-highlight);
+				}
+
+				&:focus-visible {
+					outline: 2px solid var(--nimble-ui-focus);
+					outline-offset: 1px;
 				}
 			}
 		}
 
 		&__input {
-			width: 3rem;
-			padding: 0.25rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
+			box-sizing: border-box;
+			width: 4rem;
+			height: 26px;
+			margin: 0;
+			padding: 0 3px;
+			border: 0;
+			border-bottom: 1px dashed var(--nimble-ui-ring);
+			border-radius: 0;
+			background: none;
+			box-shadow: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.875rem;
+			font-weight: 700;
 			text-align: center;
-			background: var(--nimble-card-background-color);
-			border: 1px solid var(--nimble-accent-color);
-			border-radius: 4px;
-			color: var(--nimble-dark-text-color);
+			color: var(--nimble-ui-ink);
+			appearance: textfield;
+
+			&::-webkit-inner-spin-button,
+			&::-webkit-outer-spin-button {
+				display: none;
+			}
 
 			&:focus {
-				outline: 2px solid var(--nimble-accent-color);
-				outline-offset: -1px;
+				border-bottom: 1px solid var(--nimble-ui-highlight);
+				outline: none;
 			}
 		}
 
@@ -371,144 +379,74 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.5rem;
+			gap: 6px;
 		}
 
 		&__btn {
 			display: flex;
+			flex: none;
 			align-items: center;
 			justify-content: center;
-			padding: 0.25rem 0.5rem;
-			min-width: 1.75rem;
-			height: 1.75rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
+			min-width: 26px;
+			height: 26px;
+			margin: 0;
+			padding: 0 9px;
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
-			color: var(--nimble-dark-text-color);
+			background: none;
+			box-shadow: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.75rem;
+			font-weight: 700;
+			line-height: 1;
+			white-space: nowrap;
+			color: var(--nimble-ui-ink);
 			cursor: pointer;
-			transition: all 0.15s ease;
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+			i {
+				font-size: 0.688rem;
+			}
 
 			&:hover:not(:disabled) {
-				background: var(--nimble-card-border-color);
-				color: var(--nimble-light-text-color);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
 			}
 
 			&:disabled {
-				opacity: 0.4;
-				cursor: not-allowed;
+				border-style: dashed;
+				color: var(--nimble-ui-ink-muted);
+				cursor: default;
 			}
 
-			&--max {
-				color: var(--nimble-charge-action-max-color);
-				border-color: var(--nimble-charge-action-max-color);
-
-				&:hover:not(:disabled) {
-					background: var(--nimble-charge-action-max-color);
-					color: white;
-				}
-			}
-
-			&--empty {
-				color: var(--nimble-charge-action-empty-color);
-				border-color: var(--nimble-charge-action-empty-color);
-
-				&:hover:not(:disabled) {
-					background: var(--nimble-charge-action-empty-color);
-					color: white;
-				}
+			&--minus,
+			&--plus {
+				width: 26px;
+				padding: 0;
 			}
 		}
 
 		&__source {
 			display: flex;
 			align-items: center;
-			gap: 0.25rem;
-			font-size: var(--nimble-xs-text);
+			gap: 4px;
+			font-size: 0.75rem;
 		}
 
 		&__source-label {
-			color: var(--nimble-medium-text-color);
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__source-name {
-			color: var(--nimble-dark-text-color);
-			font-weight: 500;
-		}
-	}
-
-	.nimble-sheet__footer {
-		--nimble-button-padding: 0.5rem 1rem;
-		--nimble-button-width: 100%;
-	}
-
-	:global(.theme-dark) {
-		.nimble-configure-charges-dialog {
-			--nimble-charge-action-max-color: var(--nimble-charge-card-dark-max-color);
-			--nimble-charge-action-empty-color: var(--nimble-charge-card-dark-empty-color);
-		}
-
-		.charge-pool-card {
-			background: var(--nimble-charge-card-dark-background);
-			border-color: var(--nimble-charge-card-dark-border);
-
-			&__icon {
-				color: var(--nimble-charge-card-dark-icon);
-			}
-
-			&__label {
-				color: var(--nimble-charge-card-dark-label);
-			}
-
-			&__current {
-				background: var(--nimble-charge-card-dark-current);
-			}
-
-			&__btn {
-				background: var(--nimble-charge-card-dark-button-background);
-				border-color: var(--nimble-charge-card-dark-button-border);
-				color: var(--nimble-charge-card-dark-button-text);
-
-				&:hover:not(:disabled) {
-					background: var(--nimble-charge-card-dark-button-hover);
-					color: var(--nimble-charge-card-dark-button-hover-text);
-				}
-
-				&--max {
-					color: var(--nimble-charge-card-dark-max-color);
-					border-color: var(--nimble-charge-card-dark-max-border);
-
-					&:hover:not(:disabled) {
-						background: var(--nimble-charge-action-max-color);
-						color: white;
-					}
-				}
-
-				&--empty {
-					color: var(--nimble-charge-card-dark-empty-color);
-					border-color: var(--nimble-charge-card-dark-empty-border);
-
-					&:hover:not(:disabled) {
-						background: var(--nimble-charge-action-empty-color);
-						color: white;
-					}
-				}
-			}
-
-			&__input {
-				background: var(--nimble-charge-card-dark-input);
-				border-color: var(--nimble-accent-color);
-				color: var(--nimble-charge-card-dark-label);
-			}
-
-			&__source-label {
-				color: var(--nimble-charge-card-dark-source-label);
-			}
-
-			&__source-name {
-				color: var(--nimble-charge-card-dark-source-name);
-			}
+			font-weight: 600;
+			color: var(--nimble-ui-ink);
 		}
 	}
 </style>

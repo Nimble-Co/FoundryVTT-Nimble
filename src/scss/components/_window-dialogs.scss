@@ -1,0 +1,121 @@
+//** WINDOW DIALOGS: the GenericDialog windows in the nimble-window frame **/
+
+.system-nimble .nimble-window {
+	.nimble-window__content > .nimble-sheet__body {
+		padding: 12px;
+		gap: 4px;
+	}
+
+	// A dialog whose component is a list of fields, with no body of its own
+	.nimble-window__content:has(> .nimble-field) {
+		gap: 4px;
+		padding: 12px;
+	}
+
+	// A section starts with more space above its heading than under it.
+	.nimble-window__content :is(.nimble-section-header, .nimble-sheet__body > header:not([class])) {
+		margin-block: 16px 6px;
+	}
+
+	.nimble-window__content
+		:is(
+			.nimble-sheet__body > :first-child,
+			.nimble-sheet__body > :first-child > :first-child,
+			.nimble-field:first-child > :first-child
+		):is(.nimble-section-header, header) {
+		margin-top: 0;
+	}
+
+	.nimble-window__content .nimble-field[data-field-variant="stacked"] + .nimble-field {
+		margin-top: 10px;
+	}
+
+	// The label of a field sits close to its control.
+	.nimble-window__content .nimble-field > .nimble-section-header:not(:has(> [data-heading-variant="section"])) {
+		margin-block: 0 6px;
+	}
+
+	// The label over a field, as in the roll window
+	.nimble-heading[data-heading-variant="field"] {
+		--nimble-heading-size: 0.75rem;
+		--nimble-heading-weight: 600;
+		--nimble-heading-color: var(--nimble-ui-ink-muted);
+	}
+
+	.nimble-field__hint {
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1.3;
+		color: var(--nimble-ui-ink-muted);
+	}
+
+	// A heading with no section header round it is a GroupHeading too.
+	.nimble-sheet__body > header:not([class]) {
+		--nimble-heading-size: 0.688rem;
+		--nimble-heading-color: var(--nimble-ui-ink-dim);
+
+		padding-bottom: 5px;
+		border-bottom: 1px solid var(--nimble-ui-soft);
+
+		.nimble-heading {
+			letter-spacing: 0.1em;
+		}
+	}
+
+	// The sheet table is a card with stripes; in the window it is rows on the surface.
+	.nimble-window__content table {
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+	}
+
+	.nimble-window__content table tr:nth-child(2n) {
+		background: none;
+	}
+
+	.nimble-window__content table tbody tr + tr {
+		border-top: 1px solid var(--nimble-ui-soft);
+	}
+
+	.nimble-window__content table :is(thead, tfoot) {
+		border: 0;
+		background: none;
+		color: var(--nimble-ui-ink);
+	}
+
+	.nimble-section-header[data-header-variant="monster-actions"] .nimble-button[data-button-variant="icon"] {
+		color: var(--nimble-ui-ink-dim);
+	}
+
+	// The button that ends the window is the primary Button.
+	.nimble-sheet__footer {
+		padding: 0 12px 12px;
+		border: 0;
+		background: none;
+
+		.nimble-button[data-button-variant="basic"] {
+			flex: 1;
+			width: 100%;
+			height: 34px;
+			border: 0;
+			background: var(--nimble-crimson);
+			font-size: 0.875rem;
+			color: var(--nimble-ui-fill-ink);
+
+			&:hover {
+				filter: brightness(1.15);
+			}
+
+			&:disabled {
+				background: var(--nimble-ui-soft);
+				color: var(--nimble-ui-ink-muted);
+				filter: none;
+			}
+		}
+	}
+}
+
+// Two window controls: the menu and close
+.system-nimble .nimble-window:not(.sheet) {
+	--nimble-window-controls: 58px;
+}

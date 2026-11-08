@@ -124,6 +124,7 @@
 			<input
 				id="base-mana"
 				class="mana-base-row__input"
+				data-look="plain"
 				type="number"
 				min="0"
 				step="1"
@@ -166,11 +167,11 @@
 </footer>
 
 <style lang="scss">
-	.nimble-edit-mana-dialog {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
+	:global(.nimble-window) .nimble-sheet__body.nimble-edit-mana-dialog {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0;
+		padding: 12px;
 	}
 
 	.nimble-sheet__footer {
@@ -178,94 +179,115 @@
 		--nimble-button-width: 100%;
 	}
 
-	.mana-section {
-		padding: 0.625rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 6px;
+	.mana-section .nimble-section-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+
+		i {
+			display: none;
+		}
+	}
+
+	:global(.nimble-window)
+		.nimble-edit-mana-dialog
+		> .mana-section:first-child
+		> .nimble-section-header {
+		margin-top: 0;
 	}
 
 	.mana-subtitle {
 		display: block;
-		font-size: var(--nimble-xs-text);
-		color: var(--nimble-medium-text-color);
-		margin-top: 0.125rem;
-		padding-left: 1.125rem;
+		font-size: 0.75rem;
+		line-height: 1.3;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.mana-empty {
 		margin: 0;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
-		font-style: italic;
+		padding: 4px;
+		font-size: 0.75rem;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.mana-contribution-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 	}
 
 	.mana-contribution-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.125rem;
-		padding: 0.5rem 0.625rem;
-		background: var(--nimble-input-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 6px;
+		justify-content: center;
+		gap: 1px;
+		min-height: 34px;
+		padding: 4px;
 
 		&__header {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			gap: 0.5rem;
+			gap: 14px;
 		}
 
 		&__name {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			font-size: 0.813rem;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__value {
-			font-size: var(--nimble-sm-text);
+			font-size: 0.875rem;
 			font-weight: 700;
-			color: hsl(212deg 52% 42%);
+			color: var(--nimble-ui-action);
 		}
 
 		&__formula {
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
+			font-family: var(--nimble-mono-font);
+			font-size: 0.75rem;
+			line-height: 1.3;
+			color: var(--nimble-ui-ink-muted);
 		}
 	}
 
 	.mana-base-row {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.75rem;
+		gap: 14px;
+		min-height: 34px;
+		padding: 4px;
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
+			flex: 1;
+			min-width: 0;
+			font-size: 0.813rem;
+			color: var(--nimble-ui-ink);
 		}
 
-		&__input {
-			width: 5rem;
-			padding: 0.375rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			text-align: center;
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
-			background: var(--nimble-input-background-color);
-			color: var(--nimble-dark-text-color);
+		input.mana-base-row__input[data-look='plain'] {
+			box-sizing: border-box;
+			flex: none;
+			width: 64px;
+			height: 26px;
+			padding: 0 3px;
+			border: 0;
+			border-bottom: 1px dashed var(--nimble-ui-ring);
+			border-radius: 0;
+			background: none;
+			box-shadow: none;
+			font-size: 0.875rem;
+			font-weight: 700;
+			text-align: right;
+			color: var(--nimble-ui-ink);
+			appearance: textfield;
+
+			&::-webkit-inner-spin-button,
+			&::-webkit-outer-spin-button {
+				appearance: none;
+			}
 
 			&:focus {
-				outline: 2px solid hsl(212deg 60% 48%);
-				outline-offset: -1px;
-				border-color: hsl(212deg 60% 48%);
+				border-bottom: 1px solid var(--nimble-ui-highlight);
+				outline: none;
 			}
 		}
 	}
@@ -273,49 +295,50 @@
 	.mana-recovery-types {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.375rem;
+		gap: 4px;
+		padding: 4px;
 	}
 
 	.mana-recovery-pill {
-		padding: 0.25rem 0.5rem;
-		font-size: var(--nimble-xs-text);
-		font-weight: 700;
+		padding: 0 5px;
+		border-radius: 3px;
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+		font-size: 0.656rem;
+		font-weight: 800;
+		line-height: 16px;
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
-		color: hsl(212deg 55% 26%);
-		background: hsl(212deg 52% 88%);
-		border: 1px solid hsl(212deg 52% 74%);
-		border-radius: 4px;
+		letter-spacing: 0.05em;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.mana-note {
-		margin: 0.5rem 0 0;
-		font-size: var(--nimble-xs-text);
-		color: var(--nimble-medium-text-color);
-		font-style: italic;
+		margin: 0;
+		padding: 0 4px 4px;
+		font-size: 0.75rem;
+		line-height: 1.3;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.mana-total {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.625rem 0.75rem;
-		background: linear-gradient(to right, hsl(212deg 48% 37%), hsl(212deg 52% 47%));
-		border-radius: 6px;
+		margin-top: 8px;
+		padding: 6px 4px 0;
+		border-top: 1px solid var(--nimble-ui-soft);
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: hsl(212deg 36% 95%);
+			font-size: 0.75rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.03em;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__value {
-			font-size: var(--nimble-xl-text);
-			font-weight: 700;
-			color: #fff;
-			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+			font-size: 1.15rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 	}
 </style>

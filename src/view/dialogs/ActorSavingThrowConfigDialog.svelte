@@ -309,6 +309,7 @@
 							<input
 								class="nimble-save-config__bonus-input"
 								type="number"
+								data-look="plain"
 								value={bonus}
 								onchange={({ target }) => updateSavingThrowBonus(saveKey, Number(target.value))}
 							/>
@@ -433,35 +434,61 @@
 </section>
 
 <style lang="scss">
+	:global(.nimble-window) .nimble-sheet__body.nimble-sheet__body--save-config {
+		padding: 12px;
+	}
+
 	.nimble-save-config {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 12px;
+		font-family: var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
 
 		&__table {
 			width: 100%;
-			border-collapse: separate;
+			margin: 0;
+			border: 0;
+			border-collapse: collapse;
 			border-spacing: 0;
-			background: var(--nimble-box-background-color);
-			border-radius: 6px;
-			box-shadow: var(--nimble-box-shadow);
-			overflow: hidden;
+			border-radius: 0;
+			background: none;
+			box-shadow: none;
+			overflow: visible;
+
+			thead,
+			tbody,
+			tfoot,
+			tr,
+			tr:nth-child(even),
+			tr:nth-child(odd) {
+				border: 0;
+				background: none;
+				color: var(--nimble-ui-ink);
+				text-shadow: none;
+			}
+
+			th,
+			td {
+				padding: 0 4px;
+				background: none;
+				vertical-align: middle;
+			}
 		}
 
-		&__header-row {
-			background: var(--nimble-box-background-color);
-			border-bottom: 2px solid var(--nimble-box-color);
+		&__header-row th {
+			height: 26px;
+			padding-bottom: 5px;
+			border-bottom: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__save-header {
-			padding: 0.75rem 0.5rem;
 			text-align: center;
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--nimble-dark-text-color);
-			vertical-align: middle;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__save-name {
@@ -469,303 +496,329 @@
 			line-height: 1.3;
 		}
 
-		&__section-header {
-			th {
-				padding: 0;
-				border: 0;
-			}
+		&__section-header th {
+			padding: 12px 4px 0;
+			border-bottom: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__section-title {
 			display: flex;
-			align-items: baseline;
-			gap: 0.75rem;
-			padding: 0.625rem 0.75rem;
-			background: hsla(0, 0%, 0%, 0.04);
-			border-top: 1px solid var(--nimble-card-border-color);
-			border-bottom: 1px solid var(--nimble-card-border-color);
+			align-items: center;
+			gap: 8px;
+			min-height: 26px;
+			padding-bottom: 5px;
 		}
 
 		&__section-title-text {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--nimble-dark-text-color);
+			letter-spacing: 0.1em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__section-subtitle {
-			font-size: var(--nimble-xs-text);
-			font-weight: 400;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 600;
+			letter-spacing: 0;
+			text-transform: none;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__reset-btn {
 			display: inline-flex;
+			flex: none;
 			align-items: center;
 			justify-content: center;
-			margin-left: auto;
-			padding: 0.25rem 0.5rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
-			background: transparent;
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 3px;
+			width: 26px;
+			height: 26px;
+			min-height: 0;
+			margin: 0 0 0 auto;
+			padding: 0;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			background: none;
+			box-shadow: none;
+			font-size: 0.75rem;
+			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
 			cursor: pointer;
-			transition: var(--nimble-standard-transition);
+			transition:
+				border-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+				background-color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover {
-				color: var(--nimble-dark-text-color);
-				background: hsla(0, 0%, 0%, 0.05);
-				border-color: var(--nimble-dark-text-color);
+				border-color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
+				color: var(--nimble-ui-ink);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
 			}
 		}
 
 		&__row-label {
-			padding: 0.5rem 0.75rem;
 			text-align: left;
-			font-size: var(--nimble-sm-text);
+			font-size: 0.813rem;
 			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			color: var(--nimble-ui-ink);
 			white-space: nowrap;
 
 			i {
-				margin-right: 0.375rem;
-				color: var(--nimble-medium-text-color);
+				width: 1.1em;
+				margin-right: 6px;
+				text-align: center;
+				color: var(--nimble-ui-ink-dim);
 			}
 
 			&--total {
-				font-weight: 700;
+				font-size: 0.688rem;
+				font-weight: 900;
 				text-transform: uppercase;
-				letter-spacing: 0.03em;
+				letter-spacing: 0.1em;
+				color: var(--nimble-ui-ink-dim);
 			}
 		}
 
 		&__data-row {
-			&:hover {
-				background: hsla(0, 0%, 0%, 0.02);
+			> th,
+			> td {
+				height: 30px;
+				border-bottom: 1px solid var(--nimble-ui-soft);
 			}
 
-			&--roll-mode {
-				vertical-align: top;
+			&:has(+ .nimble-save-config__section-header, + .nimble-save-config__spacer-row) > th,
+			&:has(+ .nimble-save-config__section-header, + .nimble-save-config__spacer-row) > td,
+			&:last-child > th,
+			&:last-child > td {
+				border-bottom: 0;
 			}
 		}
 
-		&__value-cell {
-			padding: 0.5rem;
+		&__value-cell,
+		&__input-cell,
+		&__ancestry-cell {
 			text-align: center;
 		}
 
 		&__ability-value {
-			font-size: var(--nimble-md-text);
+			font-size: 0.813rem;
 			font-weight: 600;
-			color: var(--nimble-dark-text-color);
-		}
-
-		&__input-cell {
-			padding: 0.375rem;
-			text-align: center;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__bonus-input {
 			display: block;
-			width: 3.5rem;
-			height: 1.75rem;
+			flex: none;
+			width: 3rem;
+			min-width: 0;
+			height: 26px;
 			margin: 0 auto;
-			padding: 0.25rem;
-			font-size: var(--nimble-md-text);
-			font-weight: 600;
-			text-align: center;
-			color: var(--nimble-dark-text-color);
-			background-color: var(--nimble-input-background-color);
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 2px;
-			outline: none;
+			padding: 0 2px;
+			border: 0;
+			border-bottom: 1px dashed var(--nimble-ui-ring);
+			border-radius: 0;
+			background: none;
 			box-shadow: none;
-			transition: var(--nimble-standard-transition);
+			outline: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.875rem;
+			font-weight: 700;
+			text-align: center;
+			color: var(--nimble-ui-ink);
+			appearance: textfield;
 
-			&:hover,
+			&::-webkit-inner-spin-button,
+			&::-webkit-outer-spin-button {
+				display: none;
+			}
+
 			&:focus {
-				border-color: var(--nimble-input-focus-border-color);
-				outline: none;
+				border-bottom: 1px solid var(--nimble-ui-highlight);
 				box-shadow: none;
+				outline: none;
 			}
 		}
 
+		&__data-row--roll-mode > th,
+		&__data-row--roll-mode > td {
+			padding-block: 6px;
+		}
+
 		&__roll-mode-cell {
-			padding: 0.5rem;
 			text-align: center;
 		}
 
 		&__roll-mode-selector {
 			display: flex;
 			justify-content: center;
-			gap: 0.125rem;
-			margin-bottom: 0.375rem;
+			gap: 1px;
+			margin-bottom: 4px;
 		}
 
 		&__roll-mode-btn {
 			display: inline-flex;
+			flex: none;
 			align-items: center;
 			justify-content: center;
-			width: 1.25rem;
-			height: 1.25rem;
+			width: 0.875rem;
+			height: 1.125rem;
+			min-height: 0;
 			margin: 0;
 			padding: 0;
-			font-size: 0.5rem;
-			color: var(--nimble-medium-text-color);
-			background: transparent;
 			border: 0;
 			border-radius: 50%;
+			background: none;
+			box-shadow: none;
+			font-size: 0.5rem;
+			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
 			cursor: pointer;
-			transition: var(--nimble-standard-transition);
+			transition: color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover {
-				transform: scale(1.2);
-				color: var(--nimble-dark-text-color);
+				color: var(--nimble-ui-ink);
 			}
 
-			&--active {
-				color: var(--nimble-dark-text-color);
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 0;
 			}
 
-			&--disadvantage {
-				color: var(--nimble-roll-failure-color);
+			&--active,
+			&--active:hover {
+				color: var(--nimble-ui-highlight);
 			}
 
-			&--advantage {
-				color: hsl(139, 48%, 36%);
+			&--disadvantage,
+			&--disadvantage:hover {
+				color: var(--nimble-ui-vital);
+			}
+
+			&--advantage,
+			&--advantage:hover {
+				color: var(--nimble-ui-action);
 			}
 		}
 
 		&__roll-mode-label {
 			display: block;
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__data-row--ancestry {
-			background: hsla(45, 80%, 50%, 0.03);
-		}
-
-		&__ancestry-cell {
-			padding: 0.5rem;
-			text-align: center;
+			font-size: 0.75rem;
+			font-weight: 600;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__ancestry-btn {
 			display: inline-flex;
+			flex: none;
 			align-items: center;
 			justify-content: center;
-			width: 1.5rem;
-			height: 1.5rem;
+			width: 26px;
+			height: 26px;
+			min-height: 0;
 			margin: 0;
 			padding: 0;
-			font-size: 0.75rem;
-			color: var(--nimble-medium-text-color);
-			background: transparent;
 			border: 0;
 			border-radius: 50%;
+			background: none;
+			box-shadow: none;
+			font-size: 0.813rem;
+			line-height: 1;
+			color: var(--nimble-ui-ink-dim);
 			cursor: pointer;
-			transition: var(--nimble-standard-transition);
+			transition: color 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
 
 			&:hover {
-				transform: scale(1.15);
-				color: hsl(45, 80%, 40%);
+				color: var(--nimble-ui-ink);
 			}
 
-			&--selected {
-				color: hsl(45, 80%, 40%);
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 0;
+			}
 
-				&:hover {
-					color: hsl(45, 90%, 35%);
-				}
+			&--selected,
+			&--selected:hover {
+				color: var(--nimble-ui-highlight);
 			}
 		}
 
 		&__ancestry-unavailable {
 			display: inline-block;
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-light-text-color);
+			font-size: 0.813rem;
+			color: var(--nimble-ui-ink-dim);
 		}
 
-		&__spacer-row {
-			td {
-				height: 0.75rem;
-				padding: 0;
-				background: linear-gradient(
-					to bottom,
-					transparent 0%,
-					transparent 40%,
-					var(--nimble-card-border-color) 40%,
-					var(--nimble-card-border-color) 60%,
-					transparent 60%,
-					transparent 100%
-				);
-			}
+		&__spacer-row td {
+			height: 4px;
+			padding: 0;
+			border: 0;
 		}
 
-		&__total-row {
-			background: var(--nimble-box-background-color);
-			border-top: 2px solid var(--nimble-box-color);
+		&__total-row > th,
+		&__total-row > td {
+			padding-top: 8px;
+			border: 0;
 		}
 
 		&__total-cell {
-			padding: 0.75rem 0.5rem;
 			text-align: center;
 		}
 
 		&__total-value {
-			display: inline-block;
-			min-width: 2.5rem;
-			padding: 0.25rem 0.5rem;
-			font-size: var(--nimble-lg-text);
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
-			border: 1px solid var(--nimble-box-color);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 2.75rem;
+			height: 30px;
+			padding: 0 8px;
+			border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
 			border-radius: 4px;
+			background: none;
+			font-size: 1rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__legend {
 			display: flex;
 			flex-wrap: wrap;
-			gap: 1rem;
-			padding: 0.75rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
-			background: hsla(0, 0%, 0%, 0.03);
-			border-radius: 4px;
+			gap: 6px 14px;
+			margin: 0;
+			padding: 0 4px;
+			border: 0;
+			background: none;
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__legend-item {
 			display: flex;
 			align-items: center;
-			gap: 0.375rem;
+			gap: 6px;
 		}
 
 		&__legend-badge {
 			display: inline-block;
-			padding: 0.125rem 0.375rem;
-			font-size: var(--nimble-xxs-text);
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
+			padding: 0 5px;
 			border-radius: 3px;
+			background: none;
+			box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+			font-size: 0.656rem;
+			font-weight: 800;
+			line-height: 16px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-ui-ink-muted);
 
 			&--disadvantage {
-				background: hsla(0, 70%, 50%, 0.15);
-				color: var(--nimble-roll-failure-color);
-			}
-
-			&--normal {
-				background: hsla(0, 0%, 50%, 0.15);
-				color: var(--nimble-medium-text-color);
+				color: var(--nimble-ui-vital);
 			}
 
 			&--advantage {
-				background: hsla(139, 48%, 36%, 0.15);
-				color: hsl(139, 48%, 36%);
+				color: var(--nimble-ui-action);
 			}
 		}
 	}

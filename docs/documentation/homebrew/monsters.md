@@ -37,7 +37,7 @@ The monster sheet has four tabs (**Core**, **Conditions**, **Notes**, and **Sett
 - **Damage Resistances**: damage types the monster takes half damage from. Applied automatically when the GM clicks Apply Damage, and the button's preview shows the halved number.
 - **Damage Immunities**: damage types the monster takes no damage from at all.
 - **Damage Vulnerabilities**: recorded on the sheet for reference, but not yet automated; apply the vulnerability rule from the rulebook by hand.
-- **Flunky**: a checkbox on Standard monsters. Flunkies can still miss, but never crit.
+- **Flunky**: a switch on Standard monsters. Flunkies can still miss, but never crit.
 
 Resistances and immunities only kick in when the incoming damage has a known type; a roll with no damage type is applied in full.
 

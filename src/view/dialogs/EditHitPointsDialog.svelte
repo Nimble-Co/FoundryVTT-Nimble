@@ -81,7 +81,7 @@
 	});
 </script>
 
-<article class="nimble-sheet__body">
+<article class="nimble-sheet__body nimble-edit-hp-dialog">
 	{#each classHpData as cls, classIndex}
 		<section class="hp-class-section">
 			<header class="hp-class-header">
@@ -113,6 +113,7 @@
 							>
 							<input
 								class="hp-level-entry__input"
+								data-look="plain"
 								type="number"
 								min="1"
 								max={cls.hitDie}
@@ -156,7 +157,13 @@
 			<label class="hp-bonus-label" for="hp-bonus-input">
 				{CONFIG.NIMBLE.hitPoints.bonusHpHint}
 			</label>
-			<input id="hp-bonus-input" class="hp-bonus-input" type="number" bind:value={hpBonus} />
+			<input
+				id="hp-bonus-input"
+				class="hp-bonus-input"
+				data-look="plain"
+				type="number"
+				bind:value={hpBonus}
+			/>
 		</div>
 	</section>
 
@@ -175,11 +182,11 @@
 </footer>
 
 <style lang="scss">
-	.nimble-sheet__body {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
+	:global(.nimble-window) .nimble-sheet__body.nimble-edit-hp-dialog {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0;
+		padding: 12px;
 	}
 
 	.nimble-sheet__footer {
@@ -187,95 +194,118 @@
 		--nimble-button-width: 100%;
 	}
 
-	.hp-class-section {
+	.hp-class-section,
+	.hp-bonus-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		padding: 0.75rem;
-		background: var(--nimble-box-background-color);
-		border-radius: 6px;
-		border: 1px solid var(--nimble-card-border-color);
+		gap: 6px;
 	}
 
 	.hp-class-header {
+		--nimble-heading-size: 0.688rem;
+		--nimble-heading-color: var(--nimble-ui-ink-dim);
+
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding-bottom: 0.5rem;
-		border-bottom: 1px solid var(--nimble-card-border-color);
+		gap: 8px;
+		margin: 8px 0 0;
+		padding-bottom: 5px;
+		border-bottom: 1px solid var(--nimble-ui-soft);
+
+		.nimble-heading {
+			min-width: 0;
+			overflow: hidden;
+		}
+	}
+
+	.nimble-edit-hp-dialog > .hp-class-section:first-child > .hp-class-header {
+		margin-top: 0;
+	}
+
+	:global(.nimble-window)
+		.nimble-edit-hp-dialog
+		> .hp-bonus-section:first-child
+		> .nimble-section-header {
+		margin-top: 0;
+	}
+
+	:global(.nimble-window) .hp-bonus-section > .nimble-section-header {
+		margin-bottom: 0;
+	}
+
+	.hp-class-header i,
+	.nimble-section-header i {
+		display: none;
 	}
 
 	.hp-class-die {
-		padding: 0.25rem 0.5rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 700;
-		color: var(--nimble-dark-text-color);
-		background: var(--nimble-input-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
+		flex: none;
+		padding: 0 5px;
+		border-radius: 3px;
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+		font-size: 0.656rem;
+		font-weight: 800;
+		line-height: 16px;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.hp-class-summary {
 		display: flex;
-		gap: 0.75rem;
+		gap: 8px;
 	}
 
 	.hp-stat {
 		flex: 1;
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		padding: 0.5rem;
-		background: var(--nimble-input-background-color);
+		justify-content: space-between;
+		gap: 8px;
+		min-width: 0;
+		padding: 5px 8px;
+		border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
 		border-radius: 4px;
-		border: 1px solid var(--nimble-card-border-color);
 
 		&--highlight {
-			background: linear-gradient(to bottom, hsl(139, 35%, 40%), hsl(139, 40%, 50%));
-			border-color: hsl(139, 35%, 35%);
-
-			.hp-stat__label {
-				color: hsl(139, 30%, 95%);
-			}
-
-			.hp-stat__value {
-				color: #fff;
-				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-			}
+			border-color: var(--nimble-ui-highlight);
+			background: var(--nimble-ui-hover);
 		}
 
 		&__label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.025em;
+			letter-spacing: 0.06em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__value {
-			font-size: var(--nimble-lg-text);
-			font-weight: 700;
-			color: var(--nimble-dark-text-color);
+			font-size: 1rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 	}
 
 	.hp-levels {
+		margin-top: 8px;
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 4px;
 
 		&__header {
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 700;
 			text-transform: uppercase;
-			letter-spacing: 0.025em;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-			gap: 0.375rem;
+			gap: 6px;
 		}
 	}
 
@@ -283,88 +313,91 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.125rem;
-		padding: 0.375rem;
-		background: var(--nimble-input-background-color);
+		gap: 2px;
+		padding: 4px 6px;
+		border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
 		border-radius: 4px;
-		border: 1px solid var(--nimble-card-border-color);
 
 		&__label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			white-space: nowrap;
+			color: var(--nimble-ui-ink-dim);
 		}
 
-		&__input {
+		input.hp-level-entry__input[data-look='plain'] {
 			width: 3rem;
-			padding: 0.25rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
 			text-align: center;
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
-			background: var(--nimble-input-background-color);
-			color: var(--nimble-dark-text-color);
-
-			&:focus {
-				outline: 2px solid hsl(139, 50%, 50%);
-				outline-offset: -1px;
-				border-color: hsl(139, 50%, 50%);
-			}
 		}
 	}
 
-	.hp-bonus-section {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.75rem;
-		background: var(--nimble-box-background-color);
-		border-radius: 6px;
-		border: 1px solid var(--nimble-card-border-color);
+	input.hp-level-entry__input[data-look='plain'],
+	input.hp-bonus-input[data-look='plain'] {
+		box-sizing: border-box;
+		flex: none;
+		height: 26px;
+		padding: 0 3px;
+		border: 0;
+		border-bottom: 1px dashed var(--nimble-ui-ring);
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: var(--nimble-ui-ink);
+		appearance: textfield;
+
+		&::-webkit-inner-spin-button,
+		&::-webkit-outer-spin-button {
+			appearance: none;
+		}
+
+		&:focus {
+			border-bottom: 1px solid var(--nimble-ui-highlight);
+			outline: none;
+		}
 	}
 
 	.hp-rule-bonuses {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
-		padding: 0.5rem;
-		background: var(--nimble-input-background-color);
-		border-radius: 4px;
-		border: 1px solid var(--nimble-card-border-color);
+		gap: 4px;
+		padding: 0 4px;
 
 		&__header {
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.688rem;
+			font-weight: 700;
 			text-transform: uppercase;
-			letter-spacing: 0.025em;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
+			gap: 2px;
 		}
 
 		&__total {
 			display: flex;
+			align-items: center;
 			justify-content: space-between;
-			padding-top: 0.375rem;
-			margin-top: 0.25rem;
-			border-top: 1px solid var(--nimble-card-border-color);
+			padding-top: 4px;
+			border-top: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__total-label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__total-value {
-			font-size: var(--nimble-sm-text);
+			font-size: 0.875rem;
 			font-weight: 700;
-			color: hsl(139, 50%, 40%);
+			color: var(--nimble-ui-action);
 		}
 	}
 
@@ -372,54 +405,44 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 14px;
 
 		&__name {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-dark-text-color);
+			font-size: 0.813rem;
+			color: var(--nimble-ui-ink);
 		}
 
 		&__value {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: hsl(139, 50%, 40%);
+			font-size: 0.875rem;
+			font-weight: 700;
+			color: var(--nimble-ui-action);
 		}
 	}
 
 	.hp-bonus-row {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
+		gap: 14px;
+		min-height: 34px;
+		padding: 4px;
 	}
 
 	.hp-bonus-label {
 		flex: 1;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
+		min-width: 0;
+		font-size: 0.813rem;
+		color: var(--nimble-ui-ink);
 	}
 
-	.hp-bonus-input {
-		width: 4rem;
-		padding: 0.375rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 600;
-		text-align: center;
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		background: var(--nimble-input-background-color);
-		color: var(--nimble-dark-text-color);
-
-		&:focus {
-			outline: 2px solid hsl(45, 60%, 50%);
-			outline-offset: -1px;
-			border-color: hsl(45, 60%, 50%);
-		}
+	input.hp-bonus-input[data-look='plain'] {
+		width: 64px;
+		text-align: right;
 	}
 
 	.hp-total-section {
-		padding: 0.75rem;
-		background: linear-gradient(to right, hsl(139, 40%, 35%), hsl(139, 45%, 45%));
-		border-radius: 6px;
+		margin-top: 8px;
+		padding: 6px 4px 0;
+		border-top: 1px solid var(--nimble-ui-soft);
 	}
 
 	.hp-total {
@@ -428,18 +451,17 @@
 		justify-content: space-between;
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: hsl(139, 30%, 95%);
+			font-size: 0.75rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
+			letter-spacing: 0.08em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__value {
-			font-size: var(--nimble-xl-text);
-			font-weight: 700;
-			color: #fff;
-			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+			font-size: 1.15rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 	}
 </style>

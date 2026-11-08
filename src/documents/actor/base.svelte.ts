@@ -588,7 +588,7 @@ class NimbleBaseActor<
 			`${this.name}: Configure Saves`,
 			ActorSavingThrowConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-shield', width: 600, uniqueId },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-shield', width: 600, uniqueId },
 		);
 
 		await dialog.render(true);

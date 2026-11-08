@@ -76,6 +76,7 @@
 						<input
 							class="movement-card__input"
 							type="number"
+							data-look="plain"
 							min="0"
 							value={baseValue}
 							onchange={({ target }) => updateMovement(key, target.value)}
@@ -124,155 +125,180 @@
 </section>
 
 <style lang="scss">
+	:global(.nimble-window) .nimble-sheet__body.nimble-movement-config {
+		padding: 12px;
+	}
+
 	.nimble-movement-config {
 		--nimble-sheet-body-padding-block-start: 0.5rem;
+
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 12px;
+		font-family: var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
 	}
 
 	.movement-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-		gap: 0.5rem;
+		gap: 8px;
 		align-items: stretch;
 	}
 
 	.movement-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.625rem;
-		background: var(--nimble-box-background-color);
-		border-radius: 6px;
-		border: 1px solid var(--nimble-card-border-color);
+		gap: 4px;
 		height: 100%;
-
-		&--has-bonus {
-			border-color: var(--nimble-accent-color);
-			background: linear-gradient(
-				to bottom,
-				var(--nimble-box-background-color),
-				color-mix(in srgb, var(--nimble-accent-color) 10%, var(--nimble-box-background-color))
-			);
-		}
+		padding: 5px 8px 6px;
+		border: 1px solid color-mix(in srgb, var(--nimble-bronze) 60%, transparent);
+		border-radius: 4px;
+		background: none;
+		box-shadow: none;
 
 		&__header {
 			display: flex;
 			align-items: center;
-			gap: 0.375rem;
-			padding-bottom: 0.375rem;
-			border-bottom: 1px solid var(--nimble-card-border-color);
+			gap: 4px;
+			white-space: nowrap;
 		}
 
 		&__icon {
-			font-size: 0.875rem;
-			color: var(--nimble-accent-color);
+			font-size: 0.688rem;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			font-size: 0.688rem;
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__body {
 			display: flex;
-			flex-direction: column;
-			gap: 0.375rem;
 			flex: 1;
+			flex-direction: column;
+			gap: 4px;
 		}
 
 		&__input-wrapper {
 			display: flex;
-			align-items: center;
-			gap: 0.25rem;
+			align-items: baseline;
+			gap: 6px;
 		}
 
 		&__input {
-			width: 3.5rem;
-			padding: 0.375rem;
-			font-size: var(--nimble-md-text);
-			font-weight: 600;
+			flex: none;
+			width: 2.75rem;
+			min-width: 0;
+			height: 26px;
+			margin: 0;
+			padding: 0 2px;
+			border: 0;
+			border-bottom: 1px dashed var(--nimble-ui-ring);
+			border-radius: 0;
+			background: none;
+			box-shadow: none;
+			outline: none;
+			font-family: var(--nimble-primary-font);
+			font-size: 0.875rem;
+			font-weight: 700;
 			text-align: center;
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
-			background: var(--nimble-input-background-color);
-			color: var(--nimble-dark-text-color);
+			color: var(--nimble-ui-ink);
+			appearance: textfield;
+
+			&::-webkit-inner-spin-button,
+			&::-webkit-outer-spin-button {
+				display: none;
+			}
 
 			&:focus {
-				outline: 2px solid var(--nimble-accent-color);
-				outline-offset: -1px;
-				border-color: var(--nimble-accent-color);
+				border-bottom: 1px solid var(--nimble-ui-highlight);
+				box-shadow: none;
+				outline: none;
 			}
 		}
 
 		&__unit {
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
+		}
+
+		&__bonus-list {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		&__bonus-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 6px;
+			font-size: 0.75rem;
+		}
+
+		&__bonus-item-name {
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			font-weight: 600;
+			color: var(--nimble-ui-ink-muted);
+		}
+
+		&__bonus-value {
+			flex: none;
+			font-weight: 700;
+			color: var(--nimble-ui-action);
+
+			&--negative {
+				color: var(--nimble-ui-vital);
+			}
 		}
 
 		&__total {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 0.25rem 0.375rem;
-			background: var(--nimble-accent-color);
-			border-radius: 4px;
 			margin-top: auto;
+			padding: 4px 0 0;
+			border-top: 1px solid var(--nimble-ui-soft);
+			border-radius: 0;
+			background: none;
 		}
 
 		&__total-label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-			color: white;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.025em;
+			letter-spacing: 0.06em;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__total-value {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
-			color: white;
-		}
-
-		&__bonus-list {
-			display: flex;
-			flex-direction: column;
-			gap: 0.125rem;
-		}
-
-		&__bonus-item {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			font-size: var(--nimble-xs-text);
-		}
-
-		&__bonus-item-name {
-			color: var(--nimble-dark-text-color);
-			font-weight: 500;
-		}
-
-		&__bonus-value {
-			font-weight: 600;
-			color: var(--nimble-roll-success-color);
-
-			&--negative {
-				color: var(--nimble-roll-failure-color);
-			}
+			font-size: 1rem;
+			font-weight: 900;
+			color: var(--nimble-ui-ink);
 		}
 	}
 
 	.movement-note {
 		display: flex;
 		align-items: center;
-		gap: 0.375rem;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
+		gap: 6px;
+		margin: 0;
+		padding: 0 4px;
+		border: 0;
+		background: none;
+		font-size: 0.75rem;
+		color: var(--nimble-ui-ink-muted);
 
 		i {
-			color: var(--nimble-accent-color);
+			color: var(--nimble-ui-ink-dim);
 		}
 	}
 </style>

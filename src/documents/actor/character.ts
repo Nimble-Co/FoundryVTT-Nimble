@@ -788,7 +788,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Stats`,
 			CharacterStatConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-wrench', width: 600 },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-wrench', width: 600 },
 		);
 
 		this.#dialogs.configureAbilityScores.setTitle(`${this.name}: Configure Stats`);
@@ -800,7 +800,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Armor Proficiencies`,
 			CharacterArmorProficienciesConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-shield' },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-shield' },
 		);
 
 		this.#dialogs.configureArmorProficiencies.setTitle(
@@ -814,7 +814,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Damage Defenses`,
 			DamageDefensesConfig,
 			{ actor: this },
-			{ icon: 'fa-solid fa-shield-halved' },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-shield-halved' },
 		);
 
 		this.#dialogs.configureDamageDefenses.setTitle(`${this.name}: Configure Damage Defenses`);
@@ -826,7 +826,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Language Proficiencies`,
 			CharacterLanguageProficienciesConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-language' },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-language' },
 		);
 
 		this.#dialogs.configureLanguageProficiencies.setTitle(
@@ -840,7 +840,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-person-running', width: 600 },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-person-running', width: 600 },
 		);
 
 		this.#dialogs.configureMovement.setTitle(`${this.name}: Configure Movement Speeds`);
@@ -852,7 +852,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Weapon Proficiencies`,
 			CharacterWeaponProficienciesConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-hand-fist' },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-hand-fist' },
 		);
 
 		this.#dialogs.configureWeaponProficiencies.setTitle(
@@ -866,7 +866,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-wrench', width: 600, height: 600 },
+			{ classes: ['nimble-window'], icon: 'fa-solid fa-wrench', width: 600, height: 600 },
 		);
 
 		this.#dialogs.configureSkills.setTitle(`${this.name}: Configure Skills`);
@@ -878,7 +878,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Hit Points`,
 			EditHitPointsDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-heart', width: 250, uniqueId: `${this.id}-configure-hp` },
+			{
+				classes: ['nimble-window'],
+				icon: 'fa-solid fa-heart',
+				width: 250,
+				uniqueId: `${this.id}-configure-hp`,
+			},
 		);
 
 		await dialog.render(true);
@@ -907,7 +912,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Hit Dice`,
 			EditHitDiceDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-dice-d20', width: 420, uniqueId: `${this.id}-configure-hd` },
+			{
+				classes: ['nimble-window'],
+				icon: 'fa-solid fa-dice-d20',
+				width: 420,
+				uniqueId: `${this.id}-configure-hd`,
+			},
 		);
 
 		await dialog.render(true);
@@ -976,7 +986,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: ${game.i18n.localize(CONFIG.NIMBLE.manaConfig.configureMana)}`,
 			EditManaDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-sparkles', width: 340, uniqueId: `${this.id}-configure-mana` },
+			{
+				classes: ['nimble-window'],
+				icon: 'fa-solid fa-sparkles',
+				width: 340,
+				uniqueId: `${this.id}-configure-mana`,
+			},
 		);
 
 		await dialog.render(true);
@@ -1018,7 +1033,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Edit Current Hit Dice`,
 			EditCurrentHitDiceDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-dice-d20', width: 340, uniqueId: `${this.id}-edit-current-hd` },
+			{
+				classes: ['nimble-window'],
+				icon: 'fa-solid fa-dice-d20',
+				width: 340,
+				uniqueId: `${this.id}-edit-current-hd`,
+			},
 		);
 
 		await dialog.render(true);
@@ -2392,6 +2412,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configuration`,
 			CharacterMetaConfigDialog,
 			{ actor: this },
+			{ classes: ['nimble-window'] },
 		);
 
 		this.#dialogs.metaConfig.setTitle(`${this.name}: Configuration`);
