@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
+import { taggedCreature } from '../../../tests/fixtures/conditionCreature.js';
 import { ItemActivationManager, testDependencies } from '../ItemActivationManager.js';
 
 const dialogState = { result: undefined as unknown };
@@ -19,18 +20,9 @@ const MockDialog = vi.fn(function DialogMock() {
 	};
 });
 
-function creature(name: string, conditions: string[] = []) {
-	return {
-		name,
-		uuid: `Actor.${name}`,
-		getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
-		getTargetDomain: () => new Set(conditions.map((condition) => `target:${condition}`)),
-	};
-}
-
 function attacker(conditions: string[] = []) {
 	return {
-		...creature('Kael', conditions),
+		...taggedCreature('Kael', conditions),
 		token: { uuid: 'Token.kael' },
 		getRollData: vi.fn(() => ({})),
 		getFlag: vi.fn(() => undefined),
@@ -40,7 +32,7 @@ function attacker(conditions: string[] = []) {
 }
 
 function target(name: string, conditions: string[] = []) {
-	return { actor: creature(name, conditions), document: { uuid: `Token.${name}` } };
+	return { actor: taggedCreature(name, conditions), document: { uuid: `Token.${name}` } };
 }
 
 function setTargets(...targets: Array<ReturnType<typeof target>>) {

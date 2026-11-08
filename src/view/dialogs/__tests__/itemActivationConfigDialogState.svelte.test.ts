@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
 
 const conditionalBonuses = vi.fn(() => []);
 
@@ -233,12 +234,6 @@ describe('the activation dialog damage multiplier tick', () => {
 });
 
 describe('the activation dialog condition ticks', () => {
-	const tagged = (name: string, conditions: string[]) => ({
-		name,
-		uuid: `Actor.${name}`,
-		getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
-		getTargetDomain: () => new Set(conditions.map((condition) => `target:${condition}`)),
-	});
 	const spear = {
 		type: 'weapon',
 		system: {
@@ -256,11 +251,11 @@ describe('the activation dialog condition ticks', () => {
 		item: object = spear,
 		items: object[] = [],
 	) {
-		user.targets = new Set([{ actor: tagged('Goblin', targetConditions) }]);
+		user.targets = new Set([{ actor: taggedCreature('Goblin', targetConditions) }]);
 		return createState({
 			actor: () =>
 				({
-					...tagged('Kael', attackerConditions),
+					...taggedCreature('Kael', attackerConditions),
 					rules: [],
 					system: {},
 					items,

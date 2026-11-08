@@ -1,15 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { taggedCreature as creature } from '../../../../tests/fixtures/conditionCreature.js';
 import { conditionRollModes } from '../conditionRollModes.js';
-
-function creature(name: string, conditions: string[] = [], extra: Record<string, unknown> = {}) {
-	return {
-		name,
-		uuid: `Actor.${name}`,
-		getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
-		getTargetDomain: () => new Set(conditions.map((condition) => `target:${condition}`)),
-		...extra,
-	};
-}
 
 const steps = (lines: ReturnType<typeof conditionRollModes>) =>
 	lines.map((line) => `${line.side}:${line.condition}:${line.step}`);
