@@ -20,6 +20,7 @@ import {
 } from '#utils/incomingReactions/heroicActions.js';
 import resolveHeroicReactionActionCost from '#utils/incomingReactions/resolveHeroicReactionActionCost.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minions/minionGrouping.js';
+import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.ts';
 import {
 	isActionTrackingAutomationEnabled,
 	isCombatConvenienceAutomationEnabled,
@@ -112,12 +113,14 @@ interface ResolvedInitiativeRollData {
 	rollFormula: string;
 	rollMode: number;
 	visibilityMode?: string | undefined;
+	conditionRollModes?: ConditionRollMode[];
 }
 
 interface ActorWithInitiativeRollConfiguration extends Actor {
 	resolveInitiativeRollData?: (
 		options?: ActorRollOptions,
 	) => Promise<ResolvedInitiativeRollData | null>;
+	initiativeWithNoWindow?: () => ResolvedInitiativeRollData;
 }
 
 class NimbleCombat extends Combat {
@@ -1087,10 +1090,14 @@ class NimbleCombat extends Combat {
 	async #resolvePromptedInitiativeRollData(
 		combatantId: string,
 	): Promise<ResolvedInitiativeRollData | null | undefined> {
-		const actor = this.combatants.get(combatantId)
-			?.actor as ActorWithInitiativeRollConfiguration | null;
+		const actor = this.#initiativeActor(combatantId);
 		if (typeof actor?.resolveInitiativeRollData !== 'function') return undefined;
 		return actor.resolveInitiativeRollData();
+	}
+
+	#initiativeActor(combatantId: string): ActorWithInitiativeRollConfiguration | null {
+		return (this.combatants.get(combatantId)?.actor ??
+			null) as ActorWithInitiativeRollConfiguration | null;
 	}
 
 	async #performInitiativeRollForCombatant(params: {
@@ -1117,9 +1124,12 @@ class NimbleCombat extends Combat {
 			if (lockedCombatant.initiative !== null) return null;
 			if (!initiativeRollLock.matches(lockedCombatant, lockData.requestId)) return null;
 
+			// With no window and no formula, the roll still takes the conditions that change it.
 			const promptedRollData = params.promptRollDialog
 				? await this.#resolvePromptedInitiativeRollData(params.combatantId)
-				: undefined;
+				: params.formula
+					? undefined
+					: this.#initiativeActor(params.combatantId)?.initiativeWithNoWindow?.();
 			if (params.promptRollDialog && promptedRollData === null) return null;
 
 			const resolvedMessageOptions = {
@@ -1133,6 +1143,7 @@ class NimbleCombat extends Combat {
 				combat: this as Combat,
 				combatantId: params.combatantId,
 				formula: promptedRollData?.rollFormula ?? params.formula,
+				conditionRollModes: promptedRollData?.conditionRollModes,
 				messageOptions: resolvedMessageOptions,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,

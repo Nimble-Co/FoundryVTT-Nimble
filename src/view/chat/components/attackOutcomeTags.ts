@@ -9,6 +9,8 @@ import { findPrimaryDamageNode } from '../../../utils/damage/foldBonusIntoPrimar
 import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
 import { termsHaveDieAtMax } from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import localize from '../../../utils/localize.js';
+import type { ConditionRollMode } from '../../../utils/rolls/conditionRollModes.js';
+import { conditionRollModeTag } from '../../../utils/rolls/conditionRollModeText.js';
 import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 
 interface OutcomeRollOptions {
@@ -18,6 +20,7 @@ interface OutcomeRollOptions {
 	forcedCrit?: string;
 	missThreshold?: number;
 	outcomeSources?: Partial<AttackOutcomeSources>;
+	conditionRollModes?: ConditionRollMode[];
 }
 
 interface DieTermView {
@@ -68,6 +71,16 @@ function critCauses(
 	return [...new Set(causes)];
 }
 
+/** The conditions that changed the roll mode of an attack or a check. */
+function conditionRollModeTags(
+	roll: { options?: { conditionRollModes?: ConditionRollMode[] } | null } | null,
+): AttackOutcomeTag[] {
+	return (roll?.options?.conditionRollModes ?? []).map((line) => ({
+		kind: line.step > 0 ? 'advantage' : 'disadvantage',
+		...conditionRollModeTag(line),
+	}));
+}
+
 /**
  * The tags for a result the die face does not explain: what made a face below
  * the max a crit, what made a miss face a hit, and that an attack on 2 or more
@@ -81,7 +94,7 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 			tooltip: localize(`${TAG_TEXT}.mustAttackOtherTooltip`, { feature }),
 		}),
 	);
-	return [...mustAttack, ...outcomeTagsOfResult(roll)];
+	return [...conditionRollModeTags(roll), ...mustAttack, ...outcomeTagsOfResult(roll)];
 }
 
 function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
@@ -206,4 +219,4 @@ function primaryDieBonusNotAdded(
 	});
 }
 
-export { attackOutcomeTags, cardPrimaryRoll, primaryDieBonusNotAdded };
+export { attackOutcomeTags, cardPrimaryRoll, conditionRollModeTags, primaryDieBonusNotAdded };

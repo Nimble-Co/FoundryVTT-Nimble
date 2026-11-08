@@ -1202,6 +1202,33 @@
 				"all": "End All"
 			}
 		},
+		"conditionRollMode": {
+			"label": "{condition} ({name})",
+			"proneMelee": "{condition}, melee attack ({name})",
+			"proneRanged": "{condition}, ranged attack ({name})",
+			"fearNearby": "{condition}, source of fear nearby ({name})",
+			"taunter": "{condition}, not the taunter ({name})",
+			"tag": "{mode}: {label}",
+			"advantage": "Advantage",
+			"disadvantage": "Disadvantage",
+			"self": {
+				"blinded": "A Blinded creature has disadvantage on its attacks.",
+				"prone": "A Prone creature has disadvantage on attacks.",
+				"invisible": "An Invisible creature has advantage on its attacks.",
+				"poisoned": "A Poisoned creature has disadvantage on rolls.",
+				"frightened": "A Frightened creature has disadvantage on rolls when the source of its fear is nearby.",
+				"taunted": "A Taunted creature has disadvantage on attacks, except against the most recent taunter.",
+				"despair": "Disadvantage on the next attack this encounter. Despair ends after that attack."
+			},
+			"target": {
+				"blinded": "Attacks against a Blinded creature have advantage.",
+				"grappled": "Attacks against a Grappled or Restrained creature have advantage.",
+				"incapacitated": "Attacks against an Incapacitated creature have advantage.",
+				"proneMelee": "Melee attacks against a Prone creature have advantage.",
+				"proneRanged": "Ranged attacks against a Prone creature have disadvantage.",
+				"invisible": "Attacks against an Invisible creature have disadvantage."
+			}
+		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
 			"bloodied": "<p>At half HP or less.</p>",

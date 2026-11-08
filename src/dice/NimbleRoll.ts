@@ -1,4 +1,5 @@
 import type { NimbleRollData } from '#types/rollData.d.ts';
+import type { ConditionRollMode } from '../utils/rolls/conditionRollModes.js';
 
 declare namespace NimbleRoll {
 	/**
@@ -12,7 +13,10 @@ declare namespace NimbleRoll {
 	};
 
 	/** Options for configuring a NimbleRoll. */
-	type Options = foundry.dice.Roll.Options;
+	type Options = foundry.dice.Roll.Options & {
+		/** The conditions that changed the roll mode, for the card. */
+		conditionRollModes?: ConditionRollMode[];
+	};
 
 	/**
 	 * Represents an evaluated NimbleRoll with guaranteed total value.

@@ -20,6 +20,8 @@
 		cannotMiss: 'fa-bullseye',
 		noOutcome: 'fa-ban',
 		mustAttackOther: 'fa-arrows-turn-to-dots',
+		advantage: 'fa-arrow-up',
+		disadvantage: 'fa-arrow-down',
 	};
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {

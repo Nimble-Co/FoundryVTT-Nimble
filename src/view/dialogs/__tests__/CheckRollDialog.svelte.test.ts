@@ -38,11 +38,19 @@ function createSituationalRule(
 	};
 }
 
-function renderWillSave(rules: Array<Record<string, unknown>>, rollMode = 0) {
+function renderWillSave(
+	rules: Array<Record<string, unknown>>,
+	rollMode = 0,
+	conditions: string[] = [],
+) {
 	const submitRoll = vi.fn();
 	const close = vi.fn();
 	const { container } = render(CheckRollDialog, {
-		actor: { name: 'Hero', rules },
+		actor: {
+			name: 'Hero',
+			rules,
+			getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
+		},
 		dialog: { submitRoll, close, title: 'Hero: Configure Will Save' },
 		type: 'savingThrow',
 		saveKey: 'will',
@@ -227,5 +235,46 @@ describe('CheckRollDialog situational roll modes', () => {
 		await roll();
 
 		expect(submitRoll).toHaveBeenCalledWith(expect.objectContaining({ rollMode: 6 }));
+	});
+
+	describe('conditions', () => {
+		it('opens with a tick on for each condition that changes the roll', async () => {
+			const { formula, optionValues, roll, submitRoll } = renderWillSave([], 1, [
+				'poisoned',
+				'frightened',
+				'blinded',
+			]);
+
+			expect(screen.getByRole('checkbox', { name: /Poisoned \(Hero\)/ })).toBeChecked();
+			expect(
+				screen.getByRole('checkbox', { name: /Frightened, source of fear nearby \(Hero\)/ }),
+			).toBeChecked();
+			expect(optionValues()).toEqual(['Disadvantage × 1', 'Disadvantage × 1']);
+			expect(formula()).toBe('d20 @ -1');
+
+			await roll();
+
+			expect(submitRoll).toHaveBeenCalledWith(
+				expect.objectContaining({
+					rollMode: -1,
+					conditionRollModes: [
+						expect.objectContaining({ condition: 'poisoned', step: -1 }),
+						expect.objectContaining({ condition: 'frightened', step: -1 }),
+					],
+				}),
+			);
+		});
+
+		it('gives the step back when the tick is taken off, and leaves it off the card', async () => {
+			const { formula, roll, submitRoll, toggle } = renderWillSave([], 0, ['frightened']);
+
+			await toggle('Frightened');
+			await waitFor(() => expect(formula()).toBe('d20 @ 0'));
+			await roll();
+
+			expect(submitRoll).toHaveBeenCalledWith(
+				expect.objectContaining({ rollMode: 0, conditionRollModes: [] }),
+			);
+		});
 	});
 });

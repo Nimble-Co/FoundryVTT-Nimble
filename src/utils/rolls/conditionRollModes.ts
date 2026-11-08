@@ -1,0 +1,136 @@
+import type { AttackDelivery } from '../damage/attackDelivery.js';
+
+/** One condition that changes the roll mode of a roll. */
+interface ConditionRollMode {
+	/** Stable for the roll: `${side}:${condition}`. */
+	key: string;
+	condition: string;
+	/** Whose condition it is: the one who rolls, or the attack's target. */
+	side: 'self' | 'target';
+	/** +1 is one advantage, -1 one disadvantage. */
+	step: number;
+	/** Ticked when the roll window opens, and used when no window opens. */
+	on: boolean;
+	/** The name of the creature with the condition. */
+	name: string;
+	/** What the table decides, which the line names. */
+	ask?: 'fearNearby' | 'taunter';
+	/** The condition ends after the attack that used the line. */
+	ends?: boolean;
+}
+
+interface ConditionEffect {
+	statuses?: ReadonlySet<string>;
+	origin?: string | null;
+	disabled?: boolean;
+	_stats?: { createdTime?: number | null } | null;
+}
+
+interface Creature {
+	name?: string | null;
+	uuid?: string | null;
+	getDomain?(): Set<string>;
+	getTargetDomain?(): Set<string>;
+	effects?: Iterable<ConditionEffect>;
+}
+
+interface ConditionRollInput {
+	kind: 'attack' | 'check';
+	roller: Creature | null | undefined;
+	/** The attack's only target; null with no target or two or more, or an area. */
+	target?: Creature | null;
+	delivery?: AttackDelivery;
+}
+
+/**
+ * "Attacks against you" (Core:389-421). Grappled stands for Restrained and
+ * Incapacitated for its group, as their aliases give those tags (Core:1934, :1970).
+ */
+function targetSteps(delivery: AttackDelivery | undefined): Array<[string, number]> {
+	const prone = delivery === 'melee' ? 1 : delivery === 'ranged' ? -1 : 0;
+	return [
+		['blinded', 1],
+		['grappled', 1],
+		['incapacitated', 1],
+		['prone', prone],
+		['invisible', -1],
+	];
+}
+
+/** The roller's own conditions (Core:389-421, GM:1906). Poisoned and Frightened change every roll. */
+const SELF_ATTACK_STEPS: Array<[string, number]> = [
+	['blinded', -1],
+	['prone', -1],
+	['invisible', 1],
+];
+const SELF_ROLL_STEPS: Array<[string, number]> = [
+	['poisoned', -1],
+	['frightened', -1],
+];
+
+/**
+ * The uuid of the creature that caused the most recent Taunted, from the
+ * effect's origin: an actor, or an item on one. Null when no creature is known.
+ */
+function taunterUuid(roller: Creature | null | undefined): string | null {
+	let latest: ConditionEffect | null = null;
+	for (const effect of roller?.effects ?? []) {
+		if (effect.disabled || !effect.statuses?.has('taunted')) continue;
+		const time = effect._stats?.createdTime ?? 0;
+		if (!latest || time >= (latest._stats?.createdTime ?? 0)) latest = effect;
+	}
+	const actorUuid = latest?.origin?.split('.Item.')[0] ?? '';
+	return /^(Actor|Scene)\./.test(actorUuid) ? actorUuid : null;
+}
+
+/** Disadvantage on attacks except against the most recent taunter (Core:409). */
+function tauntedLine(roller: Creature | null | undefined, target: Creature | null | undefined) {
+	const taunter = taunterUuid(roller);
+	if (!taunter || !target?.uuid) return { ask: 'taunter' as const };
+	return target.uuid === taunter ? null : {};
+}
+
+/** The conditions that change the roll mode of this roll, in a fixed order. */
+function conditionRollModes(input: ConditionRollInput): ConditionRollMode[] {
+	const lines: ConditionRollMode[] = [];
+	const target = input.kind === 'attack' ? input.target : null;
+	const targetTags = target?.getTargetDomain?.() ?? new Set<string>();
+	const add = (
+		side: ConditionRollMode['side'],
+		condition: string,
+		step: number,
+		name: string,
+		extra: Partial<ConditionRollMode> = {},
+	) => lines.push({ key: `${side}:${condition}`, condition, side, step, on: true, name, ...extra });
+
+	const rollerTags = input.roller?.getDomain?.() ?? new Set<string>();
+	const rollerName = input.roller?.name ?? '';
+	const selfSteps =
+		input.kind === 'attack' ? [...SELF_ATTACK_STEPS, ...SELF_ROLL_STEPS] : SELF_ROLL_STEPS;
+	for (const [condition, step] of selfSteps) {
+		if (!rollerTags.has(`self:${condition}`)) continue;
+		add(
+			'self',
+			condition,
+			step,
+			rollerName,
+			condition === 'frightened' ? { ask: 'fearNearby' } : {},
+		);
+	}
+	if (input.kind === 'attack' && rollerTags.has('self:taunted')) {
+		const taunted = tauntedLine(input.roller, input.target);
+		if (taunted) add('self', 'taunted', -1, rollerName, taunted);
+	}
+	if (input.kind === 'attack' && rollerTags.has('self:despair')) {
+		add('self', 'despair', -1, rollerName, { ends: true });
+	}
+
+	for (const [condition, step] of targetSteps(input.delivery)) {
+		if (step !== 0 && targetTags.has(`target:${condition}`)) {
+			add('target', condition, step, target?.name ?? '');
+		}
+	}
+	return lines;
+}
+
+export { type ConditionRollMode, conditionRollModes };
