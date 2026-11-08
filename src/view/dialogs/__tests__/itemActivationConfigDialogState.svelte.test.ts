@@ -254,6 +254,7 @@ describe('the activation dialog condition ticks', () => {
 		targetConditions: string[],
 		initialRollMode = 0,
 		item: object = spear,
+		items: object[] = [],
 	) {
 		user.targets = new Set([{ actor: tagged('Goblin', targetConditions) }]);
 		return createState({
@@ -262,7 +263,7 @@ describe('the activation dialog condition ticks', () => {
 					...tagged('Kael', attackerConditions),
 					rules: [],
 					system: {},
-					items: [],
+					items,
 					getFlag: () => undefined,
 				}) as never,
 			item: () => item as never,
@@ -307,5 +308,73 @@ describe('the activation dialog condition ticks', () => {
 
 		expect(state.conditionOptions).toEqual([]);
 		expect(state.selectedRollMode).toBe(0);
+	});
+
+	it('reads a spell with Range as a ranged attack', () => {
+		const zap = {
+			type: 'spell',
+			system: {
+				properties: { selected: ['range'] },
+				activation: {
+					targets: {},
+					effects: [{ id: 'd', type: 'damage', formula: '2d6', canCrit: true, canMiss: true }],
+				},
+			},
+		};
+
+		const state = open([], ['prone'], 0, zap);
+
+		expect(state.conditionOptions.map((option) => [option.label, option.value])).toEqual([
+			['Prone, ranged attack (Goblin)', -1],
+		]);
+		expect(state.selectedRollMode).toBe(-1);
+	});
+
+	it('reads the lines again for the weapon the player picks', () => {
+		const weapon = (id: string, attackType: string) => ({
+			id,
+			uuid: `Item.${id}`,
+			name: id,
+			type: 'object',
+			system: {
+				objectType: 'weapon',
+				equipped: true,
+				activation: {
+					targets: { attackType },
+					effects: [{ type: 'damage', formula: '1d6' }],
+				},
+			},
+		});
+		const ability = {
+			type: 'feature',
+			system: {
+				activation: {
+					weaponAttack: 'any',
+					targets: { attackType: 'reach' },
+					effects: [{ id: 'd', type: 'damage', formula: '1d6', canCrit: true, canMiss: true }],
+				},
+			},
+		};
+
+		const state = open([], ['prone'], 0, ability, [
+			weapon('sword', 'reach'),
+			weapon('bow', 'range'),
+		]);
+		expect(state.selectedRollMode).toBe(1);
+
+		state.weaponUuid = 'Item.bow';
+
+		expect(state.conditionOptions.map((option) => option.label)).toEqual([
+			'Prone, ranged attack (Goblin)',
+		]);
+		expect(state.selectedRollMode).toBe(-1);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('gives the dual wield field the player own roll mode, without the ticks', () => {
+		const state = open([], ['blinded']);
+
+		expect(state.selectedRollMode).toBe(1);
+		expect(state.ownRollMode).toBe(0);
 	});
 });

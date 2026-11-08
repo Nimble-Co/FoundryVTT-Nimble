@@ -1,4 +1,4 @@
-import { attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
+import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 import { isAttackRoll } from '../heldChange/heldChange.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { type ConditionRollMode, conditionRollModes } from './conditionRollModes.js';
@@ -20,6 +20,7 @@ export function attackConditionLines(
 	roller: Creature,
 	activation: WindowActivation | null | undefined,
 	soleTarget: Creature,
+	properties: readonly string[] = [],
 ): ConditionRollMode[] {
 	const damage = flattenEffectsTree((activation?.effects ?? []) as never).find(
 		(node) => node.type === 'damage',
@@ -30,6 +31,21 @@ export function attackConditionLines(
 		kind: 'attack',
 		roller,
 		target: area ? null : soleTarget,
-		delivery: attackDeliveryFromAttackType(activation.targets?.attackType),
+		delivery: conditionDelivery(activation.targets?.attackType, properties),
 	});
+}
+
+/**
+ * Melee or ranged, for Prone. With no attack type, a spell's Range or Reach
+ * property says it (Core:1407); with both or neither, it is not known.
+ */
+export function conditionDelivery(
+	attackType: string | null | undefined,
+	properties: readonly string[] = [],
+): AttackDelivery {
+	const delivery = attackDeliveryFromAttackType(attackType);
+	if (delivery) return delivery;
+	const range = properties.includes('range');
+	if (range === properties.includes('reach')) return null;
+	return range ? 'ranged' : 'melee';
 }

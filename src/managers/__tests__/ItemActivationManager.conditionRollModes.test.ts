@@ -152,6 +152,25 @@ describe('ItemActivationManager: conditions that change the roll mode', () => {
 		expect(used(area.rollOptions)).toEqual(['self:prone:-1']);
 	});
 
+	it('reads a spell with Range and no attack type as a ranged attack', async () => {
+		setTargets(target('Goblin', ['prone']));
+		const actor = attacker();
+		const zap = {
+			type: 'spell',
+			name: 'Zap',
+			actor,
+			system: { properties: { selected: ['range'] }, activation: { effects: [] } },
+		};
+		const manager = new ItemActivationManager(
+			zap as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+			{ fastForward: true },
+		);
+		manager.activationData = { effects: [{ ...ATTACK }], targets: {} };
+		await manager.getData();
+
+		expect(used(lastRollOptions())).toEqual(['target:prone:-1']);
+	});
+
 	it('changes nothing on a roll that is not an attack', async () => {
 		setTargets(target('Goblin', ['blinded']));
 
@@ -181,6 +200,40 @@ describe('ItemActivationManager: conditions that change the roll mode', () => {
 		});
 
 		expect(rollOptions.rollModeSources).toEqual([1]);
+	});
+
+	it('gives both weapons of a dual wield the condition steps, each with its own roll mode', async () => {
+		setTargets(target('Goblin', ['blinded']));
+		const globals = globalThis as unknown as Record<string, unknown>;
+		globals.fromUuidSync = vi.fn(() => ({
+			uuid: 'Item.dagger',
+			name: 'Dagger',
+			identifier: 'dagger',
+			system: { activation: { effects: [{ type: 'damage', formula: '1d4' }] } },
+		}));
+		dialogState.result = {
+			rollMode: 1,
+			conditionRollModes: [
+				{
+					key: 'target:blinded',
+					condition: 'blinded',
+					side: 'target',
+					step: 1,
+					on: true,
+					name: 'Goblin',
+				},
+			],
+			dualWield: { otherItemUuid: 'Item.dagger', extraDieOn: 'activated' },
+		};
+
+		await attack(attacker(), {});
+		delete globals.fromUuidSync;
+
+		const [first, second] = MockDamageRoll.mock.calls.map(
+			(call) => (call as unknown[])[2] as Record<string, any>,
+		);
+		expect(first.rollModeSources).toEqual([1, 1]);
+		expect(second.rollModeSources.reduce((sum: number, n: number) => sum + n, 0)).toBe(1);
 	});
 
 	describe('Despair', () => {

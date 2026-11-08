@@ -45,6 +45,7 @@
 					firstDecides: spell?.activation?.targets?.singleTargetAttack === true,
 				}) as { actor?: unknown } | null
 			)?.actor ?? null,
+			spell?.properties?.selected,
 		),
 	);
 	const conditionOptions = conditionRollModeOptions(conditionLines);

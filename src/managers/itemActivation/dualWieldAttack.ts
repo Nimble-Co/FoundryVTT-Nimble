@@ -94,6 +94,14 @@ export async function rollOtherWeapon(input: {
 	}
 
 	const rollMode = rollModeOfWeapon(context.rollMode, choice.extraDieOn, 'other');
+	// The other sources (conditions, the target's rules) count for both weapons;
+	// only the extra die moves from one weapon to the other.
+	const sources = Array.isArray(firstOptions.rollModeSources)
+		? [
+				...firstOptions.rollModeSources,
+				rollMode - rollModeOfWeapon(context.rollMode, choice.extraDieOn, 'activated'),
+			]
+		: undefined;
 	const self = {
 		itemUuid: input.item.uuid ?? '',
 		label: input.item.name,
@@ -103,6 +111,7 @@ export async function rollOtherWeapon(input: {
 	const otherOptions = {
 		...firstOptions,
 		rollMode,
+		...(sources ? { rollModeSources: sources } : {}),
 		canCrit:
 			firstOptions.canCrit &&
 			node.canCrit !== false &&

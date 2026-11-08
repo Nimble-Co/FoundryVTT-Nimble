@@ -172,7 +172,7 @@
 		<DualWieldField
 			offer={state.dualWieldOffer}
 			itemName={item.name}
-			rollMode={state.selectedRollMode}
+			rollMode={state.ownRollMode}
 			bind:checked={state.dualWield}
 			bind:extraDieOn={state.dualWieldExtraDieOn}
 		/>

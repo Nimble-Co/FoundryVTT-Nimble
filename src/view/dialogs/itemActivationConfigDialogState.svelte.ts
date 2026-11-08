@@ -118,15 +118,44 @@ export function createItemActivationConfigDialogState(
 	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
-	const conditionLines = attackConditionLines(
-		actor as never,
-		(item.system as { activation?: Parameters<typeof attackConditionLines>[1] }).activation,
-		(firstTargetActor ?? null) as never,
-	);
-	const conditionOptions = conditionRollModeOptions(conditionLines);
-	const opened = openRollModeTicks(initialRollMode, conditionOptions);
+	const weaponAttack = weaponAttackOf(item);
+	const weapons = weaponOptionsFor(actor, weaponAttack);
+	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
+	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
+
+	// A weapon ability attacks as the weapon does, so the weapon's attack type
+	// decides melee or ranged.
+	const itemSystem = item.system as {
+		activation?: Parameters<typeof attackConditionLines>[1];
+		properties?: { selected?: string[] };
+	};
+	const conditionLinesFor = (weapon: { attackType: string } | null) =>
+		attackConditionLines(
+			actor as never,
+			weapon
+				? {
+						...itemSystem.activation,
+						targets: { ...itemSystem.activation?.targets, attackType: weapon.attackType },
+					}
+				: itemSystem.activation,
+			(firstTargetActor ?? null) as never,
+			itemSystem.properties?.selected,
+		);
+	let conditionLines = $state(conditionLinesFor(weapons[0] ?? null));
+	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));
+	const opened = openRollModeTicks(initialRollMode, conditionRollModeOptions(conditionLines));
 	let selectedRollMode = $state(opened.mode);
 	let appliedTicks = $state<AppliedTicks>(opened.applied);
+
+	// The condition ticks of the new weapon replace those of the old one.
+	function chooseWeapon(uuid: string | null) {
+		weaponUuid = uuid;
+		const own = selectedRollMode - Object.values(appliedTicks).reduce((sum, step) => sum + step, 0);
+		conditionLines = conditionLinesFor(weapons.find((weapon) => weapon.uuid === uuid) ?? null);
+		const reopened = openRollModeTicks(own, conditionRollModeOptions(conditionLines));
+		selectedRollMode = reopened.mode;
+		appliedTicks = reopened.applied;
+	}
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
 		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
 	);
@@ -254,18 +283,13 @@ export function createItemActivationConfigDialogState(
 	);
 
 	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
+	const ownRollMode = $derived(
+		selectedRollMode - conditionRollModes.reduce((sum, line) => sum + line.step, 0),
+	);
 
 	// The roll mode the manager gets: the player's own, with the condition ticks
 	// apart (they go in as their own sources) and the advantage choices in.
-	const submittedRollMode = $derived(
-		Math.clamp(
-			selectedRollMode -
-				conditionRollModes.reduce((sum, line) => sum + line.step, 0) +
-				conditionalAdvantageTotal,
-			-6,
-			6,
-		),
-	);
+	const submittedRollMode = $derived(Math.clamp(ownRollMode + conditionalAdvantageTotal, -6, 6));
 
 	const chosenDamageOptions = $derived(
 		conditionalBonusOptions.filter((o) => conditionalChoices[o.key] === 'damage'),
@@ -296,11 +320,6 @@ export function createItemActivationConfigDialogState(
 				label: o.label,
 			})),
 	);
-
-	const weaponAttack = weaponAttackOf(item);
-	const weapons = weaponOptionsFor(actor, weaponAttack);
-	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
-	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
 
 	const damageEffects = $derived.by(() => {
 		const effects = extractDamageEffectsFromItem(options.item());
@@ -355,7 +374,12 @@ export function createItemActivationConfigDialogState(
 		set selectedRollMode(value: number) {
 			selectedRollMode = value;
 		},
-		conditionOptions,
+		get conditionOptions() {
+			return conditionOptions;
+		},
+		get ownRollMode() {
+			return ownRollMode;
+		},
 		get appliedTicks() {
 			return appliedTicks;
 		},
@@ -405,7 +429,7 @@ export function createItemActivationConfigDialogState(
 			return weaponUuid;
 		},
 		set weaponUuid(value: string | null) {
-			weaponUuid = value;
+			chooseWeapon(value);
 		},
 		chargeCosts,
 		get cannotRollReason() {

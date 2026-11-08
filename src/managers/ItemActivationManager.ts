@@ -80,6 +80,7 @@ import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffe
 import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
+import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
 import { type ConditionRollMode, conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { endUsedConditions } from '../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
@@ -799,7 +800,7 @@ class ItemActivationManager {
 					}
 					this.#usedConditions =
 						isAttack && !this.#keptAmount && !this.#maxDamage
-							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(delivery, isAoE))
+							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(isAoE))
 							: [];
 					if (this.#usedConditions.length > 0) {
 						damageOptions.rollModeSources = [
@@ -1678,12 +1679,13 @@ class ItemActivationManager {
 	 * The conditions that change an attack with no roll window: every line that
 	 * starts on. An area has no target conditions (Core:1403).
 	 */
-	#conditionsWithNoWindow(delivery: AttackDelivery, area: boolean): ConditionRollMode[] {
+	#conditionsWithNoWindow(area: boolean): ConditionRollMode[] {
+		const properties = (this.#item.system as { properties?: { selected?: string[] } }).properties;
 		return conditionRollModes({
 			kind: 'attack',
 			roller: this.actor as never,
 			target: area ? null : ((this.#getSoleTargetToken()?.actor ?? null) as never),
-			delivery,
+			delivery: conditionDelivery(this.activationData?.targets?.attackType, properties?.selected),
 		}).filter((line) => line.on);
 	}
 
