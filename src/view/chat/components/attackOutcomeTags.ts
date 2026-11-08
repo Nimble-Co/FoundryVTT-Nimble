@@ -72,10 +72,23 @@ function critCauses(
 }
 
 /** The conditions that changed the roll mode of an attack or a check. */
-function conditionRollModeTags(
-	roll: { options?: { conditionRollModes?: ConditionRollMode[] } | null } | null,
-): AttackOutcomeTag[] {
-	return (roll?.options?.conditionRollModes ?? []).map((line) => ({
+/** The Font Awesome icon of each tag kind. */
+const ATTACK_OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
+	maxDamage: 'fa-angles-up',
+	keptAmount: 'fa-angles-up',
+	critDice: 'fa-dice-d20',
+	crit: 'fa-burst',
+	cannotMiss: 'fa-bullseye',
+	noOutcome: 'fa-ban',
+	mustAttackOther: 'fa-arrows-turn-to-dots',
+	advantage: 'fa-arrow-up',
+	disadvantage: 'fa-arrow-down',
+};
+
+/** A tag for each condition that changed the roll mode of a stored roll. */
+function conditionRollModeTags(roll: { options?: unknown } | null | undefined): AttackOutcomeTag[] {
+	const options = roll?.options as { conditionRollModes?: ConditionRollMode[] } | null | undefined;
+	return (options?.conditionRollModes ?? []).map((line) => ({
 		kind: line.step > 0 ? 'advantage' : 'disadvantage',
 		...conditionRollModeTag(line),
 	}));
@@ -219,4 +232,10 @@ function primaryDieBonusNotAdded(
 	});
 }
 
-export { attackOutcomeTags, cardPrimaryRoll, conditionRollModeTags, primaryDieBonusNotAdded };
+export {
+	ATTACK_OUTCOME_TAG_ICONS,
+	attackOutcomeTags,
+	cardPrimaryRoll,
+	conditionRollModeTags,
+	primaryDieBonusNotAdded,
+};

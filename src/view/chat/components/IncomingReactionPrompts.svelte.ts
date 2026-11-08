@@ -179,7 +179,7 @@ export function createIncomingReactionPromptsState(
 	const outcomeTags = $derived.by(() => {
 		if (getPlace() === 'roll') return attackOutcomeTags(primaryRoll);
 		if (getPlace() === 'checkRoll') {
-			return conditionRollModeTags(message?.reactive?.rolls?.[0] as never);
+			return conditionRollModeTags(message?.reactive?.rolls?.[0]);
 		}
 		return [];
 	});

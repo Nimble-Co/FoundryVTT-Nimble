@@ -1,28 +1,16 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { AttackOutcomeTag } from '#types/attackOutcome.d.ts';
 	import type { RerollHistoryProps } from '#types/components/RerollHistory.d.ts';
 
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import { ATTACK_OUTCOME_TAG_ICONS } from './attackOutcomeTags.ts';
 	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	import { createTagNotes } from './tagNotes.ts';
 	type RerollHistoryLine = RerollHistoryProps['lines'][number];
-
-	const OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
-		maxDamage: 'fa-angles-up',
-		keptAmount: 'fa-angles-up',
-		critDice: 'fa-dice-d20',
-		crit: 'fa-burst',
-		cannotMiss: 'fa-bullseye',
-		noOutcome: 'fa-ban',
-		mustAttackOther: 'fa-arrows-turn-to-dots',
-		advantage: 'fa-arrow-up',
-		disadvantage: 'fa-arrow-down',
-	};
 
 	const TAG_ICONS: Record<RerollHistoryLine['tags'][number]['kind'], string> = {
 		automatic: 'fa-gear',
@@ -86,7 +74,7 @@
 {#if outcomeTags.length > 0}
 	<div class="nimble-roll-changes__tags nimble-roll-changes__tags--outcome">
 		{#each outcomeTags as tag (tag.label)}
-			{@render tagButton('outcome', tag.label, tag, OUTCOME_TAG_ICONS[tag.kind], {
+			{@render tagButton('outcome', tag.label, tag, ATTACK_OUTCOME_TAG_ICONS[tag.kind], {
 				none: tag.kind === 'noOutcome',
 				crit: tag.kind === 'crit',
 			})}
