@@ -1,3 +1,4 @@
+import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -168,6 +169,7 @@ export function createOpportunityAttackPanelState(
 			img: 'icons/skills/melee/unarmed-punch-fist.webp',
 			system: {
 				activation: {
+					targets: { attackType: 'reach' },
 					effects: [
 						{
 							type: 'damage',
@@ -199,10 +201,18 @@ export function createOpportunityAttackPanelState(
 			getOnConsumeForcedReactionUse()();
 		}
 
+		const rollMode = result.rollMode ?? -1; // Disadvantage by default
+		const conditions = result.conditionRollModes ?? [];
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit,
 			canMiss: true,
-			rollMode: result.rollMode ?? -1, // Disadvantage by default
+			rollMode,
+			...(conditions.length > 0
+				? {
+						rollModeSources: [rollMode, ...conditions.map((line) => line.step)],
+						conditionRollModes: conditions,
+					}
+				: {}),
 			primaryDieValue: result.primaryDieValue ?? 0,
 			primaryDieModifier: Number(result.primaryDieModifier) || 0,
 			damageType: 'bludgeoning',
@@ -257,7 +267,7 @@ export function createOpportunityAttackPanelState(
 				actorType: getActor().type,
 				image: unarmedItem.img,
 				permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
-				rollMode: result.rollMode ?? -1,
+				rollMode,
 				name: localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity'),
 				description: '',
 				featureType: 'feature',
@@ -278,6 +288,7 @@ export function createOpportunityAttackPanelState(
 		};
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		await endUsedConditions(getActor(), conditions);
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {

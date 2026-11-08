@@ -80,6 +80,8 @@ import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffe
 import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
+import { type ConditionRollMode, conditionRollModes } from '../utils/rolls/conditionRollModes.js';
+import { endUsedConditions } from '../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
@@ -278,6 +280,9 @@ class ItemActivationManager {
 
 	/** The Held Changes this attack uses, which the roll spends. */
 	#heldPlan: AttackHeldPlan | null = null;
+
+	/** The conditions that changed the attack's roll mode, for what ends after it. */
+	#usedConditions: ConditionRollMode[] = [];
 
 	/** The kept amount this attack uses in place of a roll. */
 	#keptAmount: HeldChange | null = null;
@@ -792,6 +797,17 @@ class ItemActivationManager {
 					if (Array.isArray(this.#options.rollModeSources)) {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
+					this.#usedConditions =
+						isAttack && !this.#keptAmount && !this.#maxDamage
+							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(delivery, isAoE))
+							: [];
+					if (this.#usedConditions.length > 0) {
+						damageOptions.rollModeSources = [
+							...(damageOptions.rollModeSources ?? [damageOptions.rollMode]),
+							...this.#usedConditions.map((line) => line.step),
+						];
+						damageOptions.conditionRollModes = this.#usedConditions;
+					}
 
 					// The target's incoming-attack rules only apply to actual attacks
 					// with a resolvable single target; an AoE roll is shared by every
@@ -1213,6 +1229,8 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
+		await endUsedConditions(this.actor as never, this.#usedConditions);
+		this.#usedConditions = [];
 		if (this.#heldPlan) await this.#heldPlan.spend();
 		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
 		this.#heldPlan = null;
@@ -1656,6 +1674,19 @@ class ItemActivationManager {
 		}) as Token.Implementation | null;
 	}
 
+	/**
+	 * The conditions that change an attack with no roll window: every line that
+	 * starts on. An area has no target conditions (Core:1403).
+	 */
+	#conditionsWithNoWindow(delivery: AttackDelivery, area: boolean): ConditionRollMode[] {
+		return conditionRollModes({
+			kind: 'attack',
+			roller: this.actor as never,
+			target: area ? null : ((this.#getSoleTargetToken()?.actor ?? null) as never),
+			delivery,
+		}).filter((line) => line.on);
+	}
+
 	/** The item's extra targets do not make the attack a Multi-target Attack. */
 	#isSingleTargetAttack(): boolean {
 		return this.activationData?.targets?.singleTargetAttack === true;
@@ -1749,8 +1780,10 @@ namespace ItemActivationManager {
 		freeUse?: boolean;
 		/** The tick for 1 less mana. */
 		lessMana?: boolean;
-		/** Roll mode selected in the dialog. */
+		/** Roll mode selected in the dialog, without the condition ticks. */
 		rollMode: number | undefined;
+		/** The condition ticks that were on. None means the dialog had none to show. */
+		conditionRollModes?: ConditionRollMode[];
 		/** Modified roll formula from the dialog. */
 		rollFormula?: string;
 		/** Primary die value if predetermined. */

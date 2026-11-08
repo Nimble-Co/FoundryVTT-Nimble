@@ -1,3 +1,4 @@
+import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.ts';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
 export interface SpendablePool {
@@ -75,6 +76,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	 * Optional: the upcast dialog submits the same shape without it.
 	 */
 	consumedVariableCharges?: ConsumedChargePool[];
+	/** The condition ticks that were on, apart from `rollMode`. */
+	conditionRollModes?: ConditionRollMode[];
 }
 
 export interface ItemActivationConfigDialogInstance {

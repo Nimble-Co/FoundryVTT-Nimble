@@ -15,6 +15,7 @@
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
+	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	const { skillCheckDialog, damageTypes } = CONFIG.NIMBLE;
@@ -68,10 +69,9 @@
 			.filter(([, count]) => count > 0)
 			.map(([poolId, count]) => ({ poolId, count }));
 		dialog.submitActivation({
-			// Fold any "advantage" conditional-bonus choices into the roll mode; "damage"
-			// choices are already baked into the modified formula below. Clamp the sum to
-			// the ±6 convention so stacked advantage can't push past what the UI allows.
-			rollMode: Math.clamp(state.selectedRollMode + state.conditionalAdvantageTotal, -6, 6),
+			// "Damage" conditional-bonus choices are already in the modified formula below.
+			rollMode: state.submittedRollMode,
+			conditionRollModes: state.conditionRollModes,
 			rollFormula: state.modifiedFormulas[0]?.formula || '0',
 			situationalModifiers: state.situationalModifiers,
 			primaryDieValue: state.primaryDieValue,
@@ -147,7 +147,14 @@
 		/>
 	{/if}
 
-	{#if !rollsNoDice}<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />{/if}
+	{#if !rollsNoDice}
+		<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
+		<SituationalRollModeList
+			options={state.conditionOptions}
+			bind:value={state.selectedRollMode}
+			bind:applied={state.appliedTicks}
+		/>
+	{/if}
 
 	{#if !state.usesKeptAmount}<MaxDamageField
 			offers={state.maxDamageOffers}

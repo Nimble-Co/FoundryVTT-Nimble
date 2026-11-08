@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
+	import { conditionRollModeTags } from './components/attackOutcomeTags.ts';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -190,6 +191,15 @@
 								label: bonus.label,
 								value: bonus.value > 0 ? `+${bonus.value}` : String(bonus.value),
 							})}
+						</p>
+					{/each}
+					{#each conditionRollModeTags((row.roll ?? null) as never) as tag (tag.label)}
+						<p class="nimble-group-member-roll__bonus" data-tooltip={tag.tooltip}>
+							<i
+								class="fa-solid {tag.kind === 'advantage' ? 'fa-arrow-up' : 'fa-arrow-down'}"
+								aria-hidden="true"
+							></i>
+							{tag.label}
 						</p>
 					{/each}
 					{#if row.mustAttackLabel}

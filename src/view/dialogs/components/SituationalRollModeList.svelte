@@ -38,8 +38,8 @@ A tick moves the Roll Mode slider by its value, and an untick gives back what it
 	function valueText(option: SituationalRollModeListOption): string {
 		const shown = shownValue(option);
 		if (shown === 0) return localize(`${TEXT}.noEffect`);
-		if (shown > 0) return localize(`${TEXT}.advantage`, { count: shown });
-		return localize(`${TEXT}.disadvantage`, { count: Math.abs(shown) });
+		if (shown > 0) return localize(`${TEXT}.advantage`, { count: String(shown) });
+		return localize(`${TEXT}.disadvantage`, { count: String(Math.abs(shown)) });
 	}
 
 	function direction(option: SituationalRollModeListOption): 'bonus' | 'penalty' | 'none' {

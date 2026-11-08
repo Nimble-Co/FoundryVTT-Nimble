@@ -23,8 +23,12 @@ import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
+import { tickedConditionRollModes } from '#utils/rolls/appliedConditionRollModes.js';
+import { attackConditionLines } from '#utils/rolls/attackConditionLines.js';
+import { type AppliedTicks, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
 import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
@@ -114,7 +118,15 @@ export function createItemActivationConfigDialogState(
 	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
-	let selectedRollMode = $state(Math.clamp(initialRollMode, -6, 6));
+	const conditionLines = attackConditionLines(
+		actor as never,
+		(item.system as { activation?: Parameters<typeof attackConditionLines>[1] }).activation,
+		(firstTargetActor ?? null) as never,
+	);
+	const conditionOptions = conditionRollModeOptions(conditionLines);
+	const opened = openRollModeTicks(initialRollMode, conditionOptions);
+	let selectedRollMode = $state(opened.mode);
+	let appliedTicks = $state<AppliedTicks>(opened.applied);
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
 		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
 	);
@@ -241,6 +253,20 @@ export function createItemActivationConfigDialogState(
 		),
 	);
 
+	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
+
+	// The roll mode the manager gets: the player's own, with the condition ticks
+	// apart (they go in as their own sources) and the advantage choices in.
+	const submittedRollMode = $derived(
+		Math.clamp(
+			selectedRollMode -
+				conditionRollModes.reduce((sum, line) => sum + line.step, 0) +
+				conditionalAdvantageTotal,
+			-6,
+			6,
+		),
+	);
+
 	const chosenDamageOptions = $derived(
 		conditionalBonusOptions.filter((o) => conditionalChoices[o.key] === 'damage'),
 	);
@@ -328,6 +354,19 @@ export function createItemActivationConfigDialogState(
 		},
 		set selectedRollMode(value: number) {
 			selectedRollMode = value;
+		},
+		conditionOptions,
+		get appliedTicks() {
+			return appliedTicks;
+		},
+		set appliedTicks(value: AppliedTicks) {
+			appliedTicks = value;
+		},
+		get conditionRollModes() {
+			return conditionRollModes;
+		},
+		get submittedRollMode() {
+			return submittedRollMode;
 		},
 		get situationalModifiers() {
 			return situationalModifiers;

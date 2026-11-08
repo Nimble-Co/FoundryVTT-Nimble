@@ -11,7 +11,10 @@ import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttac
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
+import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
+import { endUsedConditions } from '../../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
+import { soleTarget } from '../../utils/tokens/soleTarget.js';
 import {
 	getCurrentUserTargetTokenIds,
 	getTargetTokenName,
@@ -232,6 +235,8 @@ async function rollSingleMinionAttack(params: {
 	combat: Combat;
 	member: Combatant.Implementation;
 	targetActor: Parameters<typeof heldChangesForAttack>[0]['target'];
+	/** The attack's only target, whose conditions change the roll mode. */
+	soleTargetActor: unknown;
 	selectionsByMemberId: ReadonlyMap<string, string>;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
@@ -255,13 +260,18 @@ async function rollSingleMinionAttack(params: {
 			typeof resolvedActionContext.actor.getRollData === 'function'
 				? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
 				: {};
+		const conditions = attackConditionLines(
+			resolvedActionContext.actor as never,
+			resolvedActionContext.selectedAction.system?.activation as never,
+			params.soleTargetActor as never,
+		).filter((line) => line.on);
 		const held = attackHeldPlanOf({
 			attacker: resolvedActionContext.actor as never,
 			target: params.targetActor,
 			area: false,
 			attack: true,
-			// A minion group attack rolls with no disadvantage.
-			noDisadvantageToIgnore: true,
+			// Only the conditions give a minion group attack disadvantage.
+			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),
 		});
 		checkFormulaReferences(
 			formula,
@@ -269,15 +279,24 @@ async function rollSingleMinionAttack(params: {
 			{ item: resolvedActionContext.selectedAction as FormulaOwner['item'] },
 			{ rollData },
 		);
-		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
+		const rollOptions: DamageRoll.Options = {
 			canCrit: false,
 			canMiss: true,
 			rollMode: 0,
 			primaryDieValue: 0,
 			primaryDieModifier: held.primaryDieBonus,
-		});
+			...(conditions.length > 0
+				? {
+						rollModeSources: [0, ...conditions.map((line) => line.step)],
+						conditionRollModes: conditions,
+					}
+				: {}),
+		};
+		held.applyToRoll(rollOptions);
+		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
 		await held.spend();
+		await endUsedConditions(resolvedActionContext.actor as never, conditions);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -490,11 +509,14 @@ async function collectMinionAttackRollData(params: {
 	const unsupportedWarnings = new Set<string>();
 	const rollEntries: MinionGroupAttackRollEntry[] = [];
 	const targetActor = firstTargetActor();
+	const soleTargetActor =
+		(soleTarget(game.user?.targets) as { actor?: unknown } | null)?.actor ?? null;
 	for (const member of params.attackMembers) {
 		const rollOutcome = await rollSingleMinionAttack({
 			combat: params.combat,
 			member,
 			targetActor,
+			soleTargetActor,
 			selectionsByMemberId: params.selectionsByMemberId,
 		});
 		appendMinionAttackRollOutcome({

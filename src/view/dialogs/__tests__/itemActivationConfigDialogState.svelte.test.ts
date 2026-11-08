@@ -231,3 +231,81 @@ describe('the activation dialog damage multiplier tick', () => {
 		expect(state.usesDamageMultiplier).toBe(false);
 	});
 });
+
+describe('the activation dialog condition ticks', () => {
+	const tagged = (name: string, conditions: string[]) => ({
+		name,
+		uuid: `Actor.${name}`,
+		getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
+		getTargetDomain: () => new Set(conditions.map((condition) => `target:${condition}`)),
+	});
+	const spear = {
+		type: 'weapon',
+		system: {
+			activation: {
+				targets: { attackType: 'reach' },
+				effects: [{ id: 'd', type: 'damage', formula: '1d8', canCrit: true, canMiss: true }],
+			},
+		},
+	};
+
+	function open(
+		attackerConditions: string[],
+		targetConditions: string[],
+		initialRollMode = 0,
+		item: object = spear,
+	) {
+		user.targets = new Set([{ actor: tagged('Goblin', targetConditions) }]);
+		return createState({
+			actor: () =>
+				({
+					...tagged('Kael', attackerConditions),
+					rules: [],
+					system: {},
+					items: [],
+					getFlag: () => undefined,
+				}) as never,
+			item: () => item as never,
+			initialRollMode,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('lists each condition ticked, and the slider opens with their steps', () => {
+		const state = open(['poisoned'], ['blinded', 'prone'], -1);
+
+		expect(state.conditionOptions.map((option) => [option.label, option.value])).toEqual([
+			['Poisoned (Kael)', -1],
+			['Blinded (Goblin)', 1],
+			['Prone, melee attack (Goblin)', 1],
+		]);
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(-1);
+		expect(state.conditionRollModes.map((line) => line.key)).toEqual([
+			'self:poisoned',
+			'target:blinded',
+			'target:prone',
+		]);
+	});
+
+	it('sends only the ticks that are on, and the player own roll mode apart', () => {
+		const state = open([], ['blinded', 'prone']);
+		state.appliedTicks = { 'target:blinded': 1 };
+		state.selectedRollMode = 2;
+
+		expect(state.submittedRollMode).toBe(1);
+		expect(state.conditionRollModes.map((line) => line.key)).toEqual(['target:blinded']);
+	});
+
+	it('has no tick on a roll that is not an attack', () => {
+		const potion = {
+			type: 'object',
+			system: { activation: { effects: [{ id: 'h', type: 'healing', formula: '2d4' }] } },
+		};
+
+		const state = open(['poisoned'], ['blinded'], 0, potion);
+
+		expect(state.conditionOptions).toEqual([]);
+		expect(state.selectedRollMode).toBe(0);
+	});
+});

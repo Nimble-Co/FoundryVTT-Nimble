@@ -26,6 +26,7 @@ import {
 } from '#utils/incomingReactions/incomingAttackModifiers.js';
 import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '#utils/localize.js';
+import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
@@ -80,6 +81,7 @@ export async function rollUnarmedStrike(
 		img: UNARMED_STRIKE_IMG,
 		system: {
 			activation: {
+				targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE },
 				effects: [
 					{
 						type: 'damage',
@@ -156,12 +158,15 @@ export async function rollUnarmedStrike(
 			: {}),
 	};
 
-	if (incomingAttackPlan.disadvantageCount > 0) {
+	const conditions = kept ? [] : (result.conditionRollModes ?? []);
+	if (conditions.length > 0 || incomingAttackPlan.disadvantageCount > 0) {
 		rollOptions.rollModeSources = [
 			rollMode,
+			...conditions.map((line) => line.step),
 			...Array.from({ length: incomingAttackPlan.disadvantageCount }, () => -1),
 		];
 	}
+	if (conditions.length > 0) rollOptions.conditionRollModes = conditions;
 	if (incomingAttackPlan.forceMiss) rollOptions.forceMiss = true;
 	if (incomingAttackPlan.missThreshold > DEFAULT_MISS_THRESHOLD) {
 		rollOptions.missThreshold = incomingAttackPlan.missThreshold;
@@ -258,6 +263,7 @@ export async function rollUnarmedStrike(
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);
 	await held.spend();
+	await endUsedConditions(actor, conditions);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll)) {
 		await spendRuleCharge(actor, identifier);
