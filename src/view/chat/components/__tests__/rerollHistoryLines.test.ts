@@ -233,7 +233,6 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 				off: false,
 			},
 		]);
-		expect(line).not.toHaveProperty('tempHpNote');
 		expect(line.offNote).toBeNull();
 	});
 

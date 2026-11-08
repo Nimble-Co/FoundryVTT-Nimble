@@ -57,14 +57,14 @@
 	id: string,
 	tag: { label: string; tooltip: string },
 	icon: string,
-	look: { off?: boolean; none?: boolean; crit?: boolean },
+	variant: { off?: boolean; none?: boolean; crit?: boolean },
 )}
 	<button
 		type="button"
 		class="nimble-reroll-tag"
-		class:nimble-reroll-tag--off={look.off}
-		class:nimble-reroll-tag--none={look.none}
-		class:nimble-reroll-tag--crit={look.crit}
+		class:nimble-reroll-tag--off={variant.off}
+		class:nimble-reroll-tag--none={variant.none}
+		class:nimble-reroll-tag--crit={variant.crit}
 		aria-expanded={tagNotes.openTag(row) === id}
 		data-tooltip={tag.tooltip}
 		onclick={() => tagNotes.toggle(row, id)}
@@ -75,9 +75,9 @@
 {/snippet}
 
 {#snippet tagNote(row: string, tags: { id: string; tooltip: string }[])}
-	{@const open = tags.find((tag) => tag.id === tagNotes.openTag(row))}
-	{#if open}
-		<p class="nimble-roll-changes__note">{open.tooltip}</p>
+	{@const openTag = tags.find((tag) => tag.id === tagNotes.openTag(row))}
+	{#if openTag}
+		<p class="nimble-roll-changes__note">{openTag.tooltip}</p>
 	{/if}
 {/snippet}
 
@@ -112,6 +112,7 @@
 	{@const value = signed(bonus.value)}
 	{@const sentence =
 		bonusNotAdded ?? localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
+	{@const row = `bonus-${index}`}
 	<div
 		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
 		data-tooltip={sentence}
@@ -129,7 +130,7 @@
 			<span class="nimble-roll-changes__spoken">{sentence}</span>
 		</p>
 		{@render tagButton(
-			`bonus-${index}`,
+			row,
 			'bonus',
 			{
 				label: localize(
@@ -144,7 +145,7 @@
 			{ none: !!bonusNotAdded },
 		)}
 	</div>
-	{#if tagNotes.openTag(`bonus-${index}`)}
+	{#if tagNotes.openTag(row)}
 		<p class="nimble-roll-changes__note nimble-roll-changes__note--line">{sentence}</p>
 	{/if}
 {/each}
@@ -189,10 +190,11 @@
 		</div>
 
 		{#if line.tags.length > 0}
+			{@const row = `line-${key}`}
 			<div class="nimble-roll-changes__tags">
 				{#each line.tags as tag (tag.kind + tag.label)}
 					{@render tagButton(
-						`line-${key}`,
+						row,
 						tag.kind + tag.label,
 						tag,
 						tag.off ? 'fa-hand' : TAG_ICONS[tag.kind],
@@ -204,7 +206,7 @@
 					)}
 				{/each}
 				{@render tagNote(
-					`line-${key}`,
+					row,
 					line.tags.map((tag) => ({ id: tag.kind + tag.label, tooltip: tag.tooltip })),
 				)}
 				{#if line.offNote}
