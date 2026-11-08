@@ -27,7 +27,7 @@
 		</p>
 		{#if line.canRemove}
 			<button
-				class="nimble-result-line__remove"
+				class="nimble-roll-control nimble-result-line__remove"
 				type="button"
 				aria-label={localize('NIMBLE.chat.incomingReactions.resultChange.removeLine', {
 					line: line.sentence,
@@ -91,35 +91,10 @@
 		&__remove {
 			flex: none;
 			width: auto;
-			height: auto;
 			min-height: 24px;
-			margin: 0;
 			padding: 0.125rem 0.5rem;
-			font-family: var(--nimble-primary-font);
 			font-size: var(--nimble-xs-text);
 			font-weight: 700;
-			line-height: 1.2;
-			color: inherit;
-			background: transparent;
-			border: 1px solid var(--nimble-input-border-color);
-			border-radius: 3px;
-			box-shadow: none;
-			cursor: pointer;
-
-			&:hover:not(:disabled) {
-				color: inherit;
-				background: var(--nimble-card-border-color);
-			}
-
-			&:focus-visible {
-				outline: 2px solid var(--nimble-dark-text-color);
-				outline-offset: 1px;
-			}
-
-			&:disabled {
-				cursor: default;
-				opacity: 0.6;
-			}
 		}
 	}
 </style>

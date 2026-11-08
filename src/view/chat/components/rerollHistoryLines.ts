@@ -31,6 +31,7 @@ interface RerollTag {
 		| 'stat'
 		| 'cannotMiss';
 	label: string;
+	/** The tag as a sentence: its tooltip, and the note a click on the tag opens. */
 	tooltip: string;
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
 	off: boolean;
@@ -42,8 +43,6 @@ interface RerollHistoryLine {
 	/** The whole line as a sentence, for its tooltip. */
 	text: string;
 	tags: RerollTag[];
-	/** Who gained temp HP and who kept their own, shown from the temp HP tag. */
-	tempHpNote: string | null;
 	/** What to give by hand when Feature Effects is off. */
 	offNote: string | null;
 	detail: string | null;
@@ -91,6 +90,10 @@ function dice(record: RerollRecord): RerollHistoryLine['dice'] {
 	return { previous: { faces, ...previous }, next: { faces, ...next } };
 }
 
+function fromSource(label: string, source: string): string {
+	return localize('NIMBLE.chat.incomingReactions.rerollTags.fromSource', { label, source });
+}
+
 function buildRollChangeTags(record: RerollRecord): RerollTag[] {
 	return (record.changes ?? []).map((change) => {
 		if (change.kind === 'extraDamage') {
@@ -104,11 +107,12 @@ function buildRollChangeTags(record: RerollRecord): RerollTag[] {
 		}
 		const kept = record.next?.value;
 		const dropped = record.dropped;
+		const label = localize(
+			`NIMBLE.chat.incomingReactions.rerollTags.${change.value > 0 ? 'advantage' : 'disadvantage'}`,
+		);
 		return {
 			kind: 'rollMode',
-			label: localize(
-				`NIMBLE.chat.incomingReactions.rerollTags.${change.value > 0 ? 'advantage' : 'disadvantage'}`,
-			),
+			label,
 			tooltip:
 				typeof dropped === 'number' && typeof kept === 'number'
 					? localize('NIMBLE.chat.incomingReactions.rerollTags.rollModeDropped', {
@@ -117,15 +121,73 @@ function buildRollChangeTags(record: RerollRecord): RerollTag[] {
 							second: String(dropped),
 							kept: String(kept),
 						})
-					: change.label,
+					: fromSource(label, change.label),
 			off: false,
 		};
 	});
 }
 
+/** The temp HP tag of the creatures that got one amount. */
+function tempHpTag(withTempHp: RerollGrant[]): RerollTag {
+	const amount = String(withTempHp[0].tempHp?.amount ?? 0);
+	const gainers = withTempHp.filter((grant) => grant.tempHp?.keeps === null);
+	const fresh = gainers.filter((grant) => !grant.tempHp?.had);
+	const label =
+		gainers.length === 0
+			? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpNobody', { amount })
+			: gainers.length === 1
+				? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpOne', {
+						amount,
+						name: gainers[0].name,
+					})
+				: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpMany', {
+						amount,
+						count: String(gainers.length),
+					});
+	const sources = [...new Set(withTempHp.map((grant) => grant.tempHp?.source ?? ''))];
+	const parts = [fromSource(label, sources.join(', '))];
+	// One gainer is named in the label already.
+	if (fresh.length > 0 && gainers.length > 1) {
+		parts.push(
+			localize(
+				`NIMBLE.chat.incomingReactions.rerollTags.${fresh.length === 1 ? 'tempHpGainOne' : 'tempHpGain'}`,
+				{ names: fresh.map((grant) => grant.name).join(', '), amount },
+			),
+		);
+	}
+	const replaced = gainers.filter((grant) => grant.tempHp?.had);
+	const kept = withTempHp.filter((grant) => grant.tempHp?.keeps !== null);
+	for (const grant of replaced) {
+		parts.push(
+			localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpReplaced', {
+				name: grant.name,
+				had: String(grant.tempHp?.had),
+				amount,
+			}),
+		);
+	}
+	for (const grant of kept) {
+		parts.push(
+			localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpKeeps', {
+				name: grant.name,
+				had: String(grant.tempHp?.had),
+				amount,
+			}),
+		);
+	}
+	if (replaced.length > 0 || kept.length > 0) {
+		parts.push(localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpChoice'));
+	}
+	return {
+		kind: 'tempHp',
+		label,
+		tooltip: parts.join(' '),
+		off: withTempHp.some((grant) => !grant.applied),
+	};
+}
+
 function buildGrantTags(grants: readonly RerollGrant[]): {
 	tags: RerollTag[];
-	tempHpNote: string | null;
 	offNote: string | null;
 } {
 	const tags: RerollTag[] = [];
@@ -143,75 +205,23 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 				off: false,
 			});
 		} else if (actions && actions.amount > 0) {
+			const label = localize(
+				`NIMBLE.chat.incomingReactions.rerollTags.${actions.amount === 1 ? 'action' : 'actions'}`,
+				{ name: grant.name, count: String(actions.amount) },
+			);
 			tags.push({
 				kind: 'action',
-				label: localize(
-					`NIMBLE.chat.incomingReactions.rerollTags.${actions.amount === 1 ? 'action' : 'actions'}`,
-					{ name: grant.name, count: String(actions.amount) },
-				),
-				tooltip: actions.source,
+				label,
+				tooltip: fromSource(label, actions.source),
 				off: !grant.applied,
 			});
 		}
 	}
 
 	const withTempHp = grants.filter((grant) => grant.tempHp);
-	let tempHpNote: string | null = null;
-	const first = withTempHp[0]?.tempHp;
-	if (first) {
-		const amount = String(first.amount);
-		const gainers = withTempHp.filter((grant) => grant.tempHp?.keeps === null);
-		const fresh = gainers.filter((grant) => !grant.tempHp?.had);
-		tags.push({
-			kind: 'tempHp',
-			label:
-				gainers.length === 0
-					? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpNobody', { amount })
-					: gainers.length === 1
-						? localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpOne', {
-								amount,
-								name: gainers[0].name,
-							})
-						: localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpMany', {
-								amount,
-								count: String(gainers.length),
-							}),
-			tooltip: first.source,
-			off: withTempHp.some((grant) => !grant.applied),
-		});
-		const parts: string[] = [];
-		if (fresh.length > 0) {
-			parts.push(
-				localize(
-					`NIMBLE.chat.incomingReactions.rerollTags.${fresh.length === 1 ? 'tempHpGainOne' : 'tempHpGain'}`,
-					{ names: fresh.map((grant) => grant.name).join(', '), amount },
-				),
-			);
-		}
-		const replaced = gainers.filter((grant) => grant.tempHp?.had);
-		const kept = withTempHp.filter((grant) => grant.tempHp?.keeps !== null);
-		for (const grant of replaced) {
-			parts.push(
-				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpReplaced', {
-					name: grant.name,
-					had: String(grant.tempHp?.had),
-					amount,
-				}),
-			);
-		}
-		for (const grant of kept) {
-			parts.push(
-				localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpKeeps', {
-					name: grant.name,
-					had: String(grant.tempHp?.had),
-					amount,
-				}),
-			);
-		}
-		if (replaced.length > 0 || kept.length > 0) {
-			parts.push(localize('NIMBLE.chat.incomingReactions.rerollTags.tempHpChoice'));
-		}
-		tempHpNote = parts.join(' ');
+	const amounts = [...new Set(withTempHp.map((grant) => grant.tempHp?.amount ?? 0))];
+	for (const amount of amounts) {
+		tags.push(tempHpTag(withTempHp.filter((grant) => grant.tempHp?.amount === amount)));
 	}
 
 	const offTempHp = withTempHp.some((grant) => !grant.applied);
@@ -221,7 +231,7 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 	const offNote =
 		offTempHp || offAction ? localize(`NIMBLE.chat.incomingReactions.rerollTags.${offKey}`) : null;
 
-	return { tags: [...tags, ...notGiven], tempHpNote, offNote };
+	return { tags: [...tags, ...notGiven], offNote };
 }
 
 /** What a reroll did to the new roll besides its dice: the stat it used, a hit it made sure of. */
@@ -321,7 +331,6 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			return {
 				title: feature,
 				tags: [],
-				tempHpNote: null,
 				offNote: null,
 				text: localize(
 					`NIMBLE.chat.incomingReactions.effectHistory.${record.effect ?? 'critD20'}`,
@@ -349,7 +358,6 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 						off: false,
 					},
 				],
-				tempHpNote: null,
 				offNote: null,
 				text: localize('NIMBLE.chat.incomingReactions.critHistory', { feature }),
 				detail: details.length > 0 ? details.join(' - ') : null,
@@ -364,7 +372,6 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			return {
 				title: feature,
 				tags: buildChangeTags(record, feature),
-				tempHpNote: null,
 				offNote: null,
 				text: changeText(record, feature),
 				detail: details.length > 0 ? details.join(' - ') : null,
@@ -402,7 +409,6 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 				...buildRollChangeTags(record),
 				...given.tags,
 			],
-			tempHpNote: given.tempHpNote,
 			offNote: given.offNote,
 			text: kept
 				? localize('NIMBLE.chat.incomingReactions.rerollHistoryKept', {
