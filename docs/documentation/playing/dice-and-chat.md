@@ -28,6 +28,7 @@ Clicking an ability, skill, saving throw, or initiative on your sheet opens a ro
 ![The check roll window showing the advantage/disadvantage slider and formula preview](/images/documentation/roll-dialog-simple-attack.png)
 
 - **The advantage slider.** Drag from Disadvantage ×6 through Straight Roll up to Advantage ×6. The formula preview below updates live so you can see exactly what will be rolled.
+- **Situational Modifiers.** Conditions that change the roll, such as Poisoned, are ticks here. They are on when the window opens and the slider counts them. See [Conditions that change a roll](conditions.md#conditions-that-change-a-roll).
 - **Hide roll** *(GMs only)*. Ticking this makes the roll a blind roll that other players can't see.
 - **Roll.** Sends the result to chat.
 
@@ -40,6 +41,8 @@ If you're a GM who usually rolls in secret, turn on the **Hide Rolls by Default*
 ### The attack roll window
 
 Attacks, spells, and other items that roll damage or healing open their own roll window. It has the same advantage slider, plus three fields for one-off changes. Leave a field empty (or at 0) and it does nothing.
+
+The window lists the conditions of the attacker and the target that change the roll, as ticks under the slider. See [Conditions that change a roll](conditions.md#conditions-that-change-a-roll).
 
 In combat, the window says what the roll spends: "When you roll, it spends 1 action." From your second attack on your turn, the slider starts with the disadvantage of a Rushed Attack, and a line in the window says so. Move the slider if a feature or the GM says otherwise. A spell that the target saves against does not start with disadvantage: the rule gives the target advantage instead, so tell the GM.
 
