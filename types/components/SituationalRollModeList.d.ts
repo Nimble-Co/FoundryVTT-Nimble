@@ -1,4 +1,4 @@
-import type { AppliedTicks } from '../../src/utils/rolls/rollModeTicks.ts';
+import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 
 export interface SituationalRollModeListOption {
 	key: string;

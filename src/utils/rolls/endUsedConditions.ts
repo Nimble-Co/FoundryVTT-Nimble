@@ -1,4 +1,4 @@
-import type { ConditionRollMode } from './conditionRollModes.js';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 
 interface ConditionHolder {
 	toggleStatusEffect?(statusId: string, options: { active: boolean }): Promise<unknown>;

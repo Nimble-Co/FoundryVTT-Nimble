@@ -1,23 +1,5 @@
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
-
-/** One condition that changes the roll mode of a roll. */
-interface ConditionRollMode {
-	/** Stable for the roll: `${side}:${condition}`. */
-	key: string;
-	condition: string;
-	/** Whose condition it is: the one who rolls, or the attack's target. */
-	side: 'self' | 'target';
-	/** +1 is one advantage, -1 one disadvantage. */
-	step: number;
-	/** Ticked when the roll window opens, and used when no window opens. */
-	on: boolean;
-	/** The name of the creature with the condition. */
-	name: string;
-	/** What the table decides, which the line names. */
-	ask?: 'fearNearby' | 'taunter';
-	/** The condition ends after the attack that used the line. */
-	ends?: boolean;
-}
 
 interface ConditionEffect {
 	statuses?: ReadonlySet<string>;
@@ -143,4 +125,4 @@ function conditionRollModes(input: ConditionRollInput): ConditionRollMode[] {
 	return lines;
 }
 
-export { type ConditionRollMode, conditionRollModes };
+export { conditionRollModes };

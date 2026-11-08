@@ -2,6 +2,7 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { MarkedActor } from '#types/marks.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
@@ -24,17 +25,14 @@ import {
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
 import { appliedConditionRollModes } from '../../utils/rolls/appliedConditionRollModes.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
-import {
-	type ConditionRollMode,
-	conditionRollModes,
-} from '../../utils/rolls/conditionRollModes.js';
-import { conditionRollOptions } from '../../utils/rolls/conditionRollOptions.js';
+import { conditionRollModes } from '../../utils/rolls/conditionRollModes.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+import { conditionRollOptions } from './conditionRollOptions.js';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
 

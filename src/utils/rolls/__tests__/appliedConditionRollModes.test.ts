@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { appliedConditionRollModes } from '../appliedConditionRollModes.js';
-import type { ConditionRollMode } from '../conditionRollModes.js';
 
 function line(condition: string, step: number, on = true): ConditionRollMode {
 	return { key: `self:${condition}`, condition, side: 'self', step, on, name: 'Kael' };

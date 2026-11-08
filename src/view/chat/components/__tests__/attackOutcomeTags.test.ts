@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ConditionRollMode } from '../../../../utils/rolls/conditionRollModes.js';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import {
 	attackOutcomeTags,
 	conditionRollModeTags,

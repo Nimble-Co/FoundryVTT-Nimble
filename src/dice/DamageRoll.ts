@@ -1,11 +1,11 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
 import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
-import type { ConditionRollMode } from '../utils/rolls/conditionRollModes.js';
 import { critDiceLinesOf, dieRoleOf } from './critDiceLines.js';
 import {
 	addCritDice,

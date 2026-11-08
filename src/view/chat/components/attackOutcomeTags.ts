@@ -3,13 +3,13 @@ import type {
 	AttackOutcomeTag,
 	MultiTargetDetail,
 } from '#types/attackOutcome.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import { critFaceOf } from '../../../dice/critFace.js';
 import { findPrimaryDamageNode } from '../../../utils/damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
 import { termsHaveDieAtMax } from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import localize from '../../../utils/localize.js';
-import type { ConditionRollMode } from '../../../utils/rolls/conditionRollModes.js';
 import { conditionRollModeTag } from '../../../utils/rolls/conditionRollModeText.js';
 import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 

@@ -1,5 +1,5 @@
 import type { SituationalRollModeListOption } from '#types/components/SituationalRollModeList.d.ts';
-import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.js';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { conditionRollModeLabel } from '#utils/rolls/conditionRollModeText.js';
 
 /** The condition lines as ticks of the Situational Modifiers list. */

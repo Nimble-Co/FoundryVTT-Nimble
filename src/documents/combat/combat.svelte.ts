@@ -2,6 +2,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { requestSetActiveCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
@@ -20,7 +21,6 @@ import {
 } from '#utils/incomingReactions/heroicActions.js';
 import resolveHeroicReactionActionCost from '#utils/incomingReactions/resolveHeroicReactionActionCost.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minions/minionGrouping.js';
-import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.ts';
 import {
 	isActionTrackingAutomationEnabled,
 	isCombatConvenienceAutomationEnabled,

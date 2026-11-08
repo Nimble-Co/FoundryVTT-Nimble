@@ -56,7 +56,6 @@ import {
 } from '../../utils/reroll/checkCardRollTarget.js';
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
-import { conditionRollOptions } from '../../utils/rolls/conditionRollOptions.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
@@ -81,6 +80,7 @@ import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import { conditionRollOptions } from './conditionRollOptions.js';
 import {
 	calculateInventorySlotCost,
 	findContainerStorageRejection,

@@ -26,6 +26,7 @@ import {
 } from '#utils/incomingReactions/incomingAttackModifiers.js';
 import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import localize from '#utils/localize.js';
+import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
 import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
@@ -161,8 +162,7 @@ export async function rollUnarmedStrike(
 	const conditions = kept ? [] : (result.conditionRollModes ?? []);
 	if (conditions.length > 0 || incomingAttackPlan.disadvantageCount > 0) {
 		rollOptions.rollModeSources = [
-			rollMode,
-			...conditions.map((line) => line.step),
+			...withConditionSources([rollMode], conditions),
 			...Array.from({ length: incomingAttackPlan.disadvantageCount }, () => -1),
 		];
 	}

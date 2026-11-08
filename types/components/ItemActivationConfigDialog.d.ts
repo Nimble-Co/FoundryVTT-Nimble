@@ -1,4 +1,4 @@
-import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
 export interface SpendablePool {

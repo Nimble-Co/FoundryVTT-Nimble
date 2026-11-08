@@ -1,5 +1,5 @@
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { NimbleRollData } from '#types/rollData.d.ts';
-import type { ConditionRollMode } from '../utils/rolls/conditionRollModes.js';
 
 declare namespace NimbleRoll {
 	/**

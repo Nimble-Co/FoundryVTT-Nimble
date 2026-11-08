@@ -1,7 +1,8 @@
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 import { isAttackRoll } from '../heldChange/heldChange.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
-import { type ConditionRollMode, conditionRollModes } from './conditionRollModes.js';
+import { conditionRollModes } from './conditionRollModes.js';
 
 interface WindowActivation {
 	targets?: { attackType?: string } | null;

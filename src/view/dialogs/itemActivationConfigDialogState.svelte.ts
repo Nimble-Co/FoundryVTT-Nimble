@@ -7,6 +7,7 @@ import type {
 	SpendablePool,
 	VariableChargeSpend,
 } from '#types/components/ItemActivationConfigDialog.d.ts';
+import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 import type { DualWieldOffer } from '#types/dualWield.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
 import {
@@ -23,9 +24,12 @@ import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
-import { tickedConditionRollModes } from '#utils/rolls/appliedConditionRollModes.js';
+import {
+	rollModeWithoutConditions,
+	tickedConditionRollModes,
+} from '#utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '#utils/rolls/attackConditionLines.js';
-import { type AppliedTicks, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
+import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
@@ -283,13 +287,13 @@ export function createItemActivationConfigDialogState(
 	);
 
 	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
-	const ownRollMode = $derived(
-		selectedRollMode - conditionRollModes.reduce((sum, line) => sum + line.step, 0),
-	);
+	const ownRollMode = $derived(rollModeWithoutConditions(selectedRollMode, conditionRollModes));
 
 	// The roll mode the manager gets: the player's own, with the condition ticks
 	// apart (they go in as their own sources) and the advantage choices in.
-	const submittedRollMode = $derived(Math.clamp(ownRollMode + conditionalAdvantageTotal, -6, 6));
+	const submittedRollMode = $derived(
+		Math.clamp(ownRollMode + conditionalAdvantageTotal, -MAX_ROLL_MODE, MAX_ROLL_MODE),
+	);
 
 	const chosenDamageOptions = $derived(
 		conditionalBonusOptions.filter((o) => conditionalChoices[o.key] === 'damage'),

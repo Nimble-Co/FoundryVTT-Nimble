@@ -1,7 +1,7 @@
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getInitiativeStartingActions } from '../../utils/combat/initiativeStartingActions.js';
 import { keptD20 } from '../../utils/reroll/checkRollOfCard.js';
-import type { ConditionRollMode } from '../../utils/rolls/conditionRollModes.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { getCombatantPendingActionDelta } from './combatantSystem.js';

@@ -3,18 +3,19 @@
 
 	import { untrack } from 'svelte';
 
-	import { SYSTEM_ID } from '#system';
 	import Hint from '#view/components/Hint.svelte';
-	import { conditionRollModes } from '../../utils/rolls/conditionRollModes.js';
-	import getRollFormula from '../../utils/rolls/getRollFormula.js';
-	import localize from '../../utils/localize.js';
-	import { getSituationalRollModeOptions } from './CheckRollDialog.utils.js';
-	import { tickedConditionRollModes } from '../../utils/rolls/appliedConditionRollModes.js';
-	import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
 	import RollModeField from './components/RollModeField.svelte';
 	import RollWindow from './components/RollWindow.svelte';
-	import { openRollModeTicks } from '#utils/rolls/rollModeTicks.ts';
 	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
+
+	import { SYSTEM_ID } from '#system';
+	import localize from '#utils/localize.ts';
+	import { tickedConditionRollModes } from '#utils/rolls/appliedConditionRollModes.ts';
+	import { conditionRollModes } from '#utils/rolls/conditionRollModes.ts';
+	import getRollFormula from '#utils/rolls/getRollFormula.ts';
+	import { openRollModeTicks } from '#utils/rolls/rollModeTicks.ts';
+	import { getSituationalRollModeOptions } from './CheckRollDialog.utils.ts';
+	import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 

@@ -1,4 +1,5 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
@@ -80,8 +81,9 @@ import type { OfferingActor } from '../utils/incomingReactions/poolSpendCardOffe
 import localize from '../utils/localize.js';
 import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
+import { withConditionSources } from '../utils/rolls/appliedConditionRollModes.js';
 import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
-import { type ConditionRollMode, conditionRollModes } from '../utils/rolls/conditionRollModes.js';
+import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { endUsedConditions } from '../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
@@ -803,10 +805,10 @@ class ItemActivationManager {
 							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(isAoE))
 							: [];
 					if (this.#usedConditions.length > 0) {
-						damageOptions.rollModeSources = [
-							...(damageOptions.rollModeSources ?? [damageOptions.rollMode]),
-							...this.#usedConditions.map((line) => line.step),
-						];
+						damageOptions.rollModeSources = withConditionSources(
+							damageOptions.rollModeSources ?? [damageOptions.rollMode],
+							this.#usedConditions,
+						);
 						damageOptions.conditionRollModes = this.#usedConditions;
 					}
 

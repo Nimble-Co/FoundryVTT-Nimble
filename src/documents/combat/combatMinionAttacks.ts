@@ -11,6 +11,7 @@ import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttac
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
+import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
 import { endUsedConditions } from '../../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
@@ -287,7 +288,7 @@ async function rollSingleMinionAttack(params: {
 			primaryDieModifier: held.primaryDieBonus,
 			...(conditions.length > 0
 				? {
-						rollModeSources: [0, ...conditions.map((line) => line.step)],
+						rollModeSources: withConditionSources([0], conditions),
 						conditionRollModes: conditions,
 					}
 				: {}),

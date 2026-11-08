@@ -1,3 +1,5 @@
+import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
+
 /** A tick in a roll window that moves the Roll Mode slider by its value. */
 interface RollModeTick {
 	key: string;
@@ -6,12 +8,7 @@ interface RollModeTick {
 	on?: boolean;
 }
 
-/**
- * Per ticked key, what the tick really moved the slider. The ends of the
- * slider can take part of a value, and an untick gives back only what the tick took.
- */
-type AppliedTicks = Record<string, number>;
-
+/** The ends of the Roll Mode slider: Disadvantage × 6 to Advantage × 6. */
 const MAX_ROLL_MODE = 6;
 
 function tickRollMode(
@@ -45,4 +42,4 @@ function openRollModeTicks(
 	return state;
 }
 
-export { type AppliedTicks, openRollModeTicks, type RollModeTick, tickRollMode };
+export { MAX_ROLL_MODE, openRollModeTicks, tickRollMode };

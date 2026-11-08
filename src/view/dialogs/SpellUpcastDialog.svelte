@@ -25,7 +25,10 @@
 	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
 	import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
 	import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
-	import { tickedConditionRollModes } from '../../utils/rolls/appliedConditionRollModes.js';
+	import {
+		rollModeWithoutConditions,
+		tickedConditionRollModes,
+	} from '../../utils/rolls/appliedConditionRollModes.js';
 	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
 	import { soleTarget } from '../../utils/tokens/soleTarget.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
@@ -308,11 +311,7 @@
 		}
 
 		const activationData = {
-			rollMode: Math.clamp(
-				selectedRollMode - conditionRollModes.reduce((sum, line) => sum + line.step, 0),
-				-6,
-				6,
-			),
+			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes),
 			conditionRollModes,
 			situationalModifiers,
 			primaryDieValue,

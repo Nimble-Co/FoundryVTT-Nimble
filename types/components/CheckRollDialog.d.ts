@@ -1,5 +1,5 @@
 import type { CheckRollDialogData } from '#documents/actor/actorInterfaces.ts';
-import type { ConditionRollMode } from '#utils/rolls/conditionRollModes.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 
 export type RollDialogType = 'abilityCheck' | 'savingThrow' | 'skillCheck' | 'initiative';
 
