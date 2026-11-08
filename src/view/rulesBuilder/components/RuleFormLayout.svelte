@@ -84,9 +84,9 @@
 		&__group {
 			display: flex;
 			flex-direction: column;
-			gap: 0.375rem;
-			padding: 0.5rem 0;
-			border-top: 1px solid var(--nimble-card-border-color);
+			gap: 10px;
+			padding: 10px 0;
+			border-top: 1px solid var(--nimble-ui-soft);
 
 			&:first-child {
 				padding-top: 0;
@@ -95,37 +95,43 @@
 		}
 
 		&__question {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.688rem;
+			font-weight: 900;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__field {
 			display: flex;
 			flex-direction: column;
-			gap: 0.125rem;
+			gap: 4px;
 		}
 
 		&__label {
-			font-size: var(--nimble-xs-text);
+			font-size: 0.75rem;
 			font-weight: 600;
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__check {
 			display: flex;
-			gap: 0.375rem;
+			gap: 14px;
 			align-items: center;
+			justify-content: space-between;
+			flex-direction: row-reverse;
+			min-height: 30px;
 			cursor: pointer;
 		}
 
 		&__check-label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-size: 0.813rem;
+			font-weight: 600;
 		}
 
 		&__hint {
-			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
 			line-height: 1.3;
 		}
 	}

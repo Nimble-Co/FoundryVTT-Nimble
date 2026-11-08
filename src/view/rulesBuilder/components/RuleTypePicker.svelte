@@ -55,37 +55,30 @@
 		&__group {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
-			padding: 0.375rem 0.5rem 0.5rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 6px;
+			gap: 6px;
+			padding: 0 0 6px;
 		}
 
 		&__group-header {
 			display: flex;
 			gap: 0.375rem;
 			align-items: center;
-			padding-bottom: 0.125rem;
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
+			padding-bottom: 5px;
+			font-size: 0.688rem;
+			font-weight: 900;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--color-text-dark-secondary);
-			border-bottom: 1px solid var(--nimble-card-border-color);
-
-			i {
-				color: var(--nimble-accent-color);
-			}
+			letter-spacing: 0.1em;
+			color: var(--nimble-ui-ink-dim);
+			border-bottom: 1px solid var(--nimble-ui-soft);
 		}
 
 		&__group-count {
 			margin-left: auto;
 			padding: 0 0.375rem;
-			font-size: var(--nimble-xs-text);
-			color: var(--color-text-dark-secondary);
-			background: var(--nimble-input-background-color);
-			border-radius: 999px;
+			font-size: 0.688rem;
+			font-weight: 700;
+			letter-spacing: 0;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__cards {
@@ -96,15 +89,16 @@
 
 		&__card {
 			display: flex;
-			gap: 0.375rem;
+			gap: 7px;
 			align-items: center;
-			padding: 0.25rem 0.5rem;
-			min-height: 1.75rem;
-			background: var(--nimble-card-background-color);
-			color: inherit;
+			padding: 0 10px;
+			min-height: 28px;
+			background: none;
+			color: var(--nimble-ui-ink);
 			text-align: left;
-			border: 1px solid var(--nimble-card-border-color);
+			border: 1px solid var(--nimble-ui-ring);
 			border-radius: 4px;
+			font-weight: 700;
 			cursor: pointer;
 			overflow: hidden;
 			transition:
@@ -113,12 +107,8 @@
 
 			&:hover,
 			&:focus {
-				background: color-mix(
-					in srgb,
-					var(--nimble-card-background-color) 80%,
-					var(--nimble-accent-color)
-				);
-				border-color: var(--nimble-accent-color);
+				background: var(--nimble-ui-hover);
+				border-color: var(--nimble-ui-highlight);
 				outline: none;
 			}
 
@@ -135,7 +125,7 @@
 		&__card-icon {
 			width: 0.875rem;
 			text-align: center;
-			color: var(--nimble-accent-color);
+			color: var(--nimble-ui-ink-dim);
 			flex-shrink: 0;
 		}
 

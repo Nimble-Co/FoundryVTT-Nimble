@@ -1,6 +1,7 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import type * as svelte from 'svelte';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import WindowShell from '#view/components/WindowShell.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -16,6 +17,8 @@ interface GenericDialogOptions {
 	resizable?: boolean;
 	/** Unique ID for singleton behavior - only one dialog with this ID can be open at a time */
 	uniqueId?: string;
+	/** Classes for the window, for example `nimble-window` for the frame of the new sheets */
+	classes?: string[];
 	/** Caller-supplied viewport position. When omitted, the dialog is centered horizontally near the top. */
 	position?: { top?: number; left?: number };
 }
@@ -33,6 +36,12 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	data: Record<string, unknown>;
 
 	override root: svelte.Component<Record<string, never>>;
+
+	/** The dialog's own component. In the `nimble-window` frame, `root` is the shell round it. */
+	readonly content: svelte.Component<Record<string, never>>;
+
+	/** The window title as state, so the head of the `nimble-window` frame follows `setTitle`. */
+	headTitle = $state('');
 
 	#uniqueId: string | null = null;
 
@@ -62,7 +71,11 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 			}) as DeepPartial<foundry.applications.api.ApplicationV2.Configuration>,
 		);
 
-		this.root = component;
+		this.content = component;
+		this.headTitle = title;
+		this.root = options.classes?.includes('nimble-window')
+			? (WindowShell as unknown as svelte.Component<Record<string, never>>)
+			: component;
 		this.data = data;
 		this.#uniqueId = options.uniqueId ?? null;
 
@@ -132,6 +145,7 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	 */
 	setTitle(newTitle: string): void {
 		(this.options as { window: { title: string } }).window.title = newTitle;
+		this.headTitle = newTitle;
 	}
 
 	protected override async _prepareContext(

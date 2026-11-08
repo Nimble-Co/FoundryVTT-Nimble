@@ -2,6 +2,7 @@ import { SvelteSet } from 'svelte/reactivity';
 
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+import localize from '#utils/localize.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
 // Internal clipboard drag-drop type, set and matched by the same code; never
@@ -72,12 +73,13 @@ export function createItemRulesTabState(
 	function openBuilder() {
 		const item = getItem();
 		const dialog = GenericDialog.getOrCreate(
-			`${item.name}: Rules Builder`,
+			`${item.name}: ${localize('NIMBLE.rulesBuilder.windowTitle')}`,
 			getRulesBuilderComponent(),
 			{ document: item },
 			{
 				uniqueId: `rules-builder-${item.uuid}`,
 				icon: 'fa-solid fa-sliders',
+				classes: ['nimble-window'],
 				width: 720,
 				resizable: true,
 			},

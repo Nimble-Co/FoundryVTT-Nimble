@@ -196,14 +196,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.5rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-accent-color);
+		padding: 8px;
+		border: 1px solid var(--nimble-ui-line);
 		border-radius: 4px;
 
 		&__intro {
 			margin: 0 0 0.25rem 0;
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 			font-size: var(--nimble-xs-text);
 			line-height: 1.3;
 		}
@@ -214,7 +213,7 @@
 			gap: 0.375rem;
 			align-items: start;
 			padding: 0.375rem;
-			background: var(--nimble-sheet-background, transparent);
+			background: var(--nimble-ui-well);
 			border-radius: 4px;
 		}
 
@@ -248,12 +247,12 @@
 		}
 
 		&__range-sep {
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 			font-size: var(--nimble-xs-text);
 		}
 
 		&__hint {
-			color: var(--color-text-dark-secondary);
+			color: var(--nimble-ui-ink-muted);
 			font-size: var(--nimble-xs-text);
 			font-style: italic;
 		}

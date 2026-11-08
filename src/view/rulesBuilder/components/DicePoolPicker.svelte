@@ -85,7 +85,7 @@
 	.nimble-field-hint {
 		display: block;
 		margin-top: 0.125rem;
-		color: var(--color-text-dark-secondary);
+		color: var(--nimble-ui-ink-muted);
 		font-size: var(--nimble-xs-text);
 	}
 </style>
