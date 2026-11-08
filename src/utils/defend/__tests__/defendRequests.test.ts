@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DefendOptionUse } from '../defendRecords.js';
+import type { DefendOptionUse } from '#types/defend.d.ts';
 
 // Setup loads these modules before a hoisted mock could apply.
 const applyCondition = vi.fn();

@@ -1,20 +1,5 @@
 import { SYSTEM_ID } from '#system';
-
-/** A point in a combat, so a 1/round use can tell when the hero's own turn came back. */
-export interface RoundMark {
-	combatId: string;
-	round: number;
-	turn: number;
-}
-
-/** A Defend that covers every attack on the hero until their own turn begins. */
-export interface WholeRoundDefend extends RoundMark {
-	label: string;
-	armorBonus: number;
-	outcome: string;
-	messageId: string;
-	recordId: string;
-}
+import type { RoundMark, WholeRoundDefend } from '#types/defend.d.ts';
 
 export const EXTRA_DEFEND_FLAG = 'extraDefendUsed';
 export const WHOLE_ROUND_DEFEND_FLAG = 'wholeRoundDefend';

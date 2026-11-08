@@ -1,4 +1,10 @@
 import type { AttackerCondition } from '#types/attackerCondition.d.ts';
+import type {
+	DefendCardLike,
+	DefendOptionPick,
+	DefendOptionUse,
+	DefendOutcome,
+} from '#types/defend.d.ts';
 import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
@@ -8,20 +14,12 @@ import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
-import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
+import { speakerActorOf } from './defendReactors.js';
 
 const RULE_TYPE = 'defendOption';
 
-/** A Defend option one hero can use against one attack card. */
-export interface DefendOptionPick {
-	key: string;
-	label: string;
-	rule: DefendOptionRule;
-}
-
 /** What the picked Defend options do together to the Defended hero's damage. */
-export interface DefendOptionEffect {
+interface DefendOptionEffect {
 	outcome: DefendOutcome;
 	armorBonus: number;
 	reminders: string[];

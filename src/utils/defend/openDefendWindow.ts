@@ -5,6 +5,15 @@ import type {
 	DefendOption,
 	DefendWindowData,
 } from '#types/components/DefendDialog.d.ts';
+import type {
+	DefendOptionPick,
+	DefendOptionUse,
+	DefendOutcome,
+	DefendReactor,
+	DefendRecordWay,
+	DefendWay,
+	WholeRoundDefend,
+} from '#types/defend.d.ts';
 import { useCostParts } from '../../view/chat/components/incomingReactionCost.js';
 import { spendInterpose } from '../../view/chat/components/spendInterpose.ts';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
@@ -25,18 +34,16 @@ import showReactionConfirmation from '../incomingReactions/showReactionConfirmat
 import localize from '../localize.js';
 import {
 	cardRerollFor,
-	type DefendOptionPick,
 	defendOptionEffect,
 	defendOptionsOf,
 	defendOptionUse,
 	payDefendOption,
 	tickCost,
 } from './defendOptions.js';
-import { type DefendReactor, defendReactors } from './defendReactors.js';
-import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRecords.js';
+import { defendReactors } from './defendReactors.js';
 import { requestDefend } from './defendRequests.js';
-import { extraDefendUsed, type WholeRoundDefend, wholeRoundDefendOf } from './defendRound.js';
-import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
+import { extraDefendUsed, wholeRoundDefendOf } from './defendRound.js';
+import { newestDefendCard } from './newestDefendCard.js';
 import { ticksOfRow } from './ticksOfRow.js';
 
 const TEXT = 'NIMBLE.chat.defend';

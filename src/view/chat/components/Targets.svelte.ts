@@ -1,5 +1,6 @@
+import type { DefendRecord } from '#types/defend.d.ts';
 import { endMark } from '#utils/actor/markLifecycle.ts';
-import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
+import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
 import localize from '#utils/localize.js';
 import { cardMarkingItem, liveMarksOf, markOnToken } from './cardMarks.ts';
 

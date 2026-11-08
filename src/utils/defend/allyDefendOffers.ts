@@ -1,19 +1,10 @@
+import type { AllyDefendOffer, DefendCardLike } from '#types/defend.d.ts';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
-import { type DefendOptionPick, defendOptionsOf, payDefendOption } from './defendOptions.js';
-import type { DefendCardLike } from './defendReactors.js';
+import { defendOptionsOf, payDefendOption } from './defendOptions.js';
 import { damageAppliedTo, defendsOf } from './defendRecords.js';
 import { requestDefendAllyUse } from './defendRequests.js';
-
-/** A button for a hero whose option reacts when an ally Defends. */
-export interface AllyDefendOffer {
-	key: string;
-	defendId: string;
-	actor: Actor.Implementation;
-	pick: DefendOptionPick;
-	defenderName: string;
-}
 
 function canvasTokenOf(uuid: string): Token.Implementation | null {
 	const document = fromUuidSync(uuid) as TokenDocument | null;

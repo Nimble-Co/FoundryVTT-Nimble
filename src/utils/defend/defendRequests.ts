@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { DefendOptionUse, DefendRecord, WholeRoundDefend } from '#types/defend.d.ts';
 import applyConditionToActor, { type ConditionStart } from '../actor/applyConditionToActor.js';
 import { defineCardOperation, rejectCardRequest } from '../chat/cardOperations.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
@@ -9,28 +10,17 @@ import {
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
-import {
-	cardTakesDefends,
-	type DefendOptionUse,
-	type DefendRecord,
-	damageAppliedTo,
-	defendsOf,
-} from './defendRecords.js';
-import {
-	EXTRA_DEFEND_FLAG,
-	roundMarkNow,
-	WHOLE_ROUND_DEFEND_FLAG,
-	type WholeRoundDefend,
-} from './defendRound.js';
+import { cardTakesDefends, damageAppliedTo, defendsOf } from './defendRecords.js';
+import { EXTRA_DEFEND_FLAG, roundMarkNow, WHOLE_ROUND_DEFEND_FLAG } from './defendRound.js';
 
-export type DefendRequest = Omit<DefendRecord, 'id' | 'armorApplies' | 'userId'> & {
+type DefendRequest = Omit<DefendRecord, 'id' | 'armorApplies' | 'userId'> & {
 	messageId: string;
 	/** The Defend covers every attack on the hero until their own turn begins. */
 	wholeRound: boolean;
 };
 
 /** An ally's option used on a hero's Defend (a reaction when an ally Defends). */
-export interface DefendAllyUse {
+interface DefendAllyUse {
 	messageId: string;
 	defendId: string;
 	use: DefendOptionUse;
