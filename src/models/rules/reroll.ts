@@ -1,4 +1,4 @@
-import type { UseCost } from '../../utils/cost/useCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
 import {
 	REROLL_DICE,
 	REROLL_KEEPS,

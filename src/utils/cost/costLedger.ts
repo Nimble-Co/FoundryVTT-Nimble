@@ -1,4 +1,5 @@
 import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { CostPayer, PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { refundRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
@@ -19,13 +20,9 @@ import {
 	actionPayer,
 	canSpendActions,
 	findActorCombatant,
-	type PaidUseCost,
 	poolToExpend,
 	turnStampOf,
-	type UseCost,
 } from './useCost.js';
-
-type CostPayer = Actor | null | undefined;
 
 /** The receipt of Mana or pool charges a use took. With no amount, the use cost nothing. */
 function receiptOf(

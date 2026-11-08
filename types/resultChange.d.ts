@@ -1,6 +1,6 @@
 import type { CheckResult } from './checkResult.d.ts';
 import type { ResultChangeKind } from '#utils/incomingReactions/incomingReactionEntry.ts';
-import type { PaidUseCost } from '#utils/cost/useCost.ts';
+import type { PaidUseCost } from '#types/useCost.d.ts';
 
 /** What one use of a Change a Result rule does now. */
 export interface ResultUse {

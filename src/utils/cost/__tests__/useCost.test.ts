@@ -1,13 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import type { UseCost } from '#types/useCost.d.ts';
 import { giveBack, payCost } from '../costLedger.js';
-import {
-	canPayUseCost,
-	costUsesLeft,
-	findActorCombatant,
-	type UseCost,
-	useCostCharges,
-} from '../useCost.js';
+import { canPayUseCost, costUsesLeft, findActorCombatant, useCostCharges } from '../useCost.js';
 
 const testGlobals = globalThis as unknown as {
 	game: {

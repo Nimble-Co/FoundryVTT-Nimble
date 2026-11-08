@@ -1,4 +1,4 @@
-import type { PaidUseCost, UseCost } from '#utils/cost/useCost.ts';
+import type { PaidUseCost, UseCost } from '#types/useCost.d.ts';
 
 /** What one use paid, kept to give it back later. */
 export interface CostReceipt {

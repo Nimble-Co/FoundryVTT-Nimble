@@ -1,9 +1,10 @@
 import type { AttackerCondition } from '#types/attackerCondition.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { payCost } from '../cost/costLedger.js';
-import { canPayUseCost, type UseCost } from '../cost/useCost.js';
+import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';

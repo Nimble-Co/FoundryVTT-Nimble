@@ -1,7 +1,8 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleKey, ruleLabel } from '../../utils/actor/actorRules.js';
 import { usedThisTurn } from '../../utils/combat/perTurnUse.js';
-import { chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
+import { chargeOnlyCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDelivery,

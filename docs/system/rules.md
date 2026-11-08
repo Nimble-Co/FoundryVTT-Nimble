@@ -716,7 +716,7 @@ The words stay under `NIMBLE.rules.reroll.*`, except the few that say what the r
 
 `rerollEntries.ts` treats both types as one (`isRollUseRule`): a `changeDie` rule stamps a `kind: 'reroll'` entry with `use: 'change'`, and a rule with a note stamps `hint`. The side, outcome, delivery, Reach and cost checks are the same. A target-side entry is for the first target, as for a reroll.
 
-**Action cost.** `actionCost` (0 or 1) is part of `UseCost` (`src/utils/cost/useCost.ts`). Only a character combatant in the started combat pays it (`actionPayer`). On its own turn, `canSpendActions` needs the actions, and the pay step lowers the current actions. Off its turn, it lowers the pending actions, so the next turn starts with fewer. Both go through `requestCombatantActionDelta`, and the refund adds the same delta back. It is not a heroic reaction and has no per-round limit. Like charges, mana and Wounds, it is not checked or spent with resource spending automation off.
+**Action cost.** `actionCost` (0 or 1) is part of `UseCost` (`types/useCost.d.ts`). Only a character combatant in the started combat pays it (`actionPayer`). On its own turn, `canSpendActions` needs the actions, and the pay step lowers the current actions. Off its turn, it lowers the pending actions, so the next turn starts with fewer. Both go through `requestCombatantActionDelta`, and the refund adds the same delta back. It is not a heroic reaction and has no per-round limit. Like charges, mana and Wounds, it is not checked or spent with resource spending automation off.
 
 ### Change a Die: one die to a fixed face
 

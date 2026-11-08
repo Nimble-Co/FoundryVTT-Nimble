@@ -1,4 +1,5 @@
-import { costUsesLeft, type UseCost, useCostCharges } from '#utils/cost/useCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
+import { costUsesLeft, useCostCharges } from '#utils/cost/useCost.js';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import { findRerollRule } from '#utils/reroll/rerollEntries.js';

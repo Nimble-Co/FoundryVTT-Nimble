@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { UseCost } from '../../cost/useCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
 import type { IncomingReactionEntry } from '../../incomingReactions/incomingReactionEntry.js';
 import type { RerollRuleLike } from '../rerollEntries.js';
 import { type ReplacedRoll, type RerollStepInput, rerollWithRule } from '../rerollStep.js';

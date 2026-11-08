@@ -1,9 +1,10 @@
 import type { ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { hasRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
-import { chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
+import { chargeOnlyCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	ATTACK_SOURCES,

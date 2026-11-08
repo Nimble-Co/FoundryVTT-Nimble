@@ -3,6 +3,7 @@ import type { DieChange } from '#types/dieChange.d.ts';
 import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
+import type { PaidUseCost } from '#types/useCost.d.ts';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_DOMAIN_FLAG,
@@ -16,12 +17,7 @@ import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import { giveBack, payCost } from '#utils/cost/costLedger.js';
-import {
-	canPayUseCost,
-	costForDice,
-	keepsTurnCost,
-	type PaidUseCost,
-} from '#utils/cost/useCost.js';
+import { canPayUseCost, costForDice, keepsTurnCost } from '#utils/cost/useCost.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';

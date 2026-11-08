@@ -1,4 +1,5 @@
-import { canPayUseCost, chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
+import { canPayUseCost, chargeOnlyCost } from '../../utils/cost/useCost.js';
 import type {
 	RerollTrigger,
 	RollEffect,

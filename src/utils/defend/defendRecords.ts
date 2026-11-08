@@ -1,9 +1,9 @@
 import type { AttackerCondition } from '#types/attackerCondition.d.ts';
+import type { PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import {
 	DEFEND_OPTION_OUTCOMES,
 	type DefendOptionOutcome,
 } from '../../models/rules/defendOption.js';
-import type { PaidUseCost, UseCost } from '../cost/useCost.js';
 
 export type DefendOutcome = DefendOptionOutcome;
 

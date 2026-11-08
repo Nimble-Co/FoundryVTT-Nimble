@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { costForDice, type UseCost } from '../../cost/useCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
+import { costForDice } from '../../cost/useCost.js';
 import { severalDiceFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 

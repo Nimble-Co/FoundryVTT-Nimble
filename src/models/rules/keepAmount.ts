@@ -1,5 +1,6 @@
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleKey } from '../../utils/actor/actorRules.js';
-import { canPayUseCost, chargeOnlyCost, type UseCost } from '../../utils/cost/useCost.js';
+import { canPayUseCost, chargeOnlyCost } from '../../utils/cost/useCost.js';
 import type {
 	RerollTrigger,
 	RollEffect,

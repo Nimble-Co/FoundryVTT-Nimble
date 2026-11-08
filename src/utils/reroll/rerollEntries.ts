@@ -1,9 +1,10 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { type UseCost, useCostCharges } from '../cost/useCost.js';
+import { useCostCharges } from '../cost/useCost.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
 	type AttackOutcomeView,

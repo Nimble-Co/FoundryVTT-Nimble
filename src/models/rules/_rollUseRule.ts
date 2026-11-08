@@ -1,8 +1,9 @@
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { ResultCardView } from '#types/resultChange.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import { ruleKey } from '../../utils/actor/actorRules.js';
-import { canPayUseCost, type UseCost } from '../../utils/cost/useCost.js';
+import { canPayUseCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	ATTACK_SOURCES,

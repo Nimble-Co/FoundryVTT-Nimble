@@ -1,5 +1,5 @@
+import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
-import type { UseCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDeliveryFilter,
