@@ -59,6 +59,9 @@ const sheetsOf = (type: string) =>
 const monsterEntry = (type = 'npc') =>
 	sheetsOf(type).find((entry) => t(entry.label) === t('NIMBLE.sheets.monster'))!;
 
+const oldEntry = (type = 'npc') =>
+	sheetsOf(type).find((entry) => t(entry.label) === t('NIMBLE.sheets.npc'))!;
+
 const ability = (name: string, subtype: string, sort: number, description = '') => ({
 	name: `${TEST_PREFIX} ${name}`,
 	type: 'monsterFeature',
@@ -144,6 +147,7 @@ describe('the new NPC sheet', () => {
 	let ogre: MonsterActor;
 	let kobold: MonsterActor;
 	let plain: MonsterActor;
+	let keepsOld: MonsterActor;
 	let tauntId: string;
 	let stabId: string;
 	let shootId: string;
@@ -185,6 +189,11 @@ describe('the new NPC sheet', () => {
 		plain = (await Actor.create({
 			name: `${TEST_PREFIX} Plain`,
 			type: 'npc',
+		} as Actor.CreateData)) as unknown as MonsterActor;
+		keepsOld = (await Actor.create({
+			name: `${TEST_PREFIX} Keeps Old`,
+			type: 'minion',
+			flags: { core: { sheetClass: oldEntry('minion').id } },
 		} as Actor.CreateData)) as unknown as MonsterActor;
 
 		const created = await goblin.createEmbeddedDocuments('Item', [
@@ -229,7 +238,8 @@ describe('the new NPC sheet', () => {
 	}, 120_000);
 
 	afterAll(async () => {
-		for (const actor of [goblin, ogre, kobold, plain]) await actor?.sheet.close().catch(() => {});
+		for (const actor of [goblin, ogre, kobold, plain, keepsOld])
+			await actor?.sheet.close().catch(() => {});
 		await worldClaw?.delete().catch(() => {});
 		await game.settings.set(
 			'nimble' as 'core',
@@ -239,18 +249,29 @@ describe('the new NPC sheet', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
-	test('the sheet selector offers it for NPCs, solo monsters and minions, and the old sheet stays the default', async () => {
+	test('it is the default for NPCs, solo monsters and minions, and the old sheet stays a choice', async () => {
 		for (const type of ['npc', 'soloMonster', 'minion']) {
 			const entry = monsterEntry(type);
-			expect(entry, `the NPC sheet (Monster) for ${type}`).toBeTruthy();
-			expect(t(entry.label)).toBe('NPC sheet (Monster)');
-			expect(entry.default).toBe(false);
-			expect(sheetsOf(type).find((sheet) => sheet.default)?.id).not.toBe(entry.id);
+			expect(entry, `the NPC sheet for ${type}`).toBeTruthy();
+			expect(t(entry.label)).toBe('NPC sheet');
+			expect(entry.default).toBe(true);
+			expect(sheetsOf(type).find((sheet) => sheet.default)?.id).toBe(entry.id);
+			const old = oldEntry(type);
+			expect(old, `the old NPC sheet for ${type}`).toBeTruthy();
+			expect(t(old.label)).toBe('NPC sheet (old)');
+			expect(old.default).toBe(false);
 		}
-		expect(plain.sheet.constructor).not.toBe(monsterEntry().cls);
+		expect(
+			foundry.utils.getProperty(plain, 'flags.core.sheetClass'),
+			'the plain NPC has no sheet flag',
+		).toBeFalsy();
+		expect(plain.sheet.constructor, 'an NPC with no sheet flag').toBe(monsterEntry().cls);
 		expect(goblin.sheet.constructor).toBe(monsterEntry().cls);
 		expect(ogre.sheet.constructor).toBe(monsterEntry('soloMonster').cls);
 		expect(kobold.sheet.constructor).toBe(monsterEntry('minion').cls);
+		expect(keepsOld.sheet.constructor, 'a minion set to the old sheet by hand').toBe(
+			oldEntry('minion').cls,
+		);
 	}, 30_000);
 
 	test('each tab opens and shows its content', async () => {
@@ -532,14 +553,12 @@ describe('the new NPC sheet', () => {
 		);
 		configure!.click();
 		await waitFor(
-			() => !!document.querySelector('.sheet-config select, #document-sheet-config select'),
+			() => !!document.querySelector('select[name="sheetClass"]'),
 			'the sheet config window',
 		);
 		await settle(300);
-		const select = document.querySelector<HTMLSelectElement>(
-			'.sheet-config select, #document-sheet-config select',
-		)!;
-		expect(select.selectedOptions[0]?.textContent?.trim()).toBe('NPC sheet (Monster)');
+		const select = document.querySelector<HTMLSelectElement>('select[name="sheetClass"]')!;
+		expect(select.selectedOptions[0]?.textContent?.trim()).toBe('NPC sheet');
 		for (const app of foundry.applications.instances.values()) {
 			if ((app as { constructor: { name: string } }).constructor.name === 'DocumentSheetConfig') {
 				await app.close();
