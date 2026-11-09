@@ -4966,7 +4966,7 @@
 				"name": "Habilitar sistema de combate"
 			},
 			"openNpcSheetsNarrow": {
-				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
+				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
 				"name": "Open NPC sheets narrow"
 			},
 			"resourceRecovery": {
@@ -4990,8 +4990,8 @@
 			"boon": "Hoja de dones de Nimble",
 			"class": "Hoja de clase de Nimble",
 			"feature": "Hoja de rasgos de Nimble",
-			"hero": "Character sheet (Hero)",
-			"monster": "NPC sheet (Monster)",
+			"hero": "Character sheet",
+			"monster": "NPC sheet",
 			"monsterFeature": "Hoja de rasgos de monstruo de Nimble",
 			"npc": "Hoja de PNJ de Nimble",
 			"object": "Hoja de objetos de Nimble",

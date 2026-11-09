@@ -4965,7 +4965,7 @@
 				"name": "Activer le Système de Combat"
 			},
 			"openNpcSheetsNarrow": {
-				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
+				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
 				"name": "Open NPC sheets narrow"
 			},
 			"resourceRecovery": {
@@ -4989,8 +4989,8 @@
 			"boon": "Feuille de Bienfait Nimble",
 			"class": "Feuille de Classe Nimble",
 			"feature": "Feuille de Capacité Nimble",
-			"hero": "Character sheet (Hero)",
-			"monster": "NPC sheet (Monster)",
+			"hero": "Character sheet",
+			"monster": "NPC sheet",
 			"monsterFeature": "Feuille de Capacité de Monstre Nimble",
 			"npc": "Feuille de PNJ Nimble",
 			"object": "Feuille d'Objet Nimble",

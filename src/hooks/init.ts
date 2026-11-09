@@ -133,7 +133,7 @@ export default function init() {
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['npc'],
-			makeDefault: true,
+			makeDefault: false,
 			label: 'NIMBLE.sheets.npc',
 		},
 	);
@@ -143,18 +143,17 @@ export default function init() {
 		PlayerCharacterSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['character'],
-			makeDefault: true,
+			makeDefault: false,
 			label: 'NIMBLE.sheets.playerCharacter',
 		},
 	);
 
-	// the new character sheet: a second choice in the sheet selector until the switch
 	foundry.documents.collections.Actors.registerSheet(
 		SYSTEM_ID,
 		HeroSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['character'],
-			makeDefault: false,
+			makeDefault: true,
 			label: 'NIMBLE.sheets.hero',
 		},
 	);
@@ -164,7 +163,7 @@ export default function init() {
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['soloMonster'],
-			makeDefault: true,
+			makeDefault: false,
 			label: 'NIMBLE.sheets.npc',
 		},
 	);
@@ -174,18 +173,17 @@ export default function init() {
 		NPCSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['minion'],
-			makeDefault: true,
+			makeDefault: false,
 			label: 'NIMBLE.sheets.npc',
 		},
 	);
 
-	// the new NPC sheet: a second choice in the sheet selector until the switch
 	foundry.documents.collections.Actors.registerSheet(
 		SYSTEM_ID,
 		MonsterSheet as unknown as ActorSheetConstructor,
 		{
 			types: ['npc', 'soloMonster', 'minion'],
-			makeDefault: false,
+			makeDefault: true,
 			label: 'NIMBLE.sheets.monster',
 		},
 	);
