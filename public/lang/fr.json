@@ -406,6 +406,7 @@
 						"image": "Actor Image Settings",
 						"inventory": "Inventory Settings",
 						"items": "Embedded Document Settings",
+						"needsAPlace": "Needs a place",
 						"skills": "Skill Settings",
 						"spells": "Spell Settings"
 					},
@@ -426,6 +427,7 @@
 					"imageX": "X-Offset (px)",
 					"imageY": "Y-Offset (px)",
 					"initiativeBonus": "Initiative bonus",
+					"needsAPlaceHint": "These have no place on the new character sheet yet.",
 					"passiveSkills": "Show Passive Skill Scores",
 					"resetSpellTier": "Reset spell tier",
 					"runMacros": "Execute Item Macros on Item Activation",
@@ -3085,7 +3087,7 @@
 					"label": "Scope"
 				},
 				"showAsResource": {
-					"hint": "Also show the pool as a meter in the rail of the character sheet, under mana. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here.",
+					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here.",
 					"label": "Show as a resource"
 				}
 			},
@@ -3371,7 +3373,7 @@
 					"label": "Attack delivery"
 				},
 				"cardOffer": {
-					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend only on the sheet, in the choice step under the item's row. Requires a manual spend that consumes dice for a generic effect.",
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect.",
 					"label": "Offer on attack card"
 				},
 				"damageType": {
@@ -4963,7 +4965,7 @@
 				"name": "Activer le Système de Combat"
 			},
 			"openNpcSheetsNarrow": {
-				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
+				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again.",
 				"name": "Open NPC sheets narrow"
 			},
 			"resourceRecovery": {
@@ -4987,8 +4989,8 @@
 			"boon": "Feuille de Bienfait Nimble",
 			"class": "Feuille de Classe Nimble",
 			"feature": "Feuille de Capacité Nimble",
-			"hero": "Character sheet",
-			"monster": "NPC sheet",
+			"hero": "Character sheet (Hero)",
+			"monster": "NPC sheet (Monster)",
 			"monsterFeature": "Feuille de Capacité de Monstre Nimble",
 			"npc": "Feuille de PNJ Nimble",
 			"object": "Feuille d'Objet Nimble",
