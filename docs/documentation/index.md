@@ -6,7 +6,7 @@ title: "Welcome"
 
 Nimble for Foundry VTT is the official implementation of the Nimble 2 tabletop RPG for Foundry Virtual Tabletop. It takes the bookkeeping off your table so you can spend your time playing: the system rolls the dice, tracks the resources, applies the conditions, and keeps everyone's sheets up to date.
 
-![A filled-out character sheet, front page, showing stats, hit points, and inventory](/images/documentation/full-character-sheet.png)
+![A filled-out character sheet, with the rail on the left and the Core tab open](/images/documentation/full-character-sheet.png)
 
 ## What the system does for you
 
