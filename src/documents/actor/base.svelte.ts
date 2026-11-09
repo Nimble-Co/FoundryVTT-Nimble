@@ -213,8 +213,12 @@ class NimbleBaseActor<
 				}),
 			};
 
+			// The world's language names are not actor data, so a change to them sends no actor hook.
+			const languagesHook = Hooks.on(systemHookName('languagesChanged'), () => update());
+
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
+				Hooks.off(systemHookName('languagesChanged'), languagesHook);
 				Hooks.off('createItem', embeddedItemHooks.create);
 				Hooks.off('deleteItem', embeddedItemHooks.delete);
 				Hooks.off('updateItem', embeddedItemHooks.update);
