@@ -37,9 +37,9 @@ Each condition is one step, and the steps stack and cancel as other advantage an
 - Taunted gives no disadvantage when the only target is the most recent taunter. The system knows the taunter when a feature applied Taunted. When you applied it by hand, the tick is on and you take it off for an attack on the taunter.
 - Despair ends after the attack that used it. When you take its tick off, Despair stays.
 
-**Every roll.** Poisoned and Frightened give disadvantage on attacks, saves, checks and initiative. The Frightened line says "source of fear nearby": take it off when the source is not near.
+**Every roll.** Poisoned and Frightened give disadvantage on attacks, saves, checks and initiative. Only a character rolls for initiative, so a monster's initiative has no condition lines. The Frightened line says "source of fear nearby": take it off when the source is not near.
 
-The card names each condition that changed the roll as a tag, for example **Advantage: Blinded (Goblin)**. Hover or click the tag to read the rule. A minion group attack shows the lines under each minion.
+The card names each condition that changed the roll as a tag, for example **Advantage: Blinded (Goblin)**. Hover or click the tag to read the rule. When a feature takes away all disadvantage, the card shows no disadvantage tag. A minion group attack shows the lines under each minion.
 
 ## Latched and Swallowed
 

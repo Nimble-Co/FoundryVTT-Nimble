@@ -183,7 +183,7 @@ describe('ItemActivationManager: conditions that change the roll mode', () => {
 		expect(rollOptions.conditionRollModes).toBeUndefined();
 	});
 
-	it('takes the condition steps out with all other disadvantage', async () => {
+	it('takes the condition steps out with all other disadvantage, and off the card', async () => {
 		setTargets(target('Goblin', ['blinded']));
 
 		const { rollOptions } = await attack(attacker(['poisoned']), {
@@ -192,6 +192,7 @@ describe('ItemActivationManager: conditions that change the roll mode', () => {
 		});
 
 		expect(rollOptions.rollModeSources).toEqual([1]);
+		expect(used(rollOptions)).toEqual(['target:blinded:1']);
 	});
 
 	it('gives both weapons of a dual wield the condition steps, each with its own roll mode', async () => {

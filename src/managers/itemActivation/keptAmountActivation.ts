@@ -32,6 +32,9 @@ export function removeDisadvantage(
 	if (Array.isArray(options.rollModeSources)) {
 		options.rollModeSources = options.rollModeSources.filter((value) => value > 0);
 	}
+	const advantages = options.conditionRollModes?.filter((line) => line.step > 0) ?? [];
+	if (advantages.length > 0) options.conditionRollModes = advantages;
+	else delete options.conditionRollModes;
 }
 
 /** The attack cannot miss, and its card tells why. */
