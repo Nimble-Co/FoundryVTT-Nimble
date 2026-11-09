@@ -69,6 +69,10 @@ export class ConditionManager {
 	configureStatusEffects() {
 		if (!this.#ready) throw Error('Conditions are not ready yet.');
 
+		// Every registered condition belongs here, monster-scoped ones included: Foundry validates a
+		// status id against CONFIG.statusEffects before ActiveEffect.fromStatusEffect will build the
+		// effect, so an id missing from this list can never be applied. Keeping them out of the
+		// pickers is a display concern, handled by shouldListCondition.
 		const statusEffects = [...this.#conditions.values()].sort((a, b) => {
 			const aid = a.name !== undefined ? localize(a.name) : a.id || a;
 			const bid = b.name !== undefined ? localize(b.name) : b.id || b;

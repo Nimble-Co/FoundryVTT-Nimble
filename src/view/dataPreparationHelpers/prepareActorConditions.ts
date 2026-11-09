@@ -1,5 +1,6 @@
 import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
 import localize from '../../utils/localize.js';
+import shouldListCondition from '../../utils/shouldListCondition.js';
 
 export type ActorCondition = {
 	id: string;
@@ -151,8 +152,12 @@ export default function prepareActorConditions(
 		}
 	}
 
+	const selectableConditionIds = Object.keys(CONFIG.NIMBLE.conditions ?? {}).filter((conditionId) =>
+		shouldListCondition(conditionId, activeConditions),
+	);
+
 	const conditionIds = includeInactive
-		? new Set([...Object.keys(CONFIG.NIMBLE.conditions ?? {}), ...activeConditions])
+		? new Set([...selectableConditionIds, ...activeConditions])
 		: includeEffectStatuses
 			? new Set([...activeConditions, ...effectConditions.keys()])
 			: new Set(activeConditions);

@@ -191,7 +191,7 @@
 			"img": "icons/creatures/abilities/wing-membrane-red.webp",
 			"system": {
 				"macro": "",
-				"identifier": "",
+				"identifier": "latched",
 				"rules": [
 					{
 						"type": "attackOutcome",
