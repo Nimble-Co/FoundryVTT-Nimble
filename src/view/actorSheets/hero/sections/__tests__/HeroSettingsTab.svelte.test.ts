@@ -64,11 +64,9 @@ describe('HeroSettingsTab', () => {
 		});
 	});
 
-	it('shows no Needs a place group when it has no entry', () => {
+	it('has no Inspiration switch (Inspiration has its own place)', () => {
 		renderTab();
-		const headings = screen.getAllByRole('heading').map((heading) => heading.textContent);
 
-		expect(headings).not.toContain(`${SET}.groups.needsAPlace`);
 		expect(screen.queryByRole('switch', { name: `${SET}.inspiration` })).toBeNull();
 	});
 });

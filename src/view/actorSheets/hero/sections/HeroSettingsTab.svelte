@@ -1,7 +1,6 @@
 <!--
 @component
 The Settings tab: every setting and button works in all modes.
-At the bottom, "Needs a place" holds system data that has no place on the sheet yet, with its control.
 -->
 <script lang="ts">
 	import type { HeroSettingsTabProps } from '#types/components/actorSheets/HeroSettingsTab.d.ts';
@@ -13,10 +12,6 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 
 	const uid = $props.id();
 
-	const groups = $derived(
-		view.needsAPlace.settings.length ? [...view.groups, view.needsAPlace] : view.groups,
-	);
-
 	function setNumber(intent: (value: number) => HeroIntent, text: string, min?: number) {
 		const value = Number(text);
 		if (!Number.isFinite(value) || (min !== undefined && value < min)) return;
@@ -25,10 +20,9 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 </script>
 
 <div class="settings">
-	{#each groups as group (group.id)}
+	{#each view.groups as group (group.id)}
 		<section>
-			<GroupHeading label={group.label} flush={group.id === groups[0].id} />
-			{#if group.hint}<p class="hint">{group.hint}</p>{/if}
+			<GroupHeading label={group.label} flush={group.id === view.groups[0].id} />
 			<div class="list">
 				{#each group.settings as setting (setting.id)}
 					{#if setting.kind === 'button'}
@@ -113,10 +107,5 @@ At the bottom, "Needs a place" holds system data that has no place on the sheet 
 	}
 	.button:disabled {
 		opacity: 0.5;
-	}
-	.hint {
-		margin: 0 4px 2px;
-		font-size: 0.703rem;
-		color: var(--nimble-ui-ink-muted);
 	}
 </style>

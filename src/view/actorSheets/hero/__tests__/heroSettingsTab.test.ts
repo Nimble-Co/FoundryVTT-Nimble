@@ -5,9 +5,7 @@ import { heroSettingsTab } from '../heroSettingsTab.ts';
 const SET = 'NIMBLE.actorSheet.hero.settings';
 
 const settingOf = (view: ReturnType<typeof heroSettingsTab>, id: string) => {
-	const setting = [...view.groups, view.needsAPlace]
-		.flatMap((group) => group.settings)
-		.find((entry) => entry.id === id);
+	const setting = view.groups.flatMap((group) => group.settings).find((entry) => entry.id === id);
 	if (!setting) throw new Error(`no setting ${id}`);
 	return setting;
 };
@@ -130,19 +128,16 @@ describe('heroSettingsTab', () => {
 	});
 
 	it.each([true, false])(
-		'has no entry in Needs a place (Inspiration %s has its own place)',
+		'has no Inspiration setting (Inspiration %s has its own place)',
 		(inspiration) => {
 			const view = heroSettingsTab(
 				blankHero({ system: { resources: { inspiration } } }),
 				heroContext(),
 			);
 
-			expect(view.needsAPlace).toEqual({
-				id: 'needsAPlace',
-				label: `${SET}.groups.needsAPlace`,
-				hint: `${SET}.needsAPlaceHint`,
-				settings: [],
-			});
+			expect(
+				view.groups.flatMap((group) => group.settings.map((setting) => setting.id)),
+			).not.toContain('inspiration');
 		},
 	);
 });

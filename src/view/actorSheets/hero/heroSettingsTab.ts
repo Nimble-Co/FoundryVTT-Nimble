@@ -43,14 +43,11 @@ export type HeroSetting =
 export interface HeroSettingsGroup {
 	id: string;
 	label: string;
-	hint?: string;
 	settings: HeroSetting[];
 }
 
 export interface HeroSettingsTabView {
 	groups: HeroSettingsGroup[];
-	/** system data with no place on the sheet yet, with its control */
-	needsAPlace: HeroSettingsGroup;
 }
 
 const flag =
@@ -205,11 +202,5 @@ export function heroSettingsTab(
 				],
 			},
 		],
-		needsAPlace: {
-			id: 'needsAPlace',
-			label: label('groups.needsAPlace'),
-			hint: label('needsAPlaceHint'),
-			settings: [],
-		},
 	};
 }

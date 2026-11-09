@@ -266,10 +266,8 @@
 						"inventory": "Inventory Settings",
 						"bonuses": "Bonuses",
 						"skills": "Skill Settings",
-						"spells": "Spell Settings",
-						"needsAPlace": "Needs a place"
+						"spells": "Spell Settings"
 					},
-					"needsAPlaceHint": "These have no place on the new character sheet yet.",
 					"imageX": "X-Offset (px)",
 					"imageY": "Y-Offset (px)",
 					"imageScale": "Scale (%)",

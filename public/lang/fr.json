@@ -406,7 +406,6 @@
 						"image": "Actor Image Settings",
 						"inventory": "Inventory Settings",
 						"items": "Embedded Document Settings",
-						"needsAPlace": "Needs a place",
 						"skills": "Skill Settings",
 						"spells": "Spell Settings"
 					},
@@ -427,7 +426,6 @@
 					"imageX": "X-Offset (px)",
 					"imageY": "Y-Offset (px)",
 					"initiativeBonus": "Initiative bonus",
-					"needsAPlaceHint": "These have no place on the new character sheet yet.",
 					"passiveSkills": "Show Passive Skill Scores",
 					"resetSpellTier": "Reset spell tier",
 					"runMacros": "Execute Item Macros on Item Activation",
