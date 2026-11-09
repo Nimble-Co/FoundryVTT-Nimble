@@ -9,7 +9,7 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 ## Three ways to apply and remove them
 
 1. **The token.** Select a token and open its overhead controls (right-click the token). The status panel lists every condition by name. Click one to toggle it on or off, and use the clear-all button to wipe them.
-2. **The sheet's Conditions tab.** Both the character sheet and the NPC sheet have a Conditions tab listing every condition with a search box and an "active only" filter. Toggle a condition there to apply or remove it. Other temporary and passive effects on the actor are listed on the same tab.
+2. **The sheet's Effects tab.** Both the character sheet and the NPC sheet have an Effects tab. Under **All conditions**, a grid shows each condition that you set by hand. Click a condition to apply or remove it. A condition that is on is crimson, with a check. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they are not in the grid. Each condition that is on, also these six, shows in the list above the grid. Click its row to remove it: the sheet asks first. The active and passive effects on the actor are listed on the same tab.
 3. **Chat card buttons.** When an attack, spell, or feature inflicts a condition, the condition appears as a button on its chat card. Select the affected tokens and click the button to apply the condition to all of them. Hover the button for the condition's description.
 
 ![A chat card with a condition button, next to the token status panel showing named conditions](/images/documentation/condition-chatcard-with-button.png)
@@ -77,7 +77,7 @@ Master of Storm names two schools and grants two concentrations. What it does no
 
 Tracks follow a spell's school, and a magic item carries no school. So a Wand of Fly or a Cloak of Lesser Windform concentrates on the default track, and using one ends a tracked concentration the caster is holding.
 
-Ending one of two held concentrations is a choice rather than bookkeeping, so removing Concentration from the token panel or the Conditions tab asks which one should end. A caster holding only one is ended without a prompt.
+Ending one of two held concentrations is a choice rather than bookkeeping, so removing Concentration from the token panel or the Effects tab asks which one should end. A caster holding only one is ended without a prompt.
 
 This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
 
@@ -89,13 +89,13 @@ Turning off **Feature Effects** in the Automation settings turns this off with i
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Conditions tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 
 Removing a custom condition that something still uses opens a confirmation listing what would be left behind: the creatures currently carrying it, and the items whose rules or activation effects name it. From there you can **Remove Everywhere**, which deletes those effects and strips the condition out of those items, or **Remove Only**, which drops the definition and leaves the references in place. Either way nothing changes until you save the conditions list, so closing the editor cancels it.
 
-**Remove Only** leaves markers and rules pointing at an id nothing resolves. Rules in that state stop running and say why on their card in the Rules Builder; leftover markers drop out of the Conditions tab's condition list, so remove them from the same tab's Temporary Effects or Passive Effects section, or from the token conditions panel on the canvas. Items inside compendiums are not searched or rewritten, since packs can be locked or owned by a module.
+**Remove Only** leaves markers and rules pointing at an id nothing resolves. Rules in that state stop running and say why on their card in the Rules Builder; leftover markers drop out of the condition grid on the Effects tab, so remove them from **Active effects** or **Passive effects** on the same tab, or from the token conditions panel on the canvas. Items inside compendiums are not searched or rewritten, since packs can be locked or owned by a module.
 
 ## Condition immunity
 

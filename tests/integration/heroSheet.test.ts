@@ -9,6 +9,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
+	clearTargets,
 	createViewedTestScene,
 	getRuleAutomationEnabled,
 	importPackItem,
@@ -17,6 +18,7 @@ import {
 	purgeTestDocuments,
 	setRuleAutomationEnabled,
 	settle,
+	targetToken,
 	waitFor,
 } from './liveHelpers.ts';
 
@@ -61,6 +63,30 @@ const characterSheets = () =>
 
 const heroEntry = () =>
 	characterSheets().find((entry) => t(entry.label) === t('NIMBLE.sheets.hero'))!;
+
+const oldEntry = () =>
+	characterSheets().find((entry) => t(entry.label) === t('NIMBLE.sheets.playerCharacter'))!;
+
+const sheetFlagOf = (actor: HeroActor) =>
+	foundry.utils.getProperty(actor, 'flags.core.sheetClass') as string | undefined;
+
+const windowTitled = (start: string) =>
+	[...foundry.applications.instances.values()].find((app) =>
+		String((app as { title?: string }).title ?? '').startsWith(start),
+	) as { rendered: boolean; element: HTMLElement; close(): Promise<unknown> } | undefined;
+
+/** Embeds a pack document with its source, as a drop from the compendium does. */
+async function embedFromPack(actor: HeroActor, packName: string, name: string): Promise<Item> {
+	const pack = game.packs.get(`${game.system.id}.${packName}`)!;
+	const index = await pack.getIndex();
+	const entry = index.contents.find((candidate) => candidate.name === name);
+	if (!entry) throw new Error(`${packName} has no "${name}"`);
+	const doc = (await pack.getDocument(entry._id as string))!;
+	const source = doc.toObject() as Record<string, unknown>;
+	foundry.utils.setProperty(source, '_stats.compendiumSource', doc.uuid);
+	const [item] = await actor.createEmbeddedDocuments('Item', [source]);
+	return item!;
+}
 
 const objectData = (name: string, system: Record<string, unknown> = {}) => ({
 	name: `${TEST_PREFIX} ${name}`,
@@ -230,47 +256,54 @@ describe('the new character sheet', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
-	test('the sheet selector offers it, and the old sheet stays the default', async () => {
+	test('it is the default: a character with no sheet flag opens it', async () => {
 		const entry = heroEntry();
-		expect(t(entry.label)).toBe('Character sheet (Hero)');
-		expect(entry.default).toBe(false);
-		expect(characterSheets().find((sheet) => sheet.default)?.id).not.toBe(entry.id);
-		expect(plain.sheet.constructor).not.toBe(entry.cls);
+		expect(t(entry.label)).toBe('Character sheet');
+		expect(entry.default).toBe(true);
+		expect(characterSheets().find((sheet) => sheet.default)?.id).toBe(entry.id);
+		expect(sheetFlagOf(plain), 'the plain character has no sheet flag').toBeFalsy();
+		expect(plain.sheet.constructor).toBe(entry.cls);
 		expect(hero.sheet.constructor).toBe(entry.cls);
+	}, 30_000);
+
+	test('the selector keeps the old sheet, and a character set to it by hand keeps it', async () => {
+		const old = oldEntry();
+		expect(t(old.label)).toBe('Character sheet (old)');
+		expect(old.default).toBe(false);
 
 		await plain.sheet.render({ force: true });
-		await waitFor(() => plain.sheet.rendered, 'the old sheet to render');
+		await waitFor(() => plain.sheet.rendered, 'the new sheet to render');
 		await settle(600);
-		const frame = plain.sheet.element;
-		frame.querySelector<HTMLButtonElement>('[data-action="toggleControls"]')!.click();
-		await waitFor(
-			() =>
-				!!document.querySelector('#context-menu [data-action="configureSheet"], #context-menu li'),
-			'the window menu',
-		);
+		plain.sheet.element.querySelector<HTMLButtonElement>('[data-action="toggleControls"]')!.click();
+		await waitFor(() => !!document.querySelector('#context-menu li'), 'the window menu');
 		const configure = [...document.querySelectorAll<HTMLElement>('#context-menu li')].find(
 			(item) => item.textContent?.trim() === t('SHEETS.ConfigureSheet'),
 		);
 		expect(configure, 'a Configure Sheet entry in the window menu').toBeTruthy();
 		configure!.click();
-		await waitFor(
-			() => !!document.querySelector('.sheet-config select, #document-sheet-config select'),
-			'the sheet config window',
-		);
+		const configForm = () =>
+			document.querySelector<HTMLFormElement>('form:has(select[name="sheetClass"])');
+		await waitFor(() => !!configForm(), 'the sheet config window');
 		await settle(300);
-		const options = [
-			...document.querySelectorAll<HTMLOptionElement>(
-				'.sheet-config select option, #document-sheet-config select option',
-			),
-		].map((option) => option.textContent?.trim());
-		expect(options).toContain('Character sheet (Hero)');
+		const form = configForm()!;
+		const sheetSelect = form.querySelector<HTMLSelectElement>('select[name="sheetClass"]')!;
+		const defaultSelect = form.querySelector<HTMLSelectElement>('select[name="defaultClass"]')!;
+		const labels = [...sheetSelect.options].map((option) => option.textContent?.trim());
+		expect(labels).toContain('Character sheet');
+		expect(labels).toContain('Character sheet (old)');
+		expect(defaultSelect.selectedOptions[0]?.textContent?.trim()).toBe('Character sheet');
 
-		for (const app of foundry.applications.instances.values()) {
-			if ((app as { constructor: { name: string } }).constructor.name === 'DocumentSheetConfig') {
-				await app.close();
-			}
-		}
+		sheetSelect.value = old.id;
+		sheetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		form.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+		await waitFor(() => sheetFlagOf(plain) === old.id, 'the old sheet to be set on the character');
+		await waitFor(
+			() => plain.sheet.constructor === old.cls && plain.sheet.rendered,
+			'the old sheet to open in place of the new one',
+		);
+		expect(game.settings.get('core', 'sheetClasses').Actor?.character ?? '').not.toBe(old.id);
 		await plain.sheet.close();
+		expect(plain.sheet.constructor, 'the character keeps the old sheet').toBe(old.cls);
 	}, 60_000);
 
 	test('each tab opens and shows its content', async () => {
@@ -507,14 +540,12 @@ describe('the new character sheet', () => {
 		);
 		configure!.click();
 		await waitFor(
-			() => !!document.querySelector('.sheet-config select, #document-sheet-config select'),
+			() => !!document.querySelector('select[name="sheetClass"]'),
 			'the sheet config window',
 		);
 		await settle(300);
-		const select = document.querySelector<HTMLSelectElement>(
-			'.sheet-config select, #document-sheet-config select',
-		)!;
-		expect(select.selectedOptions[0]?.textContent?.trim()).toBe('Character sheet (Hero)');
+		const select = document.querySelector<HTMLSelectElement>('select[name="sheetClass"]')!;
+		expect(select.selectedOptions[0]?.textContent?.trim()).toBe('Character sheet');
 		for (const app of foundry.applications.instances.values()) {
 			if ((app as { constructor: { name: string } }).constructor.name === 'DocumentSheetConfig') {
 				await app.close();
@@ -675,6 +706,120 @@ describe('the new character sheet', () => {
 		await waitFor(() => !!sheet.querySelector('aside.rail'), 'the wide rail');
 	}, 30_000);
 
+	test('a sheet that the user may not change opens with its inputs disabled', async () => {
+		const watched = (await Actor.create({
+			name: `${TEST_PREFIX} Watched`,
+			type: 'character',
+			system: { attributes: { hp: { value: 9, max: 12 } } },
+		} as Actor.CreateData)) as unknown as HeroActor;
+		// An edit permission above OWNER makes the sheet read-only for the GM too: the same
+		// isEditable path that an Observer takes. The harness has only the one GM client.
+		const SheetClass = heroEntry().cls as new (
+			actor: { document: HeroActor },
+			options: object,
+		) => HeroSheetApp & { isEditable: boolean };
+		const sheet = new SheetClass(
+			{ document: watched },
+			{ editPermission: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER + 1 },
+		);
+		try {
+			await sheet.render({ force: true, position: { width: 720, height: 850 } });
+			await waitFor(() => sheet.rendered, 'the read-only sheet to render');
+			await settle(600);
+			expect(sheet.isEditable).toBe(false);
+
+			const content = sheet.element.querySelector('.window-content')!;
+			const fields = [...content.querySelectorAll<HTMLInputElement>('input, select, textarea')];
+			const hpLabel = t('NIMBLE.actorSheet.parts.vitalPlate.current', {
+				label: t('NIMBLE.actorSheet.parts.vitalPlate.hp'),
+			});
+			expect(fields.find((field) => field.getAttribute('aria-label') === hpLabel)).toBeTruthy();
+			expect(
+				fields.filter((field) => !field.disabled).map((field) => field.getAttribute('aria-label')),
+				'the inputs that are not disabled',
+			).toEqual([]);
+			expect(buttonNamed(content, t('NIMBLE.prompts.safeRest'))?.disabled).toBe(true);
+			expect(buttonNamed(content, t('NIMBLE.actorSheet.hero.rail.edit'))?.disabled).toBe(true);
+		} finally {
+			await sheet.close().catch(() => {});
+		}
+	}, 30_000);
+
+	test('a missed level choice shows the warning above Level Up, and it goes after the correction', async () => {
+		const leveled = (await Actor.create({
+			name: `${TEST_PREFIX} Leveled`,
+			type: 'character',
+		} as Actor.CreateData)) as unknown as HeroActor & {
+			getMissingLevelSelections(): Promise<unknown[]>;
+			updateItem(itemId: string, changes: Record<string, unknown>): Promise<unknown>;
+		};
+		try {
+			const characterClass = await embedFromPack(leveled, 'nimble-classes', 'Commander');
+			await settle();
+			const identifier = (characterClass as unknown as { identifier: string }).identifier;
+			// Level 2 grants the Commander's Orders; the history records none of them.
+			await leveled.updateItem(characterClass.id!, { 'system.classLevel': 2 });
+			await leveled.update({
+				'system.classData.levels': [identifier, identifier],
+				'system.levelUpHistory': [
+					{
+						level: 2,
+						hpIncrease: 0,
+						abilityIncreases: {},
+						skillIncreases: {},
+						hitDieAdded: false,
+						classIdentifier: identifier,
+						grantedFeatureIds: [],
+						grantedSpellIds: [],
+					},
+				],
+			});
+			await settle();
+			expect(await leveled.getMissingLevelSelections()).toHaveLength(1);
+
+			const sheet = await openHeroSheet(leveled);
+			const warningLabel = t('NIMBLE.levelCorrectionDialog.sheetWarning');
+			const warning = () => buttonNamed(sheet.querySelector('aside.rail')!, warningLabel);
+			await waitFor(() => !!warning(), 'the missing level choices warning');
+			const levelUp = buttonNamed(sheet.querySelector('aside.rail')!, t('NIMBLE.prompts.levelUp'))!;
+			expect(
+				warning()!.compareDocumentPosition(levelUp) & Node.DOCUMENT_POSITION_FOLLOWING,
+				'the warning is above Level Up',
+			).toBeTruthy();
+
+			const itemsBefore = leveled.items.contents.length;
+			warning()!.click();
+			const title = `${leveled.name}: ${t('NIMBLE.levelCorrectionDialog.title')}`;
+			await waitFor(() => !!windowTitled(title)?.rendered, 'the level correction window');
+			await settle(300);
+			const dialog = windowTitled(title)!.element;
+			const submit = () =>
+				dialog.querySelector<HTMLButtonElement>('.nimble-sheet__footer button.nimble-button')!;
+			const selectLabel = t('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+				featureName: '',
+			}).trim();
+			for (let pick = 0; pick < 5 && submit().disabled; pick += 1) {
+				const choice = [...dialog.querySelectorAll<HTMLButtonElement>('button[aria-label]')].find(
+					(button) =>
+						!button.disabled && button.getAttribute('aria-label')!.startsWith(selectLabel),
+				);
+				if (!choice) break;
+				choice.click();
+				await settle(200);
+			}
+			expect(submit().disabled, 'the correction is complete').toBe(false);
+			submit().click();
+
+			await waitFor(
+				() => leveled.items.contents.length > itemsBefore,
+				'the correction to grant the picks',
+			);
+			await waitFor(() => !warning(), 'the warning to go');
+		} finally {
+			await leveled.sheet.close().catch(() => {});
+		}
+	}, 60_000);
+
 	test('the heroic action macro opens the Assess choice on Actions', async () => {
 		await hero.sheet.close();
 		await settle(300);
@@ -707,6 +852,40 @@ describe('the new character sheet', () => {
 		);
 	}, 60_000);
 
+	test('a new target shows in the Opportunity Attack step at once', async () => {
+		const goblin = (await Actor.create({
+			name: `${TEST_PREFIX} Goblin`,
+			type: 'npc',
+		} as Actor.CreateData)) as unknown as Actor;
+		const goblinToken = await placeToken(scene, {
+			name: `${TEST_PREFIX} Goblin`,
+			actor: goblin,
+			gx: 8,
+			gy: 3,
+			disposition: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+		});
+		await clearTargets();
+		const sheet = await openHeroSheet(hero);
+		await openTab(sheet, 'actions');
+		useButtonOf(rowOf(sheet, 'heroic-opportunity')!)!.click();
+		const stepText = () =>
+			rowOf(sheet, 'heroic-opportunity')?.querySelector('[role="group"]')?.textContent ?? '';
+		await waitFor(
+			() => stepText().includes(t('NIMBLE.actorSheet.hero.actions.noTarget')),
+			'the step to say that there is no target',
+		);
+
+		await targetToken(goblinToken);
+		const named = t('NIMBLE.actorSheet.hero.actions.target', { name: goblinToken.name });
+		await waitFor(() => stepText().includes(named), `the step to say "${named}"`);
+
+		await clearTargets();
+		await waitFor(
+			() => stepText().includes(t('NIMBLE.actorSheet.hero.actions.noTarget')),
+			'the step to say again that there is no target',
+		);
+	}, 30_000);
+
 	test('in a combat the rail shows the turn, and it goes when the combat ends', async () => {
 		const sheet = await openHeroSheet(hero);
 		const tokenId = canvas.tokens!.placeables.find((token) => token.actor?.id === hero.id)!.id;
@@ -720,6 +899,72 @@ describe('the new character sheet', () => {
 		await combat.delete();
 		combat = undefined;
 		await waitFor(() => !endTurn(), 'the turn to leave the rail');
+	}, 60_000);
+
+	test('mana from Initiative is idle out of the roll, and fills when Initiative is rolled from the rail', async () => {
+		const caster = (await Actor.create({
+			name: `${TEST_PREFIX} Caster`,
+			type: 'character',
+			system: {
+				abilities: { intelligence: { baseValue: 3 } },
+				attributes: { hp: { value: 12, max: 12 } },
+			},
+		} as Actor.CreateData)) as unknown as HeroActor & {
+			system: { resources: { mana: { current: number } } };
+		};
+		try {
+			const spellblade = await embedFromPack(caster, 'nimble-subclasses', 'Spellblade');
+			// An older copy has no rules of its own: the sheet gets them from the pack source.
+			await spellblade.update({ 'system.rules': [] } as Item.UpdateData);
+			const casterToken = await placeToken(scene, {
+				name: caster.name,
+				actor: caster as unknown as Actor,
+				gx: 3,
+				gy: 6,
+				disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+				actorLink: true,
+			});
+			combat = (await Combat.create({ active: true, scene: scene.id } as Combat.CreateData))!;
+			await combat.createEmbeddedDocuments('Combatant', [
+				{ actorId: caster.id, tokenId: casterToken.id, sceneId: scene.id, type: 'character' },
+			] as Combatant.CreateData[]);
+			await settle(400);
+
+			const sheet = await openHeroSheet(caster);
+			const manaLabel = t('NIMBLE.ui.combatTracker.mana');
+			const idleNote = t('NIMBLE.actorSheet.hero.meter.fromInitiative');
+			const manaInput = () =>
+				sheet.querySelector<HTMLInputElement>(
+					`input[aria-label="${CSS.escape(t('NIMBLE.actorSheet.parts.vitalPlate.current', { label: manaLabel }))}"]`,
+				);
+			await waitFor(
+				() => !!sheet.querySelector('aside.rail')?.textContent?.includes(idleNote),
+				'the mana meter to wait for Initiative',
+			);
+			expect(manaInput()).toBeNull();
+
+			const initiative = [...sheet.querySelectorAll<HTMLButtonElement>('aside.rail button')].find(
+				(button) => button.textContent?.trim().startsWith(t('NIMBLE.prompts.rollInitiative')),
+			);
+			expect(initiative, 'the Roll Initiative button on the rail').toBeTruthy();
+			initiative!.click();
+			const rollWindow = () =>
+				[...foundry.applications.instances.values()].find(
+					(app) =>
+						String((app as { title?: string }).title ?? '').includes(caster.name) &&
+						!!(app as { element?: HTMLElement }).element?.querySelector('.foot .btn.primary'),
+				) as { element: HTMLElement } | undefined;
+			await waitFor(() => !!rollWindow(), 'the initiative roll window');
+			rollWindow()!.element.querySelector<HTMLButtonElement>('.foot .btn.primary')!.click();
+
+			await waitFor(() => caster.system.resources.mana.current === 3, 'the combat mana grant');
+			await waitFor(() => manaInput()?.value === '3', 'the mana meter to show 3');
+			expect(sheet.querySelector('aside.rail')?.textContent).not.toContain(idleNote);
+		} finally {
+			await caster.sheet.close().catch(() => {});
+			await combat?.delete().catch(() => {});
+			combat = undefined;
+		}
 	}, 60_000);
 
 	test('the sheet of an unlinked token opens for the token actor', async () => {

@@ -8,7 +8,7 @@ When your character gains a level, the sheet does the bookkeeping for you. Your 
 
 ## Starting a level up
 
-Enable the sheet's editing toggle, then click the **Level Up** button in the sheet's sidebar (the rising arrow). The button is disabled if the character has no class or is already level 20.
+Click **Level Up** at the bottom of the rail. You do not need edit mode. The button is off if the character has no class or is already level 20.
 
 ![The level up dialog showing the HP increase choice and skill point section](/images/documentation/levelup-dialog.png)
 
@@ -32,10 +32,10 @@ Completing a level up posts a "Level Up Summary" card to chat showing the level 
 
 ## Leveling down: the undo button
 
-The **Revert Last Level Up** button (the undo arrow next to Level Up) walks back your most recent level up. The system keeps a history of every level up, so the confirmation window can show you exactly what will be reverted: the HP and hit die you gained, skill and ability increases, and any features, spells, and boons that the level granted (plus your subclass, when reverting from level 3).
+The **Revert Last Level Up** button (the undo arrow next to **Level Up**) walks back your most recent level up. The system keeps a history of every level up, so the confirmation window can show you exactly what will be reverted: the HP and hit die you gained, skill and ability increases, and any features, spells, and boons that the level granted (plus your subclass, when reverting from level 3).
 
 ::: warning One step at a time
-Reverting only undoes the most recent level up. To go back several levels, revert repeatedly. The button is disabled when there is no level up history to revert, for example on a character whose level was set by hand rather than through the dialog.
+Reverting only undoes the most recent level up. To go back several levels, revert repeatedly. The button shows only in edit mode, and only when there is a level up history to revert. For example, it does not show on a character whose level was set by hand rather than through the dialog.
 :::
 
 ::: info Manual edits are not tracked

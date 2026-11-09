@@ -4,10 +4,10 @@
  * it from the Features tab opens the activation dialog's spend prompt, and the
  * amount named there is what gets deducted, healed, and reported on the card.
  *
- * Everything under test is driven by real DOM clicks (the feature card's
- * activate button, the dialog's stepper and roll button, the card's Apply
- * Healing button, the sheet's Safe Rest button); the API is used only to stage
- * the actor and to read resulting state.
+ * Everything under test is driven by real DOM clicks (the Features tab, the
+ * use button of the feature row, the dialog's stepper and roll button, the
+ * card's Apply Healing button, the sheet's Safe Rest button); the API is used
+ * only to stage the actor and to read resulting state.
  *
  * The refill on a Safe Rest runs through the charge system's rest hook, gated
  * on `automation.resourceRecovery`.
@@ -39,6 +39,13 @@ const RESOURCE_RECOVERY_SETTING = 'automation.resourceRecovery';
 const SPEND_AMOUNT = 3;
 const POOL_MAX = 5;
 
+const t = (key: string) => game.i18n.localize(key);
+
+const buttonNamed = (root: ParentNode, name: string) =>
+	[...root.querySelectorAll<HTMLButtonElement>('button')].find(
+		(button) => button.getAttribute('aria-label') === name || button.textContent?.trim() === name,
+	);
+
 const getResourceRecoveryEnabled = () => getAutomationToggle(RESOURCE_RECOVERY_SETTING);
 const setResourceRecoveryEnabled = (value: boolean) =>
 	setAutomationToggle(RESOURCE_RECOVERY_SETTING, value);
@@ -49,7 +56,7 @@ interface SheetActor {
 	system: { attributes: { hp: { value: number; max: number } } };
 	items: { get(id: string): Item | undefined };
 	sheet: {
-		render(force: boolean): Promise<unknown>;
+		render(options: object): Promise<unknown>;
 		close(): Promise<unknown>;
 		element: HTMLElement;
 	};
@@ -131,8 +138,12 @@ describe('variable charge spends', () => {
 		});
 		await targetToken(token);
 
-		await actor.sheet.render(true);
-		await settle(1500);
+		await actor.sheet.render({ force: true, position: { width: 720, height: 850 } });
+		await waitFor(
+			() => !!actor.sheet.element?.querySelector('[role="tab"]'),
+			'the sheet to render',
+		);
+		await settle(600);
 	}, 120_000);
 
 	afterAll(async () => {
@@ -166,23 +177,28 @@ describe('variable charge spends', () => {
 		await waitFor(() => !spendInput(), 'the previous spend prompt to close');
 	}
 
-	/** Activates the feature from its card and waits for the spend prompt. */
+	/** Uses the feature from its row on the Features tab and waits for the spend prompt. */
 	async function openSpendPrompt(): Promise<void> {
 		await closeSpendPrompt();
 
-		const featuresTab = actor.sheet.element.querySelector<HTMLButtonElement>(
-			'.nimble-primary-navigation button[aria-label="Features"]',
+		const sheet = actor.sheet.element;
+		const featuresName = t('NIMBLE.actorSheet.hero.tabs.features');
+		const featuresTab = [...sheet.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((tab) =>
+			(tab.getAttribute('aria-label') || tab.textContent || '').trim().startsWith(featuresName),
 		);
 		expect(featuresTab, 'the Features tab button').toBeTruthy();
-		featuresTab!.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
-		featuresTab!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-		await settle(600);
-
-		const activate = actor.sheet.element.querySelector<HTMLElement>(
-			`.nimble-feature-card[data-item-id="${layOnHands.id}"] .nimble-feature-card__img-activate`,
+		featuresTab!.click();
+		await waitFor(
+			() => featuresTab!.getAttribute('aria-selected') === 'true',
+			'the Features tab to open',
 		);
-		expect(activate, 'the feature card activate button').toBeTruthy();
-		activate!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		await settle(300);
+
+		const use = sheet
+			.querySelector(`[data-row-id="${CSS.escape(layOnHands.id!)}"]`)
+			?.querySelector<HTMLButtonElement>('button.use, button.main');
+		expect(use, 'the use button of the feature row').toBeTruthy();
+		use!.click();
 
 		await waitFor(() => !!spendInput(), 'the spend prompt to open');
 	}
@@ -275,9 +291,7 @@ describe('variable charge spends', () => {
 		await stage({ charges: POOL_MAX - SPEND_AMOUNT, wound: 10 });
 		await closeSpendPrompt();
 
-		const safeRest = actor.sheet.element.querySelector<HTMLButtonElement>(
-			'button[aria-label="Safe Rest"]',
-		);
+		const safeRest = buttonNamed(actor.sheet.element, t('NIMBLE.prompts.safeRest'));
 		expect(safeRest, 'the sheet Safe Rest button').toBeTruthy();
 		safeRest!.click();
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { systemHookName } from '#system';
 import getLanguageName from '../../utils/documents/getLanguageName.js';
 import { findLanguageNameConflicts, type LanguageCustomizations } from '../languageSettings.js';
 
@@ -278,5 +279,20 @@ describe('getLanguageName', () => {
 
 	it('falls back to the key for unknown languages', () => {
 		expect(getLanguageName('madeUpKey', { ancestryIdentifier: 'gnome' })).toBe('madeUpKey');
+	});
+});
+
+describe('registerLanguageSettings', () => {
+	it('a change of the setting calls the languagesChanged hook, so open sheets refresh', async () => {
+		const { registerLanguageSettings } = await loadModule();
+		registerLanguageSettings();
+		const register = game.settings.register as unknown as ReturnType<typeof vi.fn>;
+		const config = register.mock.calls[0][2] as { onChange: () => void };
+		const callAll = Hooks.callAll as unknown as ReturnType<typeof vi.fn>;
+		callAll.mockClear();
+
+		config.onChange();
+
+		expect(callAll).toHaveBeenCalledWith(systemHookName('languagesChanged'));
 	});
 });

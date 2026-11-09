@@ -40,7 +40,7 @@ If you would rather assemble a character piece by piece, create the character th
 
 - Drag a **class**, **ancestry**, and **background** onto the sheet. Each brings its rules with it: proficiencies, stat bonuses, and granted equipment apply automatically.
 - Drag **features**, **spells**, and **equipment** from their compendiums onto the matching tabs.
-- Set your ability scores, skill points, and languages from the Core tab with the sheet's editing toggle enabled.
+- Turn on **Edit** at the bottom of the rail. Then, on the Core tab, click **Stats** to set your ability scores, the **Skills** outline to set your skill points, and the **Languages** outline to set your languages.
 
 This path gives you full control, but nothing checks your work. The creator exists precisely so you don't have to remember every step.
 
@@ -52,9 +52,9 @@ The actor creation window also offers two import options: importing a character 
 
 Open the new sheet and give it a quick once-over:
 
-- **Hit Points**: your maximum HP comes from your class. Make sure the HP bar looks right.
+- **Hit Points**: your maximum HP comes from your class. Make sure the HP in the rail looks right.
 - **Hit dice**: you should have one hit die of your class's size at level 1.
-- **Mana**: if your class has a mana formula, the mana bar appears in the sheet header. The mana bar does not decide whether you can cast. That comes from the spell grants on your class: the Settings tab shows your **Highest Unlocked Spell Tier**, and a 0 there means your class grants no tiered spells.
+- **Mana**: if your class has a mana formula, the **Mana** meter appears in the rail. The meter does not decide whether you can cast. That comes from the spell grants on your class: the Settings tab shows your **Highest Unlocked Spell Tier**, and a 0 there means your class grants no tiered spells.
 - **Known spells**: check the Spells tab against what you picked in the creator.
 - **Equipment**: if you chose starting equipment, it should already be equipped on the Inventory tab; if you chose gold, you should have 50 gp.
 

@@ -1,4 +1,4 @@
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 
 export const LANGUAGE_CUSTOMIZATIONS_SETTING_KEY = 'languageCustomizations';
 
@@ -359,6 +359,8 @@ export function registerLanguageSettings(): void {
 				for (const actor of game.actors ?? []) {
 					if (actor?.type === 'character') actor.reset?.();
 				}
+				// @ts-expect-error Custom hook
+				Hooks.callAll(systemHookName('languagesChanged'));
 				rerenderLanguageConsumers();
 			},
 		} as unknown as Parameters<typeof game.settings.register>[2],

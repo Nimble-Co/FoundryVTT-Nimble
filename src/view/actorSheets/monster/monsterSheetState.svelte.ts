@@ -1,6 +1,6 @@
 import type { MonsterSheetProps } from '#types/components/actorSheets/MonsterSheet.d.ts';
 import { flashRows, trackWidth } from '../shared/sheetFrame.svelte.ts';
-import { setClosedRows } from '../shared/sheetUiState.ts';
+import { isCardOpen, setCardsOpen } from '../shared/sheetUiState.ts';
 import { monsterAbilitiesTab } from './monsterAbilitiesTab.ts';
 import { monsterEffectsTab } from './monsterEffectsTab.ts';
 import { monsterFrame } from './monsterFrame.ts';
@@ -40,8 +40,8 @@ export function createMonsterSheetState(
 	const expandAll = $derived.by(() => {
 		if (!abilities?.cardIds.length) return null;
 		const ids = abilities.cardIds;
-		const allOpen = ids.every((id) => !ui.closedRows.includes(id));
-		return { allOpen, onclick: () => setClosedRows(ui, allOpen ? ids : []) };
+		const allOpen = ids.every((id) => isCardOpen(ui, id));
+		return { allOpen, onclick: () => setCardsOpen(ui, ids, !allOpen) };
 	});
 
 	return {

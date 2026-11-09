@@ -25,11 +25,11 @@ The same Create Actor window links to the Nimble Nexus monster browser, which ca
 
 ## Step 2: Fill in the stat block
 
-The monster sheet has four tabs (**Core**, **Conditions**, **Notes**, and **Settings**), and almost everything lives on **Core**.
+The NPC sheet has a rail on the left and four tabs (**Abilities**, **Effects**, **Notes**, and **Settings**). The name is at the top, the stat block lives in the rail, and the features live on **Abilities**. Click **Edit**, the last row of the menu at the bottom of the rail, to turn on edit mode: the parts that you can configure get an outline. On a narrow sheet, **Edit** is the pen in the header, and **Create Feature** is the **+** beside it.
 
-![A Standard monster sheet on the Core tab, with the metadata line, HP bar, armor icon, and saving throws visible](/images/documentation/standard-monster-sheet.png)
+![A Standard monster on the NPC sheet, with the line beside the name, and the HP, the saves and the armor in the rail](/images/documentation/standard-monster-sheet.png)
 
-**The metadata line.** Under the monster's name you will see something like "Level 1 Medium". Click the edit button next to it to open the configuration window where you set:
+**The line beside the name.** Beside the monster's name you will see something like "Level 1/3 Small Goblins". In edit mode, click the outline on this line to open the monster window, where you set:
 
 - **Level**: free text, so fractional levels like `1/3` and `1/4` work (the compendium Goblin is Level 1/3).
 - **Creature Type**: free text, such as "Beast" or "Goblins".
@@ -38,32 +38,33 @@ The monster sheet has four tabs (**Core**, **Conditions**, **Notes**, and **Sett
 - **Damage Immunities**: damage types the monster takes no damage from at all.
 - **Damage Vulnerabilities**: recorded on the sheet for reference, but not yet automated; apply the vulnerability rule from the rulebook by hand.
 - **Flunky**: a switch on Standard monsters. Flunkies can still miss, but never crit.
+- **Monster Type**: Standard, Minion or Solo Monster.
 
 Resistances and immunities only kick in when the incoming damage has a known type; a roll with no damage type is applied in full.
 
 For the Bog Howler: Level 3, Creature Type "Beast", Medium.
 
-**Hit points.** Edit current, maximum, and temporary HP directly on the sheet. When a monster drops to half HP or less, the heart icon on its HP bar cracks to show it is bloodied.
+**Hit points.** Out of edit mode, type the current HP in the Hit Points plate of the rail. In edit mode, you type the maximum HP there. When a monster drops to half HP or less, the plate shows that it is bloodied.
 
-**Armor.** Monsters do not wear armor items. Armor is a simple three-state value (none, **Medium (M)**, or **Heavy (H)**), stepped up and down with the buttons beside the armor display on the Core tab. What Medium and Heavy armor mean in play is in the Nimble rulebook.
+**Armor.** Monsters do not wear armor items. Armor is a simple three-state value (**None**, **Medium**, or **Heavy**). In edit mode, select it in the rail. What Medium and Heavy armor mean in play is in the Nimble rulebook.
 
-**Saving throws.** The four saves (Strength, Dexterity, Intelligence, Will) show their modifiers on the Core tab. Click a save to roll it straight to chat; the configuration button beside them opens a window to edit the modifiers.
+**Saving throws.** The four saves (Strength, Dexterity, Intelligence, Will) show their modifiers in the rail. Click a save to roll it straight to chat. In edit mode, the outline on the saves opens a window to edit the modifiers.
 
-**Movement.** Walk speed plus burrow, climb, fly, and swim speeds are set in their own configuration window opened from the sheet.
+**Movement.** Walk speed plus burrow, climb, fly, and swim speeds are set in their own configuration window. In edit mode, click the outline on the speeds to open it.
 
 ## Step 3: Attacks and abilities are monster features
 
-Everything a monster *does* is a **Monster Feature** item on its sheet. On the Core tab, click the add button in the features area to create one, then open it. A monster feature sheet has **Description**, **Config**, **Activation**, and **Macro** tabs. On **Config**, the important field is the **Subtype**:
+Everything a monster *does* is a **Monster Feature** item on its sheet. In edit mode, click **Create Feature** on the Abilities tab to create one, then click its pen to open it. A monster feature sheet has **Description**, **Config**, **Activation**, and **Macro** tabs. On **Config**, the important field is the **Subtype**:
 
 | Subtype | What it is |
 | :--- | :--- |
 | **Feature** | A passive trait. Usually just a description. |
 | **Action** | Something the monster actively does: an attack, a howl, a spell-like ability. |
-| **Attack Sequence** | A grouping header. Drag action features onto it on the Core tab to nest them under the sequence, for monsters that make several strikes per activation. |
+| **Attack Sequence** | A grouping header. Drag action features onto it on the Abilities tab to nest them under the sequence, for monsters that make several strikes per activation. |
 | **Bloodied** | An ability that matters once the monster is bloodied. Listed in its own group so it is easy to find at the right moment. |
 | **Last Stand** | The Last Stand mechanic; see the Solo Monster section below. |
 
-The Core tab groups features by these subtypes, and you can drag entries to reorder them or to nest actions under an attack sequence.
+The Abilities tab groups features by these subtypes, and you can drag entries to reorder them or to nest actions under an attack sequence.
 
 Give the Bog Howler three features:
 
@@ -71,20 +72,20 @@ Give the Bog Howler three features:
 2. **Bite** (subtype Action). On its **Activation → Effects** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** on, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
 3. **Terrifying Howl** (subtype Action). Add a **Save** effect: Will save, with a **Condition** entry (Frightened) under **On Failed Save**.
 
-Activating features works like any item activation: click the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.
+Activating features works like any item activation. Click **Edit** to turn off edit mode, because in edit mode a click on the name does nothing. Then click the name of the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.
 
-![The Bog Howler's Core tab with the Bite and Terrifying Howl actions listed, and the chat card from activating Bite](/images/documentation/bog-howler-bite.png)
+![The Bog Howler's Abilities tab with the Bite and Terrifying Howl actions, and the chat card from activating Bite](/images/documentation/bog-howler-bite.png)
 
 ## Solo monster extras
 
 A **Solo Monster** uses the same sheet and features, but two subtypes are made for it:
 
-- **Bloodied**: solo monsters from the compendium ship with a Bloodied feature describing what changes at half HP; the cracked-heart indicator tells you when to use it.
+- **Bloodied**: solo monsters from the compendium ship with a Bloodied feature describing what changes at half HP; the Hit Points plate tells you when the monster is bloodied, so you know when to use it.
 - **Last Stand**: a feature with subtype Last Stand gains a **Last Stand HP** field on its Config tab. When the monster's HP would hit zero, the system instead heals it to that value, applies the *lastStand* and *dying* conditions, and posts a GM chat card. Set the field to 0 to disable the mechanic. The compendium's legendary monsters (for example *Vael, Undying Necromancer*, who returns at 90 HP) are worked examples.
 
 ## Minion setup
 
-Create the actor with the **Minion** type. The sheet is deliberately thin: no hit point bar, the same metadata window (level, creature type, size), saves, and features. A compendium minion typically has one action and one flavor feature. Minions never crit.
+Create the actor with the **Minion** type. The sheet is deliberately thin: no hit points (the rail says that any damage kills a minion), the same monster window (level, creature type, size), saves, and features. A compendium minion typically has one action and one flavor feature. Minions never crit.
 
 Minions shine in numbers: during combat the system can run **group attacks**, where a batch of minion tokens attacks together through a single panel. That workflow lives on the combat page; see [Running Combat](../gm/combat.md).
 

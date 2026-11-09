@@ -266,10 +266,8 @@
 						"inventory": "Inventory Settings",
 						"bonuses": "Bonuses",
 						"skills": "Skill Settings",
-						"spells": "Spell Settings",
-						"needsAPlace": "Needs a place"
+						"spells": "Spell Settings"
 					},
-					"needsAPlaceHint": "These have no place on the new character sheet yet.",
 					"imageX": "X-Offset (px)",
 					"imageY": "Y-Offset (px)",
 					"imageScale": "Scale (%)",
@@ -1953,7 +1951,7 @@
 				},
 				"cardOffer": {
 					"label": "Offer on attack card",
-					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend through the sheet's dice pool panel only. Requires a manual spend that consumes dice for a generic effect."
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend only on the character sheet. Requires a manual spend that consumes dice for a generic effect."
 				},
 				"bonusOnAttackDelivery": {
 					"label": "Attack delivery",
@@ -1988,7 +1986,7 @@
 				},
 				"showAsResource": {
 					"label": "Show as a resource",
-					"hint": "Also show the pool in the sheet header, alongside mana and the other standing resources. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
+					"hint": "Also show the pool as a meter on the character sheet, with the other meters. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
 				},
 				"recoveries": {
 					"label": "Recoveries",
@@ -3725,11 +3723,11 @@
 			"class": "Nimble Class Sheet",
 			"feature": "Nimble Feature Sheet",
 			"monsterFeature": "Nimble Monster Feature Sheet",
-			"npc": "Nimble NPC Sheet",
+			"npc": "NPC sheet (old)",
 			"object": "Nimble Object Sheet",
-			"playerCharacter": "Nimble Player Character Sheet",
-			"hero": "Character sheet (Hero)",
-			"monster": "NPC sheet (Monster)",
+			"playerCharacter": "Character sheet (old)",
+			"hero": "Character sheet",
+			"monster": "NPC sheet",
 			"ancestry": "Nimble Ancestry Sheet",
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
@@ -5296,9 +5294,13 @@
 				"name": "Include Spell Description On Scrolls",
 				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
 			},
+			"collapseNpcFeatures": {
+				"name": "Collapse NPC features",
+				"hint": "The ability cards of the NPC sheet open with their text closed. Click the arrow of a card, or Expand all, to read the text. The old NPC sheet does not change."
+			},
 			"openNpcSheetsNarrow": {
 				"name": "Open NPC sheets narrow",
-				"hint": "Changes only the new NPC sheet (NPC sheet (Monster)). The sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again."
+				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again. The old NPC sheet does not change."
 			}
 		},
 		"diceTestbench": {

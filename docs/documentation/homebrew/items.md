@@ -31,7 +31,7 @@ On the **Config** tab, the **Object Type** row offers five kinds. The choice cha
 | Kind | What it unlocks |
 | :--- | :--- |
 | **Weapon** | A whole **Weapon Configuration** section with weapon properties (see step 3). |
-| **Armor** | An **Armor Type** row: Cloth, Leather, Mail or Plate. Protection is added on the **Rules** tab (see the armor section below). In the inventory, the item gets a shield-shaped equip toggle. |
+| **Armor** | An **Armor Type** row: Cloth, Leather, Mail or Plate. Protection is added on the **Rules** tab (see the armor section below). On the Inventory tab of the character sheet, its row gets the **Equip** tag. |
 | **Shield** | Same as armor. Carrying a shield also lets rules elsewhere in the system detect "this character has a shield". |
 | **Consumable** | Behaves like other items, but healing effects on consumables benefit from any "healing potion bonus" rules the drinker has. |
 | **Miscellaneous** | Everything else: tools, trinkets, wands. A wand is just a miscellaneous object with an activation. |
@@ -55,7 +55,9 @@ Below the object type you will find fields shared by every kind:
 
 A **Container** section sits below the shared fields. Turn on **This Object Is A Container** and the
 object can hold others: boxes, chests, pouches, backpacks, bags, quivers, saddlebags. Players drag
-inventory items onto its row on the character sheet and the contents appear nested under it.
+inventory items onto its row on the character sheet and the contents appear nested under it. In
+edit mode, each object row also has a select: pick a container to store the object in it, or
+**Loose** to take it out.
 
 A container always costs its own inventory slots. **Stored Object Slot Cost** decides what the
 objects inside cost their carrier:
@@ -123,8 +125,8 @@ Two more consequences worth knowing:
 
 - **A stored object cannot be equipped.** It is packed away. Dragging an equipped weapon or suit
   of armor into a container asks for confirmation first, then unequips it, which also switches
-  off any rules that item was granting. Stored rows show a quantity field instead of an equip
-  toggle.
+  off any rules that item was granting. A stored row has no **Equip**
+  tag.
 - **Stacks stay separate per container.** A bundle dropped onto a container joins the stack inside
   it; one dropped anywhere else joins the loose pile. The rulebook's own advice is not to track
   ammo at all ("If you have a quiver, you have enough arrows"), so this matters only in a game
@@ -195,7 +197,7 @@ To build your own armor:
 2. For armor, pick its **Armor Type**. Click the picked type again to clear it.
 3. On the **Rules** tab, click **Open Rules Builder** and add an **Armor Class** rule with your formula and mode.
 
-Equipping matters: the equip toggle in the character's inventory switches all of an item's rules on or off. Unequipped armor protects no one.
+Equipping matters: the **Equip** tag on the item's row in the Inventory tab switches all of an item's rules on or off. Unequipped armor protects no one.
 
 ::: warning Defend and armor proficiency
 A hero who wears armor or a shield that their armor proficiencies do not include pays 1 more action to Defend. The armor's **Armor Type** gives the check; a shield is always the Shield type. Armor with no armor type is not checked, so armor you make by hand works for everyone until you pick a type.
@@ -208,7 +210,7 @@ A hero who wears armor or a shield that their armor proficiencies do not include
 A consumable is an object that does something when used and is expected to run out. The compendium **Healing Potion** is the template to copy: Object Type **Consumable**, size 0.5 slots, and an activation with a single **Healing** effect of `2d4+4` costing 1 Action. When a player drinks it with no target selected, the healing is applied to their own token by default.
 
 ::: warning Quantity is yours to manage
-Activating a consumable does not automatically reduce its quantity. Have players adjust the quantity field in their inventory, or delete the item, when a consumable is spent.
+Activating a consumable does not automatically reduce its quantity. When a consumable is spent, have players turn on **Edit** and type the new quantity on its row in the Inventory tab, or delete the item.
 :::
 
 For items with limited uses that recharge, such as wands and once-per-rest trinkets, use **charges** instead of quantity:
@@ -219,9 +221,9 @@ For items with limited uses that recharge, such as wands and once-per-rest trink
 
 A Charge Pool on its own never spends anything: activating an item that only has a pool leaves its charges untouched. If the item should pay a charge each time it is used, add a Charge Consumer rule (or a Pool effect) alongside the pool.
 
-Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its owner can open a charge window from the character sheet showing each pool as a card with plus/minus buttons, a click-to-edit current value, and **Max** / **Empty** shortcuts. Saving the changes posts a chat message recording the adjustment, so the table can see the wand tick down.
+Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its row on the sheet shows the charges that are left. To change the number by hand, turn on **Edit** and type it on the row. The maximum comes from the rule. A pool with **Show as a resource** on also has a meter in the rail of the character sheet, where you type the number without edit mode. A pool with **Hide from sheet** on shows neither.
 
-![The charge configuration window showing a pool card with plus/minus buttons and Max/Empty shortcuts](/images/documentation/charge-window.png)
+![An Inventory row in edit mode, with the quantity and the charges left as numbers that you type](/images/documentation/charge-uses-edit.png)
 
 ## Descriptions
 

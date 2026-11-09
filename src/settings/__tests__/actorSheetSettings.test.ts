@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 
 import {
+	COLLAPSE_NPC_FEATURES_SETTING_KEY,
 	OPEN_NPC_SHEETS_NARROW_SETTING_KEY,
+	openNpcFeaturesCollapsed,
 	openNpcSheetsNarrow,
 	registerActorSheetSettings,
 } from '../actorSheetSettings.js';
@@ -61,5 +63,23 @@ describe('actorSheetSettings', () => {
 
 		expect(openNpcSheetsNarrow()).toBe(false);
 		expect(settingsMock.get).not.toHaveBeenCalled();
+	});
+
+	it('registers "Collapse NPC features" for each user, off at the start, and reads it', () => {
+		registerActorSheetSettings();
+		settingsMock.get.mockReturnValue(true);
+
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			SYSTEM_ID,
+			COLLAPSE_NPC_FEATURES_SETTING_KEY,
+			expect.objectContaining({
+				name: 'NIMBLE.settings.collapseNpcFeatures.name',
+				scope: 'client',
+				config: true,
+				default: false,
+			}),
+		);
+		expect(openNpcFeaturesCollapsed()).toBe(true);
+		expect(settingsMock.get).toHaveBeenCalledWith(SYSTEM_ID, COLLAPSE_NPC_FEATURES_SETTING_KEY);
 	});
 });

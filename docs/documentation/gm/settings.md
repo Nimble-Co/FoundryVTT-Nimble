@@ -47,7 +47,7 @@ Worlds upgrading from an earlier version keep their old choice: the stored value
 
 The **Manage Conditions** button in the system settings tab (GM only) opens an editor for adding conditions the system doesn't ship with — useful when your table is running content that introduces its own statuses. Give each one a name, a description, and an icon from your Foundry files. The id fills in from the name, but you can type your own before the first save; after that it's locked, because every effect and rule using the condition stores that id. Descriptions are plain text: type them as you'd read them, and blank lines become paragraphs.
 
-Saved conditions appear alongside the built-in ones in the token status panel, both Conditions tabs, and every rule that picks a condition. The token panel and any open conditions list pick up changes right away; sheets and rule dropdowns that are already open show them after you reopen them. Removing one that is still in use opens a confirmation listing the creatures carrying it and the items naming it, so you can strip it from them in the same step. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means.
+Saved conditions appear alongside the built-in ones in the token status panel, the Effects tab of both sheets, and every rule that picks a condition. The token panel and any open conditions list pick up changes right away; sheets and rule dropdowns that are already open show them after you reopen them. Removing one that is still in use opens a confirmation listing the creatures carrying it and the items naming it, so you can strip it from them in the same step. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means.
 
 ## Settings to decide before your first session
 
@@ -71,7 +71,7 @@ Want the system to carry as much as possible? Leave every Automation toggle **on
 Prefer to stay hands-on? Open Configure Automation and turn **off** Feature Effects (conditions become one-click suggestions on chat cards instead), plus any other toggle you'd rather track yourself, such as Costs or Action Spending. Leave **off** Auto-Add Character To Combat On Initiative Roll and Auto-Track Token Adjacency. Consider turning **on** Hide Rolls by Default on your own client so GM rolls stay behind the screen. The system still rolls the dice and does the math. It just asks before changing anything.
 :::
 
-**Show Chaos Table rolls** is for a hero with Force of Chaos. It is off by default, because the book keeps the table secret: the player sees only the number, and you get the text in a whisper. Turn it on to show the text to all. See [The Chaos Table](../playing/dice-and-chat.md#the-chaos-table).
+**Show Chaos Table rolls** is for a hero with Force of Chaos. It is off by default, because the book keeps the table secret: the player sees only the number, and you get the text in a whisper. Turn it on to show the text to all.
 
 ## 3D dice
 

@@ -45,24 +45,17 @@ test('a Shadowmancer levelled through the real UI gains Pilfered Power on its ow
 	);
 	await settle();
 
-	// Open the sheet and press Level Up, exactly as a player would.
+	// Open the sheet and press Level Up on the rail, exactly as a player would.
 	await actor.sheet.render(true);
-	await waitFor(() => !!actor.sheet.element, 'sheet element');
+	await waitFor(() => !!actor.sheet.element?.querySelector('aside.rail'), 'the sheet rail');
 	await settle(300);
 
-	// The level-up control only exists once the sheet is unlocked, which is a
-	// step the player takes too.
-	const editToggle = [...actor.sheet.element.querySelectorAll('button')].find(
-		(button) => button.getAttribute('aria-label') === 'Enable editing',
-	);
-	expect(editToggle, 'the sheet offers an editing toggle').toBeTruthy();
-	editToggle!.click();
-	await settle(300);
-
-	const levelUpButton = [...actor.sheet.element.querySelectorAll('button')].find(
-		(button) => button.getAttribute('aria-label') === 'Level Up',
+	const levelUpLabel = game.i18n.localize('NIMBLE.prompts.levelUp');
+	const levelUpButton = [...actor.sheet.element.querySelectorAll<HTMLButtonElement>('button')].find(
+		(button) => button.textContent?.trim() === levelUpLabel,
 	);
 	expect(levelUpButton, 'the sheet offers a Level Up button').toBeTruthy();
+	expect(levelUpButton!.disabled, 'the Level Up button is enabled').toBe(false);
 	levelUpButton!.click();
 
 	// The dialog is a separate application window; find it by a control only it has.

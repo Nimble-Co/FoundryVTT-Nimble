@@ -4,4 +4,4 @@
 - **Formula** → `1`
 - **How to apply** → `add`
 
-The Label is what players see in the armor breakdown on the character sheet. Use `override` mode instead (with a higher Priority number) for items that replace armor entirely, like a suit of enchanted plate with **Formula** → `16`.
+The Label names the rule. The character sheet shows only the total Armor, in the rail. Use `override` mode instead (with a higher Priority number) for items that replace armor entirely, like a suit of enchanted plate with **Formula** → `16`.

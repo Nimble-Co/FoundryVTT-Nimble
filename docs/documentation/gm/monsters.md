@@ -4,10 +4,6 @@ title: "Monsters, Minions & Solo Monsters"
 
 # Monsters, Minions & Solo Monsters
 
-::: tip Try the new NPC sheet
-A preview of the new NPC sheet is in the system, with the new character sheet. See [The New Sheets (Preview)](../new-sheets.md) to select them and to give feedback.
-:::
-
 The system gives you three kinds of monster actor, each matching one of the roles monsters play in Nimble. Pick the right type when you create the actor and the combat tracker, sheets, and automation all behave correctly on their own.
 
 ## Which type do I use?
@@ -24,28 +20,47 @@ You choose the type in the actor creation window. If you're not sure, use NPC.
 The **Nimble Legendary Monsters** compendium contains the legendary monsters from the rulebook as fully built solo monsters. Several bring their own companion minions too. Check there before building a boss from scratch.
 :::
 
-## A tour of the monster sheet
+## A tour of the NPC sheet
 
-All three types share the same sheet. The header shows the portrait (click it to change the image), the monster's name, and a metadata line such as *"Level 3 Medium Goblin"*. Click the edit button beside the metadata to change the level, creature type, size, and the monster's damage resistances (half damage) and immunities (no damage), which the Apply Damage button honors automatically. For NPCs it also covers whether the monster is a *flunky* (see the Nimble rulebook for what that means at the table). NPCs and solo monsters also get a hit point bar in the header, with fields for current, maximum, and temporary hit points; minion sheets skip the bar entirely (see the Nimble rulebook for how minions handle damage).
+All three types share the same sheet. The monster's name and a line such as *"Level 3 Medium Goblin"* are at the top. The rail on the left shows the portrait, the hit points, the saves, the armor, the speeds, and the damage defenses (Resist, Immune and Vulnerable), with the tabs under them. Click a save to roll it. NPCs and solo monsters have an **HP** and a **Temp HP** plate; click a number to type a new one. Minions have no hit points: in place of the plate, the rail tells you that any damage kills a minion and that a minion cannot crit (see the Nimble rulebook for how minions handle damage).
 
-![An NPC sheet showing the header (portrait, HP bar, metadata line) and the Core tab with a few features and actions](/images/documentation/monster-sheet.png)
+![The NPC sheet of a solo monster, with the rail on the left and its abilities as cards](/images/documentation/monster-sheet.png)
 
-The sheet has four tabs:
+The sheet has four tabs, in the menu at the bottom of the rail:
 
-- **Core**: armor, movement speeds, saving throws, and the monster's features and actions. This is where you'll spend the fight.
-- **Conditions**: the same conditions list as the character sheet; toggle conditions on and off here or from the token. See [Conditions](../playing/conditions.md).
-- **Notes**: the monster's description and any notes of your own.
-- **Settings**: cosmetic controls for how the portrait sits in its frame (offset and scale).
+- **Abilities**: the monster's features and actions, as cards in columns like a stat block. This is where you'll spend the fight.
+- **Effects**: the conditions and effects on the monster, with the same condition grid as the character sheet. Toggle conditions on and off here or from the token. See [Conditions](../playing/conditions.md).
+- **Notes**: the monster's description and any notes of your own. For an imported monster, the credit line is at the bottom.
+- **Settings**: the monster's level, size, creature type and monster type (to read), the controls for how the portrait sits in its frame (offset and scale), whether item macros run, and the coins the creature carries.
+
+### Edit mode
+
+The sheet opens out of edit mode. Click **Edit**, the last row of the menu at the bottom of the rail, to change the monster. In edit mode you can change the portrait and the name, type the maximum HP, and select the armor (None, Medium or Heavy). The parts that you can configure get an outline:
+
+- The outline on the line beside the name opens the monster window: level, creature type, size, monster type, whether an NPC is a *flunky* (see the Nimble rulebook for what that means at the table), and the damage defenses. The outline on the damage defenses opens the same window. The Apply Damage button honors resistances (half damage) and immunities (no damage) automatically.
+- The outlines on the saves and the speeds open their windows.
+
+Click **Edit** again to stop.
+
+### The narrow form
+
+A GM opens many NPC sheets in an encounter. Make the window narrower than 560 px, and the rail becomes a header with the HP and a strip of tabs. In the narrow form, **Edit** is the pen in the header. With the setting **Open NPC sheets narrow** on, NPC sheets open 390 px wide, in the narrow form. Each user sets it for their own screen, in **Configure Settings** on the Nimble tab. It is off at the start.
+
+### The old NPC sheet
+
+The old NPC sheet is still in the system as a backup. To use it for one monster, open the menu of its window, click **Configure Sheet**, select **NPC sheet (old)** in **This Sheet**, and click **Save**. Select **NPC sheet** to go back. **Default Sheet** in the same window changes the sheet for the actors of that type that have no sheet of their own in **This Sheet**. NPCs, solo monsters and minions are three types, so set each one. A world that saved the old sheet as its default keeps opening it until a GM selects **NPC sheet** there. An actor set to **NPC sheet (old)** in **This Sheet** keeps it: select **NPC sheet** there for that actor.
 
 ## Using features and actions
 
-Everything a monster can do lives on the Core tab as a *monster feature*, sorted into groups:
+Everything a monster can do lives on the Abilities tab as a *monster feature*, sorted into groups:
 
 - **Features**: passive abilities. Their text is there when you need it.
-- **Actions**: attacks and activated abilities. A monster's attack routine can appear as an *attack sequence*: a parent entry describing the routine, with its individual attacks nested beneath it.
+- **Actions**: attacks and activated abilities. A monster's attack routine can appear as an *attack sequence*: a parent card describing the routine, with its individual attacks nested beneath it.
 - **Bloodied** and **Last Stand**: solo monster phase abilities, kept in their own groups so they're impossible to miss when the fight turns.
 
-Click an action to use it: the system rolls its attack and damage and posts a chat card, where hits, misses, and an apply-damage button are handled for you, the same flow as player attacks (see [Dice & Chat](../playing/dice-and-chat.md)). Hover an entry to reveal its edit and delete buttons, and use the plus button in a group header to add a new feature.
+The text of each card starts open. To start with the cards closed, turn on **Collapse NPC features** in **Configure Settings** (each user sets it). The arrow at the start of a card closes or opens its text, and the pen opens the feature's window. Click the name of a card to use it. A card with activation effects (an attack, a save, damage) has a d20 icon: a roll window opens, and **Roll** posts the chat card, where hits, misses, and an apply-damage button are handled for you, the same flow as player attacks (see [Dice & Chat](../playing/dice-and-chat.md)). A card with no activation effects has a speech bubble and posts its text to chat. In edit mode, **Create Feature** adds a new feature, you can type the uses of a feature, and each card has a trash button. The sheet asks before it deletes.
+
+Drag a card to change the order, or drop an action on an attack sequence to nest it. On a touch screen you can drag only in edit mode.
 
 ::: tip Don't open sheets mid-fight if you don't have to
 During combat, the **Combat System** panel can roll monster and minion actions straight from the canvas: select the token, pick the action, roll. See [Running Combat](combat.md).
@@ -53,7 +68,7 @@ During combat, the **Combat System** panel can roll monster and minion actions s
 
 ## Solo monsters
 
-Solo monsters are built for the boss-fight math: the tracker automatically gives them a turn after every character's turn, so a lone dragon keeps pace with a whole party. Their Bloodied and Last Stand features sit in their own sections of the Core tab so the phase change is right in front of you when their hit points cross the line.
+Solo monsters are built for the boss-fight math: the tracker automatically gives them a turn after every character's turn, so a lone dragon keeps pace with a whole party. Their Bloodied and Last Stand features sit in their own groups on the Abilities tab so the phase change is right in front of you when their hit points cross the line.
 
 ## Minions
 

@@ -9,8 +9,8 @@ import { createSheetUiState, revealIn } from '../../shared/sheetUiState.ts';
 import MonsterSheet from '../MonsterSheet.svelte';
 import type { MonsterActorLike } from '../monsterSource.ts';
 
-function renderSheet(actor: MonsterActorLike = soloMonster()) {
-	const ui = $state(createSheetUiState('abilities'));
+function renderSheet(actor: MonsterActorLike = soloMonster(), cardsStartOpen = true) {
+	const ui = $state({ ...createSheetUiState('abilities'), cardsStartOpen });
 	const perform = vi.fn();
 	const source = () => ({ actor, context: monsterContext() });
 	render(MonsterSheet, { source, ui, perform });
@@ -75,6 +75,19 @@ describe('MonsterSheet', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: /Expand all/ }));
 
+		expect(ui.closedRows).toEqual([]);
+	});
+
+	it('with "Collapse NPC features" on, the cards start closed; the arrow and Expand all open them', async () => {
+		stubWidth(660);
+		const { ui } = renderSheet(soloMonster(), false);
+
+		expect(screen.queryByText(/Move 8, attack for 1d8\+2/)).toBeNull();
+
+		await fireEvent.click(screen.getByRole('button', { name: /Expand all/ }));
+
+		expect(ui.openRows).toHaveLength(4);
+		expect(screen.getByText(/Move 8, attack for 1d8\+2/)).toBeInTheDocument();
 		expect(ui.closedRows).toEqual([]);
 	});
 
