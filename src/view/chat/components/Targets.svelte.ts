@@ -1,5 +1,6 @@
+import type { DefendRecord } from '#types/defend.d.ts';
 import { endMark } from '#utils/actor/markLifecycle.ts';
-import { type DefendRecord, damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
+import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
 import localize from '#utils/localize.js';
 import { cardMarkingItem, liveMarksOf, markOnToken } from './cardMarks.ts';
 
@@ -43,7 +44,7 @@ interface DefendRowToken {
 }
 
 /** The armor a Defend takes off, and the options it was made with. */
-function defendTip(defend: DefendRecord, key: string): string {
+export function defendTip(defend: DefendRecord, key: string): string {
 	const tip = localize(key, { armor: String(defend.armor + defend.armorBonus) });
 	const labels = [...new Set([defend.label, ...defend.options.map((use) => use.label)])].filter(
 		(label) => !!label,
@@ -67,6 +68,5 @@ export function createTargetDefendsState(getSystem: () => unknown) {
 		controlsFor(defend: DefendRecord | null, token: DefendRowToken | null | undefined): boolean {
 			return !!defend && game.user?.isGM === true && !applied.has(token?.uuid ?? '');
 		},
-		tip: defendTip,
 	};
 }

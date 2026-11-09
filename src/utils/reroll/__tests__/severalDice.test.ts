@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { costForDice, type RerollCost } from '../rerollCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
+import { costForDice } from '../../cost/useCost.js';
 import { severalDiceFor } from '../rerollDieChoice.js';
 import type { RerollableRoll } from '../rerollRollTarget.js';
 
@@ -95,7 +96,7 @@ describe('a reroll of several dice', () => {
 });
 
 describe('a cost per die', () => {
-	const cost: RerollCost = {
+	const cost: UseCost = {
 		chargePoolIdentifier: '',
 		chargeCost: 1,
 		manaCost: 1,

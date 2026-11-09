@@ -1,6 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import type { DefendWay } from '#types/defend.d.ts';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
-import type { DefendWay } from '#utils/defend/newestDefendCard.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,

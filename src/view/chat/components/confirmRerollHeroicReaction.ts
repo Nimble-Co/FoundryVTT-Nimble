@@ -1,3 +1,4 @@
+import { findActorCombatant } from '#utils/cost/useCost.js';
 import {
 	getHeroicReactionUsageState,
 	isSoftBlockedReason,
@@ -5,7 +6,6 @@ import {
 import { getHeroicReactionLabel } from '#utils/incomingReactions/heroicActions.js';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.js';
 import showReactionConfirmation from '#utils/incomingReactions/showReactionConfirmation.js';
-import { findActorCombatant } from '#utils/reroll/rerollCost.js';
 import { findRerollRule } from '#utils/reroll/rerollEntries.js';
 
 /**

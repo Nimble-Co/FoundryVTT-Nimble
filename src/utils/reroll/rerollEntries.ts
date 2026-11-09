@@ -1,8 +1,10 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { useCostCharges } from '../cost/useCost.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
 	type AttackOutcomeView,
@@ -24,7 +26,6 @@ import {
 	rerollTriggerMatches,
 } from '../incomingReactions/incomingReactionEntry.js';
 import { soleTarget } from '../tokens/soleTarget.js';
-import { type RerollCost, rerollCostCharges } from './rerollCost.js';
 import type { RerollChanges } from './rerollOptions.js';
 import type { RollToReroll, RollUseKind } from './rollToReroll.js';
 
@@ -123,7 +124,7 @@ interface RerollRuleLike {
 	reach?: number;
 	die?: RerollDie;
 	keep?: RerollKeep;
-	rollUseCost?: RerollCost;
+	rollUseCost?: UseCost;
 	offersUseOn?: (context: {
 		side: RerollSide;
 		roll: RollToReroll;
@@ -326,7 +327,7 @@ function gateOf(rule: RerollRuleLike): RollUseGate {
  */
 function rerollsByItself(rule: RerollRuleLike, actor: RerollingActor): boolean {
 	if (rule.rerollsByItself !== true || !isRuleAutomationEnabled()) return false;
-	if (!rule.rollUseCost || !rerollCostCharges(rule.rollUseCost)) return true;
+	if (!rule.rollUseCost || !useCostCharges(rule.rollUseCost)) return true;
 	return actor.isOwner === true;
 }
 

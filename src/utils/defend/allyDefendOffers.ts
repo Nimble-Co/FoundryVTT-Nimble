@@ -1,22 +1,10 @@
+import type { AllyDefendOffer, DefendCardLike } from '#types/defend.d.ts';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
-import { type DefendOptionPick, defendOptionsOf, payDefendOption } from './defendOptions.js';
+import { defendOptionsOf, payDefendOption } from './defendOptions.js';
 import { damageAppliedTo, defendsOf } from './defendRecords.js';
 import { requestDefendAllyUse } from './defendRequests.js';
-
-interface AllyCardLike {
-	system?: unknown;
-}
-
-/** A button for a hero whose option reacts when an ally Defends. */
-export interface AllyDefendOffer {
-	key: string;
-	defendId: string;
-	actor: Actor.Implementation;
-	pick: DefendOptionPick;
-	defenderName: string;
-}
 
 function canvasTokenOf(uuid: string): Token.Implementation | null {
 	const document = fromUuidSync(uuid) as TokenDocument | null;
@@ -24,7 +12,7 @@ function canvasTokenOf(uuid: string): Token.Implementation | null {
 }
 
 /** The ally options the user's heroes can use on this card's Defends, near the hero who Defended. */
-export function allyDefendOffers(card: AllyCardLike): AllyDefendOffer[] {
+export function allyDefendOffers(card: DefendCardLike): AllyDefendOffer[] {
 	const applied = damageAppliedTo(card.system);
 	const placeables = (canvas?.tokens?.placeables ?? []) as Token.Implementation[];
 	const offers: AllyDefendOffer[] = [];

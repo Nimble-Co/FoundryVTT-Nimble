@@ -1,40 +1,33 @@
-import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { AttackerCondition } from '#types/attackerCondition.d.ts';
+import type {
+	DefendCardLike,
+	DefendOptionPick,
+	DefendOptionUse,
+	DefendOutcome,
+} from '#types/defend.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
 import { payCost } from '../cost/costLedger.js';
+import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
-import { canPayRerollCost, type RerollCost } from '../reroll/rerollCost.js';
-import { type DefendCardLike, speakerActorOf } from './defendReactors.js';
-import type { DefendOptionUse, DefendOutcome } from './defendRecords.js';
+import { speakerActorOf } from './defendReactors.js';
 
 const RULE_TYPE = 'defendOption';
 
-interface AttackCardLike {
-	system?: unknown;
-	speaker?: DefendCardLike['speaker'];
-}
-
-/** A Defend option one hero can use against one attack card. */
-export interface DefendOptionPick {
-	key: string;
-	label: string;
-	rule: DefendOptionRule;
-}
-
 /** What the picked Defend options do together to the Defended hero's damage. */
-export interface DefendOptionEffect {
+interface DefendOptionEffect {
 	outcome: DefendOutcome;
 	armorBonus: number;
 	reminders: string[];
-	attackerConditions: string[];
-	conditionsEndOnAttackerTurn: string[];
+	attackerConditions: AttackerCondition[];
 	wholeRound: boolean;
 }
 
-function cardDelivery(card: AttackCardLike) {
+function cardDelivery(card: DefendCardLike) {
 	const attackType = (card.system as { activation?: { targets?: { attackType?: string } } } | null)
 		?.activation?.targets?.attackType;
 	return attackDeliveryFromAttackType(attackType);
@@ -43,14 +36,11 @@ function cardDelivery(card: AttackCardLike) {
 /** The enabled Defend options of a way that fit this attack. Costs the hero cannot pay are left out. */
 export function defendOptionsOf(
 	actor: Actor.Implementation | null | undefined,
-	card: AttackCardLike,
+	card: DefendCardLike,
 	way: DefendOptionWay,
 ): DefendOptionPick[] {
 	const delivery = cardDelivery(card);
-	const attacker = speakerActorOf({
-		system: card.system,
-		speaker: card.speaker,
-	}) as OtherCreature | null;
+	const attacker = speakerActorOf(card);
 	return actorRules<DefendOptionRule>(actor as { rules?: unknown } | null)
 		.filter(
 			(rule) =>
@@ -59,9 +49,26 @@ export function defendOptionsOf(
 				rule.appliesTo() &&
 				matchesAttackDelivery(rule.attackDelivery, delivery) &&
 				ruleOtherCreatureMatches(rule, rule.otherCreature, attacker) &&
-				(rule.useItem || canPayRerollCost(actor, tickCost(rule, card))),
+				(rule.useItem || canPayUseCost(actor, tickCost(rule, card))),
 		)
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));
+}
+
+/** Each condition once; it ends on the attacker's turn when one of its options says so. */
+function attackerConditionsOf(rules: readonly DefendOptionRule[]): AttackerCondition[] {
+	const endsOnTurn = new Map<string, boolean>();
+	for (const rule of rules) {
+		if (!rule.attackerCondition) continue;
+		const ends = rule.attackerConditionEnds === 'attackerTurn';
+		endsOnTurn.set(
+			rule.attackerCondition,
+			(endsOnTurn.get(rule.attackerCondition) ?? false) || ends,
+		);
+	}
+	return [...endsOnTurn].map(([condition, endsOnAttackerTurn]) => ({
+		condition,
+		endsOnAttackerTurn,
+	}));
 }
 
 const OUTCOME_ORDER: readonly DefendOutcome[] = ['miss', 'noDamage', 'halve', 'none'];
@@ -80,23 +87,14 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 			const text = (rule.reminder ?? '').trim();
 			return text ? [`${ruleLabel(rule)}: ${text}`] : [];
 		}),
-		attackerConditions: [
-			...new Set(rules.map((rule) => rule.attackerCondition).filter((id) => !!id)),
-		],
-		conditionsEndOnAttackerTurn: [
-			...new Set(
-				rules
-					.filter((rule) => rule.attackerCondition && rule.attackerConditionEnds === 'attackerTurn')
-					.map((rule) => rule.attackerCondition),
-			),
-		],
+		attackerConditions: attackerConditionsOf(rules),
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};
 }
 
 /** The unused card reroll of an item for a token, which a Defend option can use. */
 export function cardRerollFor(
-	card: AttackCardLike,
+	card: DefendCardLike,
 	itemUuid: string | null | undefined,
 	tokenUuid: string | null | undefined,
 ): IncomingReactionEntry | null {
@@ -120,7 +118,7 @@ interface ItemRerollRule {
 	id?: string;
 	disabled?: boolean;
 	rolls?: string[];
-	rollUseCost?: RerollCost;
+	rollUseCost?: UseCost;
 }
 
 /**
@@ -130,9 +128,9 @@ interface ItemRerollRule {
  */
 export function tickCost(
 	rule: DefendOptionRule,
-	card?: AttackCardLike | null,
+	card?: DefendCardLike | null,
 	tokenUuid?: string | null,
-): RerollCost {
+): UseCost {
 	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
 	const rules = (rule.item as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
 	const rerolls = [...(rules?.values() ?? [])].filter(

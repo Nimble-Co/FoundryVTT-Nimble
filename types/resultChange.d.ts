@@ -1,6 +1,6 @@
 import type { CheckResult } from './checkResult.d.ts';
 import type { ResultChangeKind } from '#utils/incomingReactions/incomingReactionEntry.ts';
-import type { PaidRerollCost } from '#utils/reroll/rerollCost.ts';
+import type { PaidUseCost } from '#types/useCost.d.ts';
 
 /** What one use of a Change a Result rule does now. */
 export interface ResultUse {
@@ -33,8 +33,8 @@ export interface ResultChange extends ResultUse {
 	 * What Remove gives back. An action or a heroic reaction goes back only in the
 	 * turn of its stamp. A record from before them has none of the three.
 	 */
-	paid: Pick<PaidRerollCost, 'charges' | 'mana' | 'wounds'> &
-		Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>;
+	paid: Pick<PaidUseCost, 'charges' | 'mana' | 'wounds'> &
+		Partial<Pick<PaidUseCost, 'action' | 'heroicReaction' | 'stamp'>>;
 	/** Made with no click. It has no Remove. */
 	automatic?: boolean;
 	/** A no-damage change: the target it covers. */

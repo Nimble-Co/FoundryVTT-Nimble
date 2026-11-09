@@ -8,6 +8,7 @@ import type {
 import {
 	grantedActionOffers,
 	incomingReactions,
+	migrateDefends,
 	migrateIncomingReactions,
 	movementOffers,
 	rerollHistory,
@@ -236,6 +237,51 @@ describe('migrateIncomingReactions', () => {
 	it('does nothing to a card with no rows', () => {
 		const source = { dc: 12 };
 		migrateIncomingReactions(source);
+		expect(source).toEqual({ dc: 12 });
+	});
+});
+
+describe('migrateDefends', () => {
+	it('gives a Defend of an old card its attacker conditions as one list', () => {
+		const source = {
+			defends: [
+				{
+					id: 'old',
+					attackerConditions: ['blinded', 'frightened'],
+					conditionsEndOnAttackerTurn: ['blinded'],
+				},
+			],
+		};
+		migrateDefends(source);
+		expect(source.defends).toEqual([
+			{
+				id: 'old',
+				attackerConditions: [
+					{ condition: 'blinded', endsOnAttackerTurn: true },
+					{ condition: 'frightened', endsOnAttackerTurn: false },
+				],
+			},
+		]);
+	});
+
+	it('gives a Defend with no end list its conditions that last', () => {
+		const source = { defends: [{ id: 'older', attackerConditions: ['blinded'] }] };
+		migrateDefends(source);
+		expect(source.defends).toEqual([
+			{ id: 'older', attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }] },
+		]);
+	});
+
+	it('keeps a Defend that has the list already', () => {
+		const attackerConditions = [{ condition: 'blinded', endsOnAttackerTurn: true }];
+		const source = { defends: [{ id: 'new', attackerConditions }] };
+		migrateDefends(source);
+		expect(source.defends).toEqual([{ id: 'new', attackerConditions }]);
+	});
+
+	it('does nothing to a card with no Defends', () => {
+		const source = { dc: 12 };
+		migrateDefends(source);
 		expect(source).toEqual({ dc: 12 });
 	});
 });

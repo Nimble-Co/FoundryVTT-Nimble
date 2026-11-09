@@ -3,6 +3,7 @@ import type { DieChange } from '#types/dieChange.d.ts';
 import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
+import type { PaidUseCost } from '#types/useCost.d.ts';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_DOMAIN_FLAG,
@@ -16,6 +17,7 @@ import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { followInitiativeCard } from '#utils/combat/followInitiativeCard.js';
 import { giveBack, payCost } from '#utils/cost/costLedger.js';
+import { canPayUseCost, costForDice, keepsTurnCost } from '#utils/cost/useCost.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { openOnUser } from '#utils/demandControl/demandControl.js';
 import { cardDamageTotal, keepAmount } from '#utils/heldChange/heldChange.js';
@@ -45,12 +47,6 @@ import {
 } from '#utils/reroll/damageCardRollTarget.js';
 import { cannotFailModifier, newRollChanges } from '#utils/reroll/modifyReroll.js';
 import { rollerTokenOf, scanRerollAllies } from '#utils/reroll/rerollAllies.js';
-import {
-	canPayRerollCost,
-	costForDice,
-	keepsTurnCost,
-	type PaidRerollCost,
-} from '#utils/reroll/rerollCost.js';
 import {
 	changeableFor,
 	critFor,
@@ -752,7 +748,7 @@ export class CardRerolls {
 		const dice = diceToPick(found);
 		const cost = usable.rule.rollUseCost;
 		let max = Math.min(usable.rule.maxDiceCount, dice.length);
-		while (max > 1 && cost && !canPayRerollCost(usable.actor, costForDice(cost, max))) max -= 1;
+		while (max > 1 && cost && !canPayUseCost(usable.actor, costForDice(cost, max))) max -= 1;
 		return { dice, max, manaPerDie: cost?.manaCost ?? 0 };
 	}
 
@@ -774,8 +770,7 @@ export class CardRerolls {
 		targets: readonly string[],
 		entries: IncomingReactionEntry[] = this.#host.incomingReactions(),
 	): IncomingReactionEntry[] {
-		if (!this.#host.isActivationCard()) return entries;
-		return withNewRerollEntries(entries, noDamageEntries(this.#damageCard(), targets));
+		return this.#withDamageCardEntries(entries, (card) => noDamageEntries(card, targets));
 	}
 
 	/** After an Interpose: these entries with the rows the new target and the other targets get. */
@@ -784,8 +779,17 @@ export class CardRerolls {
 		newTarget: string,
 		entries: IncomingReactionEntry[],
 	): IncomingReactionEntry[] {
+		return this.#withDamageCardEntries(entries, (card) =>
+			interposeEntries(card, targets, newTarget),
+		);
+	}
+
+	#withDamageCardEntries(
+		entries: IncomingReactionEntry[],
+		rowsOf: (card: DamageCard) => IncomingReactionEntry[],
+	): IncomingReactionEntry[] {
 		if (!this.#host.isActivationCard()) return entries;
-		return withNewRerollEntries(entries, interposeEntries(this.#damageCard(), targets, newTarget));
+		return withNewRerollEntries(entries, rowsOf(this.#damageCard()));
 	}
 
 	/**
@@ -1122,7 +1126,7 @@ export class CardRerolls {
 		forceHeroicReaction: boolean,
 		reject: Reject,
 		failedLog: string,
-		act: (paid: PaidRerollCost | null) => Promise<boolean>,
+		act: (paid: PaidUseCost | null) => Promise<boolean>,
 	): Promise<boolean> {
 		const { rule, actor } = usable;
 		const cost = rule.rollUseCost;

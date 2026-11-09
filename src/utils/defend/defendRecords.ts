@@ -1,59 +1,6 @@
-import {
-	DEFEND_OPTION_OUTCOMES,
-	type DefendOptionOutcome,
-} from '../../models/rules/defendOption.js';
-import type { PaidRerollCost, RerollCost } from '../reroll/rerollCost.js';
+import type { DefendEffect, DefendRecord, DefendRecordWay } from '#types/defend.d.ts';
+import { DEFEND_OPTION_OUTCOMES } from '../../models/rules/defendOption.js';
 
-export type DefendOutcome = DefendOptionOutcome;
-
-/** A Defend option the hero used, with what it cost so an undo can give it back. */
-export interface DefendOptionUse {
-	/** The hero who used and paid for it. */
-	actorUuid: string;
-	ruleId: string;
-	itemUuid: string;
-	label: string;
-	cost: RerollCost | null;
-	paid: PaidRerollCost | null;
-}
-
-/** One hero's Defend against an attack card, as the card stores it. */
-export interface DefendRecord {
-	id: string;
-	/** The Defended token: the attack's damage to it loses `armor`. */
-	tokenUuid: string;
-	actorUuid: string;
-	armor: number;
-	/** The GM turns this off for damage that cannot be avoided (Core:502). */
-	armorApplies: boolean;
-	/** The feature the hero Defended with; empty for the heroic reaction. */
-	label: string;
-	userId: string;
-	combatantId: string;
-	/** Actions the Defend spent, so an undo can give back those and no more. */
-	actionsSpent: number | null;
-	reactionKeys: string[];
-	/** From the Defend options: the attack misses, no damage, or half in place of the armor. */
-	outcome: DefendOutcome;
-	/** Armor the Defend options add. */
-	armorBonus: number;
-	options: DefendOptionUse[];
-	/** Lines for the table: what the hero may do now. */
-	reminders: string[];
-	/** The GM puts these conditions on the attacker. */
-	attackerConditions: string[];
-	/** Of those, the ones that end at the start of the attacker's next turn. */
-	conditionsEndOnAttackerTurn: string[];
-	/** How the Defend was paid. */
-	way: DefendRecordWay;
-}
-
-/**
- * `action`: the Defend reaction and its action; `free`: the reaction only;
- * `extra`: a second Defend this round; `round`: covered by a Defend that lasts
- * the round.
- */
-export type DefendRecordWay = 'action' | 'free' | 'extra' | 'round';
 export const DEFEND_RECORD_WAYS: readonly DefendRecordWay[] = ['action', 'free', 'extra', 'round'];
 
 function isDefendRecord(value: unknown): value is DefendRecord {
@@ -84,20 +31,15 @@ export function defendsOf(system: unknown): DefendRecord[] {
 			? record.reminders.filter((line) => typeof line === 'string')
 			: [],
 		attackerConditions: Array.isArray(record.attackerConditions)
-			? record.attackerConditions.filter((id) => typeof id === 'string')
-			: [],
-		conditionsEndOnAttackerTurn: Array.isArray(record.conditionsEndOnAttackerTurn)
-			? record.conditionsEndOnAttackerTurn.filter((id) => typeof id === 'string')
+			? record.attackerConditions
+					.filter((each) => typeof each?.condition === 'string')
+					.map((each) => ({
+						condition: each.condition,
+						endsOnAttackerTurn: each.endsOnAttackerTurn === true,
+					}))
 			: [],
 		way: DEFEND_RECORD_WAYS.includes(record.way) ? record.way : 'action',
 	}));
-}
-
-/** What a Defend does to its token's damage from this card. */
-export interface DefendEffect {
-	armor: number;
-	zero: boolean;
-	halve: boolean;
 }
 
 /**

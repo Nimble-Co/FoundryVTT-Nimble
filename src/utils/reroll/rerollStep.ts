@@ -1,5 +1,6 @@
 import type { DieChange } from '#types/dieChange.d.ts';
 import { giveBack, giveBackPart, payCost } from '../cost/costLedger.js';
+import { costForDice, costUsesLeft } from '../cost/useCost.js';
 import type {
 	IncomingReactionEntry,
 	RerollDieResult,
@@ -7,7 +8,6 @@ import type {
 	RollChange,
 	RollEffect,
 } from '../incomingReactions/incomingReactionEntry.js';
-import { costForDice, rerollUsesLeft } from './rerollCost.js';
 import type { RerollRuleLike } from './rerollEntries.js';
 import { prepareReroll, type RerollChanges } from './rerollOptions.js';
 import type { RollUseKind } from './rollToReroll.js';
@@ -163,7 +163,7 @@ async function rerollWithRule<TRoll>(
 				faces: die.faces,
 				previous: dieResult(input.previousResult, replaced),
 				next: dieResult(die.value, rolled),
-				usesLeft: cost ? rerollUsesLeft(payer, cost) : null,
+				usesLeft: cost ? costUsesLeft(payer, cost) : null,
 				woundsGained: paid?.wounds ?? 0,
 				...(paid?.noActionLeft ? { noActionLeft: true } : {}),
 				dropped: die.dropped ?? null,

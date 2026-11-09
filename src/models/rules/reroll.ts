@@ -1,10 +1,10 @@
+import type { UseCost } from '#types/useCost.d.ts';
 import {
 	REROLL_DICE,
 	REROLL_KEEPS,
 	type RerollDie,
 	type RerollKeep,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import type { RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RerollChanges } from '../../utils/reroll/rerollOptions.js';
 import type { RollUseKind } from '../../utils/reroll/rollToReroll.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -231,7 +231,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		return Math.max(0, Math.trunc(Number(this.resolveFormula(formula)) || 0));
 	}
 
-	override get rollUseCost(): RerollCost {
+	override get rollUseCost(): UseCost {
 		return { ...super.rollUseCost, ...(this.perDie ? { perDie: true } : {}) };
 	}
 

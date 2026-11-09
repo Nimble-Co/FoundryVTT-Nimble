@@ -4,8 +4,8 @@ import { SYSTEM_ID } from '#system';
 // Setup loads the cost module before a hoisted mock could apply.
 const canPay = vi.fn(() => true);
 vi.resetModules();
-vi.doMock('../../reroll/rerollCost.js', () => ({
-	canPayRerollCost: canPay,
+vi.doMock('../../cost/useCost.js', () => ({
+	canPayUseCost: canPay,
 }));
 vi.doMock('../../cost/costLedger.js', () => ({ payCost: vi.fn() }));
 const { defendOptionEffect, defendOptionsOf, tickCost } = await import('../defendOptions.js');
@@ -74,7 +74,9 @@ describe('defendOptionEffect', () => {
 		] as unknown as DefendRules);
 		expect(effect.armorBonus).toBe(6);
 		expect(effect.reminders).toEqual(['Decoy: Move half your speed.']);
-		expect(effect.attackerConditions).toEqual(['blinded']);
+		expect(effect.attackerConditions).toEqual([
+			{ condition: 'blinded', endsOnAttackerTurn: false },
+		]);
 		expect(effect.wholeRound).toBe(true);
 	});
 
@@ -83,8 +85,10 @@ describe('defendOptionEffect', () => {
 			rule({ attackerCondition: 'blinded', attackerConditionEnds: 'attackerTurn' }),
 			rule({ attackerCondition: 'frightened' }),
 		] as unknown as DefendRules);
-		expect(effect.attackerConditions).toEqual(['blinded', 'frightened']);
-		expect(effect.conditionsEndOnAttackerTurn).toEqual(['blinded']);
+		expect(effect.attackerConditions).toEqual([
+			{ condition: 'blinded', endsOnAttackerTurn: true },
+			{ condition: 'frightened', endsOnAttackerTurn: false },
+		]);
 	});
 });
 

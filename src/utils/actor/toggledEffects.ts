@@ -77,7 +77,7 @@ function computeNextToggledList(
  */
 function getToggledTargetTags(
 	attacker: FlaggedActor | null | undefined,
-	targetActor: { uuid?: string } | null | undefined,
+	targetActor: { uuid?: string | null } | null | undefined,
 ): Set<string> {
 	const tags = new Set<string>();
 	if (!attacker || !targetActor?.uuid) return tags;
