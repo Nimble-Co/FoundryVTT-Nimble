@@ -1,9 +1,11 @@
 /**
  * Batch 2 (ApplicationV2) regression tests: sheets and dialogs render into the
- * live DOM on Foundry V14.
+ * live DOM on Foundry V14. The character sheet here is the old sheet, which is
+ * still a choice in the sheet selector.
  */
 
 import { afterAll, describe, expect, test } from 'vitest';
+import { oldSheetOf } from './liveHelpers.ts';
 
 const TEST_ACTOR_NAME = 'V14 Sheet Render Test Actor';
 
@@ -24,11 +26,12 @@ describe('ApplicationV2 rendering', () => {
 		}
 	});
 
-	test('a character sheet renders into the live DOM and closes cleanly', async () => {
+	test('the old character sheet renders into the live DOM and closes cleanly', async () => {
 		const actor = await Actor.create({ name: TEST_ACTOR_NAME, type: 'character' });
 		expect(actor).toBeDefined();
 
-		const sheet = actor!.sheet!;
+		const sheet = oldSheetOf(actor!);
+		expect(sheet.constructor.name).toBe('PlayerCharacterSheet');
 		await sheet.render(true);
 		// Svelte mounts into the application content on first render.
 		await new Promise((resolve) => setTimeout(resolve, 500));

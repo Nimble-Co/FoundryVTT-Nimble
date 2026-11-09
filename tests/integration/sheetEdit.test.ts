@@ -1,6 +1,8 @@
 /**
  * Batch 7 (final QA) regression tests: every actor and item sheet subtype
- * survives the open → edit → close → reopen cycle on live Foundry V14.
+ * survives the open → edit → close → reopen cycle on live Foundry V14. The
+ * actor sheets here are the old sheets, which are still a choice in the sheet
+ * selector.
  *
  * The "edit" step updates the document while its sheet is open, which
  * exercises the V14 ApplicationV2 re-render path plus Nimble's Svelte
@@ -9,6 +11,7 @@
  */
 
 import { afterAll, describe, expect, test } from 'vitest';
+import { oldSheetOf } from './liveHelpers.ts';
 
 const NAME_PREFIX = 'V14 Sheet Edit Test';
 
@@ -27,8 +30,14 @@ const ITEM_SUBTYPES = [
 
 const settle = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function editRoundTrip(document: Actor | Item, subtype: string) {
-	const sheet = document.sheet!;
+interface RoundTripSheet {
+	rendered: boolean;
+	element: HTMLElement;
+	render(force: boolean): Promise<unknown>;
+	close(): Promise<unknown>;
+}
+
+async function editRoundTrip(document: Actor | Item, sheet: RoundTripSheet, subtype: string) {
 	await sheet.render(true);
 	await settle(500);
 	expect(sheet.rendered, `${subtype} sheet should render`).toBe(true);
@@ -73,11 +82,15 @@ describe('sheet edit round-trips', () => {
 	});
 
 	test.each([...ACTOR_SUBTYPES])(
-		'%s sheet: open → edit → close → reopen',
+		'old %s sheet: open → edit → close → reopen',
 		async (subtype) => {
 			const actor = await Actor.create({ name: `${NAME_PREFIX} ${subtype}`, type: subtype });
 			expect(actor).toBeDefined();
-			await editRoundTrip(actor!, subtype);
+			const sheet = oldSheetOf(actor!);
+			expect(sheet.constructor.name).toBe(
+				subtype === 'character' ? 'PlayerCharacterSheet' : 'NPCSheet',
+			);
+			await editRoundTrip(actor!, sheet, subtype);
 			await actor!.delete();
 		},
 		30_000,
@@ -88,7 +101,7 @@ describe('sheet edit round-trips', () => {
 		async (subtype) => {
 			const item = await Item.create({ name: `${NAME_PREFIX} ${subtype}`, type: subtype });
 			expect(item).toBeDefined();
-			await editRoundTrip(item!, subtype);
+			await editRoundTrip(item!, item!.sheet as unknown as RoundTripSheet, subtype);
 			await item!.delete();
 		},
 		30_000,

@@ -1,29 +1,25 @@
 /**
- * The sheet header's resource slot, through the rendered sheet.
+ * The old sheet header's resource slot, through the rendered old sheet.
  *
  * A promoted pool is only worth anything if a player can read it and correct it
  * where they already look, so these render the real sheet and use its controls.
+ * The old sheet is still a choice in the sheet selector, so it opens here by its class.
  */
 
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { buildCharacter, type CharacterActor } from './builders/buildCharacter.ts';
-import { purgeTestDocuments, settle, waitFor } from './liveHelpers.ts';
+import { oldSheetOf, purgeTestDocuments, settle, waitFor } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Sheet Resource';
 
-type SheetActor = CharacterActor & {
-	sheet: {
-		render(force: boolean): Promise<unknown>;
-		element: HTMLElement;
-		close(): Promise<unknown>;
-	};
-};
+type SheetActor = CharacterActor & { type: string };
 
 const openSheet = async (actor: SheetActor): Promise<HTMLElement> => {
-	await actor.sheet.render(true);
-	await waitFor(() => !!actor.sheet.element, 'the sheet to render');
+	const sheet = oldSheetOf(actor);
+	await sheet.render(true);
+	await waitFor(() => sheet.rendered && !!sheet.element, 'the old sheet to render');
 	await settle(400);
-	return actor.sheet.element;
+	return sheet.element;
 };
 
 const resourceSlot = (sheet: HTMLElement) => sheet.querySelector('.nimble-character-resources');
@@ -94,7 +90,7 @@ describe('the sheet header shows the pools an author promoted', () => {
 	}, 120_000);
 
 	afterEach(async () => {
-		await shadowmancer.sheet.close();
+		await oldSheetOf(shadowmancer).close();
 		await settle(200);
 	});
 
@@ -155,7 +151,7 @@ describe('a pool reaches the header only when its author asks', () => {
 	}, 120_000);
 
 	afterEach(async () => {
-		await actor.sheet.close();
+		await oldSheetOf(actor).close();
 		await settle(200);
 	});
 
@@ -194,7 +190,7 @@ describe('a mana class is unaffected', () => {
 
 	afterAll(async () => {
 		try {
-			await mage.sheet.close();
+			await oldSheetOf(mage).close();
 		} finally {
 			await purgeTestDocuments(TEST_PREFIX);
 		}

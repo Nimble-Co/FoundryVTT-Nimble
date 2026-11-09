@@ -279,6 +279,49 @@ async function purgeTestDocuments(prefix: string): Promise<void> {
 	}
 }
 
+const OLD_SHEET_LABELS: Record<string, string> = {
+	character: 'NIMBLE.sheets.playerCharacter',
+	npc: 'NIMBLE.sheets.npc',
+	soloMonster: 'NIMBLE.sheets.npc',
+	minion: 'NIMBLE.sheets.npc',
+};
+
+interface OldSheet {
+	rendered: boolean;
+	element: HTMLElement;
+	render(options?: boolean | object): Promise<unknown>;
+	close(): Promise<unknown>;
+}
+
+const oldSheets = new WeakMap<object, OldSheet>();
+
+/**
+ * The old sheet of an actor. The new sheets are the default, so `actor.sheet` is not the old
+ * sheet. This makes one instance of the old sheet class per actor, as the sheet selector does.
+ */
+function oldSheetOf(actor: { type: string }): OldSheet {
+	const cached = oldSheets.get(actor);
+	if (cached) return cached;
+	const labelKey = OLD_SHEET_LABELS[actor.type];
+	if (!labelKey) throw new Error(`no old sheet for actor type ${actor.type}`);
+	const label = game.i18n.localize(labelKey);
+	const entries = Object.values(
+		(
+			CONFIG.Actor as unknown as {
+				sheetClasses: Record<
+					string,
+					Record<string, { label: string; cls: new (options: object) => OldSheet }>
+				>;
+			}
+		).sheetClasses[actor.type] ?? {},
+	);
+	const entry = entries.find((candidate) => game.i18n.localize(candidate.label) === label);
+	if (!entry) throw new Error(`no sheet labelled "${label}" for ${actor.type}`);
+	const sheet = new entry.cls({ document: actor });
+	oldSheets.set(actor, sheet);
+	return sheet;
+}
+
 export {
 	attackFeatureData,
 	clearTargets,
@@ -291,6 +334,7 @@ export {
 	importPackItem,
 	messageFromFlow,
 	messageNode,
+	oldSheetOf,
 	placeableOf,
 	placeToken,
 	purgeTestDocuments,
