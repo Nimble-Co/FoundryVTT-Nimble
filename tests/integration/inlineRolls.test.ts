@@ -18,6 +18,12 @@ interface SheetDocument {
 	};
 }
 
+/** Opens the NPC sheet, which is the new NPC sheet by default. */
+async function openNpcSheet(actor: SheetDocument) {
+	expect(actor.sheet.constructor.name).toBe('MonsterSheet');
+	await actor.sheet.render(true);
+}
+
 async function clickInlineRoll(root: () => HTMLElement | null | undefined) {
 	await waitFor(() => !!root()?.querySelector('a.inline-roll'), 'inline roll link');
 	const anchor = root()!.querySelector<HTMLAnchorElement>('a.inline-roll')!;
@@ -100,7 +106,7 @@ describe('inline rolls and save enrichers', () => {
 		});
 		canvas.tokens!.get(token.id!)!.control({ releaseOthers: true });
 		sheets.push(actor);
-		await actor.sheet.render(true);
+		await openNpcSheet(actor);
 
 		const selector = 'button[data-enricher-type="savingthrow"]';
 		await waitFor(() => !!actor.sheet.element?.querySelector(selector), 'save button');
@@ -164,7 +170,7 @@ describe('inline rolls and save enrichers', () => {
 			{ name: `${TEST_PREFIX} Bite`, type: 'monsterFeature', system: { description: LEVEL_ROLL } },
 		]);
 		sheets.push(actor);
-		await actor.sheet.render(true);
+		await openNpcSheet(actor);
 		await waitFor(() => !!actor.sheet.element?.querySelector('a.inline-roll'), 'inline roll link');
 
 		await (
@@ -188,7 +194,7 @@ describe('inline rolls and save enrichers', () => {
 			{ name: `${TEST_PREFIX} Claw`, type: 'monsterFeature', system: { description: LEVEL_ROLL } },
 		]);
 		sheets.push(actor);
-		await actor.sheet.render(true);
+		await openNpcSheet(actor);
 
 		const result = await clickInlineRoll(() => actor.sheet.element);
 		expect(result).toEqual({ formula: expect.any(String), total: 6, errors: [] });

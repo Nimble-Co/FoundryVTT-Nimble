@@ -1,9 +1,9 @@
 /**
  * Live regression tests for the dice-pool resource rules, exercised through
  * the real Berserker content: Rage's dicePool rule surfaces the Fury pool on
- * the character sheet, dice are rolled into it by clicking the sheet's real
- * roll-die button, and "That all you got?!"'s manual diceConsumer opens the
- * spend panel whose chip + spend buttons are clicked to bank a one-shot
+ * the character sheet, dice are rolled into it by clicking the roll button of
+ * the Fury meter, and the use button of "That all you got?!" opens the dice
+ * step of its row, whose die and Spend buttons are clicked to bank a one-shot
  * damage reduction (an ActiveEffect carrying the bankedDamageReduction flag).
  *
  * The consumer dispatch runs through ruleEventDispatch, gated on
@@ -22,6 +22,17 @@ import {
 
 const TEST_PREFIX = 'V14 Dice Pools';
 
+const t = (key: string, data?: Record<string, string>) =>
+	data ? game.i18n.format(key, data) : game.i18n.localize(key);
+
+const buttonNamed = (root: ParentNode, name: string) =>
+	[...root.querySelectorAll<HTMLButtonElement>('button')].find(
+		(button) => button.getAttribute('aria-label') === name || button.textContent?.trim() === name,
+	);
+
+const rowOf = (sheet: HTMLElement, id: string) =>
+	sheet.querySelector<HTMLElement>(`[data-row-id="${CSS.escape(id)}"]`);
+
 interface PoolActor {
 	id: string;
 	effects: {
@@ -29,8 +40,9 @@ interface PoolActor {
 	};
 	items: { get(id: string): Item | undefined };
 	sheet: {
-		render(force: boolean): Promise<unknown>;
+		render(options: object): Promise<unknown>;
 		close(): Promise<unknown>;
+		rendered: boolean;
 		element: HTMLElement;
 	};
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -38,6 +50,7 @@ interface PoolActor {
 
 interface PoolMapEntry {
 	identifier: string;
+	label: string;
 	faces: number[];
 }
 
@@ -99,28 +112,18 @@ describe('dice pool rules', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
-	test('rolling Fury dice through the real sheet button fills the pool', async () => {
+	test('the roll button of the Fury meter fills the pool', async () => {
 		expect(furyPool()?.faces ?? []).toHaveLength(0);
 
-		await actor.sheet.render(true);
-		await settle(1500);
+		await actor.sheet.render({ force: true, position: { width: 720, height: 850 } });
+		await waitFor(() => actor.sheet.rendered && !!actor.sheet.element, 'the sheet to render');
+		await settle(600);
 
-		// The pool tracker re-renders after every roll, replacing the button
-		// node — re-query before each click instead of holding a reference.
+		// The meter renders again after every roll, so find the button again before each click.
 		const clickRollButton = () => {
-			const button = actor.sheet.element.querySelector<HTMLButtonElement>(
-				'[data-tooltip*="Roll one die"], [aria-label*="Roll one die"]',
-			);
-			if (!button) {
-				const labels = [...actor.sheet.element.querySelectorAll('button')]
-					.map(
-						(candidate) =>
-							candidate.getAttribute('aria-label') || candidate.getAttribute('data-tooltip'),
-					)
-					.filter(Boolean)
-					.join(' | ');
-				throw new Error(`no roll-die button on the sheet; buttons: ${labels}`);
-			}
+			const label = t('NIMBLE.actorSheet.parts.dicePool.addLabel', { label: furyPool()!.label });
+			const button = buttonNamed(actor.sheet.element, label);
+			if (!button) throw new Error(`no "${label}" button on the sheet`);
 			button.click();
 		};
 
@@ -135,24 +138,36 @@ describe('dice pool rules', () => {
 		}
 	}, 90_000);
 
-	test('the manual diceConsumer spend banks a damage reduction via real panel clicks', async () => {
+	test('the dice step of the row spends a die and banks a damage reduction', async () => {
 		expect(bankedEffects()).toHaveLength(0);
 		const messagesBefore = new Set(game.messages.contents.map((message) => message.id));
+		const sheet = actor.sheet.element;
 
-		await (taygItem as unknown as { activate(options: object): Promise<unknown> }).activate({
-			fastForward: true,
-		});
+		const actionsName = t('NIMBLE.actorSheet.hero.tabs.actions');
+		const actionsTab = [...sheet.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((tab) =>
+			(tab.getAttribute('aria-label') || tab.textContent || '').trim().startsWith(actionsName),
+		);
+		actionsTab!.click();
+		await waitFor(() => !!rowOf(sheet, taygItem.id!), 'the That all you got?! row');
+		rowOf(sheet, taygItem.id!)!
+			.querySelector<HTMLButtonElement>('button.use, button.main')!
+			.click();
+
+		const step = () =>
+			rowOf(sheet, taygItem.id!)?.querySelector<HTMLElement>(
+				`[role="group"][aria-label="${CSS.escape(t('NIMBLE.actorSheet.hero.actions.pickDice'))}"]`,
+			);
+		await waitFor(() => !!step(), 'the dice step of the row to open');
+
+		const die = step()!.querySelector<HTMLButtonElement>('button[aria-pressed]');
+		expect(die, 'a die in the dice step').toBeTruthy();
+		die!.click();
 		await waitFor(
-			() => !!document.querySelector('.dice-pool-panel'),
-			'the dice-pool spend panel to open',
+			() => step()?.querySelector('button[aria-pressed="true"]') !== null,
+			'the die to be picked',
 		);
 
-		const chip = document.querySelector<HTMLButtonElement>('.dice-pool-panel__chip');
-		expect(chip, 'a die chip in the spend panel').toBeTruthy();
-		chip!.click();
-		await settle(400);
-
-		document.querySelector<HTMLButtonElement>('.dice-pool-panel__spend-button')!.click();
+		buttonNamed(step()!, t('NIMBLE.actorSheet.hero.actions.spend'))!.click();
 
 		// TAYG banks (@strength + @dexterity) * dice spent = (5 + 3) * 1.
 		await waitFor(() => bankedEffects().length === 1, 'the banked reduction effect');

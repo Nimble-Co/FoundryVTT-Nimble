@@ -165,9 +165,11 @@ async function openRestDialog(actor: SwapActor, kind: 'safe' | 'field'): Promise
 	await closeStaleRestDialogs();
 	await actor.sheet.render(true);
 	await settle(800);
-	const label = kind === 'safe' ? 'Safe Rest' : 'Field Rest';
-	const button = actor.sheet.element.querySelector<HTMLButtonElement>(
-		`button[aria-label="${label}"]`,
+	const label = game.i18n.localize(
+		kind === 'safe' ? 'NIMBLE.prompts.safeRest' : 'NIMBLE.prompts.fieldRest',
+	);
+	const button = [...actor.sheet.element.querySelectorAll<HTMLButtonElement>('button')].find(
+		(candidate) => candidate.textContent?.trim() === label,
 	);
 	if (!button) throw new Error(`the sheet has no ${label} button`);
 	button.click();
@@ -908,8 +910,14 @@ describe('a Commander whose die was deleted by hand', () => {
 	let commander: SwapActor;
 	let dieItems: SwapItem[];
 
-	const banner = () =>
-		commander.sheet.element.querySelector<HTMLElement>('.nimble-level-correction-warning');
+	const banner = () => {
+		const label = game.i18n.localize('NIMBLE.levelCorrectionDialog.sheetWarning');
+		return (
+			[...commander.sheet.element.querySelectorAll<HTMLButtonElement>('aside.rail button')].find(
+				(button) => button.textContent?.trim() === label,
+			) ?? null
+		);
+	};
 
 	beforeAll(async () => {
 		commander = (await Actor.create({
