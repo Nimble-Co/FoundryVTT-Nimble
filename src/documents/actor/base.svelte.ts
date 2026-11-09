@@ -214,10 +214,12 @@ class NimbleBaseActor<
 			};
 
 			// The world's language names are not actor data, so a change to them sends no actor hook.
+			// @ts-expect-error Custom hook
 			const languagesHook = Hooks.on(systemHookName('languagesChanged'), () => update());
 
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
+				// @ts-expect-error Custom hook
 				Hooks.off(systemHookName('languagesChanged'), languagesHook);
 				Hooks.off('createItem', embeddedItemHooks.create);
 				Hooks.off('deleteItem', embeddedItemHooks.delete);
