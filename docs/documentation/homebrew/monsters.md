@@ -25,11 +25,11 @@ The same Create Actor window links to the Nimble Nexus monster browser, which ca
 
 ## Step 2: Fill in the stat block
 
-The NPC sheet has a rail on the left and four tabs (**Abilities**, **Effects**, **Notes**, and **Settings**). The stat block lives in the rail, and the features live on **Abilities**. Click **Edit**, the last row of the menu at the bottom of the rail, to turn on edit mode: the parts that you can configure get an outline.
+The NPC sheet has a rail on the left and four tabs (**Abilities**, **Effects**, **Notes**, and **Settings**). The name is at the top, the stat block lives in the rail, and the features live on **Abilities**. Click **Edit**, the last row of the menu at the bottom of the rail, to turn on edit mode: the parts that you can configure get an outline.
 
-![A Standard monster on the NPC sheet, with the line under the name, the HP, the saves and the armor in the rail](/images/documentation/standard-monster-sheet.png)
+![A Standard monster on the NPC sheet, with the line beside the name, and the HP, the saves and the armor in the rail](/images/documentation/standard-monster-sheet.png)
 
-**The line under the name.** Under the monster's name you will see something like "Level 1 Medium Goblin". In edit mode, click the outline on this line to open the monster window, where you set:
+**The line beside the name.** Beside the monster's name you will see something like "Level 1/3 Small Goblins". In edit mode, click the outline on this line to open the monster window, where you set:
 
 - **Level**: free text, so fractional levels like `1/3` and `1/4` work (the compendium Goblin is Level 1/3).
 - **Creature Type**: free text, such as "Beast" or "Goblins".

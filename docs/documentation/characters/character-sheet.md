@@ -12,10 +12,10 @@ The character sheet puts everything you touch during play (HP, Hit Dice, mana, r
 
 The rail is always visible, whatever tab is open:
 
-- **Portrait, name and summary line.** Your ancestry, size, class, subclass, and level.
+- **Portrait, name and summary line.** Your level, ancestry, class, and subclass.
 - **Inspiration seal.** The star seal in the top-right corner of the portrait. A crimson seal means that you have Inspiration, and a ghost ring means that you do not. Click the seal to grant Inspiration or to end it. Inspiration is an optional rule: the GM grants it, and you can spend it to reroll any single die. It ends after a Safe Rest.
-- **Hit Points.** Your current, temporary, and maximum HP. Type in the HP number to set your HP. The plate shows when you are Bloodied (half HP or less) or Dying (0 HP).
-- **Wounds.** One mark per wound that your character can take. Click a mark to add or remove a wound.
+- **HP** and **Temp HP.** Your current, maximum, and temporary hit points. Click a number to type a new one. The HP plate shows when you are Bloodied (half HP or less) or Dying (0 HP).
+- **Wounds.** A meter with one segment per wound that your character can take. Click a segment to add or remove a wound.
 - **Armor and speed.** Your armor value and your walking speed.
 - **Roll Initiative.** Rolls initiative. If a combat is running, this also handles joining it. The roll posts an [Initiative card](../playing/dice-and-chat.md#the-initiative-card) that tells how many actions you start with.
 - **Field Rest** and **Safe Rest.** Only out of combat. See [Rest & Recovery](../playing/rest-and-recovery.md).
@@ -86,13 +86,13 @@ Everything a class gives you sits under that class. The features it hands you au
 
 ### Spells
 
-Your known spells. **Group the spells** sorts them **By tier** or **By school**. Click a spell to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
+Your known spells. The buttons at the top group them **By tier** or **By school**. Click a spell to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
 Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
 
 Each spell row shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead, and their rows show that pool by name.
 
-![The Spells tab with the spells grouped by tier](/images/documentation/character-sheet-spells-tab.png)
+![The Spells tab with the spells grouped by school, and the mana meter in the rail](/images/documentation/character-sheet-spells-tab.png)
 
 #### Casting without enough left to pay
 

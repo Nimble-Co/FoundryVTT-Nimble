@@ -22,11 +22,11 @@ The **Nimble Legendary Monsters** compendium contains the legendary monsters fro
 
 ## A tour of the NPC sheet
 
-All three types share the same sheet. The rail on the left shows the portrait, the monster's name, and a line such as *"Level 3 Medium Goblin"*. Under it are the hit points, the saves, the armor, the speeds, and the damage defenses (Resist, Immune and Vulnerable). Click a save to roll it. NPCs and solo monsters have a Hit Points plate with the current, temporary, and maximum hit points; type in the HP number to set the current HP. Minions have no hit points: in place of the plate, the rail tells you that any damage kills a minion and that a minion cannot crit (see the Nimble rulebook for how minions handle damage).
+All three types share the same sheet. The monster's name and a line such as *"Level 3 Medium Goblin"* are at the top. The rail on the left shows the portrait, the hit points, the saves, the armor, the speeds, and the damage defenses (Resist, Immune and Vulnerable), with the tabs under them. Click a save to roll it. NPCs and solo monsters have an **HP** and a **Temp HP** plate; click a number to type a new one. Minions have no hit points: in place of the plate, the rail tells you that any damage kills a minion and that a minion cannot crit (see the Nimble rulebook for how minions handle damage).
 
 ![The NPC sheet of a solo monster, with the rail on the left and its abilities as cards](/images/documentation/monster-sheet.png)
 
-The sheet has four tabs:
+The sheet has four tabs, in the menu at the bottom of the rail:
 
 - **Abilities**: the monster's features and actions, as cards in columns like a stat block. This is where you'll spend the fight.
 - **Effects**: the conditions and effects on the monster, with the same condition grid as the character sheet. Toggle conditions on and off here or from the token. See [Conditions](../playing/conditions.md).
@@ -37,7 +37,7 @@ The sheet has four tabs:
 
 The sheet opens out of edit mode. Click **Edit**, the last row of the menu at the bottom of the rail, to change the monster. In edit mode you can change the portrait and the name, type the maximum HP, and select the armor (None, Medium or Heavy). The parts that you can configure get an outline:
 
-- The outline on the line under the name opens the monster window: level, creature type, size, monster type, whether an NPC is a *flunky* (see the Nimble rulebook for what that means at the table), and the damage defenses. The outline on the damage defenses opens the same window. The Apply Damage button honors resistances (half damage) and immunities (no damage) automatically.
+- The outline on the line beside the name opens the monster window: level, creature type, size, monster type, whether an NPC is a *flunky* (see the Nimble rulebook for what that means at the table), and the damage defenses. The outline on the damage defenses opens the same window. The Apply Damage button honors resistances (half damage) and immunities (no damage) automatically.
 - The outlines on the saves and the speeds open their windows.
 
 Click **Edit** again to stop.
