@@ -41,7 +41,7 @@ The dialog gives you control over the free-text area of the sheet:
 - An **additional page** with three more columns is added automatically when you put content on it.
 - Choose between the **lined** and **no-lines** versions of the sheet, and use the preview to check the layout before you press **Download PDF**.
 
-![The PDF export dialog with the content picker on the left and the column editor on the right](/images/documentation/export-character-pdf.png)
+![The Export buttons on the Settings tab of the character sheet, and the PDF export window with the content picker and the column editor](/images/documentation/export-character-pdf.png)
 
 ::: tip
 The picker and editor start pre-filled with a sensible selection of the character's content, so for most characters "open, glance, download" is the whole workflow.
