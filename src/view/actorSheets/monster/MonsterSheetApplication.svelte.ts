@@ -1,18 +1,24 @@
 import { untrack } from 'svelte';
 import { routeItemDrop } from '#documents/actor/routeItemDrop.js';
 import type { SvelteApplicationRenderContext } from '#lib/SvelteApplicationMixin.svelte.js';
-import { openNpcSheetsNarrow } from '../../../settings/actorSheetSettings.js';
+import {
+	openNpcFeaturesCollapsed,
+	openNpcSheetsNarrow,
+} from '../../../settings/actorSheetSettings.js';
 import { ActorSheetApplication } from '../shared/ActorSheetApplication.svelte.ts';
+import { isCardOpen, setCardsStartOpen } from '../shared/sheetUiState.ts';
 import MonsterSheetComponent from './MonsterSheet.svelte';
 import { createMonsterSource, type MonsterDocument } from './monsterAdapter.ts';
 import type { MonsterPerform } from './monsterIntent.ts';
 import { createMonsterPerform } from './monsterPerform.ts';
 import type { MonsterSource } from './monsterSource.ts';
 
+type ActorSheet = foundry.applications.sheets.ActorSheetV2;
+
 /** The width of a new NPC sheet with "Open NPC sheets narrow" on: the narrow form. */
 const NARROW_WIDTH = 390;
 
-/** The new NPC sheet, for `npc`, `soloMonster` and `minion`. A second choice in the sheet selector until the switch. */
+/** The NPC sheet, for `npc`, `soloMonster` and `minion`. */
 export default class MonsterSheet extends ActorSheetApplication<
 	MonsterDocument,
 	MonsterSource,
@@ -37,6 +43,15 @@ export default class MonsterSheet extends ActorSheetApplication<
 		position: { width: 660, height: 650 },
 	};
 
+	/** Each open reads "Collapse NPC features", because Foundry keeps one sheet for each actor. */
+	protected override async _onFirstRender(
+		context: Parameters<ActorSheet['_onFirstRender']>[0],
+		options: Parameters<ActorSheet['_onFirstRender']>[1],
+	): Promise<void> {
+		setCardsStartOpen(this.ui, !openNpcFeaturesCollapsed());
+		await super._onFirstRender(context, options);
+	}
+
 	protected override createProps() {
 		return {
 			source: createMonsterSource(this.sheetActor, {
@@ -51,13 +66,12 @@ export default class MonsterSheet extends ActorSheetApplication<
 		return String((this.sheetActor.reactive.system as { description?: string }).description ?? '');
 	}
 
-	/** The text of a card starts open, so each ability waits for its enriched text unless it is closed. */
+	/** Each open card waits for its enriched text. */
 	protected override watch(): void {
 		const actor = this.sheetActor;
 		$effect(() => {
-			const closed = new Set(this.ui.closedRows);
 			const wanted = actor.reactive.items
-				.filter((item) => item.type === 'monsterFeature' && !closed.has(item.id ?? ''))
+				.filter((item) => item.type === 'monsterFeature' && isCardOpen(this.ui, item.id ?? ''))
 				.map(
 					(item) =>
 						[

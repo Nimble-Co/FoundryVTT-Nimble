@@ -4,11 +4,15 @@ import {
 	closeChoice,
 	closeConfirm,
 	createSheetUiState,
+	isCardOpen,
 	revealIn,
+	setCardsOpen,
+	setCardsStartOpen,
 	setClosedRows,
 	setEditing,
 	setOpenRows,
 	showTab,
+	toggleCard,
 	toggleChoice,
 	toggleClosedRow,
 	toggleRow,
@@ -117,6 +121,62 @@ describe('rows and choice steps', () => {
 		setClosedRows(ui, []);
 
 		expect(ui.closedRows).toEqual([]);
+	});
+
+	it.each([
+		[true, ['bite'], 'closedRows'],
+		[false, ['claw'], 'openRows'],
+	] as const)(
+		'cards that start open (%s): one click on each changes it, and the list keeps the exceptions',
+		(startOpen, exceptions, list) => {
+			const ui = createSheetUiState('abilities');
+			ui.cardsStartOpen = startOpen;
+
+			expect(isCardOpen(ui, 'bite')).toBe(startOpen);
+			toggleCard(ui, exceptions[0]);
+
+			expect(isCardOpen(ui, 'bite')).toBe(false);
+			expect(isCardOpen(ui, 'claw')).toBe(true);
+			expect(ui[list]).toEqual(exceptions);
+		},
+	);
+
+	it.each([true, false])(
+		'Expand all and Collapse all of the cards, when cards start open is %s',
+		(startOpen) => {
+			const ui = createSheetUiState('abilities');
+			ui.cardsStartOpen = startOpen;
+
+			setCardsOpen(ui, ['bite', 'claw'], false);
+			expect([isCardOpen(ui, 'bite'), isCardOpen(ui, 'claw')]).toEqual([false, false]);
+
+			setCardsOpen(ui, ['bite', 'claw'], true);
+			expect([isCardOpen(ui, 'bite'), isCardOpen(ui, 'claw')]).toEqual([true, true]);
+		},
+	);
+
+	it('Expand all of the cards keeps the open rows of the other tabs', () => {
+		const ui = createSheetUiState('abilities');
+		ui.cardsStartOpen = false;
+		ui.openRows = ['effect-1'];
+
+		setCardsOpen(ui, ['bite', 'claw'], true);
+		expect(ui.openRows).toEqual(['effect-1', 'bite', 'claw']);
+
+		setCardsOpen(ui, ['bite', 'claw'], false);
+		expect(ui.openRows).toEqual(['effect-1']);
+	});
+
+	it('a change of where the cards start forgets the cards opened or closed by hand', () => {
+		const ui = createSheetUiState('abilities');
+		ui.closedRows = ['bite'];
+
+		setCardsStartOpen(ui, true);
+		expect(ui.closedRows).toEqual(['bite']);
+
+		setCardsStartOpen(ui, false);
+		expect(ui.cardsStartOpen).toBe(false);
+		expect([ui.openRows, ui.closedRows]).toEqual([[], []]);
 	});
 
 	it('opens one choice step at a time, and a second click closes it', () => {

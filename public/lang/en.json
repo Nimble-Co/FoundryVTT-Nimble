@@ -5294,6 +5294,10 @@
 				"name": "Include Spell Description On Scrolls",
 				"hint": "Copies the selected spell's own description onto the scroll item, beneath the scroll rules. Turning this off does not affect whether the scroll can be cast."
 			},
+			"collapseNpcFeatures": {
+				"name": "Collapse NPC features",
+				"hint": "The ability cards of the NPC sheet open with their text closed. Click the arrow of a card, or Expand all, to read the text. The old NPC sheet does not change."
+			},
 			"openNpcSheetsNarrow": {
 				"name": "Open NPC sheets narrow",
 				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again. The old NPC sheet does not change."

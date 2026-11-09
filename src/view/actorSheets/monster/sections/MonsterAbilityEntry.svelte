@@ -12,7 +12,7 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 	import GroupHeading from '../../parts/GroupHeading.svelte';
 	import InlineNumber from '../../parts/InlineNumber.svelte';
 	import RowButton from '../../parts/RowButton.svelte';
-	import { askConfirm, closeConfirm, toggleClosedRow } from '../../shared/sheetUiState.ts';
+	import { askConfirm, closeConfirm, isCardOpen, toggleCard } from '../../shared/sheetUiState.ts';
 
 	let { entry, ui, perform, uid }: MonsterAbilityEntryProps = $props();
 
@@ -89,7 +89,7 @@ that asks in a ConfirmBar before Delete. A heading line gets its pen in edit mod
 		description={entry.description}
 		descriptionHtml={entry.descriptionHtml}
 		nested={entry.nested}
-		bind:open={() => !ui.closedRows.includes(entry.id), () => toggleClosedRow(ui, entry.id)}
+		bind:open={() => isCardOpen(ui, entry.id), () => toggleCard(ui, entry.id)}
 		onuse={editing ? undefined : () => perform(entry.use.intent)}
 		onedit={() => perform(entry.edit.intent)}
 		fields={editing ? cardFields : undefined}

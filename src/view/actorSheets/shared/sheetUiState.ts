@@ -14,6 +14,8 @@ export interface SheetUiState {
 	openRows: string[];
 	/** ids of the rows that hide their text, on a sheet where the text starts open */
 	closedRows: string[];
+	/** the cards of the sheet start with their text open; off, they start closed and `openRows` lists the open ones */
+	cardsStartOpen: boolean;
 	/** id of the row whose choice step is open */
 	choiceStep: string | null;
 	/** id of the ConfirmBar that asks now */
@@ -28,6 +30,7 @@ export function createSheetUiState(tab: string): SheetUiState {
 		editing: false,
 		openRows: [],
 		closedRows: [],
+		cardsStartOpen: true,
 		choiceStep: null,
 		confirm: null,
 		flash: null,
@@ -82,6 +85,31 @@ export function toggleClosedRow(ui: SheetUiState, rowId: string): void {
 /** Expand all gives none; Collapse all gives every row id of the tab. */
 export function setClosedRows(ui: SheetUiState, rowIds: string[]): void {
 	ui.closedRows = [...rowIds];
+}
+
+/** A card shows its text: with `cardsStartOpen`, unless it is closed; without, only when it is opened. */
+export function isCardOpen(ui: SheetUiState, rowId: string): boolean {
+	return ui.cardsStartOpen ? !ui.closedRows.includes(rowId) : ui.openRows.includes(rowId);
+}
+
+export function toggleCard(ui: SheetUiState, rowId: string): void {
+	if (ui.cardsStartOpen) toggleClosedRow(ui, rowId);
+	else toggleRow(ui, rowId);
+}
+
+/** Expand all and Collapse all of the cards. The rows of other tabs keep their state. */
+export function setCardsOpen(ui: SheetUiState, rowIds: string[], open: boolean): void {
+	const list = ui.cardsStartOpen ? 'closedRows' : 'openRows';
+	const others = ui[list].filter((id) => !rowIds.includes(id));
+	ui[list] = open === ui.cardsStartOpen ? others : [...others, ...rowIds];
+}
+
+/** Cards start open or closed. A change forgets the cards that were opened or closed by hand. */
+export function setCardsStartOpen(ui: SheetUiState, startOpen: boolean): void {
+	if (ui.cardsStartOpen === startOpen) return;
+	ui.cardsStartOpen = startOpen;
+	ui.openRows = [];
+	ui.closedRows = [];
 }
 
 export function toggleChoice(ui: SheetUiState, rowId: string): void {
