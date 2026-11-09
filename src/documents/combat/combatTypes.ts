@@ -1,3 +1,4 @@
+import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 export type NimbleCombatantSystemMap = DataModelConfig['Combatant'];
 export type NimbleCombatantSystem = NimbleCombatantSystemMap[keyof NimbleCombatantSystemMap];
 export type CombatantBaseActions = NimbleCombatantSystem['actions']['base'];
@@ -90,7 +91,7 @@ export interface ItemLike {
 	};
 }
 
-export interface ActorWithActivateItem {
+export interface ActorWithActivateItem extends ConditionCreature {
 	type?: string;
 	name?: string;
 	items?: { contents?: ItemLike[] } | ItemLike[];

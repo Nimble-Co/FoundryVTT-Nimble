@@ -22,6 +22,15 @@
 	import RollModeField from './components/RollModeField.svelte';
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
+	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
+	import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
+	import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
+	import {
+		rollModeWithoutConditions,
+		tickedConditionRollModes,
+	} from '../../utils/rolls/appliedConditionRollModes.js';
+	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
+	import { soleTarget } from '../../utils/tokens/soleTarget.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	let { actor, dialog, spell, ...data } = $props();
@@ -30,7 +39,23 @@
 	const spellName = $derived(spell?.parent?.name ?? dialog?.item?.name ?? '');
 
 	// Initialize state
-	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
+	const conditionLines = untrack(() =>
+		attackConditionLines(
+			actor,
+			spell?.activation,
+			(
+				soleTarget(game.user?.targets, {
+					firstDecides: spell?.activation?.targets?.singleTargetAttack === true,
+				}) as { actor?: unknown } | null
+			)?.actor ?? null,
+			spell?.properties?.selected,
+		),
+	);
+	const conditionOptions = conditionRollModeOptions(conditionLines);
+	const opened = untrack(() => openRollModeTicks(data.rollMode ?? 0, conditionOptions));
+	let selectedRollMode = $state(opened.mode);
+	let appliedTicks = $state(opened.applied);
+	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
 	const offers = maxDamageOffers(
 		untrack(() => actor),
 		{ type: 'spell', system: untrack(() => spell) },
@@ -286,7 +311,8 @@
 		}
 
 		const activationData = {
-			rollMode: selectedRollMode,
+			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes),
+			conditionRollModes,
 			situationalModifiers,
 			primaryDieValue,
 			primaryDieModifier,
@@ -342,6 +368,11 @@
 
 	{#if !keptInUse}
 		<RollModeField bind:value={selectedRollMode} rushedAttack={data.rushedAttack} />
+		<SituationalRollModeList
+			options={conditionOptions}
+			bind:value={selectedRollMode}
+			bind:applied={appliedTicks}
+		/>
 
 		<MaxDamageField {offers} bind:choice={maxDamageChoice} />
 	{/if}

@@ -18,6 +18,29 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 Blinded uses Foundry's blindness. The vision of a Blinded token reaches only its own space, so through that token you see no other token. A detection mode that is not sight, which the GM adds to the token, still works. Nimble does not give Blindsight a detection mode. Fighting in the dark imposes Blinded, unless a light or Darkvision lets the creature see. The GM applies it.
 
+## Conditions that change a roll
+
+Some conditions give advantage or disadvantage. The roll window lists each one under **Situational Modifiers** as a tick with its name and the creature, for example "Blinded (Goblin)". The tick is on when the window opens, and the slider already counts it. Take the tick off when the condition does not apply. A roll with no window (an item set to skip it, Alt, a macro, a minion group attack, initiative from the combat tracker) uses every tick that would start on.
+
+Each condition is one step, and the steps stack and cancel as other advantage and disadvantage do.
+
+**The target of an attack.** These count only when the attack has one target. A Multi-target or area attack ignores them (Core Rules).
+
+- Blinded, Grappled or Restrained, Incapacitated (also Paralyzed, Stunned, Unconscious, Petrified): advantage. Grappled and Restrained together are one step.
+- Prone: advantage on a melee attack, disadvantage on a ranged attack. A Reach attack is melee. A spell with no attack type is ranged with Range and melee with Reach. A weapon ability attacks as the weapon you pick. When the attack is neither (most monster attacks have no attack type), the window shows both lines with their ticks off, and you pick one.
+- Invisible: disadvantage.
+
+**The one who attacks.** These count also on Multi-target and area attacks.
+
+- Blinded, Prone, Taunted, Despair: disadvantage.
+- Invisible: advantage.
+- Taunted gives no disadvantage when the only target is the most recent taunter. The system knows the taunter when a feature applied Taunted. When you applied it by hand, the tick is on and you take it off for an attack on the taunter.
+- Despair ends after the attack that used it. When you take its tick off, Despair stays.
+
+**Every roll.** Poisoned and Frightened give disadvantage on attacks, saves, checks and initiative. Only a character rolls for initiative, so a monster's initiative has no condition lines. The Frightened line says "source of fear nearby": take it off when the source is not near.
+
+The card names each condition that changed the roll as a tag, for example **Advantage: Blinded (Goblin)**. Hover or click the tag to read the rule. When a feature takes away all disadvantage, the card shows no disadvantage tag. A minion group attack shows the lines under each minion.
+
 ## Latched and Swallowed
 
 These two conditions come from monsters. The GM removes them by hand.

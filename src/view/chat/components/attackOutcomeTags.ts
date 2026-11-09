@@ -3,12 +3,14 @@ import type {
 	AttackOutcomeTag,
 	MultiTargetDetail,
 } from '#types/attackOutcome.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import { critFaceOf } from '../../../dice/critFace.js';
 import { findPrimaryDamageNode } from '../../../utils/damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
 import { termsHaveDieAtMax } from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import localize from '../../../utils/localize.js';
+import { conditionRollModeTag } from '../../../utils/rolls/conditionRollModeText.js';
 import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 
 interface OutcomeRollOptions {
@@ -18,6 +20,7 @@ interface OutcomeRollOptions {
 	forcedCrit?: string;
 	missThreshold?: number;
 	outcomeSources?: Partial<AttackOutcomeSources>;
+	conditionRollModes?: ConditionRollMode[];
 }
 
 interface DieTermView {
@@ -68,6 +71,29 @@ function critCauses(
 	return [...new Set(causes)];
 }
 
+/** The conditions that changed the roll mode of an attack or a check. */
+/** The Font Awesome icon of each tag kind. */
+const ATTACK_OUTCOME_TAG_ICONS: Record<AttackOutcomeTag['kind'], string> = {
+	maxDamage: 'fa-angles-up',
+	keptAmount: 'fa-angles-up',
+	critDice: 'fa-dice-d20',
+	crit: 'fa-burst',
+	cannotMiss: 'fa-bullseye',
+	noOutcome: 'fa-ban',
+	mustAttackOther: 'fa-arrows-turn-to-dots',
+	advantage: 'fa-arrow-up',
+	disadvantage: 'fa-arrow-down',
+};
+
+/** A tag for each condition that changed the roll mode of a stored roll. */
+function conditionRollModeTags(roll: { options?: unknown } | null | undefined): AttackOutcomeTag[] {
+	const options = roll?.options as { conditionRollModes?: ConditionRollMode[] } | null | undefined;
+	return (options?.conditionRollModes ?? []).map((line) => ({
+		kind: line.step > 0 ? 'advantage' : 'disadvantage',
+		...conditionRollModeTag(line),
+	}));
+}
+
 /**
  * The tags for a result the die face does not explain: what made a face below
  * the max a crit, what made a miss face a hit, and that an attack on 2 or more
@@ -81,7 +107,7 @@ function attackOutcomeTags(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 			tooltip: localize(`${TAG_TEXT}.mustAttackOtherTooltip`, { feature }),
 		}),
 	);
-	return [...mustAttack, ...outcomeTagsOfResult(roll)];
+	return [...conditionRollModeTags(roll), ...mustAttack, ...outcomeTagsOfResult(roll)];
 }
 
 function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
@@ -206,4 +232,10 @@ function primaryDieBonusNotAdded(
 	});
 }
 
-export { attackOutcomeTags, cardPrimaryRoll, primaryDieBonusNotAdded };
+export {
+	ATTACK_OUTCOME_TAG_ICONS,
+	attackOutcomeTags,
+	cardPrimaryRoll,
+	conditionRollModeTags,
+	primaryDieBonusNotAdded,
+};

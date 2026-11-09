@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
 
 const conditionalBonuses = vi.fn(() => []);
 
@@ -229,5 +230,146 @@ describe('the activation dialog damage multiplier tick', () => {
 
 		expect(state.damageMultiplier).toEqual({ label: 'Sharpshooter', multiplier: 2 });
 		expect(state.usesDamageMultiplier).toBe(false);
+	});
+});
+
+describe('the activation dialog condition ticks', () => {
+	const spear = {
+		type: 'weapon',
+		system: {
+			activation: {
+				targets: { attackType: 'reach' },
+				effects: [{ id: 'd', type: 'damage', formula: '1d8', canCrit: true, canMiss: true }],
+			},
+		},
+	};
+
+	function open(
+		attackerConditions: string[],
+		targetConditions: string[],
+		initialRollMode = 0,
+		item: object = spear,
+		items: object[] = [],
+	) {
+		user.targets = new Set([{ actor: taggedCreature('Goblin', targetConditions) }]);
+		return createState({
+			actor: () =>
+				({
+					...taggedCreature('Kael', attackerConditions),
+					rules: [],
+					system: {},
+					items,
+					getFlag: () => undefined,
+				}) as never,
+			item: () => item as never,
+			initialRollMode,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('lists each condition ticked, and the slider opens with their steps', () => {
+		const state = open(['poisoned'], ['blinded', 'prone'], -1);
+
+		expect(state.conditionOptions.map((option) => [option.label, option.value])).toEqual([
+			['Poisoned (Kael)', -1],
+			['Blinded (Goblin)', 1],
+			['Prone, melee attack (Goblin)', 1],
+		]);
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(-1);
+		expect(state.conditionRollModes.map((line) => line.key)).toEqual([
+			'self:poisoned',
+			'target:blinded',
+			'target:prone',
+		]);
+	});
+
+	it('sends only the ticks that are on, and the player own roll mode apart', () => {
+		const state = open([], ['blinded', 'prone']);
+		state.appliedTicks = { 'target:blinded': 1 };
+		state.selectedRollMode = 2;
+
+		expect(state.submittedRollMode).toBe(1);
+		expect(state.conditionRollModes.map((line) => line.key)).toEqual(['target:blinded']);
+	});
+
+	it('has no tick on a roll that is not an attack', () => {
+		const potion = {
+			type: 'object',
+			system: { activation: { effects: [{ id: 'h', type: 'healing', formula: '2d4' }] } },
+		};
+
+		const state = open(['poisoned'], ['blinded'], 0, potion);
+
+		expect(state.conditionOptions).toEqual([]);
+		expect(state.selectedRollMode).toBe(0);
+	});
+
+	it('reads a spell with Range as a ranged attack', () => {
+		const zap = {
+			type: 'spell',
+			system: {
+				properties: { selected: ['range'] },
+				activation: {
+					targets: {},
+					effects: [{ id: 'd', type: 'damage', formula: '2d6', canCrit: true, canMiss: true }],
+				},
+			},
+		};
+
+		const state = open([], ['prone'], 0, zap);
+
+		expect(state.conditionOptions.map((option) => [option.label, option.value])).toEqual([
+			['Prone, ranged attack (Goblin)', -1],
+		]);
+		expect(state.selectedRollMode).toBe(-1);
+	});
+
+	it('reads the lines again for the weapon the player picks', () => {
+		const weapon = (id: string, attackType: string) => ({
+			id,
+			uuid: `Item.${id}`,
+			name: id,
+			type: 'object',
+			system: {
+				objectType: 'weapon',
+				equipped: true,
+				activation: {
+					targets: { attackType },
+					effects: [{ type: 'damage', formula: '1d6' }],
+				},
+			},
+		});
+		const ability = {
+			type: 'feature',
+			system: {
+				activation: {
+					weaponAttack: 'any',
+					targets: { attackType: 'reach' },
+					effects: [{ id: 'd', type: 'damage', formula: '1d6', canCrit: true, canMiss: true }],
+				},
+			},
+		};
+
+		const state = open([], ['prone'], 0, ability, [
+			weapon('sword', 'reach'),
+			weapon('bow', 'range'),
+		]);
+		expect(state.selectedRollMode).toBe(1);
+
+		state.weaponUuid = 'Item.bow';
+
+		expect(state.conditionOptions.map((option) => option.label)).toEqual([
+			'Prone, ranged attack (Goblin)',
+		]);
+		expect(state.selectedRollMode).toBe(-1);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('gives the dual wield field the player own roll mode, without the ticks', () => {
+		const state = open([], ['blinded']);
+
+		expect(state.selectedRollMode).toBe(1);
+		expect(state.ownRollMode).toBe(0);
 	});
 });

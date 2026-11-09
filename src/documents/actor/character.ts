@@ -80,6 +80,7 @@ import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
+import { conditionRollOptions } from './conditionRollOptions.js';
 import {
 	calculateInventorySlotCost,
 	findContainerStorageRejection,
@@ -1364,7 +1365,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		);
 
 		const rollData = await (options.skipRollDialog
-			? this.getDefaultSkillCheckData(skillKey, baseRollMode, options)
+			? this._checkWithNoWindow('skillCheck', baseRollMode, (rollMode) =>
+					this.getDefaultSkillCheckData(skillKey, rollMode, options),
+				)
 			: this.showCheckRollDialog('skillCheck', {
 					...options,
 					skillKey,
@@ -1373,11 +1376,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		if (!rollData) return { roll: null, rollData: null };
 
-		const roll = new NimbleRoll(rollData.rollFormula, {
-			...this.getRollData(),
-			prompted: options.prompted ?? false,
-			respondentId: this.uuid,
-		} as NimbleRoll.Data);
+		const roll = new NimbleRoll(
+			rollData.rollFormula,
+			{
+				...this.getRollData(),
+				prompted: options.prompted ?? false,
+				respondentId: this.uuid,
+			} as NimbleRoll.Data,
+			conditionRollOptions(rollData.conditionRollModes),
+		);
 
 		await roll.evaluate();
 

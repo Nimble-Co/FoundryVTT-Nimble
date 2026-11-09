@@ -25,7 +25,9 @@ export interface AttackOutcomeTag {
 		| 'maxDamage'
 		| 'keptAmount'
 		| 'critDice'
-		| 'mustAttackOther';
+		| 'mustAttackOther'
+		| 'advantage'
+		| 'disadvantage';
 	label: string;
 	tooltip: string;
 }

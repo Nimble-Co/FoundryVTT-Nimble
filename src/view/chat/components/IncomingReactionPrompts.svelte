@@ -48,7 +48,7 @@
 {/if}
 
 {#if place === 'checkRoll'}
-	{#if prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0 || prompts.resultLines.length > 0}
+	{#if prompts.outcomeTags.length > 0 || prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0 || prompts.resultLines.length > 0}
 		<section class="nimble-roll-changes nimble-roll-changes--under-row">
 			<!-- A change a new roll took off came before that roll's line. -->
 			<ResultChangeLines
