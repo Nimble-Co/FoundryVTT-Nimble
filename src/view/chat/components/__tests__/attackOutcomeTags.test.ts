@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { attackOutcomeTags, primaryDieBonusNotAdded } from '../attackOutcomeTags.js';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import {
+	attackOutcomeTags,
+	conditionRollModeTags,
+	primaryDieBonusNotAdded,
+} from '../attackOutcomeTags.js';
 
 function roll(face: number, overrides: Record<string, unknown> = {}, options = {}) {
 	return {
@@ -14,7 +19,61 @@ function roll(face: number, overrides: Record<string, unknown> = {}, options = {
 const labels = (...args: Parameters<typeof attackOutcomeTags>) =>
 	attackOutcomeTags(...args).map((tag) => tag.label);
 
+const blindedGoblin: ConditionRollMode = {
+	key: 'target:blinded',
+	condition: 'blinded',
+	side: 'target',
+	step: 1,
+	on: true,
+	name: 'Goblin',
+};
+const proneGoblin: ConditionRollMode = {
+	...blindedGoblin,
+	key: 'target:prone',
+	condition: 'prone',
+	step: -1,
+};
+const frightenedKael: ConditionRollMode = {
+	key: 'self:frightened',
+	condition: 'frightened',
+	side: 'self',
+	step: -1,
+	on: true,
+	name: 'Kael',
+	ask: 'fearNearby',
+};
+
+describe('conditionRollModeTags', () => {
+	it('names each condition that changed the roll mode, with the rule as its tooltip', () => {
+		const tags = conditionRollModeTags({
+			options: { conditionRollModes: [blindedGoblin, proneGoblin, frightenedKael] },
+		});
+
+		expect(tags.map((tag) => tag.label)).toEqual([
+			'Advantage: Blinded (Goblin)',
+			'Disadvantage: Prone, ranged attack (Goblin)',
+			'Disadvantage: Frightened, source of fear nearby (Kael)',
+		]);
+		expect(tags.map((tag) => tag.kind)).toEqual(['advantage', 'disadvantage', 'disadvantage']);
+		expect(tags[0]?.tooltip).toBe('Attacks against a Blinded creature have advantage.');
+		expect(tags[1]?.tooltip).toBe('Ranged attacks against a Prone creature have disadvantage.');
+	});
+
+	it('gives no tag to a roll with no conditions', () => {
+		expect(conditionRollModeTags({ options: {} })).toEqual([]);
+		expect(conditionRollModeTags(null)).toEqual([]);
+	});
+});
+
 describe('attackOutcomeTags', () => {
+	it('shows the condition tags first, also on a Multi-target Attack', () => {
+		const tags = attackOutcomeTags(
+			roll(1, {}, { multiTarget: true, conditionRollModes: [frightenedKael] }),
+		);
+
+		expect(tags.map((tag) => tag.kind)).toEqual(['disadvantage', 'noOutcome']);
+	});
+
 	it('gives no tag to a roll with no causes', () => {
 		expect(attackOutcomeTags(roll(4))).toEqual([]);
 		expect(attackOutcomeTags(null)).toEqual([]);

@@ -28,6 +28,7 @@ import localize from '../../../utils/localize.js';
 import {
 	attackOutcomeTags,
 	cardPrimaryRoll,
+	conditionRollModeTags,
 	primaryDieBonusNotAdded,
 } from './attackOutcomeTags.ts';
 import { createChangeThisRollState } from './ChangeThisRoll.svelte.ts';
@@ -175,7 +176,13 @@ export function createIncomingReactionPromptsState(
 			: null,
 	);
 	const primaryRoll = $derived(cardPrimaryRoll(message?.reactive?.system));
-	const outcomeTags = $derived(getPlace() === 'roll' ? attackOutcomeTags(primaryRoll) : []);
+	const outcomeTags = $derived.by(() => {
+		if (getPlace() === 'roll') return attackOutcomeTags(primaryRoll);
+		if (getPlace() === 'checkRoll') {
+			return conditionRollModeTags(message?.reactive?.rolls?.[0]);
+		}
+		return [];
+	});
 	const bonusNotAdded = $derived(
 		primaryDieBonusNotAdded(primaryRoll?.options, rerolls, text.documentName),
 	);

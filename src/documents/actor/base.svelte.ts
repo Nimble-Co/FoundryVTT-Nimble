@@ -2,6 +2,8 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
+import type { RollDialogType } from '#types/components/CheckRollDialog.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { MarkedActor } from '#types/marks.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
@@ -22,13 +24,16 @@ import {
 	createCheckCard,
 } from '../../utils/reroll/checkCardRollTarget.js';
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
+import { appliedConditionRollModes } from '../../utils/rolls/appliedConditionRollModes.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
+import { conditionRollModes } from '../../utils/rolls/conditionRollModes.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+import { conditionRollOptions } from './conditionRollOptions.js';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
 
@@ -96,6 +101,7 @@ interface InitiativeRollData {
 	rollFormula: string;
 	rollMode: number;
 	visibilityMode?: string | undefined;
+	conditionRollModes?: ConditionRollMode[];
 }
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
@@ -906,7 +912,9 @@ class NimbleBaseActor<
 		);
 
 		const rollData = await (options.skipRollDialog
-			? this.getDefaultAbilityCheckData(abilityKey, baseRollMode, options)
+			? this._checkWithNoWindow('abilityCheck', baseRollMode, (rollMode) =>
+					this.getDefaultAbilityCheckData(abilityKey, rollMode, options),
+				)
 			: this.showCheckRollDialog('abilityCheck', {
 					...options,
 					abilityKey,
@@ -915,11 +923,15 @@ class NimbleBaseActor<
 
 		if (!rollData) return { roll: null, rollData: null };
 
-		const roll = new Roll(rollData.rollFormula, {
-			...this.getRollData(),
-			prompted: options.prompted ?? false,
-			respondentId: this.uuid,
-		} as Record<string, any>);
+		const roll = new Roll(
+			rollData.rollFormula,
+			{
+				...this.getRollData(),
+				prompted: options.prompted ?? false,
+				respondentId: this.uuid,
+			} as Record<string, any>,
+			conditionRollOptions(rollData.conditionRollModes),
+		);
 
 		await roll.evaluate();
 
@@ -994,7 +1006,11 @@ class NimbleBaseActor<
 		const rollData = await this.resolveInitiativeRollData(options);
 		if (!rollData) return null;
 
-		const roll = Roll.create(rollData.rollFormula, this.getRollData());
+		const roll = Roll.create(
+			rollData.rollFormula,
+			this.getRollData(),
+			conditionRollOptions(rollData.conditionRollModes),
+		);
 		await roll.evaluate();
 
 		const chatData = (await roll.toMessage(
@@ -1045,7 +1061,9 @@ class NimbleBaseActor<
 		);
 
 		const rollData = options.skipRollDialog
-			? this.getDefaultSavingThrowData(saveKey, baseRollMode, options)
+			? this._checkWithNoWindow('savingThrow', baseRollMode, (rollMode) =>
+					this.getDefaultSavingThrowData(saveKey, rollMode, options),
+				)
 			: await this.showCheckRollDialog('savingThrow', {
 					...options,
 					saveKey,
@@ -1054,11 +1072,15 @@ class NimbleBaseActor<
 
 		if (!rollData) return { roll: null, rollData: null };
 
-		const roll = new NimbleRoll(rollData.rollFormula, {
-			...this.getRollData(),
-			prompted: options.prompted ?? false,
-			respondentId: this?.token?.uuid ?? this.uuid,
-		} as NimbleRoll.Data);
+		const roll = new NimbleRoll(
+			rollData.rollFormula,
+			{
+				...this.getRollData(),
+				prompted: options.prompted ?? false,
+				respondentId: this?.token?.uuid ?? this.uuid,
+			} as NimbleRoll.Data,
+			conditionRollOptions(rollData.conditionRollModes),
+		);
 
 		await roll.evaluate();
 
@@ -1084,21 +1106,29 @@ class NimbleBaseActor<
 	async resolveInitiativeRollData(
 		options = {} as ActorRollOptions,
 	): Promise<InitiativeRollData | null> {
+		if (options.skipRollDialog) return this.initiativeWithNoWindow(options);
+		return await this.showCheckRollDialog('initiative', {
+			...options,
+			rollMode: this.#initiativeRollMode(options),
+		});
+	}
+
+	/** The initiative roll when no window opens. */
+	initiativeWithNoWindow(options = {} as ActorRollOptions): InitiativeRollData {
+		return this._checkWithNoWindow('initiative', this.#initiativeRollMode(options), (rollMode) =>
+			this.getDefaultInitiativeData(rollMode, options),
+		);
+	}
+
+	#initiativeRollMode(options: ActorRollOptions): number {
 		const systemData = this.system as unknown as BaseActorSystemData & {
 			attributes: { initiative: { defaultRollMode?: number } };
 		};
-		const baseRollMode = calculateRollMode(
+		return calculateRollMode(
 			systemData.attributes.initiative?.defaultRollMode ?? 0,
 			options.rollModeModifier,
 			options.rollMode,
 		);
-
-		return options.skipRollDialog
-			? this.getDefaultInitiativeData(baseRollMode, options)
-			: await this.showCheckRollDialog('initiative', {
-					...options,
-					rollMode: baseRollMode,
-				});
 	}
 
 	getDefaultInitiativeData(rollMode: number, options = {} as ActorRollOptions): InitiativeRollData {
@@ -1128,6 +1158,22 @@ class NimbleBaseActor<
 				...rerolls.system,
 			},
 		};
+	}
+
+	/** The conditions that change a check. Only a character rolls for initiative. */
+	checkConditionLines(type: RollDialogType): ConditionRollMode[] {
+		if (type === 'initiative' && !this.isType('character')) return [];
+		return conditionRollModes({ kind: 'check', roller: this });
+	}
+
+	/** A check with no roll window: the conditions that start on go on its roll mode. */
+	_checkWithNoWindow<T extends { rollMode: number }>(
+		type: RollDialogType,
+		rollMode: number,
+		build: (rollMode: number) => T,
+	): T & { conditionRollModes: ConditionRollMode[] } {
+		const applied = appliedConditionRollModes(this.checkConditionLines(type), rollMode);
+		return { ...build(applied.rollMode), conditionRollModes: applied.lines };
 	}
 
 	async showCheckRollDialog(

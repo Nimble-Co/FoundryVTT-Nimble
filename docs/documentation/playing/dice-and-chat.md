@@ -23,13 +23,14 @@ A click on a skill, a save, an ability or Initiative opens a roll window.
 ![The check roll window with the advantage slider and the formula preview](/images/documentation/roll-dialog-simple-attack.png)
 
 - **The advantage slider** goes from Disadvantage ×6 to Advantage ×6. The formula under it shows what you roll.
+- **Situational Modifiers:** a tick for each condition that changes the roll, such as Poisoned. The ticks are on when the window opens, and the slider counts them. See [Conditions that change a roll](conditions.md#conditions-that-change-a-roll).
 - **Hide roll** *(GM only)* makes a blind roll. The **Hide Rolls by Default** setting ticks it at the start.
 
 A save can start with advantage or disadvantage from your class or ancestry. To change it, turn on **Edit** and click **Saves** on the Core tab.
 
 ### The attack roll window
 
-An item that rolls damage or healing opens the same window, with more fields:
+An item that rolls damage or healing opens the same window. The ticks also list the conditions of the target that change the roll. The window has more fields:
 
 - **Add to Roll:** a number or dice, such as `2` or `1d4`, added to the first damage formula. It does not change the Primary Die.
 - **Set Primary Die Result:** the Primary Die shows this number and is not rolled. The max is a crit, 1 is a miss.

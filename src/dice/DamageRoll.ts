@@ -1,5 +1,6 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
 import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
@@ -95,6 +96,8 @@ declare namespace DamageRoll {
 		 * The aggregated net is written to `netRollMode` and overrides `rollMode`.
 		 */
 		rollModeSources?: number[];
+		/** The conditions that changed the roll mode, for the card. */
+		conditionRollModes?: ConditionRollMode[];
 		/** Net rollMode after summing rollModeSources (computed; do not set manually). */
 		netRollMode?: number;
 		/**

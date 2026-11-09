@@ -1,3 +1,5 @@
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getInitiativeStartingActions } from '../../utils/combat/initiativeStartingActions.js';
 import { keptD20 } from '../../utils/reroll/checkRollOfCard.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
@@ -93,6 +95,8 @@ export async function rollInitiativeForCombatant(params: {
 	combat: Combat;
 	combatantId: string;
 	formula: string | null;
+	/** The conditions the roll mode in the formula has, for the card. */
+	conditionRollModes?: ConditionRollMode[] | undefined;
 	messageOptions: ChatMessage.CreateData;
 	rollIndex: number;
 	combatManaUpdates: Promise<unknown>[];
@@ -103,6 +107,9 @@ export async function rollInitiativeForCombatant(params: {
 	const combatantUpdates: Record<string, unknown> = { _id: params.combatantId };
 
 	const roll = combatant.getInitiativeRoll(params.formula ?? undefined);
+	if (params.conditionRollModes?.length) {
+		(roll.options as NimbleRoll.Options).conditionRollModes = params.conditionRollModes;
+	}
 	await roll.evaluate();
 	const rollTotal = roll.total ?? 0;
 	combatantUpdates.initiative = rollTotal;

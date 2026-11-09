@@ -2,6 +2,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
+import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { requestSetActiveCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
@@ -112,12 +113,14 @@ interface ResolvedInitiativeRollData {
 	rollFormula: string;
 	rollMode: number;
 	visibilityMode?: string | undefined;
+	conditionRollModes?: ConditionRollMode[];
 }
 
 interface ActorWithInitiativeRollConfiguration extends Actor {
 	resolveInitiativeRollData?: (
 		options?: ActorRollOptions,
 	) => Promise<ResolvedInitiativeRollData | null>;
+	initiativeWithNoWindow?: () => ResolvedInitiativeRollData;
 }
 
 class NimbleCombat extends Combat {
@@ -1087,10 +1090,14 @@ class NimbleCombat extends Combat {
 	async #resolvePromptedInitiativeRollData(
 		combatantId: string,
 	): Promise<ResolvedInitiativeRollData | null | undefined> {
-		const actor = this.combatants.get(combatantId)
-			?.actor as ActorWithInitiativeRollConfiguration | null;
+		const actor = this.#initiativeActor(combatantId);
 		if (typeof actor?.resolveInitiativeRollData !== 'function') return undefined;
 		return actor.resolveInitiativeRollData();
+	}
+
+	#initiativeActor(combatantId: string): ActorWithInitiativeRollConfiguration | null {
+		return (this.combatants.get(combatantId)?.actor ??
+			null) as ActorWithInitiativeRollConfiguration | null;
 	}
 
 	async #performInitiativeRollForCombatant(params: {
@@ -1117,9 +1124,12 @@ class NimbleCombat extends Combat {
 			if (lockedCombatant.initiative !== null) return null;
 			if (!initiativeRollLock.matches(lockedCombatant, lockData.requestId)) return null;
 
+			// With no window and no formula, the roll still takes the conditions that change it.
 			const promptedRollData = params.promptRollDialog
 				? await this.#resolvePromptedInitiativeRollData(params.combatantId)
-				: undefined;
+				: params.formula
+					? undefined
+					: this.#initiativeActor(params.combatantId)?.initiativeWithNoWindow?.();
 			if (params.promptRollDialog && promptedRollData === null) return null;
 
 			const resolvedMessageOptions = {
@@ -1133,6 +1143,7 @@ class NimbleCombat extends Combat {
 				combat: this as Combat,
 				combatantId: params.combatantId,
 				formula: promptedRollData?.rollFormula ?? params.formula,
+				conditionRollModes: promptedRollData?.conditionRollModes,
 				messageOptions: resolvedMessageOptions,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,
