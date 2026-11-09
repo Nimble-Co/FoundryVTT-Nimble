@@ -28,3 +28,5 @@ The nimble-rules-agent says what the game should do. The rules-engine-agent impl
 ## User-facing docs
 
 When a change alters what a player, GM or homebrewer sees, update `docs/documentation/` on the same branch. Never edit `docs/documentation/reference/*.md` by hand: `pnpm docs:generate` builds it from the rule schemas, settings, conditions and `public/lang/en.json`.
+
+Keep the pages short. A page tells how to use a general mechanism, not what each class feature, spell or item does with it: name a feature only as a short example. Keep a section under about 300 words and a page under about 2,500. Put edge cases in a `::: details` block. Add to the section that is there, not a new section at the end of the page.
