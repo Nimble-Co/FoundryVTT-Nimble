@@ -8,7 +8,7 @@ This page tells how attack dice work, what the roll windows ask, and what you ca
 
 ## How Nimble attack dice work
 
-An attack rolls all its damage dice at once, but one die decides the outcome: the **Primary Die**, the first die of the weapon's damage. The other dice and the modifiers only add to the total.
+An attack rolls all its damage dice at once, but one die decides the outcome: the **Primary Die**, the first die of the attack's damage. The other dice and the modifiers only add to the total.
 
 - **Crit:** the Primary Die rolls its max. It explodes: roll it again and add it, as long as it rolls its max.
 - **Miss:** the Primary Die rolls a 1. Some targets make more faces a miss.
@@ -55,7 +55,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 - **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice.
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
-- **Save:** a d20 button. Select the tokens that save and click it.
+- **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
 - **Conditions:** a button for each condition of the item. Click it to apply the condition to the selected tokens. See [Conditions](conditions.md).
 - **Change This Roll:** rerolls and changes from features. See below.
 - **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
@@ -134,9 +134,9 @@ The line under the name tells how many actions a hero starts combat with: 1, 2 w
 
 ## Targeting and roll visibility
 
-Target tokens (key T) before you roll, and they show on the card. **Apply Damage** and the save button use the targets of the card, not the selected tokens.
+Target tokens (key T) before you roll, and they show on the card. **Apply Damage** uses the targets of the card, not the selected tokens. The save button rolls for the selected tokens.
 
-Two settings for each player change what you see: **Auto-Expand Rolls** always shows the dice under each total, and **Hide Rolls by Default** ticks **Hide roll** in each window. See the [Settings Reference](../reference/settings.md).
+Two settings for each player change what you see: **Auto-Expand Rolls** always shows the dice under each total, and **Hide Rolls by Default** makes your rolls blind rolls. A GM can untick **Hide roll** in the window. A player has no **Hide roll** tick, so a player who turns this on makes only blind rolls. See the [Settings Reference](../reference/settings.md).
 
 ## Related pages
 

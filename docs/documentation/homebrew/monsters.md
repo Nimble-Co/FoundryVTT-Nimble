@@ -25,7 +25,7 @@ The same Create Actor window links to the Nimble Nexus monster browser, which ca
 
 ## Step 2: Fill in the stat block
 
-The NPC sheet has a rail on the left and four tabs (**Abilities**, **Effects**, **Notes**, and **Settings**). The name is at the top, the stat block lives in the rail, and the features live on **Abilities**. Click **Edit**, the last row of the menu at the bottom of the rail, to turn on edit mode: the parts that you can configure get an outline.
+The NPC sheet has a rail on the left and four tabs (**Abilities**, **Effects**, **Notes**, and **Settings**). The name is at the top, the stat block lives in the rail, and the features live on **Abilities**. Click **Edit**, the last row of the menu at the bottom of the rail, to turn on edit mode: the parts that you can configure get an outline. On a narrow sheet, **Edit** is the pen in the header, and **Create Feature** is the **+** beside it.
 
 ![A Standard monster on the NPC sheet, with the line beside the name, and the HP, the saves and the armor in the rail](/images/documentation/standard-monster-sheet.png)
 
@@ -44,7 +44,7 @@ Resistances and immunities only kick in when the incoming damage has a known typ
 
 For the Bog Howler: Level 3, Creature Type "Beast", Medium.
 
-**Hit points.** Type the current HP in the Hit Points plate of the rail at any time. In edit mode, you type the maximum HP there too. When a monster drops to half HP or less, the plate shows that it is bloodied.
+**Hit points.** Out of edit mode, type the current HP in the Hit Points plate of the rail. In edit mode, you type the maximum HP there. When a monster drops to half HP or less, the plate shows that it is bloodied.
 
 **Armor.** Monsters do not wear armor items. Armor is a simple three-state value (**None**, **Medium**, or **Heavy**). In edit mode, select it in the rail. What Medium and Heavy armor mean in play is in the Nimble rulebook.
 
@@ -72,7 +72,7 @@ Give the Bog Howler three features:
 2. **Bite** (subtype Action). On its **Activation → Effects** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** on, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
 3. **Terrifying Howl** (subtype Action). Add a **Save** effect: Will save, with a **Condition** entry (Frightened) under **On Failed Save**.
 
-Activating features works like any item activation: click the name of the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.
+Activating features works like any item activation. Click **Edit** to turn off edit mode, because in edit mode a click on the name does nothing. Then click the name of the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.
 
 ![The Bog Howler's Abilities tab with the Bite and Terrifying Howl actions, and the chat card from activating Bite](/images/documentation/bog-howler-bite.png)
 

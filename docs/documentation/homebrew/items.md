@@ -221,7 +221,7 @@ For items with limited uses that recharge, such as wands and once-per-rest trink
 
 A Charge Pool on its own never spends anything: activating an item that only has a pool leaves its charges untouched. If the item should pay a charge each time it is used, add a Charge Consumer rule (or a Pool effect) alongside the pool.
 
-Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its row on the sheet shows the charges that are left. To change the number by hand, turn on **Edit** and type it on the row. The maximum comes from the rule. A pool with **Show as a resource** on also has a meter in the rail of the character sheet, where you type the number without edit mode.
+Both rule types are documented in the [resources reference](../reference/rules-resource.md). Once an item has a charge pool, its row on the sheet shows the charges that are left. To change the number by hand, turn on **Edit** and type it on the row. The maximum comes from the rule. A pool with **Show as a resource** on also has a meter in the rail of the character sheet, where you type the number without edit mode. A pool with **Hide from sheet** on shows neither.
 
 ![An Inventory row in edit mode, with the quantity and the charges left as numbers that you type](/images/documentation/charge-uses-edit.png)
 

@@ -1951,7 +1951,7 @@
 				},
 				"cardOffer": {
 					"label": "Offer on attack card",
-					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend only on the sheet, in the choice step under the item's row. Requires a manual spend that consumes dice for a generic effect."
+					"hint": "Also offer this spend as a button on the owner's own attack cards, adding the result to that card's damage instead of posting a separate roll. \"Hit\" offers it on any hit, \"Critical Hit\" only on a crit. Leave empty to offer the spend only on the character sheet. Requires a manual spend that consumes dice for a generic effect."
 				},
 				"bonusOnAttackDelivery": {
 					"label": "Attack delivery",
@@ -1986,7 +1986,7 @@
 				},
 				"showAsResource": {
 					"label": "Show as a resource",
-					"hint": "Also show the pool as a meter in the rail of the character sheet, under mana. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
+					"hint": "Also show the pool as a meter on the character sheet, with the other meters. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
 				},
 				"recoveries": {
 					"label": "Recoveries",
@@ -5296,7 +5296,7 @@
 			},
 			"openNpcSheetsNarrow": {
 				"name": "Open NPC sheets narrow",
-				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again."
+				"hint": "The NPC sheet opens 390 px wide, with the tabs in a strip under the name. Drag the edge of the window to make the sheet wide again. The old NPC sheet does not change."
 			}
 		},
 		"diceTestbench": {

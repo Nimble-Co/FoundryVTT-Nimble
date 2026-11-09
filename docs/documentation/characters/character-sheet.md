@@ -35,7 +35,7 @@ When you are in a combat, the **Actions** box in the rail shows your actions as 
 
 ### The narrow form
 
-Make the window narrower than 560 px, and the rail becomes a header at the top with a strip of tabs under it. Each tab keeps a short label under its icon. Drag the edge of the window to make it wide again.
+Make the window narrower than 560 px, and the rail becomes a header at the top with a strip of tabs under it. Each tab keeps a short label under its icon. Under the tabs, a strip has a chip for each meter (Wounds, Hit Dice, mana and the pools): click a chip to open its meter. In the header, the pen turns on edit mode. Drag the edge of the window to make it wide again.
 
 ## Tabs
 
@@ -90,7 +90,7 @@ Your known spells. The buttons at the top group them **By tier** or **By school*
 
 Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
 
-Each spell row shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead, and their rows show that pool by name.
+Each spell row shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead: their rows show the uses that are left and when they come back.
 
 ![The Spells tab with the spells grouped by school, and the mana meter in the rail](/images/documentation/character-sheet-spells-tab.png)
 
@@ -134,9 +134,9 @@ Some features give you a resource that lives on the sheet rather than on a chat 
 
 Some features spend an amount you choose instead of a fixed cost. An Oathsworn's Lay on Hands is the clearest example: the pool holds 5 x LVL points of healing power and refills on a safe rest, and using the feature asks how much of it to spend before healing your target for exactly that much. The roll window cannot be skipped for these, because the amount is yours to name. The chat card reports what you spent and what the pool is down to.
 
-**Dice pools** hold rolled dice, and each die remembers the number it came up with. A Berserker's Fury Dice are the clearest example: you Rage, dice go into the pool, and they add to your attacks until the Rage ends. Each dice pool is a meter in the rail:
+**Dice pools** hold rolled dice, and each die remembers the number it came up with. A Berserker's Fury Dice are the clearest example: you Rage, dice go into the pool, and they add to your attacks until the Rage ends. Each dice pool is a meter in the rail (in the strip under the tabs on a narrow sheet):
 
-- **Roll** rolls a die into the pool.
+- **+** rolls one more die into the pool.
 - **Click a die** to open its menu: **Set value** or **Discard**, when something at the table needs to be corrected by hand.
 - **Discard all** empties the pool. The sheet asks first.
 
