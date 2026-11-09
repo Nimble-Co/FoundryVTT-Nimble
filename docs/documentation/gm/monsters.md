@@ -48,7 +48,7 @@ A GM opens many NPC sheets in an encounter. Make the window narrower than 560 px
 
 ### The old NPC sheet
 
-The old NPC sheet is still in the system as a backup. To use it for one monster, open the menu of its window, click **Configure Sheet**, select **NPC sheet (old)** in **This Sheet**, and click **Save**. Select **NPC sheet** to go back. **Default Sheet** in the same window changes the sheet for all actors of that type. NPCs, solo monsters and minions are three types, so set each one. A world that saved the old sheet as its default keeps opening it until a GM selects **NPC sheet** there.
+The old NPC sheet is still in the system as a backup. To use it for one monster, open the menu of its window, click **Configure Sheet**, select **NPC sheet (old)** in **This Sheet**, and click **Save**. Select **NPC sheet** to go back. **Default Sheet** in the same window changes the sheet for the actors of that type that have no sheet of their own in **This Sheet**. NPCs, solo monsters and minions are three types, so set each one. A world that saved the old sheet as its default keeps opening it until a GM selects **NPC sheet** there. An actor set to **NPC sheet (old)** in **This Sheet** keeps it: select **NPC sheet** there for that actor.
 
 ## Using features and actions
 
@@ -58,7 +58,7 @@ Everything a monster can do lives on the Abilities tab as a *monster feature*, s
 - **Actions**: attacks and activated abilities. A monster's attack routine can appear as an *attack sequence*: a parent card describing the routine, with its individual attacks nested beneath it.
 - **Bloodied** and **Last Stand**: solo monster phase abilities, kept in their own groups so they're impossible to miss when the fight turns.
 
-The text of each card starts open. To start with the cards closed, turn on **Collapse NPC features** in **Configure Settings** (each user sets it). The arrow at the start of a card closes or opens its text, and the pen opens the feature's window. Click the name of an action to use it: a roll window opens, and **Roll** posts the chat card, where hits, misses, and an apply-damage button are handled for you, the same flow as player attacks (see [Dice & Chat](../playing/dice-and-chat.md)). A click on the name of a feature posts it to chat. In edit mode, **Create Feature** adds a new feature, you can type the uses of a feature, and each card has a trash button. The sheet asks before it deletes.
+The text of each card starts open. To start with the cards closed, turn on **Collapse NPC features** in **Configure Settings** (each user sets it). The arrow at the start of a card closes or opens its text, and the pen opens the feature's window. Click the name of a card to use it. A card with activation effects (an attack, a save, damage) has a d20 icon: a roll window opens, and **Roll** posts the chat card, where hits, misses, and an apply-damage button are handled for you, the same flow as player attacks (see [Dice & Chat](../playing/dice-and-chat.md)). A card with no activation effects has a speech bubble and posts its text to chat. In edit mode, **Create Feature** adds a new feature, you can type the uses of a feature, and each card has a trash button. The sheet asks before it deletes.
 
 Drag a card to change the order, or drop an action on an attack sequence to nest it. On a touch screen you can drag only in edit mode.
 

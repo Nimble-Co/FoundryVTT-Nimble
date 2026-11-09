@@ -158,7 +158,7 @@ The old character sheet is still in the system as a backup. To use it for one ch
 2. In the window, open the menu and click **Configure Sheet**.
 3. In **This Sheet**, select **Character sheet (old)**, then click **Save**.
 
-To go back, do the same steps and select **Character sheet**. A GM can change the sheet for all characters in **Default Sheet** in the same window. If your world saved the old sheet as its default before this update, characters keep opening in the old sheet until a GM selects **Character sheet** there.
+To go back, do the same steps and select **Character sheet**. A GM can change the sheet in **Default Sheet** in the same window, for the characters that have no sheet of their own in **This Sheet**. If your world saved the old sheet as its default before this update, characters keep opening in the old sheet until a GM selects **Character sheet** there. A character set to **Character sheet (old)** in **This Sheet** keeps it until it is changed there.
 
 ## Related pages
 
