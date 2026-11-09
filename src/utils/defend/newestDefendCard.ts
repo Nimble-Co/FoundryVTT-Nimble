@@ -1,7 +1,5 @@
-import { attackCannotBeDefended, type DefendReactor, defendReactors } from './defendReactors.js';
-
-/** What a hero asks for outside the card: a Defend, an Interpose, or both. */
-export type DefendWay = 'defend' | 'interpose' | 'both';
+import type { DefendReactor, DefendWay } from '#types/defend.d.ts';
+import { attackCannotBeDefended, defendReactors } from './defendReactors.js';
 
 type CardLike = {
 	system: unknown;

@@ -1,7 +1,9 @@
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { ResultCardView } from '#types/resultChange.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import { ruleKey } from '../../utils/actor/actorRules.js';
+import { canPayUseCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	ATTACK_SOURCES,
@@ -21,7 +23,6 @@ import {
 	type RerollSide,
 	type RerollTrigger,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { canPayRerollCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import { ROLL_STATS, statsOfRoll } from '../../utils/reroll/rollStat.js';
 import {
 	type CheckRollKind,
@@ -491,7 +492,7 @@ abstract class RollUseRule<
 		];
 	}
 
-	get rollUseCost(): RerollCost {
+	get rollUseCost(): UseCost {
 		return {
 			chargePoolIdentifier: this.chargePoolIdentifier ?? '',
 			chargeCost: Math.max(1, Number(this.chargeCost) || 1),
@@ -513,7 +514,7 @@ abstract class RollUseRule<
 		if (context.roll.kind !== 'attack' && context.card?.result === 'succeeded') {
 			if (this.waitsForFailure()) return false;
 		}
-		return canPayRerollCost(this.actor, this.rollUseCost);
+		return canPayUseCost(this.actor, this.rollUseCost);
 	}
 
 	/** Whether this rule's limits cover this roll and side. Not its cost, and not the card. */

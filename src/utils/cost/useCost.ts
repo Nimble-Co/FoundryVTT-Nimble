@@ -1,4 +1,5 @@
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
+import type { CostPayer, PaidUseCost, TurnStamp, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { hasRuleCharge, ruleChargesLeft } from '../chargePool/ruleChargeGate.js';
@@ -8,63 +9,9 @@ import { usedThisTurn } from '../combat/perTurnUse.js';
 import { getPools } from '../dicePool/dicePoolSync.js';
 import { normalizeIdentifier } from '../dicePool/helpers.js';
 import type { DicePoolState } from '../dicePool/types.js';
-import type { HeroicReactionKey } from '../incomingReactions/heroicActions.js';
 import { validateSpellCost } from '../spell/validateSpellCost.js';
 
-/** What using a reroll costs. Every part is optional; zero or blank is free. */
-interface RerollCost {
-	chargePoolIdentifier: string;
-	chargeCost: number;
-	manaCost: number;
-	woundCost: number;
-	heroicReaction: HeroicReactionKey | '';
-	/** Actions a hero spends in combat. Absent is none. */
-	actionCost?: number;
-	/** The mana, charges and Wounds are per die the player picks. */
-	perDie?: boolean;
-	/** With no action left the use still goes on, and the card says so. */
-	actionReportOnly?: boolean;
-	/** The rule can be used once per turn of any creature. */
-	turnUseKey?: string;
-	/** Every die of this dice pool is expended; it needs at least one. */
-	dicePoolIdentifier?: string;
-}
-
-/** What was actually charged, so a failed reroll can give it back. */
-interface PaidRerollCost {
-	charges: number;
-	mana: number;
-	wounds: number;
-	heroicReaction: {
-		combatId: string;
-		combatantId: string;
-		key: HeroicReactionKey;
-		actionsSpent: number;
-	} | null;
-	/** Actions spent: now on the hero's own turn, else from their next turn. */
-	action: { combatId: string; combatantId: string; amount: number; now: boolean } | null;
-	/** The action cost could not be paid, and the rule only reports that. */
-	noActionLeft?: boolean;
-	/** A 1/turn use was spent. */
-	turnUse?: boolean;
-	/** The dice expended from a dice pool. */
-	dice?: { poolId: string; faces: number[] } | null;
-	/** The combat turn when an action or a heroic reaction was paid. */
-	stamp?: TurnStamp | null;
-}
-
-/** A combat turn: the combat, the round, the combatant whose turn it is, and its turn index. */
-interface TurnStamp {
-	combatId: string;
-	round: number;
-	combatantId: string;
-	/** Absent on records from before the index was stored. */
-	turn?: number | null;
-}
-
-type RerollPayer = Actor | null | undefined;
-
-function asSpellCostActor(actor: RerollPayer): SpellCostActorLike {
+function asSpellCostActor(actor: CostPayer): SpellCostActorLike {
 	return actor as unknown as SpellCostActorLike;
 }
 
@@ -80,7 +27,7 @@ function findActorCombatant(
 	return combatant ? { combat, combatant } : null;
 }
 
-function poolToExpend(actor: RerollPayer, cost: RerollCost): DicePoolState | null {
+function poolToExpend(actor: CostPayer, cost: UseCost): DicePoolState | null {
 	const identifier = normalizeIdentifier(cost.dicePoolIdentifier);
 	if (!identifier) return null;
 	return (
@@ -89,18 +36,18 @@ function poolToExpend(actor: RerollPayer, cost: RerollCost): DicePoolState | nul
 }
 
 /** Whether the actor can gain all of `amount` Wounds without going past the maximum. */
-function canGainWounds(actor: RerollPayer, amount: number): boolean {
+function canGainWounds(actor: CostPayer, amount: number): boolean {
 	const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
 	return !!wounds && wounds.value + amount <= wounds.max;
 }
 
-function actionCostOf(cost: RerollCost): number {
+function actionCostOf(cost: UseCost): number {
 	return Math.max(0, Math.trunc(Number(cost.actionCost) || 0));
 }
 
 /** The hero's combatant and whether it is their turn, or null when no actions can be spent. */
 function actionPayer(
-	actor: RerollPayer,
+	actor: CostPayer,
 ): { combat: Combat; combatant: Combatant; now: boolean } | null {
 	const found = findActorCombatant(actor);
 	if (!found || found.combatant.type !== 'character') return null;
@@ -131,7 +78,7 @@ function hasManyTurns(combat: Combat | null | undefined, combatantId: string): b
  * A combatant with many turns in a round must also be on the same turn index.
  */
 function keepsTurnCost(
-	paid: Partial<Pick<PaidRerollCost, 'action' | 'heroicReaction' | 'stamp'>>,
+	paid: Partial<Pick<PaidUseCost, 'action' | 'heroicReaction' | 'stamp'>>,
 ): boolean {
 	if (!paid.action && !paid.heroicReaction) return false;
 	const now = turnStampOf(game.combat);
@@ -147,7 +94,7 @@ function keepsTurnCost(
 }
 
 /** How many more times the cost's charges pay for it, or null when it uses no charge pool. */
-function rerollUsesLeft(actor: RerollPayer, cost: RerollCost): number | null {
+function costUsesLeft(actor: CostPayer, cost: UseCost): number | null {
 	const charges = ruleChargesLeft(actor, cost.chargePoolIdentifier);
 	return charges === null ? null : Math.floor(charges / Math.max(1, cost.chargeCost));
 }
@@ -158,7 +105,7 @@ function rerollUsesLeft(actor: RerollPayer, cost: RerollCost): number | null {
  * the table confirms a spent one on the click. With resource spending
  * automation off, every cost can be paid.
  */
-function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
+function canPayUseCost(actor: CostPayer, cost: UseCost): boolean {
 	if (!isResourceSpendingAutomationEnabled()) return true;
 	if (
 		cost.chargePoolIdentifier.trim() &&
@@ -179,7 +126,7 @@ function canPayRerollCost(actor: RerollPayer, cost: RerollCost): boolean {
 }
 
 /** On the hero's own turn the actions must be there; off it, the next turn has fewer. */
-function canSpendActions(actor: RerollPayer, amount: number): boolean {
+function canSpendActions(actor: CostPayer, amount: number): boolean {
 	if (amount <= 0) return true;
 	const payer = actionPayer(actor);
 	if (!payer?.now) return true;
@@ -187,7 +134,7 @@ function canSpendActions(actor: RerollPayer, amount: number): boolean {
 }
 
 /** Whether paying the cost would change anything on the actor or combat. */
-function rerollCostCharges(cost: RerollCost): boolean {
+function useCostCharges(cost: UseCost): boolean {
 	if (cost.heroicReaction !== '') return true;
 	if (!isResourceSpendingAutomationEnabled()) return false;
 	return (
@@ -201,7 +148,7 @@ function rerollCostCharges(cost: RerollCost): boolean {
 }
 
 /** The cost of a use on this many dice. */
-function costForDice(cost: RerollCost, count: number): RerollCost {
+function costForDice(cost: UseCost, count: number): UseCost {
 	if (!cost.perDie) return cost;
 	return {
 		...cost,
@@ -212,7 +159,7 @@ function costForDice(cost: RerollCost, count: number): RerollCost {
 }
 
 /** A cost of one charge of `pool`, and nothing with no pool. */
-function chargeOnlyCost(pool = ''): RerollCost {
+function chargeOnlyCost(pool = ''): UseCost {
 	return {
 		chargePoolIdentifier: pool,
 		chargeCost: 1,
@@ -229,13 +176,11 @@ export {
 	canSpendActions,
 	chargeOnlyCost,
 	costForDice,
-	canPayRerollCost,
+	canPayUseCost,
 	findActorCombatant,
 	keepsTurnCost,
 	poolToExpend,
-	rerollCostCharges,
-	rerollUsesLeft,
+	useCostCharges,
+	costUsesLeft,
 	turnStampOf,
-	type PaidRerollCost,
-	type RerollCost,
 };

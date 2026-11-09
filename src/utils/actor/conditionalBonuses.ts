@@ -34,7 +34,7 @@ interface AttackingActor {
 }
 
 interface TargetActor {
-	uuid?: string;
+	uuid?: string | null;
 	getTargetDomain?: () => Set<string>;
 }
 

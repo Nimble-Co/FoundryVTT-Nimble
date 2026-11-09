@@ -28,7 +28,7 @@ async function open(choice: object, paid: object | null = {}, actor = hero()) {
 			render = vi.fn(async () => undefined);
 		},
 	}));
-	vi.doMock('../../reroll/rerollCost.js', () => ({
+	vi.doMock('../../cost/useCost.js', () => ({
 		chargeOnlyCost: (chargePoolIdentifier: string) => ({
 			chargePoolIdentifier,
 			chargeCost: 0,
@@ -60,7 +60,7 @@ describe('openDemandControl with the Reaction tick', () => {
 		delete globals.game.combat;
 		globals.ChatMessage = savedChatMessage;
 		vi.doUnmock('#documents/dialogs/ChoiceDialog.svelte.js');
-		vi.doUnmock('../../reroll/rerollCost.js');
+		vi.doUnmock('../../cost/useCost.js');
 		vi.doUnmock('../../cost/costLedger.js');
 	});
 

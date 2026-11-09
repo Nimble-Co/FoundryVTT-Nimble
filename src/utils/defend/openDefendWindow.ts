@@ -5,7 +5,16 @@ import type {
 	DefendOption,
 	DefendWindowData,
 } from '#types/components/DefendDialog.d.ts';
-import { rerollCostParts } from '../../view/chat/components/incomingReactionCost.js';
+import type {
+	DefendOptionPick,
+	DefendOptionUse,
+	DefendOutcome,
+	DefendReactor,
+	DefendRecordWay,
+	DefendWay,
+	WholeRoundDefend,
+} from '#types/defend.d.ts';
+import { useCostParts } from '../../view/chat/components/incomingReactionCost.js';
 import { spendInterpose } from '../../view/chat/components/spendInterpose.ts';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
@@ -25,18 +34,17 @@ import showReactionConfirmation from '../incomingReactions/showReactionConfirmat
 import localize from '../localize.js';
 import {
 	cardRerollFor,
-	type DefendOptionPick,
 	defendOptionEffect,
 	defendOptionsOf,
 	defendOptionUse,
 	payDefendOption,
 	tickCost,
 } from './defendOptions.js';
-import { type DefendReactor, defendReactors } from './defendReactors.js';
-import type { DefendOptionUse, DefendOutcome, DefendRecordWay } from './defendRecords.js';
+import { defendReactors } from './defendReactors.js';
 import { requestDefend } from './defendRequests.js';
-import { extraDefendUsed, type WholeRoundDefend, wholeRoundDefendOf } from './defendRound.js';
-import { type DefendWay, newestDefendCard } from './newestDefendCard.js';
+import { extraDefendUsed, wholeRoundDefendOf } from './defendRound.js';
+import { newestDefendCard } from './newestDefendCard.js';
+import { ticksOfRow } from './ticksOfRow.js';
 
 const TEXT = 'NIMBLE.chat.defend';
 
@@ -125,7 +133,6 @@ function effectOf(
 			armorBonus: row.whole.armorBonus,
 			reminders: [],
 			attackerConditions: [],
-			conditionsEndOnAttackerTurn: [],
 			wholeRound: false,
 		};
 	}
@@ -153,7 +160,7 @@ function tickDetail(
 	card: NimbleChatMessage,
 	token: string | null,
 ): string {
-	const cost = rerollCostParts(tickCost(pick.rule, card, token), actor).join(', ');
+	const cost = useCostParts(tickCost(pick.rule, card, token), actor).join(', ');
 	return [cost, (pick.rule.reminder ?? '').trim()].filter(Boolean).join('. ');
 }
 
@@ -349,9 +356,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 				const option = options.find((each) => each.id === optionId);
 				if (!row || !option) return null;
 				if (!option.defend) return option.takes;
-				const picked = tickIds
-					.filter((id) => option.tickIds.includes(id))
-					.flatMap((id) => ticks.get(id) ?? []);
+				const picked = ticksOfRow(option, tickIds).flatMap((id) => ticks.get(id) ?? []);
 				return damageAfter(card, row.token, armor, effectOf(row, picked));
 			},
 		},
@@ -569,9 +574,7 @@ export async function openDefendWindow(
 	const option = choice ? data.options.find((each) => each.id === choice.optionId) : undefined;
 	if (!choice || !row || !option || (!option.defend && !option.interposeEntryId)) return false;
 
-	const tickPicks = choice.ticks
-		.filter((id) => option.tickIds.includes(id))
-		.flatMap((id) => plan.ticks.get(id) ?? []);
+	const tickPicks = ticksOfRow(option, choice.ticks).flatMap((id) => plan.ticks.get(id) ?? []);
 	const combat = (game.combat ?? null) as ReactionCombat | null;
 	const entry = option.interposeEntryId
 		? reactor.interposes.find((each) => each.id === option.interposeEntryId)
@@ -671,7 +674,6 @@ export async function openDefendWindow(
 		options: uses,
 		reminders: effect.reminders,
 		attackerConditions: effect.attackerConditions,
-		conditionsEndOnAttackerTurn: effect.conditionsEndOnAttackerTurn,
 		way: row.way,
 		wholeRound: effect.wholeRound,
 	});

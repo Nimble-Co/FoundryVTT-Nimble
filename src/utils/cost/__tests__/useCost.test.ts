@@ -1,13 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { giveBack, payCost } from '../../cost/costLedger.js';
-import {
-	canPayRerollCost,
-	findActorCombatant,
-	type RerollCost,
-	rerollCostCharges,
-	rerollUsesLeft,
-} from '../rerollCost.js';
+import type { UseCost } from '#types/useCost.d.ts';
+import { giveBack, payCost } from '../costLedger.js';
+import { canPayUseCost, costUsesLeft, findActorCombatant, useCostCharges } from '../useCost.js';
 
 const testGlobals = globalThis as unknown as {
 	game: {
@@ -21,7 +16,7 @@ function setToggles(toggles: Record<string, boolean>): void {
 	testGlobals.game.settings = { get: (_scope, key) => toggles[key] ?? true };
 }
 
-function cost(overrides: Partial<RerollCost> = {}): RerollCost {
+function cost(overrides: Partial<UseCost> = {}): UseCost {
 	return {
 		chargePoolIdentifier: '',
 		chargeCost: 1,
@@ -136,49 +131,43 @@ function makeActionCombat(actor: unknown, options: { ownTurn: boolean; actions?:
 	return combatant;
 }
 
-describe('rerollCost', () => {
+describe('useCost', () => {
 	beforeEach(() => setToggles({}));
 	afterEach(() => {
 		delete testGlobals.game.settings;
 		testGlobals.game.combat = null;
 	});
 
-	describe('canPayRerollCost', () => {
+	describe('canPayUseCost', () => {
 		it('pays a free cost', () => {
-			expect(canPayRerollCost(makeActor().asActor, cost())).toBe(true);
+			expect(canPayUseCost(makeActor().asActor, cost())).toBe(true);
 		});
 
 		it('needs enough charges in the named pool', () => {
 			const charges = cost({ chargePoolIdentifier: 'sand', chargeCost: 2 });
-			expect(canPayRerollCost(makeActor({ charges: 1 }).asActor, charges)).toBe(false);
-			expect(canPayRerollCost(makeActor({ charges: 2 }).asActor, charges)).toBe(true);
+			expect(canPayUseCost(makeActor({ charges: 1 }).asActor, charges)).toBe(false);
+			expect(canPayUseCost(makeActor({ charges: 2 }).asActor, charges)).toBe(true);
 			expect(
-				canPayRerollCost(makeActor({ charges: 2 }).asActor, cost({ chargePoolIdentifier: 'fury' })),
+				canPayUseCost(makeActor({ charges: 2 }).asActor, cost({ chargePoolIdentifier: 'fury' })),
 			).toBe(false);
 		});
 
 		it('needs enough mana', () => {
-			expect(canPayRerollCost(makeActor({ mana: 1 }).asActor, cost({ manaCost: 2 }))).toBe(false);
-			expect(canPayRerollCost(makeActor({ mana: 2 }).asActor, cost({ manaCost: 2 }))).toBe(true);
+			expect(canPayUseCost(makeActor({ mana: 1 }).asActor, cost({ manaCost: 2 }))).toBe(false);
+			expect(canPayUseCost(makeActor({ mana: 2 }).asActor, cost({ manaCost: 2 }))).toBe(true);
 		});
 
 		it('needs room for every Wound the cost gives', () => {
 			const twoWounds = cost({ woundCost: 2 });
-			expect(canPayRerollCost(makeActor({ wounds: 4, maxWounds: 6 }).asActor, twoWounds)).toBe(
-				true,
-			);
-			expect(canPayRerollCost(makeActor({ wounds: 5, maxWounds: 6 }).asActor, twoWounds)).toBe(
-				false,
-			);
-			expect(canPayRerollCost(makeActor({ wounds: 6, maxWounds: 6 }).asActor, twoWounds)).toBe(
-				false,
-			);
+			expect(canPayUseCost(makeActor({ wounds: 4, maxWounds: 6 }).asActor, twoWounds)).toBe(true);
+			expect(canPayUseCost(makeActor({ wounds: 5, maxWounds: 6 }).asActor, twoWounds)).toBe(false);
+			expect(canPayUseCost(makeActor({ wounds: 6, maxWounds: 6 }).asActor, twoWounds)).toBe(false);
 		});
 
 		it('pays anything while resource spending automation is off', () => {
 			setToggles({ 'automation.resourceSpending': false });
 			expect(
-				canPayRerollCost(
+				canPayUseCost(
 					makeActor({ wounds: 6, maxWounds: 6 }).asActor,
 					cost({ chargePoolIdentifier: 'sand', manaCost: 9, woundCost: 1 }),
 				),
@@ -186,29 +175,29 @@ describe('rerollCost', () => {
 		});
 	});
 
-	describe('rerollUsesLeft', () => {
+	describe('costUsesLeft', () => {
 		it('counts uses, not charges', () => {
 			const twoCharges = cost({ chargePoolIdentifier: 'sand', chargeCost: 2 });
-			expect(rerollUsesLeft(makeActor({ charges: 2 }).asActor, twoCharges)).toBe(1);
-			expect(rerollUsesLeft(makeActor({ charges: 1 }).asActor, twoCharges)).toBe(0);
+			expect(costUsesLeft(makeActor({ charges: 2 }).asActor, twoCharges)).toBe(1);
+			expect(costUsesLeft(makeActor({ charges: 1 }).asActor, twoCharges)).toBe(0);
 			expect(
-				rerollUsesLeft(makeActor({ charges: 2 }).asActor, cost({ chargePoolIdentifier: 'sand' })),
+				costUsesLeft(makeActor({ charges: 2 }).asActor, cost({ chargePoolIdentifier: 'sand' })),
 			).toBe(2);
 		});
 
 		it('is null without a charge pool', () => {
-			expect(rerollUsesLeft(makeActor({ charges: 2 }).asActor, cost())).toBeNull();
+			expect(costUsesLeft(makeActor({ charges: 2 }).asActor, cost())).toBeNull();
 		});
 	});
 
-	describe('rerollCostCharges', () => {
+	describe('useCostCharges', () => {
 		it('is true for any part that charges, and only for a heroic reaction with spending off', () => {
-			expect(rerollCostCharges(cost())).toBe(false);
-			expect(rerollCostCharges(cost({ woundCost: 1 }))).toBe(true);
-			expect(rerollCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
+			expect(useCostCharges(cost())).toBe(false);
+			expect(useCostCharges(cost({ woundCost: 1 }))).toBe(true);
+			expect(useCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
 			setToggles({ 'automation.resourceSpending': false });
-			expect(rerollCostCharges(cost({ woundCost: 1 }))).toBe(false);
-			expect(rerollCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
+			expect(useCostCharges(cost({ woundCost: 1 }))).toBe(false);
+			expect(useCostCharges(cost({ heroicReaction: 'defend' }))).toBe(true);
 		});
 	});
 
@@ -362,26 +351,26 @@ describe('rerollCost', () => {
 		it("needs an action left on the owner's own turn", () => {
 			const { asActor } = makeActor();
 			makeActionCombat(asActor, { ownTurn: true, actions: 0 });
-			expect(canPayRerollCost(asActor, action)).toBe(false);
+			expect(canPayUseCost(asActor, action)).toBe(false);
 			makeActionCombat(asActor, { ownTurn: true, actions: 1 });
-			expect(canPayRerollCost(asActor, action)).toBe(true);
+			expect(canPayUseCost(asActor, action)).toBe(true);
 		});
 
 		it("can always be paid off the owner's turn, out of combat and with spending off", () => {
 			const { asActor } = makeActor();
 			makeActionCombat(asActor, { ownTurn: false, actions: 0 });
-			expect(canPayRerollCost(asActor, action)).toBe(true);
+			expect(canPayUseCost(asActor, action)).toBe(true);
 			testGlobals.game.combat = null;
-			expect(canPayRerollCost(asActor, action)).toBe(true);
+			expect(canPayUseCost(asActor, action)).toBe(true);
 			makeActionCombat(asActor, { ownTurn: true, actions: 0 });
 			setToggles({ 'automation.resourceSpending': false });
-			expect(canPayRerollCost(asActor, action)).toBe(true);
+			expect(canPayUseCost(asActor, action)).toBe(true);
 		});
 
 		it('charges something only while resource spending automation is on', () => {
-			expect(rerollCostCharges(action)).toBe(true);
+			expect(useCostCharges(action)).toBe(true);
 			setToggles({ 'automation.resourceSpending': false });
-			expect(rerollCostCharges(action)).toBe(false);
+			expect(useCostCharges(action)).toBe(false);
 		});
 
 		it("spends an action now on the owner's own turn, and gives it back", async () => {
@@ -504,8 +493,8 @@ describe('rerollCost', () => {
 		const expend = cost({ dicePoolIdentifier: 'judgment' });
 
 		it('needs at least one die in the pool', () => {
-			expect(canPayRerollCost(judgmentActor([4]).asActor, expend)).toBe(true);
-			expect(canPayRerollCost(judgmentActor([]).asActor, expend)).toBe(false);
+			expect(canPayUseCost(judgmentActor([4]).asActor, expend)).toBe(true);
+			expect(canPayUseCost(judgmentActor([]).asActor, expend)).toBe(false);
 		});
 
 		it('expends every die of the pool, and gives them back', async () => {

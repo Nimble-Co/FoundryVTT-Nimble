@@ -3,7 +3,7 @@ import type { ControlChoice, ControlOption } from '#types/optionWindow.d.ts';
 import localize from '#utils/localize.js';
 import DemandControlDialogComponent from '../../view/dialogs/DemandControlDialog.svelte';
 import { giveBack, payCost } from '../cost/costLedger.js';
-import { chargeOnlyCost } from '../reroll/rerollCost.js';
+import { chargeOnlyCost } from '../cost/useCost.js';
 import { applyControlChoice, recordChoice, recordReaction } from './demandControl.js';
 
 interface OpenOptions {

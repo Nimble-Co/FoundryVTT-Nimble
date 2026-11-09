@@ -9,8 +9,8 @@ import type {
 import { showsChaosTableRolls } from '../../settings/chaosTableSettings.js';
 import { actorRules } from '../actor/actorRules.js';
 import { spendRuleCharge } from '../chargePool/ruleChargeGate.js';
+import { canPayUseCost, chargeOnlyCost } from '../cost/useCost.js';
 import localize from '../localize.js';
-import { canPayRerollCost, chargeOnlyCost } from '../reroll/rerollCost.js';
 import { canShowDiceAnimation, showDiceAnimation } from '../rolls/showDiceAnimation.js';
 import { TABLE_NAMES } from './rollTables.js';
 
@@ -161,7 +161,7 @@ export async function whisperChaosRollsToGm(
 
 function usesOfPool(actor: ChaosActor, pool: string): number {
 	if (!pool) return 0;
-	return canPayRerollCost(actor as never, chargeOnlyCost(pool)) ? 1 : 0;
+	return canPayUseCost(actor as never, chargeOnlyCost(pool)) ? 1 : 0;
 }
 
 /**

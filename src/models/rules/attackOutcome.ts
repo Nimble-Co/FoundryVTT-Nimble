@@ -1,8 +1,10 @@
 import type { ForcedCritKind } from '#types/attackOutcome.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
 import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { hasRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
+import { chargeOnlyCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	ATTACK_SOURCES,
@@ -17,7 +19,6 @@ import type {
 	RerollTrigger,
 	RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { chargeOnlyCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
@@ -350,7 +351,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 	}
 
 	/** One charge of its pool, on your attacks only. */
-	get rollUseCost(): RerollCost {
+	get rollUseCost(): UseCost {
 		return chargeOnlyCost(
 			this.side === 'attacksAgainstYou' ? '' : (this.chargePoolIdentifier ?? '').trim(),
 		);

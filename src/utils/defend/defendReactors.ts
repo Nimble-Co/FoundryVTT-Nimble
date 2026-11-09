@@ -1,26 +1,7 @@
+import type { DefendCardLike, DefendReactor } from '#types/defend.d.ts';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
-import {
-	cardTakesDefends,
-	type DefendRecord,
-	damageAppliedTo,
-	defendFor,
-} from './defendRecords.js';
-
-/** A hero who can react to an attack card: Defend as a target, or Interpose for an ally. */
-export interface DefendReactor {
-	actor: Actor.Implementation;
-	/** The hero's own token among the targets, when the attack hits them. */
-	targetTokenUuid: string | null;
-	/** Unused Interpose offers this hero has on the card. */
-	interposes: IncomingReactionEntry[];
-	defend: DefendRecord | null;
-}
-
-export type DefendCardLike = {
-	system: unknown;
-	speaker?: { scene?: string | null; token?: string | null; actor?: string | null } | null;
-};
+import { cardTakesDefends, damageAppliedTo, defendFor } from './defendRecords.js';
 
 function tokenActor(uuid: string): Actor.Implementation | null {
 	return ((fromUuidSync(uuid) as TokenDocument | null)?.actor ??

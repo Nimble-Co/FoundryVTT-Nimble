@@ -1,3 +1,4 @@
+import type { DefendEffect } from '#types/defend.d.ts';
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
@@ -21,11 +22,7 @@ import {
 	foldBonusIntoPrimaryDamage,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
-import {
-	type DefendEffect,
-	damageAppliedTo,
-	defendEffectsOf,
-} from '#utils/defend/defendRecords.js';
+import { damageAppliedTo, defendEffectsOf } from '#utils/defend/defendRecords.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';

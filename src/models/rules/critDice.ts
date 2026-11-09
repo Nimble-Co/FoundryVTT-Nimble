@@ -1,6 +1,8 @@
 import type { CritDiceSpec } from '#types/critDice.d.ts';
+import type { UseCost } from '#types/useCost.d.ts';
 import { ruleKey, ruleLabel } from '../../utils/actor/actorRules.js';
 import { usedThisTurn } from '../../utils/combat/perTurnUse.js';
+import { chargeOnlyCost } from '../../utils/cost/useCost.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDelivery,
@@ -12,7 +14,6 @@ import {
 	type RerollTrigger,
 	type RollEffect,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { chargeOnlyCost, type RerollCost } from '../../utils/reroll/rerollCost.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { choiceLabels, type RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -145,7 +146,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 		return true;
 	}
 
-	get rollUseCost(): RerollCost {
+	get rollUseCost(): UseCost {
 		return chargeOnlyCost();
 	}
 

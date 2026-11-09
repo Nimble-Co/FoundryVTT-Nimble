@@ -1,11 +1,8 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import type { AllyDefendOffer } from '#types/defend.d.ts';
 import { registerCombatStateHooks } from '#utils/combat/combatState.js';
-import {
-	type AllyDefendOffer,
-	allyDefendOffers,
-	useAllyDefendOffer,
-} from '#utils/defend/allyDefendOffers.js';
+import { allyDefendOffers, useAllyDefendOffer } from '#utils/defend/allyDefendOffers.js';
 import {
 	attackCannotBeDefended,
 	canReactFor,
