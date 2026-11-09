@@ -447,7 +447,7 @@ ${BANNER}
 
 # Conditions Reference
 
-Every condition the system knows about, with what it does and how it interacts with other conditions. Conditions can be applied from the token, from a character sheet's Conditions tab, or automatically by the system. See [Conditions](../playing/conditions.md) for how that works at the table.
+Every condition the system knows about, with what it does and how it interacts with other conditions. Conditions can be applied from the token, from the Effects tab of a sheet, or automatically by the system. See [Conditions](../playing/conditions.md) for how that works at the table.
 
 | Condition | What it does |
 | :--- | :--- |
