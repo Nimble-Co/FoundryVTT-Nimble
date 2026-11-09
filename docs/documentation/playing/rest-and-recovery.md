@@ -8,14 +8,14 @@ Nimble characters track two layers of harm, and the sheet gives you two kinds of
 
 ## Wounds vs Hit Points
 
-- **Hit Points** are the fast-moving number: the HP bar in the sheet header tracks current, temporary, and maximum HP, and drops with every hit.
-- **Wounds** are the slow-moving one: droplet icons around your portrait, one per wound, with room for six by default (features can raise this). Click a droplet to mark or unmark a wound. A wound counter also appears next to the Hit Points heading while you have any.
+- **Hit Points** are the fast-moving number: the **HP** and **Temp HP** plates in the rail track current, temporary, and maximum HP, and drop with every hit. Click a number to type a new one.
+- **Wounds** are the slow-moving one: the **Wounds** meter in the rail has one segment per wound, with room for six by default (features can raise this). Click a segment to mark or unmark a wound. The count shows at the right of the meter.
 
 HP comes back easily. Wounds don't: a safe rest heals exactly one.
 
 ## Field Rest
 
-Click the hourglass button in the sheet sidebar. The field rest window asks two things:
+Click **Field Rest** in the rail. The rest buttons show only out of combat. The field rest window asks two things:
 
 ![The field rest window showing the Catch Breath / Make Camp cards and the hit dice spend rows](/images/documentation/field-and-saferest.png)
 
@@ -28,7 +28,7 @@ Resting posts a chat card summarizing the rest type, dice spent, total healing, 
 
 ## Safe Rest
 
-Click the moon button in the sheet sidebar. The safe rest window is a preview, not a form. It lists exactly what will happen before you commit:
+Click **Safe Rest** in the rail. The safe rest window is a preview, not a form. It lists exactly what will happen before you commit:
 
 - **Hit Points** restored to maximum, and any **temporary HP** removed.
 - **All hit dice** restored.
@@ -43,7 +43,7 @@ Anything already full is marked "Already full". Click the Safe Rest button to ap
 
 ## Rolling hit dice from the sheet
 
-You don't need a rest to spend hit dice. Click the roll button on the hit dice bar in the sheet header. The window lets you pick how many dice of each size to roll, plus two checkboxes:
+You don't need a rest to spend hit dice. Click **Roll** on the **Hit Dice** meter in the rail. The window lets you pick how many dice of each size to roll, plus two checkboxes:
 
 - **Add STR bonus**: add your Strength modifier to each die (on by default).
 - **Apply healing to HP**: apply the result to your HP immediately instead of just rolling (on by default).
@@ -86,4 +86,4 @@ Items and features can change how resting works through their rules: advantage o
 
 ## Temporary uses
 
-Some features give uses of a feature that last only for the encounter, such as the Songweaver's Quick Wit when you roll Initiative. They show as a lighter part of the feature's bar on the sheet, with an hourglass and the number of temporary uses. Hover the hourglass to see which feature gave them. Temporary uses are spent first. When the encounter ends, the temporary uses you did not spend go away. A feature that gives uses when you roll Initiative gives them one time for each combat, also when you roll Initiative again. A character who joins a combat late gets them when they roll Initiative.
+Some features give uses of a feature that last only for the encounter, such as the Songweaver's Quick Wit when you roll Initiative. They count in the uses on the feature's row. When the pool shows as a meter in the rail, the meter also names them, for example **+2 temporary**. Temporary uses are spent first. When the encounter ends, the temporary uses you did not spend go away. A feature that gives uses when you roll Initiative gives them one time for each combat, also when you roll Initiative again. A character who joins a combat late gets them when they roll Initiative.

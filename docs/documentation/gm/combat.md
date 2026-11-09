@@ -112,7 +112,7 @@ On a character's own turn, dragging its token shows its **Moves** on the ruler. 
 
 - In the rules, each Move action lets a hero move up to their Speed, and a Move can be broken up with other actions. So the first Speed spaces the character moves in a turn are Move 1, the next Speed spaces Move 2, and so on, and a later drag goes on in the Move where the last one stopped. Difficult terrain counts double. A move for free, Forced Movement or a Teleport never counts.
 - The grid spaces of the second and third Moves have colours of their own, and spaces past the third Move are red.
-- The label on the path shows a die for the Move the drop lands in: one pip for the first Move, two for the second and three for the third. These are the dice the character sheet shows for the actions. Past the third Move, a red **!** follows the die.
+- The label on the path shows a die for the Move the drop lands in: one pip for the first Move, two for the second and three for the third. Past the third Move, a red **!** follows the die.
 - The Moves only show the distance. They do not know how many actions the character has left, nothing stops the drag, and no action is spent for you. The table keeps track of actions.
 
 ## Forced Movement and Moves for Free
@@ -157,7 +157,7 @@ A move counts from where it began to where it stopped. A move broken into two dr
 
 Some abilities care about how many enemies are next to a creature. If you enable the **Auto-Track Token Adjacency** setting, the system keeps count for you during active combats: every time a token moves or a turn changes, it records how many enemies are adjacent to each combatant, and which combatant currently has the *most* adjacent enemies.
 
-Feature rules can then use this in their conditions (the Condition box), with tests like "while two or more enemies are adjacent" or "while I have the most enemies adjacent to me", and the features light up and switch off on the sheet as the battlefield shifts.
+Feature rules can then use this in their conditions (the Condition box), with tests like "while two or more enemies are adjacent" or "while I have the most enemies adjacent to me", and the rules of those features turn on and off as the battlefield shifts.
 
 Details worth knowing:
 

@@ -57,7 +57,7 @@ Each monster arrives as the right actor type automatically (legendary monsters b
 
 ### Creator credit
 
-The browse list shows who published each monster, and every import keeps that name. The credit then sits in the monster's sheet header, beside the level and size line, on every tab:
+The browse list shows who published each monster, and every import keeps that name. The credit then sits at the bottom of the **Notes** tab of the monster's sheet:
 
 > *Created by [(user)](https://nimble.nexus/u/user) on Nimble Nexus*
 

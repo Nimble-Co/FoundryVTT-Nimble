@@ -31,7 +31,7 @@ Clicking an ability, skill, saving throw, or initiative on your sheet opens a ro
 - **Hide roll** *(GMs only)*. Ticking this makes the roll a blind roll that other players can't see.
 - **Roll.** Sends the result to chat.
 
-Saving throws can start with the slider already offset: each save has a default roll mode that comes from your class and ancestry. You can review or change these defaults from the saving throw configuration window on the sheet's Core tab (with editing enabled), which also offers a reset button that recalculates the defaults from your class and items.
+Saving throws can start with the slider already offset: each save has a default roll mode that comes from your class and ancestry. You can review or change these defaults in the **Configure Saves** window: turn on **Edit**, then click **Saves** in the **Abilities and saves** heading of the Core tab. The window also offers a reset button that recalculates the defaults from your class and items.
 
 ::: tip Hide Rolls by Default
 If you're a GM who usually rolls in secret, turn on the **Hide Rolls by Default** setting. The hide checkbox will then start ticked in every roll window. See the [Settings Reference](../reference/settings.md).
@@ -101,7 +101,7 @@ After a Defend, the hero's target row shows a green shield and the damage after 
 
 A hero's button goes away when their damage is applied. On a minion group attack, one Defend covers the whole attack, so the Armor comes off the total. A creature that is Latched On cannot be Defended or Interposed against: the GM sees a line that says so, and no buttons show.
 
-The **Defend**, **Interpose** and **Interpose and Defend** buttons on the character sheet and on the hotbar open the same window, on the newest attack card of the combat that the hero can still react to. With no such card, they post the reaction card as before.
+The **Defend** and **Interpose** rows under **Reactions** on the Actions tab of the character sheet, and the **Defend**, **Interpose** and **Interpose and Defend** buttons on the hotbar, open the same window, on the newest attack card of the combat that the hero can still react to. With no such card, they post the reaction card as before.
 
 ### When you Defend
 
@@ -377,7 +377,7 @@ With Supreme Control, the window has a tick to use your Reaction when it is not 
 
 ## Thrill of the Hunt
 
-The Thrill of the Hunt pool starts at 0 and is lost when combat ends. Charges come when your quarry dies, on a melee hit or a ranged crit on your quarry, and from the features that add to the pool. An attack that spent a charge gains none, also on a kill. A kill counts when the damage is applied from the card: a change of HP by hand gives no charge, so use + on the pool. With Feature Effects off there are no automatic gains: use + and - on the pool.
+The Thrill of the Hunt pool starts at 0 and is lost when combat ends. Charges come when your quarry dies, on a melee hit or a ranged crit on your quarry, and from the features that add to the pool. An attack that spent a charge gains none, also on a kill. A kill counts when the damage is applied from the card: a change of HP by hand gives no charge, so type the new count on the pool's meter in the rail. With Feature Effects off there are no automatic gains: type the count on the meter.
 
 Each attack ability opens the roll window with a weapon field, the Hunter's Mark choice and a line that tells what it spends. The charge goes on the roll. With no charge, or no weapon of that kind, Roll is off and tells why. These attacks cannot miss. "Half range", "if you have not moved" and "Hampered" are for the table to check.
 

@@ -19,7 +19,7 @@ What is set up:
 
 Good to know:
 
-- Every actor can hold coins, so a monster or NPC works as a pile or a merchant. Only the character sheet shows coin fields; for other actors, Item Piles shows the coins.
+- Every actor can hold coins, so a monster or NPC works as a pile or a merchant. The character sheet shows the coins on its Inventory tab, and the NPC sheet shows them under **Coins** on its Settings tab.
 - You can still change any of these values in the Item Piles settings. Your changes stay until a later Nimble release ships a newer setup.
 
 ## For module developers
