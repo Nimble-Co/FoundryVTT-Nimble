@@ -2,6 +2,7 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
+import type { RollDialogType } from '#types/components/CheckRollDialog.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { MarkedActor } from '#types/marks.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
@@ -911,7 +912,7 @@ class NimbleBaseActor<
 		);
 
 		const rollData = await (options.skipRollDialog
-			? this._checkWithNoWindow(baseRollMode, (rollMode) =>
+			? this._checkWithNoWindow('abilityCheck', baseRollMode, (rollMode) =>
 					this.getDefaultAbilityCheckData(abilityKey, rollMode, options),
 				)
 			: this.showCheckRollDialog('abilityCheck', {
@@ -1060,7 +1061,7 @@ class NimbleBaseActor<
 		);
 
 		const rollData = options.skipRollDialog
-			? this._checkWithNoWindow(baseRollMode, (rollMode) =>
+			? this._checkWithNoWindow('savingThrow', baseRollMode, (rollMode) =>
 					this.getDefaultSavingThrowData(saveKey, rollMode, options),
 				)
 			: await this.showCheckRollDialog('savingThrow', {
@@ -1114,7 +1115,7 @@ class NimbleBaseActor<
 
 	/** The initiative roll when no window opens. */
 	initiativeWithNoWindow(options = {} as ActorRollOptions): InitiativeRollData {
-		return this._checkWithNoWindow(this.#initiativeRollMode(options), (rollMode) =>
+		return this._checkWithNoWindow('initiative', this.#initiativeRollMode(options), (rollMode) =>
 			this.getDefaultInitiativeData(rollMode, options),
 		);
 	}
@@ -1159,15 +1160,19 @@ class NimbleBaseActor<
 		};
 	}
 
+	/** The conditions that change a check. Only a character rolls for initiative. */
+	checkConditionLines(type: RollDialogType): ConditionRollMode[] {
+		if (type === 'initiative' && !this.isType('character')) return [];
+		return conditionRollModes({ kind: 'check', roller: this });
+	}
+
 	/** A check with no roll window: the conditions that start on go on its roll mode. */
 	_checkWithNoWindow<T extends { rollMode: number }>(
+		type: RollDialogType,
 		rollMode: number,
 		build: (rollMode: number) => T,
 	): T & { conditionRollModes: ConditionRollMode[] } {
-		const applied = appliedConditionRollModes(
-			conditionRollModes({ kind: 'check', roller: this }),
-			rollMode,
-		);
+		const applied = appliedConditionRollModes(this.checkConditionLines(type), rollMode);
 		return { ...build(applied.rollMode), conditionRollModes: applied.lines };
 	}
 

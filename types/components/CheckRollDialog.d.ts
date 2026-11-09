@@ -5,6 +5,7 @@ export type RollDialogType = 'abilityCheck' | 'savingThrow' | 'skillCheck' | 'in
 
 export interface InitiativeDialogActor extends Actor {
 	_getInitiativeFormula: (options: Record<string, unknown>) => string;
+	checkConditionLines: (type: RollDialogType) => ConditionRollMode[];
 }
 
 export interface CheckRollDialogSubmitData {

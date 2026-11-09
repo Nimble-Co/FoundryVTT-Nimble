@@ -1365,7 +1365,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		);
 
 		const rollData = await (options.skipRollDialog
-			? this._checkWithNoWindow(baseRollMode, (rollMode) =>
+			? this._checkWithNoWindow('skillCheck', baseRollMode, (rollMode) =>
 					this.getDefaultSkillCheckData(skillKey, rollMode, options),
 				)
 			: this.showCheckRollDialog('skillCheck', {

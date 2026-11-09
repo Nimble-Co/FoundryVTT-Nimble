@@ -11,7 +11,6 @@
 	import { SYSTEM_ID } from '#system';
 	import localize from '#utils/localize.ts';
 	import { tickedConditionRollModes } from '#utils/rolls/appliedConditionRollModes.ts';
-	import { conditionRollModes } from '#utils/rolls/conditionRollModes.ts';
 	import getRollFormula from '#utils/rolls/getRollFormula.ts';
 	import { openRollModeTicks } from '#utils/rolls/rollModeTicks.ts';
 	import { getSituationalRollModeOptions } from './CheckRollDialog.utils.ts';
@@ -23,12 +22,7 @@
 
 	// Rules are re-instantiated on every data-prep cycle, so the options are resolved
 	// once for the life of the dialog rather than tracked reactively.
-	const conditions = untrack(() =>
-		conditionRollModes({
-			kind: 'check',
-			roller: actor as Parameters<typeof conditionRollModes>[0]['roller'],
-		}),
-	);
+	const conditions = untrack(() => actor.checkConditionLines(type));
 	const options = [
 		...conditionRollModeOptions(conditions),
 		...untrack(() =>

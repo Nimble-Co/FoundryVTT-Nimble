@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
+import { conditionRollModes } from '../../../utils/rolls/conditionRollModes.js';
 import CheckRollDialog from '../CheckRollDialog.svelte';
 
 // Stands in for the real formula builder so the rendered formula is a direct
@@ -45,11 +47,11 @@ function renderWillSave(
 ) {
 	const submitRoll = vi.fn();
 	const close = vi.fn();
+	const hero = { ...taggedCreature('Hero', conditions), rules };
 	const { container } = render(CheckRollDialog, {
 		actor: {
-			name: 'Hero',
-			rules,
-			getDomain: () => new Set(conditions.map((condition) => `self:${condition}`)),
+			...hero,
+			checkConditionLines: () => conditionRollModes({ kind: 'check', roller: hero }),
 		},
 		dialog: { submitRoll, close, title: 'Hero: Configure Will Save' },
 		type: 'savingThrow',
