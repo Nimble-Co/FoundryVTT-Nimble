@@ -2,14 +2,14 @@
 	import { getContext } from 'svelte';
 
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+	import type { RuleHolder } from '#utils/documents/ruleHolder.js';
 	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
 	import { COPY_TYPE, createItemRulesTabState } from './ItemRulesTab.svelte.js';
 
-	const item: NimbleBaseItem = getContext('document');
+	const item: RuleHolder = getContext('document');
 	const state = createItemRulesTabState(
 		() => item,
 		() => RulesBuilderWindow as unknown as Parameters<typeof GenericDialog.getOrCreate>[1],

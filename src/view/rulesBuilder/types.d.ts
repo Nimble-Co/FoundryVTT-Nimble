@@ -8,7 +8,7 @@
  * rules.
  */
 
-import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import type { RuleHolder } from '../../utils/documents/ruleHolder.js';
 import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
 
 export interface RuleSource {
@@ -20,7 +20,7 @@ export interface RuleSource {
 }
 
 export interface RulesBuilderWindowProps {
-	document: NimbleBaseItem;
+	document: RuleHolder;
 }
 
 export interface SchemaFieldRendererProps {
@@ -40,7 +40,7 @@ export interface SchemaFieldRendererProps {
 	disabled?: boolean;
 	/** Parent item — passed through to widgets that need a document context
 	 *  (e.g. RichTextEditor for enrichHTML / documentUUID wiring). */
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface FormulaInputProps {
@@ -58,7 +58,7 @@ export interface RichTextEditorProps {
 	placeholder?: string;
 	/** Optional parent document — used to drive enrichHTML's rollData / secrets
 	 *  context and the underlying form-control's documentUUID binding. */
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface PredicateBuilderProps {
@@ -94,7 +94,7 @@ export interface RuleCardProps {
 	collapsed?: boolean;
 	onToggleCollapse?: () => void;
 	/** Parent item — threaded through to rich-text widgets. */
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface ResolvedFormField {
@@ -123,11 +123,13 @@ export interface RuleFormLayoutProps {
 	fieldHint: (field: foundry.data.fields.DataField.Any) => string;
 	previewDomain?: Set<string>;
 	appliesInPrePrepareData?: boolean;
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface RuleTypePickerProps {
 	onPick: (ruleKey: string) => void;
+	/** Hide the rule types that work only on an item. */
+	forEffect?: boolean;
 	disabled?: boolean;
 }
 

@@ -1,13 +1,13 @@
 import { SvelteSet } from 'svelte/reactivity';
 
-import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+import { actorOfRuleHolder, type RuleHolder } from '#utils/documents/ruleHolder.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
 // Internal clipboard drag-drop type, set and matched by the same code; never
 // crosses the Foundry system-id boundary, so the literal is intentional.
 export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 
-export function createRulesBuilderWindowState(getItem: () => NimbleBaseItem) {
+export function createRulesBuilderWindowState(getItem: () => RuleHolder) {
 	const rawRules = $derived(
 		(getItem().reactive.system as unknown as { rules: RuleSource[] }).rules,
 	);
@@ -18,11 +18,11 @@ export function createRulesBuilderWindowState(getItem: () => NimbleBaseItem) {
 		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
 	);
 
-	// Surface the parent actor's tag domain to predicate builders so the key
-	// input can offer typeahead suggestions. Undefined when the item isn't
-	// owned by an actor (e.g. compendium edit).
+	// Surface the actor's tag domain to predicate builders so the key input can
+	// offer typeahead suggestions. Undefined when no actor holds the document
+	// (e.g. compendium edit).
 	const previewDomain = $derived(
-		(getItem().actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
+		(actorOfRuleHolder(getItem()) as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
 	);
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 

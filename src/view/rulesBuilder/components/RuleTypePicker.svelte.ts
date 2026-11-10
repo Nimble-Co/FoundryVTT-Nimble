@@ -19,13 +19,20 @@ const GROUP_META: Record<string, { label: string; icon: string }> = {
 	unsorted: { label: 'Other', icon: 'fa-solid fa-cube' },
 };
 
-export function createRuleTypePickerState() {
+export function createRuleTypePickerState(getForEffect: () => boolean = () => false) {
 	const groupedEntries = $derived.by(() => {
 		const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 		const buckets = new Map<string, PickerEntry[]>();
+		const forEffect = getForEffect();
 
 		for (const [key, RuleClass] of Object.entries(ruleDataModels)) {
-			const Cls = RuleClass as unknown as { group?: string; description?: string; icon?: string };
+			const Cls = RuleClass as unknown as {
+				group?: string;
+				description?: string;
+				icon?: string;
+				worksOnEffects?: boolean;
+			};
+			if (forEffect && Cls.worksOnEffects === false) continue;
 			const group = Cls.group ?? 'unsorted';
 			const descriptionKey = Cls.description ?? '';
 			const localizedDescription = descriptionKey ? localize(descriptionKey) : '';

@@ -1,7 +1,7 @@
 import { SvelteSet } from 'svelte/reactivity';
 
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+import type { RuleHolder } from '#utils/documents/ruleHolder.js';
 import localize from '#utils/localize.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
@@ -12,7 +12,7 @@ export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 type DialogComponent = Parameters<typeof GenericDialog.getOrCreate>[1];
 
 export function createItemRulesTabState(
-	getItem: () => NimbleBaseItem,
+	getItem: () => RuleHolder,
 	getRulesBuilderComponent: () => DialogComponent,
 ) {
 	const rawRules = $derived(

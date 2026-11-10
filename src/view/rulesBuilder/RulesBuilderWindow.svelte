@@ -69,7 +69,7 @@
 
 	<div class="nimble-rules-builder-window__body">
 		{#if state.pickerOpen}
-			<RuleTypePicker onPick={state.pickRule} />
+			<RuleTypePicker onPick={state.pickRule} forEffect={item.documentName === 'ActiveEffect'} />
 		{:else if state.rules.length === 0}
 			<p class="nimble-rules-builder-window__empty">
 				{localize('NIMBLE.rulesBuilder.emptyHint', {
