@@ -1,6 +1,10 @@
-import { coreEventOf } from './coreEvents.js';
-import { effectSubject } from './effectSubject.js';
-import { anyMomentReached, type LastsUntilCheck, type Moment } from './momentReached.js';
+import { coreEventOf } from '#utils/lastsUntil/coreEvents.js';
+import { effectSubject } from '#utils/lastsUntil/effectSubject.js';
+import {
+	anyMomentReached,
+	type LastsUntilCheck,
+	type Moment,
+} from '#utils/lastsUntil/momentReached.js';
 
 /** The parts of a Nimble Active Effect the end check reads. */
 interface TimedEffect extends ActiveEffect {
@@ -18,7 +22,10 @@ function coreDurationEndsAt(
 ): boolean {
 	if (!effect.isTemporary) return false;
 	if (check.type === 'event' && check.actor !== effect.parent) return false;
-	const { remaining } = effect.updateDuration() as { remaining?: number };
+	// As core's registry: a turn or round end never changes what is left.
+	const ends = check.type === 'turnEnd' || check.type === 'roundEnd';
+	const duration = (ends ? effect.duration : effect.updateDuration()) as { remaining?: number };
+	const { remaining } = duration;
 	const left = remaining ?? Number.POSITIVE_INFINITY;
 	if (left > 0 && Number.isFinite(left)) return false;
 	const isExpiryEvent = ActiveEffect.prototype.isExpiryEvent as unknown as CoreExpiryCheck;

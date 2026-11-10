@@ -31,16 +31,22 @@ beforeEach(() => {
 	effectsEndingAtMock.mockReturnValue([]);
 });
 
-describe('isAttackUse (decision 19)', () => {
+describe('isAttackUse', () => {
 	it('an activation with a damage roll is an attack', () => {
 		expect(isAttackUse(item({}, [{ type: 'damage' }]), [])).toBe(true);
 	});
 
-	it('a weapon attack is an attack', () => {
-		const weapon = item({
-			system: { activation: { effects: [], targets: { attackType: 'melee' } } },
+	it('an attack type with no damage roll is not an attack', () => {
+		const touch = item({
+			system: {
+				activation: { effects: [{ type: 'condition' }], targets: { attackType: 'melee' } },
+			},
 		});
-		expect(isAttackUse(weapon, [])).toBe(true);
+		expect(isAttackUse(touch, [ally])).toBe(false);
+	});
+
+	it('a save with no target chosen is an attack', () => {
+		expect(isAttackUse(item({}, [{ type: 'savingThrow' }]), [])).toBe(true);
 	});
 
 	it('a save asked of another creature is an attack; one asked only of the user is not', () => {

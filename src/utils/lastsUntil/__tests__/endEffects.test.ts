@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import {
 	type EndedEffectRow,
 	effectsEndingAt,
@@ -156,11 +157,32 @@ describe('endEffects', () => {
 
 		await endEffects([a], 'Goblin attacked');
 
-		expect(activeGM?.query).toHaveBeenCalledWith('nimble.endTimedEffects', {
+		expect(activeGM?.query).toHaveBeenCalledWith(`${SYSTEM_ID}.endTimedEffects`, {
 			uuids: [a.uuid],
 			heading: 'Goblin attacked',
 		});
 		expect(goblin.holder.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('a failed delete is logged, not thrown, and the next moment still runs', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		goblin.holder.deleteEmbeddedDocuments.mockRejectedValueOnce(new Error('locked'));
+
+		await expect(endEffects([addEffect(goblin, 'a')], 'First')).resolves.toBeUndefined();
+		await endEffects([addEffect(goblin, 'b')], 'Second');
+
+		expect(error).toHaveBeenCalled();
+		expect(create).toHaveBeenCalledTimes(1);
+		expect(create.mock.calls[0][0].system.heading).toBe('Second');
+	});
+
+	it('a failed ask to the GM is logged, not thrown', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		user.isActiveGM = false;
+		activeGM?.query.mockRejectedValueOnce(new Error('timeout'));
+
+		await expect(endEffects([addEffect(goblin, 'a')], 'Heading')).resolves.toBeUndefined();
+		expect(error).toHaveBeenCalled();
 	});
 
 	it('with no GM online, ends nothing', async () => {

@@ -1,4 +1,4 @@
-import type { LastsUntilCheck } from './momentReached.js';
+import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 
 /** The core expiry event name of a check. */
 export function coreEventOf(check: LastsUntilCheck): string {

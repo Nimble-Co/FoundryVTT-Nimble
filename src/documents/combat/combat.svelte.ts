@@ -123,6 +123,11 @@ interface ActorWithInitiativeRollConfiguration extends Actor {
 	initiativeWithNoWindow?: () => ResolvedInitiativeRollData;
 }
 
+/** The place of a turn for the Nimble turn hooks: a solo monster has more than one turn in a round. */
+function turnOf(context: Combat.TurnEventContext): { round: number; turn: number } {
+	return { round: context.round, turn: context.turn };
+}
+
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
 	#expandedTurnIdentity: TurnIdentity | null = null;
@@ -751,9 +756,9 @@ class NimbleCombat extends Combat {
 	 * the turn-start counterpart of `nimbleCombatTurnEnd`. Consumed by the dice/charge pool
 	 * turn triggers.
 	 */
-	#emitTurnStart(combatant: Combatant.Implementation, context?: { round: number }): void {
+	#emitTurnStart(combatant: Combatant.Implementation, context?: Combat.TurnEventContext): void {
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnStart', combatant, context ? { round: context.round } : undefined);
+		Hooks.call('nimbleCombatTurnStart', combatant, context ? turnOf(context) : undefined);
 	}
 
 	/**
@@ -820,7 +825,7 @@ class NimbleCombat extends Combat {
 			}
 		} else {
 			// @ts-expect-error Custom hook
-			Hooks.call('nimbleCombatTurnEnd', endingCombatant, { round: context.round });
+			Hooks.call('nimbleCombatTurnEnd', endingCombatant, turnOf(context));
 		}
 	}
 
@@ -833,12 +838,12 @@ class NimbleCombat extends Combat {
 	 */
 	async #applyCharacterTurnEndRefill(
 		combatant: Combatant.Implementation,
-		context?: { round: number },
+		context?: Combat.TurnEventContext,
 	): Promise<void> {
 		if (combatant.type !== 'character') return;
 
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', combatant, context ? { round: context.round } : undefined);
+		Hooks.call('nimbleCombatTurnEnd', combatant, context ? turnOf(context) : undefined);
 
 		await combatant.update(buildCharacterTurnRefillUpdate(combatant));
 	}

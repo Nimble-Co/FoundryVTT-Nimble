@@ -1,17 +1,18 @@
 import { systemHookName } from '#system';
-import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
-import { getActorHealthState } from '../utils/actor/actorHealthState.js';
+import { getActorHealthState } from '#utils/actor/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
 	hpGained,
-} from '../utils/actor/actorHpChangePaths.js';
-import { getActorWoundsValueAndMax } from '../utils/actor/actorResources.js';
-import { seatOf } from '../utils/lastsUntil/effectSubject.js';
-import { endEffectsAt } from '../utils/lastsUntil/endEffects.js';
-import { fireEvent, fireItemUseEvents } from '../utils/lastsUntil/lastsUntilEvents.js';
-import localize from '../utils/localize.js';
+} from '#utils/actor/actorHpChangePaths.js';
+import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
+import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { seatOf } from '#utils/lastsUntil/effectSubject.js';
+import { endEffectsAt } from '#utils/lastsUntil/endEffects.js';
+import { fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
+import localize from '#utils/localize.js';
+import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
 const on = (event: string, handler: HookFn) =>
@@ -21,6 +22,7 @@ const isActiveGm = () => !!game.user?.isActiveGM;
 
 interface TurnContext {
 	round?: number;
+	turn?: number;
 }
 
 /** The round of the turn that just ended, when the combat class did not say. */
@@ -41,7 +43,7 @@ function onTurn(type: 'turnStart' | 'turnEnd') {
 			name: combatant.name ?? '',
 		});
 		void endEffectsAt(
-			{ type, combatId: combat.id, seat: seatOf(combatant), round },
+			{ type, combatId: combat.id, seat: seatOf(combatant), round, turn: context?.turn ?? null },
 			heading,
 			combat,
 		);
@@ -66,9 +68,17 @@ function endCombat(combat: Combat): void {
 	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, heading, combat);
 }
 
+/** A core duration can end as combat starts. */
+function startCombat(combat: Combat): void {
+	if (!isActiveGm() || !combat.id) return;
+	endedCombats.delete(combat.id);
+	const heading = localize('NIMBLE.lastsUntil.chat.heading.combatStart');
+	void endEffectsAt({ type: 'combatStart', combatId: combat.id }, heading, combat);
+}
+
 function onUpdateCombat(combat: Combat, changes: Record<string, unknown>): void {
 	if (changes.started === false) endCombat(combat);
-	if (changes.started === true && combat.id) endedCombats.delete(combat.id);
+	if (changes.started === true) startCombat(combat);
 }
 
 function onDeleteCombat(combat: Combat): void {
@@ -108,8 +118,9 @@ function onUpdateToken(token: TokenDocument, changes: Record<string, unknown>): 
 	fireEvent('move', token.actor as Actor | null);
 }
 
-function onDeleteEffect(effect: ActiveEffect): void {
+function onDeleteEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
+	if (options?.[CONDITION_REPLACED_OPTION]) return;
 	const holder = effect.parent;
 	fireEvent('effectEnds', holder, { effectName: effect.name, effect: effect.name });
 	if (effect.statuses?.has(STATUS_EFFECT_IDS.concentration)) {

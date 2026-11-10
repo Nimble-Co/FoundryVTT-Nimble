@@ -1,5 +1,5 @@
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import type { TimeUnit } from '../../models/activeEffect/nimbleEffectChoices.js';
-import type { Moment } from './momentReached.js';
 
 /** What an estimate reads of one application of a condition. */
 export interface Application {
@@ -42,7 +42,7 @@ function coreRounds(duration: Application['duration'], elapsed: number, context:
 }
 
 /**
- * Decision 48: how long an application lasts, in rounds. The first moment wins,
+ * How long an application lasts, in rounds. The first moment wins,
  * so the shortest moment counts. An event, or no moment at all, has no end.
  */
 export function estimateRounds(application: Application, context: EstimateContext): number {

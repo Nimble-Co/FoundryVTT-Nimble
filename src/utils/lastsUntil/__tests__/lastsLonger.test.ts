@@ -22,7 +22,7 @@ function moment(fields: Partial<Moment>): Moment {
 const rounds = (lastsUntil: Moment[], extra = {}) =>
 	estimateRounds({ lastsUntil, ...extra }, context);
 
-describe('estimateRounds (decision 48)', () => {
+describe('estimateRounds', () => {
 	it('ranks the turn moments', () => {
 		expect(rounds([moment({ boundary: 'end', clock: 'holder', span: 'currentTurn' })])).toBe(0.5);
 		expect(rounds([moment({ boundary: 'start', clock: 'source', span: 'nextTurn' })])).toBe(1);

@@ -1166,6 +1166,7 @@
 			"chat": {
 				"ended": "{effect} ended on {name}",
 				"undo": "Undo",
+				"undoLabel": "Undo: put {effect} back on {name}",
 				"backOn": "On {name}",
 				"alreadyOn": "{effect} is already on {name}.",
 				"heading": {
@@ -1173,6 +1174,7 @@
 					"turnEnd": "End of {name}'s turn",
 					"roundStart": "Start of round {round}",
 					"roundEnd": "End of round {round}",
+					"combatStart": "Combat started",
 					"combatEnd": "Combat ended",
 					"worldTime": "Time passed",
 					"attack": "{name} attacked",

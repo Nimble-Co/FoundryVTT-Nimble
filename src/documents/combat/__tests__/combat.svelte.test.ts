@@ -1299,7 +1299,7 @@ describe('NimbleCombat', () => {
 				.map(([hook, combatant]) => [hook, combatant]);
 		}
 
-		it('gives the turn-start hook the round of the turn', async () => {
+		it('gives the turn-start hook the round and the place of the turn', async () => {
 			const combatId = 'combat-start-turn-round';
 			const { monster, incomingHero } = createTurnStartFixture(combatId);
 			const combat = buildCombat(combatId, [monster, incomingHero], monster);
@@ -1307,7 +1307,10 @@ describe('NimbleCombat', () => {
 			await combat._onStartTurn(incomingHero, { round: 3, turn: 1, skipped: false });
 
 			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
-			expect(call).toHaveBeenCalledWith('nimbleCombatTurnStart', incomingHero, { round: 3 });
+			expect(call).toHaveBeenCalledWith('nimbleCombatTurnStart', incomingHero, {
+				round: 3,
+				turn: 1,
+			});
 		});
 
 		it('emits the turn-start hook for the incoming combatant when Foundry never fires _onStartTurn', async () => {
@@ -3945,7 +3948,7 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
-	it('emits the round hooks with the round, before the group dissolves', async () => {
+	it('emits the round hooks with the round', async () => {
 		const combat = new NimbleCombat({
 			id: 'combat-round-hooks',
 			combatants: createCombatantsCollectionFixture([]),

@@ -37,9 +37,16 @@ export interface TurnSeat {
 }
 
 export type LastsUntilCheck =
-	| { type: 'turnStart' | 'turnEnd'; combatId: string; seat: TurnSeat; round: number }
+	| {
+			type: 'turnStart' | 'turnEnd';
+			combatId: string;
+			seat: TurnSeat;
+			round: number;
+			/** The index in the turn order, when known. A solo monster has more than one turn in a round. */
+			turn?: number | null;
+	  }
 	| { type: 'roundStart' | 'roundEnd'; combatId: string; round: number }
-	| { type: 'combatEnd'; combatId: string }
+	| { type: 'combatStart' | 'combatEnd'; combatId: string }
 	| { type: 'worldTime'; worldTime: number }
 	| {
 			type: 'event';
@@ -78,12 +85,18 @@ function roundBase(subject: MomentSubject, combatId: string): number {
 
 function turnInProgressAtStart(
 	subject: MomentSubject,
-	check: { combatId: string; seat: TurnSeat; round: number },
+	check: { combatId: string; seat: TurnSeat; round: number; turn?: number | null },
 ): boolean {
 	const { start, startSeat } = subject;
-	return start.combat === check.combatId && start.round === check.round
-		? sameSeat(startSeat, check.seat)
-		: false;
+	if (start.combat !== check.combatId || start.round !== check.round) return false;
+	if (
+		typeof check.turn === 'number' &&
+		typeof start.turn === 'number' &&
+		check.turn !== start.turn
+	) {
+		return false;
+	}
+	return sameSeat(startSeat, check.seat);
 }
 
 function turnMomentReached(
@@ -93,7 +106,7 @@ function turnMomentReached(
 ): boolean {
 	if (check.type === 'combatEnd') return subject.relatesTo(check.combatId);
 	if (check.type === 'worldTime') return !subject.holderInCombat;
-	if (check.type === 'event') return false;
+	if (check.type === 'event' || check.type === 'combatStart') return false;
 
 	const { boundary, span, clock } = moment;
 	if (span === 'currentRound' || span === 'nextRound') {

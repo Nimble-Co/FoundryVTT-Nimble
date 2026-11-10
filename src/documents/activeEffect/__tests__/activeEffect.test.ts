@@ -223,6 +223,9 @@ describe('NimbleActiveEffect.isMinor', () => {
 
 	it('is a Minor Status when it carries a minor condition', () => {
 		expect(make({ statuses: new Set(['smoldering']) }).isMinor).toBe(true);
+	});
+
+	it('is not a Minor Status for another condition', () => {
 		expect(make({ statuses: new Set(['blinded']) }).isMinor).toBe(false);
 	});
 });

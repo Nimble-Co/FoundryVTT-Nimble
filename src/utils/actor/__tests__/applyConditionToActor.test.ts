@@ -302,7 +302,7 @@ describe('applyConditionToActor effect creation', () => {
 	});
 });
 
-describe('applyConditionToActor same condition again (spec 3.6)', () => {
+describe('applyConditionToActor same condition again', () => {
 	const moment = (fields: Record<string, unknown>) => ({
 		kind: 'turn',
 		boundary: null,
@@ -351,7 +351,10 @@ describe('applyConditionToActor same condition again (spec 3.6)', () => {
 		});
 
 		expect(result).not.toBeNull();
-		expect(deleteDocuments).toHaveBeenCalledWith(['old'], { parent: target });
+		expect(deleteDocuments).toHaveBeenCalledWith(['old'], {
+			parent: target,
+			nimbleConditionReplaced: true,
+		});
 		expect(createEffect).toHaveBeenCalledTimes(1);
 	});
 
@@ -386,7 +389,10 @@ describe('applyConditionToActor same condition again (spec 3.6)', () => {
 		});
 
 		expect(result).not.toBeNull();
-		expect(deleteDocuments).toHaveBeenCalledWith(['old'], { parent: target });
+		expect(deleteDocuments).toHaveBeenCalledWith(['old'], {
+			parent: target,
+			nimbleConditionReplaced: true,
+		});
 	});
 
 	it('stamps the moments on the created effect', async () => {

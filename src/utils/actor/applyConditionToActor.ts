@@ -4,6 +4,9 @@ import { type Application, newApplicationLastsLonger } from '../lastsUntil/lasts
 import type { Moment } from '../lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
 
+/** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
+export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
+
 /** A second Taunted takes the place of the first, whatever their Lasts Until. */
 const NEWEST_WINS = new Set(['taunted']);
 
@@ -155,7 +158,7 @@ function applicationOf(effect: ExistingConditionEffect): Application {
 }
 
 /**
- * Spec 3.6: the same condition again. The application that lasts longer stays;
+ * The same condition again. The application that lasts longer stays;
  * Taunted takes the newest. Gives the effects to replace, or null to refuse.
  */
 function reapplication(
@@ -222,7 +225,10 @@ interface ActiveEffectImplementation {
 		data: AppliedConditionEffect | Record<string, unknown>,
 		operation: { parent: unknown; keepId: boolean },
 	): Promise<AppliedConditionEffect | undefined>;
-	deleteDocuments(ids: string[], operation: { parent: unknown }): Promise<unknown>;
+	deleteDocuments(
+		ids: string[],
+		operation: { parent: unknown } & Record<string, unknown>,
+	): Promise<unknown>;
 }
 
 function activeEffectImplementation(): ActiveEffectImplementation {
@@ -295,7 +301,10 @@ async function removeReplacedEffects(
 
 	if (ids.length === 0) return [];
 
-	await activeEffectImplementation().deleteDocuments(ids, { parent: target });
+	await activeEffectImplementation().deleteDocuments(ids, {
+		parent: target,
+		[CONDITION_REPLACED_OPTION]: true,
+	});
 
 	return sources;
 }

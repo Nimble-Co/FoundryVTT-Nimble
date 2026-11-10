@@ -185,18 +185,40 @@ describe('customConditionSettings', () => {
 			expect(Object.keys(config.conditions).sort()).toEqual(['blinded', 'prone']);
 		});
 
-		it('marks a custom Minor Status, and unmarks it when it changes or goes', () => {
-			const minor = new Set(['smoldering']);
-			(
-				CONFIG.NIMBLE as unknown as { conditionMinorConditions: Set<string> }
-			).conditionMinorConditions = minor;
-			setStoredConditions(settingsMock, [{ id: 'hexed', minor: true }, { id: 'shaken' }]);
-			mergeCustomConditionsIntoConfig();
-			expect([...minor].sort()).toEqual(['hexed', 'smoldering']);
+		describe('Minor Status', () => {
+			let minor: Set<string>;
 
-			setStoredConditions(settingsMock, [{ id: 'shaken', minor: true }]);
-			mergeCustomConditionsIntoConfig();
-			expect([...minor].sort()).toEqual(['shaken', 'smoldering']);
+			beforeEach(() => {
+				minor = new Set(['smoldering']);
+				(
+					CONFIG.NIMBLE as unknown as { conditionMinorConditions: Set<string> }
+				).conditionMinorConditions = minor;
+			});
+
+			it('marks a custom condition with the box on', () => {
+				setStoredConditions(settingsMock, [{ id: 'hexed', minor: true }, { id: 'shaken' }]);
+				mergeCustomConditionsIntoConfig();
+
+				expect([...minor].sort()).toEqual(['hexed', 'smoldering']);
+			});
+
+			it('unmarks it when the box goes off', () => {
+				setStoredConditions(settingsMock, [{ id: 'hexed', minor: true }]);
+				mergeCustomConditionsIntoConfig();
+				setStoredConditions(settingsMock, [{ id: 'hexed', minor: false }]);
+				mergeCustomConditionsIntoConfig();
+
+				expect([...minor]).toEqual(['smoldering']);
+			});
+
+			it('unmarks it when the condition goes', () => {
+				setStoredConditions(settingsMock, [{ id: 'hexed', minor: true }]);
+				mergeCustomConditionsIntoConfig();
+				setStoredConditions(settingsMock, []);
+				mergeCustomConditionsIntoConfig();
+
+				expect([...minor]).toEqual(['smoldering']);
+			});
 		});
 
 		it('reaches CONFIG.statusEffects once the condition manager reinitializes', () => {

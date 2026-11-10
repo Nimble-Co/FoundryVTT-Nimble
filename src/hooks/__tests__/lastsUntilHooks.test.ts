@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { systemHookName } from '#system';
 
 const { endEffectsAtMock, fireEventMock, fireItemUseEventsMock } = vi.hoisted(() => ({
 	endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
@@ -63,6 +64,7 @@ describe('turn and round moments', () => {
 				combatId: 'combat1',
 				seat: { combatantId: 'cGoblin', groupId: null, isHero: false },
 				round: 1,
+				turn: null,
 			},
 			expect.any(String),
 			combat,
@@ -88,6 +90,26 @@ describe('turn and round moments', () => {
 		expect(endEffectsAtMock.mock.calls[0][0]).toMatchObject({
 			type: 'turnStart',
 			seat: { isHero: true },
+			round: 2,
+		});
+	});
+
+	it('a turn end gives the place of the turn, for a solo monster with more than one', () => {
+		const { add } = makeCombat();
+
+		hook('nimbleCombatTurnEnd')(add('cDragon', 'Dragon'), { round: 1, turn: 2 });
+
+		expect(endEffectsAtMock.mock.calls[0][0]).toMatchObject({ round: 1, turn: 2 });
+	});
+
+	it('a round start checks that round', () => {
+		const { combat } = makeCombat();
+
+		hook('nimbleCombatRoundStart')(combat, { round: 2 });
+
+		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({
+			type: 'roundStart',
+			combatId: 'combat1',
 			round: 2,
 		});
 	});
@@ -126,6 +148,20 @@ describe('combat end', () => {
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
 	});
 
+	it('checks core durations as combat starts, and a restarted combat can end again', () => {
+		const { combat } = makeCombat('combat3');
+
+		hook('updateCombat')(combat, { started: false });
+		hook('updateCombat')(combat, { started: true });
+		hook('updateCombat')(combat, { started: false });
+
+		expect(endEffectsAtMock.mock.calls.map(([check]) => (check as { type: string }).type)).toEqual([
+			'combatEnd',
+			'combatStart',
+			'combatEnd',
+		]);
+	});
+
 	it('ends when a running combat is deleted', () => {
 		const { combat } = makeCombat('combat2');
 
@@ -152,15 +188,71 @@ describe('events', () => {
 		system: { attributes: { hp: { value: hp, max: 10 }, ...(wounds ? { wounds } : {}) } },
 	});
 
-	it('dropping to 0 HP with no wound track is 0 HP and death', () => {
-		const utils = foundry.utils as unknown as Record<string, unknown>;
+	const utils = foundry.utils as unknown as Record<string, unknown>;
+	let hadHasProperty: unknown;
+
+	beforeEach(() => {
+		hadHasProperty = utils.hasProperty;
 		utils.hasProperty ??= (object: object, path: string) =>
 			foundry.utils.getProperty(object, path) !== undefined;
+	});
+
+	afterEach(() => {
+		utils.hasProperty = hadHasProperty;
+	});
+
+	it('dropping to 0 HP with no wound track is 0 HP and death', () => {
 		const actor = actorAt(0);
 
 		hook('updateActor')(actor, { system: { attributes: { hp: { value: 0 } } } }, {});
 
 		expect(fireEventMock.mock.calls.map(([event]) => event)).toEqual(['zeroHp', 'die']);
+	});
+
+	it('dropping to 0 HP with wounds left is 0 HP, not death', () => {
+		const actor = actorAt(0, { value: 1, max: 6 });
+
+		hook('updateActor')(actor, { system: { attributes: { hp: { value: 0 } } } }, {});
+
+		expect(fireEventMock.mock.calls.map(([event]) => event)).toEqual(['zeroHp']);
+	});
+
+	it('HP that goes up is a heal', () => {
+		const actor = actorAt(9);
+		const options = { nimble: { previousHp: { value: 4, max: 10, temp: 0 } } };
+
+		hook('updateActor')(actor, { system: { attributes: { hp: { value: 9 } } } }, options);
+
+		expect(fireEventMock).toHaveBeenCalledWith('healed', actor);
+	});
+
+	it('a rest is a rest of that creature', () => {
+		const actor = { name: 'Tessa' };
+
+		hook(systemHookName('rest'))({ actor, restType: 'safe' });
+
+		expect(fireEventMock).toHaveBeenCalledWith('rest', actor);
+	});
+
+	it('the events every client sees are checked only on the active GM', () => {
+		user.isActiveGM = false;
+
+		hook('updateToken')({ actor: {} }, { x: 1 });
+		hook('deleteActiveEffect')({
+			parent: Object.create(Actor.prototype),
+			name: 'Rage',
+			statuses: new Set(),
+		});
+
+		expect(fireEventMock).not.toHaveBeenCalled();
+	});
+
+	it('a condition that a new application replaces does not end', () => {
+		const effect = { parent: Object.create(Actor.prototype), name: 'Taunted', statuses: new Set() };
+
+		hook('deleteActiveEffect')(effect, { nimbleConditionReplaced: true });
+
+		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
 	it('a move of the token is a move of its actor', () => {
@@ -190,13 +282,13 @@ describe('events', () => {
 		const item = { actor: {} };
 		const target = { name: 'Ogre' };
 
-		hook('nimble.useItem')(item, null, { targets: [{ actor: target }, null] });
+		hook(systemHookName('useItem'))(item, null, { targets: [{ actor: target }, null] });
 
 		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [target]);
 	});
 
 	it('damage on a miss is no damage', () => {
-		hook('nimble.damageApplied')({ targetActor: { name: 'Ogre' }, isMiss: true });
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, isMiss: true });
 
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
@@ -204,8 +296,8 @@ describe('events', () => {
 	it('a charge pool that goes up is a charge gained', () => {
 		const actor = { name: 'Hunter' };
 
-		hook('nimble.chargePool.changed')({ actor, previousValue: 0, newValue: 1 });
-		hook('nimble.chargePool.changed')({ actor, previousValue: 1, newValue: 0 });
+		hook(systemHookName('chargePool.changed'))({ actor, previousValue: 0, newValue: 1 });
+		hook(systemHookName('chargePool.changed'))({ actor, previousValue: 1, newValue: 0 });
 
 		expect(fireEventMock).toHaveBeenCalledTimes(1);
 		expect(fireEventMock).toHaveBeenCalledWith('chargeGained', actor);

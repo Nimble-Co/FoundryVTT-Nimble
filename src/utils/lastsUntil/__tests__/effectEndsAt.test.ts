@@ -135,11 +135,30 @@ describe('effectEndsAt', () => {
 
 	describe('a core duration', () => {
 		const legacy = (remaining: number) =>
-			makeEffect({ isTemporary: true, updateDuration: () => ({ remaining }) });
+			makeEffect({
+				isTemporary: true,
+				duration: { remaining },
+				updateDuration: () => ({ remaining }),
+			});
 
 		it('ends by core rule once the duration is reached', () => {
 			expect(effectEndsAt(legacy(0), turnEnd(goblinCombatant, 1), combat)).toBe(true);
 			expect(coreIsExpiryEvent).toHaveBeenCalledWith('turnEnd', { combat });
+		});
+
+		it('at a turn end, reads what is left without counting again, as core does', () => {
+			const updateDuration = vi.fn(() => ({ remaining: 1 }));
+			const effect = makeEffect({ isTemporary: true, duration: { remaining: 0 }, updateDuration });
+
+			expect(effectEndsAt(effect, turnEnd(goblinCombatant, 1), combat)).toBe(true);
+			expect(updateDuration).not.toHaveBeenCalled();
+		});
+
+		it('can end as combat starts', () => {
+			const start: LastsUntilCheck = { type: 'combatStart', combatId: COMBAT };
+
+			expect(effectEndsAt(legacy(0), start, combat)).toBe(true);
+			expect(coreIsExpiryEvent).toHaveBeenCalledWith('combatStart', { combat });
 		});
 
 		it('does not end before the duration is reached', () => {

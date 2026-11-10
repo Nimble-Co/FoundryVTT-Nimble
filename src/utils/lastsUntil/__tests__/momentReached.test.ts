@@ -150,6 +150,26 @@ describe('turn moments', () => {
 		expect(momentReached(endOfTheirNextTurn, applied, turnEnd(leader, 2))).toBe(true);
 	});
 
+	it('a solo monster turn later in the same round is its next turn', () => {
+		const applied = subject({ combatant: 'goblin', round: 1, turn: 0 });
+		const turnEndAt = (turn: number): LastsUntilCheck => ({
+			type: 'turnEnd',
+			combatId: COMBAT,
+			seat: GOBLIN,
+			round: 1,
+			turn,
+		});
+
+		expect(momentReached(endOfTheirNextTurn, applied, turnEndAt(0))).toBe(false);
+		expect(momentReached(endOfTheirNextTurn, applied, turnEndAt(2))).toBe(true);
+	});
+
+	it('does not end as combat starts', () => {
+		expect(
+			momentReached(endOfTheirNextTurn, subject(), { type: 'combatStart', combatId: COMBAT }),
+		).toBe(false);
+	});
+
 	it('an effect applied before combat ends at the first matching turn', () => {
 		const applied = subject({ combat: null, combatant: null, round: null, turn: null });
 

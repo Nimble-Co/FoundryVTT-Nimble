@@ -1,9 +1,9 @@
 import type { EffectNode } from '#types/effectTree.js';
+import { effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
+import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
+import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
-import localize from '../localize.js';
-import { effectsEndingAt, endEffects } from './endEffects.js';
-import type { LastsUntilCheck } from './momentReached.js';
 
 interface UsedItem {
 	uuid?: string | null;
@@ -14,14 +14,13 @@ interface UsedItem {
 }
 
 /**
- * Decision 19: an activation with a damage roll, or one that asks a creature
- * other than its user for a save.
+ * An attack: an activation with a damage roll, or one that asks a creature
+ * other than its user for a save. A save with no target chosen counts.
  */
 export function isAttackUse(item: UsedItem, targetActors: readonly object[]): boolean {
 	const { activation } = (item.system ?? {}) as {
-		activation?: { effects?: EffectNode[]; targets?: { attackType?: string } };
+		activation?: { effects?: EffectNode[] };
 	};
-	if (activation?.targets?.attackType) return true;
 	const types = new Set(flattenEffectsTree(activation?.effects ?? []).map((node) => node.type));
 	if (types.has('damage')) return true;
 	if (!types.has('savingThrow')) return false;

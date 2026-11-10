@@ -1,12 +1,12 @@
-import { getMinionGroupId } from '../minions/minionGrouping.js';
 import {
 	type EffectStart,
 	type LastsUntilCheck,
 	type MomentSubject,
 	sameSeat,
 	type TurnSeat,
-} from './momentReached.js';
-import { secondsOf } from './secondsOf.js';
+} from '#utils/lastsUntil/momentReached.js';
+import { secondsOf } from '#utils/lastsUntil/secondsOf.js';
+import { getMinionGroupId } from '#utils/minions/minionGrouping.js';
 
 type CombatantLike = Combatant.Implementation;
 

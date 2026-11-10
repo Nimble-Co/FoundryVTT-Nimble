@@ -1,9 +1,9 @@
 import { SYSTEM_ID } from '#system';
-import { keyedQueue } from '../keyedQueue.js';
-import localize from '../localize.js';
-import { effectEndsAt } from './effectEndsAt.js';
-import { sourceOf } from './effectSubject.js';
-import type { LastsUntilCheck } from './momentReached.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
+import { effectEndsAt } from '#utils/lastsUntil/effectEndsAt.js';
+import { sourceOf } from '#utils/lastsUntil/effectSubject.js';
+import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
+import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.endTimedEffects`;
 
@@ -119,15 +119,19 @@ async function endHere(effects: ActiveEffect[], heading: string): Promise<void> 
  * End `effects` for one moment. The active GM deletes them and posts the
  * message; another client asks the active GM. With no GM online, nothing ends.
  */
-export function endEffects(effects: ActiveEffect[], heading: string): Promise<void> {
-	if (effects.length < 1) return Promise.resolve();
-	if (game.user?.isActiveGM) return queue.run('end', () => endHere(effects, heading));
-	const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
-		.activeGM;
-	if (!gm) return Promise.resolve();
-	return Promise.resolve(
-		gm.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), heading }),
-	).then(() => undefined);
+export async function endEffects(effects: ActiveEffect[], heading: string): Promise<void> {
+	if (effects.length < 1) return;
+	try {
+		if (game.user?.isActiveGM) {
+			await queue.run('end', () => endHere(effects, heading));
+			return;
+		}
+		const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
+			.activeGM;
+		await gm?.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), heading });
+	} catch (error) {
+		console.error('Nimble | Could not end the Timed Effects of a moment.', error);
+	}
 }
 
 /** End what `check` ends, with the message heading of that moment. */
