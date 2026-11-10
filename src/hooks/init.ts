@@ -18,6 +18,7 @@ import AncestrySheet from '../documents/sheets/AncestrySheet.svelte.js';
 import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte.js';
 import BoonSheet from '../documents/sheets/BoonSheet.svelte.js';
 import ClassSheet from '../documents/sheets/ClassSheet.svelte.js';
+import EffectSheet from '../documents/sheets/EffectSheet.svelte.js';
 import FeatureSheet from '../documents/sheets/FeatureSheet.svelte.js';
 import MonsterFeatureSheet from '../documents/sheets/MonsterFeatureSheet.svelte.js';
 import NPCSheet from '../documents/sheets/NPCSheet.svelte.js';
@@ -33,7 +34,10 @@ import activateEnricherListeners from '../enrichers/activateEnricherListeners.js
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 import { NIMBLE_GAME } from '../game.js';
 import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
-import { NIMBLE_EFFECT_TYPE } from '../models/activeEffect/nimbleEffectChoices.js';
+import {
+	LEGACY_CONDITION_EFFECT_TYPE,
+	NIMBLE_EFFECT_TYPE,
+} from '../models/activeEffect/nimbleEffectChoices.js';
 import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
@@ -291,6 +295,17 @@ export default function init() {
 			types: ['subclass'],
 			makeDefault: true,
 			label: 'NIMBLE.sheets.subclass',
+		},
+	);
+
+	foundry.applications.apps?.DocumentSheetConfig?.registerSheet(
+		NimbleActiveEffect as unknown as typeof ActiveEffect,
+		SYSTEM_ID,
+		EffectSheet as unknown as foundry.applications.api.DocumentSheetV2.AnyConstructor,
+		{
+			types: [NIMBLE_EFFECT_TYPE, LEGACY_CONDITION_EFFECT_TYPE],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.effect',
 		},
 	);
 }
