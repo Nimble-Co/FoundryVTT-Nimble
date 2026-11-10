@@ -32,8 +32,17 @@ function plainPayload(lastsUntil: object[] = [turnMoment]): EffectPayload {
 	};
 }
 
-function holder(fields: { isOwner?: boolean; effects?: object[] } = {}) {
-	return { uuid: 'Actor.goblin', name: 'Goblin', isOwner: true, effects: [], ...fields };
+function holder(fields: { isOwner?: boolean; effects?: object[]; temp?: number } = {}) {
+	const { temp = 0, ...rest } = fields;
+	return {
+		uuid: 'Actor.goblin',
+		name: 'Goblin',
+		isOwner: true,
+		effects: [],
+		system: { attributes: { hp: { temp } } },
+		update: vi.fn(async () => undefined),
+		...rest,
+	};
 }
 
 beforeEach(() => {
@@ -150,5 +159,26 @@ describe('applyEffectToActor', () => {
 			[CONDITION_REPLACED_OPTION]: true,
 		});
 		expect(createEffect).toHaveBeenCalled();
+	});
+
+	it('gives the temp HP of the card and records them on the effect', async () => {
+		const target = holder({ temp: 2 });
+
+		await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
+
+		expect(createEffect).toHaveBeenCalledWith(
+			expect.objectContaining({ system: expect.objectContaining({ tempHp: 6 }) }),
+			expect.anything(),
+		);
+		expect(target.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 6 });
+	});
+
+	it('gives no temp HP when the holder has as many already', async () => {
+		const target = holder({ temp: 8 });
+
+		await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
+
+		expect(createEffect.mock.calls[0][0].system).not.toHaveProperty('tempHp');
+		expect(target.update).not.toHaveBeenCalled();
 	});
 });

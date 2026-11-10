@@ -160,3 +160,37 @@ describe('ApplyEffectNode on the card', () => {
 		expect(screen.queryByRole('button', { name: /Apply to Targets/ })).toBeNull();
 	});
 });
+
+describe('the temp healing that an effect gives', () => {
+	const healing = {
+		id: 'h1',
+		type: 'healing',
+		healingType: 'tempHealing',
+		formula: '2*@key',
+		roll: { total: 6 },
+		parentNode: null,
+		parentContext: null,
+	};
+	const apply = {
+		id: 'a1',
+		type: 'applyEffect',
+		effectId: 'fx',
+		recipient: 'self',
+		tempHealingNodeId: 'h1',
+	};
+	const card = {
+		system: { activation: { effects: [healing, apply] } },
+		update: async () => undefined,
+	};
+
+	it('reads the roll of the linked temp healing node', async () => {
+		const { givenByAnEffect, linkedTempHealing } = await import(
+			'#utils/chat/applyEffectFromCard.js'
+		);
+
+		expect(linkedTempHealing(card, apply as never)).toEqual({ id: 'h1', total: 6 });
+		expect(linkedTempHealing(card, { tempHealingNodeId: null })).toBeNull();
+		expect(givenByAnEffect(card, 'h1')).toBe(true);
+		expect(givenByAnEffect(card, 'other')).toBe(false);
+	});
+});

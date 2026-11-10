@@ -549,6 +549,7 @@
 			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
+			"tempHpGivenByEffect": "The effect below gives these temp HP, and takes back what is left when it ends.",
 			"applyEffect": {
 				"heading": "Effects",
 				"applyToTargets": "Apply to Targets",

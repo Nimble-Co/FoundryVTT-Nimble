@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { ApplyEffectNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -10,6 +10,7 @@ import {
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { ApplyEffectSource } from '#view/chat/components/applyEffectRow.js';
 
 export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
@@ -116,10 +117,36 @@ function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | nul
 	);
 }
 
+/** The temp healing node of the card that an Apply Effect node gives, when it has a roll. */
+export function linkedTempHealing(
+	card: EffectCard,
+	node: Pick<ApplyEffectNode, 'tempHealingNodeId'>,
+): { id: string; total: number } | null {
+	if (!node.tempHealingNodeId) return null;
+	const tree = (card.system as { activation?: { effects?: EffectNode[] } } | undefined)?.activation
+		?.effects;
+	const healing = flattenEffectsTree(tree ?? []).find(
+		(entry) => entry.id === node.tempHealingNodeId,
+	);
+	if (healing?.type !== 'healing' || healing.healingType !== 'tempHealing') return null;
+	const total = Number(healing.roll?.total);
+	return Number.isFinite(total) ? { id: healing.id, total } : null;
+}
+
+/** An Apply Effect node of the card gives this temp healing: the healing node has no button of its own. */
+export function givenByAnEffect(card: EffectCard, healingNodeId: string): boolean {
+	const tree = (card.system as { activation?: { effects?: EffectNode[] } } | undefined)?.activation
+		?.effects;
+	return flattenEffectsTree(tree ?? []).some(
+		(entry) => entry.type === 'applyEffect' && entry.tempHealingNodeId === healingNodeId,
+	);
+}
+
 /** Puts the node's effect on the card's targets, or on its user, and records who took it. */
 export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
-	const payload = payloadOf(card, node);
-	if (!payload) return;
+	const base = payloadOf(card, node);
+	if (!base) return;
+	const payload = { ...base, tempHp: linkedTempHealing(card, node)?.total ?? null };
 	const user = cardUser(card);
 	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
 	const results = await Promise.allSettled(

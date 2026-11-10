@@ -11,6 +11,7 @@ import applyConditionToActor, {
 	type ConditionDuration,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
+import { giveTempHp, tempHpToGive } from './effectTempHp.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.applyEffect`;
 
@@ -25,6 +26,8 @@ export interface EffectPayload {
 	sourceActorUuid: string | null;
 	/** A core duration, for a card that a rule made. */
 	duration?: ConditionDuration | null;
+	/** The temp HP that the effect gives, from a temp healing roll of the card. */
+	tempHp?: number | null;
 }
 
 export interface AppliedEffect {
@@ -42,6 +45,8 @@ interface EffectHolder {
 	uuid: string;
 	name?: string | null;
 	isOwner?: boolean;
+	system?: unknown;
+	update(data: Record<string, unknown>): Promise<unknown>;
 	effects?: Iterable<ExistingConditionEffect & { origin?: string | null; name?: string | null }>;
 }
 
@@ -139,7 +144,10 @@ export async function applyEffectHere(
 		documentOrUuid(payload.sourceItemUuid),
 		documentOrUuid(payload.sourceActorUuid),
 	]);
-	const { data } = payload;
+	const tempHp = tempHpToGive(target, payload.tempHp);
+	const data = tempHp
+		? foundry.utils.mergeObject(foundry.utils.deepClone(payload.data), { system: { tempHp } })
+		: payload.data;
 	const statuses = Array.isArray(data.statuses) ? (data.statuses as string[]) : [];
 	const lastsUntil = (data.system as { lastsUntil?: Moment[] } | undefined)?.lastsUntil ?? [];
 	const effect = statuses.length
@@ -152,6 +160,7 @@ export async function applyEffectHere(
 			})) as CreatedEffect | null)
 		: await createPlainEffect(target, data, sourceItem?.uuid ?? sourceActor?.uuid ?? null);
 	if (!effect?.uuid) return null;
+	await giveTempHp(target, tempHp);
 	return { effectUuid: effect.uuid, actorName: target.name ?? '' };
 }
 
