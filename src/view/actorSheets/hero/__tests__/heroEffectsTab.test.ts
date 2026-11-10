@@ -137,6 +137,7 @@ describe('heroEffectsTab', () => {
 		});
 		expect(row.cost.text).toBe('3 rounds');
 		expect(row.description).toBe('Add 1d4.');
+		expect(row.edit).toEqual({ kind: 'openEffect', effectId: 'bless', itemId: null });
 	});
 
 	it('asks before it removes a condition, and names where it comes from', () => {

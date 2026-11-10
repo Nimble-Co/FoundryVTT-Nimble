@@ -24,6 +24,15 @@ export async function endEffect(actor: Actor.Implementation, effectId: string): 
 	}
 }
 
+/** The effect window of an effect on the actor or on one of its items. */
+export async function openEffect(
+	actor: Actor.Implementation,
+	effectId: string,
+	itemId: string | null,
+): Promise<void> {
+	await effectOf(actor, effectId, itemId)?.sheet?.render(true);
+}
+
 export async function removeEffect(
 	actor: Actor.Implementation,
 	effectId: string,

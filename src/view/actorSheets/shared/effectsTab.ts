@@ -20,6 +20,7 @@ const OTHER_CONDITIONS = new Set(['charged', 'distracted', 'marked', 'smoldering
 /** What the Effects tab asks for. Both sheets have these intents, with the same shape. */
 export type EffectIntent =
 	| { kind: 'endEffect'; effectId: string }
+	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'openItem'; itemId: string };
@@ -49,7 +50,7 @@ export interface EffectRowView {
 		| { kind: 'act'; label: string; intent: EffectIntent }
 		| { kind: 'ask'; ask: EffectRowAsk }
 		| null;
-	/** the pen: open the item that keeps the effect on */
+	/** the pen: open the effect window, or the item that keeps the effect on */
 	edit: EffectIntent | null;
 }
 
@@ -179,6 +180,7 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 			},
 		},
 		input,
+		{ edit: { kind: 'openEffect', effectId: effect.id, itemId: effect.itemId } },
 	);
 }
 
