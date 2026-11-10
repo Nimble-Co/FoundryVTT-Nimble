@@ -5,6 +5,7 @@
 	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
 	import TagGroup from '../../components/TagGroup.svelte';
+	import ApplyEffectNodeConfig from '../components/ApplyEffectNodeConfig.svelte';
 	import {
 		POOL_PREDICATE_PLACEHOLDER,
 		getDamageOutcomes,
@@ -37,6 +38,8 @@
 	// so they cannot be lifted into a helper; this dispatcher must stay here.
 	function getNodeSnippet(nodeType) {
 		switch (nodeType) {
+			case 'applyEffect':
+				return ApplyEffectNode;
 			case 'condition':
 				return ConditionNode;
 			case 'damage':
@@ -613,6 +616,10 @@
 			</ul>
 		</details>
 	</li>
+{/snippet}
+
+{#snippet ApplyEffectNode(node, _parentNode = null)}
+	<ApplyEffectNodeConfig {node} {document} {effects} />
 {/snippet}
 
 {#snippet ConditionNode(node, _parentNode = null)}
