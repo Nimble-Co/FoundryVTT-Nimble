@@ -3855,7 +3855,9 @@
 				"off": "Off",
 				"offHint": "Its changes and rules do not apply.",
 				"transfer": "Apply to the actor",
-				"transferHint": "The actor that has this item gets the effect."
+				"transferHint": "The actor that has this item gets the effect.",
+				"conditions": "Conditions",
+				"conditionsHint": "The creature that has this effect has these conditions."
 			},
 			"lastsUntil": {
 				"heading": "Lasts Until",

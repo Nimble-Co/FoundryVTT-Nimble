@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
 	import localize from '#utils/localize.js';
+	import TagGroup from '../../components/TagGroup.svelte';
 	import Editor from '../components/Editor.svelte';
+	import { effectConditionOptions, toggledStatus } from './effectConditions.ts';
 
 	let { effect }: EffectTabProps = $props();
 
@@ -18,6 +20,9 @@
 	});
 
 	const update = (data: Record<string, unknown>) => effect.update(data as never);
+
+	const conditions = effectConditionOptions();
+	const statuses = $derived([...((reactive.statuses ?? []) as Iterable<string>)]);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
@@ -62,6 +67,22 @@
 		{/if}
 	</div>
 
+	<div>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize(`${DETAILS}.conditions`)}
+			</h3>
+		</header>
+		<p class="nimble-effect-details__hint">{localize(`${DETAILS}.conditionsHint`)}</p>
+		<TagGroup
+			options={conditions}
+			selectedOptions={statuses}
+			toggleOption={async (id) => {
+				await update({ statuses: toggledStatus(statuses, String(id)) });
+			}}
+		/>
+	</div>
+
 	{#key reactive.description}
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
@@ -80,6 +101,12 @@
 		align-items: baseline;
 		margin: 0;
 		color: var(--nimble-ui-ink);
+	}
+
+	.nimble-effect-details__hint {
+		margin: 0 0 0.375rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-ui-ink-muted);
 	}
 
 	.nimble-effect-details__text {

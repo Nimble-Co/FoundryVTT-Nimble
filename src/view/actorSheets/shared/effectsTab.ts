@@ -5,7 +5,7 @@ import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sh
 const FX = 'NIMBLE.actorSheet.shared.effects';
 
 /** States that the system sets from HP, wounds and spells; they show in the group of the actor while they are on. */
-const SET_BY_THE_SYSTEM = new Set([
+export const SET_BY_THE_SYSTEM = new Set([
 	'bloodied',
 	'dying',
 	'dead',

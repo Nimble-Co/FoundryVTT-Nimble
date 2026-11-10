@@ -29,7 +29,7 @@ export function statusOf(condition: string): { name: string; img: string } {
 	).find((status) => status.id === condition);
 	const names = (CONFIG.NIMBLE?.conditions ?? {}) as Record<string, string>;
 	return {
-		name: names[condition] ?? (entry?.name ? localize(entry.name) : condition),
+		name: localize(names[condition] ?? entry?.name ?? condition),
 		img: entry?.img ?? 'icons/svg/aura.svg',
 	};
 }
