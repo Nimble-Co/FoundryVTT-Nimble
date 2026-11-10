@@ -1,5 +1,9 @@
 {
 	"TYPES": {
+		"ActiveEffect": {
+			"condition": "Condition (Old Type)",
+			"nimble": "Nimble Effect"
+		},
 		"Actor": {
 			"character": "Player Character",
 			"minion": "Minion",

@@ -1,7 +1,9 @@
-import { NimbleConditionEffectData } from './conditionDataModel.js';
+import { LEGACY_CONDITION_EFFECT_TYPE, NIMBLE_EFFECT_TYPE } from './nimbleEffectChoices.js';
+import { NimbleEffectData } from './nimbleEffectDataModel.js';
 
 const activeEffectDataModels = {
-	condition: NimbleConditionEffectData,
+	[NIMBLE_EFFECT_TYPE]: NimbleEffectData,
+	[LEGACY_CONDITION_EFFECT_TYPE]: NimbleEffectData,
 };
 
 export default activeEffectDataModels;
@@ -9,7 +11,8 @@ export default activeEffectDataModels;
 declare global {
 	interface DataModelConfig {
 		ActiveEffect: {
-			condition: NimbleConditionEffectData;
+			[NIMBLE_EFFECT_TYPE]: NimbleEffectData;
+			[LEGACY_CONDITION_EFFECT_TYPE]: NimbleEffectData;
 		};
 	}
 }

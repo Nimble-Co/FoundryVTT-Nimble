@@ -63,7 +63,8 @@
 	},
 	"documentTypes": {
 		"ActiveEffect": {
-			"condition": {}
+			"condition": {},
+			"nimble": {}
 		},
 		"Actor": {
 			"character": {
