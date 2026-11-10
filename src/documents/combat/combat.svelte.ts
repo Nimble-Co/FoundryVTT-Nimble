@@ -729,7 +729,7 @@ class NimbleCombat extends Combat {
 
 		await super._onStartTurn(combatant, context);
 
-		if (claimed) this.#emitTurnStart(combatant);
+		if (claimed) this.#emitTurnStart(combatant, context);
 	}
 
 	/**
@@ -751,9 +751,9 @@ class NimbleCombat extends Combat {
 	 * the turn-start counterpart of `nimbleCombatTurnEnd`. Consumed by the dice/charge pool
 	 * turn triggers.
 	 */
-	#emitTurnStart(combatant: Combatant.Implementation): void {
+	#emitTurnStart(combatant: Combatant.Implementation, context?: { round: number }): void {
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnStart', combatant);
+		Hooks.call('nimbleCombatTurnStart', combatant, context ? { round: context.round } : undefined);
 	}
 
 	/**
@@ -815,10 +815,12 @@ class NimbleCombat extends Combat {
 		await super._onEndTurn(combatant, context);
 
 		if (endingCombatant.type === 'character') {
-			if (shouldRefillCharacter) await this.#applyCharacterTurnEndRefill(endingCombatant);
+			if (shouldRefillCharacter) {
+				await this.#applyCharacterTurnEndRefill(endingCombatant, context);
+			}
 		} else {
 			// @ts-expect-error Custom hook
-			Hooks.call('nimbleCombatTurnEnd', endingCombatant);
+			Hooks.call('nimbleCombatTurnEnd', endingCombatant, { round: context.round });
 		}
 	}
 
@@ -829,11 +831,14 @@ class NimbleCombat extends Combat {
 	 * `#endingTurnRefilledCharacterId` synchronously before invoking this so a single forward
 	 * advance never refills — or fires the hook for — the same hero twice.
 	 */
-	async #applyCharacterTurnEndRefill(combatant: Combatant.Implementation): Promise<void> {
+	async #applyCharacterTurnEndRefill(
+		combatant: Combatant.Implementation,
+		context?: { round: number },
+	): Promise<void> {
 		if (combatant.type !== 'character') return;
 
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', combatant);
+		Hooks.call('nimbleCombatTurnEnd', combatant, context ? { round: context.round } : undefined);
 
 		await combatant.update(buildCharacterTurnRefillUpdate(combatant));
 	}
@@ -889,9 +894,18 @@ class NimbleCombat extends Combat {
 		return summary.members;
 	}
 
-	override async _onEndRound() {
+	/** Emits `nimbleCombatRoundStart` with the round, on the active GM only, as core runs it. */
+	override async _onStartRound(context: Combat.RoundEventContext) {
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatRoundStart', this, { round: context?.round ?? this.round });
+	}
+
+	override async _onEndRound(context: Combat.RoundEventContext) {
 		// Reset only non-character combatants' actions at end of round.
 		await this.#applyNpcActionResetUpdates();
+
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatRoundEnd', this, { round: context?.round ?? this.round });
 
 		await dissolveRoundBoundaryMinionGroups({
 			combat: this as Combat,
