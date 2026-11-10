@@ -1,3 +1,4 @@
+import type { ConditionDuration } from '../src/utils/actor/applyConditionToActor.js';
 import type { Moment } from '../src/utils/lastsUntil/momentReached.js';
 
 export type EffectNode =
@@ -86,6 +87,8 @@ export type ApplyEffectNode = {
 	effectId: string | null;
 	condition?: string | null;
 	lastsUntil?: Moment[];
+	/** A core duration, for a card that a rule made. */
+	duration?: ConditionDuration | null;
 	recipient: 'self' | 'targets';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;

@@ -122,6 +122,32 @@ describe('findConditionUsage', () => {
 		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.condition']);
 	});
 
+	it('finds Apply Effect nodes by their condition or by the item effect that holds it', () => {
+		const hexBolt = {
+			...item('Hex Bolt', {
+				activation: {
+					effects: [
+						{ id: 'a1', type: 'applyEffect', effectId: 'fx', recipient: 'targets' },
+						{ id: 'a2', type: 'applyEffect', effectId: null, condition: 'hexed' },
+						{ id: 'a3', type: 'applyEffect', effectId: 'other', recipient: 'targets' },
+					],
+				},
+			}),
+			effects: [
+				{ id: 'fx', transfer: false, statuses: new Set(['hexed']) },
+				{ id: 'other', transfer: false, statuses: new Set(['prone']) },
+				{ id: 'passive', transfer: true, statuses: new Set(['hexed']) },
+			],
+		};
+		setWorld([], [hexBolt]);
+
+		const usage = findConditionUsage('hexed');
+
+		expect(usage.items[0].nodeIds).toEqual(['a1', 'a2']);
+		expect(usage.items[0].itemEffectIds).toEqual(['fx']);
+		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.applyEffect']);
+	});
+
 	it('names the owning actor for an embedded item, and lists it only once', () => {
 		const owner = actor('Wizard', []);
 		const owned = item('Hex Bolt', {

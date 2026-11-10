@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ConditionNode, DamageNode, HealingNode, SavingThrowNode } from '#types/effectTree.js';
+import type { DamageNode, HealingNode, SavingThrowNode } from '#types/effectTree.js';
 import type { ScalingDelta, SpellScaling } from '#types/spellScaling.js';
 import type { UpcastContext } from '../applyUpcastDeltas.js';
 import { applyUpcastDeltas, validateAndComputeUpcast } from '../applyUpcastDeltas.js';
@@ -668,8 +668,12 @@ describe('applyUpcastDeltas', () => {
 
 			expect(result.upcastResult.upcastSteps).toBe(1);
 			expect(result.activationData.effects.length).toBe(1);
-			expect(result.activationData.effects[0].type).toBe('condition');
-			expect((result.activationData.effects[0] as ConditionNode).condition).toBe('burning');
+			expect(result.activationData.effects[0]).toMatchObject({
+				type: 'applyEffect',
+				effectId: null,
+				condition: 'burning',
+				recipient: 'targets',
+			});
 		});
 	});
 

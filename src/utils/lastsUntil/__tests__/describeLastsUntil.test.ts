@@ -107,4 +107,26 @@ describe('describeLastsUntil', () => {
 		expect(read([time(1, 'minutes')], holderReader('Worg'), true)).toBe('For 1 minute');
 		expect(read([], holderReader('Worg'))).toBe('');
 	});
+
+	it('reads a core duration after the moments', () => {
+		const coreDuration = { rounds: 2, turns: null, seconds: null };
+		expect(
+			describeLastsUntil({
+				moments: [],
+				coreDuration,
+				reader: CARD_TARGETS_READER,
+				localize,
+				format: localize,
+			}),
+		).toBe('For 2 rounds');
+		expect(
+			describeLastsUntil({
+				moments: [event('source', 'zeroHp')],
+				coreDuration: { turns: 1 },
+				reader: CARD_TARGETS_READER,
+				localize,
+				format: localize,
+			}),
+		).toBe('Until you drop to 0 HP, or for 1 turn');
+	});
 });

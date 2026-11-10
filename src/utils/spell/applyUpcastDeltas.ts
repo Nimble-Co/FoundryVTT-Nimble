@@ -322,13 +322,13 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 		}
 
 		case 'addCondition': {
-			// Add new condition node to effects
 			if (delta.condition) {
-				//TODO: Figure out how to handle conditions
 				activationData.effects.push({
 					id: foundry.utils.randomID(),
-					type: 'condition',
+					type: 'applyEffect',
+					effectId: null,
 					condition: delta.condition,
+					recipient: 'targets',
 					parentContext: null,
 					parentNode: null,
 				});

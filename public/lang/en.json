@@ -3803,7 +3803,9 @@
 				"rounds": { "one": "1 round", "many": "{value} rounds" },
 				"minutes": { "one": "1 minute", "many": "{value} minutes" },
 				"hours": { "one": "1 hour", "many": "{value} hours" },
-				"days": { "one": "1 day", "many": "{value} days" }
+				"days": { "one": "1 day", "many": "{value} days" },
+				"turns": { "one": "1 turn", "many": "{value} turns" },
+				"seconds": { "one": "1 second", "many": "{value} seconds" }
 			},
 			"event": {
 				"attack": { "base": "attack", "third": "attacks" },

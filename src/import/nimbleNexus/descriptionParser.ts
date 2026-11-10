@@ -4,7 +4,7 @@
  */
 
 import type {
-	ConditionNode,
+	ApplyEffectNode,
 	DamageNode,
 	DamageOutcomeNode,
 	EffectNode,
@@ -399,17 +399,19 @@ function createDamageOutcomeNode(
 }
 
 /**
- * Create a ConditionNode
+ * An Apply Effect node that names its condition; `conditionsToItemEffects` gives it an effect on the item.
  */
 function createConditionNode(
 	condition: string,
 	parentNode: string | null,
 	parentContext: string | null,
-): ConditionNode {
+): ApplyEffectNode {
 	return {
 		id: generateId(),
-		type: 'condition',
+		type: 'applyEffect',
+		effectId: null,
 		condition,
+		recipient: 'targets',
 		parentContext,
 		parentNode,
 	};

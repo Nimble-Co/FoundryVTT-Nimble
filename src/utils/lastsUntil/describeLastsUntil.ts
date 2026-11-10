@@ -37,6 +37,8 @@ export function holderReader(sourceName: string | null): LastsUntilReader {
 
 export interface DescribeInput {
 	moments: readonly Moment[];
+	/** A core duration of an older effect or a rule; it reads after the moments. */
+	coreDuration?: { rounds?: number | null; turns?: number | null; seconds?: number | null } | null;
 	/** The effect has an Escape DC. */
 	escape?: boolean;
 	reader: LastsUntilReader;
@@ -80,12 +82,7 @@ function turnPhrase(moment: Moment, input: DescribeInput): string {
 }
 
 function timePhrase(moment: Moment, input: DescribeInput): string {
-	const value = moment.value ?? 1;
-	const units = moment.units ?? 'rounds';
-	const amount =
-		value === 1
-			? input.localize(`${WORDS}.units.${units}.one`)
-			: input.format(`${WORDS}.units.${units}.many`, { value: String(value) });
+	const amount = amountOf(moment.units ?? 'rounds', moment.value ?? 1, input);
 	return input.format(`${WORDS}.for`, { amount });
 }
 
@@ -108,6 +105,24 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 	});
 }
 
+function amountOf(units: string, value: number, input: DescribeInput): string {
+	return value === 1
+		? input.localize(`${WORDS}.units.${units}.one`)
+		: input.format(`${WORDS}.units.${units}.many`, { value: String(value) });
+}
+
+function corePhrase(input: DescribeInput): string | null {
+	const duration = input.coreDuration;
+	if (!duration) return null;
+	for (const units of ['seconds', 'turns', 'rounds'] as const) {
+		const value = duration[units];
+		if (typeof value === 'number' && value > 0) {
+			return input.format(`${WORDS}.for`, { amount: amountOf(units, value, input) });
+		}
+	}
+	return null;
+}
+
 function phraseOf(moment: Moment, input: DescribeInput): string {
 	if (moment.kind === 'turn') return turnPhrase(moment, input);
 	if (moment.kind === 'time') return timePhrase(moment, input);
@@ -120,6 +135,8 @@ function phraseOf(moment: Moment, input: DescribeInput): string {
  */
 export function describeLastsUntil(input: DescribeInput): string {
 	const phrases = input.moments.map((moment) => phraseOf(moment, input));
+	const core = corePhrase(input);
+	if (core) phrases.push(core);
 	if (!phrases.length && input.escape) {
 		phrases.push(
 			input.format(`${WORDS}.until`, {

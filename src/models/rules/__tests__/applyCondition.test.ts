@@ -701,17 +701,24 @@ describe('ApplyConditionRule', () => {
 	});
 
 	describe('getActivationCardNodes', () => {
-		it('returns a condition node when the trigger matches the context', () => {
+		it('returns an Apply Effect node with the condition and its duration', () => {
 			const actor = createMockActor();
-			const rule = createApplyConditionRule({ condition: 'smoldering', trigger: 'onCrit' }, actor);
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', duration: { rounds: 2 } },
+				actor,
+			);
 
 			const nodes = rule.getActivationCardNodes({ isCritical: true, isMiss: false });
 
 			expect(nodes).toHaveLength(1);
-			const first = nodes[0] as { type: string; condition: string; id: string } | undefined;
-			expect(first?.type).toBe('condition');
-			expect(first?.condition).toBe('smoldering');
-			expect(first?.id).toContain('apply-condition-');
+			expect(nodes[0]).toMatchObject({
+				type: 'applyEffect',
+				effectId: null,
+				condition: 'smoldering',
+				duration: expect.objectContaining({ rounds: 2 }),
+				recipient: 'targets',
+			});
+			expect(nodes[0]?.id).toContain('apply-condition-');
 		});
 
 		it('returns nothing when the trigger does not match the context', () => {

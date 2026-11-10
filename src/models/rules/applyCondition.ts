@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { ConditionNode, EffectNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
@@ -141,10 +141,13 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (!this.#isAttackTrigger()) return [];
 		if (!this.#matchesAttackContext(context)) return [];
 		if (!this.condition) return [];
-		const node: ConditionNode = {
+		const node: ApplyEffectNode = {
 			id: `apply-condition-${this.id}`,
-			type: 'condition',
+			type: 'applyEffect',
+			effectId: null,
 			condition: this.condition,
+			duration: this.duration,
+			recipient: 'targets',
 			parentContext: null,
 			parentNode: null,
 		};

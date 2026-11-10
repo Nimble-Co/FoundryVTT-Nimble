@@ -8,6 +8,7 @@ import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
 import applyConditionToActor, {
 	applicationOf,
 	CONDITION_REPLACED_OPTION,
+	type ConditionDuration,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
 
@@ -22,6 +23,8 @@ export interface EffectPayload {
 	data: Record<string, unknown>;
 	sourceItemUuid: string | null;
 	sourceActorUuid: string | null;
+	/** A core duration, for a card that a rule made. */
+	duration?: ConditionDuration | null;
 }
 
 export interface AppliedEffect {
@@ -75,11 +78,13 @@ export function payloadFromCondition(
 	condition: string,
 	lastsUntil: Moment[],
 	source: { itemUuid: string | null; actorUuid: string | null },
+	duration: ConditionDuration | null = null,
 ): EffectPayload {
 	return {
 		data: { statuses: [condition], system: { lastsUntil } },
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.actorUuid,
+		duration,
 	};
 }
 
@@ -142,6 +147,7 @@ export async function applyEffectHere(
 				sourceItem,
 				sourceActor,
 				lastsUntil,
+				duration: payload.duration ?? null,
 				effectData: data,
 			})) as CreatedEffect | null)
 		: await createPlainEffect(target, data, sourceItem?.uuid ?? sourceActor?.uuid ?? null);

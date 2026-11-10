@@ -459,7 +459,7 @@ describe('buildEffectTree', () => {
 			expect(result).toHaveLength(1);
 			const damageNode = result[0] as any;
 			expect(damageNode.on?.hit).toHaveLength(2); // DamageOutcome + Condition
-			expect(damageNode.on?.hit[1].type).toBe('condition');
+			expect(damageNode.on?.hit[1].type).toBe('applyEffect');
 			expect(damageNode.on?.hit[1].condition).toBe('poisoned');
 		});
 
@@ -473,7 +473,7 @@ describe('buildEffectTree', () => {
 
 			const damageNode = result[0] as any;
 			expect(damageNode.on?.criticalHit).toHaveLength(1);
-			expect(damageNode.on?.criticalHit[0].type).toBe('condition');
+			expect(damageNode.on?.criticalHit[0].type).toBe('applyEffect');
 			expect(damageNode.on?.criticalHit[0].condition).toBe('stunned');
 		});
 	});
@@ -508,7 +508,7 @@ describe('buildEffectTree', () => {
 			expect(result).toHaveLength(1);
 			const saveNode = result[0] as any;
 			expect(saveNode.on?.failedSave).toHaveLength(1);
-			expect(saveNode.on?.failedSave[0].type).toBe('condition');
+			expect(saveNode.on?.failedSave[0].type).toBe('applyEffect');
 			expect(saveNode.on?.failedSave[0].condition).toBe('petrified');
 		});
 
@@ -842,7 +842,7 @@ describe('buildEffectTree', () => {
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
-				const conditions = (result[0] as any).on?.hit?.filter((n: any) => n.type === 'condition');
+				const conditions = (result[0] as any).on?.hit?.filter((n: any) => n.type === 'applyEffect');
 				expect(conditions).toHaveLength(2);
 			});
 
@@ -1534,7 +1534,7 @@ describe('buildEffectTree', () => {
 				// Should have Smoldering condition on failedSave
 				expect(saveNode.on?.failedSave).toBeDefined();
 				const failedSaveConditions = saveNode.on?.failedSave?.filter(
-					(n: any) => n.type === 'condition',
+					(n: any) => n.type === 'applyEffect',
 				);
 				expect(failedSaveConditions).toHaveLength(1);
 				expect(failedSaveConditions[0].condition).toBe('smoldering');

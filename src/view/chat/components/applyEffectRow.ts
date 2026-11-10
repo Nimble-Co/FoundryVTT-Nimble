@@ -1,4 +1,5 @@
 import type { ApplyEffectNode } from '#types/effectTree.js';
+import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
 import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
 import {
 	CARD_SELF_READER,
@@ -16,6 +17,7 @@ export interface ApplyEffectSource {
 	name: string;
 	img: string;
 	lastsUntil: readonly Moment[];
+	coreDuration?: ConditionDuration | null;
 	escape: boolean;
 }
 
@@ -58,6 +60,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 	const self = input.node.recipient === 'self';
 	const lasts = describeLastsUntil({
 		moments: source.lastsUntil,
+		coreDuration: source.coreDuration ?? null,
 		escape: source.escape,
 		reader: self ? CARD_SELF_READER : CARD_TARGETS_READER,
 		localize,

@@ -9,6 +9,7 @@ import {
 } from '#utils/actor/applyEffectToActor.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
+import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import type { ApplyEffectSource } from '#view/chat/components/applyEffectRow.js';
 
 export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
@@ -63,17 +64,6 @@ function nodeEffect(card: EffectCard, node: ApplyEffectNode): CardEffect | null 
 	return node.effectId ? (cardItem(card)?.effects?.get(node.effectId) ?? null) : null;
 }
 
-function statusOf(condition: string): { name: string; img: string } {
-	const entry = (
-		CONFIG.statusEffects as unknown as { id: string; name?: string; img?: string }[]
-	).find((status) => status.id === condition);
-	const names = CONFIG.NIMBLE.conditions as Record<string, string>;
-	return {
-		name: names[condition] ?? (entry?.name ? localize(entry.name) : condition),
-		img: entry?.img ?? 'icons/svg/aura.svg',
-	};
-}
-
 /** What the card row shows; null when the item no longer has the effect. */
 export function applyEffectSource(
 	card: EffectCard,
@@ -89,7 +79,12 @@ export function applyEffectSource(
 		};
 	}
 	if (!node.condition) return null;
-	return { ...statusOf(node.condition), lastsUntil: node.lastsUntil ?? [], escape: false };
+	return {
+		...statusOf(node.condition),
+		lastsUntil: node.lastsUntil ?? [],
+		coreDuration: node.duration ?? null,
+		escape: false,
+	};
 }
 
 export function appliedEffects(card: EffectCard, nodeId: string): AppliedEffect[] | undefined {
@@ -113,10 +108,12 @@ function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | nul
 	const effect = nodeEffect(card, node);
 	if (effect) return payloadFromEffect(effect, { itemUuid: item?.uuid ?? null, user });
 	if (!node.condition) return null;
-	return payloadFromCondition(node.condition, node.lastsUntil ?? [], {
-		itemUuid: item?.uuid ?? null,
-		actorUuid: user?.uuid ?? null,
-	});
+	return payloadFromCondition(
+		node.condition,
+		node.lastsUntil ?? [],
+		{ itemUuid: item?.uuid ?? null, actorUuid: user?.uuid ?? null },
+		node.duration ?? null,
+	);
 }
 
 /** Puts the node's effect on the card's targets, or on its user, and records who took it. */
