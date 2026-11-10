@@ -1,5 +1,4 @@
-import type { ApplyEffectNode } from '#types/effectTree.js';
-import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
+import type { ApplyEffectNode, ApplyEffectSource } from '#types/effectTree.js';
 import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
 import {
 	CARD_SELF_READER,
@@ -8,18 +7,8 @@ import {
 	type Format,
 	type Localize,
 } from '#utils/lastsUntil/describeLastsUntil.js';
-import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 const WORDS = 'NIMBLE.chat.applyEffect';
-
-/** What the card shows of the effect: the item's effect, or the condition of a card a rule made. */
-export interface ApplyEffectSource {
-	name: string;
-	img: string;
-	lastsUntil: readonly Moment[];
-	coreDuration?: ConditionDuration | null;
-	escape: boolean;
-}
 
 export interface ApplyEffectRowInput {
 	node: Pick<ApplyEffectNode, 'recipient'>;
@@ -84,7 +73,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		appliedLine: null,
 		button: input.canApply
 			? {
-					label: localize(`${WORDS}.${self ? 'applyToYou' : 'applyToTargets'}`),
+					label: localize(self ? `${WORDS}.applyToYou` : `${WORDS}.applyToTargets`),
 					disabled: !input.hasRecipient,
 					tooltip: input.hasRecipient ? null : localize(`${WORDS}.noTargets`),
 				}

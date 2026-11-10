@@ -1,17 +1,17 @@
 import { SYSTEM_ID } from '#system';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { newApplicationLastsLonger } from '../lastsUntil/lastsLonger.js';
-import type { Moment } from '../lastsUntil/momentReached.js';
-import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
 import applyConditionToActor, {
 	applicationOf,
 	CONDITION_REPLACED_OPTION,
 	type ConditionDuration,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
-import { giveTempHp, tempHpToGive } from './effectTempHp.js';
+import { giveTempHp, tempHpGrant } from './effectTempHp.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.applyEffect`;
 
@@ -33,6 +33,8 @@ export interface EffectPayload {
 export interface AppliedEffect {
 	effectUuid: string;
 	actorName: string;
+	/** the holder kept more temp HP than the effect gives */
+	tempHpRefused?: { temp: number; amount: number };
 }
 
 interface SourceUser {
@@ -52,6 +54,7 @@ interface EffectHolder {
 
 interface CreatedEffect {
 	uuid?: string;
+	update?(data: Record<string, unknown>): Promise<unknown>;
 }
 
 /** The Escape DC as a number, from the roll data of the one who used the item. */
@@ -144,10 +147,8 @@ export async function applyEffectHere(
 		documentOrUuid(payload.sourceItemUuid),
 		documentOrUuid(payload.sourceActorUuid),
 	]);
-	const tempHp = tempHpToGive(target, payload.tempHp);
-	const data = tempHp
-		? foundry.utils.mergeObject(foundry.utils.deepClone(payload.data), { system: { tempHp } })
-		: payload.data;
+	const data = payload.data;
+	const grantsBefore = tempHpGrants(target);
 	const statuses = Array.isArray(data.statuses) ? (data.statuses as string[]) : [];
 	const lastsUntil = (data.system as { lastsUntil?: Moment[] } | undefined)?.lastsUntil ?? [];
 	const effect = statuses.length
@@ -160,8 +161,26 @@ export async function applyEffectHere(
 			})) as CreatedEffect | null)
 		: await createPlainEffect(target, data, sourceItem?.uuid ?? sourceActor?.uuid ?? null);
 	if (!effect?.uuid) return null;
-	await giveTempHp(target, tempHp);
-	return { effectUuid: effect.uuid, actorName: target.name ?? '' };
+	const ids = new Set([...(target.effects ?? [])].map((entry) => entry.id));
+	const replaced = grantsBefore
+		.filter(([id]) => !ids.has(id))
+		.reduce((sum, [, amount]) => sum + amount, 0);
+	const grant = tempHpGrant(target, payload.tempHp, replaced);
+	await giveTempHp(target, grant.give);
+	if (grant.owned) await effect.update?.({ 'system.tempHp': grant.owned });
+	return {
+		effectUuid: effect.uuid,
+		actorName: target.name ?? '',
+		...(grant.refused ? { tempHpRefused: grant.refused } : {}),
+	};
+}
+
+/** The temp HP that each effect on the target gave, by effect id. */
+function tempHpGrants(target: EffectHolder): [string, number][] {
+	return [...(target.effects ?? [])].flatMap((entry) => {
+		const given = Number((entry as { system?: { tempHp?: number | null } }).system?.tempHp);
+		return entry.id && Number.isFinite(given) && given > 0 ? [[entry.id, given]] : [];
+	});
 }
 
 function isApplied(answer: unknown): answer is AppliedEffect {

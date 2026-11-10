@@ -120,8 +120,14 @@ function onUpdateToken(token: TokenDocument, changes: Record<string, unknown>): 
 }
 
 /** The user who deleted the effect owns its holder, so the temp HP comes back on that client. */
-function takeBackEffectTempHp(effect: ActiveEffect, userId: string | undefined): void {
+/** A replaced copy leaves its temp HP to the copy that takes its place. */
+function takeBackEffectTempHp(
+	effect: ActiveEffect,
+	options: Record<string, unknown> | undefined,
+	userId: string | undefined,
+): void {
 	if (userId !== game.user?.id || !(effect.parent instanceof Actor)) return;
+	if (options?.[CONDITION_REPLACED_OPTION]) return;
 	const given = (effect.system as { tempHp?: number | null } | undefined)?.tempHp;
 	if (given) void takeBackTempHp(effect.parent as never, given);
 }
@@ -131,7 +137,7 @@ function onDeleteEffect(
 	options?: Record<string, unknown>,
 	userId?: string,
 ): void {
-	takeBackEffectTempHp(effect, userId);
+	takeBackEffectTempHp(effect, options, userId);
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
 	if (options?.[CONDITION_REPLACED_OPTION]) return;
 	const holder = effect.parent;

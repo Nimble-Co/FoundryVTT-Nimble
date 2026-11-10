@@ -1,5 +1,3 @@
-import localize from '#utils/localize.js';
-
 interface TempHpHolder {
 	name?: string | null;
 	system?: unknown;
@@ -13,23 +11,31 @@ function currentTemp(holder: TempHpHolder): number {
 	return Number.isFinite(temp) ? temp : 0;
 }
 
+export interface TempHpGrant {
+	/** the temp HP to set on the holder now */
+	give: number;
+	/** the temp HP that the new effect takes back when it ends */
+	owned: number;
+	/** the holder kept more temp HP than the effect gives */
+	refused: { temp: number; amount: number } | null;
+}
+
 /**
- * The temp HP that an effect gives: all of it when it is more than the holder has, else none
- * (temp HP do not stack). Says so when it gives none.
+ * What a new effect does with temp HP, after the copies it replaced are gone. It gives all of
+ * `amount` when that is more than the holder has, else none (temp HP do not stack). When it gives
+ * none, it takes over what is left of the temp HP that the replaced copies gave (`replaced`).
  */
-export function tempHpToGive(holder: TempHpHolder, amount: number | null | undefined): number {
+export function tempHpGrant(
+	holder: TempHpHolder,
+	amount: number | null | undefined,
+	replaced: number,
+): TempHpGrant {
 	const value = Math.floor(Number(amount));
-	if (!Number.isFinite(value) || value <= 0) return 0;
 	const temp = currentTemp(holder);
-	if (value > temp) return value;
-	ui.notifications?.warn(
-		localize('NIMBLE.healingTypes.tempHealingNotGranted', {
-			name: holder.name ?? '',
-			temp: String(temp),
-			amount: String(value),
-		}),
-	);
-	return 0;
+	const inherited = Math.min(temp, Math.max(0, replaced));
+	if (!Number.isFinite(value) || value <= 0) return { give: 0, owned: inherited, refused: null };
+	if (value > temp) return { give: value, owned: value, refused: null };
+	return { give: 0, owned: inherited, refused: { temp, amount: value } };
 }
 
 export async function giveTempHp(holder: TempHpHolder, amount: number): Promise<void> {

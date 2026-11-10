@@ -163,22 +163,47 @@ describe('applyEffectToActor', () => {
 
 	it('gives the temp HP of the card and records them on the effect', async () => {
 		const target = holder({ temp: 2 });
+		const update = vi.fn(async () => undefined);
+		createEffect.mockResolvedValueOnce({ uuid: 'Actor.goblin.ActiveEffect.new', update });
 
-		await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
+		const applied = await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
 
-		expect(createEffect).toHaveBeenCalledWith(
-			expect.objectContaining({ system: expect.objectContaining({ tempHp: 6 }) }),
-			expect.anything(),
-		);
 		expect(target.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 6 });
+		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
+		expect(applied).not.toHaveProperty('tempHpRefused');
 	});
 
-	it('gives no temp HP when the holder has as many already', async () => {
+	it('gives no temp HP when the holder has as many already, and says so to the caller', async () => {
 		const target = holder({ temp: 8 });
+		const update = vi.fn(async () => undefined);
+		createEffect.mockResolvedValueOnce({ uuid: 'Actor.goblin.ActiveEffect.new', update });
+
+		const applied = await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
+
+		expect(target.update).not.toHaveBeenCalled();
+		expect(update).not.toHaveBeenCalled();
+		expect(applied?.tempHpRefused).toEqual({ temp: 8, amount: 6 });
+	});
+
+	it('takes over the temp HP of a copy it replaces, when it gives none of its own', async () => {
+		const old = {
+			id: 'old',
+			origin: 'Actor.hero.Item.spell',
+			name: 'Snowblind',
+			statuses: new Set(),
+			system: { lastsUntil: [{ ...turnMoment, span: 'currentTurn' }], tempHp: 6 },
+		};
+		const target = holder({ temp: 6, effects: [old] });
+		deleteDocuments.mockImplementation(async () => {
+			target.effects.splice(0);
+		});
+		const update = vi.fn(async () => undefined);
+		createEffect.mockResolvedValueOnce({ uuid: 'Actor.goblin.ActiveEffect.new', update });
 
 		await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
 
-		expect(createEffect.mock.calls[0][0].system).not.toHaveProperty('tempHp');
+		expect(deleteDocuments).toHaveBeenCalled();
 		expect(target.update).not.toHaveBeenCalled();
+		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
 	});
 });

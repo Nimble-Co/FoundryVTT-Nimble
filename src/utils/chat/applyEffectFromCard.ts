@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -11,7 +11,6 @@ import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-import type { ApplyEffectSource } from '#view/chat/components/applyEffectRow.js';
 
 export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
 
@@ -142,6 +141,16 @@ export function givenByAnEffect(card: EffectCard, healingNodeId: string): boolea
 	);
 }
 
+function warnTempHpKept(name: string, refused: { temp: number; amount: number }): void {
+	ui.notifications?.warn(
+		localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+			name,
+			temp: String(refused.temp),
+			amount: String(refused.amount),
+		}),
+	);
+}
+
 /** Puts the node's effect on the card's targets, or on its user, and records who took it. */
 export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
 	const base = payloadOf(card, node);
@@ -155,7 +164,11 @@ export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNod
 	const applied: AppliedEffect[] = [];
 	for (const result of results) {
 		if (result.status === 'rejected') console.error(result.reason);
-		else if (result.value) applied.push(result.value);
+		else if (result.value) {
+			const { tempHpRefused, ...entry } = result.value;
+			if (tempHpRefused) warnTempHpKept(entry.actorName, tempHpRefused);
+			applied.push(entry);
+		}
 	}
 	if (!applied.length) {
 		const name = applyEffectSource(card, node)?.name ?? '';

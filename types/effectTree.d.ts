@@ -1,5 +1,5 @@
-import type { ConditionDuration } from '../src/utils/actor/applyConditionToActor.js';
-import type { Moment } from '../src/utils/lastsUntil/momentReached.js';
+import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 export type EffectNode =
 	| ApplyEffectNode
@@ -94,6 +94,15 @@ export type ApplyEffectNode = {
 	parentContext: string | null;
 	parentNode: string | null;
 };
+
+/** What a card shows of the effect: the item's effect, or the condition of a card a rule made. */
+export interface ApplyEffectSource {
+	name: string;
+	img: string;
+	lastsUntil: readonly Moment[];
+	coreDuration?: ConditionDuration | null;
+	escape: boolean;
+}
 
 export type EffectNodeDisposition = 'any' | 'friendly' | 'neutral' | 'hostile' | 'secret';
 

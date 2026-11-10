@@ -292,8 +292,9 @@ describe('events', () => {
 
 		hook('deleteActiveEffect')(effect, {}, game.user?.id);
 		hook('deleteActiveEffect')(effect, {}, 'someone else');
+		hook('deleteActiveEffect')(effect, { nimbleConditionReplaced: true }, game.user?.id);
 
-		expect(holder.update).toHaveBeenCalledTimes(1);
+		expect(holder.update, 'a replaced copy leaves its temp HP').toHaveBeenCalledTimes(1);
 		expect(holder.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 3 });
 	});
 
