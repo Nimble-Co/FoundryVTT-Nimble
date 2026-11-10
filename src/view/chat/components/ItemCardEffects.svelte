@@ -24,7 +24,16 @@
 		<section
 			class="nimble-card-section"
 			class:nimble-card-section--conditions={nodeGroup.find((node) => node.type === 'condition')}
+			class:nimble-card-section--apply-effects={nodeGroup[0]?.type === 'applyEffect'}
 		>
+			{#if nodeGroup[0]?.type === 'applyEffect'}
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{localize('NIMBLE.chat.applyEffect.heading')}
+					</h3>
+				</header>
+			{/if}
+
 			{#each nodeGroup as node}
 				{@const Component = getNodeComponent(node.type)}
 
@@ -74,6 +83,17 @@
 
 	.nimble-card-section {
 		--nimble-card-section-padding: 0;
+
+		&--apply-effects {
+			--nimble-card-section-padding: 0.5rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			.nimble-effect {
+				padding: 0;
+			}
+		}
 
 		&--conditions {
 			--nimble-card-section-padding: 0.5rem;

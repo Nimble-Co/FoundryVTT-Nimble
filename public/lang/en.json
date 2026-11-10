@@ -549,6 +549,16 @@
 			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
+			"applyEffect": {
+				"heading": "Effects",
+				"applyToTargets": "Apply to Targets",
+				"applyToYou": "Apply to You",
+				"on": "On {names}",
+				"noTargets": "This card has no targets.",
+				"noneTook": "No creature took {name}.",
+				"missingName": "Effect not found",
+				"missing": "The item no longer has this effect."
+			},
 			"applyConditionHint": "Left click to apply this condition to this card's targets.",
 			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
