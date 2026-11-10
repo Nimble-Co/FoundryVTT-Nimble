@@ -37,14 +37,15 @@ export function eventsFor(moment: Moment): LastsUntilEvent[] {
 }
 
 export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffect) {
-	const effect = $derived(getEffect().reactive);
-	const system = $derived(effect.system as unknown as EffectSystem);
+	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
 	const escapeData = $derived(system.escape ?? { dc: '', saves: 'strOrDex' });
 
 	/** The label of an older core duration, which still ends the effect. */
 	const coreDuration = $derived.by(() => {
-		const duration = effect.duration as { value?: number | null; label?: string } | undefined;
+		const duration = getEffect().reactive.duration as
+			| { value?: number | null; label?: string }
+			| undefined;
 		return Number.isFinite(duration?.value) ? (duration?.label ?? '') : '';
 	});
 

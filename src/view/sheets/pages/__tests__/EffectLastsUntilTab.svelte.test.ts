@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
+import { createSubscriber } from 'svelte/reactivity';
 import { describe, expect, it, vi } from 'vitest';
 import { newMoment } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -8,12 +9,26 @@ import EffectLastsUntilTab from '../EffectLastsUntilTab.svelte';
 const LU = 'NIMBLE.effectSheet.lastsUntil';
 const word = (key: string, data?: Record<string, string>) => localize(key, data);
 
+/** Like a document: plain data, and a `reactive` getter that a database update wakes. */
 function makeEffect(lastsUntil: Moment[], duration: object = { value: null }) {
+	let wake = () => {};
+	const subscribe = createSubscriber((update) => {
+		wake = update;
+		return () => {
+			wake = () => {};
+		};
+	});
 	const effect = {
 		duration,
 		system: { lastsUntil, escape: { dc: '', saves: 'strOrDex' } },
-		update: vi.fn(async () => undefined),
+		update: vi.fn(async (data: Record<string, unknown>) => {
+			if ('system.lastsUntil' in data) {
+				effect.system = { ...effect.system, lastsUntil: data['system.lastsUntil'] as Moment[] };
+			}
+			wake();
+		}),
 		get reactive() {
+			subscribe();
 			return effect;
 		},
 	};
@@ -68,6 +83,7 @@ describe('EffectLastsUntilTab', () => {
 		await fireEvent.change(field(container, 'add'), { target: { value: 'turn' } });
 
 		expect(saved(effect)).toEqual([newMoment('turn')]);
+		expect(field(container, 'boundary')?.value, 'the new row shows').toBe('end');
 	});
 
 	it('reads a turn moment as its words, and a change saves the moment', async () => {
