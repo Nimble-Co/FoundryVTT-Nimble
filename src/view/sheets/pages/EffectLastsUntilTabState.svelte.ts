@@ -44,9 +44,10 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 	/** The label of an older core duration, which still ends the effect. */
 	const coreDuration = $derived.by(() => {
 		const duration = getEffect().reactive.duration as
-			| { value?: number | null; label?: string }
+			| { value?: number | null; units?: string | null }
 			| undefined;
-		return Number.isFinite(duration?.value) ? (duration?.label ?? '') : '';
+		if (!Number.isFinite(duration?.value) || !duration?.units) return '';
+		return `${duration.value} ${localize(`EFFECT.DURATION.UNITS.${duration.units}`)}`;
 	});
 
 	function save(next: Moment[]) {

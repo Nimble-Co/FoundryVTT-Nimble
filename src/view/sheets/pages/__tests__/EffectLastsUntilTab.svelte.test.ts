@@ -58,9 +58,10 @@ describe('EffectLastsUntilTab', () => {
 	});
 
 	it('shows an older core duration, which still ends the effect', () => {
-		const { container } = renderTab(makeEffect([], { value: 1, label: '1 Round' }));
+		const { container } = renderTab(makeEffect([], { value: 1, units: 'rounds' }));
 
-		expect(container.textContent).toContain(word(`${LU}.coreDuration`, { duration: '1 Round' }));
+		const duration = `1 ${word('EFFECT.DURATION.UNITS.rounds')}`;
+		expect(container.textContent).toContain(word(`${LU}.coreDuration`, { duration }));
 		expect(container.textContent).not.toContain(word(`${LU}.none`));
 	});
 
