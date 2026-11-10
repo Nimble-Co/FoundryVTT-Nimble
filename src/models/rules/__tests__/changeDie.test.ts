@@ -56,7 +56,7 @@ function makeRule(config: Record<string, unknown> = {}) {
 		addsBonusOnSet: false,
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	return rule;
 }
 

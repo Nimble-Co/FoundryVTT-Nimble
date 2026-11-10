@@ -130,7 +130,7 @@ function addActionCostRule(
 	rule.priority = config.priority ?? 1;
 	rule.type = 'actionCost';
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => ownerItem,
 		configurable: true,
 	});

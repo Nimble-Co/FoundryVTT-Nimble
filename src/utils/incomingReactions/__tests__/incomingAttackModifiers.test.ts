@@ -36,7 +36,7 @@ interface MockRule {
 	modifier?: 'disadvantage' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
 	missThreshold?: number;
 	resolveRange?: () => number;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
 

@@ -191,7 +191,7 @@ function createToggleEffectRule(
 		writable: true,
 	});
 
-	Object.defineProperty(rule, 'item', { get: () => parentItem, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parentItem, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0, test: () => true }),
 		configurable: true,

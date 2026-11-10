@@ -76,7 +76,7 @@ function createDamageBonusRule(
 	(rule as any).source = config.source ?? 'any';
 	(rule as any).disabled = config.disabled ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});
@@ -298,7 +298,7 @@ describe('DamageBonusRule', () => {
 			(rule as any).source = 'weapon';
 			(rule as any).disabled = false;
 
-			Object.defineProperty(rule, 'item', {
+			Object.defineProperty(rule, 'parent', {
 				get: () => item,
 				configurable: true,
 			});

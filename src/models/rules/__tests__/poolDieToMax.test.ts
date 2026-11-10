@@ -18,7 +18,7 @@ async function make(
 		{ parent, strict: false } as never,
 	);
 	Object.assign(rule, data);
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	Object.defineProperty(rule, 'actor', {
 		get: () => ({ uuid: 'Actor.a', getRollData: () => rollData }),
 		configurable: true,

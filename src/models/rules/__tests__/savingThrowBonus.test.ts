@@ -57,7 +57,7 @@ describe('SavingThrowBonusRule', () => {
 			rule.savingThrows = ['strength'];
 			rule.disabled = false;
 
-			Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+			Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 			Object.defineProperty(rule, 'actor', { get: () => item.actor, configurable: true });
 			Object.defineProperty(rule, 'predicate', {
 				get: () => predicate ?? { size: 0 },

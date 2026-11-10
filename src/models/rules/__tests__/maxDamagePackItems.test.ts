@@ -28,7 +28,7 @@ function liveRule(file: string): MaxDamageRule {
 		{ parent, strict: false } as never,
 	);
 	Object.assign(rule, { ...data, predicate: new Predicate(data.predicate ?? {}) });
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	return rule;
 }
 

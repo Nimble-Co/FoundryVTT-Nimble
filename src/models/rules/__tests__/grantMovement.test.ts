@@ -119,7 +119,7 @@ function createGrantMovementRule(
 	(rule as any).speed = config.speed ?? '@attributes.movement.walk';
 	(rule as any).disabled = config.disabled ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

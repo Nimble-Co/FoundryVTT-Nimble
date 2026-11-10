@@ -11,7 +11,7 @@ function make(
 		{ parent, strict: false } as never,
 	);
 	Object.assign(rule, { predicate: new Predicate({}), chargePoolIdentifier: '', ...data });
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	return rule;
 }
 

@@ -71,7 +71,7 @@ function createDamageReductionRule(
 	(rule as any).disabled = config.disabled ?? false;
 	(rule as any).onlyCrits = config.onlyCrits ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});
