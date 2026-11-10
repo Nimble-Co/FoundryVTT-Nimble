@@ -128,6 +128,17 @@ describe('conditions under ActiveEffect V2', () => {
 		expect(effect!.type).toBe('nimble');
 		expect(effect!.system.changes).toHaveLength(1);
 
+		await actor.delete();
+	});
+
+	test('an effect that another module flags keeps the base type', async () => {
+		const actor = (await Actor.create({
+			name: TEST_ACTOR_NAME,
+			type: 'character',
+		})) as unknown as StatusActorLike & {
+			createEmbeddedDocuments: (name: string, data: object[]) => Promise<EffectLike[]>;
+		};
+
 		const [foreign] = await actor.createEmbeddedDocuments('ActiveEffect', [
 			{ name: 'Module effect', flags: { 'some-module': { owned: true } } },
 		]);

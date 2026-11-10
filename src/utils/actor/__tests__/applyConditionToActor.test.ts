@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 const hooksCall = vi.fn().mockReturnValue(true);
 const hooksCallAll = vi.fn();
@@ -174,7 +175,7 @@ describe('applyConditionToActor origin', () => {
 		await applyConditionToActor(target, 'dazed');
 
 		expect(createEffect).toHaveBeenCalledWith(
-			expect.objectContaining({ id: 'effect-1', type: 'nimble' }),
+			expect.objectContaining({ id: 'effect-1', type: NIMBLE_EFFECT_TYPE }),
 			{ parent: target, keepId: true },
 		);
 	});
@@ -286,7 +287,7 @@ describe('applyConditionToActor effect creation', () => {
 
 		const created = createEffect.mock.calls[0][0] as Record<string, unknown>;
 		expect(created).not.toBe(effect);
-		expect(created.type).toBe('nimble');
+		expect(created.type).toBe(NIMBLE_EFFECT_TYPE);
 		expect(created.origin).toBe('Item.feature');
 		expect(created.duration).toEqual({ value: 1, units: 'rounds', expiry: 'turnStart' });
 	});

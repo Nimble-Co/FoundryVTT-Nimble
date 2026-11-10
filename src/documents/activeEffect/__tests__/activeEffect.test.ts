@@ -177,18 +177,24 @@ describe('NimbleActiveEffect.createDialog', () => {
 		);
 	});
 
-	it('keeps a caller restriction and still drops the legacy and base types', async () => {
+	it('keeps the caller restriction and other options, and still drops the legacy and base types', async () => {
 		await createDialog(
 			{},
 			{},
-			{ types: ['base', LEGACY_CONDITION_EFFECT_TYPE, NIMBLE_EFFECT_TYPE] },
+			{ types: [LEGACY_CONDITION_EFFECT_TYPE, NIMBLE_EFFECT_TYPE], width: 400 },
 		);
 
 		expect(coreCreateDialog).toHaveBeenCalledWith(
 			{},
 			{},
-			{ types: [NIMBLE_EFFECT_TYPE] },
+			{ types: [NIMBLE_EFFECT_TYPE], width: 400 },
 			undefined,
 		);
+	});
+
+	it('passes an empty restriction on when the caller allows only removed types', async () => {
+		await createDialog({}, {}, { types: [LEGACY_CONDITION_EFFECT_TYPE] });
+
+		expect(coreCreateDialog).toHaveBeenCalledWith({}, {}, { types: [] }, undefined);
 	});
 });
