@@ -6,7 +6,7 @@ import type { LastsUntilCheck, Moment } from '../momentReached.js';
 const COMBAT = 'combat1';
 
 function makeActor(uuid: string, type = 'npc') {
-	return new Actor({ uuid, type, inCombat: true });
+	return new Actor({ uuid, type, inCombat: true } as never);
 }
 
 const goblin = makeActor('Actor.goblin');
@@ -28,7 +28,7 @@ const combat = {
 	},
 } as unknown as Combat;
 
-const spell = new Item({ uuid: 'Actor.tessa.Item.sand', actor: tessa });
+const spell = new Item({ uuid: 'Actor.tessa.Item.sand', actor: tessa } as never);
 
 function moment(fields: Partial<Moment>): Moment {
 	return {

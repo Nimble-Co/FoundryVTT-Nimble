@@ -38,6 +38,7 @@ import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
 import itemDataModels from '../models/item/itemDataModels.js';
+import { configureEffectExpiry } from '../utils/lastsUntil/configureExpiry.js';
 import { registerMovementActions } from '../utils/movement/movementActions.js';
 import HeroSheet from '../view/actorSheets/hero/HeroSheetApplication.svelte.js';
 import MonsterSheet from '../view/actorSheets/monster/MonsterSheetApplication.svelte.js';
@@ -67,6 +68,7 @@ export default function init() {
 	Object.assign(CONFIG.ActiveEffect.dataModels, activeEffectDataModels);
 	// Core's create dialog preselects this type.
 	(CONFIG.ActiveEffect as { defaultType?: string }).defaultType = NIMBLE_EFFECT_TYPE;
+	configureEffectExpiry();
 	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
 	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
 	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;

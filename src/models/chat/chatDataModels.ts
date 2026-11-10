@@ -4,6 +4,7 @@ import { NimbleChaosCardData } from './ChaosCardDataModel.js';
 import { NimbleChargeAdjustmentCardData } from './ChargeAdjustmentCardDataModel.js';
 import { NimbleCritBackCardData } from './CritBackCardDataModel.js';
 import { NimbleDemandControlCardData } from './DemandControlCardDataModel.js';
+import { NimbleEffectsEndedCardData } from './EffectsEndedCardDataModel.js';
 import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
 import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
 import { NimbleInitiativeCardData } from './InitiativeCardDataModel.js';
@@ -32,6 +33,7 @@ const chatDataModels = {
 	movementOffer: NimbleMovementOfferCardData,
 	chaos: NimbleChaosCardData,
 	demandControl: NimbleDemandControlCardData,
+	effectsEnded: NimbleEffectsEndedCardData,
 	critBack: NimbleCritBackCardData,
 	movementTrigger: NimbleMovementTriggerCardData,
 	object: NimbleObjectCardData,
@@ -60,6 +62,7 @@ declare global {
 			movementOffer: NimbleMovementOfferCardData;
 			chaos: NimbleChaosCardData;
 			demandControl: NimbleDemandControlCardData;
+			effectsEnded: NimbleEffectsEndedCardData;
 			critBack: NimbleCritBackCardData;
 			movementTrigger: NimbleMovementTriggerCardData;
 			object: NimbleObjectCardData;
