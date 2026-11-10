@@ -30,11 +30,11 @@ function otherCreatureMatches(
 	return predicate.test(domain);
 }
 
-/** `otherCreatureMatches` for a rule: its actor is the owner, its item gives the item tags. */
+/** `otherCreatureMatches` for a rule: its actor is the owner, its parent gives the item tags. */
 export function ruleOtherCreatureMatches(
-	rule: { actor: unknown; item: { getDomain(): Set<string> } },
+	rule: { actor: unknown; parentDomain: Set<string> },
 	raw: Predicate | RawPredicate | null | undefined,
 	other: OtherCreature | null | undefined,
 ): boolean {
-	return otherCreatureMatches(raw, rule.actor as RuleOwner, rule.item.getDomain(), other);
+	return otherCreatureMatches(raw, rule.actor as RuleOwner, rule.parentDomain, other);
 }

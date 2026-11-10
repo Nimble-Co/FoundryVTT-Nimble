@@ -138,8 +138,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	 * Dice-based values are stored as raw formulas; numeric values are resolved.
 	 */
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
 		const tc = this.targetCondition;

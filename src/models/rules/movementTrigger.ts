@@ -198,7 +198,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	}
 
 	override async onMovementFinished(context: MovementFinishedContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
 		const { record } = context;
@@ -225,7 +225,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 
 		await postMovementTriggerCard({
 			actor: this.actor,
-			item: this.item,
+			item: this.parentDocument,
 			token: context.token,
 			message,
 			targets: match.targets.flatMap((token) => (token.uuid ? [token.uuid] : [])),

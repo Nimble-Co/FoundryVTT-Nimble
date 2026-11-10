@@ -31,7 +31,7 @@ class InitiativeManaRerollOnesRule extends NimbleBaseRule<InitiativeManaRerollOn
 
 	/** The feature name for the tag. Null when its condition does not hold. */
 	get rerollFeature(): string | null {
-		if (!this.item.isEmbedded || !this.test()) return null;
+		if (!this.isOnActor || !this.test()) return null;
 		return ruleLabel(this);
 	}
 }

@@ -41,11 +41,10 @@ class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const value = this.resolveFormula(this.value) ?? 0;
 
 		interface ActorAttributes {

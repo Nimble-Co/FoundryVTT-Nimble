@@ -48,6 +48,8 @@ declare namespace OptionSwapRule {
  * explicit group names exist for content that means less.
  */
 class OptionSwapRule extends NimbleBaseRule<OptionSwapRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.optionSwap.description';
 

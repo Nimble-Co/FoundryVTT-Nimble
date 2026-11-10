@@ -90,10 +90,9 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	 * Apply the speed bonus to the actor's movement
 	 */
 	private applySpeedBonus(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const value = this.resolveFormula(this.value) ?? 0;
 		this.appliedAmount = value;
 		const actorSystem = actor as object as ActorSystem;

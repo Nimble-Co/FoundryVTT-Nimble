@@ -94,6 +94,8 @@ declare namespace ModifyRerollRule {
  * when the reroll is used.
  */
 class ModifyRerollRule extends NimbleBaseRule<ModifyRerollRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.modifyReroll.description';
 	static override formLayout: readonly RuleFormGroup[] = [

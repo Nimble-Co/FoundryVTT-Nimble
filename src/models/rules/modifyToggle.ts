@@ -76,6 +76,8 @@ declare namespace ModifyToggleRule {
  * owning actor when deciding whether an automatic turn-off trigger fires.
  */
 class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.modifyToggle.description';
 

@@ -47,6 +47,8 @@ declare namespace GrantActivationRule {
  * (e.g. an action-cost or action-adjustment rule), not by the offer itself.
  */
 class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.grantActivation.description';
 	static override icon = 'fa-solid fa-hand-point-right';

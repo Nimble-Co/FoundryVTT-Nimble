@@ -82,6 +82,8 @@ declare namespace ChargeConsumerRule {
 }
 
 class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.chargeConsumer.description';
 	static override icon = 'fa-solid fa-arrow-down-from-line';

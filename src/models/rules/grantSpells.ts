@@ -85,6 +85,8 @@ declare namespace GrantSpellsRule {
  * 4. Spell selection - User chooses N individual spells from the filtered pool
  */
 class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.grantSpells.description';
 	static override icon = 'fa-solid fa-wand-magic-sparkles';

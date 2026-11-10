@@ -198,7 +198,7 @@ describe('ChangeResultRule#offersUseOn', () => {
 	it('does not offer a Wound the actor has no room for, and offers the last one', () => {
 		const rule = makeRule({ change: 'add', formula: '@strength', woundCost: 1 });
 		const { wounds } = (
-			rule.item.actor as unknown as { system: { attributes: { wounds: { value: number } } } }
+			rule.actor as unknown as { system: { attributes: { wounds: { value: number } } } }
 		).system.attributes;
 		wounds.value = 5;
 		expect(offered(rule, card(7))).toBe(true);

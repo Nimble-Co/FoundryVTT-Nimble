@@ -270,11 +270,11 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 
 	/** How this rule changes the reading of this attack, or null when it does not apply. */
 	changeFor(context: AttackOutcomeContext): AttackOutcomeChange | null {
-		if (!this.item.isEmbedded || this.side !== context.side) return null;
+		if (!this.isOnActor || this.side !== context.side) return null;
 		if (!this.test(this.domainWith(attackTags(context.damageTypes)))) return null;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return null;
 		const ownAttack = context.side === 'yourAttacks';
-		if (ownAttack && this.thisItemOnly && context.itemUuid !== this.item.uuid) return null;
+		if (ownAttack && this.thisItemOnly && context.itemUuid !== this.item?.uuid) return null;
 		if (!this.#matchesAttackItem(context.itemUuid)) return null;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return null;
 		const chargePoolIdentifier = ownAttack ? (this.chargePoolIdentifier ?? '').trim() : '';

@@ -58,6 +58,8 @@ declare namespace SavingThrowRollModeRule {
  * able to reset to calculated defaults.
  */
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'bonuses';
 	static override description = 'NIMBLE.rules.savingThrowRollMode.description';
 	static override icon = 'fa-solid fa-dice-five';

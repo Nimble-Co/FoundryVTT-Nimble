@@ -508,7 +508,7 @@ describe('ApplyConditionRule', () => {
 			await saveResolved(rule, actor, 'fail');
 
 			const otherRule = createSaveRule(actor);
-			Object.defineProperty(otherRule, 'item', {
+			Object.defineProperty(otherRule, 'parent', {
 				get: () => ({ ...createMockItem(actor), uuid: 'other-item-uuid' }),
 			});
 			await saveResolved(otherRule, actor, 'pass');

@@ -109,7 +109,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 
 	/** The dice this rule adds to a crit of an attack with this delivery, or null. */
 	specFor(delivery: AttackDelivery | null): CritDiceSpec | null {
-		if (!this.item.isEmbedded || !this.test()) return null;
+		if (!this.isOnActor || !this.test()) return null;
 		if (!matchesAttackDelivery(this.attackDelivery, delivery)) return null;
 		const spec = this.critDiceSpec;
 		return spec.oncePerTurn && usedThisTurn(this.actor as Actor | null, spec.key) ? null : spec;
@@ -151,7 +151,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		if (this.item.isEmbedded) this.checkReferences(this.formula);
+		if (this.isOnActor) this.checkReferences(this.formula);
 	}
 }
 

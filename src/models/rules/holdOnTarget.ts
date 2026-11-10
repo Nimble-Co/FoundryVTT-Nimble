@@ -33,6 +33,8 @@ declare namespace HoldOnTargetRule {
 
 /** A use of this item that does not miss puts a Held Change on each target. */
 class HoldOnTargetRule extends NimbleBaseRule<HoldOnTargetRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.holdOnTarget.description';
 	static override icon = 'fa-solid fa-hourglass-half';

@@ -140,7 +140,7 @@ class MaxDamageRule extends NimbleBaseRule<MaxDamageRule.Schema> {
 
 	/** Whether this rule covers rolls of `item`. Its uses left are read by `canPay`. */
 	covers(item: MaxDamageItem): boolean {
-		if (!this.item.isEmbedded || !this.test()) return false;
+		if (!this.isOnActor || !this.test()) return false;
 		const schools = this.schools ?? [];
 		if (schools.length < 1) return true;
 		return item.type === 'spell' && (schools as string[]).includes(item.system?.school ?? '');

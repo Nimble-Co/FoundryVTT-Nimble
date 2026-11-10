@@ -551,7 +551,12 @@ export const foundryApiMocks = {
 	},
 	abstract: {
 		TypeDataModel: class TypeDataModel {},
-		DataModel: class DataModel {},
+		DataModel: class DataModel {
+			parent: unknown;
+			constructor(_source?: unknown, options?: { parent?: unknown }) {
+				this.parent = options?.parent ?? null;
+			}
+		},
 		EmbeddedCollection: class EmbeddedCollection {},
 	},
 	applications: {

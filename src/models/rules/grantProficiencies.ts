@@ -71,11 +71,10 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const actor = item.actor as NimbleCharacter;
+		const actor = this.actor as NimbleCharacter;
 		const { proficiencyType } = this;
 
 		// Ancestry language grants are governed by the In-Game Languages settings
@@ -85,7 +84,7 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 		// initial load) so languages are never silently dropped.
 		if (
 			proficiencyType === 'languages' &&
-			item.type === 'ancestry' &&
+			this.parentDocument.type === 'ancestry' &&
 			(CONFIG.NIMBLE as unknown as { languageGrantsManaged?: boolean }).languageGrantsManaged
 		) {
 			return;

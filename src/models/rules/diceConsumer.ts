@@ -116,6 +116,8 @@ declare namespace DiceConsumerRule {
 }
 
 class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.diceConsumer.description';
 
@@ -226,7 +228,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 		if (!this.cardOffer) return false;
 		if (!this.#isEvaluatedManualSpend()) return false;
 		if (this.effectType !== 'generic') return false;
-		if (this.item.actor?.type !== 'character') return false;
+		if (this.parentItem.actor?.type !== 'character') return false;
 		if (!this.test()) return false;
 		return matchesAttackDelivery(this.bonusOnAttackDelivery, context?.delivery ?? null);
 	}
@@ -240,13 +242,13 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 	 * player.
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (context.sourceItem !== (this.item as unknown)) return;
+		if (context.sourceItem !== (this.parentItem as unknown)) return;
 		if (!this.#providesSpendFlow()) return;
 
 		// @ts-expect-error - dicePool.requestSpend is a custom Nimble hook
 		Hooks.callAll(systemHookName('dicePool.requestSpend'), {
-			actorUuid: this.item.actor.uuid,
-			itemId: this.item.id,
+			actorUuid: this.parentItem.actor.uuid,
+			itemId: this.parentItem.id,
 			ruleId: this.id,
 			poolIdentifier: this.poolIdentifier,
 			poolScope: this.poolScope,
@@ -255,7 +257,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 
 	/** The dice count and their sum are filled in when the player spends dice. */
 	override afterPrepareData(): void {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		this.checkReferences(this.cost);
 		this.checkReferences(this.effectFormula, this.actor, { extraRollData: { n: 1, sum: 1 } });
 	}

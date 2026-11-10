@@ -35,6 +35,8 @@ declare namespace InitiativeMessageRule {
 }
 
 class InitiativeMessageRule extends NimbleBaseRule<InitiativeMessageRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'notes';
 	static override description = 'NIMBLE.rules.initiativeMessage.description';
 	static override icon = 'fa-solid fa-message';

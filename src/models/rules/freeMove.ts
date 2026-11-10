@@ -179,18 +179,18 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onActivation') return;
-		if (context.sourceItem?.uuid !== this.item.uuid) return;
+		if (context.sourceItem?.uuid !== this.item?.uuid) return;
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.onActivation', { item: this.item.name }),
+			localize('NIMBLE.rules.freeMove.reasons.onActivation', { item: this.parentDocument.name }),
 			speakerToken(context.card),
 		);
 	}
 
 	override async onInitiativeRolled(context: InitiativeRolledContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onInitiativeRolled') return;
 		if (context.actor !== this.actor) return;
@@ -202,7 +202,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 
 	// The stored trigger stays `onTurnStart`; the active-GM hook posts the card once.
 	override async onActiveGmTurnStart(context: TurnContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onTurnStart') return;
 		if (context.actor !== this.actor) return;
@@ -213,7 +213,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 
 	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onCritReceived') return;
 		if (!firesCritTriggers(context) || context.targetActor !== this.actor) return;
@@ -224,7 +224,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 
 	override async onPoolGain(context: PoolGainContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onPoolGain') return;
 		const identifier = this.poolIdentifier.trim();
@@ -235,9 +235,11 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 
 	/** A rule of this item raised pool dice, or would with some held. */
 	async offerAfterPoolDice(): Promise<void> {
-		if (!this.item.isEmbedded || !this.test() || this.trigger !== 'afterPoolDiceToMax') return;
+		if (!this.isOnActor || !this.test() || this.trigger !== 'afterPoolDiceToMax') return;
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.afterPoolDiceToMax', { item: this.item.name }),
+			localize('NIMBLE.rules.freeMove.reasons.afterPoolDiceToMax', {
+				item: this.parentDocument.name,
+			}),
 		);
 	}
 
@@ -253,8 +255,8 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			return postMovementOfferCard({
 				actor,
 				token,
-				name: this.label || this.item.name,
-				image: (this.item as { img?: string | null }).img ?? undefined,
+				name: this.label || this.parentDocument.name,
+				image: this.parentDocument.img ?? undefined,
 				reason,
 				node: {
 					kind: 'free',

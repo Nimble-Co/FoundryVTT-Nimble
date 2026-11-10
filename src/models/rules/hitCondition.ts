@@ -40,6 +40,8 @@ declare namespace HitConditionRule {
 
 /** When the damage of this item is applied, a creature gets a condition. */
 class HitConditionRule extends NimbleBaseRule<HitConditionRule.Schema> {
+	static override worksOnEffects = false;
+
 	declare condition: string;
 	declare when: (typeof WHEN_CHOICES)[number];
 	declare recipient: (typeof RECIPIENT_CHOICES)[number];

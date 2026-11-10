@@ -259,7 +259,7 @@ describe('MarkTargetRule', () => {
 		const owner = createOwner();
 		const { rule } = createRule({}, owner);
 		owner.rules = [rule];
-		Object.defineProperty(rule, 'item', {
+		Object.defineProperty(rule, 'parent', {
 			get: () => ({ isEmbedded: false, uuid: 'item-uuid', actor: owner }),
 			configurable: true,
 		});

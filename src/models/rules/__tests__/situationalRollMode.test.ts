@@ -49,10 +49,10 @@ function createRule(config: RuleConfig = {}): TestRule {
 	rule.abilities = sourceData.abilities;
 	rule.skills = sourceData.skills;
 
-	// `item` is a getter over `parent` on the base rule, so it has to be stubbed rather
+	// `parentDocument` is a getter over `parent` on the base rule, so it has to be stubbed rather
 	// than assigned. Left alone it stays undefined, standing in for an unowned rule.
 	if (config.itemImg !== undefined) {
-		Object.defineProperty(rule, 'item', { value: { img: config.itemImg } });
+		Object.defineProperty(rule, 'parent', { value: { img: config.itemImg } });
 	}
 
 	return rule;

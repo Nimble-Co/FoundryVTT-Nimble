@@ -68,7 +68,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 
 	/** Whether the rule answers damage from this attack. */
 	answersAttack(attack: { isCritical: boolean }): boolean {
-		if (!this.item.isEmbedded || !this.test()) return false;
+		if (!this.isOnActor || !this.test()) return false;
 		return !this.onlyCrits || attack.isCritical;
 	}
 }

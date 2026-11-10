@@ -39,11 +39,10 @@ class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const value = this.resolveFormula(this.value) ?? 0;
 		const originalValue =
 			(foundry.utils.getProperty(actor.system, 'attributes.wounds.bonus') as number | undefined) ??

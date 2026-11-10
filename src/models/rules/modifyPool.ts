@@ -182,6 +182,8 @@ declare namespace ModifyPoolRule {
 }
 
 class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.modifyPool.description';
 

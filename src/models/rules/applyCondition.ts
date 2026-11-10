@@ -153,36 +153,36 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onTurnStart(context: TurnContext): Promise<void> {
 		if (this.trigger !== 'onTurnStart') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	override async onTurnEnd(context: TurnContext): Promise<void> {
 		if (this.trigger !== 'onTurnEnd') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	override async onActorKilled(context: ActorHealthContext): Promise<void> {
 		if (this.trigger !== 'onKill') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	override async onActorWounded(context: ActorHealthContext): Promise<void> {
 		if (this.trigger !== 'onWound') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	override async onSaveResolved(context: SaveResolvedContext): Promise<void> {
 		if (this.trigger !== 'onSaveFail') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		if (context.outcome === 'fail') {
 			if (!isRuleAutomationEnabled()) return;
 			const source: SaveFailSource = {
 				messageId: context.messageId,
-				itemUuid: this.item.uuid,
+				itemUuid: this.parentDocument.uuid ?? '',
 				condition: this.condition,
 			};
 			await this.#applyConditionToSelf({ [SAVE_FAIL_SOURCE_FLAG]: source });
@@ -193,19 +193,19 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onRest(context: RestContext): Promise<void> {
 		if (this.trigger !== 'onRest') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	override async onInitiativeRolled(context: InitiativeRolledContext): Promise<void> {
 		if (this.trigger !== 'onInitiative') return;
-		if (context.actor !== this.item.actor) return;
+		if (context.actor !== this.actor) return;
 		await this.#applyConditionToSelf();
 	}
 
 	#shouldFireOnItemUsed(context: ItemUsedContext): boolean {
 		if (!this.test()) return false;
-		if (context.sourceActor !== this.item.actor) return false;
+		if (context.sourceActor !== this.actor) return false;
 		return this.#matchesAttackContext(context);
 	}
 
@@ -222,14 +222,14 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<void> {
 		if (!this.test()) return;
-		const selfActor = this.item.actor as unknown as ConditionTargetActor | null;
+		const selfActor = this.actor as unknown as ConditionTargetActor | null;
 		if (!selfActor) return;
 		await this.#applyConditionTo(selfActor, systemFlags);
 	}
 
 	// No predicate test: this takes back an effect of a result that no longer stands.
 	async #removeConditionFromSaveCard(messageId: string): Promise<void> {
-		const owner = this.item.actor as unknown as ConditionOwner | null;
+		const owner = this.actor as unknown as ConditionOwner | null;
 		if (!owner) return;
 
 		const ids: string[] = [];
@@ -240,7 +240,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 			if (
 				effect.id &&
 				source?.messageId === messageId &&
-				source.itemUuid === this.item.uuid &&
+				source.itemUuid === this.parentDocument.uuid &&
 				source.condition === this.condition
 			) {
 				ids.push(effect.id);
@@ -256,8 +256,8 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (!this.condition) return;
 
 		await applyConditionToActor(target, this.condition, {
-			sourceItem: this.item as unknown as { uuid?: string },
-			sourceActor: this.item.actor as unknown as { uuid?: string } | null,
+			sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
+			sourceActor: this.actor as unknown as { uuid?: string } | null,
 			duration: this.duration,
 			rule: this,
 			systemFlags: systemFlags ?? null,

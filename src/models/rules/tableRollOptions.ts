@@ -78,7 +78,7 @@ class TableRollOptionsRule extends NimbleBaseRule<TableRollOptionsRule.Schema> {
 	}
 
 	get applies(): boolean {
-		return this.item.isEmbedded && this.test();
+		return this.isOnActor && this.test();
 	}
 }
 

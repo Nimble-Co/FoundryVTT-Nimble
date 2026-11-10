@@ -78,7 +78,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 
 	/** What the rule adds to an attack from the offer of this item. Null for another attack. */
 	bonusFor(offerSource: string | null | undefined): OfferBonus | null {
-		if (!this.item.isEmbedded || !this.test()) return null;
+		if (!this.isOnActor || !this.test()) return null;
 		if (!offerSource || offerSource !== this.offerSource) return null;
 		return this.offerBonus;
 	}

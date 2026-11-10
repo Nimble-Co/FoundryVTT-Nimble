@@ -30,6 +30,18 @@ interface NimbleBaseItem extends Item {
 	grantedBy: NimbleBaseItem | null;
 }
 
+type EffectParent = ActiveEffect & {
+	documentName: 'ActiveEffect';
+	target: foundry.abstract.Document.Any | null;
+};
+
+/** The document that holds a rule in its `system.rules`. */
+type RuleParentDocument = NimbleBaseItem | EffectParent;
+
+function isEffectParent(parent: RuleParentDocument): parent is EffectParent {
+	return parent?.documentName === 'ActiveEffect';
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -176,6 +188,13 @@ interface PoolGainContext {
 	poolLabel?: string;
 }
 
+function originItemOf(effect: ActiveEffect): NimbleBaseItem | null {
+	if (effect.parent instanceof Item) return effect.parent as object as NimbleBaseItem;
+	if (!effect.origin) return null;
+	const origin = foundry.utils.fromUuidSync(effect.origin);
+	return origin instanceof Item ? (origin as object as NimbleBaseItem) : null;
+}
+
 // Members of NimbleBaseRule, used to type `alwaysDispatchedEvents` (statics
 // inside the generic class body cannot reference the bare class name).
 type RuleLifecycleEvent = keyof NimbleBaseRule;
@@ -206,6 +225,9 @@ abstract class NimbleBaseRule<
 	 * members so a renamed or misspelled lifecycle method fails to compile.
 	 */
 	static alwaysDispatchedEvents: readonly RuleLifecycleEvent[] = [];
+
+	/** False for a rule type that needs an item as its parent. The rules manager of an Active Effect refuses it. */
+	static worksOnEffects: boolean = true;
 
 	/** True when this rule class implements the prePrepareData lifecycle hook. */
 	static get appliesInPrePrepareData(): boolean {
@@ -264,8 +286,8 @@ abstract class NimbleBaseRule<
 
 		// Unembedded rules (compendium/world items, pending creations) are the
 		// Rules Builder's domain; its banner covers them.
-		const item = this.parent as object as NimbleBaseItem | null;
-		if (!item?.isEmbedded) return;
+		const parent = this.parentDocument;
+		if (!parent?.isEmbedded) return;
 
 		const lateKeys = (CONFIG.NIMBLE as { LATE_PREDICATE_KEYS?: readonly string[] } | undefined)
 			?.LATE_PREDICATE_KEYS;
@@ -278,7 +300,7 @@ abstract class NimbleBaseRule<
 
 		// Keyed on stable content, not this.id — id-less rule sources regenerate
 		// a random id on every re-instantiation.
-		const dedupeKey = `${item.uuid}:${this.type}:${hits.join(',')}`;
+		const dedupeKey = `${parent.uuid}:${this.type}:${hits.join(',')}`;
 		if (warnedLatePredicateRules.has(dedupeKey)) return;
 		warnedLatePredicateRules.add(dedupeKey);
 
@@ -295,16 +317,45 @@ abstract class NimbleBaseRule<
 		};
 	}
 
-	// get uuid(): string {
-	//   return `${this.parent.uuid}.${this.id}`;
-	// }
-
-	get actor(): NimbleBaseActor {
-		return this.item.actor;
+	/** The item or Active Effect that holds this rule. Use it for the rule's identity and label. */
+	get parentDocument(): RuleParentDocument {
+		return this.parent as object as RuleParentDocument;
 	}
 
-	get item(): NimbleBaseItem {
-		return this.parent as object as NimbleBaseItem;
+	/** The creature whose rolls and data this rule changes. */
+	get actor(): NimbleBaseActor {
+		const parent = this.parentDocument;
+		if (isEffectParent(parent)) {
+			return (parent.target instanceof Actor ? parent.target : null) as object as NimbleBaseActor;
+		}
+		return parent.actor;
+	}
+
+	/** Whether the rule sits on a creature: its item is on an actor, or its effect changes one. */
+	get isOnActor(): boolean {
+		const parent = this.parentDocument;
+		if (isEffectParent(parent)) return parent.target instanceof Actor;
+		return parent.isEmbedded;
+	}
+
+	/** The item's own domain tags. An Active Effect adds none. */
+	get parentDomain(): Set<string> {
+		const parent = this.parentDocument;
+		return isEffectParent(parent) ? new Set() : (parent.getDomain() ?? new Set());
+	}
+
+	/**
+	 * The item that made this rule. On an Active Effect: the item that transfers it, else
+	 * the item in its `origin`, which can be on another actor. Null when there is none.
+	 */
+	get item(): NimbleBaseItem | null {
+		const parent = this.parentDocument;
+		return isEffectParent(parent) ? originItemOf(parent) : parent;
+	}
+
+	/** The parent item of a rule type with `worksOnEffects = false`. */
+	protected get parentItem(): NimbleBaseItem {
+		return this.parentDocument as NimbleBaseItem;
 	}
 
 	tooltipInfo(props?: Map<string, string>): string {
@@ -355,7 +406,7 @@ abstract class NimbleBaseRule<
 			if (err instanceof foundry.data.validation.DataModelValidationError) {
 				const message = err.message.replace(
 					/validation errors|Joint Validation Error/,
-					`validation errors on item ${this.item.name} (${this.item.uuid})`,
+					`validation errors on ${this.parentDocument.name} (${this.parentDocument.uuid})`,
 				);
 				// eslint-disable-next-line no-console
 				console.warn(message);
@@ -390,7 +441,7 @@ abstract class NimbleBaseRule<
 
 		const domain = new Set<string>([
 			...(passedDomain ?? this.actor?.getDomain() ?? []),
-			...(this.item.getDomain() ?? []),
+			...this.parentDomain,
 		]);
 
 		return this.predicate.test(domain);
@@ -439,7 +490,7 @@ abstract class NimbleBaseRule<
 	 */
 	protected pushToActorSystemArray<T>(path: string, entry: T): void {
 		actorAccumulatorPaths.add(path);
-		const { actor } = this.item;
+		const { actor } = this;
 		const existing = foundry.utils.getProperty(actor.system, path) as T[] | undefined;
 		if (Array.isArray(existing)) {
 			existing.push(entry);
@@ -455,7 +506,7 @@ abstract class NimbleBaseRule<
 	 */
 	protected addToActorSystemSet(path: string, entry: string): void {
 		actorAccumulatorPaths.add(path);
-		const { actor } = this.item;
+		const { actor } = this;
 		const existing = foundry.utils.getProperty(actor.system, path) as Set<string> | undefined;
 		if (existing instanceof Set) {
 			existing.add(entry);
@@ -637,6 +688,7 @@ abstract class NimbleBaseRule<
 
 export {
 	NimbleBaseRule,
+	type RuleParentDocument,
 	type PreCreateArgs,
 	type ItemUsedContext,
 	type ItemActivatedContext,

@@ -84,7 +84,7 @@ class PoolDieToMaxRule extends NimbleBaseRule<PoolDieToMaxRule.Schema> {
 	/** Raise the lowest `count` dice of the pool. */
 	async raiseDice(count: number): Promise<void> {
 		const actor = this.actor;
-		if (!actor || !this.item.isEmbedded) return;
+		if (!actor || !this.isOnActor) return;
 		const identifier = normalizeIdentifier(this.poolIdentifier);
 		const pool = getPools(actor).find(
 			(each) => normalizeIdentifier(each.identifier) === identifier,

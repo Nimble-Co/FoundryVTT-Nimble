@@ -25,6 +25,8 @@ declare namespace DamageMultiplierRule {
  * says when it applies. The player decides; the system checks nothing.
  */
 class DamageMultiplierRule extends NimbleBaseRule<DamageMultiplierRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.damageMultiplier.description';
 	static override icon = 'fa-solid fa-xmark';

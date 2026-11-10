@@ -135,7 +135,7 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 	 * second icon has to be authored or kept in sync.
 	 */
 	iconPath(): string {
-		return this.item?.img ?? '';
+		return this.parentDocument?.img ?? '';
 	}
 
 	/** A zero adjustment would render a toggle that does nothing. */
