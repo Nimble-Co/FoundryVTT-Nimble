@@ -22,7 +22,7 @@ interface CardOfferRuleLike {
 	id?: string;
 	label?: string;
 	cardOffer?: 'hit' | 'criticalHit' | null;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	providesCardOffer?: (context?: CardOfferContext) => boolean;
 }
 
@@ -64,7 +64,7 @@ export function collectPoolSpendCardOffers(
 			targetTokenUuid: null,
 			label: ruleLabel(rule),
 			ruleId: rule.id ?? '',
-			itemUuid: rule.item?.uuid ?? '',
+			itemUuid: rule.parentDocument?.uuid ?? '',
 			used: false,
 			outcomeTrigger: rule.cardOffer ?? null,
 		});

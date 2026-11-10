@@ -18,15 +18,15 @@ export function rulesOfType<T extends RuleType>(
 /** What a card or a window calls a rule: its label, or the name of its item. */
 export function ruleLabel(rule: {
 	label?: string;
-	item?: { name?: string | null } | null;
+	parentDocument?: { name?: string | null } | null;
 }): string {
-	return rule.label || rule.item?.name || '';
+	return rule.label || rule.parentDocument?.name || '';
 }
 
 /** The key of a rule on its item. */
 export function ruleKey(rule: {
 	id?: string | null;
-	item?: { uuid?: string | null } | null;
+	parentDocument?: { uuid?: string | null } | null;
 }): string {
-	return `${rule.item?.uuid ?? ''}:${rule.id ?? ''}`;
+	return `${rule.parentDocument?.uuid ?? ''}:${rule.id ?? ''}`;
 }

@@ -14,7 +14,7 @@ function rule(fields: Record<string, unknown>) {
 		id: String(fields.id),
 		type: 'defendOption',
 		label: String(fields.id),
-		item: {
+		parentDocument: {
 			uuid: `Item.${String(fields.id)}`,
 			name: String(fields.id),
 			getDomain: () => new Set(),

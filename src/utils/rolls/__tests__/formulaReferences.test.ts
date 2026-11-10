@@ -63,8 +63,14 @@ describe('formula references', () => {
 
 	it('gives a rule owner the rule label, else its type, and a pool owner the granting item', () => {
 		const item = { name: 'Rage', isOwner: true };
-		expect(ruleOwner({ item, label: 'Fury', type: 'dicePool' })).toEqual({ item, rule: 'Fury' });
-		expect(ruleOwner({ item, label: '', type: 'dicePool' })).toEqual({ item, rule: 'dicePool' });
+		expect(ruleOwner({ parentDocument: item, label: 'Fury', type: 'dicePool' })).toEqual({
+			item,
+			rule: 'Fury',
+		});
+		expect(ruleOwner({ parentDocument: item, label: '', type: 'dicePool' })).toEqual({
+			item,
+			rule: 'dicePool',
+		});
 
 		const actor = { items: { get: (id: string) => (id === 'rage' ? item : undefined) } };
 		expect(poolOwner(actor, { sourceItemId: 'rage', label: 'Fury Dice' })).toEqual({

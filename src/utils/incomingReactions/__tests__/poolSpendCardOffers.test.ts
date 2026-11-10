@@ -11,7 +11,7 @@ function consumerRule(overrides: Record<string, unknown> = {}) {
 		id: 'death-blow-fury-consumer',
 		label: 'Death Blow: bonus damage',
 		cardOffer: 'criticalHit',
-		item: { name: 'Death Blow', uuid: 'Item.death-blow' },
+		parentDocument: { name: 'Death Blow', uuid: 'Item.death-blow' },
 		providesCardOffer: () => true,
 		...overrides,
 	};

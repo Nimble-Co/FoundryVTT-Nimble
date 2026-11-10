@@ -1771,7 +1771,7 @@ describe('ChargePoolService', () => {
 							poolType: 'charge',
 							poolIdentifier: 'inspiration',
 							addRefills: [quickWit],
-							item: { name: 'Quick Wit' },
+							parentDocument: { name: 'Quick Wit' },
 						} as unknown as MockRule,
 					],
 				]),

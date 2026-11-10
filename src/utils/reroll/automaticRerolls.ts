@@ -61,7 +61,7 @@ async function chainAutomaticRerolls<TRoll, TTarget extends AutomaticRerollTarge
 			});
 			if (result.status === 'failed') throw result.error;
 			if (result.status !== 'done') return;
-			await applyGrants(result.reroll.grants ?? [], step.rule.item?.uuid ?? '');
+			await applyGrants(result.reroll.grants ?? [], step.rule.parentDocument?.uuid ?? '');
 		} catch (error) {
 			console.error('Nimble | An automatic reroll failed.', error);
 			return;

@@ -10,7 +10,11 @@ function createRule(overrides: Record<string, unknown> = {}) {
 		id: 'rule-id',
 		label: 'Against fear',
 		value: 1,
-		item: { name: 'Haunted Past', uuid: 'Item.hp1', img: 'icons/backgrounds/haunted-past.webp' },
+		parentDocument: {
+			name: 'Haunted Past',
+			uuid: 'Item.hp1',
+			img: 'icons/backgrounds/haunted-past.webp',
+		},
 		iconPath: vi.fn(() => 'icons/backgrounds/haunted-past.webp'),
 		appliesTo: vi.fn(() => true),
 		offersAdjustment: vi.fn(() => true),
@@ -117,7 +121,7 @@ describe('getSituationalRollModeOptions', () => {
 		});
 
 		it('falls back to the rule type name when neither label nor item name exists', () => {
-			const rule = createRule({ label: '', item: undefined });
+			const rule = createRule({ label: '', parentDocument: undefined });
 			expect(getSituationalRollModeOptions(createActor([rule]), willSave)[0]?.label).toBe(
 				'Situational Roll Mode',
 			);
@@ -127,8 +131,8 @@ describe('getSituationalRollModeOptions', () => {
 		// otherwise share a key and collapse into one checkbox.
 		it('scopes the key by item uuid so same-id rules on different items stay distinct', () => {
 			const rules = [
-				createRule({ item: { name: 'Haunted Past', uuid: 'Item.hp1' } }),
-				createRule({ item: { name: 'Haunted Past', uuid: 'Item.hp2' } }),
+				createRule({ parentDocument: { name: 'Haunted Past', uuid: 'Item.hp1' } }),
+				createRule({ parentDocument: { name: 'Haunted Past', uuid: 'Item.hp2' } }),
 			];
 			const keys = getSituationalRollModeOptions(createActor(rules), willSave).map((o) => o.key);
 			expect(keys).toEqual(['Item.hp1:rule-id', 'Item.hp2:rule-id']);

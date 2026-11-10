@@ -14,7 +14,7 @@ export interface FormulaOwner {
 
 /** A rule as a formula owner reads it. */
 export interface FormulaRule {
-	item?: FormulaOwner['item'];
+	parentDocument?: FormulaOwner['item'];
 	label?: string;
 	type?: string;
 }

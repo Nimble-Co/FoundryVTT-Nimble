@@ -104,7 +104,7 @@ describe('naturalResultChange', () => {
 	const rule = {
 		id: 'rule-1',
 		label: '',
-		item: { name: 'Bumblewise', uuid: 'Item.bumble' },
+		parentDocument: { name: 'Bumblewise', uuid: 'Item.bumble' },
 		countsAsNat20On: (roll: { kind: string; key?: string }) => roll.key === 'will',
 	};
 	const roller = { uuid: 'Actor.hero', rules: [{ type: 'reroll' }, rule] };

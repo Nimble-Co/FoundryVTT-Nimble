@@ -110,8 +110,9 @@ function getActiveConditionalBonuses(
 		const damage = rule.resolveDamage();
 		const doubled = doublesDamage(rule, item, targetActor);
 		options.push({
-			key: `${rule.item?.uuid ?? ''}:${rule.id}`,
-			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
+			key: `${rule.parentDocument?.uuid ?? ''}:${rule.id}`,
+			label:
+				rule.label || rule.parentDocument?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value === null ? null : damage.value * (doubled ? 2 : 1),
 			damageFormula: damage.formula && doubled ? `(${damage.formula})*2` : damage.formula,

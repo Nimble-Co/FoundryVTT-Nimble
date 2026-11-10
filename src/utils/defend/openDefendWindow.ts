@@ -187,7 +187,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 		tickPicks.filter(
 			(pick) =>
 				!pick.rule.useReroll ||
-				!!cardRerollFor(card, pick.rule.item?.uuid, reactor.targetTokenUuid),
+				!!cardRerollFor(card, pick.rule.parentDocument?.uuid, reactor.targetTokenUuid),
 		),
 	);
 	const bothTicks = keysOf(tickPicks);
@@ -211,7 +211,7 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 	const freeCost = (pick: DefendOptionPick) =>
 		pick.rule.useItem
 			? localize(`${TEXT}.itemCost`, {
-					item: pick.rule.item?.name ?? pick.label,
+					item: pick.rule.parentDocument?.name ?? pick.label,
 					armor: String(armor),
 				})
 			: localize(`${TEXT}.freeCost`, { armor: String(armor) });
@@ -493,7 +493,7 @@ async function useOptionReroll(
 	token: string,
 	quiet = false,
 ): Promise<boolean> {
-	const entry = cardRerollFor(currentCard(card), pick.rule.item?.uuid, token);
+	const entry = cardRerollFor(currentCard(card), pick.rule.parentDocument?.uuid, token);
 	if (!entry) {
 		if (!quiet) ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
 		return false;
@@ -532,8 +532,9 @@ async function useRowItem(
 	actor: Actor.Implementation,
 	pick: DefendOptionPick,
 ): Promise<number | null> {
-	const itemId = pick.rule.item?.id;
-	if (!itemId) return null;
+	const item = pick.rule.item;
+	if (!item?.id || item.actor !== actor) return null;
+	const itemId = item.id;
 	const activate = (actor as { activateItem?: (id: string) => Promise<unknown> }).activateItem;
 	const result = (await activate?.call(actor, itemId)) as
 		| { system?: { upcast?: { upcastSteps?: number } | null } }
@@ -640,7 +641,7 @@ export async function openDefendWindow(
 	const usedTicks: DefendOptionPick[] = [];
 	for (const pick of tickPicks) {
 		if (pick.rule.useReroll) {
-			if (!cardRerollFor(currentCard(card), pick.rule.item?.uuid, defendedToken)) {
+			if (!cardRerollFor(currentCard(card), pick.rule.parentDocument?.uuid, defendedToken)) {
 				ui.notifications?.warn(localize(`${TEXT}.rerollNotFound`, { label: pick.label }));
 				continue;
 			}

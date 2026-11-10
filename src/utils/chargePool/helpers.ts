@@ -381,7 +381,7 @@ function applyModifiersToDefinition(
 		// can give an existing pool a new way to come back without the pool's own
 		// rule knowing about it. The modifier's rule-level predicate already gated
 		// inclusion, so entries land unconditionally once it applies.
-		const source = modifier.item?.name;
+		const source = modifier.parentDocument?.name;
 		const contributed = normalizeRecoveries(modifier.addRefills).map((entry) =>
 			source ? { ...entry, source } : entry,
 		);

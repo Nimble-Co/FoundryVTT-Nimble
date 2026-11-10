@@ -115,7 +115,7 @@ interface RerollRuleLike {
 	identifier?: string;
 	label?: string;
 	disabled?: boolean;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	actor?: unknown;
 	outcome?: RerollTrigger;
 	rerollsByItself?: boolean;
@@ -427,7 +427,7 @@ function collectRerollEntries(context: RerollRollContext): {
 						side,
 						label: ruleLabel(rule),
 						ruleId: rule.id ?? '',
-						itemUuid: rule.item?.uuid ?? '',
+						itemUuid: rule.parentDocument?.uuid ?? '',
 						used: false,
 						outcomeTrigger: trigger,
 						oncePerRoll: rule.oncePerRoll === true,

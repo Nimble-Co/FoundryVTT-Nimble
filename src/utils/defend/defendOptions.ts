@@ -132,11 +132,13 @@ export function tickCost(
 	tokenUuid?: string | null,
 ): UseCost {
 	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
-	const rules = (rule.item as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
+	const rules = (rule.parentDocument as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
 	const rerolls = [...(rules?.values() ?? [])].filter(
 		(each) => each.type === 'reroll' && !each.disabled,
 	);
-	const entryRuleId = card ? cardRerollFor(card, rule.item?.uuid, tokenUuid)?.ruleId : undefined;
+	const entryRuleId = card
+		? cardRerollFor(card, rule.parentDocument?.uuid, tokenUuid)?.ruleId
+		: undefined;
 	const reroll =
 		rerolls.find((each) => entryRuleId && each.id === entryRuleId) ??
 		rerolls.find((each) => each.rolls?.includes('attack'));
@@ -168,7 +170,7 @@ export async function payDefendOption(
 	return {
 		actorUuid: actor.uuid ?? '',
 		ruleId: pick.rule.id ?? '',
-		itemUuid: pick.rule.item?.uuid ?? '',
+		itemUuid: pick.rule.parentDocument?.uuid ?? '',
 		label: pick.label,
 		cost,
 		paid,
@@ -183,7 +185,7 @@ export function defendOptionUse(
 	return {
 		actorUuid: actor.uuid ?? '',
 		ruleId: pick.rule.id ?? '',
-		itemUuid: pick.rule.item?.uuid ?? '',
+		itemUuid: pick.rule.parentDocument?.uuid ?? '',
 		label: pick.label,
 		cost: null,
 		paid: null,

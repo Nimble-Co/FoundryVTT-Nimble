@@ -41,7 +41,7 @@ interface RuleLike {
 	modifier?: IncomingAttackModifier;
 	resolveRange?: () => number;
 	missThreshold?: number;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	appliesTo?: () => boolean;
 }
 
@@ -203,7 +203,7 @@ function toModifierEntry(rule: RuleLike): IncomingAttackModifierEntry {
 		modifier: rule.modifier as IncomingAttackModifier,
 		label: ruleLabel(rule),
 		ruleId: rule.id ?? '',
-		itemUuid: rule.item?.uuid ?? '',
+		itemUuid: rule.parentDocument?.uuid ?? '',
 		missThreshold: rule.missThreshold ?? DEFAULT_MISS_THRESHOLD,
 	};
 }

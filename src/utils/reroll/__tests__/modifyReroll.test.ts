@@ -15,7 +15,7 @@ function modifier(config: RuleConfig = {}, itemName = 'Unfailing Courage') {
 		tempHp: '',
 		tempHpWithin: 0,
 		appliesTo: () => true,
-		item: { name: itemName, uuid: `Actor.lyra.Item.${itemName}` },
+		parentDocument: { name: itemName, uuid: `Actor.lyra.Item.${itemName}` },
 		...config,
 	};
 }

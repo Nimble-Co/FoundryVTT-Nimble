@@ -15,7 +15,7 @@ function rule(fields: Record<string, unknown> = {}) {
 		id: String(fields.id ?? 'r1'),
 		type: 'defendOption',
 		label: '',
-		item: {
+		parentDocument: {
 			uuid: 'Item.feature',
 			name: String(fields.name ?? 'Feature'),
 			getDomain: () => new Set(),
@@ -142,7 +142,8 @@ describe('defendOptionsOf', () => {
 				id: 'peerless',
 				way: 'freeDefend',
 				actor: hunter,
-				item: { uuid: 'Item.peerless', name: 'Peerless Hunter', getDomain: () => new Set() },
+				parentDocument: { uuid: 'Item.peerless', name: 'Peerless Hunter' },
+				parentDomain: new Set(),
 				otherCreature: { $and: ['target:quarry'] },
 			}),
 		];
@@ -167,7 +168,7 @@ describe('defendOptionsOf', () => {
 			id: 'fearsome',
 			useReroll: true,
 			optionCost: { manaCost: 0 },
-			item: {
+			parentDocument: {
 				uuid: 'Item.beast',
 				getDomain: () => new Set(),
 				rules: new Map([['r', { type: 'reroll', rolls: ['attack'], rollUseCost: rerollCost }]]),
@@ -189,7 +190,7 @@ describe('tickCost', () => {
 			id: 'fearsome',
 			useReroll: true,
 			optionCost: { manaCost: 0 },
-			item: {
+			parentDocument: {
 				uuid: 'Item.beast',
 				getDomain: () => new Set(),
 				rules: new Map([

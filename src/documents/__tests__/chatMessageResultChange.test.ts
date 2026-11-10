@@ -100,7 +100,7 @@ function makeRule(
 		change: use.change,
 		disabled: false,
 		label: '',
-		item: { name: id, uuid: `Item.${id}` },
+		parentDocument: { name: id, uuid: `Item.${id}` },
 		actor: roller,
 		rollUseCost,
 		resultUseFor: vi.fn(() => use),
@@ -118,7 +118,7 @@ function setupWorld(
 	roller.rules = rules;
 	const byUuid: Record<string, unknown> = { [ROLLER]: roller };
 	for (const rule of rules) {
-		byUuid[rule.item.uuid] = { rules: new Map([[rule.id, rule]]) };
+		byUuid[rule.parentDocument.uuid] = { rules: new Map([[rule.id, rule]]) };
 	}
 	vi.stubGlobal(
 		'fromUuidSync',
@@ -441,7 +441,7 @@ describe('Modify Reroll: cannot fail, on a save card', () => {
 			tempHp: '',
 			tempHpWithin: 0,
 			appliesTo: () => true,
-			item: { name: 'Sure Song', uuid: 'Item.song' },
+			parentDocument: { name: 'Sure Song', uuid: 'Item.song' },
 		};
 		Object.assign(roller, { items: { contents: [{ rules: new Map([[modifier.id, modifier]]) }] } });
 		const base = makeRule(roller, 'insp', { change: 'succeed', value: 0, stat: '' });
@@ -1073,7 +1073,7 @@ describe('a reroll on a card with changes', () => {
 			id: 'lucky',
 			disabled: false,
 			label: '',
-			item: { name: 'Lucky', uuid: 'Item.lucky' },
+			parentDocument: { name: 'Lucky', uuid: 'Item.lucky' },
 			actor: roller,
 			rollUseCost: FREE,
 			offersUseOn: vi.fn(() => true),
@@ -1158,7 +1158,7 @@ describe('an add on a roll that fails on its natural 1', () => {
 			id: 'lucky',
 			disabled: false,
 			label: '',
-			item: { name: 'Lucky', uuid: 'Item.lucky' },
+			parentDocument: { name: 'Lucky', uuid: 'Item.lucky' },
 			actor: roller,
 			rollUseCost: FREE,
 			offersUseOn: vi.fn(() => true),

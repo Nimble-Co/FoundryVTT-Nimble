@@ -77,7 +77,11 @@ function fromRuleSource(
 			checkFormulaReferences(
 				formula,
 				actor,
-				ruleOwner({ item, label: String(source.label ?? ''), type: String(source.type ?? '') }),
+				ruleOwner({
+					parentDocument: item,
+					label: String(source.label ?? ''),
+					type: String(source.type ?? ''),
+				}),
 				{ rollData },
 			);
 			return Math.max(0, Number(getDeterministicBonus(formula, rollData as any) ?? 0));
