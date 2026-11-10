@@ -1,4 +1,4 @@
-import { RulesManager } from '../../managers/RulesManager.js';
+import { RulesManager } from '#managers/RulesManager.js';
 import {
 	type EffectSource,
 	isUnclaimedBaseEffect,

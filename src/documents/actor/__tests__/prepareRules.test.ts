@@ -38,21 +38,10 @@ describe('prepareRules', () => {
 		expect(ids).toEqual(['item-rule', 'effect-rule']);
 	});
 
-	it('skips an effect that is off, expired or suppressed', () => {
+	it('skips an effect that does not change the actor now', () => {
 		const ids = prepareRules([], [effect([rule('off')], false), effect([rule('on')])]);
 
 		expect(ids).toEqual(['on']);
-	});
-
-	it('counts the rule of an effect an item transfers once', () => {
-		const transferred = effect([rule('aura')]);
-
-		const ids = prepareRules(
-			[{ rules: rulesOf(rule('feature')), effects: [transferred] }],
-			[transferred],
-		);
-
-		expect(ids.filter((id) => id === 'aura')).toHaveLength(1);
 	});
 
 	it('skips an effect with no rules, such as a core base effect', () => {

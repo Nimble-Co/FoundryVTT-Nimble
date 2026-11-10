@@ -372,6 +372,21 @@ describe('RulesManager on an Active Effect', () => {
 		expect(manager.has('rule-1')).toBe(true);
 	});
 
+	it('builds no item-only rule for an effect without writing it', async () => {
+		const effect = createMockEffect([]);
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const rule = await RulesManager.addRule(
+			effect as never,
+			{ type: 'grantItem', id: 'rule-9' },
+			{ update: false },
+		);
+
+		expect(rule).toBeUndefined();
+		expect(effect.update).not.toHaveBeenCalled();
+		error.mockRestore();
+	});
+
 	it('writes a new rule to the effect', async () => {
 		const effect = createMockEffect([]);
 

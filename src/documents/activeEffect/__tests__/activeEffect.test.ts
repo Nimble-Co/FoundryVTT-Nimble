@@ -42,6 +42,16 @@ describe('NimbleActiveEffect.prepareBaseData', () => {
 	// Effects stored before the V14 upgrade have no showIcon in their source, so
 	// the schema initializes them to CONDITIONAL — the case that would otherwise
 	// make an existing toggle or banked reduction go invisible on the token.
+	it('builds a rules manager over the rules in its system data', () => {
+		const effect = effectWithShowIcon(SHOW_ICON.ALWAYS);
+		Object.assign(effect, { system: { rules: [] } });
+
+		effect.prepareBaseData();
+
+		expect(effect.rules).toBeInstanceOf(Map);
+		expect(effect.rules.size).toBe(0);
+	});
+
 	it('promotes an effect that initialized to the schema default', () => {
 		const effect = effectWithShowIcon(undefined);
 		(effect as { showIcon: number }).showIcon = SHOW_ICON.CONDITIONAL;

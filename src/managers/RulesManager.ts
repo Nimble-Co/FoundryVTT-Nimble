@@ -1,6 +1,5 @@
 import type { RuleSource } from '#types/ruleSource.js';
 import localize from '#utils/localize.js';
-import type { NimbleActiveEffect } from '../documents/activeEffect/activeEffect.js';
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
 export namespace RulesManager {
@@ -9,14 +8,22 @@ export namespace RulesManager {
 	}
 }
 
+interface EffectRuleParent {
+	documentName: 'ActiveEffect';
+	name: string;
+	uuid: string | null;
+	system: unknown;
+	update(data: Record<string, unknown>): Promise<unknown>;
+}
+
 /** A document that holds rules in `system.rules`. */
-type RuleParent = NimbleBaseItem | NimbleActiveEffect;
+type RuleParent = NimbleBaseItem | EffectRuleParent;
 
 function rulesOf(parent: RuleParent): RuleSource[] {
 	return (parent.system as { rules?: RuleSource[] } | undefined)?.rules ?? [];
 }
 
-function isEffect(parent: RuleParent): boolean {
+function isEffect(parent: RuleParent): parent is EffectRuleParent {
 	return parent.documentName === 'ActiveEffect';
 }
 
@@ -273,6 +280,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		if (!Cls) {
 			// eslint-disable-next-line no-console
 			console.error('Nimble | Rule is not of a recognizable type.');
+			return undefined;
+		}
+		if (isEffect(parent) && Cls.worksOnEffects === false) {
+			// eslint-disable-next-line no-console
+			console.error(`Nimble | A ${type} rule works only on an item.`);
 			return undefined;
 		}
 
