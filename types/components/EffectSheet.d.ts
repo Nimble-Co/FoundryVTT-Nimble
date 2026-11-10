@@ -1,9 +1,8 @@
 import type { NimbleActiveEffect } from '../../src/documents/activeEffect/activeEffect';
-import type EffectSheet from '../../src/documents/sheets/EffectSheet.svelte';
 
 export interface EffectSheetProps {
 	effect: NimbleActiveEffect;
-	sheet: EffectSheet;
+	sheet: foundry.applications.api.DocumentSheetV2.Any;
 }
 
 /** The props of each tab of the effect window. */
