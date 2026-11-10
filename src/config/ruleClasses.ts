@@ -24,6 +24,7 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DefendOptionRule } from '../models/rules/defendOption.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
+import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
@@ -120,6 +121,7 @@ export const RULE_CLASSES = {
 	heldRoll: HeldRollRule,
 	countAsMarked: CountAsMarkedRule,
 	poolEmptyEffect: PoolEmptyEffectRule,
+	dieResultEffect: DieResultEffectRule,
 	holdOnTarget: HoldOnTargetRule,
 	keepAmount: KeepAmountRule,
 	makeCrit: MakeCritRule,

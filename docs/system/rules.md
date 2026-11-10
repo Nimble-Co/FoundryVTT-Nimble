@@ -253,13 +253,15 @@ A mark is an entry in the marking actor's toggled effects flag (`src/utils/actor
 
 Only a GM or the owner of the marked creature can delete the marker effect. The token HUD status toggle uses the static status `_id`, so it does not delete the marker effects and does not end the mark.
 
-## Held Changes (`heldRoll`, `countAsMarked`, `poolEmptyEffect`)
+## Held Changes (`heldRoll`, `countAsMarked`, `poolEmptyEffect`, `dieResultEffect`)
 
 A Held Change is an Active Effect with a `heldRoll` rule (`worksOnItems = false`). The rule names the change (`heldKind`), its amount (`value`), which roll uses it (`whichRoll`: the holder's attacks or the attacks on the holder), and whether that roll ends the effect (`usedUp`). `meleeOnly` and `fromSourceOnly` narrow which attack uses it; the source is the creature of the effect's `origin`. The effect's Lasts Until ends it in time. The rule does nothing in data preparation: the attack code reads it through `src/utils/heldChange/heldChange.ts` (`heldChangesOn`, reading the prepared rules so the predicate counts) and spends it through `attackHeldPlan.ts`. Code that holds a change (Assess, Demand Control, `holdOnTarget`, Keep the Amount) builds the same effect with `heldChangeEffect`.
 
 `countAsMarked` gives every creature the `target:<flagKey>` tag for the owner's attacks of one delivery. `buildTargetDomain` (conditional bonuses) and `recoveryDomainOf` (charge recoveries) read it through `countedMarkTags`.
 
 `poolEmptyEffect` (`worksOnEffects = false`) puts the item's first effect with `transfer: false` on the owner, on the owner's own turn, while a charge pool is empty. `src/hooks/poolEmptyEffects.ts` checks on the active GM at turn start and when the actor or one of its items changes; checks for one actor run in turn. `applyRuleEffects` stops it.
+
+`dieResultEffect` (`worksOnEffects = false`) puts the item's first effect with `transfer: false` on each target of an activation card (`feature`, `spell`, `object`) of the same actor, when the card does not miss and its Primary Die rolled `atLeast` or more. `itemIdentifier` names the used item; blank means the rule's own item. With `notOnAllies`, a target token on the same side as the user's token (`areAllies`, the same disposition that is not neutral or secret) gets nothing; the user's token is the card speaker's token, else the actor's prototype token. The face is the one before any Primary Die bonus (`options.primaryDieBaseResult`, else `primaryDieValue`) of the card's `DamageRoll`, so a healing roll never counts. `src/hooks/dieResultEffects.ts` runs on `createChatMessage`, on the client of the user who made the card, and skips a card that waits for Keep a Result. It applies through `applyEffectToActor`, so the active GM applies the effect to a target the user does not own. An equal Lasts Until keeps the effect that is there. A later Reroll or Change a Die on the card does not apply or remove the effect. `applyRuleEffects` stops it.
 
 ## `toggleEffect` (player-controlled tag pushes)
 

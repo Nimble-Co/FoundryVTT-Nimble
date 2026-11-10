@@ -25,6 +25,7 @@ import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedT
 import { registerEncounterEndTriggerHooks } from './hooks/dicePoolTriggers/encounterEndTrigger.js';
 import { registerPoolDieToMaxTriggerHooks } from './hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
 import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnTrigger.js';
+import { registerDieResultEffectHooks } from './hooks/dieResultEffects.js';
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
 import { registerFreeAssessHooks } from './hooks/freeAssessOnUse.js';
 import { registerHoldOnTargetHooks } from './hooks/holdOnTargetOnUse.js';
@@ -180,6 +181,7 @@ registerMarkLifecycleHooks();
 registerBankedDamageReductionExpiryHooks();
 registerLastsUntilHooks();
 registerPoolEmptyEffectHooks();
+registerDieResultEffectHooks();
 registerEndTimedEffectsQuery();
 registerApplyEffectQuery();
 registerMinionGroupTokenBadges();

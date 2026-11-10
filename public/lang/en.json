@@ -1849,6 +1849,7 @@
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
 			"poolEmptyEffect": "Effect When Pool Empty",
+			"dieResultEffect": "Effect on a Die Result",
 			"holdOnTarget": "Hold a Change on the Target",
 			"keepAmount": "Keep the Amount of a Hit",
 			"critBack": "Crit Back",
@@ -3274,6 +3275,21 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool to watch."
+				}
+			},
+			"dieResultEffect": {
+				"description": "When a use of an item does not miss and its Primary Die rolls a high number, each target of the use gets the effect of this item: its first effect with Apply to the actor off. The number is the face of the die before any bonus. A healing roll does not count. The Lasts Until of the effect ends it.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The item whose roll to read. Leave blank to read this item."
+				},
+				"atLeast": {
+					"label": "Lowest die result",
+					"hint": "The Primary Die must roll this number or higher."
+				},
+				"notOnAllies": {
+					"label": "Not on allies",
+					"hint": "A target on the same side as the user (the same token disposition) does not get the effect."
 				}
 			},
 			"holdOnTarget": {
