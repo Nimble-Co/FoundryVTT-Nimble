@@ -67,6 +67,7 @@ import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	isAttackRoll,
+	isMelee,
 	keptAmountEndedBy,
 	keptAmountFor,
 	spendHeldChanges,
@@ -739,6 +740,7 @@ class ItemActivationManager {
 						target: firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
+						melee: isMelee(delivery),
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
@@ -1667,7 +1669,7 @@ class ItemActivationManager {
 			| { getFlag(scope: string, key: string): unknown }
 			| null
 			| undefined;
-		return buildTargetDomain(attacker, targetActor);
+		return buildTargetDomain(attacker, targetActor, this.#getAttackDelivery());
 	}
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */

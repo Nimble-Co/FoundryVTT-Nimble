@@ -46,8 +46,23 @@ const CORE_UNITS: readonly CoreDurationUnits[] = [
 	'rounds',
 ];
 
+/** Whose attack uses up a Held Change: the holder's next attack, or the next attack against them. */
+export type UsedUpBy = 'holderAttacks' | 'attacksOnHolder';
+
+/** The attack that uses up an effect's Held Roll rule, if one of its rules is used up. */
+export function usedUpOf(system: unknown): UsedUpBy | null {
+	const rules = (system as { rules?: unknown } | null | undefined)?.rules;
+	if (!Array.isArray(rules)) return null;
+	const rule = (
+		rules as Array<{ type?: string; disabled?: boolean; usedUp?: boolean; appliesTo?: UsedUpBy }>
+	).find((entry) => entry?.type === 'heldRoll' && !entry.disabled && entry.usedUp !== false);
+	return rule ? (rule.appliesTo ?? 'holderAttacks') : null;
+}
+
 export interface DescribeInput {
 	moments: readonly Moment[];
+	/** A Held Roll rule that the next attack uses up; it reads first. */
+	usedUp?: UsedUpBy | null;
 	/** A core duration of an older effect or a rule; it reads after the moments. */
 	coreDuration?: Partial<Record<CoreDurationUnits, number | null>> | null;
 	/** The effect has an Escape DC. */
@@ -70,6 +85,20 @@ function subjectWord(person: Person, input: DescribeInput): string {
 function verb(event: LastsUntilEvent, person: Person, input: DescribeInput): string {
 	const form = person.kind === 'named' ? 'third' : 'base';
 	return input.localize(`${WORDS}.event.${event}.${form}`);
+}
+
+function objectWord(person: Person, input: DescribeInput): string {
+	if (person.kind === 'named') return person.name;
+	return input.localize(`${WORDS}.${person.kind === 'you' ? 'you' : 'them'}`);
+}
+
+function usedUpPhrase(usedUp: UsedUpBy, input: DescribeInput): string {
+	const holder = input.reader.holder;
+	const moment =
+		usedUp === 'holderAttacks'
+			? input.format(`${WORDS}.nextAttack`, { whose: possessive(holder, input) })
+			: input.format(`${WORDS}.nextAttackOn`, { whom: objectWord(holder, input) });
+	return input.format(`${WORDS}.until`, { moment });
 }
 
 function turnPhrase(moment: Moment, input: DescribeInput): string {
@@ -145,7 +174,10 @@ function phraseOf(moment: Moment, input: DescribeInput): string {
  * turn, or until you drop to 0 HP". Empty when nothing ends the effect.
  */
 export function describeLastsUntil(input: DescribeInput): string {
-	const phrases = input.moments.map((moment) => phraseOf(moment, input));
+	const phrases = [
+		...(input.usedUp ? [usedUpPhrase(input.usedUp, input)] : []),
+		...input.moments.map((moment) => phraseOf(moment, input)),
+	];
 	const core = corePhrase(input);
 	if (core) phrases.push(core);
 	if (!phrases.length && input.escape) {

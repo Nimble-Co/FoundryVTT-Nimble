@@ -1,24 +1,65 @@
 import { SYSTEM_ID } from '#system';
-import type { HeldChange, HeldChangeData } from '#types/heldChange.d.ts';
+import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.heldChange`;
-const FLAG = 'heldChange';
+const MESSAGE_FLAG = 'heldChangeMessage';
 const SHOW_ICON_ALWAYS = 2;
 
 const ICONS: Record<HeldChangeData['kind'], string> = {
+	advantage: 'icons/svg/upgrade.svg',
 	primaryDie: 'icons/svg/target.svg',
 	wholeAmount: 'icons/svg/sword.svg',
 	ignoreDisadvantage: 'icons/svg/aura.svg',
 	mustAttackOther: 'icons/svg/daze.svg',
 	vulnerableOnce: 'icons/svg/fire.svg',
+	maximize: 'icons/svg/dice-target.svg',
 };
+
+const NO_MOMENT = {
+	boundary: null,
+	clock: null,
+	span: null,
+	value: null,
+	units: null,
+	who: null,
+	event: null,
+	effectName: '',
+} as const;
+
+/** The Lasts Until of a Held Change that code makes. */
+export function heldChangeMoments(ends: HeldChangeEnd): Moment[] {
+	if (ends === 'combat') return [{ ...NO_MOMENT, kind: 'event', event: 'combatEnd' }];
+	if (ends === 'round') {
+		return [{ ...NO_MOMENT, kind: 'turn', boundary: 'end', span: 'currentRound' }];
+	}
+	return [{ ...NO_MOMENT, kind: 'turn', boundary: 'end', clock: 'holder', span: 'currentTurn' }];
+}
+
+interface HeldRollSource {
+	type?: string;
+	disabled?: boolean;
+	heldKind?: HeldChangeData['kind'];
+	value?: number;
+	appliesTo?: HeldChangeData['appliesTo'];
+	usedUp?: boolean;
+	meleeOnly?: boolean;
+	fromSourceOnly?: boolean;
+	damageType?: string;
+}
 
 interface HolderEffect {
 	id?: string | null;
+	name?: string | null;
+	origin?: string | null;
+	disabled?: boolean;
+	active?: boolean;
+	system?: unknown;
 	flags?: Record<string, Record<string, unknown> | undefined>;
 }
 
@@ -30,58 +71,111 @@ interface Holder {
 	deleteEmbeddedDocuments?(type: string, ids: string[]): Promise<unknown>;
 }
 
-interface LiveCombat {
-	started?: boolean;
-	round?: number;
-	turn?: number | null;
+/** The creature that applied the effect, and the name of what made it. */
+function originOf(effect: HolderEffect): { creatureUuid: string | null; name: string } {
+	if (!effect.origin) return { creatureUuid: null, name: '' };
+	const document = fromUuidSync(effect.origin as never, { strict: false }) as {
+		uuid?: string;
+		name?: string;
+		documentName?: string;
+		actor?: { uuid?: string } | null;
+	} | null;
+	const creatureUuid =
+		document?.documentName === 'Actor' ? (document.uuid ?? null) : (document?.actor?.uuid ?? null);
+	return { creatureUuid, name: document?.name ?? '' };
 }
 
-/** A change ends with its turn, round or combat, also if no GM was there to delete it. */
-function isLive(change: HeldChangeData): boolean {
-	if (!change.combatId) return false;
-	const combat = (game.combats as unknown as { get?(id: string): LiveCombat } | undefined)?.get?.(
-		change.combatId,
-	);
-	if (!combat?.started) return false;
-	if (change.ends === 'combat') return true;
-	if (combat.round !== change.round) return false;
-	return change.ends === 'round' || combat.turn === change.turn;
+function heldRollsOf(effect: HolderEffect): HeldRollSource[] {
+	const rules = (effect.system as { rules?: HeldRollSource[] } | undefined)?.rules;
+	if (!Array.isArray(rules)) return [];
+	return rules.filter((rule) => rule?.type === 'heldRoll' && !rule.disabled);
 }
 
-function allHeldOn(holder: Holder | null | undefined): HeldChange[] {
+/** Every Held Change on a creature: each Held Roll rule of an active effect on it. */
+function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
 	const held: HeldChange[] = [];
 	for (const effect of holder?.effects ?? []) {
-		const change = effect.flags?.[SYSTEM_ID]?.[FLAG] as HeldChangeData | undefined;
-		if (!change || !effect.id) continue;
-		held.push({ ...change, effectId: effect.id, holderUuid: holder?.uuid ?? '' });
+		if (!effect.id || effect.disabled || effect.active === false) continue;
+		const rules = heldRollsOf(effect);
+		if (!rules.length) continue;
+		const origin = originOf(effect);
+		const messageId = effect.flags?.[SYSTEM_ID]?.[MESSAGE_FLAG];
+		for (const rule of rules) {
+			held.push({
+				kind: rule.heldKind ?? 'advantage',
+				value: Number(rule.value ?? 1),
+				label: effect.name ?? '',
+				sourceName: origin.name || effect.name || '',
+				appliesTo: rule.appliesTo ?? 'holderAttacks',
+				spentBy: rule.usedUp === false ? 'everyRoll' : 'oneRoll',
+				meleeOnly: rule.meleeOnly === true,
+				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
+				...(rule.damageType ? { damageType: rule.damageType } : {}),
+				...(typeof messageId === 'string' ? { sourceMessageId: messageId } : {}),
+				effectId: effect.id,
+				holderUuid: holder?.uuid ?? '',
+			});
+		}
 	}
 	return held;
 }
 
-/** The live Held Changes on a creature. */
-function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
-	return allHeldOn(holder).filter(isLive);
+/** The change can go on an attack by `attacker`, melee or not. */
+function fitsAttack(
+	held: HeldChange,
+	attacker: Holder | null | undefined,
+	melee: boolean | undefined,
+): boolean {
+	if (held.meleeOnly && melee === false) return false;
+	// A lost source ('') fits no attacker.
+	return held.onlyFromUuid === null || held.onlyFromUuid === attacker?.uuid;
+}
+
+interface AttackInput {
+	attacker: Holder | null | undefined;
+	target: Holder | null | undefined;
+	/** An area attack: a change on a target does not go on it. */
+	area: boolean;
+	/** A melee attack; unknown counts as melee. */
+	melee?: boolean;
+}
+
+/** The attacker's own changes of `kind`, and those on the single target, that fit this attack. */
+function changesForAttack(input: AttackInput, kind: HeldChangeData['kind']): HeldChange[] {
+	const own = heldChangesOn(input.attacker).filter((held) => held.appliesTo === 'holderAttacks');
+	const onTarget = input.area
+		? []
+		: heldChangesOn(input.target).filter((held) => held.appliesTo === 'attacksOnHolder');
+	return [...own, ...onTarget].filter(
+		(held) => held.kind === kind && fitsAttack(held, input.attacker, input.melee),
+	);
 }
 
 /**
  * The Primary Die changes one attack roll uses: the attacker's own, and those
  * on the target. An area roll has no Primary Die.
  */
-export function heldChangesForAttack(input: {
-	attacker: Holder | null | undefined;
-	target: Holder | null | undefined;
-	area: boolean;
-	/** The roll spends a change that ignores negative effects. */
-	ignoresNegative?: boolean;
-}): HeldChange[] {
+export function heldChangesForAttack(
+	input: AttackInput & {
+		/** The roll spends a change that ignores negative effects. */
+		ignoresNegative?: boolean;
+	},
+): HeldChange[] {
 	if (input.area) return [];
-	const own = heldChangesOn(input.attacker).filter((held) => held.appliesTo === 'holderAttacks');
-	const onTarget = heldChangesOn(input.target).filter(
-		(held) => held.appliesTo === 'attacksOnHolder',
+	return changesForAttack(input, 'primaryDie').filter(
+		(held) => !(input.ignoresNegative && held.value < 0),
 	);
-	return [...own, ...onTarget].filter(
-		(held) => held.kind === 'primaryDie' && !(input.ignoresNegative && held.value < 0),
-	);
+}
+
+/** The advantage changes one attack uses. A change on the target needs a single target. */
+export function heldAdvantageForAttack(input: AttackInput): HeldChange[] {
+	return changesForAttack(input, 'advantage');
+}
+
+/** The change that makes every die of the attack roll its highest number, from the single target. */
+export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
+	if (input.area) return null;
+	return changesForAttack(input, 'maximize')[0] ?? null;
 }
 
 /** The change that takes disadvantage out of the holder's next roll. */
@@ -183,19 +277,28 @@ export function heldLinesForItem(
 		return [...mustAttackLines, ...endedLines];
 	}
 	const ignore = options.ignoresDisadvantage ? null : ignoreDisadvantageChange(attacker);
+	const attack = {
+		attacker,
+		target: firstTargetActor(),
+		area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
+		melee: isMelee(attackDeliveryFromAttackType(activation.targets?.attackType)),
+	};
+	const maximize = heldMaximizeForAttack(attack);
 	return [
 		...mustAttackLines,
 		...endedLines,
 		...heldLines([
 			...(ignore ? [ignore] : []),
-			...heldChangesForAttack({
-				attacker,
-				target: firstTargetActor(),
-				area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
-				ignoresNegative: !!ignore,
-			}),
+			...heldAdvantageForAttack(attack),
+			...(maximize ? [maximize] : []),
+			...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore }),
 		]),
 	];
+}
+
+/** Melee, ranged, or unknown (an attack with no attack type). */
+export function isMelee(delivery: AttackDelivery): boolean | undefined {
+	return delivery === null ? undefined : delivery === 'melee';
 }
 
 /** The amount the holder keeps for its next attack. Any damage that can harm is an attack (C:452); an area does not use it. */
@@ -250,19 +353,20 @@ export function cardDamageTotal(system: {
 }
 
 /** Holds the amount for the next attack of the holder. It ends with the turn. */
-export async function keepAmount(holder: Holder, label: string, amount: number): Promise<void> {
-	const combat = game.combat;
+export async function keepAmount(
+	holder: Holder,
+	label: string,
+	amount: number,
+	origin?: string | null,
+): Promise<void> {
 	await createHeldChange(holder, {
 		kind: 'wholeAmount',
 		value: amount,
 		label,
-		sourceName: label,
 		appliesTo: 'holderAttacks',
 		spentBy: 'oneRoll',
 		ends: 'turn',
-		combatId: combat?.started ? (combat.id ?? '') : '',
-		round: combat?.round ?? 0,
-		turn: combat?.turn ?? 0,
+		origin: origin ?? null,
 	});
 }
 
@@ -272,17 +376,38 @@ export function firstTargetActor(): Holder | null {
 	return first?.actor ?? null;
 }
 
-async function createHere(holder: Holder, change: HeldChangeData): Promise<void> {
-	await holder.createEmbeddedDocuments?.('ActiveEffect', [
-		{
-			type: NIMBLE_EFFECT_TYPE,
-			name: change.label,
-			img: ICONS[change.kind],
-			disabled: false,
-			showIcon: SHOW_ICON_ALWAYS,
-			flags: { [SYSTEM_ID]: { [FLAG]: change } },
+/** The effect of a Held Change that code makes: a Held Roll rule, and its time as Lasts Until. */
+export function heldChangeEffect(change: HeldChangeData): Record<string, unknown> {
+	return {
+		type: NIMBLE_EFFECT_TYPE,
+		name: change.label,
+		img: ICONS[change.kind],
+		disabled: false,
+		showIcon: SHOW_ICON_ALWAYS,
+		origin: change.origin ?? null,
+		system: {
+			lastsUntil: heldChangeMoments(change.ends),
+			rules: [
+				{
+					id: foundry.utils.randomID(),
+					type: 'heldRoll',
+					label: change.label,
+					heldKind: change.kind,
+					value: change.value,
+					appliesTo: change.appliesTo,
+					usedUp: change.spentBy === 'oneRoll',
+					...(change.damageType ? { damageType: change.damageType } : {}),
+				},
+			],
 		},
-	]);
+		...(change.sourceMessageId
+			? { flags: { [SYSTEM_ID]: { [MESSAGE_FLAG]: change.sourceMessageId } } }
+			: {}),
+	};
+}
+
+async function createHere(holder: Holder, change: HeldChangeData): Promise<void> {
+	await holder.createEmbeddedDocuments?.('ActiveEffect', [heldChangeEffect(change)]);
 }
 
 async function deleteHere(holder: Holder, effectId: string): Promise<void> {
@@ -299,7 +424,7 @@ async function deleteHeld(holder: Holder, effectId: string): Promise<void> {
  * Outside combat nothing would end it, so nothing is held.
  */
 export async function createHeldChange(holder: Holder, change: HeldChangeData): Promise<void> {
-	if (!change.combatId) return;
+	if (!game.combat?.started) return;
 	if (holder.isOwner) return createHere(holder, change);
 	await askActiveGm(QUERY_NAME, { action: 'create', actorUuid: holder.uuid, change });
 }
@@ -319,7 +444,7 @@ export async function takeBackHeldChanges(
 	holder: Holder,
 	sourceMessageId: string,
 ): Promise<number> {
-	const made = allHeldOn(holder).filter((held) => held.sourceMessageId === sourceMessageId);
+	const made = heldChangesOn(holder).filter((held) => held.sourceMessageId === sourceMessageId);
 	for (const change of made) await deleteHeld(holder, change.effectId);
 	return made.length;
 }
@@ -330,20 +455,7 @@ export async function spendHeldIgnoreDisadvantage(
 	usedItemName?: string | null,
 ): Promise<void> {
 	const held = ignoreDisadvantageChange(holder);
-	if (held && held.sourceName !== usedItemName) await spendHeldChanges([held]);
-}
-
-/** Deletes each change whose time ended. */
-export async function expireHeldChanges(holders: Iterable<Holder | null | undefined>) {
-	for (const holder of holders) {
-		const ended = allHeldOn(holder).filter((held) => !isLive(held));
-		if (ended.length > 0) {
-			await holder?.deleteEmbeddedDocuments?.(
-				'ActiveEffect',
-				ended.map((held) => held.effectId),
-			);
-		}
-	}
+	if (held && held.label !== usedItemName) await spendHeldChanges([held]);
 }
 
 export function registerHeldChangeQuery(): void {

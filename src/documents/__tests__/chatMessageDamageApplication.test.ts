@@ -600,24 +600,23 @@ describe('a vulnerability to the next fire damage', () => {
 		const actor = createTarget();
 		const effect = {
 			id: 'grease',
+			name: 'Grease Trap',
 			disabled: false,
-			flags: {
-				[SYSTEM_ID]: {
-					heldChange: {
-						kind: 'vulnerableOnce',
+			origin: null,
+			system: {
+				rules: [
+					{
+						id: 'grease-rule',
+						type: 'heldRoll',
+						heldKind: 'vulnerableOnce',
 						value: 0,
-						label: 'Grease Trap',
-						sourceName: 'Grease Trap',
 						appliesTo: 'attacksOnHolder',
-						spentBy: 'oneRoll',
-						ends: 'combat',
-						combatId: 'c1',
-						round: 1,
-						turn: 0,
+						usedUp: true,
 						damageType: 'fire',
 					},
-				},
+				],
 			},
+			flags: {},
 		};
 		Object.assign(actor, { uuid: 'Actor.greased', isOwner: true, effects: [effect] });
 		return actor;
@@ -627,9 +626,6 @@ describe('a vulnerability to the next fire damage', () => {
 		vi.clearAllMocks();
 		globals().game.user.isGM = true;
 		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
-		(globals().game as unknown as { combats: unknown }).combats = new Map([
-			['c1', { started: true }],
-		]);
 	});
 
 	it('deals more, and is gone after the first fire damage', async () => {

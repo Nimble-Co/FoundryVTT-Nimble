@@ -30,7 +30,6 @@ export const LASTS_UNTIL_EVENTS = [
 	'nextRoll',
 	'nextDamage',
 	'nextSpell',
-	'nextAffliction',
 	'inactiveRound',
 	'wounded',
 	'chargeGained',

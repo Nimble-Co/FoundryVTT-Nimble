@@ -72,7 +72,15 @@ export function fireEvent(
 	]);
 }
 
-/** The events of one item use: an attack, a spell cast, and a use of the item again. */
+/** A spell of tier 1 or more. A cantrip is tier 0. */
+function isTieredSpell(item: UsedItem): boolean {
+	return item.type === 'spell' && Number((item.system as { tier?: number })?.tier ?? 0) >= 1;
+}
+
+/**
+ * The events of one item use: an attack (also a roll), a spell cast, a tiered spell cast, and a
+ * use of the item again.
+ */
 export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[]): void {
 	const actor = item.actor as { name?: string | null } | null;
 	if (!actor) return;
@@ -83,11 +91,21 @@ export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[
 			check: { type: 'event', event: 'attack', actor },
 			heading: eventHeading('attack', { name }),
 		});
+		events.push({
+			check: { type: 'event', event: 'nextRoll', actor },
+			heading: eventHeading('nextRoll', { name }),
+		});
 	}
 	if (item.type === 'spell') {
 		events.push({
 			check: { type: 'event', event: 'castSpell', actor },
 			heading: eventHeading('castSpell', { name }),
+		});
+	}
+	if (isTieredSpell(item)) {
+		events.push({
+			check: { type: 'event', event: 'nextSpell', actor },
+			heading: eventHeading('nextSpell', { name }),
 		});
 	}
 	if (item.uuid) {

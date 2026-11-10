@@ -6,6 +6,7 @@ import {
 	type DescribeInput,
 	describeLastsUntil,
 	holderReader,
+	usedUpOf,
 } from '../describeLastsUntil.js';
 import type { Moment } from '../momentReached.js';
 
@@ -128,5 +129,78 @@ describe('describeLastsUntil', () => {
 				format: localize,
 			}),
 		).toBe('Until you drop to 0 HP, or for 1 turn');
+	});
+});
+
+describe('describeLastsUntil with a used-up Held Roll', () => {
+	const namedHolder: DescribeInput['reader'] = {
+		holder: { kind: 'named', name: 'Kobold' },
+		source: { kind: 'you' },
+	};
+
+	function readUsedUp(
+		usedUp: DescribeInput['usedUp'],
+		reader: DescribeInput['reader'],
+		moments: Moment[] = [],
+	): string {
+		return describeLastsUntil({ moments, usedUp, reader, localize, format: localize });
+	}
+
+	it("reads the holder's next attack for each reader", () => {
+		expect(readUsedUp('holderAttacks', CARD_SELF_READER)).toBe('Until your next attack');
+		expect(readUsedUp('holderAttacks', CARD_TARGETS_READER)).toBe('Until their next attack');
+		expect(readUsedUp('holderAttacks', namedHolder)).toBe("Until Kobold's next attack");
+	});
+
+	it('reads the next attack against the holder for each reader', () => {
+		expect(readUsedUp('attacksOnHolder', CARD_SELF_READER)).toBe(
+			'Until the next attack against you',
+		);
+		expect(readUsedUp('attacksOnHolder', CARD_TARGETS_READER)).toBe(
+			'Until the next attack against them',
+		);
+		expect(readUsedUp('attacksOnHolder', namedHolder)).toBe('Until the next attack against Kobold');
+	});
+
+	it('reads the used-up phrase before the moments', () => {
+		const endOfTurn = turn({ boundary: 'end', clock: 'holder', span: 'currentTurn' });
+		expect(readUsedUp('holderAttacks', CARD_SELF_READER, [endOfTurn])).toBe(
+			'Until your next attack, or until the end of your turn',
+		);
+	});
+
+	it('reads no used-up phrase when usedUp is null', () => {
+		expect(readUsedUp(null, CARD_SELF_READER)).toBe('');
+	});
+});
+
+describe('usedUpOf', () => {
+	const heldRoll = (fields: Record<string, unknown> = {}) => ({
+		type: 'heldRoll',
+		appliesTo: 'attacksOnHolder',
+		usedUp: true,
+		...fields,
+	});
+
+	it('gives the appliesTo of a used-up Held Roll rule', () => {
+		expect(usedUpOf({ rules: [heldRoll()] })).toBe('attacksOnHolder');
+	});
+
+	it("gives the holder's attacks when the rule has no appliesTo", () => {
+		expect(usedUpOf({ rules: [heldRoll({ appliesTo: undefined })] })).toBe('holderAttacks');
+	});
+
+	it('gives null for a Held Roll rule that is not used up', () => {
+		expect(usedUpOf({ rules: [heldRoll({ usedUp: false })] })).toBeNull();
+	});
+
+	it('gives null for a disabled Held Roll rule', () => {
+		expect(usedUpOf({ rules: [heldRoll({ disabled: true })] })).toBeNull();
+	});
+
+	it('gives null for other rules and for no rules', () => {
+		expect(usedUpOf({ rules: [{ type: 'speedBonus' }] })).toBeNull();
+		expect(usedUpOf({})).toBeNull();
+		expect(usedUpOf(null)).toBeNull();
 	});
 });

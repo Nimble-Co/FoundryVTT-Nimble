@@ -62,11 +62,12 @@ describe('isAttackUse', () => {
 });
 
 describe('fireItemUseEvents', () => {
-	it('checks an attack, a spell cast and a use of the item again', () => {
+	it('checks an attack, a roll, a spell cast and a use of the item again', () => {
 		fireItemUseEvents(item({ type: 'spell' }, [{ type: 'damage' }]), []);
 
 		expect(effectsEndingAtMock.mock.calls.map(([check]) => check)).toEqual([
 			{ type: 'event', event: 'attack', actor: user },
+			{ type: 'event', event: 'nextRoll', actor: user },
 			{ type: 'event', event: 'castSpell', actor: user },
 			{ type: 'event', event: 'useAgain', actor: user, itemUuid: 'Actor.t.Item.i' },
 		]);
@@ -78,7 +79,49 @@ describe('fireItemUseEvents', () => {
 
 		fireItemUseEvents(item({ type: 'spell' }, [{ type: 'damage' }]), []);
 
-		expect(endEffectsMock.mock.calls.map(([effects]) => effects)).toEqual([[effect], [], []]);
+		expect(endEffectsMock.mock.calls.map(([effects]) => effects)).toEqual([[effect], [], [], []]);
+	});
+});
+
+function firedEvents(): unknown[] {
+	return effectsEndingAtMock.mock.calls.map(([check]) => (check as { event: string }).event);
+}
+
+describe('fireItemUseEvents for a roll and a spell', () => {
+	it('an attack also checks the next roll', () => {
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), []);
+
+		expect(firedEvents()).toEqual(['attack', 'nextRoll', 'useAgain']);
+	});
+
+	it('a use that is not an attack does not check the next roll', () => {
+		fireItemUseEvents(item({}, [{ type: 'healing' }]), [ally]);
+
+		expect(firedEvents()).not.toContain('nextRoll');
+	});
+
+	it('a spell of tier 1 or more checks the next spell', () => {
+		fireItemUseEvents(
+			item({ type: 'spell', system: { tier: 1, activation: { effects: [] } } }),
+			[],
+		);
+
+		expect(firedEvents()).toEqual(['castSpell', 'nextSpell', 'useAgain']);
+	});
+
+	it('a cantrip of tier 0 does not check the next spell', () => {
+		fireItemUseEvents(
+			item({ type: 'spell', system: { tier: 0, activation: { effects: [] } } }),
+			[],
+		);
+
+		expect(firedEvents()).not.toContain('nextSpell');
+	});
+
+	it('a feature does not check the next spell', () => {
+		fireItemUseEvents(item({ system: { tier: 2, activation: { effects: [] } } }), []);
+
+		expect(firedEvents()).not.toContain('nextSpell');
 	});
 });
 

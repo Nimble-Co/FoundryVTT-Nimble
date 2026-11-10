@@ -1,4 +1,5 @@
 import type { ConditionalBonusRule } from '../../models/rules/conditionalBonus.js';
+import type { CountAsMarkedRule } from '../../models/rules/countAsMarked.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 import localize from '../localize.js';
 import { getToggledTargetTags } from './toggledEffects.js';
@@ -58,10 +59,24 @@ function getDelivery(item: ActivationItem): AttackDelivery {
 function buildTargetDomain(
 	attacker: AttackingActor | null | undefined,
 	targetActor: TargetActor | null | undefined,
+	delivery?: AttackDelivery,
 ): Set<string> {
 	const domain = new Set<string>(targetActor?.getTargetDomain?.() ?? []);
 	for (const tag of getToggledTargetTags(attacker, targetActor)) domain.add(tag);
+	if (targetActor) for (const tag of countedMarkTags(attacker, delivery)) domain.add(tag);
 	return domain;
+}
+
+/** The marks that every creature has for this attacker's attack of `delivery`. */
+function countedMarkTags(
+	attacker: AttackingActor | null | undefined,
+	delivery: AttackDelivery | undefined,
+): string[] {
+	return ((attacker?.rules ?? []) as CountAsMarkedRule[]).flatMap((rule) => {
+		if (rule?.type !== 'countAsMarked') return [];
+		const tag = rule.markedTagFor(delivery);
+		return tag ? [tag] : [];
+	});
 }
 
 /** The attack's item asks to double the damage. Heroes and monsters with no armor have none. */
@@ -97,7 +112,7 @@ function getActiveConditionalBonuses(
 	// for the current rules; a future author wanting to distinguish them will need a
 	// finer source mapping here.
 	const source = item.type === 'spell' ? 'spell' : 'weapon';
-	const targetDomain = buildTargetDomain(attacker, targetActor);
+	const targetDomain = buildTargetDomain(attacker, targetActor, delivery);
 
 	const options: ConditionalBonusOption[] = [];
 	for (const rule of rules) {

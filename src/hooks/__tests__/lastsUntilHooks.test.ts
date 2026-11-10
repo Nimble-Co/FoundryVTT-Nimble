@@ -313,6 +313,104 @@ describe('events', () => {
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
+	it('damage is damage taken by the target', () => {
+		const target = { name: 'Ogre' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor: null });
+
+		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target);
+	});
+
+	it('damage is the next damage of the speaker actor of the card', () => {
+		const speakerActor = { name: 'Tessa' };
+		const sourceActor = { name: 'Other' };
+		const speaker = { actor: 'tessa' };
+		const getSpeakerActor = vi
+			.spyOn(ChatMessage, 'getSpeakerActor')
+			.mockReturnValue(speakerActor as never);
+
+		hook(systemHookName('damageApplied'))({
+			targetActor: { name: 'Ogre' },
+			sourceActor,
+			card: { speaker },
+		});
+
+		getSpeakerActor.mockRestore();
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor);
+	});
+
+	it('damage is the next damage of the source actor when the card has no speaker actor', () => {
+		const sourceActor = { name: 'Tessa' };
+		const getSpeakerActor = vi.spyOn(ChatMessage, 'getSpeakerActor').mockReturnValue(null);
+
+		hook(systemHookName('damageApplied'))({
+			targetActor: { name: 'Ogre' },
+			sourceActor,
+			card: { speaker: { actor: 'gone' } },
+		});
+
+		getSpeakerActor.mockRestore();
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+	});
+
+	it('damage with no card is the next damage of the source actor', () => {
+		const sourceActor = { name: 'Tessa' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor });
+
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+	});
+
+	it('damage on a miss is not the next damage', () => {
+		hook(systemHookName('damageApplied'))({
+			targetActor: { name: 'Ogre' },
+			sourceActor: { name: 'Tessa' },
+			isMiss: true,
+		});
+
+		expect(fireEventMock.mock.calls.map(([event]) => event)).not.toContain('nextDamage');
+	});
+
+	it.each(['savingThrow', 'abilityCheck', 'skillCheck'])(
+		'a %s card of this user is the next roll of its speaker actor',
+		(type) => {
+			const actor = { name: 'Tessa' };
+			Object.assign(user, { id: 'me' });
+			const getSpeakerActor = vi
+				.spyOn(ChatMessage, 'getSpeakerActor')
+				.mockReturnValue(actor as never);
+
+			hook('createChatMessage')({ type, speaker: { actor: 'tessa' } }, {}, 'me');
+
+			getSpeakerActor.mockRestore();
+			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor);
+		},
+	);
+
+	it('a save card of another user is not the next roll here', () => {
+		Object.assign(user, { id: 'me' });
+		const getSpeakerActor = vi
+			.spyOn(ChatMessage, 'getSpeakerActor')
+			.mockReturnValue({ name: 'Tessa' } as never);
+
+		hook('createChatMessage')({ type: 'savingThrow', speaker: { actor: 'tessa' } }, {}, 'other');
+
+		getSpeakerActor.mockRestore();
+		expect(fireEventMock).not.toHaveBeenCalled();
+	});
+
+	it('a card of another type is not the next roll', () => {
+		Object.assign(user, { id: 'me' });
+		const getSpeakerActor = vi
+			.spyOn(ChatMessage, 'getSpeakerActor')
+			.mockReturnValue({ name: 'Tessa' } as never);
+
+		hook('createChatMessage')({ type: 'feature', speaker: { actor: 'tessa' } }, {}, 'me');
+
+		getSpeakerActor.mockRestore();
+		expect(fireEventMock).not.toHaveBeenCalled();
+	});
+
 	it('a charge pool that goes up is a charge gained', () => {
 		const actor = { name: 'Hunter' };
 

@@ -223,6 +223,9 @@ abstract class NimbleBaseRule<
 	/** False for a rule type that needs an item as its parent. The rules manager of an Active Effect refuses it. */
 	static worksOnEffects: boolean = true;
 
+	/** False for a rule type that only an Active Effect can hold. The Rules Builder of an item does not offer it. */
+	static worksOnItems: boolean = true;
+
 	/** True when this rule class implements the prePrepareData lifecycle hook. */
 	static get appliesInPrePrepareData(): boolean {
 		// biome-ignore lint/complexity/noThisInStatic: must introspect the calling subclass's prototype, not the base class

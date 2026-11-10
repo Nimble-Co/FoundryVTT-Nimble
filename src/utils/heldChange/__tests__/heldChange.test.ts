@@ -1,67 +1,123 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HeldChangeData } from '#types/heldChange.d.ts';
+import type { HeldChangeData, HeldChangeKind } from '#types/heldChange.d.ts';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	cardDamageTotal,
 	createHeldChange,
-	expireHeldChanges,
+	heldAdvantageForAttack,
+	heldChangeEffect,
 	heldChangesForAttack,
 	heldLines,
 	heldLinesForItem,
+	heldMaximizeForAttack,
 	heldVulnerabilityTo,
 	keepAmount,
 	keptAmountEndedBy,
 	keptAmountFor,
 	mustAttackOtherChange,
 	spendHeldChanges,
+	takeBackHeldChanges,
 } from '../heldChange.js';
 
-const data = (overrides: Partial<HeldChangeData> = {}): HeldChangeData => ({
-	kind: 'primaryDie',
-	value: 1,
-	label: 'Create an Opening',
-	sourceName: 'Mira',
-	appliesTo: 'attacksOnHolder',
-	spentBy: 'oneRoll',
-	ends: 'round',
-	combatId: 'c1',
-	round: 2,
-	turn: 0,
-	...overrides,
-});
+interface HeldSpec {
+	kind?: HeldChangeKind;
+	value?: number;
+	label?: string;
+	appliesTo?: HeldChangeData['appliesTo'];
+	usedUp?: boolean;
+	meleeOnly?: boolean;
+	fromSourceOnly?: boolean;
+	damageType?: string;
+	origin?: string | null;
+	messageId?: string;
+	disabled?: boolean;
+}
 
-function creature(uuid: string, held: HeldChangeData[] = [], isOwner = true) {
-	const effects = held.map((change, index) => ({
-		id: `e${index}`,
-		flags: { nimble: { heldChange: change } },
-	}));
+const MIRA = 'Actor.mira';
+
+/** An effect with one Held Roll rule, as a Held Change is on a creature. */
+function heldEffect(id: string, spec: HeldSpec = {}) {
+	const label = spec.label ?? 'Create an Opening';
 	return {
+		id,
+		name: label,
+		origin: spec.origin === undefined ? MIRA : spec.origin,
+		disabled: spec.disabled ?? false,
+		system: {
+			rules: [
+				{
+					id: `${id}-rule`,
+					type: 'heldRoll',
+					label,
+					heldKind: spec.kind ?? 'primaryDie',
+					value: spec.value ?? 1,
+					appliesTo: spec.appliesTo ?? 'attacksOnHolder',
+					usedUp: spec.usedUp ?? true,
+					meleeOnly: spec.meleeOnly ?? false,
+					fromSourceOnly: spec.fromSourceOnly ?? false,
+					damageType: spec.damageType ?? '',
+				},
+			],
+		},
+		flags: spec.messageId ? { nimble: { heldChangeMessage: spec.messageId } } : {},
+	};
+}
+
+const documents = new Map<string, unknown>();
+
+function creature(uuid: string, held: HeldSpec[] = [], isOwner = true) {
+	const holder = {
 		uuid,
 		isOwner,
-		effects,
+		effects: held.map((spec, index) => heldEffect(`e${index}`, spec)),
 		createEmbeddedDocuments: vi.fn(async () => []),
 		deleteEmbeddedDocuments: vi.fn(async () => []),
 	};
+	documents.set(uuid, holder);
+	return holder;
+}
+
+function changeData(overrides: Partial<HeldChangeData> = {}): HeldChangeData {
+	return {
+		kind: 'primaryDie',
+		value: 1,
+		label: 'Create an Opening',
+		appliesTo: 'attacksOnHolder',
+		spentBy: 'oneRoll',
+		ends: 'round',
+		origin: MIRA,
+		...overrides,
+	};
+}
+
+function createdEffect(holder: ReturnType<typeof creature>): Record<string, any> {
+	const [[, [effect]]] = holder.createEmbeddedDocuments.mock.calls as unknown as [
+		[string, [Record<string, any>]],
+	];
+	return effect;
 }
 
 const globals = globalThis as unknown as Record<string, any>;
 let saved: Record<string, unknown>;
 
 beforeEach(() => {
-	saved = { fromUuidSync: globals.fromUuidSync };
-	globals.game.combats = new Map([['c1', { id: 'c1', started: true, round: 2, turn: 0 }]]);
+	saved = { fromUuidSync: globals.fromUuidSync, combat: globals.game.combat };
+	documents.clear();
+	documents.set(MIRA, { uuid: MIRA, name: 'Mira', documentName: 'Actor' });
+	globals.fromUuidSync = vi.fn((uuid: string) => documents.get(uuid) ?? null);
+	globals.game.combat = { id: 'c1', started: true, round: 2, turn: 0 };
 });
 
 afterEach(() => {
 	globals.fromUuidSync = saved.fromUuidSync;
-	delete globals.game.combats;
+	globals.game.combat = saved.combat;
 });
 
 describe('heldChangesForAttack', () => {
 	it('drops a minus on the Primary Die on a roll that ignores negative effects', () => {
 		const target = creature('T', [
-			data({ label: 'Anticipate Danger', value: -1, spentBy: 'everyRoll' }),
-			data({ label: 'Create an Opening', value: 1 }),
+			{ label: 'Anticipate Danger', value: -1, usedUp: false },
+			{ label: 'Create an Opening', value: 1 },
 		]);
 
 		const withNullify = heldChangesForAttack({
@@ -77,8 +133,8 @@ describe('heldChangesForAttack', () => {
 	});
 
 	it("reads the target's changes on attacks against it and the attacker's own", () => {
-		const attacker = creature('A', [data({ label: 'Own', appliesTo: 'holderAttacks' })]);
-		const target = creature('T', [data()]);
+		const attacker = creature('A', [{ label: 'Own', appliesTo: 'holderAttacks' }]);
+		const target = creature('T', [{}]);
 
 		const held = heldChangesForAttack({ attacker, target, area: false });
 
@@ -87,58 +143,181 @@ describe('heldChangesForAttack', () => {
 	});
 
 	it("does not read the target's own attack changes, or the attacker's incoming ones", () => {
-		const attacker = creature('A', [data()]);
-		const target = creature('T', [data({ appliesTo: 'holderAttacks' })]);
+		const attacker = creature('A', [{}]);
+		const target = creature('T', [{ appliesTo: 'holderAttacks' }]);
 
 		expect(heldChangesForAttack({ attacker, target, area: false })).toEqual([]);
 	});
 
 	it('gives two Openings on one target, so they add up', () => {
-		const target = creature('T', [data(), data()]);
+		const target = creature('T', [{}, {}]);
 		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
 		expect(held.reduce((sum, entry) => sum + entry.value, 0)).toBe(2);
 	});
 
 	it('gives an area roll no Primary Die change', () => {
-		const target = creature('T', [data()]);
+		const target = creature('T', [{}]);
 		expect(heldChangesForAttack({ attacker: creature('A'), target, area: true })).toEqual([]);
 	});
 
-	it('leaves out a round change from an earlier round', () => {
-		const target = creature('T', [data({ round: 1 })]);
+	it('does not read a disabled effect', () => {
+		const target = creature('T', [{ disabled: true }]);
 		expect(heldChangesForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
 	});
+});
 
-	it('leaves out a turn change from an earlier turn', () => {
-		const attacker = creature('A', [
-			data({ ends: 'turn', turn: 3, appliesTo: 'holderAttacks', kind: 'wholeAmount' }),
-		]);
-		expect(heldChangesForAttack({ attacker, target: null, area: false })).toEqual([]);
+describe('the Held Change read from an effect', () => {
+	it('takes the source name from the origin document', () => {
+		const target = creature('T', [{}]);
+		const [held] = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.sourceName).toBe('Mira');
 	});
 
-	it('leaves out a change from a combat that ended', () => {
-		const target = creature('T', [data({ combatId: 'gone' })]);
-		expect(heldChangesForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
+	it('takes the source name from the effect name when it has no origin', () => {
+		const target = creature('T', [{ origin: null, label: 'Opening' }]);
+		const [held] = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.sourceName).toBe('Opening');
 	});
 
-	it('does not read a change with no combat', () => {
-		const attacker = creature('A', [
-			data({ combatId: '', round: 0, appliesTo: 'holderAttacks', ends: 'turn' }),
-		]);
-		expect(heldChangesForAttack({ attacker, target: null, area: false })).toHaveLength(0);
+	it('is spent by one roll when used up, and stays for every roll when not', () => {
+		const target = creature('T', [{ usedUp: true }, { usedUp: false }]);
+		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.map((entry) => entry.spentBy)).toEqual(['oneRoll', 'everyRoll']);
 	});
 
-	it('holds nothing outside combat', async () => {
-		const holder = creature('A');
-		await createHeldChange(holder, data({ combatId: '', round: 0 }));
-		expect(holder.createEmbeddedDocuments).not.toHaveBeenCalled();
+	it('carries the message id of the card that made it', () => {
+		const target = creature('T', [{ messageId: 'm1' }]);
+		const [held] = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.sourceMessageId).toBe('m1');
+	});
+});
+
+describe('heldAdvantageForAttack', () => {
+	const advantage = (spec: HeldSpec = {}): HeldSpec => ({
+		kind: 'advantage',
+		label: 'Advantage',
+		...spec,
+	});
+
+	it("reads the attacker's own changes on its attacks", () => {
+		const attacker = creature('A', [advantage({ appliesTo: 'holderAttacks' })]);
+		const held = heldAdvantageForAttack({ attacker, target: creature('T'), area: false });
+		expect(held.map((entry) => entry.holderUuid)).toEqual(['A']);
+	});
+
+	it("reads the target's changes on attacks against it", () => {
+		const target = creature('T', [advantage({ appliesTo: 'attacksOnHolder' })]);
+		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.map((entry) => entry.holderUuid)).toEqual(['T']);
+	});
+
+	it("does not read the attacker's changes on attacks against it", () => {
+		const attacker = creature('A', [advantage({ appliesTo: 'attacksOnHolder' })]);
+		expect(heldAdvantageForAttack({ attacker, target: creature('T'), area: false })).toEqual([]);
+	});
+
+	it("does not read the target's changes on an area attack", () => {
+		const attacker = creature('A', [advantage({ appliesTo: 'holderAttacks', label: 'Own' })]);
+		const target = creature('T', [advantage()]);
+		const held = heldAdvantageForAttack({ attacker, target, area: true });
+		expect(held.map((entry) => entry.label)).toEqual(['Own']);
+	});
+
+	it('does not read a melee-only change on an attack that is not melee', () => {
+		const target = creature('T', [advantage({ meleeOnly: true })]);
+		const held = heldAdvantageForAttack({
+			attacker: creature('A'),
+			target,
+			area: false,
+			melee: false,
+		});
+		expect(held).toEqual([]);
+	});
+
+	it('reads a melee-only change on an attack of unknown delivery', () => {
+		const target = creature('T', [advantage({ meleeOnly: true })]);
+		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
+		expect(held).toHaveLength(1);
+	});
+
+	it('reads a source-only change only on an attack by the origin creature', () => {
+		const target = creature('T', [advantage({ fromSourceOnly: true })]);
+		const mira = creature(MIRA);
+		documents.set(MIRA, { ...mira, name: 'Mira', documentName: 'Actor' });
+
+		const fromMira = heldAdvantageForAttack({ attacker: mira, target, area: false });
+		const fromOther = heldAdvantageForAttack({ attacker: creature('B'), target, area: false });
+
+		expect(fromMira).toHaveLength(1);
+		expect(fromOther).toEqual([]);
+	});
+
+	it('reads a source-only change on no attack when its origin is lost', () => {
+		const target = creature('T', [advantage({ fromSourceOnly: true, origin: 'Item.gone' })]);
+
+		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
+
+		expect(held).toEqual([]);
+	});
+
+	it('takes the origin creature of an item origin from the item actor', () => {
+		documents.set('Item.feature', {
+			uuid: 'Item.feature',
+			name: 'Feature',
+			documentName: 'Item',
+			actor: { uuid: 'A' },
+		});
+		const target = creature('T', [advantage({ fromSourceOnly: true, origin: 'Item.feature' })]);
+
+		const [held] = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
+
+		expect(held.onlyFromUuid).toBe('A');
+	});
+});
+
+describe('heldMaximizeForAttack', () => {
+	const maximize = (spec: HeldSpec = {}): HeldSpec => ({
+		kind: 'maximize',
+		label: 'Maximize',
+		...spec,
+	});
+
+	it("reads the target's change on attacks against it", () => {
+		const target = creature('T', [maximize()]);
+		expect(heldMaximizeForAttack({ attacker: creature('A'), target, area: false })?.label).toBe(
+			'Maximize',
+		);
+	});
+
+	it("reads the attacker's own change on its attacks", () => {
+		const attacker = creature('A', [maximize({ appliesTo: 'holderAttacks' })]);
+		expect(heldMaximizeForAttack({ attacker, target: null, area: false })?.holderUuid).toBe('A');
+	});
+
+	it('gives an area attack no maximize change', () => {
+		const target = creature('T', [maximize()]);
+		expect(heldMaximizeForAttack({ attacker: creature('A'), target, area: true })).toBeNull();
+	});
+
+	it('does not read a melee-only change on an attack that is not melee', () => {
+		const target = creature('T', [maximize({ meleeOnly: true })]);
+		expect(
+			heldMaximizeForAttack({ attacker: creature('A'), target, area: false, melee: false }),
+		).toBeNull();
+	});
+
+	it('reads a source-only change only on an attack by the origin creature', () => {
+		const target = creature('T', [maximize({ fromSourceOnly: true })]);
+		documents.set(MIRA, { uuid: MIRA, name: 'Mira', documentName: 'Actor' });
+
+		expect(heldMaximizeForAttack({ attacker: { uuid: MIRA }, target, area: false })).not.toBeNull();
+		expect(heldMaximizeForAttack({ attacker: creature('B'), target, area: false })).toBeNull();
 	});
 });
 
 describe('spendHeldChanges', () => {
 	it('deletes a one-roll change and keeps an every-roll change', async () => {
-		const target = creature('T', [data(), data({ spentBy: 'everyRoll' })]);
-		globals.fromUuidSync = vi.fn(() => target);
+		const target = creature('T', [{}, { usedUp: false }]);
 
 		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
 		await spendHeldChanges(held);
@@ -148,8 +327,7 @@ describe('spendHeldChanges', () => {
 	});
 
 	it('asks the GM when the player does not own the holder', async () => {
-		const target = creature('T', [data()], false);
-		globals.fromUuidSync = vi.fn(() => target);
+		const target = creature('T', [{}], false);
 		const query = vi.fn(async () => true);
 		const users = globals.game.users;
 		globals.game.users = { activeGM: { query } };
@@ -167,35 +345,113 @@ describe('spendHeldChanges', () => {
 	});
 });
 
-describe('createHeldChange', () => {
-	it('makes a Nimble effect with a token icon on the holder', async () => {
-		const target = creature('T');
-		await createHeldChange(target, data());
+describe('takeBackHeldChanges', () => {
+	it('deletes only the changes that the card made', async () => {
+		const target = creature('T', [{ messageId: 'm1' }, { messageId: 'm2' }]);
 
-		const [[, [effect]]] = target.createEmbeddedDocuments.mock.calls as unknown as [
-			[string, [Record<string, any>]],
-		];
-		expect(effect.type).toBe(NIMBLE_EFFECT_TYPE);
-		expect(effect.name).toBe('Create an Opening');
-		expect(effect.showIcon).toBe(2);
-		expect(effect.flags.nimble.heldChange.value).toBe(1);
+		const count = await takeBackHeldChanges(target, 'm1');
+
+		expect(count).toBe(1);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 });
 
-describe('expireHeldChanges', () => {
-	it('deletes what the new round ended and keeps what lives on', async () => {
-		globals.game.combats = new Map([['c1', { id: 'c1', started: true, round: 3, turn: 0 }]]);
-		const actor = creature('T', [data({ round: 2 }), data({ ends: 'combat' })]);
+describe('heldChangeEffect', () => {
+	it('makes a Nimble effect with a token icon and the origin', () => {
+		const effect = heldChangeEffect(changeData()) as Record<string, any>;
 
-		await expireHeldChanges([actor]);
+		expect(effect.type).toBe(NIMBLE_EFFECT_TYPE);
+		expect(effect.name).toBe('Create an Opening');
+		expect(effect.showIcon).toBe(2);
+		expect(effect.origin).toBe(MIRA);
+	});
 
-		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+	it('holds the change as one Held Roll rule', () => {
+		const effect = heldChangeEffect(
+			changeData({ kind: 'vulnerableOnce', value: 0, damageType: 'fire' }),
+		) as Record<string, any>;
+
+		expect(effect.system.rules).toHaveLength(1);
+		expect(effect.system.rules[0]).toMatchObject({
+			type: 'heldRoll',
+			label: 'Create an Opening',
+			heldKind: 'vulnerableOnce',
+			value: 0,
+			appliesTo: 'attacksOnHolder',
+			usedUp: true,
+			damageType: 'fire',
+		});
+		expect(typeof effect.system.rules[0].id).toBe('string');
+	});
+
+	it('is not used up when it stays for every roll', () => {
+		const effect = heldChangeEffect(changeData({ spentBy: 'everyRoll' })) as Record<string, any>;
+		expect(effect.system.rules[0].usedUp).toBe(false);
+	});
+
+	it('lasts until the end of the holder turn when it ends with the turn', () => {
+		const effect = heldChangeEffect(changeData({ ends: 'turn' })) as Record<string, any>;
+		expect(effect.system.lastsUntil).toEqual([
+			expect.objectContaining({
+				kind: 'turn',
+				boundary: 'end',
+				clock: 'holder',
+				span: 'currentTurn',
+			}),
+		]);
+	});
+
+	it('lasts until the end of the round when it ends with the round', () => {
+		const effect = heldChangeEffect(changeData({ ends: 'round' })) as Record<string, any>;
+		expect(effect.system.lastsUntil).toEqual([
+			expect.objectContaining({ kind: 'turn', boundary: 'end', clock: null, span: 'currentRound' }),
+		]);
+	});
+
+	it('lasts until the combat ends when it ends with the combat', () => {
+		const effect = heldChangeEffect(changeData({ ends: 'combat' })) as Record<string, any>;
+		expect(effect.system.lastsUntil).toEqual([
+			expect.objectContaining({ kind: 'event', event: 'combatEnd' }),
+		]);
+	});
+
+	it('flags the card that made it', () => {
+		const effect = heldChangeEffect(changeData({ sourceMessageId: 'm1' })) as Record<string, any>;
+		expect(effect.flags).toEqual({ nimble: { heldChangeMessage: 'm1' } });
+	});
+
+	it('has no flags when no card made it', () => {
+		const effect = heldChangeEffect(changeData()) as Record<string, any>;
+		expect(effect.flags).toBeUndefined();
+	});
+});
+
+describe('createHeldChange', () => {
+	it('puts the effect of the change on the holder', async () => {
+		const target = creature('T');
+		await createHeldChange(target, changeData());
+
+		expect(createdEffect(target).system.rules[0].heldKind).toBe('primaryDie');
+	});
+
+	it('holds nothing outside combat', async () => {
+		globals.game.combat = null;
+		const holder = creature('A');
+		await createHeldChange(holder, changeData());
+		expect(holder.createEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('holds nothing in a combat that has not started', async () => {
+		globals.game.combat = { id: 'c1', started: false };
+		const holder = creature('A');
+		await createHeldChange(holder, changeData());
+		expect(holder.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 });
 
 describe('heldLines', () => {
 	it('tells the source and if the roll spends it', () => {
-		const target = creature('T', [data(), data({ spentBy: 'everyRoll', value: -1 })]);
+		const target = creature('T', [{}, { usedUp: false, value: -1 }]);
 		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
 
 		expect(heldLines(held)).toEqual([
@@ -214,15 +470,13 @@ describe('heldLines', () => {
 });
 
 describe('a kept amount', () => {
-	const kept = (overrides: Partial<HeldChangeData> = {}) =>
-		data({
-			kind: 'wholeAmount',
-			value: 13,
-			label: 'Rampage',
-			appliesTo: 'holderAttacks',
-			ends: 'turn',
-			...overrides,
-		});
+	const kept = (spec: HeldSpec = {}): HeldSpec => ({
+		kind: 'wholeAmount',
+		value: 13,
+		label: 'Rampage',
+		appliesTo: 'holderAttacks',
+		...spec,
+	});
 
 	const attack = (activation: Record<string, unknown> = {}) => ({
 		system: {
@@ -277,34 +531,25 @@ describe('a kept amount', () => {
 		expect(heldLinesForItem(attacker, area)).toHaveLength(1);
 	});
 
-	it('ends with the turn', () => {
-		expect(keptAmountFor(creature('A', [kept({ turn: 1 })]), attack())).toBeNull();
-	});
-
 	it('is not a Primary Die change', () => {
 		const attacker = creature('A', [kept()]);
 		expect(heldChangesForAttack({ attacker, target: null, area: false })).toEqual([]);
 	});
 
-	it('is held with the amount and the turn', async () => {
-		globals.game.combat = { id: 'c1', started: true, round: 2, turn: 4 };
+	it('is held with the amount until the end of the turn', async () => {
 		const holder = creature('A');
 
-		await keepAmount(holder, 'Rampage', 13);
+		await keepAmount(holder, 'Rampage', 13, 'Item.rampage');
 
-		delete globals.game.combat;
-		const [[, [effect]]] = holder.createEmbeddedDocuments.mock.calls as unknown as [
-			[string, [Record<string, any>]],
-		];
-		expect(effect.flags.nimble.heldChange).toMatchObject({
-			kind: 'wholeAmount',
+		const effect = createdEffect(holder);
+		expect(effect.origin).toBe('Item.rampage');
+		expect(effect.system.rules[0]).toMatchObject({
+			heldKind: 'wholeAmount',
 			value: 13,
-			spentBy: 'oneRoll',
-			ends: 'turn',
-			combatId: 'c1',
-			round: 2,
-			turn: 4,
+			appliesTo: 'holderAttacks',
+			usedUp: true,
 		});
+		expect(effect.system.lastsUntil[0]).toMatchObject({ span: 'currentTurn', clock: 'holder' });
 	});
 });
 
@@ -323,16 +568,23 @@ describe('cardDamageTotal', () => {
 			}),
 		).toBe(15);
 	});
+
+	it('multiplies the damage node', () => {
+		expect(
+			cardDamageTotal({
+				activation: { effects: [{ type: 'damage', roll: { total: 6 }, damageMultiplier: 2 }] },
+			}),
+		).toBe(12);
+	});
 });
 
 describe('a change that waits on the target of a feature', () => {
-	const mustAttack = data({ kind: 'mustAttackOther', appliesTo: 'holderAttacks', ends: 'combat' });
-	const greased = data({
+	const mustAttack: HeldSpec = { kind: 'mustAttackOther', appliesTo: 'holderAttacks' };
+	const greased: HeldSpec = {
 		kind: 'vulnerableOnce',
 		appliesTo: 'attacksOnHolder',
-		ends: 'combat',
 		damageType: 'fire',
-	});
+	};
 
 	it('tells the next attacker who it must attack, on its window', () => {
 		const attacker = creature('A', [mustAttack]);
@@ -358,15 +610,5 @@ describe('a change that waits on the target of a feature', () => {
 		const holder = creature('A', [greased]);
 		expect(heldVulnerabilityTo(holder, 'fire')?.kind).toBe('vulnerableOnce');
 		expect(heldVulnerabilityTo(holder, 'cold')).toBeNull();
-	});
-});
-
-describe('cardDamageTotal with a damage multiplier', () => {
-	it('multiplies the damage node', () => {
-		expect(
-			cardDamageTotal({
-				activation: { effects: [{ type: 'damage', roll: { total: 6 }, damageMultiplier: 2 }] },
-			}),
-		).toBe(12);
 	});
 });

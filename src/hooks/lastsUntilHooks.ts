@@ -162,9 +162,31 @@ function onUseItem(
 	fireItemUseEvents(item, targets);
 }
 
-function onDamageApplied(payload: { targetActor?: Actor | null; isMiss?: boolean }): void {
+function onDamageApplied(payload: {
+	targetActor?: Actor | null;
+	sourceActor?: Actor | null;
+	card?: { speaker?: ChatMessage['speaker'] } | null;
+	isMiss?: boolean;
+}): void {
 	if (payload?.isMiss) return;
 	fireEvent('takeDamage', payload?.targetActor ?? null);
+	const dealer = payload?.card?.speaker
+		? (ChatMessage.getSpeakerActor(payload.card.speaker) ?? payload.sourceActor)
+		: payload?.sourceActor;
+	fireEvent('nextDamage', (dealer as Actor | null | undefined) ?? null);
+}
+
+const ROLL_CARD_TYPES = new Set(['savingThrow', 'abilityCheck', 'skillCheck']);
+
+/** A save or check card ends "until you make a roll" on the client that rolled it. */
+function onCreateChatMessage(
+	card: { type?: string; author?: { id?: string } | null; speaker?: ChatMessage['speaker'] },
+	_options: unknown,
+	userId: string,
+): void {
+	if (userId !== game.user?.id || !ROLL_CARD_TYPES.has(card.type ?? '')) return;
+	if (!card.speaker) return;
+	fireEvent('nextRoll', (ChatMessage.getSpeakerActor(card.speaker) as Actor | null) ?? null);
 }
 
 function onRest(payload: { actor?: Actor | null }): void {
@@ -204,6 +226,7 @@ export default function registerLastsUntilHooks(): void {
 	on('deleteActiveEffect', onDeleteEffect);
 	on(systemHookName('useItem'), onUseItem);
 	on(systemHookName('damageApplied'), onDamageApplied);
+	on('createChatMessage', onCreateChatMessage);
 	on(systemHookName('rest'), onRest);
 	on(systemHookName('chargePool.changed'), onChargeChanged);
 }

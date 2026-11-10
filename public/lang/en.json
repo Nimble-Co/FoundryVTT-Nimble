@@ -1198,7 +1198,10 @@
 					"effectEnds": "{effect} ended on {name}",
 					"wounded": "{name} is Bloodied",
 					"rest": "{name} rested",
-					"chargeGained": "{name} gained a charge"
+					"chargeGained": "{name} gained a charge",
+					"nextRoll": "{name} made a roll",
+					"nextDamage": "{name} dealt damage",
+					"nextSpell": "{name} cast a tiered spell"
 				}
 			},
 			"expiryEvents": {
@@ -1842,6 +1845,9 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"damageMultiplier": "Damage Multiplier Tick",
+			"heldRoll": "Held Roll Change",
+			"countAsMarked": "Count All As Marked",
+			"poolEmptyEffect": "Effect When Pool Empty",
 			"holdOnTarget": "Hold a Change on the Target",
 			"keepAmount": "Keep the Amount of a Hit",
 			"critBack": "Crit Back",
@@ -3202,6 +3208,73 @@
 				"tick": "x{multiplier} damage: {label}",
 				"onCard": "x{multiplier} damage"
 			},
+			"heldRoll": {
+				"description": "Only on an effect. The effect changes a later roll: the next attack of the creature that has it, or the next attack against that creature. The roll that uses it ends the effect; the Lasts Until of the effect ends it in time.",
+				"heldKind": {
+					"label": "Change",
+					"hint": "What the roll gets.",
+					"choices": {
+						"advantage": "Advantage",
+						"primaryDie": "Add to the Primary Die",
+						"wholeAmount": "Use a set amount in place of the roll",
+						"ignoreDisadvantage": "Ignore all disadvantage",
+						"mustAttackOther": "Must attack the closest other creature",
+						"vulnerableOnce": "Vulnerable to the next damage of one type",
+						"maximize": "Every die rolls its highest number"
+					}
+				},
+				"value": {
+					"label": "Amount",
+					"hint": "Steps of advantage, the number added to the Primary Die, or the set amount. A minus number takes away."
+				},
+				"appliesTo": {
+					"label": "Which roll",
+					"hint": "The roll of the creature that has the effect, or a roll against it.",
+					"choices": {
+						"holderAttacks": "Its next attack",
+						"attacksOnHolder": "The next attack against it"
+					}
+				},
+				"usedUp": {
+					"label": "The roll uses it up",
+					"hint": "On: the first roll that uses it ends the effect. Off: every roll uses it until the effect ends."
+				},
+				"meleeOnly": {
+					"label": "Melee attacks only",
+					"hint": "Only a melee attack uses it."
+				},
+				"fromSourceOnly": {
+					"label": "Only attacks by the creature that applied it",
+					"hint": "For the next attack against it: only an attack by the creature that put the effect on uses it."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "For a one-use vulnerability: the damage type, such as fire."
+				}
+			},
+			"countAsMarked": {
+				"description": "Every creature counts as marked by the owner, for the attacks you choose. A bonus that needs a marked target, such as one for your quarry, then works against any target.",
+				"flagKey": {
+					"label": "Mark",
+					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry."
+				},
+				"delivery": {
+					"label": "Attacks",
+					"hint": "The attacks for which every creature counts as marked.",
+					"choices": {
+						"melee": "Melee attacks",
+						"ranged": "Ranged attacks",
+						"any": "All attacks"
+					}
+				}
+			},
+			"poolEmptyEffect": {
+				"description": "On your own turn, when the charge pool has no charges, you get the effect of this item. It shows at the start of your turn, or when you spend the last charge. The Lasts Until of the effect ends it.",
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool to watch."
+				}
+			},
 			"holdOnTarget": {
 				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.",
 				"heldKind": {
@@ -3806,6 +3879,9 @@
 			"effectEnds": "{name} ends",
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
+			"them": "them",
+			"nextAttack": "{whose} next attack",
+			"nextAttackOn": "the next attack against {whom}",
 			"units": {
 				"rounds": { "one": "1 round", "many": "{value} rounds" },
 				"minutes": { "one": "1 minute", "many": "{value} minutes" },
@@ -3828,7 +3904,6 @@
 				"nextRoll": { "base": "make a roll", "third": "makes a roll" },
 				"nextDamage": { "base": "deal damage", "third": "deals damage" },
 				"nextSpell": { "base": "cast a tiered spell", "third": "casts a tiered spell" },
-				"nextAffliction": { "base": "apply an Affliction", "third": "applies an Affliction" },
 				"inactiveRound": {
 					"base": "spend a round with no attack and no new use",
 					"third": "spends a round with no attack and no new use"

@@ -33,12 +33,9 @@ async function holdAssessChange(
 	const time = {
 		appliesTo: 'attacksOnHolder' as const,
 		ends: 'round' as const,
-		combatId: combat.id ?? '',
-		round: combat.round ?? 0,
-		turn: combat.turn ?? 0,
 		kind: 'primaryDie' as const,
 		label,
-		sourceName: actor.name ?? '',
+		origin: actor.uuid,
 	};
 	if (optionId === 'create-opening' && target?.actor) {
 		await createHeldChange(target.actor, { ...time, value: 1, spentBy: 'oneRoll' });

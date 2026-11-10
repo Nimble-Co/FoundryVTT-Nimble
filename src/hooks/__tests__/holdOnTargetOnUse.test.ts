@@ -39,24 +39,27 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 function heldEffect(id: string, sourceMessageId: string) {
 	return {
 		id,
-		flags: {
-			nimble: {
-				heldChange: {
-					kind: 'mustAttackOther',
+		name: 'Addling Arrow',
+		origin: null,
+		system: {
+			rules: [
+				{
+					id: `${id}-rule`,
+					type: 'heldRoll',
+					heldKind: 'mustAttackOther',
 					value: 0,
 					appliesTo: 'holderAttacks',
-					spentBy: 'oneRoll',
-					ends: 'combat',
-					combatId: 'c1',
-					sourceMessageId,
+					usedUp: true,
 				},
-			},
+			],
 		},
+		flags: { nimble: { heldChangeMessage: sourceMessageId } },
 	};
 }
 
 const item = (rule: object) => ({
 	name: 'Grease Trap',
+	uuid: 'Item.grease',
 	rules: new Map([['0', { type: 'holdOnTarget', ...rule }]]),
 });
 
@@ -85,14 +88,20 @@ describe('holdOnTarget on an item use', () => {
 
 		const [, [effect]] = token.actor.createEmbeddedDocuments.mock.calls[0] as unknown as [
 			string,
-			[{ flags: { nimble: { heldChange: Record<string, unknown> } } }],
+			[{ origin: string; system: { rules: object[]; lastsUntil: object[] } }],
 		];
-		expect(effect.flags.nimble.heldChange).toMatchObject({
-			kind: 'vulnerableOnce',
-			damageType: 'fire',
-			ends: 'combat',
-			combatId: 'c1',
-		});
+		expect(effect.origin).toBe('Item.grease');
+		expect(effect.system.rules).toEqual([
+			expect.objectContaining({
+				type: 'heldRoll',
+				heldKind: 'vulnerableOnce',
+				damageType: 'fire',
+				appliesTo: 'attacksOnHolder',
+			}),
+		]);
+		expect(effect.system.lastsUntil).toEqual([
+			expect.objectContaining({ kind: 'event', event: 'combatEnd' }),
+		]);
 	});
 
 	it('holds nothing on a miss, or outside combat', async () => {
@@ -138,7 +147,6 @@ describe('holdOnTarget on an item use', () => {
 				deleteEmbeddedDocuments: vi.fn(async () => []),
 			};
 			const rules = new Map([['0', { type: 'holdOnTarget', heldKind: 'mustAttackOther' }]]);
-			globals.game.combats = { get: () => ({ started: true }) };
 			globals.fromUuidSync = vi.fn((uuid: string) =>
 				uuid === 'Item.i' ? { name: 'Addling Arrow', rules } : { actor },
 			);
@@ -152,10 +160,6 @@ describe('holdOnTarget on an item use', () => {
 			};
 			return { actor, card };
 		}
-
-		afterEach(() => {
-			delete globals.game.combats;
-		});
 
 		it('takes back only the holds of this card when it becomes a miss', async () => {
 			const update = await capturedUpdateHook();

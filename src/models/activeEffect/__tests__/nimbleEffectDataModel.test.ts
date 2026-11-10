@@ -124,7 +124,6 @@ describe('Nimble effect data model', () => {
 			'nextRoll',
 			'nextDamage',
 			'nextSpell',
-			'nextAffliction',
 			'inactiveRound',
 			'wounded',
 			'chargeGained',

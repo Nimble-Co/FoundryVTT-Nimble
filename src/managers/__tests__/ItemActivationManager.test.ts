@@ -1224,36 +1224,29 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			});
 
 			describe('Held Changes', () => {
-				beforeEach(() => {
-					(globalThis as unknown as Record<string, any>).game.combats = new Map([
-						['c1', { started: true, round: 0, turn: 0 }],
-					]);
-				});
+				/** An effect with one Held Roll rule, as a Held Change is on a creature. */
+				function heldRollEffect(id: string, name: string, rule: Record<string, unknown>) {
+					return {
+						id,
+						name,
+						origin: null,
+						system: {
+							rules: [{ id: `${id}-rule`, type: 'heldRoll', usedUp: true, ...rule }],
+						},
+						flags: {},
+					};
+				}
 
-				function targetWithOpening(combatId = 'c1') {
+				function targetWithOpening() {
 					const target = {
 						uuid: 'Actor.ogre',
 						isOwner: true,
 						effects: [
-							{
-								id: 'opening',
-								flags: {
-									nimble: {
-										heldChange: {
-											kind: 'primaryDie',
-											value: 1,
-											label: 'Create an Opening',
-											sourceName: 'Mira',
-											appliesTo: 'attacksOnHolder',
-											spentBy: 'oneRoll',
-											ends: 'round',
-											combatId,
-											round: 0,
-											turn: 0,
-										},
-									},
-								},
-							},
+							heldRollEffect('opening', 'Create an Opening', {
+								heldKind: 'primaryDie',
+								value: 1,
+								appliesTo: 'attacksOnHolder',
+							}),
 						],
 						deleteEmbeddedDocuments: vi.fn(async () => []),
 						getFlag: () => undefined,
@@ -1296,25 +1289,11 @@ describe('ItemActivationManager.getData (rolls)', () => {
 						const deleteEmbeddedDocuments = vi.fn(async () => []);
 						const holder = {
 							effects: [
-								{
-									id: 'kept',
-									flags: {
-										nimble: {
-											heldChange: {
-												kind: 'wholeAmount',
-												value: 13,
-												label: 'Rampage',
-												sourceName: 'Rampage',
-												appliesTo: 'holderAttacks',
-												spentBy: 'oneRoll',
-												ends: 'turn',
-												combatId: 'c1',
-												round: 0,
-												turn: 0,
-											},
-										},
-									},
-								},
+								heldRollEffect('kept', 'Rampage', {
+									heldKind: 'wholeAmount',
+									value: 13,
+									appliesTo: 'holderAttacks',
+								}),
 							],
 							isOwner: true,
 							deleteEmbeddedDocuments,

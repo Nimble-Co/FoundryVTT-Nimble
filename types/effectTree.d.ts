@@ -100,6 +100,8 @@ export interface ApplyEffectSource {
 	name: string;
 	img: string;
 	lastsUntil: readonly Moment[];
+	/** The attack that uses up its Held Roll rule. */
+	usedUp?: 'holderAttacks' | 'attacksOnHolder' | null;
 	coreDuration?: ConditionDuration | null;
 	escape: boolean;
 }

@@ -17,6 +17,7 @@ interface HoldRule {
 
 interface UsedItem {
 	name?: string;
+	uuid?: string;
 	rules?: Iterable<unknown> | Map<string, unknown>;
 }
 
@@ -49,8 +50,7 @@ async function holdOn(
 	actors: Actor.Implementation[],
 	cardId?: string,
 ) {
-	const combat = game.combat;
-	if (!combat?.started) return;
+	if (!game.combat?.started) return;
 	for (const rule of rules) {
 		if (rule.heldKind === 'vulnerableOnce' && !rule.damageType) continue;
 		for (const actor of actors) {
@@ -58,13 +58,10 @@ async function holdOn(
 				kind: rule.heldKind ?? 'mustAttackOther',
 				value: 0,
 				label: item.name ?? '',
-				sourceName: item.name ?? '',
 				appliesTo: rule.heldKind === 'vulnerableOnce' ? 'attacksOnHolder' : 'holderAttacks',
 				spentBy: 'oneRoll',
 				ends: 'combat',
-				combatId: combat.id ?? '',
-				round: combat.round ?? 0,
-				turn: combat.turn ?? 0,
+				origin: item.uuid ?? null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
 				...(cardId ? { sourceMessageId: cardId } : {}),
 			});

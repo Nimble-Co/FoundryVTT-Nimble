@@ -171,39 +171,50 @@ describe('rollUnarmedStrike', () => {
 
 	it('takes out disadvantage with a Held Change that ignores it', async () => {
 		dialogResult({ rollMode: -1 });
-		(heroicGlobals().game as unknown as { combats: unknown }).combats = new Map([
-			['c1', { started: true }],
-		]);
 		const actor = createHeroicCharacter({ proficient: true });
 		const remove = vi.fn(async () => undefined);
+		const deleteEmbeddedDocuments = vi.fn(async () => []);
 		Object.assign(actor, {
+			uuid: 'Actor.hero',
+			deleteEmbeddedDocuments,
 			effects: [
 				{
 					id: 'held',
+					name: 'Nullify',
+					origin: null,
 					delete: remove,
-					flags: {
-						nimble: {
-							heldChange: {
-								kind: 'ignoreDisadvantage',
+					system: {
+						rules: [
+							{
+								id: 'held-rule',
+								type: 'heldRoll',
+								heldKind: 'ignoreDisadvantage',
 								appliesTo: 'holderAttacks',
+								usedUp: true,
 								value: 0,
-								label: 'Nullify',
-								combatId: 'c1',
-								ends: 'combat',
 							},
-						},
+						],
 					},
+					flags: {},
 				},
 			],
 		});
+		const globals = globalThis as unknown as Record<string, unknown>;
+		const savedFromUuidSync = globals.fromUuidSync;
+		globals.fromUuidSync = vi.fn(() => actor);
 
-		await rollUnarmedStrike(actor);
+		try {
+			await rollUnarmedStrike(actor);
+		} finally {
+			globals.fromUuidSync = savedFromUuidSync;
+		}
 
 		expect(damageRollMock).toHaveBeenCalledWith(
 			expect.any(String),
 			{},
 			expect.objectContaining({ rollMode: 0 }),
 		);
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
 	});
 
 	it('writes the recovery flags on its card, so a reroll can follow them', async () => {

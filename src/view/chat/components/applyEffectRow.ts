@@ -49,6 +49,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 	const self = input.node.recipient === 'self';
 	const lasts = describeLastsUntil({
 		moments: source.lastsUntil,
+		usedUp: source.usedUp ?? null,
 		coreDuration: source.coreDuration ?? null,
 		escape: source.escape,
 		reader: self ? CARD_SELF_READER : CARD_TARGETS_READER,

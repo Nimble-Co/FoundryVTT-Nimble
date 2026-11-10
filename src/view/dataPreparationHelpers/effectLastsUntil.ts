@@ -2,6 +2,7 @@ import {
 	type CoreDurationUnits,
 	describeLastsUntil,
 	holderReader,
+	usedUpOf,
 } from '#utils/lastsUntil/describeLastsUntil.js';
 import { escapeDcOfEffect } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -72,6 +73,7 @@ export function effectLastsUntil(effect: LastsUntilEffect, holder: Creature | nu
 	const sourceName = source && source.uuid !== holder?.uuid ? (source.name ?? null) : null;
 	return describeLastsUntil({
 		moments: system.lastsUntil ?? [],
+		usedUp: usedUpOf(system),
 		coreDuration: coreDurationOf(effect),
 		escape: !!system.escape?.dc?.trim(),
 		reader: holderReader(sourceName),

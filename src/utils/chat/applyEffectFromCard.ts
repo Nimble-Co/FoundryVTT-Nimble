@@ -7,6 +7,7 @@ import {
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
+import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
@@ -75,6 +76,7 @@ export function applyEffectSource(
 			name: effect.name,
 			img: effect.img ?? 'icons/svg/aura.svg',
 			lastsUntil: effect.system?.lastsUntil ?? [],
+			usedUp: usedUpOf(effect.system),
 			escape: !!effect.system?.escape?.dc?.trim(),
 		};
 	}

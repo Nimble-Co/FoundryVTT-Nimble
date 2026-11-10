@@ -75,26 +75,46 @@ describe('runAssess', () => {
 
 	it('takes the disadvantage off a paid Assess while the character holds Nullify', async () => {
 		const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
-		const heldChange = {
-			kind: 'ignoreDisadvantage',
-			appliesTo: 'holderAttacks',
-			combatId: 'heroic-combat',
-			ends: 'combat',
-			value: 0,
+		const nullify = {
+			id: 'nullify',
+			name: 'Nullify',
+			origin: null,
+			system: {
+				rules: [
+					{
+						id: 'nullify-rule',
+						type: 'heldRoll',
+						heldKind: 'ignoreDisadvantage',
+						appliesTo: 'holderAttacks',
+						usedUp: true,
+						value: 0,
+					},
+				],
+			},
+			flags: {},
+			delete: vi.fn(),
 		};
+		const deleteEmbeddedDocuments = vi.fn(async () => []);
 		const actor = createHeroicCharacter({
+			uuid: 'Actor.hero',
 			rollSkillCheck,
 			system: { skills: { insight: { defaultRollMode: -1 } } },
-			effects: [{ id: 'nullify', flags: { nimble: { heldChange } }, delete: vi.fn() }],
+			effects: [nullify],
+			deleteEmbeddedDocuments,
 		});
 		setHeroicCombat(createHeroicCombatant(actor));
-		(game as unknown as { combats: { get(): { started: boolean } } }).combats = {
-			get: () => ({ started: true }),
-		};
+		const globals = globalThis as unknown as Record<string, unknown>;
+		const savedFromUuidSync = globals.fromUuidSync;
+		globals.fromUuidSync = vi.fn(() => actor);
 
-		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+		try {
+			await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+		} finally {
+			globals.fromUuidSync = savedFromUuidSync;
+		}
 
 		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['nullify']);
 	});
 
 	describe('what a success holds', () => {
@@ -114,11 +134,14 @@ describe('runAssess', () => {
 			setHeroicCombat(createHeroicCombatant(actor));
 		}
 
+		const effectOf = (creature: { createEmbeddedDocuments: ReturnType<typeof vi.fn> }) =>
+			creature.createEmbeddedDocuments.mock.calls[0]?.[1]?.[0];
 		const heldOf = (creature: { createEmbeddedDocuments: ReturnType<typeof vi.fn> }) =>
-			creature.createEmbeddedDocuments.mock.calls[0]?.[1]?.[0]?.flags?.nimble?.heldChange;
+			effectOf(creature)?.system?.rules?.[0];
 
 		it('Create an Opening holds +1 for one roll on the target, and the card shows it', async () => {
 			const { actor } = actorRolling(ASSESS_DC);
+			Object.assign(actor, { uuid: 'Actor.hero' });
 			inCombat(actor);
 			const ogre = holder();
 			heroicGlobals().game.user.targets = new Set([target(ogre)]);
@@ -126,13 +149,15 @@ describe('runAssess', () => {
 			await runAssess(actor, { optionId: 'create-opening', skillKey: 'perception' });
 
 			expect(heldOf(ogre)).toMatchObject({
-				kind: 'primaryDie',
+				heldKind: 'primaryDie',
 				value: 1,
 				appliesTo: 'attacksOnHolder',
-				spentBy: 'oneRoll',
-				ends: 'round',
-				sourceName: 'Heroic Tester',
+				usedUp: true,
 				label: 'Create an Opening',
+			});
+			expect(effectOf(ogre)).toMatchObject({
+				origin: 'Actor.hero',
+				system: { lastsUntil: [expect.objectContaining({ span: 'currentRound' })] },
 			});
 			expect(ChatMessage.create).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -152,9 +177,11 @@ describe('runAssess', () => {
 			expect(heldOf({ createEmbeddedDocuments })).toMatchObject({
 				value: -1,
 				appliesTo: 'attacksOnHolder',
-				spentBy: 'everyRoll',
-				ends: 'round',
+				usedUp: false,
 			});
+			expect(effectOf({ createEmbeddedDocuments })?.system?.lastsUntil).toEqual([
+				expect.objectContaining({ span: 'currentRound' }),
+			]);
 		});
 
 		it('a failed check holds nothing', async () => {
