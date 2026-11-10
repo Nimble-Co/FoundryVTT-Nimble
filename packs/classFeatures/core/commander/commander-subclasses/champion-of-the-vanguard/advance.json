@@ -93,7 +93,10 @@
 				],
 				"escape": {
 					"dc": "",
-					"saves": "strOrDex"
+					"saves": [
+						"strength",
+						"dexterity"
+					]
 				},
 				"tempHp": null,
 				"minor": false
