@@ -30,8 +30,10 @@ export interface ConditionItemUsage {
 	immunityRuleIds: string[];
 	markTargetRuleIds: string[];
 	nodeIds: string[];
-	/** The item's own effects (for Apply Effect nodes) that hold the condition. */
+	/** The item's own effects (for Apply Effect nodes) that hold only this condition. */
 	itemEffectIds: string[];
+	/** The item's own effects that hold this condition and others: only the condition goes. */
+	itemEffectStatusIds: string[];
 }
 
 export interface ConditionUsage {
@@ -114,6 +116,7 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		markTargetRuleIds: [],
 		nodeIds: [],
 		itemEffectIds: [],
+		itemEffectStatusIds: [],
 	};
 
 	for (const rule of rules) {
@@ -138,9 +141,9 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 
 	for (const effect of item.effects ?? []) {
 		// A transferred effect is on the actor too, and goes with the actor's effects.
-		if (effect.id && effect.transfer === false && effect.statuses?.has(conditionId)) {
-			usage.itemEffectIds.push(effect.id);
-		}
+		if (!effect.id || effect.transfer !== false || !effect.statuses?.has(conditionId)) continue;
+		if (effect.statuses.size === 1) usage.itemEffectIds.push(effect.id);
+		else usage.itemEffectStatusIds.push(effect.id);
 	}
 	const itemEffects = new Set(usage.itemEffectIds);
 
@@ -162,7 +165,8 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		usage.immunityRuleIds.length +
 		usage.markTargetRuleIds.length +
 		usage.nodeIds.length +
-		usage.itemEffectIds.length;
+		usage.itemEffectIds.length +
+		usage.itemEffectStatusIds.length;
 
 	if (referenced === 0) return null;
 

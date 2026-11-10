@@ -20,6 +20,7 @@ function itemUsage(
 		markTargetRuleIds: [],
 		nodeIds: [],
 		itemEffectIds: [],
+		itemEffectStatusIds: [],
 		...overrides,
 	} as ConditionItemUsage & { item: { update: ReturnType<typeof vi.fn> } };
 }
@@ -132,6 +133,21 @@ describe('removeConditionReferences', () => {
 
 		expect(usage.item.update).toHaveBeenCalledWith({ 'system.activation.effects': [] });
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
+	});
+
+	it('takes only the condition off an item effect that holds others too', async () => {
+		const usage = itemUsage({}, { itemEffectStatusIds: ['both'] });
+		const updateEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		Object.assign(usage.item, {
+			effects: { get: () => ({ statuses: new Set(['hexed', 'prone']) }) },
+			updateEmbeddedDocuments,
+		});
+
+		await removeConditionReferences(usageOf([usage]), 'hexed');
+
+		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'both', statuses: ['prone'] },
+		]);
 	});
 
 	it('deletes the carrying effects from whichever document owns them', async () => {

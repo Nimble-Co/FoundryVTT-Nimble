@@ -11,7 +11,9 @@ interface UpdatableItem {
 	name?: string;
 	system?: { rules?: Record<string, unknown>[]; activation?: { effects?: EffectNode[] } };
 	update?: (data: Record<string, unknown>) => Promise<unknown>;
+	effects?: { get(id: string): { statuses?: Set<string> } | undefined };
 	deleteEmbeddedDocuments?: (type: 'ActiveEffect', ids: string[]) => Promise<unknown>;
+	updateEmbeddedDocuments?: (type: 'ActiveEffect', updates: object[]) => Promise<unknown>;
 }
 
 /**
@@ -72,6 +74,17 @@ async function stripFromItem(usage: ConditionItemUsage, conditionId: string): Pr
 	if (Object.keys(update).length) await item.update?.(update);
 	if (usage.itemEffectIds.length) {
 		await item.deleteEmbeddedDocuments?.('ActiveEffect', usage.itemEffectIds);
+	}
+	if (usage.itemEffectStatusIds.length) {
+		await item.updateEmbeddedDocuments?.(
+			'ActiveEffect',
+			usage.itemEffectStatusIds.map((id) => ({
+				_id: id,
+				statuses: [...(item.effects?.get(id)?.statuses ?? [])].filter(
+					(status) => status !== conditionId,
+				),
+			})),
+		);
 	}
 }
 

@@ -143,6 +143,7 @@ describe('findConditionUsage', () => {
 			effects: [
 				{ id: 'fx', transfer: false, statuses: new Set(['hexed']) },
 				{ id: 'other', transfer: false, statuses: new Set(['prone']) },
+				{ id: 'both', transfer: false, statuses: new Set(['hexed', 'prone']) },
 				{ id: 'passive', transfer: true, statuses: new Set(['hexed']) },
 			],
 		};
@@ -152,6 +153,7 @@ describe('findConditionUsage', () => {
 
 		expect(usage.items[0].nodeIds).toEqual(['a1', 'a2']);
 		expect(usage.items[0].itemEffectIds).toEqual(['fx']);
+		expect(usage.items[0].itemEffectStatusIds, 'an effect with more conditions').toEqual(['both']);
 		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.applyEffect']);
 	});
 
