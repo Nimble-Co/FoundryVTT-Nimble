@@ -2,6 +2,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { checkResultOfCard } from '#utils/rolls/checkResult.js';
+import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import type { EscapeSave } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 const ALL_SAVES: SaveKeyType[] = ['strength', 'dexterity', 'intelligence', 'will'];
@@ -21,9 +22,39 @@ export function escapeDcOf(dc: unknown): number | null {
 	return Number.isFinite(value) ? Math.floor(value) : null;
 }
 
-interface EscapingActor {
+interface DcRoller {
+	type: string;
+	getRollData(): Record<string, unknown>;
+}
+
+/** The creature in the effect's origin (the actor, or the actor of the item), else the holder. */
+function rollerOf(origin: string | null | undefined, holder: DcRoller | null): DcRoller | null {
+	const document = origin
+		? (fromUuidSync(origin as never, { strict: false }) as
+				| (DcRoller & { documentName?: string; actor?: DcRoller | null })
+				| null)
+		: null;
+	if (document?.documentName === 'Actor') return document;
+	return document?.actor ?? holder;
+}
+
+/**
+ * The Escape DC of the effect as a number. A formula reads the creature that applied the effect,
+ * or the holder when there is none. Null when there is no DC.
+ */
+export function escapeDcOfEffect(
+	effect: { origin?: string | null; system?: unknown },
+	holder: DcRoller | null,
+): number | null {
+	const dc = (effect.system as { escape?: { dc?: string } } | undefined)?.escape?.dc;
+	const value = escapeDcOf(dc);
+	if (value !== null || !dc?.trim()) return value;
+	return resolveSaveNodeDC(dc, rollerOf(effect.origin, holder));
+}
+
+interface EscapingActor extends DcRoller {
 	uuid: string;
-	allApplicableEffects(): Iterable<EscapableEffect>;
+	effects: { get(id: string): EscapableEffect | undefined };
 	rollSavingThrowToChat(
 		save: SaveKeyType,
 		options: { dc?: number },
@@ -37,6 +68,7 @@ interface EscapingActor {
 interface EscapableEffect {
 	id: string | null;
 	name: string;
+	origin?: string | null;
 	system?: { escape?: { dc?: string; saves?: string } };
 	delete(): Promise<unknown>;
 }
@@ -65,19 +97,19 @@ async function spendOneAction(actor: EscapingActor): Promise<void> {
 
 /**
  * The holder tries to Escape: the owner picks one of the allowed saves, the save rolls against the
- * DC, 1 action is spent in combat, and a success removes the effect. A save with no result (no DC
- * that is a number) leaves the effect for the table to remove.
+ * DC, 1 action is spent in combat, and a success removes the effect. A save with no DC leaves the
+ * effect for the table to remove. Only an effect on the actor itself can be escaped.
  */
 export async function escapeEffect(
 	actor: EscapingActor,
 	effectId: string,
 ): Promise<'escaped' | 'held' | null> {
-	const effect = [...actor.allApplicableEffects()].find((entry) => entry.id === effectId);
+	const effect = actor.effects.get(effectId);
 	if (!effect) return null;
 	const escapeData = effect.system?.escape;
 	const save = await pickSave(escapeSavesOf(escapeData?.saves), effect.name);
 	if (!save) return null;
-	const dc = escapeDcOf(escapeData?.dc);
+	const dc = escapeDcOfEffect(effect, actor);
 	const card = await actor.rollSavingThrowToChat(save, dc === null ? {} : { dc });
 	if (!card) return null;
 	await spendOneAction(actor);

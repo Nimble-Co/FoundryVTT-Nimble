@@ -17,11 +17,12 @@ function saveCard(total: number, natural = 10) {
 	};
 }
 
-function grappled(saves = 'strOrDex') {
+function grappled(saves = 'strOrDex', dc = '13') {
 	return {
 		id: 'grab',
 		name: 'Grappled',
-		system: { escape: { dc: '13', saves } },
+		origin: null as string | null,
+		system: { escape: { dc, saves } },
 		delete: vi.fn(async () => undefined),
 	};
 }
@@ -29,7 +30,9 @@ function grappled(saves = 'strOrDex') {
 function holder(effect: ReturnType<typeof grappled>, card: unknown) {
 	return {
 		uuid: 'Actor.hero',
-		allApplicableEffects: () => [effect],
+		type: 'character',
+		getRollData: () => ({ strength: 3 }),
+		effects: { get: (id: string) => (id === effect.id ? effect : undefined) },
 		rollSavingThrowToChat: vi.fn(async () => card),
 	};
 }
@@ -49,6 +52,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	(game as unknown as { combat: unknown }).combat = null;
+	vi.unstubAllGlobals();
 });
 
 describe('escapeSavesOf and escapeDcOf', () => {
@@ -89,6 +93,29 @@ describe('escapeEffect', () => {
 		expect(consumeCombatantAction).toHaveBeenCalled();
 		expect(effect.delete).not.toHaveBeenCalled();
 		expect(result).toBe('held');
+	});
+
+	it('works out a DC formula from the creature that applied the effect', async () => {
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string, data: Record<string, number>) =>
+				formula.replace(/@(\w+)/g, (_match, key: string) => String(data[key] ?? 0)),
+			safeEval: (formula: string) => Function(`return ${formula}`)(),
+		});
+		const bear = { documentName: 'Actor', type: 'npc', getRollData: () => ({ strength: 5 }) };
+		vi.stubGlobal('fromUuidSync', () => bear);
+		const effect = grappled('strength', '10 + @strength');
+		effect.origin = 'Actor.bear';
+		const actor = holder(effect, saveCard(16));
+
+		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBe('escaped');
+		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('strength', { dc: 15 });
+	});
+
+	it('cannot escape an effect that is not on the actor itself', async () => {
+		const actor = holder(grappled(), saveCard(15));
+
+		expect(await escapeModule.escapeEffect(actor as never, 'on-an-item')).toBeNull();
+		expect(actor.rollSavingThrowToChat).not.toHaveBeenCalled();
 	});
 
 	it('does nothing when the owner closes the question', async () => {

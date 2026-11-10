@@ -3,7 +3,7 @@ import {
 	describeLastsUntil,
 	holderReader,
 } from '#utils/lastsUntil/describeLastsUntil.js';
-import { escapeDcOf } from '#utils/lastsUntil/escapeEffect.js';
+import { escapeDcOfEffect } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 
@@ -46,14 +46,20 @@ function coreDurationOf(
 	return { [units]: value };
 }
 
-/** The user owns the effect and it has an Escape DC. */
+/** The user owns the effect, it is on the actor itself, and it has an Escape DC. */
 export function escapeOf(effect: {
 	isOwner?: boolean;
+	origin?: string | null;
 	system?: unknown;
+	parent?: unknown;
 }): { dc: number | null } | null {
 	const dc = (effect.system as { escape?: { dc?: string } } | undefined)?.escape?.dc;
-	if (!effect.isOwner || !dc?.trim()) return null;
-	return { dc: escapeDcOf(dc) };
+	const holder = effect.parent as
+		| { documentName?: string; type: string; getRollData(): Record<string, unknown> }
+		| null
+		| undefined;
+	if (!effect.isOwner || !dc?.trim() || holder?.documentName !== 'Actor') return null;
+	return { dc: escapeDcOfEffect(effect, holder) };
 }
 
 /** How long the effect lasts, as its holder reads it: "Until Goblin Boss drops to 0 HP". */

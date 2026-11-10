@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { effectLastsUntil, originName } from '../effectLastsUntil.js';
+import { effectLastsUntil, escapeOf, originName } from '../effectLastsUntil.js';
 
 const zeroHp = {
 	kind: 'event',
@@ -56,5 +56,26 @@ describe('effectLastsUntil', () => {
 			'Until you Escape',
 		);
 		expect(effectLastsUntil({}, null)).toBe('');
+	});
+});
+
+describe('escapeOf', () => {
+	const hero = { documentName: 'Actor', type: 'character', getRollData: () => ({}) };
+	const grab = (fields: Record<string, unknown> = {}) => ({
+		isOwner: true,
+		origin: null,
+		parent: hero,
+		system: { escape: { dc: '13', saves: 'strOrDex' } },
+		...fields,
+	});
+
+	it('gives the owner the Escape DC of an effect on the actor', () => {
+		expect(escapeOf(grab())).toEqual({ dc: 13 });
+	});
+
+	it('gives no Escape for an effect on an item, with no DC, or for a user who does not own it', () => {
+		expect(escapeOf(grab({ parent: { documentName: 'Item' } }))).toBeNull();
+		expect(escapeOf(grab({ system: { escape: { dc: ' ', saves: 'any' } } }))).toBeNull();
+		expect(escapeOf(grab({ isOwner: false }))).toBeNull();
 	});
 });
