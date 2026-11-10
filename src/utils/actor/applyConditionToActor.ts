@@ -1,5 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { type Application, newApplicationLastsLonger } from '../lastsUntil/lastsLonger.js';
+import type { Moment } from '../lastsUntil/momentReached.js';
+import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
+
+/** A second Taunted takes the place of the first, whatever their Lasts Until. */
+const NEWEST_WINS = new Set(['taunted']);
 
 export interface ConditionDuration {
 	rounds?: number | null;
@@ -29,8 +35,11 @@ export interface ReplaceableConditionEffect {
 }
 
 /** What this helper reads off a condition already on the target. */
-interface ExistingConditionEffect {
+interface ExistingConditionEffect extends ReplaceableConditionEffect {
 	statuses?: Set<string>;
+	system?: { lastsUntil?: Moment[] };
+	duration?: { value?: number | null; units?: string | null } | null;
+	start?: { time?: number } | null;
 }
 
 /**
@@ -67,6 +76,8 @@ export interface ApplyConditionOptions {
 	sourceActor?: ConditionSourceDocument | null;
 	/** Combat duration to stamp on the created effect. */
 	duration?: ConditionDuration | null;
+	/** The Lasts Until moments of the created effect. */
+	lastsUntil?: Moment[] | null;
 	/**
 	 * Where the duration counts from, when not the current turn. A `turnStart`
 	 * end comes as this combatant's turn starts.
@@ -115,6 +126,57 @@ function targetAlreadyHasCondition(target: ConditionTargetActor, conditionId: st
 	}
 
 	return false;
+}
+
+/** The effects that hold this condition on their own. */
+function conditionEffectsOn(
+	target: ConditionTargetActor,
+	conditionId: string,
+): ExistingConditionEffect[] {
+	const effects = target.effects;
+	if (!effects) return [];
+	const staticId = findStatusEffectEntry(conditionId)?._id;
+	if (staticId) {
+		const effect = effects.get?.(staticId);
+		return effect ? [effect] : [];
+	}
+	return [...effects].filter(
+		(effect) => effect.statuses?.size === 1 && effect.statuses.has(conditionId),
+	);
+}
+
+function applicationOf(effect: ExistingConditionEffect): Application {
+	const now = game.time?.worldTime ?? 0;
+	return {
+		lastsUntil: effect.system?.lastsUntil ?? [],
+		duration: effect.duration,
+		elapsedSeconds: Math.max(0, now - (effect.start?.time ?? now)),
+	};
+}
+
+/**
+ * Spec 3.6: the same condition again. The application that lasts longer stays;
+ * Taunted takes the newest. Gives the effects to replace, or null to refuse.
+ */
+function reapplication(
+	target: ConditionTargetActor,
+	conditionId: string,
+	options: ApplyConditionOptions,
+): ExistingConditionEffect[] | null {
+	if (!targetAlreadyHasCondition(target, conditionId)) return [];
+	if (CONFIG.NIMBLE?.conditionStackableConditions?.has(conditionId)) return null;
+
+	// The status can come from an effect that holds more than this condition.
+	const current = conditionEffectsOn(target, conditionId);
+	if (current.length < 1) return null;
+	if (NEWEST_WINS.has(conditionId)) return current;
+
+	const next: Application = {
+		lastsUntil: options.lastsUntil ?? [],
+		duration: buildDurationPatch(options.duration),
+	};
+	const context = { roundSeconds: roundSeconds(), secondsOf };
+	return newApplicationLastsLonger(next, current.map(applicationOf), context) ? current : null;
 }
 
 function findStatusEffectEntry(conditionId: string): StatusEffectEntry | undefined {
@@ -196,6 +258,7 @@ async function createConditionEffect(
 	const duration = buildDurationPatch(options.duration);
 	if (duration) patch.duration = duration;
 	if (duration && options.start) patch.start = options.start;
+	if (options.lastsUntil?.length) patch['system.lastsUntil'] = options.lastsUntil;
 	if (options.systemFlags) patch[`flags.${SYSTEM_ID}`] = options.systemFlags;
 	if (Object.keys(patch).length > 0) effect.updateSource(patch);
 
@@ -274,10 +337,11 @@ async function restoreReplacedEffects(
 /**
  * Apply a single condition to a single actor, recording what caused it.
  *
- * Going through here gives a caller one set of guarantees: no duplicate
- * application, a blocking `preApplyCondition` hook that condition immunity
- * listens on, a recorded origin, an optional duration, and a `conditionApplied`
- * hook once the effect exists. A caller replacing instances it names keeps the
+ * Going through here gives a caller one set of guarantees: no duplicate (the
+ * same condition again keeps the application that lasts longer), a blocking
+ * `preApplyCondition` hook that condition immunity listens on, a recorded
+ * origin, an optional Lasts Until, and a `conditionApplied` hook once the
+ * effect exists. A caller replacing instances it names keeps the
  * duplicate decision and gets the swap done transactionally.
  *
  * @returns the created effect, or `null` when nothing was applied.
@@ -288,7 +352,9 @@ export default async function applyConditionToActor(
 	options: ApplyConditionOptions = {},
 ): Promise<AppliedConditionEffect | null> {
 	if (!target || !conditionId) return null;
-	if (options.replaces === undefined && targetAlreadyHasCondition(target, conditionId)) return null;
+	const replaces =
+		options.replaces === undefined ? reapplication(target, conditionId, options) : options.replaces;
+	if (replaces === null) return null;
 
 	const source = options.sourceItem ?? options.sourceActor ?? null;
 
@@ -303,7 +369,7 @@ export default async function applyConditionToActor(
 	});
 	if (allowed === false) return null;
 
-	const replacedSources = await removeReplacedEffects(target, options.replaces);
+	const replacedSources = await removeReplacedEffects(target, replaces);
 
 	let effect: AppliedConditionEffect | null;
 	try {

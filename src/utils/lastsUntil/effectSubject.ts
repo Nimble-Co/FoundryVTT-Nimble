@@ -1,4 +1,3 @@
-import type { TimeUnit } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { getMinionGroupId } from '../minions/minionGrouping.js';
 import {
 	type EffectStart,
@@ -7,6 +6,7 @@ import {
 	sameSeat,
 	type TurnSeat,
 } from './momentReached.js';
+import { secondsOf } from './secondsOf.js';
 
 type CombatantLike = Combatant.Implementation;
 
@@ -44,20 +44,6 @@ function seatsOf(actor: Actor | null, combat: Combat | null | undefined): TurnSe
 	return combat.combatants.contents
 		.filter((combatant) => sameActor(combatant.actor as Actor | null, actor))
 		.map(seatOf);
-}
-
-const SINGULAR: Record<Exclude<TimeUnit, 'rounds'>, string> = {
-	minutes: 'minute',
-	hours: 'hour',
-	days: 'day',
-};
-
-function secondsOf(units: TimeUnit, value: number): number {
-	if (units === 'rounds') return value * (Number(CONFIG.time?.roundTime) || 6);
-	const calendar = game.time?.calendar as
-		| { componentsToTime(components: Record<string, number>): number }
-		| undefined;
-	return calendar?.componentsToTime({ [SINGULAR[units]]: value }) ?? 0;
 }
 
 function combatOfCheck(check: LastsUntilCheck): Combat | null {

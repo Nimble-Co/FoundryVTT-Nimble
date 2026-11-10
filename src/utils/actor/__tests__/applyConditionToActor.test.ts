@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 const hooksCall = vi.fn().mockReturnValue(true);
@@ -299,5 +299,102 @@ describe('applyConditionToActor effect creation', () => {
 		await applyConditionToActor(target, 'dazed', {});
 
 		expect(fromStatusEffect).toHaveBeenCalledWith('dazed', { parent: target });
+	});
+});
+
+describe('applyConditionToActor same condition again (spec 3.6)', () => {
+	const moment = (fields: Record<string, unknown>) => ({
+		kind: 'turn',
+		boundary: null,
+		clock: null,
+		span: null,
+		value: null,
+		units: null,
+		who: null,
+		event: null,
+		effectName: '',
+		...fields,
+	});
+	const endOfTheirNextTurn = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
+	const oneMinute = moment({ kind: 'time', value: 1, units: 'minutes' });
+
+	let deleteDocuments: ReturnType<typeof vi.fn>;
+	let previousTime: unknown;
+
+	function existing(id: string, statuses: string[], lastsUntil: object[]) {
+		return { ...createFakeEffect(id, statuses), system: { lastsUntil }, start: { time: 0 } };
+	}
+
+	beforeEach(() => {
+		deleteDocuments = vi.fn(async () => []);
+		Object.assign((ActiveEffect as unknown as { implementation: object }).implementation, {
+			deleteDocuments,
+		});
+		const g = globalThis as unknown as { game: { time?: unknown } };
+		previousTime = g.game.time;
+		g.game.time = {
+			worldTime: 0,
+			calendar: { componentsToTime: ({ minute = 0 }: { minute?: number }) => minute * 60 },
+		};
+	});
+
+	afterEach(() => {
+		(globalThis as unknown as { game: { time?: unknown } }).game.time = previousTime;
+	});
+
+	it('a longer application replaces a shorter one', async () => {
+		const old = existing('old', ['dazed'], [endOfTheirNextTurn]);
+		const target = createTargetActor({ statuses: ['dazed'], effects: [old] });
+
+		const result = await applyConditionToActor(target, 'dazed', {
+			lastsUntil: [oneMinute] as never,
+		});
+
+		expect(result).not.toBeNull();
+		expect(deleteDocuments).toHaveBeenCalledWith(['old'], { parent: target });
+		expect(createEffect).toHaveBeenCalledTimes(1);
+	});
+
+	it('a shorter application does not replace a longer one', async () => {
+		const old = existing('old', ['dazed'], [oneMinute]);
+		const target = createTargetActor({ statuses: ['dazed'], effects: [old] });
+
+		const result = await applyConditionToActor(target, 'dazed', {
+			lastsUntil: [endOfTheirNextTurn] as never,
+		});
+
+		expect(result).toBeNull();
+		expect(deleteDocuments).not.toHaveBeenCalled();
+		expect(createEffect).not.toHaveBeenCalled();
+	});
+
+	it('an application with no end is not replaced', async () => {
+		const old = existing('old', ['dazed'], []);
+		const target = createTargetActor({ statuses: ['dazed'], effects: [old] });
+
+		expect(
+			await applyConditionToActor(target, 'dazed', { lastsUntil: [oneMinute] as never }),
+		).toBeNull();
+	});
+
+	it('a second Taunted takes the place of the first', async () => {
+		const old = existing('old', ['taunted'], []);
+		const target = createTargetActor({ statuses: ['taunted'], effects: [old] });
+
+		const result = await applyConditionToActor(target, 'taunted', {
+			lastsUntil: [endOfTheirNextTurn] as never,
+		});
+
+		expect(result).not.toBeNull();
+		expect(deleteDocuments).toHaveBeenCalledWith(['old'], { parent: target });
+	});
+
+	it('stamps the moments on the created effect', async () => {
+		const created = createFakeEffect();
+		fromStatusEffect.mockResolvedValue(created);
+
+		await applyConditionToActor(createTargetActor(), 'dazed', { lastsUntil: [oneMinute] as never });
+
+		expect(created.sourceData['system.lastsUntil']).toEqual([oneMinute]);
 	});
 });
