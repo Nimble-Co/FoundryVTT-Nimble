@@ -24,13 +24,13 @@ function succeedsWith(roll: AssessRoll, changes: ResultChange[]): boolean {
 	);
 }
 
-/** The item name of the rule that made the change, as the skill check card shows it. */
+/** The name of the document that holds the rule that made the change, as the skill check card shows it. */
 function featureNameOf(roller: AssessRoller, change: ResultChange): string {
 	const rules = Array.isArray(roller?.rules) ? roller.rules : [];
-	const item = (rules as { item?: { uuid?: string; name?: string | null } | null }[]).find(
-		(rule) => rule?.item?.uuid === change.itemUuid,
-	)?.item;
-	return (item?.name ?? '').trim() || change.label;
+	const parent = (
+		rules as { parentDocument?: { uuid?: string | null; name?: string | null } | null }[]
+	).find((rule) => rule?.parentDocument?.uuid === change.itemUuid)?.parentDocument;
+	return (parent?.name ?? '').trim() || change.label;
 }
 
 /**

@@ -225,7 +225,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 
 		await postMovementTriggerCard({
 			actor: this.actor,
-			item: this.parentDocument,
+			item: this.#usableItem(),
 			token: context.token,
 			message,
 			targets: match.targets.flatMap((token) => (token.uuid ? [token.uuid] : [])),
@@ -234,6 +234,14 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			spacesThisTurn: record.spacesThisTurn,
 			whisper: this.whisper,
 		});
+	}
+
+	/** The item the card offers to use: only an item of the creature with this rule. */
+	#usableItem(): { uuid: string | null; name: string | null; img?: string | null } {
+		const { item } = this;
+		if (item && item.actor === this.actor) return item;
+		const parent = this.parentDocument;
+		return { uuid: null, name: parent.name, img: parent.img };
 	}
 
 	#options(): MovementTriggerOptions {
