@@ -17,7 +17,7 @@ function saveCard(total: number, natural = 10) {
 	};
 }
 
-function grappled(saves = 'strOrDex', dc = '13') {
+function grappled(saves: string[] = ['strength', 'dexterity'], dc = '13') {
 	return {
 		id: 'grab',
 		name: 'Grappled',
@@ -57,9 +57,13 @@ afterEach(() => {
 
 describe('escapeSavesOf and escapeDcOf', () => {
 	it('reads the allowed saves and a DC that is a number', () => {
-		expect(escapeModule.escapeSavesOf('strOrDex')).toEqual(['strength', 'dexterity']);
-		expect(escapeModule.escapeSavesOf('will')).toEqual(['will']);
-		expect(escapeModule.escapeSavesOf('any')).toHaveLength(4);
+		expect(escapeModule.escapeSavesOf(['will', 'strength'])).toEqual(['strength', 'will']);
+		expect(escapeModule.escapeSavesOf(['will'])).toEqual(['will']);
+		expect(
+			escapeModule.escapeSavesOf(['strength', 'dexterity', 'intelligence', 'will']),
+		).toHaveLength(4);
+		expect(escapeModule.escapeSavesOf([])).toEqual(['strength', 'dexterity']);
+		expect(escapeModule.escapeSavesOf(undefined)).toEqual(['strength', 'dexterity']);
 		expect(escapeModule.escapeDcOf(' 13 ')).toBe(13);
 		expect(escapeModule.escapeDcOf('10 + @key')).toBeNull();
 		expect(escapeModule.escapeDcOf('')).toBeNull();
@@ -83,7 +87,7 @@ describe('escapeEffect', () => {
 	});
 
 	it('keeps the effect on a failure, and still spends the action', async () => {
-		const effect = grappled('strength');
+		const effect = grappled(['strength']);
 		const actor = holder(effect, saveCard(8));
 
 		const result = await escapeModule.escapeEffect(actor as never, 'grab');
@@ -103,7 +107,7 @@ describe('escapeEffect', () => {
 		});
 		const bear = { documentName: 'Actor', type: 'npc', getRollData: () => ({ strength: 5 }) };
 		vi.stubGlobal('fromUuidSync', () => bear);
-		const effect = grappled('strength', '10 + @strength');
+		const effect = grappled(['strength'], '10 + @strength');
 		effect.origin = 'Actor.bear';
 		const actor = holder(effect, saveCard(16));
 

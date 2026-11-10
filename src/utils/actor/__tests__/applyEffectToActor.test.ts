@@ -80,7 +80,7 @@ describe('payloadFromEffect', () => {
 				transfer: false,
 				start: { round: 1 },
 				statuses: ['grappled'],
-				system: { escape: { dc: '10 + @intelligence', saves: 'strOrDex' } },
+				system: { escape: { dc: '10 + @intelligence', saves: ['strength', 'dexterity'] } },
 			}),
 		};
 		const user = { type: 'npc', uuid: 'Actor.worg', getRollData: () => ({ intelligence: 3 }) };
@@ -91,7 +91,7 @@ describe('payloadFromEffect', () => {
 			data: {
 				name: 'Grappled',
 				statuses: ['grappled'],
-				system: { escape: { dc: '13', saves: 'strOrDex' } },
+				system: { escape: { dc: '13', saves: ['strength', 'dexterity'] } },
 			},
 			sourceItemUuid: 'Actor.worg.Item.bite',
 			sourceActorUuid: 'Actor.worg',

@@ -3,15 +3,12 @@ import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
 import { checkResultOfCard } from '#utils/rolls/checkResult.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
-import type { EscapeSave } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { ESCAPE_SAVES } from '../../models/activeEffect/nimbleEffectChoices.js';
 
-const ALL_SAVES: SaveKeyType[] = ['strength', 'dexterity', 'intelligence', 'will'];
-
-/** The saves that an Escape allows. */
-export function escapeSavesOf(saves: EscapeSave | string | null | undefined): SaveKeyType[] {
-	if (saves === 'any') return ALL_SAVES;
-	if (saves && (ALL_SAVES as string[]).includes(saves)) return [saves as SaveKeyType];
-	return ['strength', 'dexterity'];
+/** The saves that an Escape allows, in the order of the saves. With none, STR and DEX. */
+export function escapeSavesOf(saves: readonly string[] | null | undefined): SaveKeyType[] {
+	const allowed = ESCAPE_SAVES.filter((save) => saves?.includes(save));
+	return allowed.length ? allowed : ['strength', 'dexterity'];
 }
 
 /** The Escape DC as a number; null when there is no DC or it is not a number. */
@@ -69,7 +66,7 @@ interface EscapableEffect {
 	id: string | null;
 	name: string;
 	origin?: string | null;
-	system?: { escape?: { dc?: string; saves?: string } };
+	system?: { escape?: { dc?: string; saves?: string[] } };
 	delete(): Promise<unknown>;
 }
 

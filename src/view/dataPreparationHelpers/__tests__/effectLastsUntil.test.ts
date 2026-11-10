@@ -65,7 +65,7 @@ describe('escapeOf', () => {
 		isOwner: true,
 		origin: null,
 		parent: hero,
-		system: { escape: { dc: '13', saves: 'strOrDex' } },
+		system: { escape: { dc: '13', saves: ['strength', 'dexterity'] } },
 		...fields,
 	});
 
@@ -75,7 +75,7 @@ describe('escapeOf', () => {
 
 	it('gives no Escape for an effect on an item, with no DC, or for a user who does not own it', () => {
 		expect(escapeOf(grab({ parent: { documentName: 'Item' } }))).toBeNull();
-		expect(escapeOf(grab({ system: { escape: { dc: ' ', saves: 'any' } } }))).toBeNull();
+		expect(escapeOf(grab({ system: { escape: { dc: ' ', saves: ['strength', 'dexterity', 'intelligence', 'will'] } } }))).toBeNull();
 		expect(escapeOf(grab({ isOwner: false }))).toBeNull();
 	});
 });
