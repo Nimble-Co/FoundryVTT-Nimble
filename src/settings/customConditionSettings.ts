@@ -13,6 +13,8 @@ export interface CustomCondition {
 	/** Plain text, escaped into HTML on the way into CONFIG. May be empty. */
 	description: string;
 	img: string;
+	/** A Minor Status ends when combat ends. */
+	minor: boolean;
 }
 
 export const DEFAULT_CUSTOM_CONDITION_ICON = 'icons/svg/aura.svg';
@@ -21,6 +23,7 @@ interface ConditionConfig {
 	conditions: Record<string, string>;
 	conditionDescriptions: Record<string, string>;
 	conditionDefaultImages: Record<string, string>;
+	conditionMinorConditions?: Set<string>;
 }
 
 /** The condition dictionaries, or null when any of them is not populated yet. */
@@ -117,7 +120,7 @@ export function getCustomConditions(): CustomCondition[] {
 				: DEFAULT_CUSTOM_CONDITION_ICON;
 
 		seen.add(id);
-		conditions.push({ id, name, description, img });
+		conditions.push({ id, name, description, img, minor: candidate.minor === true });
 	}
 
 	return conditions;
@@ -148,6 +151,7 @@ export function mergeCustomConditionsIntoConfig(): void {
 		delete config.conditions[retiredId];
 		delete config.conditionDescriptions[retiredId];
 		delete config.conditionDefaultImages[retiredId];
+		config.conditionMinorConditions?.delete(retiredId);
 	}
 
 	// Mutated in place, not reassigned: anything holding a reference to one of these dictionaries
@@ -156,6 +160,8 @@ export function mergeCustomConditionsIntoConfig(): void {
 		config.conditions[custom.id] = custom.name;
 		config.conditionDescriptions[custom.id] = toDescriptionHtml(custom.description);
 		config.conditionDefaultImages[custom.id] = custom.img;
+		if (custom.minor) config.conditionMinorConditions?.add(custom.id);
+		else config.conditionMinorConditions?.delete(custom.id);
 	}
 
 	mergedCustomIds = [...currentIds];

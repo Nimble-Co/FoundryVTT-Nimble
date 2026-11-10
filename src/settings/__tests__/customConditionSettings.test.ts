@@ -89,7 +89,13 @@ describe('customConditionSettings', () => {
 			]);
 
 			expect(getCustomConditions()).toEqual([
-				{ id: 'hexed', name: 'Hexed', description: 'Cursed by a hex.', img: 'icons/svg/hex.svg' },
+				{
+					id: 'hexed',
+					name: 'Hexed',
+					description: 'Cursed by a hex.',
+					img: 'icons/svg/hex.svg',
+					minor: false,
+				},
 			]);
 		});
 
@@ -106,8 +112,22 @@ describe('customConditionSettings', () => {
 		it('defaults name, description, and image when omitted', () => {
 			setStoredConditions(settingsMock, [{ id: 'shaken' }]);
 			expect(getCustomConditions()).toEqual([
-				{ id: 'shaken', name: 'Shaken', description: '', img: DEFAULT_CUSTOM_CONDITION_ICON },
+				{
+					id: 'shaken',
+					name: 'Shaken',
+					description: '',
+					img: DEFAULT_CUSTOM_CONDITION_ICON,
+					minor: false,
+				},
 			]);
+		});
+
+		it('keeps the Minor Status mark', () => {
+			setStoredConditions(settingsMock, [
+				{ id: 'shaken', minor: true },
+				{ id: 'hexed', minor: 'yes' },
+			]);
+			expect(getCustomConditions().map(({ minor }) => minor)).toEqual([true, false]);
 		});
 	});
 
@@ -163,6 +183,20 @@ describe('customConditionSettings', () => {
 			expect(config.conditionDescriptions).not.toHaveProperty('hexed');
 			expect(config.conditionDefaultImages).not.toHaveProperty('hexed');
 			expect(Object.keys(config.conditions).sort()).toEqual(['blinded', 'prone']);
+		});
+
+		it('marks a custom Minor Status, and unmarks it when it changes or goes', () => {
+			const minor = new Set(['smoldering']);
+			(
+				CONFIG.NIMBLE as unknown as { conditionMinorConditions: Set<string> }
+			).conditionMinorConditions = minor;
+			setStoredConditions(settingsMock, [{ id: 'hexed', minor: true }, { id: 'shaken' }]);
+			mergeCustomConditionsIntoConfig();
+			expect([...minor].sort()).toEqual(['hexed', 'smoldering']);
+
+			setStoredConditions(settingsMock, [{ id: 'shaken', minor: true }]);
+			mergeCustomConditionsIntoConfig();
+			expect([...minor].sort()).toEqual(['shaken', 'smoldering']);
 		});
 
 		it('reaches CONFIG.statusEffects once the condition manager reinitializes', () => {

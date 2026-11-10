@@ -5199,6 +5199,8 @@
 				"idPlaceholder": "e.g. hexed",
 				"namePlaceholder": "e.g. Hexed",
 				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
+				"minor": "Minor Status",
+				"minorHint": "Ends when combat ends.",
 				"chooseIcon": "Choose icon",
 				"addCondition": "Add Condition",
 				"remove": "Remove condition",

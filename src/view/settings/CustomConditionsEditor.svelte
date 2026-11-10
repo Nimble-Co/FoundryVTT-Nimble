@@ -81,6 +81,14 @@
 						></textarea>
 					</label>
 
+					<label class="condition-card__toggle">
+						<input type="checkbox" bind:checked={row.minor} />
+						<span>
+							<span class="condition-card__field-label">{t('minor')}</span>
+							<span class="condition-card__toggle-hint">{t('minorHint')}</span>
+						</span>
+					</label>
+
 					{#if rowErrors[index]}
 						<p class="condition-card__error" role="alert">
 							<i class="fa-solid fa-circle-exclamation"></i>
@@ -272,6 +280,31 @@
 		&__textarea {
 			resize: vertical;
 			line-height: 1.4;
+		}
+
+		&__toggle {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.5rem;
+			cursor: pointer;
+
+			input {
+				flex: none;
+				width: 1rem;
+				height: 1rem;
+				margin: 0.125rem 0 0;
+			}
+
+			> span {
+				display: flex;
+				flex-direction: column;
+				gap: 0.125rem;
+			}
+		}
+
+		&__toggle-hint {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__remove {
