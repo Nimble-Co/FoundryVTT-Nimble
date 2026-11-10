@@ -97,7 +97,7 @@ function makeRule(
 		keep: 'new',
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	const predicate = options.predicate;
 	Object.defineProperty(rule, 'predicate', {
 		get: () => (predicate ? { size: 1, test: predicate } : { size: 0 }),
@@ -339,6 +339,28 @@ describe('RerollRule', () => {
 			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
+		it('does not offer as this item only from an effect that has no item', () => {
+			const globals = globalThis as { fromUuidSync?: unknown };
+			const previous = globals.fromUuidSync;
+			globals.fromUuidSync = () => null;
+			try {
+				const { rule, actor } = makeRule({ attackDelivery: 'melee', thisItemOnly: true });
+				Object.setPrototypeOf(actor, Actor.prototype);
+				const effect = {
+					documentName: 'ActiveEffect',
+					uuid: 'Actor.hero.ActiveEffect.e',
+					parent: actor,
+					target: actor,
+					origin: null,
+				};
+				Object.defineProperty(rule, 'parent', { get: () => effect, configurable: true });
+
+				expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
+			} finally {
+				globals.fromUuidSync = previous;
+			}
+		});
+
 		it('does not offer while disabled', () => {
 			const { rule } = makeRule({ disabled: true });
 			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
@@ -549,7 +571,7 @@ describe('RerollRule', () => {
 		it('lets two rules on one actor offer side by side', () => {
 			const { rule: first, actor } = makeRule({ id: 'a' });
 			const { rule: second } = makeRule({ id: 'b' });
-			Object.defineProperty(second, 'item', {
+			Object.defineProperty(second, 'parent', {
 				get: () => ({ ...first.item, actor }),
 				configurable: true,
 			});

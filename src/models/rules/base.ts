@@ -191,7 +191,9 @@ interface PoolGainContext {
 function originItemOf(effect: ActiveEffect): NimbleBaseItem | null {
 	if (effect.parent instanceof Item) return effect.parent as object as NimbleBaseItem;
 	if (!effect.origin) return null;
-	const origin = foundry.utils.fromUuidSync(effect.origin);
+	const origin = fromUuidSync(effect.origin as Parameters<typeof fromUuidSync>[0], {
+		strict: false,
+	});
 	return origin instanceof Item ? (origin as object as NimbleBaseItem) : null;
 }
 

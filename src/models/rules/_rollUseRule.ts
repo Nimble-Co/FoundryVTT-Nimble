@@ -527,7 +527,7 @@ abstract class RollUseRule<
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
-			if (this.thisItemOnly && roll.itemUuid !== this.item?.uuid) return false;
+			if (this.thisItemOnly && (!this.item || roll.itemUuid !== this.item.uuid)) return false;
 			if ((this.attackSource ?? 'any') !== 'any') {
 				const item = roll.itemUuid ? fromUuidSync(roll.itemUuid) : null;
 				if (!matchesAttackSource(this.attackSource, item as { type?: string } | null)) return false;

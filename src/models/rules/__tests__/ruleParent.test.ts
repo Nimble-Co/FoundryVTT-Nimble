@@ -1,15 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RULE_CLASSES } from '../../../config/ruleClasses.js';
+import { Predicate } from '../../../etc/Predicate.js';
 import { NimbleBaseRule } from '../base.js';
 import { DamageBonusRule } from '../damageBonus.js';
 import { SavingThrowBonusRule } from '../savingThrowBonus.js';
 
 class TestRule extends NimbleBaseRule {}
 
-const utils = foundry.utils as unknown as { fromUuidSync?: unknown };
+/** The test DataModel keeps no parent, so the parent is stubbed as other rule tests do. */
+function withParent<T extends object>(rule: T, parent: object): T {
+	Object.defineProperty(rule, 'parent', { value: parent, configurable: true });
+	return rule;
+}
 
 function ruleOn(parent: object) {
-	return new TestRule({} as never, { parent: parent as never, strict: false });
+	return withParent(new TestRule({} as never), parent);
 }
 
 function makeActor(name = 'Holder') {
@@ -34,20 +39,18 @@ function makeEffect(fields: Record<string, unknown>) {
 	return { documentName: 'ActiveEffect', uuid: 'Actor.h.ActiveEffect.e', name: 'Bless', ...fields };
 }
 
+let fromUuidSync: ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+	fromUuidSync = vi.fn(() => null);
+	vi.stubGlobal('fromUuidSync', fromUuidSync);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
+
 describe('a rule on an Active Effect', () => {
-	let fromUuidSync: ReturnType<typeof vi.fn>;
-	let previous: unknown;
-
-	beforeEach(() => {
-		previous = utils.fromUuidSync;
-		fromUuidSync = vi.fn(() => null);
-		utils.fromUuidSync = fromUuidSync;
-	});
-
-	afterEach(() => {
-		utils.fromUuidSync = previous;
-	});
-
 	it('changes the actor the effect is on, and names the effect as its parent', () => {
 		const holder = makeActor();
 		const effect = makeEffect({ parent: holder, target: holder });
@@ -69,6 +72,14 @@ describe('a rule on an Active Effect', () => {
 
 		expect(rule.item).toBe(spell);
 		expect(rule.actor).toBe(holder);
+	});
+
+	it('reads the origin without throwing when it is inside a compendium', () => {
+		const holder = makeActor();
+		const origin = 'Compendium.nimble.monsters.Actor.m.Item.claw';
+
+		expect(ruleOn(makeEffect({ parent: holder, target: holder, origin })).item).toBeNull();
+		expect(fromUuidSync).toHaveBeenCalledWith(origin, { strict: false });
 	});
 
 	it('has no item when the origin is not an item', () => {
@@ -99,12 +110,16 @@ describe('a rule on an Active Effect', () => {
 		expect(rule.actor).toBeNull();
 	});
 
-	it('adds no item tags to the domain its predicate reads', () => {
+	it('tests its predicate against the actor tags only, with no item tags', () => {
 		const holder = makeActor();
+		const onEffect = ruleOn(makeEffect({ parent: holder, target: holder }));
+		const onItem = ruleOn(makeItem(holder));
+		for (const rule of [onEffect, onItem]) {
+			Object.assign(rule, { disabled: false, predicate: new Predicate({ type: 'weapon' }) });
+		}
 
-		const rule = ruleOn(makeEffect({ parent: holder, target: holder }));
-
-		expect([...rule.parentDomain]).toEqual([]);
+		expect(onEffect.appliesTo()).toBe(false);
+		expect(onItem.appliesTo()).toBe(true);
 	});
 });
 
@@ -139,39 +154,41 @@ describe('bonus rules on an Active Effect', () => {
 		};
 	}
 
-	function withFields<T extends object>(rule: T, fields: Record<string, unknown>): T {
+	function withFields<T extends object>(
+		rule: T,
+		parent: object,
+		fields: Record<string, unknown>,
+	): T {
 		Object.assign(rule, { disabled: false, predicate: { size: 0 }, ...fields });
-		return rule;
+		return withParent(rule, parent);
 	}
 
 	it('a saving throw bonus raises the save of the creature with the effect, not the caster', () => {
 		const holder = holderWithSaves('Holder');
 		const caster = holderWithSaves('Caster');
+		fromUuidSync.mockReturnValue(makeItem(caster, 'Actor.c.Item.s'));
 		const effect = makeEffect({ parent: holder, target: holder, origin: 'Actor.c.Item.s' });
-		const previous = utils.fromUuidSync;
-		utils.fromUuidSync = () => makeItem(caster, 'Actor.c.Item.s');
-		try {
-			const rule = withFields(
-				new SavingThrowBonusRule({} as never, { parent: effect as never, strict: false }),
-				{ value: '2', savingThrows: ['strength'] },
-			);
+		const rule = withFields(new SavingThrowBonusRule({} as never), effect, {
+			value: '2',
+			savingThrows: ['strength'],
+		});
 
-			rule.prePrepareData();
+		rule.prePrepareData();
 
-			expect(holder.system.savingThrows.strength.bonus).toBe(2);
-			expect(caster.system.savingThrows.strength.bonus).toBe(0);
-		} finally {
-			utils.fromUuidSync = previous;
-		}
+		expect(holder.system.savingThrows.strength.bonus).toBe(2);
+		expect(caster.system.savingThrows.strength.bonus).toBe(0);
 	});
 
 	it('a damage bonus is added to the damage bonuses of the creature with the effect', () => {
 		const holder = holderWithSaves('Holder');
 		const effect = makeEffect({ parent: holder, target: holder });
-		const rule = withFields(
-			new DamageBonusRule({} as never, { parent: effect as never, strict: false }),
-			{ value: '3', damageType: '', delivery: 'any', source: 'any', itemIdentifier: '' },
-		);
+		const rule = withFields(new DamageBonusRule({} as never), effect, {
+			value: '3',
+			damageType: '',
+			delivery: 'any',
+			source: 'any',
+			itemIdentifier: '',
+		});
 
 		rule.afterPrepareData();
 
@@ -184,10 +201,8 @@ describe('bonus rules on an Active Effect', () => {
 		const owner = holderWithSaves('Owner');
 		const sword = makeItem(owner);
 		const rule = withFields(
-			new SavingThrowBonusRule({} as never, {
-				parent: makeEffect({ parent: sword, target: sword }) as never,
-				strict: false,
-			}),
+			new SavingThrowBonusRule({} as never),
+			makeEffect({ parent: sword, target: sword }),
 			{ value: '2', savingThrows: ['strength'] },
 		);
 

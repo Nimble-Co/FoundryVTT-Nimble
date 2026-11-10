@@ -182,7 +182,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.trigger !== 'onActivation') return;
-		if (context.sourceItem?.uuid !== this.item?.uuid) return;
+		if (!this.item || context.sourceItem?.uuid !== this.item.uuid) return;
 		await this.#offer(
 			localize('NIMBLE.rules.freeMove.reasons.onActivation', { item: this.parentDocument.name }),
 			speakerToken(context.card),

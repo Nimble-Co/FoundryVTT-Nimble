@@ -142,7 +142,7 @@ function makeRule(
 		label: '',
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	const predicate = options.predicate;
 	Object.defineProperty(rule, 'predicate', {
 		get: () => (predicate ? { size: 1, test: predicate } : { size: 0 }),
@@ -291,6 +291,24 @@ describe('FreeMoveRule', () => {
 				ignoreDifficultTerrain: true,
 			});
 			expect(offer.reason).toContain('Swift Step');
+		});
+
+		it('makes no offer from an effect that has no item', async () => {
+			const harness = makeRule();
+			Object.setPrototypeOf(harness.actor, Actor.prototype);
+			const effect = {
+				documentName: 'ActiveEffect',
+				name: 'Haste',
+				uuid: 'Actor.hero-actor.ActiveEffect.haste',
+				parent: harness.actor,
+				target: harness.actor,
+				origin: null,
+			};
+			Object.defineProperty(harness.rule, 'parent', { get: () => effect, configurable: true });
+
+			await activate(harness, {});
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 
 		it('posts a card for everyone by default', async () => {

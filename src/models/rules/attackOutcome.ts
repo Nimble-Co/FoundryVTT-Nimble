@@ -274,7 +274,9 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		if (!this.test(this.domainWith(attackTags(context.damageTypes)))) return null;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return null;
 		const ownAttack = context.side === 'yourAttacks';
-		if (ownAttack && this.thisItemOnly && context.itemUuid !== this.item?.uuid) return null;
+		if (ownAttack && this.thisItemOnly && (!this.item || context.itemUuid !== this.item.uuid)) {
+			return null;
+		}
 		if (!this.#matchesAttackItem(context.itemUuid)) return null;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return null;
 		const chargePoolIdentifier = ownAttack ? (this.chargePoolIdentifier ?? '').trim() : '';
