@@ -40,6 +40,16 @@
 
 	let isEmpty = $derived(isContentEmpty(content));
 
+	/** The actor's data; an effect on a world item has no actor and no roll data of its own. */
+	function rollDataOf(doc: foundry.abstract.Document.Any): object {
+		const { actor, getRollData } = doc as unknown as {
+			actor?: { getRollData(): object } | null;
+			getRollData?: () => object;
+		};
+		if (doc.isEmbedded) return actor?.getRollData() ?? {};
+		return getRollData?.call(doc) ?? {};
+	}
+
 	// Build Options - using $derived to avoid state_referenced_locally warnings
 	const mergedEditorOptions = $derived(
 		foundry.utils.mergeObject(
@@ -60,7 +70,7 @@
 		foundry.utils.mergeObject(
 			{
 				secrets: document.isOwner || game.user?.isGM,
-				rollData: document.isEmbedded ? document.actor.getRollData() : document.getRollData(),
+				rollData: rollDataOf(document),
 				relativeTo: document,
 			},
 			enrichOptions,
