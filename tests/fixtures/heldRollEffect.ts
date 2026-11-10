@@ -10,6 +10,7 @@ export interface HeldRollSpec {
 	meleeOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
+	formula?: string;
 	ruleDisabled?: boolean;
 }
 
@@ -36,6 +37,7 @@ export function heldRollSource(id: string, spec: HeldRollSpec = {}, fallbackLabe
 		meleeOnly: spec.meleeOnly ?? false,
 		fromSourceOnly: spec.fromSourceOnly ?? false,
 		damageType: spec.damageType ?? '',
+		formula: spec.formula ?? '',
 		disabled: spec.ruleDisabled ?? false,
 	};
 }

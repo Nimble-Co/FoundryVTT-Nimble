@@ -296,3 +296,128 @@ describe('attackHeldPlanOf with a maximize change', () => {
 		expect(plan.maximize).toBeNull();
 	});
 });
+
+describe('attackHeldPlanOf extra damage', () => {
+	const radiant: HeldSpec = {
+		kind: 'extraDamage',
+		value: 1,
+		label: 'Shining Mandate',
+		whichRoll: 'holderAttacks',
+		damageType: 'radiant',
+		formula: '1d8',
+	};
+
+	class FixedRoll {
+		formula: string;
+		total = 0;
+		constructor(
+			formula: string,
+			readonly data: Record<string, unknown>,
+		) {
+			this.formula = formula;
+		}
+		async evaluate() {
+			if (this.formula.includes('@')) throw new Error('unresolved');
+			this.total = 5;
+			return this;
+		}
+		toJSON() {
+			return { formula: this.formula, total: this.total };
+		}
+	}
+
+	beforeEach(() => {
+		vi.stubGlobal('Roll', FixedRoll);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('adds a typed damage part for each extra damage change, and spends each one', async () => {
+		const attacker = creature('A', [radiant, { ...radiant, formula: '2', damageType: 'fire' }]);
+
+		const plan = attackHeldPlanOf({
+			attacker,
+			target: null,
+			area: false,
+			attack: true,
+			extraDamage: true,
+		});
+		const parts = await plan.rollExtraDamage({ strength: 2 });
+		await plan.spend();
+
+		expect(parts.map((part) => [part.node.formula, part.node.damageType])).toEqual([
+			['1d8', 'radiant'],
+			['2', 'fire'],
+		]);
+		expect(parts[0].roll.total).toBe(5);
+		expect(spentIds(attacker)).toEqual(['A-e0', 'A-e1']);
+	});
+
+	it('deals the extra damage only on a hit: its node has a hit outcome and no miss outcome', async () => {
+		const plan = attackHeldPlanOf({
+			attacker: creature('A', [radiant]),
+			target: null,
+			area: false,
+			attack: true,
+			extraDamage: true,
+		});
+
+		const [part] = await plan.rollExtraDamage({});
+
+		expect(part.node.parentNode).toBeNull();
+		expect(Object.keys(part.node.on ?? {})).toEqual(['hit']);
+		expect(part.node.on?.hit?.[0]).toMatchObject({ type: 'damageOutcome', parentContext: 'hit' });
+	});
+
+	it('is spent by an attack that misses, as the attack uses it hit or miss', async () => {
+		const attacker = creature('A', [radiant]);
+		const plan = attackHeldPlanOf({
+			attacker,
+			target: null,
+			area: false,
+			attack: true,
+			extraDamage: true,
+		});
+
+		await plan.spend();
+
+		expect(spentIds(attacker)).toEqual(['A-e0']);
+	});
+
+	it('is not used by a roll that is not an attack, nor by a caller that shows no extra damage', async () => {
+		const attacker = creature('A', [radiant]);
+
+		const notAttack = attackHeldPlanOf({
+			attacker,
+			target: null,
+			area: false,
+			attack: false,
+			extraDamage: true,
+		});
+		const noParts = attackHeldPlanOf({ attacker, target: null, area: false, attack: true });
+		await notAttack.spend();
+		await noParts.spend();
+
+		expect(notAttack.extraDamage).toEqual([]);
+		expect(noParts.extraDamage).toEqual([]);
+		expect(await noParts.rollExtraDamage({})).toEqual([]);
+		expect(spentIds(attacker)).toEqual([]);
+	});
+
+	it('skips a part whose formula does not roll', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		const plan = attackHeldPlanOf({
+			attacker: creature('A', [{ ...radiant, formula: '1d@pools.judgment.faces' }]),
+			target: null,
+			area: false,
+			attack: true,
+			extraDamage: true,
+		});
+
+		expect(await plan.rollExtraDamage({})).toEqual([]);
+		expect(warn).toHaveBeenCalled();
+		warn.mockRestore();
+	});
+});

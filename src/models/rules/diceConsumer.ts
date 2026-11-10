@@ -165,7 +165,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 				['cost', 'string'],
 				['bonusOnAttackDelivery', '"melee" | "ranged" | "any" | null'],
 				['effectFormula', 'string | null'],
-				['effectType', '"generic" | "damageReduction"'],
+				['effectType', '"generic" | "damageReduction" | "giveEffect"'],
 				['damageType', 'string'],
 				['selectionOutcome', '"consume" | "maximize"'],
 				['cardOffer', '"hit" | "criticalHit" | null'],
@@ -184,8 +184,8 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 	/**
 	 * Whether this consumer drives an interactive spend flow on activation:
 	 * manual mode and the predicate passes, plus something for the panel to do
-	 * — either an effect formula to evaluate, or a selection outcome that
-	 * transforms the picked dice rather than spending them for an effect.
+	 * — an effect formula to evaluate, an effect to give, or a selection outcome
+	 * that transforms the picked dice rather than spending them for an effect.
 	 *
 	 * A consumer offered on the attack card is spent from that card instead, so
 	 * it deliberately has no sheet flow: the panel cannot see the attack's
@@ -196,6 +196,7 @@ class DiceConsumerRule extends NimbleBaseRule<DiceConsumerRule.Schema> {
 		if (this.cardOffer) return false;
 		if (!this.test()) return false;
 		if (this.selectionOutcome !== 'consume') return true;
+		if (this.effectType === 'giveEffect') return true;
 		return Boolean(this.effectFormula && this.effectFormula.trim().length > 0);
 	}
 

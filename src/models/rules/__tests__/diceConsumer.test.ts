@@ -111,7 +111,7 @@ describe('DiceConsumerRule', () => {
 			const schema = DiceConsumerRule.defineSchema();
 			const effectType = schema.effectType as unknown as { initial: unknown; choices: string[] };
 			expect(effectType.initial).toBe('generic');
-			expect(effectType.choices).toEqual(['generic', 'damageReduction']);
+			expect(effectType.choices).toEqual(['generic', 'damageReduction', 'giveEffect']);
 		});
 	});
 
@@ -222,6 +222,21 @@ describe('DiceConsumerRule', () => {
 				`${SYSTEM_ID}.dicePool.requestSpend`,
 				expect.objectContaining({ poolIdentifier: 'fury', ruleId: 'test-consumer-id' }),
 			);
+		});
+
+		it('requests the spend UI for an effect to give without a formula', async () => {
+			const { rule, item } = createDiceConsumerRule({
+				effectFormula: null,
+				effectType: 'giveEffect',
+			});
+
+			await rule.onItemActivated(activationContext(item));
+
+			expect(Hooks.callAll).toHaveBeenCalledWith(
+				`${SYSTEM_ID}.dicePool.requestSpend`,
+				expect.objectContaining({ poolIdentifier: 'fury', ruleId: 'test-consumer-id' }),
+			);
+			expect(rule.suppressesActivationCard()).toBe(true);
 		});
 
 		it('does not request the spend UI without an effect formula', async () => {

@@ -529,6 +529,30 @@ describe('heldLines', () => {
 			'Condemn: every die rolls its highest number',
 		);
 	});
+
+	it('shows an extra damage change on the window of the next attack', () => {
+		const holder = creature('A', [
+			{
+				kind: 'extraDamage',
+				label: 'Shining Mandate',
+				whichRoll: 'holderAttacks',
+				formula: '1d8',
+				damageType: 'radiant',
+			},
+		]);
+		const attack = {
+			system: {
+				activation: {
+					effects: [{ type: 'damage', canMiss: true }],
+					targets: { attackType: 'reach' },
+				},
+			},
+		};
+
+		expect(heldLinesForItem(holder, attack).map((line) => line.text)).toEqual([
+			'Shining Mandate: 1d8 Radiant damage on a hit',
+		]);
+	});
 });
 
 describe('a kept amount', () => {

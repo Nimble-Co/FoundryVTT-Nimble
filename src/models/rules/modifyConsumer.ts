@@ -2,7 +2,11 @@ import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const EFFECT_TYPE_FILTERS = ['', ...DicePoolRuleConfig.effectTypes] as const;
+// A given effect has no formula to add to.
+const EFFECT_TYPE_FILTERS = [
+	'',
+	...DicePoolRuleConfig.effectTypes.filter((type) => type !== 'giveEffect'),
+];
 const MODIFY_CONSUMER_SCOPES = [...DicePoolRuleConfig.scopes];
 
 function schema() {

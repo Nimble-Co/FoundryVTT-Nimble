@@ -19,6 +19,7 @@ const ICONS: Record<HeldChangeData['kind'], string> = {
 	mustAttackOther: 'icons/svg/daze.svg',
 	vulnerableOnce: 'icons/svg/fire.svg',
 	maximize: 'icons/svg/dice-target.svg',
+	extraDamage: 'icons/svg/explosion.svg',
 };
 
 const NO_MOMENT = {
@@ -51,6 +52,7 @@ interface HeldRollSource {
 	meleeOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
+	formula?: string;
 	/** The prepared rule's predicate check; a source with no rule instance has none. */
 	appliesTo?: unknown;
 }
@@ -130,6 +132,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				meleeOnly: rule.meleeOnly === true,
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
+				...(rule.formula ? { formula: rule.formula } : {}),
 				...(typeof messageId === 'string' ? { sourceMessageId: messageId } : {}),
 				effectId: effect.id,
 				holderUuid: holder?.uuid ?? '',
@@ -191,6 +194,11 @@ export function heldAdvantageForAttack(input: AttackInput): HeldChange[] {
 	return changesForAttack(input, 'advantage');
 }
 
+/** The extra damage changes one attack uses. Each one is a damage part that counts only on a hit. */
+export function heldExtraDamageForAttack(input: AttackInput): HeldChange[] {
+	return changesForAttack(input, 'extraDamage').filter((held) => !!held.formula?.trim());
+}
+
 /** The change that makes every die of the attack roll its highest number, from the single target. */
 export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 	if (input.area) return null;
@@ -226,6 +234,15 @@ export function heldVulnerabilityTo(
 
 /** Advantage steps below 0 are disadvantage. */
 function lineText(change: HeldChange): string {
+	if (change.kind === 'extraDamage') {
+		const types = CONFIG.NIMBLE?.damageTypes as Record<string, string> | undefined;
+		const type = change.damageType ? (types?.[change.damageType] ?? change.damageType) : '';
+		return localize('NIMBLE.heldChange.line.extraDamage', {
+			label: change.label,
+			formula: change.formula ?? '',
+			damageType: type ? localize(type) : '',
+		});
+	}
 	if (change.kind === 'advantage' && change.value < 0) {
 		return localize('NIMBLE.heldChange.line.disadvantage', {
 			label: change.label,
@@ -322,6 +339,7 @@ export function heldLinesForItem(
 			...heldAdvantageForAttack(attack),
 			...(maximize ? [maximize] : []),
 			...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore }),
+			...heldExtraDamageForAttack(attack),
 		]),
 	];
 }
@@ -427,6 +445,7 @@ export function heldChangeEffect(change: HeldChangeData): Record<string, unknown
 					whichRoll: change.appliesTo,
 					usedUp: change.spentBy === 'oneRoll',
 					...(change.damageType ? { damageType: change.damageType } : {}),
+					...(change.formula ? { formula: change.formula } : {}),
 				},
 			],
 		},

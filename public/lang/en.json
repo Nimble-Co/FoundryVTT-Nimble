@@ -2004,7 +2004,7 @@
 				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
 				"effectType": {
 					"label": "Effect type",
-					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken; \"Give Effect\" rolls nothing and puts the item's effect (one that does not go on the owner) on each creature the user targets."
 				},
 				"damageType": {
 					"inherit": "Inherit the attack's type",
@@ -3222,7 +3222,8 @@
 						"ignoreDisadvantage": "Ignore all disadvantage",
 						"mustAttackOther": "Must attack the closest other creature",
 						"vulnerableOnce": "Vulnerable to the next damage of one type",
-						"maximize": "Every die rolls its highest number"
+						"maximize": "Every die rolls its highest number",
+						"extraDamage": "Extra damage on a hit"
 					}
 				},
 				"value": {
@@ -3251,7 +3252,11 @@
 				},
 				"damageType": {
 					"label": "Damage type",
-					"hint": "For a one-use vulnerability: the damage type, such as fire."
+					"hint": "For a one-use vulnerability or extra damage: the damage type, such as fire."
+				},
+				"formula": {
+					"label": "Damage",
+					"hint": "The dice of the extra damage, such as 1d6. An @ reference takes the number from the creature that applied the effect, when it is applied."
 				}
 			},
 			"countAsMarked": {
@@ -3731,7 +3736,9 @@
 					"maximize": "Maximize",
 					"maximizedNote": "Maximized {count} {label} ({changes})",
 					"spentNote": "Spent {count} {label} ({faces})",
-					"bankedReductionNote": "Applied automatically as damage reduction against damage taken."
+					"bankedReductionNote": "Applied automatically as damage reduction against damage taken.",
+					"givenNote": "Gave {effect} to {names}",
+					"giveEffectNoTarget": "Target a creature to give {name} to. No dice were spent."
 				}
 			}
 		},
@@ -5017,6 +5024,7 @@
 				"advantage": "{label}: {value} advantage",
 				"disadvantage": "{label}: {value} disadvantage",
 				"maximize": "{label}: every die rolls its highest number",
+				"extraDamage": "{label}: {formula} {damageType} damage on a hit",
 				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",
 				"stays": "From {source}. It stays until its time ends."

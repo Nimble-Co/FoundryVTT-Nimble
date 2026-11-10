@@ -29,9 +29,9 @@ const DicePoolRuleConfig = {
 	consumptionModes: ['manual', 'autoBonus'] as const,
 	// What a manual spend's effect roll produces. 'generic' just posts the total
 	// to chat; 'damageReduction' additionally banks the total as a one-shot
-	// reduction applied to the next damage the actor takes (e.g. Berserker's
-	// "That all you got?!").
-	effectTypes: ['generic', 'damageReduction'] as const,
+	// reduction applied to the next damage the actor takes. 'giveEffect' rolls
+	// nothing: it puts the item's effect on each target of the user.
+	effectTypes: ['generic', 'damageReduction', 'giveEffect'] as const,
 	// What happens to the dice the player picks in the spend panel. 'consume'
 	// removes them from the pool; 'maximize' leaves them in place and raises
 	// each to the die's highest face. Selection for 'maximize' is capped at the

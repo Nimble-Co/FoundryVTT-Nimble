@@ -105,13 +105,17 @@ export function createDicePoolPanelState(
 	const isMaximizeOutcome = $derived(selectedConsumer?.selectionOutcome === 'maximize');
 
 	/**
-	 * How many dice the chosen consumer may act on. Transforming outcomes are
-	 * capped at the consumer's cost so a "change 1 die" feature offers exactly
-	 * one pick; spending outcomes stay uncapped ("expend 1 or more").
+	 * How many dice the chosen consumer may act on. Transforming outcomes and
+	 * a given effect are capped at the consumer's cost so a "change 1 die"
+	 * feature offers exactly one pick; other spends stay uncapped ("expend 1
+	 * or more").
 	 */
 	const selectionCap = $derived.by((): number | null => {
 		const consumer = selectedConsumer;
-		if (!consumer || consumer.selectionOutcome === 'consume') return null;
+		if (!consumer) return null;
+		if (consumer.selectionOutcome === 'consume' && consumer.effectType !== 'giveEffect') {
+			return null;
+		}
 		return Math.max(1, resolveFormulaToInteger(getActor(), consumer.cost));
 	});
 

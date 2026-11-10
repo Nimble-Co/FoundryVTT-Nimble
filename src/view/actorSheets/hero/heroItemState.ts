@@ -79,7 +79,7 @@ function diceConsumersByItem(actor: NimbleCharacter): Map<string, DiceConsumerLi
 				poolId: pool.id,
 				label: consumer.ruleLabel || consumer.itemName,
 				cap:
-					consumer.selectionOutcome === 'consume'
+					consumer.selectionOutcome === 'consume' && consumer.effectType !== 'giveEffect'
 						? null
 						: Math.max(
 								1,

@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import type { FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
+import { getDicePoolDieFaces } from '#utils/dicePool/helpers.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -249,7 +250,8 @@ function addPoolDieFaces(
 
 /**
  * Roll data for `@pools.<identifier>.faces`. Reads the stored pool state, and
- * the die size of a pool rule nothing stored yet. It resolves no formula,
+ * the die size of a pool rule nothing stored yet, then the dice pools; a charge
+ * pool wins over a dice pool of the same identifier. It resolves no formula,
  * because pool max formulas resolve against roll data and must not recurse.
  */
 function getChargePoolRollData(actor: CharacterActorLike): Record<string, { faces: number }> {
@@ -272,7 +274,8 @@ function getChargePoolRollData(actor: CharacterActorLike): Record<string, { face
 	}
 
 	addUnstoredPoolDieFaces(actor, pools);
-	return pools;
+	const dicePools = getDicePoolDieFaces(actor as Parameters<typeof getDicePoolDieFaces>[0]);
+	return { ...dicePools, ...pools };
 }
 
 function addUnstoredPoolDieFaces(

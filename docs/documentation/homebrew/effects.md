@@ -52,6 +52,8 @@ For example, True Strike holds advantage for the next attack of its target, unti
 - **Melee attacks only**: only a melee attack uses the change. An attack with no attack type counts as melee.
 - **Only attacks by the creature that applied it**: for the next attack against the holder, only the creature that put the effect on uses it, as with Advance!.
 - An area attack uses only the attacker's own changes, not the changes on a target.
+- **Extra damage on a hit** adds a damage roll of its own type to the attack, such as `1d6` radiant. A miss deals none of it, but the attack still uses it up. An `@` reference in its formula takes the number from the creature that applied the effect, at the time it is applied: `1d@pools.judgment.faces` rolls that creature's Judgment Die size.
+- A **Dice Consumer** rule set to **giveEffect** spends a die the player picks and puts the item's effect (one that does not go on the owner) on each creature they target, as Shining Mandate does. With no target, nothing is spent.
 - Out of combat, a change that a feature holds for you (Assess, for example) is not held.
 :::
 

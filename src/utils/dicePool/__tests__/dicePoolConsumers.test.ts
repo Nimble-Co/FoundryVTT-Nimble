@@ -159,6 +159,32 @@ describe('getDicePoolConsumers', () => {
 		expect(getDicePoolConsumers(actor, createFuryPool())).toEqual([]);
 	});
 
+	it('lists a manual consumer with no effectFormula that gives an effect', () => {
+		const actor = createMockActor([
+			createMockItem('mandate', 'Shining Mandate', [
+				{
+					type: 'diceConsumer',
+					id: 'mandate-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: null,
+					effectType: 'giveEffect',
+				} as MockRule,
+			]),
+		]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toEqual([
+			expect.objectContaining({
+				ruleId: 'mandate-consumer',
+				effectFormula: null,
+				effectType: 'giveEffect',
+			}),
+		]);
+	});
+
 	it('excludes consumers targeting a different pool identifier', () => {
 		const actor = createMockActor([
 			createMockItem('judgment-spender', 'Judgment Spender', [

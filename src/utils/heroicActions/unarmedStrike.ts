@@ -141,6 +141,7 @@ export async function rollUnarmedStrike(
 		melee: true,
 		kept,
 		keptToEnd: keptAmount,
+		extraDamage: true,
 	});
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
@@ -221,6 +222,7 @@ export async function rollUnarmedStrike(
 			},
 		},
 	];
+	const extraDamage = await held.rollExtraDamage(actor.getRollData());
 
 	const chatData = {
 		author: game.user?.id,
@@ -228,7 +230,7 @@ export async function rollUnarmedStrike(
 		speaker: ChatMessage.getSpeaker({ actor }),
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
-		rolls: [roll],
+		rolls: [roll, ...extraDamage.map((part) => part.roll)],
 		system: {
 			actorName: actor.name,
 			actorType: actor.type,
@@ -245,7 +247,7 @@ export async function rollUnarmedStrike(
 			isCritical: roll.isCritical,
 			isMiss: roll.isMiss,
 			activation: {
-				effects: evaluatedEffects,
+				effects: [...evaluatedEffects, ...extraDamage.map((part) => part.node)],
 				cost: { type: 'action', quantity: 1 },
 				duration: { type: 'none', quantity: 1 },
 				targets: { count: 1, attackType: UNARMED_STRIKE_ATTACK_TYPE, distance: 1 },

@@ -125,7 +125,8 @@ function applyConsumerModifiers(
  *   - rule.poolIdentifier matches pool.identifier
  *   - rule.poolScope matches pool.scope
  *   - the consumer has something for the panel to do: an effectFormula to
- *     evaluate, or a selection outcome that transforms the picked dice.
+ *     evaluate, an effect to give, or a selection outcome that transforms the
+ *     picked dice.
  *     Formula-less consumers that only spend have no UX hook to advertise —
  *     they spend silently via the sheet's per-die click.
  */
@@ -170,13 +171,18 @@ function getDicePoolConsumers(
 					? (consumer as { selectionOutcome: string }).selectionOutcome
 					: 'consume';
 
-			const baseEffectFormula = readEffectFormula(consumer);
-			if (baseEffectFormula === null && selectionOutcome === 'consume') continue;
-
 			const effectType =
 				typeof consumer.effectType === 'string' && consumer.effectType.length > 0
 					? consumer.effectType
 					: 'generic';
+			const baseEffectFormula = readEffectFormula(consumer);
+			if (
+				baseEffectFormula === null &&
+				selectionOutcome === 'consume' &&
+				effectType !== 'giveEffect'
+			) {
+				continue;
+			}
 			const effectFormula =
 				baseEffectFormula === null
 					? null

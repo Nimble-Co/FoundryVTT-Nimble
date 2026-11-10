@@ -1025,6 +1025,43 @@ describe('getChargePoolRollData', () => {
 		expect(getChargePoolRollData(stale)).toEqual({ 'combat-dice': { faces: 6 } });
 		expect(getChargePoolRollData(stored)).toEqual({ 'combat-dice': { faces: 8 } });
 	});
+
+	it('gives the die size of a dice pool with its modifyPool changes, and never resolves its max', () => {
+		const judgment = (dieSize: string, appliesTo: () => boolean, priority: number) =>
+			({
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'judgment',
+				dieSize,
+				priority,
+				appliesTo,
+			}) as unknown as MockRule;
+		const actor = createMockActor(
+			[
+				createMockItem('item-1', 'Radiant Judgment', [
+					{ type: 'dicePool', identifier: 'judgment', max: '@level', dieSize: 'd6' } as MockRule,
+					judgment('d12', () => false, 3),
+					judgment('d10', () => true, 2),
+					judgment('d8', () => true, 1),
+				]),
+			],
+			{ level: 5 },
+		);
+
+		expect(getChargePoolRollData(actor)).toEqual({ judgment: { faces: 10 } });
+		expect(actor.getRollData).not.toHaveBeenCalled();
+	});
+
+	it('gives the charge pool when a dice pool has the same identifier', () => {
+		const actor = createMockActor([
+			createMockItem('item-1', 'Feature', [
+				{ type: 'dicePool', identifier: 'judgment', max: '2', dieSize: 'd6' } as MockRule,
+				{ type: 'chargePool', identifier: 'judgment', max: '2', dieSize: 'd12' },
+			]),
+		]);
+
+		expect(getChargePoolRollData(actor)).toEqual({ judgment: { faces: 12 } });
+	});
 });
 
 describe('resolveFormulaToInteger', () => {

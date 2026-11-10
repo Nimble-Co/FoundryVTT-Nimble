@@ -744,6 +744,7 @@ class ItemActivationManager {
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
+						extraDamage: true,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
 					const offerSource = this.#offerSource();
@@ -959,6 +960,10 @@ class ItemActivationManager {
 				}),
 			);
 			rolls.push(roll);
+		}
+		for (const part of (await this.#heldPlan?.rollExtraDamage(this.actor!.getRollData())) ?? []) {
+			updatedEffects.push(part.node);
+			rolls.push(part.roll);
 		}
 
 		// Pool nodes mutate actor state, so their application is deferred until

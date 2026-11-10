@@ -9,6 +9,7 @@ const HELD_ROLL_KINDS = [
 	'mustAttackOther',
 	'vulnerableOnce',
 	'maximize',
+	'extraDamage',
 ] as const;
 
 const WORDS = 'NIMBLE.rules.heldRoll';
@@ -17,7 +18,9 @@ const KINDS_WITH_A_VALUE = new Set(['advantage', 'primaryDie', 'wholeAmount']);
 
 const kindHasValue = (data: Record<string, unknown>) =>
 	KINDS_WITH_A_VALUE.has(String(data.heldKind));
-const isVulnerability = (data: Record<string, unknown>) => data.heldKind === 'vulnerableOnce';
+const hasDamageType = (data: Record<string, unknown>) =>
+	data.heldKind === 'vulnerableOnce' || data.heldKind === 'extraDamage';
+const isExtraDamage = (data: Record<string, unknown>) => data.heldKind === 'extraDamage';
 const isOnHolder = (data: Record<string, unknown>) => data.whichRoll === 'attacksOnHolder';
 
 function schema() {
@@ -89,7 +92,19 @@ function schema() {
 				choices: () => CONFIG.NIMBLE.damageTypes,
 				label: `${WORDS}.damageType.label`,
 				hint: `${WORDS}.damageType.hint`,
-				showWhen: isVulnerability,
+				showWhen: hasDamageType,
+			}),
+		),
+		formula: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				widget: 'formula',
+				label: `${WORDS}.formula.label`,
+				hint: `${WORDS}.formula.hint`,
+				showWhen: isExtraDamage,
 			}),
 		),
 	};

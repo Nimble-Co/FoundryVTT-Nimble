@@ -6,7 +6,8 @@ export type HeldChangeKind =
 	| 'ignoreDisadvantage'
 	| 'mustAttackOther'
 	| 'vulnerableOnce'
-	| 'maximize';
+	| 'maximize'
+	| 'extraDamage';
 
 /** Which roll uses a Held Change: the holder's next attack, or the next attack against the holder. */
 export type HeldAppliesTo = 'holderAttacks' | 'attacksOnHolder';
@@ -34,8 +35,10 @@ export interface HeldChangeData {
 	ends: HeldChangeEnd;
 	/** The uuid of the creature or item that made it. */
 	origin?: string | null;
-	/** The damage type of a one-use vulnerability. */
+	/** The damage type of a one-use vulnerability, or of the extra damage. */
 	damageType?: string;
+	/** The dice of the extra damage. */
+	formula?: string;
 	/** The card that made it, so a new roll on that card can take it back. */
 	sourceMessageId?: string;
 }
@@ -44,7 +47,14 @@ export interface HeldChangeData {
 export interface HeldChange
 	extends Pick<
 		HeldChangeData,
-		'kind' | 'value' | 'label' | 'appliesTo' | 'spentBy' | 'damageType' | 'sourceMessageId'
+		| 'kind'
+		| 'value'
+		| 'label'
+		| 'appliesTo'
+		| 'spentBy'
+		| 'damageType'
+		| 'formula'
+		| 'sourceMessageId'
 	> {
 	sourceName: string;
 	meleeOnly: boolean;
