@@ -6,7 +6,7 @@ import {
 	CLOCKS,
 	ESCAPE_SAVES,
 	EVENT_SUBJECTS,
-	EXPIRY_EVENTS,
+	LASTS_UNTIL_EVENTS,
 	LASTS_UNTIL_KINDS,
 	LEGACY_CONDITION_EFFECT_TYPE,
 	NIMBLE_EFFECT_TYPE,
@@ -96,7 +96,7 @@ describe('Nimble effect data model', () => {
 		expect(moment.span.options.choices).toEqual([...TURN_SPANS]);
 		expect(moment.units.options.choices).toEqual([...TIME_UNITS]);
 		expect(moment.who.options.choices).toEqual([...EVENT_SUBJECTS]);
-		expect(moment.event.options.choices).toEqual([...EXPIRY_EVENTS]);
+		expect(moment.event.options.choices).toEqual([...LASTS_UNTIL_EVENTS]);
 		expect(moment.value.options).toMatchObject({ integer: true, min: 1 });
 	});
 
@@ -110,7 +110,7 @@ describe('Nimble effect data model', () => {
 	});
 
 	it('lists every event moment the spec names', () => {
-		expect(EXPIRY_EVENTS).toEqual([
+		expect(LASTS_UNTIL_EVENTS).toEqual([
 			'attack',
 			'move',
 			'castSpell',
@@ -126,6 +126,10 @@ describe('Nimble effect data model', () => {
 			'nextSpell',
 			'nextAffliction',
 			'inactiveRound',
+			'wounded',
+			'chargeGained',
+			'rest',
+			'combatEnd',
 		]);
 	});
 
@@ -145,6 +149,18 @@ describe('Nimble effect data model', () => {
 		expect(ESCAPE_SAVES.filter((save) => save !== 'strOrDex' && save !== 'any')).toEqual(saveKeys);
 	});
 
+	it('gives change values a form input, like core', () => {
+		const changeFields = (
+			schema().changes as unknown as {
+				element: { fields: Record<string, { options: Record<string, unknown> }> };
+			}
+		).element.fields;
+
+		expect(changeFields.value.options.serializable).toBe(true);
+		expect(() => (changeFields.type.options.validate as (type: string) => true)('x')).toThrow();
+		expect((changeFields.type.options.validate as (type: string) => true)('add')).toBe(true);
+	});
+
 	it('records no temp HP and is not minor by default', () => {
 		const { tempHp, minor } = schema();
 
@@ -159,7 +175,7 @@ describe('Nimble effect registration', () => {
 		expect(activeEffectDataModels[LEGACY_CONDITION_EFFECT_TYPE]).toBe(NimbleEffectData);
 	});
 
-	it('merges the models into the core ones and makes the Nimble type the default', () => {
+	it('registers the models in CONFIG and makes the Nimble type the default', () => {
 		const config = CONFIG.ActiveEffect as unknown as {
 			dataModels: Record<string, unknown>;
 			defaultType?: string;

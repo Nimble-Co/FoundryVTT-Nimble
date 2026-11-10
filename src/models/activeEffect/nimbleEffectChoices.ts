@@ -10,13 +10,13 @@ export const TURN_BOUNDARIES = ['start', 'end'] as const;
 
 export const CLOCKS = ['holder', 'source', 'nextHero'] as const;
 
-export const TURN_SPANS = ['nextTurn', 'currentTurn', 'nextRound'] as const;
+export const TURN_SPANS = ['nextTurn', 'currentTurn', 'currentRound', 'nextRound'] as const;
 
 export const TIME_UNITS = ['minutes', 'hours', 'days'] as const;
 
 export const EVENT_SUBJECTS = ['holder', 'source'] as const;
 
-export const EXPIRY_EVENTS = [
+export const LASTS_UNTIL_EVENTS = [
 	'attack',
 	'move',
 	'castSpell',
@@ -32,6 +32,10 @@ export const EXPIRY_EVENTS = [
 	'nextSpell',
 	'nextAffliction',
 	'inactiveRound',
+	'wounded',
+	'chargeGained',
+	'rest',
+	'combatEnd',
 ] as const;
 
 export const ESCAPE_SAVES = [
@@ -49,5 +53,5 @@ export type Clock = (typeof CLOCKS)[number];
 export type TurnSpan = (typeof TURN_SPANS)[number];
 export type TimeUnit = (typeof TIME_UNITS)[number];
 export type EventSubject = (typeof EVENT_SUBJECTS)[number];
-export type ExpiryEvent = (typeof EXPIRY_EVENTS)[number];
+export type LastsUntilEvent = (typeof LASTS_UNTIL_EVENTS)[number];
 export type EscapeSave = (typeof ESCAPE_SAVES)[number];

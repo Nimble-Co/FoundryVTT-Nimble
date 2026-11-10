@@ -3,7 +3,7 @@ import {
 	CLOCKS,
 	ESCAPE_SAVES,
 	EVENT_SUBJECTS,
-	EXPIRY_EVENTS,
+	LASTS_UNTIL_EVENTS,
 	LASTS_UNTIL_KINDS,
 	TIME_UNITS,
 	TURN_BOUNDARIES,
@@ -21,12 +21,36 @@ const { fields } = foundry.data;
  * requires an ArrayField of SchemaFields with string `type`/`phase` and
  * numeric `priority`.
  */
+function validateChangeType(type: string): true {
+	if (type.length < 3) throw new Error('must be at least three characters long');
+	if (
+		!/^custom\.-?\d+$/.test(type) &&
+		!type.split('.').every((part) => /^[a-z0-9]+$/i.test(part))
+	) {
+		throw new Error(
+			'A change type must either be a sequence of dot-delimited, alpha-numeric substrings or of the form "custom.{number}"',
+		);
+	}
+	return true;
+}
+
 const changesSchema = () => ({
 	changes: new fields.ArrayField(
 		new fields.SchemaField({
 			key: new fields.StringField({ required: true }),
-			type: new fields.StringField({ required: true, blank: false, initial: 'add' }),
-			value: new fields.AnyField({ required: true, nullable: true, initial: '' }),
+			type: new fields.StringField({
+				required: true,
+				blank: false,
+				initial: 'add',
+				validate: validateChangeType,
+			}),
+			// fvtt-types does not declare `serializable`; core's form input needs it.
+			value: new fields.AnyField({
+				required: true,
+				nullable: true,
+				initial: '',
+				...({ serializable: true } as object),
+			}),
 			phase: new fields.StringField({ required: true, blank: false, initial: 'initial' }),
 			priority: new fields.NumberField(),
 		}),
@@ -58,7 +82,7 @@ const momentSchema = () =>
 		}),
 		units: nullableChoice(TIME_UNITS),
 		who: nullableChoice(EVENT_SUBJECTS),
-		event: nullableChoice(EXPIRY_EVENTS),
+		event: nullableChoice(LASTS_UNTIL_EVENTS),
 		effectName: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	});
 
