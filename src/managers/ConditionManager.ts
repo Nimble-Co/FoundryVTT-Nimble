@@ -1,4 +1,5 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+import { NIMBLE_EFFECT_TYPE } from '../models/activeEffect/nimbleEffectChoices.js';
 import localize from '../utils/localize.js';
 
 export interface ConditionTriggerConfig {
@@ -81,7 +82,9 @@ export class ConditionManager {
 		// Mutate it in place: direct array assignment only works through a
 		// setter shim that is deprecated since v14.
 		CONFIG.statusEffects.length = 0;
-		CONFIG.statusEffects.push(...(statusEffects as object[] as typeof CONFIG.statusEffects));
+		// Core copies the entry into the effect it creates, so the type rides along.
+		const entries = statusEffects.map((condition) => ({ ...condition, type: NIMBLE_EFFECT_TYPE }));
+		CONFIG.statusEffects.push(...(entries as object[] as typeof CONFIG.statusEffects));
 	}
 
 	get(conditionId: string) {
