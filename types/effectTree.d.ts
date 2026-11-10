@@ -1,4 +1,7 @@
+import type { Moment } from '../src/utils/lastsUntil/momentReached.js';
+
 export type EffectNode =
+	| ApplyEffectNode
 	| ConditionNode
 	| DamageNode
 	| DamageOutcomeNode
@@ -70,6 +73,24 @@ export type ActionConsequence = {
 	failedSaveBy?: Record<number, EffectNode[]>;
 	miss?: EffectNode[];
 	passedSave?: EffectNode[];
+};
+
+/**
+ * Puts an effect on the card's targets or on the one who used the item. The
+ * effect is a `transfer: false` Active Effect on the same item (`effectId`), or,
+ * for a card a rule or an upcast makes, a condition with its Lasts Until.
+ */
+export type ApplyEffectNode = {
+	id: string;
+	type: 'applyEffect';
+	effectId: string | null;
+	condition?: string | null;
+	lastsUntil?: Moment[];
+	recipient: 'self' | 'targets';
+	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
+	tempHealingNodeId?: string | null;
+	parentContext: string | null;
+	parentNode: string | null;
 };
 
 export type ConditionNode = {

@@ -4683,6 +4683,7 @@
 		"activationEffects": {
 			"effects": "Effects",
 			"addEffect": "Add Effect",
+			"applyEffect": "Apply Effect",
 			"condition": "Condition",
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",

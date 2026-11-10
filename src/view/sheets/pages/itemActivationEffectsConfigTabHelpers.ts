@@ -9,14 +9,15 @@ export const POOL_PREDICATE_PLACEHOLDER = '{ "level": { "min": 5 } }';
 
 /**
  * Available child-node options for the "Add Effect" picker. The set depends
- * on the parent node type: top-level adds (node === null) can create damage,
- * healing, condition, pool, savingThrow; damage children can additionally
- * create damageOutcome and note; savingThrow children only create damage,
- * healing, condition, note.
+ * on the parent node type: top-level adds (node === null) can create
+ * applyEffect, damage, healing, condition, move, pool, savingThrow; damage
+ * children can additionally create damageOutcome and note; savingThrow
+ * children only create applyEffect, damage, healing, condition, move, note.
  */
 export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 	const { saves } = CONFIG.NIMBLE;
 	const nodeOptions = new Map<string, string>([
+		['applyEffect', localize('NIMBLE.activationEffects.applyEffect')],
 		['condition', localize('NIMBLE.activationEffects.condition')],
 		['damage', localize('NIMBLE.activationEffects.damage')],
 		['damageOutcome', localize('NIMBLE.activationEffects.damageOutcome')],
@@ -30,9 +31,18 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 	const includedOptions: string[] = [];
 
 	if (node === null) {
-		includedOptions.push('damage', 'healing', 'condition', 'move', 'pool', 'savingThrow');
+		includedOptions.push(
+			'applyEffect',
+			'damage',
+			'healing',
+			'condition',
+			'move',
+			'pool',
+			'savingThrow',
+		);
 	} else if (node.type === 'damage') {
 		includedOptions.push(
+			'applyEffect',
 			'damage',
 			'damageOutcome',
 			'healing',
@@ -42,7 +52,7 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 			'note',
 		);
 	} else if (node.type === 'savingThrow') {
-		includedOptions.push('damage', 'healing', 'condition', 'move', 'note');
+		includedOptions.push('applyEffect', 'damage', 'healing', 'condition', 'move', 'note');
 	}
 
 	return includedOptions.sort().map((option) => ({
