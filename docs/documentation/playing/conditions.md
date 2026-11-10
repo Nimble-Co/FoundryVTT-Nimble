@@ -10,9 +10,9 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 1. **The token.** Select a token and open its overhead controls (right-click the token). The status panel lists every condition by name. Click one to toggle it on or off, and use the clear-all button to wipe them.
 2. **The sheet's Effects tab.** Both the character sheet and the NPC sheet have an Effects tab. Under **All conditions**, a grid shows each condition that you set by hand. Click a condition to apply or remove it. A condition that is on is crimson, with a check. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they are not in the grid. Each condition that is on, also these six, shows in the list above the grid. Click its row to remove it: the sheet asks first. The active and passive effects on the actor are listed on the same tab.
-3. **Chat card buttons.** When an attack, spell, or feature inflicts a condition, the condition appears as a button on its chat card. Select the affected tokens and click the button to apply the condition to all of them. Hover the button for the condition's description.
+3. **The Effects part of a chat card.** A card that gives an effect has a row for it under **Effects**, with its Lasts Until. **Apply to Targets** puts it on the card's targets, **Apply to You** on the user. The user who rolled the card and the GM can click. Then the row tells who has it: "✓ On Goblin". For a creature you do not own, a GM must be connected.
 
-![A chat card with a condition button, next to the token status panel showing named conditions](/images/documentation/condition-chatcard-with-button.png)
+![A chat card for Ice Lance: the cold damage, and an Effects part with Slowed and Apply to Targets](/images/documentation/apply-effect-chat-card.png)
 
 ## Blinded
 
@@ -68,6 +68,10 @@ A condition, or any other effect, can have a **Lasts Until**: one or more moment
 - **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
 
 When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
+
+On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
+
+**Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save (you pick when more than one is allowed), spends 1 action in combat, and ends the effect on a success.
 
 When effects end, the chat gets one message for that moment, such as "Start of Tessa's turn", with a row for each effect that ended. **Undo** on a row puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
 

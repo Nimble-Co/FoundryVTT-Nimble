@@ -36,7 +36,7 @@ On monster features only, an **Attack Type** dropdown (None / Reach / Range) and
 
 ## The Effects sub-tab: the effect tree
 
-Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Condition**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Apply Effect**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
@@ -50,7 +50,7 @@ The *first* damage entry in the list is special: it is the attack roll. It alone
 Even with Can Crit on, some attacks never crit: template (AoE) attacks, attacks made by minions and flunkies, and attacks with a weapon whose type the wielder is not proficient with.
 :::
 
-Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, a condition, a saving throw, or a note.
+Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, a saving throw, or a note.
 
 A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
 
@@ -66,11 +66,11 @@ A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Tem
 A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity, Intelligence, or Will) and optionally a **Custom Save DC**, a number or a formula such as `12+@key`. The formula reads the creature that uses the item. When the field is empty, a hero uses `10+@key`, and a monster has no DC. When a creature rolls with the d20 button on the card, its save card tells the result against this DC. It has three sections:
 
 - **Shared Rolls**: damage that is rolled once and then split by the outcome. Add a damage entry here, then put **Damage Outcome** entries under On Failed Save (Full Damage) and On Passed Save (Half Damage) for the classic "half on a save" pattern.
-- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, conditions, or notes.
+- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, Apply Effect entries, or notes.
 
-### Condition
+### Apply Effect
 
-A condition entry picks one status condition from the system's list (Frightened, Poisoned, Prone…). It renders as a labeled button on the chat card.
+Puts an effect of the item (one with **Apply to the actor** off) on the card's targets or on the user (**Who takes it**). A new entry makes an effect with the item's name; **Effect** picks another. The pen opens the [effect window](effects.md): the conditions it gives (Frightened, for example) are on **Details**, its Lasts Until and Escape on **Lasts Until**. **Temp HP that it gives** links a Temporary Healing entry: the effect gives those temp HP, and takes back what is left when it ends.
 
 ### Move
 
@@ -101,7 +101,7 @@ The placement is the point: because the cold damage sits *under On Hit*, it only
 1. Create an Object and set Object Type to **Consumable** (size 0.5 slots is the potion convention).
 2. On **Activation → Core**, set the cost to 1 **Action** and leave the description output on.
 3. On **Activation → Effects**, add a **Healing** entry: formula `1d4+2`, type **Healing**.
-4. Add a top-level **Condition** entry and pick **Invisible**.
+4. Add a top-level **Apply Effect** entry, and set **Who takes it** to **The creature that uses this**. Click the pen, and on **Details** pick **Invisible**.
 
 Because the item has a healing effect, drinking it with no target selected automatically targets the drinker's own token.
 
@@ -128,10 +128,10 @@ Holding **Alt** while clicking the item skips the window and rolls with defaults
 - each **damage roll** as a summary line with the total, an expandable breakdown, and an **Apply Damage** button that applies it to the card's targets (on a miss the roll is still shown but the apply button is disabled; half-damage outcomes halve the total),
 - each **healing roll** with an **Apply Healing** button and an undo button after use,
 - each **saving throw** section with a d20 button that rolls that save for all currently selected tokens, plus its "On Failed Save" / "On Successful Save" contents,
-- each **condition** as a button that applies the condition to all selected tokens when clicked,
+- an **Effects** part with a row for each Apply Effect entry and an **Apply to Targets** or **Apply to You** button,
 - any **notes**, styled by their note type.
 
-![A chat card for the Ghostwalk Draught showing the healing roll with Apply Healing and the Invisible condition button](/images/documentation/ghostwalk-draught-chat-card.png)
+![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect with Apply to You](/images/documentation/ghostwalk-draught-chat-card.png)
 
 ## The Macro tab
 

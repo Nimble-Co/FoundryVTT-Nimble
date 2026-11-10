@@ -12,12 +12,16 @@ On the character or NPC sheet, go to the **Effects** tab and click the pen at th
 
 The window has four tabs:
 
-- **Details**: the description, **Off** (its changes and rules do not apply), and, for an effect on an item, **Apply to the actor** (the actor that has the item gets the effect).
+- **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect), the **Conditions** that the effect gives, and the description.
 - **Lasts Until**: the moments that end the effect, and its Escape.
 - **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority.
 - **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list.
 
 Each field saves when you change it.
+
+An effect on an item with **Apply to the actor** off goes on a creature from the item's card, through an [Apply Effect](activations.md#apply-effect) entry.
+
+![The Details tab of an effect: State, and the Conditions with Invisible picked](/images/documentation/effect-window-conditions.png)
 
 ## Lasts Until
 
