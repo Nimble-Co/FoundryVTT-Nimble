@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { itemLike } from '../documentLikes.ts';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { effectLike, itemLike } from '../documentLikes.ts';
 
 function itemWith(rules: Record<string, unknown>[]) {
 	return {
@@ -30,5 +30,41 @@ describe('itemLike', () => {
 
 		expect(applied).toMatchObject({ id: 'applied', active: true, amount: 3 });
 		expect(none).toMatchObject({ id: 'none', active: false, amount: undefined });
+	});
+});
+
+describe('effectLike', () => {
+	beforeEach(() => {
+		vi.stubGlobal('fromUuidSync', () => null);
+	});
+
+	const effectOn = (parent: { documentName: string; id: string }, origin: string | null) =>
+		({
+			id: 'shield',
+			name: 'Shield',
+			img: '',
+			statuses: new Set(),
+			origin,
+			parent,
+			duration: {},
+			getFlag: () => undefined,
+			system: {},
+			_source: {},
+		}) as never;
+
+	it('makes an effect on the actor temporary, also when its origin is an item of that actor', () => {
+		const applied = effectLike(
+			effectOn({ documentName: 'Actor', id: 'hero' }, 'Actor.hero.Item.frost'),
+		);
+
+		expect(applied.temporary).toBe(true);
+		expect(applied.itemId).toBeNull();
+	});
+
+	it('keeps an effect on an item, with no duration, passive', () => {
+		const kept = effectLike(effectOn({ documentName: 'Item', id: 'frost' }, null));
+
+		expect(kept.temporary).toBe(false);
+		expect(kept.itemId).toBe('frost');
 	});
 });

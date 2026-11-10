@@ -80,9 +80,9 @@ export type EffectDocument = ActiveEffect & {
 	duration?: Parameters<typeof deriveDurationDetails>[0];
 };
 
-/** Same split as the old Conditions tab: an effect that no item keeps on is temporary. */
-function isTemporary(effect: EffectDocument, fromItem: boolean): boolean {
-	if (!fromItem) return true;
+/** An effect on the actor itself is temporary, also when an item put it there. */
+function isTemporary(effect: EffectDocument, onItem: boolean): boolean {
+	if (!onItem) return true;
 	if (typeof effect.isTemporary === 'boolean') return effect.isTemporary;
 	const duration = effect.duration as { remaining?: number; rounds?: number } | undefined;
 	return (
@@ -115,7 +115,7 @@ export function effectLike(effect: EffectDocument): EffectLike {
 			typeof ruleId === 'string'
 				? { itemId: typeof toggleItemId === 'string' ? toggleItemId : '', ruleId }
 				: null,
-		temporary: isTemporary(effect, !!itemId || !!effect.origin),
+		temporary: isTemporary(effect, !!itemId),
 		duration: durationWords(deriveDurationDetails(effect.duration).label),
 		lastsUntil: effectLastsUntil(effect as never, holderOf(effect)),
 		sourceName: originName(effect as never),
