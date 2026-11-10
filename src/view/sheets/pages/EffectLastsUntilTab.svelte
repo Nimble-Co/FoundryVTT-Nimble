@@ -41,7 +41,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 
 	const state = createEffectLastsUntilTabState(() => effect);
-	const { change, remove, add, setEscapeDc, setEscapeSaves } = state;
+	const { change, remove, add, setEscapeDc, toggleEscapeSave } = state;
 	const moments = $derived(state.moments);
 	const escapeData = $derived(state.escape);
 	const coreDuration = $derived(state.coreDuration);
@@ -221,15 +221,23 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 					onchange={({ currentTarget }) => setEscapeDc(currentTarget.value)}
 				/>
 				<span>{localize(`${ESCAPE_WORDS}.withA`)}</span>
-				<select
+				<span
+					class="nimble-lasts-until__saves"
+					role="group"
 					aria-label={localize(`${ESCAPE_WORDS}.savesLabel`)}
-					value={escapeData.saves}
-					onchange={({ currentTarget }) => setEscapeSaves(currentTarget.value)}
 				>
-					{#each ESCAPE_SAVES as saves (saves)}
-						<option value={saves}>{localize(`${ESCAPE_WORDS}.saves.${saves}`)}</option>
+					{#each ESCAPE_SAVES as save (save)}
+						{@const on = escapeData.saves.includes(save)}
+						<button
+							class="nimble-lasts-until__save"
+							type="button"
+							aria-pressed={on}
+							onclick={() => toggleEscapeSave(save)}
+						>
+							{localize(`${ESCAPE_WORDS}.saves.${save}`)}
+						</button>
 					{/each}
-				</select>
+				</span>
 				<span>{localize(`${ESCAPE_WORDS}.save`)}</span>
 			</span>
 		</div>
@@ -305,6 +313,42 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		&__dc {
 			flex: 1 1 8rem;
 			min-width: 6rem;
+		}
+
+		&__saves {
+			display: inline-flex;
+			gap: 0.25rem;
+		}
+
+		&__save {
+			width: auto;
+			min-width: 2.5rem;
+			height: 1.5rem;
+			padding: 0 0.375rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			line-height: 1;
+			color: var(--nimble-ui-ink-muted);
+			background: transparent;
+			border: 1px solid var(--nimble-ui-ring);
+			border-radius: 4px;
+			cursor: pointer;
+
+			&:hover {
+				color: var(--nimble-ui-ink);
+				background: var(--nimble-ui-hover);
+			}
+
+			&[aria-pressed='true'] {
+				color: var(--nimble-ui-highlight);
+				background: var(--nimble-ui-hover);
+				box-shadow: inset 0 0 0 1px var(--nimble-ui-highlight);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-ui-focus);
+				outline-offset: 1px;
+			}
 		}
 
 		&__remove {

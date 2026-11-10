@@ -20,7 +20,7 @@ function makeEffect(lastsUntil: Moment[], duration: object = { value: null }) {
 	});
 	const effect = {
 		duration,
-		system: { lastsUntil, escape: { dc: '', saves: 'strOrDex' } },
+		system: { lastsUntil, escape: { dc: '', saves: ['strength', 'dexterity'] } },
 		update: vi.fn(async (data: Record<string, unknown>) => {
 			if ('system.lastsUntil' in data) {
 				effect.system = { ...effect.system, lastsUntil: data['system.lastsUntil'] as Moment[] };
@@ -68,9 +68,8 @@ describe('EffectLastsUntilTab', () => {
 	it('names each moment row for a screen reader', () => {
 		const { container } = renderTab(makeEffect([newMoment('turn'), newMoment('time')]));
 
-		const groups = [...container.querySelectorAll('[role="group"]')].map((group) =>
-			group.getAttribute('aria-label'),
-		);
+		const rows = container.querySelectorAll('.nimble-lasts-until__row[role="group"]');
+		const groups = [...rows].map((group) => group.getAttribute('aria-label'));
 		expect(groups).toEqual([
 			word(`${LU}.moment`, { number: '1' }),
 			word(`${LU}.moment`, { number: '2' }),
@@ -152,7 +151,7 @@ describe('EffectLastsUntilTab', () => {
 		expect(saved(effect)).toEqual([newMoment('time')]);
 	});
 
-	it('saves the Escape DC and saves', async () => {
+	it('saves the Escape DC', async () => {
 		const effect = makeEffect([]);
 		const { container } = renderTab(effect);
 
@@ -160,12 +159,48 @@ describe('EffectLastsUntilTab', () => {
 			`[aria-label="${word('NIMBLE.effectSheet.escape.dcLabel')}"]`,
 		) as HTMLInputElement;
 		await fireEvent.change(dc, { target: { value: ' 10 + @intelligence ' } });
-		const saves = container.querySelector(
-			`[aria-label="${word('NIMBLE.effectSheet.escape.savesLabel')}"]`,
-		) as HTMLSelectElement;
-		await fireEvent.change(saves, { target: { value: 'will' } });
 
 		expect(effect.update).toHaveBeenCalledWith({ 'system.escape.dc': '10 + @intelligence' });
-		expect(effect.update).toHaveBeenCalledWith({ 'system.escape.saves': 'will' });
+	});
+
+	function saveButton(container: HTMLElement, save: string) {
+		const group = container.querySelector(
+			`[aria-label="${word('NIMBLE.effectSheet.escape.savesLabel')}"]`,
+		) as HTMLElement;
+		const label = word(`NIMBLE.effectSheet.escape.saves.${save}`);
+		return [...group.querySelectorAll('button')].find(
+			(button) => button.textContent?.trim() === label,
+		) as HTMLButtonElement;
+	}
+
+	it('shows the saves that are on as pressed', () => {
+		const { container } = renderTab(makeEffect([]));
+
+		expect(saveButton(container, 'strength').getAttribute('aria-pressed')).toBe('true');
+		expect(saveButton(container, 'dexterity').getAttribute('aria-pressed')).toBe('true');
+		expect(saveButton(container, 'will').getAttribute('aria-pressed')).toBe('false');
+	});
+
+	it('turns a save on in the order of the saves, and turns a save off', async () => {
+		const effect = makeEffect([]);
+		const { container } = renderTab(effect);
+
+		await fireEvent.click(saveButton(container, 'intelligence'));
+		expect(effect.update).toHaveBeenLastCalledWith({
+			'system.escape.saves': ['strength', 'dexterity', 'intelligence'],
+		});
+
+		await fireEvent.click(saveButton(container, 'strength'));
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.escape.saves': ['dexterity'] });
+	});
+
+	it('keeps the last save that is on', async () => {
+		const effect = makeEffect([]);
+		effect.system = { ...effect.system, escape: { dc: '10', saves: ['will'] } };
+		const { container } = renderTab(effect);
+
+		await fireEvent.click(saveButton(container, 'will'));
+
+		expect(effect.update).not.toHaveBeenCalled();
 	});
 });

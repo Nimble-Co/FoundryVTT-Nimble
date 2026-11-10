@@ -40,7 +40,7 @@ The first moment that happens ends the effect. An effect with no moment stays un
 
 ## Escape
 
-Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and the save: STR or DEX, one ability, or any. With no DC, the effect has no escape.
+Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. A new effect has STR and DEX on. With no DC, the effect has no escape.
 
 ## Related pages
 

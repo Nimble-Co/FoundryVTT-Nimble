@@ -8,14 +8,19 @@ import {
 } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
-import type { LastsUntilEvent } from '../../../models/activeEffect/nimbleEffectChoices.js';
+import {
+	ESCAPE_SAVES,
+	type EscapeSave,
+	type LastsUntilEvent,
+} from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 export const LASTS_UNTIL_WORDS = 'NIMBLE.effectSheet.lastsUntil';
 export const ESCAPE_WORDS = 'NIMBLE.effectSheet.escape';
+export const DEFAULT_ESCAPE_SAVES: readonly EscapeSave[] = ['strength', 'dexterity'];
 
 interface EffectSystem {
 	lastsUntil?: Moment[];
-	escape?: { dc: string; saves: string };
+	escape?: { dc: string; saves: EscapeSave[] };
 }
 
 export function lastsUntilWord(path: string, data?: Record<string, string>): string {
@@ -39,7 +44,7 @@ export function eventsFor(moment: Moment): LastsUntilEvent[] {
 export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffect) {
 	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
-	const escapeData = $derived(system.escape ?? { dc: '', saves: 'strOrDex' });
+	const escapeData = $derived(system.escape ?? { dc: '', saves: [...DEFAULT_ESCAPE_SAVES] });
 
 	/** The label of an older core duration, which still ends the effect. */
 	const coreDuration = $derived.by(() => {
@@ -71,7 +76,13 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		return getEffect().update({ 'system.escape.dc': dc.trim() } as never);
 	}
 
-	function setEscapeSaves(saves: string) {
+	/** Turns one save on or off. The last save that is on stays on. */
+	function toggleEscapeSave(save: EscapeSave) {
+		const on = new Set(escapeData.saves);
+		if (on.has(save)) on.delete(save);
+		else on.add(save);
+		if (!on.size) return;
+		const saves = ESCAPE_SAVES.filter((each) => on.has(each));
 		return getEffect().update({ 'system.escape.saves': saves } as never);
 	}
 
@@ -89,6 +100,6 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		remove,
 		add,
 		setEscapeDc,
-		setEscapeSaves,
+		toggleEscapeSave,
 	};
 }

@@ -3860,14 +3860,12 @@
 				"save": "save",
 				"savesLabel": "Saves for the escape",
 				"saves": {
-					"strOrDex": "STR or DEX",
 					"strength": "STR",
 					"dexterity": "DEX",
 					"intelligence": "INT",
-					"will": "WIL",
-					"any": "any"
+					"will": "WIL"
 				},
-				"hint": "The holder spends 1 action and rolls the save. A success removes the effect. With no DC, there is no escape."
+				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success removes the effect. With no DC, there is no escape."
 			},
 			"changes": {
 				"key": "Key",
