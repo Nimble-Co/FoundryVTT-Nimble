@@ -3,6 +3,8 @@
 	import TagGroup from '../../components/TagGroup.svelte';
 	import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 	import localize from '../../../utils/localize.js';
+	import { effectRuleNumbers } from '../../../utils/spell/effectRuleNumbers.js';
+	import { createItemEffectOptions } from './applyEffectNodeOptions.ts';
 
 	let item = getContext('document');
 
@@ -30,6 +32,7 @@
 		{ label: t('operations.addDuration'), value: 'addDuration' },
 		{ label: t('operations.addCondition'), value: 'addCondition' },
 		{ label: t('operations.increaseDieSize'), value: 'increaseDieSize' },
+		{ label: t('operations.raiseEffectRule'), value: 'raiseEffectRule' },
 	];
 
 	const diceFaceOptions = [4, 6, 8, 10, 12, 20];
@@ -51,6 +54,19 @@
 			}));
 	});
 
+	const itemEffects = createItemEffectOptions(() => item);
+
+	// Apply Effect nodes, the rules of their effects, and the number fields of those rules
+	let raiseTargets = $derived.by(() => {
+		// Read to refresh when an effect of the item changes
+		void itemEffects.options;
+		return effectRuleNumbers({ system: item.reactive.system, effects: item.effects });
+	});
+
+	function raiseTargetOf(delta) {
+		return raiseTargets.find((target) => target.nodeId === delta.targetEffectId) ?? null;
+	}
+
 	function formatEffectLabel(node) {
 		const type = node.type === 'savingThrow' ? 'Save' : node.type;
 		const detail = node.damageType || node.saveType || node.formula || '';
@@ -67,6 +83,8 @@
 			targetEffectId: null,
 			durationType: null,
 			maxDieFaces: null,
+			ruleId: null,
+			ruleField: null,
 		};
 	}
 
@@ -89,12 +107,31 @@
 			delta.maxDieFaces = delta.maxDieFaces ?? 12;
 			delta.dice = null;
 			delta.condition = null;
+		} else if (operation === 'raiseEffectRule') {
+			delta.value = delta.value ?? 1;
+			delta.targetEffectId = raiseTargets[0]?.nodeId ?? null;
+			delta.ruleId = null;
+			delta.ruleField = null;
+			delta.dice = null;
+			delta.condition = null;
+			delta.maxDieFaces = null;
 		} else {
 			delta.value = delta.value ?? 1;
 			delta.dice = null;
 			delta.condition = null;
 			delta.maxDieFaces = null;
 		}
+		if (operation !== 'raiseEffectRule') {
+			delta.ruleId = null;
+			delta.ruleField = null;
+		}
+	}
+
+	// A new effect or rule leaves the picks below it empty
+	function reshapeRaise(delta, field, value) {
+		delta[field] = value;
+		if (field === 'targetEffectId') delta.ruleId = null;
+		if (field === 'targetEffectId' || field === 'ruleId') delta.ruleField = null;
 	}
 
 	async function toggleScalingMode(mode) {
@@ -123,6 +160,8 @@
 			applyOperationDefaults(deltas[index], value);
 		} else if (field === 'dice') {
 			deltas[index].dice = value;
+		} else if (deltas[index].operation === 'raiseEffectRule') {
+			reshapeRaise(deltas[index], field, value);
 		} else {
 			deltas[index][field] = value;
 		}
@@ -166,6 +205,8 @@
 			applyOperationDefaults(delta, value);
 		} else if (field === 'dice') {
 			delta.dice = value;
+		} else if (delta.operation === 'raiseEffectRule') {
+			reshapeRaise(delta, field, value);
 		} else {
 			delta[field] = value;
 		}
@@ -251,7 +292,7 @@
 						onchange={({ target }) => onUpdate(index, 'condition', target.value || null)}
 					/>
 				</label>
-			{:else}
+			{:else if delta.operation !== 'raiseEffectRule'}
 				<label class="nimble-field" data-field-variant="stacked">
 					<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
 					<input
@@ -260,6 +301,67 @@
 						onchange={({ target }) => onUpdate(index, 'value', Number(target.value))}
 					/>
 				</label>
+			{/if}
+
+			{#if delta.operation === 'raiseEffectRule'}
+				{@const raiseTarget = raiseTargetOf(delta)}
+				{@const raiseRule = raiseTarget?.rules.find((rule) => rule.id === delta.ruleId) ?? null}
+				{#if raiseTargets.length === 0}
+					<p class="nimble-scaling-empty">{t('noEffectRules')}</p>
+				{:else}
+					<label class="nimble-field" data-field-variant="stacked">
+						<span class="nimble-heading" data-heading-variant="field">{t('targetEffect')}</span>
+						<select
+							value={raiseTarget?.nodeId ?? ''}
+							onchange={({ target }) => onUpdate(index, 'targetEffectId', target.value || null)}
+						>
+							{#if !raiseTarget}
+								<option value="" selected>{t('chooseOne')}</option>
+							{/if}
+							{#each raiseTargets as target}
+								<option value={target.nodeId} selected={target.nodeId === raiseTarget?.nodeId}
+									>{target.label}</option
+								>
+							{/each}
+						</select>
+					</label>
+					<label class="nimble-field" data-field-variant="stacked">
+						<span class="nimble-heading" data-heading-variant="field">{t('effectRule')}</span>
+						<select
+							value={raiseRule?.id ?? ''}
+							disabled={!raiseTarget?.rules.length}
+							onchange={({ target }) => onUpdate(index, 'ruleId', target.value || null)}
+						>
+							<option value="" selected={!raiseRule}>{t('chooseOne')}</option>
+							{#each raiseTarget?.rules ?? [] as rule}
+								<option value={rule.id} selected={rule.id === raiseRule?.id}>{rule.label}</option>
+							{/each}
+						</select>
+					</label>
+					<label class="nimble-field" data-field-variant="stacked">
+						<span class="nimble-heading" data-heading-variant="field">{t('ruleField')}</span>
+						<select
+							value={delta.ruleField ?? ''}
+							disabled={!raiseRule?.fields.length}
+							onchange={({ target }) => onUpdate(index, 'ruleField', target.value || null)}
+						>
+							<option value="" selected={!delta.ruleField}>{t('chooseOne')}</option>
+							{#each raiseRule?.fields ?? [] as numberField}
+								<option value={numberField.name} selected={numberField.name === delta.ruleField}
+									>{numberField.label}</option
+								>
+							{/each}
+						</select>
+					</label>
+					<label class="nimble-field" data-field-variant="stacked">
+						<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
+						<input
+							type="number"
+							value={delta.value ?? 0}
+							onchange={({ target }) => onUpdate(index, 'value', Number(target.value))}
+						/>
+					</label>
+				{/if}
 			{/if}
 
 			{#if targetableOperations.has(delta.operation)}

@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
+import type { RuleRaise } from '#types/spellScaling.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -104,11 +105,28 @@ export function cardTargets(card: EffectCard): CardActor[] {
 		.filter((actor): actor is CardActor => !!actor);
 }
 
+/** Adds each upcast raise to its rule's field, when that field holds a number. */
+function raiseRules(payload: EffectPayload, raises: readonly RuleRaise[]): void {
+	const rules = (payload.data.system as { rules?: Record<string, unknown>[] } | undefined)?.rules;
+	if (!rules) return;
+	for (const { ruleId, field, amount } of raises) {
+		const rule = rules.find((entry) => entry.id === ruleId);
+		const current = rule?.[field];
+		if (rule && typeof current === 'number' && Number.isFinite(current)) {
+			rule[field] = current + amount;
+		}
+	}
+}
+
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
 	const item = cardItem(card);
 	const user = cardUser(card);
 	const effect = nodeEffect(card, node);
-	if (effect) return payloadFromEffect(effect, { itemUuid: item?.uuid ?? null, user });
+	if (effect) {
+		const payload = payloadFromEffect(effect, { itemUuid: item?.uuid ?? null, user });
+		if (node.ruleRaises?.length) raiseRules(payload, node.ruleRaises);
+		return payload;
+	}
 	if (!node.condition) return null;
 	return payloadFromCondition(
 		node.condition,

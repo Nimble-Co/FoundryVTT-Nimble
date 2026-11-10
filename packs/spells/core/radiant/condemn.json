@@ -10,7 +10,7 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "Attacked",
-				"quantity": 1,
+				"quantity": 2,
 				"type": "action",
 				"isReaction": false
 			},
@@ -93,6 +93,17 @@
 					"condition": null,
 					"targetEffectId": null,
 					"durationType": null
+				},
+				{
+					"operation": "raiseEffectRule",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "NT5oFI0fdWqXXIqI",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "WKt5tVwEzRIdL9hG",
+					"ruleField": "value"
 				}
 			],
 			"choices": null

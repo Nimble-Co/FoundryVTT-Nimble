@@ -1101,6 +1101,88 @@ describe('applyUpcastDeltas', () => {
 		});
 	});
 
+	describe('raiseEffectRule', () => {
+		const raise = (fields: Partial<ScalingDelta> = {}) => ({
+			...createDelta({
+				operation: 'raiseEffectRule',
+				value: 1,
+				targetEffectId: 'apply1',
+			}),
+			ruleId: 'held1',
+			ruleField: 'value',
+			...fields,
+		});
+
+		function upcast(
+			deltas: ScalingDelta[],
+			steps: number,
+			applyNode: Record<string, unknown> = {},
+		) {
+			const node = {
+				id: 'apply1',
+				type: 'applyEffect',
+				effectId: 'fx1',
+				recipient: 'targets',
+				parentContext: 'hit',
+				parentNode: 'dmg1',
+				...applyNode,
+			};
+			const context: UpcastContext = {
+				spell: { tier: 4, scaling: createScaling('upcast', deltas) },
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'radiant',
+							formula: '30',
+							parentContext: null,
+							parentNode: null,
+							on: { hit: [node] },
+						} as unknown as DamageNode,
+					],
+				},
+				manaToSpend: 4 + steps,
+			};
+			const effects = applyUpcastDeltas(context).activationData.effects as any[];
+			return effects[0].on.hit[0];
+		}
+
+		it('writes the raise times the steps on the Apply Effect node', () => {
+			expect(upcast([raise()], 0).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 0 },
+			]);
+			expect(upcast([raise()], 1).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 1 },
+			]);
+			expect(upcast([raise({ value: 3 })], 2).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 6 },
+			]);
+		});
+
+		it('adds to an entry that is there, and keeps an entry for another field', () => {
+			const there = {
+				ruleRaises: [
+					{ ruleId: 'held1', field: 'value', amount: 2 },
+					{ ruleId: 'held1', field: 'other', amount: 5 },
+				],
+			};
+
+			expect(upcast([raise(), raise()], 2, there).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 6 },
+				{ ruleId: 'held1', field: 'other', amount: 5 },
+			]);
+		});
+
+		it('changes nothing with no node, rule or field picked', () => {
+			for (const fields of [{ targetEffectId: null }, { ruleId: null }, { ruleField: null }]) {
+				expect(upcast([raise(fields)], 2).ruleRaises).toBeUndefined();
+			}
+			expect(upcast([raise({ targetEffectId: 'missing' })], 2).ruleRaises).toBeUndefined();
+		});
+	});
+
 	describe('Immutability Tests', () => {
 		it('should not mutate original activation data', () => {
 			const originalActivationData = {

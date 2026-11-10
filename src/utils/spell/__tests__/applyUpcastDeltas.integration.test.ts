@@ -301,6 +301,18 @@ describe('Spell Data Integration Tests', () => {
 			expect(result.upcastResult.upcastSteps).toBe(1);
 		});
 
+		it('Condemn - costs 2 actions and raises the Held Roll advantage of its effect', () => {
+			expect(condemn.system.activation.cost).toMatchObject({ type: 'action', quantity: 2 });
+			const heldRoll = condemn.effects[0].system.rules.find((rule) => rule.type === 'heldRoll');
+			expect(heldRoll?.id).toBe('WKt5tVwEzRIdL9hG');
+
+			const result = applyUpcastDeltas(ctxWithSteps(condemn, 2));
+			const node = findNodeById(result.activationData.effects, 'NT5oFI0fdWqXXIqI');
+
+			expect(node.effectId).toBe(condemn.effects[0]._id);
+			expect(node.ruleRaises).toEqual([{ ruleId: 'WKt5tVwEzRIdL9hG', field: 'value', amount: 2 }]);
+		});
+
 		it('Vengeance - addReach +1', () => {
 			const result = applyUpcastDeltas(ctxWithSteps(vengeance, 1));
 			expect(result.upcastResult.upcastSteps).toBe(1);

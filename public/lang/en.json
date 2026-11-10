@@ -3827,6 +3827,7 @@
 				"chooseEnhancement": "Choose Enhancement",
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
+				"raiseEffectRule": "{rule}: +{amount} {field}",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier",
 				"warnings": {
@@ -5298,6 +5299,10 @@
 				"steps": "Steps",
 				"maxDie": "Max Die",
 				"maxDieNone": "No maximum",
+				"effectRule": "Rule",
+				"ruleField": "Number",
+				"chooseOne": "Choose one",
+				"noEffectRules": "Add an Apply Effect node with an effect in the Activation tab to pick its rule here.",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -5309,7 +5314,8 @@
 					"addArmor": "Armor",
 					"addDuration": "Duration",
 					"addCondition": "Condition",
-					"increaseDieSize": "Increase Die Size"
+					"increaseDieSize": "Increase Die Size",
+					"raiseEffectRule": "Raise Effect Rule"
 				}
 			}
 		},

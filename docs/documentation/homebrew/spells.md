@@ -74,8 +74,11 @@ With **Upcast** selected, click **Add Delta** to add entries under **Per Upcast 
 | **Armor** | armor granted per step |
 | **Duration** | duration increase per step |
 | **Condition** | a condition id applied per step |
+| **Raise Effect Rule** | an Apply Effect node, a **Rule** of its effect, a **Number** of that rule, and the amount added per step |
 
 Damage, dice, and DC deltas also offer a **Target Effect** picker that sets which effect in the activation tree the delta modifies. Leave it on **Auto (first match)** unless the spell has several damage entries.
+
+**Raise Effect Rule** changes the effect that an Apply Effect node puts on its recipients, not the item's own effect. Pick the node, then a rule of its effect (listed by its label, or its rule type when it has none), then the number field to raise. When the effect is applied from the card, the upcast amount is added to that field on the copy. *Condemn* uses it: each upcast step adds 1 to the advantage of its Held Roll rule.
 
 For Emberlance, add one delta: Operation **Dice**, count 1, die **d8**.
 

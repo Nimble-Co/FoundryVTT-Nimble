@@ -441,6 +441,8 @@ Every field a user edits **must** carry:
 - **`label:`** — display label. Without it, `RuleCard` auto-generates an English-only label from the camelCase property name and warns once per `(rule.type, field)` in dev. Localized labels are required for shipping.
 - **`hint:`** — short help text shown below the input. Optional but strongly recommended for any non-obvious field.
 
+Every `NumberField` of a rule (except `priority`) is also a number that a spell's upcast step `raiseEffectRule` can raise on the effect of an Apply Effect node. `effectRuleNumbers` (`src/utils/spell/`) reads the rule class schema for the scaling editor, and shows the field's `label`. At cast, `applyUpcastDeltas` writes `ruleRaises: [{ ruleId, field, amount }]` on the node; `applyEffectFromCard` adds each amount to the copy's rule when the field holds a finite number.
+
 ### Widget hints (when type alone isn't enough)
 
 Foundry's data-field types map automatically to widgets, but some fields need a hint via the `withWidget()` helper:
