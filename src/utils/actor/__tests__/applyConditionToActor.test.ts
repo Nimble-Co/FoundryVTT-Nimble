@@ -404,3 +404,33 @@ describe('applyConditionToActor same condition again', () => {
 		expect(created.sourceData['system.lastsUntil']).toEqual([oneMinute]);
 	});
 });
+
+describe('applyConditionToActor effectData', () => {
+	it('puts the authored effect on the status effect, and the patch after it', async () => {
+		const target = createTargetActor();
+		const effect = createFakeEffect();
+		fromStatusEffect.mockResolvedValueOnce(effect);
+
+		await applyConditionToActor(target, 'dazed', {
+			sourceItem: { uuid: 'Item.source' },
+			effectData: { name: 'Face Me!', statuses: ['dazed'], origin: 'Item.other' },
+		});
+
+		expect(effect.sourceData).toMatchObject({ name: 'Face Me!', origin: 'Item.source' });
+	});
+
+	it('asks preApplyCondition for each status of the effect', async () => {
+		const target = createTargetActor();
+		hooksCall.mockImplementation((_name: string, data: { condition: string }) =>
+			data.condition !== 'prone' ? true : false,
+		);
+
+		const result = await applyConditionToActor(target, 'dazed', {
+			effectData: { statuses: ['dazed', 'prone'] },
+		});
+
+		expect(hooksCall.mock.calls.map(([, data]) => data.condition)).toEqual(['dazed', 'prone']);
+		expect(result).toBeNull();
+		expect(createEffect).not.toHaveBeenCalled();
+	});
+});

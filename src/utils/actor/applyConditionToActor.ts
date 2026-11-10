@@ -38,7 +38,7 @@ export interface ReplaceableConditionEffect {
 }
 
 /** What this helper reads off a condition already on the target. */
-interface ExistingConditionEffect extends ReplaceableConditionEffect {
+export interface ExistingConditionEffect extends ReplaceableConditionEffect {
 	statuses?: Set<string>;
 	system?: { lastsUntil?: Moment[] };
 	duration?: { value?: number | null; units?: string | null } | null;
@@ -90,6 +90,12 @@ export interface ApplyConditionOptions {
 	rule?: unknown;
 	/** System flags stamped on the created effect, under the system's flag scope. */
 	systemFlags?: Record<string, unknown> | null;
+	/**
+	 * Source data of an authored effect (name, img, description, statuses, system), put on
+	 * the status effect before the options above. Each of its statuses goes through
+	 * `preApplyCondition`.
+	 */
+	effectData?: Record<string, unknown> | null;
 	/**
 	 * The effects this application supersedes. Passing the key at all, an empty
 	 * array included, hands the caller the duplicate decision: the target may
@@ -148,7 +154,7 @@ function conditionEffectsOn(
 	);
 }
 
-function applicationOf(effect: ExistingConditionEffect): Application {
+export function applicationOf(effect: ExistingConditionEffect): Application {
 	const now = game.time?.worldTime ?? 0;
 	return {
 		lastsUntil: effect.system?.lastsUntil ?? [],
@@ -258,6 +264,8 @@ async function createConditionEffect(
 
 	const effect = await activeEffectClass.fromStatusEffect(conditionId, { parent: target });
 
+	if (options.effectData) effect.updateSource(options.effectData);
+
 	const patch: Record<string, unknown> = {};
 	const origin = resolveConditionOrigin(options);
 	if (origin) patch.origin = origin;
@@ -343,6 +351,11 @@ async function restoreReplacedEffects(
 	}
 }
 
+function extraStatuses(options: ApplyConditionOptions): string[] {
+	const statuses = options.effectData?.statuses;
+	return Array.isArray(statuses) ? statuses.filter((id) => typeof id === 'string') : [];
+}
+
 /**
  * Apply a single condition to a single actor, recording what caused it.
  *
@@ -369,14 +382,16 @@ export default async function applyConditionToActor(
 
 	// Blocking hook: listeners return false to prevent application, which is how
 	// condition immunity, resistance and redirects get a say.
-	// @ts-expect-error - preApplyCondition is a custom system hook
-	const allowed = Hooks.call(systemHookName('preApplyCondition'), {
-		target,
-		condition: conditionId,
-		source,
-		rule: options.rule ?? null,
-	});
-	if (allowed === false) return null;
+	for (const condition of new Set([conditionId, ...extraStatuses(options)])) {
+		// @ts-expect-error - preApplyCondition is a custom system hook
+		const allowed = Hooks.call(systemHookName('preApplyCondition'), {
+			target,
+			condition,
+			source,
+			rule: options.rule ?? null,
+		});
+		if (allowed === false) return null;
+	}
 
 	const replacedSources = await removeReplacedEffects(target, replaces);
 
