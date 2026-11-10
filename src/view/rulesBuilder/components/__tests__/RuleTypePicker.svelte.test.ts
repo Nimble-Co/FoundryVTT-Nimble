@@ -10,8 +10,9 @@ beforeEach(() => {
 		note: { group: 'notes', description: 'Note', worksOnEffects: true },
 		grantItem: { group: 'grants', description: 'Grant', worksOnEffects: false },
 		heal: { group: 'bonuses', description: 'Heal' },
+		heldRoll: { group: 'bonuses', description: 'Held Roll', worksOnItems: false },
 	};
-	nimble.ruleTypes = { note: 'Note', grantItem: 'Grant Item', heal: 'Heal' };
+	nimble.ruleTypes = { note: 'Note', grantItem: 'Grant Item', heal: 'Heal', heldRoll: 'Held Roll' };
 });
 
 afterEach(() => {
@@ -24,11 +25,15 @@ const labels = (forEffect?: boolean) =>
 	).groupedEntries.flatMap(({ entries }) => entries.map((entry) => entry.label));
 
 describe('createRuleTypePickerState', () => {
-	it('offers every rule type for an item', () => {
+	it('offers every rule type for an item, but not one that works only on an effect', () => {
 		expect(labels().sort()).toEqual(['Grant Item', 'Heal', 'Note']);
 	});
 
 	it('hides the rule types that work only on an item, for an effect; a type with no flag stays', () => {
-		expect(labels(true).sort()).toEqual(['Heal', 'Note']);
+		expect(labels(true).sort()).toEqual(['Heal', 'Held Roll', 'Note']);
+	});
+
+	it('hides a rule type that works only on an effect when the picker is for an item', () => {
+		expect(labels(false)).not.toContain('Held Roll');
 	});
 });

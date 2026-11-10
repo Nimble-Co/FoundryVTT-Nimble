@@ -22,13 +22,19 @@ function actorRolling(total: number | null, d20 = 10) {
 }
 
 describe('runAssess', () => {
+	const globals = globalThis as unknown as Record<string, unknown>;
 	let restore: () => void;
+	let savedFromUuidSync: unknown;
 
 	beforeEach(() => {
 		restore = resetHeroicGlobals();
+		savedFromUuidSync = globals.fromUuidSync;
 	});
 
-	afterEach(() => restore());
+	afterEach(() => {
+		globals.fromUuidSync = savedFromUuidSync;
+		restore();
+	});
 
 	it('rolls the skill, spends 1 action and posts the assess card', async () => {
 		const { actor, rollSkillCheck } = actorRolling(ASSESS_DC);
@@ -85,14 +91,13 @@ describe('runAssess', () => {
 						id: 'nullify-rule',
 						type: 'heldRoll',
 						heldKind: 'ignoreDisadvantage',
-						appliesTo: 'holderAttacks',
+						whichRoll: 'holderAttacks',
 						usedUp: true,
 						value: 0,
 					},
 				],
 			},
 			flags: {},
-			delete: vi.fn(),
 		};
 		const deleteEmbeddedDocuments = vi.fn(async () => []);
 		const actor = createHeroicCharacter({
@@ -103,15 +108,9 @@ describe('runAssess', () => {
 			deleteEmbeddedDocuments,
 		});
 		setHeroicCombat(createHeroicCombatant(actor));
-		const globals = globalThis as unknown as Record<string, unknown>;
-		const savedFromUuidSync = globals.fromUuidSync;
 		globals.fromUuidSync = vi.fn(() => actor);
 
-		try {
-			await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
-		} finally {
-			globals.fromUuidSync = savedFromUuidSync;
-		}
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
 
 		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['nullify']);
@@ -151,7 +150,7 @@ describe('runAssess', () => {
 			expect(heldOf(ogre)).toMatchObject({
 				heldKind: 'primaryDie',
 				value: 1,
-				appliesTo: 'attacksOnHolder',
+				whichRoll: 'attacksOnHolder',
 				usedUp: true,
 				label: 'Create an Opening',
 			});
@@ -176,7 +175,7 @@ describe('runAssess', () => {
 
 			expect(heldOf({ createEmbeddedDocuments })).toMatchObject({
 				value: -1,
-				appliesTo: 'attacksOnHolder',
+				whichRoll: 'attacksOnHolder',
 				usedUp: false,
 			});
 			expect(effectOf({ createEmbeddedDocuments })?.system?.lastsUntil).toEqual([

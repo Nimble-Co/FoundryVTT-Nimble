@@ -1,10 +1,11 @@
+import type { AttackDelivery } from '../../utils/damage/attackDelivery.js';
 import { NimbleBaseRule } from './base.js';
 
 const WORDS = 'NIMBLE.rules.countAsMarked';
 
-export const COUNT_AS_MARKED_DELIVERIES = ['melee', 'ranged', 'any'] as const;
+const COUNT_AS_MARKED_DELIVERIES = ['melee', 'ranged', 'any'] as const;
 
-export type CountAsMarkedDelivery = (typeof COUNT_AS_MARKED_DELIVERIES)[number];
+type CountAsMarkedDelivery = (typeof COUNT_AS_MARKED_DELIVERIES)[number];
 
 function schema() {
 	const { fields } = foundry.data;
@@ -51,12 +52,12 @@ class CountAsMarkedRule extends NimbleBaseRule<CountAsMarkedRule.Schema> {
 	}
 
 	/** The tag it adds to the target of an attack of `delivery`, or null. */
-	markedTagFor(delivery: 'melee' | 'ranged' | null | undefined): string | null {
+	markedTagFor(delivery: AttackDelivery | undefined): string | null {
 		const key = this.flagKey.trim();
-		if (!key || !delivery || !this.test()) return null;
+		if (!key || !delivery || !this.isOnActor || !this.test()) return null;
 		if (this.delivery !== 'any' && this.delivery !== delivery) return null;
 		return `target:${key}`;
 	}
 }
 
-export { CountAsMarkedRule };
+export { CountAsMarkedRule, type CountAsMarkedDelivery };

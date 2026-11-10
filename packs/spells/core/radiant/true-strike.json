@@ -82,7 +82,7 @@
 						"priority": 1,
 						"heldKind": "advantage",
 						"value": 1,
-						"appliesTo": "holderAttacks",
+						"whichRoll": "holderAttacks",
 						"usedUp": true,
 						"meleeOnly": false,
 						"fromSourceOnly": false,

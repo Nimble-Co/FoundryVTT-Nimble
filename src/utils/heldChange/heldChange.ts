@@ -38,7 +38,7 @@ export function heldChangeMoments(ends: HeldChangeEnd): Moment[] {
 	if (ends === 'round') {
 		return [{ ...NO_MOMENT, kind: 'turn', boundary: 'end', span: 'currentRound' }];
 	}
-	return [{ ...NO_MOMENT, kind: 'turn', boundary: 'end', clock: 'holder', span: 'currentTurn' }];
+	return [{ ...NO_MOMENT, kind: 'turn', boundary: 'end', clock: 'any', span: 'currentTurn' }];
 }
 
 interface HeldRollSource {
@@ -46,11 +46,13 @@ interface HeldRollSource {
 	disabled?: boolean;
 	heldKind?: HeldChangeData['kind'];
 	value?: number;
-	appliesTo?: HeldChangeData['appliesTo'];
+	whichRoll?: HeldChangeData['appliesTo'];
 	usedUp?: boolean;
 	meleeOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
+	/** The prepared rule's predicate check; a source with no rule instance has none. */
+	appliesTo?: unknown;
 }
 
 interface HolderEffect {
@@ -60,6 +62,8 @@ interface HolderEffect {
 	disabled?: boolean;
 	active?: boolean;
 	system?: unknown;
+	/** The prepared rules of the effect. */
+	rules?: { values(): Iterable<unknown> } | null;
 	flags?: Record<string, Record<string, unknown> | undefined>;
 }
 
@@ -85,18 +89,33 @@ function originOf(effect: HolderEffect): { creatureUuid: string | null; name: st
 	return { creatureUuid, name: document?.name ?? '' };
 }
 
-function heldRollsOf(effect: HolderEffect): HeldRollSource[] {
-	const rules = (effect.system as { rules?: HeldRollSource[] } | undefined)?.rules;
+/** The Held Roll rules of an effect whose predicate passes. A prepared rule checks it; a source rule has none to check. */
+function heldRollsOf(effect: HolderEffect, all: boolean): HeldRollSource[] {
+	const prepared = effect.rules && typeof effect.rules.values === 'function';
+	const rules = (
+		prepared
+			? [...(effect.rules as { values(): Iterable<unknown> }).values()]
+			: ((effect.system as { rules?: unknown[] } | undefined)?.rules ?? [])
+	) as HeldRollSource[];
 	if (!Array.isArray(rules)) return [];
-	return rules.filter((rule) => rule?.type === 'heldRoll' && !rule.disabled);
+	return rules.filter(
+		(rule) =>
+			rule?.type === 'heldRoll' &&
+			(all ||
+				(!rule.disabled && (typeof rule.appliesTo !== 'function' || rule.appliesTo() !== false))),
+	);
 }
 
-/** Every Held Change on a creature: each Held Roll rule of an active effect on it. */
-function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
+/**
+ * Every Held Change on a creature: each Held Roll rule of an active effect on it. With `all`, also
+ * the rules of a disabled effect and the rules that are off, so a take-back finds them.
+ */
+function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChange[] {
 	const held: HeldChange[] = [];
 	for (const effect of holder?.effects ?? []) {
-		if (!effect.id || effect.disabled || effect.active === false) continue;
-		const rules = heldRollsOf(effect);
+		if (!effect.id) continue;
+		if (!all && (effect.disabled || effect.active === false)) continue;
+		const rules = heldRollsOf(effect, all);
 		if (!rules.length) continue;
 		const origin = originOf(effect);
 		const messageId = effect.flags?.[SYSTEM_ID]?.[MESSAGE_FLAG];
@@ -106,7 +125,7 @@ function heldChangesOn(holder: Holder | null | undefined): HeldChange[] {
 				value: Number(rule.value ?? 1),
 				label: effect.name ?? '',
 				sourceName: origin.name || effect.name || '',
-				appliesTo: rule.appliesTo ?? 'holderAttacks',
+				appliesTo: rule.whichRoll ?? 'holderAttacks',
 				spentBy: rule.usedUp === false ? 'everyRoll' : 'oneRoll',
 				meleeOnly: rule.meleeOnly === true,
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
@@ -205,14 +224,25 @@ export function heldVulnerabilityTo(
 	);
 }
 
+/** Advantage steps below 0 are disadvantage. */
+function lineText(change: HeldChange): string {
+	if (change.kind === 'advantage' && change.value < 0) {
+		return localize('NIMBLE.heldChange.line.disadvantage', {
+			label: change.label,
+			value: String(-change.value),
+		});
+	}
+	return localize(`NIMBLE.heldChange.line.${change.kind}`, {
+		label: change.label,
+		value: change.value > 0 ? `+${change.value}` : String(change.value),
+	});
+}
+
 /** The read-only lines of a roll window. */
 export function heldLines(held: HeldChange[]) {
 	return held.map((change) => ({
 		key: `${change.holderUuid}.${change.effectId}`,
-		text: localize(`NIMBLE.heldChange.line.${change.kind}`, {
-			label: change.label,
-			value: change.value > 0 ? `+${change.value}` : String(change.value),
-		}),
+		text: lineText(change),
 		source: localize(
 			`NIMBLE.heldChange.line.${change.spentBy === 'oneRoll' ? 'spends' : 'stays'}`,
 			{
@@ -394,7 +424,7 @@ export function heldChangeEffect(change: HeldChangeData): Record<string, unknown
 					label: change.label,
 					heldKind: change.kind,
 					value: change.value,
-					appliesTo: change.appliesTo,
+					whichRoll: change.appliesTo,
 					usedUp: change.spentBy === 'oneRoll',
 					...(change.damageType ? { damageType: change.damageType } : {}),
 				},
@@ -444,9 +474,13 @@ export async function takeBackHeldChanges(
 	holder: Holder,
 	sourceMessageId: string,
 ): Promise<number> {
-	const made = heldChangesOn(holder).filter((held) => held.sourceMessageId === sourceMessageId);
-	for (const change of made) await deleteHeld(holder, change.effectId);
-	return made.length;
+	const ids = new Set(
+		heldChangesOn(holder, true)
+			.filter((held) => held.sourceMessageId === sourceMessageId)
+			.map((held) => held.effectId),
+	);
+	for (const id of ids) await deleteHeld(holder, id);
+	return ids.size;
 }
 
 /** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */

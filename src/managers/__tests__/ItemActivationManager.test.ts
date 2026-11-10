@@ -1245,7 +1245,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 							heldRollEffect('opening', 'Create an Opening', {
 								heldKind: 'primaryDie',
 								value: 1,
-								appliesTo: 'attacksOnHolder',
+								whichRoll: 'attacksOnHolder',
 							}),
 						],
 						deleteEmbeddedDocuments: vi.fn(async () => []),
@@ -1292,7 +1292,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 								heldRollEffect('kept', 'Rampage', {
 									heldKind: 'wholeAmount',
 									value: 13,
-									appliesTo: 'holderAttacks',
+									whichRoll: 'holderAttacks',
 								}),
 							],
 							isOwner: true,

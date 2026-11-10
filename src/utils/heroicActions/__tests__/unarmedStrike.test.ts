@@ -39,10 +39,13 @@ function dialogResult(result: unknown) {
 	});
 }
 
+const globals = globalThis as unknown as Record<string, unknown>;
 let restore: () => void;
+let savedFromUuidSync: unknown;
 
 beforeEach(() => {
 	restore = resetHeroicGlobals();
+	savedFromUuidSync = globals.fromUuidSync;
 	dialogMock.mockReset();
 	damageRollMock.mockReset();
 	damageRollMock.mockImplementation(function roll() {
@@ -50,7 +53,10 @@ beforeEach(() => {
 	});
 });
 
-afterEach(() => restore());
+afterEach(() => {
+	globals.fromUuidSync = savedFromUuidSync;
+	restore();
+});
 
 describe('rollUnarmedStrike', () => {
 	it('posts the unarmed strike card with the damage bonuses', async () => {
@@ -172,7 +178,6 @@ describe('rollUnarmedStrike', () => {
 	it('takes out disadvantage with a Held Change that ignores it', async () => {
 		dialogResult({ rollMode: -1 });
 		const actor = createHeroicCharacter({ proficient: true });
-		const remove = vi.fn(async () => undefined);
 		const deleteEmbeddedDocuments = vi.fn(async () => []);
 		Object.assign(actor, {
 			uuid: 'Actor.hero',
@@ -182,14 +187,13 @@ describe('rollUnarmedStrike', () => {
 					id: 'held',
 					name: 'Nullify',
 					origin: null,
-					delete: remove,
 					system: {
 						rules: [
 							{
 								id: 'held-rule',
 								type: 'heldRoll',
 								heldKind: 'ignoreDisadvantage',
-								appliesTo: 'holderAttacks',
+								whichRoll: 'holderAttacks',
 								usedUp: true,
 								value: 0,
 							},
@@ -199,15 +203,9 @@ describe('rollUnarmedStrike', () => {
 				},
 			],
 		});
-		const globals = globalThis as unknown as Record<string, unknown>;
-		const savedFromUuidSync = globals.fromUuidSync;
 		globals.fromUuidSync = vi.fn(() => actor);
 
-		try {
-			await rollUnarmedStrike(actor);
-		} finally {
-			globals.fromUuidSync = savedFromUuidSync;
-		}
+		await rollUnarmedStrike(actor);
 
 		expect(damageRollMock).toHaveBeenCalledWith(
 			expect.any(String),

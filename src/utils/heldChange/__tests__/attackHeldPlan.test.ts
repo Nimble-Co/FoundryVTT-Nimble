@@ -1,37 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HeldChange, HeldChangeData, HeldChangeKind } from '#types/heldChange.d.ts';
+import type { HeldChange } from '#types/heldChange.d.ts';
+import {
+	type HeldRollEffectSpec,
+	heldRollEffect,
+} from '../../../../tests/fixtures/heldRollEffect.js';
 import { attackHeldPlanOf } from '../attackHeldPlan.js';
 
-interface HeldSpec {
-	kind?: HeldChangeKind;
-	value?: number;
-	label?: string;
-	appliesTo?: HeldChangeData['appliesTo'];
-	usedUp?: boolean;
-}
-
-function heldEffect(id: string, spec: HeldSpec) {
-	const label = spec.label ?? 'Create an Opening';
-	return {
-		id,
-		name: label,
-		origin: null,
-		system: {
-			rules: [
-				{
-					id: `${id}-rule`,
-					type: 'heldRoll',
-					label,
-					heldKind: spec.kind ?? 'primaryDie',
-					value: spec.value ?? 1,
-					appliesTo: spec.appliesTo ?? 'attacksOnHolder',
-					usedUp: spec.usedUp ?? true,
-				},
-			],
-		},
-		flags: {},
-	};
-}
+type HeldSpec = HeldRollEffectSpec;
 
 const documents = new Map<string, unknown>();
 
@@ -39,7 +14,7 @@ function creature(uuid: string, held: HeldSpec[] = []) {
 	const holder = {
 		uuid,
 		isOwner: true,
-		effects: held.map((spec, index) => heldEffect(`${uuid}-e${index}`, spec)),
+		effects: held.map((spec, index) => heldRollEffect(`${uuid}-e${index}`, spec)),
 		createEmbeddedDocuments: vi.fn(async () => []),
 		deleteEmbeddedDocuments: vi.fn(async () => []),
 	};
@@ -51,15 +26,15 @@ const ignore: HeldSpec = {
 	kind: 'ignoreDisadvantage',
 	value: 0,
 	label: 'Demand Control',
-	appliesTo: 'holderAttacks',
+	whichRoll: 'holderAttacks',
 };
 const mustAttack: HeldSpec = {
 	kind: 'mustAttackOther',
 	value: 0,
 	label: 'Taunt',
-	appliesTo: 'holderAttacks',
+	whichRoll: 'holderAttacks',
 };
-const kept: HeldSpec = { kind: 'wholeAmount', value: 7, label: 'Kept', appliesTo: 'holderAttacks' };
+const kept: HeldSpec = { kind: 'wholeAmount', value: 7, label: 'Kept', whichRoll: 'holderAttacks' };
 const advantage = (value = 1): HeldSpec => ({ kind: 'advantage', value, label: 'Advantage' });
 const maximize: HeldSpec = { kind: 'maximize', value: 0, label: 'Maximize' };
 
@@ -182,14 +157,35 @@ describe('attackHeldPlanOf', () => {
 });
 
 describe('attackHeldPlanOf with advantage changes', () => {
-	it('appends the advantage steps to the roll mode sources', () => {
+	it('appends one roll mode source for each advantage change', () => {
 		const target = creature('T', [advantage(1), advantage(2)]);
 		const plan = attackHeldPlanOf({ attacker: creature('A'), target, area: false, attack: true });
 		const options: Record<string, any> = { rollMode: 0, rollModeSources: [-1] };
 
 		plan.applyToRoll(options as never);
 
-		expect(options.rollModeSources).toEqual([-1, 3]);
+		expect(options.rollModeSources).toEqual([-1, 1, 2]);
+	});
+
+	it('appends a minus advantage change as a disadvantage source', () => {
+		const target = creature('T', [advantage(-1)]);
+		const plan = attackHeldPlanOf({ attacker: creature('A'), target, area: false, attack: true });
+		const options: Record<string, any> = { rollMode: 0, rollModeSources: [] };
+
+		plan.applyToRoll(options as never);
+
+		expect(options.rollModeSources).toEqual([-1]);
+	});
+
+	it('takes out a minus advantage change and keeps a plus one when it ignores disadvantage', () => {
+		const attacker = creature('A', [ignore]);
+		const target = creature('T', [advantage(-1), advantage(1)]);
+		const plan = attackHeldPlanOf({ attacker, target, area: false, attack: true });
+		const options: Record<string, any> = { rollMode: 0, rollModeSources: [] };
+
+		plan.applyToRoll(options as never);
+
+		expect(options.rollModeSources).toEqual([1]);
 	});
 
 	it('starts the roll mode sources from the roll mode when it has none', () => {

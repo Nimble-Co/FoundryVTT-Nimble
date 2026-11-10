@@ -60,7 +60,7 @@ The `movementTrigger` rule reads these records. It tests its predicate, stops un
 ## Key Patterns
 
 - **Guard with `isOnActor`**: Always start `prePrepareData()` with `if (!this.isOnActor) return;`. A rule on an item that is not on an actor, or on an effect that does not change an actor, has no actor to change.
-- **Parent document**: a rule's parent is an item or an Active Effect. `this.parentDocument` holds the rule; use it for keys and labels. `this.actor` is the creature the rule changes. `this.item` is the item, or for an effect the item in its `origin`, and can be null or on another actor. A rule type that needs an item as parent sets `static worksOnEffects = false`; an effect's rules manager refuses it.
+- **Parent document**: a rule's parent is an item or an Active Effect. `this.parentDocument` holds the rule; use it for keys and labels. `this.actor` is the creature the rule changes. `this.item` is the item, or for an effect the item in its `origin`, and can be null or on another actor. A rule type that needs an item as parent sets `static worksOnEffects = false`; an effect's rules manager refuses it. A rule type that works only on an effect sets `static worksOnItems = false`; an item's rules manager refuses it, and the Rules Builder of an item does not offer it.
 - **Predicate testing**: `this.test()` checks domain tags from the predicate. An empty predicate always passes.
 - **Formula resolution**: `this.resolveFormula(formula)` evaluates against the actor's roll data and returns a number.
 - **Forward declarations**: Use local interfaces for `NimbleBaseActor` / `NimbleBaseItem` to avoid circular imports — see the pattern in `base.ts`.
@@ -252,6 +252,14 @@ A mark is an entry in the marking actor's toggled effects flag (`src/utils/actor
 - **`endMarkOfRemovedMarker(effect)`.** `registerMarkLifecycleHooks()` (called from `src/nimble.ts`) listens on `deleteActiveEffect`, on the active GM only. When the deleted effect has `MARK_TARGET_ITEM_FLAG`, it finds the marking item and its actor, and takes the marked creature's `actorUuid` out of the flag list of each `markTarget` rule on that item. A mark that is already gone changes nothing.
 
 Only a GM or the owner of the marked creature can delete the marker effect. The token HUD status toggle uses the static status `_id`, so it does not delete the marker effects and does not end the mark.
+
+## Held Changes (`heldRoll`, `countAsMarked`, `poolEmptyEffect`)
+
+A Held Change is an Active Effect with a `heldRoll` rule (`worksOnItems = false`). The rule names the change (`heldKind`), its amount (`value`), which roll uses it (`whichRoll`: the holder's attacks or the attacks on the holder), and whether that roll ends the effect (`usedUp`). `meleeOnly` and `fromSourceOnly` narrow which attack uses it; the source is the creature of the effect's `origin`. The effect's Lasts Until ends it in time. The rule does nothing in data preparation: the attack code reads it through `src/utils/heldChange/heldChange.ts` (`heldChangesOn`, reading the prepared rules so the predicate counts) and spends it through `attackHeldPlan.ts`. Code that holds a change (Assess, Demand Control, `holdOnTarget`, Keep the Amount) builds the same effect with `heldChangeEffect`.
+
+`countAsMarked` gives every creature the `target:<flagKey>` tag for the owner's attacks of one delivery. `buildTargetDomain` (conditional bonuses) and `recoveryDomainOf` (charge recoveries) read it through `countedMarkTags`.
+
+`poolEmptyEffect` (`worksOnEffects = false`) puts the item's first effect with `transfer: false` on the owner, on the owner's own turn, while a charge pool is empty. `src/hooks/poolEmptyEffects.ts` checks on the active GM at turn start and when the actor or one of its items changes; checks for one actor run in turn. `applyRuleEffects` stops it.
 
 ## `toggleEffect` (player-controlled tag pushes)
 

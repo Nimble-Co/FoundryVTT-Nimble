@@ -67,6 +67,12 @@ describe('describeLastsUntil', () => {
 		).toBe("Until the start of the next hero's turn");
 	});
 
+	it('reads a turn of any creature without a person', () => {
+		const endOfTheTurn = turn({ boundary: 'end', clock: 'any', span: 'currentTurn' });
+		expect(read([endOfTheTurn], CARD_TARGETS_READER)).toBe('Until the end of the turn');
+		expect(read([endOfTheTurn], holderReader('Goblin Boss'))).toBe('Until the end of the turn');
+	});
+
 	it('reads time with one and many units', () => {
 		expect(read([time(1, 'minutes')], CARD_TARGETS_READER)).toBe('For 1 minute');
 		expect(read([time(10, 'rounds')], CARD_TARGETS_READER)).toBe('For 10 rounds');
@@ -178,6 +184,29 @@ describe('describeLastsUntil with a used-up Held Roll', () => {
 		);
 	});
 
+	it('reads the next attack against the holder when the source is the holder', () => {
+		const fromSelf = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		expect(readUsedUp(fromSelf, CARD_SELF_READER)).toBe('Until the next attack against you');
+	});
+
+	it('reads the attack of a named source against a holder of the same name', () => {
+		const fromSource = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		const sameName: DescribeInput['reader'] = {
+			holder: { kind: 'named', name: 'Kobold' },
+			source: { kind: 'named', name: 'Kobold' },
+		};
+		expect(readUsedUp(fromSource, sameName)).toBe('Until the next attack against Kobold');
+	});
+
+	it('reads the attack of a named source against a holder of another name', () => {
+		const fromSource = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		const otherName: DescribeInput['reader'] = {
+			holder: { kind: 'named', name: 'Kobold' },
+			source: { kind: 'named', name: 'Mira' },
+		};
+		expect(readUsedUp(fromSource, otherName)).toBe("Until Mira's next attack against Kobold");
+	});
+
 	it('reads no used-up phrase when usedUp is null', () => {
 		expect(readUsedUp(null, CARD_SELF_READER)).toBe('');
 	});
@@ -186,12 +215,12 @@ describe('describeLastsUntil with a used-up Held Roll', () => {
 describe('usedUpOf', () => {
 	const heldRoll = (fields: Record<string, unknown> = {}) => ({
 		type: 'heldRoll',
-		appliesTo: 'attacksOnHolder',
+		whichRoll: 'attacksOnHolder',
 		usedUp: true,
 		...fields,
 	});
 
-	it('gives the appliesTo of a used-up Held Roll rule', () => {
+	it('gives the whichRoll of a used-up Held Roll rule', () => {
 		expect(usedUpOf({ rules: [heldRoll()] })).toEqual({
 			by: 'attacksOnHolder',
 			melee: false,
@@ -207,8 +236,8 @@ describe('usedUpOf', () => {
 		});
 	});
 
-	it("gives the holder's attacks when the rule has no appliesTo", () => {
-		expect(usedUpOf({ rules: [heldRoll({ appliesTo: undefined })] })?.by).toBe('holderAttacks');
+	it("gives the holder's attacks when the rule has no whichRoll", () => {
+		expect(usedUpOf({ rules: [heldRoll({ whichRoll: undefined })] })?.by).toBe('holderAttacks');
 	});
 
 	it('gives null for a Held Roll rule that is not used up', () => {

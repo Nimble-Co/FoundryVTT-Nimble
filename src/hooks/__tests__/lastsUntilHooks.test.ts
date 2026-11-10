@@ -197,8 +197,17 @@ describe('events', () => {
 			foundry.utils.getProperty(object, path) !== undefined;
 	});
 
+	let speakerSpy: { mockRestore(): void } | null = null;
+
+	/** ChatMessage.getSpeakerActor gives `actor`; afterEach restores it. */
+	function speakerActorIs(actor: unknown) {
+		speakerSpy = vi.spyOn(ChatMessage, 'getSpeakerActor').mockReturnValue(actor as never);
+	}
+
 	afterEach(() => {
 		utils.hasProperty = hadHasProperty;
+		speakerSpy?.mockRestore();
+		speakerSpy = null;
 	});
 
 	it('dropping to 0 HP with no wound track is 0 HP and death', () => {
@@ -325,9 +334,7 @@ describe('events', () => {
 		const speakerActor = { name: 'Tessa' };
 		const sourceActor = { name: 'Other' };
 		const speaker = { actor: 'tessa' };
-		const getSpeakerActor = vi
-			.spyOn(ChatMessage, 'getSpeakerActor')
-			.mockReturnValue(speakerActor as never);
+		speakerActorIs(speakerActor);
 
 		hook(systemHookName('damageApplied'))({
 			targetActor: { name: 'Ogre' },
@@ -335,13 +342,12 @@ describe('events', () => {
 			card: { speaker },
 		});
 
-		getSpeakerActor.mockRestore();
 		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor);
 	});
 
 	it('damage is the next damage of the source actor when the card has no speaker actor', () => {
 		const sourceActor = { name: 'Tessa' };
-		const getSpeakerActor = vi.spyOn(ChatMessage, 'getSpeakerActor').mockReturnValue(null);
+		speakerActorIs(null);
 
 		hook(systemHookName('damageApplied'))({
 			targetActor: { name: 'Ogre' },
@@ -349,7 +355,6 @@ describe('events', () => {
 			card: { speaker: { actor: 'gone' } },
 		});
 
-		getSpeakerActor.mockRestore();
 		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
 	});
 
@@ -376,38 +381,29 @@ describe('events', () => {
 		(type) => {
 			const actor = { name: 'Tessa' };
 			Object.assign(user, { id: 'me' });
-			const getSpeakerActor = vi
-				.spyOn(ChatMessage, 'getSpeakerActor')
-				.mockReturnValue(actor as never);
+			speakerActorIs(actor);
 
 			hook('createChatMessage')({ type, speaker: { actor: 'tessa' } }, {}, 'me');
 
-			getSpeakerActor.mockRestore();
 			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor);
 		},
 	);
 
 	it('a save card of another user is not the next roll here', () => {
 		Object.assign(user, { id: 'me' });
-		const getSpeakerActor = vi
-			.spyOn(ChatMessage, 'getSpeakerActor')
-			.mockReturnValue({ name: 'Tessa' } as never);
+		speakerActorIs({ name: 'Tessa' });
 
 		hook('createChatMessage')({ type: 'savingThrow', speaker: { actor: 'tessa' } }, {}, 'other');
 
-		getSpeakerActor.mockRestore();
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
 	it('a card of another type is not the next roll', () => {
 		Object.assign(user, { id: 'me' });
-		const getSpeakerActor = vi
-			.spyOn(ChatMessage, 'getSpeakerActor')
-			.mockReturnValue({ name: 'Tessa' } as never);
+		speakerActorIs({ name: 'Tessa' });
 
 		hook('createChatMessage')({ type: 'feature', speaker: { actor: 'tessa' } }, {}, 'me');
 
-		getSpeakerActor.mockRestore();
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 

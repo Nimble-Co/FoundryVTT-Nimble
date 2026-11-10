@@ -46,13 +46,14 @@ function planOf(
 				itemUuid: '',
 			})),
 		applyToRoll(options) {
-			if (parts.advantage.length > 0) {
-				const steps = parts.advantage.reduce((sum, change) => sum + Math.max(change.value, 0), 0);
+			// One source for each change, so ignoring disadvantage takes out only the minus ones.
+			const steps = parts.advantage.map((change) => change.value).filter((value) => value !== 0);
+			if (steps.length > 0) {
 				options.rollModeSources = [
 					...(Array.isArray(options.rollModeSources)
 						? options.rollModeSources
 						: [options.rollMode ?? 0]),
-					steps,
+					...steps,
 				];
 			}
 			if (parts.ignoreDisadvantage) removeDisadvantage(options);

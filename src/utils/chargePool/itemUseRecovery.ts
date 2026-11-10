@@ -33,7 +33,8 @@ export function recoveryDomainOf(
 	const tags = [...getToggledTargetTags(attacker as never, target)];
 	const delivery = attackDeliveryFromAttackType(attackType);
 	if (target) tags.push(...countedMarkTags(attacker as never, delivery));
-	return delivery ? [...new Set(tags), `attack:${delivery}`] : tags;
+	const unique = [...new Set(tags)];
+	return delivery ? [...unique, `attack:${delivery}`] : unique;
 }
 
 export function itemUseRecoveryDomain(

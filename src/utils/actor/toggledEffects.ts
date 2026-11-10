@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
-import type { CountAsMarkedRule } from '../../models/rules/countAsMarked.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import { rulesOfType } from './actorRules.js';
 
 /**
  * Relational "marked target" tracking — used by the `markTarget` rule to record which
@@ -99,8 +99,7 @@ function countedMarkTags(
 	attacker: { rules?: unknown[] } | null | undefined,
 	delivery: AttackDelivery | undefined,
 ): string[] {
-	return ((attacker?.rules ?? []) as CountAsMarkedRule[]).flatMap((rule) => {
-		if (rule?.type !== 'countAsMarked') return [];
+	return rulesOfType(attacker, 'countAsMarked').flatMap((rule) => {
 		const tag = rule.markedTagFor(delivery);
 		return tag ? [tag] : [];
 	});

@@ -154,7 +154,7 @@ describe('the activation dialog kept amount', () => {
 					type: 'heldRoll',
 					heldKind: 'wholeAmount',
 					value: 13,
-					appliesTo: 'holderAttacks',
+					whichRoll: 'holderAttacks',
 					usedUp: true,
 				},
 			],

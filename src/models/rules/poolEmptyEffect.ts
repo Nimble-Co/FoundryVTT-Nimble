@@ -1,4 +1,3 @@
-import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -37,7 +36,6 @@ class PoolEmptyEffectRule extends NimbleBaseRule<PoolEmptyEffectRule.Schema> {
 	static override group = 'triggers';
 	static override description = `${WORDS}.description`;
 	static override icon = 'fa-solid fa-battery-empty';
-	static override formLayout: readonly RuleFormGroup[] = [{ fields: ['chargePoolIdentifier'] }];
 
 	static override defineSchema(): PoolEmptyEffectRule.Schema {
 		return {
@@ -48,7 +46,7 @@ class PoolEmptyEffectRule extends NimbleBaseRule<PoolEmptyEffectRule.Schema> {
 
 	/** Its predicate passes now. */
 	isLive(): boolean {
-		return this.test();
+		return this.isOnActor && this.test();
 	}
 }
 

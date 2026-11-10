@@ -610,7 +610,7 @@ describe('a vulnerability to the next fire damage', () => {
 						type: 'heldRoll',
 						heldKind: 'vulnerableOnce',
 						value: 0,
-						appliesTo: 'attacksOnHolder',
+						whichRoll: 'attacksOnHolder',
 						usedUp: true,
 						damageType: 'fire',
 					},

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ruleChargesLeftMock = vi.fn((..._args: unknown[]): number | null => 0);
 const applyEffectHereMock = vi.fn(async (..._args: unknown[]) => null);
@@ -7,12 +7,22 @@ const payloadFromEffectMock = vi.fn((effect: { toObject(): object }, source: obj
 	source,
 }));
 
+const ruleAutomationMock = vi.fn(() => true);
+const isActiveGMMock = vi.fn(() => true);
+
 let applyPoolEmptyEffects: typeof import('../poolEmptyEffects.js').applyPoolEmptyEffects;
+let registerPoolEmptyEffectHooks: typeof import('../poolEmptyEffects.js').registerPoolEmptyEffectHooks;
 
 beforeEach(async () => {
 	vi.clearAllMocks();
 	ruleChargesLeftMock.mockReturnValue(0);
+	ruleAutomationMock.mockReturnValue(true);
+	isActiveGMMock.mockReturnValue(true);
 	vi.resetModules();
+	vi.doMock('../../settings/automationSettings.js', () => ({
+		isRuleAutomationEnabled: ruleAutomationMock,
+	}));
+	vi.doMock('#utils/isActiveGM.js', () => ({ isActiveGM: isActiveGMMock }));
 	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
 		ruleChargesLeft: ruleChargesLeftMock,
 	}));
@@ -20,7 +30,9 @@ beforeEach(async () => {
 		applyEffectHere: applyEffectHereMock,
 		payloadFromEffect: payloadFromEffectMock,
 	}));
-	({ applyPoolEmptyEffects } = await import('../poolEmptyEffects.js'));
+	({ applyPoolEmptyEffects, registerPoolEmptyEffectHooks } = await import(
+		'../poolEmptyEffects.js'
+	));
 });
 
 const ITEM_UUID = 'Actor.a.Item.armor';
@@ -120,10 +132,105 @@ describe('applyPoolEmptyEffects', () => {
 		expect(applyEffectHereMock).not.toHaveBeenCalled();
 	});
 
+	it('does not apply anything when rule automation is off', async () => {
+		ruleAutomationMock.mockReturnValue(false);
+
+		await applyPoolEmptyEffects(owner([poolEmptyRule()]));
+
+		expect(ruleChargesLeftMock).not.toHaveBeenCalled();
+		expect(applyEffectHereMock).not.toHaveBeenCalled();
+	});
+
 	it('ignores rules of other types', async () => {
 		await applyPoolEmptyEffects(owner([{ type: 'speedBonus', isLive: () => true }]));
 
 		expect(ruleChargesLeftMock).not.toHaveBeenCalled();
 		expect(applyEffectHereMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('registerPoolEmptyEffectHooks', () => {
+	const globals = globalThis as unknown as Record<string, any>;
+	type Handler = (document: unknown) => void;
+	let handlers: Map<string, Handler>;
+	let saved: { Hooks: unknown; combat: unknown };
+
+	beforeEach(() => {
+		saved = { Hooks: globals.Hooks, combat: globals.game.combat };
+		handlers = new Map();
+		globals.Hooks = {
+			...globals.Hooks,
+			on: vi.fn((name: string, handler: Handler) => handlers.set(name, handler)),
+		};
+		registerPoolEmptyEffectHooks();
+	});
+
+	afterEach(() => {
+		globals.Hooks = saved.Hooks;
+		globals.game.combat = saved.combat;
+	});
+
+	const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+	function onTurnOf(uuid: string) {
+		globals.game.combat = { started: true, combatant: { actor: { uuid } } };
+	}
+
+	it('checks the actor of the combatant at the start of its turn on the active GM', async () => {
+		const actor = owner([poolEmptyRule()]);
+
+		handlers.get('nimbleCombatTurnStart')?.({ actor });
+		await flush();
+
+		expect(applyEffectHereMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not check at the start of a turn on a user who is not the active GM', async () => {
+		isActiveGMMock.mockReturnValue(false);
+
+		handlers.get('nimbleCombatTurnStart')?.({ actor: owner([poolEmptyRule()]) });
+		await flush();
+
+		expect(applyEffectHereMock).not.toHaveBeenCalled();
+	});
+
+	it('checks an updated actor on its own turn', async () => {
+		onTurnOf('Actor.a');
+
+		handlers.get('updateActor')?.(owner([poolEmptyRule()]));
+		await flush();
+
+		expect(applyEffectHereMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not check an updated actor on the turn of another creature', async () => {
+		onTurnOf('Actor.other');
+
+		handlers.get('updateActor')?.(owner([poolEmptyRule()]));
+		await flush();
+
+		expect(applyEffectHereMock).not.toHaveBeenCalled();
+	});
+
+	it('does not check an updated actor on a user who is not the active GM', async () => {
+		onTurnOf('Actor.a');
+		isActiveGMMock.mockReturnValue(false);
+
+		handlers.get('updateActor')?.(owner([poolEmptyRule()]));
+		await flush();
+
+		expect(applyEffectHereMock).not.toHaveBeenCalled();
+	});
+
+	it('checks the owner of an updated item on its own turn, and not on another turn', async () => {
+		const actor = owner([poolEmptyRule()]);
+		onTurnOf('Actor.a');
+		handlers.get('updateItem')?.({ parent: actor });
+		await flush();
+		onTurnOf('Actor.other');
+		handlers.get('updateItem')?.({ parent: actor });
+		await flush();
+
+		expect(applyEffectHereMock).toHaveBeenCalledTimes(1);
 	});
 });

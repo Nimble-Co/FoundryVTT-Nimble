@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { applyEffectSource } from '#utils/chat/applyEffectFromCard.js';
 import localize from '#utils/localize.js';
 import { applyEffectRow } from '../applyEffectRow.js';
 import ItemCardEffectsTestHarness from './ItemCardEffects.testHarness.svelte';
@@ -51,11 +52,57 @@ describe('applyEffectRow', () => {
 		expect(row({ hasRecipient: false }).button).toMatchObject({ disabled: true });
 	});
 
+	it('reads the attack that uses up a Held Roll before the moments', () => {
+		const usedUp = { by: 'holderAttacks', melee: false, fromSource: false } as const;
+		const source = { ...tauntedSource, usedUp };
+
+		expect(row({ source }).lasts).toBe('Until their next attack, or until you drop to 0 HP');
+		expect(row({ source, node: { recipient: 'self' } }).lasts).toBe(
+			'Until your next attack, or until you drop to 0 HP',
+		);
+	});
+
 	it('says so when the item no longer has the effect', () => {
 		expect(row({ source: null })).toMatchObject({
 			button: null,
 			note: localize('NIMBLE.chat.applyEffect.missing'),
 		});
+	});
+});
+
+describe('applyEffectSource', () => {
+	const heldRoll = { type: 'heldRoll', whichRoll: 'attacksOnHolder', usedUp: true };
+
+	function cardWith(system: Record<string, unknown>) {
+		const effect = { name: 'Opening', img: 'opening.svg', system, toObject: () => ({}) };
+		const item = { uuid: 'Item.spell', effects: { get: () => effect } };
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn(() => item),
+		);
+		return { flags: { nimble: { itemUuid: item.uuid } }, update: vi.fn() };
+	}
+
+	const node = { effectId: 'fx' } as Parameters<typeof applyEffectSource>[1];
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('gives the attack that uses up the Held Roll rule of the item effect', () => {
+		const card = cardWith({ lastsUntil: [], rules: [heldRoll] });
+
+		expect(applyEffectSource(card, node)?.usedUp).toEqual({
+			by: 'attacksOnHolder',
+			melee: false,
+			fromSource: false,
+		});
+	});
+
+	it('gives no used-up attack for an item effect with no Held Roll rule', () => {
+		const card = cardWith({ lastsUntil: [zeroHp] });
+
+		expect(applyEffectSource(card, node)?.usedUp).toBeNull();
 	});
 });
 

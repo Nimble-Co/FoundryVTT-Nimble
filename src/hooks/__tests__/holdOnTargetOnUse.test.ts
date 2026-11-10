@@ -48,7 +48,7 @@ function heldEffect(id: string, sourceMessageId: string) {
 					type: 'heldRoll',
 					heldKind: 'mustAttackOther',
 					value: 0,
-					appliesTo: 'holderAttacks',
+					whichRoll: 'holderAttacks',
 					usedUp: true,
 				},
 			],
@@ -96,7 +96,7 @@ describe('holdOnTarget on an item use', () => {
 				type: 'heldRoll',
 				heldKind: 'vulnerableOnce',
 				damageType: 'fire',
-				appliesTo: 'attacksOnHolder',
+				whichRoll: 'attacksOnHolder',
 			}),
 		]);
 		expect(effect.system.lastsUntil).toEqual([

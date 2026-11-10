@@ -1,3 +1,4 @@
+import type { HeldUsedUp } from './heldChange.d.ts';
 import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
@@ -101,7 +102,7 @@ export interface ApplyEffectSource {
 	img: string;
 	lastsUntil: readonly Moment[];
 	/** The attack that uses up its Held Roll rule. */
-	usedUp?: import('#utils/lastsUntil/describeLastsUntil.js').UsedUp | null;
+	usedUp?: HeldUsedUp | null;
 	coreDuration?: ConditionDuration | null;
 	escape: boolean;
 }

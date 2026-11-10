@@ -1,6 +1,7 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-export const HELD_ROLL_KINDS = [
+const HELD_ROLL_KINDS = [
 	'advantage',
 	'primaryDie',
 	'wholeAmount',
@@ -11,6 +12,13 @@ export const HELD_ROLL_KINDS = [
 ] as const;
 
 const WORDS = 'NIMBLE.rules.heldRoll';
+
+const KINDS_WITH_A_VALUE = new Set(['advantage', 'primaryDie', 'wholeAmount']);
+
+const kindHasValue = (data: Record<string, unknown>) =>
+	KINDS_WITH_A_VALUE.has(String(data.heldKind));
+const isVulnerability = (data: Record<string, unknown>) => data.heldKind === 'vulnerableOnce';
+const isOnHolder = (data: Record<string, unknown>) => data.whichRoll === 'attacksOnHolder';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -26,24 +34,27 @@ function schema() {
 			label: `${WORDS}.heldKind.label`,
 			hint: `${WORDS}.heldKind.hint`,
 		}),
-		value: new fields.NumberField({
-			required: true,
-			nullable: false,
-			integer: true,
-			initial: 1,
-			label: `${WORDS}.value.label`,
-			hint: `${WORDS}.value.hint`,
-		}),
-		appliesTo: new fields.StringField({
+		value: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				initial: 1,
+				label: `${WORDS}.value.label`,
+				hint: `${WORDS}.value.hint`,
+				showWhen: kindHasValue,
+			}),
+		),
+		whichRoll: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'holderAttacks',
 			choices: {
-				holderAttacks: `${WORDS}.appliesTo.choices.holderAttacks`,
-				attacksOnHolder: `${WORDS}.appliesTo.choices.attacksOnHolder`,
+				holderAttacks: `${WORDS}.whichRoll.choices.holderAttacks`,
+				attacksOnHolder: `${WORDS}.whichRoll.choices.attacksOnHolder`,
 			},
-			label: `${WORDS}.appliesTo.label`,
-			hint: `${WORDS}.appliesTo.hint`,
+			label: `${WORDS}.whichRoll.label`,
+			hint: `${WORDS}.whichRoll.hint`,
 		}),
 		usedUp: new fields.BooleanField({
 			required: true,
@@ -59,22 +70,28 @@ function schema() {
 			label: `${WORDS}.meleeOnly.label`,
 			hint: `${WORDS}.meleeOnly.hint`,
 		}),
-		fromSourceOnly: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: `${WORDS}.fromSourceOnly.label`,
-			hint: `${WORDS}.fromSourceOnly.hint`,
-		}),
-		damageType: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			choices: () => CONFIG.NIMBLE.damageTypes,
-			label: `${WORDS}.damageType.label`,
-			hint: `${WORDS}.damageType.hint`,
-		}),
+		fromSourceOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.fromSourceOnly.label`,
+				hint: `${WORDS}.fromSourceOnly.hint`,
+				showWhen: isOnHolder,
+			}),
+		),
+		damageType: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				choices: () => CONFIG.NIMBLE.damageTypes,
+				label: `${WORDS}.damageType.label`,
+				hint: `${WORDS}.damageType.hint`,
+				showWhen: isVulnerability,
+			}),
+		),
 	};
 }
 

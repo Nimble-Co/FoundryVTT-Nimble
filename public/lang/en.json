@@ -1712,6 +1712,7 @@
 			"ruleNotRunning": "This rule is not running:",
 			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
 			"ruleFailureNotOnEffect": "A \"{type}\" rule works only on an item, not on an effect.",
+			"ruleFailureNotOnItem": "A \"{type}\" rule works only on an effect, not on an item.",
 			"ruleFailureValidation": "The rule failed validation and has been disabled.",
 			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
@@ -3227,7 +3228,7 @@
 					"label": "Amount",
 					"hint": "Steps of advantage, the number added to the Primary Die, or the set amount. A minus number takes away."
 				},
-				"appliesTo": {
+				"whichRoll": {
 					"label": "Which roll",
 					"hint": "The roll of the creature that has the effect, or a roll against it.",
 					"choices": {
@@ -3269,7 +3270,7 @@
 				}
 			},
 			"poolEmptyEffect": {
-				"description": "On your own turn, when the charge pool has no charges, you get the effect of this item. It shows at the start of your turn, or when you spend the last charge. The Lasts Until of the effect ends it.",
+				"description": "On your own turn, when the charge pool has no charges, you get the effect of this item: its first effect with Apply to the actor off. It shows at the start of your turn, or when you spend the last charge. The Lasts Until of the effect ends it.",
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool to watch."
@@ -3870,6 +3871,7 @@
 				"nextRound": "the next round"
 			},
 			"nextHero": "the next hero's turn",
+			"anyTurn": "the",
 			"your": "your",
 			"their": "their",
 			"possessive": "{name}'s",
@@ -3954,7 +3956,8 @@
 				"clock": {
 					"holder": "their",
 					"source": "your",
-					"nextHero": "the next hero's"
+					"nextHero": "the next hero's",
+					"any": "the"
 				},
 				"span": {
 					"nextTurn": "next turn",
@@ -4995,6 +4998,7 @@
 				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
 				"wholeAmountEnds": "{label}: an area attack does not use {value}",
 				"advantage": "{label}: {value} advantage",
+				"disadvantage": "{label}: {value} disadvantage",
 				"maximize": "{label}: every die rolls its highest number",
 				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",

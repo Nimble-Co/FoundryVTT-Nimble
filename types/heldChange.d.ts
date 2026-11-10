@@ -8,6 +8,18 @@ export type HeldChangeKind =
 	| 'vulnerableOnce'
 	| 'maximize';
 
+/** Which roll uses a Held Change: the holder's next attack, or the next attack against the holder. */
+export type HeldAppliesTo = 'holderAttacks' | 'attacksOnHolder';
+
+/** The attack that uses up a Held Change, as the Lasts Until sentence names it. */
+export interface HeldUsedUp {
+	by: HeldAppliesTo;
+	/** Only a melee attack uses it. */
+	melee: boolean;
+	/** Only an attack by the creature that applied it uses it. */
+	fromSource: boolean;
+}
+
 /** The time that ends a Held Change that code makes. It becomes a Lasts Until moment. */
 export type HeldChangeEnd = 'turn' | 'round' | 'combat';
 
@@ -17,7 +29,7 @@ export interface HeldChangeData {
 	/** Steps of advantage, the number on the Primary Die, or the whole amount of the attack. */
 	value: number;
 	label: string;
-	appliesTo: 'holderAttacks' | 'attacksOnHolder';
+	appliesTo: HeldAppliesTo;
 	spentBy: 'oneRoll' | 'everyRoll';
 	ends: HeldChangeEnd;
 	/** The uuid of the creature or item that made it. */
@@ -29,18 +41,15 @@ export interface HeldChangeData {
 }
 
 /** A Held Change as it is on a creature: one Held Roll rule of an effect. */
-export interface HeldChange {
-	kind: HeldChangeKind;
-	value: number;
-	label: string;
+export interface HeldChange
+	extends Pick<
+		HeldChangeData,
+		'kind' | 'value' | 'label' | 'appliesTo' | 'spentBy' | 'damageType' | 'sourceMessageId'
+	> {
 	sourceName: string;
-	appliesTo: 'holderAttacks' | 'attacksOnHolder';
-	spentBy: 'oneRoll' | 'everyRoll';
 	meleeOnly: boolean;
 	/** Only attacks by this creature use it; empty when that creature is lost. Null: any attacker. */
 	onlyFromUuid: string | null;
-	damageType?: string;
-	sourceMessageId?: string;
 	effectId: string;
 	holderUuid: string;
 }

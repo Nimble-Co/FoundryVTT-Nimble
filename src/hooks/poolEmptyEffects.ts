@@ -1,7 +1,8 @@
+import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectHere, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { ruleChargesLeft } from '#utils/chargePool/ruleChargeGate.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
-import type { PoolEmptyEffectRule } from '../models/rules/poolEmptyEffect.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 interface ItemEffect {
 	transfer?: boolean;
@@ -42,11 +43,8 @@ export function applyPoolEmptyEffects(actor: Owner): Promise<void> {
 }
 
 async function applyNow(actor: Owner): Promise<void> {
-	const rules = (actor.rules ?? []).filter(
-		(rule): rule is PoolEmptyEffectRule =>
-			(rule as { type?: string }).type === 'poolEmptyEffect' &&
-			(rule as PoolEmptyEffectRule).isLive(),
-	);
+	if (!isRuleAutomationEnabled()) return;
+	const rules = rulesOfType(actor, 'poolEmptyEffect').filter((rule) => rule.isLive());
 	for (const rule of rules) {
 		const item = rule.item as RuleItem | null;
 		const effect = itemEffectOf(item);

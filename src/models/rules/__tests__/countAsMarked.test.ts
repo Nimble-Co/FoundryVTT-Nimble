@@ -6,11 +6,12 @@ interface RuleConfig {
 	delivery?: CountAsMarkedDelivery;
 	disabled?: boolean;
 	predicatePasses?: boolean;
+	isEmbedded?: boolean;
 }
 
 function createCountAsMarkedRule(config: RuleConfig = {}): CountAsMarkedRule {
 	const item = {
-		isEmbedded: true,
+		isEmbedded: config.isEmbedded ?? true,
 		actor: { getDomain: () => new Set<string>() },
 		name: 'Item',
 		getDomain: () => new Set<string>(),
@@ -72,5 +73,9 @@ describe('CountAsMarkedRule.markedTagFor', () => {
 
 	it('gives no tag when its predicate fails', () => {
 		expect(createCountAsMarkedRule({ predicatePasses: false }).markedTagFor('melee')).toBeNull();
+	});
+
+	it('gives no tag when its item is not on an actor', () => {
+		expect(createCountAsMarkedRule({ isEmbedded: false }).markedTagFor('melee')).toBeNull();
 	});
 });

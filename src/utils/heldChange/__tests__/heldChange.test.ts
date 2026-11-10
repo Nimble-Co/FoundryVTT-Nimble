@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HeldChangeData, HeldChangeKind } from '#types/heldChange.d.ts';
+import type { HeldChangeData } from '#types/heldChange.d.ts';
+import {
+	type HeldRollEffectSpec,
+	heldRollEffect,
+	heldRollSource,
+} from '../../../../tests/fixtures/heldRollEffect.js';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	cardDamageTotal,
@@ -19,48 +24,13 @@ import {
 	takeBackHeldChanges,
 } from '../heldChange.js';
 
-interface HeldSpec {
-	kind?: HeldChangeKind;
-	value?: number;
-	label?: string;
-	appliesTo?: HeldChangeData['appliesTo'];
-	usedUp?: boolean;
-	meleeOnly?: boolean;
-	fromSourceOnly?: boolean;
-	damageType?: string;
-	origin?: string | null;
-	messageId?: string;
-	disabled?: boolean;
-}
+type HeldSpec = HeldRollEffectSpec;
 
 const MIRA = 'Actor.mira';
 
-/** An effect with one Held Roll rule, as a Held Change is on a creature. */
+/** An effect with one Held Roll rule, from Mira unless the spec says otherwise. */
 function heldEffect(id: string, spec: HeldSpec = {}) {
-	const label = spec.label ?? 'Create an Opening';
-	return {
-		id,
-		name: label,
-		origin: spec.origin === undefined ? MIRA : spec.origin,
-		disabled: spec.disabled ?? false,
-		system: {
-			rules: [
-				{
-					id: `${id}-rule`,
-					type: 'heldRoll',
-					label,
-					heldKind: spec.kind ?? 'primaryDie',
-					value: spec.value ?? 1,
-					appliesTo: spec.appliesTo ?? 'attacksOnHolder',
-					usedUp: spec.usedUp ?? true,
-					meleeOnly: spec.meleeOnly ?? false,
-					fromSourceOnly: spec.fromSourceOnly ?? false,
-					damageType: spec.damageType ?? '',
-				},
-			],
-		},
-		flags: spec.messageId ? { nimble: { heldChangeMessage: spec.messageId } } : {},
-	};
+	return heldRollEffect(id, { origin: MIRA, ...spec });
 }
 
 const documents = new Map<string, unknown>();
@@ -133,7 +103,7 @@ describe('heldChangesForAttack', () => {
 	});
 
 	it("reads the target's changes on attacks against it and the attacker's own", () => {
-		const attacker = creature('A', [{ label: 'Own', appliesTo: 'holderAttacks' }]);
+		const attacker = creature('A', [{ label: 'Own', whichRoll: 'holderAttacks' }]);
 		const target = creature('T', [{}]);
 
 		const held = heldChangesForAttack({ attacker, target, area: false });
@@ -144,7 +114,7 @@ describe('heldChangesForAttack', () => {
 
 	it("does not read the target's own attack changes, or the attacker's incoming ones", () => {
 		const attacker = creature('A', [{}]);
-		const target = creature('T', [{ appliesTo: 'holderAttacks' }]);
+		const target = creature('T', [{ whichRoll: 'holderAttacks' }]);
 
 		expect(heldChangesForAttack({ attacker, target, area: false })).toEqual([]);
 	});
@@ -192,6 +162,46 @@ describe('the Held Change read from an effect', () => {
 	});
 });
 
+describe('the Held Roll rules that are read', () => {
+	const advantage: HeldSpec = { kind: 'advantage', label: 'Advantage' };
+
+	/** An effect whose prepared rule's predicate gives `passes`. */
+	function preparedEffect(passes: boolean) {
+		const rule = { ...heldRollSource('r1', advantage, 'Advantage'), appliesTo: () => passes };
+		return { ...heldEffect('e0', advantage), rules: new Map([[rule.id, rule]]) };
+	}
+
+	function holderOf(effect: ReturnType<typeof heldEffect> & { rules?: Map<string, unknown> }) {
+		return { uuid: 'T', isOwner: true, effects: [effect] };
+	}
+
+	it('skips a disabled Held Roll rule', () => {
+		const target = creature('T', [{ ...advantage, ruleDisabled: true }]);
+		expect(heldAdvantageForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
+	});
+
+	it('skips an effect that is not active', () => {
+		const target = creature('T', [{ ...advantage, active: false }]);
+		expect(heldAdvantageForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
+	});
+
+	it('skips a prepared rule whose predicate fails', () => {
+		const target = holderOf(preparedEffect(false));
+		expect(heldAdvantageForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
+	});
+
+	it('reads a prepared rule whose predicate passes', () => {
+		const target = holderOf(preparedEffect(true));
+		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
+		expect(held.map((entry) => entry.effectId)).toEqual(['e0']);
+	});
+
+	it('reads the prepared rules, not the source rules, when the effect has them', () => {
+		const target = holderOf({ ...heldEffect('e0', advantage), rules: new Map() });
+		expect(heldAdvantageForAttack({ attacker: creature('A'), target, area: false })).toEqual([]);
+	});
+});
+
 describe('heldAdvantageForAttack', () => {
 	const advantage = (spec: HeldSpec = {}): HeldSpec => ({
 		kind: 'advantage',
@@ -200,24 +210,24 @@ describe('heldAdvantageForAttack', () => {
 	});
 
 	it("reads the attacker's own changes on its attacks", () => {
-		const attacker = creature('A', [advantage({ appliesTo: 'holderAttacks' })]);
+		const attacker = creature('A', [advantage({ whichRoll: 'holderAttacks' })]);
 		const held = heldAdvantageForAttack({ attacker, target: creature('T'), area: false });
 		expect(held.map((entry) => entry.holderUuid)).toEqual(['A']);
 	});
 
 	it("reads the target's changes on attacks against it", () => {
-		const target = creature('T', [advantage({ appliesTo: 'attacksOnHolder' })]);
+		const target = creature('T', [advantage({ whichRoll: 'attacksOnHolder' })]);
 		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
 		expect(held.map((entry) => entry.holderUuid)).toEqual(['T']);
 	});
 
 	it("does not read the attacker's changes on attacks against it", () => {
-		const attacker = creature('A', [advantage({ appliesTo: 'attacksOnHolder' })]);
+		const attacker = creature('A', [advantage({ whichRoll: 'attacksOnHolder' })]);
 		expect(heldAdvantageForAttack({ attacker, target: creature('T'), area: false })).toEqual([]);
 	});
 
 	it("does not read the target's changes on an area attack", () => {
-		const attacker = creature('A', [advantage({ appliesTo: 'holderAttacks', label: 'Own' })]);
+		const attacker = creature('A', [advantage({ whichRoll: 'holderAttacks', label: 'Own' })]);
 		const target = creature('T', [advantage()]);
 		const held = heldAdvantageForAttack({ attacker, target, area: true });
 		expect(held.map((entry) => entry.label)).toEqual(['Own']);
@@ -290,7 +300,7 @@ describe('heldMaximizeForAttack', () => {
 	});
 
 	it("reads the attacker's own change on its attacks", () => {
-		const attacker = creature('A', [maximize({ appliesTo: 'holderAttacks' })]);
+		const attacker = creature('A', [maximize({ whichRoll: 'holderAttacks' })]);
 		expect(heldMaximizeForAttack({ attacker, target: null, area: false })?.holderUuid).toBe('A');
 	});
 
@@ -354,6 +364,32 @@ describe('takeBackHeldChanges', () => {
 		expect(count).toBe(1);
 		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
+
+	it('deletes a disabled effect that the card made', async () => {
+		const target = creature('T', [{ messageId: 'm1', disabled: true }]);
+
+		const count = await takeBackHeldChanges(target, 'm1');
+
+		expect(count).toBe(1);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+	});
+
+	it('deletes an effect with a disabled rule that the card made', async () => {
+		const target = creature('T', [{ messageId: 'm1', ruleDisabled: true }]);
+
+		await takeBackHeldChanges(target, 'm1');
+
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+	});
+
+	it('deletes an effect with two Held Roll rules once', async () => {
+		const target = creature('T', [{ messageId: 'm1', moreRules: [{ kind: 'advantage' }] }]);
+
+		const count = await takeBackHeldChanges(target, 'm1');
+
+		expect(count).toBe(1);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
 });
 
 describe('heldChangeEffect', () => {
@@ -377,7 +413,7 @@ describe('heldChangeEffect', () => {
 			label: 'Create an Opening',
 			heldKind: 'vulnerableOnce',
 			value: 0,
-			appliesTo: 'attacksOnHolder',
+			whichRoll: 'attacksOnHolder',
 			usedUp: true,
 			damageType: 'fire',
 		});
@@ -389,13 +425,13 @@ describe('heldChangeEffect', () => {
 		expect(effect.system.rules[0].usedUp).toBe(false);
 	});
 
-	it('lasts until the end of the holder turn when it ends with the turn', () => {
+	it('lasts until the end of the current turn of any creature when it ends with the turn', () => {
 		const effect = heldChangeEffect(changeData({ ends: 'turn' })) as Record<string, any>;
 		expect(effect.system.lastsUntil).toEqual([
 			expect.objectContaining({
 				kind: 'turn',
 				boundary: 'end',
-				clock: 'holder',
+				clock: 'any',
 				span: 'currentTurn',
 			}),
 		]);
@@ -467,6 +503,32 @@ describe('heldLines', () => {
 			},
 		]);
 	});
+
+	function lineOf(spec: HeldSpec): string {
+		const holder = creature('A', [{ whichRoll: 'holderAttacks', ...spec }]);
+		const attack = { attacker: holder, target: null, area: false };
+		const held =
+			spec.kind === 'maximize' ? heldMaximizeForAttack(attack) : heldAdvantageForAttack(attack)[0];
+		return heldLines(held ? [held] : [])[0]?.text ?? '';
+	}
+
+	it('words a plus advantage with its sign', () => {
+		expect(lineOf({ kind: 'advantage', label: 'True Strike', value: 1 })).toBe(
+			'True Strike: +1 advantage',
+		);
+	});
+
+	it('words a minus advantage as disadvantage of its size', () => {
+		expect(lineOf({ kind: 'advantage', label: 'Hindered', value: -1 })).toBe(
+			'Hindered: 1 disadvantage',
+		);
+	});
+
+	it('words a maximize change', () => {
+		expect(lineOf({ kind: 'maximize', label: 'Condemn', value: 0 })).toBe(
+			'Condemn: every die rolls its highest number',
+		);
+	});
 });
 
 describe('a kept amount', () => {
@@ -474,7 +536,7 @@ describe('a kept amount', () => {
 		kind: 'wholeAmount',
 		value: 13,
 		label: 'Rampage',
-		appliesTo: 'holderAttacks',
+		whichRoll: 'holderAttacks',
 		...spec,
 	});
 
@@ -546,10 +608,10 @@ describe('a kept amount', () => {
 		expect(effect.system.rules[0]).toMatchObject({
 			heldKind: 'wholeAmount',
 			value: 13,
-			appliesTo: 'holderAttacks',
+			whichRoll: 'holderAttacks',
 			usedUp: true,
 		});
-		expect(effect.system.lastsUntil[0]).toMatchObject({ span: 'currentTurn', clock: 'holder' });
+		expect(effect.system.lastsUntil[0]).toMatchObject({ span: 'currentTurn', clock: 'any' });
 	});
 });
 
@@ -579,10 +641,10 @@ describe('cardDamageTotal', () => {
 });
 
 describe('a change that waits on the target of a feature', () => {
-	const mustAttack: HeldSpec = { kind: 'mustAttackOther', appliesTo: 'holderAttacks' };
+	const mustAttack: HeldSpec = { kind: 'mustAttackOther', whichRoll: 'holderAttacks' };
 	const greased: HeldSpec = {
 		kind: 'vulnerableOnce',
-		appliesTo: 'attacksOnHolder',
+		whichRoll: 'attacksOnHolder',
 		damageType: 'fire',
 	};
 
