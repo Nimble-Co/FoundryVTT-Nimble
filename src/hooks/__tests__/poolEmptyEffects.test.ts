@@ -64,6 +64,20 @@ describe('applyPoolEmptyEffects', () => {
 		});
 	});
 
+	it('applies the effect once when two checks start at the same time', async () => {
+		const effects: { origin?: string | null }[] = [];
+		const actor = owner([poolEmptyRule()], effects);
+		applyEffectHereMock.mockImplementationOnce(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			effects.push({ origin: ITEM_UUID });
+			return null;
+		});
+
+		await Promise.all([applyPoolEmptyEffects(actor), applyPoolEmptyEffects(actor)]);
+
+		expect(applyEffectHereMock).toHaveBeenCalledTimes(1);
+	});
+
 	it('does not apply the effect when the pool has charges', async () => {
 		ruleChargesLeftMock.mockReturnValue(2);
 

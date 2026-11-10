@@ -1,4 +1,6 @@
 import { SYSTEM_ID } from '#system';
+import type { CountAsMarkedRule } from '../../models/rules/countAsMarked.js';
+import type { AttackDelivery } from '../damage/attackDelivery.js';
 
 /**
  * Relational "marked target" tracking — used by the `markTarget` rule to record which
@@ -92,6 +94,18 @@ function getToggledTargetTags(
 	return tags;
 }
 
+/** The marks that every creature has for this attacker's attack of `delivery`. */
+function countedMarkTags(
+	attacker: { rules?: unknown[] } | null | undefined,
+	delivery: AttackDelivery | undefined,
+): string[] {
+	return ((attacker?.rules ?? []) as CountAsMarkedRule[]).flatMap((rule) => {
+		if (rule?.type !== 'countAsMarked') return [];
+		const tag = rule.markedTagFor(delivery);
+		return tag ? [tag] : [];
+	});
+}
+
 export {
 	FLAG_KEY as TOGGLED_EFFECTS_FLAG_KEY,
 	type ToggledTargetEntry,
@@ -99,4 +113,5 @@ export {
 	readToggledEffects,
 	computeNextToggledList,
 	getToggledTargetTags,
+	countedMarkTags,
 };

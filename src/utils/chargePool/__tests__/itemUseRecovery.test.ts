@@ -115,4 +115,31 @@ describe('recoveryDomainOf', () => {
 			'attack:ranged',
 		]);
 	});
+	describe('with a rule that counts every creature as the quarry for melee attacks', () => {
+		const resolve = {
+			type: 'countAsMarked',
+			markedTagFor: (delivery: string | null) => (delivery === 'melee' ? 'target:quarry' : null),
+		};
+		const resolute = { ...hunter, rules: [resolve] };
+
+		it('names the mark on any creature for a melee attack', () => {
+			expect(recoveryDomainOf(resolute, 'reach', [{ actor: { uuid: 'Actor.wolf' } }])).toEqual([
+				'target:quarry',
+				'attack:melee',
+			]);
+		});
+
+		it('names it once on the marked quarry', () => {
+			expect(recoveryDomainOf(resolute, 'reach', [{ actor: { uuid: 'Actor.ogre' } }])).toEqual([
+				'target:quarry',
+				'attack:melee',
+			]);
+		});
+
+		it('names no mark for a ranged attack', () => {
+			expect(recoveryDomainOf(resolute, 'range', [{ actor: { uuid: 'Actor.wolf' } }])).toEqual([
+				'attack:ranged',
+			]);
+		});
+	});
 });

@@ -28,8 +28,20 @@ function hasEffectFrom(actor: Owner, itemUuid: string): boolean {
 	return [...(actor.effects ?? [])].some((effect) => effect.origin === itemUuid);
 }
 
-/** The owner gets each effect whose pool is empty now. Only on the owner's own turn. */
-export async function applyPoolEmptyEffects(actor: Owner): Promise<void> {
+const running = new WeakMap<object, Promise<void>>();
+
+/**
+ * The owner gets each effect whose pool is empty now. A check waits for the one before it on the
+ * same actor, so a turn start and an update at the same time give one effect.
+ */
+export function applyPoolEmptyEffects(actor: Owner): Promise<void> {
+	const next = (running.get(actor) ?? Promise.resolve()).then(() => applyNow(actor));
+	const settled = next.catch(() => {});
+	running.set(actor, settled);
+	return next;
+}
+
+async function applyNow(actor: Owner): Promise<void> {
 	const rules = (actor.rules ?? []).filter(
 		(rule): rule is PoolEmptyEffectRule =>
 			(rule as { type?: string }).type === 'poolEmptyEffect' &&

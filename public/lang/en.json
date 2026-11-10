@@ -3880,8 +3880,11 @@
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
 			"them": "them",
-			"nextAttack": "{whose} next attack",
-			"nextAttackOn": "the next attack against {whom}",
+			"attack": "attack",
+			"meleeAttack": "melee attack",
+			"nextAttack": "{whose} next {attack}",
+			"nextAttackFrom": "{whose} next {attack} against {whom}",
+			"nextAttackOn": "the next {attack} against {whom}",
 			"units": {
 				"rounds": { "one": "1 round", "many": "{value} rounds" },
 				"minutes": { "one": "1 minute", "many": "{value} minutes" },
@@ -4991,6 +4994,8 @@
 				"wholeAmount": "{label}: {value}",
 				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
 				"wholeAmountEnds": "{label}: an area attack does not use {value}",
+				"advantage": "{label}: {value} advantage",
+				"maximize": "{label}: every die rolls its highest number",
 				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",
 				"stays": "From {source}. It stays until its time ends."

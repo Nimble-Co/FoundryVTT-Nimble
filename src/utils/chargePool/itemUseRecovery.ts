@@ -1,7 +1,11 @@
 import { SYSTEM_ID } from '#system';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
-import { getToggledTargetTags, readToggledEffects } from '../actor/toggledEffects.js';
+import {
+	countedMarkTags,
+	getToggledTargetTags,
+	readToggledEffects,
+} from '../actor/toggledEffects.js';
 import { applyRecoveryToActorIfEligible } from './chargePoolRecover.js';
 import { RECOVERY_DOMAIN_FLAG, RECOVERY_GIVEN_FLAG } from './chargePoolReroll.js';
 import { getChargeConsumers } from './helpers.js';
@@ -25,9 +29,11 @@ export function recoveryDomainOf(
 	attackType: string | undefined,
 	targets: readonly TargetToken[] | undefined,
 ): string[] {
-	const tags = [...getToggledTargetTags(attacker as never, targets?.[0]?.actor)];
+	const target = targets?.[0]?.actor;
+	const tags = [...getToggledTargetTags(attacker as never, target)];
 	const delivery = attackDeliveryFromAttackType(attackType);
-	return delivery ? [...tags, `attack:${delivery}`] : tags;
+	if (target) tags.push(...countedMarkTags(attacker as never, delivery));
+	return delivery ? [...new Set(tags), `attack:${delivery}`] : tags;
 }
 
 export function itemUseRecoveryDomain(

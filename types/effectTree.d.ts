@@ -101,7 +101,7 @@ export interface ApplyEffectSource {
 	img: string;
 	lastsUntil: readonly Moment[];
 	/** The attack that uses up its Held Roll rule. */
-	usedUp?: 'holderAttacks' | 'attacksOnHolder' | null;
+	usedUp?: import('#utils/lastsUntil/describeLastsUntil.js').UsedUp | null;
 	coreDuration?: ConditionDuration | null;
 	escape: boolean;
 }
