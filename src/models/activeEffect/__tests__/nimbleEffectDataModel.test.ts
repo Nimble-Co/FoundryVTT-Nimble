@@ -133,20 +133,22 @@ describe('Nimble effect data model', () => {
 		]);
 	});
 
-	it('has no escape DC and a STR or DEX save by default', () => {
+	it('has no escape DC and the STR and DEX saves by default', () => {
 		const escapeFields = schema().escape.fields ?? {};
 
 		expect(escapeFields.dc.options).toMatchObject({ blank: true, initial: '' });
-		expect(escapeFields.saves.options).toMatchObject({
-			initial: 'strOrDex',
-			choices: [...ESCAPE_SAVES],
-		});
+		const saves = escapeFields.saves as unknown as {
+			options: { initial: () => string[] };
+			element: { options: { choices: string[] } };
+		};
+		expect(saves.options.initial()).toEqual(['strength', 'dexterity']);
+		expect(saves.element.options.choices).toEqual([...ESCAPE_SAVES]);
 	});
 
 	it('offers the save keys the system uses', () => {
 		const saveKeys = Object.keys(CONFIG.NIMBLE.savingThrows);
 
-		expect(ESCAPE_SAVES.filter((save) => save !== 'strOrDex' && save !== 'any')).toEqual(saveKeys);
+		expect([...ESCAPE_SAVES]).toEqual(saveKeys);
 	});
 
 	it('gives change values a form input, like core', () => {

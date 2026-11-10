@@ -94,13 +94,10 @@ const effectSchema = () => ({
 	}),
 	escape: new fields.SchemaField({
 		dc: new fields.StringField({ required: true, nullable: false, blank: true, initial: '' }),
-		saves: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: false,
-			initial: 'strOrDex',
-			choices: [...ESCAPE_SAVES],
-		}),
+		saves: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, choices: [...ESCAPE_SAVES] }),
+			{ required: true, nullable: false, initial: () => ['strength', 'dexterity'] },
+		),
 	}),
 	tempHp: new fields.NumberField({
 		required: true,

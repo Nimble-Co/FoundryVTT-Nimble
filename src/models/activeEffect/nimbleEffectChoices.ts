@@ -38,14 +38,8 @@ export const LASTS_UNTIL_EVENTS = [
 	'combatEnd',
 ] as const;
 
-export const ESCAPE_SAVES = [
-	'strOrDex',
-	'strength',
-	'dexterity',
-	'intelligence',
-	'will',
-	'any',
-] as const;
+/** The saves an Escape can allow. The author picks any set of them. */
+export const ESCAPE_SAVES = ['strength', 'dexterity', 'intelligence', 'will'] as const;
 
 export type LastsUntilKind = (typeof LASTS_UNTIL_KINDS)[number];
 export type TurnBoundary = (typeof TURN_BOUNDARIES)[number];
