@@ -174,17 +174,16 @@ describe('NimbleActiveEffect.createDialog', () => {
 	const createDialog = (...args: unknown[]) =>
 		(NimbleActiveEffect as unknown as { createDialog: CreateDialog }).createDialog(...args);
 
-	it('offers only the Nimble type', async () => {
+	it('makes a Nimble effect with no type select when only the Nimble type is left', async () => {
 		const renderOptions = { renderContext: 'test' };
 
-		await createDialog({}, {}, undefined, renderOptions);
+		await createDialog({ name: 'Rage' }, {}, undefined, renderOptions);
 
-		expect(coreCreateDialog).toHaveBeenCalledWith(
-			{},
-			{},
-			{ types: [NIMBLE_EFFECT_TYPE] },
-			renderOptions,
-		);
+		const [data, , options, passedRender] = coreCreateDialog.mock.calls[0];
+		expect(data).toEqual({ name: 'Rage', type: NIMBLE_EFFECT_TYPE });
+		expect(options).toMatchObject({ types: [NIMBLE_EFFECT_TYPE], context: { hasTypes: false } });
+		expect(options.render()).toBeUndefined();
+		expect(passedRender).toBe(renderOptions);
 	});
 
 	it('keeps the caller restriction and other options, and still drops the legacy and base types', async () => {
@@ -194,10 +193,21 @@ describe('NimbleActiveEffect.createDialog', () => {
 			{ types: [LEGACY_CONDITION_EFFECT_TYPE, NIMBLE_EFFECT_TYPE], width: 400 },
 		);
 
+		expect(coreCreateDialog.mock.calls[0][2]).toMatchObject({
+			types: [NIMBLE_EFFECT_TYPE],
+			width: 400,
+		});
+	});
+
+	it('keeps the type select when more than one type is left', async () => {
+		coreClass.TYPES = ['base', NIMBLE_EFFECT_TYPE, 'other'];
+
+		await createDialog({}, {});
+
 		expect(coreCreateDialog).toHaveBeenCalledWith(
 			{},
 			{},
-			{ types: [NIMBLE_EFFECT_TYPE], width: 400 },
+			{ types: [NIMBLE_EFFECT_TYPE, 'other'] },
 			undefined,
 		);
 	});
@@ -206,6 +216,16 @@ describe('NimbleActiveEffect.createDialog', () => {
 		await createDialog({}, {}, { types: [LEGACY_CONDITION_EFFECT_TYPE] });
 
 		expect(coreCreateDialog).toHaveBeenCalledWith({}, {}, { types: [] }, undefined);
+	});
+});
+
+describe('NimbleActiveEffect.reactive', () => {
+	it('is the effect itself', () => {
+		const effect = new (NimbleActiveEffect as unknown as new (data: object) => NimbleActiveEffect)(
+			{},
+		);
+
+		expect(effect.reactive).toBe(effect);
 	});
 });
 
