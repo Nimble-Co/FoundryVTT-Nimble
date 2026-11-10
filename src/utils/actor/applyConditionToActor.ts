@@ -264,7 +264,12 @@ async function createConditionEffect(
 
 	const effect = await activeEffectClass.fromStatusEffect(conditionId, { parent: target });
 
-	if (options.effectData) effect.updateSource(options.effectData);
+	if (options.effectData) {
+		const linked = [...(effect.statuses ?? [])];
+		effect.updateSource(options.effectData);
+		const authored = (options.effectData.statuses as string[] | undefined) ?? [];
+		effect.updateSource({ statuses: [...new Set([...linked, ...authored])] });
+	}
 
 	const patch: Record<string, unknown> = {};
 	const origin = resolveConditionOrigin(options);

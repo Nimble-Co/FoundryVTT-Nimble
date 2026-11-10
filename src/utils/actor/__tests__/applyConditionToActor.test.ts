@@ -419,10 +419,22 @@ describe('applyConditionToActor effectData', () => {
 		expect(effect.sourceData).toMatchObject({ name: 'Face Me!', origin: 'Item.source' });
 	});
 
+	it('keeps the statuses that the condition carries with it', async () => {
+		const target = createTargetActor();
+		const effect = createFakeEffect('effect-1', ['petrified', 'incapacitated']);
+		fromStatusEffect.mockResolvedValueOnce(effect);
+
+		await applyConditionToActor(target, 'petrified', {
+			effectData: { name: 'Stone Gaze', statuses: ['petrified'] },
+		});
+
+		expect(effect.sourceData.statuses).toEqual(['petrified', 'incapacitated']);
+	});
+
 	it('asks preApplyCondition for each status of the effect', async () => {
 		const target = createTargetActor();
-		hooksCall.mockImplementation((_name: string, data: { condition: string }) =>
-			data.condition !== 'prone' ? true : false,
+		hooksCall.mockImplementation(
+			(_name: string, data: { condition: string }) => data.condition !== 'prone',
 		);
 
 		const result = await applyConditionToActor(target, 'dazed', {
