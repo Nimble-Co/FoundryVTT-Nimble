@@ -46,6 +46,12 @@ function seatsOf(actor: Actor | null, combat: Combat | null | undefined): TurnSe
 		.map(seatOf);
 }
 
+/** A prepared `start.combat` is the Combat document; its source is the id. */
+function idOf(value: string | { id?: string | null } | null | undefined): string | null {
+	if (!value) return null;
+	return typeof value === 'string' ? value : (value.id ?? null);
+}
+
 function combatOfCheck(check: LastsUntilCheck): Combat | null {
 	if (!('combatId' in check)) return game.combat ?? null;
 	return (game.combats?.get(check.combatId) as Combat | undefined) ?? game.combat ?? null;
@@ -62,9 +68,11 @@ export function effectSubject(
 ): MomentSubject {
 	const holder = holderOf(effect);
 	const source = sourceOf(effect);
-	const start = (effect.start ?? { time: 0 }) as Partial<EffectStart>;
+	const start = (effect.start ?? { time: 0 }) as Partial<Omit<EffectStart, 'combat'>> & {
+		combat?: string | { id?: string | null } | null;
+	};
 	const fullStart: EffectStart = {
-		combat: start.combat ?? null,
+		combat: idOf(start.combat),
 		combatant: start.combatant ?? null,
 		round: start.round ?? null,
 		turn: start.turn ?? null,

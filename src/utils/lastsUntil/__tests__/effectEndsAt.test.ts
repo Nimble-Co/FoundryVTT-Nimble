@@ -92,6 +92,16 @@ describe('effectEndsAt', () => {
 		expect(effectEndsAt(effect, turnEnd(goblinCombatant, 1), combat)).toBe(true);
 	});
 
+	it('reads a prepared start, whose combat is the Combat document', () => {
+		const effect = makeEffect({
+			lastsUntil: [endOfTheirNextTurn],
+			start: { combat, combatant: 'cGoblin', round: 1, turn: 1, time: 0 },
+		});
+
+		expect(effectEndsAt(effect, turnEnd(goblinCombatant, 1), combat)).toBe(false);
+		expect(effectEndsAt(effect, turnEnd(goblinCombatant, 2), combat)).toBe(true);
+	});
+
 	it('finds the source from the origin item', () => {
 		const startOfYourNextTurn = moment({ boundary: 'start', clock: 'source', span: 'nextTurn' });
 		const effect = makeEffect({ lastsUntil: [startOfYourNextTurn] });
