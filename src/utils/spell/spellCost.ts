@@ -1,4 +1,5 @@
 import type { FormulaOwner } from '#types/formulaReferences.d.ts';
+import { rulesOfType } from '#utils/actor/actorRules.js';
 import type {
 	ClassSpellcastingDeclaration,
 	ResolvedSpellCost,
@@ -91,6 +92,11 @@ function getDeclaringClass(actor: SpellCostActorLike, spell: SpellLike): Declari
 	return declared[0];
 }
 
+/** A live `freeSpellCost` rule on the caster takes the cost off this pool. */
+function poolCostIsFree(actor: SpellCostActorLike, poolIdentifier: string): boolean {
+	return rulesOfType(actor, 'freeSpellCost').some((rule) => rule.makesFree(poolIdentifier));
+}
+
 type SpellCostOptions = { castTier?: number };
 
 /**
@@ -142,7 +148,7 @@ export function createSpellCostResolver(
 			type: 'pool',
 			poolIdentifier,
 			poolLabel: poolEntry?.pool.label ?? poolIdentifier,
-			amount,
+			amount: poolCostIsFree(actor, poolIdentifier) ? 0 : amount,
 			overdraftConsequence: spellcasting?.cost?.overdraftConsequence ?? '',
 			overdraftResolvedAtTable,
 		};
@@ -152,7 +158,7 @@ export function createSpellCostResolver(
 /**
  * Resolves what a cast of the given spell costs the given actor: nothing for
  * cantrips, the cast tier in mana by default, or the flat pool cost the
- * actor's class declares. Cost resolution is independent of the resource
+ * actor's class declares (0 while a `freeSpellCost` rule matches). Cost resolution is independent of the resource
  * spending automation setting so the cost stays visible when automation is
  * off.
  */

@@ -42,6 +42,8 @@ export async function spendSpellCost(
 		return validateSpellCost(actor, cost);
 	}
 
+	if (cost.amount <= 0) return { ok: true, overdrawn: false, spent: 0 };
+
 	const pools = buildEffectiveChargePoolMap(asChargePoolActor(actor));
 	const poolEntry = findChargePoolByIdentifier(pools, cost.poolIdentifier);
 	if (!poolEntry) {

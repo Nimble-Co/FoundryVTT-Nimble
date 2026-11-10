@@ -28,6 +28,7 @@ import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
+import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
@@ -103,6 +104,7 @@ export const RULE_CLASSES = {
 	damageReduction: DamageReductionRule,
 	dyingActionLimit: DyingActionLimitRule,
 	freeMove: FreeMoveRule,
+	freeSpellCost: FreeSpellCostRule,
 	grantActivation: GrantActivationRule,
 	grantMovement: GrantMovementRule,
 	diceConsumer: DiceConsumerRule,

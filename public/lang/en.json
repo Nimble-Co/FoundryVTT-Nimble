@@ -1828,6 +1828,7 @@
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
 			"freeMove": "Move for Free",
+			"freeSpellCost": "Free Spell Cost",
 			"grantMovement": "Grant Movement Mode",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -3273,6 +3274,13 @@
 						"ranged": "Ranged attacks",
 						"any": "All attacks"
 					}
+				}
+			},
+			"freeSpellCost": {
+				"description": "Only on an effect. While the effect is on, a tiered spell that your class pays for from a charge pool costs nothing from that pool, so there is no overdraw. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
+				"poolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool that the spell cost would come from. Blank means any pool."
 				}
 			},
 			"poolEmptyEffect": {
