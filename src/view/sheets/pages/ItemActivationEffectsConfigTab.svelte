@@ -617,7 +617,33 @@
 {/snippet}
 
 {#snippet ApplyEffectNode(node, _parentNode = null)}
-	<ApplyEffectNodeConfig {node} {document} {effects} />
+	<li data-node-id={node.id}>
+		<header>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.applyEffect')}
+			</h4>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				aria-label={localize('NIMBLE.activationEffects.applyEffectNode.delete')}
+				data-tooltip={localize('NIMBLE.activationEffects.applyEffectNode.delete')}
+				type="button"
+				onclick={() => deleteEffectNode(document, effects, node.id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
+			<div class="nimble-config-block nimble-card">
+				<ApplyEffectNodeConfig {node} {document} {effects} />
+			</div>
+		</div>
+	</li>
 {/snippet}
 
 {#snippet DamageOutcomeNode(node, parentNode = null)}

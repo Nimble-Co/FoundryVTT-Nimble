@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { ApplyEffectNodeConfigProps } from '#types/components/ApplyEffectNodeConfig.d.ts';
 	import localize from '#utils/localize.ts';
-	import { deleteEffectNode } from '#utils/treeManipulation/deleteEffectNode.ts';
 	import { updateEffectNode } from '#utils/treeManipulation/updateEffectNode.ts';
 	import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.ts';
 	import TagGroup from '../../components/TagGroup.svelte';
@@ -43,104 +42,72 @@
 	}
 </script>
 
-<li data-node-id={node.id}>
-	<header>
-		<h4 class="nimble-heading" data-heading-variant="field">
-			{localize('NIMBLE.activationEffects.applyEffect')}
-		</h4>
+{#if conditionName && !node.effectId}
+	<p class="nimble-apply-effect-config__condition">
+		{localize(`${WORDS}.condition`, { name: conditionName })}
+	</p>
+{:else}
+	<label class="nimble-field" data-field-variant="stacked">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize(`${WORDS}.effect`)}
+		</h5>
+		<div class="nimble-apply-effect-config__effect">
+			<select onchange={({ currentTarget }) => chooseEffect(currentTarget.value)}>
+				<option value="" selected={!node.effectId}>{localize(`${WORDS}.noEffect`)}</option>
+				{#each itemEffects.options as option (option.id)}
+					<option value={option.id} selected={option.id === node.effectId}>
+						{option.name}
+					</option>
+				{/each}
+				<option value={NEW_EFFECT}>{localize(`${WORDS}.newEffect`)}</option>
+			</select>
 
-		<button
-			class="nimble-button"
-			data-button-variant="icon"
-			aria-label={localize(`${WORDS}.delete`)}
-			data-tooltip={localize(`${WORDS}.delete`)}
-			type="button"
-			onclick={() => deleteEffectNode(document, effects, node.id)}
-		>
-			<i class="fa-solid fa-trash"></i>
-		</button>
-	</header>
-
-	<div
-		class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
-		style="--nimble-card-width: 320px;"
-	>
-		<div class="nimble-config-block nimble-card">
-			{#if conditionName && !node.effectId}
-				<p class="nimble-apply-effect-config__condition">
-					{localize(`${WORDS}.condition`, { name: conditionName })}
-				</p>
-			{:else}
-				<label class="nimble-field" data-field-variant="stacked">
-					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						{localize(`${WORDS}.effect`)}
-					</h5>
-					<div class="nimble-apply-effect-config__effect">
-						<select onchange={({ currentTarget }) => chooseEffect(currentTarget.value)}>
-							<option value="" selected={!node.effectId}>{localize(`${WORDS}.noEffect`)}</option>
-							{#each itemEffects.options as option (option.id)}
-								<option value={option.id} selected={option.id === node.effectId}>
-									{option.name}
-								</option>
-							{/each}
-							<option value={NEW_EFFECT}>{localize(`${WORDS}.newEffect`)}</option>
-						</select>
-
-						<button
-							class="nimble-button"
-							data-button-variant="icon"
-							type="button"
-							aria-label={localize(`${WORDS}.edit`)}
-							data-tooltip={localize(`${WORDS}.edit`)}
-							disabled={!node.effectId}
-							onclick={openEffect}
-						>
-							<i class="fa-solid fa-pen"></i>
-						</button>
-					</div>
-				</label>
-			{/if}
-
-			<div style="width: 100%;">
-				<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-					{localize(`${WORDS}.recipient`)}
-				</h5>
-				<TagGroup
-					options={recipients}
-					selectedOptions={[node.recipient]}
-					toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
-				/>
-			</div>
-
-			{#if tempHealing.length}
-				<label class="nimble-field" data-field-variant="stacked">
-					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						{localize(`${WORDS}.tempHealing`)}
-					</h5>
-					<select
-						onchange={({ currentTarget }) =>
-							updateEffectNode(
-								document,
-								effects,
-								node,
-								'tempHealingNodeId',
-								currentTarget.value || null,
-							)}
-					>
-						<option value="" selected={!node.tempHealingNodeId}>
-							{localize(`${WORDS}.noTempHealing`)}
-						</option>
-						{#each tempHealing as option (option.id)}
-							<option value={option.id} selected={option.id === node.tempHealingNodeId}>
-								{localize(`${WORDS}.tempHealingFormula`, { formula: option.formula })}
-							</option>
-						{/each}
-					</select>
-				</label>
-			{/if}
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				aria-label={localize(`${WORDS}.edit`)}
+				data-tooltip={localize(`${WORDS}.edit`)}
+				disabled={!node.effectId}
+				onclick={openEffect}
+			>
+				<i class="fa-solid fa-pen"></i>
+			</button>
 		</div>
-	</div>
-</li>
+	</label>
+{/if}
+
+<div style="width: 100%;">
+	<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+		{localize(`${WORDS}.recipient`)}
+	</h5>
+	<TagGroup
+		options={recipients}
+		selectedOptions={[node.recipient]}
+		toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
+	/>
+</div>
+
+{#if tempHealing.length}
+	<label class="nimble-field" data-field-variant="stacked">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize(`${WORDS}.tempHealing`)}
+		</h5>
+		<select
+			onchange={({ currentTarget }) =>
+				updateEffectNode(document, effects, node, 'tempHealingNodeId', currentTarget.value || null)}
+		>
+			<option value="" selected={!node.tempHealingNodeId}>
+				{localize(`${WORDS}.noTempHealing`)}
+			</option>
+			{#each tempHealing as option (option.id)}
+				<option value={option.id} selected={option.id === node.tempHealingNodeId}>
+					{localize(`${WORDS}.tempHealingFormula`, { formula: option.formula })}
+				</option>
+			{/each}
+		</select>
+	</label>
+{/if}
 
 <style lang="scss">
 	.nimble-apply-effect-config {
@@ -148,6 +115,11 @@
 			display: flex;
 			align-items: center;
 			gap: 0.25rem;
+
+			.nimble-button {
+				--nimble-button-min-width: var(--input-height);
+				--nimble-button-height: var(--input-height);
+			}
 
 			select {
 				flex: 1 1 auto;
