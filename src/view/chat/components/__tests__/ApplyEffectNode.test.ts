@@ -102,6 +102,7 @@ describe('ApplyEffectNode on the card', () => {
 	}
 
 	let previousUser: unknown;
+	let previousActiveEffect: unknown;
 
 	beforeEach(() => {
 		const g = globalThis as unknown as { game: { user: unknown } };
@@ -118,6 +119,7 @@ describe('ApplyEffectNode on the card', () => {
 			'fromUuid',
 			vi.fn(async (uuid: string) => ({ uuid })),
 		);
+		previousActiveEffect = (CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect;
 		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
 			documentClass: { create: createEffect, deleteDocuments: vi.fn() },
 		};
@@ -125,6 +127,7 @@ describe('ApplyEffectNode on the card', () => {
 
 	afterEach(() => {
 		(globalThis as unknown as { game: { user: unknown } }).game.user = previousUser;
+		(CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect = previousActiveEffect;
 		vi.unstubAllGlobals();
 	});
 

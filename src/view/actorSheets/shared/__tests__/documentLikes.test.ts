@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { effectLike, itemLike } from '../documentLikes.ts';
 
 function itemWith(rules: Record<string, unknown>[]) {
@@ -36,6 +36,10 @@ describe('itemLike', () => {
 describe('effectLike', () => {
 	beforeEach(() => {
 		vi.stubGlobal('fromUuidSync', () => null);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	const effectOn = (parent: { documentName: string; id: string }, origin: string | null) =>

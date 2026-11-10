@@ -92,25 +92,4 @@ describe('conditionsToItemEffects', () => {
 		expect(effects).toHaveLength(1);
 		expect(tree[0].on.failedSave[0]).toMatchObject({ type: 'applyEffect', effectId: 'id1' });
 	});
-
-	it('uses an effect that the item already has for the condition', () => {
-		const tree = [
-			{ id: 'c1', type: 'condition', condition: 'dazed', parentNode: null, parentContext: null },
-		];
-		const existing = [
-			{
-				_id: 'old',
-				name: 'Dazed',
-				img: '',
-				type: 'nimble',
-				transfer: false,
-				statuses: ['dazed'],
-			} as const,
-		];
-
-		expect(
-			conditionsToItemEffects(tree as never, makeId, [{ ...existing[0], statuses: ['dazed'] }]),
-		).toEqual([]);
-		expect(tree[0]).toMatchObject({ effectId: 'old' });
-	});
 });

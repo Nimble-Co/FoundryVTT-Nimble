@@ -122,7 +122,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		useLabel={c.useLabel}
 		useExpanded={c.useExpanded}
 		disabled={row.use?.kind === 'blocked' || undefined}
-		endButton={row.escape
+		escapeButton={row.escape
 			? {
 					label: row.escape.label,
 					ariaLabel: row.escape.ariaLabel,

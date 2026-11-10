@@ -1,5 +1,5 @@
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
-import { SET_BY_THE_SYSTEM } from '../../actorSheets/shared/effectsTab.ts';
+import { SET_BY_THE_SYSTEM } from '#view/actorSheets/shared/effectsTab.ts';
 
 /** The conditions an effect can put on a creature, A to Z; not the states the system sets. */
 export function effectConditionOptions(): TagGroupOption[] {

@@ -12,9 +12,9 @@
 	import localize from '#utils/localize.ts';
 	import { applyEffectRow } from './applyEffectRow.ts';
 
-	let { node }: ApplyEffectNodeProps = $props();
-
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
+
+	let { node }: ApplyEffectNodeProps = $props();
 
 	let busy = $state(false);
 

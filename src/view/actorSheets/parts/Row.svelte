@@ -41,7 +41,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		useLabel,
 		useExpanded,
 		disabled,
-		endButton,
+		escapeButton,
 		onedit,
 		hasWindow = true,
 		fields,
@@ -132,16 +132,16 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		{:else}
 			<div class="main">{@render face(true)}</div>
 		{/if}
-		{#if endButton && !fields}
+		{#if escapeButton && !fields}
 			<button
 				type="button"
 				class="nimble-u-reset-button eb"
-				aria-label={endButton.ariaLabel ?? endButton.label}
-				data-tooltip={endButton.ariaLabel ?? endButton.label}
-				onclick={endButton.onclick}
+				aria-label={escapeButton.ariaLabel ?? escapeButton.label}
+				data-tooltip={escapeButton.ariaLabel ?? escapeButton.label}
+				onclick={escapeButton.onclick}
 			>
 				<i class="fa-solid fa-person-running" aria-hidden="true"></i>
-				<span>{endButton.label}</span>
+				<span>{escapeButton.label}</span>
 			</button>
 		{/if}
 		<RowButton kind={hasWindow ? 'edit' : 'spacer'} {name} {touch} onclick={onedit} />

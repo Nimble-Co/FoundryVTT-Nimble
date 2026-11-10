@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import prepareActorConditions from '../prepareActorConditions.js';
 
 function createEffect({
@@ -24,6 +24,10 @@ describe('prepareActorConditions', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.stubGlobal('fromUuidSync', () => null);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	it('sorts conditions alphabetically by display name', () => {

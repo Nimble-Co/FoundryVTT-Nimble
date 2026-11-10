@@ -556,7 +556,7 @@
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
 				"noTargets": "This card has no targets.",
-				"noneTook": "No creature took {name}.",
+				"noneTook": "{name} did not go on any creature.",
 				"missingName": "Effect not found",
 				"missing": "The item no longer has this effect."
 			},

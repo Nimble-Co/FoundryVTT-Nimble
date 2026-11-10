@@ -41,13 +41,9 @@ export function statusOf(condition: string): { name: string; img: string } {
  */
 export function conditionsToItemEffects(
 	tree: EffectNode[],
-	makeId: () => string = () => foundry.utils.randomID(),
-	existing: Iterable<ItemEffectSource> = [],
+	makeId: () => string,
 ): ItemEffectSource[] {
 	const byCondition = new Map<string, ItemEffectSource>();
-	for (const effect of existing) {
-		if (effect.statuses.length === 1) byCondition.set(effect.statuses[0], effect);
-	}
 	const created: ItemEffectSource[] = [];
 
 	const effectFor = (condition: string): ItemEffectSource => {

@@ -21,7 +21,7 @@ describe('Row', () => {
 		render(Row, {
 			name: 'Grappled',
 			onuse,
-			endButton: { label: 'Escape DC 13', ariaLabel: 'Escape Grappled', onclick },
+			escapeButton: { label: 'Escape DC 13', ariaLabel: 'Escape Grappled', onclick },
 		});
 
 		const escapeButton = screen.getByRole('button', { name: 'Escape Grappled' });

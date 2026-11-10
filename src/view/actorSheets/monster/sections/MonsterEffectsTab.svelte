@@ -59,7 +59,7 @@ The arrow keys, Home and End move the focus in the condition grid.
 					onuse={row.use ? () => use(row) : undefined}
 					useLabel={row.use?.kind === 'ask' ? row.use.ask.label : row.use?.label}
 					useExpanded={row.use?.kind === 'ask' ? !!asking : undefined}
-					endButton={row.escape
+					escapeButton={row.escape
 						? {
 								label: row.escape.label,
 								ariaLabel: row.escape.ariaLabel,
