@@ -5,6 +5,7 @@ function makeItem() {
 	const list = [
 		{ id: 'fx', name: 'Taunted', transfer: false, sheet: { render: vi.fn() } },
 		{ id: 'passive', name: 'Passive', transfer: true, sheet: { render: vi.fn() } },
+		{ id: 'blank', name: 'Face Me!', img: 'face.svg', transfer: false, sheet: { render: vi.fn() } },
 	];
 	const effects = {
 		get: (id: string) => list.find((effect) => effect.id === id),
@@ -18,6 +19,7 @@ function makeItem() {
 		effects,
 		update: vi.fn(async () => undefined),
 		createEmbeddedDocuments: vi.fn(async () => [{ id: 'new' }]),
+		deleteEmbeddedDocuments: vi.fn(async () => []),
 	};
 }
 
@@ -43,7 +45,7 @@ describe('ApplyEffectNodeConfig', () => {
 		});
 
 		const options = screen.getAllByRole('option').map((option) => option.textContent?.trim());
-		expect(options).toEqual(['No effect', 'Taunted', 'New effect']);
+		expect(options).toEqual(['No effect', 'Taunted', 'Face Me!', 'New effect']);
 		await fireEvent.click(screen.getByRole('button', { name: 'Edit the effect' }));
 		expect(document.effects.get('fx')?.sheet.render).toHaveBeenCalledWith(true);
 	});
@@ -65,6 +67,29 @@ describe('ApplyEffectNodeConfig', () => {
 		expect(document.createEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
 			{ name: 'Face Me!', img: 'face.svg', type: 'nimble', transfer: false },
 		]);
+	});
+
+	it('deletes the effect it moves off when no node uses it and the author did not change it', async () => {
+		const document = makeItem();
+		render(ApplyEffectNodeConfig, {
+			props: { document, effects: [node({ effectId: 'blank' })] } as never,
+		});
+
+		await fireEvent.change(screen.getByRole('combobox'), { target: { value: 'fx' } });
+
+		await waitFor(() =>
+			expect(document.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['blank']),
+		);
+	});
+
+	it('keeps an effect it moves off when the author changed it', async () => {
+		const document = makeItem();
+		render(ApplyEffectNodeConfig, { props: { document, effects: [node()] } as never });
+
+		await fireEvent.change(screen.getByRole('combobox'), { target: { value: 'blank' } });
+
+		await waitFor(() => expect(document.update).toHaveBeenCalled());
+		expect(document.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('offers the temp healing of the same card only when there is one', () => {

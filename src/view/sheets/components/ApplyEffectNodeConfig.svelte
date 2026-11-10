@@ -1,13 +1,11 @@
 <script lang="ts">
 	import type { ApplyEffectNodeConfigProps } from '#types/components/ApplyEffectNodeConfig.d.ts';
 	import localize from '#utils/localize.ts';
+	import { deleteLeftItemEffect } from '#utils/treeManipulation/deleteLeftItemEffect.ts';
 	import { updateEffectNode } from '#utils/treeManipulation/updateEffectNode.ts';
 	import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.ts';
 	import TagGroup from '../../components/TagGroup.svelte';
-	import {
-		createItemEffectOptions,
-		tempHealingOptions,
-	} from './ApplyEffectNodeConfigState.svelte.ts';
+	import { createItemEffectOptions, tempHealingOptions } from './applyEffectNodeOptions.ts';
 
 	const WORDS = 'NIMBLE.activationEffects.applyEffectNode';
 	const NEW_EFFECT = '__new';
@@ -25,15 +23,18 @@
 	const tempHealing = $derived(tempHealingOptions(effects));
 
 	async function chooseEffect(value: string) {
-		if (value !== NEW_EFFECT) {
-			await updateEffectNode(document, effects, node, 'effectId', value || null);
-			return;
+		const left = node.effectId;
+		let chosen: string | null = value || null;
+		if (value === NEW_EFFECT) {
+			const [created] =
+				((await document.createEmbeddedDocuments('ActiveEffect', [
+					{ name: document.name, img: document.img, type: NIMBLE_EFFECT_TYPE, transfer: false },
+				] as never)) as unknown as { id: string }[] | undefined) ?? [];
+			if (!created) return;
+			chosen = created.id;
 		}
-		const [created] =
-			((await document.createEmbeddedDocuments('ActiveEffect', [
-				{ name: document.name, img: document.img, type: NIMBLE_EFFECT_TYPE, transfer: false },
-			] as never)) as unknown as { id: string }[] | undefined) ?? [];
-		if (created) await updateEffectNode(document, effects, node, 'effectId', created.id);
+		await updateEffectNode(document, effects, node, 'effectId', chosen);
+		if (left !== chosen) await deleteLeftItemEffect(document as never, effects, left);
 	}
 
 	function openEffect() {
@@ -47,12 +48,19 @@
 		{localize(`${WORDS}.condition`, { name: conditionName })}
 	</p>
 {:else}
-	<label class="nimble-field" data-field-variant="stacked">
-		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+	<div class="nimble-field" data-field-variant="stacked">
+		<h5
+			class="nimble-field__label nimble-heading"
+			data-heading-variant="field"
+			id={`${node.id}-effect-label`}
+		>
 			{localize(`${WORDS}.effect`)}
 		</h5>
 		<div class="nimble-apply-effect-config__effect">
-			<select onchange={({ currentTarget }) => chooseEffect(currentTarget.value)}>
+			<select
+				aria-labelledby={`${node.id}-effect-label`}
+				onchange={({ currentTarget }) => chooseEffect(currentTarget.value)}
+			>
 				<option value="" selected={!node.effectId}>{localize(`${WORDS}.noEffect`)}</option>
 				{#each itemEffects.options as option (option.id)}
 					<option value={option.id} selected={option.id === node.effectId}>
@@ -71,10 +79,10 @@
 				disabled={!node.effectId}
 				onclick={openEffect}
 			>
-				<i class="fa-solid fa-pen"></i>
+				<i class="fa-solid fa-pen" aria-hidden="true"></i>
 			</button>
 		</div>
-	</label>
+	</div>
 {/if}
 
 <div style="width: 100%;">
