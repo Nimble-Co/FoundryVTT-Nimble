@@ -1,9 +1,8 @@
 import { SvelteSet } from 'svelte/reactivity';
 
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-import type { RuleHolder } from '#utils/documents/ruleHolder.js';
 import localize from '#utils/localize.js';
-import type { RuleSource } from '#view/rulesBuilder/types.js';
+import type { RuleHolder, RuleSource } from '#view/rulesBuilder/types.js';
 
 // Internal clipboard drag-drop type, set and matched by the same code; never
 // crosses the Foundry system-id boundary, so the literal is intentional.

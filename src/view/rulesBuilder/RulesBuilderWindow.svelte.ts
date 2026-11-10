@@ -1,7 +1,6 @@
 import { SvelteSet } from 'svelte/reactivity';
 
-import { actorOfRuleHolder, type RuleHolder } from '#utils/documents/ruleHolder.js';
-import type { RuleSource } from '#view/rulesBuilder/types.js';
+import type { RuleHolder, RuleSource } from '#view/rulesBuilder/types.js';
 
 // Internal clipboard drag-drop type, set and matched by the same code; never
 // crosses the Foundry system-id boundary, so the literal is intentional.
@@ -22,7 +21,7 @@ export function createRulesBuilderWindowState(getItem: () => RuleHolder) {
 	// offer typeahead suggestions. Undefined when no actor holds the document
 	// (e.g. compendium edit).
 	const previewDomain = $derived(
-		(actorOfRuleHolder(getItem()) as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
+		(getItem().actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
 	);
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 

@@ -2,7 +2,7 @@
 	import { getContext } from 'svelte';
 
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-	import type { RuleHolder } from '#utils/documents/ruleHolder.js';
+	import type { RuleHolder } from '#view/rulesBuilder/types.js';
 	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';

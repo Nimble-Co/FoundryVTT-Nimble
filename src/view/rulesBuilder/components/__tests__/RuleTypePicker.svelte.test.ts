@@ -9,8 +9,9 @@ beforeEach(() => {
 	nimble.ruleDataModels = {
 		note: { group: 'notes', description: 'Note', worksOnEffects: true },
 		grantItem: { group: 'grants', description: 'Grant', worksOnEffects: false },
+		heal: { group: 'bonuses', description: 'Heal' },
 	};
-	nimble.ruleTypes = { note: 'Note', grantItem: 'Grant Item' };
+	nimble.ruleTypes = { note: 'Note', grantItem: 'Grant Item', heal: 'Heal' };
 });
 
 afterEach(() => {
@@ -22,12 +23,12 @@ const labels = (forEffect?: boolean) =>
 		forEffect === undefined ? undefined : () => forEffect,
 	).groupedEntries.flatMap(({ entries }) => entries.map((entry) => entry.label));
 
-describe('RuleTypePicker', () => {
+describe('createRuleTypePickerState', () => {
 	it('offers every rule type for an item', () => {
-		expect(labels().sort()).toEqual(['Grant Item', 'Note']);
+		expect(labels().sort()).toEqual(['Grant Item', 'Heal', 'Note']);
 	});
 
-	it('hides the rule types that work only on an item, for an effect', () => {
-		expect(labels(true)).toEqual(['Note']);
+	it('hides the rule types that work only on an item, for an effect; a type with no flag stays', () => {
+		expect(labels(true).sort()).toEqual(['Heal', 'Note']);
 	});
 });

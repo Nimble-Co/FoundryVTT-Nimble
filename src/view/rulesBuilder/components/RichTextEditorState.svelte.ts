@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 
-import { actorOfRuleHolder, type RuleHolder } from '#utils/documents/ruleHolder.js';
+import type { RuleHolder } from '#view/rulesBuilder/types.js';
 
 type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
 type EnrichOptions = Parameters<
@@ -14,8 +14,7 @@ interface ProseMirrorElement extends HTMLElement {
 
 function rollDataOf(document: RuleHolder | undefined): object {
 	if (!document) return {};
-	const actor = actorOfRuleHolder(document);
-	if (actor) return actor.getRollData();
+	if (document.actor) return document.actor.getRollData();
 	return 'getRollData' in document ? document.getRollData() : {};
 }
 
