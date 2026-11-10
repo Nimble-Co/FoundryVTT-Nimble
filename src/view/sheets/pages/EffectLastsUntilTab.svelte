@@ -311,6 +311,10 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 				width: auto;
 				max-width: 100%;
 			}
+
+			> span {
+				font-size: var(--nimble-sm-text);
+			}
 		}
 
 		&__number {

@@ -42,8 +42,10 @@
 				checked={reactive.disabled}
 				onchange={({ currentTarget }) => update({ disabled: currentTarget.checked })}
 			/>
-			<span class="nimble-field__label">{localize(`${DETAILS}.off`)}</span>
-			<small class="nimble-effect-details__hint">{localize(`${DETAILS}.offHint`)}</small>
+			<span class="nimble-effect-details__text">
+				<span class="nimble-field__label">{localize(`${DETAILS}.off`)}</span>
+				<small>{localize(`${DETAILS}.offHint`)}</small>
+			</span>
 		</label>
 
 		{#if onItem}
@@ -53,8 +55,10 @@
 					checked={reactive.transfer}
 					onchange={({ currentTarget }) => update({ transfer: currentTarget.checked })}
 				/>
-				<span class="nimble-field__label">{localize(`${DETAILS}.transfer`)}</span>
-				<small class="nimble-effect-details__hint">{localize(`${DETAILS}.transferHint`)}</small>
+				<span class="nimble-effect-details__text">
+					<span class="nimble-field__label">{localize(`${DETAILS}.transfer`)}</span>
+					<small>{localize(`${DETAILS}.transferHint`)}</small>
+				</span>
 			</label>
 		{/if}
 
@@ -64,10 +68,11 @@
 				checked={system.minor ?? false}
 				onchange={({ currentTarget }) => update({ 'system.minor': currentTarget.checked })}
 			/>
-			<span class="nimble-field__label">{localize('NIMBLE.settings.customConditions.minor')}</span>
-			<small class="nimble-effect-details__hint">
-				{localize('NIMBLE.settings.customConditions.minorHint')}
-			</small>
+			<span class="nimble-effect-details__text">
+				<span class="nimble-field__label">{localize('NIMBLE.settings.customConditions.minor')}</span
+				>
+				<small>{localize('NIMBLE.settings.customConditions.minorHint')}</small>
+			</span>
 		</label>
 	</div>
 
@@ -91,13 +96,16 @@
 		color: var(--nimble-ui-ink);
 	}
 
-	.nimble-field {
-		flex-wrap: wrap;
-	}
+	.nimble-effect-details__text {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.125rem;
+		min-width: 0;
 
-	.nimble-effect-details__hint {
-		flex-basis: 100%;
-		padding-inline-start: 1.5rem;
-		color: var(--nimble-ui-ink-muted);
+		small {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-ui-ink-muted);
+		}
 	}
 </style>
