@@ -1,5 +1,5 @@
 import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
-import { isCharacterActor, normalizeIdentifier } from './helpers.js';
+import { isCharacterActor, normalizeIdentifier, resolveFormulaToInteger } from './helpers.js';
 import type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
@@ -28,6 +28,25 @@ type DicePoolConsumer = {
 	/** Narrows a card offer to melee or ranged attacks; null = unrestricted */
 	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
 };
+
+/** A spend that only consumes dice, without an outcome on them or a given effect. */
+function isPlainSpend(
+	consumer: Pick<DicePoolConsumer, 'selectionOutcome' | 'effectType'>,
+): boolean {
+	return consumer.selectionOutcome === 'consume' && consumer.effectType !== 'giveEffect';
+}
+
+/**
+ * How many dice a consumer may act on: its cost for a transforming outcome or a given effect, so a
+ * "change 1 die" feature offers exactly one pick; null for a plain spend ("expend 1 or more").
+ */
+function dicePoolConsumerSelectionCap(
+	actor: CharacterActorLike,
+	consumer: Pick<DicePoolConsumer, 'selectionOutcome' | 'effectType' | 'cost'>,
+): number | null {
+	if (isPlainSpend(consumer)) return null;
+	return Math.max(1, resolveFormulaToInteger(actor, consumer.cost));
+}
 
 /** Narrow a stored `cardOffer` to a trigger the executor knows, else null. */
 function toCardOfferTrigger(value: unknown): DiceCardOfferTrigger | null {
@@ -176,13 +195,7 @@ function getDicePoolConsumers(
 					? consumer.effectType
 					: 'generic';
 			const baseEffectFormula = readEffectFormula(consumer);
-			if (
-				baseEffectFormula === null &&
-				selectionOutcome === 'consume' &&
-				effectType !== 'giveEffect'
-			) {
-				continue;
-			}
+			if (baseEffectFormula === null && isPlainSpend({ selectionOutcome, effectType })) continue;
 			const effectFormula =
 				baseEffectFormula === null
 					? null
@@ -219,5 +232,5 @@ function getDicePoolConsumers(
 	return consumers.sort((a, b) => a.itemName.localeCompare(b.itemName));
 }
 
-export { getDicePoolConsumers };
+export { dicePoolConsumerSelectionCap, getDicePoolConsumers };
 export type { DicePoolConsumer };

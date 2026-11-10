@@ -9,8 +9,9 @@ function schema() {
 		type: new fields.StringField({ required: true, nullable: false, initial: 'freeSpellCost' }),
 		poolIdentifier: new fields.StringField(
 			withWidget({
-				required: false,
+				required: true,
 				nullable: false,
+				blank: true,
 				initial: '',
 				label: `${WORDS}.poolIdentifier.label`,
 				hint: `${WORDS}.poolIdentifier.hint`,

@@ -3282,7 +3282,7 @@
 				}
 			},
 			"freeSpellCost": {
-				"description": "Only on an effect. While the effect is on, a tiered spell that your class pays for from a charge pool costs nothing from that pool, so there is no overdraw. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
+				"description": "Only on an effect. While the effect is on, a tiered spell that your class pays for from a charge pool costs nothing from that pool, so it cannot go past the pool's limit. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
 				"poolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool that the spell cost would come from. Blank means any pool."
@@ -3307,7 +3307,7 @@
 				},
 				"notOnAllies": {
 					"label": "Not on allies",
-					"hint": "A target on the same side as the user (the same token disposition) does not get the effect."
+					"hint": "A target on the same side as the creature that uses the item (the same token disposition) does not get the effect."
 				}
 			},
 			"holdOnTarget": {
@@ -3751,7 +3751,8 @@
 					"spentNote": "Spent {count} {label} ({faces})",
 					"bankedReductionNote": "Applied automatically as damage reduction against damage taken.",
 					"givenNote": "Gave {effect} to {names}",
-					"giveEffectNoTarget": "Target a creature to give {name} to. No dice were spent."
+					"giveEffectNoTarget": "Target a creature to give {name} to. No dice were spent.",
+					"giveEffectNotTaken": "No target took {name}: each one has it already. No dice were spent."
 				}
 			}
 		},

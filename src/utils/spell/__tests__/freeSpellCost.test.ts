@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import { NimbleBaseActor } from '../../../documents/actor/base.svelte.js';
 import { FreeSpellCostRule } from '../../../models/rules/freeSpellCost.js';
@@ -68,7 +69,7 @@ function createCaster(options: {
 }) {
 	const poolIdentifier = options.poolIdentifier ?? POOL;
 	const flags = {
-		nimble: {
+		[SYSTEM_ID]: {
 			chargePools: { [poolIdentifier]: { current: options.current ?? 0, max: 3 } } as Record<
 				string,
 				unknown
@@ -117,7 +118,7 @@ function createCaster(options: {
 			contents: options.withPoolClass === false ? [] : [classItem],
 			get: () => classItem,
 		},
-		flags: { nimble: { chargePools: {} } },
+		flags: { [SYSTEM_ID]: { chargePools: {} } },
 		rules: options.rules ?? [],
 		getRollData: () => ({}),
 		getFlag: () => undefined,

@@ -1175,10 +1175,19 @@ describe('applyUpcastDeltas', () => {
 			]);
 		});
 
-		it('changes nothing with no node, rule or field picked', () => {
-			for (const fields of [{ targetEffectId: null }, { ruleId: null }, { ruleField: null }]) {
-				expect(upcast([raise(fields)], 2).ruleRaises).toBeUndefined();
-			}
+		it('changes nothing with no node picked', () => {
+			expect(upcast([raise({ targetEffectId: null })], 2).ruleRaises).toBeUndefined();
+		});
+
+		it('changes nothing with no rule picked', () => {
+			expect(upcast([raise({ ruleId: null })], 2).ruleRaises).toBeUndefined();
+		});
+
+		it('changes nothing with no rule field picked', () => {
+			expect(upcast([raise({ ruleField: null })], 2).ruleRaises).toBeUndefined();
+		});
+
+		it('changes nothing when the picked node is not in the activation', () => {
 			expect(upcast([raise({ targetEffectId: 'missing' })], 2).ruleRaises).toBeUndefined();
 		});
 	});

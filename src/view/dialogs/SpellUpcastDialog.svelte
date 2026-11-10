@@ -242,7 +242,7 @@
 		);
 		const rule = target?.rules.find((entry) => entry.id === delta.ruleId);
 		const field = rule?.fields.find((entry) => entry.name === delta.ruleField);
-		return format('NIMBLE.spells.spellUpcastDialog.raiseEffectRule', {
+		return format(spellUpcastDialog.raiseEffectRule, {
 			rule: rule?.label ?? target?.label ?? '',
 			amount: String((delta.value ?? 0) * steps),
 			field: field?.label ?? delta.ruleField ?? '',

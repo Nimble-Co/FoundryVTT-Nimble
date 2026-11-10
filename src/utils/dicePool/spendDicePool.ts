@@ -84,7 +84,10 @@ function targetActors(): { actor: TargetActor; name: string }[] {
 	});
 }
 
-/** The picked dice leave the pool and the item's effect goes on each target. With no target nothing is spent. */
+/**
+ * The item's effect goes on each target, then the picked dice leave the pool. With no target, or
+ * when no target takes the effect (it has one that lasts as long), nothing is spent.
+ */
 async function applyGiveEffect(
 	request: SpendDicePoolRequest,
 	spentFaces: number[],
@@ -106,15 +109,27 @@ async function applyGiveEffect(
 		return;
 	}
 
-	await setPoolFaces(actor, pool.id, nextFaces);
 	const payload = payloadFromEffect(given.effect, {
 		itemUuid: given.itemUuid,
 		user: actor as unknown as Parameters<typeof payloadFromEffect>[1]['user'],
 	});
-	const names: string[] = [];
-	for (const target of targets) {
-		if (await applyEffectToActor(target.actor, payload)) names.push(target.name);
+	const results = await Promise.allSettled(
+		targets.map((target) => applyEffectToActor(target.actor, payload)),
+	);
+	const names = targets.flatMap((target, index) => {
+		const result = results[index];
+		if (result.status === 'rejected') console.error(result.reason);
+		return result.status === 'fulfilled' && result.value ? [target.name] : [];
+	});
+	if (names.length < 1) {
+		ui.notifications?.warn(
+			localize('NIMBLE.dicePoolTracker.panel.useFeature.giveEffectNotTaken', {
+				name: given.effect.name,
+			}),
+		);
+		return;
 	}
+	await setPoolFaces(actor, pool.id, nextFaces);
 
 	const lines = [
 		localize('NIMBLE.dicePoolTracker.panel.useFeature.spentNote', {
@@ -122,14 +137,10 @@ async function applyGiveEffect(
 			label: pool.label,
 			faces: spentFaces.join(', '),
 		}),
-		...(names.length
-			? [
-					localize('NIMBLE.dicePoolTracker.panel.useFeature.givenNote', {
-						effect: given.effect.name,
-						names: names.join(', '),
-					}),
-				]
-			: []),
+		localize('NIMBLE.dicePoolTracker.panel.useFeature.givenNote', {
+			effect: given.effect.name,
+			names: names.join(', '),
+		}),
 	];
 	const ChatMessageCls = chatMessageClass();
 	await ChatMessageCls.create({

@@ -22,6 +22,7 @@ const payloadFromEffectMock = vi.fn((effect: { toObject(): object }, source: obj
 	source,
 }));
 const ruleAutomationMock = vi.fn(() => true);
+const isActiveGMMock = vi.fn(() => false);
 
 let applyDieResultEffects: typeof import('../dieResultEffects.js').applyDieResultEffects;
 let registerDieResultEffectHooks: typeof import('../dieResultEffects.js').registerDieResultEffectHooks;
@@ -33,6 +34,7 @@ let savedFromUuidSync: unknown;
 beforeEach(async () => {
 	vi.clearAllMocks();
 	ruleAutomationMock.mockReturnValue(true);
+	isActiveGMMock.mockReturnValue(false);
 	items.clear();
 	savedFromUuidSync = globals.fromUuidSync;
 	globals.fromUuidSync = (uuid: string) => items.get(uuid) ?? null;
@@ -40,6 +42,7 @@ beforeEach(async () => {
 	vi.doMock('../../settings/automationSettings.js', () => ({
 		isRuleAutomationEnabled: ruleAutomationMock,
 	}));
+	vi.doMock('#utils/isActiveGM.js', () => ({ isActiveGM: isActiveGMMock }));
 	vi.doMock('../../dice/DamageRoll.js', () => ({ DamageRoll: FakeDamageRoll }));
 	vi.doMock('#utils/actor/applyEffectToActor.js', () => ({
 		applyEffectToActor: applyEffectToActorMock,
@@ -147,22 +150,39 @@ function card(
 		itemUuid?: string;
 		type?: string;
 		pendingKeep?: unknown;
+		author?: { id?: string | null; active?: boolean } | null;
+		read?: boolean;
 	} = {},
 ) {
+	cardCount += 1;
+	const flags: Record<string, Record<string, unknown>> = {
+		[SYSTEM_ID]: {
+			itemUuid: fields.itemUuid ?? SPIRIT_UUID,
+			...(fields.read ? { dieResultRead: true } : {}),
+		},
+	};
 	if (!items.has('Scene.s.Token.a')) placeToken('Scene.s.Token.a', TARGET_A);
 	if (!items.has('Scene.s.Token.b')) placeToken('Scene.s.Token.b', TARGET_B);
 	return {
+		id: `card-${cardCount}`,
+		author:
+			fields.author === undefined ? { id: globals.game.user.id, active: true } : fields.author,
 		type: fields.type ?? 'feature',
-		flags: { [SYSTEM_ID]: { itemUuid: fields.itemUuid ?? SPIRIT_UUID } },
+		flags,
+		getFlag: (scope: string, key: string) => flags[scope]?.[key],
+		setFlag: vi.fn(async (scope: string, key: string, value: unknown) => {
+			flags[scope] = { ...flags[scope], [key]: value };
+		}),
 		system: {
 			isMiss: fields.isMiss ?? false,
 			targets: fields.targets ?? ['Scene.s.Token.a'],
 			...(fields.pendingKeep ? { pendingKeep: fields.pendingKeep } : {}),
 		},
 		rolls: fields.rolls ?? [new FakeDamageRoll(6)],
-		update: vi.fn(async () => undefined),
 	};
 }
+
+let cardCount = 0;
 
 describe('applyDieResultEffects', () => {
 	it.each([6, 7])('applies the effect to the target at a face of %i', async (face) => {
@@ -415,9 +435,64 @@ describe('registerDieResultEffectHooks', () => {
 	it("does not apply the effect on another user's client", async () => {
 		setup();
 
-		handlers.get('createChatMessage')?.(card(), {}, 'another-user');
+		handlers.get('createChatMessage')?.(
+			card({ author: { id: 'another-user', active: true } }),
+			{},
+			'another-user',
+		);
 		await flush();
 
 		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+	});
+
+	it('applies the effect when a card that waited for Keep a Result is updated', async () => {
+		setup();
+		const waiting = card({ pendingKeep: { dice: [6, 2] } });
+
+		handlers.get('createChatMessage')?.(waiting, {}, globals.game.user.id);
+		await flush();
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+
+		delete (waiting.system as { pendingKeep?: unknown }).pendingKeep;
+		handlers.get('updateChatMessage')?.(waiting, {}, globals.game.user.id);
+		await flush();
+
+		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('reads a card only once, and marks it read', async () => {
+		setup();
+		const used = card();
+
+		handlers.get('createChatMessage')?.(used, {}, globals.game.user.id);
+		await flush();
+		handlers.get('updateChatMessage')?.(used, {}, globals.game.user.id);
+		await flush();
+
+		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+		expect(used.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'dieResultRead', true);
+	});
+
+	it('does not read a card that another client marked read', async () => {
+		setup();
+
+		handlers.get('updateChatMessage')?.(card({ read: true }), {}, globals.game.user.id);
+		await flush();
+
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+	});
+
+	it('lets the active GM read the card when its author is away', async () => {
+		setup();
+		isActiveGMMock.mockReturnValue(true);
+
+		handlers.get('createChatMessage')?.(
+			card({ author: { id: 'another-user', active: false } }),
+			{},
+			'another-user',
+		);
+		await flush();
+
+		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
 	});
 });

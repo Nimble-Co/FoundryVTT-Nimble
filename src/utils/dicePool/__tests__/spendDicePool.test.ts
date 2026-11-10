@@ -243,16 +243,20 @@ describe('spendDicePool with a giveEffect consumer', () => {
 		);
 	});
 
+	let warn: ReturnType<typeof vi.spyOn> | null = null;
+
 	afterEach(() => {
 		globals.game.user.targets = savedTargets;
 		globals.CONFIG.ActiveEffect = savedActiveEffect;
 		vi.unstubAllGlobals();
+		warn?.mockRestore();
+		warn = null;
 	});
 
 	it('spends nothing and warns when the user has no target', async () => {
 		const { actor, persistedFaces } = oathsworn([4, 7]);
 		target();
-		const warn = vi.spyOn(ui.notifications!, 'warn');
+		warn = vi.spyOn(ui.notifications!, 'warn');
 
 		await spendDicePool({ actor, pool: pool([4, 7]), consumer: give(), selectedIndices: [1] });
 
@@ -260,7 +264,30 @@ describe('spendDicePool with a giveEffect consumer', () => {
 		expect(persistedFaces()).toEqual([4, 7]);
 		expect(createEffect).not.toHaveBeenCalled();
 		expect(globals.ChatMessage.create).not.toHaveBeenCalled();
-		warn.mockRestore();
+	});
+
+	it('spends nothing and warns when no target takes the effect', async () => {
+		const { actor, persistedFaces } = oathsworn([4, 7]);
+		const mira = ally('Mira');
+		(mira as { effects: unknown[] }).effects = [
+			{
+				origin: 'Actor.paladin.Item.item-rage',
+				name: 'Shining Mandate',
+				statuses: new Set(),
+				system: { lastsUntil: [] },
+			},
+		];
+		target(mira);
+		warn = vi.spyOn(ui.notifications!, 'warn');
+
+		await spendDicePool({ actor, pool: pool([4, 7]), consumer: give(), selectedIndices: [1] });
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(warn).toHaveBeenCalledWith(
+			'No target took Shining Mandate: each one has it already. No dice were spent.',
+		);
+		expect(persistedFaces()).toEqual([4, 7]);
+		expect(globals.ChatMessage.create).not.toHaveBeenCalled();
 	});
 
 	it('removes the picked die, gives the effect to each target, and posts the note', async () => {

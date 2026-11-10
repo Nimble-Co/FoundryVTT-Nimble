@@ -158,9 +158,9 @@ export function createSpellCostResolver(
 /**
  * Resolves what a cast of the given spell costs the given actor: nothing for
  * cantrips, the cast tier in mana by default, or the flat pool cost the
- * actor's class declares (0 while a `freeSpellCost` rule matches). Cost resolution is independent of the resource
- * spending automation setting so the cost stays visible when automation is
- * off.
+ * actor's class declares (0 while a `freeSpellCost` rule matches). Cost
+ * resolution is independent of the resource spending automation setting so the
+ * cost stays visible when automation is off.
  */
 export function resolveSpellCost(
 	actor: SpellCostActorLike,

@@ -3,6 +3,7 @@ import { askActiveGm } from '#utils/askActiveGm.js';
 import { newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
+import { checkFormulaReferences } from '#utils/rolls/formulaReferences.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import applyConditionToActor, {
@@ -73,7 +74,9 @@ function resolveExtraDamage(rules: unknown, user: SourceUser | null): void {
 		if (rule?.type !== 'heldRoll' || rule.heldKind !== 'extraDamage') continue;
 		if (typeof rule.formula !== 'string' || !rule.formula.includes('@')) continue;
 		rollData ??= user.getRollData();
-		rule.formula = Roll.replaceFormulaData(rule.formula, rollData);
+		checkFormulaReferences(rule.formula, user, {}, { rollData });
+		// A reference the source has no value for is 0 here, not the holder's value at the roll.
+		rule.formula = Roll.replaceFormulaData(rule.formula, rollData, { missing: '0' });
 	}
 }
 

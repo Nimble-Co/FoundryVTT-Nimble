@@ -2,11 +2,15 @@ import { SYSTEM_ID } from '#system';
 import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
 import { pendingKeepOf } from '#utils/rolls/cardRollState.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 const ACTIVATION_CARD_TYPES = new Set(['feature', 'spell', 'object']);
+
+/** The card flag that says its die result was read. */
+export const DIE_RESULT_READ_FLAG = 'dieResultRead';
 
 interface ItemEffect {
 	transfer?: boolean;
@@ -26,13 +30,24 @@ interface SideToken {
 }
 
 interface ActivationCard {
+	id?: string | null;
+	author?: { id?: string | null; active?: boolean } | null;
 	type?: string;
 	speaker?: { scene?: string | null; token?: string | null };
 	flags?: Record<string, Record<string, unknown> | undefined>;
 	system?: { isMiss?: boolean; targets?: string[]; pendingKeep?: unknown };
 	rolls?: unknown[];
-	update(data: Record<string, unknown>): Promise<unknown>;
+	getFlag(scope: string, key: string): unknown;
+	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 }
+
+/** The author's client reads the card; the active GM stands in for an author who is away. */
+function isCardAuthorClient(card: ActivationCard): boolean {
+	if (card.author?.active) return card.author.id === game.user?.id;
+	return isActiveGM();
+}
+
+const read = new Set<string>();
 
 /** The effect the item gives: its first effect that stays on the item. */
 function itemEffectOf(item: UsedItem | null | undefined): ItemEffect | null {
@@ -75,9 +90,12 @@ function userSide(card: ActivationCard, user: unknown): SideToken | null {
 }
 
 /** Each target of the card gets the effect of every rule that the Primary Die face meets. */
+/** A card that waits for Keep a Result is read when the result is kept, and each card only once. */
 export async function applyDieResultEffects(card: ActivationCard): Promise<void> {
-	if (!ACTIVATION_CARD_TYPES.has(card.type ?? '') || !isRuleAutomationEnabled()) return;
-	if (card.system?.isMiss === true || pendingKeepOf(card.system)) return;
+	if (!card.id || !ACTIVATION_CARD_TYPES.has(card.type ?? '') || !isRuleAutomationEnabled()) return;
+	if (pendingKeepOf(card.system)) return;
+	if (read.has(card.id) || card.getFlag(SYSTEM_ID, DIE_RESULT_READ_FLAG)) return;
+	if (!isCardAuthorClient(card)) return;
 
 	const used = cardItem(card);
 	const user = used?.actor as
@@ -88,6 +106,9 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 		(rule) => rule.isLive() && rule.readsUseOf(used),
 	);
 	if (rules.length === 0) return;
+	read.add(card.id);
+	await card.setFlag(SYSTEM_ID, DIE_RESULT_READ_FLAG, true);
+	if (card.system?.isMiss === true) return;
 
 	const face = primaryDieFace(card);
 	if (face === null) return;
@@ -116,14 +137,15 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 
 let registered = false;
 
-/** The client that made the card applies the effects; a target it does not own goes to the GM. */
+/** The author's client applies the effects; a target it does not own goes to the GM. */
 export function registerDieResultEffectHooks(): void {
 	if (registered) return;
 	registered = true;
-	Hooks.on('createChatMessage', ((card: ActivationCard, _options: unknown, userId: string) => {
-		if (userId !== game.user?.id) return;
-		void applyDieResultEffects(card).catch((error) => {
+	const onCard = (card: unknown) => {
+		void applyDieResultEffects(card as ActivationCard).catch((error) => {
 			console.error('Nimble | Could not apply the effect of a die result.', error);
 		});
-	}) as never);
+	};
+	Hooks.on('createChatMessage', onCard);
+	Hooks.on('updateChatMessage', onCard);
 }

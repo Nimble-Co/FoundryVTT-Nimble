@@ -1,5 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.js';
+import type { NimbleBaseRule } from '../../models/rules/base.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 
 export interface EffectRuleNumberField {
@@ -24,10 +25,8 @@ interface ItemWithEffects {
 	effects?: { get(id: string): { name?: string; system?: unknown } | undefined } | null;
 }
 
-type RuleClass = {
+type RuleClass = Pick<typeof NimbleBaseRule, 'raisedFieldLabel'> & {
 	defineSchema(): Record<string, unknown>;
-	/** The words for what a raise of the field adds, when the field label does not say it. */
-	raisedFieldLabel?(field: string, rule: Record<string, unknown>): string | null;
 };
 
 /** Not a number of the rule's effect: it orders the rules. */
@@ -40,7 +39,7 @@ function numberFields(type: string, rule: Record<string, unknown>): EffectRuleNu
 	return Object.entries(RuleClass.defineSchema())
 		.filter(([name, field]) => field instanceof NumberField && !NOT_RAISED.has(name))
 		.map(([name, field]) => {
-			const raised = RuleClass.raisedFieldLabel?.(name, rule);
+			const raised = RuleClass.raisedFieldLabel(name, rule);
 			if (raised) return { name, label: raised };
 			const label = (field as { label?: string }).label;
 			return { name, label: label ? localize(label) : name };

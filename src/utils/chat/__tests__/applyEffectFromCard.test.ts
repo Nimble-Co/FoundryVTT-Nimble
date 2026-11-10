@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { ApplyEffectNode } from '#types/effectTree.js';
 import { applyEffectFromCard } from '#utils/chat/applyEffectFromCard.js';
 
@@ -40,7 +41,7 @@ function applyNode(fields: Partial<ApplyEffectNode> = {}): ApplyEffectNode {
 }
 
 const card = {
-	flags: { nimble: { itemUuid: item.uuid } },
+	flags: { [SYSTEM_ID]: { itemUuid: item.uuid } },
 	system: { targets: ['Scene.s.Token.goblin'] },
 	update: vi.fn(async () => undefined),
 };

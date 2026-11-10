@@ -332,6 +332,7 @@ describe('attackHeldPlanOf extra damage', () => {
 
 	afterEach(() => {
 		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
 	});
 
 	it('adds a typed damage part for each extra damage change, and spends each one', async () => {
@@ -371,7 +372,7 @@ describe('attackHeldPlanOf extra damage', () => {
 		expect(part.node.on?.hit?.[0]).toMatchObject({ type: 'damageOutcome', parentContext: 'hit' });
 	});
 
-	it('is spent by an attack that misses, as the attack uses it hit or miss', async () => {
+	it('spend() spends the extra damage change with no hit or miss input', async () => {
 		const attacker = creature('A', [radiant]);
 		const plan = attackHeldPlanOf({
 			attacker,
@@ -386,9 +387,8 @@ describe('attackHeldPlanOf extra damage', () => {
 		expect(spentIds(attacker)).toEqual(['A-e0']);
 	});
 
-	it('is not used by a roll that is not an attack, nor by a caller that shows no extra damage', async () => {
+	it('is not used by a roll that is not an attack', async () => {
 		const attacker = creature('A', [radiant]);
-
 		const notAttack = attackHeldPlanOf({
 			attacker,
 			target: null,
@@ -396,11 +396,19 @@ describe('attackHeldPlanOf extra damage', () => {
 			attack: false,
 			extraDamage: true,
 		});
-		const noParts = attackHeldPlanOf({ attacker, target: null, area: false, attack: true });
+
 		await notAttack.spend();
-		await noParts.spend();
 
 		expect(notAttack.extraDamage).toEqual([]);
+		expect(spentIds(attacker)).toEqual([]);
+	});
+
+	it('is not used by a caller that shows no extra damage', async () => {
+		const attacker = creature('A', [radiant]);
+		const noParts = attackHeldPlanOf({ attacker, target: null, area: false, attack: true });
+
+		await noParts.spend();
+
 		expect(noParts.extraDamage).toEqual([]);
 		expect(await noParts.rollExtraDamage({})).toEqual([]);
 		expect(spentIds(attacker)).toEqual([]);
@@ -418,6 +426,5 @@ describe('attackHeldPlanOf extra damage', () => {
 
 		expect(await plan.rollExtraDamage({})).toEqual([]);
 		expect(warn).toHaveBeenCalled();
-		warn.mockRestore();
 	});
 });

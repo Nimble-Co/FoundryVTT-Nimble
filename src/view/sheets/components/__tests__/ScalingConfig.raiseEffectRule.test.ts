@@ -38,6 +38,10 @@ function makeItem(delta: Record<string, unknown>) {
 	};
 }
 
+function selectNamed(key: string) {
+	return screen.getByRole('combobox', { name: localize(`${WORDS}.${key}`) }) as HTMLSelectElement;
+}
+
 const raise = {
 	operation: 'raiseEffectRule',
 	value: 1,
@@ -55,9 +59,9 @@ describe('ScalingConfig raiseEffectRule', () => {
 		const item = makeItem(raise);
 		render(ScalingConfig, { context: new Map([['document', item]]) });
 
-		const [, nodeSelect, ruleSelect, fieldSelect] = screen.getAllByRole(
-			'combobox',
-		) as HTMLSelectElement[];
+		const nodeSelect = selectNamed('targetEffect');
+		const ruleSelect = selectNamed('effectRule');
+		const fieldSelect = selectNamed('ruleField');
 		expect(nodeSelect.selectedOptions[0].textContent?.trim()).toBe('Condemned');
 		expect(ruleSelect.selectedOptions[0].textContent?.trim()).toBe('Condemn');
 		const fieldLabel = localize('NIMBLE.rules.heldRoll.value.label');
@@ -73,16 +77,20 @@ describe('ScalingConfig raiseEffectRule', () => {
 		});
 	});
 
-	it('empties the rule and field when the author picks another operation', async () => {
+	it('empties the Apply Effect node, rule and field when the author picks another operation', async () => {
 		const item = makeItem({ ...raise, ruleField: 'value' });
 		render(ScalingConfig, { context: new Map([['document', item]]) });
 
-		const [operationSelect] = screen.getAllByRole('combobox') as HTMLSelectElement[];
-		await fireEvent.change(operationSelect, { target: { value: 'addDC' } });
+		await fireEvent.change(selectNamed('operation'), { target: { value: 'addDC' } });
 
 		expect(item.update).toHaveBeenCalledWith({
 			'system.scaling.deltas': [
-				expect.objectContaining({ operation: 'addDC', ruleId: null, ruleField: null }),
+				expect.objectContaining({
+					operation: 'addDC',
+					targetEffectId: null,
+					ruleId: null,
+					ruleField: null,
+				}),
 			],
 		});
 	});

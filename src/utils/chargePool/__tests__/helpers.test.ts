@@ -1026,7 +1026,8 @@ describe('getChargePoolRollData', () => {
 		expect(getChargePoolRollData(stored)).toEqual({ 'combat-dice': { faces: 8 } });
 	});
 
-	it('gives the die size of a dice pool with its modifyPool changes, and never resolves its max', () => {
+	/** A d6 dice pool with a max from @level, and three modifyPool rules: d12 fails, d10 and d8 apply. */
+	function createJudgmentDicePoolActor() {
 		const judgment = (dieSize: string, appliesTo: () => boolean, priority: number) =>
 			({
 				type: 'modifyPool',
@@ -1036,7 +1037,7 @@ describe('getChargePoolRollData', () => {
 				priority,
 				appliesTo,
 			}) as unknown as MockRule;
-		const actor = createMockActor(
+		return createMockActor(
 			[
 				createMockItem('item-1', 'Radiant Judgment', [
 					{ type: 'dicePool', identifier: 'judgment', max: '@level', dieSize: 'd6' } as MockRule,
@@ -1047,8 +1048,19 @@ describe('getChargePoolRollData', () => {
 			],
 			{ level: 5 },
 		);
+	}
+
+	it('gives the die size of a dice pool with its modifyPool changes', () => {
+		const actor = createJudgmentDicePoolActor();
 
 		expect(getChargePoolRollData(actor)).toEqual({ judgment: { faces: 10 } });
+	});
+
+	it('never resolves the max of a dice pool', () => {
+		const actor = createJudgmentDicePoolActor();
+
+		getChargePoolRollData(actor);
+
 		expect(actor.getRollData).not.toHaveBeenCalled();
 	});
 
