@@ -9,7 +9,6 @@ type DocumentSheet = foundry.applications.api.DocumentSheetV2.Any;
 
 // fvtt-types types DocumentSheetV2 with type arguments that the mixin cannot pass.
 const DocumentSheetBase = foundry.applications.api.DocumentSheetV2 as unknown as abstract new (
-	// biome-ignore lint/suspicious/noExplicitAny: a mixin base takes any arguments (TS2545)
 	...args: any[]
 ) => DocumentSheet;
 
