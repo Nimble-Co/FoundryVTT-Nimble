@@ -132,6 +132,10 @@ The **Defend** and **Interpose** rows on the Actions tab of the sheet, and the h
 
 The line under the name tells how many actions a hero starts combat with: 1, 2 with a total of 10 or more, 3 with 20 or more or a natural 20. A monster's card has no line. A change from **Change This Roll**, such as **Change to 10**, also goes to the combat tracker: the Initiative, the starting actions, and your current actions if you did not spend them yet. **Remove** does the reverse.
 
+## Effects that ended
+
+When effects end by themselves, at a turn, a round, the end of combat, a time or an event, the chat gets one message for that moment with a row for each effect. **Undo** on a row puts that effect back. See [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
+
 ## Targeting and roll visibility
 
 Target tokens (key T) before you roll, and they show on the card. **Apply Damage** uses the targets of the card, not the selected tokens. The save button rolls for the selected tokens.
