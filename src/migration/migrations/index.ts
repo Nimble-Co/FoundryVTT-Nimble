@@ -82,3 +82,4 @@ export { Migration081OncePerTurnUses } from './Migration081OncePerTurnUses.js';
 export { Migration082AvengerAuraReach } from './Migration082AvengerAuraReach.js';
 export { Migration083FreeReactionCost } from './Migration083FreeReactionCost.js';
 export { Migration084CombatDiceMaxReference } from './Migration084CombatDiceMaxReference.js';
+export { Migration085NimbleEffectType } from './Migration085NimbleEffectType.js';
