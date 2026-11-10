@@ -3255,6 +3255,11 @@
 					"label": "Damage type",
 					"hint": "For a one-use vulnerability or extra damage: the damage type, such as fire."
 				},
+				"raised": {
+					"advantage": "advantage",
+					"primaryDie": "to the Primary Die",
+					"wholeAmount": "to the set amount"
+				},
 				"formula": {
 					"label": "Damage",
 					"hint": "The dice of the extra damage, such as 1d6. An @ reference takes the number from the creature that applied the effect, when it is applied."

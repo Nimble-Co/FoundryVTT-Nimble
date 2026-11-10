@@ -7,7 +7,8 @@ describe('effectRuleNumbers', () => {
 		system: {
 			rules: [
 				{ id: 'held1', type: 'heldRoll', label: 'Condemn' },
-				{ id: 'held2', type: 'heldRoll', label: '' },
+				{ id: 'held2', type: 'heldRoll', label: '', heldKind: 'advantage' },
+				{ id: 'held3', type: 'heldRoll', label: 'Edge', heldKind: 'primaryDie' },
 			],
 		},
 	};
@@ -57,9 +58,17 @@ describe('effectRuleNumbers', () => {
 		expect(target.rules.map((rule) => rule.label)).toEqual([
 			'Condemn',
 			localize('NIMBLE.ruleTypes.heldRoll'),
+			'Edge',
 		]);
 		expect(target.rules[0].fields).toEqual([
 			{ name: 'value', label: localize('NIMBLE.rules.heldRoll.value.label') },
 		]);
+	});
+
+	it('names the field by what a raise adds, when the rule class says it', () => {
+		const [target] = effectRuleNumbers(item as never);
+
+		expect(target.rules[1].fields).toEqual([{ name: 'value', label: 'advantage' }]);
+		expect(target.rules[2].fields).toEqual([{ name: 'value', label: 'to the Primary Die' }]);
 	});
 });

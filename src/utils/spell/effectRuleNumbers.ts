@@ -24,18 +24,24 @@ interface ItemWithEffects {
 	effects?: { get(id: string): { name?: string; system?: unknown } | undefined } | null;
 }
 
-type RuleClass = { defineSchema(): Record<string, unknown> };
+type RuleClass = {
+	defineSchema(): Record<string, unknown>;
+	/** The words for what a raise of the field adds, when the field label does not say it. */
+	raisedFieldLabel?(field: string, rule: Record<string, unknown>): string | null;
+};
 
 /** Not a number of the rule's effect: it orders the rules. */
 const NOT_RAISED = new Set(['priority']);
 
-function numberFields(type: string): EffectRuleNumberField[] {
+function numberFields(type: string, rule: Record<string, unknown>): EffectRuleNumberField[] {
 	const RuleClass = (CONFIG.NIMBLE.ruleDataModels as Record<string, RuleClass | undefined>)[type];
 	if (!RuleClass) return [];
 	const { NumberField } = foundry.data.fields;
 	return Object.entries(RuleClass.defineSchema())
 		.filter(([name, field]) => field instanceof NumberField && !NOT_RAISED.has(name))
 		.map(([name, field]) => {
+			const raised = RuleClass.raisedFieldLabel?.(name, rule);
+			if (raised) return { name, label: raised };
 			const label = (field as { label?: string }).label;
 			return { name, label: label ? localize(label) : name };
 		});
@@ -52,7 +58,7 @@ export function effectRuleNumbers(item: ItemWithEffects): ApplyEffectRuleNumbers
 		const effect = item.effects?.get(node.effectId);
 		if (!effect) return [];
 		const rules = ((effect.system as { rules?: Record<string, unknown>[] } | undefined)?.rules ??
-			[]) as Array<{ id?: string; type?: string; label?: string }>;
+			[]) as Array<Record<string, unknown> & { id?: string; type?: string; label?: string }>;
 		return [
 			{
 				nodeId: node.id,
@@ -62,7 +68,7 @@ export function effectRuleNumbers(item: ItemWithEffects): ApplyEffectRuleNumbers
 					.map((rule) => ({
 						id: rule.id as string,
 						label: rule.label || localize(ruleTypes[rule.type as string] ?? (rule.type as string)),
-						fields: numberFields(rule.type as string),
+						fields: numberFields(rule.type as string, rule),
 					})),
 			},
 		];

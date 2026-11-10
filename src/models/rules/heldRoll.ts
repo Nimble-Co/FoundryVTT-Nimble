@@ -1,3 +1,4 @@
+import localize from '#utils/localize.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -125,6 +126,12 @@ class HeldRollRule extends NimbleBaseRule<HeldRollRule.Schema> {
 	static override group = 'bonuses';
 	static override description = `${WORDS}.description`;
 	static override icon = 'fa-solid fa-hourglass-half';
+
+	/** An upcast raise of `value` adds steps of advantage, or to the Primary Die or the set amount. */
+	static raisedFieldLabel(field: string, rule: Record<string, unknown>): string | null {
+		if (field !== 'value' || !KINDS_WITH_A_VALUE.has(String(rule.heldKind))) return null;
+		return localize(`${WORDS}.raised.${String(rule.heldKind)}`);
+	}
 
 	static override defineSchema(): HeldRollRule.Schema {
 		return {
