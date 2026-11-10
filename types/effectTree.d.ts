@@ -3,7 +3,6 @@ import type { Moment } from '../src/utils/lastsUntil/momentReached.js';
 
 export type EffectNode =
 	| ApplyEffectNode
-	| ConditionNode
 	| DamageNode
 	| DamageOutcomeNode
 	| HealingNode
@@ -92,14 +91,6 @@ export type ApplyEffectNode = {
 	recipient: 'self' | 'targets';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
-	parentContext: string | null;
-	parentNode: string | null;
-};
-
-export type ConditionNode = {
-	id: string;
-	type: 'condition';
-	condition: string;
 	parentContext: string | null;
 	parentNode: string | null;
 };

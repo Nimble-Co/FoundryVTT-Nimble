@@ -147,18 +147,13 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 	const effects = item.system?.activation?.effects;
 	if (Array.isArray(effects) && effects.length > 0) {
 		for (const node of flattenEffectsTree(effects)) {
+			if (node.type !== 'applyEffect') continue;
 			const names =
-				(node.type === 'condition' && node.condition === conditionId) ||
-				(node.type === 'applyEffect' &&
-					(node.condition === conditionId || (!!node.effectId && itemEffects.has(node.effectId))));
+				node.condition === conditionId || (!!node.effectId && itemEffects.has(node.effectId));
 			if (!names) continue;
 
 			usage.nodeIds.push(node.id);
-			usage.referenceLabels.push(
-				node.type === 'applyEffect'
-					? 'NIMBLE.activationEffects.applyEffect'
-					: 'NIMBLE.activationEffects.condition',
-			);
+			usage.referenceLabels.push('NIMBLE.activationEffects.applyEffect');
 		}
 	}
 

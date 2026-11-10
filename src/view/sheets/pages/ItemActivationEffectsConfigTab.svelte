@@ -21,7 +21,7 @@
 		prepareSavingThrowOptions,
 	} from './itemActivationEffectsConfigTabHelpers.js';
 
-	const { conditions, damageTypes, healingTypes, savingThrows, saves } = CONFIG.NIMBLE;
+	const { damageTypes, healingTypes, savingThrows, saves } = CONFIG.NIMBLE;
 
 	const damageOutcomes = getDamageOutcomes();
 	const dispositionOptions = getDispositionOptions();
@@ -40,8 +40,6 @@
 		switch (nodeType) {
 			case 'applyEffect':
 				return ApplyEffectNode;
-			case 'condition':
-				return ConditionNode;
 			case 'damage':
 				return DamageNode;
 			case 'damageOutcome':
@@ -620,44 +618,6 @@
 
 {#snippet ApplyEffectNode(node, _parentNode = null)}
 	<ApplyEffectNodeConfig {node} {document} {effects} />
-{/snippet}
-
-{#snippet ConditionNode(node, _parentNode = null)}
-	<li data-node-id={node.id}>
-		<header>
-			<h4 class="nimble-heading" data-heading-variant="field">
-				{localize('NIMBLE.activationEffects.statusCondition')}
-			</h4>
-
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				aria-label={localize('NIMBLE.activationEffects.deleteCondition')}
-				data-tooltip={localize('NIMBLE.activationEffects.deleteCondition')}
-				type="button"
-				onclick={() => deleteEffectNode(document, effects, node.id)}
-			>
-				<i class="fa-solid fa-trash"></i>
-			</button>
-		</header>
-
-		<div class="nimble-effect-main-config nimble-effect-main-config--no-sub-config">
-			<div class="nimble-config-block nimble-card">
-				<label class="nimble-field" data-field-variant="stacked">
-					<select
-						onchange={({ target }) =>
-							updateEffectNode(document, effects, node, 'condition', target.value)}
-					>
-						{#each Object.entries(conditions) as [value, label]}
-							<option {value} selected={value === node.condition}>
-								{label}
-							</option>
-						{/each}
-					</select>
-				</label>
-			</div>
-		</div>
-	</li>
 {/snippet}
 
 {#snippet DamageOutcomeNode(node, parentNode = null)}

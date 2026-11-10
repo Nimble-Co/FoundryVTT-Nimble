@@ -2,7 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import findConditionUsage from '../findConditionUsage.js';
 
 function conditionNode(id: string, condition: string) {
-	return { id, type: 'condition', condition, parentContext: null, parentNode: null };
+	return {
+		id,
+		type: 'applyEffect',
+		effectId: null,
+		condition,
+		parentContext: null,
+		parentNode: null,
+	};
 }
 
 function item(name: string, system: Record<string, unknown>) {
@@ -119,7 +126,7 @@ describe('findConditionUsage', () => {
 
 		expect(usage.items).toHaveLength(1);
 		expect(usage.items[0].nodeIds).toEqual(['c1']);
-		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.condition']);
+		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.applyEffect']);
 	});
 
 	it('finds Apply Effect nodes by their condition or by the item effect that holds it', () => {

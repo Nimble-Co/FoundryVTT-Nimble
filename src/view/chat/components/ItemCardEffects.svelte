@@ -23,7 +23,6 @@
 	{#if nodeGroup.length}
 		<section
 			class="nimble-card-section"
-			class:nimble-card-section--conditions={nodeGroup.find((node) => node.type === 'condition')}
 			class:nimble-card-section--apply-effects={nodeGroup[0]?.type === 'applyEffect'}
 		>
 			{#if nodeGroup[0]?.type === 'applyEffect'}
@@ -37,13 +36,9 @@
 			{#each nodeGroup as node}
 				{@const Component = getNodeComponent(node.type)}
 
-				{#if node.type === 'condition'}
+				<section class="nimble-effect">
 					<Component {node} />
-				{:else}
-					<section class="nimble-effect">
-						<Component {node} />
-					</section>
-				{/if}
+				</section>
 			{/each}
 
 			{#if isDamageGroup(nodeGroup)}
@@ -93,13 +88,6 @@
 			.nimble-effect {
 				padding: 0;
 			}
-		}
-
-		&--conditions {
-			--nimble-card-section-padding: 0.5rem;
-			display: flex;
-			gap: 0.375rem;
-			flex-wrap: wrap;
 		}
 	}
 </style>

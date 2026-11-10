@@ -1780,8 +1780,9 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			);
 			const conditionNode: EffectNode = {
 				id: 'condition-1',
-				type: 'condition',
-				condition: 'poisoned',
+				type: 'applyEffect',
+				effectId: 'poisoned',
+				recipient: 'targets',
 				parentContext: null,
 				parentNode: null,
 			} as EffectNode;

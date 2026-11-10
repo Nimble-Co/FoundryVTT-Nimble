@@ -113,12 +113,7 @@
 
 			{#each relevantNodes as nodeGroup}
 				{#if nodeGroup.length}
-					<section
-						class="nimble-effect-group"
-						class:nimble-effect-group--conditions={nodeGroup.find(
-							(node) => node.type === 'condition',
-						)}
-					>
+					<section class="nimble-effect-group">
 						{#each nodeGroup as childNode}
 							{#if childNode.type !== 'savingThrow'}
 								{@const Component = getNodeComponent(childNode.type)}
@@ -128,10 +123,7 @@
 										? damagePacket(childNode)
 										: null}
 
-								<section
-									class="nimble-effect"
-									class:nimble-effect--conditions={childNode.type === 'condition'}
-								>
+								<section class="nimble-effect">
 									<Component node={childNode} />
 
 									{#if packet}
@@ -157,22 +149,12 @@
 
 		padding-block: 0.5rem 0;
 
-		&--conditions {
-			padding: 0;
-		}
-
 		&:first-of-type {
 			padding-top: 0;
 		}
 	}
 
 	.nimble-effect-group {
-		&--conditions {
-			display: flex;
-			gap: 0.375rem;
-			flex-wrap: wrap;
-		}
-
 		&:not(:last-of-type) {
 			padding-bottom: 0.5rem;
 		}

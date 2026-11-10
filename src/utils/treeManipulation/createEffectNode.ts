@@ -2,7 +2,6 @@ import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleBoonItem } from '../../documents/item/boon.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { createApplyEffectNode } from './createApplyEffectNode.js';
-import { createConditionNode } from './createConditionNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
 import { createHealingNode } from './createHealingNode.js';
@@ -43,8 +42,7 @@ export async function createEffectNode(
 
 	if (nodeType === 'applyEffect') {
 		newNode = createApplyEffectNode(parentId, context, await createItemEffect(document));
-	} else if (nodeType === 'condition') newNode = createConditionNode(parentId, context);
-	else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
+	} else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
 	else if (nodeType === 'move') newNode = createMoveNode(parentId, context);

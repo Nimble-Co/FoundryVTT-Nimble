@@ -1,5 +1,4 @@
 import ApplyEffectNode from '../../chat/components/ApplyEffectNode.svelte';
-import ConditionNode from '../../chat/components/ConditionNode.svelte';
 import DamageNode from '../../chat/components/DamageNode.svelte';
 import DamageOutcomeNode from '../../chat/components/DamageOutcomeNode.svelte';
 import HealingNode from '../../chat/components/HealingNode.svelte';
@@ -12,8 +11,6 @@ export function getNodeComponent(nodeType: string) {
 	switch (nodeType) {
 		case 'applyEffect':
 			return ApplyEffectNode;
-		case 'condition':
-			return ConditionNode;
 		case 'damage':
 			return DamageNode;
 		case 'damageOutcome':

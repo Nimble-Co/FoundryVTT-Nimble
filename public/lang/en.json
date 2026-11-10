@@ -559,8 +559,6 @@
 				"missingName": "Effect not found",
 				"missing": "The item no longer has this effect."
 			},
-			"applyConditionHint": "Left click to apply this condition to this card's targets.",
-			"applyConditionToTargets": "Apply condition to this card's targets",
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"checkResult": {
@@ -4763,7 +4761,6 @@
 				"noTempHealing": "None",
 				"tempHealingFormula": "Temp healing {formula}"
 			},
-			"condition": "Condition",
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
@@ -4813,10 +4810,8 @@
 			"customSaveDCHint": "A number or a formula against the data of the creature that uses this. When empty, a hero uses 10+@key and a monster has no DC.",
 			"sharedRolls": "Shared Rolls",
 			"none": "None",
-			"statusCondition": "Status Condition",
 			"noteType": "Note Type",
 			"deleteDamage": "Delete damage roll",
-			"deleteCondition": "Delete condition",
 			"deleteMove": "Delete move",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteNote": "Delete Note",
