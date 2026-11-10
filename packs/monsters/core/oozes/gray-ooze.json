@@ -266,8 +266,10 @@
 								"hit": [
 									{
 										"id": "AbBeWSxJeFyskrgU",
-										"type": "condition",
-										"condition": "blinded",
+										"type": "applyEffect",
+										"effectId": "nW1StkJlJnAIiRxQ",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "mkpNpTeFYIgKJbey"
 									},
@@ -301,7 +303,37 @@
 			},
 			"_id": "wgRj9GjR4DMp4mQx",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "nW1StkJlJnAIiRxQ",
+					"name": "Blinded",
+					"img": "icons/svg/blind.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"blinded"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

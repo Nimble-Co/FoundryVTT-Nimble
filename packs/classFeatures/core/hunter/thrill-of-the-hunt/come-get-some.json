@@ -54,8 +54,10 @@
 							},
 							{
 								"id": "comeGetSomeDmg00C0",
-								"type": "condition",
-								"condition": "taunted",
+								"type": "applyEffect",
+								"effectId": "VVT5y8qfBnOYZmHo",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "hit",
 								"parentNode": "comeGetSomeDmg00"
 							}
@@ -95,7 +97,37 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "VVT5y8qfBnOYZmHo",
+			"name": "Taunted",
+			"img": "systems/nimble/assets/icons/taunted.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"taunted"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

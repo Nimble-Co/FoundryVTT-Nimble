@@ -283,8 +283,10 @@
 									},
 									{
 										"id": "greenRootRestrain",
-										"type": "condition",
-										"condition": "restrained",
+										"type": "applyEffect",
+										"effectId": "fOFSCnZsv5MVN9Mr",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "greenRootSave001"
 									}
@@ -309,7 +311,37 @@
 				"subtype": "action",
 				"parentItemId": "greenAtkSeq00001"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "fOFSCnZsv5MVN9Mr",
+					"name": "Restrained",
+					"img": "icons/svg/net.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"restrained"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

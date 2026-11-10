@@ -160,15 +160,19 @@
 					"effects": [
 						{
 							"id": "zp5I17UCFzX7evU7",
-							"type": "condition",
-							"condition": "prone",
+							"type": "applyEffect",
+							"effectId": "9rRHeEWnuaYAQ4B5",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						},
 						{
 							"id": "7Xvl3e22HkkWcTGi",
-							"type": "condition",
-							"condition": "hampered",
+							"type": "applyEffect",
+							"effectId": "CjJd3Ft3JDj1h6UJ",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						}
@@ -187,7 +191,66 @@
 				},
 				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "9rRHeEWnuaYAQ4B5",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "CjJd3Ft3JDj1h6UJ",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -419,15 +482,19 @@
 								"failedSave": [
 									{
 										"id": "LwJ8iS6H76SUg9YT",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "wiSSsa3KBuGd8TkW",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "XSsMqXrm3eke0Gj6"
 									},
 									{
 										"id": "0Oh2HN5dMuWgedki",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "UzjyEJKtYZ2z8AB6",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "XSsMqXrm3eke0Gj6"
 									}
@@ -456,7 +523,66 @@
 			},
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "wiSSsa3KBuGd8TkW",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "UzjyEJKtYZ2z8AB6",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

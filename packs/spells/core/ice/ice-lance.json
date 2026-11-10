@@ -33,8 +33,10 @@
 						"hit": [
 							{
 								"id": "H8EN9zVubJKOLvHA",
-								"type": "condition",
-								"condition": "slowed",
+								"type": "applyEffect",
+								"effectId": "fgMd7kjQ9KienaIw",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "hit",
 								"parentNode": "6pEXpZ8znbQP6LiP"
 							},
@@ -102,7 +104,37 @@
 		"school": "ice",
 		"tier": 0
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "fgMd7kjQ9KienaIw",
+			"name": "Slowed",
+			"img": "systems/nimble/assets/icons/slowed.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"slowed"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

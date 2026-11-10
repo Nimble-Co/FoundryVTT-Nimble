@@ -102,8 +102,10 @@
 			"effects": [
 				{
 					"id": "MhOQyBN2Fb6rCtI8",
-					"type": "condition",
-					"condition": "blinded",
+					"type": "applyEffect",
+					"effectId": "1ZTirxa4Cux7gj17",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -130,7 +132,37 @@
 			7
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "1ZTirxa4Cux7gj17",
+			"name": "Blinded",
+			"img": "icons/svg/blind.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"blinded"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

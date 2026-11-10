@@ -170,15 +170,19 @@
 								"hit": [
 									{
 										"id": "kFtiHRPIIs6l4gDP",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "s1XPJYu6tzoxXQFC",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "M6hnSUAyIO8XbKoo"
 									},
 									{
 										"id": "XsGa32Fvj5Av3B1h",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "trrgMKwGO1eSC0tb",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "M6hnSUAyIO8XbKoo"
 									},
@@ -212,7 +216,66 @@
 			},
 			"_id": "faCrvNI9LXhe7JFR",
 			"img": "icons/creatures/claws/claw-hooked-barbed.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "s1XPJYu6tzoxXQFC",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "trrgMKwGO1eSC0tb",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

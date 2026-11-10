@@ -266,8 +266,10 @@
 								"criticalHit": [
 									{
 										"id": "2WK593YRmeuloA29",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "iB3UeTVOYx6GUF35",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "oC8imxDwrY0Cb8OG"
 									}
@@ -303,7 +305,37 @@
 			},
 			"_id": "Wy7ikl5qUSIMLNsK",
 			"img": "icons/weapons/swords/shortsword-simple.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "iB3UeTVOYx6GUF35",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

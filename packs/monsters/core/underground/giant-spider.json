@@ -170,15 +170,19 @@
 								"hit": [
 									{
 										"id": "ah3pHtFYfzOZV6Zf",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "5oxaGV24dlNtRQRP",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "T9LWdmKADzv0aJSl"
 									},
 									{
 										"id": "JCm1vmnnng7ktqmp",
-										"type": "condition",
-										"condition": "restrained",
+										"type": "applyEffect",
+										"effectId": "1Y3BB4THhK04NKze",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "T9LWdmKADzv0aJSl"
 									},
@@ -212,7 +216,66 @@
 			},
 			"_id": "XYLGTfOSJIhnEFg6",
 			"img": "icons/creatures/webs/web-clumped-blue.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "5oxaGV24dlNtRQRP",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "1Y3BB4THhK04NKze",
+					"name": "Restrained",
+					"img": "icons/svg/net.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"restrained"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -258,8 +321,10 @@
 								"hit": [
 									{
 										"id": "2CEgu2iOcvOg30DY",
-										"type": "condition",
-										"condition": "poisoned",
+										"type": "applyEffect",
+										"effectId": "YNtOwm7G1ENwjL82",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "hOvBWCvldkhCdAu1"
 									},
@@ -293,7 +358,37 @@
 			},
 			"_id": "KE9brUwkH68TjZFh",
 			"img": "icons/creatures/abilities/fang-tooth-poison-green.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "YNtOwm7G1ENwjL82",
+					"name": "Poisoned",
+					"img": "icons/svg/poison.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"poisoned"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

@@ -50,8 +50,10 @@
 			"effects": [
 				{
 					"id": "OafObDpPG61HaLlo",
-					"type": "condition",
-					"condition": "frightened",
+					"type": "applyEffect",
+					"effectId": "HKrFk8DTg4qJdTrU",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -128,7 +130,37 @@
 		"school": "necrotic",
 		"tier": 2
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "HKrFk8DTg4qJdTrU",
+			"name": "Frightened",
+			"img": "icons/svg/terror.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"frightened"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

@@ -42,8 +42,10 @@
 									"failedSave": [
 										{
 											"id": "xU1H46GErvHeHktL",
-											"type": "condition",
-											"condition": "restrained",
+											"type": "applyEffect",
+											"effectId": "lw6Gq5oQtvrk7XUC",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
 											"parentNode": "P2MHYNyCBVrBNjGJ"
 										}
@@ -109,7 +111,37 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "lw6Gq5oQtvrk7XUC",
+			"name": "Restrained",
+			"img": "icons/svg/net.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"restrained"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

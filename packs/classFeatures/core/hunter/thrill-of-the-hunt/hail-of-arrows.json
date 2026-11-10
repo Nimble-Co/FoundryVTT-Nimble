@@ -54,8 +54,10 @@
 							},
 							{
 								"id": "hailOfArrowsDmg0C0",
-								"type": "condition",
-								"condition": "slowed",
+								"type": "applyEffect",
+								"effectId": "dNLZfEe90lFwHQRD",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "hit",
 								"parentNode": "hailOfArrowsDmg0"
 							}
@@ -95,7 +97,37 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "dNLZfEe90lFwHQRD",
+			"name": "Slowed",
+			"img": "systems/nimble/assets/icons/slowed.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"slowed"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

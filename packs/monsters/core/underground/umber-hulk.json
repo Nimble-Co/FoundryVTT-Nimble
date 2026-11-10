@@ -171,8 +171,10 @@
 								"failedSave": [
 									{
 										"id": "3GCn8oRY2zLRA9RS",
-										"type": "condition",
-										"condition": "confused",
+										"type": "applyEffect",
+										"effectId": "q5AOtsApLNEP2oHY",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "8oSIyG74A90ERntm"
 									}
@@ -195,7 +197,37 @@
 				},
 				"description": "<p>Enemies make a DC 15 WIL save at the start of their turns or Confused this turn. Gain advantage 1 on the save for each failure this encounter. </p><p>(<strong>Confused.</strong> The GM Spends your next action)</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "q5AOtsApLNEP2oHY",
+					"name": "Confused",
+					"img": "systems/nimble/assets/icons/confused.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"confused"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

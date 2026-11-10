@@ -42,8 +42,10 @@
 									"failedSave": [
 										{
 											"id": "RPmekslPbF0Hwizv",
-											"type": "condition",
-											"condition": "prone",
+											"type": "applyEffect",
+											"effectId": "788vgfV6Pg9YOm1M",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
 											"parentNode": "sklq8bAt2H8fc8lm"
 										}
@@ -107,7 +109,37 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "788vgfV6Pg9YOm1M",
+			"name": "Prone",
+			"img": "icons/svg/falling.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"prone"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

@@ -287,15 +287,19 @@
 								"failedSave": [
 									{
 										"id": "QzzLXlXGYaCzv6mP",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "qLRW1UkDAVUDKFvj",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "Eq4wmPFjrkCrjSso"
 									},
 									{
 										"id": "fNd6s6VVxcvkHsSc",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "bm0syBy0M81cxxBc",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "Eq4wmPFjrkCrjSso"
 									}
@@ -323,7 +327,66 @@
 			},
 			"_id": "h0qvQ7hA6kTuBPDI",
 			"img": "icons/magic/nature/root-vine-fire-entangled-hand.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "qLRW1UkDAVUDKFvj",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "bm0syBy0M81cxxBc",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

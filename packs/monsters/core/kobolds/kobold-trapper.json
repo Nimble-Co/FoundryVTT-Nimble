@@ -403,8 +403,10 @@
 					"effects": [
 						{
 							"id": "BOagfdRs3KYxzFag",
-							"type": "condition",
-							"condition": "restrained",
+							"type": "applyEffect",
+							"effectId": "EySYv4G54ZK1393a",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						}
@@ -428,7 +430,37 @@
 			},
 			"_id": "32UcKER1GRaKPLcD",
 			"img": "icons/tools/fishing/net-simple-tan.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "EySYv4G54ZK1393a",
+					"name": "Restrained",
+					"img": "icons/svg/net.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"restrained"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

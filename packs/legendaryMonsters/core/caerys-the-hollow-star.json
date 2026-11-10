@@ -388,8 +388,10 @@
 								"failedSave": [
 									{
 										"id": "2WccWFEj0QTmBLfP",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "D3qLsoL3Gt5vAoaI",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "q20U5ghtUs4RbwzR"
 									}
@@ -448,7 +450,37 @@
 			},
 			"_id": "3ZLbCogTJylv3j6P",
 			"img": "icons/magic/defensive/barrier-shield-dome-blue-purple.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "D3qLsoL3Gt5vAoaI",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

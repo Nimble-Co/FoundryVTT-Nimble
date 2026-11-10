@@ -170,8 +170,10 @@
 								"hit": [
 									{
 										"id": "gdEQboXHfET5cJV6",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "7UFQnfAVsMUPtXI3",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "Z8MKXP8lRs0E1lK9"
 									},
@@ -205,7 +207,37 @@
 			},
 			"_id": "wgiL9nmnsFME5ufI",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "7UFQnfAVsMUPtXI3",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

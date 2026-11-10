@@ -323,8 +323,10 @@
 											"failedSave": [
 												{
 													"id": "dregCritWound0001",
-													"type": "condition",
-													"condition": "wounded",
+													"type": "applyEffect",
+													"effectId": "x0JESQNOrc9H5CW9",
+													"recipient": "targets",
+													"tempHealingNodeId": null,
 													"parentContext": "failedSave",
 													"parentNode": "dregCritSave00001"
 												}
@@ -336,8 +338,10 @@
 								"hit": [
 									{
 										"id": "dregClawDaze00001",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "3MS1sJPohqRAzGz5",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "dregClawDmg000001"
 									},
@@ -370,7 +374,66 @@
 				"subtype": "action",
 				"parentItemId": "dregaAtkSeq000001"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "x0JESQNOrc9H5CW9",
+					"name": "Wounded",
+					"img": "systems/nimble/assets/icons/wound.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"wounded"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "3MS1sJPohqRAzGz5",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

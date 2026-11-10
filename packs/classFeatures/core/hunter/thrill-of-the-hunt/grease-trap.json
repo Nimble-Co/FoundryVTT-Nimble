@@ -79,15 +79,19 @@
 			"effects": [
 				{
 					"id": "greaseTrapConsum0",
-					"type": "condition",
-					"condition": "prone",
+					"type": "applyEffect",
+					"effectId": "q3p1OVGNM0Nx22fM",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				},
 				{
 					"id": "greaseTrapConsum1",
-					"type": "condition",
-					"condition": "smoldering",
+					"type": "applyEffect",
+					"effectId": "BMXCXdTE1HnDOuMi",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -122,7 +126,66 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "q3p1OVGNM0Nx22fM",
+			"name": "Prone",
+			"img": "icons/svg/falling.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"prone"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "BMXCXdTE1HnDOuMi",
+			"name": "Smoldering",
+			"img": "icons/svg/fire.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"smoldering"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

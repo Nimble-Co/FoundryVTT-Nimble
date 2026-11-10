@@ -32,8 +32,10 @@
 						"failedSave": [
 							{
 								"id": "QkjFPsbIpEp4cnQT",
-								"type": "condition",
-								"condition": "incapacitated",
+								"type": "applyEffect",
+								"effectId": "A12bIBmJuK6OOEr3",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "failedSave",
 								"parentNode": "9dMZOZo2xDDUrl90"
 							}
@@ -76,7 +78,37 @@
 		"school": "ice",
 		"tier": 8
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "A12bIBmJuK6OOEr3",
+			"name": "Incapacitated",
+			"img": "systems/nimble/assets/icons/incapacitated.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"incapacitated"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

@@ -54,8 +54,10 @@
 							},
 							{
 								"id": "pinningShotDmg00C0",
-								"type": "condition",
-								"condition": "restrained",
+								"type": "applyEffect",
+								"effectId": "daTg3tG701pkS4Py",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "hit",
 								"parentNode": "pinningShotDmg00"
 							}
@@ -95,7 +97,37 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "daTg3tG701pkS4Py",
+			"name": "Restrained",
+			"img": "icons/svg/net.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"restrained"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -220,8 +220,10 @@
 								"hit": [
 									{
 										"id": "flytrapTangleGrab",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "gW8I6VKZv4O4cXya",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "flytrapTangleDmg1"
 									},
@@ -253,7 +255,37 @@
 				"description": "<p>(Reach 12) 1d6+2, Grappled (escape DC 12, or any fire or slashing damage).</p>",
 				"subtype": "action"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "gW8I6VKZv4O4cXya",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

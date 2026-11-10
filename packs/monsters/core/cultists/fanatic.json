@@ -255,8 +255,10 @@
 					"effects": [
 						{
 							"id": "GOjNJGLRqfO3ILRz",
-							"type": "condition",
-							"condition": "despair",
+							"type": "applyEffect",
+							"effectId": "Sk1c8vGvGtDAE3tc",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						},
@@ -301,7 +303,37 @@
 			},
 			"_id": "ft187LYF1CK3SovV",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "Sk1c8vGvGtDAE3tc",
+					"name": "Despair",
+					"img": "systems/nimble/assets/icons/despair.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"despair"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -345,8 +377,10 @@
 								"failedSave": [
 									{
 										"id": "dUCaaTDoblAmthzS",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "AR6seICcuscRLWqW",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "I4FAutwqUV25q4Qs"
 									}
@@ -395,7 +429,37 @@
 			},
 			"_id": "hiGWXOMmLSUL84RY",
 			"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "AR6seICcuscRLWqW",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

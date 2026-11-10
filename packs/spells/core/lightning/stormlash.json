@@ -42,15 +42,19 @@
 									"failedSave": [
 										{
 											"id": "JWrZ7yNewPNQFKf1",
-											"type": "condition",
-											"condition": "dazed",
+											"type": "applyEffect",
+											"effectId": "fNHfnzPAu2hn65qY",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
 											"parentNode": "IwddxkKmamMGEjCs"
 										},
 										{
 											"id": "sJk9jpZjgofUGgng",
-											"type": "condition",
-											"condition": "incapacitated",
+											"type": "applyEffect",
+											"effectId": "mIzPxDpbUSQfYERv",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
 											"parentNode": "IwddxkKmamMGEjCs"
 										}
@@ -114,7 +118,66 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "fNHfnzPAu2hn65qY",
+			"name": "Dazed",
+			"img": "systems/nimble/assets/icons/dazed.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"dazed"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "mIzPxDpbUSQfYERv",
+			"name": "Incapacitated",
+			"img": "systems/nimble/assets/icons/incapacitated.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"incapacitated"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

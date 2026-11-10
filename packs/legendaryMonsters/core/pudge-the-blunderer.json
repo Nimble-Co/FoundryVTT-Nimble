@@ -213,15 +213,19 @@
 								"hit": [
 									{
 										"id": "v7HFo1fTg5k7F54X",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "PT1M1r4VlGV4K7T8",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "fpYTjiKcPYII10tZ"
 									},
 									{
 										"id": "58PWXSKjDsRMohWr",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "Fn9JoExpzFFZmQkc",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "fpYTjiKcPYII10tZ"
 									},
@@ -256,7 +260,66 @@
 			},
 			"_id": "Egw0SfukBFY6ug6C",
 			"img": "icons/weapons/clubs/club-banded-brown.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "PT1M1r4VlGV4K7T8",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "Fn9JoExpzFFZmQkc",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -321,8 +384,10 @@
 								"failedSave": [
 									{
 										"id": "qG0HYl7w86Rj5C4f",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "tFqHZr0ptWqxMWSq",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "b2eM1wlJ1rVqDhMw"
 									},
@@ -360,7 +425,37 @@
 			},
 			"_id": "SKhOQ3JXY1aE3RK2",
 			"img": "icons/skills/melee/unarmed-punch-fist.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "tFqHZr0ptWqxMWSq",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

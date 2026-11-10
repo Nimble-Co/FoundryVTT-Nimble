@@ -315,8 +315,10 @@
 								"criticalHit": [
 									{
 										"id": "swallowCritChip0",
-										"type": "condition",
-										"condition": "swallowed",
+										"type": "applyEffect",
+										"effectId": "sNV4rNGDGseaVmJk",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "XOR7rxFVWDUzi9ra"
 									}
@@ -343,7 +345,37 @@
 			},
 			"_id": "y6ehHXM8WKOXUyUl",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-needles-purple.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "sNV4rNGDGseaVmJk",
+					"name": "Swallowed",
+					"img": "systems/nimble/assets/icons/swallowed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"swallowed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

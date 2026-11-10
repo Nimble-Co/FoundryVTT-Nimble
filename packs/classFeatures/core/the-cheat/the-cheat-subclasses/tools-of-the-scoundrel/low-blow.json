@@ -23,15 +23,19 @@
 			"effects": [
 				{
 					"id": "r5ukBBJ3p1I8awLr",
-					"type": "condition",
-					"condition": "incapacitated",
+					"type": "applyEffect",
+					"effectId": "v0YvmeL7XTwk2mYu",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				},
 				{
 					"id": "TadcniVBHxG6oYAs",
-					"type": "condition",
-					"condition": "taunted",
+					"type": "applyEffect",
+					"effectId": "VbE63saZhyxxIbjE",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -58,7 +62,66 @@
 			3
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "v0YvmeL7XTwk2mYu",
+			"name": "Incapacitated",
+			"img": "systems/nimble/assets/icons/incapacitated.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"incapacitated"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "VbE63saZhyxxIbjE",
+			"name": "Taunted",
+			"img": "systems/nimble/assets/icons/taunted.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"taunted"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -40,8 +40,10 @@
 							},
 							{
 								"id": "b4uLkFLDWt2uKTUP",
-								"type": "condition",
-								"condition": "charged",
+								"type": "applyEffect",
+								"effectId": "naPljowutGjNJFzf",
+								"recipient": "self",
+								"tempHealingNodeId": null,
 								"parentContext": "miss",
 								"parentNode": "6pEXpZ8znbQP6LiP"
 							},
@@ -109,7 +111,37 @@
 		"school": "lightning",
 		"tier": 0
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "naPljowutGjNJFzf",
+			"name": "Charged",
+			"img": "systems/nimble/assets/icons/charged.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"charged"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {
