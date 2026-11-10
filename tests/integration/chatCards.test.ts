@@ -175,7 +175,7 @@ describe('chat message cards', () => {
 	}, 30_000);
 
 	test('dialog-produced cards render from their producer data shapes', async () => {
-		// Shapes mirror AssessActionDialog, executeMoveAction,
+		// Shapes mirror AssessActionDialog, executeMoveAction, endEffects,
 		// buildReactionChatData, the charge system, buildNcsGroupAttackChatData,
 		// postMovementOfferCard and postMovementTriggerCard respectively.
 		const moveNodeId = foundry.utils.randomID();
@@ -194,6 +194,21 @@ describe('chat message cards', () => {
 				targetName: null,
 			},
 			moveAction: { actorName: actor.name, speed: 6 },
+			effectsEnded: {
+				actorName: 'Gamemaster',
+				heading: 'Start of the test turn',
+				rows: [
+					{
+						effectId: 'chatCardEffect01',
+						holderUuid: actor.uuid,
+						holderName: actor.name,
+						name: 'Test Effect',
+						img: 'icons/svg/aura.svg',
+						sourceName: 'Test Source',
+						effect: { _id: 'chatCardEffect01', name: 'Test Effect' },
+					},
+				],
+			},
 			reaction: {
 				actorName: actor.name,
 				actorType: actor.type,

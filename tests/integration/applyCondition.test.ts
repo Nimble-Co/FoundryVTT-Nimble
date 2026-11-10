@@ -168,10 +168,9 @@ describe('applyCondition rule', () => {
 			() => combat.combatant?.actorId === actor.id && combat.round === startRound + 1,
 			'the character turn in the next round',
 		);
-		await waitFor(() => effect.duration.expired, 'slowed to expire at the character turn start');
 		await waitFor(
 			() => !actor.effects.contents.some((candidate) => candidate.id === effect.id),
-			'the expired slowed effect to be deleted',
+			'slowed to end at the character turn start',
 		);
 		expect(actor.statuses.has('slowed')).toBe(false);
 		await waitFor(() => !actor.statuses.has('hampered'), 'hampered to be removed with slowed');
