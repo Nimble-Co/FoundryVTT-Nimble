@@ -1,28 +1,58 @@
 <script lang="ts">
+	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import { type EndedEffectRow, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 	import localize from '#utils/localize.js';
 	import CardHeader from './components/CardHeader.svelte';
 
-	let { messageDocument } = $props();
+	let { messageDocument }: ChatCardProps = $props();
 
-	const system = $derived(messageDocument.reactive.system);
-	const rows: EndedEffectRow[] = $derived(system.rows ?? []);
+	const system = $derived(
+		(
+			messageDocument.reactive as unknown as {
+				system: { heading: string; rows?: EndedEffectRow[] };
+			}
+		).system,
+	);
+	const rows = $derived(system.rows ?? []);
 
-	let undone = $state<Record<string, boolean>>({});
+	// Bumped when an effect is made or deleted, so "On <name>" shows on every client.
+	let effectsVersion = $state(0);
 	let busy = $state<Record<string, boolean>>({});
 
+	$effect(() => {
+		const bump = () => {
+			effectsVersion += 1;
+		};
+		const ids = ['createActiveEffect', 'deleteActiveEffect'].map((hook) => ({
+			hook,
+			id: Hooks.on(hook as never, bump as never),
+		}));
+		return () => {
+			for (const { hook, id } of ids) Hooks.off(hook as never, id);
+		};
+	});
+
+	const keyOf = (row: EndedEffectRow) => `${row.holderUuid}.${row.effectId}`;
+
+	function holderOf(row: EndedEffectRow): Actor | null {
+		return fromUuidSync(row.holderUuid as never, { strict: false }) as Actor | null;
+	}
+
+	function isBack(row: EndedEffectRow): boolean {
+		void effectsVersion;
+		return !!holderOf(row)?.effects?.get(row.effectId);
+	}
+
 	function canUndo(row: EndedEffectRow): boolean {
-		if (game.user?.isGM) return true;
-		const holder = fromUuidSync(row.holderUuid as never, { strict: false }) as Actor | null;
-		return !!holder?.isOwner;
+		return !!game.user?.isGM || !!holderOf(row)?.isOwner;
 	}
 
 	async function undo(row: EndedEffectRow) {
-		busy[row.effectId] = true;
+		busy[keyOf(row)] = true;
 		try {
-			if (await undoEndedEffect(row)) undone[row.effectId] = true;
+			await undoEndedEffect(row);
 		} finally {
-			busy[row.effectId] = false;
+			busy[keyOf(row)] = false;
 		}
 	}
 </script>
@@ -33,7 +63,7 @@
 	<h3 class="nimble-effects-ended__heading">{system.heading}</h3>
 
 	<ul class="nimble-effects-ended__rows">
-		{#each rows as row (row.effectId + row.holderUuid)}
+		{#each rows as row (keyOf(row))}
 			<li class="nimble-effects-ended__row">
 				<img class="nimble-effects-ended__icon" src={row.img || 'icons/svg/aura.svg'} alt="" />
 
@@ -46,8 +76,8 @@
 					{/if}
 				</span>
 
-				{#if undone[row.effectId]}
-					<span class="nimble-effects-ended__back">
+				{#if isBack(row)}
+					<span class="nimble-effects-ended__back" role="status">
 						<i class="fa-solid fa-check" aria-hidden="true"></i>
 						{localize('NIMBLE.lastsUntil.chat.backOn', { name: row.holderName })}
 					</span>
@@ -55,7 +85,12 @@
 					<button
 						class="nimble-effects-ended__undo"
 						type="button"
-						disabled={busy[row.effectId]}
+						aria-label={localize('NIMBLE.lastsUntil.chat.undoLabel', {
+							effect: row.name,
+							name: row.holderName,
+						})}
+						aria-busy={busy[keyOf(row)] ?? false}
+						disabled={busy[keyOf(row)]}
 						onclick={() => undo(row)}
 					>
 						<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
@@ -106,7 +141,7 @@
 			padding: 0.125rem;
 			border: 0;
 			border-radius: 3px;
-			background: hsl(0, 0%, 13%);
+			background: var(--nimble-card-status-icon-plate);
 		}
 
 		&__text {
@@ -155,7 +190,7 @@
 			gap: 0.3125rem;
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
-			color: var(--nimble-ui-action, hsl(139, 45%, 40%));
+			color: var(--nimble-card-text-color);
 		}
 	}
 </style>
