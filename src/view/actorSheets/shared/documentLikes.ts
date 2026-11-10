@@ -5,6 +5,7 @@
 import { SYSTEM_ID } from '#system';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
+import { effectLastsUntil, originName } from '#view/dataPreparationHelpers/effectLastsUntil.js';
 import type { ActorCondition } from '#view/dataPreparationHelpers/prepareActorConditions.js';
 import {
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
@@ -90,6 +91,10 @@ function durationWords(label: string): string {
 	return label === NO_END_LABEL ? '' : expandDurationLabel(label, (key) => localize(key));
 }
 
+function holderOf(effect: EffectDocument): { uuid?: string | null } | null {
+	return (effect as unknown as { actor?: { uuid?: string | null } | null }).actor ?? null;
+}
+
 export function effectLike(effect: EffectDocument): EffectLike {
 	const itemId = effect.parent?.documentName === 'Item' ? (effect.parent.id ?? null) : null;
 	const ruleId = effect.getFlag?.(SYSTEM_ID as 'core', TOGGLE_EFFECT_RULE_ID_FLAG as never);
@@ -108,6 +113,8 @@ export function effectLike(effect: EffectDocument): EffectLike {
 				: null,
 		temporary: isTemporary(effect, !!itemId || !!effect.origin),
 		duration: durationWords(deriveDurationDetails(effect.duration).label),
+		lastsUntil: effectLastsUntil(effect as never, holderOf(effect)),
+		sourceName: originName(effect as never),
 		description: plainText(effect.description ?? ''),
 	};
 }
@@ -120,6 +127,8 @@ export function conditionLike(condition: ActorCondition): ConditionLike {
 		active: condition.active,
 		description: plainText(condition.descriptionHtml),
 		duration: durationWords(condition.durationLabel),
+		lastsUntil: condition.active ? condition.lastsUntil : '',
 		source: condition.active ? (condition.originName ?? '') : '',
+		effectId: condition.active ? condition.effectId : null,
 	};
 }

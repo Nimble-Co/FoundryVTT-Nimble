@@ -28,6 +28,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		onequip,
 		equipped = false,
 		summary,
+		summaryIcon,
 		summaryTone,
 		cost = {},
 		description,
@@ -84,7 +85,11 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 				<em class="tag" class:on={tagOn}>{tag}</em>
 			{/if}
 		</span>
-		{#if summary}<span class="sm {summaryTone ?? ''}">{summary}</span>{/if}
+		{#if summary && summaryIcon}
+			<span class="sm si {summaryTone ?? ''}"
+				><i class={summaryIcon} aria-hidden="true"></i><span>{summary}</span></span
+			>
+		{:else if summary}<span class="sm {summaryTone ?? ''}">{summary}</span>{/if}
 	</span>
 	{#if withCost}<RowCost {...cost} />{/if}
 {/snippet}
@@ -294,6 +299,23 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		font-weight: 500;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink-muted);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
+	}
+	.sm.si {
+		display: flex;
+		align-items: flex-start;
+		gap: 5px;
+	}
+	.sm.si i {
+		flex: none;
+		margin-block-start: 0.15em;
+		font-size: 0.7rem;
+	}
+	.sm.si span {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;

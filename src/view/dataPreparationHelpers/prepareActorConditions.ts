@@ -1,5 +1,6 @@
 import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
 import localize from '../../utils/localize.js';
+import { effectLastsUntil } from './effectLastsUntil.js';
 
 export type ActorCondition = {
 	id: string;
@@ -13,6 +14,10 @@ export type ActorCondition = {
 	sourceLabel: string;
 	/** the document that made the effect; null when the effect has no origin */
 	originName: string | null;
+	/** how long it lasts, as the holder reads it; empty for no end */
+	lastsUntil: string;
+	/** the effect that gives the condition; null for one the system sets */
+	effectId: string | null;
 	tooltipHtml: string;
 };
 
@@ -28,6 +33,8 @@ type ConditionEffectCandidate = {
 	durationSortMs: number | null;
 	sourceName: string | null;
 	originName: string | null;
+	lastsUntil: string;
+	effectId: string | null;
 };
 
 function escapeHtml(value: string): string {
@@ -55,7 +62,10 @@ function getEffectSourceName(effect: ActiveEffect): string | null {
 	return null;
 }
 
-function getBestEffectCandidate(effects: ActiveEffect[]): ConditionEffectCandidate {
+function getBestEffectCandidate(
+	effects: ActiveEffect[],
+	holder: Actor.Implementation,
+): ConditionEffectCandidate {
 	const candidates = effects.map((effect) => {
 		const duration = deriveDurationDetails(
 			(
@@ -70,6 +80,8 @@ function getBestEffectCandidate(effects: ActiveEffect[]): ConditionEffectCandida
 			durationSortMs: duration.sortMs,
 			sourceName: getEffectSourceName(effect),
 			originName: effect.origin ? getEffectSourceName(effect) : null,
+			lastsUntil: effectLastsUntil(effect as never, holder),
+			effectId: effect.id ?? null,
 		};
 	});
 
@@ -87,6 +99,8 @@ function getBestEffectCandidate(effects: ActiveEffect[]): ConditionEffectCandida
 			durationSortMs: null,
 			sourceName: null,
 			originName: null,
+			lastsUntil: '',
+			effectId: null,
 		}
 	);
 }
@@ -164,7 +178,7 @@ export default function prepareActorConditions(
 			CONFIG.NIMBLE.conditions?.[conditionId] ?? (matchingEffects[0]?.name || conditionId);
 		const fallbackImage =
 			CONFIG.NIMBLE.conditionDefaultImages?.[conditionId] ?? (matchingEffects[0]?.img || '');
-		const bestEffect = getBestEffectCandidate(matchingEffects);
+		const bestEffect = getBestEffectCandidate(matchingEffects, actor);
 		const sourceLabel = bestEffect.sourceName ?? sourceNoneText;
 		const descriptionHtml = conditionDescriptions[conditionId] ?? '';
 		const baseCondition = {
@@ -182,6 +196,8 @@ export default function prepareActorConditions(
 		return {
 			...baseCondition,
 			originName: bestEffect.originName,
+			lastsUntil: bestEffect.lastsUntil,
+			effectId: bestEffect.effectId,
 			tooltipHtml: buildConditionTooltip(baseCondition),
 		};
 	});

@@ -46,6 +46,10 @@ export interface EffectLike {
 	temporary: boolean;
 	/** how long it lasts, in words; empty for no end */
 	duration: string;
+	/** Lasts Until as the holder reads it: "Until the end of your next turn"; empty for none */
+	lastsUntil: string;
+	/** the name of the document in the origin: "Snowblind" */
+	sourceName: string;
 	description: string;
 }
 
@@ -59,8 +63,12 @@ export interface ConditionLike {
 	description: string;
 	/** how long it lasts, in words; empty for no end */
 	duration: string;
+	/** Lasts Until as the holder reads it; empty for none */
+	lastsUntil: string;
 	/** the name of the effect that gives it, if any */
 	source: string;
+	/** the effect that gives it; null for one the system sets */
+	effectId: string | null;
 }
 
 export interface DicePoolLike {

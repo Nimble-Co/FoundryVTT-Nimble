@@ -50,7 +50,7 @@ The arrow keys, Home and End move the focus in the condition grid.
 					tag={row.tag}
 					tagOn={row.tagOn}
 					summary={row.summary}
-					cost={{ text: row.lasts }}
+					summaryIcon={row.summaryIcon}
 					description={row.description}
 					facts={row.facts}
 					state={row.state}

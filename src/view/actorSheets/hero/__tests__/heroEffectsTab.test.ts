@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	blankHero,
 	conditionLike,
+	effectLike,
 	effectsContext,
 	effectsHero,
 	heroContext,
@@ -103,7 +104,9 @@ describe('heroEffectsTab', () => {
 			intent: { kind: 'endEffect', effectId: 'rageEffect' },
 		});
 		expect(row.state).toBe('active');
-		expect(row.cost.text).toBe(`${FX}.inactiveRound`);
+		expect(row.summary).toBe(`${FX}.inactiveRound`);
+		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
+		expect(row.cost, 'no duration text at the end of the row').toEqual({});
 	});
 
 	it('takes the duration of a toggle effect from the activation when the rule has no end', () => {
@@ -120,7 +123,7 @@ describe('heroEffectsTab', () => {
 
 		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-rageEffect');
 
-		expect(row.cost.text).toBe('10 NIMBLE.durationsPlural.minute');
+		expect(row.summary).toBe('10 NIMBLE.durationsPlural.minute');
 	});
 
 	it('asks before it removes a timed effect', () => {
@@ -135,7 +138,7 @@ describe('heroEffectsTab', () => {
 				intent: { kind: 'removeEffect', effectId: 'bless', itemId: null },
 			},
 		});
-		expect(row.cost.text).toBe('3 rounds');
+		expect(row.summary).toBe('3 rounds');
 		expect(row.description).toBe('Add 1d4.');
 		expect(row.edit).toEqual({ kind: 'openEffect', effectId: 'bless', itemId: null });
 	});
@@ -148,7 +151,24 @@ describe('heroEffectsTab', () => {
 			ask: { intent: { kind: 'setCondition', conditionId: 'dazed', active: false } },
 		});
 		expect(row.description).toBe('You lose 1 action.');
-		expect(row.summary, 'no source: the first sentence').toBe('You lose 1 action.');
+		expect(row.summary, 'the short text is in the open row').toBeUndefined();
+	});
+
+	it('reads Lasts Until with the source on the facts line', () => {
+		const hero = effectsHero();
+		hero.effects.push(
+			effectLike({
+				id: 'snow',
+				name: 'Blinded',
+				lastsUntil: 'Until the end of your next turn',
+				sourceName: 'Snowblind',
+			}),
+		);
+
+		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-snow');
+
+		expect(row.summary).toBe('Until the end of your next turn - Snowblind');
+		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
 	});
 
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {

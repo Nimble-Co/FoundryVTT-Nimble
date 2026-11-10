@@ -35,10 +35,21 @@ export function holderReader(sourceName: string | null): LastsUntilReader {
 	};
 }
 
+export type CoreDurationUnits = 'seconds' | 'minutes' | 'hours' | 'days' | 'turns' | 'rounds';
+
+const CORE_UNITS: readonly CoreDurationUnits[] = [
+	'seconds',
+	'minutes',
+	'hours',
+	'days',
+	'turns',
+	'rounds',
+];
+
 export interface DescribeInput {
 	moments: readonly Moment[];
 	/** A core duration of an older effect or a rule; it reads after the moments. */
-	coreDuration?: { rounds?: number | null; turns?: number | null; seconds?: number | null } | null;
+	coreDuration?: Partial<Record<CoreDurationUnits, number | null>> | null;
 	/** The effect has an Escape DC. */
 	escape?: boolean;
 	reader: LastsUntilReader;
@@ -114,7 +125,7 @@ function amountOf(units: string, value: number, input: DescribeInput): string {
 function corePhrase(input: DescribeInput): string | null {
 	const duration = input.coreDuration;
 	if (!duration) return null;
-	for (const units of ['seconds', 'turns', 'rounds'] as const) {
+	for (const units of CORE_UNITS) {
 		const value = duration[units];
 		if (typeof value === 'number' && value > 0) {
 			return input.format(`${WORDS}.for`, { amount: amountOf(units, value, input) });

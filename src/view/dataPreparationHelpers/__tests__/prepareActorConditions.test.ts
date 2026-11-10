@@ -23,6 +23,7 @@ function createEffect({
 describe('prepareActorConditions', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.stubGlobal('fromUuidSync', () => null);
 	});
 
 	it('sorts conditions alphabetically by display name', () => {
@@ -124,6 +125,8 @@ describe('prepareActorConditions', () => {
 				durationSortMs: null,
 				sourceLabel: 'None',
 				originName: null,
+				lastsUntil: '',
+				effectId: null,
 				tooltipHtml: expect.stringContaining('Custom Condition'),
 			},
 		]);

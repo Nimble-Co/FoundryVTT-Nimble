@@ -28,8 +28,8 @@ export function effectsOnHero(actor: HeroActorLike, context: HeroSheetContext): 
 	return count + (actor.system.resources.inspiration ? 1 : 0);
 }
 
-function heroRow({ lasts, ...row }: EffectRowView): HeroRowView {
-	return { ...row, cost: { text: lasts }, choice: null, drag: null, fields: [] };
+function heroRow(row: EffectRowView): HeroRowView {
+	return { ...row, cost: {}, choice: null, drag: null, fields: [] };
 }
 
 /** Inspiration is not an ActiveEffect, but it is on the hero until it is spent or a Safe Rest. */

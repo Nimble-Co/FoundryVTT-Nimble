@@ -38,8 +38,8 @@ export interface EffectRowView {
 	name: string;
 	img?: string;
 	summary?: string;
-	/** how long it lasts, at the end of the row */
-	lasts?: string;
+	/** Font Awesome class before the summary: the hourglass of a Lasts Until line */
+	summaryIcon?: string;
 	description?: string;
 	facts: [string, string][];
 	state?: 'active';
@@ -106,26 +106,41 @@ function askRemove(name: string, intent: EffectIntent, input: EffectsTabInput): 
 	};
 }
 
+const HOURGLASS = 'fa-solid fa-hourglass-half';
+
+/** "Until the end of your next turn - Snowblind"; the source only when it is not the row's name. */
+function lastsLine(lasts: string, sourceName: string, name: string): string {
+	return sourceName && sourceName !== name ? `${lasts} - ${sourceName}` : lasts;
+}
+
 function stateRow(
 	base: Pick<EffectRowView, 'id' | 'name' | 'img' | 'use'> & {
-		duration: string;
+		/** Lasts Until, or the older duration words */
+		lasts: string;
 		from: string;
+		sourceName: string;
 		description: string;
+		/** a condition keeps its short text in the open row */
+		textInSummary: boolean;
 	},
 	input: EffectsTabInput,
 	extra: Partial<EffectRowView> = {},
 ): EffectRowView {
 	const { localize } = input;
+	const summary = base.lasts
+		? lastsLine(base.lasts, base.sourceName, base.name)
+		: base.from ||
+			(base.textInSummary ? firstSentence(plainText(base.description), base.name) : '');
 	return {
 		id: base.id,
 		name: base.name,
 		img: base.img || undefined,
-		summary: base.from || firstSentence(plainText(base.description), base.name) || undefined,
-		lasts: base.duration || undefined,
+		summary: summary || undefined,
+		summaryIcon: base.lasts ? HOURGLASS : undefined,
 		description: base.description || undefined,
 		facts: [
 			...(base.from ? [[localize(`${FX}.facts.from`), base.from] as [string, string]] : []),
-			[localize(`${FX}.facts.lasts`), base.duration || localize(`${FX}.untilItEnds`)],
+			[localize(`${FX}.facts.lasts`), base.lasts || localize(`${FX}.untilItEnds`)],
 		],
 		use: base.use,
 		edit: null,
@@ -143,12 +158,16 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 		description: effect.description,
 	};
 	const from = item ? format(`${FX}.fromItem`, { name: item.name }) : '';
+	const sourceName = effect.sourceName || item?.name || '';
+	const lasts = effect.lastsUntil || effect.duration;
 	if (effect.toggle) {
 		return stateRow(
 			{
 				...base,
-				duration: effectDuration(effect, item, input),
+				lasts: effect.lastsUntil || effectDuration(effect, item, input),
 				from,
+				sourceName,
+				textInSummary: true,
 				use: {
 					kind: 'act',
 					label: format('NIMBLE.actorSheet.shared.endName', { name: effect.name }),
@@ -161,15 +180,17 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 	}
 	// an item keeps its passive effect on: you change it through the item
 	if (passive && item) {
-		return stateRow({ ...base, duration: effect.duration, from, use: null }, input, {
+		return stateRow({ ...base, lasts, from, sourceName, textInSummary: true, use: null }, input, {
 			edit: { kind: 'openItem', itemId: item.id },
 		});
 	}
 	return stateRow(
 		{
 			...base,
-			duration: effect.duration,
+			lasts,
 			from,
+			sourceName,
+			textInSummary: true,
 			use: {
 				kind: 'ask',
 				ask: askRemove(
@@ -191,11 +212,13 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			name: condition.name,
 			img: condition.img,
 			description: condition.description,
-			duration: condition.duration,
+			lasts: condition.lastsUntil || condition.duration,
 			from:
 				condition.source && condition.source !== condition.name
 					? input.format(`${FX}.fromItem`, { name: condition.source })
 					: '',
+			sourceName: condition.source,
+			textInSummary: false,
 			use: {
 				kind: 'ask',
 				ask: askRemove(

@@ -105,6 +105,8 @@ export interface HeroRowView {
 	tag?: string;
 	tagOn?: boolean;
 	summary?: string;
+	/** Font Awesome class before the summary */
+	summaryIcon?: string;
 	/** warn: a risk, for example a container over its capacity */
 	summaryTone?: 'act' | 'warn';
 	cost: RowCostProps;

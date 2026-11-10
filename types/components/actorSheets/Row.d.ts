@@ -16,6 +16,8 @@ export interface RowProps {
 	equipped?: boolean;
 	/** one line under the name */
 	summary?: string;
+	/** Font Awesome class before the summary, at the top of its first line */
+	summaryIcon?: string;
 	/** act = you just used it, warn = a risk (past the limit) */
 	summaryTone?: 'act' | 'warn';
 	cost?: RowCostProps;

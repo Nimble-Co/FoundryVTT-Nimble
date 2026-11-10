@@ -109,6 +109,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		onequip={row.equip ? () => row.equip && perform(row.equip.intent) : undefined}
 		equipped={row.equip?.on}
 		summary={row.summary}
+		summaryIcon={row.summaryIcon}
 		summaryTone={row.summaryTone}
 		cost={row.cost}
 		description={row.description}
