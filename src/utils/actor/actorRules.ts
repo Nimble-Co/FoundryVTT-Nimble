@@ -30,3 +30,30 @@ export function ruleKey(rule: {
 }): string {
 	return `${rule.parentDocument?.uuid ?? ''}:${rule.id ?? ''}`;
 }
+
+interface RuleParentLike<T> {
+	documentName?: string;
+	modifiesActor?: boolean;
+	rules?: Map<string, T>;
+}
+
+/** The document that holds rules, found from its uuid. Null for an effect that does not change its actor now. */
+export function runningRuleParent<T>(uuid: string | null | undefined): RuleParentLike<T> | null {
+	if (!uuid) return null;
+	const parent = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], {
+		strict: false,
+	}) as RuleParentLike<T> | null;
+	if (!parent?.rules) return null;
+	if (parent.documentName === 'ActiveEffect' && !parent.modifiesActor) return null;
+	return parent;
+}
+
+/** A rule found from the uuid of its parent and its id, while it runs. */
+export function runningRule<T extends { id?: string; disabled?: boolean }>(
+	parentUuid: string | null | undefined,
+	ruleId: string | null | undefined,
+): T | null {
+	const parent = runningRuleParent<T>(parentUuid);
+	const rule = parent?.rules ? [...parent.rules.values()].find((r) => r.id === ruleId) : null;
+	return rule && !rule.disabled ? rule : null;
+}

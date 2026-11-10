@@ -8,7 +8,7 @@ import type {
 import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
-import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
+import { actorRules, ruleKey, ruleLabel, runningRuleParent } from '../actor/actorRules.js';
 import { payCost } from '../cost/costLedger.js';
 import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
@@ -147,11 +147,8 @@ export function tickCost(
 
 /** Whether a Defend option uses this item's reroll, so the reroll waits for the Defend window. */
 export function rerollIsUsedByDefend(itemUuid: string | null | undefined): boolean {
-	if (!itemUuid) return false;
-	const item = fromUuidSync(itemUuid as `Item.${string}`) as {
-		rules?: Map<string, DefendOptionRule>;
-	} | null;
-	return [...(item?.rules?.values() ?? [])].some(
+	const parent = runningRuleParent<DefendOptionRule>(itemUuid);
+	return [...(parent?.rules?.values() ?? [])].some(
 		(rule) => rule.type === RULE_TYPE && rule.useReroll && !rule.disabled,
 	);
 }

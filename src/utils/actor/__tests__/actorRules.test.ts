@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { ruleKey, ruleLabel, rulesOfType } from '../actorRules.js';
+import { ruleKey, ruleLabel, rulesOfType, runningRule } from '../actorRules.js';
 
 describe('ruleLabel', () => {
 	it('gives the rule label when it has one', () => {
@@ -49,5 +49,51 @@ describe('rulesOfType', () => {
 	it('gives none for an actor with no rules', () => {
 		expect(rulesOfType(null, 'reroll')).toEqual([]);
 		expect(rulesOfType({}, 'note')).toEqual([]);
+	});
+});
+
+describe('runningRule', () => {
+	const globals = globalThis as { fromUuidSync?: unknown };
+	let previous: unknown;
+	let documents: Record<string, unknown>;
+
+	beforeEach(() => {
+		previous = globals.fromUuidSync;
+		documents = {};
+		globals.fromUuidSync = (uuid: string) => documents[uuid] ?? null;
+	});
+
+	afterEach(() => {
+		globals.fromUuidSync = previous;
+	});
+
+	const rulesWith = (...rules: { id: string; disabled?: boolean }[]) =>
+		new Map(rules.map((rule) => [rule.id, rule]));
+
+	it('finds a rule on an item by the item uuid and the rule id', () => {
+		documents['Item.a'] = { documentName: 'Item', rules: rulesWith({ id: 'r1' }) };
+
+		expect(runningRule('Item.a', 'r1')).toEqual({ id: 'r1' });
+		expect(runningRule('Item.a', 'r2')).toBeNull();
+	});
+
+	it('finds a rule on an effect only while the effect changes its actor', () => {
+		const effect = {
+			documentName: 'ActiveEffect',
+			modifiesActor: true,
+			rules: rulesWith({ id: 'r1' }),
+		};
+		documents['Actor.a.ActiveEffect.e'] = effect;
+
+		expect(runningRule('Actor.a.ActiveEffect.e', 'r1')).toEqual({ id: 'r1' });
+		effect.modifiesActor = false;
+		expect(runningRule('Actor.a.ActiveEffect.e', 'r1')).toBeNull();
+	});
+
+	it('finds no rule that is disabled, and nothing with no uuid', () => {
+		documents['Item.a'] = { documentName: 'Item', rules: rulesWith({ id: 'r1', disabled: true }) };
+
+		expect(runningRule('Item.a', 'r1')).toBeNull();
+		expect(runningRule('', 'r1')).toBeNull();
 	});
 });
