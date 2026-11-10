@@ -180,6 +180,9 @@ export default function registerConditionsConfig() {
 
 	const conditionOverlayConditions = new Set(['dead', 'unconscious']);
 
+	/** Minor Statuses end when combat ends. A custom condition can join with its Minor box. */
+	const conditionMinorConditions = new Set<string>(['charged', 'distracted', 'smoldering']);
+
 	// New: Automatic condition trigger relationships
 	const conditionTriggerRelationships = {
 		hampered: {
@@ -198,6 +201,7 @@ export default function registerConditionsConfig() {
 		conditionLinkedConditions,
 		conditionStackableConditions,
 		conditionOverlayConditions,
+		conditionMinorConditions,
 		conditionTriggerRelationships,
 	};
 }

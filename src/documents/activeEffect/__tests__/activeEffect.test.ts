@@ -208,3 +208,21 @@ describe('NimbleActiveEffect.createDialog', () => {
 		expect(coreCreateDialog).toHaveBeenCalledWith({}, {}, { types: [] }, undefined);
 	});
 });
+
+describe('NimbleActiveEffect.isMinor', () => {
+	const make = (fields: object) =>
+		new (NimbleActiveEffect as unknown as new (data: object) => NimbleActiveEffect)({
+			statuses: new Set<string>(),
+			system: {},
+			...fields,
+		});
+
+	it('is a Minor Status when its data says so', () => {
+		expect(make({ system: { minor: true } }).isMinor).toBe(true);
+	});
+
+	it('is a Minor Status when it carries a minor condition', () => {
+		expect(make({ statuses: new Set(['smoldering']) }).isMinor).toBe(true);
+		expect(make({ statuses: new Set(['blinded']) }).isMinor).toBe(false);
+	});
+});

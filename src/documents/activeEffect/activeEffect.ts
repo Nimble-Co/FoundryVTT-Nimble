@@ -7,6 +7,12 @@ import {
 	LEGACY_CONDITION_EFFECT_TYPE,
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
+import type { Moment } from '../../utils/lastsUntil/momentReached.js';
+
+interface NimbleEffectSystem {
+	lastsUntil?: Moment[];
+	minor?: boolean;
+}
 
 class NimbleActiveEffect extends ActiveEffect {
 	declare rules: RulesManager;
@@ -57,6 +63,17 @@ class NimbleActiveEffect extends ActiveEffect {
 		}
 
 		this.rules = new RulesManager(this);
+	}
+
+	get lastsUntil(): Moment[] {
+		return (this.system as NimbleEffectSystem | undefined)?.lastsUntil ?? [];
+	}
+
+	/** A Minor Status ends when combat ends. */
+	get isMinor(): boolean {
+		if ((this.system as NimbleEffectSystem | undefined)?.minor) return true;
+		const minor = CONFIG.NIMBLE?.conditionMinorConditions;
+		return !!minor && [...this.statuses].some((status) => minor.has(status));
 	}
 
 	/**
