@@ -441,9 +441,16 @@ class NimbleBaseActor<
 		this.rules = this.prepareRules();
 	}
 
+	/** The rules of the actor's items, and of the Active Effects that change the actor now. */
 	protected prepareRules() {
-		return this.items.contents
-			.flatMap((i) => [...i.rules.values()])
+		const itemRules = this.items.contents.flatMap((i) => [...i.rules.values()]);
+		const effectRules = [...this.allApplicableEffects()].flatMap((effect) => {
+			const { rules, modifiesActor } = effect as ActiveEffect & {
+				rules?: Map<string, NimbleBaseRule>;
+			};
+			return modifiesActor && rules ? [...rules.values()] : [];
+		});
+		return [...itemRules, ...effectRules]
 			.filter((r) => !r.disabled)
 			.sort((a, b) => a.priority - b.priority);
 	}
