@@ -4,16 +4,12 @@ The Lasts Until tab of the effect window. Each moment is one sentence: its words
 The first moment that happens ends the effect. Escape lets the holder roll a save to end it.
 -->
 <script lang="ts">
-	import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
 	import {
 		eventRowSubject,
-		formEventsOf,
 		isRoundSpan,
 		NEW_MOMENT_KINDS,
 		type NewMomentKind,
-		newMoment,
-		removeAt,
-		replaceAt,
 		withBoundary,
 		withClock,
 		withEffectName,
@@ -23,7 +19,6 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		withUnits,
 		withValue,
 	} from '#utils/lastsUntil/momentForm.js';
-	import type { Moment } from '#utils/lastsUntil/momentReached.js';
 	import localize from '#utils/localize.js';
 	import {
 		CLOCKS,
@@ -33,63 +28,47 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		TURN_BOUNDARIES,
 		TURN_SPANS,
 	} from '../../../models/activeEffect/nimbleEffectChoices.js';
+	import {
+		createEffectLastsUntilTabState,
+		ESCAPE_WORDS,
+		eventLabel,
+		eventsFor,
+		lastsUntilWord as word,
+	} from './EffectLastsUntilTabState.svelte.ts';
 
-	let { effect }: { effect: NimbleActiveEffect } = $props();
+	let { effect }: EffectTabProps = $props();
 
-	const LU = 'NIMBLE.effectSheet.lastsUntil';
-	const ESC = 'NIMBLE.effectSheet.escape';
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 
-	const system = $derived(
-		effect.reactive.system as unknown as {
-			lastsUntil: Moment[];
-			escape: { dc: string; saves: string };
-		},
-	);
-	const moments = $derived(system.lastsUntil ?? []);
+	const state = createEffectLastsUntilTabState(() => effect);
+	const { change, remove, add, setEscapeDc, setEscapeSaves } = state;
+	const moments = $derived(state.moments);
+	const escapeData = $derived(state.escape);
+	const coreDuration = $derived(state.coreDuration);
 
-	const word = (path: string) => localize(`${LU}.${path}`);
-
-	function eventLabel(event: LastsUntilEvent): string {
-		const key = `${LU}.event.${event}`;
-		return game.i18n?.has?.(key) ? localize(key) : event;
-	}
-
-	/** The form's events, and an event from the data that the form does not offer. */
-	function eventsFor(moment: Moment): LastsUntilEvent[] {
-		const events: LastsUntilEvent[] = [...formEventsOf(moment.who)];
-		if (moment.event && !events.includes(moment.event)) events.push(moment.event);
-		return events;
-	}
-
-	function save(next: Moment[]) {
-		return effect.update({ 'system.lastsUntil': next } as never);
-	}
-
-	function change(index: number, next: Moment) {
-		return save(replaceAt(moments, index, next));
-	}
-
-	function add(event: Event & { currentTarget: HTMLSelectElement }) {
+	function onAdd(event: Event & { currentTarget: HTMLSelectElement }) {
 		const kind = event.currentTarget.value as NewMomentKind | '';
 		event.currentTarget.value = '';
-		if (!kind) return;
-		return save([...moments, newMoment(kind)]);
+		return add(kind);
 	}
-
-	const updateEscape = (data: Record<string, unknown>) => effect.update(data as never);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item nimble-lasts-until">
 	<fieldset class="nimble-lasts-until__group">
 		<legend>{word('heading')}</legend>
 
-		{#if moments.length === 0}
+		{#if coreDuration}
+			<p class="nimble-lasts-until__none">{word('coreDuration', { duration: coreDuration })}</p>
+		{:else if moments.length === 0}
 			<p class="nimble-lasts-until__none">{word('none')}</p>
 		{/if}
 
 		{#each moments as moment, index (index)}
-			<div class="nimble-lasts-until__row">
+			<div
+				class="nimble-lasts-until__row"
+				role="group"
+				aria-label={word('moment', { number: String(index + 1) })}
+			>
 				<span class="nimble-lasts-until__lead">{index === 0 ? word('until') : word('orUntil')}</span
 				>
 
@@ -204,9 +183,9 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 				<button
 					type="button"
 					class="nimble-lasts-until__remove"
-					aria-label={word('remove')}
-					data-tooltip={word('remove')}
-					onclick={() => save(removeAt(moments, index))}
+					aria-label={word('remove', { number: String(index + 1) })}
+					data-tooltip={word('remove', { number: String(index + 1) })}
+					onclick={() => remove(index)}
 				>
 					<i class="fa-solid fa-trash" aria-hidden="true"></i>
 				</button>
@@ -218,7 +197,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 				>{moments.length ? word('orUntil') : word('until')}</span
 			>
 			<span class="nimble-lasts-until__words">
-				<select aria-label={word('fields.add')} value="" onchange={add}>
+				<select aria-label={word('fields.add')} value="" onchange={onAdd}>
 					<option value="">{word('add')}</option>
 					{#each NEW_MOMENT_KINDS as kind (kind)}
 						<option value={kind}>{word(`addKind.${kind}`)}</option>
@@ -229,35 +208,33 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	</fieldset>
 
 	<fieldset class="nimble-lasts-until__group">
-		<legend>{localize(`${ESC}.heading`)}</legend>
+		<legend>{localize(`${ESCAPE_WORDS}.heading`)}</legend>
 
 		<div class="nimble-lasts-until__row nimble-lasts-until__row--escape">
-			<span class="nimble-lasts-until__lead">{localize(`${ESC}.dc`)}</span>
+			<span class="nimble-lasts-until__lead">{localize(`${ESCAPE_WORDS}.dc`)}</span>
 			<span class="nimble-lasts-until__words">
 				<input
 					class="nimble-lasts-until__dc"
 					type="text"
-					aria-label={localize(`${ESC}.dcLabel`)}
-					value={system.escape?.dc ?? ''}
-					onchange={({ currentTarget }) =>
-						updateEscape({ 'system.escape.dc': currentTarget.value.trim() })}
+					aria-label={localize(`${ESCAPE_WORDS}.dcLabel`)}
+					value={escapeData.dc}
+					onchange={({ currentTarget }) => setEscapeDc(currentTarget.value)}
 				/>
-				<span>{localize(`${ESC}.withA`)}</span>
+				<span>{localize(`${ESCAPE_WORDS}.withA`)}</span>
 				<select
-					aria-label={localize(`${ESC}.savesLabel`)}
-					value={system.escape?.saves ?? 'strOrDex'}
-					onchange={({ currentTarget }) =>
-						updateEscape({ 'system.escape.saves': currentTarget.value })}
+					aria-label={localize(`${ESCAPE_WORDS}.savesLabel`)}
+					value={escapeData.saves}
+					onchange={({ currentTarget }) => setEscapeSaves(currentTarget.value)}
 				>
 					{#each ESCAPE_SAVES as saves (saves)}
-						<option value={saves}>{localize(`${ESC}.saves.${saves}`)}</option>
+						<option value={saves}>{localize(`${ESCAPE_WORDS}.saves.${saves}`)}</option>
 					{/each}
 				</select>
-				<span>{localize(`${ESC}.save`)}</span>
+				<span>{localize(`${ESCAPE_WORDS}.save`)}</span>
 			</span>
 		</div>
 
-		<p class="nimble-lasts-until__hint">{localize(`${ESC}.hint`)}</p>
+		<p class="nimble-lasts-until__hint">{localize(`${ESCAPE_WORDS}.hint`)}</p>
 	</fieldset>
 </section>
 

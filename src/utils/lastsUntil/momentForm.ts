@@ -21,6 +21,8 @@ export const HOLDER_FORM_EVENTS = [
 
 /** What the user of the item does: "or until you drop to 0 HP". */
 export const SOURCE_FORM_EVENTS = [
+	'attack',
+	'castSpell',
 	'zeroHp',
 	'die',
 	'loseConcentration',
@@ -51,7 +53,7 @@ export function newMoment(kind: NewMomentKind): Moment {
 		case 'turn':
 			return { ...BLANK, kind: 'turn', boundary: 'end', clock: 'holder', span: 'nextTurn' };
 		case 'time':
-			return { ...BLANK, kind: 'time', value: 1, units: 'rounds' };
+			return { ...BLANK, kind: 'time', value: 1, units: 'minutes' };
 		case 'event':
 			return { ...BLANK, kind: 'event', who: 'holder', event: 'attack' };
 		case 'effectEnds':

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import localize from '#utils/localize.js';
 import EffectChangesTab from '../EffectChangesTab.svelte';
 
-const CH = 'NIMBLE.effectSheet.changes';
+const CHANGES = 'NIMBLE.effectSheet.changes';
 const effectClass = ActiveEffect as unknown as { CHANGE_TYPES?: unknown };
 
 interface Change {
@@ -25,7 +25,7 @@ function makeEffect(changes: Change[]) {
 	return effect;
 }
 
-const STR: Change = {
+const STRENGTH_BONUS: Change = {
 	key: 'system.abilities.strength.bonus',
 	type: 'add',
 	value: 1,
@@ -47,8 +47,8 @@ afterEach(() => {
 const saved = (effect: ReturnType<typeof makeEffect>) =>
 	(effect.update.mock.calls.at(-1) as unknown as [Record<string, Change[]>])[0]['system.changes'];
 
-const byLabel = (container: HTMLElement, key: string) =>
-	[...container.querySelectorAll(`[aria-label="${localize(`${CH}.${key}`)}"]`)] as (
+const byLabel = (container: HTMLElement, key: string, data?: Record<string, string>) =>
+	[...container.querySelectorAll(`[aria-label="${localize(`${CHANGES}.${key}`, data)}"]`)] as (
 		| HTMLInputElement
 		| HTMLSelectElement
 	)[];
@@ -66,15 +66,17 @@ describe('EffectChangesTab', () => {
 	});
 
 	it('shows a change, with the default priority of its type as the hint', () => {
-		const { container } = render(EffectChangesTab, { effect: makeEffect([STR]) as never });
+		const { container } = render(EffectChangesTab, {
+			effect: makeEffect([STRENGTH_BONUS]) as never,
+		});
 
-		expect(byLabel(container, 'key')[0].value).toBe(STR.key);
+		expect(byLabel(container, 'key')[0].value).toBe(STRENGTH_BONUS.key);
 		expect(byLabel(container, 'value')[0].value).toBe('1');
 		expect((byLabel(container, 'priority')[0] as HTMLInputElement).placeholder).toBe('20');
 	});
 
 	it('stores a value that reads as JSON as that value, and other text as text', async () => {
-		const effect = makeEffect([STR]);
+		const effect = makeEffect([STRENGTH_BONUS]);
 		const { container } = render(EffectChangesTab, { effect: effect as never });
 
 		await fireEvent.change(byLabel(container, 'value')[0], { target: { value: '3' } });
@@ -84,14 +86,30 @@ describe('EffectChangesTab', () => {
 		expect(saved(effect)[0].value).toBe('@level');
 	});
 
-	it('changes the type, and the trash removes the change', async () => {
-		const effect = makeEffect([STR]);
+	it('changes the type', async () => {
+		const effect = makeEffect([STRENGTH_BONUS]);
 		const { container } = render(EffectChangesTab, { effect: effect as never });
 
 		await fireEvent.change(byLabel(container, 'type')[0], { target: { value: 'override' } });
-		expect(saved(effect)[0].type).toBe('override');
 
-		await fireEvent.click(byLabel(container, 'remove')[0]);
-		expect(saved(effect)).toEqual([]);
+		expect(saved(effect)[0].type).toBe('override');
+	});
+
+	it('the trash of a row removes that change', async () => {
+		const effect = makeEffect([STRENGTH_BONUS, { ...STRENGTH_BONUS, key: 'other' }]);
+		const { container } = render(EffectChangesTab, { effect: effect as never });
+
+		await fireEvent.click(byLabel(container, 'remove', { number: '2' })[0]);
+
+		expect(saved(effect)).toEqual([STRENGTH_BONUS]);
+	});
+
+	it('a blank priority is stored as no priority', async () => {
+		const effect = makeEffect([{ ...STRENGTH_BONUS, priority: 30 }]);
+		const { container } = render(EffectChangesTab, { effect: effect as never });
+
+		await fireEvent.change(byLabel(container, 'priority')[0], { target: { value: '' } });
+
+		expect(saved(effect)[0].priority).toBeNull();
 	});
 });

@@ -20,8 +20,8 @@ describe('newMoment', () => {
 		});
 	});
 
-	it('a time moment is "1 round passes"', () => {
-		expect(newMoment('time')).toMatchObject({ kind: 'time', value: 1, units: 'rounds' });
+	it('a time moment is "1 minute passes"', () => {
+		expect(newMoment('time')).toMatchObject({ kind: 'time', value: 1, units: 'minutes' });
 	});
 
 	it('an event is "they attack"', () => {
@@ -75,10 +75,9 @@ describe('withSubject', () => {
 	});
 
 	it('takes the first event of the new subject when the old one is not allowed', () => {
-		expect(withSubject(newMoment('event'), 'source')).toMatchObject({
-			who: 'source',
-			event: 'zeroHp',
-		});
+		const theyMove = { ...newMoment('event'), event: 'move' as const };
+
+		expect(withSubject(theyMove, 'source')).toMatchObject({ who: 'source', event: 'attack' });
 	});
 
 	it('another effect ends has no subject', () => {

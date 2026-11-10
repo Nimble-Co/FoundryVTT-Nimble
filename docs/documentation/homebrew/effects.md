@@ -12,7 +12,7 @@ On the character or NPC sheet, go to the **Effects** tab and click the pen at th
 
 The window has four tabs:
 
-- **Details**: the description, **Off** (its changes and rules do not apply), **Minor Status** (it ends when combat ends) and, for an effect on an item, **Put on the owner** (the actor that has the item gets the effect).
+- **Details**: the description, **Off** (its changes and rules do not apply), and, for an effect on an item, **Apply to the actor** (the actor that has the item gets the effect).
 - **Lasts Until**: the moments that end the effect, and its Escape.
 - **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority.
 - **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list.
@@ -34,9 +34,9 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 
 "Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero.
 
-They can attack, move, cast a spell, take damage, be Healed, drop to 0 HP or die. You can drop to 0 HP, die, lose Concentrating or use this again.
+They can attack, move, cast a spell, take damage, be Healed, drop to 0 HP or die. You can attack, cast a spell, drop to 0 HP, die, lose Concentration or use this again.
 
-The first moment that happens ends the effect. An effect with no moment stays until someone removes it. When an effect ends, the chat says so, with an Undo button: see [How long a condition lasts](../playing/conditions.md#how-long-a-condition-lasts).
+The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An older effect can also have a core duration, such as 1 round; the tab shows it, and it still ends the effect. When an effect ends, the chat says so, with an Undo button: see [How long a condition lasts](../playing/conditions.md#how-long-a-condition-lasts).
 
 ## Escape
 

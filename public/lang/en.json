@@ -3781,14 +3781,16 @@
 				"state": "State",
 				"off": "Off",
 				"offHint": "Its changes and rules do not apply.",
-				"transfer": "Put on the owner",
+				"transfer": "Apply to the actor",
 				"transferHint": "The actor that has this item gets the effect."
 			},
 			"lastsUntil": {
-				"heading": "Lasts until",
+				"heading": "Lasts Until",
 				"until": "Until",
 				"orUntil": "Or until",
 				"none": "No moment: the effect stays until someone removes it.",
+				"coreDuration": "It also ends after its core duration: {duration}.",
+				"moment": "Moment {number}",
 				"the": "the",
 				"pass": "pass",
 				"ends": "ends",
@@ -3826,7 +3828,7 @@
 					"healed": "are Healed",
 					"zeroHp": "drop to 0 HP",
 					"die": "die",
-					"loseConcentration": "lose Concentrating",
+					"loseConcentration": "lose Concentration",
 					"useAgain": "use this again"
 				},
 				"add": "add a moment...",
@@ -3848,7 +3850,7 @@
 					"add": "Add a moment"
 				},
 				"effectNamePlaceholder": "Rage",
-				"remove": "Remove this moment"
+				"remove": "Remove moment {number}"
 			},
 			"escape": {
 				"heading": "Escape",
@@ -3873,7 +3875,8 @@
 				"value": "Value",
 				"priority": "Priority",
 				"add": "Add a change",
-				"remove": "Remove this change",
+				"remove": "Remove change {number}",
+				"change": "Change {number}",
 				"none": "No changes."
 			}
 		},

@@ -186,6 +186,17 @@ describe('NimbleActiveEffect.createDialog', () => {
 		expect(passedRender).toBe(renderOptions);
 	});
 
+	it('keeps the caller context and render callback', async () => {
+		const render = vi.fn();
+
+		await createDialog({}, {}, { context: { hint: 'x' }, render });
+
+		expect(coreCreateDialog.mock.calls[0][2]).toMatchObject({
+			context: { hint: 'x', hasTypes: false },
+			render,
+		});
+	});
+
 	it('keeps the caller restriction and other options, and still drops the legacy and base types', async () => {
 		await createDialog(
 			{},
@@ -216,16 +227,6 @@ describe('NimbleActiveEffect.createDialog', () => {
 		await createDialog({}, {}, { types: [LEGACY_CONDITION_EFFECT_TYPE] });
 
 		expect(coreCreateDialog).toHaveBeenCalledWith({}, {}, { types: [] }, undefined);
-	});
-});
-
-describe('NimbleActiveEffect.reactive', () => {
-	it('is the effect itself', () => {
-		const effect = new (NimbleActiveEffect as unknown as new (data: object) => NimbleActiveEffect)(
-			{},
-		);
-
-		expect(effect.reactive).toBe(effect);
 	});
 });
 

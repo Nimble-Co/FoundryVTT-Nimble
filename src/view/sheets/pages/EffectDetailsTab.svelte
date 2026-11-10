@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
 	import localize from '#utils/localize.js';
 	import Editor from '../components/Editor.svelte';
 
-	let { effect }: { effect: NimbleActiveEffect } = $props();
+	let { effect }: EffectTabProps = $props();
 
 	const DETAILS = 'NIMBLE.effectSheet.details';
 
 	const reactive = $derived(effect.reactive);
-	const system = $derived(reactive.system as unknown as { minor?: boolean });
 	const onItem = $derived(effect.parent?.documentName === 'Item');
 	const fromName = $derived.by(() => {
 		if (!reactive.origin) return '';
@@ -61,19 +60,6 @@
 				</span>
 			</label>
 		{/if}
-
-		<label class="nimble-field">
-			<input
-				type="checkbox"
-				checked={system.minor ?? false}
-				onchange={({ currentTarget }) => update({ 'system.minor': currentTarget.checked })}
-			/>
-			<span class="nimble-effect-details__text">
-				<span class="nimble-field__label">{localize('NIMBLE.settings.customConditions.minor')}</span
-				>
-				<small>{localize('NIMBLE.settings.customConditions.minorHint')}</small>
-			</span>
-		</label>
 	</div>
 
 	{#key reactive.description}

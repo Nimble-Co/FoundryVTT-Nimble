@@ -1,7 +1,7 @@
 import { endToggleEffectFromAE } from '#utils/actor/toggleEffectControl.js';
 import localize from '#utils/localize.js';
 
-/** What the Effects tab of both sheets does to an actor: End, Remove, and a condition on or off. */
+/** What the Effects tab of both sheets does to an actor: End, Remove, open the effect window, and a condition on or off. */
 
 type EffectHolder = { effects?: { get(id: string): ActiveEffect | undefined } };
 

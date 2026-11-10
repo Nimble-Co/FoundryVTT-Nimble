@@ -5,7 +5,7 @@ Each field saves when it changes, as in the item windows.
 -->
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
-	import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+	import type { EffectSheetProps } from '#types/components/EffectSheet.d.ts';
 	import localize from '#utils/localize.js';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
 	import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
@@ -16,7 +16,7 @@ Each field saves when it changes, as in the item windows.
 	import EffectLastsUntilTab from './pages/EffectLastsUntilTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 
-	let { effect, sheet }: { effect: NimbleActiveEffect; sheet: unknown } = $props();
+	let { effect, sheet }: EffectSheetProps = $props();
 
 	const TABS = 'NIMBLE.effectSheet.tabs';
 
@@ -79,8 +79,7 @@ Each field saves when it changes, as in the item windows.
 	<WindowHead
 		img={effect.reactive.img ?? undefined}
 		tileLabel={localize('NIMBLE.effectSheet.changeImage')}
-		ontile={(event: MouseEvent) =>
-			updateDocumentImage(effect as unknown as Item, { shiftKey: event.shiftKey })}
+		ontile={(event: MouseEvent) => updateDocumentImage(effect, { shiftKey: event.shiftKey })}
 	>
 		{#snippet name()}<ItemHeader
 				item={effect}

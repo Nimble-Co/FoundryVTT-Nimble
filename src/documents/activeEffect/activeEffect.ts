@@ -42,7 +42,7 @@ class NimbleActiveEffect extends ActiveEffect {
 		}
 		// Core shows its type select for one type too; hide it, and drop core's
 		// render callback, which reads that select.
-		const dialogOptions = options as { context?: object } | undefined;
+		const dialogOptions = options as { context?: object; render?: unknown } | undefined;
 		return ActiveEffect.createDialog(
 			{ ...data, type: types[0] } as ActiveEffect.CreateDialogData,
 			createOptions,
@@ -50,7 +50,7 @@ class NimbleActiveEffect extends ActiveEffect {
 				...options,
 				types,
 				context: { ...dialogOptions?.context, hasTypes: false },
-				render: () => undefined,
+				render: dialogOptions?.render ?? (() => undefined),
 			} as unknown as Options,
 			renderOptions,
 		);
@@ -87,8 +87,7 @@ class NimbleActiveEffect extends ActiveEffect {
 	/** The effect, read so that Svelte follows its updates. */
 	get reactive(): this {
 		this.#subscribe ??= createSubscriber((update) => {
-			const id = Hooks.on('updateActiveEffect', (effect, _change, options) => {
-				if ((options as { diff?: boolean }).diff === false) return;
+			const id = Hooks.on('updateActiveEffect', (effect) => {
 				if (effect.uuid === this.uuid) update();
 			});
 			return () => Hooks.off('updateActiveEffect', id);

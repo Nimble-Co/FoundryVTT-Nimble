@@ -6,10 +6,11 @@ import localize from '#utils/localize.js';
 import EffectLastsUntilTab from '../EffectLastsUntilTab.svelte';
 
 const LU = 'NIMBLE.effectSheet.lastsUntil';
-const word = (key: string) => localize(key);
+const word = (key: string, data?: Record<string, string>) => localize(key, data);
 
-function makeEffect(lastsUntil: Moment[]) {
+function makeEffect(lastsUntil: Moment[], duration: object = { value: null }) {
 	const effect = {
+		duration,
 		system: { lastsUntil, escape: { dc: '', saves: 'strOrDex' } },
 		update: vi.fn(async () => undefined),
 		get reactive() {
@@ -39,6 +40,25 @@ describe('EffectLastsUntilTab', () => {
 
 		expect(container.textContent).toContain(word(`${LU}.none`));
 		expect(container.textContent).toContain(word(`${LU}.until`));
+	});
+
+	it('shows an older core duration, which still ends the effect', () => {
+		const { container } = renderTab(makeEffect([], { value: 1, label: '1 Round' }));
+
+		expect(container.textContent).toContain(word(`${LU}.coreDuration`, { duration: '1 Round' }));
+		expect(container.textContent).not.toContain(word(`${LU}.none`));
+	});
+
+	it('names each moment row for a screen reader', () => {
+		const { container } = renderTab(makeEffect([newMoment('turn'), newMoment('time')]));
+
+		const groups = [...container.querySelectorAll('[role="group"]')].map((group) =>
+			group.getAttribute('aria-label'),
+		);
+		expect(groups).toEqual([
+			word(`${LU}.moment`, { number: '1' }),
+			word(`${LU}.moment`, { number: '2' }),
+		]);
 	});
 
 	it('adds a moment from "add a moment..."', async () => {
@@ -91,7 +111,7 @@ describe('EffectLastsUntilTab', () => {
 
 		await fireEvent.change(field(container, 'subject'), { target: { value: 'source' } });
 
-		expect(saved(effect)).toEqual([{ ...newMoment('event'), who: 'source', event: 'zeroHp' }]);
+		expect(saved(effect)).toEqual([{ ...newMoment('event'), who: 'source' }]);
 	});
 
 	it('another effect ends: a name field', async () => {
@@ -107,7 +127,9 @@ describe('EffectLastsUntilTab', () => {
 		const effect = makeEffect([newMoment('turn'), newMoment('time')]);
 		const { container } = renderTab(effect);
 
-		const [first] = container.querySelectorAll(`[aria-label="${word(`${LU}.remove`)}"]`);
+		const [first] = container.querySelectorAll(
+			`[aria-label^="${word(`${LU}.remove`, { number: '1' }).slice(0, -1)}"]`,
+		);
 		await fireEvent.click(first);
 
 		expect(saved(effect)).toEqual([newMoment('time')]);
