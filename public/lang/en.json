@@ -3766,6 +3766,60 @@
 			"minMax": "Min-Max",
 			"standard": "Standard"
 		},
+		"lastsUntilText": {
+			"until": "until {moment}",
+			"for": "for {amount}",
+			"or": ", or ",
+			"turn": "the {boundary} of {whose}",
+			"round": "the {boundary} of {round}",
+			"boundary": { "start": "start", "end": "end" },
+			"span": {
+				"nextTurn": "next turn",
+				"currentTurn": "turn",
+				"currentRound": "this round",
+				"nextRound": "the next round"
+			},
+			"nextHero": "the next hero's turn",
+			"your": "your",
+			"their": "their",
+			"possessive": "{name}'s",
+			"you": "you",
+			"they": "they",
+			"escape": "Escape",
+			"effectEnds": "{name} ends",
+			"anotherEffectEnds": "another effect ends",
+			"combatEnds": "combat ends",
+			"units": {
+				"rounds": { "one": "1 round", "many": "{value} rounds" },
+				"minutes": { "one": "1 minute", "many": "{value} minutes" },
+				"hours": { "one": "1 hour", "many": "{value} hours" },
+				"days": { "one": "1 day", "many": "{value} days" }
+			},
+			"event": {
+				"attack": { "base": "attack", "third": "attacks" },
+				"move": { "base": "move", "third": "moves" },
+				"castSpell": { "base": "cast a spell", "third": "casts a spell" },
+				"takeDamage": { "base": "take damage", "third": "takes damage" },
+				"healed": { "base": "are Healed", "third": "is Healed" },
+				"zeroHp": { "base": "drop to 0 HP", "third": "drops to 0 HP" },
+				"die": { "base": "die", "third": "dies" },
+				"loseConcentration": { "base": "lose Concentration", "third": "loses Concentration" },
+				"useAgain": { "base": "use it again", "third": "uses it again" },
+				"effectEnds": { "base": "end", "third": "ends" },
+				"nextRoll": { "base": "make a roll", "third": "makes a roll" },
+				"nextDamage": { "base": "deal damage", "third": "deals damage" },
+				"nextSpell": { "base": "cast a tiered spell", "third": "casts a tiered spell" },
+				"nextAffliction": { "base": "apply an Affliction", "third": "applies an Affliction" },
+				"inactiveRound": {
+					"base": "spend a round with no attack and no new use",
+					"third": "spends a round with no attack and no new use"
+				},
+				"wounded": { "base": "are Bloodied", "third": "is Bloodied" },
+				"chargeGained": { "base": "gain a charge", "third": "gains a charge" },
+				"rest": { "base": "rest", "third": "rests" },
+				"combatEnd": { "base": "end", "third": "ends" }
+			}
+		},
 		"effectSheet": {
 			"tabs": {
 				"details": "Details",
