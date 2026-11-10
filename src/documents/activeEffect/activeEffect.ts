@@ -1,22 +1,11 @@
-import { SYSTEM_ID } from '#system';
+import {
+	type EffectSource,
+	isUnclaimedBaseEffect,
+} from '../../models/activeEffect/isUnclaimedBaseEffect.js';
 import {
 	LEGACY_CONDITION_EFFECT_TYPE,
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
-
-interface EffectSource {
-	type?: string;
-	flags?: Record<string, unknown>;
-	system?: { changes?: unknown[] };
-}
-
-const OWN_FLAG_SCOPES = new Set(['core', SYSTEM_ID]);
-
-/** A core-typed effect that no other package has claimed with its flags. */
-function isUnclaimedBaseEffect(source: EffectSource): boolean {
-	if (source.type !== CONST.BASE_DOCUMENT_TYPE) return false;
-	return Object.keys(source.flags ?? {}).every((scope) => OWN_FLAG_SCOPES.has(scope));
-}
 
 class NimbleActiveEffect extends ActiveEffect {
 	/** New effects are Nimble effects: the legacy type stays loadable, and `base` would become Nimble on create anyway. */
