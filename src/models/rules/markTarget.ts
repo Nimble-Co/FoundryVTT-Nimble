@@ -11,6 +11,7 @@ import {
 	type ToggledTargetEntry,
 } from '#utils/actor/toggledEffects.js';
 import localize from '#utils/localize.js';
+import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -227,6 +228,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		const markerName = (this.actor as object as { name?: string })?.name ?? '';
 
 		return {
+			type: NIMBLE_EFFECT_TYPE,
 			name: markerName ? `${conditionName} (${markerName})` : conditionName,
 			img: images[this.statusCondition],
 			statuses: [this.statusCondition],

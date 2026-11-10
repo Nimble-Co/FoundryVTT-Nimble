@@ -3,7 +3,7 @@
  * condition applies and removes cleanly through Actor#toggleStatusEffect, the
  * created effects are eligible for token status icons under V14's draw filter
  * (appliedEffects + showIcon/isTemporary), linked conditions cascade, and the
- * condition subtype data model carries the AE V2 `changes` schema.
+ * Nimble effect data model carries the AE V2 `changes` schema.
  */
 
 import { afterAll, describe, expect, test } from 'vitest';
@@ -45,18 +45,21 @@ describe('conditions under ActiveEffect V2', () => {
 		}
 	});
 
-	test('the condition data model defines the AE V2 changes field', () => {
-		const model = CONFIG.ActiveEffect.dataModels.condition as unknown as {
-			schema: { fields: Record<string, unknown> };
-		};
-		expect(model).toBeDefined();
-		const changes = model.schema.fields.changes;
-		expect(changes).toBeInstanceOf(foundry.data.fields.ArrayField);
-		const element = (changes as { element: { fields: Record<string, unknown> } }).element;
-		expect(element.fields.type).toBeInstanceOf(foundry.data.fields.StringField);
-		expect(element.fields.phase).toBeInstanceOf(foundry.data.fields.StringField);
-		expect(element.fields.priority).toBeInstanceOf(foundry.data.fields.NumberField);
-	});
+	test.each(['nimble', 'condition'])(
+		'the %s data model defines the AE V2 changes field',
+		(type) => {
+			const model = CONFIG.ActiveEffect.dataModels[type] as unknown as {
+				schema: { fields: Record<string, unknown> };
+			};
+			expect(model).toBeDefined();
+			const changes = model.schema.fields.changes;
+			expect(changes).toBeInstanceOf(foundry.data.fields.ArrayField);
+			const element = (changes as { element: { fields: Record<string, unknown> } }).element;
+			expect(element.fields.type).toBeInstanceOf(foundry.data.fields.StringField);
+			expect(element.fields.phase).toBeInstanceOf(foundry.data.fields.StringField);
+			expect(element.fields.priority).toBeInstanceOf(foundry.data.fields.NumberField);
+		},
+	);
 
 	// The automatic-conditions hooks run additional un-awaited effect writes
 	// after each toggle (linked condition application/removal). Give those
@@ -92,6 +95,7 @@ describe('conditions under ActiveEffect V2', () => {
 				// effects with ALWAYS (isTemporary is duration-based only in V14).
 				const effect = actor.appliedEffects.find((e) => e.statuses.has(status.id));
 				expect(effect, `${status.id} should produce an applied effect`).toBeDefined();
+				expect(effect!.type, `${status.id} should be a Nimble effect`).toBe('nimble');
 				expect(effect!.showIcon, `${status.id} effect should always show its icon`).toBe(
 					CONST.ACTIVE_EFFECT_SHOW_ICON.ALWAYS,
 				);
@@ -106,6 +110,31 @@ describe('conditions under ActiveEffect V2', () => {
 			await actor.delete();
 		},
 	);
+
+	test('an effect created without a type becomes a Nimble effect and keeps its changes', async () => {
+		const actor = (await Actor.create({
+			name: TEST_ACTOR_NAME,
+			type: 'character',
+		})) as unknown as StatusActorLike & {
+			createEmbeddedDocuments: (name: string, data: object[]) => Promise<EffectLike[]>;
+		};
+
+		const [effect] = await actor.createEmbeddedDocuments('ActiveEffect', [
+			{
+				name: 'Untyped',
+				system: { changes: [{ key: 'system.attributes.movement.walk', type: 'add', value: 1 }] },
+			},
+		]);
+		expect(effect!.type).toBe('nimble');
+		expect(effect!.system.changes).toHaveLength(1);
+
+		const [foreign] = await actor.createEmbeddedDocuments('ActiveEffect', [
+			{ name: 'Module effect', flags: { 'some-module': { owned: true } } },
+		]);
+		expect(foreign!.type).toBe('base');
+
+		await actor.delete();
+	});
 
 	test('overlay application marks the effect as an overlay', async () => {
 		const actor = (await Actor.create({

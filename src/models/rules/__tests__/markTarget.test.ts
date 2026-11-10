@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { NIMBLE_EFFECT_TYPE } from '../../activeEffect/nimbleEffectChoices.js';
 import { MarkTargetRule } from '../markTarget.js';
 
 interface MockMarkEffect {
@@ -120,7 +121,7 @@ describe('MarkTargetRule', () => {
 		(globalThis as { fromUuid?: unknown }).fromUuid = vi.fn(async () => null);
 	});
 
-	it('marks a target: stores the flag entry and creates a per-marker status effect', async () => {
+	it('marks a target: stores the flag entry and creates a per-marker Nimble status effect', async () => {
 		const owner = createOwner();
 		const { rule, item } = createRule({}, owner);
 		owner.rules = [rule];
@@ -139,6 +140,7 @@ describe('MarkTargetRule', () => {
 		const [aeType, aeData] = token.actor.createEmbeddedDocuments.mock.calls[0];
 		expect(aeType).toBe('ActiveEffect');
 		expect(aeData[0]).toMatchObject({
+			type: NIMBLE_EFFECT_TYPE,
 			statuses: ['marked'],
 			origin: 'item-uuid',
 			flags: { [SYSTEM_ID]: { markTargetItemUuid: 'item-uuid' } },

@@ -12,6 +12,7 @@ vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
 }));
 
 import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
+import { NIMBLE_EFFECT_TYPE } from '../../activeEffect/nimbleEffectChoices.js';
 import { ToggleEffectRule, type TurnOffEvent } from '../toggleEffect.js';
 
 interface MockActiveEffect {
@@ -369,7 +370,7 @@ describe('ToggleEffectRule', () => {
 			};
 		}
 
-		it('creates an AE on the actor on first activation, flagged to this rule', async () => {
+		it('creates a Nimble AE on the actor on first activation, flagged to this rule', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule(
 				{ tags: ['self:raging'], turnOff: ['onRest'], label: 'Rage' },
@@ -384,6 +385,7 @@ describe('ToggleEffectRule', () => {
 			expect(Array.isArray(data)).toBe(true);
 			const created = (data as Array<Record<string, unknown>>)[0];
 			expect(created).toMatchObject({
+				type: NIMBLE_EFFECT_TYPE,
 				disabled: false,
 				flags: {
 					nimble: {

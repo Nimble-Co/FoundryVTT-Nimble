@@ -166,14 +166,17 @@ describe('applyConditionToActor origin', () => {
 		expect(effect.sourceData).not.toHaveProperty('origin');
 	});
 
-	it('creates the effect on the target while preserving its reserved id', async () => {
+	it('creates a Nimble effect on the target while preserving its reserved id', async () => {
 		const target = createTargetActor();
 		const effect = createFakeEffect();
 		fromStatusEffect.mockResolvedValue(effect);
 
 		await applyConditionToActor(target, 'dazed');
 
-		expect(createEffect).toHaveBeenCalledWith(effect, { parent: target, keepId: true });
+		expect(createEffect).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'effect-1', type: 'nimble' }),
+			{ parent: target, keepId: true },
+		);
 	});
 });
 
@@ -241,16 +244,22 @@ describe('applyConditionToActor duration', () => {
 describe('applyConditionToActor applied hook', () => {
 	it('fires once the effect exists, carrying the effect and its source', async () => {
 		const target = createTargetActor();
-		const effect = createFakeEffect();
-		fromStatusEffect.mockResolvedValue(effect);
+		fromStatusEffect.mockResolvedValue(createFakeEffect());
+		const created = createFakeEffect('created-1');
+		createEffect.mockResolvedValue(created);
 		const sourceItem = { uuid: 'Item.feature' };
 
 		const result = await applyConditionToActor(target, 'dazed', { sourceItem });
 
-		expect(result).toBe(effect);
+		expect(result).toBe(created);
 		expect(hooksCallAll).toHaveBeenCalledWith(
 			'nimble.conditionApplied',
-			expect.objectContaining({ target, condition: 'dazed', effect, source: sourceItem }),
+			expect.objectContaining({
+				target,
+				condition: 'dazed',
+				effect: created,
+				source: sourceItem,
+			}),
 		);
 	});
 });
@@ -277,6 +286,7 @@ describe('applyConditionToActor effect creation', () => {
 
 		const created = createEffect.mock.calls[0][0] as Record<string, unknown>;
 		expect(created).not.toBe(effect);
+		expect(created.type).toBe('nimble');
 		expect(created.origin).toBe('Item.feature');
 		expect(created.duration).toEqual({ value: 1, units: 'rounds', expiry: 'turnStart' });
 	});
