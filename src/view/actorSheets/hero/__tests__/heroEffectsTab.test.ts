@@ -171,6 +171,19 @@ describe('heroEffectsTab', () => {
 		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
 	});
 
+	it('gives an effect with an Escape DC an Escape button at the end of the row', () => {
+		const hero = effectsHero();
+		hero.effects.push(effectLike({ id: 'grab', name: 'Bound', escape: { dc: 13 } }));
+
+		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-grab');
+
+		expect(row.escape).toEqual({
+			label: 'NIMBLE.escape.button {"dc":"13"}',
+			ariaLabel: 'NIMBLE.escape.label {"name":"Bound","dc":"13"}',
+			intent: { kind: 'escape', effectId: 'grab' },
+		});
+	});
+
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {
 		const view = heroEffectsTab(effectsHero(), effectsContext());
 

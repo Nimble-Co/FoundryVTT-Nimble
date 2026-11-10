@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { SaveKeyType } from '#types/saveKey.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
+import { escapeEffect } from '#utils/lastsUntil/escapeEffect.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 import { endEffect, openEffect, removeEffect, setCondition } from './effectActions.ts';
 import type { SheetIntent } from './sheetIntent.ts';
@@ -56,6 +57,9 @@ export async function performSheetIntent(actor: SheetActor, intent: SheetIntent)
 			return;
 		case 'removeEffect':
 			await removeEffect(document, intent.effectId, intent.itemId);
+			return;
+		case 'escape':
+			await escapeEffect(document as never, intent.effectId);
 			return;
 		case 'setCondition':
 			await setCondition(document, intent.conditionId, intent.active);

@@ -1,6 +1,6 @@
 import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
 import localize from '../../utils/localize.js';
-import { effectLastsUntil } from './effectLastsUntil.js';
+import { effectLastsUntil, escapeOf } from './effectLastsUntil.js';
 
 export type ActorCondition = {
 	id: string;
@@ -18,6 +18,8 @@ export type ActorCondition = {
 	lastsUntil: string;
 	/** the effect that gives the condition; null for one the system sets */
 	effectId: string | null;
+	/** the user owns the effect and it has an Escape DC */
+	escape: { dc: number | null } | null;
 	tooltipHtml: string;
 };
 
@@ -35,6 +37,7 @@ type ConditionEffectCandidate = {
 	originName: string | null;
 	lastsUntil: string;
 	effectId: string | null;
+	escape: { dc: number | null } | null;
 };
 
 function escapeHtml(value: string): string {
@@ -82,6 +85,7 @@ function getBestEffectCandidate(
 			originName: effect.origin ? getEffectSourceName(effect) : null,
 			lastsUntil: effectLastsUntil(effect as never, holder),
 			effectId: effect.id ?? null,
+			escape: escapeOf(effect),
 		};
 	});
 
@@ -101,6 +105,7 @@ function getBestEffectCandidate(
 			originName: null,
 			lastsUntil: '',
 			effectId: null,
+			escape: null,
 		}
 	);
 }
@@ -198,6 +203,7 @@ export default function prepareActorConditions(
 			originName: bestEffect.originName,
 			lastsUntil: bestEffect.lastsUntil,
 			effectId: bestEffect.effectId,
+			escape: bestEffect.escape,
 			tooltipHtml: buildConditionTooltip(baseCondition),
 		};
 	});

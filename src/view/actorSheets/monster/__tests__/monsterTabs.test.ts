@@ -67,6 +67,7 @@ describe('monsterEffectsTab', () => {
 				duration: '',
 				lastsUntil: '',
 				sourceName: '',
+				escape: null,
 				description: '',
 			},
 		];

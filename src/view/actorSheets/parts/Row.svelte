@@ -41,6 +41,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		useLabel,
 		useExpanded,
 		disabled,
+		endButton,
 		onedit,
 		hasWindow = true,
 		fields,
@@ -130,6 +131,18 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 			</button>
 		{:else}
 			<div class="main">{@render face(true)}</div>
+		{/if}
+		{#if endButton && !fields}
+			<button
+				type="button"
+				class="nimble-u-reset-button eb"
+				aria-label={endButton.ariaLabel ?? endButton.label}
+				data-tooltip={endButton.ariaLabel ?? endButton.label}
+				onclick={endButton.onclick}
+			>
+				<i class="fa-solid fa-person-running" aria-hidden="true"></i>
+				<span>{endButton.label}</span>
+			</button>
 		{/if}
 		<RowButton kind={hasWindow ? 'edit' : 'spacer'} {name} {touch} onclick={onedit} />
 	</div>
@@ -304,6 +317,32 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
 		overflow: hidden;
+	}
+	.eb {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		min-height: 28px;
+		padding: 0 9px;
+		border-radius: 4px;
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
+		white-space: nowrap;
+	}
+	.eb:hover {
+		background: var(--nimble-ui-hover);
+	}
+	.eb:active {
+		background: var(--nimble-ui-soft);
+	}
+	.eb:focus-visible {
+		outline: 2px solid var(--nimble-ui-focus);
+		outline-offset: 1px;
+	}
+	.touch .eb {
+		min-height: 40px;
 	}
 	.sm.si {
 		display: flex;

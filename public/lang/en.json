@@ -3774,6 +3774,14 @@
 			"minMax": "Min-Max",
 			"standard": "Standard"
 		},
+		"escape": {
+			"button": "Escape DC {dc}",
+			"buttonNoDc": "Escape",
+			"label": "Escape {name}: roll a save against DC {dc}",
+			"labelNoDc": "Escape {name}: roll a save",
+			"title": "Escape {name}",
+			"pick": "Which save do you roll?"
+		},
 		"lastsUntilText": {
 			"until": "until {moment}",
 			"for": "for {amount}",

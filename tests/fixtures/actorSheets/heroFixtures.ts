@@ -502,6 +502,7 @@ export function effectLike(
 		duration: '',
 		lastsUntil: '',
 		sourceName: '',
+		escape: null,
 		description: '',
 		...overrides,
 	};
@@ -518,6 +519,7 @@ export function conditionLike(
 		lastsUntil: '',
 		source: '',
 		effectId: null,
+		escape: null,
 		...overrides,
 	};
 }

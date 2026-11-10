@@ -50,6 +50,8 @@ export interface EffectLike {
 	lastsUntil: string;
 	/** the name of the document in the origin: "Snowblind" */
 	sourceName: string;
+	/** the user owns the holder and the effect has an Escape DC; `dc` is null when it is not a number */
+	escape: { dc: number | null } | null;
 	description: string;
 }
 
@@ -69,6 +71,8 @@ export interface ConditionLike {
 	source: string;
 	/** the effect that gives it; null for one the system sets */
 	effectId: string | null;
+	/** as on an effect: the user can try to Escape it */
+	escape: { dc: number | null } | null;
 }
 
 export interface DicePoolLike {

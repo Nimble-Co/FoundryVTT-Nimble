@@ -122,6 +122,13 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		useLabel={c.useLabel}
 		useExpanded={c.useExpanded}
 		disabled={row.use?.kind === 'blocked' || undefined}
+		endButton={row.escape
+			? {
+					label: row.escape.label,
+					ariaLabel: row.escape.ariaLabel,
+					onclick: () => row.escape && perform(row.escape.intent),
+				}
+			: undefined}
 		onedit={row.edit ? () => row.edit && perform(row.edit) : undefined}
 		hasWindow={!!row.edit}
 		fields={c.editing && c.hasFields ? fields : undefined}

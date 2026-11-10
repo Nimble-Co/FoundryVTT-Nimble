@@ -22,6 +22,7 @@ export type EffectIntent =
 	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
+	| { kind: 'escape'; effectId: string }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'openItem'; itemId: string };
 
@@ -52,6 +53,8 @@ export interface EffectRowView {
 		| null;
 	/** the pen: open the effect window, or the item that keeps the effect on */
 	edit: EffectIntent | null;
+	/** a button at the end of the row: roll a save to Escape the effect */
+	escape?: { label: string; ariaLabel: string; intent: EffectIntent };
 }
 
 export interface EffectRowGroup {
@@ -111,6 +114,25 @@ const HOURGLASS = 'fa-solid fa-hourglass-half';
 /** "Until the end of your next turn - Snowblind"; the source only when it is not the row's name. */
 function lastsLine(lasts: string, sourceName: string, name: string): string {
 	return sourceName && sourceName !== name ? `${lasts} - ${sourceName}` : lasts;
+}
+
+function escapeButton(
+	name: string,
+	effectId: string | null,
+	escapeData: { dc: number | null } | null,
+	input: EffectsTabInput,
+): EffectRowView['escape'] {
+	if (!escapeData || !effectId) return undefined;
+	const dc = escapeData.dc === null ? null : String(escapeData.dc);
+	return {
+		label: dc
+			? input.format('NIMBLE.escape.button', { dc })
+			: input.localize('NIMBLE.escape.buttonNoDc'),
+		ariaLabel: dc
+			? input.format('NIMBLE.escape.label', { name, dc })
+			: input.format('NIMBLE.escape.labelNoDc', { name }),
+		intent: { kind: 'escape', effectId },
+	};
 }
 
 function stateRow(
@@ -201,7 +223,10 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 			},
 		},
 		input,
-		{ edit: { kind: 'openEffect', effectId: effect.id, itemId: effect.itemId } },
+		{
+			edit: { kind: 'openEffect', effectId: effect.id, itemId: effect.itemId },
+			escape: escapeButton(effect.name, effect.id, effect.escape, input),
+		},
 	);
 }
 
@@ -229,6 +254,7 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			},
 		},
 		input,
+		{ escape: escapeButton(condition.name, condition.effectId, condition.escape, input) },
 	);
 }
 

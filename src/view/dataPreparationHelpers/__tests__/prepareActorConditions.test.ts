@@ -127,6 +127,7 @@ describe('prepareActorConditions', () => {
 				originName: null,
 				lastsUntil: '',
 				effectId: null,
+				escape: null,
 				tooltipHtml: expect.stringContaining('Custom Condition'),
 			},
 		]);

@@ -5,7 +5,11 @@
 import { SYSTEM_ID } from '#system';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
-import { effectLastsUntil, originName } from '#view/dataPreparationHelpers/effectLastsUntil.js';
+import {
+	effectLastsUntil,
+	escapeOf,
+	originName,
+} from '#view/dataPreparationHelpers/effectLastsUntil.js';
 import type { ActorCondition } from '#view/dataPreparationHelpers/prepareActorConditions.js';
 import {
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
@@ -115,6 +119,7 @@ export function effectLike(effect: EffectDocument): EffectLike {
 		duration: durationWords(deriveDurationDetails(effect.duration).label),
 		lastsUntil: effectLastsUntil(effect as never, holderOf(effect)),
 		sourceName: originName(effect as never),
+		escape: escapeOf(effect as never),
 		description: plainText(effect.description ?? ''),
 	};
 }
@@ -130,5 +135,6 @@ export function conditionLike(condition: ActorCondition): ConditionLike {
 		lastsUntil: condition.active ? condition.lastsUntil : '',
 		source: condition.active ? (condition.originName ?? '') : '',
 		effectId: condition.active ? condition.effectId : null,
+		escape: condition.active ? condition.escape : null,
 	};
 }

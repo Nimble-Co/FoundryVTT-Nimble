@@ -41,6 +41,8 @@ export interface RowProps {
 	useExpanded?: boolean;
 	/** the thing cannot be used now; default: state out */
 	disabled?: boolean;
+	/** a button of its own at the end of the row, outside the row's main button: Escape DC 13 */
+	endButton?: { label: string; ariaLabel?: string; onclick: () => void };
 	/** the pen: open the window of the thing */
 	onedit?: () => void;
 	/** false = no window: an empty place in place of the pen */

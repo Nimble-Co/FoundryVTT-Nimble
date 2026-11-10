@@ -3,6 +3,7 @@ import {
 	describeLastsUntil,
 	holderReader,
 } from '#utils/lastsUntil/describeLastsUntil.js';
+import { escapeDcOf } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 
@@ -43,6 +44,16 @@ function coreDurationOf(
 	const units = duration?.units as CoreDurationUnits | undefined;
 	if (!units || !Number.isFinite(value) || value <= 0) return null;
 	return { [units]: value };
+}
+
+/** The user owns the effect and it has an Escape DC. */
+export function escapeOf(effect: {
+	isOwner?: boolean;
+	system?: unknown;
+}): { dc: number | null } | null {
+	const dc = (effect.system as { escape?: { dc?: string } } | undefined)?.escape?.dc;
+	if (!effect.isOwner || !dc?.trim()) return null;
+	return { dc: escapeDcOf(dc) };
 }
 
 /** How long the effect lasts, as its holder reads it: "Until Goblin Boss drops to 0 HP". */
