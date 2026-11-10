@@ -1,3 +1,4 @@
+import { RulesManager } from '../../managers/RulesManager.js';
 import {
 	type EffectSource,
 	isUnclaimedBaseEffect,
@@ -8,6 +9,8 @@ import {
 } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 class NimbleActiveEffect extends ActiveEffect {
+	declare rules: RulesManager;
+
 	/** New effects are Nimble effects: the legacy type stays loadable, and `base` would become Nimble on create anyway. */
 	static override async createDialog<
 		Options extends ActiveEffect.CreateDialogOptions | undefined = undefined,
@@ -52,6 +55,8 @@ class NimbleActiveEffect extends ActiveEffect {
 		if (this.showIcon === CONST.ACTIVE_EFFECT_SHOW_ICON.CONDITIONAL) {
 			this.showIcon = CONST.ACTIVE_EFFECT_SHOW_ICON.ALWAYS;
 		}
+
+		this.rules = new RulesManager(this);
 	}
 
 	/**

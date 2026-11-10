@@ -1655,6 +1655,7 @@
 			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
 			"ruleNotRunning": "This rule is not running:",
 			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
+			"ruleFailureNotOnEffect": "A \"{type}\" rule works only on an item, not on an effect.",
 			"ruleFailureValidation": "The rule failed validation and has been disabled.",
 			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
