@@ -22,9 +22,15 @@ interface MockActiveEffect {
 }
 
 interface MockActor {
+	isOwner: boolean;
 	statuses: Set<string>;
 	effects: MockActiveEffect[];
 	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
+}
+
+interface MockItemEffect {
+	transfer: boolean;
+	toObject(): Record<string, unknown>;
 }
 
 interface MockItem {
@@ -32,6 +38,7 @@ interface MockItem {
 	isEmbedded: boolean;
 	name: string;
 	uuid: string;
+	effects: Map<string, MockItemEffect>;
 }
 
 /** Every effect the rule managed to create, in order, with who it landed on. */
@@ -50,7 +57,7 @@ function lastAppliedEffect(): MockActiveEffect | undefined {
 interface ApplyConditionSource {
 	condition: string;
 	trigger: ApplyConditionTrigger;
-	duration?: { rounds?: number | null; turns?: number | null; seconds?: number | null };
+	effectId?: string;
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -63,13 +70,14 @@ interface ApplyConditionSource {
 interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
 	trigger: ApplyConditionTrigger;
-	duration: { rounds: number | null; turns: number | null; seconds: number | null };
+	effectId: string;
 	disabled: boolean;
 	label: string;
 }
 
 function createMockActor(): MockActor {
 	const actor: MockActor = {
+		isOwner: true,
 		statuses: new Set<string>(),
 		effects: [],
 		deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
@@ -109,22 +117,24 @@ function saveResolved(
 }
 
 function createMockItem(actor: MockActor): MockItem {
-	return { actor, isEmbedded: true, name: 'Test Feature', uuid: 'test-item-uuid' };
+	return {
+		actor,
+		isEmbedded: true,
+		name: 'Test Feature',
+		uuid: 'test-item-uuid',
+		effects: new Map(),
+	};
 }
 
 function createApplyConditionRule(
 	config: ApplyConditionSource,
 	actor: MockActor,
+	item: MockItem = createMockItem(actor),
 ): ApplyConditionRuleTestInstance {
-	const item = createMockItem(actor);
 	const sourceData = {
 		condition: config.condition,
 		trigger: config.trigger,
-		duration: {
-			rounds: config.duration?.rounds ?? null,
-			turns: config.duration?.turns ?? null,
-			seconds: config.duration?.seconds ?? null,
-		},
+		effectId: config.effectId ?? '',
 		disabled: config.disabled ?? false,
 		label: config.label ?? 'Test Apply Condition',
 		id: config.id ?? 'test-apply-condition-id',
@@ -143,7 +153,7 @@ function createApplyConditionRule(
 
 	rule.condition = config.condition;
 	rule.trigger = config.trigger;
-	rule.duration = sourceData.duration;
+	rule.effectId = sourceData.effectId;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Apply Condition';
 
@@ -210,7 +220,8 @@ describe('ApplyConditionRule', () => {
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('condition');
 			expect(schema).toHaveProperty('trigger');
-			expect(schema).toHaveProperty('duration');
+			expect(schema).toHaveProperty('effectId');
+			expect(schema).not.toHaveProperty('duration');
 		});
 
 		it('declares choices on the condition field (driven by CONFIG.NIMBLE.conditions)', () => {
@@ -557,63 +568,114 @@ describe('ApplyConditionRule', () => {
 		});
 	});
 
-	describe('duration pass-through', () => {
-		it('stamps the configured duration on the applied effect', async () => {
-			const attackerActor = createMockActor();
-			const targetActor = createMockActor();
+	describe('with an item effect', () => {
+		const globals = globalThis as { fromUuid?: unknown };
+		let previousFromUuid: unknown;
+		beforeEach(() => {
+			previousFromUuid = globals.fromUuid;
+			globals.fromUuid = async (uuid: string) => ({ uuid });
+		});
+		afterEach(() => {
+			globals.fromUuid = previousFromUuid;
+		});
 
-			const rule = createApplyConditionRule(
-				{
-					condition: 'smoldering',
-					trigger: 'onCrit',
-					duration: { rounds: 2 },
-				},
-				attackerActor,
+		const markEffect = (transfer = false): MockItemEffect => ({
+			transfer,
+			toObject: () => ({
+				_id: 'fx',
+				name: 'Marked',
+				statuses: ['dazed'],
+				origin: 'elsewhere',
+				transfer,
+				system: { lastsUntil: [{ kind: 'turn', boundary: 'end', clock: 'holder' }] },
+			}),
+		});
+
+		function ruleWithEffect(
+			actor: MockActor,
+			trigger: ApplyConditionTrigger,
+			effect: MockItemEffect = markEffect(),
+		) {
+			const item = createMockItem(actor);
+			item.effects.set('fx', effect);
+			return createApplyConditionRule(
+				{ condition: 'smoldering', trigger, effectId: 'fx' },
+				actor,
+				item,
 			);
+		}
 
-			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+		const wounded = (actor: MockActor) => ({
+			actor: actor as unknown as Parameters<ApplyConditionRule['onActorWounded']>[0]['actor'],
+			previousHp: 10,
+			currentHp: 5,
+		});
 
-			expect(lastAppliedEffect()?.sourceData.duration).toEqual({
-				value: 2,
-				units: 'rounds',
-				expiry: 'turnStart',
+		it('puts a copy of the effect on the owner of a self trigger, with the item as its source', async () => {
+			const owner = createMockActor();
+
+			await ruleWithEffect(owner, 'onWound').onActorWounded(wounded(owner));
+
+			expect(conditionsAppliedTo(owner)).toEqual(['dazed']);
+			expect(lastAppliedEffect()?.sourceData).toMatchObject({
+				name: 'Marked',
+				origin: 'test-item-uuid',
+				statuses: ['dazed'],
+				system: { lastsUntil: [{ kind: 'turn', boundary: 'end', clock: 'holder' }] },
 			});
 		});
 
-		it('stamps the configured duration on a condition applied to the owner', async () => {
-			const ownerActor = createMockActor();
-			const rule = createApplyConditionRule(
-				{ condition: 'slowed', trigger: 'onWound', duration: { turns: 1 } },
-				ownerActor,
+		it('puts a copy of the effect on the target of an attack trigger', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+
+			await ruleWithEffect(attacker, 'onCrit').onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true }),
 			);
 
-			await rule.onActorWounded({
-				actor: ownerActor as unknown as Parameters<
-					ApplyConditionRule['onActorWounded']
-				>[0]['actor'],
-				previousHp: 10,
-				currentHp: 5,
-			});
-
-			expect(lastAppliedEffect()?.sourceData.duration).toEqual({
-				value: 1,
-				units: 'turns',
-				expiry: 'turnStart',
+			expect(conditionsAppliedTo(target)).toEqual(['dazed']);
+			expect(lastAppliedEffect()?.sourceData).toMatchObject({
+				name: 'Marked',
+				origin: 'test-item-uuid',
 			});
 		});
 
-		it('leaves the duration alone when no duration fields are set', async () => {
-			const attackerActor = createMockActor();
-			const targetActor = createMockActor();
+		it('gives the bare condition when the rule names no effect', async () => {
+			const owner = createMockActor();
+			const rule = createApplyConditionRule({ condition: 'slowed', trigger: 'onWound' }, owner);
 
-			const rule = createApplyConditionRule(
-				{ condition: 'smoldering', trigger: 'onCrit' },
-				attackerActor,
-			);
+			await rule.onActorWounded(wounded(owner));
 
-			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
-
+			expect(conditionsAppliedTo(owner)).toEqual(['slowed']);
+			expect(lastAppliedEffect()?.sourceData).not.toHaveProperty('name');
 			expect(lastAppliedEffect()?.sourceData).not.toHaveProperty('duration');
+		});
+
+		it('gives the bare condition when the effect goes on the item owner itself', async () => {
+			const owner = createMockActor();
+
+			await ruleWithEffect(owner, 'onWound', markEffect(true)).onActorWounded(wounded(owner));
+
+			expect(conditionsAppliedTo(owner)).toEqual(['smoldering']);
+		});
+
+		it('marks the copy of a failed save, and a pass takes it back', async () => {
+			const owner = createMockActor();
+			const rule = ruleWithEffect(owner, 'onSaveFail');
+
+			await saveResolved(rule, owner, 'fail');
+			const copy = owner.effects[0] as MockActiveEffect;
+			const flags = copy.sourceData.flags as Record<string, Record<string, unknown>>;
+			expect(flags[SYSTEM_ID]?.saveFailSource).toEqual({
+				messageId: 'card-1',
+				itemUuid: 'test-item-uuid',
+				condition: 'smoldering',
+			});
+
+			// The copy carries its flags as a nested object, as a created effect does.
+			copy.getFlag = (scope, key) => flags[scope]?.[key];
+			await saveResolved(rule, owner, 'pass');
+			expect(owner.effects).toHaveLength(0);
 		});
 	});
 
@@ -701,12 +763,9 @@ describe('ApplyConditionRule', () => {
 	});
 
 	describe('getActivationCardNodes', () => {
-		it('returns an Apply Effect node with the condition and its duration', () => {
+		it('returns an Apply Effect node with the condition', () => {
 			const actor = createMockActor();
-			const rule = createApplyConditionRule(
-				{ condition: 'smoldering', trigger: 'onCrit', duration: { rounds: 2 } },
-				actor,
-			);
+			const rule = createApplyConditionRule({ condition: 'smoldering', trigger: 'onCrit' }, actor);
 
 			const nodes = rule.getActivationCardNodes({ isCritical: true, isMiss: false });
 
@@ -714,11 +773,45 @@ describe('ApplyConditionRule', () => {
 			expect(nodes[0]).toMatchObject({
 				type: 'applyEffect',
 				effectId: null,
+				effectItemUuid: null,
 				condition: 'smoldering',
-				duration: expect.objectContaining({ rounds: 2 }),
 				recipient: 'targets',
 			});
+			expect(nodes[0]).not.toHaveProperty('duration');
 			expect(nodes[0]?.id).toContain('apply-condition-');
+		});
+
+		it('names the item effect and its item, so the card applies a copy of it', () => {
+			const actor = createMockActor();
+			const item = createMockItem(actor);
+			item.effects.set('fx', { transfer: false, toObject: () => ({}) });
+			const rule = createApplyConditionRule(
+				{ condition: '', trigger: 'onHit', effectId: 'fx' },
+				actor,
+				item,
+			);
+
+			const nodes = rule.getActivationCardNodes({ isCritical: false, isMiss: false });
+
+			expect(nodes).toHaveLength(1);
+			expect(nodes[0]).toMatchObject({
+				type: 'applyEffect',
+				effectId: 'fx',
+				effectItemUuid: 'test-item-uuid',
+				recipient: 'targets',
+			});
+		});
+
+		it('names no effect when the item no longer has it', () => {
+			const actor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onHit', effectId: 'gone' },
+				actor,
+			);
+
+			const [node] = rule.getActivationCardNodes({ isCritical: false, isMiss: false });
+
+			expect(node).toMatchObject({ effectId: null, condition: 'smoldering' });
 		});
 
 		it('returns nothing when the trigger does not match the context', () => {

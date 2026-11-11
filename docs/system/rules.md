@@ -43,6 +43,8 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 
 `src/hooks/saveResolved.ts` fires the system hook `nimble.saveResolved` on the active GM, from `createChatMessage` and `updateChatMessage`. It fires when a save card has a known result (`checkResultOfCard`) that differs from the card's `system.reportedSaveResult`, and writes that field first, so a reload or an unchanged write does not fire again. A card that never had a result fires nothing. A result that stops being known (for example after Remove on a save with no DC) fires `unknown`. The context holds `actor`, `saveType` (the save key), `outcome` (`pass | fail | unknown`) and `messageId`.
 
+`applyCondition` with an `effectId` (picked with the `itemEffectPicker` widget, read through `itemEffectOf`) applies a copy of that item effect in place of the bare condition: the self triggers and `onItemUsed` go through `payloadFromEffect` and `applyEffectToActor`, with the rule's item as source. Its card nodes (`getActivationCardNodes`) carry the `effectId` and `effectItemUuid` (the rule's item, which is not always the card's item), so the card's Apply Effect button applies the same copy. With no effect, the rule applies the bare condition with no Lasts Until.
+
 `applyCondition` with trigger `onSaveFail` stamps the effect it creates with the flag `saveFailSource` (`messageId`, `itemUuid` and `condition`). The flag does not use the rule id, because a rule source with no id gets a new one each time it is built. On `pass` or `unknown` the rule deletes only the effects whose flag matches the card, its item and its condition, and does not test its predicate. A condition the actor already held gets no flag, so it stays. `applyCondition` lists `onSaveResolved` in `alwaysDispatchedEvents`: with Feature Effects (`applyRuleEffects`) off, a `fail` adds nothing, but a `pass` or `unknown` still deletes the effect of an earlier fail. `ruleEventDispatch.ts` sends the results of one card to the rules one at a time, so a `pass` that comes right after a `fail` finds the effect of that fail.
 
 ### `onMovementFinished(context)`
@@ -497,7 +499,7 @@ count: new fields.NumberField({
 ```
 
 ::: tip Type cast quirk
-SchemaField/ArrayField options don't accept `showWhen` through `withWidget()`'s leaf-only generic, so use a raw `as unknown as never` cast at the option-object site. See `applyCondition.ts` and `grantSpells.ts` for live examples.
+SchemaField/ArrayField options don't accept `showWhen` through `withWidget()`'s leaf-only generic, so use a raw `as unknown as never` cast at the option-object site. See `grantSpells.ts` for a live example.
 :::
 
 ### Default field-type rendering

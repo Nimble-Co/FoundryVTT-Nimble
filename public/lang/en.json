@@ -1964,6 +1964,10 @@
 				"trigger": {
 					"label": "Trigger",
 					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+				},
+				"effectId": {
+					"label": "Effect",
+					"hint": "An effect of this item to apply in place of the condition, with its Lasts Until. Pick none to apply the condition alone, until someone removes it."
 				}
 			},
 			"armorClass": {

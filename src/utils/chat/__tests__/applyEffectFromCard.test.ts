@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { ApplyEffectNode } from '#types/effectTree.js';
-import { applyEffectFromCard } from '#utils/chat/applyEffectFromCard.js';
+import { applyEffectFromCard, applyEffectSource } from '#utils/chat/applyEffectFromCard.js';
 
 const heldRoll = {
 	id: 'held1',
@@ -114,5 +114,86 @@ describe('applyEffectFromCard with upcast rule raises', () => {
 			type: 'nimble',
 		});
 		expect(empty).toEqual(plain);
+	});
+});
+
+describe('applyEffectFromCard for a node that a rule gives', () => {
+	const createEffect = vi.fn();
+	const fromStatusEffect = vi.fn();
+	let previousActiveEffect: unknown;
+
+	const featureEffect = {
+		name: 'Marked',
+		toObject: () => ({ _id: 'mark', name: 'Marked', statuses: [], system: { lastsUntil: [] } }),
+	};
+	const feature = {
+		uuid: 'Actor.hero.Item.feature',
+		effects: { get: (id: string) => (id === 'mark' ? featureEffect : undefined) },
+	};
+
+	beforeEach(() => {
+		createEffect.mockReset().mockResolvedValue({ uuid: 'Actor.goblin.ActiveEffect.new' });
+		fromStatusEffect.mockReset().mockImplementation(async (status: string) => {
+			const source: Record<string, unknown> = { statuses: [status] };
+			return {
+				statuses: new Set([status]),
+				updateSource: (data: Record<string, unknown>) => Object.assign(source, data),
+				toObject: () => source,
+			};
+		});
+		const documents: Record<string, unknown> = {
+			[item.uuid]: item,
+			[feature.uuid]: feature,
+			'Scene.s.Token.goblin': { actor: goblin },
+		};
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => documents[uuid] ?? null),
+		);
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => ({ uuid })),
+		);
+		vi.stubGlobal('Hooks', { call: vi.fn(() => true), callAll: vi.fn() });
+		vi.stubGlobal('ActiveEffect', {
+			implementation: { fromStatusEffect, create: createEffect, deleteDocuments: vi.fn() },
+		});
+		previousActiveEffect = (CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect;
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments: vi.fn() },
+		};
+	});
+
+	afterEach(() => {
+		(CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect = previousActiveEffect;
+		vi.unstubAllGlobals();
+	});
+
+	it('applies a copy of the effect of the item the node names, with that item as its origin', async () => {
+		await applyEffectFromCard(
+			card,
+			applyNode({ effectId: 'mark', effectItemUuid: feature.uuid, condition: 'dazed' }),
+		);
+
+		const [data] = createEffect.mock.calls[0] as [Record<string, unknown>];
+		expect(data).toMatchObject({ name: 'Marked', origin: feature.uuid, type: 'nimble' });
+		expect(
+			applyEffectSource(card, applyNode({ effectId: 'mark', effectItemUuid: feature.uuid })),
+		).toMatchObject({ name: 'Marked' });
+	});
+
+	it('reads no core duration from a condition node', async () => {
+		const legacy = {
+			...applyNode({ effectId: null, condition: 'dazed' }),
+			duration: { rounds: 2, turns: null, seconds: null },
+		} as ApplyEffectNode;
+
+		expect(applyEffectSource(card, legacy)).not.toHaveProperty('coreDuration');
+
+		await applyEffectFromCard(card, legacy);
+
+		const [data] = createEffect.mock.calls[0] as [Record<string, unknown>];
+		expect(data.statuses).toEqual(['dazed']);
+		expect(data).not.toHaveProperty('duration');
 	});
 });
