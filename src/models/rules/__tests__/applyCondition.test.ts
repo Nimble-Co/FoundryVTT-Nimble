@@ -9,7 +9,11 @@ const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
 import { SYSTEM_ID } from '#system';
-import { ApplyConditionRule, type ApplyConditionTrigger, TRIGGER_CHOICES } from '../applyCondition.js';
+import {
+	ApplyConditionRule,
+	type ApplyConditionTrigger,
+	TRIGGER_CHOICES,
+} from '../applyCondition.js';
 
 interface MockActiveEffect {
 	condition: string;
