@@ -25,7 +25,7 @@ describe('buildMinionAttackRollEntry', () => {
 });
 
 describe('performMinionGroupAttack Lasts Until events', () => {
-	const fireAttackEvents = vi.fn();
+	const fireAttackEvents = vi.fn((..._args: unknown[]) => Promise.resolve());
 	let performMinionGroupAttack: typeof import('../combatMinionAttacks.js').performMinionGroupAttack;
 
 	// Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
@@ -83,16 +83,22 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		return createMockCombatant({ id, type: 'npc', actionsCurrent: 1, actor, combatId: 'c1' });
 	}
 
-	async function attack(members: Combatant.Implementation[]) {
-		const combat = {
+	function attackCombat(members: Combatant.Implementation[]) {
+		return {
 			id: 'c1',
 			combatants: createCombatantsCollectionFixture(members),
 			combatant: members[0],
 			updateEmbeddedDocuments: vi.fn().mockResolvedValue([]),
 			nextTurn: vi.fn(),
-		} as unknown as Combat;
+		};
+	}
+
+	async function attack(
+		members: Combatant.Implementation[],
+		{ endTurn = false, combat = attackCombat(members) } = {},
+	) {
 		return performMinionGroupAttack({
-			combat,
+			combat: combat as unknown as Combat,
 			attackParams: {
 				memberCombatantIds: members.map((each) => each.id ?? ''),
 				targetTokenIds: ['target-1'],
@@ -100,7 +106,7 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 					memberCombatantId: each.id ?? '',
 					actionId: `${each.actor?.id}-action`,
 				})),
-				endTurn: false,
+				endTurn,
 			},
 			assignNcsTemporaryGroupFromAttackMembers: vi.fn(),
 		});
@@ -121,6 +127,23 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		expect(fireAttackEvents).toHaveBeenCalledTimes(2);
 		expect(fireAttackEvents).toHaveBeenCalledWith(actorA);
 		expect(fireAttackEvents).toHaveBeenCalledWith(actorB);
+	});
+
+	it('ends the turn only after the activity of the attack is saved', async () => {
+		const actor = minionActor('a');
+		const members = [member('m-a', actor)];
+		const combat = attackCombat(members);
+		let saved = false;
+		fireAttackEvents.mockImplementationOnce(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			saved = true;
+		});
+		combat.nextTurn.mockImplementation(() => expect(saved).toBe(true));
+
+		const result = await attack(members, { endTurn: true, combat });
+
+		expect(result.endTurnApplied).toBe(true);
+		expect(combat.nextTurn).toHaveBeenCalledTimes(1);
 	});
 
 	it('fires it once for an actor that two members share', async () => {

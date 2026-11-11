@@ -434,17 +434,20 @@ async function buildNcsAttackChatData(params: {
 	};
 }
 
-/** The attack event of each actor whose member rolled. */
-function fireMemberAttackEvents(
+/**
+ * The attack event of each actor whose member rolled. Resolves when their activity is saved, so the
+ * turn does not end before the round has the attack.
+ */
+async function fireMemberAttackEvents(
 	attackMembers: Combatant.Implementation[],
 	rolledCombatantIds: string[],
-): void {
+): Promise<void> {
 	const rolled = new Set(rolledCombatantIds);
 	const attackers = new Set<Actor>();
 	for (const member of attackMembers) {
 		if (member.actor && rolled.has(member.id ?? '')) attackers.add(member.actor as Actor);
 	}
-	for (const actor of attackers) fireAttackEvents(actor);
+	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor)));
 }
 
 async function maybeAdvanceTurnAfterAttack(params: {
@@ -607,7 +610,7 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
-	fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
+	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,
 		endTurn: normalizedParams.endTurn,

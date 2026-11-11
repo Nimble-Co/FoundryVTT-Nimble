@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
+import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
-import { toggleEffectData, turnToggleOn } from '../toggleEffectData.js';
+import { findToggleEffect, turnToggleOn } from '../toggleEffectData.js';
 
 function moment(event: Moment['event']): Moment {
 	return {
@@ -75,11 +77,26 @@ const eventsOf = (data: Record<string, unknown>) =>
 		(each) => each.event ?? each.span,
 	);
 
-describe('toggleEffectData', () => {
-	it('copies the item effect, with the toggle flags, the item as origin and type nimble', () => {
+type ToggleItem = Parameters<typeof turnToggleOn>[1];
+type ToggleRule = Parameters<typeof turnToggleOn>[2];
+
+/** The data of the effect that turnToggleOn makes on an actor with no toggle effect. */
+async function toggleEffectData(item: ToggleItem, toggleRule: ToggleRule) {
+	const createEmbeddedDocuments = vi.fn(async (..._args: unknown[]) => []);
+	await turnToggleOn(
+		{ effects: [], createEmbeddedDocuments, deleteEmbeddedDocuments: vi.fn() },
+		item,
+		toggleRule,
+	);
+	const [, [data]] = createEmbeddedDocuments.mock.calls[0] as [string, Record<string, unknown>[]];
+	return data;
+}
+
+describe('turnToggleOn: the effect data', () => {
+	it('copies the item effect, with the toggle flags, the item as origin and type nimble', async () => {
 		const { item } = setup();
 
-		const data = toggleEffectData(item, rule);
+		const data = await toggleEffectData(item, rule);
 
 		expect(data).toMatchObject({
 			name: 'Raging',
@@ -90,7 +107,7 @@ describe('toggleEffectData', () => {
 			changes: [{ key: 'system.x', value: '1' }],
 			flags: {
 				other: { keep: 1 },
-				nimble: { toggleEffectRuleId: 'rageToggle', toggleEffectItemId: 'rage' },
+				[SYSTEM_ID]: { toggleEffectRuleId: 'rageToggle', toggleEffectItemId: 'rage' },
 			},
 		});
 		expect(data).not.toHaveProperty('_id');
@@ -99,24 +116,24 @@ describe('toggleEffectData', () => {
 		expect(eventsOf(data)).toEqual(['zeroHp', 'die', 'currentRound']);
 	});
 
-	it('makes the blank effect when the rule names no effect, or one that goes to the actor', () => {
+	it('makes the blank effect when the rule names no effect, or one that goes to the actor', async () => {
 		const blank = {
 			type: NIMBLE_EFFECT_TYPE,
 			name: 'Rage',
 			img: 'rage.webp',
 			disabled: false,
 			origin: 'Actor.hero.Item.rage',
-			flags: { nimble: { toggleEffectRuleId: 'rageToggle', toggleEffectItemId: 'rage' } },
+			flags: { [SYSTEM_ID]: { toggleEffectRuleId: 'rageToggle', toggleEffectItemId: 'rage' } },
 		};
 
-		expect(toggleEffectData(setup().item, { ...rule, effectId: '' })).toEqual(blank);
-		expect(toggleEffectData(setup([], itemEffect(true)).item, rule)).toEqual(blank);
+		expect(await toggleEffectData(setup().item, { ...rule, effectId: '' })).toEqual(blank);
+		expect(await toggleEffectData(setup([], itemEffect(true)).item, rule)).toEqual(blank);
 		expect(
-			toggleEffectData(setup().item, { ...rule, effectId: '', label: 'Raging' }),
+			await toggleEffectData(setup().item, { ...rule, effectId: '', label: 'Raging' }),
 		).toMatchObject({ name: 'Raging' });
 	});
 
-	it('takes out the event moments that the live Modify Toggle rules for this toggle drop', () => {
+	it('takes out the event moments that the live Modify Toggle rules for this toggle drop', async () => {
 		const { item } = setup([
 			modifier({ dropMoments: ['zeroHp'] }),
 			modifier({ dropMoments: ['die'], disabled: true }),
@@ -124,16 +141,16 @@ describe('toggleEffectData', () => {
 			modifier({ dropMoments: ['die'], toggleIdentifier: 'other' }),
 		]);
 
-		expect(eventsOf(toggleEffectData(item, rule))).toEqual(['die', 'currentRound']);
+		expect(eventsOf(await toggleEffectData(item, rule))).toEqual(['die', 'currentRound']);
 	});
 
-	it('stacks the drops of more than one Modify Toggle rule, and matches the rule id', () => {
+	it('stacks the drops of more than one Modify Toggle rule, and matches the rule id', async () => {
 		const { item } = setup([
 			modifier({ dropMoments: ['zeroHp'] }),
 			modifier({ dropMoments: ['die'], toggleIdentifier: 'rageToggle' }),
 		]);
 
-		expect(eventsOf(toggleEffectData(item, rule))).toEqual(['currentRound']);
+		expect(eventsOf(await toggleEffectData(item, rule))).toEqual(['currentRound']);
 	});
 });
 
@@ -142,7 +159,7 @@ describe('turnToggleOn', () => {
 		const flagged = effects.map((effect) => ({
 			...effect,
 			getFlag: (scope: string, key: string) =>
-				scope === 'nimble' && key === 'toggleEffectRuleId' ? 'rageToggle' : undefined,
+				scope === SYSTEM_ID && key === 'toggleEffectRuleId' ? 'rageToggle' : undefined,
 		}));
 		return {
 			effects: flagged,
@@ -166,7 +183,7 @@ describe('turnToggleOn', () => {
 
 		expect(await turnToggleOn(actor, setup().item, rule)).toBe(true);
 		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['old'], {
-			nimbleConditionReplaced: true,
+			[CONDITION_REPLACED_OPTION]: true,
 		});
 		expect(actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
 		const [deleted] = actor.deleteEmbeddedDocuments.mock.invocationCallOrder;
@@ -180,5 +197,29 @@ describe('turnToggleOn', () => {
 		expect(await turnToggleOn(actor, setup().item, rule)).toBe(false);
 		expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+});
+
+describe('findToggleEffect', () => {
+	function flaggedEffect(id: string, ruleIdFlag: unknown, disabled = false) {
+		return {
+			id,
+			disabled,
+			getFlag: (scope: string, key: string): unknown =>
+				scope === SYSTEM_ID && key === 'toggleEffectRuleId' ? ruleIdFlag : undefined,
+		};
+	}
+
+	it('returns the effect whose toggle rule flag matches, on or off', () => {
+		const actor = {
+			effects: [flaggedEffect('other', 'different-rule'), flaggedEffect('match', 'rage', true)],
+		};
+		expect(findToggleEffect(actor, 'rage')?.id).toBe('match');
+	});
+
+	it('returns null when no effect matches, or the actor has no effects', () => {
+		expect(findToggleEffect({ effects: [flaggedEffect('a', 'unrelated')] }, 'rage')).toBeNull();
+		expect(findToggleEffect(undefined, 'rage')).toBeNull();
+		expect(findToggleEffect({}, 'rage')).toBeNull();
 	});
 });

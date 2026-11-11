@@ -167,7 +167,7 @@ function onUseItem(
 	const targets = (context?.targets ?? []).flatMap((target) =>
 		target?.actor ? [target.actor] : [],
 	);
-	fireItemUseEvents(item, targets);
+	void fireItemUseEvents(item, targets);
 }
 
 function onDamageApplied(payload: {

@@ -2,11 +2,8 @@
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import {
-		findToggleEffectAE,
-		findToggleEffectRule,
-		toggleEffectAE,
-	} from '../../../utils/actor/toggleEffectControl.js';
+	import { findToggleEffectRule, toggleEffectAE } from '../../../utils/actor/toggleEffectControl.js';
+	import { findToggleEffect } from '#utils/actor/toggleEffectData.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
@@ -38,7 +35,7 @@
 		void state.effectVersion;
 		const rule = findToggleEffectRule(item);
 		if (!rule) return null;
-		const existing = findToggleEffectAE(actor, rule.id);
+		const existing = findToggleEffect(actor, rule.id);
 		const enabled = existing !== null && !existing.disabled;
 		return {
 			enabled,

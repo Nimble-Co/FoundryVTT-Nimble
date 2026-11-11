@@ -100,6 +100,7 @@
 			onChange={(v) => onChange(v)}
 			{disabled}
 			{document}
+			label={childFieldLabel(name, field)}
 		/>
 	{:else if state.widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />

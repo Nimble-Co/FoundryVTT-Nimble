@@ -93,10 +93,7 @@ function droppedEvents(
  * The data of the toggle's effect on the actor. With an item effect: a copy of it, minus the event
  * moments that the actor's Modify Toggle rules drop. With none: a blank effect named for the toggle.
  */
-export function toggleEffectData(
-	item: ToggleItemLike,
-	rule: ToggleRuleLike,
-): Record<string, unknown> {
+function toggleEffectData(item: ToggleItemLike, rule: ToggleRuleLike): Record<string, unknown> {
 	const toggleFlags = {
 		[TOGGLE_EFFECT_RULE_ID_FLAG]: rule.id,
 		[TOGGLE_EFFECT_ITEM_ID_FLAG]: item.id,

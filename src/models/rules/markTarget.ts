@@ -262,7 +262,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: itemUuid } },
 		};
 
-		const effect = itemEffectOf<MarkSourceEffect>(this.parentItem as never, this.effectId);
+		const effect = itemEffectOf<MarkSourceEffect>(this.parentItem, this.effectId);
 		if (!effect) return marker;
 
 		const { data } = payloadFromEffect(effect, {
@@ -273,8 +273,8 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		return {
 			...marker,
 			img: (data.img as string | null | undefined) || marker.img,
-			changes: Array.isArray(data.changes) ? data.changes : [],
 			system: {
+				changes: Array.isArray(system.changes) ? system.changes : [],
 				lastsUntil: Array.isArray(system.lastsUntil) ? system.lastsUntil : [],
 				...(system.escape ? { escape: system.escape } : {}),
 				rules: Array.isArray(system.rules) ? system.rules : [],

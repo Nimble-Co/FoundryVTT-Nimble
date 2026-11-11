@@ -73,10 +73,13 @@ export function fireEvent(
 	]);
 }
 
-/** An attack that is not an item use: an attack, and so a roll. */
-export function fireAttackEvents(actor: { name?: string | null } | null): void {
-	if (!actor) return;
-	noteActivity(actor, { attack: true });
+/**
+ * An attack that is not an item use: an attack, and so a roll. Resolves when the activity of the
+ * attacker is saved.
+ */
+export function fireAttackEvents(actor: { name?: string | null } | null): Promise<void> {
+	if (!actor) return Promise.resolve();
+	const noted = noteActivity(actor, { attack: true });
 	const name = actor.name;
 	fireEvents([
 		{ check: { type: 'event', event: 'attack', actor }, heading: eventHeading('attack', { name }) },
@@ -85,6 +88,7 @@ export function fireAttackEvents(actor: { name?: string | null } | null): void {
 			heading: eventHeading('nextRoll', { name }),
 		},
 	]);
+	return noted;
 }
 
 /** A spell of tier 1 or more. A cantrip is tier 0. */
@@ -94,13 +98,13 @@ function isTieredSpell(item: UsedItem): boolean {
 
 /**
  * The events of one item use: an attack (also a roll), a spell cast, a tiered spell cast, and a
- * use of the item again.
+ * use of the item again. Resolves when the activity of the user is saved.
  */
-export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[]): void {
+export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[]): Promise<void> {
 	const actor = item.actor as { name?: string | null } | null;
-	if (!actor) return;
+	if (!actor) return Promise.resolve();
 	const attack = isAttackUse(item, targetActors);
-	noteActivity(actor, { attack, itemUuid: item.uuid });
+	const noted = noteActivity(actor, { attack, itemUuid: item.uuid });
 	const name = actor.name;
 	const events: { check: EventCheck; heading: string }[] = [];
 	if (attack) {
@@ -132,4 +136,5 @@ export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[
 		});
 	}
 	fireEvents(events);
+	return noted;
 }

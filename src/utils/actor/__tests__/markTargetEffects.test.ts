@@ -57,8 +57,13 @@ beforeEach(() => {
 	originalGame = (globalThis as { game?: unknown }).game;
 });
 
+function effectStartStub() {
+	return CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
+}
+
 afterEach(() => {
 	(globalThis as { game?: unknown }).game = originalGame;
+	delete effectStartStub().getEffectStart;
 	vi.restoreAllMocks();
 });
 
@@ -103,8 +108,7 @@ describe('applyMarkEffect', () => {
 			round: null,
 			turn: null,
 		};
-		const documentClass = CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
-		documentClass.getEffectStart = () => start;
+		effectStartStub().getEffectStart = () => start;
 		const target = createTarget('Actor.goblin', false, [
 			markEffect('Effect.existing', 'Item.hunters-mark'),
 		]);
@@ -119,7 +123,6 @@ describe('applyMarkEffect', () => {
 		expect(target.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
 			{ _id: 'Effect.existing', start },
 		]);
-		delete documentClass.getEffectStart;
 	});
 
 	it('relays to the GM when this client can neither own the target nor is GM', async () => {

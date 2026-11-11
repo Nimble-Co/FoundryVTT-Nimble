@@ -61,7 +61,10 @@ function activationDuration(item: ItemLike, words: Words): string {
 	return `${quantity} ${unit}`;
 }
 
-/** A toggle effect: the activation duration of its item. */
+/**
+ * The duration text of an effect row. A toggle effect with its item: the activation duration of
+ * the item, or the effect's own duration when the item has none. Any other effect: its own duration.
+ */
 export function effectDuration(
 	effect: EffectLike,
 	item: ItemLike | undefined,

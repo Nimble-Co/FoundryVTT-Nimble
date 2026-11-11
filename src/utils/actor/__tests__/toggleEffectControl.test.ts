@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 const { mockSetPoolFaces, mockBuildEffectiveDicePoolMap } = vi.hoisted(() => ({
@@ -26,7 +27,6 @@ vi.mock('#utils/localize.js', () => ({
 // importing dynamically forces a fresh graph that resolves through the mocks.
 let findToggleEffectRule: typeof import('../toggleEffectControl.js').findToggleEffectRule;
 let findToggleEffectRuleById: typeof import('../toggleEffectControl.js').findToggleEffectRuleById;
-let findToggleEffectAE: typeof import('../toggleEffectControl.js').findToggleEffectAE;
 let isToggleEffectAE: typeof import('../toggleEffectControl.js').isToggleEffectAE;
 let toggleEffectAE: typeof import('../toggleEffectControl.js').toggleEffectAE;
 let endToggleEffectFromAE: typeof import('../toggleEffectControl.js').endToggleEffectFromAE;
@@ -36,7 +36,6 @@ beforeAll(async () => {
 	({
 		findToggleEffectRule,
 		findToggleEffectRuleById,
-		findToggleEffectAE,
 		isToggleEffectAE,
 		toggleEffectAE,
 		endToggleEffectFromAE,
@@ -91,36 +90,6 @@ describe('toggleEffectControl', () => {
 		it('returns null when item has no rules collection', () => {
 			expect(findToggleEffectRule({})).toBeNull();
 			expect(findToggleEffectRule({ rules: undefined as never })).toBeNull();
-		});
-	});
-
-	describe('findToggleEffectAE', () => {
-		function mkEffect(id: string, ruleIdFlag: unknown, disabled = false) {
-			return {
-				id,
-				disabled,
-				getFlag: (scope: string, key: string): unknown => {
-					if (scope === 'nimble' && key === 'toggleEffectRuleId') return ruleIdFlag;
-					return undefined;
-				},
-			};
-		}
-
-		it('returns the AE whose toggleEffectRuleId flag matches the rule id', () => {
-			const actor = {
-				effects: [mkEffect('other', 'different-rule'), mkEffect('match', 'rage-toggle')],
-			};
-			expect(findToggleEffectAE(actor, 'rage-toggle')?.id).toBe('match');
-		});
-
-		it('returns null when no AE matches the rule id', () => {
-			const actor = { effects: [mkEffect('a', 'unrelated')] };
-			expect(findToggleEffectAE(actor, 'rage-toggle')).toBeNull();
-		});
-
-		it('returns null when actor has no effects collection', () => {
-			expect(findToggleEffectAE(undefined, 'rage-toggle')).toBeNull();
-			expect(findToggleEffectAE({}, 'rage-toggle')).toBeNull();
 		});
 	});
 
@@ -179,7 +148,7 @@ describe('toggleEffectControl', () => {
 				id: 'ae-active',
 				disabled: false,
 				getFlag: (scope: string, key: string): unknown => {
-					if (scope === 'nimble' && key === 'toggleEffectRuleId') return ruleId;
+					if (scope === SYSTEM_ID && key === 'toggleEffectRuleId') return ruleId;
 					return undefined;
 				},
 			};
@@ -333,7 +302,7 @@ describe('toggleEffectControl', () => {
 		it('identifies AEs carrying the toggleEffectRuleId flag', () => {
 			const toggleAE = {
 				getFlag: (scope: string, key: string) =>
-					scope === 'nimble' && key === 'toggleEffectRuleId' ? 'rage-toggle' : undefined,
+					scope === SYSTEM_ID && key === 'toggleEffectRuleId' ? 'rage-toggle' : undefined,
 			};
 			const plainAE = { getFlag: () => undefined };
 			expect(isToggleEffectAE(toggleAE)).toBe(true);
@@ -362,7 +331,7 @@ describe('toggleEffectControl', () => {
 				id,
 				disabled: false,
 				getFlag: (scope: string, key: string): unknown => {
-					if (scope !== 'nimble') return undefined;
+					if (scope !== SYSTEM_ID) return undefined;
 					if (key === 'toggleEffectRuleId') return ruleId;
 					if (key === 'toggleEffectItemId') return itemId;
 					return undefined;
@@ -416,6 +385,32 @@ describe('toggleEffectControl', () => {
 			expect(ok).toBe(true);
 			expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-active']);
+		});
+
+		it('asks before it ends a turned-off toggle whose pools have dice', async () => {
+			const effect = { ...mkToggleAE(), disabled: true };
+			const rule = {
+				type: 'toggleEffect',
+				id: 'rage-toggle',
+				confirmEndPrompt: 'NIMBLE.confirmKey',
+				clearPoolsOnEnd: ['fury'],
+			};
+			const actor = {
+				effects: [effect],
+				items: {
+					get: () => ({ id: 'rage-item', name: 'Rage', rules: new Map([['0', rule]]) }),
+				},
+				createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+				deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			};
+			mockBuildEffectiveDicePoolMap.mockReturnValue({ fury: { faces: [4] } });
+			getDialogConfirmMock().mockResolvedValue(false);
+
+			const ok = await endToggleEffectFromAE(actor, effect);
+
+			expect(ok).toBe(false);
+			expect(getDialogConfirmMock()).toHaveBeenCalledTimes(1);
+			expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		});
 
 		it('deletes the AE directly when the owning item is gone', async () => {

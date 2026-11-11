@@ -3,6 +3,10 @@
  * Only the adapters import this file: it reads Foundry.
  */
 import { SYSTEM_ID } from '#system';
+import {
+	TOGGLE_EFFECT_ITEM_ID_FLAG,
+	TOGGLE_EFFECT_RULE_ID_FLAG,
+} from '#utils/actor/toggleEffectData.js';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
 import {
@@ -11,10 +15,6 @@ import {
 	originName,
 } from '#view/dataPreparationHelpers/effectLastsUntil.js';
 import type { ActorCondition } from '#view/dataPreparationHelpers/prepareActorConditions.js';
-import {
-	TOGGLE_EFFECT_ITEM_ID_FLAG,
-	TOGGLE_EFFECT_RULE_ID_FLAG,
-} from '../../../models/rules/toggleEffect.js';
 import { CONDITIONS_CHANGED_HOOK } from '../../../settings/customConditionSettings.js';
 import { plainText } from './plainText.ts';
 import type { ConditionLike, EffectLike, ItemLike, RuleLike } from './sheetSource.ts';

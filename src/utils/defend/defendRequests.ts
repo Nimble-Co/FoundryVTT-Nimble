@@ -1,17 +1,18 @@
 import { SYSTEM_ID } from '#system';
 import type { DefendOptionUse, DefendRecord, WholeRoundDefend } from '#types/defend.d.ts';
+import { CONDITION_REPLACED_OPTION } from '../actor/applyConditionToActor.js';
 import { applyEffectHere, payloadFromEffect } from '../actor/applyEffectToActor.js';
 import { itemEffectOf } from '../actor/itemEffectOf.js';
 import { defineCardOperation, rejectCardRequest } from '../chat/cardOperations.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
 import { giveBack } from '../cost/costLedger.js';
-import localize from '../localize.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
+import localize from '../localize.js';
 import { cardTakesDefends, damageAppliedTo, defendsOf } from './defendRecords.js';
 import {
 	EXTRA_DEFEND_FLAG,
@@ -103,7 +104,11 @@ async function setRoundMarks(record: DefendRecord, request: DefendRequest): Prom
 		recordId: record.id,
 	};
 	const older = roundDefendEffectIds(actor);
-	if (older.length) await actor.deleteEmbeddedDocuments('ActiveEffect', older);
+	if (older.length) {
+		await actor.deleteEmbeddedDocuments('ActiveEffect', older, {
+			[CONDITION_REPLACED_OPTION]: true,
+		} as never);
+	}
 	const itemUuid = record.options.find((use) => use.label === record.label)?.itemUuid;
 	const item = itemUuid ? (fromUuidSync(itemUuid) as { uuid?: string; img?: string } | null) : null;
 	const data = roundDefendEffectData(whole, {
@@ -121,7 +126,7 @@ async function affectAttacker(card: DefendCard, record: DefendRecord): Promise<v
 	if (!attacker) return;
 	for (const { itemUuid, effectId } of record.attackerEffects) {
 		const item = fromUuidSync(itemUuid) as Item.Implementation | null;
-		const effect = itemEffectOf(item as never, effectId) as ActiveEffect.Implementation | null;
+		const effect = itemEffectOf(item, effectId) as ActiveEffect.Implementation | null;
 		if (!item || !effect) continue;
 		const user = (item.actor ?? fromUuidSync(record.actorUuid) ?? null) as never;
 		await applyEffectHere(attacker as never, payloadFromEffect(effect, { itemUuid, user }));

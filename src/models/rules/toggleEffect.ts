@@ -1,8 +1,6 @@
 import {
 	findToggleEffect,
 	modifyToggleRulesFor,
-	TOGGLE_EFFECT_ITEM_ID_FLAG,
-	TOGGLE_EFFECT_RULE_ID_FLAG,
 	type ToggleActorLike,
 	type ToggleItemLike,
 	turnToggleOn,
@@ -207,10 +205,4 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	}
 }
 
-export {
-	ToggleEffectRule,
-	TURN_ON_CHOICES,
-	TOGGLE_EFFECT_RULE_ID_FLAG,
-	TOGGLE_EFFECT_ITEM_ID_FLAG,
-	type TurnOnEvent,
-};
+export { ToggleEffectRule, TURN_ON_CHOICES, type TurnOnEvent };

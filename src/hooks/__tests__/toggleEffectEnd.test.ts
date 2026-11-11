@@ -1,17 +1,25 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
+import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { getTestGlobals } from '../../../tests/helpers.js';
+import { createHookCapture } from '../../../tests/mocks/combat.js';
 
 const setPoolFaces = vi.fn(async (..._args: unknown[]) => true);
 
-let clearPoolsOfEndedToggle: typeof import('../toggleEffectEnd.js').clearPoolsOfEndedToggle;
+type DeleteHook = (effect: unknown, options: unknown, userId: string) => void;
 
-beforeAll(async () => {
+function globals() {
+	return getTestGlobals<{ game: { user: { id: string } | null }; Hooks: { on: unknown } }>();
+}
+
+async function registeredHook(): Promise<DeleteHook> {
 	vi.resetModules();
 	vi.doMock('#utils/dicePool/dicePoolRefill.js', () => ({ setPoolFaces }));
-	({ clearPoolsOfEndedToggle } = await import('../toggleEffectEnd.js'));
-});
-
-const gameGlobal = globalThis as unknown as { game: { users?: unknown } };
-let savedUsers: unknown;
+	const callbacks = createHookCapture(globals().Hooks.on as never);
+	const { default: registerToggleEffectEndHooks } = await import('../toggleEffectEnd.js');
+	registerToggleEffectEndHooks();
+	return callbacks.get('deleteActiveEffect') as DeleteHook;
+}
 
 function toggleHolder(rule: Record<string, unknown>) {
 	const actor = new Actor({} as never) as unknown as Record<string, unknown>;
@@ -30,56 +38,62 @@ function toggleEffect(parent: unknown, flags: Record<string, string> = {}) {
 	};
 	return {
 		parent,
-		getFlag: (scope: string, key: string) => (scope === 'nimble' ? all[key] : undefined),
+		getFlag: (scope: string, key: string) => (scope === SYSTEM_ID ? all[key] : undefined),
 	};
 }
 
 const rule = { type: 'toggleEffect', id: 'rageToggle', clearPoolsOnEnd: ['fury', ' ', 'focus'] };
 
-describe('clearPoolsOfEndedToggle', () => {
+describe('registerToggleEffectEndHooks', () => {
 	beforeEach(() => {
 		setPoolFaces.mockClear();
-		savedUsers = gameGlobal.game.users;
-		gameGlobal.game.users = { activeGM: { id: 'test-user-id' } };
+		globals().game.user = { id: 'user-1' };
 	});
 
-	afterEach(() => {
-		gameGlobal.game.users = savedUsers;
+	it('registers a deleteActiveEffect hook', async () => {
+		expect(await registeredHook()).toBeTypeOf('function');
 	});
 
-	it('empties each listed pool once, on the active GM', async () => {
+	it('empties each listed pool once, on the client of the user who deleted the effect', async () => {
+		const hook = await registeredHook();
 		const actor = toggleHolder(rule);
 
-		await clearPoolsOfEndedToggle(toggleEffect(actor), {});
+		hook(toggleEffect(actor), {}, 'user-1');
 
-		expect(setPoolFaces.mock.calls).toEqual([
-			[actor, 'fury', []],
-			[actor, 'focus', []],
-		]);
+		await vi.waitFor(() =>
+			expect(setPoolFaces.mock.calls).toEqual([
+				[actor, 'fury', []],
+				[actor, 'focus', []],
+			]),
+		);
 	});
 
-	it('does nothing on a client that is not the active GM', async () => {
-		gameGlobal.game.users = { activeGM: { id: 'another-gm' } };
+	it('does nothing on the client of another user, with no GM needed', async () => {
+		const hook = await registeredHook();
 
-		await clearPoolsOfEndedToggle(toggleEffect(toggleHolder(rule)), {});
+		hook(toggleEffect(toggleHolder(rule)), {}, 'another-user');
+		await Promise.resolve();
 
 		expect(setPoolFaces).not.toHaveBeenCalled();
 	});
 
 	it('keeps the pools when the effect is replaced by a new copy', async () => {
-		await clearPoolsOfEndedToggle(toggleEffect(toggleHolder(rule)), {
-			nimbleConditionReplaced: true,
-		});
+		const hook = await registeredHook();
+
+		hook(toggleEffect(toggleHolder(rule)), { [CONDITION_REPLACED_OPTION]: true }, 'user-1');
+		await Promise.resolve();
 
 		expect(setPoolFaces).not.toHaveBeenCalled();
 	});
 
 	it('does nothing for an effect that is not a toggle, or whose item is gone', async () => {
+		const hook = await registeredHook();
 		const actor = toggleHolder(rule);
 
-		await clearPoolsOfEndedToggle({ parent: actor, getFlag: () => undefined }, {});
-		await clearPoolsOfEndedToggle(toggleEffect(actor, { toggleEffectItemId: 'gone' }), {});
-		await clearPoolsOfEndedToggle(toggleEffect({ documentName: 'Item' }), {});
+		hook({ parent: actor, getFlag: () => undefined }, {}, 'user-1');
+		hook(toggleEffect(actor, { toggleEffectItemId: 'gone' }), {}, 'user-1');
+		hook(toggleEffect({ documentName: 'Item' }), {}, 'user-1');
+		await Promise.resolve();
 
 		expect(setPoolFaces).not.toHaveBeenCalled();
 	});

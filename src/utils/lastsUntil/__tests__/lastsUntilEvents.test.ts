@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const effectsEndingAtMock = vi.fn((..._args: unknown[]): object[] => []);
 const endEffectsMock = vi.fn(async (..._args: unknown[]) => undefined);
-const noteActivityMock = vi.fn((..._args: unknown[]) => undefined);
+const noteActivityMock = vi.fn(async (..._args: unknown[]): Promise<void> => {});
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 vi.resetModules();
@@ -180,5 +180,14 @@ describe('activity for an inactive round', () => {
 			[user, { attack: true, itemUuid: 'Actor.t.Item.i' }],
 			[user, { attack: false, itemUuid: 'Actor.t.Item.i' }],
 		]);
+	});
+
+	it('the events resolve when the activity is saved', async () => {
+		const noted = Promise.resolve();
+		noteActivityMock.mockReturnValueOnce(noted).mockReturnValueOnce(noted);
+
+		expect(fireAttackEvents(user)).toBe(noted);
+		expect(fireItemUseEvents(item(), [])).toBe(noted);
+		await expect(fireAttackEvents(null)).resolves.toBeUndefined();
 	});
 });

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../activeEffect/nimbleEffectChoices.js';
 import { MarkTargetRule } from '../markTarget.js';
@@ -137,7 +137,15 @@ function activation(sourceItem: { uuid: string }, tokens: ReturnType<typeof crea
 	} as never;
 }
 
+function effectStartStub() {
+	return CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
+}
+
 describe('MarkTargetRule', () => {
+	afterEach(() => {
+		delete effectStartStub().getEffectStart;
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Eviction resolves token actors via the global fromUuid; reset per test so a
@@ -240,8 +248,7 @@ describe('MarkTargetRule', () => {
 			getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'item-uuid' : undefined),
 		});
 
-		const documentClass = CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
-		documentClass.getEffectStart = () => ({ time: 60 });
+		effectStartStub().getEffectStart = () => ({ time: 60 });
 
 		await rule.onItemActivated(activation(item, [token]));
 
@@ -249,7 +256,6 @@ describe('MarkTargetRule', () => {
 		expect(token.actor.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
 			{ _id: 'Effect.existing', start: { time: 60 } },
 		]);
-		delete documentClass.getEffectStart;
 	});
 
 	it('raises capacity to the largest sibling maxTargets (finite Nemesis upgrade)', async () => {
@@ -336,9 +342,9 @@ describe('MarkTargetRule', () => {
 				origin: 'Compendium.x',
 				start: { round: 4 },
 				statuses: ['dazed'],
-				changes: [{ key: 'system.x', type: 'add', value: '1' }],
 				flags: { other: { keep: 1 } },
 				system: {
+					changes: [{ key: 'system.x', type: 'add', value: '1' }],
 					lastsUntil: [oneMinute],
 					escape: { dc: '', saves: ['strength'] },
 					rules: [{ type: 'heldRoll', heldKind: 'advantage' }],
@@ -370,8 +376,8 @@ describe('MarkTargetRule', () => {
 			const data = token.actor.createEmbeddedDocuments.mock.calls[0][1][0];
 			expect(data).toMatchObject({
 				img: 'exploit.webp',
-				changes: [{ key: 'system.x', type: 'add', value: '1' }],
 				system: {
+					changes: [{ key: 'system.x', type: 'add', value: '1' }],
 					lastsUntil: [oneMinute],
 					escape: { dc: '', saves: ['strength'] },
 					rules: [{ type: 'heldRoll', heldKind: 'advantage' }],
@@ -393,6 +399,7 @@ describe('MarkTargetRule', () => {
 			expect(data.origin).toBe('item-uuid');
 			expect(data.flags).toEqual({ [SYSTEM_ID]: { markTargetItemUuid: 'item-uuid' } });
 			expect(data).not.toHaveProperty('start');
+			expect(data).not.toHaveProperty('changes');
 		});
 
 		it("still puts its marker on a creature that has a second hunter's marker", async () => {

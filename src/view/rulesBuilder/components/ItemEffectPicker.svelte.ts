@@ -30,19 +30,15 @@ function resolveItem(document: unknown): PickerItem | null {
 
 export function createItemEffectPickerState(getDocument: () => unknown, getValue: () => string) {
 	const subscribeToEffects = createSubscriber((update) => {
-		const hooksApi = Hooks as unknown as {
-			on: (hook: string, listener: (effect: PickerEffect) => void) => number;
-			off: (hook: string, id: number) => void;
-		};
 		const ids = EFFECT_HOOKS.map((hook) => {
-			const id = hooksApi.on(hook, (effect) => {
+			const id = Hooks.on(hook, (effect: ActiveEffect.Implementation) => {
 				const itemUuid = resolveItem(getDocument())?.uuid;
 				if (itemUuid && effect?.parent?.uuid === itemUuid) update();
 			});
 			return [hook, id] as const;
 		});
 		return () => {
-			for (const [hook, id] of ids) hooksApi.off(hook, id);
+			for (const [hook, id] of ids) Hooks.off(hook, id);
 		};
 	});
 

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { DefendOptionUse } from '#types/defend.d.ts';
+import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 // Setup loads these modules before a hoisted mock could apply.
 const applyEffectHere = vi.fn();
@@ -16,8 +18,13 @@ const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await
 );
 
 const TOKEN = 'Scene.s.Token.pip';
-const ogre = { uuid: 'Actor.ogre', name: 'Ogre' };
 type TestEffect = { id: string; flags?: Record<string, Record<string, unknown>> };
+const ogre = {
+	uuid: 'Actor.ogre',
+	name: 'Ogre',
+	effects: [] as TestEffect[],
+	deleteEmbeddedDocuments: vi.fn(),
+};
 const pip = {
 	uuid: 'Actor.pip',
 	effects: [] as TestEffect[],
@@ -123,6 +130,8 @@ beforeEach(() => {
 	card = makeCard();
 	applyEffectHere.mockReset();
 	giveBack.mockReset();
+	ogre.effects = [];
+	ogre.deleteEmbeddedDocuments.mockClear();
 	pip.effects = [];
 	pip.createEmbeddedDocuments.mockClear();
 	pip.deleteEmbeddedDocuments.mockClear();
@@ -203,14 +212,17 @@ describe('Defend options on the card', () => {
 	});
 
 	it('does not take the attacker effect back on Undo', async () => {
+		applyEffectHere.mockImplementation(async (target: typeof ogre) => {
+			target.effects.push({ id: 'sand-copy' });
+		});
 		await requestDefend(request({ attackerEffects: [SAND] }));
 		const [record] = card.system.defends as { id: string }[];
 
 		await undoDefend('m1', record?.id ?? '');
 
 		expect(card.system.defends).toEqual([]);
-		expect(applyEffectHere).toHaveBeenCalledTimes(1);
-		expect(pip.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(ogre.effects.map((effect) => effect.id)).toEqual(['sand-copy']);
+		expect(ogre.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	describe('a Defend for the whole round', () => {
@@ -251,7 +263,7 @@ describe('Defend options on the card', () => {
 				{
 					name: 'Whirling Defense',
 					img: 'burst.webp',
-					type: 'nimble',
+					type: NIMBLE_EFFECT_TYPE,
 					origin: 'Item.burst',
 					system: {
 						lastsUntil: [
@@ -299,7 +311,9 @@ describe('Defend options on the card', () => {
 
 			await defendWholeRound();
 
-			expect(pip.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['old']);
+			expect(pip.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['old'], {
+				[CONDITION_REPLACED_OPTION]: true,
+			});
 			expect(pip.effects.map((effect) => effect.id)).toEqual(['made-0']);
 		});
 

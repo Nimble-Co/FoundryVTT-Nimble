@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { flushSync, tick } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
-
+import { createItemEffectPickerState } from '../ItemEffectPicker.svelte.js';
 import SchemaFieldRenderer from '../SchemaFieldRenderer.svelte';
 
 const { fields } = foundry.data;
@@ -18,90 +18,128 @@ function fakeItem(effects: FakeEffect[]) {
 	return item;
 }
 
-function effectField() {
-	return new fields.StringField({
-		required: true,
-		nullable: false,
-		blank: true,
-		initial: '',
-		widget: 'itemEffectPicker',
-	} as never);
-}
-
-function renderPicker(item: unknown, value: string, onChange = vi.fn()) {
-	const result = render(SchemaFieldRenderer, {
-		field: effectField(),
-		value,
-		parentData: {},
-		name: 'effectId',
-		onChange,
-		document: item as never,
-	});
-	const select = result.container.querySelector('select.nimble-item-effect-picker');
-	return { ...result, select: select as HTMLSelectElement, onChange };
-}
-
-const optionsOf = (select: HTMLSelectElement) =>
-	[...select.options].map((option) => [option.value, option.textContent?.trim()]);
-
-describe('itemEffectPicker widget', () => {
-	it('lists None and the effects of the item that are not applied to the actor, by name', () => {
+describe('createItemEffectPickerState', () => {
+	it('lists the effects of the item that are not applied to the actor, by name', () => {
 		const item = fakeItem([
 			{ id: 'b', name: 'Slowed', transfer: false },
 			{ id: 'a', name: 'Burning', transfer: false },
 			{ id: 'c', name: 'Passive Bonus', transfer: true },
 		]);
-		const { select } = renderPicker(item, '');
+		const state = createItemEffectPickerState(
+			() => item,
+			() => '',
+		);
 
-		expect(optionsOf(select)).toEqual([
-			['', 'None'],
-			['a', 'Burning'],
-			['b', 'Slowed'],
+		expect(state.hasItem).toBe(true);
+		expect(state.options).toEqual([
+			{ id: 'a', name: 'Burning' },
+			{ id: 'b', name: 'Slowed' },
 		]);
-		expect(select.value).toBe('');
+		expect(state.isMissing).toBe(false);
 	});
 
-	it('shows a stored id that is not on the item as a missing effect, selected', () => {
+	it('reads the item of a rule-holding effect', () => {
 		const item = fakeItem([{ id: 'a', name: 'Burning', transfer: false }]);
-		const { select } = renderPicker(item, 'gone');
+		const holder = { documentName: 'ActiveEffect', parent: item };
+		const state = createItemEffectPickerState(
+			() => holder,
+			() => '',
+		);
 
-		expect(optionsOf(select)).toEqual([
-			['', 'None'],
-			['gone', 'Missing effect (gone)'],
-			['a', 'Burning'],
-		]);
-		expect(select.value).toBe('gone');
+		expect(state.options).toEqual([{ id: 'a', name: 'Burning' }]);
+	});
+
+	it('says a stored id that is not on the item is missing', () => {
+		const item = fakeItem([{ id: 'a', name: 'Burning', transfer: false }]);
+
+		expect(
+			createItemEffectPickerState(
+				() => item,
+				() => 'gone',
+			).isMissing,
+		).toBe(true);
+		expect(
+			createItemEffectPickerState(
+				() => item,
+				() => 'a',
+			).isMissing,
+		).toBe(false);
+	});
+
+	it('has no item and no options when the rule is not on an item', () => {
+		const state = createItemEffectPickerState(
+			() => undefined,
+			() => '',
+		);
+
+		expect(state.hasItem).toBe(false);
+		expect(state.options).toEqual([]);
+	});
+
+	it('reads the options again when an effect is made on the item, not on another', async () => {
+		const item = fakeItem([{ id: 'a', name: 'Burning', transfer: false }]);
+		const state = createItemEffectPickerState(
+			() => item,
+			() => '',
+		);
+		let ids: string[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				ids = state.options.map((option) => option.id);
+			});
+		});
+		flushSync();
+		const call = vi
+			.mocked(Hooks.on)
+			.mock.calls.findLast(([hook]) => (hook as string) === 'createActiveEffect');
+		const onCreate = call?.[1] as unknown as (effect: unknown) => void;
+
+		const added = { id: 'z', name: 'Dazed', transfer: false, parent: item };
+		item.effects.set('z', added);
+		onCreate({ id: 'x', parent: { uuid: 'Item.other' } });
+		flushSync();
+		expect(ids).toEqual(['a']);
+
+		onCreate(added);
+		flushSync();
+		expect(ids).toEqual(['a', 'z']);
+
+		stop();
+		await tick();
+		expect(Hooks.off).toHaveBeenCalledWith('createActiveEffect', expect.anything());
+	});
+});
+
+describe('itemEffectPicker widget', () => {
+	function renderPicker(onChange = vi.fn()) {
+		const result = render(SchemaFieldRenderer, {
+			field: new fields.StringField({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: 'Effect',
+				widget: 'itemEffectPicker',
+			} as never),
+			value: '',
+			parentData: {},
+			name: 'effectId',
+			onChange,
+			document: fakeItem([{ id: 'a', name: 'Burning', transfer: false }]) as never,
+		});
+		const select = result.container.querySelector('select.nimble-item-effect-picker');
+		return { select: select as HTMLSelectElement, onChange };
+	}
+
+	it('names the select with the field label', () => {
+		expect(renderPicker().select.getAttribute('aria-label')).toBe('Effect');
 	});
 
 	it('writes the id of the chosen effect', async () => {
-		const item = fakeItem([{ id: 'a', name: 'Burning', transfer: false }]);
-		const { select, onChange } = renderPicker(item, '');
+		const { select, onChange } = renderPicker();
 
 		await fireEvent.change(select, { target: { value: 'a' } });
 
 		expect(onChange).toHaveBeenCalledWith('a');
-	});
-
-	it('updates when an effect is made on the item', async () => {
-		const item = fakeItem([{ id: 'a', name: 'Burning', transfer: false }]);
-		const { select } = renderPicker(item, '');
-
-		const added = { id: 'z', name: 'Dazed', transfer: false, parent: item };
-		item.effects.set('z', added);
-		const hookCalls = (Hooks.on as unknown as ReturnType<typeof vi.fn>).mock.calls;
-		const listener = hookCalls.filter(([hook]) => hook === 'createActiveEffect').at(-1)?.[1] as (
-			effect: unknown,
-		) => void;
-		listener(added);
-		await tick();
-
-		expect(optionsOf(select).map(([id]) => id)).toEqual(['', 'a', 'z']);
-	});
-
-	it('shows a hint when the rule is not on an item', () => {
-		const { select, container } = renderPicker(undefined, '');
-
-		expect(optionsOf(select)).toEqual([['', 'None']]);
-		expect(container.querySelector('.nimble-field-hint')?.textContent).toContain('not on an item');
 	});
 });

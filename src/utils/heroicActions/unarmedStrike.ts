@@ -262,7 +262,7 @@ export async function rollUnarmedStrike(
 	};
 
 	const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-	fireAttackEvents(actor);
+	void fireAttackEvents(actor);
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);

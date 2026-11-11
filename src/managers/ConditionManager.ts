@@ -1,6 +1,6 @@
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
 import { NIMBLE_EFFECT_TYPE } from '../models/activeEffect/nimbleEffectChoices.js';
-import type { Moment } from '../utils/lastsUntil/momentReached.js';
 import localize from '../utils/localize.js';
 
 export interface ConditionTriggerConfig {

@@ -2,7 +2,8 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from '#documents/actor/resolveCharacterItemActionCost.js';
-import { findToggleEffectAE, findToggleEffectRule } from '#utils/actor/toggleEffectControl.js';
+import { findToggleEffectRule } from '#utils/actor/toggleEffectControl.js';
+import { findToggleEffect } from '#utils/actor/toggleEffectData.js';
 import { validateItemChargeConsumption } from '#utils/chargePool/chargePoolConsume.js';
 import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 import { getChargeConsumers } from '#utils/chargePool/helpers.js';
@@ -64,8 +65,8 @@ function gateOf(item: Item, all: ChargePoolState[]): ChargeGateLike | null {
 function toggleOf(actor: NimbleCharacter, item: Item): HeroItemState['toggle'] {
 	const rule = findToggleEffectRule(item as unknown as Parameters<typeof findToggleEffectRule>[0]);
 	if (!rule) return null;
-	const effect = findToggleEffectAE(
-		actor as unknown as Parameters<typeof findToggleEffectAE>[0],
+	const effect = findToggleEffect(
+		actor as unknown as Parameters<typeof findToggleEffect>[0],
 		rule.id,
 	);
 	return { ruleId: rule.id, on: !!effect && !effect.disabled };

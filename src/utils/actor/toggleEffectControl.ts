@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import {
+	findToggleEffect,
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
 	TOGGLE_EFFECT_RULE_ID_FLAG,
 	type ToggleActorLike,
@@ -35,19 +36,6 @@ interface ToggleEffectRuleLike {
 
 interface ItemWithRules {
 	rules?: { values: () => Iterable<unknown> } | Map<string, unknown>;
-}
-
-interface ToggleAELike {
-	id: string;
-	disabled: boolean;
-}
-
-interface ActorWithEffects {
-	effects?: Iterable<{
-		id: string;
-		disabled: boolean;
-		getFlag?: (scope: string, key: string) => unknown;
-	}>;
 }
 
 /**
@@ -90,21 +78,9 @@ export function findToggleEffectRule(item: ItemWithRules): ToggleEffectRuleLike 
 	return null;
 }
 
-export function findToggleEffectAE(
-	actor: ActorWithEffects | null | undefined,
-	ruleId: string,
-): ToggleAELike | null {
-	const effects = actor?.effects;
-	if (!effects) return null;
-	for (const effect of effects) {
-		if (effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG) === ruleId) return effect;
-	}
-	return null;
-}
-
 type ItemForToggle = ToggleItemLike;
 
-type ActorForToggle = ActorWithEffects & ToggleActorLike;
+type ActorForToggle = ToggleActorLike;
 
 /**
  * Returns true if any pool listed in `clearPoolsOnEnd` currently has dice
@@ -138,12 +114,8 @@ export async function endToggleEffect(
 	item: ItemForToggle,
 	rule: ToggleEffectRuleLike,
 ): Promise<boolean> {
-	const existing = findToggleEffectAE(actor, rule.id);
-	if (!existing) return true;
-	if (existing.disabled) {
-		await actor.deleteEmbeddedDocuments('ActiveEffect', [existing.id]);
-		return true;
-	}
+	const existing = findToggleEffect(actor, rule.id);
+	if (!existing?.id) return true;
 
 	const prompt = rule.confirmEndPrompt?.trim() ?? '';
 	const shouldPrompt = prompt.length > 0 && hasPoolContentToLose(actor, rule.clearPoolsOnEnd);
@@ -178,7 +150,7 @@ export async function toggleEffectAE(
 	item: ItemForToggle,
 	rule: ToggleEffectRuleLike,
 ): Promise<boolean> {
-	const existing = findToggleEffectAE(actor, rule.id);
+	const existing = findToggleEffect(actor, rule.id);
 	if (!existing || existing.disabled) {
 		await turnToggleOn(actor, item, rule);
 		return true;

@@ -109,6 +109,14 @@ describe('turn and round moments', () => {
 	it('a turn start ends no effect for an inactive round', () => {
 		const { add } = makeCombat();
 		const goblin = add('cGoblin', 'Goblin');
+		(goblin.actor as { effects?: unknown[] }).effects = [
+			{
+				active: true,
+				start: { combat: 'combat1', round: 1 },
+				lastsUntil: [{ kind: 'event', event: 'inactiveRound', who: 'holder' }],
+				getFlag: () => undefined,
+			},
+		];
 
 		hook('nimbleCombatTurnStart')(goblin, { round: 2 });
 

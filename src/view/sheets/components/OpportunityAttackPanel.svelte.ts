@@ -289,7 +289,7 @@ export function createOpportunityAttackPanelState(
 		};
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-		fireAttackEvents(getActor());
+		void fireAttackEvents(getActor());
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {

@@ -6,7 +6,6 @@ import {
 	TOGGLE_EFFECT_RULE_ID_FLAG,
 } from '#utils/actor/toggleEffectData.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
-import { isActiveGM } from '#utils/isActiveGM.js';
 
 interface DeletedEffect {
 	parent?: unknown;
@@ -14,18 +13,20 @@ interface DeletedEffect {
 }
 
 interface ToggleHolder {
-	items?: { get(id: string): unknown } | null;
+	items?: {
+		get(id: string): Parameters<typeof findToggleEffectRuleById>[0] | null | undefined;
+	} | null;
 }
 
 /**
  * A toggle effect that is deleted by any path empties the pools its rule lists in
- * `clearPoolsOnEnd`. It runs on the active GM only, so once. A replace is not an end.
+ * `clearPoolsOnEnd`. A replace is not an end.
  */
-export async function clearPoolsOfEndedToggle(
+async function clearPoolsOfEndedToggle(
 	effect: DeletedEffect,
-	options?: Record<string, unknown>,
+	options: Record<string, unknown> | undefined,
 ): Promise<void> {
-	if (!isActiveGM() || options?.[CONDITION_REPLACED_OPTION]) return;
+	if (options?.[CONDITION_REPLACED_OPTION]) return;
 	if (!(effect.parent instanceof Actor)) return;
 	const ruleId = effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG);
 	const itemId = effect.getFlag?.(SYSTEM_ID, TOGGLE_EFFECT_ITEM_ID_FLAG);
@@ -33,7 +34,7 @@ export async function clearPoolsOfEndedToggle(
 	const actor = effect.parent as unknown as ToggleHolder;
 	const item = actor.items?.get(itemId);
 	if (!item) return;
-	const rule = findToggleEffectRuleById(item as never, ruleId);
+	const rule = findToggleEffectRuleById(item, ruleId);
 	for (const poolId of rule?.clearPoolsOnEnd ?? []) {
 		const trimmed = (poolId ?? '').trim();
 		if (trimmed) await setPoolFaces(actor as unknown as Actor, trimmed, []);
@@ -42,10 +43,12 @@ export async function clearPoolsOfEndedToggle(
 
 let registered = false;
 
+/** The pools are cleared once, on the client of the user who deleted the effect. */
 export default function registerToggleEffectEndHooks(): void {
 	if (registered) return;
 	registered = true;
-	Hooks.on('deleteActiveEffect', (effect, options) => {
+	Hooks.on('deleteActiveEffect', (effect, options, userId) => {
+		if (userId !== game.user?.id) return;
 		void clearPoolsOfEndedToggle(
 			effect as unknown as DeletedEffect,
 			options as unknown as Record<string, unknown>,

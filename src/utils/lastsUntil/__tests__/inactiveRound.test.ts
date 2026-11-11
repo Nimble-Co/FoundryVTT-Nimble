@@ -1,10 +1,7 @@
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-	effectsInactiveAt,
-	inactiveThisRound,
-	noteActivity,
-} from '#utils/lastsUntil/inactiveRound.js';
+import { SYSTEM_ID } from '#system';
+import { effectsInactiveAt, noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 const inactiveMoment: Moment = {
@@ -91,29 +88,29 @@ describe('the inactiveRound moment', () => {
 		expect(endsAtTurnEnd(effect(), 2)).toBe(true);
 	});
 
-	it('keeps the effect when its holder attacked this round', () => {
+	it('keeps the effect when its holder attacked this round', async () => {
 		const target = effect();
 		const holder = { uuid: 'Actor.hero', effects: [target] };
 		const { combat, seat } = fight(holder, 2);
 
-		noteActivity(holder, { attack: true });
+		await noteActivity(holder, { attack: true });
 
 		expect(target.update).toHaveBeenCalledWith({
-			'flags.nimble.lastActivity': { combatId: 'c1', round: 2 },
+			[`flags.${SYSTEM_ID}.lastActivity`]: { combatId: 'c1', round: 2 },
 		});
 		expect(effectsInactiveAt(combat as unknown as Combat, seat, 2)).toEqual([]);
 		expect(effectsInactiveAt(combat as unknown as Combat, seat, 3)).toEqual([target]);
 	});
 
-	it('keeps the effect when its holder used the origin item again this round', () => {
+	it('keeps the effect when its holder used the origin item again this round', async () => {
 		const target = effect();
 		const holder = { uuid: 'Actor.hero', effects: [target] };
 		const { combat, seat } = fight(holder, 2);
 
-		noteActivity(holder, { attack: false, itemUuid: 'Actor.hero.Item.other' });
+		await noteActivity(holder, { attack: false, itemUuid: 'Actor.hero.Item.other' });
 		expect(target.update).not.toHaveBeenCalled();
 
-		noteActivity(holder, { attack: false, itemUuid: 'Actor.hero.Item.rage' });
+		await noteActivity(holder, { attack: false, itemUuid: 'Actor.hero.Item.rage' });
 
 		expect(effectsInactiveAt(combat as unknown as Combat, seat, 2)).toEqual([]);
 	});
@@ -124,40 +121,105 @@ describe('the inactiveRound moment', () => {
 	});
 
 	it('reads only effects with the moment, that are on', () => {
-		expect(inactiveThisRound(effect({ lastsUntil: [] }), 'c1', 2)).toBe(false);
-		expect(inactiveThisRound(effect({ active: false }), 'c1', 2)).toBe(false);
-		expect(
-			inactiveThisRound(effect({ lastsUntil: [{ ...inactiveMoment, who: 'source' }] }), 'c1', 2),
-		).toBe(false);
+		expect(endsAtTurnEnd(effect({ lastsUntil: [] }), 2)).toBe(false);
+		expect(endsAtTurnEnd(effect({ active: false }), 2)).toBe(false);
+		expect(endsAtTurnEnd(effect({ lastsUntil: [{ ...inactiveMoment, who: 'source' }] }), 2)).toBe(
+			false,
+		);
 	});
 
 	it('counts activity of another combat as none', () => {
-		const target = effect({ flags: { nimble: { lastActivity: { combatId: 'old', round: 2 } } } });
-		expect(inactiveThisRound(target, 'c1', 2)).toBe(true);
+		const target = effect({
+			flags: { [SYSTEM_ID]: { lastActivity: { combatId: 'old', round: 2 } } },
+		});
+		expect(endsAtTurnEnd(target, 2)).toBe(true);
 	});
 
-	it('notes no activity out of combat, nor on an effect this user does not own', () => {
+	it('keeps the effect when the combat round went back below its start or its last activity', () => {
+		expect(endsAtTurnEnd(effect({ start: { combat: 'c1', round: 3 } }), 2)).toBe(false);
+		const attackedLater = effect({
+			flags: { [SYSTEM_ID]: { lastActivity: { combatId: 'c1', round: 3 } } },
+		});
+		expect(endsAtTurnEnd(attackedLater, 2)).toBe(false);
+	});
+
+	it('notes no activity out of combat, nor on an effect this user does not own', async () => {
 		const target = effect();
 		const other = effect({ isOwner: false });
 		gameGlobal.game.combat = null;
 		gameGlobal.game.combats = [];
 
-		noteActivity({ uuid: 'Actor.hero', effects: [target] }, { attack: true });
+		await noteActivity({ uuid: 'Actor.hero', effects: [target] }, { attack: true });
 		fight({ uuid: 'Actor.hero', effects: [other] }, 2);
-		noteActivity({ uuid: 'Actor.hero', effects: [other] }, { attack: true });
+		await noteActivity({ uuid: 'Actor.hero', effects: [other] }, { attack: true });
 
 		expect(target.update).not.toHaveBeenCalled();
 		expect(other.update).not.toHaveBeenCalled();
 	});
 
-	it('writes the same round only once', () => {
+	it('writes the same round only once', async () => {
 		const target = effect();
 		const holder = { uuid: 'Actor.hero', effects: [target] };
 		fight(holder, 2);
 
-		noteActivity(holder, { attack: true });
-		noteActivity(holder, { attack: true });
+		await noteActivity(holder, { attack: true });
+		await noteActivity(holder, { attack: true });
 
 		expect(target.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('resolves only when every write is done', async () => {
+		const first = effect({ id: 'first' });
+		const second = effect({ id: 'second' });
+		const done: string[] = [];
+		for (const each of [first, second]) {
+			each.update.mockImplementation(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+				done.push(each.id);
+			});
+		}
+		const holder = { uuid: 'Actor.hero', effects: [first, second] };
+		fight(holder, 2);
+
+		await noteActivity(holder, { attack: true });
+
+		expect(done).toEqual(['first', 'second']);
+	});
+
+	describe('a write that fails', () => {
+		let consoleError: ReturnType<typeof vi.spyOn>;
+
+		beforeEach(() => {
+			consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+		});
+
+		afterEach(() => {
+			consoleError.mockRestore();
+		});
+
+		it('is quiet when the effect is gone', async () => {
+			const target = effect();
+			const holder = { uuid: 'Actor.hero', effects: [target] as TestEffect[] };
+			target.update.mockImplementation(async () => {
+				holder.effects = [];
+				throw new Error('gone');
+			});
+			fight(holder, 2);
+
+			await noteActivity(holder, { attack: true });
+
+			expect(consoleError).not.toHaveBeenCalled();
+		});
+
+		it('is logged when the effect is still there', async () => {
+			const target = effect();
+			const holder = { uuid: 'Actor.hero', effects: [target] };
+			target.update.mockRejectedValue(new Error('denied'));
+			fight(holder, 2);
+
+			await noteActivity(holder, { attack: true });
+
+			expect(consoleError).toHaveBeenCalledTimes(1);
+		});
 	});
 });

@@ -1,5 +1,5 @@
 import { SYSTEM_PATH } from '#system';
-import type { Moment } from '../utils/lastsUntil/momentReached.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 /**
  * Canonical status-effect IDs for the conditions that ship with the system. The keys here are

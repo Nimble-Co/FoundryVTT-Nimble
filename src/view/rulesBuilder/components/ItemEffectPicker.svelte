@@ -7,14 +7,19 @@
 		onChange: (next: string) => void;
 		disabled?: boolean;
 		document: unknown;
+		/** The field label, the accessible name of the select. */
+		label: string;
 	};
 
-	let { value, onChange, disabled = false, document }: ItemEffectPickerProps = $props();
+	let { value, onChange, disabled = false, document, label }: ItemEffectPickerProps = $props();
 
 	const pickerState = createItemEffectPickerState(
 		() => document,
 		() => value,
 	);
+	const hasItem = $derived(pickerState.hasItem);
+	const options = $derived(pickerState.options);
+	const isMissing = $derived(pickerState.isMissing);
 
 	function handleChange(event: Event) {
 		onChange((event.target as HTMLSelectElement).value);
@@ -23,23 +28,24 @@
 
 <select
 	class="nimble-field-input nimble-item-effect-picker"
+	aria-label={label}
 	{value}
 	{disabled}
 	onchange={handleChange}
 >
 	<option value="">{localize('NIMBLE.rulesBuilder.itemEffectPicker.none')}</option>
-	{#if pickerState.isMissing}
+	{#if isMissing}
 		<option {value}
 			>{localize('NIMBLE.rulesBuilder.itemEffectPicker.missing', { id: value })}</option
 		>
 	{/if}
-	{#each pickerState.options as option (option.id)}
+	{#each options as option (option.id)}
 		<option value={option.id}>{option.name}</option>
 	{/each}
 </select>
-{#if !pickerState.hasItem}
+{#if !hasItem}
 	<small class="nimble-field-hint">{localize('NIMBLE.rulesBuilder.itemEffectPicker.noItem')}</small>
-{:else if pickerState.options.length === 0}
+{:else if options.length === 0}
 	<small class="nimble-field-hint">{localize('NIMBLE.rulesBuilder.itemEffectPicker.empty')}</small>
 {/if}
 

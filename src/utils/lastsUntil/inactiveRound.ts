@@ -41,7 +41,7 @@ function momentsOf(effect: ActivityEffect): Moment[] {
 }
 
 /** The effect ends after a round with no activity of its holder. */
-export function hasInactiveRound(effect: ActivityEffect): boolean {
+function hasInactiveRound(effect: ActivityEffect): boolean {
 	return momentsOf(effect).some(
 		(moment) =>
 			moment.kind === 'event' && moment.event === 'inactiveRound' && moment.who !== 'source',
@@ -78,20 +78,30 @@ function activityOf(effect: ActivityEffect): Activity | null {
 	return { combatId: value.combatId, round: value.round };
 }
 
+function isOn(holder: Holder, effect: ActivityEffect): boolean {
+	for (const entry of holder.effects ?? []) {
+		if (entry === effect || (!!effect.id && (entry as ActivityEffect).id === effect.id))
+			return true;
+	}
+	return false;
+}
+
 /**
  * Note activity of the holder on each of its effects that end after an inactive round: an attack
  * counts for every such effect, a use of an item only for the effects that item made. Out of
- * combat nothing is noted. Run on the client where the activity happens.
+ * combat nothing is noted. Run on the client where the activity happens. Resolves when every write
+ * is done.
  */
-export function noteActivity(
+export async function noteActivity(
 	holder: object | null | undefined,
 	activity: { attack: boolean; itemUuid?: string | null },
-): void {
+): Promise<void> {
 	const actor = holder as Holder | null | undefined;
 	if (!actor) return;
 	const combat = combatOf(actor);
 	if (!combat?.id) return;
 	const stamp: Activity = { combatId: combat.id, round: Number(combat.round) || 0 };
+	const writes: Promise<unknown>[] = [];
 	for (const entry of actor.effects ?? []) {
 		const effect = entry as ActivityEffect;
 		if (!effect.update || effect.isOwner === false || !hasInactiveRound(effect)) continue;
@@ -99,9 +109,15 @@ export function noteActivity(
 		if (!counts) continue;
 		const last = activityOf(effect);
 		if (last?.combatId === stamp.combatId && last.round === stamp.round) continue;
-		// The effect can end at the same moment; a write that misses it changes nothing.
-		effect.update({ [`flags.${SYSTEM_ID}.${LAST_ACTIVITY_FLAG}`]: stamp }).catch(() => {});
+		writes.push(
+			effect.update({ [`flags.${SYSTEM_ID}.${LAST_ACTIVITY_FLAG}`]: stamp }).catch((error) => {
+				// The effect can end at the same moment; a write that misses it changes nothing.
+				if (!isOn(actor, effect)) return;
+				console.error('Nimble | Could not save the activity of an effect.', error);
+			}),
+		);
 	}
+	await Promise.all(writes);
 }
 
 function startCombatId(effect: ActivityEffect): string | null {
@@ -110,16 +126,19 @@ function startCombatId(effect: ActivityEffect): string | null {
 	return typeof combat === 'string' ? combat : (combat.id ?? null);
 }
 
-/** No activity of the holder in this round of the combat, and the effect did not start in it. */
-export function inactiveThisRound(
-	effect: ActivityEffect,
-	combatId: string,
-	round: number,
-): boolean {
+/**
+ * No activity of the holder in this round of the combat, and the effect did not start in it. A start
+ * or an activity in a later round of the same combat means the round went back: that is not an
+ * inactive round.
+ */
+function inactiveThisRound(effect: ActivityEffect, combatId: string, round: number): boolean {
 	if (effect.active === false || !hasInactiveRound(effect)) return false;
-	if (startCombatId(effect) === combatId && effect.start?.round === round) return false;
+	const startRound = effect.start?.round;
+	if (startCombatId(effect) === combatId && typeof startRound === 'number' && startRound >= round) {
+		return false;
+	}
 	const last = activityOf(effect);
-	return !(last?.combatId === combatId && last.round === round);
+	return !(last?.combatId === combatId && last.round >= round);
 }
 
 /** The effects of the creatures at `seat` that end as their turn in `round` ends. */
