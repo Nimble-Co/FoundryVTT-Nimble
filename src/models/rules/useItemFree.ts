@@ -87,7 +87,7 @@ function schema() {
 			{
 				required: true,
 				nullable: false,
-				initial: ['uses'],
+				initial: ['uses', 'mana'],
 				label: `${WORDS}.freeOf.label`,
 				hint: `${WORDS}.freeOf.hint`,
 			} as unknown as never,

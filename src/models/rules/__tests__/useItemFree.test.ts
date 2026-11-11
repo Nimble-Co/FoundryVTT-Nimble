@@ -50,7 +50,7 @@ function freeRule(
 		label: '',
 		itemIdentifier: source.itemIdentifier ?? 'rage',
 		triggers: source.triggers,
-		freeOf: source.freeOf ?? ['uses'],
+		freeOf: source.freeOf ?? ['uses', 'mana'],
 		disabled: source.disabled ?? false,
 		predicate: new Predicate((source.predicate ?? {}) as never),
 	});
@@ -111,7 +111,7 @@ describe('UseItemFreeRule', () => {
 		expect(UseItemFreeRule.worksOnEffects).toBe(false);
 		expect(UseItemFreeRule.group).toBe('triggers');
 		expect(UseItemFreeRule.description).toBe('NIMBLE.rules.useItemFree.description');
-		expect(schema.freeOf.initial).toEqual(['uses']);
+		expect(schema.freeOf.initial).toEqual(['uses', 'mana']);
 		expect(Object.keys(schema.freeOf.element?.choices ?? {})).toEqual(['uses', 'mana']);
 		expect(UseItemFreeRule.alwaysDispatchedEvents).toEqual([]);
 	});
@@ -129,7 +129,7 @@ describe('UseItemFreeRule', () => {
 		];
 		expect(usedBy).toBe(actor);
 		expect(identifier).toBe('rage');
-		expect(free.of).toEqual(['uses']);
+		expect(free.of).toEqual(['uses', 'mana']);
 		expect(free.reason).toEqual({
 			key: 'NIMBLE.rules.useItemFree.cardLine',
 			data: {
