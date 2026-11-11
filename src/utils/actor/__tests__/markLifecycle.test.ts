@@ -2,16 +2,16 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { SYSTEM_ID } from '#system';
 import { MARK_TARGET_ITEM_FLAG } from '../markTargetEffects.js';
-import { TOGGLED_EFFECTS_FLAG_KEY, type ToggledEffectsFlag } from '../toggledEffects.js';
+import type { ToggledEffectsFlag } from '../toggledEffects.js';
 
 const removeMarkEffect = vi.fn(async () => undefined);
 
 type Lifecycle = typeof import('../markLifecycle.js');
-let endEncounterMarks: Lifecycle['endEncounterMarks'];
 let endMark: Lifecycle['endMark'];
 let endMarkOfRemovedMarker: Lifecycle['endMarkOfRemovedMarker'];
 let markerEffectIds: Lifecycle['markerEffectIds'];
 let marksOfItem: Lifecycle['marksOfItem'];
+let registerMarkLifecycleHooks: Lifecycle['registerMarkLifecycleHooks'];
 
 // The actor document imports markLifecycle, so test setup has it cached with the real relay.
 beforeAll(async () => {
@@ -20,28 +20,21 @@ beforeAll(async () => {
 		...(await importOriginal<typeof import('../markTargetEffects.js')>()),
 		removeMarkEffect,
 	}));
-	({ endEncounterMarks, endMark, endMarkOfRemovedMarker, markerEffectIds, marksOfItem } =
+	({ endMark, endMarkOfRemovedMarker, markerEffectIds, marksOfItem, registerMarkLifecycleHooks } =
 		await import('../markLifecycle.js'));
 });
 
 const goblin = { actorUuid: 'Actor.goblin', tokenUuid: 'Scene.s.Token.goblin', name: 'Goblin' };
 const ogre = { actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre' };
 
-function markRule(flagKey: string, itemUuid: string, endsAtEncounterEnd: boolean) {
-	return {
-		type: 'markTarget',
-		flagKey,
-		endsAtEncounterEnd,
-		disabled: false,
-		item: { uuid: itemUuid },
-	};
+function markRule(flagKey: string) {
+	return { type: 'markTarget', flagKey, disabled: false };
 }
 
-function createOwner(flag: ToggledEffectsFlag, rules: unknown[] = []) {
+function createOwner(flag: ToggledEffectsFlag) {
 	let stored = flag;
 	return {
 		uuid: 'Actor.cheat',
-		rules,
 		getFlag: vi.fn(() => stored),
 		setFlag: vi.fn(async (_scope: string, _key: string, value: ToggledEffectsFlag) => {
 			stored = value;
@@ -71,51 +64,6 @@ afterEach(() => {
 	for (const key of Object.keys(documents)) delete documents[key];
 });
 
-describe('endEncounterMarks', () => {
-	it('ends the marks of the rules that end at the end of the encounter, and only those', async () => {
-		const owner = createOwner({ 'exploit-weakness': [goblin, ogre], quarry: [ogre] }, [
-			markRule('exploit-weakness', 'Item.exploit', true),
-			markRule('quarry', 'Item.mark', false),
-		]);
-		const goblinActor = { uuid: 'Actor.goblin' };
-		const ogreActor = { uuid: 'Actor.ogre' };
-		documents['Scene.s.Token.goblin'] = { actor: goblinActor };
-		documents['Actor.ogre'] = ogreActor;
-
-		await endEncounterMarks(owner as never);
-
-		expect(owner.setFlag).toHaveBeenCalledWith(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, {
-			'exploit-weakness': [],
-			quarry: [ogre],
-		});
-		expect(removeMarkEffect).toHaveBeenCalledWith({
-			target: goblinActor,
-			sourceItemUuid: 'Item.exploit',
-		});
-		expect(removeMarkEffect).toHaveBeenCalledWith({
-			target: ogreActor,
-			sourceItemUuid: 'Item.exploit',
-		});
-		expect(removeMarkEffect).toHaveBeenCalledTimes(2);
-	});
-
-	it('writes nothing when no rule ends at the end of the encounter', async () => {
-		const owner = createOwner({ quarry: [ogre] }, [markRule('quarry', 'Item.mark', false)]);
-
-		await endEncounterMarks(owner as never);
-
-		expect(owner.setFlag).not.toHaveBeenCalled();
-	});
-
-	it('writes nothing when the actor has no mark to end', async () => {
-		const owner = createOwner({}, [markRule('exploit-weakness', 'Item.exploit', true)]);
-
-		await endEncounterMarks(owner as never);
-
-		expect(owner.setFlag).not.toHaveBeenCalled();
-	});
-});
-
 describe('endMarkOfRemovedMarker', () => {
 	function marker(itemUuid: string | undefined, parentUuid = 'Actor.goblin') {
 		return {
@@ -129,7 +77,7 @@ describe('endMarkOfRemovedMarker', () => {
 		const owner = createOwner({ 'exploit-weakness': [goblin, ogre], quarry: [goblin] });
 		documents['Item.exploit'] = {
 			actor: owner,
-			rules: new Map([['r', markRule('exploit-weakness', 'Item.exploit', true)]]),
+			rules: new Map([['r', markRule('exploit-weakness')]]),
 		};
 
 		await endMarkOfRemovedMarker(marker('Item.exploit') as never);
@@ -141,7 +89,7 @@ describe('endMarkOfRemovedMarker', () => {
 		const owner = createOwner({ quarry: [goblin] });
 		documents['Item.mark'] = {
 			actor: owner,
-			rules: new Map([['r', markRule('quarry', 'Item.mark', false)]]),
+			rules: new Map([['r', markRule('quarry')]]),
 		};
 
 		await endMarkOfRemovedMarker(marker(undefined) as never);
@@ -153,12 +101,35 @@ describe('endMarkOfRemovedMarker', () => {
 		const owner = createOwner({ quarry: [ogre] });
 		documents['Item.mark'] = {
 			actor: owner,
-			rules: new Map([['r', markRule('quarry', 'Item.mark', false)]]),
+			rules: new Map([['r', markRule('quarry')]]),
 		};
 
 		await endMarkOfRemovedMarker(marker('Item.mark') as never);
 
 		expect(owner.setFlag).not.toHaveBeenCalled();
+	});
+
+	it('drops the mark when a moment of its Lasts Until deletes the marker, on the active GM', async () => {
+		const handlers = new Map<string, (...args: unknown[]) => unknown>();
+		vi.stubGlobal('Hooks', {
+			on: vi.fn((event: string, handler: (...args: unknown[]) => unknown) => {
+				handlers.set(event, handler);
+				return 1;
+			}),
+		});
+		vi.stubGlobal('game', { user: { id: 'gm', isGM: true }, users: { activeGM: { id: 'gm' } } });
+		const owner = createOwner({ 'exploit-weakness': [goblin, ogre] });
+		documents['Item.exploit'] = {
+			actor: owner,
+			rules: new Map([['r', markRule('exploit-weakness')]]),
+		};
+		registerMarkLifecycleHooks();
+
+		// The Lasts Until engine deletes an ended effect with no options.
+		handlers.get('deleteActiveEffect')?.(marker('Item.exploit'), {}, 'gm');
+		await vi.waitFor(() => expect(owner.setFlag).toHaveBeenCalled());
+
+		expect(owner.stored).toEqual({ 'exploit-weakness': [ogre] });
 	});
 });
 
@@ -167,7 +138,7 @@ describe('endMark', () => {
 		return {
 			uuid: 'Item.exploit',
 			actor: owner,
-			rules: new Map([['r1', markRule('exploit-weakness', 'Item.exploit', true)]]),
+			rules: new Map([['r1', markRule('exploit-weakness')]]),
 		};
 	}
 

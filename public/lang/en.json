@@ -2794,7 +2794,7 @@
 				}
 			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark can also end at the end of the encounter, or when its marker effect is deleted from the creature.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark also ends when its marker effect ends on the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -2807,9 +2807,9 @@
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
 				},
-				"endsAtEncounterEnd": {
-					"label": "Ends at the end of the encounter",
-					"hint": "The marks end when the encounter ends. Taking the marker off a creature ends its mark at any time."
+				"effectId": {
+					"label": "Effect",
+					"hint": "The effect of this item that the marker on each target copies: its image, Lasts Until, Escape, changes and rules. The mark ends when the marker ends. Needs a status condition. Pick none for a marker that ends only when you mark another creature or someone takes it off."
 				}
 			},
 			"unarmedDamage": {

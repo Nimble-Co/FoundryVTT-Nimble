@@ -26,12 +26,14 @@ function createTarget(uuid: string, isOwner: boolean, effects: MockEffect[] = []
 	const target: MarkEffectTarget & {
 		createEmbeddedDocuments: ReturnType<typeof vi.fn>;
 		deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	} = {
 		uuid,
 		isOwner,
 		effects,
 		createEmbeddedDocuments: vi.fn(async () => undefined),
 		deleteEmbeddedDocuments: vi.fn(async () => undefined),
+		updateEmbeddedDocuments: vi.fn(async () => undefined),
 	};
 	return target;
 }
@@ -91,8 +93,18 @@ describe('applyMarkEffect', () => {
 		expect(data[0]).toMatchObject({ statuses: ['marked'], origin: 'Item.hunters-mark' });
 	});
 
-	it('does not stack a second marker this item already applied', async () => {
+	it('does not stack a second marker this item already applied; the marker starts again', async () => {
 		setGame({ user: { id: 'gm', isGM: true } });
+		const start = {
+			time: 120,
+			combat: null,
+			combatant: null,
+			initiative: null,
+			round: null,
+			turn: null,
+		};
+		const documentClass = CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
+		documentClass.getEffectStart = () => start;
 		const target = createTarget('Actor.goblin', false, [
 			markEffect('Effect.existing', 'Item.hunters-mark'),
 		]);
@@ -104,6 +116,10 @@ describe('applyMarkEffect', () => {
 		});
 
 		expect(target.createEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(target.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'Effect.existing', start },
+		]);
+		delete documentClass.getEffectStart;
 	});
 
 	it('relays to the GM when this client can neither own the target nor is GM', async () => {

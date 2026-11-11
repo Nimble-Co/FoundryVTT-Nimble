@@ -33,6 +33,10 @@ export interface MarkEffectTarget {
 		data: Array<Record<string, unknown>>,
 	): Promise<unknown>;
 	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+	updateEmbeddedDocuments(
+		type: 'ActiveEffect',
+		updates: Array<Record<string, unknown>>,
+	): Promise<unknown>;
 }
 
 interface ApplyMarkEffectRequest {
@@ -74,15 +78,23 @@ function getSocket():
 }
 
 /**
- * Creates the marker ActiveEffect on `target`, skipping if the source item already marks it
- * (re-marking a creature this item already marks is a no-op, never a duplicate stack).
+ * Creates the marker ActiveEffect on `target`. When the source item already marks it, the
+ * marker starts again from now instead, so its Lasts Until counts from the new mark.
  */
 async function createMarkEffect(
 	target: MarkEffectTarget,
 	sourceItemUuid: string,
 	effectData: Record<string, unknown>,
 ): Promise<void> {
-	if (findMarkEffectIds(target, sourceItemUuid).length > 0) return;
+	const existing = findMarkEffectIds(target, sourceItemUuid);
+	if (existing.length > 0) {
+		const start = CONFIG.ActiveEffect.documentClass.getEffectStart();
+		await target.updateEmbeddedDocuments(
+			'ActiveEffect',
+			existing.map((_id) => ({ _id, start })),
+		);
+		return;
+	}
 	await target.createEmbeddedDocuments('ActiveEffect', [foundry.utils.deepClone(effectData)]);
 }
 
