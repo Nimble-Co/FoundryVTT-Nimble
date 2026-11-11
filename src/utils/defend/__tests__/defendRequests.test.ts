@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { DefendOptionUse } from '#types/defend.d.ts';
 
 // Setup loads these modules before a hoisted mock could apply.
-const applyCondition = vi.fn();
+const applyEffectHere = vi.fn();
 const giveBack = vi.fn();
 vi.resetModules();
-vi.doMock('../../actor/applyConditionToActor.js', () => ({ default: applyCondition }));
+const applyEffect = await vi.importActual<typeof import('../../actor/applyEffectToActor.js')>(
+	'../../actor/applyEffectToActor.js',
+);
+vi.doMock('../../actor/applyEffectToActor.js', () => ({ ...applyEffect, applyEffectHere }));
 vi.doMock('../../cost/costLedger.js', () => ({ giveBack: giveBack }));
 const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await import(
 	'../defendRequests.js'
@@ -13,8 +17,39 @@ const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await
 
 const TOKEN = 'Scene.s.Token.pip';
 const ogre = { uuid: 'Actor.ogre', name: 'Ogre' };
-const pip = { uuid: 'Actor.pip', setFlag: vi.fn(), unsetFlag: vi.fn(), getFlag: vi.fn() };
+type TestEffect = { id: string; flags?: Record<string, Record<string, unknown>> };
+const pip = {
+	uuid: 'Actor.pip',
+	effects: [] as TestEffect[],
+	setFlag: vi.fn(),
+	unsetFlag: vi.fn(),
+	getFlag: vi.fn(),
+	createEmbeddedDocuments: vi.fn(async (_type: string, data: Record<string, unknown>[]) => {
+		const created = data.map((each, index) => ({ ...each, id: `made-${index}` }) as TestEffect);
+		pip.effects.push(...created);
+		return created;
+	}),
+	deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
+		pip.effects = pip.effects.filter((effect) => !ids.includes(effect.id));
+	}),
+	getRollData: () => ({}),
+};
 const bram = { uuid: 'Actor.bram' };
+const UNTIL_BLINDED_ENDS = [{ kind: 'turn', boundary: 'start', clock: 'holder', span: 'nextTurn' }];
+const sandEffect = {
+	transfer: false,
+	toObject: () => ({
+		_id: 'e-sand',
+		name: 'Pocket Sand',
+		statuses: ['blinded'],
+		transfer: false,
+		origin: null,
+		system: { lastsUntil: UNTIL_BLINDED_ENDS },
+	}),
+};
+const sandItem = { uuid: 'Item.sand', actor: pip, effects: new Map([['e-sand', sandEffect]]) };
+const burstItem = { uuid: 'Item.burst', img: 'burst.webp' };
+const SAND = { itemUuid: 'Item.sand', effectId: 'e-sand', name: 'Pocket Sand' };
 
 type Globals = { fromUuidSync: ReturnType<typeof vi.fn>; game: Record<string, unknown> };
 
@@ -77,7 +112,7 @@ function request(fields: Record<string, unknown> = {}) {
 		armorBonus: 0,
 		options: [],
 		reminders: [],
-		attackerConditions: [],
+		attackerEffects: [] as { itemUuid: string; effectId: string; name: string }[],
 		way: 'action' as const,
 		wholeRound: false,
 		...fields,
@@ -86,12 +121,19 @@ function request(fields: Record<string, unknown> = {}) {
 
 beforeEach(() => {
 	card = makeCard();
-	applyCondition.mockReset();
+	applyEffectHere.mockReset();
 	giveBack.mockReset();
+	pip.effects = [];
+	pip.createEmbeddedDocuments.mockClear();
+	pip.deleteEmbeddedDocuments.mockClear();
 	const globals = globalThis as unknown as Globals;
-	globals.fromUuidSync = vi.fn(
-		(uuid: string) => ({ 'Actor.pip': pip, 'Actor.bram': bram })[uuid] ?? null,
-	);
+	const documents: Record<string, unknown> = {
+		'Actor.pip': pip,
+		'Actor.bram': bram,
+		'Item.sand': sandItem,
+		'Item.burst': burstItem,
+	};
+	globals.fromUuidSync = vi.fn((uuid: string) => documents[uuid] ?? null);
 	globals.game = {
 		user: { id: 'gm', isGM: true },
 		messages: { get: () => card },
@@ -116,7 +158,7 @@ describe('Defend options on the card', () => {
 				armorBonus: 2,
 				options: [paidUse],
 				reminders: ['Pocket Sand: reroll.'],
-				attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }],
+				attackerEffects: [SAND],
 			}),
 		);
 
@@ -125,85 +167,153 @@ describe('Defend options on the card', () => {
 			outcome: 'halve',
 			armorBonus: 2,
 			reminders: ['Pocket Sand: reroll.'],
-			attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }],
+			attackerEffects: [SAND],
 		});
 	});
 
-	it('puts the option condition on the attacker', async () => {
-		await requestDefend(
-			request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: false }] }),
-		);
+	it('puts a copy of the item effect on the attacker, with the item as source', async () => {
+		await requestDefend(request({ attackerEffects: [SAND] }));
 
-		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', { sourceActor: pip });
-	});
-
-	it('ends a condition at the start of the attacker next turn when the option says so', async () => {
-		await requestDefend(
-			request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
-		);
-
-		expect(applyCondition).toHaveBeenCalledWith(ogre, 'blinded', {
-			sourceActor: pip,
-			duration: { rounds: 1 },
+		expect(applyEffectHere).toHaveBeenCalledTimes(1);
+		const [target, payload] = applyEffectHere.mock.calls[0] ?? [];
+		expect(target).toBe(ogre);
+		expect(payload).toMatchObject({
+			sourceItemUuid: 'Item.sand',
+			sourceActorUuid: 'Actor.pip',
+			data: {
+				name: 'Pocket Sand',
+				statuses: ['blinded'],
+				system: { lastsUntil: UNTIL_BLINDED_ENDS },
+			},
 		});
+		expect(payload.data).not.toHaveProperty('_id');
+		expect(payload.data).not.toHaveProperty('transfer');
 	});
 
-	describe('in a combat, the end counts from the attacker turn', () => {
-		const ogreCombatant = { id: 'c-ogre', actorId: 'ogre', tokenId: 'ogre-token' };
-		const pipCombatant = { id: 'c-pip', actorId: 'pip', tokenId: 'pip-token' };
+	it('puts nothing on the attacker with no effect picked', async () => {
+		await requestDefend(request());
 
-		function combat(turns: unknown[], turn: number) {
-			return {
+		expect(applyEffectHere).not.toHaveBeenCalled();
+	});
+
+	it('puts nothing on the attacker when the item effect is gone', async () => {
+		await requestDefend(request({ attackerEffects: [{ ...SAND, effectId: 'gone' }] }));
+
+		expect(applyEffectHere).not.toHaveBeenCalled();
+	});
+
+	it('does not take the attacker effect back on Undo', async () => {
+		await requestDefend(request({ attackerEffects: [SAND] }));
+		const [record] = card.system.defends as { id: string }[];
+
+		await undoDefend('m1', record?.id ?? '');
+
+		expect(card.system.defends).toEqual([]);
+		expect(applyEffectHere).toHaveBeenCalledTimes(1);
+		expect(pip.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	describe('a Defend for the whole round', () => {
+		const whirl: DefendOptionUse = {
+			...paidUse,
+			label: 'Whirling Defense',
+			itemUuid: 'Item.burst',
+		};
+
+		beforeEach(() => {
+			(globalThis as unknown as Globals).game.combat = {
 				id: 'combat-1',
 				started: true,
-				round: 3,
-				turn,
-				turns,
-				combatants: { find: (fn: (c: unknown) => boolean) => turns.find(fn) },
+				round: 2,
+				turn: 1,
+				combatants: { get: () => undefined },
 			};
+		});
+
+		async function defendWholeRound() {
+			await requestDefend(
+				request({
+					label: 'Whirling Defense',
+					armorBonus: 1,
+					outcome: 'miss',
+					options: [whirl],
+					way: 'free',
+					wholeRound: true,
+				}),
+			);
+			return (card.system.defends as { id: string }[])[0]?.id ?? '';
 		}
 
-		async function blindOn(turns: unknown[], turn: number) {
-			(globalThis as unknown as Globals).game.combat = combat(turns, turn);
-			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
-			await requestDefend(
-				request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
+		it('is a Timed Effect on the hero until the start of their next turn, with the mark in its flags', async () => {
+			const recordId = await defendWholeRound();
+
+			expect(pip.createEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+				{
+					name: 'Whirling Defense',
+					img: 'burst.webp',
+					type: 'nimble',
+					origin: 'Item.burst',
+					system: {
+						lastsUntil: [
+							{
+								kind: 'turn',
+								boundary: 'start',
+								clock: 'holder',
+								span: 'nextTurn',
+								value: null,
+								units: null,
+								who: null,
+								event: null,
+								effectName: '',
+							},
+						],
+					},
+					flags: {
+						[SYSTEM_ID]: {
+							roundDefend: {
+								combatId: 'combat-1',
+								round: 2,
+								turn: 1,
+								label: 'Whirling Defense',
+								armorBonus: 1,
+								outcome: 'miss',
+								messageId: 'm1',
+								recordId,
+							},
+						},
+					},
+				},
+			]);
+		});
+
+		it('makes no effect outside a combat', async () => {
+			(globalThis as unknown as Globals).game.combat = null;
+
+			await defendWholeRound();
+
+			expect(pip.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
+
+		it('replaces an older whole-round effect of the hero', async () => {
+			pip.effects = [{ id: 'old', flags: { [SYSTEM_ID]: { roundDefend: { recordId: 'r-old' } } } }];
+
+			await defendWholeRound();
+
+			expect(pip.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['old']);
+			expect(pip.effects.map((effect) => effect.id)).toEqual(['made-0']);
+		});
+
+		it('Undo deletes the effect of that Defend only, by its record id', async () => {
+			const recordId = await defendWholeRound();
+			pip.effects.push(
+				{ id: 'other', flags: { [SYSTEM_ID]: { roundDefend: { recordId: 'r-other' } } } },
+				{ id: 'plain' },
 			);
-			return applyCondition.mock.calls[0]?.[2];
-		}
 
-		it('on the attacker turn: one round from now', async () => {
-			expect(await blindOn([ogreCombatant, pipCombatant], 0)).toMatchObject({
-				duration: { rounds: 1 },
-				start: { combat: 'combat-1', combatant: 'c-ogre', round: 3, turn: 0 },
-			});
-		});
+			await undoDefend('m1', recordId);
 
-		it('when the attacker has gone this round: one round from now', async () => {
-			expect(await blindOn([ogreCombatant, pipCombatant], 1)).toMatchObject({
-				start: { combatant: 'c-ogre', round: 3 },
-			});
-		});
-
-		it('when the attacker is not in the turn order: at their next turn, when it comes', async () => {
-			const combatants = [ogreCombatant, pipCombatant];
-			(globalThis as unknown as Globals).game.combat = {
-				...combat([pipCombatant], 0),
-				combatants: { find: (fn: (c: unknown) => boolean) => combatants.find(fn) },
-			};
-			card.speaker = { actor: 'ogre', token: 'ogre-token' } as never;
-			await requestDefend(
-				request({ attackerConditions: [{ condition: 'blinded', endsOnAttackerTurn: true }] }),
-			);
-			expect(applyCondition.mock.calls[0]?.[2]).toMatchObject({
-				start: { combatant: 'c-ogre', round: 2 },
-			});
-		});
-
-		it('when the attacker turn is still to come this round: at that turn', async () => {
-			expect(await blindOn([pipCombatant, ogreCombatant], 0)).toMatchObject({
-				start: { combatant: 'c-ogre', round: 2 },
-			});
+			expect(pip.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['made-0']);
+			expect(pip.effects.map((effect) => effect.id)).toEqual(['other', 'plain']);
 		});
 	});
 

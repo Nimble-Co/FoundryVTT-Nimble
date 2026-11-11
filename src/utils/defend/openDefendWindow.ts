@@ -132,7 +132,7 @@ function effectOf(
 			outcome: row.whole.outcome as DefendOutcome,
 			armorBonus: row.whole.armorBonus,
 			reminders: [],
-			attackerConditions: [],
+			attackerEffects: [],
 			wholeRound: false,
 		};
 	}
@@ -674,7 +674,7 @@ export async function openDefendWindow(
 		armorBonus: effect.armorBonus + upcastArmor,
 		options: uses,
 		reminders: effect.reminders,
-		attackerConditions: effect.attackerConditions,
+		attackerEffects: effect.attackerEffects,
 		way: row.way,
 		wholeRound: effect.wholeRound,
 	});

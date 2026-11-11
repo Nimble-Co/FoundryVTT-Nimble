@@ -755,6 +755,7 @@
 				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
+				"attackerEffect": "The attacker gets {name}.",
 				"refused": {
 					"noCard": "This card cannot take a Defend.",
 					"notTarget": "That hero is not a target of this attack.",
@@ -2956,12 +2957,9 @@
 					"label": "Use this item's reroll",
 					"hint": "Rerolls the attack with this item's Reroll rule. Its Change This Roll row does not show on the card."
 				},
-				"attackerCondition": {
-					"label": "Condition on the attacker",
-					"hint": "The attacker gets this condition.",
-					"choices": {
-						"none": "None"
-					}
+				"attackerEffectId": {
+					"label": "Effect on the attacker",
+					"hint": "An effect of this item (Apply to the actor off). A copy goes on the attacker when you Defend. Set its Lasts Until in the effect window."
 				},
 				"reminder": {
 					"label": "Reminder",
@@ -2982,14 +2980,6 @@
 				"alsoInterpose": {
 					"label": "Also when you Interpose",
 					"hint": "The tick also goes with an Interpose and no Defend. Its cost, reroll and reminder work; what it does to the Defend does not."
-				},
-				"attackerConditionEnds": {
-					"label": "Condition ends",
-					"hint": "When the condition on the attacker ends.",
-					"choices": {
-						"none": "When removed",
-						"attackerTurn": "At the start of the attacker's next turn"
-					}
 				},
 				"upcastArmor": {
 					"label": "More armor per upcast",

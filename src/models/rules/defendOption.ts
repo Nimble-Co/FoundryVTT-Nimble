@@ -13,8 +13,6 @@ const DEFEND_OPTION_WAYS = ['withDefend', 'freeDefend', 'extraDefend', 'allyDefe
 const DEFEND_OPTION_OUTCOMES = ['none', 'miss', 'noDamage', 'halve'] as const;
 
 type DefendOptionWay = (typeof DEFEND_OPTION_WAYS)[number];
-/** When a condition the option puts on the attacker ends: '' when removed by hand. */
-type AttackerConditionEnds = '' | 'attackerTurn';
 type DefendOptionOutcome = (typeof DEFEND_OPTION_OUTCOMES)[number];
 
 const key = (field: string, part: 'label' | 'hint') => `NIMBLE.rules.defendOption.${field}.${part}`;
@@ -88,32 +86,15 @@ function schema() {
 				showWhen: isWay('withDefend'),
 			}),
 		),
-		attackerCondition: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			label: key('attackerCondition', 'label'),
-			hint: key('attackerCondition', 'hint'),
-			choices: (): Record<string, string> => ({
-				'': 'NIMBLE.rules.defendOption.attackerCondition.choices.none',
-				...CONFIG.NIMBLE.conditions,
-			}),
-		}),
-		attackerConditionEnds: new fields.StringField(
+		attackerEffectId: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
-				initial: '',
 				blank: true,
-				choices: (): Record<string, string> => ({
-					'': 'NIMBLE.rules.defendOption.attackerConditionEnds.choices.none',
-					attackerTurn: 'NIMBLE.rules.defendOption.attackerConditionEnds.choices.attackerTurn',
-				}),
-				label: key('attackerConditionEnds', 'label'),
-				hint: key('attackerConditionEnds', 'hint'),
-				showWhen: (data: Record<string, unknown>) =>
-					typeof data.attackerCondition === 'string' && data.attackerCondition !== '',
+				initial: '',
+				label: key('attackerEffectId', 'label'),
+				hint: key('attackerEffectId', 'hint'),
+				widget: 'itemEffectPicker',
 			}),
 		),
 		reminder: new fields.StringField({
@@ -268,8 +249,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare armorBonus: string;
 	declare useReroll: boolean;
 	declare alsoInterpose: boolean;
-	declare attackerCondition: string;
-	declare attackerConditionEnds: AttackerConditionEnds;
+	declare attackerEffectId: string;
 	declare reminder: string;
 	declare useItem: boolean;
 	declare upcastArmor: number;
@@ -331,10 +311,4 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	}
 }
 
-export {
-	DEFEND_OPTION_OUTCOMES,
-	DefendOptionRule,
-	type AttackerConditionEnds,
-	type DefendOptionOutcome,
-	type DefendOptionWay,
-};
+export { DEFEND_OPTION_OUTCOMES, DefendOptionRule, type DefendOptionOutcome, type DefendOptionWay };

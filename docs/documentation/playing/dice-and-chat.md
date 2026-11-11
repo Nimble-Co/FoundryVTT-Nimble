@@ -122,7 +122,7 @@ The button opens the Defend window. Its heading tells the attack, the hero and t
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-Pick a row and click the button. When the reaction is spent, you have no actions or it is your turn, a window asks first. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do.
+Pick a row and click the button. When the reaction is spent, you have no actions or it is your turn, a window asks first. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do. An effect that a feature puts on the attacker goes on it when you Defend, with a line on the card; **Undo** does not take it off. A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
 
 After a Defend, the target row shows a green shield and the damage after Armor. Until the damage is applied, the GM can click the shield when the damage cannot be avoided (no Armor comes off), or click **Undo** to give back the reaction and its actions.
 

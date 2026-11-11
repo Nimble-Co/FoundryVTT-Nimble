@@ -1,17 +1,24 @@
 import { SYSTEM_ID } from '#system';
 import type { DefendOptionUse, DefendRecord, WholeRoundDefend } from '#types/defend.d.ts';
-import applyConditionToActor, { type ConditionStart } from '../actor/applyConditionToActor.js';
+import { applyEffectHere, payloadFromEffect } from '../actor/applyEffectToActor.js';
+import { itemEffectOf } from '../actor/itemEffectOf.js';
 import { defineCardOperation, rejectCardRequest } from '../chat/cardOperations.js';
 import { queueReactionWrite } from '../chat/reactionWriteQueue.js';
 import { buildCombatantActionDeltaUpdate } from '../combat/requestCombatantActionDelta.js';
 import { giveBack } from '../cost/costLedger.js';
+import localize from '../localize.js';
 import {
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
 import { cardTakesDefends, damageAppliedTo, defendsOf } from './defendRecords.js';
-import { EXTRA_DEFEND_FLAG, roundMarkNow, WHOLE_ROUND_DEFEND_FLAG } from './defendRound.js';
+import {
+	EXTRA_DEFEND_FLAG,
+	roundDefendEffectData,
+	roundDefendEffectIds,
+	roundMarkNow,
+} from './defendRound.js';
 
 type DefendRequest = Omit<DefendRecord, 'id' | 'armorApplies' | 'userId'> & {
 	messageId: string;
@@ -70,13 +77,13 @@ async function writeDefend(request: DefendRequest, userId: string): Promise<stri
 		armorBonus: Math.max(0, Math.floor(request.armorBonus)),
 		options: request.options,
 		reminders: request.reminders,
-		attackerConditions: request.attackerConditions,
+		attackerEffects: request.attackerEffects,
 		way: request.way,
 	};
 	await card.update({
 		'system.defends': [...defendsOf(card.system), record],
 	} as Record<string, unknown>);
-	await conditionAttacker(card, record);
+	await affectAttacker(card, record);
 	await setRoundMarks(record, request);
 	return null;
 }
@@ -95,46 +102,30 @@ async function setRoundMarks(record: DefendRecord, request: DefendRequest): Prom
 		messageId: request.messageId,
 		recordId: record.id,
 	};
-	await actor.setFlag(SYSTEM_ID, WHOLE_ROUND_DEFEND_FLAG, whole);
+	const older = roundDefendEffectIds(actor);
+	if (older.length) await actor.deleteEmbeddedDocuments('ActiveEffect', older);
+	const itemUuid = record.options.find((use) => use.label === record.label)?.itemUuid;
+	const item = itemUuid ? (fromUuidSync(itemUuid) as { uuid?: string; img?: string } | null) : null;
+	const data = roundDefendEffectData(whole, {
+		name: record.label || localize('NIMBLE.chat.defend.confirmDefend'),
+		img: item?.img ?? null,
+		origin: item?.uuid ?? actor.uuid ?? null,
+	});
+	await actor.createEmbeddedDocuments('ActiveEffect', [data as never]);
 }
 
-async function conditionAttacker(card: DefendCard, record: DefendRecord): Promise<void> {
-	if (record.attackerConditions.length < 1) return;
+/** A copy of each picked item effect goes on the attacker, with the item as its source. */
+async function affectAttacker(card: DefendCard, record: DefendRecord): Promise<void> {
+	if (record.attackerEffects.length < 1) return;
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
-	const source = fromUuidSync(record.actorUuid) as Actor.Implementation | null;
-	const start = attackerTurnStart(card);
-	for (const { condition, endsOnAttackerTurn } of record.attackerConditions) {
-		await applyConditionToActor(attacker as never, condition, {
-			sourceActor: (source ?? undefined) as never,
-			...(endsOnAttackerTurn ? { duration: { rounds: 1 }, ...(start ? { start } : {}) } : {}),
-		});
+	if (!attacker) return;
+	for (const { itemUuid, effectId } of record.attackerEffects) {
+		const item = fromUuidSync(itemUuid) as Item.Implementation | null;
+		const effect = itemEffectOf(item as never, effectId) as ActiveEffect.Implementation | null;
+		if (!item || !effect) continue;
+		const user = (item.actor ?? fromUuidSync(record.actorUuid) ?? null) as never;
+		await applyEffectHere(attacker as never, payloadFromEffect(effect, { itemUuid, user }));
 	}
-}
-
-/**
- * Where a one-round duration counts from so it ends as the attacker's next turn
- * starts: their combatant, and a round back when their turn is still to come.
- */
-function attackerTurnStart(card: DefendCard): ConditionStart | null {
-	const combat = game.combat;
-	if (!combat?.started || !combat.id) return null;
-	const token = card.speaker?.token;
-	const combatant = token
-		? combat.combatants.find((each) => each.tokenId === token)
-		: combat.combatants.find((each) => each.actorId === card.speaker?.actor);
-	if (!combatant?.id) return null;
-	const index = combat.turns.findIndex((each) => each.id === combatant.id);
-	const round = Number(combat.round) || 0;
-	// Out of the turn order, their next turn is also still to come.
-	const turnToCome = index < 0 || index > Number(combat.turn);
-	return {
-		combat: combat.id,
-		combatant: combatant.id,
-		initiative: combatant.initiative ?? null,
-		round: turnToCome ? round - 1 : round,
-		turn: Math.max(0, index),
-		time: game.time?.worldTime ?? 0,
-	};
 }
 
 async function writeAllyUse(request: DefendAllyUse): Promise<boolean> {
@@ -257,8 +248,8 @@ async function clearRoundMarks(record: DefendRecord): Promise<void> {
 	const actor = fromUuidSync(record.actorUuid) as Actor.Implementation | null;
 	if (!actor) return;
 	if (record.way === 'extra') await actor.unsetFlag(SYSTEM_ID, EXTRA_DEFEND_FLAG);
-	const whole = actor.getFlag(SYSTEM_ID, WHOLE_ROUND_DEFEND_FLAG) as WholeRoundDefend | undefined;
-	if (whole?.recordId === record.id) await actor.unsetFlag(SYSTEM_ID, WHOLE_ROUND_DEFEND_FLAG);
+	const marks = roundDefendEffectIds(actor, record.id);
+	if (marks.length) await actor.deleteEmbeddedDocuments('ActiveEffect', marks);
 }
 
 async function refundDefend(record: DefendRecord): Promise<void> {
