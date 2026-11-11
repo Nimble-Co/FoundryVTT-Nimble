@@ -197,3 +197,81 @@ describe('applyEffectFromCard for a node that a rule gives', () => {
 		expect(data).not.toHaveProperty('duration');
 	});
 });
+
+describe('applyEffectFromCard when the holder keeps the effect it had', () => {
+	const turnMoment = {
+		kind: 'turn',
+		boundary: 'end',
+		clock: 'holder',
+		span: 'nextTurn',
+		value: null,
+		units: null,
+		who: null,
+		event: null,
+		effectName: '',
+	};
+	const shortEffect = {
+		name: 'Condemned',
+		toObject: () => ({
+			_id: 'fx',
+			name: 'Condemned',
+			statuses: [],
+			system: { lastsUntil: [turnMoment] },
+		}),
+	};
+	const source = { ...item, effects: { get: () => shortEffect } };
+	const holder = {
+		uuid: 'Actor.goblin',
+		name: 'Goblin',
+		isOwner: true,
+		effects: [
+			{
+				id: 'old',
+				uuid: 'Actor.goblin.ActiveEffect.old',
+				name: 'Condemned',
+				origin: item.uuid,
+				statuses: new Set(),
+				system: { lastsUntil: [{ ...turnMoment, kind: 'time', value: 10, units: 'rounds' }] },
+			},
+		],
+	};
+	const createEffect = vi.fn();
+	let previousActiveEffect: unknown;
+
+	beforeEach(() => {
+		card.update.mockClear();
+		createEffect.mockReset();
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === item.uuid ? source : uuid === 'Scene.s.Token.goblin' ? { actor: holder } : null,
+			),
+		);
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => ({ uuid })),
+		);
+		vi.stubGlobal('ui', { notifications: { info: vi.fn(), warn: vi.fn() } });
+		previousActiveEffect = (CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect;
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments: vi.fn() },
+		};
+	});
+
+	afterEach(() => {
+		(CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect = previousActiveEffect;
+		vi.unstubAllGlobals();
+	});
+
+	it('records that the effect stays on the holder, and does not say that it went on no creature', async () => {
+		await applyEffectFromCard(card, applyNode());
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(ui.notifications?.info).not.toHaveBeenCalled();
+		expect(card.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [
+				{ effectUuid: 'Actor.goblin.ActiveEffect.old', actorName: 'Goblin', stays: true },
+			],
+		});
+	});
+});

@@ -58,10 +58,14 @@
 			{/if}
 		</div>
 
-		{#if row.appliedLine}
+		{#if row.appliedLines.length}
 			<span class="nimble-apply-effect__applied">
-				<i class="fa-solid fa-check" aria-hidden="true"></i>
-				{row.appliedLine}
+				{#each row.appliedLines as line}
+					<span class="nimble-apply-effect__applied-line">
+						<i class="fa-solid fa-check" aria-hidden="true"></i>
+						{line}
+					</span>
+				{/each}
 			</span>
 		{:else if row.button}
 			<button
@@ -146,6 +150,8 @@
 		}
 
 		&__applied {
+			display: flex;
+			flex-direction: column;
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
 		}

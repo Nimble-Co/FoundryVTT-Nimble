@@ -553,6 +553,7 @@
 				"applyToTargets": "Apply to Targets",
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
+				"stays": "{name} stays on {holder}",
 				"noTargets": "This card has no targets.",
 				"noneTook": "{name} did not go on any creature.",
 				"missingName": "Effect not found",
