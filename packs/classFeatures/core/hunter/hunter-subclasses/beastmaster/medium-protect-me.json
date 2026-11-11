@@ -20,7 +20,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Your companion may first attack the attacker for 1d4+LVL damage.",
 				"useItem": false,
 				"withInterpose": false,

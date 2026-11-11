@@ -59,7 +59,7 @@
 				"outcome": "miss",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Move up to half your speed away.",
 				"useItem": false,
 				"withInterpose": false,

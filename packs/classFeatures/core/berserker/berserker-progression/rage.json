@@ -8,29 +8,6 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "toggleEffect",
-				"disabled": false,
-				"id": "rage-toggle",
-				"identifier": "rage",
-				"label": "Rage",
-				"predicate": {},
-				"priority": 1,
-				"tags": [
-					"self:raging"
-				],
-				"turnOff": [
-					"onActorKilled",
-					"onActorDying",
-					"onEncounterEnd",
-					"onRest"
-				],
-				"confirmEndPrompt": "NIMBLE.rules.featureMessages.berserker.rageEndConfirm",
-				"clearPoolsOnEnd": [
-					"fury"
-				],
-				"endAfterInactiveRounds": 1
-			},
-			{
 				"type": "dicePool",
 				"disabled": false,
 				"id": "fury-pool-base",
@@ -106,6 +83,15 @@
 					"suppressChat": true,
 					"parentContext": null,
 					"parentNode": null
+				},
+				{
+					"id": "ZWJpNxrTK8PUekfb",
+					"type": "applyEffect",
+					"effectId": "S1P4R61pBW5uvg1M",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -131,7 +117,116 @@
 		],
 		"subclass": false
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "S1P4R61pBW5uvg1M",
+			"name": "Raging",
+			"img": "icons/skills/social/intimidation-impressing.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "tags",
+						"disabled": false,
+						"id": "qKJOACdSD8rsdbpq",
+						"identifier": "",
+						"label": "Raging",
+						"predicate": {},
+						"priority": 1,
+						"tags": [
+							"self:raging"
+						]
+					},
+					{
+						"type": "emptyPoolsAtEnd",
+						"disabled": false,
+						"id": "OV036xUvfrw85hJ7",
+						"identifier": "",
+						"label": "Fury Dice are lost",
+						"predicate": {},
+						"priority": 1,
+						"pools": [
+							"fury"
+						]
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "die",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "zeroHp",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "rest",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "inactiveRound",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

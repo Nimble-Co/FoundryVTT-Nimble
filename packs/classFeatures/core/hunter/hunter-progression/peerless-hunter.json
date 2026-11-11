@@ -25,7 +25,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "",
 				"useItem": false,
 				"withInterpose": false,

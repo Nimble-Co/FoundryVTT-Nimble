@@ -19,7 +19,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Remove these temp HP at the start of your next turn.",
 				"useItem": true,
 				"withInterpose": false,

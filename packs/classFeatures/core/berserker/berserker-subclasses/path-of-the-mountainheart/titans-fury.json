@@ -8,17 +8,21 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "modifyToggle",
+				"type": "useItemFree",
 				"disabled": false,
-				"id": "titans-fury-auto-rage",
+				"id": "e5woFYLAOB7NNmx6",
 				"identifier": "",
-				"label": "Titan's Fury: Rage for free when crit",
+				"label": "Titan's Fury",
 				"predicate": {},
 				"priority": 1,
-				"toggleIdentifier": "rage",
-				"suppressTurnOff": [],
-				"turnOn": [
-					"onCritReceived"
+				"itemIdentifier": "rage",
+				"triggers": [
+					"onCritReceived",
+					"onMiss"
+				],
+				"freeOf": [
+					"uses",
+					"mana"
 				]
 			}
 		],
@@ -48,7 +52,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p><p><em>The Raging state is restored automatically when an enemy crits you (roll your free Fury Die by clicking Rage). The on-miss half is not automated; activate Rage manually after a miss.</em></p>",
+		"description": "<p>After you miss an attack or are crit by an enemy, Rage for free.</p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "path-of-the-mountainheart",

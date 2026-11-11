@@ -42,7 +42,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "The attacker makes a WIL save: on a fail they choose another target in range (if there is none, the attack fails; fail by 5+: they attack themselves); on a save they attack you with disadvantage.",
 				"useItem": false,
 				"withInterpose": false,

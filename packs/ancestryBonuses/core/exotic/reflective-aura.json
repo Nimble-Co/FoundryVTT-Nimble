@@ -41,7 +41,7 @@
 				"outcome": "none",
 				"armorBonus": "@key",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Deal KEY damage back to the attacker.",
 				"useItem": false,
 				"withInterpose": false,

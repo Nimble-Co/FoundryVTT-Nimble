@@ -8,17 +8,18 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "modifyToggle",
+				"type": "changeEffect",
 				"disabled": false,
-				"id": "deep-rage-suppress-0hp",
+				"id": "abtG9uvzTxND08Vc",
 				"identifier": "",
 				"label": "Deep Rage",
 				"predicate": {},
 				"priority": 1,
-				"toggleIdentifier": "rage",
-				"suppressTurnOff": [
-					"onActorDying"
-				]
+				"itemIdentifier": "rage",
+				"removeMoments": [
+					"zeroHp"
+				],
+				"addMoments": []
 			}
 		],
 		"activation": {

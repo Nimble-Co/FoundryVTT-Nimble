@@ -72,8 +72,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": true,
-				"attackerCondition": "blinded",
-				"attackerConditionEnds": "attackerTurn",
+				"attackerEffectId": "1ZTirxa4Cux7gj17",
 				"reminder": "",
 				"useItem": false,
 				"withInterpose": false,
@@ -135,13 +134,25 @@
 	"effects": [
 		{
 			"_id": "1ZTirxa4Cux7gj17",
-			"name": "Blinded",
+			"name": "Pocket Sand",
 			"img": "icons/svg/blind.svg",
 			"type": "nimble",
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [

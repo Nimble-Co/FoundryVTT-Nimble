@@ -49,7 +49,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": true,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Give each later ranged attack against you disadvantage this round.",
 				"useItem": true,
 				"upcastArmor": 3,

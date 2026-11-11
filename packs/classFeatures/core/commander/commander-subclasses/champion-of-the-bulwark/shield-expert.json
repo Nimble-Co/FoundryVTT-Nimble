@@ -21,7 +21,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "The first time each round you block all of the damage, make a free opportunity attack against the attacker.",
 				"useItem": false,
 				"withInterpose": false,
