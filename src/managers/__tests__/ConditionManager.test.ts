@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import registerConditionsConfig from '../../config/registerConditionsConfig.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { ConditionManager } from '../ConditionManager.js';
 
@@ -8,6 +9,7 @@ function setConfiguredConditions(
 		aliased?: Record<string, readonly string[]>;
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
+		lastsUntil?: Record<string, object[]>;
 	} = {},
 ): void {
 	(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
@@ -18,6 +20,7 @@ function setConfiguredConditions(
 		conditionAliasedConditions: relationships.aliased ?? {},
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
+		conditionLastsUntil: relationships.lastsUntil ?? {},
 	};
 }
 
@@ -158,6 +161,21 @@ describe('ConditionManager', () => {
 			manager.configureStatusEffects();
 
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded', 'hexed']);
+		});
+
+		it("puts a condition's Lasts Until on its entry, which core copies into the effect", () => {
+			const { conditionLastsUntil } = registerConditionsConfig();
+			setConfiguredConditions(
+				{ blinded: 'Blinded', despair: 'Despair' },
+				{ lastsUntil: conditionLastsUntil },
+			);
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			const entry = (id: string) =>
+				CONFIG.statusEffects.find((effect) => effect.id === id) as { system?: unknown };
+			expect(entry('despair').system).toEqual({ lastsUntil: conditionLastsUntil.despair });
+			expect(entry('blinded')).not.toHaveProperty('system');
 		});
 	});
 });

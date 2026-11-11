@@ -131,4 +131,23 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		expect(fireAttackEvents).toHaveBeenCalledTimes(1);
 		expect(fireAttackEvents).toHaveBeenCalledWith(shared);
 	});
+
+	it('does not end the Despair of a member itself: the attack event ends it', async () => {
+		const actor = Object.assign(minionActor('despairing'), {
+			getDomain: vi.fn(() => new Set(['self:despair'])),
+			toggleStatusEffect: vi.fn(),
+		});
+		const action = (actor.items as unknown as { system: { activation: object } }[])[0];
+		action.system.activation = {
+			cost: { type: 'action', quantity: 1 },
+			targets: { attackType: 'reach' },
+			effects: [{ type: 'damage', formula: '1', canMiss: true }],
+		};
+
+		await attack([member('m-d', actor)]);
+
+		expect(actor.getDomain).toHaveBeenCalled();
+		expect(fireAttackEvents).toHaveBeenCalledWith(actor);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+	});
 });

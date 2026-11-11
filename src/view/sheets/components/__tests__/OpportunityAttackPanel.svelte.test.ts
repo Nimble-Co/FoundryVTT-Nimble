@@ -15,8 +15,9 @@ beforeAll(async () => {
 	const svelteRuntime = await import('svelte/internal/client');
 	vi.resetModules();
 	vi.doMock('svelte/internal/client', () => svelteRuntime);
-	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireAttackEvents: fireAttackEventsMock }));
-	vi.doMock('#utils/rolls/endUsedConditions.js', () => ({ endUsedConditions: vi.fn() }));
+	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({
+		fireAttackEvents: fireAttackEventsMock,
+	}));
 	vi.doMock('../../../../dice/DamageRoll.js', () => ({ DamageRoll: damageRollMock }));
 	vi.doMock('../../../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 		default: dialogMock,
@@ -79,6 +80,15 @@ function striker() {
 	};
 }
 
+const despairLine = {
+	key: 'self:despair',
+	condition: 'despair',
+	side: 'self',
+	step: -1,
+	on: true,
+	name: 'Striker',
+};
+
 describe('OpportunityAttackPanel unarmed strike', () => {
 	it('fires the attack event for the striker once', async () => {
 		dialogResult({ rollMode: -1 });
@@ -91,6 +101,18 @@ describe('OpportunityAttackPanel unarmed strike', () => {
 		expect(ChatMessage.create).toHaveBeenCalledTimes(1);
 		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
 		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+	});
+
+	it('does not end a Despair line itself: the attack event ends it', async () => {
+		dialogResult({ rollMode: -1, conditionRollModes: [despairLine] });
+		const actor = { ...striker(), toggleStatusEffect: vi.fn() };
+		const { panel, stop } = panelFor(actor);
+
+		await panel.handleUnarmedStrike();
+		stop();
+
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
 	it('fires nothing when the reaction is not spent', async () => {

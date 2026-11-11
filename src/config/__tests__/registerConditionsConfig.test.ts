@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { registerSpecialStatusEffects, STATUS_EFFECT_IDS } from '../registerConditionsConfig.js';
+import registerConditionsConfig, {
+	registerSpecialStatusEffects,
+	STATUS_EFFECT_IDS,
+} from '../registerConditionsConfig.js';
 
 describe('registerSpecialStatusEffects', () => {
 	const original = CONFIG.specialStatusEffects;
@@ -21,6 +24,26 @@ describe('registerSpecialStatusEffects', () => {
 			DEFEATED: 'dead',
 			INVISIBLE: 'invisible',
 			BLIND: STATUS_EFFECT_IDS.blinded,
+		});
+	});
+});
+
+describe('conditionLastsUntil', () => {
+	const event = (name: string, who: string | null) => ({
+		kind: 'event',
+		boundary: null,
+		clock: null,
+		span: null,
+		value: null,
+		units: null,
+		who,
+		event: name,
+		effectName: '',
+	});
+
+	it("Despair lasts until the holder's next attack, or combat ends", () => {
+		expect(registerConditionsConfig().conditionLastsUntil).toEqual({
+			despair: [event('attack', 'holder'), event('combatEnd', null)],
 		});
 	});
 });

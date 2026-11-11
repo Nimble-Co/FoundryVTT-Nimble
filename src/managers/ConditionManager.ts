@@ -1,5 +1,6 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
 import { NIMBLE_EFFECT_TYPE } from '../models/activeEffect/nimbleEffectChoices.js';
+import type { Moment } from '../utils/lastsUntil/momentReached.js';
 import localize from '../utils/localize.js';
 
 export interface ConditionTriggerConfig {
@@ -17,6 +18,8 @@ export interface Condition {
 	aliases?: Set<string> | undefined;
 	statuses?: string[] | undefined;
 	stackable: boolean;
+	/** Core copies this into the effect it builds from the status, so a hand-applied condition gets it too. */
+	system?: { lastsUntil: Moment[] };
 	/** The `[[/condition]]` enricher source for this condition, for callers that render it. */
 	enricherText: string;
 }
@@ -55,6 +58,9 @@ export class ConditionManager {
 			};
 
 			if (aliases.length) data.aliases = new Set(aliases);
+
+			const lastsUntil: Moment[] = CONFIG.NIMBLE.conditionLastsUntil?.[id] ?? [];
+			if (lastsUntil.length) data.system = { lastsUntil };
 
 			if (statuses.length) {
 				data.statuses = statuses;

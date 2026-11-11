@@ -109,6 +109,7 @@ export interface ApplyConditionOptions {
 interface StatusEffectEntry {
 	id: string;
 	_id?: string;
+	system?: { lastsUntil?: Moment[] };
 }
 
 /**
@@ -181,7 +182,7 @@ function reapplication(
 	if (NEWEST_WINS.has(conditionId)) return current;
 
 	const next: Application = {
-		lastsUntil: options.lastsUntil ?? [],
+		lastsUntil: lastsUntilOf(conditionId, options),
 		duration: buildDurationPatch(options.duration),
 	};
 	const context = { roundSeconds: roundSeconds(), secondsOf };
@@ -191,6 +192,25 @@ function reapplication(
 function findStatusEffectEntry(conditionId: string): StatusEffectEntry | undefined {
 	const statusEffects = (CONFIG as { statusEffects?: StatusEffectEntry[] }).statusEffects;
 	return statusEffects?.find((entry) => entry.id === conditionId);
+}
+
+function hasCoreDuration(options: ApplyConditionOptions): boolean {
+	if (buildDurationPatch(options.duration)) return true;
+	const authored = options.effectData?.duration as { value?: number | null } | null | undefined;
+	return typeof authored?.value === 'number' && authored.value > 0;
+}
+
+/**
+ * The moments of the new effect: the caller's, else the authored effect's. With neither and no
+ * core duration, the status entry's own moments stay.
+ */
+function lastsUntilOf(conditionId: string, options: ApplyConditionOptions): Moment[] {
+	if (options.lastsUntil?.length) return options.lastsUntil;
+	const authored = (options.effectData?.system as { lastsUntil?: Moment[] } | undefined)
+		?.lastsUntil;
+	if (authored?.length) return authored;
+	if (hasCoreDuration(options)) return [];
+	return findStatusEffectEntry(conditionId)?.system?.lastsUntil ?? [];
 }
 
 /**
@@ -277,9 +297,9 @@ async function createConditionEffect(
 	const duration = buildDurationPatch(options.duration);
 	if (duration) patch.duration = duration;
 	if (duration && options.start) patch.start = options.start;
-	if (options.lastsUntil?.length) patch['system.lastsUntil'] = options.lastsUntil;
+	patch['system.lastsUntil'] = lastsUntilOf(conditionId, options);
 	if (options.systemFlags) patch[`flags.${SYSTEM_ID}`] = options.systemFlags;
-	if (Object.keys(patch).length > 0) effect.updateSource(patch);
+	effect.updateSource(patch);
 
 	const source = effect.toObject?.() ?? effect;
 	const created = await activeEffectClass.create(

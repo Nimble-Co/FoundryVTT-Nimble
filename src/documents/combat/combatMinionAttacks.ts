@@ -20,7 +20,6 @@ import {
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
-import { endUsedConditions } from '../../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import { soleTarget } from '../../utils/tokens/soleTarget.js';
 import {
@@ -313,7 +312,6 @@ async function rollSingleMinionAttack(params: {
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
 		await held.spend();
-		await endUsedConditions(resolvedActionContext.actor, conditions);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {

@@ -105,7 +105,7 @@ function conditionRollModes(input: ConditionRollInput): ConditionRollMode[] {
 		if (taunted) add('self', 'taunted', -1, rollerName, taunted);
 	}
 	if (input.kind === 'attack' && rollerTags.has('self:despair')) {
-		add('self', 'despair', -1, rollerName, { ends: true });
+		add('self', 'despair', -1, rollerName);
 	}
 
 	const targetName = target?.name ?? '';

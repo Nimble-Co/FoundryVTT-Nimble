@@ -25,7 +25,9 @@ beforeAll(async () => {
 	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
 		spendRuleCharge: spendRuleChargeMock,
 	}));
-	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireAttackEvents: fireAttackEventsMock }));
+	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({
+		fireAttackEvents: fireAttackEventsMock,
+	}));
 	vi.doMock('../../damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => ['1d4'],
 		getDamageBonusTotal: () => 2,
@@ -278,6 +280,17 @@ describe('rollUnarmedStrike', () => {
 
 		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
 		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+	});
+
+	it('does not end a Despair line itself: the attack event ends it', async () => {
+		const despair = { key: 'self:despair', condition: 'despair', side: 'self', step: -1, on: true };
+		dialogResult({ rollMode: -1, conditionRollModes: [{ ...despair, name: 'Kael' }] });
+		const actor = Object.assign(createHeroicCharacter(), { toggleStatusEffect: vi.fn() });
+
+		await rollUnarmedStrike(actor);
+
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
 	it('posts nothing when the dialog is cancelled', async () => {

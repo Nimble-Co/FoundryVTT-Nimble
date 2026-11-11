@@ -85,7 +85,6 @@ import { statsInFormula } from '../utils/reroll/rollStat.js';
 import { withConditionSources } from '../utils/rolls/appliedConditionRollModes.js';
 import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
-import { endUsedConditions } from '../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
@@ -284,9 +283,6 @@ class ItemActivationManager {
 
 	/** The Held Changes this attack uses, which the roll spends. */
 	#heldPlan: AttackHeldPlan | null = null;
-
-	/** The conditions that changed the attack's roll mode, for what ends after it. */
-	#usedConditions: ConditionRollMode[] = [];
 
 	/** The kept amount this attack uses in place of a roll. */
 	#keptAmount: HeldChange | null = null;
@@ -803,16 +799,16 @@ class ItemActivationManager {
 					if (Array.isArray(this.#options.rollModeSources)) {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
-					this.#usedConditions =
+					const usedConditions: ConditionRollMode[] =
 						isAttack && !this.#keptAmount && !this.#maxDamage
 							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(isAoE))
 							: [];
-					if (this.#usedConditions.length > 0) {
+					if (usedConditions.length > 0) {
 						damageOptions.rollModeSources = withConditionSources(
 							damageOptions.rollModeSources ?? [damageOptions.rollMode],
-							this.#usedConditions,
+							usedConditions,
 						);
-						damageOptions.conditionRollModes = this.#usedConditions;
+						damageOptions.conditionRollModes = usedConditions;
 					}
 
 					// The target's incoming-attack rules only apply to actual attacks
@@ -1239,8 +1235,6 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		await endUsedConditions(this.actor, this.#usedConditions);
-		this.#usedConditions = [];
 		if (this.#heldPlan) await this.#heldPlan.spend();
 		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
 		this.#heldPlan = null;

@@ -1,6 +1,5 @@
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
-import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -291,7 +290,6 @@ export function createOpportunityAttackPanelState(
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		fireAttackEvents(getActor());
-		await endUsedConditions(getActor(), conditions);
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {
