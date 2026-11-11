@@ -72,7 +72,8 @@ function sourceNameOf(effect: ActiveEffect): string {
 	return origin?.name ?? sourceOf(effect)?.name ?? '';
 }
 
-function rowOf(effect: ActiveEffect): EndedEffectRow {
+/** What an ended line keeps of the effect, so Undo can put it back. */
+export function endedEffectRow(effect: ActiveEffect): EndedEffectRow {
 	const holder = effect.parent as Actor;
 	return {
 		effectId: effect.id ?? '',
@@ -123,7 +124,7 @@ async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void
 	for (const effect of live) ending.add(effect.uuid ?? '');
 	try {
 		const lines = live.map((effect) => ({
-			row: rowOf(effect),
+			row: endedEffectRow(effect),
 			endedBy: endedByOf(effect, moment),
 		}));
 		const byHolder = new Map<Actor, string[]>();

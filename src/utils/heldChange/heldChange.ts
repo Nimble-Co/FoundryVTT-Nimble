@@ -1,6 +1,9 @@
 import { SYSTEM_ID } from '#system';
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
+import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -478,12 +481,36 @@ export async function createHeldChange(holder: Holder, change: HeldChangeData): 
 	await askActiveGm(QUERY_NAME, { action: 'create', actorUuid: holder.uuid, change });
 }
 
-/** Removes what a roll spent. A change that stays for every roll is not spent. */
-export async function spendHeldChanges(held: HeldChange[]): Promise<void> {
+/** The lines of the use whose roll spends the changes. */
+interface SpendLines {
+	add(events: CardEvent[]): Promise<boolean>;
+}
+
+function usedUpLine(change: HeldChange): CardEvent | null {
+	const uuid = `${change.holderUuid}.ActiveEffect.${change.effectId}`;
+	const effect = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], {
+		strict: false,
+	}) as ActiveEffect | null;
+	if (!effect) return null;
+	return endedEffectEvent(endedEffectRow(effect), Date.now(), {
+		key: 'NIMBLE.chat.events.cause.usedUp',
+	});
+}
+
+/**
+ * Removes what a roll spent. A change that stays for every roll is not spent. With `lines`, each
+ * spent change is an ended line, with Undo, on the card of the use.
+ */
+export async function spendHeldChanges(
+	held: HeldChange[],
+	lines: SpendLines | null = null,
+): Promise<void> {
 	for (const change of held) {
 		if (change.spentBy !== 'oneRoll') continue;
 		const holder = fromUuidSync(change.holderUuid) as unknown as Holder | null;
 		if (!holder) continue;
+		const line = lines ? usedUpLine(change) : null;
+		if (line) await lines?.add([line]);
 		await deleteHeld(holder, change.effectId);
 	}
 }

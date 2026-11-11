@@ -1264,8 +1264,8 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		if (this.#heldPlan) await this.#heldPlan.spend();
-		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
+		if (this.#heldPlan) await this.#heldPlan.spend(events);
+		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd], events);
 		this.#heldPlan = null;
 		this.#keptAmountToEnd = null;
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);

@@ -336,6 +336,40 @@ describe('spendHeldChanges', () => {
 		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 
+	it('puts an ended line with Undo in the lines of the use before it deletes the change', async () => {
+		const target = creature('T', [{ label: 'True Strike' }]);
+		documents.set('T.ActiveEffect.e0', {
+			id: 'e0',
+			uuid: 'T.ActiveEffect.e0',
+			name: 'True Strike',
+			img: 'strike.webp',
+			origin: MIRA,
+			parent: { uuid: 'T', name: 'Grug' },
+			toObject: () => ({ name: 'True Strike' }),
+		});
+		const add = vi.fn(async () => true);
+
+		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		await spendHeldChanges(held, { add });
+
+		expect(add).toHaveBeenCalledWith([
+			expect.objectContaining({
+				kind: 'effectEnded',
+				text: {
+					key: 'NIMBLE.lastsUntil.chat.ended',
+					data: { effect: 'True Strike', name: 'Grug' },
+				},
+				cause: expect.objectContaining({
+					data: expect.objectContaining({ reason: { key: 'NIMBLE.chat.events.cause.usedUp' } }),
+				}),
+				action: expect.objectContaining({ kind: 'undoEnd' }),
+			}),
+		]);
+		expect(add.mock.invocationCallOrder[0]).toBeLessThan(
+			target.deleteEmbeddedDocuments.mock.invocationCallOrder[0],
+		);
+	});
+
 	it('asks the GM when the player does not own the holder', async () => {
 		const target = creature('T', [{}], false);
 		const query = vi.fn(async () => true);

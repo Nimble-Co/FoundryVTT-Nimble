@@ -108,7 +108,7 @@ function planOf(
 		},
 		rollExtraDamage: (rollData) => rollExtraDamage(parts.extraDamage, rollData),
 		withoutPrimaryDie: () => planOf({ ...parts, primaryDie: [] }, keptToEnd),
-		spend: () =>
+		spend: (lines) =>
 			spendHeldChanges(
 				[
 					...parts.primaryDie,
@@ -119,6 +119,7 @@ function planOf(
 					parts.mustAttackOther,
 					...parts.extraDamage,
 				].filter((change): change is HeldChange => !!change),
+				lines,
 			),
 	};
 	return plan;

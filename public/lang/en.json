@@ -726,6 +726,7 @@
 				"cause": {
 					"source": "{source}",
 					"reasonAndSource": "{reason} - {source}",
+					"usedUp": "This roll used it",
 					"lastsUntil": "{moment}"
 				},
 				"freeUse": {
