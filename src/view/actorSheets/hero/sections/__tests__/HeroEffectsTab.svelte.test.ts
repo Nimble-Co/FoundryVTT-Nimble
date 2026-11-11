@@ -20,13 +20,20 @@ function renderTab(view = heroEffectsTab(effectsHero(), effectsContext())) {
 }
 
 describe('HeroEffectsTab', () => {
-	it('ends a toggle effect on a click, with no question', async () => {
+	it('names the pools that the end of an effect empties in the question', async () => {
 		const { perform } = renderTab();
 
-		await fireEvent.click(screen.getByRole('button', { name: /shared\.endName.*Rage/ }));
+		await fireEvent.click(screen.getByRole('button', { name: `${FX}.removeName {"name":"Rage"}` }));
 
-		expect(perform).toHaveBeenCalledWith({ kind: 'endEffect', effectId: 'rageEffect' });
-		expect(screen.queryByRole('alertdialog')).toBeNull();
+		expect(screen.getByRole('alertdialog')).toHaveTextContent(
+			'NIMBLE.ui.effectPoolLost {"pool":"Fury Dice"}',
+		);
+		await fireEvent.click(screen.getByRole('button', { name: `${FX}.remove` }));
+		expect(perform).toHaveBeenCalledWith({
+			kind: 'removeEffect',
+			effectId: 'rageEffect',
+			itemId: null,
+		});
 	});
 
 	it('ends Inspiration from its row, with no question', async () => {

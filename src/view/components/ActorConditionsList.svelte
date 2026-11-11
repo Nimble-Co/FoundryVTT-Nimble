@@ -2,10 +2,7 @@
 	import { onMount } from 'svelte';
 	import prepareActorConditions from '../dataPreparationHelpers/prepareActorConditions.js';
 	import localize from '../../utils/localize.js';
-	import {
-		endToggleEffectFromAE,
-		isToggleEffectAE,
-	} from '../../utils/actor/toggleEffectControl.js';
+	import { effectDeleteQuestion } from '#utils/actor/effectDeleteQuestion.js';
 	import { CONDITIONS_CHANGED_HOOK } from '../../settings/customConditionSettings.js';
 	import { SYSTEM_ID } from '#system';
 
@@ -53,30 +50,13 @@
 		return Array.from(actor?.effects ?? []);
 	});
 
-	// Effects owned by an item (or stamped with an item origin) vanish with
-	// their item and are not recoverable by re-toggling; ad-hoc effects
-	// (banked reductions, GM-created states) are freely disposable.
-	function isItemGranted(effect: unknown): boolean {
-		const typedEffect = effect as {
-			origin?: string | null;
-			parent?: { documentName?: string } | null;
-		};
-		return typedEffect.parent?.documentName === 'Item' || Boolean(typedEffect.origin);
-	}
-	// Backing AEs of toggleEffect rules render in the Temporary Effects
-	// bucket (they end via triggers, the switch, or inactivity) but with an
-	// off switch that runs the rule-owned toggle lifecycle (confirm prompt,
-	// pool clearing) instead of the raw-delete trash button.
-	let activeToggleEffects = $derived.by(() =>
-		actorEffects.filter((effect) => isToggleEffectAE(effect)),
-	);
 	// Enabled effects with no statuses at all. Status-bearing effects surface
-	// through the conditions path; toggles have their own row. This row exists
+	// through the conditions path. This row exists
 	// so no Active Effect is ever invisible on the canvas panel, whatever
 	// created it.
 	let statuslessEffects = $derived.by(() =>
 		actorEffects.filter((effect) => {
-			if (effect.disabled || isToggleEffectAE(effect)) return false;
+			if (effect.disabled) return false;
 			return Array.from(effect.statuses ?? []).length === 0;
 		}),
 	);
@@ -84,15 +64,16 @@
 		const standardConditionIds = new Set(Object.keys(CONFIG.NIMBLE.conditions ?? {}));
 
 		return actorEffects.filter((effect) => {
-			if (isToggleEffectAE(effect)) return false;
 			const statuses = Array.from(effect.statuses ?? []);
 			return !statuses.some((statusId) => standardConditionIds.has(statusId));
 		});
 	});
 	let temporaryEffects = $derived.by(() => {
 		const timed = nonConditionEffects.filter((effect) => {
-			// Ad-hoc effects are transient; item-granted effects are passive.
-			if (!isItemGranted(effect)) return true;
+			// An effect on the actor itself is temporary, also when an item use put it there.
+			if ((effect.parent as { documentName?: string } | null)?.documentName !== 'Item') {
+				return true;
+			}
 			const typedEffect = effect as EffectWithTemporary;
 			if (typeof typedEffect.isTemporary === 'boolean') return typedEffect.isTemporary;
 			const duration = (effect as EffectWithDuration).duration;
@@ -101,9 +82,7 @@
 				(typeof duration?.rounds === 'number' && duration.rounds > 0)
 			);
 		});
-		return [...activeToggleEffects, ...timed].sort((a, b) =>
-			(a.name ?? '').localeCompare(b.name ?? ''),
-		);
+		return timed.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 	});
 	let passiveEffects = $derived.by(() => {
 		const temporaryIds = new Set(temporaryEffects.map((effect) => effect.id));
@@ -171,12 +150,11 @@
 	async function removeEffect(effect: (typeof actorEffects)[number] | null | undefined) {
 		if (!actor || !canRemoveConditions || !effect?.id) return;
 
-		// Item-granted effects are not recoverable short of re-adding the
-		// item, so unlike ad-hoc effects they need confirmation.
-		if (isItemGranted(effect)) {
+		const question = effectDeleteQuestion(effect);
+		if (question) {
 			const confirmed = await foundry.applications.api.DialogV2.confirm({
 				window: { title: localize('NIMBLE.ui.removeEffect') },
-				content: `<p>${localize('NIMBLE.ui.removeEffectConfirmation', { name: effect.name ?? '' })}</p>`,
+				content: question.map((line) => `<p>${line}</p>`).join(''),
 				rejectClose: false,
 			});
 			if (confirmed !== true) return;
@@ -186,19 +164,6 @@
 			// delete() routes to the owning document: item-granted effects are
 			// embedded in their item, not the actor.
 			await effect.delete();
-		} catch (_error) {
-			ui.notifications.error(localize('NIMBLE.ui.failedToRemoveEffect'));
-		}
-	}
-
-	async function endActiveToggle(effect: (typeof activeToggleEffects)[number]) {
-		if (!actor || !canRemoveConditions) return;
-
-		try {
-			await endToggleEffectFromAE(
-				actor as unknown as Parameters<typeof endToggleEffectFromAE>[0],
-				effect as unknown as Parameters<typeof endToggleEffectFromAE>[1],
-			);
 		} catch (_error) {
 			ui.notifications.error(localize('NIMBLE.ui.failedToRemoveEffect'));
 		}
@@ -259,17 +224,6 @@
 		await removeCondition(conditionId);
 	}
 
-	async function handleToggleContextMenu(
-		event: MouseEvent,
-		effect: (typeof activeToggleEffects)[number],
-	) {
-		if (mode !== 'canvas') return;
-
-		event.preventDefault();
-		event.stopPropagation();
-		await endActiveToggle(effect);
-	}
-
 	async function handleEffectContextMenu(event: MouseEvent, effect: (typeof actorEffects)[number]) {
 		if (mode !== 'canvas') return;
 
@@ -317,7 +271,7 @@
 
 <section class="nimble-actor-conditions" data-mode={mode}>
 	{#if mode === 'canvas'}
-		{#if actorConditions.filter((condition) => condition.active).length > 0 || activeToggleEffects.length > 0 || statuslessEffects.length > 0}
+		{#if actorConditions.filter((condition) => condition.active).length > 0 || statuslessEffects.length > 0}
 			<ul class="nimble-actor-conditions__icons">
 				{#each actorConditions.filter((condition) => condition.active) as condition}
 					<li>
@@ -338,27 +292,6 @@
 									<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 									{condition.durationLabel}
 								{/if}
-							</span>
-						</button>
-					</li>
-				{/each}
-				{#each activeToggleEffects as effect}
-					<li>
-						<button
-							class="nimble-actor-conditions__icon-button"
-							type="button"
-							aria-label={effect.name ?? effect.id}
-							data-tooltip={effect.name ?? effect.id}
-							data-tooltip-direction="LEFT"
-							oncontextmenu={(event) => handleToggleContextMenu(event, effect)}
-						>
-							<img
-								class="nimble-actor-conditions__icon"
-								src={effect.img}
-								alt={effect.name ?? effect.id}
-							/>
-							<span class="nimble-actor-conditions__duration-badge">
-								<i class="fa-solid fa-toggle-on" aria-hidden="true"></i>
 							</span>
 						</button>
 					</li>
@@ -404,33 +337,17 @@
 								{effect.name ?? effect.id}
 							</h4>
 							{#if canRemoveConditions}
-								{#if isToggleEffectAE(effect)}
-									<button
-										class="nimble-button"
-										data-button-variant="icon"
-										type="button"
-										style="grid-area: deleteButton"
-										aria-label={localize('NIMBLE.ui.endToggledEffect', {
-											name: effect.name ?? effect.id,
-										})}
-										data-tooltip="NIMBLE.ui.endToggledEffectTooltip"
-										onclick={() => endActiveToggle(effect)}
-									>
-										<i class="fa-solid fa-toggle-on"></i>
-									</button>
-								{:else}
-									<button
-										class="nimble-button"
-										data-button-variant="icon"
-										type="button"
-										style="grid-area: deleteButton"
-										aria-label={localize('NIMBLE.ui.removeEffect')}
-										data-tooltip="NIMBLE.ui.removeEffect"
-										onclick={() => removeEffect(effect)}
-									>
-										<i class="fa-solid fa-trash-can"></i>
-									</button>
-								{/if}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									style="grid-area: deleteButton"
+									aria-label={localize('NIMBLE.ui.removeEffect')}
+									data-tooltip="NIMBLE.ui.removeEffect"
+									onclick={() => removeEffect(effect)}
+								>
+									<i class="fa-solid fa-trash-can"></i>
+								</button>
 							{/if}
 						</li>
 					{/each}

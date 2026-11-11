@@ -275,6 +275,24 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 		);
 	});
 
+	it('a use a rule gives free of its uses validates and consumes free of uses', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(true);
+		const registerChargeSystemHooks = (await import('../chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = createCharacterItem();
+		const free = { of: ['action', 'uses'], reason: 'For free' };
+		hooks.get('nimble.preUseItem')?.(item, { free });
+		expect(validateItemChargeConsumptionMock).toHaveBeenCalledWith(item, { freeOfUses: true });
+
+		hooks.get('nimble.useItem')?.(item, null, { free: { of: ['action'], reason: 'For free' } });
+		expect(consumeOnResolvedItemUseMock).toHaveBeenCalledWith(
+			item,
+			expect.not.objectContaining({ freeOfUses: true }),
+		);
+	});
+
 	it('skips validation and consumption but allows the use when spending automation is off', async () => {
 		const hooks = captureHooks();
 		setSpendingAutomation(false);

@@ -2594,6 +2594,41 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
 			});
 
+			it('costs no mana on a use a rule gives free of mana, and always free of actions', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, free: { of: ['mana'], reason: 'For free' } },
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				await manager.getData();
+
+				expect(manager.spellCost).toEqual({ type: 'none' });
+				expect(manager.free).toEqual({ of: ['action', 'mana'], reason: 'For free' });
+			});
+
+			it('still costs mana on a use free only of its uses', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, free: { of: ['action', 'uses'], reason: 'For free' } },
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				await manager.getData();
+
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
+			});
+
 			it('refuses an upcast bought with a flat pool cost when no class pins the tier', async () => {
 				const poolClass = {
 					type: 'class',

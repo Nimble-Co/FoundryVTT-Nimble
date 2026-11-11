@@ -1,4 +1,4 @@
-import { effectDuration, effectLists, sourceItem } from './effectLists.ts';
+import { effectLists, sourceItem } from './effectLists.ts';
 import { firstSentence, plainText } from './plainText.ts';
 import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sheetSource.ts';
 
@@ -19,7 +19,6 @@ const OTHER_CONDITIONS = new Set(['charged', 'distracted', 'marked', 'smoldering
 
 /** What the Effects tab asks for. Both sheets have these intents, with the same shape. */
 export type EffectIntent =
-	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'escape'; effectId: string }
@@ -100,10 +99,17 @@ export interface EffectsTabInput {
 	keepEmpty?: boolean;
 }
 
-function askRemove(name: string, intent: EffectIntent, input: EffectsTabInput): EffectRowAsk {
+/** The question names each pool that the end of the effect empties. */
+function askRemove(
+	name: string,
+	intent: EffectIntent,
+	input: EffectsTabInput,
+	poolsLost: string[] = [],
+): EffectRowAsk {
+	const lost = poolsLost.map((pool) => input.format('NIMBLE.ui.effectPoolLost', { pool }));
 	return {
 		label: input.format(`${FX}.removeName`, { name }),
-		question: input.format(`${FX}.removeQuestion`, { name }),
+		question: [input.format(`${FX}.removeQuestion`, { name }), ...lost].join(' '),
 		confirmLabel: input.localize(`${FX}.remove`),
 		intent,
 	};
@@ -171,7 +177,7 @@ function stateRow(
 }
 
 function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean): EffectRowView {
-	const { localize, format } = input;
+	const { format } = input;
 	const item = sourceItem(input.items, effect);
 	const base = {
 		id: `effect-${effect.id}`,
@@ -182,24 +188,6 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 	const from = item ? format(`${FX}.fromItem`, { name: item.name }) : '';
 	const sourceName = effect.sourceName || item?.name || '';
 	const lasts = effect.lastsUntil || effect.duration;
-	if (effect.toggle) {
-		return stateRow(
-			{
-				...base,
-				lasts: effect.lastsUntil || effectDuration(effect, item, input),
-				from,
-				sourceName,
-				textInSummary: true,
-				use: {
-					kind: 'act',
-					label: format('NIMBLE.actorSheet.shared.endName', { name: effect.name }),
-					intent: { kind: 'endEffect', effectId: effect.id },
-				},
-			},
-			input,
-			{ state: 'active', tag: localize('NIMBLE.actorSheet.shared.active'), tagOn: true },
-		);
-	}
 	// an item keeps its passive effect on: you change it through the item
 	if (passive && item) {
 		return stateRow({ ...base, lasts, from, sourceName, textInSummary: true, use: null }, input, {
@@ -219,6 +207,7 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 					effect.name,
 					{ kind: 'removeEffect', effectId: effect.id, itemId: effect.itemId },
 					input,
+					effect.poolsLost,
 				),
 			},
 		},

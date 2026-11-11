@@ -222,6 +222,7 @@ describe('rule types that need an item', () => {
 		expect(itemOnly).toEqual(
 			[
 				'actionDelta',
+				'changeEffect',
 				'chargeConsumer',
 				'chargePool',
 				'combatMana',
@@ -241,12 +242,11 @@ describe('rule types that need an item', () => {
 				'modifyConsumer',
 				'modifyPool',
 				'modifyReroll',
-				'modifyToggle',
 				'optionSwap',
 				'poolEmptyEffect',
 				'savingThrowRollMode',
 				'skillPointMove',
-				'toggleEffect',
+				'useItemFree',
 			].sort(),
 		);
 	});
@@ -259,6 +259,6 @@ describe('rule types that need an effect', () => {
 			.map(([type]) => type)
 			.sort();
 
-		expect(effectOnly).toEqual(['freeSpellCost', 'heldRoll']);
+		expect(effectOnly).toEqual(['emptyPoolsAtEnd', 'freeSpellCost', 'heldRoll']);
 	});
 });

@@ -40,8 +40,6 @@ export interface EffectLike {
 	origin: string | null;
 	/** the item that holds the effect; null for an effect on the actor */
 	itemId: string | null;
-	/** the effect is on because a toggle effect rule of this item is on */
-	toggle: { itemId: string; ruleId: string } | null;
 	/** a timed or one-off effect, not one that an item keeps on */
 	temporary: boolean;
 	/** how long it lasts, in words; empty for no end */
@@ -53,6 +51,8 @@ export interface EffectLike {
 	/** the user owns the holder and the effect has an Escape DC; `dc` is null when it is not a number */
 	escape: { dc: number | null } | null;
 	description: string;
+	/** the labels of the pools that are emptied when the effect ends */
+	poolsLost: string[];
 }
 
 /** A condition of the system, on the actor or not. */

@@ -17,7 +17,7 @@
 		disabled = false,
 		showImage = true,
 		itemId = null,
-		toggle = null,
+		active = false,
 		onToggleDescription = null,
 		onclick,
 		ondragstart = null,
@@ -60,8 +60,13 @@
 					<ChargeIndicator {actor} {itemId} {pools} />
 				{/if}
 			</div>
-			{#if properties.length > 0}
+			{#if properties.length > 0 || active}
 				<div class="weapon-card__meta">
+					{#if active}
+						<span class="weapon-card__tag weapon-card__tag--active">
+							{localize('NIMBLE.ui.heroicActions.active')}
+						</span>
+					{/if}
 					{#each properties as prop}
 						<span class="weapon-card__tag">{prop}</span>
 					{/each}
@@ -74,24 +79,6 @@
 				<i class="fa-solid fa-burst"></i>
 				{damage}
 			</span>
-		{/if}
-
-		{#if toggle}
-			<button
-				type="button"
-				class="weapon-card__toggle"
-				class:weapon-card__toggle--on={toggle.enabled}
-				role="switch"
-				aria-checked={toggle.enabled}
-				aria-label={toggle.ariaLabel}
-				data-tooltip={toggle.ariaLabel}
-				onclick={(e) => {
-					e.stopPropagation();
-					void toggle.onClick(e);
-				}}
-			>
-				<i class={toggle.enabled ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'}></i>
-			</button>
 		{/if}
 
 		{#if description && onToggleDescription}
@@ -215,6 +202,11 @@
 			border-radius: 2px;
 		}
 
+		&__tag--active {
+			font-weight: 700;
+			color: var(--nimble-weapon-active-color);
+		}
+
 		&__damage {
 			display: inline-flex;
 			align-items: center;
@@ -230,35 +222,6 @@
 			i {
 				font-size: 0.875rem;
 				color: hsl(0, 60%, 50%);
-			}
-		}
-
-		&__toggle {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			padding: 0;
-			background: transparent;
-			border: none;
-			cursor: pointer;
-			flex-shrink: 0;
-			color: var(--nimble-medium-text-color);
-			transition: color 0.15s ease;
-
-			i {
-				font-size: 1.25rem;
-			}
-
-			&:hover {
-				color: var(--nimble-dark-text-color);
-			}
-		}
-
-		&__toggle--on {
-			color: var(--nimble-weapon-toggle-on-color);
-
-			&:hover {
-				color: var(--nimble-weapon-toggle-on-color-hover);
 			}
 		}
 

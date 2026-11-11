@@ -293,7 +293,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			return null;
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
-		const useContext = { freeUse: manager.freeUse, ...this._useContext(manager) };
+		const useContext = {
+			freeUse: manager.freeUse,
+			...(manager.free ? { free: manager.free } : {}),
+			...this._useContext(manager),
+		};
 
 		/**
 		 * A hook event that fires before an item is used.
@@ -359,6 +363,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 							...(manager.chargeConsumption.length > 0
 								? { chargeConsumption: manager.chargeConsumption }
 								: {}),
+							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
 						},
 					},
 					system: {

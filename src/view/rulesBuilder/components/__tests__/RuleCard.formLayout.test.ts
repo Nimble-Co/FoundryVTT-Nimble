@@ -457,10 +457,10 @@ describe('RuleCard with a form layout (makeCrit)', () => {
 	});
 });
 
-describe('RuleCard for a toggle modifier', () => {
-	it('names the dropped moments in plain words, and selects only the stored one', () => {
+describe('RuleCard for an effect change', () => {
+	it('names the moments in plain words, and selects only the stored one', () => {
 		const { container } = render(RuleCard, {
-			rule: initialRule('modifyToggle', { dropMoments: ['zeroHp'] }),
+			rule: initialRule('changeEffect', { removeMoments: ['zeroHp'], addMoments: [] }),
 			manager,
 		});
 		const chips = [...container.querySelectorAll('.nimble-tag-group__option-button')];

@@ -6,6 +6,7 @@ import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
 import { AuraReachRule } from '../models/rules/auraReach.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
+import { ChangeEffectRule } from '../models/rules/changeEffect.js';
 import { ChangeResultRule } from '../models/rules/changeResult.js';
 import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import { ChargePoolRule } from '../models/rules/chargePool.js';
@@ -26,6 +27,7 @@ import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
+import { EmptyPoolsAtEndRule } from '../models/rules/emptyPoolsAtEnd.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
@@ -57,7 +59,6 @@ import { ModifyConsumerRule } from '../models/rules/modifyConsumer.js';
 import { ModifyIncomingAttackRule } from '../models/rules/modifyIncomingAttack.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyRerollRule } from '../models/rules/modifyReroll.js';
-import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { MovementTriggerRule } from '../models/rules/movementTrigger.js';
 import { NoteRule } from '../models/rules/note.js';
 import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
@@ -78,8 +79,9 @@ import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { TableRollRule } from '../models/rules/tableRoll.js';
 import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
-import { ToggleEffectRule } from '../models/rules/toggleEffect.js';
+import { TagsRule } from '../models/rules/tags.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
+import { UseItemFreeRule } from '../models/rules/useItemFree.js';
 
 /** Every rule type and its class. A rule type's label key is `NIMBLE.ruleTypes.<type>`. */
 export const RULE_CLASSES = {
@@ -92,6 +94,7 @@ export const RULE_CLASSES = {
 	attackOutcome: AttackOutcomeRule,
 	chargeConsumer: ChargeConsumerRule,
 	changeDie: ChangeDieRule,
+	changeEffect: ChangeEffectRule,
 	changeResult: ChangeResultRule,
 	chargePool: ChargePoolRule,
 	combatMana: CombatManaRule,
@@ -103,6 +106,7 @@ export const RULE_CLASSES = {
 	defendOption: DefendOptionRule,
 	damageReduction: DamageReductionRule,
 	dyingActionLimit: DyingActionLimitRule,
+	emptyPoolsAtEnd: EmptyPoolsAtEndRule,
 	freeMove: FreeMoveRule,
 	freeSpellCost: FreeSpellCostRule,
 	grantActivation: GrantActivationRule,
@@ -148,7 +152,6 @@ export const RULE_CLASSES = {
 	modifyConsumer: ModifyConsumerRule,
 	modifyPool: ModifyPoolRule,
 	modifyReroll: ModifyRerollRule,
-	modifyToggle: ModifyToggleRule,
 	movementTrigger: MovementTriggerRule,
 	note: NoteRule,
 	optionSwap: OptionSwapRule,
@@ -163,6 +166,7 @@ export const RULE_CLASSES = {
 	skillPointMove: SkillPointMoveRule,
 	skillRollMode: SkillRollModeRule,
 	speedBonus: SpeedBonusRule,
-	toggleEffect: ToggleEffectRule,
+	tags: TagsRule,
+	useItemFree: UseItemFreeRule,
 	unarmedDamage: UnarmedDamageRule,
 } as const;

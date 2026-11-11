@@ -8,7 +8,7 @@ import { GrantMovementRule } from '../grantMovement.js';
 import { SavingThrowRollModeRule } from '../savingThrowRollMode.js';
 import { SkillRollModeRule } from '../skillRollMode.js';
 import { SpeedBonusRule } from '../speedBonus.js';
-import { ToggleEffectRule } from '../toggleEffect.js';
+import { TagsRule } from '../tags.js';
 
 describe('NimbleBaseRule', () => {
 	describe('appliesInPrePrepareData', () => {
@@ -26,7 +26,7 @@ describe('NimbleBaseRule', () => {
 			expect(AbilityBonusRule.appliesInPrePrepareData).toBe(true);
 			expect(SpeedBonusRule.appliesInPrePrepareData).toBe(true);
 			expect(GrantMovementRule.appliesInPrePrepareData).toBe(true);
-			expect(ToggleEffectRule.appliesInPrePrepareData).toBe(true);
+			expect(TagsRule.appliesInPrePrepareData).toBe(true);
 		});
 
 		it('reports false for rules that apply only after preparation', () => {

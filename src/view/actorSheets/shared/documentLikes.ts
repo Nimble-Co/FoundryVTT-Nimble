@@ -2,11 +2,7 @@
  * The plain copies of Foundry documents that both sheet adapters give the view model.
  * Only the adapters import this file: it reads Foundry.
  */
-import { SYSTEM_ID } from '#system';
-import {
-	TOGGLE_EFFECT_ITEM_ID_FLAG,
-	TOGGLE_EFFECT_RULE_ID_FLAG,
-} from '#utils/actor/toggleEffectData.js';
+import { poolsLostOnEnd } from '#utils/dicePool/poolsEmptiedAtEnd.js';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
 import {
@@ -101,8 +97,6 @@ function holderOf(effect: EffectDocument): { uuid?: string | null } | null {
 
 export function effectLike(effect: EffectDocument): EffectLike {
 	const itemId = effect.parent?.documentName === 'Item' ? (effect.parent.id ?? null) : null;
-	const ruleId = effect.getFlag?.(SYSTEM_ID as 'core', TOGGLE_EFFECT_RULE_ID_FLAG as never);
-	const toggleItemId = effect.getFlag?.(SYSTEM_ID as 'core', TOGGLE_EFFECT_ITEM_ID_FLAG as never);
 	return {
 		id: effect.id ?? '',
 		name: effect.name ?? '',
@@ -111,16 +105,13 @@ export function effectLike(effect: EffectDocument): EffectLike {
 		statuses: [...(effect.statuses ?? [])],
 		origin: (effect.origin as string | null) ?? null,
 		itemId,
-		toggle:
-			typeof ruleId === 'string'
-				? { itemId: typeof toggleItemId === 'string' ? toggleItemId : '', ruleId }
-				: null,
 		temporary: isTemporary(effect, !!itemId),
 		duration: durationWords(deriveDurationDetails(effect.duration).label),
 		lastsUntil: effectLastsUntil(effect as never, holderOf(effect)),
 		sourceName: originName(effect as never),
 		escape: escapeOf(effect as never),
 		description: plainText(effect.description ?? ''),
+		poolsLost: poolsLostOnEnd(effect as never),
 	};
 }
 

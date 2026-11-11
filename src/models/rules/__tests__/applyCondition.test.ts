@@ -361,6 +361,66 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 		});
 
+		it('fires onCritReceived on a crit against the owner, also a discarded crit that keeps its triggers', async () => {
+			const ownerActor = createMockActor();
+			const attackerActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onCritReceived' },
+				ownerActor,
+			);
+
+			await rule.onAttackReceived(buildItemUsedContext(attackerActor, ownerActor));
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
+
+			await rule.onAttackReceived(
+				buildItemUsedContext(attackerActor, ownerActor, { isCritical: true }),
+			);
+			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
+
+			const secondOwner = createMockActor();
+			const secondRule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onCritReceived' },
+				secondOwner,
+			);
+			await secondRule.onAttackReceived({
+				...buildItemUsedContext(attackerActor, secondOwner),
+				discardedCritTriggers: true,
+			});
+			expect(conditionsAppliedTo(secondOwner)).toEqual(['focused']);
+		});
+
+		it('does not fire onCritReceived for a crit against another creature', async () => {
+			const ownerActor = createMockActor();
+			const otherActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onCritReceived' },
+				ownerActor,
+			);
+
+			await rule.onAttackReceived(
+				buildItemUsedContext(ownerActor, otherActor, { isCritical: true }),
+			);
+
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
+			expect(conditionsAppliedTo(otherActor)).toEqual([]);
+		});
+
+		it('fires onDying when the owner starts Dying, and not for another creature', async () => {
+			const ownerActor = createMockActor();
+			const otherActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onDying' },
+				ownerActor,
+			);
+			type Context = Parameters<ApplyConditionRule['onActorDying']>[0];
+
+			await rule.onActorDying({ actor: otherActor as unknown as Context['actor'], source: null });
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
+
+			await rule.onActorDying({ actor: ownerActor as unknown as Context['actor'], source: null });
+			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
+		});
+
 		it('fires onSaveFail only on failing outcome', async () => {
 			const ownerActor = createMockActor();
 			const rule = createApplyConditionRule(

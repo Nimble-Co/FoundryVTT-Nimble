@@ -1886,4 +1886,16 @@ describe('a charge consumer that allows a use with no charge', () => {
 
 		expect(result.consumption?.[0]).toMatchObject({ previousValue: 2, currentValue: 1 });
 	});
+
+	it('needs no charge and spends none on a use free of its uses, also when no free use is allowed', async () => {
+		const empty = beastshift(0, false);
+		const full = beastshift(2, false);
+
+		expect(validateItemChargeConsumption(itemOf(empty), { freeOfUses: true }).ok).toBe(true);
+		const result = await consumeOnResolvedItemUse(itemOf(full), { freeOfUses: true });
+
+		expect(result.ok).toBe(true);
+		expect(result.consumption ?? []).toEqual([]);
+		expect(full.items.contents[0].update).not.toHaveBeenCalled();
+	});
 });

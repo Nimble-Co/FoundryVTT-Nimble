@@ -1,27 +1,12 @@
-import { endToggleEffectFromAE } from '#utils/actor/toggleEffectControl.js';
 import localize from '#utils/localize.js';
 
-/** What the Effects tab of both sheets does to an actor: End, Remove, open the effect window, and a condition on or off. */
+/** What the Effects tab of both sheets does to an actor: Remove, open the effect window, and a condition on or off. */
 
 type EffectHolder = { effects?: { get(id: string): ActiveEffect | undefined } };
 
 function effectOf(actor: Actor.Implementation, effectId: string, itemId: string | null) {
 	const holder = (itemId ? actor.items.get(itemId) : actor) as EffectHolder | undefined;
 	return holder?.effects?.get(effectId);
-}
-
-/** The toggle lifecycle ends it: its confirm prompt and pool clearing run. */
-export async function endEffect(actor: Actor.Implementation, effectId: string): Promise<void> {
-	const effect = [...actor.allApplicableEffects()].find((entry) => entry.id === effectId);
-	if (!effect) return;
-	try {
-		await endToggleEffectFromAE(
-			actor as unknown as Parameters<typeof endToggleEffectFromAE>[0],
-			effect as unknown as Parameters<typeof endToggleEffectFromAE>[1],
-		);
-	} catch (_error) {
-		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
-	}
 }
 
 /** The effect window of an effect on the actor or on one of its items. */

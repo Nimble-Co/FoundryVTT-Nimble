@@ -5,10 +5,13 @@ import applyConditionToActor, {
 } from '#utils/actor/applyConditionToActor.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
+import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type ActivationCardContext,
+	type ActorDyingContext,
 	type ActorHealthContext,
 	type InitiativeRolledContext,
 	type ItemUsedContext,
@@ -18,18 +21,7 @@ import {
 	type TurnContext,
 } from './base.js';
 
-const ATTACK_OUTCOME_TRIGGERS = ['onHit', 'onCrit', 'onMiss'] as const;
-const SELF_TRIGGERS = [
-	'onTurnStart',
-	'onTurnEnd',
-	'onKill',
-	'onWound',
-	'onSaveFail',
-	'onRest',
-	'onInitiative',
-] as const;
-
-const TRIGGER_CHOICES = [...ATTACK_OUTCOME_TRIGGERS, ...SELF_TRIGGERS] as const;
+const TRIGGER_CHOICES = RULE_TRIGGERS;
 
 type ApplyConditionTrigger = (typeof TRIGGER_CHOICES)[number];
 
@@ -164,6 +156,19 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return [node];
 	}
 
+	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
+		if (this.trigger !== 'onCritReceived') return;
+		if (context.targetActor !== this.actor) return;
+		if (!firesCritTriggers(context)) return;
+		await this.#applyConditionToSelf();
+	}
+
+	override async onActorDying(context: ActorDyingContext): Promise<void> {
+		if (this.trigger !== 'onDying') return;
+		if (context.actor !== this.actor) return;
+		await this.#applyConditionToSelf();
+	}
+
 	override async onTurnStart(context: TurnContext): Promise<void> {
 		if (this.trigger !== 'onTurnStart') return;
 		if (context.actor !== this.actor) return;
@@ -223,14 +228,11 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	}
 
 	#matchesAttackContext(context: { isCritical: boolean; isMiss: boolean }): boolean {
-		if (this.trigger === 'onHit') return !context.isCritical && !context.isMiss;
-		if (this.trigger === 'onCrit') return context.isCritical;
-		if (this.trigger === 'onMiss') return context.isMiss;
-		return false;
+		return attackOutcomeMatches(this.trigger, context);
 	}
 
 	#isAttackTrigger(): boolean {
-		return this.trigger === 'onHit' || this.trigger === 'onCrit' || this.trigger === 'onMiss';
+		return isAttackOutcomeTrigger(this.trigger);
 	}
 
 	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<void> {

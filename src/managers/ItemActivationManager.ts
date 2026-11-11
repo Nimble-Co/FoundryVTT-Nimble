@@ -231,6 +231,16 @@ class ItemActivationManager {
 	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
 	freeUse = false;
 
+	/** A use that a rule gives for free, and what it is free of. It never spends actions. */
+	get free(): ItemActivationManager.FreeUse | null {
+		const free = this.#options.free;
+		if (!free) return null;
+		return {
+			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
+			reason: free.reason,
+		};
+	}
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -424,7 +434,8 @@ class ItemActivationManager {
 			// Mana affordability only applies when mana is what the cast
 			// costs; a class-declared pool cost is validated at spend time.
 			const flatCost = this.spellCost?.type === 'pool';
-			const enforceManaCost = isResourceSpendingAutomationEnabled() && !flatCost;
+			const enforceManaCost =
+				isResourceSpendingAutomationEnabled() && !flatCost && !this.free?.of.includes('mana');
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
 				resources: actorSystem.resources,
@@ -487,6 +498,10 @@ class ItemActivationManager {
 		}
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
+
+		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
+			this.spellCost = { type: 'none' };
+		}
 
 		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
 			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
@@ -1759,6 +1774,17 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
 		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		/** A use that a rule gives for free. */
+		free?: FreeUse;
+	}
+
+	/** What a free use does not spend or check. `action` is always part of it. */
+	export type FreeOf = 'action' | 'uses' | 'mana';
+
+	export interface FreeUse {
+		of: FreeOf[];
+		/** The line the card shows for it. */
+		reason: string;
 	}
 
 	/**

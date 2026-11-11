@@ -11,7 +11,6 @@ export type SheetIntent<Flag extends string = string> =
 	| { kind: 'rollSave'; save: SaveKeyType }
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'openItem'; itemId: string }
-	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'escape'; effectId: string }
@@ -30,7 +29,6 @@ const SHEET_INTENT_KINDS: Record<SheetIntent['kind'], true> = {
 	rollSave: true,
 	activate: true,
 	openItem: true,
-	endEffect: true,
 	openEffect: true,
 	removeEffect: true,
 	escape: true,

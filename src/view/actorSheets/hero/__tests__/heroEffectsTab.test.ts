@@ -95,37 +95,21 @@ describe('heroEffectsTab', () => {
 		});
 	});
 
-	it('ends a toggle effect from its row, with no question, and says when it ends', () => {
+	it('asks before it removes an effect that an item use gave, and names each pool that its end empties', () => {
 		const row = rowOf(heroEffectsTab(effectsHero(), effectsContext()), 'effect-rageEffect');
 
 		expect(row.use).toEqual({
-			kind: 'act',
-			label: 'NIMBLE.actorSheet.shared.endName {"name":"Rage"}',
-			intent: { kind: 'endEffect', effectId: 'rageEffect' },
-		});
-		expect(row.state).toBe('active');
-		expect(row.summary).toBe('until you drop to 0 HP');
-		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
-		expect(row.cost, 'no duration text at the end of the row').toEqual({});
-	});
-
-	it('takes the duration of a toggle effect from the activation when the effect has no Lasts Until', () => {
-		const hero = effectsHero();
-		const rage = hero.items.find((item) => item.id === 'rage')!;
-		hero.effects = hero.effects.map((effect) =>
-			effect.id === 'rageEffect' ? { ...effect, lastsUntil: '' } : effect,
-		);
-		rage.system = {
-			...rage.system,
-			activation: {
-				...(rage.system.activation as object),
-				duration: { type: 'minute', quantity: 10, details: '' },
+			kind: 'ask',
+			ask: {
+				label: `${FX}.removeName {"name":"Rage"}`,
+				question: `${FX}.removeQuestion {"name":"Rage"} NIMBLE.ui.effectPoolLost {"pool":"Fury Dice"}`,
+				confirmLabel: `${FX}.remove`,
+				intent: { kind: 'removeEffect', effectId: 'rageEffect', itemId: null },
 			},
-		};
-
-		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-rageEffect');
-
-		expect(row.summary).toBe('10 NIMBLE.durationsPlural.minute');
+		});
+		expect(row.state).toBeUndefined();
+		expect(row.summary).toBe('until you drop to 0 HP');
+		expect(row.facts).toContainEqual([`${FX}.facts.from`, `${FX}.fromItem {"name":"Rage"}`]);
 	});
 
 	it('asks before it removes a timed effect', () => {

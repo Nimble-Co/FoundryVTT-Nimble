@@ -2,8 +2,7 @@
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import { findToggleEffectRule, toggleEffectAE } from '../../../utils/actor/toggleEffectControl.js';
-	import { findToggleEffect } from '#utils/actor/toggleEffectData.js';
+	import { activeOrigins } from '#utils/actor/activeOrigins.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 
@@ -20,43 +19,15 @@
 		() => onActivateItem,
 	);
 
-	// toggleEffect switch: surfaces a Foundry AE toggle on attack-feature rows.
-	// state.effectVersion is bumped by Hooks listeners registered in the state
-	// file when any AE on this actor is created/updated/deleted, so the
-	// switch updates from the in-panel click, the PASSIVE EFFECTS panel, or a
-	// Lasts Until end without manual sheet refresh.
-	function buildToggleState(item: {
-		id: string;
-		name: string;
-		img?: string;
-		uuid?: string;
-		rules?: { values: () => Iterable<unknown> } | Map<string, unknown>;
-	}) {
+	// The items whose use gave the actor an effect that is on: their rows show "Active".
+	let activeItems = $derived.by(() => {
 		void state.effectVersion;
-		const rule = findToggleEffectRule(item);
-		if (!rule) return null;
-		const existing = findToggleEffect(actor, rule.id);
-		const enabled = existing !== null && !existing.disabled;
-		return {
-			enabled,
-			ariaLabel: localize(
-				enabled ? 'NIMBLE.ui.heroicActions.toggleOff' : 'NIMBLE.ui.heroicActions.toggleOn',
-				{ name: item.name },
-			),
-			onClick: async () => {
-				await toggleEffectAE(actor, item, rule);
-				// AE hook below will bump effectVersion; this immediate bump
-				// covers any timing window where the hook hasn't fired yet.
-				state.bumpEffectVersion();
-			},
-		};
-	}
+		return activeOrigins(actor.effects);
+	});
 
-	// Subscribe to AE create/update/delete on this actor so the switch
-	// updates from external sources (PASSIVE EFFECTS panel, Lasts Until ends,
-	// chat-card buttons). $effect handles mount/unmount lifecycle and
-	// cleanup, avoiding the eager-registration runtime error we hit when
-	// calling Hooks.on outside a component lifecycle scope.
+	// Effects on the actor are not on actor.reactive, so the AE hooks redraw the Active tags.
+	// $effect handles mount/unmount lifecycle and cleanup, avoiding the eager-registration
+	// runtime error we hit when calling Hooks.on outside a component lifecycle scope.
 	$effect(() => {
 		const actorId = (actor as { id?: string } | null)?.id;
 		if (!actorId) return;
@@ -158,7 +129,7 @@
 					showImage={showEmbeddedDocumentImages}
 					itemId={item._id}
 					pools={getPoolsForItem(actor.reactive, item._id, allPools)}
-					toggle={buildToggleState(item)}
+					active={activeItems.has(item.uuid)}
 					onclick={() => state.handleItemClick(item._id)}
 					ondragstart={(event) => sheet._onDragStart(event)}
 					onToggleDescription={(e) => state.toggleDescription(item._id, e)}

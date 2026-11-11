@@ -20,6 +20,7 @@ type ItemUseContext = {
 	isMiss?: boolean;
 	isCritical?: boolean;
 	freeUse?: boolean;
+	freeOfUses?: boolean;
 };
 
 type RestContext = {
@@ -58,9 +59,14 @@ function toItemUseContext(context: unknown): ItemUseContext {
 	};
 }
 
-/** The player ticked a use with no charge in the roll window. */
-function freeUseOf(context: unknown): { freeUse?: true } {
-	return (context as { freeUse?: unknown } | null)?.freeUse === true ? { freeUse: true } : {};
+/** The player ticked a use with no charge in the roll window, or a rule gives the use free of its uses. */
+function freeUseOf(context: unknown): { freeUse?: true; freeOfUses?: true } {
+	const use = context as { freeUse?: unknown; free?: { of?: unknown } } | null;
+	const freeOf = Array.isArray(use?.free?.of) ? use.free.of : [];
+	return {
+		...(use?.freeUse === true ? { freeUse: true } : {}),
+		...(freeOf.includes('uses') ? { freeOfUses: true } : {}),
+	};
 }
 
 function toRestContext(context: unknown): RestContext {

@@ -166,6 +166,8 @@ type ChargeContext = {
 	isCritical?: boolean;
 	/** The player ticked a use with no charge: consumers that allow it spend nothing. */
 	freeUse?: boolean;
+	/** A rule gives the use free of its uses: no consumer is checked or spent. */
+	freeOfUses?: boolean;
 	/** What a recovery predicate can read of this use, as the target and how it attacked. */
 	recoveryDomain?: readonly string[];
 };

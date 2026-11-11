@@ -1877,7 +1877,8 @@
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyReroll": "Modify Reroll",
-			"modifyToggle": "Modify Toggle",
+			"changeEffect": "Change an effect",
+			"emptyPoolsAtEnd": "Empty pools at end",
 			"movementTrigger": "Movement Trigger",
 			"note": "Note",
 			"optionSwap": "Option Swap",
@@ -1891,7 +1892,8 @@
 			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
-			"toggleEffect": "Toggle Effect",
+			"tags": "Tags",
+			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
 		},
@@ -2601,15 +2603,21 @@
 					"hint": "On a save or a check, the new roll succeeds, with no choice of result. On an attack, the new roll cannot miss, and it is a crit only if the die makes it a crit. It counts on each use that is clicked."
 				}
 			},
-			"modifyToggle": {
-				"description": "Modify a toggleEffect rule (by identifier): take moments out of its effect's Lasts Until, or turn it on by itself. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
-				"toggleIdentifier": {
-					"label": "Toggle identifier",
-					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
+			"changeEffect": {
+				"description": "Changes the Lasts Until of the effects that another item gives to this creature, when each effect is made. Effects already on the creature do not change.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The identifier of the item that gives the effects."
 				},
-				"dropMoments": {
+				"removeMoments": {
 					"label": "Does not end when",
-					"hint": "These moments are taken out of the toggle's effect when it turns on. Its other moments stay.",
+					"hint": "These moments are taken out of the effect. Its other moments stay."
+				},
+				"addMoments": {
+					"label": "Also ends when",
+					"hint": "These moments are added to the effect, when it does not have them yet."
+				},
+				"moments": {
 					"choices": {
 						"attack": "You attack",
 						"move": "You move",
@@ -2630,15 +2638,13 @@
 						"rest": "You rest",
 						"combatEnd": "Combat ends"
 					}
-				},
-				"turnOn": {
-					"label": "Turn on by itself",
-					"hint": "The toggle turns on when one of these happens. Add an \"Only while\" condition to limit when it applies.",
-					"choices": {
-						"onTurnStart": "When its turn starts",
-						"onActorDying": "When the creature starts dying",
-						"onCritReceived": "When the creature is crit"
-					}
+				}
+			},
+			"emptyPoolsAtEnd": {
+				"description": "When this effect ends, by any path, the named dice pools are emptied. A new copy of the effect that replaces it is not an end. This rule works only on an effect.",
+				"pools": {
+					"label": "Pools",
+					"hint": "Identifiers of dice pools. The pool of the item that gave the effect is used first, then a pool of the creature."
 				}
 			},
 			"note": {
@@ -2763,32 +2769,60 @@
 					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
 				}
 			},
-			"toggleEffect": {
-				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. The effect can be a copy of one of the item's effects, which ends by its Lasts Until. Sibling rules predicate on those tags to deliver the actual bonuses.",
+			"tags": {
+				"description": "Adds tags to the creature while this is on it: while the item is on the creature, or while the effect is on the creature and on. Other rules can read the tags in their \"Only while\" condition.",
 				"tags": {
 					"label": "Tags",
-					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
+					"hint": "Tags such as self:raging. A rule that reads these tags before the other rules run needs a higher Priority than this rule."
+				}
+			},
+			"useItemFree": {
+				"description": "When one of the triggers happens and the \"Only while\" condition is true, the creature uses another item with no window. The use spends no action, and its card says why it was free.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The identifier of the item to use."
 				},
-				"effectId": {
-					"label": "Effect",
-					"hint": "The effect of this item that the actor gets while the toggle is on, with its Lasts Until. Pick none for a blank effect that lasts until it is turned off."
+				"triggers": {
+					"label": "Triggers",
+					"hint": "When the item is used. Add an \"Only while\" condition to limit when it applies.",
+					"choices": {
+						"onHit": "You hit with an attack",
+						"onCrit": "You crit with an attack",
+						"onMiss": "You miss with an attack",
+						"onTurnStart": "Your turn starts",
+						"onTurnEnd": "Your turn ends",
+						"onKill": "You die",
+						"onWound": "You are Bloodied",
+						"onSaveFail": "You fail a save",
+						"onRest": "You rest",
+						"onInitiative": "You roll Initiative",
+						"onCritReceived": "An enemy crits you",
+						"onDying": "You start Dying"
+					}
 				},
-				"confirmEndPrompt": {
-					"label": "End confirm prompt",
-					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Accepts plain text or a localization key as the dialog body. Leave empty to disable the prompt."
+				"freeOf": {
+					"label": "Free of",
+					"hint": "The use never spends an action. Use limits: the use does not count toward the uses of the item, such as 1/turn, and needs none left. Mana: a spell costs no mana.",
+					"choices": {
+						"action": "Actions",
+						"uses": "Use limits",
+						"mana": "Mana"
+					}
 				},
-				"clearPoolsOnEnd": {
-					"label": "Clear pools on end",
-					"hint": "Pool identifiers to empty when the toggle's effect ends, by any path. Use for rules like 'resources are lost when the effect ends'."
-				},
-				"confirmDialogTitle": "End {name}?",
-				"confirmDialogConfirm": "End",
-				"confirmDialogCancel": "Cancel",
-				"startedMessage": "{name} activated automatically: {reason}.",
-				"startReasons": {
-					"onTurnStart": "turn started",
-					"onActorDying": "started dying",
-					"onCritReceived": "was critically hit"
+				"cardLine": "For free: {trigger} ({feature})",
+				"reasons": {
+					"onHit": "you hit with an attack",
+					"onCrit": "you crit with an attack",
+					"onMiss": "you missed an attack",
+					"onTurnStart": "your turn started",
+					"onTurnEnd": "your turn ended",
+					"onKill": "you died",
+					"onWound": "you were Bloodied",
+					"onSaveFail": "you failed a save",
+					"onRest": "you rested",
+					"onInitiative": "you rolled Initiative",
+					"onCritReceived": "an enemy crit you",
+					"onDying": "you started Dying"
 				}
 			},
 			"markTarget": {
@@ -4295,8 +4329,7 @@
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
 				"feature": "Feature",
-				"toggleOn": "Activate {name}",
-				"toggleOff": "Deactivate {name}",
+				"active": "Active",
 				"mana": "{cost} Mana",
 				"poolCost": "{cost} {pool}",
 				"thrown": "Thrown: {distance}",
@@ -4465,14 +4498,14 @@
 			"noEffects": "No effects",
 			"temporaryEffects": "Temporary Effects",
 			"passiveEffects": "Passive Effects",
-			"endToggledEffect": "Turn off {name}",
-			"endToggledEffectTooltip": "Turn off",
 			"searchConditions": "Search conditions",
 			"showActiveOnly": "Show Active",
 			"showAllConditions": "Show All",
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
 			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
+			"removeEffectQuestion": "Delete {name}?",
+			"effectPoolLost": "Your {pool} are lost.",
 			"conditionReplacementLost": "A condition was removed to make room for a new one, and neither could be put back.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",

@@ -35,11 +35,8 @@ export function createAttackPanelState(
 	let searchTerm = $state('');
 	let expandedDescriptions = $state(new Set<string>());
 
-	// Re-render trigger for toggleEffect switches on attack-feature rows.
-	// The .svelte file subscribes to AE hooks in $effect and bumps this
-	// counter; buildToggleState reads it so the switch updates from both
-	// the in-panel click and external sources (PASSIVE EFFECTS panel,
-	// Lasts Until ends, chat-card buttons).
+	// Re-render trigger for the Active tags of attack-feature rows. The .svelte file
+	// subscribes to AE hooks in $effect and bumps this counter.
 	let effectVersion = $state(0);
 	function bumpEffectVersion(): void {
 		effectVersion += 1;

@@ -4,6 +4,7 @@
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import FreeUseLine from './components/FreeUseLine.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
@@ -84,6 +85,8 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		{subheading}
 	/>
+
+	<FreeUseLine />
 
 	<Targets />
 

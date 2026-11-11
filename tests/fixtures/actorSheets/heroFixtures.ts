@@ -322,7 +322,6 @@ export function dicePoolHero(overrides?: DeepPartial<HeroActorLike>): HeroActorL
 		}),
 		featureItem('rage', 'Rage', {
 			cost: { type: 'action', quantity: 1 },
-			rules: [rule('rageToggle', 'toggleEffect')],
 			description: '<p>Enter a rage.</p>',
 		}),
 		featureItem('bloodlust', 'Bloodlust', {
@@ -351,7 +350,7 @@ export function dicePoolContext(overrides?: Partial<HeroSheetContext>): HeroShee
 		dicePools: [{ id: 'fury', label: 'Fury Dice', dieSize: 'd6', max: 3, faces: [5, 6] }],
 		itemState: {
 			greataxe: itemState({ actionCost: 1 }),
-			rage: itemState({ actionCost: 1, toggle: { ruleId: 'rageToggle', on: false } }),
+			rage: itemState({ actionCost: 1 }),
 			bloodlust: itemState({
 				diceConsumers: [
 					{
@@ -375,7 +374,7 @@ export function dicePoolContext(overrides?: Partial<HeroSheetContext>): HeroShee
 }
 
 export function itemState(overrides: Partial<HeroItemState> = {}): HeroItemState {
-	return { actionCost: 0, pools: [], gate: null, toggle: null, diceConsumers: [], ...overrides };
+	return { actionCost: 0, pools: [], gate: null, active: false, diceConsumers: [], ...overrides };
 }
 
 export function objectItem(
@@ -497,13 +496,13 @@ export function effectLike(
 		statuses: [],
 		origin: null,
 		itemId: null,
-		toggle: null,
 		temporary: true,
 		duration: '',
 		lastsUntil: '',
 		sourceName: '',
 		escape: null,
 		description: '',
+		poolsLost: [],
 		...overrides,
 	};
 }
@@ -552,8 +551,9 @@ export function effectsHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLi
 		effectLike({
 			id: 'rageEffect',
 			name: 'Rage',
-			toggle: { itemId: 'rage', ruleId: 'rageToggle' },
+			origin: 'Actor.blankHero00000001.Item.rage',
 			lastsUntil: 'until you drop to 0 HP',
+			poolsLost: ['Fury Dice'],
 		}),
 		effectLike({ id: 'bless', name: 'Bless', duration: '3 rounds', description: 'Add 1d4.' }),
 		effectLike({ id: 'armorEffect', name: 'Armor', itemId: 'leather', temporary: false }),

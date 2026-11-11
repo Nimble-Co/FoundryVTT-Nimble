@@ -270,41 +270,26 @@ The `extraDamage` kind adds one damage part of `formula` and `damageType` to the
 
 `freeSpellCost` (`worksOnItems = false`) lives on an effect. While the effect changes its holder, a class spell cost paid from a charge pool resolves to 0: `createSpellCostResolver` (`src/utils/spell/spellCost.ts`) reads the holder's prepared rules (`rulesOfType`) and asks `makesFree(poolIdentifier)`. A blank `poolIdentifier` matches every pool. With the cost at 0 there is no overdraw prompt or consequence, and `spendSpellCost` writes nothing. A mana cost, and a cantrip (no cost), do not change. As with the other costs, `applyRuleEffects` does not stop it. The rule never ends the effect itself: give the effect a Lasts Until such as `nextSpell` for the holder. That event fires from the `useItem` hook, after `_payForUse`, so the cast that uses the free cost is free and then ends the effect.
 
-## `toggleEffect` (player-controlled tag pushes)
+## States on effects: `tags`, `emptyPoolsAtEnd`, `changeEffect`, `useItemFree`
 
-`toggleEffect` is a foundation rule that pushes one or more domain tags into the actor's domain while a backing Foundry `ActiveEffect` is enabled. The rule itself doesn't carry nested rules or express any modifiers; its only job is the tag push. Sibling rules elsewhere predicate on those tags via the standard `predicate` field.
+A state (raging, a stance) is an Active Effect that an item gives with an Apply Effect step. "On" means the creature has the enabled effect; ending it by hand is deleting it. What the state does while it lasts is rules on the effect; features that change a state from another item name that item by identifier (`item.identifier`: `system.identifier`, else the slug of the name).
 
-```jsonc
-{
-  "type": "toggleEffect",
-  "label": "Rage",
-  "tags": ["self:raging"],
-  "effectId": "<id of an item effect with transfer: false>"
-}
-```
+- **`tags`** (items and effects): `prePrepareData()` adds each of `tags` to `actor.tags` while the rule is on its actor (an item on the actor, or an enabled effect that changes it) and its predicate passes. A rule that reads these tags in its own `prePrepareData()` needs a higher priority than the Tags rule (default 1).
+- **`emptyPoolsAtEnd`** (`worksOnItems = false`): `src/hooks/emptyPoolsAtEnd.ts` empties the dice pools named in `pools` when the effect is deleted by any path (`deleteActiveEffect`, once, on the client of the user who deleted it, so no GM needs to be online). A replace (`CONDITION_REPLACED_OPTION`) is not an end, and an Undo of the end does not give the dice back. `poolsEmptiedAtEnd` (`src/utils/dicePool/poolsEmptiedAtEnd.ts`) finds each pool: the item-scope pool of the effect's origin item first, else the actor-scope pool. `poolsLostOnEnd(effect)` gives the labels of those pools that hold dice now, for a delete confirm.
+- **`changeEffect`** (`worksOnEffects = false`): `src/hooks/changeEffectOnCreate.ts` runs on `preCreateActiveEffect` (the creating client) for every path that makes an effect on an actor. When the effect's `origin` item has the rule's `itemIdentifier`, and the actor has a live rule for it (`changesEffectsOf`: enabled, on the actor, predicate passes), the event moments in `removeMoments` are taken out and an event moment (`who: 'holder'`, or `null` for `effectEnds`) is added for each id in `addMoments` that is not there. The changes of several rules add up. Effects already on the actor do not change.
+- **`useItemFree`** (`worksOnEffects = false`): on each trigger in `triggers` (the shared list in `src/models/rules/_triggers.ts`), while the predicate passes, the actor uses the item with `itemIdentifier` through `useItemForFree` (`src/utils/actor/useItemForFree.ts`): `actor.activateItem(id, { fastForward: true, free })`. The active GM makes the use; another client asks it with the `useItemForFree` query. Events that reach every client (`onKill`, `onWound`, `onDying`) act only on the active GM; `onTurnStart` uses `onActiveGmTurnStart`. An attack card gives one use for each rule and trigger, though it reaches the rule once for each target. Rule automation gates it.
 
-### Lifecycle
+### Free uses
 
-- **The effect**: one builder (`toggleEffectData`, `src/utils/actor/toggleEffectData.ts`) makes it on every path. With an `effectId` (picked with the `itemEffectPicker` widget), it is a copy of that item effect (`payloadFromEffect` data), with `origin` the item, type `nimble`, and the flags `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. With no effect, it is a blank effect named for the rule label or the item.
-- **Toggle on**: item activation (`onItemActivated`), the auto turn-on of a `modifyToggle`, and the sheet switch all call `turnToggleOn`. An effect that is off is deleted (with the replace option) and made again, so it has a new `start`. Using the item while the effect is on does nothing: item use is "ensure on," never "flip off."
-- **Toggle off**: the effect's Lasts Until ends it (with its chat line and Undo), or the player ends it from the sheet switch or the effects list. The rule has no turn-off events of its own.
-- **`clearPoolsOnEnd`**: `src/hooks/toggleEffectEnd.ts` empties the listed pools when a toggle effect is deleted by any path (`deleteActiveEffect`, once, on the client of the user who deleted it, so no GM needs to be online). A replace does not clear them. An Undo of the end does not give the dice back.
-- **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
+`ItemActivationManager.ActivationOptions.free` is `{ of: ('action' | 'uses' | 'mana')[], reason }`; `manager.free` always adds `action`. The character's `activateItem` spends no action and asks no confirm for a free use. `uses`: the `preUseItem` and `useItem` hook context has `free`, and the charge system checks and spends no charge consumer (`freeOfUses`); recoveries on use still run. `mana`: a mana spell cost resolves to `{ type: 'none' }` and the upcast does not enforce mana. The card stores `reason` in `flags.<system>.freeUseReason`, and the feature, spell and object cards show it (`FreeUseLine.svelte`).
 
 ### The `inactiveRound` moment
 
 "A round passes with no attack and no new use." `noteActivity` (`src/utils/lastsUntil/inactiveRound.ts`) runs where an `attack` event or an item use fires (`lastsUntilEvents.ts`), on that client. It writes `flags.nimble.lastActivity` (`{ combatId, round }`) on each effect of the holder with this moment: an attack counts for every such effect, an item use only for the effects whose `origin` is that item. At the end of the holder's turn (`nimbleCombatTurnEnd`, active GM, `lastsUntilHooks.ts`), an effect ends through `endEffects` when it has no activity in that round of that combat and did not start in that round. A rewind of the round is not tracked.
 
-### Modifying a toggle from another feature: `modifyToggle`
-
-A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falling back to the toggle rule's `id`) can adjust the toggle from any of the actor's items. Only rules that are enabled and whose predicate passes count.
-
-- `dropMoments` (Lasts Until event ids): when the toggle's effect is made, its `event` moments with these events are taken out. The drops of more than one rule add up.
-- `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only: it makes the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
-
 ### Adding to a reroll from another feature: `modifyReroll`
 
-A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by `rerollIdentifier` against the reroll rule's `identifier`. Like `modifyToggle` it has no hooks: the card's reroll code (`src/documents/chatMessage/cardRerolls.ts`) scans the reroll owner's items for enabled `modifyReroll` rules whose `appliesTo()` passes (`modifyRerollRules` in `src/utils/reroll/modifyReroll.ts`).
+A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by `rerollIdentifier` against the reroll rule's `identifier`. It has no hooks: the card's reroll code (`src/documents/chatMessage/cardRerolls.ts`) scans the reroll owner's items for enabled `modifyReroll` rules whose `appliesTo()` passes (`modifyRerollRules` in `src/utils/reroll/modifyReroll.ts`).
 
 - **Roll changes** (`rollModeChange`, `extraDamage`) count once per card. Each has a key (`<item uuid>#<rule id>:<kind>`); the card stores the applied ones in `system.rollChanges`, and the reroll record lists those of that use in `changes`. `rollModeChange` adds to the reroll's own roll mode. On a one-die reroll it rolls that die two times and keeps the higher or lower (`rerollOneDie`), and the record keeps the other result in `dropped`. `extraDamage` is attacks only: it is rolled when the reroll is used and folded into the primary damage roll as a flavoured bonus named by the item, when the result stands (at once, or on whichever result a player keeps). The damage card target folds every extra damage roll change of the card in again on each later reroll, the way it carries folded pool spends.
 - **Cannot fail** (`cannotFail`) comes with each clicked use (`cannotFailModifier`). On a check, the place step adds a `succeed` `ResultChange` named by the modifier's item, with nothing in `paid`, and there is no keep chooser. On an attack, the new roll has `canMiss: false` (`cannotMissOptions`), the record has `cannotMissBy`, and the next reroll restores `canMiss` (`withoutCannotMiss`). Automatic rerolls do not read it.
@@ -312,15 +297,16 @@ A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by 
 
 ### Worked example: Rage
 
-The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "while raging" features (Intensifying Fury, etc.) live on their own items and just predicate on `self:raging`:
+The Rage item gives its "Raging" effect (`transfer: false`) with an Apply Effect step (recipient: the creature that uses it). The effect carries the state's rules; the damage bonus stays on the item and reads the tag. Other "while raging" features (Intensifying Fury, etc.) live on their own items and predicate on `self:raging`:
 
 ```jsonc
+// rules on the Raging effect
 [
-  {
-    "type": "toggleEffect",
-    "tags": ["self:raging"],
-    "effectId": "<the Raging effect>"
-  },
+  { "type": "tags", "tags": ["self:raging"] },
+  { "type": "emptyPoolsAtEnd", "pools": ["fury"] }
+]
+// a rule on the Rage item
+[
   {
     "type": "damageBonus",
     "value": "@level",
@@ -331,9 +317,11 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 ]
 ```
 
+A later feature changes the state from its own item: `{ "type": "changeEffect", "itemIdentifier": "rage", "removeMoments": ["zeroHp"] }`, or uses Rage by itself: `{ "type": "useItemFree", "itemIdentifier": "rage", "triggers": ["onCritReceived", "onMiss"] }`.
+
 ### Priority note
 
-`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
+`tags.prePrepareData()` adds tags during the `prePrepareData` pass. The default priority is `1` (the base default), and rules run from the lowest priority up. Bonus-style rules that read the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If another rule also runs in `prePrepareData` and predicates on the tag, give it a higher priority than the Tags rule, so the tag is in place when it tests its predicate.
 
 ## Roll modes: default vs. situational
 

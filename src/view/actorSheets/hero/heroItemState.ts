@@ -2,8 +2,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import resolveCharacterItemActionCost, {
 	type ActivatableItem,
 } from '#documents/actor/resolveCharacterItemActionCost.js';
-import { findToggleEffectRule } from '#utils/actor/toggleEffectControl.js';
-import { findToggleEffect } from '#utils/actor/toggleEffectData.js';
+import { activeOrigins } from '#utils/actor/activeOrigins.js';
 import { validateItemChargeConsumption } from '#utils/chargePool/chargePoolConsume.js';
 import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 import { getChargeConsumers } from '#utils/chargePool/helpers.js';
@@ -62,16 +61,6 @@ function gateOf(item: Item, all: ChargePoolState[]): ChargeGateLike | null {
 	};
 }
 
-function toggleOf(actor: NimbleCharacter, item: Item): HeroItemState['toggle'] {
-	const rule = findToggleEffectRule(item as unknown as Parameters<typeof findToggleEffectRule>[0]);
-	if (!rule) return null;
-	const effect = findToggleEffect(
-		actor as unknown as Parameters<typeof findToggleEffect>[0],
-		rule.id,
-	);
-	return { ruleId: rule.id, on: !!effect && !effect.disabled };
-}
-
 function diceConsumersByItem(actor: NimbleCharacter): Map<string, DiceConsumerLike[]> {
 	const document = actor as unknown as Actor.Implementation;
 	const byItem = new Map<string, DiceConsumerLike[]>();
@@ -93,10 +82,11 @@ function diceConsumersByItem(actor: NimbleCharacter): Map<string, DiceConsumerLi
 	return byItem;
 }
 
-/** What the system works out for each item of the hero: action cost, pools, gate, toggle, dice consumers. */
+/** What the system works out for each item of the hero: action cost, pools, gate, active, dice consumers. */
 export function heroItemStates(actor: NimbleCharacter): Record<string, HeroItemState> {
 	const all = getPools(actor as unknown as Actor.Implementation);
 	const consumers = diceConsumersByItem(actor);
+	const origins = activeOrigins(actor.effects);
 	const states: Record<string, HeroItemState> = {};
 	for (const item of actor.reactive.items) {
 		const id = item.id ?? '';
@@ -107,7 +97,7 @@ export function heroItemStates(actor: NimbleCharacter): Record<string, HeroItemS
 			),
 			pools: poolsOf(actor, item, all),
 			gate: gateOf(item, all),
-			toggle: toggleOf(actor, item),
+			active: origins.has(item.uuid ?? ''),
 			diceConsumers: consumers.get(id) ?? [],
 		};
 	}
