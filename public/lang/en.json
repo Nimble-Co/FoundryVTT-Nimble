@@ -751,7 +751,6 @@
 					"cause": "Now the target of this attack"
 				},
 				"healthState": {
-					"bloodied": "{name} is Bloodied",
 					"lastStand": "{name} is in Last Stand"
 				}
 			},

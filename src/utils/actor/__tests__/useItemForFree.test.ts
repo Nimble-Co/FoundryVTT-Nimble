@@ -153,9 +153,12 @@ describe('useItemForFree', () => {
 			once: (_e: string, f: () => void) => f(),
 		});
 		vi.stubGlobal('fromUuid', async () => actor);
-		registerUseItemForFreeQuery();
-		await Object.values(queries)[0]?.(JSON.parse(JSON.stringify(request)));
-		globals.CONFIG.queries = previousQueries;
+		try {
+			registerUseItemForFreeQuery();
+			await Object.values(queries)[0]?.(JSON.parse(JSON.stringify(request)));
+		} finally {
+			globals.CONFIG.queries = previousQueries;
+		}
 
 		expect(actor.activateItem).toHaveBeenCalledWith('b', { fastForward: true, free: hosted });
 	});

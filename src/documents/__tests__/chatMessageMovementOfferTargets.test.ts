@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { MovementOffer } from '#types/movement.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -249,7 +250,7 @@ describe('offers of the Events lines of a card', () => {
 
 	it('go on the card with the line, so the tokens carry them', async () => {
 		const message = createCard([GOBLIN], [offerTo(GOBLIN)]);
-		const changes: Record<string, any> = { flags: { nimble: { events: [line] } } };
+		const changes: Record<string, any> = { flags: { [SYSTEM_ID]: { events: [line] } } };
 		await preUpdate(message, changes);
 		expect(changes.system.movementOffers.map((each: MovementOffer) => each.id)).toEqual([
 			'n1.gob',
@@ -259,7 +260,7 @@ describe('offers of the Events lines of a card', () => {
 
 	it('are not dropped by a later write of the offers', async () => {
 		const message = createCard([GOBLIN], [offerTo(GOBLIN), lineOffer]);
-		(message as unknown as { flags: object }).flags = { nimble: { events: [line] } };
+		(message as unknown as { flags: object }).flags = { [SYSTEM_ID]: { events: [line] } };
 		const changes: Record<string, any> = {
 			system: { movementOffers: [offerTo(GOBLIN, { state: 'lapsed' })] },
 		};

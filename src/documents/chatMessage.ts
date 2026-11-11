@@ -2173,22 +2173,40 @@ class NimbleChatMessage extends ChatMessage {
 		const protectedName =
 			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)
 				?.name ?? '';
-		const at = Date.now();
-		await addCardEvents(this, [
-			{
-				id: `interpose.${entry.id}`,
-				kind: 'interpose',
-				...(protector.img ? { img: protector.img } : { icon: 'fa-solid fa-people-arrows' }),
-				text: {
-					key: protectedName
-						? 'NIMBLE.chat.events.interpose.text'
-						: 'NIMBLE.chat.events.interpose.textNoTarget',
-					data: { name: protector.name ?? '', target: protectedName },
+		const isPublic = (this.whisper ?? []).length < 1;
+		const hosted =
+			isPublic &&
+			(await addCardEvents(this, [
+				{
+					id: `interpose.${entry.id}`,
+					kind: 'interpose',
+					...(protector.img ? { img: protector.img } : { icon: 'fa-solid fa-people-arrows' }),
+					text: {
+						key: protectedName
+							? 'NIMBLE.chat.events.interpose.text'
+							: 'NIMBLE.chat.events.interpose.textNoTarget',
+						data: { name: protector.name ?? '', target: protectedName },
+					},
+					cause: { key: 'NIMBLE.chat.events.interpose.cause' },
+					at: Date.now(),
 				},
-				cause: { key: 'NIMBLE.chat.events.interpose.cause' },
-				at,
+			]));
+		if (hosted) return;
+
+		await ChatMessage.create({
+			author: game.user?.id,
+			speaker: ChatMessage.getSpeaker({ actor: protector }),
+			type: 'reaction',
+			system: {
+				actorName: protector.name,
+				actorType: protector.type,
+				image: protector.img,
+				permissions: protector.permission,
+				rollMode: 0,
+				reactionType: 'interpose',
+				targets: entry.targetTokenUuid ? [entry.targetTokenUuid] : [],
 			},
-		]);
+		} as unknown as ChatMessage.CreateData);
 	}
 }
 

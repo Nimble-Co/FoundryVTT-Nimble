@@ -9,29 +9,6 @@ import { buildMonsterPrototypeTokenDefaults } from './monsterPrototypeTokenDefau
 
 type MonsterFeatureSubtype = 'bloodied' | 'lastStand';
 
-/**
- * The phase as a line on the card whose Apply Damage caused it. The line is for the GMs, so only a
- * card that only GMs read can show it. False: the phase gets its own card.
- */
-export async function phaseLineOnCard(
-	actor: { uuid?: string | null; name?: string | null },
-	subtype: MonsterFeatureSubtype,
-	cardId?: string | null,
-): Promise<boolean> {
-	const card = cardId ? game.messages?.get(cardId) : null;
-	if (!card || !canHost(card as never, { gmOnly: true })) return false;
-	const at = Date.now();
-	return addCardEvents(card as never, [
-		{
-			id: `healthState.${subtype}.${actor.uuid ?? ''}.${at}`,
-			kind: 'healthState',
-			icon: subtype === 'bloodied' ? 'fa-solid fa-droplet' : 'fa-solid fa-skull',
-			text: { key: `NIMBLE.chat.events.healthState.${subtype}`, data: { name: actor.name ?? '' } },
-			at,
-		},
-	]);
-}
-
 export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	declare system: NimbleSoloMonsterData;
 
@@ -90,10 +67,26 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 		return item?.system?.description ?? '';
 	}
 
-	async activateBloodiedFeature(
-		options: { visibilityMode?: string; hostCardId?: string | null } = {},
-	) {
-		if (await phaseLineOnCard(this, 'bloodied', options.hostCardId)) return null;
+	/**
+	 * Last Stand as a line on the card whose Apply Damage caused it. The line is for the GMs, so
+	 * only a card that only GMs read can show it. False: the phase gets its own card.
+	 */
+	async #lastStandLineOnCard(cardId: string | null | undefined): Promise<boolean> {
+		const card = cardId ? game.messages?.get(cardId) : null;
+		if (!card || !canHost(card as never, { gmOnly: true })) return false;
+		const at = Date.now();
+		return addCardEvents(card as never, [
+			{
+				id: `healthState.lastStand.${this.uuid}.${at}`,
+				kind: 'healthState',
+				icon: 'fa-solid fa-skull',
+				text: { key: 'NIMBLE.chat.events.healthState.lastStand', data: { name: this.name } },
+				at,
+			},
+		]);
+	}
+
+	async activateBloodiedFeature(options: { visibilityMode?: string } = {}) {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
@@ -123,7 +116,8 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 	async activateLastStandFeature(
 		options: { visibilityMode?: string; hostCardId?: string | null } = {},
 	) {
-		if (await phaseLineOnCard(this, 'lastStand', options.hostCardId)) return null;
+		const description = this.#getPhaseDescription('lastStand');
+		if (!description && (await this.#lastStandLineOnCard(options.hostCardId))) return null;
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
@@ -133,7 +127,7 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 			whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id) as string[],
 			system: {
 				actorName: this.name,
-				description: this.#getPhaseDescription('lastStand'),
+				description,
 				image: 'icons/svg/combat.svg',
 				name: 'Last Stand',
 				permissions: this.permission,

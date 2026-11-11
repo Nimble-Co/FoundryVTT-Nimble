@@ -17,10 +17,19 @@ describe('damage card', () => {
 		expect(currentDamageCard()).toBeNull();
 	});
 
-	it('reads the card back from the update options', () => {
+	it('puts the card id in the update options', () => {
 		expect(damageCardOption('card-1')).toEqual({ [SYSTEM_ID]: { damageCardId: 'card-1' } });
-		expect(damageCardIdOf(damageCardOption('card-1'))).toBe('card-1');
+	});
+
+	it('adds no update option when no card applies the damage', () => {
 		expect(damageCardOption(null)).toEqual({});
+	});
+
+	it('reads the card back from the update options', () => {
+		expect(damageCardIdOf(damageCardOption('card-1'))).toBe('card-1');
+	});
+
+	it('reads no card from options that do not name one', () => {
 		expect(damageCardIdOf({})).toBeNull();
 		expect(damageCardIdOf(undefined)).toBeNull();
 	});
