@@ -4,14 +4,14 @@ import { createSubscriber } from 'svelte/reactivity';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
+// @ts-expect-error - Svelte component default export is provided by the Svelte compiler
+import CardEvents from '../CardEvents.svelte';
 
 const { undoEndedEffect } = vi.hoisted(() => ({
 	undoEndedEffect: vi.fn(async (..._args: unknown[]) => true),
 }));
 
 vi.mock('#utils/lastsUntil/endEffects.js', () => ({ undoEndedEffect }));
-
-const { default: CardEvents } = await import('../CardEvents.svelte');
 
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
@@ -36,9 +36,9 @@ const ended = (id: string, holderUuid: string, holderName: string, at = 1): Card
 	at,
 });
 
-const note = (id: string, at: number): CardEvent => ({
+const poolLine = (id: string, at: number): CardEvent => ({
 	id,
-	kind: 'note',
+	kind: 'poolGain',
 	icon: 'fa-solid fa-dice-d6',
 	text: { key: 'NIMBLE.lastsUntil.chat.heading.rest', data: { name: `Tessa ${id}` } },
 	at,
@@ -88,8 +88,14 @@ afterEach(() => {
 	globals.game.user = previous.user;
 });
 
-const renderEvents = (card: ReturnType<typeof makeCard>) =>
-	render(CardEvents, { props: { messageDocument: card as never } });
+const renderEvents = (card: ReturnType<typeof makeCard>, labelled?: boolean) =>
+	render(CardEvents, { props: { messageDocument: card as never, labelled } });
+
+/** What Foundry does on every client when an effect is made. */
+function effectCreated() {
+	const calls = vi.mocked(Hooks.on).mock.calls as unknown as [string, () => void][];
+	for (const [hook, callback] of calls) if (hook === 'createActiveEffect') callback();
+}
 
 describe('CardEvents', () => {
 	it('shows nothing when the card has no events', () => {
@@ -99,23 +105,33 @@ describe('CardEvents', () => {
 	});
 
 	it('shows the label and a line for each event, in order, with its cause', () => {
-		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa', 1), note('n1', 2)]));
+		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa', 1), poolLine('n1', 2)]));
 
 		const strip = screen.getByRole('region', { name: 'Events' });
-		expect(strip).toHaveTextContent('Events');
+		const heading = screen.getByRole('heading', { name: 'Events' });
+		expect(strip).toHaveAttribute('aria-labelledby', heading.id);
+		expect(strip).not.toHaveAttribute('aria-label');
 		const lines = screen.getAllByRole('listitem');
-		expect(lines.map((line) => line.dataset.eventKind)).toEqual(['effectEnded', 'note']);
+		expect(lines.map((line) => line.dataset.eventKind)).toEqual(['effectEnded', 'poolGain']);
 		expect(lines[0]).toHaveTextContent('Despair ended on Tessa');
 		expect(lines[0]).toHaveTextContent('Cultist');
 		expect(lines[1]).toHaveTextContent('Tessa n1 rested');
 		expect(lines[1].querySelector('i.fa-dice-d6')).not.toBeNull();
 	});
 
+	it('a strip with no heading names itself', () => {
+		renderEvents(makeCard([poolLine('n1', 1)]), false);
+
+		const strip = screen.getByRole('region', { name: 'Events' });
+		expect(screen.queryByRole('heading')).toBeNull();
+		expect(strip).not.toHaveAttribute('aria-labelledby');
+	});
+
 	it('a line added later shows without a reload', async () => {
-		const card = makeCard([note('n1', 1)]);
+		const card = makeCard([poolLine('n1', 1)]);
 		renderEvents(card);
 
-		card.updated([note('n1', 1), note('n2', 2)]);
+		card.updated([poolLine('n1', 1), poolLine('n2', 2)]);
 		await tick();
 
 		expect(screen.getAllByRole('listitem')).toHaveLength(2);
@@ -149,6 +165,48 @@ describe('CardEvents', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Undo: put Despair back on Tessa' }));
 
 		expect(undoEndedEffect).toHaveBeenCalledWith(row('Actor.tessa', 'Tessa'));
+	});
+
+	it('after Undo, the focus moves to the line that tells where the effect is', async () => {
+		undoEndedEffect.mockImplementationOnce(async () => {
+			holders['Actor.tessa'].effects.set('despair', {});
+			effectCreated();
+			return true;
+		});
+		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa')]));
+		const button = screen.getByRole('button', { name: 'Undo: put Despair back on Tessa' });
+		button.focus();
+
+		await fireEvent.click(button);
+		await tick();
+
+		const status = screen.getByRole('status');
+		expect(status).toHaveTextContent('On Tessa');
+		expect(status).toHaveFocus();
+	});
+
+	it('a second click while Undo runs does nothing', async () => {
+		let finish: (value: boolean) => void = () => undefined;
+		undoEndedEffect.mockImplementationOnce(
+			() => new Promise<boolean>((resolve) => (finish = resolve)),
+		);
+		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa')]));
+		const button = screen.getByRole('button', { name: 'Undo: put Despair back on Tessa' });
+
+		await fireEvent.click(button);
+		await fireEvent.click(button);
+
+		expect(button).toHaveAttribute('aria-disabled', 'true');
+		expect(undoEndedEffect).toHaveBeenCalledTimes(1);
+		finish(true);
+	});
+
+	it('the cause line keeps its stored words', () => {
+		const event = ended('e1', 'Actor.tessa', 'Tessa');
+		event.cause = { key: 'an enemy hit you' };
+		renderEvents(makeCard([event]));
+
+		expect(screen.getByText('an enemy hit you')).toHaveClass('nimble-card-events__cause');
 	});
 
 	it('an effect that is back on its creature shows where, with no Undo', () => {
@@ -205,8 +263,11 @@ describe('CardEvents movement line', () => {
 		card.system = { movementOffers: [offer] };
 		render(CardEvents, { props: { messageDocument: card as never } });
 
-		expect(screen.getByText('Charge')).toBeTruthy();
-		expect(document.querySelector('.nimble-card-events__move .nimble-move-node')).toBeTruthy();
-		expect(screen.getByText('Hero')).toBeTruthy();
+		const [line] = screen.getAllByRole('listitem');
+		expect(line).toHaveAttribute('data-event-kind', 'movementOffer');
+		expect(line.querySelector('.nimble-card-events__text')).toHaveTextContent('Charge');
+		const move = line.querySelector('.nimble-card-events__move .nimble-move-node');
+		expect(move).not.toBeNull();
+		expect(move).toHaveTextContent('Hero');
 	});
 });

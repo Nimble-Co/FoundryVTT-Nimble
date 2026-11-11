@@ -1,93 +1,60 @@
 <script lang="ts">
-	import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
 	import type { CardEventsProps } from '#types/components/CardEvents.d.ts';
-	import { cardEventsOf, cardEventText } from '#utils/chat/cardEvents.js';
-	import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
-	import localize from '#utils/localize.js';
+
 	import MoveNode from './MoveNode.svelte';
+	import { cardEventText } from '#utils/chat/cardEvents.js';
+	import localize from '#utils/localize.js';
+	import { createCardEventsState } from './CardEvents.svelte.ts';
 
 	let { messageDocument, labelled = true }: CardEventsProps = $props();
 
-	// Bumped when an effect is made or deleted, so "On <name>" shows on every client.
-	let effectsVersion = $state(0);
-	let busy = $state<Record<string, boolean>>({});
-
-	const events = $derived(cardEventsOf(messageDocument.reactive));
-	const hasUndo = $derived(events.some((event) => event.action?.kind === 'undoEnd'));
-
-	$effect(() => {
-		if (!hasUndo) return;
-		const bump = () => {
-			effectsVersion += 1;
-		};
-		const ids = ['createActiveEffect', 'deleteActiveEffect'].map((hook) => ({
-			hook,
-			id: Hooks.on(hook as never, bump as never),
-		}));
-		return () => {
-			for (const { hook, id } of ids) Hooks.off(hook as never, id);
-		};
-	});
-
-	function holderOf(row: EndedEffectRow): Actor | null {
-		return fromUuidSync(row.holderUuid as never, { strict: false }) as Actor | null;
-	}
-
-	function isBack(row: EndedEffectRow): boolean {
-		void effectsVersion;
-		return !!holderOf(row)?.effects?.get(row.effectId);
-	}
-
-	function canUndo(row: EndedEffectRow): boolean {
-		return !!game.user?.isGM || !!holderOf(row)?.isOwner;
-	}
-
-	async function undo(event: CardEvent, row: EndedEffectRow) {
-		busy[event.id] = true;
-		try {
-			await undoEndedEffect(row);
-		} finally {
-			busy[event.id] = false;
-		}
-	}
+	const headingId = $props.id();
+	const strip = createCardEventsState(() => messageDocument);
+	const { isBusy, isBack, canUndo, undo, backStatus } = strip;
 </script>
 
-{#if events.length > 0}
+{#if strip.events.length > 0}
 	<section
 		class="nimble-card-section nimble-card-events"
 		class:nimble-card-events--labelled={labelled}
-		aria-label={localize('NIMBLE.chat.events.label')}
+		aria-labelledby={labelled ? headingId : undefined}
+		aria-label={labelled ? undefined : localize('NIMBLE.chat.events.label')}
 	>
 		{#if labelled}
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">
+				<h3 id={headingId} class="nimble-heading" data-heading-variant="section">
 					{localize('NIMBLE.chat.events.label')}
 				</h3>
 			</header>
 		{/if}
 
 		<ul class="nimble-card-events__lines">
-			{#each events as event (event.id)}
+			{#each strip.events as event (event.id)}
 				<li class="nimble-card-events__line" data-event-kind={event.kind}>
 					<span class="nimble-card-events__plate" aria-hidden="true">
 						{#if event.img}
 							<img src={event.img} alt="" />
 						{:else}
-							<i class={event.icon ?? 'fa-solid fa-circle-info'}></i>
+							<i class={event.icon}></i>
 						{/if}
 					</span>
 
 					<span class="nimble-card-events__text">
 						<strong>{cardEventText(event.text)}</strong>
 						{#if event.cause}
-							<small>{cardEventText(event.cause)}</small>
+							<small class="nimble-card-events__cause">{cardEventText(event.cause)}</small>
 						{/if}
 					</span>
 
 					{#if event.action?.kind === 'undoEnd'}
 						{@const row = event.action.row}
 						{#if isBack(row)}
-							<span class="nimble-card-events__back" role="status">
+							<span
+								class="nimble-card-events__back"
+								role="status"
+								tabindex="-1"
+								{@attach backStatus(event.id)}
+							>
 								<i class="fa-solid fa-check" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.backOn', { name: row.holderName })}
 							</span>
@@ -99,8 +66,8 @@
 									effect: row.name,
 									name: row.holderName,
 								})}
-								aria-busy={busy[event.id] ?? false}
-								disabled={busy[event.id]}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
 								onclick={() => undo(event, row)}
 							>
 								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
@@ -175,10 +142,15 @@
 			line-height: 1.25;
 			color: var(--nimble-card-text-color);
 			font-size: var(--nimble-sm-text);
+		}
 
-			small {
-				font-size: var(--nimble-xs-text);
-				opacity: 0.8;
+		&__cause {
+			display: block;
+			font-size: var(--nimble-xs-text);
+			opacity: 0.8;
+
+			&::first-letter {
+				text-transform: uppercase;
 			}
 		}
 
@@ -203,6 +175,10 @@
 				font-size: 0.625rem;
 			}
 
+			&[aria-disabled='true'] {
+				cursor: progress;
+			}
+
 			&:focus-visible {
 				outline: 2px solid var(--nimble-card-text-color);
 				outline-offset: 1px;
@@ -220,6 +196,11 @@
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
 			color: var(--nimble-card-text-color);
+
+			&:focus-visible {
+				outline: 2px solid var(--nimble-card-text-color);
+				outline-offset: 1px;
+			}
 		}
 	}
 </style>
