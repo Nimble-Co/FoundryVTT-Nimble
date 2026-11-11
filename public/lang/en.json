@@ -5516,7 +5516,7 @@
 			},
 			"chatNotifications": {
 				"name": "Chat Notes",
-				"hint": "Short notes in chat, such as initiative reminders and when Rage starts or ends."
+				"hint": "Short notes in chat, such as initiative reminders and pool gains."
 			},
 			"movementOffers": {
 				"name": "Pushes, Pulls and Moves for Free",

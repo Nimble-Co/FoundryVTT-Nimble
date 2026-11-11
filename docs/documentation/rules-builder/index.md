@@ -64,7 +64,6 @@ Whatever the type, every rule shares a few fields:
 Some rules change a rule on another feature of the same character. They find that rule by its **Identifier**, so give the first rule an identifier in the raw JSON view, and type the same identifier in the second rule.
 
 - **Modify Pool** adds to a Charge Pool or a Dice Pool: a higher maximum, a bigger die, or **Additional refills**.
-- **Modify Toggle** changes a Toggle Effect: **Does not end when** takes moments out of the Lasts Until of its effect, and **Turn on by itself** turns it on when something happens.
 - **Modify Reroll** adds to a Reroll rule. Its **Changes to the new roll** (advantage or disadvantage, extra damage) count one time per attack or check. What creatures gain (actions for the one who rolled, temp HP for the one who rolled and their allies) comes with each use of the reroll. The Songweaver's Heroic Ballad, Unfailing Courage, Fire in my Bones and Inspiring Presence are examples on Songweaver's Inspiration. It does not add to a Change a Die rule.
 
 Some fields of these rules need a word:
@@ -83,7 +82,23 @@ Some fields of these rules need a word:
 - **Only when the other creature is** on a Reroll or Change a Die rule tests the other creature of an attack: the target, or the one who rolled when the target uses the rule. It uses `target:` tags, such as `target:distracted`. **Only while** still tests the owner. See [Conditions about the target](predicates.md#conditions-about-the-target).
 - **Action cost** on a Reroll, Change a Die or Change a Result rule makes a use cost 1 action, for a hero in combat. On their own turn they spend it at once. Off their turn, their next turn starts with 1 fewer action. It is not a Heroic Reaction.
 - **Note on the card** on a Reroll, Change a Die or Change a Result rule is a short note under the feature in its row on the card, such as a limit that the table checks. **Show the note only when** limits it to rolls where its tags match.
+- **Effect** on an Apply Condition, Mark Target or Defend Option rule picks an effect of the item. **New effect** at the end of the list makes a new effect on the item and picks it. The pen opens the effect, and the line under the list shows its Lasts Until. See [Item effects](../homebrew/effects.md#item-effects).
 - **Effect** on a Mark Target rule picks an effect of the item. The marker on each target (from **Status condition**) gets that effect's image, Lasts Until, Escape, changes and rules, and the mark ends when the marker ends, for example after 1 minute. With no effect, the mark ends only when you mark another creature past **Max targets**, or by hand. A mark can also end at any time. The owner of the marking character clicks **Marked** beside the creature in the Targets list of the card that made the mark. A GM can also delete the marker effect (from **Status condition**) from the marked creature, or turn the condition off on the token HUD. That ends every mark the condition shows on that creature.
+
+## Rules for effects and states
+
+These rules work with the effects of an item. A state such as Rage uses them: see [Build a state such as Rage](../homebrew/effects.md#build-a-state-such-as-rage).
+
+- **Tags** (under **Conditions**) adds tags to the creature, such as `self:raging`. On an item, they apply while the creature has the item. On an effect, they apply while the creature has the effect and the effect is on. Other rules read the tags in their Condition box. A rule that reads the tags before the other rules run needs a higher **Priority** than the Tags rule.
+- **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path (a Lasts Until moment, a delete by hand, the removal of the item), the dice pools in **Pools** are emptied. A new use of the item that replaces the effect is not an end. The rule looks for each pool on the item that gave the effect first, then on the creature.
+- **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made. An effect that is already on the creature does not change.
+- **Use an item for free** (under **Triggers**) works only on an item. **Item identifier** names another item. When one of the **Triggers** occurs and the Condition box matches, the creature uses that item with no window. **Free of** sets what the use does not spend: **Actions** (always), **Use limits** (on by default) and **Mana** (off by default). The card tells why the use was free, such as "For free: an enemy crit you (Titan's Fury)".
+
+::: details More about Use an item for free
+- With **Use limits** on, the use does not count toward a limit such as 1/turn, and it needs no use left.
+- A GM must be connected. The rule does nothing while the Feature Effects automation setting is off.
+- Apply Condition uses the same list of triggers. The list has **An enemy crits you** and **You start Dying** too.
+:::
 
 ## Worked example: Belt of Giant Strength
 

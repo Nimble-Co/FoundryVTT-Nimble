@@ -54,7 +54,7 @@ For the Bog Howler: Level 3, Creature Type "Beast", Medium.
 
 ## Step 3: Attacks and abilities are monster features
 
-Everything a monster *does* is a **Monster Feature** item on its sheet. In edit mode, click **Create Feature** on the Abilities tab to create one, then click its pen to open it. A monster feature sheet has **Description**, **Config**, **Activation**, and **Macro** tabs. On **Config**, the important field is the **Subtype**:
+Everything a monster *does* is a **Monster Feature** item on its sheet. In edit mode, click **Create Feature** on the Abilities tab to create one, then click its pen to open it. A monster feature sheet has **Description**, **Config**, **Activation**, **Effects**, and **Macro** tabs. On **Config**, the important field is the **Subtype**:
 
 | Subtype | What it is |
 | :--- | :--- |
@@ -69,7 +69,7 @@ The Abilities tab groups features by these subtypes, and you can drag entries to
 Give the Bog Howler three features:
 
 1. **Ambush Instinct** (subtype Feature). Just a description: "The Bog Howler has advantage on checks to hide in swamp terrain."
-2. **Bite** (subtype Action). On its **Activation → Effects** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** on, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
+2. **Bite** (subtype Action). On its **Activation → On use** tab, add a **Damage** entry: `2d6+3` piercing, **Can Miss** and **Can Crit** on, with a Full Damage outcome under On Hit. On **Activation → Targets**, set the Attack Type to **Reach** with a distance of 1. Monster features get this attack type field where player items do not.
 3. **Terrifying Howl** (subtype Action). Add a **Save** effect: Will save, with a **Condition** entry (Frightened) under **On Failed Save**.
 
 Activating features works like any item activation. Click **Edit** to turn off edit mode, because in edit mode a click on the name does nothing. Then click the name of the action on the sheet, roll in the window that appears, and the chat card shows the damage with apply buttons, the save prompt, and the condition button. The full editor is documented on [Item Activations & Effects](activations.md). Feature descriptions support [inline roll buttons](enrichers.md), which the compendium uses for things like recharge dice.

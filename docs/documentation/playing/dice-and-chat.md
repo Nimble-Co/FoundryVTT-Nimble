@@ -56,7 +56,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
 - **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
-- **Effects:** a row for each effect of the item, with its Lasts Until and an **Apply to Targets** or **Apply to You** button. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
+- **Effects:** a row for each effect of the item, with its Lasts Until. An effect for the targets has an **Apply to Targets** button. An effect for the user goes on by itself, or has an **Apply to You** button while Feature Effects is off. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 - **Change This Roll:** rerolls and changes from features. See below.
 - **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
 

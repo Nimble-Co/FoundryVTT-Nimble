@@ -80,7 +80,7 @@ To delete an item, turn on edit mode and click the trash button of its row. The 
 
 ### Features
 
-Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature to use it, or to post its details to chat.
+Your class features, subclass features, ancestry, background, and boons, grouped by category. Click a feature to use it, or to post its details to chat. While you have an effect that a feature gave, such as Raging, its row shows **Active**. A click on the row still uses the feature, for example to Rage again.
 
 Everything a class gives you sits under that class. The features it hands you automatically come first, then your subclass and the features it brings, then each named set of choices the class offers under a heading of its own, taken from the name of the set. A Shadowmancer sees **Lesser Invocations** and **Greater Invocations** as separate headings under their class rather than one long list, and a class offering no such choices shows no extra headings at all. Ancestry and background keep their own sections below. In each group, the features are in the order of the level at which you got them.
 
@@ -112,7 +112,7 @@ The conditions and effects on you. The tab count shows how many there are.
 
 - **Conditions on you**: each condition that is on you now. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they show here while they are on.
 - **The condition grid**: the conditions that you set by hand. A condition that is on is crimson, with a check. Click a condition to turn it on or off. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**.
-- **Active effects** and **passive effects**: the other effects on your character. While you have Inspiration, it is in **Active effects** too: click its row to end it when you spend it. An effect that an item gives shows the name of the item: change it through the item. To remove an effect of your own, click **Remove**, and the sheet asks first.
+- **Active effects** and **passive effects**: the other effects on your character. While you have Inspiration, it is in **Active effects** too: click its row to end it when you spend it. An effect that an item gives shows the name of the item: change it through the item. To remove an effect of your own, click **Remove**, and the sheet asks first. Removing an effect that a use of an item gave, such as Raging, ends that state. The confirm has a line for each pool that the end empties, such as "Your Fury Dice are lost.".
 
 A group with nothing in it does not show. See [Conditions](../playing/conditions.md).
 

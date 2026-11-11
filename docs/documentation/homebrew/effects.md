@@ -8,7 +8,7 @@ An effect is something that is on a creature for a time: a condition, a change t
 
 ## Open the effect window
 
-On the character or NPC sheet, go to the **Effects** tab and click the pen at the end of the effect's row. An effect that an item keeps on (a passive effect of armor, for example) opens its item instead, because you change it there. The pen of a condition opens the effect that gives it. A condition with no effect of its own on the creature, such as Bloodied or a condition that an item keeps on, has no pen.
+On the character or NPC sheet, go to the **Effects** tab and click the pen at the end of the effect's row. An effect that an item keeps on (a passive effect of armor, for example) opens its item instead, because you change it there. The pen of a condition opens the effect that gives it. A condition with no effect of its own on the creature, such as Bloodied or a condition that an item keeps on, has no pen. For an effect of an item, use the [Effects tab of the item](#item-effects).
 
 The window has four tabs:
 
@@ -19,9 +19,28 @@ The window has four tabs:
 
 Each field saves when you change it.
 
-An effect on an item with **Apply to the actor** off goes on a creature from the item's card, through an [Apply Effect](activations.md#apply-effect) entry. A rule can also pick one, for example the **Effect on the attacker** of a Defend Option rule: a copy goes on the attacker when the hero Defends. An Apply Condition rule can name one as its **Effect**: when the rule fires, a copy goes on the creature in place of the bare condition, with the Lasts Until of the effect. A Toggle Effect rule can name one as its **Effect**: while the toggle is on, the character has a copy of it, and the copy ends by its Lasts Until. A Modify Toggle rule on another feature can take moments out of that copy with **Does not end when**. A Mark Target rule can name one as its **Effect**: the marker on each marked creature gets its Lasts Until, changes and rules, and the mark ends when the marker ends.
-
 ![The Details tab of an effect: State, and the Conditions with Invisible picked](/images/documentation/effect-window-conditions.png)
+
+## Item effects
+
+Every item sheet has an **Effects** tab, between **Activation** and **Rules**. It has two lists, each with a **New effect** button:
+
+- **Given when something uses them**: effects with **Apply to the actor** off. An [Apply Effect](activations.md#apply-effect) step or a rule of the item gives a copy to a creature.
+- **Always on while you have this item**: effects with **Apply to the actor** on. The creature that has the item has the effect.
+
+Each row shows the Lasts Until of the effect and what uses it, such as "Used by: On use: Apply Effect", or "Nothing uses this effect.". The pen opens the effect window, and the trash button deletes the effect. When a step or a rule uses the effect, the confirm names them, and the delete clears the effect from each of them.
+
+A rule can also pick an effect of its item: the **Effect** of an Apply Condition rule (a copy goes on the creature in place of the bare condition), of a Mark Target rule (the marker gets its Lasts Until, changes and rules), or the **Effect on the attacker** of a Defend Option rule. The select ends with **New effect**, which makes an effect on the item and picks it. The pen opens the effect, and the line under the select shows its Lasts Until, as on an Apply Effect step.
+
+### Build a state such as Rage
+
+A state that a creature turns on, such as Rage, is an item effect. The effect is the state: the creature is Raging while it has the effect.
+
+1. On the item's **Effects** tab, click **New effect** under **Given when something uses them**. Set its name, its Lasts Until and what it does.
+2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty pools at end** rule for each dice pool that the end empties.
+3. On **Activation → On use**, add an **Apply Effect** step. Set **Who takes it** to **The creature that uses this**, and pick the effect.
+
+When the creature uses the item, the effect goes on it. With the Feature Effects automation setting off, the card has an **Apply to You** button in place. A use while the effect is on keeps one copy, and the card says "Raging stays on Grug". The row of the item on the sheet shows **Active** while the creature has an effect that the item gave, and a click on the row still uses the item. To end the state by hand, delete the effect on the **Effects** tab of the sheet. The confirm has a line for each pool that the end empties, such as "Your Fury Dice are lost.". Another feature can change the state with a **Change an effect** rule, or use the item for free with a **Use an item for free** rule. See [Rules for effects and states](../rules-builder/index.md#rules-for-effects-and-states).
 
 ## Lasts Until
 
