@@ -290,6 +290,23 @@ describe('ruleEventDispatch', () => {
 			expect(nextRule.onTurnStart).toHaveBeenCalledTimes(1);
 		});
 
+		it('the turn end has the round and index the combat is still on', async () => {
+			const previousRule = createMockRule();
+			const previousCombatant = { actor: { rules: [previousRule] } } as unknown as Combatant;
+			const combat = {
+				combatant: previousCombatant,
+				round: 2,
+				turn: 3,
+				turns: [previousCombatant],
+			} as unknown as Combat;
+
+			handlers.get('combatTurn')?.(combat, { round: 2, turn: 0 }, { direction: 1 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(previousRule.onTurnEnd.mock.calls[0][0].place).toEqual({ round: 2, turn: 3 });
+		});
+
 		it('registers combatRound so round wraps dispatch turn events too', async () => {
 			// A wrap fires only combatRound in Foundry (nextTurn delegates to
 			// nextRound), so the last combatant's onTurnEnd arrives via this
@@ -1052,6 +1069,22 @@ describe('ruleEventDispatch', () => {
 
 			expect(rule.onActiveGmTurnStart).toHaveBeenCalledWith({ combat, combatant, actor });
 			expect(rule.onTurnStart).not.toHaveBeenCalled();
+		});
+
+		it('passes the round and turn index of the turn, as the turn moment keys use them', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+			const combat = { id: 'combat' };
+			const combatant = { actor, combat };
+
+			await handlers.get('nimbleCombatTurnStart')?.(combatant, { round: 3, turn: 1 });
+
+			expect(rule.onActiveGmTurnStart).toHaveBeenCalledWith({
+				combat,
+				combatant,
+				actor,
+				place: { round: 3, turn: 1 },
+			});
 		});
 
 		it('dispatches to no other actor for a combatant without an actor', async () => {

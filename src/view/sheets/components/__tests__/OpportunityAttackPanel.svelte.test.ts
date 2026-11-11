@@ -100,7 +100,8 @@ describe('OpportunityAttackPanel unarmed strike', () => {
 
 		expect(ChatMessage.create).toHaveBeenCalledTimes(1);
 		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
-		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		// The card of the strike hosts the lines of what the attack ends.
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor, { id: 'chat-message-id' });
 	});
 
 	it('does not end a Despair line itself: the attack event ends it', async () => {
@@ -111,7 +112,7 @@ describe('OpportunityAttackPanel unarmed strike', () => {
 		await panel.handleUnarmedStrike();
 		stop();
 
-		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor, { id: 'chat-message-id' });
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 

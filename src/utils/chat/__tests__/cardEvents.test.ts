@@ -315,4 +315,51 @@ describe('cardEventText', () => {
 
 		expect(cardEventText(text)).toBe("End of Tessa's turn - Rage");
 	});
+
+	it('reads a Lasts Until moment as the holder of the effect reads it', () => {
+		const moment = {
+			kind: 'event' as const,
+			boundary: null,
+			clock: null,
+			span: null,
+			value: null,
+			units: null,
+			who: 'holder' as const,
+			event: 'attack' as const,
+			effectName: '',
+		};
+		const text = {
+			key: 'NIMBLE.chat.events.cause.reasonAndSource',
+			data: {
+				reason: {
+					key: 'NIMBLE.chat.events.cause.lastsUntil',
+					data: { moment: { lastsUntil: moment, source: 'Cultist' } },
+				},
+				source: 'Cultist',
+			},
+		};
+
+		expect(cardEventText(text)).toBe('Until you attack - Cultist');
+	});
+
+	it('a moment of the source names the source', () => {
+		const moment = {
+			kind: 'event' as const,
+			boundary: null,
+			clock: null,
+			span: null,
+			value: null,
+			units: null,
+			who: 'source' as const,
+			event: 'takeDamage' as const,
+			effectName: '',
+		};
+
+		expect(
+			cardEventText({
+				key: 'NIMBLE.chat.events.cause.lastsUntil',
+				data: { moment: { lastsUntil: moment, source: 'Cultist' } },
+			}),
+		).toBe('Until Cultist takes damage');
+	});
 });

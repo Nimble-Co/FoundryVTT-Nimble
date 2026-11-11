@@ -107,7 +107,7 @@ export function movementOfferId(nodeId: string, tokenUuid: string): string {
  * zero spaces stays only as that record: no token carries it, the card does not
  * list it, and it never lapses. A settled offer stays as the record of what
  * happened; an open or untracked one goes with its recipient, or with the
- * outcome that made it.
+ * outcome that made it. An offer of an Events line is not the card's to drop.
  */
 export function reconcileMovementOffers(
 	card: OfferCard,
@@ -156,8 +156,17 @@ export function reconcileMovementOffers(
 		}
 	}
 
+	// An offer of a line on the card has no move node in the card's activation; it stays.
+	const cardNodes = new Set(
+		flattenEffectsTree(card.system?.activation?.effects ?? [])
+			.filter((node) => node.type === 'move')
+			.map((node) => node.id),
+	);
 	const kept = existing.filter(
-		(offer) => wanted.has(offer.id) || (offer.state !== 'open' && offer.state !== 'untracked'),
+		(offer) =>
+			wanted.has(offer.id) ||
+			!cardNodes.has(offer.nodeId) ||
+			(offer.state !== 'open' && offer.state !== 'untracked'),
 	);
 	return [...kept, ...made];
 }
@@ -297,4 +306,23 @@ export function movementOfferOutcome(offer: MovementOffer): MovementOfferOutcome
 		shortfall,
 		damageOwed: offer.kind === 'forced' && shortfall > 0,
 	};
+}
+
+interface OfferEvent {
+	action?: { kind: string; offers?: MovementOffer[] };
+}
+
+/**
+ * The card's offers with the offers of its Events lines, which the card must store so the tokens
+ * carry them. Null when every one is already there.
+ */
+export function withEventOffers(
+	offers: readonly MovementOffer[],
+	events: readonly OfferEvent[],
+): MovementOffer[] | null {
+	const ids = new Set(offers.map((offer) => offer.id));
+	const missing = events
+		.flatMap((event) => (event.action?.kind === 'movementOffer' ? (event.action.offers ?? []) : []))
+		.filter((offer) => !ids.has(offer.id));
+	return missing.length > 0 ? [...offers, ...missing] : null;
 }

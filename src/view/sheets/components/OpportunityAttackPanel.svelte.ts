@@ -288,8 +288,8 @@ export function createOpportunityAttackPanelState(
 			type: 'feature',
 		};
 
-		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-		void fireAttackEvents(getActor());
+		const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		void fireAttackEvents(getActor(), card);
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {

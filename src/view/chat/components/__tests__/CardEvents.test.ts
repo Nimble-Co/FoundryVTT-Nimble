@@ -160,3 +160,53 @@ describe('CardEvents', () => {
 		expect(screen.queryByRole('button')).toBeNull();
 	});
 });
+
+describe('CardEvents movement line', () => {
+	const offer = {
+		id: 'line.hero',
+		nodeId: 'line',
+		tokenUuid: 'Scene.s.Token.hero',
+		name: 'Hero',
+		kind: 'free' as const,
+		spaces: 6,
+		ignoreDifficultTerrain: false,
+		state: 'open' as const,
+		usedBy: null,
+		movedSpaces: null,
+		stopped: false,
+		conditional: false,
+	};
+	const moveLine: CardEvent = {
+		id: 'movementOffer.line',
+		kind: 'movementOffer',
+		img: 'icons/charge.svg',
+		text: { key: 'NIMBLE.chat.events.movementOffer.text', data: { name: 'Charge' } },
+		action: {
+			kind: 'movementOffer',
+			node: {
+				id: 'line',
+				type: 'move',
+				kind: 'free',
+				recipient: 'self',
+				distance: '6',
+				distanceBySize: {},
+				ignoreDifficultTerrain: false,
+				direction: 'any',
+				parentContext: null,
+				parentNode: null,
+			},
+			offers: [offer],
+		},
+		at: 1,
+	};
+
+	it('shows the move and each creature it is for, from the offers the card stores', () => {
+		const card = makeCard([moveLine]) as ReturnType<typeof makeCard> & { system: object };
+		card.system = { movementOffers: [offer] };
+		render(CardEvents, { props: { messageDocument: card as never } });
+
+		expect(screen.getByText('Charge')).toBeTruthy();
+		expect(document.querySelector('.nimble-card-events__move .nimble-move-node')).toBeTruthy();
+		expect(screen.getByText('Hero')).toBeTruthy();
+	});
+});

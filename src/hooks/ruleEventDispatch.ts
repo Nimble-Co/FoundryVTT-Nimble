@@ -182,6 +182,8 @@ function handleCombatTurn(
 			combat,
 			combatant: previousCombatant,
 			actor: previousActor as unknown as TurnContext['actor'],
+			// The hook runs before the update, so the combat is still on the turn that ends.
+			place: { round: Number(combat.round) || 0, turn: combat.turn ?? null },
 		};
 		void dispatch(previousActor, 'onTurnEnd', endContext);
 	}
@@ -200,13 +202,17 @@ function handleCombatTurn(
 
 // Nimble's own turn-start hook fires once per turn start, on the active GM only,
 // unlike combatTurn, which runs on the client that advanced the turn.
-async function handleActiveGmTurnStart(combatant: Combatant): Promise<void> {
+async function handleActiveGmTurnStart(
+	combatant: Combatant,
+	place?: TurnContext['place'],
+): Promise<void> {
 	const actor = (combatant?.actor ?? null) as ActorWithRules | null;
 	if (!actor) return;
 	const context: TurnContext = {
 		combat: combatant.combat as Combat,
 		combatant,
 		actor: actor as unknown as TurnContext['actor'],
+		...(place ? { place } : {}),
 	};
 	await dispatch(actor, 'onActiveGmTurnStart', context);
 }

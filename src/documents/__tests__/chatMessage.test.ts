@@ -2772,22 +2772,31 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 		expect(entriesById.get('reroll-other-target')?.used).toBe(false);
 	});
 
-	it('posts an interpose reaction announcement card for the protector', async () => {
+	it('puts the Interpose on the attack card as a line, with no card of its own', async () => {
+		const user = reactionGlobals().game.user as { isActiveGM?: boolean };
+		user.isActiveGM = true;
 		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+		Object.defineProperty(message, 'id', { value: 'attack-card' });
 
-		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		try {
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		} finally {
+			delete user.isActiveGM;
+		}
 
-		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledTimes(1);
-		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+		expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+		const events = message.update.mock.calls
+			.map(([changes]) => (changes as Record<string, unknown>)[`flags.${SYSTEM_ID}.events`])
+			.find(Boolean) as Array<Record<string, unknown>>;
+		expect(events).toEqual([
 			expect.objectContaining({
-				type: 'reaction',
-				system: expect.objectContaining({
-					actorName: 'Protector',
-					reactionType: 'interpose',
-					targets: ['Scene.scene.Token.victim'],
+				id: 'interpose.redirect-1',
+				kind: 'interpose',
+				text: expect.objectContaining({
+					data: expect.objectContaining({ name: 'Protector' }),
 				}),
 			}),
-		);
+		]);
 	});
 
 	it('does nothing on non-GM clients', async () => {

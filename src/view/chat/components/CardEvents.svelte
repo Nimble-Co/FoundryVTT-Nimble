@@ -4,6 +4,7 @@
 	import { cardEventsOf, cardEventText } from '#utils/chat/cardEvents.js';
 	import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 	import localize from '#utils/localize.js';
+	import MoveNode from './MoveNode.svelte';
 
 	let { messageDocument, labelled = true }: CardEventsProps = $props();
 
@@ -107,6 +108,12 @@
 							</button>
 						{/if}
 					{/if}
+
+					{#if event.action?.kind === 'movementOffer'}
+						<div class="nimble-card-events__move">
+							<MoveNode node={event.action.node} card={messageDocument} allRows />
+						</div>
+					{/if}
 				</li>
 			{/each}
 		</ul>
@@ -200,6 +207,10 @@
 				outline: 2px solid var(--nimble-card-text-color);
 				outline-offset: 1px;
 			}
+		}
+
+		&__move {
+			grid-column: 1 / -1;
 		}
 
 		&__back {

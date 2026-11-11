@@ -125,8 +125,8 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 
 		expect(result.rolledCombatantIds).toEqual(['m-a', 'm-b']);
 		expect(fireAttackEvents).toHaveBeenCalledTimes(2);
-		expect(fireAttackEvents).toHaveBeenCalledWith(actorA);
-		expect(fireAttackEvents).toHaveBeenCalledWith(actorB);
+		expect(fireAttackEvents).toHaveBeenCalledWith(actorA, { id: 'card' });
+		expect(fireAttackEvents).toHaveBeenCalledWith(actorB, { id: 'card' });
 	});
 
 	it('ends the turn only after the activity of the attack is saved', async () => {
@@ -152,7 +152,7 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		await attack([member('m-1', shared), member('m-2', shared)]);
 
 		expect(fireAttackEvents).toHaveBeenCalledTimes(1);
-		expect(fireAttackEvents).toHaveBeenCalledWith(shared);
+		expect(fireAttackEvents).toHaveBeenCalledWith(shared, { id: 'card' });
 	});
 
 	it('does not end the Despair of a member itself: the attack event ends it', async () => {
@@ -170,7 +170,7 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		await attack([member('m-d', actor)]);
 
 		expect(actor.getDomain).toHaveBeenCalled();
-		expect(fireAttackEvents).toHaveBeenCalledWith(actor);
+		expect(fireAttackEvents).toHaveBeenCalledWith(actor, { id: 'card' });
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 });

@@ -414,4 +414,50 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(mockRollDieIntoPool).not.toHaveBeenCalled();
 		});
 	});
+
+	describe('in an item use', () => {
+		it('rolls into the pool with no card of its own and puts a line on the item card', async () => {
+			const { openActivationEvents } = await import('../../utils/chat/activationEvents.js');
+			const actor = makeActor(3, {
+				uuid: 'Actor.in-use',
+				flags: { nimble: { dicePools: { 'actor:fury': { label: 'Fury Dice', faces: [] } } } },
+			});
+			const use = openActivationEvents(actor);
+			const manager = buildManager(actor, [
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 1, poolIdentifier: 'actor:fury' }),
+			]);
+			await manager.getData();
+			await manager.applyDeferredPoolNodes(use);
+
+			expect(mockRollDieIntoPool).toHaveBeenCalledWith(
+				actor,
+				'actor:fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
+			expect(use?.take()).toEqual([
+				expect.objectContaining({
+					kind: 'poolRoll',
+					text: {
+						key: 'NIMBLE.chat.events.poolRoll.text',
+						data: { pool: 'Fury Dice', faces: '4' },
+					},
+				}),
+			]);
+			use?.close();
+		});
+
+		it('adds no line for a node that already shows its roll on the card', async () => {
+			const { openActivationEvents } = await import('../../utils/chat/activationEvents.js');
+			const actor = makeActor(3, { uuid: 'Actor.suppressed' });
+			const use = openActivationEvents(actor);
+			const manager = buildManager(actor, [
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 1, suppressChat: true }),
+			]);
+			await manager.getData();
+			await manager.applyDeferredPoolNodes(use);
+
+			expect(use?.take()).toEqual([]);
+			use?.close();
+		});
+	});
 });

@@ -1,11 +1,18 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
+import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
+import { applyEffectFromCard, type EffectCard } from '#utils/chat/applyEffectFromCard.js';
+import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { freeUseEvent, freeUseSink, useCardHasSomethingToClick } from '#utils/chat/freeUseFold.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -16,8 +23,59 @@ import {
 import { giveBack, receiptOf } from '../../utils/cost/costLedger.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
+/** What the activation card needs to know of the use beyond its data. */
+interface UseCardOptions {
+	/** The lines of the use so far. */
+	events: ActivationEvents | null;
+	free: ItemActivationManager.FreeUse | null;
+	/** The card goes to the GMs only. */
+	hidden: boolean;
+}
+
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
+
+/**
+ * A free use whose card would have nothing to click is one line on its host instead, with the
+ * other lines of the use. It still does all the use does: the self Apply Effect steps apply here,
+ * as no card is made for the hook that applies them. False: the card is posted.
+ */
+async function foldFreeUse(
+	item: { actor?: { name?: string | null } | null; name: string; img?: string | null },
+	chatData: OfferCard,
+	events: CardEvent[],
+	use: UseCardOptions,
+): Promise<boolean> {
+	const host = use.free?.host;
+	if (!host || !use.free || useCardHasSomethingToClick(chatData.system as never)) return false;
+	const sink = freeUseSink(host, { gmOnly: use.hidden });
+	if (!sink) return false;
+	const line = freeUseEvent({
+		actorName: item.actor?.name ?? '',
+		item: { name: item.name, img: item.img },
+		reason: use.free.reason,
+		effects: (chatData.system?.activation?.effects ?? []) as EffectNode[],
+	});
+	if (!(await sink([line, ...events]))) return false;
+	use.events?.posted(sink);
+	await applySelfStepsWithoutCard(chatData);
+	return true;
+}
+
+async function applySelfStepsWithoutCard(chatData: OfferCard): Promise<void> {
+	if (!isRuleAutomationEnabled()) return;
+	const card: EffectCard = {
+		id: null,
+		flags: (chatData as { flags?: Record<string, unknown> }).flags,
+		system: chatData.system,
+		update: async () => undefined,
+	};
+	for (const node of selfStepsOf(card)) {
+		await applyEffectFromCard(card, node).catch((error) =>
+			console.error('Nimble | Could not apply the effects of the item to its user.', error),
+		);
+	}
+}
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -200,6 +258,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		rolls: unknown[],
 		activation: { effects?: unknown[] } | null,
 		hookContext: Record<string, unknown>,
+		use: UseCardOptions = { events: null, free: null, hidden: false },
 	): Promise<ChatMessage | null> {
 		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
 
@@ -226,9 +285,19 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				source: this.actor as unknown as OfferActor | null,
 			});
 		}
+		const events = use.events?.take() ?? [];
+		if (!suppressCard && (await foldFreeUse(this, chatData as OfferCard, events, use))) {
+			// @ts-expect-error - nimble.useItem is custom
+			Hooks.callAll(systemHookName('useItem'), this, null, hookContext);
+			return null;
+		}
+		if (events.length > 0) {
+			foundry.utils.setProperty(chatData as object, `flags.${SYSTEM_ID}.events`, events);
+		}
 		const chatCard = suppressCard
 			? null
 			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
+		use.events?.posted(chatCard ? (lines) => addCardEvents(chatCard as never, lines) : null);
 
 		if (chatCard || suppressCard) {
 			/**
@@ -324,10 +393,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const receipt = await this._payForUse(manager);
 		if (!receipt) return null;
 
+		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
 		try {
 			// Pool-node side effects run only after the gate allowed the use and it is paid for.
-			await manager.applyDeferredPoolNodes();
+			await manager.applyDeferredPoolNodes(useEvents);
 
 			// Only allow hiding rolls for GM users rolling for non-PC actors
 			const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
@@ -397,15 +467,22 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				(chatData as Record<string, unknown>).whisper = gmUsers;
 			}
 
-			card = await this._createActivationCard(chatData, rolls, activation, {
+			card = await this._createActivationCard(
+				chatData,
 				rolls,
-				isCritical,
-				isMiss,
-				discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-				targets: manager.targets,
-				...useContext,
-			});
+				activation,
+				{
+					rolls,
+					isCritical,
+					isMiss,
+					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+					targets: manager.targets,
+					...useContext,
+				},
+				{ events: useEvents, free: manager.free, hidden: !!shouldHide },
+			);
 		} catch (error) {
+			useEvents?.close();
 			// The use did not happen, so it costs nothing.
 			await giveBack(this.actor, receipt).catch((refundError) =>
 				console.error('Nimble | Could not give back the cost of a failed use.', refundError),

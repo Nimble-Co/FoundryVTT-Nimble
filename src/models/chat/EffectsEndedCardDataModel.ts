@@ -1,4 +1,4 @@
-import { metadata } from './common.js';
+import { metadata, movementOffers } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -28,6 +28,7 @@ const effectsEndedCardSchema = () => ({
 declare namespace NimbleEffectsEndedCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof metadata> &
+		ReturnType<typeof movementOffers> &
 		ReturnType<typeof effectsEndedCardSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
@@ -44,6 +45,8 @@ class NimbleEffectsEndedCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...effectsEndedCardSchema(),
 			...metadata(),
+			// The offers of its Events lines.
+			...movementOffers(),
 		};
 	}
 }

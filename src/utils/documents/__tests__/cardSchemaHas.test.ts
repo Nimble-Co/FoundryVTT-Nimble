@@ -15,7 +15,14 @@ describe('cardSchemaHas', () => {
 		const carrying = Object.keys(chatDataModels).filter((type) =>
 			cardSchemaHas(type, 'movementOffers', models),
 		);
-		expect(carrying.sort()).toEqual(['feature', 'movementOffer', 'object', 'spell']);
+		expect(carrying.sort()).toEqual([
+			'effectsEnded',
+			'feature',
+			'initiative',
+			'movementOffer',
+			'object',
+			'spell',
+		]);
 	});
 
 	it('is false for a field the data model does not have', () => {

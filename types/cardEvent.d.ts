@@ -1,5 +1,19 @@
-/** A data value of a card text: plain text, a number, or a lang text that each reader localizes. */
-export type CardEventValue = string | number | CardEventText;
+import type { MoveNode } from '#types/effectTree.js';
+import type { MovementOffer } from '#types/movement.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
+
+/**
+ * A data value of a card text: plain text, a number, a lang text that each reader localizes, or
+ * a Lasts Until moment that each reader reads as a sentence.
+ */
+export type CardEventValue = string | number | CardEventText | CardEventLastsUntil;
+
+/** A Lasts Until moment, read by the holder of the effect: "Until your next attack". */
+export interface CardEventLastsUntil {
+	lastsUntil: Moment;
+	/** The name of the creature that put the effect on, when it is not the holder. */
+	source?: string;
+}
 
 /** A lang key and its data, localized on each client when the card renders. */
 export interface CardEventText {
@@ -29,7 +43,13 @@ export interface EndedEffectRow {
 	effect: Record<string, unknown>;
 }
 
-export type CardEventAction = { kind: 'undoEnd'; row: EndedEffectRow };
+/**
+ * What a line lets the reader do: Undo an end, or move as an offer lets. A Movement Offer line
+ * holds its move and the offers it made; the card stores the same offers, so the token carries them.
+ */
+export type CardEventAction =
+	| { kind: 'undoEnd'; row: EndedEffectRow }
+	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 
 /** One line of the Events strip of a chat card. */
 export interface CardEvent {
@@ -51,3 +71,9 @@ export interface CardEventMoment {
 	key: string;
 	heading: CardEventText;
 }
+
+/**
+ * Where a free use can show as one line: the card of the action that set it off, or the card of a
+ * moment. Ids and plain data only, so a GM query can carry it.
+ */
+export type FreeUseHost = { cardId: string } | { moment: CardEventMoment };

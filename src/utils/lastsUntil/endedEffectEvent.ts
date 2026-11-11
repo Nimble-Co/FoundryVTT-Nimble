@@ -1,12 +1,24 @@
-import type { CardEvent, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import type {
+	CardEvent,
+	CardEventLastsUntil,
+	CardEventText,
+	EndedEffectRow,
+} from '#types/cardEvent.d.ts';
 
-/** The line for an ended effect, with Undo. `reason` says why it ended, when the moment does not. */
+/**
+ * The line for an ended effect, with Undo. Its cause is the Lasts Until moment that ended it, or
+ * else `reason`, when the heading does not say why; then the source.
+ */
 export function endedEffectEvent(
 	row: EndedEffectRow,
 	at: number,
-	reason?: CardEventText,
+	why?: CardEventText,
+	endedBy?: CardEventLastsUntil,
 ): CardEvent {
 	const source = row.sourceName;
+	const reason: CardEventText | undefined = endedBy
+		? { key: 'NIMBLE.chat.events.cause.lastsUntil', data: { moment: endedBy } }
+		: why;
 	let cause: CardEventText | undefined;
 	if (reason && source) {
 		cause = { key: 'NIMBLE.chat.events.cause.reasonAndSource', data: { reason, source } };

@@ -369,7 +369,16 @@ describe('events', () => {
 
 		hook(systemHookName('useItem'))(item, null, { targets: [{ actor: target }, null] });
 
-		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [target]);
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [target], null);
+	});
+
+	it('an item use hands its card to the item use events, as the host of the lines', () => {
+		const item = { actor: { name: 'Tessa' } };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('useItem'))(item, card, { targets: [] });
+
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [], card);
 	});
 
 	it('damage on a miss is no damage', () => {
@@ -383,7 +392,20 @@ describe('events', () => {
 
 		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor: null });
 
-		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target);
+		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target, {}, null);
+	});
+
+	it('damage applied from a card has that card as the host of both events', () => {
+		const target = { name: 'Ogre' };
+		const sourceActor = { name: 'Tessa' };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor, card });
+
+		expect(fireEventMock.mock.calls).toEqual([
+			['takeDamage', target, {}, card],
+			['nextDamage', sourceActor, {}, card],
+		]);
 	});
 
 	it('damage is the next damage of the speaker actor of the card', () => {
@@ -392,26 +414,20 @@ describe('events', () => {
 		const speaker = { actor: 'tessa' };
 		speakerActorIs(speakerActor);
 
-		hook(systemHookName('damageApplied'))({
-			targetActor: { name: 'Ogre' },
-			sourceActor,
-			card: { speaker },
-		});
+		const card = { speaker };
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor, card });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor, {}, card);
 	});
 
 	it('damage is the next damage of the source actor when the card has no speaker actor', () => {
 		const sourceActor = { name: 'Tessa' };
 		speakerActorIs(null);
 
-		hook(systemHookName('damageApplied'))({
-			targetActor: { name: 'Ogre' },
-			sourceActor,
-			card: { speaker: { actor: 'gone' } },
-		});
+		const card = { speaker: { actor: 'gone' } };
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor, card });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor, {}, card);
 	});
 
 	it('damage with no card is the next damage of the source actor', () => {
@@ -419,7 +435,7 @@ describe('events', () => {
 
 		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor, {}, null);
 	});
 
 	it('damage on a miss is not the next damage', () => {
@@ -439,9 +455,10 @@ describe('events', () => {
 			Object.assign(user, { id: 'me' });
 			speakerActorIs(actor);
 
-			hook('createChatMessage')({ type, speaker: { actor: 'tessa' } }, {}, 'me');
+			const card = { id: 'roll1', type, speaker: { actor: 'tessa' } };
+			hook('createChatMessage')(card, {}, 'me');
 
-			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor);
+			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor, {}, card);
 		},
 	);
 

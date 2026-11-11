@@ -1,5 +1,10 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type MovementOfferCardInput, postMovementOfferCard } from '../postMovementOfferCard.js';
+import { SYSTEM_ID } from '#system';
+import {
+	type MovementOfferCardInput,
+	offerMovement,
+	postMovementOfferCard,
+} from '../postMovementOfferCard.js';
 
 type Globals = {
 	ChatMessage: { create?: unknown; getSpeaker?: unknown };
@@ -276,5 +281,95 @@ describe('postMovementOfferCard', () => {
 			);
 			expect(posted().whisper).toEqual(['gm', 'alice', 'bob']);
 		});
+	});
+});
+
+describe('offerMovement', () => {
+	type GameUser = { isActiveGM?: boolean; id?: string };
+	const game = (globalThis as unknown as { game: { user: GameUser; messages: unknown } }).game;
+	let saved: { isActiveGM?: boolean; messages: unknown };
+
+	beforeEach(() => {
+		create.mockClear();
+		saved = { isActiveGM: game.user.isActiveGM, messages: game.messages };
+		game.user.isActiveGM = true;
+		game.messages = { contents: [] };
+	});
+
+	afterEach(() => {
+		game.user.isActiveGM = saved.isActiveGM;
+		game.messages = saved.messages;
+	});
+
+	function hostCard(fields: Record<string, unknown> = {}) {
+		return {
+			id: 'host',
+			type: 'feature',
+			whisper: [] as string[],
+			flags: {},
+			update: vi.fn(async () => undefined),
+			...fields,
+		};
+	}
+
+	function writtenEvents(card: ReturnType<typeof hostCard>) {
+		const [changes] = card.update.mock.calls.at(-1) as unknown as [Record<string, unknown>];
+		return changes[`flags.${SYSTEM_ID}.events`] as Array<Record<string, any>>;
+	}
+
+	it('puts the offer on the host card as a line with its move, and posts no card', async () => {
+		const card = hostCard();
+		const made = await offerMovement(input({ reason: { key: 'reason.key' } }), { card });
+
+		expect(made).toBe(true);
+		expect(create).not.toHaveBeenCalled();
+		const [event] = writtenEvents(card);
+		expect(event).toMatchObject({
+			kind: 'movementOffer',
+			text: { key: 'NIMBLE.chat.events.movementOffer.text', data: { name: 'Shove' } },
+			cause: { key: 'reason.key' },
+			action: { kind: 'movementOffer', node: { type: 'move', kind: 'forced' } },
+		});
+		expect(event.action.offers).toEqual([
+			expect.objectContaining({ tokenUuid: 'Scene.s.Token.gob', spaces: 2, state: 'open' }),
+		]);
+	});
+
+	it('posts its own card when the offer is whispered and the host card is not', async () => {
+		const card = hostCard();
+		const made = await offerMovement(input({ whisper: true }), { card });
+
+		expect(made).toBe(true);
+		expect(card.update).not.toHaveBeenCalled();
+		expect(create).toHaveBeenCalledTimes(1);
+	});
+
+	it('posts its own card when the host card cannot store offers', async () => {
+		const card = hostCard({ type: 'skillCheck' });
+		await offerMovement(input(), { card });
+
+		expect(card.update).not.toHaveBeenCalled();
+		expect(create).toHaveBeenCalledTimes(1);
+	});
+
+	it('puts the offer on the card of a moment', async () => {
+		await offerMovement(input(), {
+			moment: { key: 'c:1:0:turnStart', heading: { key: 'heading' } },
+		});
+
+		expect(create).toHaveBeenCalledTimes(1);
+		const [data] = create.mock.calls[0] as unknown as [Record<string, any>];
+		expect(data.type).toBe('effectsEnded');
+		expect(data.system.momentKey).toBe('c:1:0:turnStart');
+		expect(data.flags[SYSTEM_ID].events[0].kind).toBe('movementOffer');
+	});
+
+	it('posts nothing at all when no creature gets an offer', async () => {
+		const card = hostCard();
+		const made = await offerMovement(input({ recipients: [] }), { card });
+
+		expect(made).toBe(false);
+		expect(card.update).not.toHaveBeenCalled();
+		expect(create).not.toHaveBeenCalled();
 	});
 });

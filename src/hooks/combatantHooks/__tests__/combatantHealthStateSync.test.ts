@@ -91,7 +91,36 @@ describe('registerCombatantHealthStateSync', () => {
 			active: true,
 			overlay: false,
 		});
-		expect(activateLastStandFeature).toHaveBeenCalledWith({ visibilityMode: 'gmroll' });
+		expect(activateLastStandFeature).toHaveBeenCalledWith({
+			visibilityMode: 'gmroll',
+			hostCardId: null,
+		});
+	});
+
+	it('names the card whose Apply Damage brought the monster to 0 HP', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('../combatantHealthStateSync.js'))
+			.default;
+		const { damageCardOption } = await import('../../../utils/damage/damageCard.js');
+		registerCombatantHealthStateSync();
+
+		const activateLastStandFeature = vi.fn().mockResolvedValue(null);
+		const actor = Object.assign(
+			createMockCombatActor({ type: 'soloMonster', hp: 0, hpMax: 320, lastStandHp: 180 }),
+			{ activateLastStandFeature },
+		);
+
+		callbacks.get('updateActor')?.(
+			actor,
+			{ system: { attributes: { hp: { value: 0 } } } },
+			damageCardOption('attack-card'),
+		);
+		await flushAsync();
+
+		expect(activateLastStandFeature).toHaveBeenCalledWith({
+			visibilityMode: 'gmroll',
+			hostCardId: 'attack-card',
+		});
 	});
 
 	it('also applies bloodied on entry when lastStandHp is at or below half maxHp', async () => {
@@ -280,7 +309,10 @@ describe('registerCombatantHealthStateSync', () => {
 				active: true,
 				overlay: false,
 			});
-			expect(activateLastStandFeature).toHaveBeenCalledWith({ visibilityMode: 'gmroll' });
+			expect(activateLastStandFeature).toHaveBeenCalledWith({
+				visibilityMode: 'gmroll',
+				hostCardId: null,
+			});
 			// The bloodied status sync is gated off.
 			expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('bloodied', expect.anything());
 		} finally {

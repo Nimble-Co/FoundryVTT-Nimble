@@ -10,6 +10,7 @@ import {
 	reconcileMovementOffers,
 	settleMovementOffer,
 	untrackMovementOffers,
+	withEventOffers,
 } from '../movementOffers.js';
 
 const RollGlobal = Roll as unknown as {
@@ -493,5 +494,24 @@ describe('movementOfferOutcome', () => {
 	it('has no moved spaces for an open or unused offer', () => {
 		expect(movementOfferOutcome(offer()).moved).toBeNull();
 		expect(movementOfferOutcome(offer({ state: 'unused' })).moved).toBeNull();
+	});
+});
+
+describe('offers of an Events line', () => {
+	const lineOffer = offer({ id: 'line.hero', nodeId: 'line', tokenUuid: 'Scene.s.Token.hero' });
+
+	it('stay on the card when its targets change', () => {
+		const next = reconcileMovementOffers(card([moveNode()], [], [offer(), lineOffer]), lookups);
+		expect(next.map((each) => each.id)).toEqual(['line.hero']);
+	});
+
+	it('are added to the card offers that lack them', () => {
+		const events = [
+			{ action: { kind: 'movementOffer', offers: [lineOffer] } },
+			{ action: undefined },
+		];
+		expect(withEventOffers([offer()], events)).toEqual([offer(), lineOffer]);
+		expect(withEventOffers([offer(), lineOffer], events)).toBeNull();
+		expect(withEventOffers([], [{ action: { kind: 'undoEnd' } }])).toBeNull();
 	});
 });

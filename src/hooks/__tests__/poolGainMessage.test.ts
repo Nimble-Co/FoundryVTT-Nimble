@@ -67,6 +67,51 @@ describe('registerPoolGainMessageHooks', () => {
 		expect(content).toContain('Move up to 3 spaces for free.');
 	});
 
+	it('puts the message on the item card during an item use, with no card of its own', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const chat = stubChatMessage();
+		const { registerPoolGainMessageHooks } = await import('../poolGainMessage.js');
+		const { openActivationEvents } = await import('#utils/chat/activationEvents.js');
+		registerPoolGainMessageHooks();
+
+		const actor = {
+			...(makeActor([makeRule({ parentDocument: { name: 'Rage', img: 'rage.webp' } })]) as object),
+			uuid: 'Actor.hero',
+		};
+		const use = openActivationEvents(actor);
+		callbacks.get('nimble.dicePool.changed')?.(gainPayload(actor));
+
+		expect(chat.create).not.toHaveBeenCalled();
+		expect(use?.take()).toEqual([
+			expect.objectContaining({
+				kind: 'poolGain',
+				img: 'rage.webp',
+				text: {
+					key: 'NIMBLE.chat.events.poolGain.text',
+					data: { message: 'Move up to 3 spaces for free.' },
+				},
+			}),
+		]);
+		use?.close();
+	});
+
+	it('posts its own message when the use has no card to hold it', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const chat = stubChatMessage();
+		const { registerPoolGainMessageHooks } = await import('../poolGainMessage.js');
+		const { openActivationEvents } = await import('#utils/chat/activationEvents.js');
+		registerPoolGainMessageHooks();
+
+		const actor = { ...(makeActor([makeRule()]) as object), uuid: 'Actor.late' };
+		const use = openActivationEvents(actor);
+		use?.posted(async () => false);
+		callbacks.get('nimble.dicePool.changed')?.(gainPayload(actor));
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(chat.create).toHaveBeenCalledTimes(1);
+		use?.close();
+	});
+
 	it('does not post when the pool shrank or stayed the same', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const chat = stubChatMessage();

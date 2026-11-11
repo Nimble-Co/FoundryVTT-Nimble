@@ -7,6 +7,7 @@ import type {
 	EndedEffectRow,
 } from '#types/cardEvent.d.ts';
 import { keyedQueue } from '#utils/keyedQueue.js';
+import { describeLastsUntil, holderReader } from '#utils/lastsUntil/describeLastsUntil.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import localize from '#utils/localize.js';
 
@@ -61,6 +62,14 @@ export function cardEventsOf(
 function valueText(value: CardEventValue): string {
 	if (typeof value === 'string') return value;
 	if (typeof value === 'number') return String(value);
+	if ('lastsUntil' in value) {
+		return describeLastsUntil({
+			moments: [value.lastsUntil],
+			reader: holderReader(value.source || null),
+			localize,
+			format: localize,
+		});
+	}
 	return cardEventText(value);
 }
 

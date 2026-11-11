@@ -700,7 +700,10 @@
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
-			"swallowedDamage": "{name} takes {amount} damage: Swallowed.",
+			"swallowedDamage": {
+				"text": "{name} takes {amount} damage",
+				"cause": "Swallowed"
+			},
 			"critBack": {
 				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit.",
 				"attack": "Attack with {attack}"
@@ -721,7 +724,34 @@
 				"backOn": "On {name}",
 				"cause": {
 					"source": "{source}",
-					"reasonAndSource": "{reason} - {source}"
+					"reasonAndSource": "{reason} - {source}",
+					"lastsUntil": "{moment}"
+				},
+				"freeUse": {
+					"text": "{name} uses {item} for free",
+					"cause": "{trigger} ({feature})",
+					"causeWithResults": "{cause} - {results}",
+					"poolNow": "{pool} now {value}",
+					"poolEmpty": "{pool} now empty",
+					"results": "{first}; {second}"
+				},
+				"poolRoll": {
+					"text": "Rolled {faces} into {pool}"
+				},
+				"poolGain": {
+					"text": "{message}"
+				},
+				"movementOffer": {
+					"text": "{name}"
+				},
+				"interpose": {
+					"text": "{name} Interposes for {target}",
+					"textNoTarget": "{name} Interposes",
+					"cause": "Now the target of this attack"
+				},
+				"healthState": {
+					"bloodied": "{name} is Bloodied",
+					"lastStand": "{name} is in Last Stand"
 				}
 			},
 			"defend": {

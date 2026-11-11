@@ -106,6 +106,8 @@ interface TurnContext {
 	combat: Combat;
 	combatant: Combatant;
 	actor: NimbleBaseActor;
+	/** The round and the index in the turn order of the turn, when the combat says them. */
+	place?: { round?: number; turn?: number | null };
 }
 
 interface ActorHealthContext {

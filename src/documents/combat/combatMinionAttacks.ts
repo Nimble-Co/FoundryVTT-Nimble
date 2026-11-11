@@ -407,9 +407,9 @@ async function buildNcsAttackChatData(params: {
 	skippedMembers: MinionGroupAttackSkippedMember[];
 	unsupportedWarnings: string[];
 	attackMembers: Combatant.Implementation[];
-}): Promise<{ chatMessageId: string | null; totalDamage: number }> {
+}): Promise<{ chatMessageId: string | null; totalDamage: number; chatCard: ChatMessage | null }> {
 	if (params.rollEntries.length < 1) {
-		return { chatMessageId: null, totalDamage: 0 };
+		return { chatMessageId: null, totalDamage: 0, chatCard: null };
 	}
 
 	const totalDamage = params.rollEntries.reduce((sum, entry) => sum + entry.totalDamage, 0);
@@ -431,23 +431,25 @@ async function buildNcsAttackChatData(params: {
 	return {
 		chatMessageId: chatCard?.id ?? null,
 		totalDamage,
+		chatCard,
 	};
 }
 
 /**
  * The attack event of each actor whose member rolled. Resolves when their activity is saved, so the
- * turn does not end before the round has the attack.
+ * turn does not end before the round has the attack. The group attack card hosts the lines.
  */
 async function fireMemberAttackEvents(
 	attackMembers: Combatant.Implementation[],
 	rolledCombatantIds: string[],
+	chatCard: ChatMessage | null,
 ): Promise<void> {
 	const rolled = new Set(rolledCombatantIds);
 	const attackers = new Set<Actor>();
 	for (const member of attackMembers) {
 		if (member.actor && rolled.has(member.id ?? '')) attackers.add(member.actor as Actor);
 	}
-	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor)));
+	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor, chatCard)));
 }
 
 async function maybeAdvanceTurnAfterAttack(params: {
@@ -610,7 +612,7 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
-	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
+	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds, chatData.chatCard);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,
 		endTurn: normalizedParams.endTurn,

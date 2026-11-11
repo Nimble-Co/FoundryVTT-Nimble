@@ -12,7 +12,13 @@ import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { seatOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
-import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
+import {
+	type EventHost,
+	eventHeading,
+	fireEvent,
+	fireItemUseEvents,
+} from '#utils/lastsUntil/lastsUntilEvents.js';
+import { type TurnMomentType, type TurnPlace, turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
@@ -21,35 +27,16 @@ const on = (event: string, handler: HookFn) =>
 
 const isActiveGm = () => !!game.user?.isActiveGM;
 
-interface TurnContext {
-	round?: number;
-	turn?: number;
-}
-
-/** The round of the turn that just ended, when the combat class did not say. */
-function roundOfEndedTurn(combat: Combat, combatant: Combatant.Implementation): number {
-	const round = Number(combat.round) || 0;
-	const index = combat.turns.findIndex((each) => each.id === combatant.id);
-	return index > Number(combat.turn ?? 0) ? Math.max(0, round - 1) : round;
-}
-
-function onTurn(type: 'turnStart' | 'turnEnd') {
-	return (combatant: Combatant.Implementation, context?: TurnContext) => {
+function onTurn(type: TurnMomentType) {
+	return (combatant: Combatant.Implementation, place?: TurnPlace) => {
 		const combat = combatant?.combat as Combat | null;
 		if (!isActiveGm() || !combat?.id) return;
-		const round =
-			context?.round ??
-			(type === 'turnEnd' ? roundOfEndedTurn(combat, combatant) : Number(combat.round) || 0);
-		const moment = {
-			key: `${combat.id}:${round}:${context?.turn ?? combatant.id}:${type}`,
-			heading: {
-				key: `NIMBLE.lastsUntil.chat.heading.${type}`,
-				data: { name: combatant.name ?? '' },
-			},
-		};
+		const found = turnMoment(type, combatant as never, place);
+		if (!found) return;
+		const { moment, round } = found;
 		const seat = seatOf(combatant);
 		void endEffectsAt(
-			{ type, combatId: combat.id, seat, round, turn: context?.turn ?? null },
+			{ type, combatId: combat.id, seat, round, turn: place?.turn ?? null },
 			moment,
 			combat,
 		);
@@ -63,7 +50,7 @@ function onTurn(type: 'turnStart' | 'turnEnd') {
 }
 
 function onRound(type: 'roundStart' | 'roundEnd') {
-	return (combat: Combat, context?: TurnContext) => {
+	return (combat: Combat, context?: TurnPlace) => {
 		if (!isActiveGm() || !combat?.id) return;
 		const round = context?.round ?? (Number(combat.round) || 0);
 		const moment = {
@@ -176,40 +163,48 @@ interface UseItemContext {
 
 function onUseItem(
 	item: Parameters<typeof fireItemUseEvents>[0],
-	_card: unknown,
+	card: EventHost,
 	context?: UseItemContext,
 ) {
 	const targets = (context?.targets ?? []).flatMap((target) =>
 		target?.actor ? [target.actor] : [],
 	);
-	void fireItemUseEvents(item, targets);
+	void fireItemUseEvents(item, targets, card);
 }
 
+/** The ends go on the card whose Apply Damage was clicked. */
 function onDamageApplied(payload: {
 	targetActor?: Actor | null;
 	sourceActor?: Actor | null;
-	card?: { speaker?: ChatMessage['speaker'] } | null;
+	card?: { id?: string | null; speaker?: ChatMessage['speaker'] } | null;
 	isMiss?: boolean;
 }): void {
 	if (payload?.isMiss) return;
-	fireEvent('takeDamage', payload?.targetActor ?? null);
-	const dealer = payload?.card?.speaker
-		? (ChatMessage.getSpeakerActor(payload.card.speaker) ?? payload.sourceActor)
+	const card = payload?.card ?? null;
+	fireEvent('takeDamage', payload?.targetActor ?? null, {}, card);
+	const dealer = card?.speaker
+		? (ChatMessage.getSpeakerActor(card.speaker) ?? payload.sourceActor)
 		: payload?.sourceActor;
-	fireEvent('nextDamage', (dealer as Actor | null | undefined) ?? null);
+	fireEvent('nextDamage', (dealer as Actor | null | undefined) ?? null, {}, card);
 }
 
 const ROLL_CARD_TYPES = new Set(['savingThrow', 'abilityCheck', 'skillCheck']);
 
 /** A save or check card ends "until you make a roll" on the client that rolled it. */
 function onCreateChatMessage(
-	card: { type?: string; author?: { id?: string } | null; speaker?: ChatMessage['speaker'] },
+	card: {
+		id?: string | null;
+		type?: string;
+		author?: { id?: string } | null;
+		speaker?: ChatMessage['speaker'];
+	},
 	_options: unknown,
 	userId: string,
 ): void {
 	if (userId !== game.user?.id || !ROLL_CARD_TYPES.has(card.type ?? '')) return;
 	if (!card.speaker) return;
-	fireEvent('nextRoll', (ChatMessage.getSpeakerActor(card.speaker) as Actor | null) ?? null);
+	const roller = (ChatMessage.getSpeakerActor(card.speaker) as Actor | null) ?? null;
+	fireEvent('nextRoll', roller, {}, card);
 }
 
 function onRest(payload: { actor?: Actor | null }): void {

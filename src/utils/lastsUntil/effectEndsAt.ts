@@ -4,6 +4,7 @@ import {
 	anyMomentReached,
 	type LastsUntilCheck,
 	type Moment,
+	momentReached,
 } from '#utils/lastsUntil/momentReached.js';
 
 /** The parts of a Nimble Active Effect the end check reads. */
@@ -49,4 +50,28 @@ export function effectEndsAt(
 		return true;
 	}
 	return coreDurationEndsAt(effect, check, combat);
+}
+
+/** The Lasts Until moment of `effect` that `check` reaches, as plain data. Null when none does. */
+export function endingMoment(
+	effect: TimedEffect,
+	check: LastsUntilCheck,
+	combat?: Combat | null,
+): Moment | null {
+	const moments = effect.lastsUntil ?? [];
+	if (moments.length < 1 || !(effect.parent instanceof Actor)) return null;
+	const subject = effectSubject(effect, check, combat ?? undefined);
+	const found = moments.find((moment) => momentReached(moment, subject, check));
+	if (!found) return null;
+	return {
+		kind: found.kind,
+		boundary: found.boundary ?? null,
+		clock: found.clock ?? null,
+		span: found.span ?? null,
+		value: found.value ?? null,
+		units: found.units ?? null,
+		who: found.who ?? null,
+		event: found.event ?? null,
+		effectName: found.effectName ?? '',
+	};
 }

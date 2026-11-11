@@ -236,6 +236,109 @@ describe('endEffects', () => {
 	});
 });
 
+describe('endEffects on a host card', () => {
+	function hostCard(id = 'attack1') {
+		const card = {
+			id,
+			type: 'feature',
+			flags: {} as Record<string, unknown>,
+			update: vi.fn(async (_changes: object) => card),
+		};
+		(game.messages as unknown as { get: (id: string) => unknown }).get = (wanted: string) =>
+			wanted === card.id ? card : undefined;
+		return card;
+	}
+	const hostEvents = (card: ReturnType<typeof hostCard>) =>
+		(card.update.mock.calls[0][0] as Record<string, CardEvent[]>)[`flags.${SYSTEM_ID}.events`];
+
+	it('adds the lines to the host card and posts no card', async () => {
+		const card = hostCard();
+
+		await endEffects([addEffect(goblin, 'a')], {
+			heading: { key: 'Goblin attacked' },
+			hostId: card.id,
+		});
+
+		expect(create).not.toHaveBeenCalled();
+		const events = hostEvents(card);
+		expect(events.map((event) => event.kind)).toEqual(['effectEnded']);
+		expect(events[0].action).toEqual({
+			kind: 'undoEnd',
+			row: expect.objectContaining({ effectId: 'a', holderName: 'Goblin' }),
+		});
+	});
+
+	it('a host card that is gone leaves the lines on a moment card', async () => {
+		hostCard('other');
+
+		await endEffects([addEffect(goblin, 'a')], {
+			heading: { key: 'Goblin attacked' },
+			hostId: 'gone',
+		});
+
+		expect(create).toHaveBeenCalledTimes(1);
+		expect(createdCard().system.momentHeading).toEqual({ key: 'Goblin attacked' });
+		expect(rowsOf(createdCard()).map((row) => row.effectId)).toEqual(['a']);
+	});
+
+	it('on another client, the host goes to the active GM with the ends', async () => {
+		user.isActiveGM = false;
+		const a = addEffect(goblin, 'a');
+
+		await endEffects([a], { heading: { key: 'Goblin attacked' }, hostId: 'attack1' });
+
+		expect(activeGM?.query).toHaveBeenCalledWith(`${SYSTEM_ID}.endTimedEffects`, {
+			uuids: [a.uuid],
+			moment: { heading: { key: 'Goblin attacked' }, hostId: 'attack1' },
+		});
+	});
+});
+
+describe('the cause of an ended line', () => {
+	it('is the Lasts Until moment that ended it, read by the holder, then the source', async () => {
+		const a = addEffect(goblin, 'a', { origin: ogre.holder.uuid });
+
+		await endEffects([a], moment('Goblin attacked'), { check: attackBy(goblin.holder) });
+
+		expect(createdCard().flags[SYSTEM_ID].events[0].cause).toEqual({
+			key: 'NIMBLE.chat.events.cause.reasonAndSource',
+			data: {
+				reason: {
+					key: 'NIMBLE.chat.events.cause.lastsUntil',
+					data: { moment: { lastsUntil: UNTIL_THEY_ATTACK, source: 'Ogre' } },
+				},
+				source: 'Ogre',
+			},
+		});
+	});
+
+	it('the moment goes to the active GM as plain data', async () => {
+		user.isActiveGM = false;
+		const a = addEffect(goblin, 'a');
+
+		await endEffects([a], moment('Goblin attacked'), { check: attackBy(goblin.holder) });
+
+		expect(activeGM?.query).toHaveBeenCalledWith(`${SYSTEM_ID}.endTimedEffects`, {
+			uuids: [a.uuid],
+			moment: { ...moment('Goblin attacked'), endedBy: { [a.uuid as string]: UNTIL_THEY_ATTACK } },
+		});
+	});
+
+	it('a moment that ended nothing of the effect leaves the reason', async () => {
+		const a = addEffect(goblin, 'a', { lastsUntil: [] });
+
+		await endEffects(
+			[a],
+			{ heading: { key: 'End' }, reason: { key: 'Idle' } },
+			{
+				check: attackBy(goblin.holder),
+			},
+		);
+
+		expect(createdCard().flags[SYSTEM_ID].events[0].cause).toEqual({ key: 'Idle' });
+	});
+});
+
 describe('undoEndedEffect', () => {
 	const row = (): EndedEffectRow => ({
 		effectId: 'a',

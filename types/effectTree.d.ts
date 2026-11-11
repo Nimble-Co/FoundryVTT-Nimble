@@ -64,6 +64,8 @@ export type PoolNode = {
 		previousCount?: number;
 		newCount?: number;
 		rolledFaces?: number[];
+		/** The dice pool's faces after the step. */
+		faces?: number[];
 	} | null;
 };
 

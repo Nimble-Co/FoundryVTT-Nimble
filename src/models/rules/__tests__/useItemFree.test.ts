@@ -322,4 +322,82 @@ describe('UseItemFreeRule', () => {
 
 		expect(useItemForFree).toHaveBeenCalledTimes(1);
 	});
+
+	describe('the host of the use', () => {
+		const hostOf = (index = 0) =>
+			(useItemForFree.mock.calls[index]?.[2] as { host?: unknown } | undefined)?.host;
+
+		function turnIn(actor: object, place?: { round?: number; turn?: number | null }): TurnContext {
+			const combat = { id: 'combat1', round: 3, turn: 1, turns: [] };
+			const combatant = { id: 'cHero', name: 'Tessa', combat };
+			return { combat, combatant, actor, ...(place ? { place } : {}) } as unknown as TurnContext;
+		}
+
+		it('a hit, a crit or a miss of the actor: the attack card', async () => {
+			const actor = makeActor();
+
+			await freeRule(actor, { triggers: ['onMiss'] }).onItemActivated(
+				activated(actor, { isMiss: true }, 'attack-card'),
+			);
+
+			expect(hostOf()).toEqual({ cardId: 'attack-card' });
+		});
+
+		it('an enemy crit: the card of the attacker', async () => {
+			const actor = makeActor();
+			const enemy = makeActor([], 'npc');
+
+			await freeRule(actor, { triggers: ['onCritReceived'] }).onAttackReceived(
+				attack(enemy, actor, { isCritical: true }, 'enemy-card'),
+			);
+
+			expect(hostOf()).toEqual({ cardId: 'enemy-card' });
+		});
+
+		it('a turn start or end: the card of that turn moment, keyed as the Lasts Until ends', async () => {
+			const actor = makeActor();
+
+			await freeRule(actor, { triggers: ['onTurnStart'] }).onActiveGmTurnStart(
+				turnIn(actor, { round: 3, turn: 1 }),
+			);
+			await freeRule(actor, { triggers: ['onTurnEnd'] }).onTurnEnd(
+				turnIn(actor, { round: 2, turn: 4 }),
+			);
+
+			expect(hostOf(0)).toEqual({
+				moment: {
+					key: 'combat1:3:1:turnStart',
+					heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
+				},
+			});
+			expect(hostOf(1)).toEqual({
+				moment: {
+					key: 'combat1:2:4:turnEnd',
+					heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Tessa' } },
+				},
+			});
+		});
+
+		it('the host is plain data, so a GM query can carry it', async () => {
+			const actor = makeActor();
+
+			await freeRule(actor, { triggers: ['onTurnStart'] }).onActiveGmTurnStart(
+				turnIn(actor, { round: 3, turn: 1 }),
+			);
+
+			expect(JSON.parse(JSON.stringify(hostOf()))).toEqual(hostOf());
+		});
+
+		it('a turn outside a combat, or another trigger: no host', async () => {
+			const actor = makeActor();
+
+			await freeRule(actor, { triggers: ['onTurnStart'] }).onActiveGmTurnStart(turn(actor));
+			await freeRule(actor, { triggers: ['onRest'] }).onRest({ actor, restType: 'safe' } as never);
+
+			expect(useItemForFree.mock.calls.map((call) => 'host' in (call[2] as object))).toEqual([
+				false,
+				false,
+			]);
+		});
+	});
 });
