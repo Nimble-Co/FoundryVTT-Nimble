@@ -146,7 +146,7 @@
 					value={duration}
 					onchange={({ target }) =>
 						document.update({
-							'system.activation.duration.cost.quantity': target?.value,
+							'system.activation.duration.quantity': target?.value,
 						})}
 				/>
 			{/if}
