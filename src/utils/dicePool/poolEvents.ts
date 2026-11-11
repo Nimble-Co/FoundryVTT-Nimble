@@ -1,5 +1,6 @@
 import type { CardEvent, CardEventText } from '#types/cardEvent.d.ts';
 import { cardEventId } from '../chat/activationEvents.js';
+import type { RaisedFace } from './types.js';
 
 interface EventSource {
 	name?: string | null;
@@ -15,20 +16,40 @@ export function facesText(faces: readonly number[]): string {
 	return faces.join(', ');
 }
 
-/** The line for dice an item use rolled into a pool. */
+/** Why the faces are what they are: the item, and the dice raised to the pool's lowest face. */
+function poolRollCause(
+	item: EventSource | null | undefined,
+	pool: string,
+	raised: readonly RaisedFace[],
+): CardEventText | undefined {
+	if (raised.length > 0) {
+		return {
+			key: 'NIMBLE.dicePoolTracker.raisedToFloor',
+			data: {
+				flavor: item?.name || pool,
+				rolled: facesText(raised.map((die) => die.rolled)),
+				face: facesText(raised.map((die) => die.face)),
+			},
+		};
+	}
+	if (!item?.name) return undefined;
+	return { key: 'NIMBLE.chat.events.cause.source', data: { source: item.name } };
+}
+
+/** The line for dice an item use rolled for a pool: the faces after any raise to its lowest face. */
 export function poolRollEvent(
 	item: EventSource | null | undefined,
 	pool: string,
 	faces: readonly number[],
+	raised: readonly RaisedFace[] = [],
 ): CardEvent {
+	const cause = poolRollCause(item, pool, raised);
 	return {
 		id: cardEventId('poolRoll'),
 		kind: 'poolRoll',
 		...plate(item, 'fa-solid fa-dice'),
 		text: { key: 'NIMBLE.chat.events.poolRoll.text', data: { pool, faces: facesText(faces) } },
-		...(item?.name
-			? { cause: { key: 'NIMBLE.chat.events.cause.source', data: { source: item.name } } }
-			: {}),
+		...(cause ? { cause } : {}),
 		at: Date.now(),
 	};
 }

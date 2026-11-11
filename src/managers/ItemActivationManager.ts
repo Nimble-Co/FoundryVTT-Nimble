@@ -26,6 +26,7 @@ import type {
 } from '#utils/chargePool/types.js';
 import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { FreeUseReason } from '#utils/chat/freeUseReason.js';
+import type { RaisedFace } from '#utils/dicePool/types.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -1348,11 +1349,18 @@ class ItemActivationManager {
 			// effect node: set when the feature's activation card already
 			// displays the rolled faces (e.g. Rage). Defaults to false so
 			// existing data keeps emitting the standalone roll card.
-			// In an item use the roll is a line on the item card, not a card of its own.
-			const suppressChat = node.suppressChat === true || !!events;
-			const rollLine = async (label: string | undefined, faces: number[]) => {
-				if (node.suppressChat === true || !events || faces.length < 1) return;
-				await events.add([poolRollEvent(this.#item, label ?? poolId, faces)]);
+			// In an item use the roll is a line on the item card, not a card of its own; the
+			// 3D dice still show.
+			const asLine = node.suppressChat !== true && !!events;
+			const suppressChat = node.suppressChat === true || asLine;
+			const showDice = asLine;
+			const rollLine = async (
+				label: string | undefined,
+				faces: number[],
+				raised: RaisedFace[] = [],
+			) => {
+				if (!asLine || !events || faces.length < 1) return;
+				await events.add([poolRollEvent(this.#item, label ?? poolId, faces, raised)]);
 			};
 
 			if (node.action === 'rollDie') {
@@ -1364,9 +1372,17 @@ class ItemActivationManager {
 				// which ones to keep." The chat card displays these so the
 				// player can see what was rolled.
 				const rolledFaces: number[] = [];
+				const raised: RaisedFace[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const result = await rollDieIntoPool(actor, poolId, { suppressChat, emitChange: false });
+					const result = await rollDieIntoPool(actor, poolId, {
+						suppressChat,
+						showDice,
+						emitChange: false,
+					});
 					if (result.face !== null) rolledFaces.push(result.face);
+					if (result.face !== null && result.raisedFrom !== undefined) {
+						raised.push({ rolled: result.raisedFrom, face: result.face });
+					}
 					if (result.applied) applied = true;
 				}
 				const after = readPool();
@@ -1387,12 +1403,15 @@ class ItemActivationManager {
 					rolledFaces,
 					faces: [...after.faces],
 				};
-				await rollLine(after.label ?? before.label, rolledFaces);
+				await rollLine(after.label ?? before.label, rolledFaces, raised);
 				return;
 			}
 			if (node.action === 'rollPool') {
 				const before = readPool();
-				const ok = await rollPoolFresh(actor, poolId, { suppressChat });
+				const { applied: ok, raised } = await rollPoolFresh(actor, poolId, {
+					suppressChat,
+					showDice,
+				});
 				const after = readPool();
 				node.result = {
 					applied: ok,
@@ -1402,7 +1421,7 @@ class ItemActivationManager {
 					rolledFaces: after.faces,
 					faces: [...after.faces],
 				};
-				if (ok) await rollLine(after.label ?? before.label, after.faces);
+				if (ok) await rollLine(after.label ?? before.label, after.faces, raised);
 				return;
 			}
 			if (node.action === 'clear') {

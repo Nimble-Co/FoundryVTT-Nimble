@@ -737,7 +737,7 @@
 					"results": "{first}; {second}"
 				},
 				"poolRoll": {
-					"text": "Rolled {faces} into {pool}"
+					"text": "Rolled {faces} for {pool}"
 				},
 				"poolGain": {
 					"text": "{message}"
