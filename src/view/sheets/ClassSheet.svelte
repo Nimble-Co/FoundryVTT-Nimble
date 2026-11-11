@@ -10,6 +10,7 @@
 	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import ItemTabs from './components/ItemTabs.svelte';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
@@ -23,6 +24,7 @@
 		description: descriptionTab,
 		config: configTab,
 		progression: progressionTab,
+		effects: effectsTab,
 		rules: rulesTab,
 	};
 
@@ -429,6 +431,10 @@
 
 {#snippet progressionTab()}
 	<ClassProgressionTab />
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet rulesTab()}

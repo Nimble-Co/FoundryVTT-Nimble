@@ -57,4 +57,26 @@ describe('deleteLeftItemEffect', () => {
 			expect(item.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		}
 	});
+
+	it('keeps an effect that a rule field of the item still holds', async () => {
+		const item = {
+			...itemWith(asMade()),
+			system: { rules: [{ id: 'r1', type: 'applyCondition', effectId: 'old' }] },
+		};
+
+		await deleteLeftItemEffect(item, [applyNode('new')] as never, 'old');
+
+		expect(item.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('deletes the effect a rule field left, when no rule field holds it now', async () => {
+		const item = {
+			...itemWith(asMade()),
+			system: { rules: [{ id: 'r1', type: 'markTarget', effectId: 'new' }] },
+		};
+
+		await deleteLeftItemEffect(item, [], 'old');
+
+		expect(item.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['old']);
+	});
 });

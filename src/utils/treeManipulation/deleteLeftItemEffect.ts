@@ -1,9 +1,10 @@
 import type { EffectNode } from '#types/effectTree.js';
-import { flattenEffectsTree } from './flattenEffectsTree.js';
+import { itemEffectUsers } from './itemEffectUsers.js';
 
 interface ItemLike {
 	name?: string | null;
 	img?: string | null;
+	system?: unknown;
 	effects?: { get(id: string): unknown } | null;
 	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
 }
@@ -38,8 +39,8 @@ export function isUntouchedItemEffect(effect: EffectLike, item: ItemLike): boole
 }
 
 /**
- * After a node moves off `effectId`, delete that item effect when no node points at it and the
- * author did not change it. An effect the author built stays.
+ * After a node or a rule field moves off `effectId`, delete that item effect when no node and no
+ * rule field points at it and the author did not change it. An effect the author built stays.
  */
 export async function deleteLeftItemEffect(
 	item: ItemLike,
@@ -47,9 +48,7 @@ export async function deleteLeftItemEffect(
 	effectId: string | null,
 ): Promise<void> {
 	if (!effectId) return;
-	const used = flattenEffectsTree(tree).some(
-		(node) => node.type === 'applyEffect' && node.effectId === effectId,
-	);
+	const used = itemEffectUsers(item, effectId, tree).length > 0;
 	const effect = item.effects?.get(effectId) as EffectLike | undefined;
 	if (used || !effect || !isUntouchedItemEffect(effect, item)) return;
 	await item.deleteEmbeddedDocuments('ActiveEffect', [effectId]);

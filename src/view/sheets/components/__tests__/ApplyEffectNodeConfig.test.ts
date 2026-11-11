@@ -45,7 +45,7 @@ describe('ApplyEffectNodeConfig', () => {
 		});
 
 		const options = screen.getAllByRole('option').map((option) => option.textContent?.trim());
-		expect(options).toEqual(['No effect', 'Taunted', 'Face Me!', 'New effect']);
+		expect(options).toEqual(['No effect', 'Face Me!', 'Taunted', 'New effect']);
 		await fireEvent.click(screen.getByRole('button', { name: 'Edit the effect' }));
 		expect(document.effects.get('fx')?.sheet.render).toHaveBeenCalledWith(true);
 	});

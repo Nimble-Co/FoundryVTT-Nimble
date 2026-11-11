@@ -17,7 +17,7 @@
 		},
 		{
 			component: ItemActivationEffectsConfigTab,
-			label: 'Effects',
+			label: 'NIMBLE.activationEffects.onUse',
 			name: 'effectsConfig',
 		},
 	];

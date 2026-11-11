@@ -1,18 +1,15 @@
 <script lang="ts">
 	import type { ApplyEffectNodeConfigProps } from '#types/components/ApplyEffectNodeConfig.d.ts';
 	import localize from '#utils/localize.ts';
-	import { deleteLeftItemEffect } from '#utils/treeManipulation/deleteLeftItemEffect.ts';
 	import { updateEffectNode } from '#utils/treeManipulation/updateEffectNode.ts';
-	import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.ts';
+	import ItemEffectSelect from '../../components/ItemEffectSelect.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
-	import { createItemEffectOptions, tempHealingOptions } from './applyEffectNodeOptions.ts';
+	import { tempHealingOptions } from './applyEffectNodeOptions.ts';
 
 	const WORDS = 'NIMBLE.activationEffects.applyEffectNode';
-	const NEW_EFFECT = '__new';
 
 	let { node, document, effects }: ApplyEffectNodeConfigProps = $props();
 
-	const itemEffects = createItemEffectOptions(() => document);
 	const recipients = [
 		{ value: 'targets', label: localize(`${WORDS}.recipients.targets`) },
 		{ value: 'self', label: localize(`${WORDS}.recipients.self`) },
@@ -22,24 +19,9 @@
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
 
-	async function chooseEffect(value: string) {
-		const left = node.effectId;
-		let chosen: string | null = value || null;
-		if (value === NEW_EFFECT) {
-			const [created] =
-				((await document.createEmbeddedDocuments('ActiveEffect', [
-					{ name: document.name, img: document.img, type: NIMBLE_EFFECT_TYPE, transfer: false },
-				] as never)) as unknown as { id: string }[] | undefined) ?? [];
-			if (!created) return;
-			chosen = created.id;
-		}
-		await updateEffectNode(document, effects, node, 'effectId', chosen);
-		if (left !== chosen) await deleteLeftItemEffect(document as never, effects, left);
-	}
-
-	function openEffect() {
-		const effect = node.effectId ? document.effects?.get(node.effectId) : null;
-		effect?.sheet?.render(true);
+	async function storeEffect(effectId: string | null) {
+		foundry.utils.setProperty(node, 'effectId', effectId);
+		await document.update({ 'system.activation.effects': effects } as Record<string, unknown>);
 	}
 </script>
 
@@ -56,32 +38,13 @@
 		>
 			{localize(`${WORDS}.effect`)}
 		</h5>
-		<div class="nimble-apply-effect-config__effect">
-			<select
-				aria-labelledby={`${node.id}-effect-label`}
-				onchange={({ currentTarget }) => chooseEffect(currentTarget.value)}
-			>
-				<option value="" selected={!node.effectId}>{localize(`${WORDS}.noEffect`)}</option>
-				{#each itemEffects.options as option (option.id)}
-					<option value={option.id} selected={option.id === node.effectId}>
-						{option.name}
-					</option>
-				{/each}
-				<option value={NEW_EFFECT}>{localize(`${WORDS}.newEffect`)}</option>
-			</select>
-
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label={localize(`${WORDS}.edit`)}
-				data-tooltip={localize(`${WORDS}.edit`)}
-				disabled={!node.effectId}
-				onclick={openEffect}
-			>
-				<i class="fa-solid fa-pen" aria-hidden="true"></i>
-			</button>
-		</div>
+		<ItemEffectSelect
+			item={document as never}
+			value={node.effectId}
+			onchange={storeEffect}
+			recipient={node.recipient}
+			labelledby={`${node.id}-effect-label`}
+		/>
 	</div>
 {/if}
 
@@ -119,22 +82,6 @@
 
 <style lang="scss">
 	.nimble-apply-effect-config {
-		&__effect {
-			display: flex;
-			align-items: center;
-			gap: 0.25rem;
-
-			.nimble-button {
-				--nimble-button-min-width: var(--input-height);
-				--nimble-button-height: var(--input-height);
-			}
-
-			select {
-				flex: 1 1 auto;
-				min-width: 0;
-			}
-		}
-
 		&__condition {
 			margin: 0;
 		}

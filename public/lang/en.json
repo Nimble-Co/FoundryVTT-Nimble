@@ -1768,9 +1768,7 @@
 				"notFound": "⚠ {identifier} (not found)"
 			},
 			"itemEffectPicker": {
-				"none": "None",
 				"missing": "Missing effect ({id})",
-				"empty": "This item has no effects with Apply to the actor turned off",
 				"noItem": "This rule is not on an item, so there are no effects to list"
 			},
 			"poolIdentifierPlaceholder": "Type a pool identifier",
@@ -4864,8 +4862,28 @@
 		"chatEffects": {
 			"noEffect": "No Effect"
 		},
+		"itemEffectsTab": {
+			"tab": "Effects",
+			"given": "Given when something uses them",
+			"alwaysOn": "Always on while you have this item",
+			"newEffect": "New effect",
+			"empty": "No effects.",
+			"edit": "Edit {name}",
+			"delete": "Delete {name}",
+			"usedBy": {
+				"line": "Used by: {users}",
+				"nothing": "Nothing uses this effect.",
+				"onUse": "On use: Apply Effect",
+				"rule": "Rule: {name}"
+			},
+			"confirm": {
+				"title": "Delete {name}",
+				"message": "Delete the effect {name}?",
+				"users": "Used by: {users}. The delete clears the effect from each of them."
+			}
+		},
 		"activationEffects": {
-			"effects": "Effects",
+			"onUse": "On use",
 			"addEffect": "Add Effect",
 			"applyEffect": "Apply Effect",
 			"applyEffectNode": {

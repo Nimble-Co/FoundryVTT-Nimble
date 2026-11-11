@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { ItemEffectSelectItem } from '#types/components/ItemEffectSelect.d.ts';
 	import localize from '#utils/localize.js';
-	import { createItemEffectPickerState } from './ItemEffectPicker.svelte.js';
+	import ItemEffectSelect from '#view/components/ItemEffectSelect.svelte';
 
 	type ItemEffectPickerProps = {
 		value: string;
-		onChange: (next: string) => void;
+		onChange: (next: string) => unknown;
 		disabled?: boolean;
 		document: unknown;
 		/** The field label, the accessible name of the select. */
@@ -13,45 +14,33 @@
 
 	let { value, onChange, disabled = false, document, label }: ItemEffectPickerProps = $props();
 
-	const pickerState = createItemEffectPickerState(
-		() => document,
-		() => value,
-	);
-	const hasItem = $derived(pickerState.hasItem);
-	const options = $derived(pickerState.options);
-	const isMissing = $derived(pickerState.isMissing);
-
-	function handleChange(event: Event) {
-		onChange((event.target as HTMLSelectElement).value);
-	}
+	/** The item that holds the rule: the document itself, or the item of a rule-holding effect. */
+	const item = $derived.by((): ItemEffectSelectItem | null => {
+		const doc = document as { documentName?: string; parent?: { documentName?: string } } | null;
+		if (doc?.documentName === 'Item') return doc as ItemEffectSelectItem;
+		if (doc?.documentName === 'ActiveEffect' && doc.parent?.documentName === 'Item') {
+			return doc.parent as ItemEffectSelectItem;
+		}
+		return null;
+	});
 </script>
 
-<select
-	class="nimble-field-input nimble-item-effect-picker"
-	aria-label={label}
-	{value}
-	{disabled}
-	onchange={handleChange}
->
-	<option value="">{localize('NIMBLE.rulesBuilder.itemEffectPicker.none')}</option>
-	{#if isMissing}
-		<option {value}
-			>{localize('NIMBLE.rulesBuilder.itemEffectPicker.missing', { id: value })}</option
-		>
-	{/if}
-	{#each options as option (option.id)}
-		<option value={option.id}>{option.name}</option>
-	{/each}
-</select>
-{#if !hasItem}
+<div class="nimble-item-effect-picker">
+	<ItemEffectSelect
+		{item}
+		{value}
+		onchange={(next) => onChange(next ?? '')}
+		recipient="targets"
+		{label}
+		{disabled}
+	/>
+</div>
+{#if !item}
 	<small class="nimble-field-hint">{localize('NIMBLE.rulesBuilder.itemEffectPicker.noItem')}</small>
-{:else if options.length === 0}
-	<small class="nimble-field-hint">{localize('NIMBLE.rulesBuilder.itemEffectPicker.empty')}</small>
 {/if}
 
 <style lang="scss">
-	.nimble-field-input {
-		width: 100%;
+	.nimble-item-effect-picker :global(select) {
 		padding: 0.25rem 0.375rem;
 		font-size: var(--nimble-sm-text);
 		background: var(--nimble-input-background-color, var(--nimble-box-background-color));
