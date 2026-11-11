@@ -3,6 +3,7 @@
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import FreeUseLine from './components/FreeUseLine.svelte';
@@ -83,4 +84,6 @@
 	<ActionDeltaSummaryNode />
 
 	<ConcentrationNode />
+
+	<CardEvents {messageDocument} />
 </article>

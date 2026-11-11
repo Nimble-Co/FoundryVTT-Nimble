@@ -73,7 +73,10 @@ describe('turn and round moments', () => {
 				round: 1,
 				turn: null,
 			},
-			expect.any(String),
+			{
+				key: 'combat1:1:cGoblin:turnEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+			},
 			combat,
 		);
 	});
@@ -102,7 +105,13 @@ describe('turn and round moments', () => {
 
 		hook('nimbleCombatTurnEnd')(goblin, { round: 2 });
 
-		expect(endEffectsMock).toHaveBeenCalledWith([idle], 'inactiveRound:Goblin');
+		// The same card as the other ends of that turn, with the reason on the line.
+		expect(endEffectsMock).toHaveBeenCalledWith([idle], {
+			key: 'combat1:2:cGoblin:turnEnd',
+			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+			reason: 'inactiveRound:Goblin',
+		});
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combat1:2:cGoblin:turnEnd' });
 		expect(endEffectsAtMock.mock.calls[0][2]).toBe(combat);
 	});
 
@@ -163,7 +172,10 @@ describe('turn and round moments', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledWith(
 			{ type: 'roundEnd', combatId: 'combat1', round: 3 },
-			expect.any(String),
+			{
+				key: 'combat1:3::roundEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.roundEnd', data: { round: 3 } },
+			},
 			combat,
 		);
 	});
@@ -188,6 +200,7 @@ describe('combat end', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combatEnd:combat1' });
 	});
 
 	it('checks core durations as combat starts, and a restarted combat can end again', () => {
@@ -220,6 +233,7 @@ describe('world time', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'worldTime', worldTime: 600 });
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'time:600' });
 	});
 });
 

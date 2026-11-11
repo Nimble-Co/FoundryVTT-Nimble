@@ -714,6 +714,16 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
+			"events": {
+				"label": "Events",
+				"undo": "Undo",
+				"undoLabel": "Undo: put {effect} back on {name}",
+				"backOn": "On {name}",
+				"cause": {
+					"source": "{source}",
+					"reasonAndSource": "{reason} - {source}"
+				}
+			},
 			"defend": {
 				"reactions": "Reactions",
 				"reactAs": "React as {name}",
@@ -1174,9 +1184,6 @@
 		"lastsUntil": {
 			"chat": {
 				"ended": "{effect} ended on {name}",
-				"undo": "Undo",
-				"undoLabel": "Undo: put {effect} back on {name}",
-				"backOn": "On {name}",
 				"alreadyOn": "{effect} is already on {name}.",
 				"heading": {
 					"turnStart": "Start of {name}'s turn",

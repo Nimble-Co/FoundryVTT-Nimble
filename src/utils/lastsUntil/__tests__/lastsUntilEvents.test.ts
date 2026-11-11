@@ -141,7 +141,12 @@ describe('fireEvent', () => {
 			event: 'takeDamage',
 			actor: user,
 		});
-		expect(endEffectsMock).toHaveBeenCalledWith([effect], expect.any(String));
+		expect(endEffectsMock).toHaveBeenCalledWith([effect], {
+			heading: {
+				key: 'NIMBLE.lastsUntil.chat.heading.takeDamage',
+				data: { name: user.name, item: '', effect: '' },
+			},
+		});
 	});
 
 	it('no creature, no event', () => {

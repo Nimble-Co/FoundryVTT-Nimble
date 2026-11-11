@@ -5,6 +5,7 @@
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import FreeUseLine from './components/FreeUseLine.svelte';
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
@@ -109,6 +110,8 @@
 	<ChargeConsumptionNode />
 
 	<ActionDeltaSummaryNode />
+
+	<CardEvents {messageDocument} />
 </article>
 
 <style lang="scss">

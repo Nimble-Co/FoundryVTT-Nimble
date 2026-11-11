@@ -13,7 +13,6 @@ import { seatOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
-import localize from '#utils/localize.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
@@ -41,20 +40,24 @@ function onTurn(type: 'turnStart' | 'turnEnd') {
 		const round =
 			context?.round ??
 			(type === 'turnEnd' ? roundOfEndedTurn(combat, combatant) : Number(combat.round) || 0);
-		const heading = localize(`NIMBLE.lastsUntil.chat.heading.${type}`, {
-			name: combatant.name ?? '',
-		});
+		const moment = {
+			key: `${combat.id}:${round}:${context?.turn ?? combatant.id}:${type}`,
+			heading: {
+				key: `NIMBLE.lastsUntil.chat.heading.${type}`,
+				data: { name: combatant.name ?? '' },
+			},
+		};
 		const seat = seatOf(combatant);
 		void endEffectsAt(
 			{ type, combatId: combat.id, seat, round, turn: context?.turn ?? null },
-			heading,
+			moment,
 			combat,
 		);
 		if (type === 'turnEnd') {
-			void endEffects(
-				effectsInactiveAt(combat, seat, round),
-				eventHeading('inactiveRound', { name: combatant.name }),
-			);
+			void endEffects(effectsInactiveAt(combat, seat, round), {
+				...moment,
+				reason: eventHeading('inactiveRound', { name: combatant.name }),
+			});
 		}
 	};
 }
@@ -63,8 +66,11 @@ function onRound(type: 'roundStart' | 'roundEnd') {
 	return (combat: Combat, context?: TurnContext) => {
 		if (!isActiveGm() || !combat?.id) return;
 		const round = context?.round ?? (Number(combat.round) || 0);
-		const heading = localize(`NIMBLE.lastsUntil.chat.heading.${type}`, { round: String(round) });
-		void endEffectsAt({ type, combatId: combat.id, round }, heading, combat);
+		const moment = {
+			key: `${combat.id}:${round}::${type}`,
+			heading: { key: `NIMBLE.lastsUntil.chat.heading.${type}`, data: { round } },
+		};
+		void endEffectsAt({ type, combatId: combat.id, round }, moment, combat);
 	};
 }
 
@@ -73,16 +79,22 @@ const endedCombats = new Set<string>();
 function endCombat(combat: Combat): void {
 	if (!isActiveGm() || !combat?.id || endedCombats.has(combat.id)) return;
 	endedCombats.add(combat.id);
-	const heading = localize('NIMBLE.lastsUntil.chat.heading.combatEnd');
-	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, heading, combat);
+	const moment = {
+		key: `combatEnd:${combat.id}`,
+		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatEnd' },
+	};
+	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, moment, combat);
 }
 
 /** A core duration can end as combat starts. */
 function startCombat(combat: Combat): void {
 	if (!isActiveGm() || !combat.id) return;
 	endedCombats.delete(combat.id);
-	const heading = localize('NIMBLE.lastsUntil.chat.heading.combatStart');
-	void endEffectsAt({ type: 'combatStart', combatId: combat.id }, heading, combat);
+	const moment = {
+		key: `combatStart:${combat.id}`,
+		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatStart' },
+	};
+	void endEffectsAt({ type: 'combatStart', combatId: combat.id }, moment, combat);
 }
 
 function onUpdateCombat(combat: Combat, changes: Record<string, unknown>): void {
@@ -97,8 +109,11 @@ function onDeleteCombat(combat: Combat): void {
 
 function onWorldTime(worldTime: number, delta: number): void {
 	if (!isActiveGm() || !(delta > 0)) return;
-	const heading = localize('NIMBLE.lastsUntil.chat.heading.worldTime');
-	void endEffectsAt({ type: 'worldTime', worldTime }, heading);
+	const moment = {
+		key: `time:${worldTime}`,
+		heading: { key: 'NIMBLE.lastsUntil.chat.heading.worldTime' },
+	};
+	void endEffectsAt({ type: 'worldTime', worldTime }, moment);
 }
 
 /** The HP events, read as the rule events read them (`ruleEventDispatch`). */

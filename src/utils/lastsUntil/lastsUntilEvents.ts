@@ -1,8 +1,8 @@
+import type { CardEventText } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import { effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
 import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
-import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
 
@@ -34,12 +34,11 @@ interface HeadingNames {
 	effect?: string | null;
 }
 
-export function eventHeading(event: LastsUntilEvent, names: HeadingNames): string {
-	return localize(`NIMBLE.lastsUntil.chat.heading.${event}`, {
-		name: names.name ?? '',
-		item: names.item ?? '',
-		effect: names.effect ?? '',
-	});
+export function eventHeading(event: LastsUntilEvent, names: HeadingNames): CardEventText {
+	return {
+		key: `NIMBLE.lastsUntil.chat.heading.${event}`,
+		data: { name: names.name ?? '', item: names.item ?? '', effect: names.effect ?? '' },
+	};
 }
 
 type EventCheck = Extract<LastsUntilCheck, { type: 'event' }>;
@@ -49,12 +48,12 @@ type EventCheck = Extract<LastsUntilCheck, { type: 'event' }>;
  * than one of them ends goes with the first. Run where the event happens: the
  * effects are found now, before what happens next changes them.
  */
-export function fireEvents(events: readonly { check: EventCheck; heading: string }[]): void {
+export function fireEvents(events: readonly { check: EventCheck; heading: CardEventText }[]): void {
 	const taken = new Set<ActiveEffect>();
 	for (const { check, heading } of events) {
 		const effects = effectsEndingAt(check).filter((effect) => !taken.has(effect));
 		for (const effect of effects) taken.add(effect);
-		void endEffects(effects, heading);
+		void endEffects(effects, { heading });
 	}
 }
 
@@ -106,7 +105,7 @@ export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[
 	const attack = isAttackUse(item, targetActors);
 	const noted = noteActivity(actor, { attack, itemUuid: item.uuid });
 	const name = actor.name;
-	const events: { check: EventCheck; heading: string }[] = [];
+	const events: { check: EventCheck; heading: CardEventText }[] = [];
 	if (attack) {
 		events.push({
 			check: { type: 'event', event: 'attack', actor },

@@ -5,6 +5,7 @@
 
 	import { createReactionCardState } from './ReactionCardState.svelte.ts';
 	import localize from '../../utils/localize.js';
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import DamageBackLines from './components/DamageBackLines.svelte';
 	import Targets from './components/Targets.svelte';
@@ -97,6 +98,8 @@
 			{@html chatMessage}
 		</div>
 	{/if}
+
+	<CardEvents {messageDocument} />
 </article>
 
 <style lang="scss">

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import {
 	type EndedEffectRow,
 	effectsEndingAt,
@@ -8,6 +9,21 @@ import {
 	undoEndedEffect,
 } from '../endEffects.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
+
+const moment = (text: string, key?: string) => ({
+	...(key ? { key } : {}),
+	heading: { key: text },
+});
+
+interface CreatedCard {
+	type: string;
+	system: { momentKey: string; momentHeading: { key: string } };
+	flags: Record<string, { events: CardEvent[] }>;
+}
+
+const createdCard = (index = 0) => create.mock.calls[index][0] as CreatedCard;
+const rowsOf = (card: CreatedCard) =>
+	card.flags[SYSTEM_ID].events.map((event) => (event.action as { row: EndedEffectRow }).row);
 
 const UNTIL_THEY_ATTACK: Moment = {
 	kind: 'event',
@@ -85,6 +101,7 @@ beforeEach(() => {
 				],
 			},
 		],
+		messages: { contents: [] },
 		users: {
 			get activeGM() {
 				return activeGM;
@@ -120,32 +137,56 @@ describe('effectsEndingAt', () => {
 });
 
 describe('endEffects', () => {
-	it('on the active GM, deletes the effects and posts one message with a row each', async () => {
+	it('on the active GM, deletes the effects and posts one moment card with a line each', async () => {
 		const a = addEffect(goblin, 'a');
 		const b = addEffect(goblin, 'b');
 		const c = addEffect(ogre, 'c');
 
-		await endEffects([a, b, c], 'Start of Tessa turn');
+		await endEffects([a, b, c], moment('Start of Tessa turn', 'combat:1:0:turnStart'));
 
 		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a', 'b']);
 		expect(ogre.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['c']);
 		expect(create).toHaveBeenCalledTimes(1);
-		const { system, type } = create.mock.calls[0][0];
-		expect(type).toBe('effectsEnded');
-		expect(system.heading).toBe('Start of Tessa turn');
-		expect(system.rows.map((row: EndedEffectRow) => [row.name, row.holderName])).toEqual([
+		const card = createdCard();
+		expect(card.type).toBe('effectsEnded');
+		expect(card.system.momentKey).toBe('combat:1:0:turnStart');
+		expect(card.system.momentHeading).toEqual({ key: 'Start of Tessa turn' });
+		expect(card.flags[SYSTEM_ID].events.map((event) => event.kind)).toEqual([
+			'effectEnded',
+			'effectEnded',
+			'effectEnded',
+		]);
+		expect(rowsOf(card).map((row) => [row.name, row.holderName])).toEqual([
 			['Effect a', 'Goblin'],
 			['Effect b', 'Goblin'],
 			['Effect c', 'Ogre'],
 		]);
-		expect(system.rows[0].effect).toEqual({ _id: 'a', name: 'Effect a' });
+		expect(rowsOf(card)[0].effect).toEqual({ _id: 'a', name: 'Effect a' });
+	});
+
+	it('the reason of the moment goes on each line', async () => {
+		await endEffects([addEffect(goblin, 'a')], {
+			key: 'k',
+			heading: { key: 'End' },
+			reason: { key: 'Idle' },
+		});
+
+		expect(createdCard().flags[SYSTEM_ID].events[0].cause).toEqual({ key: 'Idle' });
+	});
+
+	it('ends with no moment key get a card of their own each', async () => {
+		await endEffects([addEffect(goblin, 'a')], moment('Goblin attacked'));
+		await endEffects([addEffect(goblin, 'b')], moment('Goblin attacked'));
+
+		expect(create).toHaveBeenCalledTimes(2);
+		expect(createdCard(0).system.momentKey).not.toBe(createdCard(1).system.momentKey);
 	});
 
 	it('skips an effect that is gone already, and posts nothing when none is left', async () => {
 		const gone = addEffect(goblin, 'gone');
 		goblin.effects.delete('gone');
 
-		await endEffects([gone], 'Heading');
+		await endEffects([gone], moment('Heading'));
 
 		expect(goblin.holder.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		expect(create).not.toHaveBeenCalled();
@@ -155,11 +196,11 @@ describe('endEffects', () => {
 		user.isActiveGM = false;
 		const a = addEffect(goblin, 'a');
 
-		await endEffects([a], 'Goblin attacked');
+		await endEffects([a], moment('Goblin attacked'));
 
 		expect(activeGM?.query).toHaveBeenCalledWith(`${SYSTEM_ID}.endTimedEffects`, {
 			uuids: [a.uuid],
-			heading: 'Goblin attacked',
+			moment: moment('Goblin attacked'),
 		});
 		expect(goblin.holder.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
@@ -168,12 +209,12 @@ describe('endEffects', () => {
 		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		goblin.holder.deleteEmbeddedDocuments.mockRejectedValueOnce(new Error('locked'));
 
-		await expect(endEffects([addEffect(goblin, 'a')], 'First')).resolves.toBeUndefined();
-		await endEffects([addEffect(goblin, 'b')], 'Second');
+		await expect(endEffects([addEffect(goblin, 'a')], moment('First'))).resolves.toBeUndefined();
+		await endEffects([addEffect(goblin, 'b')], moment('Second'));
 
 		expect(error).toHaveBeenCalled();
 		expect(create).toHaveBeenCalledTimes(1);
-		expect(create.mock.calls[0][0].system.heading).toBe('Second');
+		expect(createdCard().system.momentHeading).toEqual({ key: 'Second' });
 	});
 
 	it('a failed ask to the GM is logged, not thrown', async () => {
@@ -181,7 +222,7 @@ describe('endEffects', () => {
 		user.isActiveGM = false;
 		activeGM?.query.mockRejectedValueOnce(new Error('timeout'));
 
-		await expect(endEffects([addEffect(goblin, 'a')], 'Heading')).resolves.toBeUndefined();
+		await expect(endEffects([addEffect(goblin, 'a')], moment('Heading'))).resolves.toBeUndefined();
 		expect(error).toHaveBeenCalled();
 	});
 
@@ -189,7 +230,7 @@ describe('endEffects', () => {
 		user.isActiveGM = false;
 		activeGM = null;
 
-		await endEffects([addEffect(goblin, 'a')], 'Goblin attacked');
+		await endEffects([addEffect(goblin, 'a')], moment('Goblin attacked'));
 
 		expect(goblin.holder.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
