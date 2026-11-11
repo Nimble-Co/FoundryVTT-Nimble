@@ -73,7 +73,7 @@ On the Effects tab, the row reads the Lasts Until and the source: "Until the end
 
 **Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save (you pick when more than one is allowed), spends 1 action in combat, and ends the effect on a success.
 
-When effects end, the chat gets one message for that moment, such as "Start of Tessa's turn", with a row for each effect that ended. **Undo** on a row puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
+When effects end, each one gets a line in the **Events** strip of the card that ended it, such as the card of the attack that ended "until they attack". With no such card, the chat gets one message for that moment, such as "Start of Tessa's turn", with a line for each effect that ended. **Undo** on a line puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
 
 ![The message for one moment: three effects ended, one put back with Undo](/images/documentation/effects-ended-message.png)
 
