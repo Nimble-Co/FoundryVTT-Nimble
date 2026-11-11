@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+	LASTS_UNTIL_EVENTS,
+	type LastsUntilEvent,
+} from '../../activeEffect/nimbleEffectChoices.js';
 import { ModifyToggleRule } from '../modifyToggle.js';
-import { TURN_OFF_CHOICES, type TurnOffEvent } from '../toggleEffect.js';
 
 interface MockActor {
 	getDomain: () => Set<string>;
@@ -18,7 +21,7 @@ interface MockItem {
 
 interface ModifyToggleSource {
 	toggleIdentifier: string;
-	suppressTurnOff: TurnOffEvent[];
+	dropMoments: LastsUntilEvent[];
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -47,7 +50,7 @@ function createModifyToggleRule(config: ModifyToggleSource): ModifyToggleRule {
 	const parentItem = createMockItem(actor);
 	const sourceData = {
 		toggleIdentifier: config.toggleIdentifier,
-		suppressTurnOff: config.suppressTurnOff,
+		dropMoments: config.dropMoments,
 		disabled: config.disabled ?? false,
 		label: config.label ?? '',
 		id: config.id ?? 'rule-id',
@@ -67,7 +70,7 @@ function createModifyToggleRule(config: ModifyToggleSource): ModifyToggleRule {
 	// toggleEffect.test.ts).
 	rule.type = sourceData.type;
 	rule.toggleIdentifier = sourceData.toggleIdentifier;
-	rule.suppressTurnOff = sourceData.suppressTurnOff;
+	rule.dropMoments = sourceData.dropMoments;
 	rule.disabled = sourceData.disabled;
 	rule.label = sourceData.label;
 
@@ -82,7 +85,8 @@ describe('ModifyToggleRule', () => {
 			const schema = ModifyToggleRule.defineSchema();
 			expect(schema).toHaveProperty('type');
 			expect(schema).toHaveProperty('toggleIdentifier');
-			expect(schema).toHaveProperty('suppressTurnOff');
+			expect(schema).toHaveProperty('dropMoments');
+			expect(schema).not.toHaveProperty('suppressTurnOff');
 		});
 
 		it('defaults type to modifyToggle', () => {
@@ -103,20 +107,14 @@ describe('ModifyToggleRule', () => {
 			]);
 		});
 
-		it('shares the toggleEffect turn-off vocabulary for suppressTurnOff choices', () => {
+		it('offers every Lasts Until event to drop, each with a label key', () => {
 			const schema = ModifyToggleRule.defineSchema();
-			const suppressField = schema.suppressTurnOff as unknown as {
+			const dropField = schema.dropMoments as unknown as {
 				element: { choices: Record<string, string> };
 			};
-			const choices = Object.keys(suppressField.element.choices);
-			expect(choices).toEqual([...TURN_OFF_CHOICES]);
-			expect(choices).toContain('onActorKilled');
-			expect(choices).toContain('onActorWounded');
-			expect(choices).toContain('onRest');
-			expect(choices).toContain('onTurnStart');
-			expect(choices).toContain('onTurnEnd');
-			expect(choices).toContain('onEncounterEnd');
-			expect(choices).toContain('onActorDying');
+			const { choices } = dropField.element;
+			expect(Object.keys(choices)).toEqual([...LASTS_UNTIL_EVENTS]);
+			expect(choices.zeroHp).toBe('NIMBLE.rules.modifyToggle.dropMoments.choices.zeroHp');
 		});
 	});
 
@@ -131,22 +129,22 @@ describe('ModifyToggleRule', () => {
 		it('constructs from source data with the configured fields', () => {
 			const rule = createModifyToggleRule({
 				toggleIdentifier: 'battle-focus',
-				suppressTurnOff: ['onActorKilled'],
+				dropMoments: ['zeroHp'],
 			});
 
 			expect(rule.type).toBe('modifyToggle');
 			expect(rule.toggleIdentifier).toBe('battle-focus');
-			expect(rule.suppressTurnOff).toEqual(['onActorKilled']);
+			expect(rule.dropMoments).toEqual(['zeroHp']);
 			expect(rule.disabled).toBe(false);
 		});
 
-		it('supports multiple suppressed turn-off events', () => {
+		it('supports more than one dropped moment', () => {
 			const rule = createModifyToggleRule({
 				toggleIdentifier: 'battle-focus',
-				suppressTurnOff: ['onActorKilled', 'onEncounterEnd'],
+				dropMoments: ['zeroHp', 'combatEnd'],
 			});
 
-			expect(rule.suppressTurnOff).toEqual(['onActorKilled', 'onEncounterEnd']);
+			expect(rule.dropMoments).toEqual(['zeroHp', 'combatEnd']);
 		});
 
 		it('implements no lifecycle hooks of its own (passive data rule)', () => {

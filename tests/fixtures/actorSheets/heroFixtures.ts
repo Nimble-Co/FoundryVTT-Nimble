@@ -547,14 +547,13 @@ export function effectsContext(overrides?: Partial<HeroSheetContext>): HeroSheet
 
 export function effectsHero(overrides?: DeepPartial<HeroActorLike>): HeroActorLike {
 	const hero = dicePoolHero();
-	const rage = hero.items.find((item) => item.id === 'rage')!;
-	rage.rules = [rule('rageToggle', 'toggleEffect', { endAfterInactiveRounds: 1 })];
 	hero.items.push(objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }));
 	hero.effects = [
 		effectLike({
 			id: 'rageEffect',
 			name: 'Rage',
 			toggle: { itemId: 'rage', ruleId: 'rageToggle' },
+			lastsUntil: 'until you drop to 0 HP',
 		}),
 		effectLike({ id: 'bless', name: 'Bless', duration: '3 rounds', description: 'Add 1d4.' }),
 		effectLike({ id: 'armorEffect', name: 'Armor', itemId: 'leather', temporary: false }),

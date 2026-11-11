@@ -104,15 +104,17 @@ describe('heroEffectsTab', () => {
 			intent: { kind: 'endEffect', effectId: 'rageEffect' },
 		});
 		expect(row.state).toBe('active');
-		expect(row.summary).toBe(`${FX}.inactiveRound`);
+		expect(row.summary).toBe('until you drop to 0 HP');
 		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
 		expect(row.cost, 'no duration text at the end of the row').toEqual({});
 	});
 
-	it('takes the duration of a toggle effect from the activation when the rule has no end', () => {
+	it('takes the duration of a toggle effect from the activation when the effect has no Lasts Until', () => {
 		const hero = effectsHero();
 		const rage = hero.items.find((item) => item.id === 'rage')!;
-		rage.rules = [{ ...rage.rules[0], fields: { type: 'toggleEffect' } }];
+		hero.effects = hero.effects.map((effect) =>
+			effect.id === 'rageEffect' ? { ...effect, lastsUntil: '' } : effect,
+		);
 		rage.system = {
 			...rage.system,
 			activation: {

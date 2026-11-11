@@ -39,7 +39,7 @@ export function createAttackPanelState(
 	// The .svelte file subscribes to AE hooks in $effect and bumps this
 	// counter; buildToggleState reads it so the switch updates from both
 	// the in-panel click and external sources (PASSIVE EFFECTS panel,
-	// turnOff triggers, chat-card buttons).
+	// Lasts Until ends, chat-card buttons).
 	let effectVersion = $state(0);
 	function bumpEffectVersion(): void {
 		effectVersion += 1;

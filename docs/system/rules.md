@@ -278,37 +278,28 @@ The `extraDamage` kind adds one damage part of `formula` and `damageType` to the
   "type": "toggleEffect",
   "label": "Rage",
   "tags": ["self:raging"],
-  "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+  "effectId": "<id of an item effect with transfer: false>"
 }
 ```
 
 ### Lifecycle
 
-- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor (or re-enables a disabled one), flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel. Re-activating the item while the AE is already enabled is a no-op. Item use is "ensure on," never "flip off," so re-rolling resources mid-rage can't accidentally drop the effect.
-- **Toggle off (manual)**: the player disables (or deletes) the AE via the effects panel.
-- **Toggle off (event)**: any event listed in `turnOff` deletes the AE when it fires for the rule's owning actor.
+- **The effect**: one builder (`toggleEffectData`, `src/utils/actor/toggleEffectData.ts`) makes it on every path. With an `effectId` (picked with the `itemEffectPicker` widget), it is a copy of that item effect (`payloadFromEffect` data), with `origin` the item, type `nimble`, and the flags `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. With no effect, it is a blank effect named for the rule label or the item.
+- **Toggle on**: item activation (`onItemActivated`), the auto turn-on of a `modifyToggle`, and the sheet switch all call `turnToggleOn`. An effect that is off is deleted (with the replace option) and made again, so it has a new `start`. Using the item while the effect is on does nothing: item use is "ensure on," never "flip off."
+- **Toggle off**: the effect's Lasts Until ends it (with its chat line and Undo), or the player ends it from the sheet switch or the effects list. The rule has no turn-off events of its own.
+- **`clearPoolsOnEnd`**: `src/hooks/toggleEffectEnd.ts` empties the listed pools when a toggle effect is deleted by any path (`deleteActiveEffect`, on the active GM only). A replace does not clear them. An Undo of the end does not give the dice back.
 - **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
 
-### `turnOff` triggers
+### The `inactiveRound` moment
 
-| Value | Fires from |
-|---|---|
-| `onRoundEnd` | `updateCombat` when the round number changes |
-| `onActorKilled` | `updateActor` when HP drops to 0 with a full wound track (or no wound track, e.g. monsters) |
-| `onActorWounded` | `updateActor` on bloodied / lastStand transition |
-| `onActorHealed` | `updateActor` when HP goes up (temp HP and a level-up max HP rise do not count; `hpGained`) |
-| `onRest` | `nimble.rest` hook |
-| `onTurnStart` | `combatTurn` start of owner's turn |
-| `onTurnEnd` | `combatTurn` end of owner's turn |
-| `onEncounterEnd` | `updateCombat(started:false)` or `deleteCombat` (dedup'd) |
-| `onActorDying` | `updateActor` when HP drops to 0 with the wound track below max, or `nimble.conditionApplied` with `condition: 'dying'` |
+"A round passes with no attack and no new use." `noteActivity` (`src/utils/lastsUntil/inactiveRound.ts`) runs where an `attack` event or an item use fires (`lastsUntilEvents.ts`), on that client. It writes `flags.nimble.lastActivity` (`{ combatId, round }`) on each effect of the holder with this moment: an attack counts for every such effect, an item use only for the effects whose `origin` is that item. At the end of the holder's turn (`nimbleCombatTurnEnd`, active GM, `lastsUntilHooks.ts`), an effect ends through `endEffects` when it has no activity in that round of that combat and did not start in that round. A rewind of the round is not tracked.
 
 ### Modifying a toggle from another feature: `modifyToggle`
 
-A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falling back to the toggle rule's `id`) can adjust the toggle's lifecycle from any of the actor's items:
+A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falling back to the toggle rule's `id`) can adjust the toggle from any of the actor's items. Only rules that are enabled and whose predicate passes count.
 
-- `suppressTurnOff`: turn-off events the target toggle should ignore while the modifier's predicate passes.
-- `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only — it creates or re-enables the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
+- `dropMoments` (Lasts Until event ids): when the toggle's effect is made, its `event` moments with these events are taken out. The drops of more than one rule add up.
+- `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only: it makes the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
 
 ### Adding to a reroll from another feature: `modifyReroll`
 
@@ -327,7 +318,7 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
   {
     "type": "toggleEffect",
     "tags": ["self:raging"],
-    "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
+    "effectId": "<the Raging effect>"
   },
   {
     "type": "damageBonus",

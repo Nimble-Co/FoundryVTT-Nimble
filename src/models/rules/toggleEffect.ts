@@ -1,84 +1,29 @@
-import { SYSTEM_ID } from '#system';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
+import {
+	findToggleEffect,
+	modifyToggleRulesFor,
+	TOGGLE_EFFECT_ITEM_ID_FLAG,
+	TOGGLE_EFFECT_RULE_ID_FLAG,
+	type ToggleActorLike,
+	type ToggleItemLike,
+	turnToggleOn,
+} from '#utils/actor/toggleEffectData.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
-import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
-import { choiceLabels } from './_rollUseRule.js';
+import { withWidget } from './_widgetOption.js';
 import {
 	type ActorDyingContext,
-	type ActorHealthContext,
-	type EncounterEndContext,
 	type ItemActivatedContext,
 	type ItemUsedContext,
 	NimbleBaseRule,
-	type RestContext,
-	type RoundChangedContext,
 	type TurnContext,
 } from './base.js';
 
-const TURN_OFF_CHOICES = [
-	'onActorKilled',
-	'onActorWounded',
-	'onActorHealed',
-	'onRest',
-	'onTurnStart',
-	'onTurnEnd',
-	'onEncounterEnd',
-	'onActorDying',
-	'onRoundEnd',
-] as const;
-
-type TurnOffEvent = (typeof TURN_OFF_CHOICES)[number];
-
-// Events on which a modifyToggle rule can automatically switch the target
-// toggle ON (the counterpart of turnOff, carried by the granting feature).
+// Events on which a modifyToggle rule can automatically switch the target toggle ON.
 const TURN_ON_CHOICES = ['onTurnStart', 'onActorDying', 'onCritReceived'] as const;
 
 type TurnOnEvent = (typeof TURN_ON_CHOICES)[number];
-
-const TOGGLE_EFFECT_RULE_ID_FLAG = 'toggleEffectRuleId';
-const TOGGLE_EFFECT_ITEM_ID_FLAG = 'toggleEffectItemId';
-// Inactivity tracking (endAfterInactiveRounds): round and combat id of the
-// last qualifying activity, stored on the backing AE so the state lives and
-// dies with the toggle.
-const TOGGLE_EFFECT_ACTIVITY_ROUND_FLAG = 'toggleEffectActivityRound';
-const TOGGLE_EFFECT_ACTIVITY_COMBAT_FLAG = 'toggleEffectActivityCombatId';
-
-interface ToggleEffectAEItemSource {
-	id: string;
-	name: string;
-	img?: string;
-	uuid?: string;
-}
-
-/**
- * Canonical creation payload for a toggleEffect backing AE. Shared by the
- * rule's activation path and the UI switch path (toggleEffectControl) so the
- * flag shape and origin stamping never drift between the two.
- */
-function buildToggleEffectAEData(
-	item: ToggleEffectAEItemSource,
-	ruleId: string,
-	label = '',
-): Record<string, unknown> {
-	return {
-		type: NIMBLE_EFFECT_TYPE,
-		name: label || item.name,
-		img: item.img,
-		disabled: false,
-		// Origin lets Foundry surface the source item in the effects
-		// panel and lets downstream cleanup follow item deletion.
-		origin: item.uuid,
-		flags: {
-			[SYSTEM_ID]: {
-				[TOGGLE_EFFECT_RULE_ID_FLAG]: ruleId,
-				[TOGGLE_EFFECT_ITEM_ID_FLAG]: item.id,
-			},
-		},
-	};
-}
 
 function schema() {
 	const { fields } = foundry.data;
@@ -94,24 +39,18 @@ function schema() {
 				hint: 'NIMBLE.rules.toggleEffect.tags.hint',
 			},
 		),
-		turnOff: new fields.ArrayField(
-			new fields.StringField({
+		effectId: new fields.StringField(
+			withWidget({
 				required: true,
 				nullable: false,
-				initial: 'onRest',
-				choices: choiceLabels('toggleEffect', 'turnOff', TURN_OFF_CHOICES),
+				blank: true,
+				initial: '',
+				label: 'NIMBLE.rules.toggleEffect.effectId.label',
+				hint: 'NIMBLE.rules.toggleEffect.effectId.hint',
+				widget: 'itemEffectPicker',
 			}),
-			{
-				required: true,
-				nullable: false,
-				label: 'NIMBLE.rules.toggleEffect.turnOff.label',
-				hint: 'NIMBLE.rules.toggleEffect.turnOff.hint',
-			},
 		),
-		// Confirm-end dialog content: plain text or an i18n key, so homebrew
-		// items can set a prompt without shipping translation files. Empty =
-		// no prompt (turn-off triggers and the effects-panel toggle path
-		// never prompt; only the explicit on/off switch consults this).
+		// Plain text or an i18n key, so homebrew items can set a prompt without translation files.
 		confirmEndPrompt: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -119,10 +58,6 @@ function schema() {
 			label: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.label',
 			hint: 'NIMBLE.rules.toggleEffect.confirmEndPrompt.hint',
 		}),
-		// Pool identifiers (dice or charge) to clear when the toggle ends,
-		// either via a turn-off trigger or a player toggle-off. Lets authors
-		// model rules like Berserker Rage's "Fury Dice are lost when your
-		// Rage ends" without coupling toggleEffect to a specific feature.
 		clearPoolsOnEnd: new fields.ArrayField(
 			new fields.StringField({ required: true, nullable: false, initial: '' }),
 			{
@@ -132,20 +67,6 @@ function schema() {
 				hint: 'NIMBLE.rules.toggleEffect.clearPoolsOnEnd.hint',
 			},
 		),
-		// Rounds of combat inactivity after which the toggle ends at the
-		// actor's turn end. Activity = re-activating the owning item or
-		// activating any item whose activation carries a damage effect
-		// (an attack). Null disables the mechanic. Models rules like
-		// Berserker Rage's "ends after 1 round without attacking or Raging".
-		endAfterInactiveRounds: new fields.NumberField({
-			required: false,
-			nullable: true,
-			initial: null,
-			integer: true,
-			min: 1,
-			label: 'NIMBLE.rules.toggleEffect.endAfterInactiveRounds.label',
-			hint: 'NIMBLE.rules.toggleEffect.endAfterInactiveRounds.hint',
-		}),
 	};
 }
 
@@ -153,21 +74,8 @@ declare namespace ToggleEffectRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActiveEffectLike {
-	id: string;
-	disabled: boolean;
-	getFlag(scope: string, key: string): unknown;
-	update(data: Record<string, unknown>): Promise<unknown>;
-}
-
-interface ActorWithEffects {
-	effects: Iterable<ActiveEffectLike>;
+interface ActorWithEffects extends ToggleActorLike {
 	tags: Set<string>;
-	createEmbeddedDocuments(
-		type: 'ActiveEffect',
-		data: Array<Record<string, unknown>>,
-	): Promise<unknown>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
 }
 
 class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
@@ -176,17 +84,14 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.toggleEffect.description';
 
-	// Turning the toggle ON via item activation has no manual fallback, so
-	// that dispatch survives the rule-automation toggle. The automatic
-	// turn-off / turn-on / inactivity paths run via other lifecycle events
-	// and stay gated.
+	// Turning the toggle ON via item activation has no manual fallback, so that dispatch survives
+	// the rule-automation toggle. The automatic turn-on stays gated.
 	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onItemActivated'];
 
 	declare tags: string[];
-	declare turnOff: TurnOffEvent[];
+	declare effectId: string;
 	declare confirmEndPrompt: string;
 	declare clearPoolsOnEnd: string[];
-	declare endAfterInactiveRounds: number | null;
 
 	static override defineSchema(): ToggleEffectRule.Schema {
 		return {
@@ -199,13 +104,9 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['tags', 'string[]'],
-				[
-					'turnOff',
-					TURN_OFF_CHOICES.map((t) => `'${t}'`).join(
-						' <span class="nimble-type-summary__operator">|</span> ',
-					),
-				],
-				['endAfterInactiveRounds', 'number | null'],
+				['effectId', 'string'],
+				['confirmEndPrompt', 'string'],
+				['clearPoolsOnEnd', 'string[]'],
 			]),
 		);
 	}
@@ -220,85 +121,27 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	prePrepareData(): void {
 		if (!this.isOnActor) return;
 		if (this.disabled) return;
-		const effect = this.#findActiveEffect();
+		const effect = findToggleEffect(this.#actor, this.id);
 		if (!effect || effect.disabled) return;
-		const actor = this.actor as unknown as ActorWithEffects;
-		for (const tag of this.tags) actor.tags.add(tag);
+		for (const tag of this.tags) this.#actor.tags.add(tag);
 	}
 
 	/**
-	 * Toggle entry point. Ensures the backing AE is on when this rule's owning
-	 * item is activated. Predicate-gated so authors can constrain when the
-	 * toggle is allowed to flip.
-	 *
-	 * Item activation only turns the toggle ON; turning OFF is the player's
-	 * job via the effects panel (or a `turnOff` trigger). This avoids
-	 * misclick footguns where re-using the item mid-rage accidentally drops
-	 * the effect.
-	 *
-	 * - no AE → create
-	 * - existing AE disabled → re-enable
-	 * - existing AE enabled → no-op
+	 * Item activation only turns the toggle ON, never off, so using the item again while the toggle
+	 * is on cannot drop it by mistake.
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (context.sourceItem !== this.parentItem) {
-			// A different item on the same actor was activated. If it carries a
-			// damage effect, that's an attack: record it as activity for the
-			// inactivity timer.
-			if (this.endAfterInactiveRounds && ToggleEffectRule.#isAttackActivation(context)) {
-				await this.#recordActivity();
-			}
-			return;
-		}
+		if (context.sourceItem !== this.parentItem) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
-		const existing = this.#findActiveEffect();
-		if (!existing) {
-			await this.#createActiveEffect();
-			return;
-		}
-		if (existing.disabled) {
-			await existing.update({ disabled: false });
-			return;
-		}
-		// Re-activating the owning item while already on (e.g. Raging again
-		// mid-Rage) counts as activity.
-		if (this.endAfterInactiveRounds) {
-			await this.#recordActivity();
-		}
-	}
-
-	override async onActorKilled(context: ActorHealthContext): Promise<void> {
-		await this.#maybeTurnOff('onActorKilled', context.actor);
-	}
-
-	override async onActorWounded(context: ActorHealthContext): Promise<void> {
-		await this.#maybeTurnOff('onActorWounded', context.actor);
-	}
-
-	override async onActorHealed(context: ActorHealthContext): Promise<void> {
-		await this.#maybeTurnOff('onActorHealed', context.actor);
-	}
-
-	override async onRest(context: RestContext): Promise<void> {
-		await this.#maybeTurnOff('onRest', context.actor);
+		await turnToggleOn(this.#actor, this.#item, this);
 	}
 
 	override async onTurnStart(context: TurnContext): Promise<void> {
-		await this.#maybeTurnOff('onTurnStart', context.actor);
 		await this.#maybeAutoTurnOn('onTurnStart', context.actor);
 	}
 
-	override async onTurnEnd(context: TurnContext): Promise<void> {
-		await this.#maybeTurnOff('onTurnEnd', context.actor);
-		await this.#maybeEndFromInactivity(context);
-	}
-
-	override async onEncounterEnd(context: EncounterEndContext): Promise<void> {
-		await this.#maybeTurnOff('onEncounterEnd', context.actor);
-	}
-
 	override async onActorDying(context: ActorDyingContext): Promise<void> {
-		await this.#maybeTurnOff('onActorDying', context.actor);
 		await this.#maybeAutoTurnOn('onActorDying', context.actor);
 	}
 
@@ -308,113 +151,26 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	}
 
 	/**
-	 * Keep the inactivity clock honest across round rewinds. When the round
-	 * counter moves below the stamped activity round, that stamped activity
-	 * belongs to an undone timeline: clamp it to the new round immediately
-	 * so the replayed rounds are tracked afresh. This complements the same
-	 * clamp in the turn-end check, which only runs when the owning actor's
-	 * turn boundary actually replays.
-	 */
-	override async onRoundChanged(context: RoundChangedContext): Promise<void> {
-		if (context.actor !== this.actor) return;
-		// A round that changes has ended, also when it is rewound.
-		await this.#maybeTurnOff('onRoundEnd', context.actor);
-		if (!this.endAfterInactiveRounds) return;
-		if (!isActiveGM()) return;
-		const existing = this.#findActiveEffect();
-		if (!existing) return;
-
-		const combat = context.combat as unknown as { id?: string | null };
-		const combatId = combat?.id ?? null;
-		if (!combatId) return;
-
-		const recordedCombatId = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_COMBAT_FLAG);
-		const recordedRound = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_ROUND_FLAG);
-		if (recordedCombatId !== combatId || typeof recordedRound !== 'number') return;
-
-		if (recordedRound > context.round) {
-			await this.#stampActivity(existing, combatId, context.round);
-		}
-	}
-
-	async #maybeTurnOff(event: TurnOffEvent, actor: unknown): Promise<void> {
-		if (actor !== this.actor) return;
-		if (!this.turnOff.includes(event)) return;
-		if (this.#isTurnOffSuppressed(event)) return;
-		const existing = this.#findActiveEffect();
-		if (!existing) return;
-		// Delete/pool-clear/announce must happen on exactly one client.
-		if (!isActiveGM()) return;
-		await this.#clearLinkedPools();
-		await this.#deleteActiveEffect(existing.id);
-		await this.#announceEnd(localize(`NIMBLE.rules.toggleEffect.endReasons.${event}`));
-	}
-
-	/**
-	 * Switch the toggle ON when a sibling modifyToggle rule requests it for
-	 * the given event (respecting that rule's predicate against the live
-	 * domain). The mirror of #maybeTurnOff: create the backing AE if missing,
-	 * re-enable it if disabled, no-op if already on. GM-gated so the flip and
-	 * its announcement happen on exactly one client. Auto-turn-on restores the
-	 * toggle's state only; it does not run the owning item's activation
-	 * effects.
+	 * Switch the toggle ON when a sibling modifyToggle rule requests it for the event (with that
+	 * rule's predicate). GM-gated so the flip and its announcement happen on one client. It restores
+	 * the toggle's state only; it does not run the owning item's activation effects.
 	 */
 	async #maybeAutoTurnOn(event: TurnOnEvent, actor: unknown): Promise<void> {
 		if (actor !== this.actor) return;
 		if (this.disabled) return;
 		if (!this.#hasTurnOnRequest(event)) return;
 		if (!isActiveGM()) return;
-
-		const existing = this.#findActiveEffect();
-		if (existing && !existing.disabled) return;
-
-		if (existing) {
-			await existing.update({ disabled: false });
-		} else {
-			await this.#createActiveEffect();
-		}
+		if (!(await turnToggleOn(this.#actor, this.#item, this))) return;
 		await this.#announceStart(localize(`NIMBLE.rules.toggleEffect.startReasons.${event}`));
 	}
 
-	/**
-	 * True when a sibling modifyToggle rule (on any of the actor's items)
-	 * requests automatic turn-on for the given event and its predicate passes.
-	 */
 	#hasTurnOnRequest(event: TurnOnEvent): boolean {
-		const actor = this.actor as unknown as {
-			items?: { contents?: Array<{ rules?: { values: () => Iterable<unknown> } }> };
-		} | null;
-		const items = actor?.items?.contents ?? [];
-		const targetIds = new Set([this.identifier, this.id].filter((v) => v && v.length > 0));
-
-		for (const item of items) {
-			const rules = item.rules;
-			if (!rules || typeof rules.values !== 'function') continue;
-			for (const rule of rules.values()) {
-				const modifier = rule as {
-					type?: string;
-					disabled?: boolean;
-					toggleIdentifier?: string;
-					turnOn?: string[];
-					appliesTo?: () => boolean;
-				};
-				if (modifier.type !== 'modifyToggle' || modifier.disabled) continue;
-				const toggleIdentifier = modifier.toggleIdentifier?.trim() ?? '';
-				if (!targetIds.has(toggleIdentifier)) continue;
-				if (!(modifier.turnOn ?? []).includes(event)) continue;
-				if (typeof modifier.appliesTo === 'function' && !modifier.appliesTo()) continue;
-				return true;
-			}
-		}
-
-		return false;
+		return modifyToggleRulesFor<{ turnOn?: string[] }>(this.actor as never, this).some((rule) =>
+			(rule.turnOn ?? []).includes(event),
+		);
 	}
 
-	/**
-	 * Post a chat message explaining an automatic toggle start. Mirrors
-	 * #announceEnd: runs only after the AE flip succeeded and chat failure
-	 * must not break the turn-on itself.
-	 */
+	/** Chat failure must not break the turn-on itself. */
 	async #announceStart(reason: string): Promise<void> {
 		if (!isChatNotificationsAutomationEnabled()) return;
 		const actor = this.actor as unknown as Actor | null;
@@ -431,235 +187,30 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		}
 	}
 
-	/**
-	 * True when a sibling modifyToggle rule (on any of the actor's items)
-	 * suppresses the given turn-off event for this toggle. Lets features
-	 * modify a toggle's lifecycle the same way modifyPool modifies a pool,
-	 * e.g. Berserker Deep Rage suppressing onActorKilled.
-	 */
-	#isTurnOffSuppressed(event: TurnOffEvent): boolean {
-		const actor = this.actor as unknown as {
-			items?: { contents?: Array<{ rules?: { values: () => Iterable<unknown> } }> };
-		} | null;
-		const items = actor?.items?.contents ?? [];
-		const targetIds = new Set([this.identifier, this.id].filter((v) => v && v.length > 0));
+	get #actor(): ActorWithEffects {
+		return this.actor as unknown as ActorWithEffects;
+	}
 
-		for (const item of items) {
-			const rules = item.rules;
-			if (!rules || typeof rules.values !== 'function') continue;
-			for (const rule of rules.values()) {
-				const modifier = rule as {
-					type?: string;
-					disabled?: boolean;
-					toggleIdentifier?: string;
-					suppressTurnOff?: string[];
-					appliesTo?: () => boolean;
-				};
-				if (modifier.type !== 'modifyToggle' || modifier.disabled) continue;
-				const toggleIdentifier = modifier.toggleIdentifier?.trim() ?? '';
-				if (!targetIds.has(toggleIdentifier)) continue;
-				if (typeof modifier.appliesTo === 'function' && !modifier.appliesTo()) continue;
-				if ((modifier.suppressTurnOff ?? []).includes(event)) return true;
-			}
-		}
-
-		return false;
+	get #item(): ToggleItemLike {
+		return this.parentItem as unknown as ToggleItemLike;
 	}
 
 	/**
-	 * End the toggle at the actor's turn end when `endAfterInactiveRounds`
-	 * rounds passed without qualifying activity. The first turn-end check in
-	 * a combat with no recorded activity stamps a grace baseline instead of
-	 * ending immediately (covers toggles switched on before combat started).
-	 *
-	 * Whether the round really was inactive is a table judgment, so the end
-	 * is adjudicated by the active GM: the check runs only on the GM's
-	 * client, which gets a confirm dialog. Declining resets the inactivity
-	 * clock so the prompt returns only after another inactive round.
-	 */
-	async #maybeEndFromInactivity(context: TurnContext): Promise<void> {
-		if (context.actor !== this.actor) return;
-		const inactiveRounds = this.endAfterInactiveRounds;
-		if (!inactiveRounds) return;
-		const existing = this.#findActiveEffect();
-		if (!existing) return;
-
-		const combat = context.combat as unknown as { id?: string | null; round?: number };
-		const combatId = combat?.id ?? null;
-		const round = combat?.round ?? 0;
-		if (!combatId) return;
-
-		if (!isActiveGM()) return;
-
-		const recordedCombatId = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_COMBAT_FLAG);
-		const recordedRound = existing.getFlag(SYSTEM_ID, TOGGLE_EFFECT_ACTIVITY_ROUND_FLAG);
-
-		if (recordedCombatId !== combatId || typeof recordedRound !== 'number') {
-			await this.#stampActivity(existing, combatId, round);
-			return;
-		}
-
-		// A stamp from a later round than the current one means the GM
-		// rewound the combat past it (e.g. a decline-stamp at round 2
-		// followed by stepping back to round 1). That stamped activity was
-		// undone, so reset the clock to the current round and track the
-		// replayed rounds afresh.
-		if (recordedRound > round) {
-			await this.#stampActivity(existing, combatId, round);
-			return;
-		}
-
-		if (round - recordedRound < inactiveRounds) return;
-
-		const name = this.label || this.parentItem.name;
-		const actorName = (this.actor as unknown as { name?: string })?.name ?? '';
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: {
-				title: localize('NIMBLE.rules.toggleEffect.confirmDialogTitle', { name }),
-			},
-			content: `<p>${localize('NIMBLE.rules.toggleEffect.inactivityPrompt', {
-				actor: actorName,
-				name,
-				rounds: String(inactiveRounds),
-			})}</p>`,
-			yes: { label: localize('NIMBLE.rules.toggleEffect.confirmDialogConfirm') },
-			no: { label: localize('NIMBLE.rules.toggleEffect.confirmDialogCancel') },
-			rejectClose: false,
-		});
-
-		if (confirmed !== true) {
-			await this.#stampActivity(existing, combatId, round);
-			return;
-		}
-
-		await this.#clearLinkedPools();
-		await this.#deleteActiveEffect(existing.id);
-		await this.#announceEnd(
-			localize('NIMBLE.rules.toggleEffect.endReasons.inactivity', {
-				rounds: String(inactiveRounds),
-			}),
-		);
-	}
-
-	/**
-	 * Post a chat message explaining an automatic toggle end. Runs only
-	 * after the AE deletion succeeded, so with multiple connected clients
-	 * only the client that won the delete announces. Chat failure must not
-	 * break the turn-off itself.
-	 */
-	async #announceEnd(reason: string): Promise<void> {
-		if (!isChatNotificationsAutomationEnabled()) return;
-		const actor = this.actor as unknown as Actor | null;
-		if (!actor) return;
-		const name = this.label || this.parentItem.name;
-		try {
-			await ChatMessage.create({
-				speaker: ChatMessage.getSpeaker({ actor }),
-				content: `<p>${localize('NIMBLE.rules.toggleEffect.endedMessage', { name, reason })}</p>`,
-			} as unknown as ChatMessage.CreateData);
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.warn('Nimble | toggleEffect end announcement failed', error);
-		}
-	}
-
-	/**
-	 * Record qualifying activity (owning-item activation or an attack) on the
-	 * backing AE. No-ops outside an active combat: the inactivity clock only
-	 * runs in combat, and leaving combat is handled by onEncounterEnd.
-	 */
-	async #recordActivity(): Promise<void> {
-		const existing = this.#findActiveEffect();
-		if (!existing) return;
-		const combat = game.combat as unknown as {
-			id?: string | null;
-			round?: number;
-			started?: boolean;
-		} | null;
-		if (!combat?.started || !combat.id) return;
-		await this.#stampActivity(existing, combat.id, combat.round ?? 0);
-	}
-
-	async #stampActivity(effect: ActiveEffectLike, combatId: string, round: number): Promise<void> {
-		await effect.update({
-			[`flags.${SYSTEM_ID}.${TOGGLE_EFFECT_ACTIVITY_COMBAT_FLAG}`]: combatId,
-			[`flags.${SYSTEM_ID}.${TOGGLE_EFFECT_ACTIVITY_ROUND_FLAG}`]: round,
-		});
-	}
-
-	/**
-	 * An activation counts as an attack when the item's activation carries at
-	 * least one damage effect. Damaging spells count; pure-utility, healing,
-	 * and pool actions do not.
-	 */
-	static #isAttackActivation(context: ItemActivatedContext): boolean {
-		const item = context.sourceItem as unknown as {
-			system?: { activation?: { effects?: Array<{ type?: string }> } };
-		};
-		const effects = item?.system?.activation?.effects ?? [];
-		return effects.some((effect) => effect?.type === 'damage');
-	}
-
-	/**
-	 * Empty every pool listed in `clearPoolsOnEnd`. Used by both the
-	 * automatic turn-off path and the player-initiated toggle-off so the
-	 * "resources are lost when the effect ends" rule applies uniformly
-	 * (e.g. Berserker Rage's Fury Dice).
-	 */
-	async #clearLinkedPools(): Promise<void> {
-		const pools = this.clearPoolsOnEnd ?? [];
-		if (pools.length < 1) return;
-		const actor = this.actor as unknown as Actor | null | undefined;
-		for (const poolId of pools) {
-			const trimmed = (poolId ?? '').trim();
-			if (trimmed.length < 1) continue;
-			await setPoolFaces(actor, trimmed, []);
-		}
-	}
-
-	#findActiveEffect(): ActiveEffectLike | null {
-		const actor = this.actor as unknown as ActorWithEffects;
-		for (const effect of actor.effects) {
-			const ruleId = effect.getFlag(SYSTEM_ID, TOGGLE_EFFECT_RULE_ID_FLAG);
-			if (ruleId === this.id) return effect;
-		}
-		return null;
-	}
-
-	async #createActiveEffect(): Promise<void> {
-		const actor = this.actor as unknown as ActorWithEffects;
-		const item = this.parentItem as unknown as ToggleEffectAEItemSource;
-		await actor.createEmbeddedDocuments('ActiveEffect', [
-			buildToggleEffectAEData(item, this.id, this.label),
-		]);
-	}
-
-	async #deleteActiveEffect(id: string): Promise<void> {
-		const actor = this.actor as unknown as ActorWithEffects;
-		await actor.deleteEmbeddedDocuments('ActiveEffect', [id]);
-	}
-
-	/**
-	 * Lifecycle cleanup when the owning item is deleted. The backing AE's
-	 * origin points at the item, but Foundry does not cascade-delete effects
-	 * by origin, so without this the AE would be stranded on the actor with
-	 * no rule left to turn it off.
+	 * Foundry does not delete effects by origin, so without this the AE would stay on the actor
+	 * with no rule left to turn it off.
 	 */
 	async afterDelete(): Promise<void> {
 		if (!this.isOnActor) return;
-		const existing = this.#findActiveEffect();
-		if (!existing) return;
-		await this.#deleteActiveEffect(existing.id);
+		const existing = findToggleEffect(this.#actor, this.id);
+		if (!existing?.id) return;
+		await this.#actor.deleteEmbeddedDocuments('ActiveEffect', [existing.id]);
 	}
 }
 
 export {
 	ToggleEffectRule,
-	TURN_OFF_CHOICES,
 	TURN_ON_CHOICES,
 	TOGGLE_EFFECT_RULE_ID_FLAG,
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
-	buildToggleEffectAEData,
-	type TurnOffEvent,
 	type TurnOnEvent,
 };

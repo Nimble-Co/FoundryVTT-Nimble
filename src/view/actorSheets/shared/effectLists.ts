@@ -2,8 +2,6 @@ import { activationOf } from './itemFields.ts';
 import { byName } from './rowOrder.ts';
 import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sheetSource.ts';
 
-const FX = 'NIMBLE.actorSheet.shared.effects';
-
 export interface EffectLists {
 	/** toggle effects and timed or one-off effects, A to Z */
 	active: EffectLike[];
@@ -63,16 +61,12 @@ function activationDuration(item: ItemLike, words: Words): string {
 	return `${quantity} ${unit}`;
 }
 
-/** A toggle effect: the inactivity end of its rule, else the activation duration of its item. */
+/** A toggle effect: the activation duration of its item. */
 export function effectDuration(
 	effect: EffectLike,
 	item: ItemLike | undefined,
 	words: Words,
 ): string {
 	if (!item || !effect.toggle) return effect.duration;
-	const rule = item.rules.find((entry) => entry.id === effect.toggle?.ruleId);
-	const rounds = Number(rule?.fields.endAfterInactiveRounds ?? 0);
-	if (rounds === 1) return words.localize(`${FX}.inactiveRound`);
-	if (rounds > 1) return words.format(`${FX}.inactiveRounds`, { rounds: String(rounds) });
 	return activationDuration(item, words) || effect.duration;
 }

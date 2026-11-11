@@ -1,5 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import { effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
+import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -75,6 +76,7 @@ export function fireEvent(
 /** An attack that is not an item use: an attack, and so a roll. */
 export function fireAttackEvents(actor: { name?: string | null } | null): void {
 	if (!actor) return;
+	noteActivity(actor, { attack: true });
 	const name = actor.name;
 	fireEvents([
 		{ check: { type: 'event', event: 'attack', actor }, heading: eventHeading('attack', { name }) },
@@ -97,9 +99,11 @@ function isTieredSpell(item: UsedItem): boolean {
 export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[]): void {
 	const actor = item.actor as { name?: string | null } | null;
 	if (!actor) return;
+	const attack = isAttackUse(item, targetActors);
+	noteActivity(actor, { attack, itemUuid: item.uuid });
 	const name = actor.name;
 	const events: { check: EventCheck; heading: string }[] = [];
-	if (isAttackUse(item, targetActors)) {
+	if (attack) {
 		events.push({
 			check: { type: 'event', event: 'attack', actor },
 			heading: eventHeading('attack', { name }),

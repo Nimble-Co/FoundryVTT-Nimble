@@ -1,14 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { systemHookName } from '#system';
 
-const { endEffectsAtMock, fireEventMock, fireItemUseEventsMock } = vi.hoisted(() => ({
-	endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
-	fireEventMock: vi.fn((..._args: unknown[]) => undefined),
-	fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
-}));
+const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock } = vi.hoisted(
+	() => ({
+		endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
+		endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
+		fireEventMock: vi.fn((..._args: unknown[]) => undefined),
+		fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
+	}),
+);
 
-vi.mock('../../utils/lastsUntil/endEffects.js', () => ({ endEffectsAt: endEffectsAtMock }));
+vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
+	endEffects: endEffectsMock,
+	endEffectsAt: endEffectsAtMock,
+}));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({
+	eventHeading: (event: string, names: { name?: string | null }) => `${event}:${names.name}`,
 	fireEvent: fireEventMock,
 	fireItemUseEvents: fireItemUseEventsMock,
 }));
@@ -79,6 +86,33 @@ describe('turn and round moments', () => {
 		hook('nimbleCombatTurnEnd')(goblin);
 
 		expect(endEffectsAtMock.mock.calls[0][0]).toMatchObject({ round: 1 });
+	});
+
+	it('a turn end ends the effects of that combatant that had an inactive round', () => {
+		const { combat, add } = makeCombat();
+		const goblin = add('cGoblin', 'Goblin');
+		const idle = {
+			active: true,
+			start: { combat: 'combat1', round: 1 },
+			lastsUntil: [{ kind: 'event', event: 'inactiveRound', who: 'holder' }],
+			getFlag: () => undefined,
+		};
+		const plain = { active: true, start: { combat: 'combat1', round: 1 }, lastsUntil: [] };
+		(goblin.actor as { effects?: unknown[] }).effects = [idle, plain];
+
+		hook('nimbleCombatTurnEnd')(goblin, { round: 2 });
+
+		expect(endEffectsMock).toHaveBeenCalledWith([idle], 'inactiveRound:Goblin');
+		expect(endEffectsAtMock.mock.calls[0][2]).toBe(combat);
+	});
+
+	it('a turn start ends no effect for an inactive round', () => {
+		const { add } = makeCombat();
+		const goblin = add('cGoblin', 'Goblin');
+
+		hook('nimbleCombatTurnStart')(goblin, { round: 2 });
+
+		expect(endEffectsMock).not.toHaveBeenCalled();
 	});
 
 	it('a turn start of a hero marks the seat as a hero', () => {

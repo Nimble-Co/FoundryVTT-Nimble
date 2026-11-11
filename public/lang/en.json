@@ -366,8 +366,6 @@
 					"otherConditions": "Other conditions",
 					"noEffects": "No effects and no conditions.",
 					"fromItem": "From {name}",
-					"inactiveRound": "Ends after 1 round with no attack and no new use",
-					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
 					"untilItEnds": "Until it ends",
 					"remove": "Remove",
 					"removeName": "Remove {name}",
@@ -1202,7 +1200,8 @@
 					"chargeGained": "{name} gained a charge",
 					"nextRoll": "{name} made a roll",
 					"nextDamage": "{name} dealt damage",
-					"nextSpell": "{name} cast a tiered spell"
+					"nextSpell": "{name} cast a tiered spell",
+					"inactiveRound": "{name} went a round with no attack and no new use"
 				}
 			},
 			"expiryEvents": {
@@ -2601,14 +2600,34 @@
 				}
 			},
 			"modifyToggle": {
-				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
+				"description": "Modify a toggleEffect rule (by identifier): take moments out of its effect's Lasts Until, or turn it on by itself. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
 				"toggleIdentifier": {
 					"label": "Toggle identifier",
 					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
 				},
-				"suppressTurnOff": {
-					"label": "Does not turn off",
-					"hint": "The toggle stays on when one of these happens."
+				"dropMoments": {
+					"label": "Does not end when",
+					"hint": "These moments are taken out of the toggle's effect when it turns on. Its other moments stay.",
+					"choices": {
+						"attack": "You attack",
+						"move": "You move",
+						"castSpell": "You cast a spell",
+						"takeDamage": "You take damage",
+						"healed": "You are Healed",
+						"zeroHp": "You drop to 0 HP",
+						"die": "You die",
+						"loseConcentration": "You lose Concentration",
+						"useAgain": "You use it again",
+						"effectEnds": "Another effect ends",
+						"nextRoll": "You make a roll",
+						"nextDamage": "You deal damage",
+						"nextSpell": "You cast a tiered spell",
+						"inactiveRound": "A round passes with no attack and no new use",
+						"wounded": "You are Bloodied",
+						"chargeGained": "You gain a charge",
+						"rest": "You rest",
+						"combatEnd": "Combat ends"
+					}
 				},
 				"turnOn": {
 					"label": "Turn on by itself",
@@ -2743,25 +2762,14 @@
 				}
 			},
 			"toggleEffect": {
-				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
+				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. The effect can be a copy of one of the item's effects, which ends by its Lasts Until. Sibling rules predicate on those tags to deliver the actual bonuses.",
 				"tags": {
 					"label": "Tags",
 					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
 				},
-				"turnOff": {
-					"label": "Turn off",
-					"hint": "The effect turns off by itself when one of these happens. Select none to turn it off only by hand.",
-					"choices": {
-						"onActorKilled": "When the creature dies",
-						"onActorWounded": "When the creature gets a Wound",
-						"onActorHealed": "When the creature is healed",
-						"onRest": "After a rest",
-						"onTurnStart": "When its turn starts",
-						"onTurnEnd": "When its turn ends",
-						"onEncounterEnd": "When the encounter ends",
-						"onActorDying": "When the creature starts dying",
-						"onRoundEnd": "When the round ends"
-					}
+				"effectId": {
+					"label": "Effect",
+					"hint": "The effect of this item that the actor gets while the toggle is on, with its Lasts Until. Pick none for a blank effect that lasts until it is turned off."
 				},
 				"confirmEndPrompt": {
 					"label": "End confirm prompt",
@@ -2769,29 +2777,11 @@
 				},
 				"clearPoolsOnEnd": {
 					"label": "Clear pools on end",
-					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
-				},
-				"endAfterInactiveRounds": {
-					"label": "End after inactive rounds",
-					"hint": "Rounds of combat inactivity after which the toggle ends at the actor's turn end. Activity means re-activating this item or activating any item with a damage effect (an attack). Leave blank to disable."
+					"hint": "Pool identifiers to empty when the toggle's effect ends, by any path. Use for rules like 'resources are lost when the effect ends'."
 				},
 				"confirmDialogTitle": "End {name}?",
 				"confirmDialogConfirm": "End",
 				"confirmDialogCancel": "Cancel",
-				"inactivityPrompt": "{actor} has gone {rounds} round(s) without attacking or re-activating {name}. End it?",
-				"endedMessage": "{name} ended: {reason}.",
-				"endReasons": {
-					"onActorKilled": "died",
-					"onActorWounded": "took a wound",
-					"onActorHealed": "was healed",
-					"onRest": "completed a rest",
-					"onTurnStart": "turn started",
-					"onTurnEnd": "turn ended",
-					"onEncounterEnd": "combat ended",
-					"onActorDying": "started dying",
-					"onRoundEnd": "round ended",
-					"inactivity": "went {rounds} round(s) without attacking or re-activating"
-				},
 				"startedMessage": "{name} activated automatically: {reason}.",
 				"startReasons": {
 					"onTurnStart": "turn started",

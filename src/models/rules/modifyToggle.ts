@@ -1,11 +1,7 @@
+import { LASTS_UNTIL_EVENTS, type LastsUntilEvent } from '../activeEffect/nimbleEffectChoices.js';
 import { choiceLabels } from './_rollUseRule.js';
 import { NimbleBaseRule } from './base.js';
-import {
-	TURN_OFF_CHOICES,
-	TURN_ON_CHOICES,
-	type TurnOffEvent,
-	type TurnOnEvent,
-} from './toggleEffect.js';
+import { TURN_ON_CHOICES, type TurnOnEvent } from './toggleEffect.js';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -14,8 +10,8 @@ function schema() {
 		// Matches the target toggleEffect rule's `identifier` field, falling
 		// back to the rule's `id` when no identifier is set. Lets one item's
 		// rule modify a toggle defined on another (or the same) item, e.g. a
-		// high-level feature that removes a turn-off trigger from an earlier
-		// feature's toggle.
+		// high-level feature that drops a moment from an earlier feature's
+		// toggle.
 		toggleIdentifier: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -23,20 +19,19 @@ function schema() {
 			label: 'NIMBLE.rules.modifyToggle.toggleIdentifier.label',
 			hint: 'NIMBLE.rules.modifyToggle.toggleIdentifier.hint',
 		}),
-		// Turn-off events the target toggle should ignore. Shares the
-		// toggleEffect turn-off vocabulary so the two lists never drift.
-		suppressTurnOff: new fields.ArrayField(
+		// Lasts Until events taken out of the toggle's effect when it is made.
+		dropMoments: new fields.ArrayField(
 			new fields.StringField({
 				required: true,
 				nullable: false,
-				initial: 'onActorKilled',
-				choices: choiceLabels('toggleEffect', 'turnOff', TURN_OFF_CHOICES),
+				initial: 'zeroHp',
+				choices: choiceLabels('modifyToggle', 'dropMoments', LASTS_UNTIL_EVENTS),
 			}),
 			{
 				required: true,
 				nullable: false,
-				label: 'NIMBLE.rules.modifyToggle.suppressTurnOff.label',
-				hint: 'NIMBLE.rules.modifyToggle.suppressTurnOff.hint',
+				label: 'NIMBLE.rules.modifyToggle.dropMoments.label',
+				hint: 'NIMBLE.rules.modifyToggle.dropMoments.hint',
 			},
 		),
 		// Events on which the target toggle switches ON automatically. This
@@ -70,10 +65,10 @@ declare namespace ModifyToggleRule {
 }
 
 /**
- * Passive data rule that modifies the behavior of a sibling toggleEffect
- * rule identified by `toggleIdentifier`. It implements no lifecycle hooks
- * of its own; ToggleEffectRule consults matching modifyToggle rules on the
- * owning actor when deciding whether an automatic turn-off trigger fires.
+ * Passive data rule that modifies a sibling toggleEffect rule identified by
+ * `toggleIdentifier`. It implements no lifecycle hooks of its own: the toggle
+ * reads matching modifyToggle rules on the owning actor when it makes its
+ * effect and when an event can turn it on.
  */
 class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
 	static override worksOnEffects = false;
@@ -83,7 +78,7 @@ class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
 
 	declare toggleIdentifier: string;
 
-	declare suppressTurnOff: TurnOffEvent[];
+	declare dropMoments: LastsUntilEvent[];
 
 	declare turnOn: TurnOnEvent[];
 
@@ -99,8 +94,8 @@ class ModifyToggleRule extends NimbleBaseRule<ModifyToggleRule.Schema> {
 			new Map([
 				['toggleIdentifier', 'string'],
 				[
-					'suppressTurnOff',
-					TURN_OFF_CHOICES.map((t) => `'${t}'`).join(
+					'dropMoments',
+					LASTS_UNTIL_EVENTS.map((t) => `'${t}'`).join(
 						' <span class="nimble-type-summary__operator">|</span> ',
 					),
 				],

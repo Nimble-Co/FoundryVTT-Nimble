@@ -9,7 +9,7 @@ const setPoolFaces = vi.fn();
 const updateDocumentImage = vi.fn();
 const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
-const toggleEffectAE = vi.fn();
+const endToggleEffect = vi.fn();
 const findToggleEffectRuleById = vi.fn();
 const endToggleEffectFromAE = vi.fn();
 const openPdfExportDialog = vi.fn();
@@ -35,7 +35,7 @@ beforeAll(async () => {
 		requestAdvanceCombatTurn,
 	}));
 	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
-		toggleEffectAE,
+		endToggleEffect,
 		findToggleEffectRuleById,
 		endToggleEffectFromAE,
 	}));
@@ -358,14 +358,14 @@ describe('createHeroPerform', () => {
 			expect(actor.activateItem).toHaveBeenCalledWith('rage');
 		});
 
-		it('ends a toggle through toggleEffectAE', async () => {
+		it('ends a toggle through endToggleEffect, never a flip', async () => {
 			const rule = { id: 'rageToggle' };
 			findToggleEffectRuleById.mockReturnValueOnce(rule);
 
 			await perform({ kind: 'endToggle', itemId: 'rage', ruleId: 'rageToggle' });
 
 			expect(findToggleEffectRuleById).toHaveBeenCalledWith(item, 'rageToggle');
-			expect(toggleEffectAE).toHaveBeenCalledWith(actor, item, rule);
+			expect(endToggleEffect).toHaveBeenCalledWith(actor, item, rule);
 		});
 
 		it('opens the window of an item', async () => {

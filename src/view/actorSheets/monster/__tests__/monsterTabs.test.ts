@@ -50,7 +50,7 @@ describe('monsterEffectsTab', () => {
 				id: 'hideToggle',
 				type: 'toggleEffect',
 				active: true,
-				fields: { endAfterInactiveRounds: 0 },
+				fields: {},
 			},
 		];
 		monster.effects = [

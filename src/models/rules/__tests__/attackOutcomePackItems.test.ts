@@ -91,10 +91,9 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 			});
 		});
 
-		it('turns its toggle off when the round ends, and spends one use to turn it on', () => {
+		it('has a toggle, and spends one use to turn it on', () => {
 			expect(ruleOfType(file, 'toggleEffect')).toMatchObject({
 				tags: ['self:heads-i-win'],
-				turnOff: expect.arrayContaining(['onRoundEnd']),
 			});
 			expect(ruleOfType(file, 'chargeConsumer')).toMatchObject({ poolIdentifier: 'heads-i-win' });
 			expect(ruleOfType(file, 'chargePool').recoveries).toEqual(

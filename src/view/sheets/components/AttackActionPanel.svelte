@@ -27,7 +27,7 @@
 	// state.effectVersion is bumped by Hooks listeners registered in the state
 	// file when any AE on this actor is created/updated/deleted, so the
 	// switch updates from the in-panel click, the PASSIVE EFFECTS panel, or a
-	// turnOff trigger without manual sheet refresh.
+	// Lasts Until end without manual sheet refresh.
 	function buildToggleState(item: {
 		id: string;
 		name: string;
@@ -56,7 +56,7 @@
 	}
 
 	// Subscribe to AE create/update/delete on this actor so the switch
-	// updates from external sources (PASSIVE EFFECTS panel, turnOff triggers,
+	// updates from external sources (PASSIVE EFFECTS panel, Lasts Until ends,
 	// chat-card buttons). $effect handles mount/unmount lifecycle and
 	// cleanup, avoiding the eager-registration runtime error we hit when
 	// calling Hooks.on outside a component lifecycle scope.

@@ -1,12 +1,13 @@
 import { SYSTEM_ID } from '#system';
-import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
-import { buildEffectiveDicePoolMap } from '#utils/dicePool/helpers.js';
-import localize from '#utils/localize.js';
 import {
-	buildToggleEffectAEData,
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
 	TOGGLE_EFFECT_RULE_ID_FLAG,
-} from '../../models/rules/toggleEffect.js';
+	type ToggleActorLike,
+	type ToggleItemLike,
+	turnToggleOn,
+} from '#utils/actor/toggleEffectData.js';
+import { buildEffectiveDicePoolMap } from '#utils/dicePool/helpers.js';
+import localize from '#utils/localize.js';
 
 /**
  * Helpers for the UI affordances that drive `toggleEffect` rules from outside
@@ -21,6 +22,8 @@ import {
 interface ToggleEffectRuleLike {
 	type: string;
 	id: string;
+	identifier?: string;
+	effectId?: string;
 	disabled?: boolean;
 	/** Confirm-end dialog content: plain text or an i18n key. Empty = no prompt. */
 	confirmEndPrompt?: string;
@@ -99,27 +102,9 @@ export function findToggleEffectAE(
 	return null;
 }
 
-interface ItemForToggle {
-	id: string;
-	name: string;
-	img?: string;
-	uuid?: string;
-}
+type ItemForToggle = ToggleItemLike;
 
-interface ActorForToggle extends ActorWithEffects {
-	createEmbeddedDocuments: (type: string, data: unknown[]) => Promise<unknown[]>;
-	deleteEmbeddedDocuments: (type: string, ids: string[]) => Promise<unknown[]>;
-}
-
-async function createToggleEffectAE(
-	actor: ActorForToggle,
-	item: ItemForToggle,
-	rule: ToggleEffectRuleLike,
-): Promise<void> {
-	await actor.createEmbeddedDocuments('ActiveEffect', [
-		buildToggleEffectAEData(item, rule.id, rule.label),
-	]);
-}
+type ActorForToggle = ActorWithEffects & ToggleActorLike;
 
 /**
  * Returns true if any pool listed in `clearPoolsOnEnd` currently has dice
@@ -141,21 +126,24 @@ function hasPoolContentToLose(actor: ActorForToggle, poolIds: string[] | undefin
 }
 
 /**
- * Player-initiated toggle off (from the on/off switch). When the rule sets
- * `confirmEndPrompt` AND at least one of the linked pools has dice to lose,
- * show a confirm dialog first so a misclick doesn't silently drop a
- * long-running effect. On confirm (or when no prompt fires) clear any pools
- * listed in `clearPoolsOnEnd` then delete the AE.
+ * Player-initiated toggle off. When the rule sets `confirmEndPrompt` AND at
+ * least one of the linked pools has dice to lose, show a confirm dialog first
+ * so a misclick doesn't silently drop a long-running effect. The delete hook
+ * clears the `clearPoolsOnEnd` pools.
  *
  * Returns true if the toggle was ended, false if the user cancelled.
  */
-async function disableToggleEffect(
+export async function endToggleEffect(
 	actor: ActorForToggle,
 	item: ItemForToggle,
 	rule: ToggleEffectRuleLike,
 ): Promise<boolean> {
 	const existing = findToggleEffectAE(actor, rule.id);
 	if (!existing) return true;
+	if (existing.disabled) {
+		await actor.deleteEmbeddedDocuments('ActiveEffect', [existing.id]);
+		return true;
+	}
 
 	const prompt = rule.confirmEndPrompt?.trim() ?? '';
 	const shouldPrompt = prompt.length > 0 && hasPoolContentToLose(actor, rule.clearPoolsOnEnd);
@@ -177,20 +165,13 @@ async function disableToggleEffect(
 		if (confirmed !== true) return false;
 	}
 
-	for (const poolId of rule.clearPoolsOnEnd ?? []) {
-		const trimmed = (poolId ?? '').trim();
-		if (trimmed.length < 1) continue;
-		await setPoolFaces(actor as unknown as Actor, trimmed, []);
-	}
-
 	await actor.deleteEmbeddedDocuments('ActiveEffect', [existing.id]);
 	return true;
 }
 
 /**
- * Flip the AE on or off based on its current state. Wraps create / disable
- * so the switch can call a single entry point. Returns false if the user
- * cancelled the confirm prompt during a disable, true otherwise.
+ * Flip the toggle: on when it has no effect or its effect is off, else end it.
+ * Returns false if the user cancelled the confirm prompt of an end, true otherwise.
  */
 export async function toggleEffectAE(
 	actor: ActorForToggle,
@@ -198,11 +179,11 @@ export async function toggleEffectAE(
 	rule: ToggleEffectRuleLike,
 ): Promise<boolean> {
 	const existing = findToggleEffectAE(actor, rule.id);
-	if (!existing) {
-		await createToggleEffectAE(actor, item, rule);
+	if (!existing || existing.disabled) {
+		await turnToggleOn(actor, item, rule);
 		return true;
 	}
-	return disableToggleEffect(actor, item, rule);
+	return endToggleEffect(actor, item, rule);
 }
 
 interface ActorWithItems extends ActorForToggle {
@@ -211,11 +192,9 @@ interface ActorWithItems extends ActorForToggle {
 
 /**
  * End a toggle starting from its backing AE (the conditions-list off switch).
- * Resolves the owning item and rule from the AE's flags and routes through
- * toggleEffectAE so the confirm prompt and clearPoolsOnEnd behave exactly
- * like the action-row switch. When the owning item or rule no longer exists,
- * falls back to deleting the AE directly; there is no pool cleanup left to
- * run in that case.
+ * Resolves the owning item and rule from the AE's flags so the confirm prompt
+ * behaves exactly like the action-row switch. When the owning item or rule no
+ * longer exists, deletes the AE directly.
  *
  * Returns true if the toggle was ended, false if the user cancelled.
  */
@@ -233,5 +212,5 @@ export async function endToggleEffectFromAE(
 		return true;
 	}
 
-	return toggleEffectAE(actor, item, rule);
+	return endToggleEffect(actor, item, rule);
 }

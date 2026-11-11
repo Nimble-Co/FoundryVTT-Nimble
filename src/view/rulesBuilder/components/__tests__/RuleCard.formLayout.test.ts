@@ -457,19 +457,19 @@ describe('RuleCard with a form layout (makeCrit)', () => {
 	});
 });
 
-describe('RuleCard for a toggle', () => {
-	it('names the turn-off choices in plain words, and selects only the stored one', () => {
+describe('RuleCard for a toggle modifier', () => {
+	it('names the dropped moments in plain words, and selects only the stored one', () => {
 		const { container } = render(RuleCard, {
-			rule: initialRule('toggleEffect', { turnOff: ['onRoundEnd'] }),
+			rule: initialRule('modifyToggle', { dropMoments: ['zeroHp'] }),
 			manager,
 		});
 		const chips = [...container.querySelectorAll('.nimble-tag-group__option-button')];
-		expect(chips.map((chip) => chip.textContent?.trim())).toContain('When the round ends');
-		expect(chips.map((chip) => chip.textContent?.trim())).not.toContain('onRoundEnd');
+		expect(chips.map((chip) => chip.textContent?.trim())).toContain('You drop to 0 HP');
+		expect(chips.map((chip) => chip.textContent?.trim())).not.toContain('zeroHp');
 		const selected = chips.filter((chip) =>
 			chip.classList.contains('nimble-tag-group__option-button--selected'),
 		);
-		expect(selected.map((chip) => chip.textContent?.trim())).toEqual(['When the round ends']);
+		expect(selected.map((chip) => chip.textContent?.trim())).toEqual(['You drop to 0 HP']);
 	});
 });
 

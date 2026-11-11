@@ -6,7 +6,7 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
+import { endToggleEffect, findToggleEffectRuleById } from '#utils/actor/toggleEffectControl.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
@@ -157,9 +157,9 @@ async function endToggle(actor: NimbleCharacter, itemId: string, ruleId: string)
 		ruleId,
 	);
 	if (!rule) return;
-	await toggleEffectAE(
-		actor as unknown as Parameters<typeof toggleEffectAE>[0],
-		item as unknown as Parameters<typeof toggleEffectAE>[1],
+	await endToggleEffect(
+		actor as unknown as Parameters<typeof endToggleEffect>[0],
+		item as unknown as Parameters<typeof endToggleEffect>[1],
 		rule,
 	);
 }

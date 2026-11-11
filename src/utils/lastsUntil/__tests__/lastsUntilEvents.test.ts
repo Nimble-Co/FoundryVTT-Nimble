@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const effectsEndingAtMock = vi.fn((..._args: unknown[]): object[] => []);
 const endEffectsMock = vi.fn(async (..._args: unknown[]) => undefined);
+const noteActivityMock = vi.fn((..._args: unknown[]) => undefined);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 vi.resetModules();
@@ -9,6 +10,7 @@ vi.doMock('../endEffects.js', () => ({
 	effectsEndingAt: effectsEndingAtMock,
 	endEffects: endEffectsMock,
 }));
+vi.doMock('../inactiveRound.js', () => ({ noteActivity: noteActivityMock }));
 
 const { fireAttackEvents, fireEvent, fireItemUseEvents, isAttackUse } = await import(
 	'../lastsUntilEvents.js'
@@ -160,5 +162,23 @@ describe('fireAttackEvents', () => {
 		fireAttackEvents(null);
 
 		expect(effectsEndingAtMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('activity for an inactive round', () => {
+	it('an attack that is not an item use is activity of the attacker', () => {
+		fireAttackEvents(user);
+
+		expect(noteActivityMock).toHaveBeenCalledWith(user, { attack: true });
+	});
+
+	it('an item use is activity: an attack for every effect, a use for the effects of that item', () => {
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), [ally]);
+		fireItemUseEvents(item(), []);
+
+		expect(noteActivityMock.mock.calls).toEqual([
+			[user, { attack: true, itemUuid: 'Actor.t.Item.i' }],
+			[user, { attack: false, itemUuid: 'Actor.t.Item.i' }],
+		]);
 	});
 });

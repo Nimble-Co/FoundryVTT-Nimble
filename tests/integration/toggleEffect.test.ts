@@ -1,10 +1,10 @@
 /**
  * Live regression tests for the toggleEffect rule (and its modifyToggle
- * companion) merged from dev: activating the owning item creates a real
- * backing ActiveEffect, the configured tags feed sibling rules' predicates
- * through live data prep, turn-off triggers delete the effect (with chat
- * announcement), modifyToggle suppresses configured turn-offs, and deleting
- * the owning item cleans up the stranded effect.
+ * companion): activating the owning item creates a copy of the item's effect,
+ * the configured tags feed sibling rules' predicates through live data prep,
+ * the copy's Lasts Until ends it (with the ended-effects chat line),
+ * modifyToggle drops a moment from a new copy, and deleting the owning item
+ * cleans up the stranded effect.
  *
  * Trigger dispatch runs through ruleEventDispatch, which is gated on the
  * `automation.applyRuleEffects` world setting — enabled for this suite.
@@ -23,6 +23,18 @@ import {
 const TEST_PREFIX = 'V14 Toggle Effect';
 const TOGGLE_RULE_ID = 'test-rage-toggle';
 
+const restMoment = {
+	kind: 'event',
+	boundary: null,
+	clock: null,
+	span: null,
+	value: null,
+	units: null,
+	who: 'holder',
+	event: 'rest',
+	effectName: '',
+};
+
 interface ToggleEffectLike {
 	id: string;
 	name: string;
@@ -37,7 +49,14 @@ interface ToggleActor {
 	tags: Set<string>;
 	system: { skills: Record<string, { bonus: number }> };
 	effects: { contents: ToggleEffectLike[] };
-	items: { get(id: string): Item | undefined };
+	items: {
+		get(id: string):
+			| (Item & {
+					effects: { contents: Array<{ id: string }> };
+					update(changes: Record<string, unknown>): Promise<unknown>;
+			  })
+			| undefined;
+	};
 	createEmbeddedDocuments(
 		type: 'Item',
 		data: object[],
@@ -80,19 +99,31 @@ describe('toggleEffect rule', () => {
 			'system.attributes.hp.value': 10,
 		});
 
+		const toggleRule = {
+			type: 'toggleEffect',
+			id: TOGGLE_RULE_ID,
+			label: 'Test Rage',
+			tags: ['test-raging'],
+		};
 		const [toggleItem] = await actor.createEmbeddedDocuments('Item', [
-			ruleFeatureData(`${TEST_PREFIX} Rage`, [
-				{
-					type: 'toggleEffect',
-					id: TOGGLE_RULE_ID,
-					label: 'Test Rage',
-					tags: ['test-raging'],
-					turnOff: ['onRest'],
-				},
-			]),
+			{
+				...ruleFeatureData(`${TEST_PREFIX} Rage`, [toggleRule]),
+				effects: [
+					{
+						name: 'Test Raging',
+						type: 'nimble',
+						transfer: false,
+						system: { lastsUntil: [restMoment] },
+					},
+				],
+			},
 		]);
 		toggleItemId = toggleItem.id;
 		toggleItemUuid = toggleItem.uuid;
+		const item = actor.items.get(toggleItemId)!;
+		await item.update({
+			'system.rules': [{ ...toggleRule, effectId: item.effects.contents[0]!.id }],
+		});
 
 		// A sibling bonus gated on the toggle's tag, to prove the tag reaches
 		// live data prep while the backing effect is enabled.
@@ -123,7 +154,7 @@ describe('toggleEffect rule', () => {
 		await waitFor(() => backingEffects().length === 1, 'the backing effect to be created');
 
 		const effect = backingEffects()[0]!;
-		expect(effect.name).toBe('Test Rage');
+		expect(effect.name, 'a copy of the item effect').toBe('Test Raging');
 		expect(effect.origin).toBe(toggleItemUuid);
 		expect(effect.getFlag(game.system.id, 'toggleEffectItemId')).toBe(toggleItemId);
 
@@ -155,45 +186,45 @@ describe('toggleEffect rule', () => {
 		);
 	}, 60_000);
 
-	test('modifyToggle suppresses a configured turn-off trigger', async () => {
+	test('the Lasts Until of the copy ends the toggle, with the ended-effects chat line', async () => {
+		expect(backingEffects()).toHaveLength(1);
+		const messagesBefore = game.messages.contents.length;
+
+		await actor.triggerRest({ restType: 'field', skipChatCard: true });
+		await waitFor(() => backingEffects().length === 0, 'the rest moment to end the effect');
+		await waitFor(
+			() =>
+				game.messages.contents
+					.slice(messagesBefore)
+					.some((message) => (message as { type?: string }).type === 'effectsEnded'),
+			'the ended-effects chat message',
+		);
+
+		await waitFor(() => actor.system.skills.might.bonus === 0, 'the bonus to drop');
+	}, 60_000);
+
+	test('modifyToggle drops a moment from the next copy', async () => {
 		const [modifierItem] = await actor.createEmbeddedDocuments('Item', [
 			ruleFeatureData(`${TEST_PREFIX} Deep Rage`, [
 				{
 					type: 'modifyToggle',
 					toggleIdentifier: TOGGLE_RULE_ID,
-					suppressTurnOff: ['onRest'],
+					dropMoments: ['rest'],
 				},
 			]),
 		]);
 
+		await activateToggle();
+		await waitFor(() => backingEffects().length === 1, 'the copy without the rest moment');
 		await actor.triggerRest({ restType: 'field', skipChatCard: true });
 		await settle(1200);
-		expect(backingEffects(), 'the suppressed rest must not end the toggle').toHaveLength(1);
+		expect(backingEffects(), 'the dropped rest moment must not end the toggle').toHaveLength(1);
 
 		await actor.deleteEmbeddedDocuments('Item', [modifierItem.id]);
 	}, 60_000);
 
-	test('a turn-off trigger deletes the effect and announces the end', async () => {
-		expect(backingEffects()).toHaveLength(1);
-		const messagesBefore = game.messages.contents.length;
-
-		await actor.triggerRest({ restType: 'field', skipChatCard: true });
-		await waitFor(() => backingEffects().length === 0, 'the rest turn-off to delete the effect');
-		await waitFor(
-			() =>
-				game.messages.contents
-					.slice(messagesBefore)
-					.some((message) => (message.content ?? '').includes('Test Rage')),
-			'the end announcement chat message',
-		);
-
-		// The tag-driven bonus falls away with the effect.
-		await waitFor(() => actor.system.skills.might.bonus === 0, 'the bonus to drop');
-	}, 60_000);
-
 	test('deleting the owning item cleans up a live backing effect', async () => {
-		await activateToggle();
-		await waitFor(() => backingEffects().length === 1, 'the backing effect to be re-created');
+		expect(backingEffects()).toHaveLength(1);
 
 		await actor.deleteEmbeddedDocuments('Item', [toggleItemId]);
 		await waitFor(

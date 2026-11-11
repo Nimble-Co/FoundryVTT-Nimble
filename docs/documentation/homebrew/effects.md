@@ -19,7 +19,7 @@ The window has four tabs:
 
 Each field saves when you change it.
 
-An effect on an item with **Apply to the actor** off goes on a creature from the item's card, through an [Apply Effect](activations.md#apply-effect) entry.
+An effect on an item with **Apply to the actor** off goes on a creature from the item's card, through an [Apply Effect](activations.md#apply-effect) entry. A rule can also pick one, for example the **Effect on the attacker** of a Defend Option rule: a copy goes on the attacker when the hero Defends. A Toggle Effect rule can name one as its **Effect**: while the toggle is on, the character has a copy of it, and the copy ends by its Lasts Until. A Modify Toggle rule on another feature can take moments out of that copy with **Does not end when**.
 
 ![The Details tab of an effect: State, and the Conditions with Invisible picked](/images/documentation/effect-window-conditions.png)
 

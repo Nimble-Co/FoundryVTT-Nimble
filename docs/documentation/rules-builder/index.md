@@ -64,7 +64,7 @@ Whatever the type, every rule shares a few fields:
 Some rules change a rule on another feature of the same character. They find that rule by its **Identifier**, so give the first rule an identifier in the raw JSON view, and type the same identifier in the second rule.
 
 - **Modify Pool** adds to a Charge Pool or a Dice Pool: a higher maximum, a bigger die, or **Additional refills**.
-- **Modify Toggle** changes when a Toggle Effect turns off or on.
+- **Modify Toggle** changes a Toggle Effect: **Does not end when** takes moments out of the Lasts Until of its effect, and **Turn on by itself** turns it on when something happens.
 - **Modify Reroll** adds to a Reroll rule. Its **Changes to the new roll** (advantage or disadvantage, extra damage) count one time per attack or check. What creatures gain (actions for the one who rolled, temp HP for the one who rolled and their allies) comes with each use of the reroll. The Songweaver's Heroic Ballad, Unfailing Courage, Fire in my Bones and Inspiring Presence are examples on Songweaver's Inspiration. It does not add to a Change a Die rule.
 
 Some fields of these rules need a word:
