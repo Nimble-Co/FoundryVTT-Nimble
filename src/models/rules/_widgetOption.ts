@@ -27,6 +27,7 @@ export const WIDGET_HINTS = [
 	'hidden',
 	'dicePoolPicker',
 	'chargePoolPicker',
+	'itemEffectPicker',
 	'chips',
 ] as const;
 

@@ -1,3 +1,4 @@
+import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
 import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { DamageRoll } from '../../../dice/DamageRoll.js';
@@ -289,6 +290,7 @@ export function createOpportunityAttackPanelState(
 		};
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		fireAttackEvents(getActor());
 		await endUsedConditions(getActor(), conditions);
 	}
 

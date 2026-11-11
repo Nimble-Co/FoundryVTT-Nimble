@@ -72,6 +72,19 @@ export function fireEvent(
 	]);
 }
 
+/** An attack that is not an item use: an attack, and so a roll. */
+export function fireAttackEvents(actor: { name?: string | null } | null): void {
+	if (!actor) return;
+	const name = actor.name;
+	fireEvents([
+		{ check: { type: 'event', event: 'attack', actor }, heading: eventHeading('attack', { name }) },
+		{
+			check: { type: 'event', event: 'nextRoll', actor },
+			heading: eventHeading('nextRoll', { name }),
+		},
+	]);
+}
+
 /** A spell of tier 1 or more. A cantrip is tier 0. */
 function isTieredSpell(item: UsedItem): boolean {
 	return item.type === 'spell' && Number((item.system as { tier?: number })?.tier ?? 0) >= 1;

@@ -1,6 +1,7 @@
 import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
@@ -435,6 +436,19 @@ async function buildNcsAttackChatData(params: {
 	};
 }
 
+/** The attack event of each actor whose member rolled. */
+function fireMemberAttackEvents(
+	attackMembers: Combatant.Implementation[],
+	rolledCombatantIds: string[],
+): void {
+	const rolled = new Set(rolledCombatantIds);
+	const attackers = new Set<Actor>();
+	for (const member of attackMembers) {
+		if (member.actor && rolled.has(member.id ?? '')) attackers.add(member.actor as Actor);
+	}
+	for (const actor of attackers) fireAttackEvents(actor);
+}
+
 async function maybeAdvanceTurnAfterAttack(params: {
 	combat: Combat;
 	endTurn: boolean;
@@ -595,6 +609,7 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
+	fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,
 		endTurn: normalizedParams.endTurn,

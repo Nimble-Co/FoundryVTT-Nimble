@@ -18,6 +18,7 @@ beforeAll(async () => {
 	vi.doMock('../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 		default: itemActivationConfigDialogMock,
 	}));
+	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireAttackEvents: vi.fn() }));
 	vi.doMock('../../utils/damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => [],
 		getDamageBonusTotal: () => 0,

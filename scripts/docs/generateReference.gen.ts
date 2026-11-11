@@ -157,6 +157,8 @@ function widgetKindLabel(widget: string | undefined, constructorName: string): s
 			return 'Dice pool picker';
 		case 'chargePoolPicker':
 			return 'Charge pool picker';
+		case 'itemEffectPicker':
+			return 'Item effect picker';
 		default:
 			break;
 	}

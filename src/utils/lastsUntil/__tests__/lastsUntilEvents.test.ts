@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { effectsEndingAtMock, endEffectsMock } = vi.hoisted(() => ({
-	effectsEndingAtMock: vi.fn((..._args: unknown[]): object[] => []),
-	endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
-}));
+const effectsEndingAtMock = vi.fn((..._args: unknown[]): object[] => []);
+const endEffectsMock = vi.fn(async (..._args: unknown[]) => undefined);
 
-vi.mock('../endEffects.js', () => ({
+// Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
+vi.resetModules();
+vi.doMock('../endEffects.js', () => ({
 	effectsEndingAt: effectsEndingAtMock,
 	endEffects: endEffectsMock,
 }));
 
-const { fireEvent, fireItemUseEvents, isAttackUse } = await import('../lastsUntilEvents.js');
+const { fireAttackEvents, fireEvent, fireItemUseEvents, isAttackUse } = await import(
+	'../lastsUntilEvents.js'
+);
 
 const user = { name: 'Tessa' };
 const ally = { name: 'Bruno' };
@@ -142,6 +144,20 @@ describe('fireEvent', () => {
 
 	it('no creature, no event', () => {
 		fireEvent('takeDamage', null);
+
+		expect(effectsEndingAtMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('fireAttackEvents', () => {
+	it('an attack that is not an item use checks the attack and the next roll', () => {
+		fireAttackEvents(user);
+
+		expect(firedEvents()).toEqual(['attack', 'nextRoll']);
+	});
+
+	it('no creature, no event', () => {
+		fireAttackEvents(null);
 
 		expect(effectsEndingAtMock).not.toHaveBeenCalled();
 	});

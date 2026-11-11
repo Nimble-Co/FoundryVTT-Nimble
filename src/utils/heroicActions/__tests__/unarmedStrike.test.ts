@@ -10,6 +10,7 @@ import {
 const damageRollMock = vi.fn();
 const dialogMock = vi.fn();
 const spendRuleChargeMock = vi.fn(async () => true);
+const fireAttackEventsMock = vi.fn();
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let rollUnarmedStrike: typeof import('../unarmedStrike.ts').rollUnarmedStrike;
@@ -24,6 +25,7 @@ beforeAll(async () => {
 	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
 		spendRuleCharge: spendRuleChargeMock,
 	}));
+	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireAttackEvents: fireAttackEventsMock }));
 	vi.doMock('../../damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => ['1d4'],
 		getDamageBonusTotal: () => 2,
@@ -47,6 +49,7 @@ beforeEach(() => {
 	restore = resetHeroicGlobals();
 	savedFromUuidSync = globals.fromUuidSync;
 	dialogMock.mockReset();
+	fireAttackEventsMock.mockClear();
 	damageRollMock.mockReset();
 	damageRollMock.mockImplementation(function roll() {
 		return { evaluate: vi.fn(), toJSON: () => ({}), isCritical: false, isMiss: false };
@@ -267,6 +270,16 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('fires the attack event for the striker once', async () => {
+		dialogResult({ rollMode: 0 });
+		const actor = createHeroicCharacter();
+
+		await rollUnarmedStrike(actor);
+
+		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+	});
+
 	it('posts nothing when the dialog is cancelled', async () => {
 		dialogResult(null);
 
@@ -274,6 +287,7 @@ describe('rollUnarmedStrike', () => {
 
 		expect(damageRollMock).not.toHaveBeenCalled();
 		expect(ChatMessage.create).not.toHaveBeenCalled();
+		expect(fireAttackEventsMock).not.toHaveBeenCalled();
 	});
 });
 

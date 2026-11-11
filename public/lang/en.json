@@ -1767,6 +1767,12 @@
 				"empty": "No charge pools defined on this actor",
 				"notFound": "⚠ {identifier} (not found)"
 			},
+			"itemEffectPicker": {
+				"none": "None",
+				"missing": "Missing effect ({id})",
+				"empty": "This item has no effects with Apply to the actor turned off",
+				"noItem": "This rule is not on an item, so there are no effects to list"
+			},
 			"poolIdentifierPlaceholder": "Type a pool identifier",
 			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"templateValueHintBefore": "Use",

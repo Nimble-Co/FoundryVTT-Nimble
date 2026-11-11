@@ -470,7 +470,7 @@ value: new fields.StringField(
 ),
 ```
 
-The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | dicePoolPicker | chargePoolPicker | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
+The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | dicePoolPicker | chargePoolPicker | itemEffectPicker | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
 
 For `widget: 'documentUuid'`, set `documentTypes: ['Item.spell']` (or `['Item']`, `['Actor']`) to gate accepted drops.
 
