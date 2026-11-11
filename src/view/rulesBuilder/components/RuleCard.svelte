@@ -305,9 +305,11 @@
 			gap: 0;
 		}
 
+		// The name keeps room to read; the badges and controls go to a second line when there is not enough.
 		&__header {
 			display: flex;
-			gap: 8px;
+			flex-wrap: wrap;
+			gap: 4px 8px;
 			align-items: center;
 		}
 
@@ -350,8 +352,9 @@
 		}
 
 		.nimble-rule-card__label {
-			flex-grow: 1;
+			flex: 1 1 9rem;
 			min-width: 0;
+			text-overflow: ellipsis;
 			height: 26px;
 			padding: 0 2px;
 			border: 0;
@@ -386,6 +389,7 @@
 		&__controls {
 			display: flex;
 			gap: 0.125rem;
+			margin-inline-start: auto;
 		}
 
 		&__body {

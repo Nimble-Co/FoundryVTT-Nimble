@@ -9,6 +9,7 @@ import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { choiceLabels } from './_rollUseRule.js';
 import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
 import { withWidget } from './_widgetOption.js';
 import {
@@ -80,7 +81,8 @@ function schema() {
 			initial: 'onCrit',
 			label: 'NIMBLE.rules.applyCondition.trigger.label',
 			hint: 'NIMBLE.rules.applyCondition.trigger.hint',
-			choices: TRIGGER_CHOICES as unknown as string[],
+			// The same triggers, and words, as Use an item for free.
+			choices: choiceLabels('useItemFree', 'triggers', TRIGGER_CHOICES),
 		}),
 		effectId: new fields.StringField(
 			withWidget({

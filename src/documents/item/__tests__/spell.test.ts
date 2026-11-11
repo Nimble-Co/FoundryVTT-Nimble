@@ -240,4 +240,46 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		};
 		expect(chatData.system.targets).toEqual(['Token.caster']);
 	});
+
+	describe('the targets of the card', () => {
+		const globals = globalThis as unknown as { game: { user: { targets: unknown } } };
+		let userTargets: unknown;
+
+		beforeEach(() => {
+			userTargets = globals.game.user.targets;
+			globals.game.user.targets = [{ document: { uuid: 'Token.goblin' } }];
+			setResourceSpendingAutomation(false);
+		});
+
+		afterEach(() => {
+			globals.game.user.targets = userTargets;
+		});
+
+		function activateItem(options: ItemActivationManager.ActivationOptions) {
+			const itemLike = createSpellLike({ tier: 0, currentMana: 5 });
+			Object.setPrototypeOf(itemLike, NimbleBaseItem.prototype);
+			return NimbleBaseItem.prototype.activate
+				.call(itemLike as unknown as NimbleBaseItem, options)
+				.then(() => itemLike._createActivationCard.mock.calls[0]);
+		}
+
+		it('are what the user targets on a normal use', async () => {
+			const [chatData, , , context] = await activateItem({});
+
+			expect(chatData.system.targets).toEqual(['Token.goblin']);
+			expect(context.targets).toEqual([{ document: { uuid: 'Token.goblin' } }]);
+		});
+
+		it('are none on a free use, which a trigger starts and not the user', async () => {
+			const [chatData, , , context] = await activateItem({
+				fastForward: true,
+				free: { of: [], reason: { key: 'For free' } },
+			});
+
+			expect(chatData.system.targets).toEqual([]);
+			expect(context.targets).toEqual([]);
+			const preUse = (Hooks.call as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[2];
+			expect(preUse.targets).toEqual([]);
+		});
+	});
 });

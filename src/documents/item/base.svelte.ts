@@ -316,7 +316,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			rolls,
 			isCritical,
 			isMiss,
-			targets: Array.from(game.user?.targets ?? []),
+			targets: manager.targets,
 			...useContext,
 		});
 		if (!allowed) return null;
@@ -333,7 +333,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 			const shouldHide = rollHidden && canHideRoll;
 
-			let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
+			let targets = manager.targets.map((token) => token.document.uuid);
 			const hasHealingEffect = activation.effects?.some(
 				(effect: { type: string }) => effect.type === 'healing',
 			);
@@ -402,7 +402,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				isCritical,
 				isMiss,
 				discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-				targets: Array.from(game.user?.targets ?? []),
+				targets: manager.targets,
 				...useContext,
 			});
 		} catch (error) {

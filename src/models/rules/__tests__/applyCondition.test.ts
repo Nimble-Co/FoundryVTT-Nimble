@@ -9,7 +9,7 @@ const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
 import { SYSTEM_ID } from '#system';
-import { ApplyConditionRule, type ApplyConditionTrigger } from '../applyCondition.js';
+import { ApplyConditionRule, type ApplyConditionTrigger, TRIGGER_CHOICES } from '../applyCondition.js';
 
 interface MockActiveEffect {
 	condition: string;
@@ -236,6 +236,16 @@ describe('ApplyConditionRule', () => {
 			const condition = schema.condition as unknown as { choices: () => Record<string, string> };
 
 			expect(condition.choices()).toBe(CONFIG.NIMBLE.conditions);
+		});
+
+		it('names each trigger with the words of Use an item for free, not its raw id', () => {
+			const schema = ApplyConditionRule.defineSchema();
+			const trigger = schema.trigger as unknown as { choices: Record<string, string> };
+
+			expect(trigger.choices.onCritReceived).toBe(
+				'NIMBLE.rules.useItemFree.triggers.choices.onCritReceived',
+			);
+			expect(Object.keys(trigger.choices)).toEqual([...TRIGGER_CHOICES]);
 		});
 	});
 

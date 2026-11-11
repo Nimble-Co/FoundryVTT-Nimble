@@ -115,11 +115,27 @@ uses them and those always on while the creature has the item, each with what us
 			gap: 0.25rem;
 		}
 
+		// The heading takes two lines, or the button goes under it when there is no room.
 		&__header {
 			display: flex;
+			flex-wrap: wrap;
 			align-items: center;
 			justify-content: space-between;
-			gap: 0.5rem;
+			gap: 0.375rem 0.5rem;
+
+			.nimble-heading {
+				--nimble-heading-line-height: 1.25;
+
+				flex: 1 1 10rem;
+				min-width: 0;
+				white-space: normal;
+				overflow-wrap: break-word;
+			}
+
+			.nimble-button {
+				flex: 0 0 auto;
+				white-space: nowrap;
+			}
 		}
 
 		&__empty {

@@ -242,6 +242,15 @@ class ItemActivationManager {
 		};
 	}
 
+	/**
+	 * The tokens this use targets. A free use starts from a trigger, not from the user's aim, so it
+	 * has none; its card can still get targets.
+	 */
+	get targets(): Token.Implementation[] {
+		if (this.free) return [];
+		return Array.from(game.user?.targets ?? []) as Token.Implementation[];
+	}
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -509,8 +518,7 @@ class ItemActivationManager {
 			this.invokesChaos = true;
 		}
 
-		// Get Targets — resolve the first target's domain for targetCondition evaluation
-		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
+		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
 		this.#applyChosenWeapon(dialogData);
 
@@ -683,7 +691,7 @@ class ItemActivationManager {
 					// The acquireTargetsFromTemplate flag marks intentional AoE items;
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
-					const targetCount = Array.from(game.user?.targets ?? []).length;
+					const targetCount = this.targets.length;
 					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
@@ -749,7 +757,7 @@ class ItemActivationManager {
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
 					this.#heldPlan = attackHeldPlanOf({
 						attacker: this.actor,
-						target: firstTargetActor(),
+						target: this.free ? null : firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
 						melee: isMelee(delivery),
@@ -1689,7 +1697,7 @@ class ItemActivationManager {
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */
 	#getSoleTargetToken(): Token.Implementation | null {
-		return soleTarget(game.user?.targets, {
+		return soleTarget(this.targets, {
 			firstDecides: this.#isSingleTargetAttack(),
 		}) as Token.Implementation | null;
 	}

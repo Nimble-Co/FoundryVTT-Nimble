@@ -1751,6 +1751,72 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('targets', () => {
+		const globals = globalThis as unknown as { game: { user: { targets: unknown[] } } };
+
+		afterEach(() => {
+			globals.game.user.targets = [];
+		});
+
+		it('are what the user targets on a normal use', () => {
+			const goblin = { document: { uuid: 'Token.goblin' } };
+			globals.game.user.targets = [goblin];
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+
+			expect(manager.targets).toEqual([goblin]);
+		});
+
+		async function critWithTwoTargets(options: ItemActivationManager.ActivationOptions) {
+			globals.game.user.targets = [
+				{ document: { uuid: 'Token.goblin' } },
+				{ document: { uuid: 'Token.kobold' } },
+			];
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				options,
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 6 }),
+				}),
+			);
+
+			await manager.getData();
+
+			return vi.mocked(DamageRoll).mock.calls.at(-1)?.[2]?.canCrit;
+		}
+
+		it('make a normal use with two targets a Multi-target Attack, which cannot crit', async () => {
+			expect(await critWithTwoTargets({ fastForward: true })).toBe(false);
+		});
+
+		it('are none on a free use, so the user targets do not make it a Multi-target Attack', async () => {
+			const canCrit = await critWithTwoTargets({
+				fastForward: true,
+				free: { of: [], reason: { key: 'For free' } },
+			});
+
+			expect(manager.targets).toEqual([]);
+			expect(canCrit).toBe(true);
+		});
+	});
+
 	describe('Edge cases', () => {
 		it('should handle effects with no roll types (condition, note, etc.)', async () => {
 			manager = new ItemActivationManager(

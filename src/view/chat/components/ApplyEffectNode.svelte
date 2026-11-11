@@ -63,7 +63,7 @@
 				{#each row.appliedLines as line}
 					<span class="nimble-apply-effect__applied-line">
 						<i class="fa-solid fa-check" aria-hidden="true"></i>
-						{line}
+						<span>{line}</span>
 					</span>
 				{/each}
 			</span>
@@ -85,16 +85,21 @@
 {/if}
 
 <style lang="scss">
+	// The applied lines and the note take a full line under the name, so no word breaks in a narrow column.
 	.nimble-apply-effect {
+		--nimble-apply-effect-img-size: 2rem;
+		--nimble-apply-effect-gap: 0.5rem;
+
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.25rem var(--nimble-apply-effect-gap);
 		min-width: 0;
 
 		&__img {
 			flex: 0 0 auto;
-			width: 2rem;
-			height: 2rem;
+			width: var(--nimble-apply-effect-img-size);
+			height: var(--nimble-apply-effect-img-size);
 			border: 0;
 			border-radius: 4px;
 			object-fit: cover;
@@ -102,7 +107,7 @@
 
 		&__text {
 			display: flex;
-			flex: 1 1 auto;
+			flex: 1 1 0;
 			flex-direction: column;
 			gap: 0.125rem;
 			min-width: 0;
@@ -112,7 +117,7 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
 			line-height: 1.2;
-			overflow-wrap: anywhere;
+			overflow-wrap: break-word;
 		}
 
 		&__lasts {
@@ -142,18 +147,32 @@
 
 		&__applied,
 		&__note {
-			flex: 0 1 auto;
-			max-width: 50%;
+			flex: 1 0 100%;
+			min-width: 0;
+			padding-inline-start: calc(
+				var(--nimble-apply-effect-img-size) + var(--nimble-apply-effect-gap)
+			);
 			font-size: var(--nimble-sm-text);
 			line-height: 1.3;
-			overflow-wrap: anywhere;
+			overflow-wrap: break-word;
 		}
 
 		&__applied {
 			display: flex;
 			flex-direction: column;
+			gap: 0.125rem;
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
+		}
+
+		&__applied-line {
+			display: flex;
+			align-items: baseline;
+			gap: 0.25rem;
+
+			i {
+				flex: 0 0 auto;
+			}
 		}
 
 		&__note {

@@ -2812,7 +2812,7 @@
 				"cardLine": "For free: {trigger} ({feature})",
 				"reasons": {
 					"onHit": "you hit with an attack",
-					"onCrit": "you crit with an attack",
+					"onCrit": "you hit with a crit",
 					"onMiss": "you missed an attack",
 					"onTurnStart": "your turn started",
 					"onTurnEnd": "your turn ended",
@@ -2821,7 +2821,7 @@
 					"onSaveFail": "you failed a save",
 					"onRest": "you rested",
 					"onInitiative": "you rolled Initiative",
-					"onCritReceived": "an enemy crit you",
+					"onCritReceived": "an enemy hit you with a crit",
 					"onDying": "you started Dying"
 				}
 			},
