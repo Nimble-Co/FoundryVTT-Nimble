@@ -8,19 +8,37 @@ function combatantIn(round: number, turn: number, index: number) {
 }
 
 describe('turnMoment', () => {
-	it('keys a turn by combat, round, index in the turn order and boundary', () => {
+	it('keys a turn by combat, round, combatant and boundary', () => {
 		expect(turnMoment('turnStart', combatantIn(3, 1, 1), { round: 3, turn: 1 })).toEqual({
 			round: 3,
 			moment: {
-				key: 'combat1:3:1:turnStart',
+				key: 'combat1:3:cB:turnStart',
 				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Goblin' } },
 			},
 		});
 	});
 
-	it('with no index, keys the turn by the combatant', () => {
-		expect(turnMoment('turnStart', combatantIn(3, 1, 1))?.moment.key).toBe(
-			'combat1:3:cB:turnStart',
+	it('a turn end with the place of the turn and one with no place have one key', () => {
+		const ended = combatantIn(4, 0, 2);
+
+		expect(turnMoment('turnEnd', ended, { round: 3, turn: 2 })?.moment.key).toBe(
+			turnMoment('turnEnd', ended)?.moment.key,
+		);
+	});
+
+	it('a combatant with more than one turn in the round adds the index of the turn', () => {
+		const turns = [{ id: 'cHero' }, { id: 'cDragon' }, { id: 'cElf' }, { id: 'cDragon' }];
+		const dragon = {
+			id: 'cDragon',
+			name: 'Dragon',
+			combat: { id: 'combat1', round: 2, turn: 3, turns },
+		};
+
+		expect(turnMoment('turnEnd', dragon, { round: 2, turn: 1 })?.moment.key).toBe(
+			'combat1:2:cDragon@1:turnEnd',
+		);
+		expect(turnMoment('turnEnd', dragon, { round: 2, turn: 3 })?.moment.key).toBe(
+			'combat1:2:cDragon@3:turnEnd',
 		);
 	});
 

@@ -1,4 +1,4 @@
-import type { CardEventText } from '#types/cardEvent.d.ts';
+import type { CardEventText, MovementOfferHost } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
 import { activationEventsOf } from '#utils/chat/activationEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
@@ -9,10 +9,7 @@ import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
-import {
-	type MovementOfferHost,
-	offerMovement,
-} from '../../utils/movement/postMovementOfferCard.js';
+import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type InitiativeRolledContext,

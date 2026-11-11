@@ -1,7 +1,11 @@
-import type { CardEvent, CardEventMoment, CardEventText } from '#types/cardEvent.d.ts';
+import type {
+	CardEvent,
+	CardEventText,
+	EventHostCard,
+	MovementOfferHost,
+} from '#types/cardEvent.d.ts';
 import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferActor, OfferCard } from '#types/movement.js';
-import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import { addCardEvents, addMomentEvents, cardEventText } from '#utils/chat/cardEvents.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { movementCardWhisper } from './movementCardWhisper.js';
@@ -23,20 +27,6 @@ export interface MovementOfferCardInput {
 	recipients: 'self' | string[];
 	/** Whether only the owners of the source and of each creature with an offer, and the GMs, see the card. */
 	whisper: boolean;
-}
-
-/** The card that shows the offer as a line: a card, the card of a moment, or an item use. */
-export type MovementOfferHost =
-	| { card: HostCard }
-	| { moment: CardEventMoment }
-	| { activation: ActivationEvents };
-
-interface HostCard {
-	id?: string | null;
-	type?: string;
-	whisper?: readonly (string | null)[];
-	flags?: Record<string, unknown>;
-	update?(changes: object): Promise<unknown>;
 }
 
 interface BuiltOffer {
@@ -120,7 +110,7 @@ function offerEvent(input: MovementOfferCardInput, built: BuiltOffer): CardEvent
 }
 
 /** A whispered offer goes only on a card that no one else reads. */
-function readersWithin(card: HostCard, whisper: readonly string[]): boolean {
+function readersWithin(card: EventHostCard, whisper: readonly string[]): boolean {
 	if (whisper.length < 1) return true;
 	const readers = card.whisper ?? [];
 	if (readers.length < 1) return false;

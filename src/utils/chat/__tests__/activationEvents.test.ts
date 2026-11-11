@@ -4,7 +4,8 @@ import { activationEventsOf, openActivationEvents } from '../activationEvents.js
 
 const line = (id: string, at: number): CardEvent => ({
 	id,
-	kind: 'note',
+	kind: 'poolGain',
+	icon: 'fa-solid fa-dice',
 	text: { key: id },
 	at,
 });
@@ -35,17 +36,23 @@ describe('activation events', () => {
 		expect(sink).toHaveBeenCalledWith([line('after', 3)]);
 	});
 
-	it('takes no line a while after the card, or for a use with no card', async () => {
+	it('takes no line a while after the card', () => {
 		vi.useFakeTimers();
 		const actor = { uuid: 'Actor.c' };
 		const use = openActivationEvents(actor);
 		use?.posted(vi.fn(async () => true));
-		vi.advanceTimersByTime(5000);
-		expect(activationEventsOf(actor)).toBeNull();
 
-		const other = { uuid: 'Actor.d' };
-		openActivationEvents(other)?.posted(null);
-		expect(activationEventsOf(other)).toBeNull();
+		vi.advanceTimersByTime(5000);
+
+		expect(activationEventsOf(actor)).toBeNull();
+	});
+
+	it('takes no line for a use with no card', () => {
+		const actor = { uuid: 'Actor.d' };
+
+		openActivationEvents(actor)?.posted(null);
+
+		expect(activationEventsOf(actor)).toBeNull();
 	});
 
 	it('drops a use that stopped, and keeps the newer use of the actor', () => {
@@ -56,6 +63,37 @@ describe('activation events', () => {
 		expect(activationEventsOf(actor)).toBe(second);
 		second?.close();
 		expect(activationEventsOf(actor)).toBeNull();
+	});
+
+	it('a use made during another use takes the lines while it is live', () => {
+		const actor = { uuid: 'Actor.f' };
+		openActivationEvents(actor);
+		const inner = openActivationEvents(actor);
+
+		expect(activationEventsOf(actor)).toBe(inner);
+	});
+
+	it('the outer use takes the lines again once the use made during it closes', async () => {
+		const actor = { uuid: 'Actor.g' };
+		const outer = openActivationEvents(actor);
+		const inner = openActivationEvents(actor);
+
+		inner?.close();
+		await activationEventsOf(actor)?.add([line('outer', 1)]);
+
+		expect(activationEventsOf(actor)).toBe(outer);
+		expect(outer?.take().map((event) => event.id)).toEqual(['outer']);
+	});
+
+	it('the outer use takes the lines again once the window of the inner card ends', () => {
+		vi.useFakeTimers();
+		const actor = { uuid: 'Actor.h' };
+		const outer = openActivationEvents(actor);
+		openActivationEvents(actor)?.posted(vi.fn(async () => true));
+
+		vi.advanceTimersByTime(5000);
+
+		expect(activationEventsOf(actor)).toBe(outer);
 	});
 
 	it('has no use outside an item use', () => {

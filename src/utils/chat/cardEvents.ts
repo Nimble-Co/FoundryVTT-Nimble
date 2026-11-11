@@ -82,6 +82,13 @@ export function cardEventText(text: CardEventText): string {
 	return localize(text.key, data);
 }
 
+/** The ids of the GMs: who reads a card for the GMs only. */
+export function gmReaders(): string[] {
+	return (game.users?.filter((user) => user.isGM).map((user) => user.id ?? '') ?? []).filter(
+		Boolean,
+	);
+}
+
 /**
  * Whether the card can show a line. A line for the GMs only needs a card that only GMs read; a
  * card whispered to others shows them a placeholder, so its whisper list is who reads it.

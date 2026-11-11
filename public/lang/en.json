@@ -722,6 +722,7 @@
 				"undo": "Undo",
 				"undoLabel": "Undo: put {effect} back on {name}",
 				"backOn": "On {name}",
+				"useHeading": "{name} uses {item}",
 				"cause": {
 					"source": "{source}",
 					"reasonAndSource": "{reason} - {source}",

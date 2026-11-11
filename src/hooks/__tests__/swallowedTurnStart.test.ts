@@ -53,7 +53,7 @@ describe('Swallowed damage at turn start', () => {
 		expect(create).not.toHaveBeenCalled();
 		const [moment, events] = addMomentEvents.mock.calls[0] as [CardEventMoment, CardEvent[]];
 		expect(moment).toEqual({
-			key: 'combat1:2:0:turnStart',
+			key: 'combat1:2:cHero:turnStart',
 			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
 		});
 		expect(events).toHaveLength(1);

@@ -101,6 +101,25 @@ describe('fireItemUseEvents with an item card', () => {
 		expect(hosts).toEqual(['itemCard', 'itemCard', 'itemCard', 'itemCard']);
 	});
 
+	it('a use that went on a moment card puts its ends on that card, for the same readers', () => {
+		const moment = {
+			key: 'combat1:2:cHero:turnStart',
+			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
+		};
+
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), [], { moment, whisper: ['gm'] });
+
+		expect(endEffectsMock.mock.calls[0][1]).toEqual({
+			key: 'combat1:2:cHero:turnStart',
+			heading: moment.heading,
+			reason: {
+				key: 'NIMBLE.lastsUntil.chat.heading.attack',
+				data: { name: 'Tessa', item: '', effect: '' },
+			},
+			whisper: ['gm'],
+		});
+	});
+
 	it('a use with no card (a rule hid it) has no host', () => {
 		fireItemUseEvents(item({}, [{ type: 'damage' }]), [], null);
 

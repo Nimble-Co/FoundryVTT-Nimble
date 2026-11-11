@@ -1,13 +1,10 @@
-import type { CardEvent } from '#types/cardEvent.d.ts';
+import type { CardEvent, EventSink } from '#types/cardEvent.d.ts';
 
 /**
  * How long after its card is made an item use still takes lines. A rule that reacts to the use
  * (a pool gain, a move) can finish after the card exists; its line still goes on that card.
  */
 const AFTER_CARD_MS = 3000;
-
-/** Where the lines go once the card of the use exists. False: the caller posts its own card. */
-export type EventSink = (events: CardEvent[]) => Promise<boolean>;
 
 interface ActorKey {
 	uuid?: string | null;
@@ -18,7 +15,16 @@ function keyOf(actor: ActorKey | null | undefined): string | null {
 	return actor?.uuid || actor?.id || null;
 }
 
-const open = new Map<string, ActivationEvents>();
+/** The open uses of each actor, oldest first. A use made during another use is on top. */
+const open = new Map<string, ActivationEvents[]>();
+
+/** The uses of the actor that can still take a line; the others leave the stack. */
+function liveStack(key: string): ActivationEvents[] {
+	const stack = (open.get(key) ?? []).filter((events) => events.live);
+	if (stack.length > 0) open.set(key, stack);
+	else open.delete(key);
+	return stack;
+}
 
 /**
  * The lines of one item use, from before its card exists: they go in the card's create data, so
@@ -78,28 +84,27 @@ export class ActivationEvents {
 	/** The use stopped before it had a card; its lines are dropped. */
 	close(): void {
 		this.#closed = true;
-		if (open.get(this.#key) === this) open.delete(this.#key);
+		liveStack(this.#key);
 	}
 }
 
-/** Start the lines of an item use by this actor. A newer use of the actor takes its place. */
+/**
+ * Start the lines of an item use by this actor. While it is live it takes the lines of the actor;
+ * after it, the use it was made in takes them again.
+ */
 export function openActivationEvents(actor: ActorKey | null | undefined): ActivationEvents | null {
 	const key = keyOf(actor);
 	if (!key) return null;
 	const events = new ActivationEvents(key);
-	open.set(key, events);
+	open.set(key, [...liveStack(key), events]);
 	return events;
 }
 
-/** The item use of this actor that can still take a line, if there is one. */
+/** The newest item use of this actor that can still take a line, if there is one. */
 export function activationEventsOf(actor: ActorKey | null | undefined): ActivationEvents | null {
 	const key = keyOf(actor);
 	if (!key) return null;
-	const events = open.get(key);
-	if (!events) return null;
-	if (events.live) return events;
-	open.delete(key);
-	return null;
+	return liveStack(key).at(-1) ?? null;
 }
 
 /** A unique id for a line. */

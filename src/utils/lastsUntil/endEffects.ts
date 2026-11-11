@@ -8,8 +8,6 @@ import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { LastsUntilCheck, Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 
-export type { EndedEffectRow } from '#types/cardEvent.d.ts';
-
 const QUERY_NAME = `${SYSTEM_ID}.endTimedEffects`;
 
 /** The moment that ends the effects: its card and why they ended. */
@@ -23,6 +21,8 @@ export interface EndMoment {
 	hostId?: string;
 	/** The Lasts Until moment that ended each effect, by effect UUID. */
 	endedBy?: Record<string, Moment>;
+	/** Who sees the card of the moment. Empty or missing: everyone. */
+	whisper?: string[];
 }
 
 /** Where the check happened: the moments it reached are read here, before the effects go. */
@@ -107,7 +107,9 @@ async function postEnded(moment: EndMoment, lines: EndedLine[]): Promise<boolean
 	const host = moment.hostId ? game.messages?.get(moment.hostId) : null;
 	if (host && canHost(host as never) && (await addCardEvents(host as never, events))) return true;
 	const key = moment.key ?? `once:${foundry.utils.randomID()}`;
-	return addMomentEvents({ key, heading: moment.heading }, events);
+	return addMomentEvents({ key, heading: moment.heading }, events, {
+		...(moment.whisper ? { whisper: moment.whisper } : {}),
+	});
 }
 
 /** On the active GM: delete the effects, then add a line each to the card of the moment. */

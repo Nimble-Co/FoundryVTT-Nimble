@@ -1,4 +1,5 @@
 import { systemHookName } from '#system';
+import type { EventHost, TurnMomentType, TurnPlace } from '#types/cardEvent.d.ts';
 import { getActorHealthState } from '#utils/actor/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
@@ -12,13 +13,8 @@ import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { seatOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
-import {
-	type EventHost,
-	eventHeading,
-	fireEvent,
-	fireItemUseEvents,
-} from '#utils/lastsUntil/lastsUntilEvents.js';
-import { type TurnMomentType, type TurnPlace, turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
+import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
@@ -159,6 +155,8 @@ function onDeleteEffect(
 
 interface UseItemContext {
 	targets?: Array<{ actor?: object | null } | null>;
+	/** With no card: where the lines of the use went. */
+	eventHost?: EventHost;
 }
 
 function onUseItem(
@@ -169,7 +167,7 @@ function onUseItem(
 	const targets = (context?.targets ?? []).flatMap((target) =>
 		target?.actor ? [target.actor] : [],
 	);
-	void fireItemUseEvents(item, targets, card);
+	void fireItemUseEvents(item, targets, card ?? context?.eventHost ?? null);
 }
 
 /** The ends go on the card whose Apply Damage was clicked. */

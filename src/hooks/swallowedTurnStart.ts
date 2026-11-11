@@ -1,6 +1,6 @@
-import type { CardEvent } from '#types/cardEvent.d.ts';
+import type { CardEvent, TurnPlace } from '#types/cardEvent.d.ts';
 import { addMomentEvents } from '#utils/chat/cardEvents.js';
-import { type TurnPlace, turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 

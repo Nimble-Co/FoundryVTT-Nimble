@@ -366,13 +366,13 @@ describe('UseItemFreeRule', () => {
 
 			expect(hostOf(0)).toEqual({
 				moment: {
-					key: 'combat1:3:1:turnStart',
+					key: 'combat1:3:cHero:turnStart',
 					heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
 				},
 			});
 			expect(hostOf(1)).toEqual({
 				moment: {
-					key: 'combat1:2:4:turnEnd',
+					key: 'combat1:2:cHero:turnEnd',
 					heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Tessa' } },
 				},
 			});

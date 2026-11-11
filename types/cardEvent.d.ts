@@ -1,5 +1,6 @@
 import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer } from '#types/movement.js';
+import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 /**
@@ -29,8 +30,7 @@ export type CardEventKind =
 	| 'movementOffer'
 	| 'interpose'
 	| 'healthState'
-	| 'damage'
-	| 'note';
+	| 'damage';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -51,20 +51,19 @@ export type CardEventAction =
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 
+/** The icon plate of a line: an image, or a Font Awesome class when there is no image. */
+export type CardEventPlate = { img: string; icon?: never } | { icon: string; img?: never };
+
 /** One line of the Events strip of a chat card. */
-export interface CardEvent {
+export type CardEvent = CardEventPlate & {
 	id: string;
 	kind: CardEventKind;
-	/** An image for the icon plate. */
-	img?: string;
-	/** A Font Awesome class for the icon plate, when there is no image. */
-	icon?: string;
 	text: CardEventText;
 	cause?: CardEventText;
 	action?: CardEventAction;
 	/** When it happened, in ms. The lines show in this order. */
 	at: number;
-}
+};
 
 /** The moment of a moment card: the key that finds its card, and the heading. */
 export interface CardEventMoment {
@@ -77,3 +76,39 @@ export interface CardEventMoment {
  * moment. Ids and plain data only, so a GM query can carry it.
  */
 export type FreeUseHost = { cardId: string } | { moment: CardEventMoment };
+
+/** Where the lines of a use go once its card exists. False: the caller posts its own card. */
+export type EventSink = (events: CardEvent[]) => Promise<boolean>;
+
+/**
+ * Where the ends of an event go: the card of the action that caused it, or the card of a moment,
+ * seen by `whisper` (empty or missing: everyone).
+ */
+export type EventHost =
+	| { id?: string | null }
+	| { moment: CardEventMoment; whisper?: string[] }
+	| null
+	| undefined;
+
+/** A chat card that can take lines. */
+export interface EventHostCard {
+	id?: string | null;
+	type?: string;
+	whisper?: readonly (string | null)[];
+	flags?: Record<string, unknown>;
+	update?(changes: object): Promise<unknown>;
+}
+
+/** The card that shows a Movement Offer as a line: a card, the card of a moment, or an item use. */
+export type MovementOfferHost =
+	| { card: EventHostCard }
+	| { moment: CardEventMoment }
+	| { activation: ActivationEvents };
+
+export type TurnMomentType = 'turnStart' | 'turnEnd';
+
+/** The round and the index in the turn order of a turn, when the combat says them. */
+export interface TurnPlace {
+	round?: number;
+	turn?: number | null;
+}

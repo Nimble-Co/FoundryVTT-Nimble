@@ -1,10 +1,18 @@
-import type { CardEvent, CardEventText, CardEventValue, FreeUseHost } from '#types/cardEvent.d.ts';
+import type {
+	CardEvent,
+	CardEventText,
+	CardEventValue,
+	EventHost,
+	EventHostCard,
+	EventSink,
+	FreeUseHost,
+} from '#types/cardEvent.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import { facesText } from '#utils/dicePool/poolEvents.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-import { cardEventId, type EventSink } from './activationEvents.js';
-import { addCardEvents, addMomentEvents, canHost } from './cardEvents.js';
+import { cardEventId } from './activationEvents.js';
+import { addCardEvents, addMomentEvents, canHost, gmReaders } from './cardEvents.js';
 import type { FreeUseReason } from './freeUseReason.js';
 
 const WORDS = 'NIMBLE.chat.events.freeUse';
@@ -111,14 +119,6 @@ export function freeUseEvent(input: FreeUseLineInput): CardEvent {
 	};
 }
 
-interface HostCard {
-	id?: string | null;
-	type?: string;
-	whisper?: readonly (string | null)[];
-	flags?: Record<string, unknown>;
-	update?(changes: object): Promise<unknown>;
-}
-
 function hasOfferLine(events: CardEvent[]): boolean {
 	return events.some((event) => event.action?.kind === 'movementOffer');
 }
@@ -130,15 +130,19 @@ function hasOfferLine(events: CardEvent[]): boolean {
  */
 export function freeUseSink(host: FreeUseHost, { gmOnly }: { gmOnly: boolean }): EventSink | null {
 	if ('cardId' in host) {
-		const card = game.messages?.get(host.cardId) as unknown as HostCard | undefined;
+		const card = game.messages?.get(host.cardId) as unknown as EventHostCard | undefined;
 		if (!card || !canHost(card, { gmOnly })) return null;
 		return async (events) => {
 			if (hasOfferLine(events) && !cardSchemaHas(card.type, 'movementOffers')) return false;
 			return addCardEvents(card, events);
 		};
 	}
-	const whisper = gmOnly
-		? (game.users?.filter((user) => user.isGM).map((user) => user.id ?? '') ?? []).filter(Boolean)
-		: [];
+	const whisper = gmOnly ? gmReaders() : [];
 	return (events) => addMomentEvents(host.moment, events, { whisper });
+}
+
+/** Where the other lines of a folded free use go: the card that took its line. */
+export function freeUseEventHost(host: FreeUseHost, { gmOnly }: { gmOnly: boolean }): EventHost {
+	if ('cardId' in host) return { id: host.cardId };
+	return { moment: host.moment, whisper: gmOnly ? gmReaders() : [] };
 }

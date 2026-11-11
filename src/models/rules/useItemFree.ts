@@ -1,9 +1,9 @@
-import type { FreeUseHost } from '#types/cardEvent.d.ts';
+import type { FreeUseHost, TurnMomentType } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleLabel } from '#utils/actor/actorRules.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { useItemForFree } from '#utils/actor/useItemForFree.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
-import { type TurnMomentType, turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { cardAttackOutcome } from '#utils/rolls/cardAttackOutcome.js';
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';

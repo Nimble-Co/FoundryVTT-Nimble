@@ -25,7 +25,8 @@ interface TestCard {
 
 const line = (id: string, at: number): CardEvent => ({
 	id,
-	kind: 'note',
+	kind: 'poolGain',
+	icon: 'fa-solid fa-dice',
 	text: { key: `text.${id}` },
 	at,
 });
@@ -54,6 +55,8 @@ let messages: TestCard[];
 let create: ReturnType<typeof vi.fn>;
 let query: ReturnType<typeof vi.fn>;
 let previous: Record<string, unknown>;
+let previousCreate: unknown;
+let previousQueries: unknown;
 
 beforeEach(() => {
 	messages = [];
@@ -73,6 +76,8 @@ beforeEach(() => {
 		users: globals.game.users,
 		messages: globals.game.messages,
 	};
+	previousCreate = (ChatMessage as unknown as { create?: unknown }).create;
+	previousQueries = globals.CONFIG.queries;
 	Object.assign(ChatMessage, { create });
 	globals.game.user = { id: 'gm', name: 'Gamemaster', isGM: true, isActiveGM: true };
 	const users = new Map([
@@ -94,7 +99,9 @@ beforeEach(() => {
 
 afterEach(() => {
 	Object.assign(globals.game, previous);
-	delete (ChatMessage as unknown as { create?: unknown }).create;
+	if (previousCreate === undefined) delete (ChatMessage as unknown as { create?: unknown }).create;
+	else Object.assign(ChatMessage, { create: previousCreate });
+	globals.CONFIG.queries = previousQueries;
 	vi.restoreAllMocks();
 });
 
@@ -181,7 +188,8 @@ describe('the GM query', () => {
 
 		await handler()({ op: 'moment', moment, events: [line('a', 1)], options: {} });
 
-		expect(create).toHaveBeenCalledTimes(1);
+		expect(messages).toHaveLength(1);
+		expect(idsOf(messages[0].flags[SYSTEM_ID].events)).toEqual(['a']);
 	});
 });
 
@@ -292,7 +300,7 @@ describe('cardEventsOf', () => {
 
 		const events = cardEventsOf(card);
 
-		expect(events.map((event) => event.kind)).toEqual(['effectEnded', 'note']);
+		expect(events.map((event) => event.kind)).toEqual(['effectEnded', 'poolGain']);
 		expect(events[0].action).toEqual({ kind: 'undoEnd', row });
 		expect(cardEventText(events[0].text)).toBe('Blinded ended on Goblin');
 		expect(cardEventText(events[0].cause as never)).toBe('Pocket Sand');

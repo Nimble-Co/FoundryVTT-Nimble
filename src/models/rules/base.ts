@@ -1,3 +1,4 @@
+import type { TurnPlace } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import type { FormulaActor, FormulaCheckOptions } from '#types/formulaReferences.d.ts';
 import type { MovementRecord } from '#types/movement.js';
@@ -106,8 +107,7 @@ interface TurnContext {
 	combat: Combat;
 	combatant: Combatant;
 	actor: NimbleBaseActor;
-	/** The round and the index in the turn order of the turn, when the combat says them. */
-	place?: { round?: number; turn?: number | null };
+	place?: TurnPlace;
 }
 
 interface ActorHealthContext {

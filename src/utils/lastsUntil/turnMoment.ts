@@ -1,12 +1,4 @@
-import type { CardEventMoment } from '#types/cardEvent.d.ts';
-
-export type TurnMomentType = 'turnStart' | 'turnEnd';
-
-/** The round and the index in the turn order of a turn, when the combat says them. */
-export interface TurnPlace {
-	round?: number;
-	turn?: number | null;
-}
+import type { CardEventMoment, TurnMomentType, TurnPlace } from '#types/cardEvent.d.ts';
 
 interface TurnCombatant {
 	id?: string | null;
@@ -28,6 +20,17 @@ function roundOfEndedTurn(combatant: TurnCombatant): number {
 }
 
 /**
+ * Which turn of the round: the combatant. A combatant with more than one turn in a round (a solo
+ * monster) adds the index in the turn order, when the place says it.
+ */
+function turnSeat(combatant: TurnCombatant, place?: TurnPlace): string {
+	const id = combatant.id ?? '';
+	const turns = (combatant.combat?.turns ?? []).filter((each) => each.id === combatant.id);
+	if (turns.length > 1 && typeof place?.turn === 'number') return `${id}@${place.turn}`;
+	return id;
+}
+
+/**
  * The moment card of the start or end of a turn: the key that finds it, and its heading. Every
  * poster of one turn boundary uses it, so their lines go on one card. Null outside a combat.
  */
@@ -44,7 +47,7 @@ export function turnMoment(
 	return {
 		round,
 		moment: {
-			key: `${combatId}:${round}:${place?.turn ?? combatant.id}:${type}`,
+			key: `${combatId}:${round}:${turnSeat(combatant, place)}:${type}`,
 			heading: {
 				key: `NIMBLE.lastsUntil.chat.heading.${type}`,
 				data: { name: combatant.name ?? '' },

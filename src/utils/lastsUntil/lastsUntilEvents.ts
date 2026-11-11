@@ -1,6 +1,6 @@
-import type { CardEventText } from '#types/cardEvent.d.ts';
+import type { CardEventText, EventHost } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
-import { effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
+import { type EndMoment, effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
 import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -43,8 +43,22 @@ export function eventHeading(event: LastsUntilEvent, names: HeadingNames): CardE
 
 type EventCheck = Extract<LastsUntilCheck, { type: 'event' }>;
 
-/** The card of the action that caused the event. Its Events strip takes the ended lines. */
-export type EventHost = { id?: string | null } | null | undefined;
+/**
+ * Where the ends of an event go: the host card, or the card of the host moment with the event as
+ * the reason, or else a card of their own headed by the event.
+ */
+function endMomentOn(heading: CardEventText, host: EventHost): EndMoment {
+	if (host && 'moment' in host) {
+		return {
+			key: host.moment.key,
+			heading: host.moment.heading,
+			reason: heading,
+			...(host.whisper?.length ? { whisper: host.whisper } : {}),
+		};
+	}
+	const hostId = host?.id ?? undefined;
+	return { heading, ...(hostId ? { hostId } : {}) };
+}
 
 /**
  * End what each event ends, one message for each event, or lines on `host`. An effect that more
@@ -56,11 +70,10 @@ export function fireEvents(
 	host?: EventHost,
 ): void {
 	const taken = new Set<ActiveEffect>();
-	const hostId = host?.id ?? undefined;
 	for (const { check, heading } of events) {
 		const effects = effectsEndingAt(check).filter((effect) => !taken.has(effect));
 		for (const effect of effects) taken.add(effect);
-		void endEffects(effects, { heading, ...(hostId ? { hostId } : {}) }, { check });
+		void endEffects(effects, endMomentOn(heading, host), { check });
 	}
 }
 

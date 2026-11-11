@@ -813,7 +813,7 @@ describe('FreeMoveRule hosts', () => {
 		} as never);
 		expect(offerHosts.at(-1)).toEqual({
 			moment: {
-				key: 'c1:2:1:turnStart',
+				key: 'c1:2:cb:turnStart',
 				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Hero' } },
 			},
 		});

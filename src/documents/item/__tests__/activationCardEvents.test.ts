@@ -62,7 +62,13 @@ function chatDataWith(effects: unknown[], targets: string[] = []) {
 	} as Record<string, any>;
 }
 
-const line = (id: string): CardEvent => ({ id, kind: 'note', text: { key: id }, at: 1 });
+const line = (id: string): CardEvent => ({
+	id,
+	kind: 'poolGain',
+	icon: 'fa-solid fa-dice',
+	text: { key: id },
+	at: 1,
+});
 
 let host: { id: string; whisper: string[]; flags: object; update: ReturnType<typeof vi.fn> };
 let saved: Record<string, unknown>;
@@ -153,9 +159,52 @@ describe('a free use with nothing to click', () => {
 			expect.objectContaining({ id: null }),
 			expect.objectContaining({ id: 'self' }),
 		);
-		expect(Hooks.callAll).toHaveBeenCalledWith(systemHookName('useItem'), expect.anything(), null, {
-			free,
-		});
+		expect(Hooks.callAll).toHaveBeenCalledWith(
+			systemHookName('useItem'),
+			expect.anything(),
+			null,
+			expect.objectContaining({ free }),
+		);
+	});
+
+	it('hands its host card to the useItem hook, so what the use ends goes on that card', async () => {
+		await itemStub()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{ free },
+			{ events: null, free, hidden: false },
+		);
+
+		expect(Hooks.callAll).toHaveBeenCalledWith(
+			systemHookName('useItem'),
+			expect.anything(),
+			null,
+			expect.objectContaining({ eventHost: { id: 'attack' } }),
+		);
+	});
+
+	it('hands its moment card to the useItem hook, with the key and readers of that card', async () => {
+		const moment = {
+			key: 'combat1:2:cHero:turnStart',
+			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Hero' } },
+		};
+		const atMoment = { ...free, host: { moment } };
+
+		await itemStub()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{},
+			{ events: null, free: atMoment, hidden: false },
+		);
+
+		expect(Hooks.callAll).toHaveBeenCalledWith(
+			systemHookName('useItem'),
+			expect.anything(),
+			null,
+			expect.objectContaining({ eventHost: { moment, whisper: [] } }),
+		);
 	});
 
 	it('posts its card as before when the card has something to click', async () => {
@@ -213,5 +262,127 @@ describe('a free use with nothing to click', () => {
 		);
 
 		expect(globals.ChatMessage.create).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('a use whose card a rule holds back', () => {
+	let created: Record<string, any>[];
+	let savedUsers: unknown;
+
+	function heldBackItem() {
+		const item = itemStub() as ActivationCardHost & { rules: Map<string, unknown> };
+		item.rules = new Map([['hide', { disabled: false, suppressesActivationCard: () => true }]]);
+		return item;
+	}
+
+	beforeEach(() => {
+		created = [];
+		savedUsers = globals.game.users;
+		globals.game.users = {
+			filter: (test: (user: { id: string; isGM: boolean }) => boolean) =>
+				[
+					{ id: 'gm', isGM: true },
+					{ id: 'player', isGM: false },
+				].filter(test),
+		};
+		globals.game.messages = {
+			get: () => undefined,
+			contents: created,
+		};
+		globals.ChatMessage.create = vi.fn(async (data: Record<string, any>) => {
+			const card: Record<string, any> = {
+				...data,
+				id: `card${created.length}`,
+				update: vi.fn(async (changes: Record<string, unknown>) => {
+					card.flags[SYSTEM_ID].events = changes[`flags.${SYSTEM_ID}.events`];
+				}),
+			};
+			created.push(card);
+			return card;
+		});
+	});
+
+	afterEach(() => {
+		globals.game.users = savedUsers;
+	});
+
+	it('posts its lines on a card of their own, headed by the use', async () => {
+		const events = openActivationEvents(actor);
+		await events?.add([line('pool')]);
+
+		const card = await heldBackItem()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{},
+			{ events, free: null, hidden: false },
+		);
+
+		expect(card).toBeNull();
+		expect(created).toHaveLength(1);
+		expect(created[0].system.momentKey).toMatch(/^once:/);
+		expect(created[0].system.momentHeading).toEqual({
+			key: 'NIMBLE.chat.events.useHeading',
+			data: { name: 'Hero', item: 'Rage' },
+		});
+		expect(created[0].flags[SYSTEM_ID].events).toEqual([line('pool')]);
+		expect(created[0]).not.toHaveProperty('whisper');
+	});
+
+	it('shows that card to the GMs only when the use was for the GMs only', async () => {
+		const events = openActivationEvents(actor);
+		await events?.add([line('pool')]);
+
+		await heldBackItem()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{},
+			{ events, free: null, hidden: true },
+		);
+
+		expect(created[0].whisper).toEqual(['gm']);
+	});
+
+	it('puts a line that comes after on the same card', async () => {
+		const events = openActivationEvents(actor);
+		await events?.add([line('pool')]);
+		await heldBackItem()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{},
+			{ events, free: null, hidden: false },
+		);
+
+		await events?.add([line('later')]);
+
+		expect(created).toHaveLength(1);
+		expect(created[0].flags[SYSTEM_ID].events.map((event: CardEvent) => event.id)).toEqual([
+			'pool',
+			'later',
+		]);
+	});
+
+	it('hands that card to the useItem hook, so what the use ends goes on it too', async () => {
+		await heldBackItem()._createActivationCard(
+			chatDataWith([]),
+			[],
+			{ effects: [] },
+			{},
+			{ events: openActivationEvents(actor), free: null, hidden: true },
+		);
+
+		expect(Hooks.callAll).toHaveBeenCalledWith(
+			systemHookName('useItem'),
+			expect.anything(),
+			null,
+			expect.objectContaining({
+				eventHost: {
+					moment: expect.objectContaining({ key: expect.stringMatching(/^once:/) }),
+					whisper: ['gm'],
+				},
+			}),
+		);
 	});
 });

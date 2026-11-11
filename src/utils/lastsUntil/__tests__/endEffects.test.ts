@@ -1,13 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import type { CardEvent } from '#types/cardEvent.d.ts';
-import {
-	type EndedEffectRow,
-	effectsEndingAt,
-	endEffects,
-	everyActor,
-	undoEndedEffect,
-} from '../endEffects.js';
+import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
+import { effectsEndingAt, endEffects, everyActor, undoEndedEffect } from '../endEffects.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
 
 const moment = (text: string, key?: string) => ({

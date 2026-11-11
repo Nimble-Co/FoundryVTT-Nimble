@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { EffectNode } from '#types/effectTree.js';
 import {
 	freeUseEvent,
@@ -92,20 +93,37 @@ describe('freeUseEvent', () => {
 
 describe('freeUseSink', () => {
 	let previous: Record<string, unknown>;
+	let card: { id: string; type: string; whisper: string[]; update: ReturnType<typeof vi.fn> };
 
 	beforeEach(() => {
-		previous = { messages: globals.game.messages, users: globals.game.users };
+		previous = {
+			messages: globals.game.messages,
+			users: globals.game.users,
+			user: globals.game.user,
+		};
+		card = { id: 'host', type: 'feature', whisper: [], update: vi.fn(async () => undefined) };
+		globals.game.messages = { get: (id: string) => (id === 'host' ? card : undefined) };
+		globals.game.user = { id: 'gm', isGM: true, isActiveGM: true };
 	});
 
 	afterEach(() => {
 		Object.assign(globals.game, previous);
 	});
 
-	it('is null when the host card is gone or cannot show a GM line', () => {
-		const card = { id: 'host', whisper: [] as string[], update: vi.fn() };
-		globals.game.messages = { get: (id: string) => (id === 'host' ? card : undefined) };
+	it('is null when the host card is gone', () => {
 		expect(freeUseSink({ cardId: 'missing' }, { gmOnly: false })).toBeNull();
+	});
+
+	it('is null when the host card cannot show a GM line', () => {
 		expect(freeUseSink({ cardId: 'host' }, { gmOnly: true })).toBeNull();
-		expect(freeUseSink({ cardId: 'host' }, { gmOnly: false })).toBeTypeOf('function');
+	});
+
+	it('writes the lines on the host card', async () => {
+		const line = freeUseEvent({ actorName: 'Hero', item: { name: 'Rage' }, reason, effects: [] });
+		const sink = freeUseSink({ cardId: 'host' }, { gmOnly: false });
+
+		expect(await sink?.([line])).toBe(true);
+
+		expect(card.update).toHaveBeenCalledWith({ [`flags.${SYSTEM_ID}.events`]: [line] });
 	});
 });

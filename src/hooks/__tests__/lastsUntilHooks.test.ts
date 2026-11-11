@@ -381,6 +381,18 @@ describe('events', () => {
 		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [], card);
 	});
 
+	it('an item use with no card hands on where its lines went, so its ends go there too', () => {
+		const item = { actor: { name: 'Tessa' } };
+		const eventHost = {
+			moment: { key: 'once:abc', heading: { key: 'NIMBLE.chat.events.useHeading' } },
+			whisper: [],
+		};
+
+		hook(systemHookName('useItem'))(item, null, { targets: [], eventHost });
+
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [], eventHost);
+	});
+
 	it('damage on a miss is no damage', () => {
 		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, isMiss: true });
 
