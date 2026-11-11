@@ -2601,7 +2601,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				mockItem.system.scaling = { mode: 'none' };
 				manager = new ItemActivationManager(
 					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
-					{ fastForward: true, free: { of: ['mana'], reason: 'For free' } },
+					{ fastForward: true, free: { of: ['mana'], reason: { key: 'For free' } } },
 				);
 				manager.activationData = { effects: [], skipRollDialog: true };
 				mockReconstructEffectsTree.mockReturnValue([]);
@@ -2609,7 +2609,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				await manager.getData();
 
 				expect(manager.spellCost).toEqual({ type: 'none' });
-				expect(manager.free).toEqual({ of: ['action', 'mana'], reason: 'For free' });
+				expect(manager.free).toEqual({ of: ['action', 'mana'], reason: { key: 'For free' } });
 			});
 
 			it('still costs mana on a use free only of its uses', async () => {
@@ -2619,7 +2619,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				mockItem.system.scaling = { mode: 'none' };
 				manager = new ItemActivationManager(
 					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
-					{ fastForward: true, free: { of: ['action', 'uses'], reason: 'For free' } },
+					{ fastForward: true, free: { of: ['uses'], reason: { key: 'For free' } } },
 				);
 				manager.activationData = { effects: [], skipRollDialog: true };
 				mockReconstructEffectsTree.mockReturnValue([]);

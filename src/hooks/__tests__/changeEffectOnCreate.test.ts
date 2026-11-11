@@ -80,7 +80,7 @@ describe('changeNewEffect', () => {
 		});
 	});
 
-	it('adds an event moment for each id that is not there yet', () => {
+	it('adds an event moment for each id that is not there yet, never "another effect ends"', () => {
 		const effect = newEffect(
 			holderWith([changeRule('rage', [], ['attack', 'zeroHp', 'effectEnds'])]),
 			[eventMoment('zeroHp')],
@@ -89,11 +89,7 @@ describe('changeNewEffect', () => {
 		changeNewEffect(effect);
 
 		expect(effect.updateSource).toHaveBeenCalledWith({
-			'system.lastsUntil': [
-				eventMoment('zeroHp'),
-				eventMoment('attack'),
-				{ ...eventMoment('effectEnds'), who: null },
-			],
+			'system.lastsUntil': [eventMoment('zeroHp'), eventMoment('attack')],
 		});
 	});
 

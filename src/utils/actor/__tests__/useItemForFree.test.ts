@@ -13,15 +13,17 @@ async function load() {
 }
 
 const free = {
-	of: ['action' as const, 'uses' as const],
-	reason: 'For free: your turn started (Rage)',
+	of: ['uses' as const],
+	reason: { key: 'NIMBLE.rules.useItemFree.cardLine', data: { feature: 'Rage' } },
 };
 
 function actorWith(
 	items: Array<{ id: string; identifier?: string; system?: { identifier?: string } }>,
+	isOwner = false,
 ) {
 	return {
 		uuid: 'Actor.hero',
+		isOwner,
 		items,
 		activateItem: vi.fn(async (..._args: unknown[]) => ({})),
 	};
@@ -78,6 +80,29 @@ describe('useItemForFree', () => {
 			itemIdentifier: 'rage',
 			free,
 		});
+	});
+
+	it('on the client of a player who owns the actor, makes the use there', async () => {
+		const { useItemForFree } = await load();
+		isActiveGM.mockReturnValue(false);
+		vi.stubGlobal('game', { ...game, user: { id: 'player', isGM: false } });
+		const actor = actorWith([{ id: 'b', identifier: 'rage' }], true);
+
+		expect(await useItemForFree(actor, 'rage', free)).toBe(true);
+		expect(actor.activateItem).toHaveBeenCalledWith('b', { fastForward: true, free });
+		expect(askActiveGm).not.toHaveBeenCalled();
+	});
+
+	it('on a GM client that is not the active GM, asks the active GM', async () => {
+		const { useItemForFree } = await load();
+		isActiveGM.mockReturnValue(false);
+		vi.stubGlobal('game', { ...game, user: { id: 'other-gm', isGM: true } });
+		const actor = actorWith([{ id: 'b', identifier: 'rage' }], true);
+
+		await useItemForFree(actor, 'rage', free);
+
+		expect(actor.activateItem).not.toHaveBeenCalled();
+		expect(askActiveGm).toHaveBeenCalledTimes(1);
 	});
 
 	it('registers a query that makes the use on the GM', async () => {

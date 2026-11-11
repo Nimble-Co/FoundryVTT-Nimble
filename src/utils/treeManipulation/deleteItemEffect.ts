@@ -8,7 +8,16 @@ import {
 
 interface DeletableItem extends UserItem {
 	update(data: Record<string, unknown>): Promise<unknown>;
+	updateEmbeddedDocuments(
+		type: 'ActiveEffect',
+		updates: Record<string, unknown>[],
+	): Promise<unknown>;
 	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+}
+
+/** The stored data of a document, not the prepared data. */
+function sourceOf(document: UserRuleHolder): { system?: unknown } {
+	return (document as { _source?: { system?: unknown } })._source ?? document;
 }
 
 /** Sets `effectId` to null on every Apply Effect node, at any depth, that points at the effect. */
@@ -31,7 +40,7 @@ export async function deleteItemEffect(item: DeletableItem, effectId: string): P
 	const users = itemEffectUsers(item, effectId);
 	const itemUpdate: Record<string, unknown> = {};
 	if (users.some((user) => user.kind === 'node')) {
-		const tree = foundry.utils.deepClone(activationTreeOf(item));
+		const tree = foundry.utils.deepClone(activationTreeOf(sourceOf(item)));
 		clearNodes(tree, effectId);
 		itemUpdate['system.activation.effects'] = tree;
 	}
@@ -43,20 +52,19 @@ export async function deleteItemEffect(item: DeletableItem, effectId: string): P
 		byRule.set(user.rule.id, user.fields);
 		fieldsByHolder.set(user.holder, byRule);
 	}
-	const holderUpdates: Promise<unknown>[] = [];
+	const effectUpdates: Record<string, unknown>[] = [];
 	for (const [holder, byRule] of fieldsByHolder) {
-		const rules = rulesOf(holder).map((rule) => {
+		if (holder !== item && (!holder.id || holder.id === effectId)) continue;
+		const rules = rulesOf(sourceOf(holder)).map((rule) => {
 			const fields = rule.id ? byRule.get(rule.id) : undefined;
 			if (!fields) return rule;
 			return { ...rule, ...Object.fromEntries(fields.map((name) => [name, ''])) };
 		});
 		if (holder === item) itemUpdate['system.rules'] = rules;
-		else if (holder.id !== effectId && holder.update) {
-			holderUpdates.push(holder.update({ 'system.rules': rules }));
-		}
+		else effectUpdates.push({ _id: holder.id, 'system.rules': rules });
 	}
 
 	if (Object.keys(itemUpdate).length) await item.update(itemUpdate);
-	await Promise.all(holderUpdates);
+	if (effectUpdates.length) await item.updateEmbeddedDocuments('ActiveEffect', effectUpdates);
 	await item.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
 }

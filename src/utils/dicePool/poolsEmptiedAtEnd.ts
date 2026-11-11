@@ -17,15 +17,18 @@ export interface EndingEffect {
 
 interface ItemLike {
 	id?: string | null;
+	isEmbedded?: boolean;
 	actor?: unknown;
+}
+
+function ownerOf(item: ItemLike): Actor | null {
+	if (!item.isEmbedded) return null;
+	return item.actor instanceof Actor ? item.actor : null;
 }
 
 function holderOf(effect: EndingEffect): Actor | null {
 	if (effect.parent instanceof Actor) return effect.parent;
-	if (effect.parent instanceof Item) {
-		const owner = (effect.parent as ItemLike).actor;
-		return owner instanceof Actor ? owner : null;
-	}
+	if (effect.parent instanceof Item) return ownerOf(effect.parent as ItemLike);
 	return null;
 }
 
@@ -38,7 +41,7 @@ function originItemIdOf(effect: EndingEffect, holder: Actor): string | null {
 	}) as unknown;
 	if (!(origin instanceof Item)) return null;
 	const item = origin as ItemLike;
-	return item.actor === holder ? (item.id ?? null) : null;
+	return ownerOf(item) === holder ? (item.id ?? null) : null;
 }
 
 function emptyPoolsRules(effect: EndingEffect): EmptyPoolsRuleLike[] {

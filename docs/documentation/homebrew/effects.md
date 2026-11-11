@@ -23,7 +23,7 @@ Each field saves when you change it.
 
 ## Item effects
 
-Every item sheet has an **Effects** tab, between **Activation** and **Rules**. It has two lists, each with a **New effect** button:
+Every item sheet has an **Effects** tab, next to **Activation** or **Rules**. It has two lists, each with a **New effect** button:
 
 - **Given when something uses them**: effects with **Apply to the actor** off. An [Apply Effect](activations.md#apply-effect) step or a rule of the item gives a copy to a creature.
 - **Always on while you have this item**: effects with **Apply to the actor** on. The creature that has the item has the effect.
@@ -40,7 +40,14 @@ A state that a creature turns on, such as Rage, is an item effect. The effect is
 2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty pools at end** rule for each dice pool that the end empties.
 3. On **Activation → On use**, add an **Apply Effect** step. Set **Who takes it** to **The creature that uses this**, and pick the effect.
 
-When the creature uses the item, the effect goes on it. With the Feature Effects automation setting off, the card has an **Apply to You** button in place. A use while the effect is on keeps one copy, and the card says "Raging stays on Grug". The row of the item on the sheet shows **Active** while the creature has an effect that the item gave, and a click on the row still uses the item. To end the state by hand, delete the effect on the **Effects** tab of the sheet. The confirm has a line for each pool that the end empties, such as "Your Fury Dice are lost.". Another feature can change the state with a **Change an effect** rule, or use the item for free with a **Use an item for free** rule. See [Rules for effects and states](../rules-builder/index.md#rules-for-effects-and-states).
+When the creature uses the item, the effect goes on it. The row of the item on the sheet shows **Active** while the creature has an effect that the item gave. To end the state by hand, delete the effect on the **Effects** tab of the sheet. Another feature can change the state with a **Change an effect** rule, or use the item for free with a **Use an item for free** rule. See [Rules for effects and states](../rules-builder/index.md#rules-for-effects-and-states).
+
+::: details Using the item again, and ending the state
+- With the Feature Effects automation setting off, the card has an **Apply to You** button in place.
+- A use while the effect is on keeps one copy, and the card says "Raging stays on Grug". A click on the row still uses the item.
+- The delete confirm has a line for each pool that the end empties, for example "Your Fury Dice are lost."
+- When the item is removed from the creature, the effects that it gave the creature end too.
+:::
 
 ## Lasts Until
 

@@ -112,7 +112,7 @@ The conditions and effects on you. The tab count shows how many there are.
 
 - **Conditions on you**: each condition that is on you now. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they show here while they are on.
 - **The condition grid**: the conditions that you set by hand. A condition that is on is crimson, with a check. Click a condition to turn it on or off. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**.
-- **Active effects** and **passive effects**: the other effects on your character. While you have Inspiration, it is in **Active effects** too: click its row to end it when you spend it. An effect that an item gives shows the name of the item: change it through the item. To remove an effect of your own, click **Remove**, and the sheet asks first. Removing an effect that a use of an item gave, such as Raging, ends that state. The confirm has a line for each pool that the end empties, such as "Your Fury Dice are lost.".
+- **Active effects** and **passive effects**: the other effects on your character. While you have Inspiration, it is in **Active effects** too: click its row to end it when you spend it. An effect that an item gives shows the name of the item: change it through the item. To remove an effect of your own, click **Remove**, and the sheet asks first. Removing an effect that a use of an item gave, such as Raging, ends that state. The confirm has a line for each pool that the end empties, for example "Your Fury Dice are lost."
 
 A group with nothing in it does not show. See [Conditions](../playing/conditions.md).
 

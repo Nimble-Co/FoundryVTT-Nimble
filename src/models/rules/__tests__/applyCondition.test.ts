@@ -363,7 +363,8 @@ describe('ApplyConditionRule', () => {
 
 		it('fires onCritReceived on a crit against the owner, also a discarded crit that keeps its triggers', async () => {
 			const ownerActor = createMockActor();
-			const attackerActor = createMockActor();
+			const attackerActor = Object.assign(createMockActor(), { token: { disposition: -1 } });
+			Object.assign(ownerActor, { token: { disposition: 1 } });
 			const rule = createApplyConditionRule(
 				{ condition: 'focused', trigger: 'onCritReceived' },
 				ownerActor,
@@ -377,7 +378,7 @@ describe('ApplyConditionRule', () => {
 			);
 			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
 
-			const secondOwner = createMockActor();
+			const secondOwner = Object.assign(createMockActor(), { type: 'character' });
 			const secondRule = createApplyConditionRule(
 				{ condition: 'focused', trigger: 'onCritReceived' },
 				secondOwner,
@@ -387,6 +388,21 @@ describe('ApplyConditionRule', () => {
 				discardedCritTriggers: true,
 			});
 			expect(conditionsAppliedTo(secondOwner)).toEqual(['focused']);
+		});
+
+		it('does not fire onCritReceived for a crit from an ally', async () => {
+			const ownerActor = Object.assign(createMockActor(), { token: { disposition: 1 } });
+			const allyActor = Object.assign(createMockActor(), { token: { disposition: 1 } });
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onCritReceived' },
+				ownerActor,
+			);
+
+			await rule.onAttackReceived(
+				buildItemUsedContext(allyActor, ownerActor, { isCritical: true }),
+			);
+
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 		});
 
 		it('does not fire onCritReceived for a crit against another creature', async () => {
@@ -413,12 +429,31 @@ describe('ApplyConditionRule', () => {
 				ownerActor,
 			);
 			type Context = Parameters<ApplyConditionRule['onActorDying']>[0];
+			const user = game.user;
+			vi.stubGlobal('game', { ...game, user: { id: 'gm', isGM: true } });
 
 			await rule.onActorDying({ actor: otherActor as unknown as Context['actor'], source: null });
 			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 
 			await rule.onActorDying({ actor: ownerActor as unknown as Context['actor'], source: null });
+			vi.stubGlobal('game', { ...game, user });
 			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
+		});
+
+		it('fires onDying only on the active GM, as every client sees it', async () => {
+			const ownerActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onDying' },
+				ownerActor,
+			);
+			type Context = Parameters<ApplyConditionRule['onActorDying']>[0];
+			const user = game.user;
+			vi.stubGlobal('game', { ...game, user: { id: 'player', isGM: false } });
+
+			await rule.onActorDying({ actor: ownerActor as unknown as Context['actor'], source: null });
+			vi.stubGlobal('game', { ...game, user });
+
+			expect(conditionsAppliedTo(ownerActor)).toEqual([]);
 		});
 
 		it('fires onSaveFail only on failing outcome', async () => {
@@ -995,5 +1030,22 @@ describe('ApplyConditionRule', () => {
 
 			expect(hooksCallAll).not.toHaveBeenCalledWith('nimble.conditionApplied', expect.anything());
 		});
+	});
+});
+
+describe('ApplyConditionRule effect picker words', () => {
+	const recipientOf = (trigger: string) => {
+		const field = ApplyConditionRule.defineSchema().effectId as unknown as {
+			options: { recipient: (data: Record<string, unknown>) => string };
+		};
+		return field.options.recipient({ trigger });
+	};
+
+	it('reads the Lasts Until for the targets on an attack outcome', () => {
+		expect(recipientOf('onHit')).toBe('targets');
+	});
+
+	it('reads the Lasts Until for the rule actor on a self trigger', () => {
+		expect(recipientOf('onTurnStart')).toBe('self');
 	});
 });

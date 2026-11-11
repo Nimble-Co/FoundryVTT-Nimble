@@ -7,7 +7,7 @@ import { watchItemEffects } from '../dataPreparationHelpers/watchItemEffects.js'
 /** The select value of the "New effect" choice. */
 export const NEW_EFFECT = '__new';
 
-export interface ItemEffectOption {
+interface ItemEffectOption {
 	id: string;
 	name: string;
 }
@@ -35,7 +35,7 @@ export function createItemEffectSelectState(
 	const options = $derived(
 		effects
 			.filter((effect) => effect.transfer === false && effect.id)
-			.map((effect) => ({ id: effect.id as string, name: effect.name ?? '' }))
+			.map((effect): ItemEffectOption => ({ id: effect.id as string, name: effect.name ?? '' }))
 			.sort((a, b) => a.name.localeCompare(b.name)),
 	);
 
@@ -48,10 +48,17 @@ export function createItemEffectSelectState(
 
 	let busy = false;
 
-	/** Stores the pick (a new effect for NEW_EFFECT), then deletes the effect it left if unused. */
-	async function choose(value: string, onchange: (effectId: string | null) => unknown) {
+	/**
+	 * Stores the pick (a new effect for NEW_EFFECT), then deletes the effect it left if unused.
+	 * True when a new pick is stored; false when nothing changed, also for a pick made while
+	 * the last one is still being stored.
+	 */
+	async function choose(
+		value: string,
+		onchange: (effectId: string | null) => unknown,
+	): Promise<boolean> {
 		const item = getItem();
-		if (!item || busy) return;
+		if (!item || busy) return false;
 		busy = true;
 		try {
 			const left = getValue() || null;
@@ -61,12 +68,13 @@ export function createItemEffectSelectState(
 					((await item.createEmbeddedDocuments('ActiveEffect', [
 						{ name: item.name, img: item.img, type: NIMBLE_EFFECT_TYPE, transfer: false },
 					])) as { id: string }[] | undefined) ?? [];
-				if (!created) return;
+				if (!created) return false;
 				chosen = created.id;
 			}
-			if (chosen === left) return;
+			if (chosen === left) return false;
 			await onchange(chosen);
 			await deleteLeftItemEffect(item as never, activationTreeOf(item), left);
+			return true;
 		} finally {
 			busy = false;
 		}

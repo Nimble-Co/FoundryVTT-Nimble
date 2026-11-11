@@ -280,6 +280,20 @@ describe('ActorConditionsList', () => {
 			expect(effect.delete).toHaveBeenCalledTimes(1);
 		});
 
+		it('escapes the effect name in the question', async () => {
+			stubOriginItem([{ id: 'raging', name: '<b>Rage</b>', transfer: false }]);
+			confirmMock().mockResolvedValue(false);
+			const effect = { ...createGivenEffect(), name: '<b>Rage</b>' };
+			const actor = createActor({ statuses: [], effects: [effect] as unknown as ActiveEffect[] });
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
+
+			expect(confirmMock()).toHaveBeenCalledWith(
+				expect.objectContaining({ content: '<p>Delete &lt;b&gt;Rage&lt;/b&gt;?</p>' }),
+			);
+		});
+
 		it('says that it cannot come back when the item no longer has the effect', async () => {
 			stubOriginItem([{ id: 'other', name: 'Stoneskin', transfer: false }]);
 			confirmMock().mockResolvedValue(false);

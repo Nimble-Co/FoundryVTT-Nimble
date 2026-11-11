@@ -14,14 +14,20 @@ export interface DeletedEffect {
 	parent?: { documentName?: string } | null;
 }
 
+interface OriginItem {
+	documentName?: string;
+	effects?: Iterable<ItemEffect> & { get(id: string): ItemEffect | undefined | null };
+}
+
+function originItemOf(effect: DeletedEffect): OriginItem | null {
+	if (!effect.origin) return null;
+	const origin = fromUuidSync(effect.origin as never, { strict: false }) as OriginItem | null;
+	return origin?.documentName === 'Item' ? origin : null;
+}
+
 /** The origin item still has the effect, so a new use of the item gives it again. */
-function givenAgain(effect: DeletedEffect): boolean {
-	if (!effect.origin) return false;
-	const item = fromUuidSync(effect.origin as never, { strict: false }) as {
-		documentName?: string;
-		effects?: Iterable<ItemEffect> & { get(id: string): ItemEffect | undefined | null };
-	} | null;
-	if (item?.documentName !== 'Item' || !item.effects) return false;
+function givenAgain(item: OriginItem | null, effect: DeletedEffect): boolean {
+	if (!item?.effects) return false;
 	return [...item.effects].some(
 		(each) => each.name === effect.name && !!itemEffectOf(item as never, each.id),
 	);
@@ -37,10 +43,11 @@ export function effectDeleteQuestion(effect: DeletedEffect): string[] | null {
 	const pools = poolsLostOnEnd(effect as never).map((pool) =>
 		localize('NIMBLE.ui.effectPoolLost', { pool }),
 	);
-	const fromItem = effect.parent?.documentName === 'Item' || !!effect.origin;
+	const originItem = originItemOf(effect);
+	const fromItem = effect.parent?.documentName === 'Item' || !!originItem;
 	if (!fromItem && pools.length < 1) return null;
 	const first =
-		fromItem && !givenAgain(effect)
+		fromItem && !givenAgain(originItem, effect)
 			? localize('NIMBLE.ui.removeEffectConfirmation', { name })
 			: localize('NIMBLE.ui.removeEffectQuestion', { name });
 	return [first, ...pools];

@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { flushSync, tick } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
-import ItemEffectSelect from '../ItemEffectSelect.svelte';
-import { createItemEffectSelectState } from '../itemEffectSelectState.svelte.ts';
+import { createItemEffectSelectState } from '../ItemEffectSelect.svelte.ts';
+import ItemEffectSelect from './ItemEffectSelect.testHarness.svelte';
 
 type FakeEffect = {
 	id: string;
@@ -178,5 +178,26 @@ describe('ItemEffectSelect', () => {
 
 		await waitFor(() => expect(onchange).toHaveBeenCalledWith('a'));
 		expect(item.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('puts the select back on the stored pick when a pick comes while the last one is stored', async () => {
+		const item = fakeItem([
+			{ id: 'a', name: 'Burning', transfer: false },
+			{ id: 'b', name: 'Slowed', transfer: false },
+		]);
+		let finish: () => void = () => {};
+		const onchange = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+		render(ItemEffectSelect, {
+			props: { item, value: null, onchange, recipient: 'targets', label: 'Effect' },
+		});
+		const select = screen.getByRole('combobox', { name: 'Effect' }) as HTMLSelectElement;
+
+		await fireEvent.change(select, { target: { value: 'a' } });
+		await waitFor(() => expect(onchange).toHaveBeenCalledWith('a'));
+		await fireEvent.change(select, { target: { value: 'b' } });
+
+		await waitFor(() => expect(select.value).toBe(''));
+		expect(onchange).toHaveBeenCalledTimes(1);
+		finish();
 	});
 });

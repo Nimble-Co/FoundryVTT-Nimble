@@ -1,18 +1,17 @@
 <script lang="ts">
+	import type { ItemEffectPickerProps } from '#types/components/ItemEffectPicker.d.ts';
 	import type { ItemEffectSelectItem } from '#types/components/ItemEffectSelect.d.ts';
 	import localize from '#utils/localize.js';
 	import ItemEffectSelect from '#view/components/ItemEffectSelect.svelte';
 
-	type ItemEffectPickerProps = {
-		value: string;
-		onChange: (next: string) => unknown;
-		disabled?: boolean;
-		document: unknown;
-		/** The field label, the accessible name of the select. */
-		label: string;
-	};
-
-	let { value, onChange, disabled = false, document, label }: ItemEffectPickerProps = $props();
+	let {
+		value,
+		onChange,
+		disabled = false,
+		document,
+		label,
+		recipient = 'targets',
+	}: ItemEffectPickerProps = $props();
 
 	/** The item that holds the rule: the document itself, or the item of a rule-holding effect. */
 	const item = $derived.by((): ItemEffectSelectItem | null => {
@@ -30,7 +29,7 @@
 		{item}
 		{value}
 		onchange={(next) => onChange(next ?? '')}
-		recipient="targets"
+		{recipient}
 		{label}
 		{disabled}
 	/>

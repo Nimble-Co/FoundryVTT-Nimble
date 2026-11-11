@@ -1,3 +1,4 @@
+import type { ItemEffectRow } from '#types/components/ItemEffectsTab.d.ts';
 import localize from '#utils/localize.js';
 import {
 	type ItemEffectUser,
@@ -10,24 +11,12 @@ import { itemEffectLastsUntil } from '../../dataPreparationHelpers/itemEffectLas
 const WORDS = 'NIMBLE.itemEffectsTab';
 const DEFAULT_IMG = 'icons/svg/aura.svg';
 
-export interface TabEffect {
+interface TabEffect {
 	id: string | null;
 	name?: string | null;
 	img?: string | null;
 	transfer?: boolean;
 	system?: unknown;
-}
-
-export interface ItemEffectRow {
-	id: string;
-	name: string;
-	img: string;
-	transfer: boolean;
-	lasts: string;
-	/** "On use: Apply Effect", "Rule: Mark Target", one entry per different user */
-	users: string[];
-	/** "Used by: ..." or "Nothing uses this effect." */
-	usedByLine: string;
 }
 
 function userLabel(user: ItemEffectUser): string {

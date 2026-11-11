@@ -2431,7 +2431,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
-		// A free use (`free`) never spends actions.
 		const paysActions = !options.skipActionDeduction && !options.free;
 
 		// Soft-block gate: when the activation costs more actions than the

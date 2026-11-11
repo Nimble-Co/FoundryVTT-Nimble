@@ -1,3 +1,5 @@
+import type { EffectNode } from '#types/effectTree.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { activationCost, activationOf, enabledRules } from './itemFields.ts';
 import type { ItemLike } from './sheetSource.ts';
 
@@ -9,12 +11,9 @@ const ACT_RULES = new Set(['chargeConsumer', 'markTarget']);
 /** A step of the item's activation gives the user an effect. */
 function givesSelfEffect(item: ItemLike): boolean {
 	const steps = activationOf(item).effects;
-	return (
-		Array.isArray(steps) &&
-		steps.some(
-			(step: { type?: string; recipient?: string } | null) =>
-				step?.type === 'applyEffect' && step.recipient === 'self',
-		)
+	if (!Array.isArray(steps)) return false;
+	return flattenEffectsTree(steps as (EffectNode | string)[]).some(
+		(step) => step?.type === 'applyEffect' && step.recipient === 'self',
 	);
 }
 

@@ -26,12 +26,6 @@ async function registeredHook(): Promise<DeleteHook> {
 	return callbacks.get('deleteActiveEffect') as DeleteHook;
 }
 
-async function lostOnEnd(effect: unknown): Promise<string[]> {
-	mockPoolModules();
-	const { poolsLostOnEnd } = await import('#utils/dicePool/poolsEmptiedAtEnd.js');
-	return poolsLostOnEnd(effect as never);
-}
-
 function pool(
 	id: string,
 	identifier: string,
@@ -43,7 +37,11 @@ function pool(
 }
 
 const holder = Object.create(Actor.prototype) as Actor;
-const origin = Object.assign(Object.create(Item.prototype), { id: 'state-item', actor: holder });
+const origin = Object.assign(Object.create(Item.prototype), {
+	id: 'state-item',
+	isEmbedded: true,
+	actor: holder,
+});
 
 function emptyRule(pools: string[], overrides: Record<string, unknown> = {}) {
 	return {
@@ -141,11 +139,5 @@ describe('Empty pools at end', () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(setPoolFaces).not.toHaveBeenCalled();
-	});
-
-	it('names the pools that hold dice, for the delete confirm', async () => {
-		expect(await lostOnEnd(endingEffect([emptyRule(['fury', 'focus'])]))).toEqual(['fury dice']);
-		expect(await lostOnEnd(endingEffect([]))).toEqual([]);
-		expect(await lostOnEnd({ parent: null })).toEqual([]);
 	});
 });

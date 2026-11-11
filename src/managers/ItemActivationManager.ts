@@ -23,6 +23,7 @@ import type {
 	ChargeConsumptionDetail,
 	RuleBackedItem,
 } from '#utils/chargePool/types.js';
+import type { FreeUseReason } from '#utils/chat/freeUseReason.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -231,7 +232,7 @@ class ItemActivationManager {
 	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
 	freeUse = false;
 
-	/** A use that a rule gives for free, and what it is free of. It never spends actions. */
+	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
 	get free(): ItemActivationManager.FreeUse | null {
 		const free = this.#options.free;
 		if (!free) return null;
@@ -1784,7 +1785,7 @@ namespace ItemActivationManager {
 	export interface FreeUse {
 		of: FreeOf[];
 		/** The line the card shows for it. */
-		reason: string;
+		reason: FreeUseReason;
 	}
 
 	/**

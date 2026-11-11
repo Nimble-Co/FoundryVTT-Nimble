@@ -39,6 +39,15 @@ describe('effectDeleteQuestion', () => {
 		expect(effectDeleteQuestion({ name: 'Haste' })).toBeNull();
 	});
 
+	it('asks nothing for an effect whose origin is not an item', () => {
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn(() => ({ documentName: 'Actor' })),
+		);
+
+		expect(effectDeleteQuestion({ name: 'Blessed', origin: 'Actor.cleric' })).toBeNull();
+	});
+
 	it('adds one line for each pool that the end of the effect empties', () => {
 		poolsLostOnEnd.mockReturnValue(['Fury Dice', 'Shadow Dice']);
 

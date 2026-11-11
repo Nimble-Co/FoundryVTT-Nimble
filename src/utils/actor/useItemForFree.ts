@@ -13,6 +13,7 @@ interface IdentifiedItem {
 
 interface FreeUser {
 	uuid?: string | null;
+	isOwner?: boolean;
 	items: Iterable<IdentifiedItem>;
 	activateItem(id: string, options: Record<string, unknown>): Promise<unknown>;
 }
@@ -38,16 +39,22 @@ async function useHere(
 	return true;
 }
 
+/** A player who owns the actor uses it here, so the card is theirs and has their targets. */
+function canUseHere(actor: FreeUser): boolean {
+	if (isActiveGM()) return true;
+	return actor.isOwner === true && game.user?.isGM !== true;
+}
+
 /**
- * The actor uses its item with this identifier, with no window, as `free` says. The active GM
- * makes the use; another client asks the active GM.
+ * The actor uses its item with this identifier, with no window, as `free` says. The active GM or a
+ * player who owns the actor makes the use; another client asks the active GM.
  */
 export async function useItemForFree(
 	actor: FreeUser,
 	itemIdentifier: string,
 	free: ItemActivationManager.FreeUse,
 ): Promise<boolean> {
-	if (isActiveGM()) return useHere(actor, itemIdentifier, free);
+	if (canUseHere(actor)) return useHere(actor, itemIdentifier, free);
 	if (!actor.uuid) return false;
 	const request: FreeUseRequest = { actorUuid: actor.uuid, itemIdentifier, free };
 	return (await askActiveGm(QUERY_NAME, request)) === true;

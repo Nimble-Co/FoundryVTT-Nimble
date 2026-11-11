@@ -52,18 +52,12 @@ class TagsRule extends NimbleBaseRule<TagsRule.Schema> {
 	 */
 	prePrepareData(): void {
 		if (!this.isOnActor) return;
-		if (this.#onDisabledEffect()) return;
 		if (!this.test()) return;
 		const actor = this.actor as unknown as TaggedActor;
 		for (const tag of this.tags) {
 			const trimmed = tag.trim();
 			if (trimmed) actor.tags.add(trimmed);
 		}
-	}
-
-	#onDisabledEffect(): boolean {
-		const parent = this.parentDocument as { documentName?: string; disabled?: boolean };
-		return parent.documentName === 'ActiveEffect' && parent.disabled === true;
 	}
 }
 

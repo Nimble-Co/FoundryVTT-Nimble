@@ -4,14 +4,18 @@ import { NimbleBaseRule } from './base.js';
 
 const WORDS = 'NIMBLE.rules.changeEffect';
 
+// "Another effect ends" needs the other effect's name, which an added moment does not have.
+const ADDABLE_EVENTS = LASTS_UNTIL_EVENTS.filter((event) => event !== 'effectEnds');
+
 function momentsField(field: 'removeMoments' | 'addMoments') {
 	const { fields } = foundry.data;
+	const events = field === 'addMoments' ? ADDABLE_EVENTS : LASTS_UNTIL_EVENTS;
 	return new fields.ArrayField(
 		new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'zeroHp',
-			choices: choiceLabels('changeEffect', 'moments', LASTS_UNTIL_EVENTS),
+			choices: choiceLabels('changeEffect', 'moments', events),
 		}),
 		{
 			required: true,
@@ -67,14 +71,15 @@ class ChangeEffectRule extends NimbleBaseRule<ChangeEffectRule.Schema> {
 	}
 
 	override tooltipInfo(): string {
-		const events = LASTS_UNTIL_EVENTS.map((event) => `'${event}'`).join(
-			' <span class="nimble-type-summary__operator">|</span> ',
-		);
+		const join = (events: readonly string[]) =>
+			events
+				.map((event) => `'${event}'`)
+				.join(' <span class="nimble-type-summary__operator">|</span> ');
 		return super.tooltipInfo(
 			new Map([
 				['itemIdentifier', 'string'],
-				['removeMoments', events],
-				['addMoments', events],
+				['removeMoments', join(LASTS_UNTIL_EVENTS)],
+				['addMoments', join(ADDABLE_EVENTS)],
 			]),
 		);
 	}

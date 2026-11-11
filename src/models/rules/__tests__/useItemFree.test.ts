@@ -14,11 +14,14 @@ async function loadRule(): Promise<void> {
 	({ UseItemFreeRule } = await import('../useItemFree.js'));
 }
 
-function makeActor(domain: string[] = []) {
+function makeActor(domain: string[] = [], type = 'character') {
 	const actor = Object.create(Actor.prototype) as Record<string, unknown>;
+	actor.type = type;
 	actor.getDomain = () => new Set(domain);
 	return actor;
 }
+
+const DAMAGE_STEP = { id: 'd', type: 'damage', parentContext: null, parentNode: null };
 
 let ruleCount = 0;
 
@@ -47,7 +50,7 @@ function freeRule(
 		label: '',
 		itemIdentifier: source.itemIdentifier ?? 'rage',
 		triggers: source.triggers,
-		freeOf: source.freeOf ?? ['action', 'uses'],
+		freeOf: source.freeOf ?? ['uses'],
 		disabled: source.disabled ?? false,
 		predicate: new Predicate((source.predicate ?? {}) as never),
 	});
@@ -55,7 +58,21 @@ function freeRule(
 }
 
 type TurnContext = Parameters<UseItemFreeRuleClass['onTurnEnd']>[0];
-type UsedContext = Parameters<UseItemFreeRuleClass['onItemUsed']>[0];
+type UsedContext = Parameters<UseItemFreeRuleClass['onAttackReceived']>[0];
+type ActivatedContext = Parameters<UseItemFreeRuleClass['onItemActivated']>[0];
+
+function activated(
+	sourceActor: object,
+	system: Record<string, unknown>,
+	cardId = 'card-1',
+	sourceItem: object = { identifier: 'longsword' },
+): ActivatedContext {
+	return {
+		sourceItem,
+		sourceActor,
+		card: { id: cardId, system: { activation: { effects: [DAMAGE_STEP] }, ...system } },
+	} as unknown as ActivatedContext;
+}
 
 function turn(actor: object): TurnContext {
 	return { combat: {}, combatant: {}, actor } as unknown as TurnContext;
@@ -85,16 +102,17 @@ describe('UseItemFreeRule', () => {
 		await loadRule();
 	});
 
-	it('is an item rule under triggers, free of actions and uses by default', () => {
+	it('is an item rule under triggers, free of uses by default, with no action choice', () => {
 		const schema = UseItemFreeRule.defineSchema() as unknown as Record<
 			string,
-			{ initial?: unknown }
+			{ initial?: unknown; element?: { choices?: Record<string, string> } }
 		>;
 
 		expect(UseItemFreeRule.worksOnEffects).toBe(false);
 		expect(UseItemFreeRule.group).toBe('triggers');
 		expect(UseItemFreeRule.description).toBe('NIMBLE.rules.useItemFree.description');
-		expect(schema.freeOf.initial).toEqual(['action', 'uses']);
+		expect(schema.freeOf.initial).toEqual(['uses']);
+		expect(Object.keys(schema.freeOf.element?.choices ?? {})).toEqual(['uses', 'mana']);
 		expect(UseItemFreeRule.alwaysDispatchedEvents).toEqual([]);
 	});
 
@@ -107,20 +125,26 @@ describe('UseItemFreeRule', () => {
 		const [usedBy, identifier, free] = useItemForFree.mock.calls[0] as [
 			unknown,
 			string,
-			{ of: string[]; reason: string },
+			{ of: string[]; reason: unknown },
 		];
 		expect(usedBy).toBe(actor);
 		expect(identifier).toBe('rage');
-		expect(free.of).toEqual(['action', 'uses']);
-		expect(free.reason).toEqual(expect.any(String));
+		expect(free.of).toEqual(['uses']);
+		expect(free.reason).toEqual({
+			key: 'NIMBLE.rules.useItemFree.cardLine',
+			data: {
+				trigger: { key: 'NIMBLE.rules.useItemFree.reasons.onTurnStart' },
+				feature: 'Furious Feature',
+			},
+		});
 	});
 
-	it('is always free of actions, also when the list leaves them out', async () => {
+	it('passes its own free-of list; the activation adds actions', async () => {
 		const actor = makeActor();
 
 		await freeRule(actor, { triggers: ['onTurnEnd'], freeOf: ['mana'] }).onTurnEnd(turn(actor));
 
-		expect((useItemForFree.mock.calls[0]?.[2] as { of: string[] }).of).toEqual(['action', 'mana']);
+		expect((useItemForFree.mock.calls[0]?.[2] as { of: string[] }).of).toEqual(['mana']);
 	});
 
 	it('does nothing for another creature, a trigger not in its list, or no item named', async () => {
@@ -162,7 +186,7 @@ describe('UseItemFreeRule', () => {
 
 	it('uses the item when an enemy crits the actor, once for each attack card', async () => {
 		const actor = makeActor();
-		const enemy = makeActor();
+		const enemy = makeActor([], 'npc');
 		const rule = freeRule(actor, { triggers: ['onCritReceived'] });
 
 		await rule.onAttackReceived(attack(enemy, actor, {}));
@@ -176,16 +200,80 @@ describe('UseItemFreeRule', () => {
 		expect(useItemForFree).toHaveBeenCalledTimes(2);
 	});
 
-	it('uses the item once when an attack of the actor misses several targets', async () => {
+	it('does not use the item when an ally crits the actor', async () => {
+		const actor = makeActor();
+		const rule = freeRule(actor, { triggers: ['onCritReceived'] });
+
+		await rule.onAttackReceived(attack(makeActor(), actor, { isCritical: true }));
+
+		expect(useItemForFree).not.toHaveBeenCalled();
+	});
+
+	it('uses the item when the attack card of the actor misses, once for each card', async () => {
 		const actor = makeActor();
 		const rule = freeRule(actor, { triggers: ['onMiss'] });
 
-		await rule.onItemUsed(attack(actor, makeActor(), { isMiss: true }));
-		await rule.onItemUsed(attack(actor, makeActor(), { isMiss: true }));
-		await rule.onItemUsed(attack(actor, makeActor(), {}, 'card-2'));
-		await rule.onItemUsed(attack(makeActor(), actor, { isMiss: true }, 'card-3'));
+		await rule.onItemActivated(activated(actor, { isMiss: true }));
+		await rule.onItemActivated(activated(actor, { isMiss: true }));
+		await rule.onItemActivated(activated(actor, {}, 'card-2'));
+		await rule.onItemActivated(activated(makeActor(), { isMiss: true }, 'card-3'));
 
 		expect(useItemForFree).toHaveBeenCalledTimes(1);
+	});
+
+	it('reads hit and crit from the card, and a discarded crit that keeps its triggers', async () => {
+		const actor = makeActor();
+		const onHit = freeRule(actor, { triggers: ['onHit'], itemIdentifier: 'hit' });
+		const onCrit = freeRule(actor, { triggers: ['onCrit'], itemIdentifier: 'crit' });
+
+		for (const rule of [onHit, onCrit]) {
+			await rule.onItemActivated(activated(actor, {}, 'hit-card'));
+			await rule.onItemActivated(activated(actor, { isCritical: true }, 'crit-card'));
+			await rule.onItemActivated(
+				activated(actor, { isMiss: true, discardedCritTriggers: true }, 'kept-card'),
+			);
+		}
+
+		expect(useItemForFree.mock.calls.map((call) => call[1])).toEqual(['hit', 'crit', 'crit']);
+	});
+
+	it('does nothing for a card with no damage roll, a waiting Keep a Result, or a use of its own item', async () => {
+		const actor = makeActor();
+		const rule = freeRule(actor, { triggers: ['onHit'] });
+
+		await rule.onItemActivated({
+			sourceItem: {},
+			sourceActor: actor,
+			card: { id: 'plain', system: { activation: { effects: [] } } },
+		} as unknown as ActivatedContext);
+		await rule.onItemActivated(activated(actor, { pendingKeep: { id: 'k' } }, 'waiting'));
+		await rule.onItemActivated(activated(actor, {}, 'own', { system: { identifier: 'rage' } }));
+
+		expect(useItemForFree).not.toHaveBeenCalled();
+	});
+
+	it('forgets old cards, so the list of used cards does not grow', async () => {
+		const actor = makeActor();
+		const rule = freeRule(actor, { triggers: ['onMiss'] });
+
+		for (let index = 0; index <= 200; index += 1) {
+			await rule.onItemActivated(activated(actor, { isMiss: true }, `card-${index}`));
+		}
+		await rule.onItemActivated(activated(actor, { isMiss: true }, 'card-0'));
+
+		expect(useItemForFree).toHaveBeenCalledTimes(202);
+	});
+
+	it('lets two cards make their uses at the same time', async () => {
+		const actor = makeActor();
+		const rule = freeRule(actor, { triggers: ['onMiss'] });
+
+		await Promise.all([
+			rule.onItemActivated(activated(actor, { isMiss: true }, 'card-a')),
+			rule.onItemActivated(activated(actor, { isMiss: true }, 'card-b')),
+		]);
+
+		expect(useItemForFree).toHaveBeenCalledTimes(2);
 	});
 
 	it('acts on an event that reaches every client only on the active GM', async () => {

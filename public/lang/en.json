@@ -2805,7 +2805,6 @@
 					"label": "Free of",
 					"hint": "The use never spends an action. Use limits: the use does not count toward the uses of the item, such as 1/turn, and needs none left. Mana: a spell costs no mana.",
 					"choices": {
-						"action": "Actions",
 						"uses": "Use limits",
 						"mana": "Mana"
 					}

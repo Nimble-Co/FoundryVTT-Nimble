@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
+	import { freeUseReasonText } from '#utils/chat/freeUseReason.js';
 	import { getContext } from 'svelte';
 
 	const messageDocument = getContext('messageDocument') as
 		| { reactive?: { flags?: Record<string, { freeUseReason?: unknown } | undefined> } }
 		| undefined;
 
-	let reason = $derived(messageDocument?.reactive?.flags?.[SYSTEM_ID]?.freeUseReason);
+	let line = $derived(
+		freeUseReasonText(messageDocument?.reactive?.flags?.[SYSTEM_ID]?.freeUseReason),
+	);
 </script>
 
-{#if typeof reason === 'string' && reason}
-	<section class="nimble-card-section nimble-free-use-line">{reason}</section>
+{#if line}
+	<section class="nimble-card-section nimble-free-use-line">{line}</section>
 {/if}
 
 <style lang="scss">

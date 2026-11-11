@@ -20,6 +20,7 @@ import registerPendingActionDeltaFold from './hooks/combatantHooks/pendingAction
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import { registerCritDiceSaveHooks } from './hooks/critDiceSave.js';
+import registerDeleteItemOriginEffectsHooks from './hooks/deleteItemOriginEffects.js';
 import { registerDemandControlHooks } from './hooks/demandControlOnUse.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
 import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedTrigger.js';
@@ -185,6 +186,7 @@ registerMarkLifecycleHooks();
 registerBankedDamageReductionExpiryHooks();
 registerLastsUntilHooks();
 registerEmptyPoolsAtEndHooks();
+registerDeleteItemOriginEffectsHooks();
 registerChangeEffectOnCreateHooks();
 registerSelfEffectsOnUseHooks();
 registerPoolEmptyEffectHooks();

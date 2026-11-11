@@ -7,7 +7,7 @@ select ends with "New effect", a pencil opens the picked effect, and its Lasts U
 	import type { ItemEffectSelectProps } from '#types/components/ItemEffectSelect.d.ts';
 	import localize from '#utils/localize.js';
 	import { itemEffectLastsUntil } from '../dataPreparationHelpers/itemEffectLastsUntil.js';
-	import { createItemEffectSelectState, NEW_EFFECT } from './itemEffectSelectState.svelte.js';
+	import { createItemEffectSelectState, NEW_EFFECT } from './ItemEffectSelect.svelte.js';
 
 	const WORDS = 'NIMBLE.activationEffects.applyEffectNode';
 
@@ -28,9 +28,13 @@ select ends with "New effect", a pencil opens the picked effect, and its Lasts U
 	const lasts = $derived(itemEffectLastsUntil(selectState.picked, recipient));
 
 	async function handleChange(select: HTMLSelectElement) {
-		await selectState.choose(select.value, onchange);
-		// A failed "New effect" leaves the select on the stored pick.
-		if (select.value === NEW_EFFECT) select.value = value ?? '';
+		let stored = false;
+		try {
+			stored = await selectState.choose(select.value, onchange);
+		} finally {
+			// A pick that is not stored must not stay on show.
+			if (!stored || select.value === NEW_EFFECT) select.value = value ?? '';
+		}
 	}
 </script>
 

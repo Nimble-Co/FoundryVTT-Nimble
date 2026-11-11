@@ -4,7 +4,9 @@ import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
@@ -89,6 +91,8 @@ function schema() {
 				label: 'NIMBLE.rules.applyCondition.effectId.label',
 				hint: 'NIMBLE.rules.applyCondition.effectId.hint',
 				widget: 'itemEffectPicker',
+				recipient: (data: Record<string, unknown>): 'self' | 'targets' =>
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')) ? 'targets' : 'self',
 			}),
 		),
 	};
@@ -160,12 +164,14 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (this.trigger !== 'onCritReceived') return;
 		if (context.targetActor !== this.actor) return;
 		if (!firesCritTriggers(context)) return;
+		if (!isEnemyAttacker(context.sourceActor, this.actor, context.card)) return;
 		await this.#applyConditionToSelf();
 	}
 
+	// onActorDying reaches every client.
 	override async onActorDying(context: ActorDyingContext): Promise<void> {
 		if (this.trigger !== 'onDying') return;
-		if (context.actor !== this.actor) return;
+		if (context.actor !== this.actor || !isActiveGM()) return;
 		await this.#applyConditionToSelf();
 	}
 

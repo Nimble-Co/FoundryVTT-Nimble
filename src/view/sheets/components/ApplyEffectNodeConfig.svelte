@@ -19,9 +19,8 @@
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
 
-	async function storeEffect(effectId: string | null) {
-		foundry.utils.setProperty(node, 'effectId', effectId);
-		await document.update({ 'system.activation.effects': effects } as Record<string, unknown>);
+	function storeEffect(effectId: string | null) {
+		return updateEffectNode(document, effects, node, 'effectId', effectId);
 	}
 </script>
 

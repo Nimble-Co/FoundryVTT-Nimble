@@ -56,6 +56,26 @@ describe('placeOf', () => {
 		expect(placeOf(withStep('targets'))).toBe('passive');
 	});
 
+	it('puts a feature whose hit gives you an effect on Actions', () => {
+		const item = heroItem({
+			type: 'feature',
+			system: {
+				activation: {
+					cost: { type: 'none', quantity: 1, isReaction: false },
+					effects: [
+						{
+							id: 'd',
+							type: 'damage',
+							on: { criticalHit: [{ id: 'a', type: 'applyEffect', recipient: 'self' }] },
+						},
+					],
+				},
+			},
+		});
+
+		expect(placeOf(item)).toBe('action');
+	});
+
 	it('ignores a disabled rule', () => {
 		expect(placeOf(feature({}, [rule('markTarget', { disabled: true })]))).toBe('passive');
 	});

@@ -4,13 +4,14 @@ The Effects tab of an item window: the item's effects in two lists, those given 
 uses them and those always on while the creature has the item, each with what uses it.
 -->
 <script lang="ts">
+	import type { ItemEffectRow, ItemEffectsTabItem } from '#types/components/ItemEffectsTab.d.ts';
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.js';
-	import { createItemEffectsTabState, type ItemEffectsTabItem } from './ItemEffectsTab.svelte.js';
-	import type { ItemEffectRow } from './itemEffectsTabRows.js';
+	import { createItemEffectsTabState } from './ItemEffectsTab.svelte.js';
 
 	const WORDS = 'NIMBLE.itemEffectsTab';
 
+	const uid = $props.id();
 	const item = getContext<ItemEffectsTabItem>('document');
 	const tabState = createItemEffectsTabState(() => item);
 
@@ -22,9 +23,9 @@ uses them and those always on while the creature has the item, each with what us
 
 <section class="nimble-sheet__body nimble-sheet__body--item nimble-item-effects-tab">
 	{#each lists as list (list.id)}
-		<section class="nimble-item-effects-tab__list" aria-labelledby={`item-effects-${list.id}`}>
+		<section class="nimble-item-effects-tab__list" aria-labelledby={`${uid}-${list.id}`}>
 			<header class="nimble-section-header nimble-item-effects-tab__header">
-				<h3 class="nimble-heading" data-heading-variant="section" id={`item-effects-${list.id}`}>
+				<h3 class="nimble-heading" data-heading-variant="section" id={`${uid}-${list.id}`}>
 					{localize(list.heading)}
 				</h3>
 
@@ -32,7 +33,7 @@ uses them and those always on while the creature has the item, each with what us
 					type="button"
 					class="nimble-button"
 					data-button-variant="basic"
-					aria-describedby={`item-effects-${list.id}`}
+					aria-describedby={`${uid}-${list.id}`}
 					onclick={() => tabState.create(list.transfer)}
 				>
 					<i class="fa-solid fa-plus" aria-hidden="true"></i>

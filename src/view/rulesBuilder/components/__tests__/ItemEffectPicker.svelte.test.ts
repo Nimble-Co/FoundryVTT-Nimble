@@ -4,7 +4,14 @@ import SchemaFieldRenderer from '../SchemaFieldRenderer.svelte';
 
 const { fields } = foundry.data;
 
-type FakeEffect = { id: string; name: string; transfer: boolean; img?: string; parent?: unknown };
+type FakeEffect = {
+	id: string;
+	name: string;
+	transfer: boolean;
+	img?: string;
+	system?: Record<string, unknown>;
+	parent?: unknown;
+};
 
 function fakeItem(effects: FakeEffect[]) {
 	const item = {
@@ -97,5 +104,36 @@ describe('itemEffectPicker widget', () => {
 
 		expect((select as HTMLSelectElement).disabled).toBe(true);
 		expect(screen.getByText(/This rule is not on an item/)).toBeTruthy();
+	});
+
+	it('reads the Lasts Until line for the recipient the field names, from the rule data', () => {
+		const lastsUntil = [
+			{ kind: 'event', event: 'zeroHp', who: 'holder', effectName: '', boundary: null },
+		];
+		const item = fakeItem([{ id: 'a', name: 'Raging', transfer: false, system: { lastsUntil } }]);
+		const field = (recipient?: unknown) =>
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: 'Effect',
+				widget: 'itemEffectPicker',
+				recipient,
+			} as never);
+		const props = { value: 'a', name: 'effectId', onChange: vi.fn(), document: item as never };
+
+		const plain = render(SchemaFieldRenderer, { ...props, field: field(), parentData: {} });
+		expect(screen.getByText('Until they drop to 0 HP')).toBeTruthy();
+		plain.unmount();
+
+		render(SchemaFieldRenderer, {
+			...props,
+			field: field((data: Record<string, unknown>) =>
+				data.trigger === 'onWound' ? 'self' : 'targets',
+			),
+			parentData: { trigger: 'onWound' },
+		});
+		expect(screen.getByText('Until you drop to 0 HP')).toBeTruthy();
 	});
 });

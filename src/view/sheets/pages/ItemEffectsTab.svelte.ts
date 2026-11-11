@@ -1,3 +1,4 @@
+import type { ItemEffectsTabItem } from '#types/components/ItemEffectsTab.d.ts';
 import localize from '#utils/localize.js';
 import { deleteItemEffect } from '#utils/treeManipulation/deleteItemEffect.js';
 import { itemEffectList } from '#utils/treeManipulation/itemEffectUsers.js';
@@ -10,19 +11,6 @@ const WORDS = 'NIMBLE.itemEffectsTab';
 interface SheetEffect {
 	id: string | null;
 	sheet?: { render(force: boolean): unknown } | null;
-}
-
-export interface ItemEffectsTabItem {
-	uuid?: string | null;
-	name?: string | null;
-	img?: string | null;
-	system?: unknown;
-	effects?: unknown;
-	/** reading it makes the read redraw on an update of the item */
-	readonly reactive: ItemEffectsTabItem;
-	update(data: Record<string, unknown>): Promise<unknown>;
-	createEmbeddedDocuments(type: 'ActiveEffect', data: object[]): Promise<unknown>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
 }
 
 function confirmContent(name: string, users: string[]): string {
@@ -48,13 +36,21 @@ export function createItemEffectsTabState(getItem: () => ItemEffectsTabItem) {
 		return itemEffectList<SheetEffect>(getItem()).find((effect) => effect.id === id);
 	}
 
+	let creating = false;
+
 	async function create(transfer: boolean) {
-		const item = getItem();
-		const [created] =
-			((await item.createEmbeddedDocuments('ActiveEffect', [
-				{ name: item.name, img: item.img, type: NIMBLE_EFFECT_TYPE, transfer },
-			])) as SheetEffect[] | undefined) ?? [];
-		created?.sheet?.render(true);
+		if (creating) return;
+		creating = true;
+		try {
+			const item = getItem();
+			const [created] =
+				((await item.createEmbeddedDocuments('ActiveEffect', [
+					{ name: item.name, img: item.img, type: NIMBLE_EFFECT_TYPE, transfer },
+				])) as SheetEffect[] | undefined) ?? [];
+			created?.sheet?.render(true);
+		} finally {
+			creating = false;
+		}
 	}
 
 	function edit(id: string) {

@@ -18,8 +18,8 @@ function makeItem(actor: Holder | null) {
 	return { actor, isEmbedded: !!actor, name: 'Feature', getDomain: () => new Set<string>() };
 }
 
-function makeEffect(actor: Holder | object, disabled = false) {
-	return { documentName: 'ActiveEffect', target: actor, parent: actor, disabled, name: 'State' };
+function makeEffect(actor: Holder | object) {
+	return { documentName: 'ActiveEffect', target: actor, parent: actor, name: 'State' };
 }
 
 function tagsRule(
@@ -56,9 +56,12 @@ describe('TagsRule', () => {
 	});
 
 	it('adds nothing from an item that is not on an actor', () => {
-		const rule = tagsRule(makeItem(null), { tags: ['self:raging'] });
+		const actor = makeActor();
+		const looseItem = { ...makeItem(actor), isEmbedded: false };
 
-		expect(() => rule.prePrepareData()).not.toThrow();
+		tagsRule(looseItem, { tags: ['self:raging'] }).prePrepareData();
+
+		expect(actor.tags.size).toBe(0);
 	});
 
 	it('adds its tags while its effect is on the actor and enabled', () => {
@@ -69,10 +72,9 @@ describe('TagsRule', () => {
 		expect([...actor.tags]).toEqual(['self:raging']);
 	});
 
-	it('adds nothing from a disabled effect, or an effect that waits on an item', () => {
+	it('adds nothing from an effect that waits on an item', () => {
 		const actor = makeActor();
 
-		tagsRule(makeEffect(actor, true), { tags: ['self:raging'] }).prePrepareData();
 		tagsRule(makeEffect(makeItem(actor)), { tags: ['self:raging'] }).prePrepareData();
 
 		expect(actor.tags.size).toBe(0);

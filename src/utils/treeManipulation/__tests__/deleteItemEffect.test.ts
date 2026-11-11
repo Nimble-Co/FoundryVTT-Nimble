@@ -15,6 +15,7 @@ function itemWith(tree: unknown[], rules: Record<string, unknown>[], effects: un
 		system: { activation: { effects: tree }, rules },
 		effects: new Map(effects.map((effect) => [(effect as { id: string }).id, effect])),
 		update: vi.fn(async () => undefined),
+		updateEmbeddedDocuments: vi.fn(async () => []),
 		deleteEmbeddedDocuments: vi.fn(async () => []),
 	};
 }
@@ -53,21 +54,37 @@ describe('deleteItemEffect', () => {
 		expect(item.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
 	});
 
-	it('clears a rule field on another effect of the item', async () => {
-		const holder = {
-			id: 'holder',
+	it('clears rule fields on other effects of the item in one update', async () => {
+		const holder = (id: string) => ({
+			id,
 			system: { rules: [{ id: 'r', type: 'defendOption', attackerEffectId: 'fx' }] },
-			update: vi.fn(async () => undefined),
-		};
-		const item = itemWith([], [], [holder]);
+		});
+		const item = itemWith([], [], [holder('a'), holder('b')]);
 
 		await deleteItemEffect(item, 'fx');
 
 		expect(item.update).not.toHaveBeenCalled();
-		expect(holder.update).toHaveBeenCalledWith({
-			'system.rules': [{ id: 'r', type: 'defendOption', attackerEffectId: '' }],
-		});
+		const cleared = [{ id: 'r', type: 'defendOption', attackerEffectId: '' }];
+		expect(item.updateEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		expect(item.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'a', 'system.rules': cleared },
+			{ _id: 'b', 'system.rules': cleared },
+		]);
 		expect(item.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
+	});
+
+	it('writes the stored rules, not the prepared ones', async () => {
+		const stored = [{ id: 'r1', type: 'markTarget', effectId: 'fx' }];
+		const item = Object.assign(
+			itemWith([], [{ id: 'r1', type: 'markTarget', effectId: 'fx', maxTargets: 1 }]),
+			{ _source: { system: { activation: { effects: [] }, rules: stored } } },
+		);
+
+		await deleteItemEffect(item, 'fx');
+
+		expect(item.update).toHaveBeenCalledWith({
+			'system.rules': [{ id: 'r1', type: 'markTarget', effectId: '' }],
+		});
 	});
 
 	it('only deletes an effect that nothing uses', async () => {

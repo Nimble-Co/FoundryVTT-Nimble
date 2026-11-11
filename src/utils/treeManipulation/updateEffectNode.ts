@@ -12,7 +12,7 @@ export async function updateEffectNode(
 
 	foundry.utils.setProperty(node, field, value);
 
-	document.update({
+	await document.update({
 		'system.activation.effects': tree,
 	} as object as Record<string, unknown>);
 }

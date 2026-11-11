@@ -38,6 +38,8 @@ describe('ChangeEffectRule', () => {
 			'NIMBLE.rules.changeEffect.moments.choices.zeroHp',
 		);
 		expect(Object.keys(schema.addMoments.element?.choices ?? {})).toContain('inactiveRound');
+		expect(Object.keys(schema.addMoments.element?.choices ?? {})).not.toContain('effectEnds');
+		expect(Object.keys(schema.removeMoments.element?.choices ?? {})).toContain('effectEnds');
 	});
 
 	it('changes the effects of the item it names, while it is on an actor', () => {

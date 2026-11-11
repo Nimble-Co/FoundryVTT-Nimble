@@ -85,6 +85,33 @@ describe('ItemEffectsTab', () => {
 		await waitFor(() => expect(made.sheet.render).toHaveBeenCalledWith(true));
 	});
 
+	it('makes one effect for a double click', async () => {
+		const { item, made } = makeItem();
+		let finish: () => void = () => {};
+		item.createEmbeddedDocuments.mockImplementation(
+			() => new Promise((resolve) => (finish = () => resolve([made]))),
+		);
+		render(ItemEffectsTab, { props: { item } });
+
+		const button = within(list('Given when something uses them')).getByRole('button', {
+			name: 'New effect',
+		});
+		await fireEvent.click(button);
+		await fireEvent.click(button);
+		finish();
+
+		await waitFor(() => expect(made.sheet.render).toHaveBeenCalledTimes(1));
+		expect(item.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
+
+	it('gives each window its own list ids', () => {
+		render(ItemEffectsTab, { props: { item: makeItem().item } });
+		render(ItemEffectsTab, { props: { item: makeItem().item } });
+
+		const ids = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.id);
+		expect(new Set(ids).size).toBe(4);
+	});
+
 	it('opens the effect window with the edit button', async () => {
 		const { item } = makeItem();
 		render(ItemEffectsTab, { props: { item } });

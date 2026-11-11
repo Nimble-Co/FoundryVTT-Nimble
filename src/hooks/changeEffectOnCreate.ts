@@ -32,7 +32,7 @@ function eventMoment(event: LastsUntilEvent): Moment {
 		span: null,
 		value: null,
 		units: null,
-		who: event === 'effectEnds' ? null : 'holder',
+		who: 'holder',
 		event,
 		effectName: '',
 	};
@@ -61,7 +61,7 @@ function changedMoments(effect: NewEffect): Moment[] | null {
 	);
 	const added: Moment[] = [];
 	for (const event of rules.flatMap((rule) => rule.addMoments)) {
-		if (present.has(event)) continue;
+		if (present.has(event) || event === 'effectEnds') continue;
 		present.add(event);
 		added.push(eventMoment(event));
 	}

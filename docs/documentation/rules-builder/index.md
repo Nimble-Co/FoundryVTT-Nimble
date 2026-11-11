@@ -89,14 +89,16 @@ Some fields of these rules need a word:
 
 These rules work with the effects of an item. A state such as Rage uses them: see [Build a state such as Rage](../homebrew/effects.md#build-a-state-such-as-rage).
 
-- **Tags** (under **Conditions**) adds tags to the creature, such as `self:raging`. On an item, they apply while the creature has the item. On an effect, they apply while the creature has the effect and the effect is on. Other rules read the tags in their Condition box. A rule that reads the tags before the other rules run needs a higher **Priority** than the Tags rule.
-- **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path (a Lasts Until moment, a delete by hand, the removal of the item), the dice pools in **Pools** are emptied. A new use of the item that replaces the effect is not an end. The rule looks for each pool on the item that gave the effect first, then on the creature.
-- **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made. An effect that is already on the creature does not change.
-- **Use an item for free** (under **Triggers**) works only on an item. **Item identifier** names another item. When one of the **Triggers** occurs and the Condition box matches, the creature uses that item with no window. **Free of** sets what the use does not spend: **Actions** (always), **Use limits** (on by default) and **Mana** (off by default). The card tells why the use was free, such as "For free: an enemy crit you (Titan's Fury)".
+- **Tags** (under **Conditions**) adds tags, such as `self:raging`, while its item or effect is on the creature. Other rules read them in their Condition box.
+- **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path, the dice pools in **Pools** are emptied. A new use that replaces the effect is not an end.
+- **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made.
+- **Use an item for free** (under **Triggers**) works only on an item. **Item identifier** names another item. On one of its **Triggers**, when the Condition box matches, the creature uses that item with no window. The use never spends an action. **Free of** sets what else it does not spend: **Use limits** (on by default) and **Mana** (off by default). The card tells why the use was free, such as "For free: an enemy crit you (Titan's Fury)".
 
-::: details More about Use an item for free
-- With **Use limits** on, the use does not count toward a limit such as 1/turn, and it needs no use left.
-- A GM must be connected. The rule does nothing while the Feature Effects automation setting is off.
+::: details More about these rules
+- A rule that reads the tags before the other rules run needs a higher **Priority** than the Tags rule.
+- Empty pools at end looks for each pool on the item that gave the effect first, then on the creature.
+- With **Use limits** on, a free use does not count toward a limit such as 1/turn, and it needs no use left.
+- The rule does nothing while the Feature Effects automation setting is off.
 - Apply Condition uses the same list of triggers. The list has **An enemy crits you** and **You start Dying** too.
 :::
 

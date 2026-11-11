@@ -154,7 +154,9 @@
 		if (question) {
 			const confirmed = await foundry.applications.api.DialogV2.confirm({
 				window: { title: localize('NIMBLE.ui.removeEffect') },
-				content: question.map((line) => `<p>${line}</p>`).join(''),
+				content: question
+					.map((line) => `<p>${foundry.utils.escapeHTML(line)}</p>`)
+					.join(''),
 				rejectClose: false,
 			});
 			if (confirmed !== true) return;
