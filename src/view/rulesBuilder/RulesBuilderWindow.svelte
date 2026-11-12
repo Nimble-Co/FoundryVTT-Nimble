@@ -8,10 +8,11 @@
 		createRulesBuilderWindowState,
 	} from '#view/rulesBuilder/RulesBuilderWindow.svelte.js';
 	import type { RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
+	import { isEffectParent } from '../../models/rules/_ruleParent.js';
 
-	const { document: item }: RulesBuilderWindowProps = $props();
+	const { document: ruleParent }: RulesBuilderWindowProps = $props();
 
-	const state = createRulesBuilderWindowState(() => item);
+	const state = createRulesBuilderWindowState(() => ruleParent);
 </script>
 
 <section class="nimble-rules-builder-window">
@@ -69,7 +70,7 @@
 
 	<div class="nimble-rules-builder-window__body">
 		{#if state.pickerOpen}
-			<RuleTypePicker onPick={state.pickRule} forEffect={item.documentName === 'ActiveEffect'} />
+			<RuleTypePicker onPick={state.pickRule} forEffect={isEffectParent(ruleParent)} />
 		{:else if state.rules.length === 0}
 			<p class="nimble-rules-builder-window__empty">
 				{localize('NIMBLE.rulesBuilder.emptyHint', {
@@ -89,12 +90,12 @@
 					<li class="nimble-rules-builder-window__list-item">
 						<RuleCard
 							{rule}
-							manager={item.rules}
+							manager={ruleParent.rules}
 							previewDomain={state.previewDomain}
 							collapsed={state.collapsedIds.has(rule.id)}
 							onToggleCollapse={() => state.toggleCollapse(rule.id)}
-							onDelete={() => item.rules.deleteRule(rule.id)}
-							document={item}
+							onDelete={() => ruleParent.rules.deleteRule(rule.id)}
+							document={ruleParent}
 						/>
 					</li>
 				{/each}

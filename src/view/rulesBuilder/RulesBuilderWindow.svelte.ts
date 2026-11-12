@@ -6,9 +6,9 @@ import type { RuleHolder, RuleSource } from '#view/rulesBuilder/types.js';
 // crosses the Foundry system-id boundary, so the literal is intentional.
 export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 
-export function createRulesBuilderWindowState(getItem: () => RuleHolder) {
+export function createRulesBuilderWindowState(getRuleParent: () => RuleHolder) {
 	const rawRules = $derived(
-		(getItem().reactive.system as unknown as { rules: RuleSource[] }).rules,
+		(getRuleParent().reactive.system as unknown as { rules: RuleSource[] }).rules,
 	);
 
 	// Sort by priority so display order matches the order Foundry actually
@@ -21,7 +21,7 @@ export function createRulesBuilderWindowState(getItem: () => RuleHolder) {
 	// offer typeahead suggestions. Undefined when no actor holds the document
 	// (e.g. compendium edit).
 	const previewDomain = $derived(
-		(getItem().actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
+		(getRuleParent().actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
 	);
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 
@@ -41,24 +41,24 @@ export function createRulesBuilderWindowState(getItem: () => RuleHolder) {
 	}
 
 	async function toggleAll() {
-		if (allDisabled) await getItem().rules.enableAllRules();
-		else await getItem().rules.disableAllRules();
+		if (allDisabled) await getRuleParent().rules.enableAllRules();
+		else await getRuleParent().rules.disableAllRules();
 	}
 
 	async function pickRule(ruleKey: string) {
-		await getItem().rules.addRule({ type: ruleKey });
+		await getRuleParent().rules.addRule({ type: ruleKey });
 		pickerOpen = false;
 	}
 
 	// Drop target only — cards in here aren't draggable so the inline editing
 	// they're built for doesn't fight with drag gestures.
 	async function copyRuleFromPayload(payload: Record<string, unknown>) {
-		const item = getItem();
-		if (payload.sourceItemUuid === item.uuid) return;
+		const ruleParent = getRuleParent();
+		if (payload.sourceItemUuid === ruleParent.uuid) return;
 		const incoming = payload.rule as Record<string, unknown> | undefined;
 		if (!incoming || typeof incoming !== 'object') return;
 		const { id: _id, ...rest } = incoming;
-		await item.rules.addRule(rest);
+		await ruleParent.rules.addRule(rest);
 	}
 
 	function setPickerOpen(next: boolean) {
