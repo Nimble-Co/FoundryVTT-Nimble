@@ -50,6 +50,7 @@ import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
 import { KeepAmountRule } from '../models/rules/keepAmount.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
+import { MaxActionBonusRule } from '../models/rules/maxActionBonus.js';
 import { MaxDamageRule } from '../models/rules/maxDamage.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
@@ -133,6 +134,7 @@ export const RULE_CLASSES = {
 	keepAmount: KeepAmountRule,
 	makeCrit: MakeCritRule,
 	maxDamage: MaxDamageRule,
+	maxActionBonus: MaxActionBonusRule,
 	critDice: CritDiceRule,
 	critDiceSave: CritDiceSaveRule,
 	saveOnEvent: SaveOnEventRule,

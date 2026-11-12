@@ -1917,6 +1917,7 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"saveOnEvent": "Save on an Event",
+			"maxActionBonus": "Max Actions Bonus",
 			"damageMultiplier": "Damage Multiplier Tick",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
@@ -3419,6 +3420,10 @@
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
+			},
+			"maxActionBonus": {
+				"description": "Adds to the creature's max actions while it is on, for example \"+1 max action\". A turn starts with the new max.",
+				"value": { "label": "Actions", "hint": "How many max actions it adds, as a formula." }
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",

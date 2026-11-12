@@ -7,7 +7,7 @@ import {
 	isCombatantDying,
 } from '#documents/combat/combatantSystem.js';
 import { SYSTEM_ID, systemHookName } from '#system';
-import { getActorDyingActionLimit } from '#utils/actor/actorHealthState.js';
+import { getActorDyingActionLimit, getActorMaxActionBonus } from '#utils/actor/actorHealthState.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { getActiveCombatant } from '#utils/combat/combatTurnSync.js';
@@ -151,9 +151,10 @@ function combatState(actor: NimbleCharacter): HeroCombatState | null {
 
 	const base = getCombatantBaseActions(combatant);
 	const additional = getCombatantAdditionalActions(combatant);
+	const bonus = getActorMaxActionBonus(combatant.actor);
 	const max = isCombatantDying(combatant)
-		? Math.min(baseMaxActions(base), getActorDyingActionLimit(combatant.actor))
-		: baseMaxActions(base);
+		? Math.min(baseMaxActions(base, bonus), getActorDyingActionLimit(combatant.actor))
+		: baseMaxActions(base, bonus);
 	return {
 		initiativeRolled: combatant.initiative !== null,
 		initiativePending: initiativeRollLock.hasActiveLock(combatant),
@@ -162,7 +163,7 @@ function combatState(actor: NimbleCharacter): HeroCombatState | null {
 			current: base.current,
 			effectiveMax: max + additional,
 			pendingDelta: getCombatantPendingActionDelta(combatant),
-			mayAdd: mayAddAction(base, additional),
+			mayAdd: mayAddAction(base, additional, bonus),
 		},
 		reactionsSpent: HEROIC_REACTIONS.filter(
 			(key) => !getHeroicReactionAvailability(combatant as Combatant.Implementation, key),

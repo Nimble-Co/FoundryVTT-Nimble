@@ -14,6 +14,15 @@ export const DYING_MAX_ACTIONS = 1;
 
 /** System-relative path holding an actor's effective Dying action limit. */
 export const DYING_ACTION_LIMIT_PATH = 'attributes.dyingActionLimit';
+/** What Max Actions Bonus rules add to the creature's max actions, on `actor.system`. */
+export const MAX_ACTION_BONUS_PATH = 'attributes.maxActionBonus';
+
+/** The max actions that the creature's rules add (its effects, its features). */
+export function getActorMaxActionBonus(actor: Actor.Implementation | null | undefined): number {
+	if (!actor) return 0;
+	const value = Number(foundry.utils.getProperty(actor.system, MAX_ACTION_BONUS_PATH));
+	return Number.isFinite(value) ? Math.trunc(value) : 0;
+}
 
 /**
  * The actor's effective Dying action limit. Reads the derived

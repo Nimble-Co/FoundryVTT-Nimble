@@ -6,6 +6,7 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
+import { getActorMaxActionBonus } from '#utils/actor/actorHealthState.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
@@ -260,7 +261,8 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				await mutateActions(actor, (combatant) => {
 					const base = getCombatantBaseActions(combatant);
 					const additional = getCombatantAdditionalActions(combatant);
-					if (!mayAddAction(base, additional)) return null;
+					const bonus = getActorMaxActionBonus(combatant.actor);
+					if (!mayAddAction(base, additional, bonus)) return null;
 					return {
 						'system.actions.base.additional': additional + 1,
 						'system.actions.base.current': base.current + 1,
