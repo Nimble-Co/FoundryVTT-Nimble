@@ -119,10 +119,13 @@ async function runSyncOnce(
 	// GMs can manually toggle it off via the token HUD if needed.
 }
 
-/** `damageCardId`: the card whose Apply Damage changed the HP, where a phase line can go. */
+/**
+ * `damageCardId`: the card whose Apply Damage changed the HP, where a phase line can go. Null for
+ * an HP change with no card; left out when the HP did not change.
+ */
 async function syncActorHealthState(
 	actor: Actor.Implementation,
-	damageCardId: string | null = null,
+	damageCardId?: string | null,
 ): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!actor.id) return;
@@ -130,11 +133,11 @@ async function syncActorHealthState(
 	const existing = actorSyncState.get(actor.id);
 	if (existing?.running) {
 		existing.dirty = true;
-		existing.damageCardId = damageCardId ?? existing.damageCardId;
+		if (damageCardId !== undefined) existing.damageCardId = damageCardId;
 		return;
 	}
 
-	const state = { running: true, dirty: false, damageCardId };
+	const state = { running: true, dirty: false, damageCardId: damageCardId ?? null };
 	actorSyncState.set(actor.id, state);
 
 	try {
