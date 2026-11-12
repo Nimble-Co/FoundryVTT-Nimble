@@ -9,6 +9,7 @@ import {
 } from '#utils/actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { seatOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
@@ -206,6 +207,7 @@ function onDamageApplied(payload: {
 	const target = (payload?.targetActor ?? null) as Parameters<typeof requestSaves>[1];
 	if (payload?.isCritical) void requestSaves(card, target, 'critReceived');
 	void requestSaves(card, target, 'takeDamage');
+	void chargeOnLightning(target as never, payload?.damageTypes, payload?.sourceActor?.uuid ?? null);
 	fireEvent(
 		'takeDamage',
 		payload?.targetActor ?? null,
