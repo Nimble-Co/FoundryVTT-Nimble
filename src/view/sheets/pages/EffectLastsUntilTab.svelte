@@ -10,11 +10,14 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		isRoundSpan,
 		NEW_MOMENT_KINDS,
 		type NewMomentKind,
+		type SpanChoice,
+		spanChoiceOf,
+		spanChoices,
 		withBoundary,
 		withClock,
 		withEffectName,
 		withEvent,
-		withSpan,
+		withSpanChoice,
 		withSubject,
 		withUnits,
 		withValue,
@@ -26,7 +29,6 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		type LastsUntilEvent,
 		TIME_UNITS,
 		TURN_BOUNDARIES,
-		TURN_SPANS,
 	} from '../../../models/activeEffect/nimbleEffectChoices.js';
 	import {
 		createEffectLastsUntilTabState,
@@ -47,6 +49,11 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	const coreDuration = $derived(state.coreDuration);
 	const statusDefault = $derived(state.statusDefault);
 	const untilRemoved = $derived(state.untilRemoved);
+
+	function spanLabel(choice: SpanChoice): string {
+		const [span, count] = choice.split(':');
+		return count ? word(`nextTurnCount.${count}`) : word(`span.${span}`);
+	}
 
 	function onAdd(event: Event & { currentTarget: HTMLSelectElement }) {
 		const kind = event.currentTarget.value as NewMomentKind | '';
@@ -120,12 +127,12 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 						<select
 							aria-label={word('fields.span')}
-							value={moment.span ?? 'nextTurn'}
+							value={spanChoiceOf(moment)}
 							onchange={({ currentTarget }) =>
-								change(index, withSpan(moment, currentTarget.value as (typeof TURN_SPANS)[number]))}
+								change(index, withSpanChoice(moment, currentTarget.value as SpanChoice))}
 						>
-							{#each TURN_SPANS as span (span)}
-								<option value={span}>{word(`span.${span}`)}</option>
+							{#each spanChoices(moment.clock) as choice (choice)}
+								<option value={choice}>{spanLabel(choice)}</option>
 							{/each}
 						</select>
 					{:else if moment.kind === 'time'}

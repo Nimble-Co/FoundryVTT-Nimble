@@ -7,6 +7,7 @@ import {
 	type MomentSubject,
 	momentReached,
 	type TurnSeat,
+	turnCountedAt,
 } from '../momentReached.js';
 
 const COMBAT = 'combat1';
@@ -164,6 +165,20 @@ describe('turn moments', () => {
 
 		expect(momentReached(endOfTheirNextTurn, applied, turnEnd(leader, 1))).toBe(false);
 		expect(momentReached(endOfTheirNextTurn, applied, turnEnd(leader, 2))).toBe(true);
+	});
+
+	it('"the end of their 2nd next turn" ends at the second turn end that counts', () => {
+		const second = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
+		const applied = subject({ combatant: 'goblin', round: 1 });
+
+		expect(momentReached(second, applied, turnEnd(GOBLIN, 1))).toBe(false);
+		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 1), 0)).toBe(false);
+		expect(momentReached(second, applied, turnEnd(GOBLIN, 2))).toBe(false);
+		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 2), 0)).toBe(true);
+
+		const once = subject({ combatant: 'goblin', round: 1 }, { turnsSeen: [1] });
+		expect(momentReached(second, once, turnEnd(GOBLIN, 3))).toBe(true);
+		expect(turnCountedAt(second, once, turnEnd(GOBLIN, 3), 0)).toBe(false);
 	});
 
 	it('a solo monster turn later in the same round is its next turn', () => {

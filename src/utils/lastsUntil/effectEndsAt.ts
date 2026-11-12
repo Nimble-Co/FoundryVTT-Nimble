@@ -5,6 +5,7 @@ import {
 	type LastsUntilCheck,
 	type Moment,
 	momentReached,
+	turnCountedAt,
 } from '#utils/lastsUntil/momentReached.js';
 
 /** The parts of a Nimble Active Effect the end check reads. */
@@ -61,7 +62,7 @@ export function endingMoment(
 	const moments = effect.lastsUntil ?? [];
 	if (moments.length < 1 || !(effect.parent instanceof Actor)) return null;
 	const subject = effectSubject(effect, check, combat ?? undefined);
-	const found = moments.find((moment) => momentReached(moment, subject, check));
+	const found = moments.find((moment, index) => momentReached(moment, subject, check, index));
 	if (!found) return null;
 	return {
 		kind: found.kind,
@@ -74,4 +75,27 @@ export function endingMoment(
 		event: found.event ?? null,
 		effectName: found.effectName ?? '',
 	};
+}
+
+/**
+ * The clock turns each moment of `effect` has counted once `check` counts too. Null when `check`
+ * counts no "2nd next turn" moment of it.
+ */
+export function turnsSeenAfter(
+	effect: TimedEffect,
+	check: LastsUntilCheck,
+	combat?: Combat | null,
+): number[] | null {
+	const moments = effect.lastsUntil ?? [];
+	if (!moments.some((moment) => moment.kind === 'turn' && (moment.value ?? 1) > 1)) return null;
+	if (!(effect.parent instanceof Actor) || !effect.active) return null;
+	const subject = effectSubject(effect, check, combat ?? undefined);
+	let counted = false;
+	const seen = moments.map((moment, index) => {
+		const before = subject.turnsSeen?.[index] ?? 0;
+		if (!turnCountedAt(moment, subject, check, index)) return before;
+		counted = true;
+		return before + 1;
+	});
+	return counted ? seen : null;
 }

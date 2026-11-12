@@ -4,8 +4,12 @@ import {
 	newMoment,
 	removeAt,
 	replaceAt,
+	spanChoiceOf,
+	spanChoices,
+	withClock,
 	withEffectName,
 	withSpan,
+	withSpanChoice,
 	withSubject,
 	withValue,
 } from '../momentForm.js';
@@ -56,6 +60,34 @@ describe('withSpan', () => {
 		const yours = { ...newMoment('turn'), clock: 'source' as const };
 
 		expect(withSpan(yours, 'currentTurn').clock).toBe('source');
+	});
+});
+
+describe('the turn list with counts', () => {
+	it('puts "2nd next turn" to "5th next turn" after "next turn"', () => {
+		expect(spanChoices('holder')).toEqual([
+			'nextTurn',
+			'nextTurn:2',
+			'nextTurn:3',
+			'nextTurn:4',
+			'nextTurn:5',
+			'currentTurn',
+			'currentRound',
+			'nextRound',
+		]);
+		expect(spanChoices('nextHero')).not.toContain('nextTurn:2');
+	});
+
+	it('a count is the value of the moment, and another span drops it', () => {
+		const second = withSpanChoice(newMoment('turn'), 'nextTurn:2');
+
+		expect(second).toMatchObject({ span: 'nextTurn', value: 2 });
+		expect(spanChoiceOf(second)).toBe('nextTurn:2');
+		expect(withSpanChoice(second, 'currentTurn')).toMatchObject({
+			span: 'currentTurn',
+			value: null,
+		});
+		expect(withClock(second, 'nextHero').value).toBeNull();
 	});
 });
 

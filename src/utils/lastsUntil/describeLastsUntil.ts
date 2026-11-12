@@ -1,7 +1,7 @@
 import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { isRoundSpan } from './momentForm.js';
-import type { Moment } from './momentReached.js';
+import { type Moment, turnCount } from './momentReached.js';
 
 const WORDS = 'NIMBLE.lastsUntilText';
 
@@ -138,7 +138,11 @@ function turnPhrase(moment: Moment, input: DescribeInput): string {
 			}),
 		});
 	}
-	const spanWord = input.localize(`${WORDS}.span.${span}`);
+	const count = turnCount(moment);
+	const spanWord =
+		count > 1
+			? input.localize(`${WORDS}.nextTurnCount.${count}`)
+			: input.localize(`${WORDS}.span.${span}`);
 	let whose: string;
 	if (moment.clock === 'nextHero') whose = input.localize(`${WORDS}.nextHero`);
 	else if (moment.clock === 'any') whose = `${input.localize(`${WORDS}.anyTurn`)} ${spanWord}`;

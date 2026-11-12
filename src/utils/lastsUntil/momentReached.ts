@@ -69,6 +69,8 @@ export interface MomentSubject {
 	/** The effect belongs to this combat: applied in it, or its holder or source fights in it. */
 	relatesTo(combatId: string): boolean;
 	secondsOf(units: TimeUnit, value: number): number;
+	/** For each moment, by index: the clock turns it has counted. */
+	turnsSeen?: readonly number[];
 }
 
 export function sameSeat(a: TurnSeat | null, b: TurnSeat | null): boolean {
@@ -99,16 +101,45 @@ function turnInProgressAtStart(
 	return sameSeat(startSeat, check.seat);
 }
 
+/** How many clock turns a "2nd next turn" moment waits for. 1 for any other moment. */
+export function turnCount(moment: Moment): number {
+	if (moment.kind !== 'turn' || moment.span !== 'nextTurn') return 1;
+	return Math.max(1, moment.value ?? 1);
+}
+
+/** A turn of the moment's clock that counts toward it: not the turn in progress at the start. */
+function clockTurnCounts(moment: Moment, subject: MomentSubject, check: LastsUntilCheck): boolean {
+	const { boundary, span, clock } = moment;
+	if (!clock || span === 'currentRound' || span === 'nextRound') return false;
+	if (check.type !== (boundary === 'start' ? 'turnStart' : 'turnEnd')) return false;
+	if (!subject.isClockTurn(clock, check.seat)) return false;
+	if (boundary === 'start' || span === 'currentTurn') return true;
+	return !turnInProgressAtStart(subject, check);
+}
+
+/** The check is a clock turn that a counted moment counts, and its count is not yet reached. */
+export function turnCountedAt(
+	moment: Moment,
+	subject: MomentSubject,
+	check: LastsUntilCheck,
+	index: number,
+): boolean {
+	const count = turnCount(moment);
+	if (count < 2 || !clockTurnCounts(moment, subject, check)) return false;
+	return (subject.turnsSeen?.[index] ?? 0) + 1 < count;
+}
+
 function turnMomentReached(
 	moment: Moment,
 	subject: MomentSubject,
 	check: LastsUntilCheck,
+	index: number,
 ): boolean {
 	if (check.type === 'combatEnd') return subject.relatesTo(check.combatId);
 	if (check.type === 'worldTime') return !subject.holderInCombat;
 	if (check.type === 'event' || check.type === 'combatStart') return false;
 
-	const { boundary, span, clock } = moment;
+	const { boundary, span } = moment;
 	if (span === 'currentRound' || span === 'nextRound') {
 		if (check.type !== (boundary === 'start' ? 'roundStart' : 'roundEnd')) return false;
 		const base = roundBase(subject, check.combatId);
@@ -116,11 +147,8 @@ function turnMomentReached(
 		return check.round >= base + ahead;
 	}
 
-	if (!clock) return false;
-	if (check.type !== (boundary === 'start' ? 'turnStart' : 'turnEnd')) return false;
-	if (!subject.isClockTurn(clock, check.seat)) return false;
-	if (boundary === 'start' || span === 'currentTurn') return true;
-	return !turnInProgressAtStart(subject, check);
+	if (!clockTurnCounts(moment, subject, check)) return false;
+	return (subject.turnsSeen?.[index] ?? 0) + 1 >= turnCount(moment);
 }
 
 /** "For N rounds": up to the same place in the turn order N rounds later. */
@@ -185,10 +213,11 @@ export function momentReached(
 	moment: Moment,
 	subject: MomentSubject,
 	check: LastsUntilCheck,
+	index = 0,
 ): boolean {
 	switch (moment.kind) {
 		case 'turn':
-			return turnMomentReached(moment, subject, check);
+			return turnMomentReached(moment, subject, check, index);
 		case 'time':
 			return timeMomentReached(moment, subject, check);
 		case 'event':
@@ -204,5 +233,5 @@ export function anyMomentReached(
 	subject: MomentSubject,
 	check: LastsUntilCheck,
 ): boolean {
-	return moments.some((moment) => momentReached(moment, subject, check));
+	return moments.some((moment, index) => momentReached(moment, subject, check, index));
 }

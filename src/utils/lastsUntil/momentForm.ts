@@ -1,10 +1,12 @@
-import type {
-	Clock,
-	EventSubject,
-	LastsUntilEvent,
-	TimeUnit,
-	TurnBoundary,
-	TurnSpan,
+import {
+	type Clock,
+	type EventSubject,
+	type LastsUntilEvent,
+	NEXT_TURN_COUNTS,
+	type TimeUnit,
+	TURN_SPANS,
+	type TurnBoundary,
+	type TurnSpan,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
 import type { Moment } from './momentReached.js';
 
@@ -78,14 +80,36 @@ export function withBoundary(moment: Moment, boundary: TurnBoundary): Moment {
 	return { ...moment, boundary };
 }
 
-/** A round has no Clock; a turn needs one. */
+/** A round has no Clock; a turn needs one. A new span drops the count of a "2nd next turn". */
 export function withSpan(moment: Moment, span: TurnSpan): Moment {
-	if (isRoundSpan(span)) return { ...moment, span, clock: null };
-	return { ...moment, span, clock: moment.clock ?? 'holder' };
+	if (isRoundSpan(span)) return { ...moment, span, clock: null, value: null };
+	return { ...moment, span, clock: moment.clock ?? 'holder', value: null };
 }
 
+/** The turn list's entries: each span, with "2nd next turn" and up after "next turn". */
+export type SpanChoice = TurnSpan | `nextTurn:${(typeof NEXT_TURN_COUNTS)[number]}`;
+
+export function spanChoices(clock: Clock | null): SpanChoice[] {
+	const counts = clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+	return TURN_SPANS.flatMap((span) => (span === 'nextTurn' ? [span, ...counts] : [span]));
+}
+
+export function spanChoiceOf(moment: Moment): SpanChoice {
+	const span = moment.span ?? 'nextTurn';
+	const count = moment.value ?? 1;
+	if (span !== 'nextTurn' || count < 2) return span;
+	return `nextTurn:${count}` as SpanChoice;
+}
+
+export function withSpanChoice(moment: Moment, choice: SpanChoice): Moment {
+	const [span, count] = choice.split(':') as [TurnSpan, string | undefined];
+	const next = withSpan(moment, span);
+	return count ? { ...next, value: Number(count) } : next;
+}
+
+/** The next hero's turn has no count. */
 export function withClock(moment: Moment, clock: Clock): Moment {
-	return { ...moment, clock };
+	return clock === 'nextHero' ? { ...moment, clock, value: null } : { ...moment, clock };
 }
 
 export function withValue(moment: Moment, value: number): Moment {

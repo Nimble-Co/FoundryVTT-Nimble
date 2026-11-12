@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import registerConditionsConfig from '../../../config/registerConditionsConfig.js';
-import { effectEndsAt } from '../effectEndsAt.js';
+import { effectEndsAt, turnsSeenAfter } from '../effectEndsAt.js';
 import { seatOf } from '../effectSubject.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
 
@@ -200,5 +200,34 @@ describe('effectEndsAt', () => {
 		it('does not end at a turn end', () => {
 			expect(effectEndsAt(despair(), turnEnd(goblinCombatant, 2), combat)).toBe(false);
 		});
+	});
+});
+
+describe('turnsSeenAfter', () => {
+	const second = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
+
+	it('counts a turn of the holder that does not yet end a "2nd next turn"', () => {
+		const effect = makeEffect({ lastsUntil: [second] });
+
+		expect(turnsSeenAfter(effect as never, turnEnd(goblinCombatant, 1), combat)).toEqual([1]);
+		expect(turnsSeenAfter(effect as never, turnEnd(tessaCombatant, 1), combat)).toBeNull();
+	});
+
+	it('the turn that reaches the count ends the effect and counts nothing', () => {
+		const effect = makeEffect({ lastsUntil: [second], flags: { nimble: { turnsSeen: [1] } } });
+
+		expect(effectEndsAt(effect as never, turnEnd(goblinCombatant, 2), combat)).toBe(true);
+		expect(turnsSeenAfter(effect as never, turnEnd(goblinCombatant, 2), combat)).toBeNull();
+	});
+
+	it('an effect with no counted moment counts nothing', () => {
+		const next = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
+		expect(
+			turnsSeenAfter(
+				makeEffect({ lastsUntil: [next] }) as never,
+				turnEnd(goblinCombatant, 1),
+				combat,
+			),
+		).toBeNull();
 	});
 });

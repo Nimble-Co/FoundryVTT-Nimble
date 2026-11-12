@@ -3971,6 +3971,7 @@
 				"currentRound": "this round",
 				"nextRound": "the next round"
 			},
+			"nextTurnCount": { "2": "2nd next turn", "3": "3rd next turn", "4": "4th next turn", "5": "5th next turn" },
 			"nextHero": "the next hero's turn",
 			"anyTurn": "the",
 			"your": "your",
@@ -4067,6 +4068,12 @@
 					"currentTurn": "current turn",
 					"currentRound": "current round",
 					"nextRound": "next round"
+				},
+				"nextTurnCount": {
+					"2": "2nd next turn",
+					"3": "3rd next turn",
+					"4": "4th next turn",
+					"5": "5th next turn"
 				},
 				"units": {
 					"rounds": "rounds",

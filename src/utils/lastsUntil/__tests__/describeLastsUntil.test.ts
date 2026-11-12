@@ -44,6 +44,11 @@ function read(moments: Moment[], reader: DescribeInput['reader'], hasEscape = fa
 describe('describeLastsUntil', () => {
 	const endOfTheirNextTurn = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
 
+	it('reads a counted turn as "2nd next turn"', () => {
+		const second = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
+		expect(read([second], CARD_TARGETS_READER)).toBe('Until the end of their 2nd next turn');
+	});
+
 	it('reads a turn moment from the card and from the holder', () => {
 		expect(read([endOfTheirNextTurn], CARD_TARGETS_READER)).toBe(
 			'Until the end of their next turn',
