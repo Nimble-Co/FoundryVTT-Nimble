@@ -54,6 +54,7 @@ interface HeldRollLike {
 	usedUp?: boolean;
 	whichRoll?: HeldAppliesTo;
 	meleeOnly?: boolean;
+	rangedOnly?: boolean;
 	fromSourceOnly?: boolean;
 }
 
@@ -69,6 +70,7 @@ export function usedUpOf(system: unknown): HeldUsedUp | null {
 	return {
 		by,
 		melee: rule.meleeOnly === true,
+		...(rule.rangedOnly ? { ranged: true } : {}),
 		fromSource: by === 'attacksOnHolder' && rule.fromSourceOnly === true,
 	};
 }
@@ -112,7 +114,8 @@ function sameReader(a: Person, b: Person): boolean {
 
 function usedUpPhrase(usedUp: HeldUsedUp, input: DescribeInput): string {
 	const { holder, source } = input.reader;
-	const attack = input.localize(`${WORDS}.${usedUp.melee ? 'meleeAttack' : 'attack'}`);
+	const attackWord = usedUp.melee ? 'meleeAttack' : usedUp.ranged ? 'rangedAttack' : 'attack';
+	const attack = input.localize(`${WORDS}.${attackWord}`);
 	let moment: string;
 	if (usedUp.by === 'holderAttacks') {
 		moment = input.format(`${WORDS}.nextAttack`, { whose: possessive(holder, input), attack });

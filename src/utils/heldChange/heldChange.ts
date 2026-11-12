@@ -53,6 +53,7 @@ interface HeldRollSource {
 	whichRoll?: HeldChangeData['appliesTo'];
 	usedUp?: boolean;
 	meleeOnly?: boolean;
+	rangedOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
 	formula?: string;
@@ -133,6 +134,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				appliesTo: rule.whichRoll ?? 'holderAttacks',
 				spentBy: rule.usedUp === false ? 'everyRoll' : 'oneRoll',
 				meleeOnly: rule.meleeOnly === true,
+				...(rule.rangedOnly && !rule.meleeOnly ? { rangedOnly: true } : {}),
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
 				...(rule.formula ? { formula: rule.formula } : {}),
@@ -152,6 +154,7 @@ function fitsAttack(
 	melee: boolean | undefined,
 ): boolean {
 	if (held.meleeOnly && melee === false) return false;
+	if (held.rangedOnly && melee !== false) return false;
 	// A lost source ('') fits no attacker.
 	return held.onlyFromUuid === null || held.onlyFromUuid === attacker?.uuid;
 }

@@ -23,6 +23,15 @@ const hasDamageType = (data: Record<string, unknown>) =>
 	data.heldKind === 'vulnerableOnce' || data.heldKind === 'extraDamage';
 const isExtraDamage = (data: Record<string, unknown>) => data.heldKind === 'extraDamage';
 const isOnHolder = (data: Record<string, unknown>) => data.whichRoll === 'attacksOnHolder';
+/** The kinds that an attack uses, and so read whether it is melee or ranged. */
+const KINDS_OF_AN_ATTACK = new Set(['advantage', 'primaryDie', 'extraDamage', 'maximize']);
+const readsAttackType = (data: Record<string, unknown>) =>
+	KINDS_OF_AN_ATTACK.has(String(data.heldKind ?? 'advantage'));
+/** Melee only and Ranged only exclude each other. A field shows while the other is off or this one is on. */
+const showsMeleeOnly = (data: Record<string, unknown>) =>
+	readsAttackType(data) && (!data.rangedOnly || !!data.meleeOnly);
+const showsRangedOnly = (data: Record<string, unknown>) =>
+	readsAttackType(data) && (!data.meleeOnly || !!data.rangedOnly);
 
 function schema() {
 	const { fields } = foundry.data;
@@ -67,13 +76,26 @@ function schema() {
 			label: `${WORDS}.usedUp.label`,
 			hint: `${WORDS}.usedUp.hint`,
 		}),
-		meleeOnly: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: `${WORDS}.meleeOnly.label`,
-			hint: `${WORDS}.meleeOnly.hint`,
-		}),
+		meleeOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.meleeOnly.label`,
+				hint: `${WORDS}.meleeOnly.hint`,
+				showWhen: showsMeleeOnly,
+			}),
+		),
+		rangedOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.rangedOnly.label`,
+				hint: `${WORDS}.rangedOnly.hint`,
+				showWhen: showsRangedOnly,
+			}),
+		),
 		fromSourceOnly: new fields.BooleanField(
 			withWidget({
 				required: true,

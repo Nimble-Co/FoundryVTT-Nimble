@@ -3335,6 +3335,10 @@
 					"label": "Melee attacks only",
 					"hint": "Only a melee attack uses it."
 				},
+				"rangedOnly": {
+					"label": "Ranged attacks only",
+					"hint": "Only a ranged attack uses it."
+				},
 				"fromSourceOnly": {
 					"label": "Only attacks by the creature that applied it",
 					"hint": "For the next attack against it: only an attack by the creature that put the effect on uses it."
@@ -4023,6 +4027,7 @@
 			"them": "them",
 			"attack": "attack",
 			"meleeAttack": "melee attack",
+			"rangedAttack": "ranged attack",
 			"nextAttack": "{whose} next {attack}",
 			"nextAttackFrom": "{whose} next {attack} against {whom}",
 			"nextAttackOn": "the next {attack} against {whom}",

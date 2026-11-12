@@ -251,6 +251,23 @@ describe('heldAdvantageForAttack', () => {
 		expect(held).toHaveLength(1);
 	});
 
+	it('reads a ranged-only change only on an attack known to be ranged', () => {
+		const target = creature('T', [advantage({ rangedOnly: true })]);
+		const on = (melee: boolean | undefined) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
+		expect(on(false)).toHaveLength(1);
+		expect(on(true)).toEqual([]);
+		expect(on(undefined)).toEqual([]);
+	});
+
+	it('reads a change that is both melee-only and ranged-only as melee-only', () => {
+		const target = creature('T', [advantage({ meleeOnly: true, rangedOnly: true })]);
+		const on = (melee: boolean | undefined) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
+		expect(on(true)).toHaveLength(1);
+		expect(on(false)).toEqual([]);
+	});
+
 	it('reads a source-only change only on an attack by the origin creature', () => {
 		const target = creature('T', [advantage({ fromSourceOnly: true })]);
 		const mira = creature(MIRA);

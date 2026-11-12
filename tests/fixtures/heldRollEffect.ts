@@ -8,6 +8,7 @@ export interface HeldRollSpec {
 	whichRoll?: HeldAppliesTo;
 	usedUp?: boolean;
 	meleeOnly?: boolean;
+	rangedOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
 	formula?: string;
@@ -35,6 +36,7 @@ export function heldRollSource(id: string, spec: HeldRollSpec = {}, fallbackLabe
 		whichRoll: spec.whichRoll ?? 'attacksOnHolder',
 		usedUp: spec.usedUp ?? true,
 		meleeOnly: spec.meleeOnly ?? false,
+		rangedOnly: spec.rangedOnly ?? false,
 		fromSourceOnly: spec.fromSourceOnly ?? false,
 		damageType: spec.damageType ?? '',
 		formula: spec.formula ?? '',
