@@ -4,6 +4,7 @@ import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import localize from '#utils/localize.js';
 
 const EFFECT_HOOKS = ['createActiveEffect', 'deleteActiveEffect'] as const;
 
@@ -42,7 +43,18 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		busy[event.id] = true;
 		focusOnBack = event.id;
 		try {
-			await undoEndedEffect(row);
+			const restored = await undoEndedEffect(row).catch((error) => {
+				console.error('Nimble | Could not undo an ended effect.', error);
+				return false;
+			});
+			if (!restored) {
+				ui.notifications?.warn(
+					localize('NIMBLE.lastsUntil.chat.undoFailed', {
+						effect: row.name,
+						name: row.holderName,
+					}),
+				);
+			}
 			await tick();
 		} finally {
 			busy[event.id] = false;

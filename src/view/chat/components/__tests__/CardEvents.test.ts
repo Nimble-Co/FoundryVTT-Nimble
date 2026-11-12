@@ -167,6 +167,28 @@ describe('CardEvents', () => {
 		expect(undoEndedEffect).toHaveBeenCalledWith(row('Actor.tessa', 'Tessa'));
 	});
 
+	it.each([
+		['says no', async () => false],
+		['fails', async () => Promise.reject(new Error('gone'))],
+	])('Undo that %s tells the user', async (_name, result) => {
+		undoEndedEffect.mockImplementationOnce(result);
+		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa')]));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Undo: put Despair back on Tessa' }));
+		await tick();
+
+		expect(ui.notifications?.warn).toHaveBeenCalledWith('Could not put Despair back on Tessa.');
+	});
+
+	it('Undo that works tells nothing', async () => {
+		renderEvents(makeCard([ended('e1', 'Actor.tessa', 'Tessa')]));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Undo: put Despair back on Tessa' }));
+		await tick();
+
+		expect(ui.notifications?.warn).not.toHaveBeenCalled();
+	});
+
 	it('after Undo, the focus moves to the line that tells where the effect is', async () => {
 		undoEndedEffect.mockImplementationOnce(async () => {
 			holders['Actor.tessa'].effects.set('despair', {});

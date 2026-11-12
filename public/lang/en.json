@@ -1216,6 +1216,7 @@
 			"chat": {
 				"ended": "{effect} ended on {name}",
 				"alreadyOn": "{effect} is already on {name}.",
+				"undoFailed": "Could not put {effect} back on {name}.",
 				"heading": {
 					"turnStart": "Start of {name}'s turn",
 					"turnEnd": "End of {name}'s turn",
