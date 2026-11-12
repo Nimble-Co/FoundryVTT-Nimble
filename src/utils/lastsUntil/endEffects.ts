@@ -101,15 +101,20 @@ interface EndedLine {
 	endedBy?: CardEventLastsUntil;
 }
 
-/** The lines go on the host card when there is one, else on the card of the moment. */
+/**
+ * The lines go on the host card when there is one, else on the card of the moment. That card keeps
+ * the readers of a whispered host card.
+ */
 async function postEnded(moment: EndMoment, lines: EndedLine[]): Promise<boolean> {
 	const at = Date.now();
 	const events = lines.map(({ row, endedBy }) => endedEffectEvent(row, at, moment.reason, endedBy));
 	const host = moment.hostId ? game.messages?.get(moment.hostId) : null;
 	if (host && canHost(host as never) && (await addCardEvents(host as never, events))) return true;
 	const key = moment.key ?? `once:${foundry.utils.randomID()}`;
+	const hostReaders = ((host as { whisper?: string[] } | null)?.whisper ?? []).filter(Boolean);
+	const whisper = moment.whisper ?? (hostReaders.length > 0 ? hostReaders : undefined);
 	return addMomentEvents({ key, heading: moment.heading }, events, {
-		...(moment.whisper ? { whisper: moment.whisper } : {}),
+		...(whisper ? { whisper } : {}),
 	});
 }
 

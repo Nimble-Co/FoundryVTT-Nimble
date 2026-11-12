@@ -275,6 +275,19 @@ describe('endEffects on a host card', () => {
 		expect(rowsOf(createdCard()).map((row) => row.effectId)).toEqual(['a']);
 	});
 
+	it('a whispered host card that takes no line leaves the lines for its readers only', async () => {
+		const card = Object.assign(hostCard(), { whisper: ['gm', 'player'] });
+		card.update.mockRejectedValueOnce(new Error('no write'));
+
+		await endEffects([addEffect(goblin, 'a')], {
+			heading: { key: 'Goblin attacked' },
+			hostId: card.id,
+		});
+
+		expect(create).toHaveBeenCalledTimes(1);
+		expect((createdCard() as { whisper?: string[] }).whisper).toEqual(['gm', 'player']);
+	});
+
 	it('on another client, the host goes to the active GM with the ends', async () => {
 		user.isActiveGM = false;
 		const a = addEffect(goblin, 'a');
