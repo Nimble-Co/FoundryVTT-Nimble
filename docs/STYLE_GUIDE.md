@@ -74,7 +74,7 @@ Use these trigger rules to decide when to extract code:
 
 | Situation | Action |
 |-----------|--------|
-| Type used by 2+ files | Extract to a `types/` file |
+| Type used by 2+ files | Keep it beside the code it belongs to (AGENTS.md: related types may share a file). Extract to a `types/` file when no one module owns it |
 | Same literal repeated in 2+ files | Extract to `config.ts` or a constants file |
 | Pure helper used by 2+ files | Extract to `src/utils/` |
 | Component used by 2+ features | Extract to `src/view/components/` |
@@ -1377,7 +1377,7 @@ export const NIMBLE = {
 Use these rules as a pre-review gate. They help keep files focused by extracting shared code into the right locations.
 
 **Types:**
-- [ ] No `export type` remains in component/utility files when used outside that file → move to `types/`
+- [ ] An exported type that other files use sits beside the code it belongs to, or in `types/` when no one module owns it (AGENTS.md One Export Per File)
 - [ ] Prop types for components are in separate `.d.ts` files
 
 **Constants:**
