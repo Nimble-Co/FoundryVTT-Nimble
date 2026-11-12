@@ -132,6 +132,7 @@ export function freeUseSink(host: FreeUseHost, { gmOnly }: { gmOnly: boolean }):
 	if ('cardId' in host) {
 		const card = game.messages?.get(host.cardId) as unknown as EventHostCard | undefined;
 		if (!card || !canHost(card, { gmOnly })) return null;
+		if (!gmOnly && (card.whisper?.length ?? 0) > 0) return null;
 		return async (events) => {
 			if (hasOfferLine(events) && !cardSchemaHas(card.type, 'movementOffers')) return false;
 			return addCardEvents(card, events);

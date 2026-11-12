@@ -118,6 +118,11 @@ describe('freeUseSink', () => {
 		expect(freeUseSink({ cardId: 'host' }, { gmOnly: true })).toBeNull();
 	});
 
+	it('is null for a use that everyone sees when the host card is whispered', () => {
+		card.whisper = ['gm'];
+		expect(freeUseSink({ cardId: 'host' }, { gmOnly: false })).toBeNull();
+	});
+
 	it('writes the lines on the host card', async () => {
 		const line = freeUseEvent({ actorName: 'Hero', item: { name: 'Rage' }, reason, effects: [] });
 		const sink = freeUseSink({ cardId: 'host' }, { gmOnly: false });
