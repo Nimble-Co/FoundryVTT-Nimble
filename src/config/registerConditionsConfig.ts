@@ -214,6 +214,11 @@ export default function registerConditionsConfig() {
 	const conditionLastsUntil: Record<string, Moment[]> = {
 		dazed: [HOLDER_NEXT_TURN_END],
 		despair: [eventMoment('attack', 'holder'), eventMoment('combatEnd', null)],
+		grappled: [
+			eventMoment('zeroHp', 'source'),
+			eventMoment('die', 'source'),
+			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
+		],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
 			eventMoment('zeroHp', 'holder'),

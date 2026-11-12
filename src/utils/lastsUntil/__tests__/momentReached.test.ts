@@ -317,6 +317,27 @@ describe('gain an effect or a condition', () => {
 	it('a blank name is never reached', () => {
 		expect(momentReached(gain(''), applied(), gained('', []))).toBe(false);
 	});
+
+	it('"until you gain Incapacitated" ends when the source gains it, not the holder', () => {
+		const grappler = { name: 'Ogre' };
+		const grappled = { name: 'Tessa' };
+		const yours = moment({
+			kind: 'event',
+			who: 'source',
+			event: 'gain',
+			effectName: 'incapacitated',
+		});
+		const held = subject({}, { holder: grappled, source: grappler });
+		const stunned = (actor: object): LastsUntilCheck => ({
+			type: 'event',
+			event: 'gain',
+			actor,
+			effectName: 'Stunned',
+			statuses: ['stunned', 'incapacitated'],
+		});
+		expect(momentReached(yours, held, stunned(grappler))).toBe(true);
+		expect(momentReached(yours, held, stunned(grappled))).toBe(false);
+	});
 });
 
 describe('time moments', () => {

@@ -64,6 +64,14 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 
+	it('Grappled lasts until its source drops to 0 HP, dies or gains Incapacitated', () => {
+		expect(registerConditionsConfig().conditionLastsUntil.grappled).toEqual([
+			event('zeroHp', 'source'),
+			event('die', 'source'),
+			{ ...event('gain', 'source'), effectName: 'incapacitated' },
+		]);
+	});
+
 	it('Confused has no default Lasts Until', () => {
 		expect(registerConditionsConfig().conditionLastsUntil.confused).toBeUndefined();
 	});

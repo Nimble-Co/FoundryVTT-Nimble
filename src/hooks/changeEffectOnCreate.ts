@@ -69,9 +69,18 @@ function changedMoments(effect: NewEffect): Moment[] | null {
 	return [...kept.map((moment) => ({ ...moment })), ...added];
 }
 
+/** With no creature it came from, a moment about "you" never happens (a Grappled set by hand). */
+function withoutSourceEvents(effect: NewEffect): Moment[] | null {
+	if (!(effect.parent instanceof Actor) || effect.origin) return null;
+	const moments = effect.system?.lastsUntil;
+	if (!Array.isArray(moments)) return null;
+	const kept = moments.filter((moment) => !(moment.kind === 'event' && moment.who === 'source'));
+	return kept.length === moments.length ? null : kept.map((moment) => ({ ...moment }));
+}
+
 /** An effect is changed when it is made, on the creating client, never once it is on the actor. */
 export function changeNewEffect(effect: NewEffect): void {
-	const next = changedMoments(effect);
+	const next = changedMoments(effect) ?? withoutSourceEvents(effect);
 	if (next) effect.updateSource({ 'system.lastsUntil': next });
 }
 
