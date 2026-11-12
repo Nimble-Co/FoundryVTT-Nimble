@@ -68,6 +68,18 @@ function eventMoment(event: Moment['event'], who: Moment['who']): Moment {
 	};
 }
 
+const HOLDER_NEXT_TURN_END: Moment = {
+	kind: 'turn',
+	boundary: 'end',
+	clock: 'holder',
+	span: 'nextTurn',
+	value: null,
+	units: null,
+	who: null,
+	event: null,
+	effectName: '',
+};
+
 /** Every built-in ID required, any GM-supplied ID readable. */
 export type ConditionDictionary = Record<StatusEffectId, string> & Record<string, string>;
 
@@ -200,7 +212,9 @@ export default function registerConditionsConfig() {
 
 	/** The Lasts Until a condition has when nothing else gives it one, copied into its status effect. */
 	const conditionLastsUntil: Record<string, Moment[]> = {
+		dazed: [HOLDER_NEXT_TURN_END],
 		despair: [eventMoment('attack', 'holder'), eventMoment('combatEnd', null)],
+		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
 			eventMoment('zeroHp', 'holder'),
 			{ ...eventMoment('gain', 'holder'), effectName: 'incapacitated' },

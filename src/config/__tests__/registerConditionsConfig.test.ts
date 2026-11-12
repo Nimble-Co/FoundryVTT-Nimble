@@ -48,6 +48,26 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 
+	it.each(['dazed', 'slowed'])("%s lasts until the end of the holder's next turn", (id) => {
+		expect(registerConditionsConfig().conditionLastsUntil[id]).toEqual([
+			{
+				kind: 'turn',
+				boundary: 'end',
+				clock: 'holder',
+				span: 'nextTurn',
+				value: null,
+				units: null,
+				who: null,
+				event: null,
+				effectName: '',
+			},
+		]);
+	});
+
+	it('Confused has no default Lasts Until', () => {
+		expect(registerConditionsConfig().conditionLastsUntil.confused).toBeUndefined();
+	});
+
 	it('Concentrating lasts until the holder drops to 0 HP or gains Incapacitated', () => {
 		expect(registerConditionsConfig().conditionLastsUntil.concentration).toEqual([
 			event('zeroHp', 'holder'),
