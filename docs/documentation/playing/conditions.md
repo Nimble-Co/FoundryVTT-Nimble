@@ -67,6 +67,14 @@ A condition, or any other effect, can have a **Lasts Until**: one or more moment
 - **A time.** "For 1 minute" follows world time. "For 1 round" lasts until the same place in the turn order one round later; applied at Initiative, it lasts all of round 1.
 - **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
 
+Some conditions have a Lasts Until of their own, which they keep when nothing else gives them one:
+
+- **Dazed** and **Slowed**: until the end of their next turn.
+- **Grappled**: until the creature that applied it drops to 0 HP, dies or gains Incapacitated. A Grappled set by hand has no such creature, so it stays until someone removes it.
+- **Concentration**: see [Concentration](#concentration).
+
+**Charged** goes on a creature that takes lightning damage, for 1 minute.
+
 When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
 
 On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
@@ -103,7 +111,7 @@ Ending one of two held concentrations is a choice rather than bookkeeping, so re
 
 This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
 
-What the system does *not* do is break concentration for you. Losing it when crit (a DC 10 STR save), at 0 HP, or when Incapacitated is still yours to track. Remove the condition by hand when it ends. Ending concentration deliberately is a free action, and a hero gets one free action per turn, which the system does not spend for you either.
+Concentration ends when the caster drops to 0 HP or gains Incapacitated (or a condition that counts as it, such as Stunned), and after the spell's Duration when that is in minutes or hours. When a crit hits the caster, the card of the attack gets a line that asks for a DC 10 STR save, with **Roll** for the owner of the caster. A failure ends Concentration, and a success leaves the line as "kept". Save rules, such as advantage on STR saves, apply to that roll. Ending concentration deliberately is a free action, and a hero gets one free action per turn, which the system does not spend for you.
 
 Only spells and objects carry the **Concentration** property, so a feature that holds concentration in its text, such as Shadowmancer's **Gaze of Two Minds**, is not covered. Apply and remove the condition by hand for those.
 

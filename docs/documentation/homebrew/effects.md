@@ -40,7 +40,7 @@ The window has four tabs:
 
 - **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect), the **Conditions** that the effect gives, and the description.
 - **Lasts Until**: the moments that end the effect, and its Escape.
-- **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority.
+- **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority. The type **Multiply, round down** multiplies and rounds the result down, so a halved speed of 7 is 3 (core's **Multiply** rounds to the nearest number). An `@` reference in a value reads the creature that has the effect.
 - **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list.
 
 Each field saves when you change it.
@@ -87,16 +87,20 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 
 | Moment | Reads as |
 | --- | --- |
-| A turn or a round | until **the end of** **their** **next turn**; until **the start of** the **next round** |
+| A turn or a round | until **the end of** **their** **next turn**, or their **2nd next turn** up to the 5th; until **the start of** the **next round** |
 | Rounds or time | until **1** **minutes** pass |
-| They or you do something | until **they** **attack**; until **you** **drop to 0 HP** |
+| They or you do something | until **they** **attack**; until **you** **drop to 0 HP**; until **they** **take** **fire** damage; until **they** **gain** **Incapacitated** |
 | Another effect ends | until **the effect** **Rage** ends |
 
 "Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero. "The" is the turn in progress, whoever's it is: until **the end of** **the** **turn**, for an effect that goes on during the turn of another creature.
 
-They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP or die. You can attack, cast a spell, drop to 0 HP, die, lose Concentration or use this again.
+They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
 
-The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An older effect can also have a core duration, such as 1 round; the tab shows it, and it still ends the effect. When an effect ends, a line in the **Events** part of a card says so, with **Undo**: see [How an effect works](#how-an-effect-works).
+- **Take damage** can name damage types: turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
+- **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts its aliases: Stunned is a gain of Incapacitated. To end an effect on any of a group of effects, give each of them the same custom condition and name that condition. An effect never ends on its own gain.
+- **Apply** is the creature the new effect came from (its origin).
+
+The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An effect with a condition takes the condition's own Lasts Until (Dazed: until the end of their next turn); turn on **Stays until someone removes it** to keep it on. An older effect can also have a core duration, such as 1 round; the tab shows it, and it still ends the effect. When an effect ends, a line in the **Events** part of a card says so, with **Undo**: see [How an effect works](#how-an-effect-works).
 
 ## Hold a change for the next attack
 
@@ -109,7 +113,8 @@ For example, True Strike holds advantage for the next attack of its target, unti
 ::: details More about held changes
 - **Melee attacks only**: only a melee attack uses the change. An attack with no attack type counts as melee.
 - **Only attacks by the creature that applied it**: for the next attack against the holder, only the creature that put the effect on uses it, as with Advance!.
-- An area attack uses only the attacker's own changes, not the changes on a target.
+- An area attack uses only the attacker's own changes, not the changes on a target. The one exception is **every die at its highest number** on a target: that target alone takes the highest total of the area roll, and the change is used up when the damage is applied.
+- **Ranged attacks only** is the opposite of melee only.
 - **Extra damage on a hit** adds a damage roll of its own type to the attack, such as `1d6` radiant. A miss deals none of it, but the attack still uses it up. An `@` reference in its formula takes the number from the creature that applied the effect, at the time it is applied: `1d@pools.judgment.faces` rolls that creature's Judgment Die size.
 - A **Dice Consumer** rule set to **giveEffect** spends a die the player picks and puts the item's effect (one that does not go on the owner) on each creature they target, as Shining Mandate does. With no target, nothing is spent.
 - Out of combat, a change that a feature holds for you (Assess, for example) is not held.
