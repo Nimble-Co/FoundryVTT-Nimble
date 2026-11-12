@@ -1918,6 +1918,7 @@
 			"critDiceSave": "Save for Max Crit Dice",
 			"saveOnEvent": "Save on an Event",
 			"maxActionBonus": "Max Actions Bonus",
+			"damageRecoil": "Damage Recoil",
 			"damageMultiplier": "Damage Multiplier Tick",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
@@ -3420,6 +3421,10 @@
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
+			},
+			"damageRecoil": {
+				"description": "When the owner deals damage, the owner takes that damage times the multiplier, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"multiplier": { "label": "Multiplier", "hint": "2 takes twice the damage dealt. The result rounds down." }
 			},
 			"maxActionBonus": {
 				"description": "Adds to the creature's max actions while it is on, for example \"+1 max action\". A turn starts with the new max.",

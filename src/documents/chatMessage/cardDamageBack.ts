@@ -39,6 +39,7 @@ interface HurtCreature {
 interface AttackerLike {
 	uuid?: string;
 	name?: string | null;
+	rules?: unknown;
 	applyDamage?(amount: number): Promise<unknown>;
 }
 
@@ -63,6 +64,17 @@ function rulesOf(creature: HurtCreature): DamageBackRuleLike[] {
 	return Array.isArray(creature.rules) ? (creature.rules as DamageBackRuleLike[]) : [];
 }
 
+interface RecoilRuleLike {
+	type?: string;
+	label?: string;
+	item?: { name?: string } | null;
+	disabled?: boolean;
+	recoilFor?(dealt: number): number;
+}
+
+/** Damage Recoil rules the attacker holds now. */
+export type RecoilRules = RecoilRuleLike[];
+
 /** Damage creatures give back to the one who attacked, on one chat card. */
 export class CardDamageBack {
 	#host: DamageBackCard;
@@ -71,15 +83,38 @@ export class CardDamageBack {
 		this.#host = host;
 	}
 
-	/** Give back the damage these creatures just took from the card's attack. */
+	/** Read before the damage: the effect that holds the rule can end on the damage it deals. */
+	recoilRules(): RecoilRules {
+		const rules = this.#host.attacker()?.rules;
+		return (Array.isArray(rules) ? (rules as RecoilRuleLike[]) : []).filter(
+			(rule) => rule?.type === 'damageRecoil' && !rule.disabled,
+		);
+	}
+
+	/**
+	 * Give back the damage these creatures just took from the card's attack, and put the
+	 * attacker's recoil on the attacker.
+	 */
 	async afterDamage(
 		hurt: ReadonlyArray<{ actor: HurtCreature; taken: number }>,
 		attack: { isCritical: boolean; critDiceTotal?: number },
+		recoil: RecoilRules = [],
 	): Promise<void> {
 		const attacker = this.#host.attacker();
 		if (!attacker?.uuid) return;
 		const automatic = isRuleAutomationEnabled();
 		const added: DamageBackRecord[] = [];
+		const record = (label: string, actorUuid: string, amount: number): DamageBackRecord => ({
+			id: foundry.utils.randomID(),
+			label,
+			actorUuid,
+			attackerUuid: attacker.uuid ?? '',
+			attackerName: attacker.name ?? '',
+			amount,
+			dealt: automatic,
+			woundDoubles: false,
+			doubled: false,
+		});
 
 		for (const { actor, taken } of hurt) {
 			if (taken <= 0 || !actor.uuid || actor.uuid === attacker.uuid) continue;
@@ -90,17 +125,20 @@ export class CardDamageBack {
 				if (amount <= 0) continue;
 				if (automatic) await attacker.applyDamage?.(amount);
 				added.push({
-					id: foundry.utils.randomID(),
-					label: ruleLabel(rule),
-					actorUuid: actor.uuid,
-					attackerUuid: attacker.uuid,
-					attackerName: attacker.name ?? '',
-					amount,
-					dealt: automatic,
+					...record(ruleLabel(rule), actor.uuid, amount),
 					woundDoubles: rule.woundDoubles === true,
-					doubled: false,
 				});
 			}
+		}
+		const dealt = hurt.reduce(
+			(sum, { actor, taken }) => (actor.uuid === attacker.uuid ? sum : sum + Math.max(0, taken)),
+			0,
+		);
+		for (const rule of recoil) {
+			const amount = rule.recoilFor?.(dealt) ?? 0;
+			if (amount <= 0) continue;
+			if (automatic) await attacker.applyDamage?.(amount);
+			added.push(record(ruleLabel(rule), attacker.uuid, amount));
 		}
 		if (added.length > 0) {
 			await queueReactionWrite(this.#host.id() ?? '', async () => {

@@ -1424,6 +1424,7 @@ class NimbleChatMessage extends ChatMessage {
 			?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
+		const recoil = this.cardDamageBack.recoilRules();
 		const hurt: Array<Parameters<CardDamageBack['afterDamage']>[0][number]> = [];
 		for (const target of damageApplicationPlan.applicableTargets) {
 			hurt.push({
@@ -1467,7 +1468,7 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		await this.#markDamageApplied(targets);
-		return { damageApplicationPlan, hurt, sourceActor, sourceItem };
+		return { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem };
 	}
 
 	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
@@ -1476,16 +1477,20 @@ class NimbleChatMessage extends ChatMessage {
 			this.#applyDamageToTargets(packets),
 		);
 		if (!applied) return;
-		const { damageApplicationPlan, hurt, sourceActor, sourceItem } = applied;
+		const { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem } = applied;
 		const systemData = this.system as unknown as ActivationCardSystemData;
 
 		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
 			| DamageRoll
 			| undefined;
-		await this.cardDamageBack.afterDamage(hurt, {
-			isCritical: systemData.isCritical === true,
-			critDiceTotal: attackRoll?.critDiceTotal ?? 0,
-		});
+		await this.cardDamageBack.afterDamage(
+			hurt,
+			{
+				isCritical: systemData.isCritical === true,
+				critDiceTotal: attackRoll?.critDiceTotal ?? 0,
+			},
+			recoil,
+		);
 		const speakerActor = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
 		await applyHitConditions({
 			attacker: speakerActor,
