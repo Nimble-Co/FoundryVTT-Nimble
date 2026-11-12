@@ -72,6 +72,16 @@ describe('NimbleSoloMonster.activateLastStandFeature', () => {
 		g.ChatMessage.getWhisperRecipients = saved.getWhisperRecipients;
 	});
 
+	function expectLastStandCardForTheGm() {
+		const [chatData] = create.mock.calls[0] as unknown as [Record<string, unknown>];
+		expect(chatData).toMatchObject({
+			type: 'feature',
+			flavor: 'Boss: Last Stand',
+			whisper: ['gm'],
+			system: { actorName: 'Boss', name: 'Last Stand', description: '' },
+		});
+	}
+
 	it('puts a line on a GM-only damage card when the phase has no description', async () => {
 		const host = damageCard(['gm']);
 		game.messages = { get: () => host };
@@ -115,6 +125,7 @@ describe('NimbleSoloMonster.activateLastStandFeature', () => {
 
 		expect(host.update).not.toHaveBeenCalled();
 		expect(create).toHaveBeenCalledTimes(1);
+		expectLastStandCardForTheGm();
 	});
 
 	it('posts the Last Stand card when no damage card caused it', async () => {
@@ -123,5 +134,6 @@ describe('NimbleSoloMonster.activateLastStandFeature', () => {
 		await boss().activateLastStandFeature();
 
 		expect(create).toHaveBeenCalledTimes(1);
+		expectLastStandCardForTheGm();
 	});
 });

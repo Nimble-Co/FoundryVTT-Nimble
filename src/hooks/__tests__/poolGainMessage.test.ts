@@ -109,6 +109,10 @@ describe('registerPoolGainMessageHooks', () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(chat.create).toHaveBeenCalledTimes(1);
+		expect(chat.create).toHaveBeenCalledWith(
+			expect.objectContaining({ content: '<p>Move up to 3 spaces for free.</p>' }),
+		);
+		expect(chat.getSpeaker).toHaveBeenCalledWith({ actor });
 		use?.close();
 	});
 

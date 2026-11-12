@@ -74,17 +74,20 @@ let holders: Record<string, { isOwner: boolean; effects: Map<string, object> }>;
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	previous = { fromUuidSync: globals.fromUuidSync, user: globals.game.user };
+	previous = { user: globals.game.user };
 	holders = {
 		'Actor.tessa': { isOwner: true, effects: new Map() },
 		'Actor.goblin': { isOwner: false, effects: new Map() },
 	};
-	globals.fromUuidSync = vi.fn((uuid: string) => holders[uuid] ?? null);
+	vi.stubGlobal(
+		'fromUuidSync',
+		vi.fn((uuid: string) => holders[uuid] ?? null),
+	);
 	globals.game.user = { isGM: true };
 });
 
 afterEach(() => {
-	globals.fromUuidSync = previous.fromUuidSync;
+	vi.unstubAllGlobals();
 	globals.game.user = previous.user;
 });
 
