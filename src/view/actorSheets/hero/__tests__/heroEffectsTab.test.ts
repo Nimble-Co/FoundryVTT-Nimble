@@ -154,6 +154,23 @@ describe('heroEffectsTab', () => {
 		expect(row.summary, 'the short text is in the open row').toBeUndefined();
 	});
 
+	it('the pen of a condition opens the effect that gives it; one the system sets has none', () => {
+		const context = effectsContext({
+			conditions: [
+				conditionLike({ id: 'dazed', name: 'Dazed', active: true, effectId: 'dazedEffect' }),
+				conditionLike({ id: 'prone', name: 'Prone', active: true }),
+			],
+		});
+		const view = heroEffectsTab(effectsHero(), context);
+
+		expect(rowOf(view, 'condition-dazed').edit).toEqual({
+			kind: 'openEffect',
+			effectId: 'dazedEffect',
+			itemId: null,
+		});
+		expect(rowOf(view, 'condition-prone').edit).toBeNull();
+	});
+
 	it('reads Lasts Until with the source on the facts line', () => {
 		const hero = effectsHero();
 		hero.effects.push(

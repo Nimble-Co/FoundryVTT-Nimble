@@ -254,7 +254,12 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			},
 		},
 		input,
-		{ escape: escapeButton(condition.name, condition.effectId, condition.escape, input) },
+		{
+			escape: escapeButton(condition.name, condition.effectId, condition.escape, input),
+			edit: condition.effectId
+				? { kind: 'openEffect', effectId: condition.effectId, itemId: null }
+				: null,
+		},
 	);
 }
 
