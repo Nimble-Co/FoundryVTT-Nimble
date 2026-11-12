@@ -219,6 +219,7 @@ describe('postMovementOfferCard', () => {
 			distanceBySize: { small: '3' },
 			ignoreDifficultTerrain: true,
 			direction: 'toward',
+			sourceName: 'Hero',
 			parentContext: null,
 			parentNode: null,
 		});

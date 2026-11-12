@@ -29,6 +29,8 @@ export type MoveNode = {
 	/** The text says "up to" the distance. Unset: only a move for free does. */
 	upTo?: boolean;
 	direction: 'any' | 'away' | 'toward';
+	/** Who the direction is away from or toward. Unset: the actor of the card. */
+	sourceName?: string;
 	parentContext: string | null;
 	parentNode: string | null;
 };

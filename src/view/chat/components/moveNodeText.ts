@@ -102,7 +102,7 @@ export function moveNodeText(
 	options: MoveTextOptions,
 ): MoveNodeText {
 	const system = (card?.system ?? {}) as MoveTextCardSystem;
-	const source = system.actorName ?? '';
+	const source = node.sourceName || system.actorName || '';
 	const offers = (system.movementOffers ?? []).filter(
 		(offer) => offer.nodeId === node.id && offer.spaces > 0,
 	);

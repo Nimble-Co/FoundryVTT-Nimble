@@ -59,6 +59,7 @@ function buildOffer(input: MovementOfferCardInput): BuiltOffer | null {
 		distanceBySize: { ...(input.node.distanceBySize ?? {}) },
 		ignoreDifficultTerrain: input.node.ignoreDifficultTerrain,
 		direction: input.node.direction,
+		sourceName: actor.name ?? '',
 		parentContext: null,
 		parentNode: null,
 	};
