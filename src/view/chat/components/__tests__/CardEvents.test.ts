@@ -30,9 +30,10 @@ vi.mock('#utils/actor/tempHpChoice.js', () => ({
 
 vi.mock('#utils/saveRequest/saveRequests.js', () => ({
 	rollRequestedSave,
-	canRollRequest: (action: { holderUuid: string }) =>
-		!!(globalThis as Globals).game.user?.isGM ||
-		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+	canRollRequest: (action: { holderUuid: string; saveMessageId?: string }) =>
+		!action.saveMessageId &&
+		(!!(globalThis as Globals).game.user?.isGM ||
+			!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner),
 }));
 
 type Globals = Record<string, any>;
@@ -172,6 +173,15 @@ describe('CardEvents', () => {
 			expect.objectContaining({ id: 'card' }),
 			expect.objectContaining({ id: 'save1' }),
 		);
+	});
+
+	it('a line whose save card is rolled has no second Roll', () => {
+		const rolled = saveLine('waiting');
+		(rolled.action as { saveMessageId?: string }).saveMessageId = 's1';
+		renderEvents(makeCard([rolled]));
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByText('Waiting for Tessa')).toBeInTheDocument();
 	});
 
 	it('other players see who the save waits for, and then that it was kept', () => {

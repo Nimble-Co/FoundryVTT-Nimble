@@ -63,7 +63,7 @@ import { registerCardActionQuery } from './utils/chat/cardActions.js';
 import { registerCardEventsQuery } from './utils/chat/cardEvents.js';
 import { registerHeldChangeQuery } from './utils/heldChange/heldChange.js';
 import { registerEndTimedEffectsQuery } from './utils/lastsUntil/endEffects.js';
-import { registerSaveRequestQuery } from './utils/saveRequest/saveRequests.js';
+import { registerSaveRequestHooks } from './utils/saveRequest/saveRequests.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
@@ -205,7 +205,7 @@ registerTokenCombatantSync();
 registerRuleEventDispatch();
 registerSaveResolvedHooks();
 registerCritDiceSaveHooks();
-registerSaveRequestQuery();
+registerSaveRequestHooks();
 registerCardActionQuery();
 registerChaosOnCritHooks();
 registerChaosOnUseHooks();

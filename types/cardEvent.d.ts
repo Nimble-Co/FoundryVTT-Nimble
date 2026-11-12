@@ -56,6 +56,8 @@ export interface SaveRequestAction {
 	dc: number;
 	state: 'waiting' | 'kept';
 	total?: number;
+	/** The save card that answers the line, once its result is known. */
+	saveMessageId?: string;
 }
 
 /** Temp HP do not combine: the owner keeps the amount the creature has or takes the new one. */

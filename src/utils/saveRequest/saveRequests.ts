@@ -1,14 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, SaveRequestAction } from '#types/cardEvent.d.ts';
 import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
-import { endEffects } from '#utils/lastsUntil/endEffects.js';
-import { keptD20 } from '#utils/reroll/checkRollOfCard.js';
-import { checkResult } from '#utils/rolls/checkResult.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
+import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
-import { canShowDiceAnimation, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import type { SaveOnEvent } from '../../models/rules/saveOnEvent.js';
 
-const QUERY_NAME = `${SYSTEM_ID}.resolveSaveRequest`;
 const WORDS = 'NIMBLE.chat.saveRequest';
 
 interface SaveOnEventData {
@@ -29,10 +26,10 @@ interface SaverActor {
 	isOwner?: boolean;
 	effects: Iterable<ActiveEffect> & { get(id: string): ActiveEffect | undefined };
 	getRollData(): Record<string, unknown>;
-	rollSavingThrow(
+	rollSavingThrowToChat(
 		save: string,
-		options: { dc?: number },
-	): Promise<{ roll: foundry.dice.Roll | null }>;
+		options: { dc?: number; cardFlags?: Record<string, unknown> },
+	): Promise<unknown>;
 }
 
 interface RequestCard {
@@ -122,103 +119,168 @@ export function holderOfRequest(action: SaveRequestAction): SaverActor | null {
 	return fromUuidSync(action.holderUuid as never, { strict: false }) as SaverActor | null;
 }
 
-/** The owner of the holder, or a GM, rolls the save. */
+/** The owner of the holder, or a GM, rolls the save, once. */
 export function canRollRequest(action: SaveRequestAction): boolean {
+	if (action.saveMessageId) return false;
 	return !!game.user?.isGM || !!holderOfRequest(action)?.isOwner;
 }
 
-/** Rolls the save in the normal save window, shows the dice, and gives the total to the GM. */
+/** On the save card: the line it answers, as it was when rolled. */
+interface SaveRequestLink {
+	messageId: string;
+	event: CardEvent;
+}
+
+interface SaveCard {
+	id?: string | null;
+	flags?: Record<string, unknown>;
+	rolls?: Array<{ total?: number | null }>;
+}
+
+const LINK_FLAG = 'saveRequest';
+const BOUND_FLAG = 'saveRequestRolls';
+
+/** Rolls the save to chat as a normal save card, so reroll rules and reactions act on it. */
 export async function rollRequestedSave(card: RequestCard, event: CardEvent): Promise<boolean> {
 	const action = event.action as SaveRequestAction | undefined;
 	if (action?.kind !== 'saveRequest' || action.state !== 'waiting' || !card.id) return false;
+	if (action.saveMessageId) return false;
 	const holder = holderOfRequest(action);
 	if (!holder) return false;
-	const { roll } = await holder.rollSavingThrow(action.save, { dc: action.dc });
-	if (!roll) return false;
-	if (canShowDiceAnimation()) await showDiceAnimation(roll as never);
-	const data = {
-		messageId: card.id,
-		eventId: event.id,
-		total: Number(roll.total ?? 0),
-		keptD20: keptD20(roll.terms as unknown[]),
-	};
-	if (game.user?.isActiveGM) return resolveSaveRequest(data);
-	const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
-		.activeGM;
-	return (await gm?.query(QUERY_NAME, data)) === true;
+	const link: SaveRequestLink = { messageId: card.id, event };
+	const made = await holder.rollSavingThrowToChat(action.save, {
+		dc: action.dc,
+		cardFlags: { [LINK_FLAG]: link },
+	});
+	return !!made;
 }
 
-/** Two clients can roll the same line; the GM takes only the first result. */
-const resolving = new Set<string>();
+const queue = keyedQueue();
 
-interface ResolveData {
-	messageId: string;
-	eventId: string;
-	total: number;
-	keptD20: number | null;
+const flagsOf = (card: { flags?: Record<string, unknown> } | null | undefined) =>
+	(card?.flags?.[SYSTEM_ID] ?? {}) as Record<string, unknown>;
+
+/** A flag key for a line id, which has dots. */
+const boundKey = (eventId: string) => eventId.replaceAll('.', '_');
+
+/**
+ * On the active GM, each time the result of a save card changes: its line follows it. A pass
+ * keeps the effect; a fail ends it, with its ended line on the same card; a reroll that turns a
+ * fail into a pass puts the effect back. Only the first save card rolled for a line counts.
+ */
+export async function followSaveRequest(payload: {
+	messageId?: string | null;
+	outcome: string;
+}): Promise<boolean> {
+	const saveCard = game.messages?.get(payload.messageId ?? '') as unknown as SaveCard | undefined;
+	const link = flagsOf(saveCard)[LINK_FLAG] as SaveRequestLink | undefined;
+	if (!saveCard?.id || !link?.event?.id) return false;
+	return queue.run(link.event.id, () => follow(saveCard, link, payload.outcome));
+}
+
+async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string) {
+	const card = game.messages?.get(link.messageId) as unknown as
+		| (RequestCard & { update(changes: object): Promise<unknown> })
+		| undefined;
+	const asked = link.event.action as SaveRequestAction | undefined;
+	if (!card?.id || asked?.kind !== 'saveRequest' || !saveCard.id) return false;
+
+	const key = boundKey(link.event.id);
+	const bound = (flagsOf(card)[BOUND_FLAG] as Record<string, string> | undefined)?.[key];
+	if (bound && bound !== saveCard.id) return false;
+	if (!bound) await card.update({ [`flags.${SYSTEM_ID}.${BOUND_FLAG}.${key}`]: saveCard.id });
+
+	const events = cardEventsOf(card as never);
+	const line = events.find((each) => each.id === link.event.id);
+	const ended = line
+		? undefined
+		: events.find(
+				(each) =>
+					each.action?.kind === 'undoEnd' &&
+					each.action.row.effectId === asked.effectId &&
+					each.action.row.holderUuid === asked.holderUuid,
+			);
+	if (!line && !ended) return false;
+
+	const total = Number(saveCard.rolls?.[0]?.total ?? 0);
+	const rolled = { save: { key: saveWord(asked.save) }, total, dc: asked.dc };
+	const action: SaveRequestAction = { ...asked, saveMessageId: saveCard.id };
+
+	if (outcome === 'fail') {
+		if (!line) return true;
+		await replaceCardEvent(card as never, line.id, null);
+		const effect = holderOfRequest(asked)?.effects.get(asked.effectId);
+		if (effect) {
+			await endEffects([effect], {
+				heading: link.event.text,
+				hostId: card.id,
+				reason: { key: `${WORDS}.rolled`, data: rolled },
+			});
+		}
+		return true;
+	}
+
+	const next: CardEvent =
+		outcome === 'pass'
+			? {
+					...link.event,
+					text: {
+						key: `${WORDS}.kept`,
+						data: { name: asked.holderName, effect: asked.effectName },
+					},
+					cause: { key: `${WORDS}.rolled`, data: rolled },
+					action: { ...action, state: 'kept', total },
+				}
+			: { ...link.event, action: { ...action, state: 'waiting' } };
+	if (ended?.action?.kind === 'undoEnd') {
+		await undoEndedEffect(ended.action.row);
+		return replaceCardEvent(card as never, ended.id, next);
+	}
+	return replaceCardEvent(card as never, link.event.id, next);
 }
 
 /**
- * On the active GM: the result goes on the line. A pass keeps the effect; a fail ends it, with
- * its ended line on the same card. Save rules hear the result as for a save card.
+ * On the active GM: when the save card of a line that waits is deleted, the line can be rolled
+ * again. A result that the line shows stays.
  */
-export async function resolveSaveRequest(data: ResolveData): Promise<boolean> {
-	const key = `${data.messageId}:${data.eventId}`;
-	if (resolving.has(key)) return false;
-	resolving.add(key);
-	try {
-		return await resolveOnce(data);
-	} finally {
-		resolving.delete(key);
-	}
+export async function releaseSaveRequest(saveCard: SaveCard): Promise<boolean> {
+	const link = flagsOf(saveCard)[LINK_FLAG] as SaveRequestLink | undefined;
+	if (!saveCard.id || !link?.event?.id) return false;
+	return queue.run(link.event.id, async () => {
+		const card = game.messages?.get(link.messageId) as unknown as
+			| (RequestCard & { update(changes: object): Promise<unknown> })
+			| undefined;
+		if (!card?.id) return false;
+		const key = boundKey(link.event.id);
+		const bound = (flagsOf(card)[BOUND_FLAG] as Record<string, string> | undefined)?.[key];
+		if (bound !== saveCard.id) return false;
+		const line = cardEventsOf(card as never).find((each) => each.id === link.event.id);
+		const action = line?.action as SaveRequestAction | undefined;
+		if (!line || action?.kind !== 'saveRequest' || action.state !== 'waiting') return false;
+		await card.update({
+			[`flags.${SYSTEM_ID}.${BOUND_FLAG}.${key}`]: new foundry.data.operators.ForcedDeletion(),
+		});
+		const { saveMessageId: _, ...open } = action;
+		return replaceCardEvent(card as never, line.id, { ...line, action: open });
+	});
 }
 
-async function resolveOnce(data: ResolveData): Promise<boolean> {
-	const card = game.messages?.get(data.messageId) as unknown as RequestCard | undefined;
-	const event = card ? cardEventsOf(card as never).find((each) => each.id === data.eventId) : null;
-	const action = event?.action as SaveRequestAction | undefined;
-	if (!card || !event || action?.kind !== 'saveRequest' || action.state !== 'waiting') return false;
-	const holder = holderOfRequest(action);
-	const result = checkResult({
-		kind: 'save',
-		total: data.total,
-		keptD20: data.keptD20,
-		dc: action.dc,
-	});
-	const passed = result === 'succeeded';
-	const rolled = { save: { key: saveWord(action.save) }, total: data.total, dc: action.dc };
+let didRegister = false;
 
+export function registerSaveRequestHooks(): void {
+	if (didRegister) return;
+	didRegister = true;
+	Hooks.on('deleteChatMessage', (card: unknown) => {
+		if (!game.user?.isActiveGM) return;
+		void releaseSaveRequest(card as SaveCard).catch((error) => {
+			console.error('Nimble | A save request could not be opened again.', error);
+		});
+	});
 	// @ts-expect-error - nimble.saveResolved is a custom Nimble hook
-	Hooks.callAll(systemHookName('saveResolved'), {
-		actor: holder,
-		saveType: action.save,
-		outcome: passed ? 'pass' : 'fail',
-		messageId: card.id,
-	});
-
-	if (passed) {
-		return replaceCardEvent(card as never, event.id, {
-			...event,
-			text: { key: `${WORDS}.kept`, data: { name: action.holderName, effect: action.effectName } },
-			cause: { key: `${WORDS}.rolled`, data: rolled },
-			action: { ...action, state: 'kept', total: data.total },
+	Hooks.on(systemHookName('saveResolved'), (payload: { messageId?: string; outcome: string }) => {
+		if (!game.user?.isActiveGM) return;
+		void followSaveRequest(payload).catch((error) => {
+			console.error('Nimble | A save request could not follow its save card.', error);
 		});
-	}
-	await replaceCardEvent(card as never, event.id, null);
-	const effect = holder?.effects.get(action.effectId);
-	if (effect) {
-		await endEffects([effect], {
-			heading: event.text,
-			hostId: card.id ?? undefined,
-			reason: { key: `${WORDS}.rolled`, data: rolled },
-		});
-	}
-	return true;
-}
-
-export function registerSaveRequestQuery(): void {
-	Hooks.once('init', () => {
-		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
-		queries[QUERY_NAME] = (data: ResolveData) => resolveSaveRequest(data);
 	});
 }

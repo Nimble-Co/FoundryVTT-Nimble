@@ -5,13 +5,21 @@ import { SYSTEM_ID } from '#system';
 const replaceCardEvent = vi.fn(async () => true);
 const addCardEvents = vi.fn(async () => true);
 const endEffects = vi.fn(async () => {});
+const undoEndedEffect = vi.fn(async () => true);
 vi.resetModules();
 const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.js')>(
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, addCardEvents, replaceCardEvent }));
-vi.doMock('#utils/lastsUntil/endEffects.js', () => ({ endEffects }));
-const { requestSaves, resolveSaveRequest, saveRequestEvents } = await import('../saveRequests.js');
+vi.doMock('#utils/lastsUntil/endEffects.js', () => ({ endEffects, undoEndedEffect }));
+const {
+	canRollRequest,
+	followSaveRequest,
+	releaseSaveRequest,
+	requestSaves,
+	rollRequestedSave,
+	saveRequestEvents,
+} = await import('../saveRequests.js');
 
 const concentrating = {
 	id: 'eConc',
@@ -31,7 +39,7 @@ const tessa = {
 		get: (id: string) => (id === 'eConc' ? concentrating : undefined),
 	}),
 	getRollData: () => ({}),
-	rollSavingThrow: vi.fn(),
+	rollSavingThrowToChat: vi.fn(async () => ({ id: 's1' })),
 };
 
 describe('save requests', () => {
@@ -91,16 +99,67 @@ describe('save requests', () => {
 		expect(addCardEvents).toHaveBeenCalledTimes(1);
 	});
 
-	describe('the result', () => {
+	it('Roll makes a save card that names its line', async () => {
 		const [line] = saveRequestEvents(tessa as never, 'critReceived', 5);
-		const card = { id: 'm1', type: 'feature', flags: { [SYSTEM_ID]: { events: [line] } } };
+
+		expect(await rollRequestedSave({ id: 'm1' }, line)).toBe(true);
+		expect(tessa.rollSavingThrowToChat).toHaveBeenCalledWith('strength', {
+			dc: 10,
+			cardFlags: { saveRequest: { messageId: 'm1', event: line } },
+		});
+	});
+
+	it('a line that has its save card is rolled no more', async () => {
+		const [line] = saveRequestEvents(tessa as never, 'critReceived', 5);
+		const answered = { ...line, action: { ...line.action, saveMessageId: 's1' } };
+
+		expect(canRollRequest(answered.action as never)).toBe(false);
+		expect(await rollRequestedSave({ id: 'm1' }, answered as never)).toBe(false);
+		expect(tessa.rollSavingThrowToChat).not.toHaveBeenCalled();
+	});
+
+	describe('the line follows its save card', () => {
+		const [line] = saveRequestEvents(tessa as never, 'critReceived', 5);
+		const endedLine = {
+			id: 'effectEnded.Actor.tessa.eConc.9',
+			kind: 'effectEnded',
+			icon: 'x',
+			text: { key: 'ended' },
+			action: { kind: 'undoEnd', row: { effectId: 'eConc', holderUuid: 'Actor.tessa' } },
+			at: 9,
+		};
+		let card: {
+			id: string;
+			type: string;
+			flags: Record<string, any>;
+			update: ReturnType<typeof vi.fn>;
+		};
+		const saveCard = (id: string, total: number) => ({
+			id,
+			rolls: [{ total }],
+			flags: { [SYSTEM_ID]: { saveRequest: { messageId: 'm1', event: line } } },
+		});
+		let saves: Record<string, ReturnType<typeof saveCard>>;
 
 		beforeEach(() => {
-			(game as { messages?: unknown }).messages = { get: () => card };
+			card = {
+				id: 'm1',
+				type: 'feature',
+				flags: { [SYSTEM_ID]: { events: [line] } },
+				update: vi.fn(async (changes: Record<string, string>) => {
+					for (const [path, value] of Object.entries(changes)) {
+						foundry.utils.setProperty(card, path, value);
+					}
+				}),
+			};
+			saves = { s1: saveCard('s1', 14), s2: saveCard('s2', 6) };
+			(game as { messages?: unknown }).messages = {
+				get: (id: string) => (id === 'm1' ? card : saves[id]),
+			};
 		});
 
 		it('a pass keeps the effect, and the line says so', async () => {
-			await resolveSaveRequest({ messageId: 'm1', eventId: line.id, total: 14, keptD20: 12 });
+			await followSaveRequest({ messageId: 's1', outcome: 'pass' });
 
 			expect(endEffects).not.toHaveBeenCalled();
 			expect(replaceCardEvent).toHaveBeenCalledWith(
@@ -108,13 +167,14 @@ describe('save requests', () => {
 				line.id,
 				expect.objectContaining({
 					text: expect.objectContaining({ key: 'NIMBLE.chat.saveRequest.kept' }),
-					action: expect.objectContaining({ state: 'kept', total: 14 }),
+					action: expect.objectContaining({ state: 'kept', total: 14, saveMessageId: 's1' }),
 				}),
 			);
 		});
 
 		it('a fail ends the effect, with its ended line on the same card', async () => {
-			await resolveSaveRequest({ messageId: 'm1', eventId: line.id, total: 6, keptD20: 4 });
+			saves.s1.rolls = [{ total: 6 }];
+			await followSaveRequest({ messageId: 's1', outcome: 'fail' });
 
 			expect(replaceCardEvent).toHaveBeenCalledWith(card, line.id, null);
 			expect(endEffects).toHaveBeenCalledWith(
@@ -123,17 +183,84 @@ describe('save requests', () => {
 			);
 		});
 
-		it('takes only the first of two results for the same line', async () => {
-			const data = { messageId: 'm1', eventId: line.id, total: 6, keptD20: 4 };
-			const results = await Promise.all([resolveSaveRequest(data), resolveSaveRequest(data)]);
+		it('a reroll that turns the fail into a pass puts the effect back in place of its ended line', async () => {
+			card.flags[SYSTEM_ID].events = [endedLine];
+			await followSaveRequest({ messageId: 's1', outcome: 'pass' });
 
-			expect(results.filter(Boolean)).toHaveLength(1);
-			expect(endEffects).toHaveBeenCalledTimes(1);
+			expect(undoEndedEffect).toHaveBeenCalledWith(endedLine.action.row);
+			expect(replaceCardEvent).toHaveBeenCalledWith(
+				card,
+				endedLine.id,
+				expect.objectContaining({
+					id: line.id,
+					action: expect.objectContaining({ state: 'kept' }),
+				}),
+			);
 		});
 
-		it('a natural 1 fails whatever the total', async () => {
-			await resolveSaveRequest({ messageId: 'm1', eventId: line.id, total: 15, keptD20: 1 });
-			expect(endEffects).toHaveBeenCalled();
+		it('a result that is no longer known waits again, with no second Roll', async () => {
+			await followSaveRequest({ messageId: 's1', outcome: 'unknown' });
+
+			expect(replaceCardEvent).toHaveBeenCalledWith(
+				card,
+				line.id,
+				expect.objectContaining({
+					action: expect.objectContaining({ state: 'waiting', saveMessageId: 's1' }),
+				}),
+			);
+		});
+
+		it('only the first save card rolled for the line counts', async () => {
+			await followSaveRequest({ messageId: 's1', outcome: 'pass' });
+			await followSaveRequest({ messageId: 's2', outcome: 'fail' });
+
+			expect(replaceCardEvent).toHaveBeenCalledTimes(1);
+			expect(endEffects).not.toHaveBeenCalled();
+		});
+
+		it('a card with no line link is not a save request', async () => {
+			saves.s1.flags = { [SYSTEM_ID]: {} } as never;
+			expect(await followSaveRequest({ messageId: 's1', outcome: 'fail' })).toBe(false);
+			expect(card.update).not.toHaveBeenCalled();
+			expect(replaceCardEvent).not.toHaveBeenCalled();
+		});
+
+		it('a reroll that fails again changes nothing', async () => {
+			card.flags[SYSTEM_ID].events = [endedLine];
+			await followSaveRequest({ messageId: 's1', outcome: 'fail' });
+
+			expect(replaceCardEvent).not.toHaveBeenCalled();
+			expect(endEffects).not.toHaveBeenCalled();
+		});
+
+		describe('when its save card is deleted', () => {
+			const waiting = { ...line, action: { ...line.action, saveMessageId: 's1' } };
+			const bind = (id: string) => {
+				card.flags[SYSTEM_ID].saveRequestRolls = { [line.id.replaceAll('.', '_')]: id };
+			};
+
+			it('a line that waits can be rolled again', async () => {
+				card.flags[SYSTEM_ID].events = [waiting];
+				bind('s1');
+
+				expect(await releaseSaveRequest(saves.s1)).toBe(true);
+				expect(replaceCardEvent).toHaveBeenCalledWith(card, line.id, {
+					...line,
+					action: line.action,
+				});
+			});
+
+			it('a line with a result keeps it, and another card frees nothing', async () => {
+				card.flags[SYSTEM_ID].events = [
+					{ ...waiting, action: { ...waiting.action, state: 'kept' } },
+				];
+				bind('s1');
+				expect(await releaseSaveRequest(saves.s1)).toBe(false);
+
+				card.flags[SYSTEM_ID].events = [waiting];
+				expect(await releaseSaveRequest(saves.s2)).toBe(false);
+				expect(replaceCardEvent).not.toHaveBeenCalled();
+			});
 		});
 	});
 });
