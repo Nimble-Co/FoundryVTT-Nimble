@@ -17,6 +17,17 @@ const { rollRequestedSave } = vi.hoisted(() => ({
 	rollRequestedSave: vi.fn(async (..._args: unknown[]) => true),
 }));
 
+const { chooseTempHp } = vi.hoisted(() => ({
+	chooseTempHp: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/actor/tempHpChoice.js', () => ({
+	chooseTempHp,
+	canChooseTempHp: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 vi.mock('#utils/saveRequest/saveRequests.js', () => ({
 	rollRequestedSave,
 	canRollRequest: (action: { holderUuid: string }) =>
@@ -174,6 +185,38 @@ describe('CardEvents', () => {
 
 		renderEvents(makeCard([saveLine('kept')]));
 		expect(screen.getByRole('status')).toHaveTextContent('Kept');
+	});
+
+	it('a temp HP choice has Keep and Take for the owner, and nothing to click once made', async () => {
+		const choice = (state: 'waiting' | 'kept'): CardEvent => ({
+			id: 'temp1',
+			kind: 'tempHpChoice',
+			icon: 'fa-solid fa-shield-halved',
+			text: { key: 'NIMBLE.chat.tempHpChoice.ask', data: { name: 'Tessa', had: 5, amount: 3 } },
+			action: {
+				kind: 'tempHpChoice',
+				holderUuid: 'Actor.tessa',
+				holderName: 'Tessa',
+				had: 5,
+				amount: 3,
+				effectUuid: null,
+				state,
+			},
+			at: 1,
+		});
+		const { unmount } = renderEvents(makeCard([choice('waiting')]));
+
+		expect(screen.getByRole('button', { name: /keeps the 5 temp HP/ })).toHaveTextContent('Keep 5');
+		await fireEvent.click(screen.getByRole('button', { name: /takes 3 temp HP/ }));
+		expect(chooseTempHp).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'temp1' }),
+			true,
+		);
+		unmount();
+
+		renderEvents(makeCard([choice('kept')]));
+		expect(screen.queryByRole('button')).toBeNull();
 	});
 
 	it('a strip with no heading names itself', () => {

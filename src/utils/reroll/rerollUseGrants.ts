@@ -5,6 +5,9 @@ import { rollerTokenOf } from '#utils/reroll/rerollAllies.js';
 import type { RerollingActor, RerollRuleLike } from '#utils/reroll/rerollEntries.js';
 import { type ActionState, rerollGrants } from '#utils/reroll/rerollGrants.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { tempHpChoiceEvent } from '../actor/tempHpChoice.js';
+import { activationEventsOf } from '../chat/activationEvents.js';
+import { addCardEvents } from '../chat/cardEvents.js';
 
 interface CombatantLike {
 	id?: string | null;
@@ -45,8 +48,37 @@ async function grantsForUse(
 	});
 }
 
+/** Where the temp HP choice of a creature that has more goes: the card, or the roller's use. */
+interface GrantHost {
+	card?: { id?: string | null } | null;
+	roller?: { uuid?: string | null } | null;
+}
+
+async function askTempHpChoices(grants: readonly RerollGrant[], host: GrantHost): Promise<void> {
+	const lines = grants.flatMap((grant) =>
+		grant.applied && grant.tempHp && grant.tempHp.keeps !== null
+			? [
+					tempHpChoiceEvent(
+						{ uuid: grant.actorUuid, name: grant.name },
+						{ temp: grant.tempHp.had, amount: grant.tempHp.amount },
+					),
+				]
+			: [],
+	);
+	if (lines.length < 1) return;
+	if (host.card?.id) await addCardEvents(host.card as never, lines);
+	else await activationEventsOf(host.roller as never)?.add(lines);
+}
+
 /** Give creatures what a use of a reroll gave them. A failure is logged, not thrown. */
-async function applyGrants(grants: readonly RerollGrant[], sourceItemUuid: string): Promise<void> {
+async function applyGrants(
+	grants: readonly RerollGrant[],
+	sourceItemUuid: string,
+	host: GrantHost = {},
+): Promise<void> {
+	await askTempHpChoices(grants, host).catch((error) =>
+		console.error('Nimble | Could not ask which temp HP to keep.', error),
+	);
 	for (const grant of grants) {
 		if (!grant.applied) continue;
 		try {

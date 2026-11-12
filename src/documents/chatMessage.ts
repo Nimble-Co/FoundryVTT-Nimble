@@ -8,6 +8,7 @@ import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTr
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -1732,6 +1733,7 @@ class NimbleChatMessage extends ChatMessage {
 			appliedAt: Date.now(),
 		};
 
+		const tempHpChoices: CardEvent[] = [];
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 			const actor = actorOfHealingTarget(tokenDocument);
@@ -1744,7 +1746,8 @@ class NimbleChatMessage extends ChatMessage {
 			const previousHp = typeof hpData?.value === 'number' ? hpData.value : 0;
 			const previousTempHp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 
-			await actor.applyHealing(healing, healingType);
+			const refused = await actor.applyHealing(healing, healingType, { quiet: true });
+			if (refused) tempHpChoices.push(tempHpChoiceEvent(actor as never, refused));
 
 			// Get new HP values after healing
 			const newHpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
@@ -1761,6 +1764,19 @@ class NimbleChatMessage extends ChatMessage {
 				newHp,
 				newTempHp,
 			});
+		}
+
+		if (tempHpChoices.length && !(await addCardEvents(this as never, tempHpChoices))) {
+			for (const { action } of tempHpChoices) {
+				const choice = action as { holderName: string; had: number; amount: number };
+				ui.notifications?.warn(
+					localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+						name: choice.holderName,
+						temp: String(choice.had),
+						amount: String(choice.amount),
+					}),
+				);
+			}
 		}
 
 		// Store the healing record on the message

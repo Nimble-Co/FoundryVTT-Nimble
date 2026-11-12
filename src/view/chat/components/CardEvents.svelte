@@ -10,7 +10,8 @@
 
 	const headingId = $props.id();
 	const strip = createCardEventsState(() => messageDocument);
-	const { isBusy, isBack, canUndo, undo, canRollSave, rollSave, backStatus } = strip;
+	const { isBusy, isBack, canUndo, undo, canRollSave, rollSave, canChoose, choose, backStatus } =
+		strip;
 </script>
 
 {#if strip.events.length > 0}
@@ -102,7 +103,44 @@
 						{:else}
 							<span class="nimble-card-events__back" role="status">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
-								{localize('NIMBLE.chat.saveRequest.waiting', { name: request.holderName })}
+								{localize('NIMBLE.chat.events.waitingFor', { name: request.holderName })}
+							</span>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'tempHpChoice' && event.action.state === 'waiting'}
+						{@const choice = event.action}
+						{#if canChoose(choice)}
+							<span class="nimble-card-events__choice">
+								<button
+									class="nimble-card-events__action"
+									type="button"
+									aria-label={localize('NIMBLE.chat.tempHpChoice.keepLabel', {
+										name: choice.holderName,
+										amount: String(choice.had),
+									})}
+									aria-disabled={isBusy(event.id)}
+									onclick={() => choose(event, false)}
+								>
+									{localize('NIMBLE.chat.tempHpChoice.keep', { amount: String(choice.had) })}
+								</button>
+								<button
+									class="nimble-card-events__action"
+									type="button"
+									aria-label={localize('NIMBLE.chat.tempHpChoice.takeLabel', {
+										name: choice.holderName,
+										amount: String(choice.amount),
+									})}
+									aria-disabled={isBusy(event.id)}
+									onclick={() => choose(event, true)}
+								>
+									{localize('NIMBLE.chat.tempHpChoice.take', { amount: String(choice.amount) })}
+								</button>
+							</span>
+						{:else}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.events.waitingFor', { name: choice.holderName })}
 							</span>
 						{/if}
 					{/if}
@@ -218,6 +256,11 @@
 
 		&__move {
 			grid-column: 1 / -1;
+		}
+
+		&__choice {
+			display: inline-flex;
+			gap: 0.25rem;
 		}
 
 		&__back {

@@ -776,28 +776,39 @@ class NimbleBaseActor<
 		await this.update({ 'system.attributes.hp.temp': nextTemp } as Actor.UpdateData);
 	}
 
-	async applyHealing(healing: number, healingType?: string) {
+	/**
+	 * Heal, or give temp HP. Temp HP do not combine: a new amount that is not more is not given,
+	 * and comes back as `refused` for the owner to choose. `quiet`: no toast, the caller asks.
+	 */
+	async applyHealing(
+		healing: number,
+		healingType?: string,
+		{ quiet = false }: { quiet?: boolean } = {},
+	): Promise<{ temp: number; amount: number } | null> {
 		const { value, temp } = this.#getCurrentHpSnapshot();
 		const healingAmount = Math.floor(Number(healing));
-		if (!Number.isFinite(healingAmount) || healingAmount <= 0) return;
+		if (!Number.isFinite(healingAmount) || healingAmount <= 0) return null;
 
 		if (healingType === 'tempHealing') {
 			if (healingAmount <= temp) {
-				ui.notifications.warn(
-					localize('NIMBLE.healingTypes.tempHealingNotGranted', {
-						name: this.name,
-						temp: String(temp),
-						amount: String(healingAmount),
-					}),
-				);
-				return;
+				if (!quiet) {
+					ui.notifications.warn(
+						localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+							name: this.name,
+							temp: String(temp),
+							amount: String(healingAmount),
+						}),
+					);
+				}
+				return { temp, amount: healingAmount };
 			}
 
 			await this.setTempHP(healingAmount);
-			return;
+			return null;
 		}
 
 		await this.setCurrentHP(value + healingAmount);
+		return null;
 	}
 
 	/** ------------------------------------------------------ */

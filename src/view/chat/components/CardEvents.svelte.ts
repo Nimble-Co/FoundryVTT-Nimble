@@ -1,7 +1,13 @@
 import { tick } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type { CardEvent, EndedEffectRow, SaveRequestAction } from '#types/cardEvent.d.ts';
+import type {
+	CardEvent,
+	EndedEffectRow,
+	SaveRequestAction,
+	TempHpChoiceAction,
+} from '#types/cardEvent.d.ts';
+import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
@@ -77,6 +83,20 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	function canChoose(action: TempHpChoiceAction): boolean {
+		return canChooseTempHp(action);
+	}
+
+	async function choose(event: CardEvent, take: boolean) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			await chooseTempHp(getMessage() as never, event, take);
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
 	function backStatus(eventId: string) {
 		return (element: HTMLElement) => {
@@ -96,6 +116,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		undo,
 		canRollSave,
 		rollSave,
+		canChoose,
+		choose,
 		backStatus,
 	};
 }

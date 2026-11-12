@@ -31,7 +31,8 @@ export type CardEventKind =
 	| 'interpose'
 	| 'healthState'
 	| 'damage'
-	| 'saveRequest';
+	| 'saveRequest'
+	| 'tempHpChoice';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -61,8 +62,21 @@ export interface SaveRequestAction {
 	total?: number;
 }
 
+/** Temp HP do not combine: the owner keeps the amount the creature has or takes the new one. */
+export interface TempHpChoiceAction {
+	kind: 'tempHpChoice';
+	holderUuid: string;
+	holderName: string;
+	had: number;
+	amount: number;
+	/** The effect that gives the new amount, which owns it once taken. */
+	effectUuid: string | null;
+	state: 'waiting' | 'kept' | 'took';
+}
+
 export type CardEventAction =
 	| SaveRequestAction
+	| TempHpChoiceAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

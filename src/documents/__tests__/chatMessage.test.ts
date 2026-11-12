@@ -91,7 +91,7 @@ describe('NimbleChatMessage.applyHealing', () => {
 		const message = createActivationMessage();
 		await message.applyHealing(5, 'healing');
 
-		expect(actor.applyHealing).toHaveBeenCalledWith(5, 'healing');
+		expect(actor.applyHealing).toHaveBeenCalledWith(5, 'healing', { quiet: true });
 	});
 
 	it('applies temporary healing correctly', async () => {
@@ -105,7 +105,7 @@ describe('NimbleChatMessage.applyHealing', () => {
 		const message = createActivationMessage();
 		await message.applyHealing(10, 'temporaryHealing');
 
-		expect(actor.applyHealing).toHaveBeenCalledWith(10, 'temporaryHealing');
+		expect(actor.applyHealing).toHaveBeenCalledWith(10, 'temporaryHealing', { quiet: true });
 	});
 
 	it('warns when there are no targets', async () => {
@@ -2962,7 +2962,7 @@ describe('healing that goes to the one who used the item', () => {
 
 		await message.applySelfHealing();
 
-		expect(actor.applyHealing).toHaveBeenCalledWith(7, 'tempHealing');
+		expect(actor.applyHealing).toHaveBeenCalledWith(7, 'tempHealing', { quiet: true });
 		const changes = (message.update as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
 		expect(changes['system.appliedHealing'].temp.targets[0]).toMatchObject({
 			uuid: 'Actor.hero',

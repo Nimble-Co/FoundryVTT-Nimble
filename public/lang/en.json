@@ -717,6 +717,16 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
+			"tempHpChoice": {
+				"ask": "{name} has {had} temp HP and would gain {amount}",
+				"askCause": "Temp HP do not add up: keep one amount",
+				"chose": "{name} chose to keep {amount} temp HP",
+				"choseCause": "Temp HP do not add up",
+				"keep": "Keep {amount}",
+				"take": "Take {amount}",
+				"keepLabel": "{name} keeps the {amount} temp HP they have",
+				"takeLabel": "{name} takes {amount} temp HP"
+			},
 			"saveRequest": {
 				"ask": "{name} saves to keep {effect}",
 				"kept": "{name} keeps {effect}",
@@ -727,7 +737,6 @@
 				"rolled": "{save} save {total} - DC {dc}",
 				"roll": "Roll",
 				"rollLabel": "Roll the {save} save of {name}",
-				"waiting": "Waiting for {name}",
 				"keptBadge": "Kept"
 			},
 			"events": {
@@ -735,6 +744,7 @@
 				"undo": "Undo",
 				"undoLabel": "Undo: put {effect} back on {name}",
 				"backOn": "On {name}",
+				"waitingFor": "Waiting for {name}",
 				"useHeading": "{name} uses {item}",
 				"forHeading": "For {names}",
 				"cause": {
@@ -957,8 +967,8 @@
 					"tempHpGain": "{names} gain {amount} temp HP.",
 					"tempHpGainOne": "{names} gains {amount} temp HP.",
 					"tempHpReplaced": "{name} had {had}, now has {amount}.",
-					"tempHpKeeps": "{name} keeps {had}, not {amount}.",
-					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
+					"tempHpKeeps": "{name} keeps {had} temp HP.",
+					"tempHpChoice": "Temp HP do not add up. The owner chooses on the Events line.",
 					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
 					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
 					"offAction": "Feature Effects is off. Give the action by hand.",
