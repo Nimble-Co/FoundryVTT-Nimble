@@ -21,6 +21,7 @@ import {
 	keptAmountFor,
 	mustAttackOtherChange,
 	spendHeldChanges,
+	spendHeldIgnoreDisadvantage,
 	takeBackHeldChanges,
 } from '../heldChange.js';
 
@@ -386,6 +387,38 @@ describe('spendHeldChanges', () => {
 			actorUuid: 'T',
 			effectId: 'e0',
 		});
+	});
+});
+
+describe('spendHeldIgnoreDisadvantage', () => {
+	it('puts the ended line of the change in the lines of the use that spends it', async () => {
+		const hero = creature('H', [
+			{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks', label: 'Nullify' },
+		]);
+		documents.set('H.ActiveEffect.e0', {
+			id: 'e0',
+			uuid: 'H.ActiveEffect.e0',
+			name: 'Nullify',
+			img: 'nullify.webp',
+			origin: MIRA,
+			parent: { uuid: 'H', name: 'Tessa' },
+			toObject: () => ({ name: 'Nullify' }),
+		});
+		const add = vi.fn(async () => true);
+
+		await spendHeldIgnoreDisadvantage(hero as never, 'Shove', { add });
+
+		expect(add).toHaveBeenCalledWith([
+			expect.objectContaining({
+				kind: 'effectEnded',
+				cause: expect.objectContaining({
+					data: expect.objectContaining({
+						reason: { key: 'NIMBLE.chat.events.cause.usedByAction' },
+					}),
+				}),
+			}),
+		]);
+		expect(hero.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 });
 

@@ -727,6 +727,7 @@
 					"source": "{source}",
 					"reasonAndSource": "{reason} - {source}",
 					"usedUp": "This roll used it",
+					"usedByAction": "This action used it",
 					"lastsUntil": "{moment}"
 				},
 				"freeUse": {

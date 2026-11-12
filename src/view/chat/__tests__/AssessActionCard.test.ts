@@ -1,4 +1,5 @@
-import { render } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
+import { SYSTEM_ID } from '#system';
 import AssessActionCard from '../AssessActionCard.svelte';
 
 type Globals = Record<string, any>;
@@ -26,6 +27,7 @@ function createMessage(system: Record<string, unknown> = {}) {
 			...system,
 		},
 		rolls: [{ total: 1, dice: [], terms: [{ faces: 20, results: [{ result: 3, active: true }] }] }],
+		flags: {} as Record<string, unknown>,
 		reactive: null as unknown,
 		delete: vi.fn(),
 	};
@@ -56,6 +58,27 @@ describe('the Assess card', () => {
 		});
 
 		expect(resultLine()).toBe('Counts as a Natural 20 with Bumblewise');
+	});
+
+	it('shows the lines of its Events strip', () => {
+		const message = createMessage();
+		message.flags = {
+			[SYSTEM_ID]: {
+				events: [
+					{
+						id: 'used-up',
+						kind: 'poolGain',
+						icon: 'fa-solid fa-dice-d6',
+						text: { key: 'NIMBLE.lastsUntil.chat.heading.rest', data: { name: 'Pip' } },
+						at: 1,
+					},
+				],
+			},
+		};
+		render(AssessActionCard, { props: { messageDocument: message as never } });
+
+		const strip = screen.getByRole('region', { name: 'Events' });
+		expect(strip).toHaveTextContent('Pip rested');
 	});
 
 	it('shows no such line on a card posted before the field', () => {

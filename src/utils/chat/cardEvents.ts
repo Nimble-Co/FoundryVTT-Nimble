@@ -228,3 +228,21 @@ export function registerCardEventsQuery(): void {
 		};
 	});
 }
+
+/**
+ * Lines that a use makes before its card exists, such as the ended line of a Held Change it spends.
+ * `postOn` adds them to the card once it is there.
+ */
+export function pendingCardLines() {
+	const lines: CardEvent[] = [];
+	return {
+		async add(events: CardEvent[]): Promise<boolean> {
+			lines.push(...events);
+			return true;
+		},
+		async postOn(card: EventCard | null | undefined): Promise<boolean> {
+			if (!card || lines.length < 1) return false;
+			return addCardEvents(card, lines.splice(0));
+		},
+	};
+}

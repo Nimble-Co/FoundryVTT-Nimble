@@ -113,6 +113,7 @@ For example, True Strike holds advantage for the next attack of its target, unti
 - **Extra damage on a hit** adds a damage roll of its own type to the attack, such as `1d6` radiant. A miss deals none of it, but the attack still uses it up. An `@` reference in its formula takes the number from the creature that applied the effect, at the time it is applied: `1d@pools.judgment.faces` rolls that creature's Judgment Die size.
 - A **Dice Consumer** rule set to **giveEffect** spends a die the player picks and puts the item's effect (one that does not go on the owner) on each creature they target, as Shining Mandate does. With no target, nothing is spent.
 - Out of combat, a change that a feature holds for you (Assess, for example) is not held.
+- **Ignore all disadvantage** lasts for your next action. A Move, a paid Assess or an item use that costs an action and is not an attack also ends it. The card of that action has the line in **Events**, with **Undo**.
 :::
 
 ## Escape

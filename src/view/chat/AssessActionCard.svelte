@@ -4,6 +4,7 @@
 	import localize from '../../utils/localize.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ResultChangeLines from './components/ResultChangeLines.svelte';
 	import RollSummary from './components/RollSummary.svelte';
@@ -142,6 +143,8 @@
 			{@html resultMessage}
 		</div>
 	</div>
+
+	<CardEvents {messageDocument} />
 </article>
 
 <style lang="scss">

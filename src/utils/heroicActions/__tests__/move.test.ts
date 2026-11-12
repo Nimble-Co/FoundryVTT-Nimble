@@ -1,7 +1,10 @@
 import {
+	asActiveGm,
 	createHeroicCharacter,
 	createHeroicCombatant,
+	giveUsedUpHeldChange,
 	heroicGlobals,
+	nextEventsCard,
 	resetHeroicGlobals,
 	setHeroicCombat,
 } from '../../../../tests/fixtures/heroicActions.js';
@@ -33,6 +36,17 @@ describe('runMoveAction', () => {
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({ type: 'moveAction', system: { actorName: actor.name, speed: 6 } }),
 		);
+	});
+
+	it('puts the ended line of a held change the move spends on the move card', async () => {
+		const actor = walker();
+		setHeroicCombat(createHeroicCombatant(actor, { currentActions: 2 }));
+		giveUsedUpHeldChange(actor);
+		const events = nextEventsCard();
+
+		await asActiveGm(() => runMoveAction(actor));
+
+		expect(events()).toEqual([expect.objectContaining({ kind: 'effectEnded' })]);
 	});
 
 	it('stops when the player declines to move with no actions left', async () => {

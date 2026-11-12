@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { SYSTEM_ID } from '#system';
 import { AUTOMATION_SETTING_KEYS } from '../../src/settings/automationSettings.js';
 import { createCombatantsCollectionFixture } from './combat.js';
 
@@ -125,4 +126,64 @@ export function resetHeroicGlobals(): () => void {
 
 export function targetToken(uuid: string, name = 'Goblin') {
 	return { name, actor: { id: `${uuid}-actor`, name }, document: { uuid } };
+}
+
+/** Gives the actor a Held Change that one use spends, and lets `fromUuidSync` find it. */
+export function giveUsedUpHeldChange(actor: object, heldKind = 'ignoreDisadvantage') {
+	const actorUuid = (actor as { uuid?: string }).uuid ?? 'Actor.hero';
+	const effect = {
+		id: 'held',
+		uuid: `${actorUuid}.ActiveEffect.held`,
+		name: 'Nullify',
+		img: 'nullify.svg',
+		origin: null,
+		parent: actor,
+		toObject: () => ({ _id: 'held', name: 'Nullify' }),
+		system: {
+			rules: [
+				{
+					id: 'held-rule',
+					type: 'heldRoll',
+					heldKind,
+					whichRoll: 'holderAttacks',
+					usedUp: true,
+					value: 0,
+				},
+			],
+		},
+		flags: {},
+	};
+	Object.assign(actor, {
+		uuid: actorUuid,
+		effects: [effect],
+		deleteEmbeddedDocuments: vi.fn(async () => []),
+	});
+	vi.stubGlobal(
+		'fromUuidSync',
+		vi.fn((uuid: string) => (uuid === effect.uuid ? effect : uuid === actorUuid ? actor : null)),
+	);
+	return effect;
+}
+
+/** The next card the use posts, and the Events lines written on it. */
+export function nextEventsCard(id = 'card') {
+	const update = vi.fn(async (_changes: Record<string, unknown>) => undefined);
+	heroicGlobals().ChatMessage.create.mockResolvedValueOnce({ id, flags: {}, update });
+	return () =>
+		update.mock.calls.map(([changes]) => changes[`flags.${SYSTEM_ID}.events`]).find(Boolean) as
+			| Array<{ kind: string }>
+			| undefined;
+}
+
+/** Runs `run` on the active GM, the client that writes the Events lines. */
+export async function asActiveGm(run: () => Promise<unknown>): Promise<void> {
+	const user = heroicGlobals().game.user as { isActiveGM?: boolean };
+	const was = user.isActiveGM;
+	user.isActiveGM = true;
+	try {
+		await run();
+	} finally {
+		user.isActiveGM = was;
+		vi.unstubAllGlobals();
+	}
 }

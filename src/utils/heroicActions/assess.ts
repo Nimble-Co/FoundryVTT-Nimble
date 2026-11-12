@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import type { AssessRequest } from '#types/assess.d.ts';
 import { ASSESS_DC, assessOptions } from '#utils/assessOptions.js';
+import { pendingCardLines } from '#utils/chat/cardEvents.js';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
@@ -75,9 +76,10 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 		: rollPaidAssess(actor, request.skillKey));
 	if (!roll) return false;
 
+	const usedUp = pendingCardLines();
 	if (!request.free) {
 		await spendAssessAction(actor);
-		await spendHeldIgnoreDisadvantage(actor);
+		await spendHeldIgnoreDisadvantage(actor, null, usedUp);
 	}
 
 	const { isSuccess, countsAsNat20Feature } = assessOutcome(roll, actor, request.skillKey);
@@ -89,7 +91,7 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 	const targetName = target ? getTargetName(target) : null;
 	const resultMessage = localize(resultKey, { name: actor.name, target: targetName ?? '' });
 
-	await ChatMessage.create({
+	const card = await ChatMessage.create({
 		author: game.user?.id,
 		speaker: ChatMessage.getSpeaker({ actor }),
 		sound: CONFIG.sounds.dice,
@@ -111,5 +113,6 @@ export async function runAssess(actor: NimbleCharacter, request: AssessRequest):
 			primaryDieChange,
 		},
 	} as unknown as ChatMessage.CreateData);
+	await usedUp.postOn(card as never);
 	return true;
 }

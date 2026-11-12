@@ -1,8 +1,7 @@
-import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
-import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { pendingCardLines } from '#utils/chat/cardEvents.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
@@ -248,7 +247,7 @@ async function rollSingleMinionAttack(params: {
 	soleTargetActor: ConditionCreature | null;
 	selectionsByMemberId: ReadonlyMap<string, string>;
 	/** Takes the ended lines of the Held Changes the roll uses up, for the group card. */
-	usedUpLines: CardEvent[];
+	usedUp: ReturnType<typeof pendingCardLines>;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
 	if (isMinionAttackRollOutcome(resolvedActionContext)) {
@@ -315,12 +314,7 @@ async function rollSingleMinionAttack(params: {
 		held.applyToRoll(rollOptions);
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
-		await held.spend({
-			add: async (events) => {
-				params.usedUpLines.push(...events);
-				return true;
-			},
-		});
+		await held.spend(params.usedUp);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -546,9 +540,9 @@ async function collectMinionAttackRollData(params: {
 	actionUpdates: Record<string, unknown>[];
 	rollEntries: MinionGroupAttackRollEntry[];
 	unsupportedWarnings: string[];
-	usedUpLines: CardEvent[];
+	usedUp: ReturnType<typeof pendingCardLines>;
 }> {
-	const usedUpLines: CardEvent[] = [];
+	const usedUp = pendingCardLines();
 	const actionUpdates: Record<string, unknown>[] = [];
 	const unsupportedWarnings = new Set<string>();
 	const rollEntries: MinionGroupAttackRollEntry[] = [];
@@ -561,7 +555,7 @@ async function collectMinionAttackRollData(params: {
 			targetActor,
 			soleTargetActor,
 			selectionsByMemberId: params.selectionsByMemberId,
-			usedUpLines,
+			usedUp,
 		});
 		appendMinionAttackRollOutcome({
 			rollOutcome,
@@ -575,7 +569,7 @@ async function collectMinionAttackRollData(params: {
 		actionUpdates,
 		rollEntries,
 		unsupportedWarnings: [...unsupportedWarnings],
-		usedUpLines,
+		usedUp,
 	};
 }
 
@@ -625,9 +619,7 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
-	if (chatData.chatCard && rollData.usedUpLines.length > 0) {
-		await addCardEvents(chatData.chatCard as never, rollData.usedUpLines);
-	}
+	await rollData.usedUp.postOn(chatData.chatCard as never);
 	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds, chatData.chatCard);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,

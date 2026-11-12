@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { getMovementSpeeds } from '#utils/actor/movementSpeeds.js';
+import { pendingCardLines } from '#utils/chat/cardEvents.js';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
@@ -39,15 +40,16 @@ export async function runMoveAction(actor: NimbleCharacter): Promise<void> {
 		if (confirmed !== true) return;
 	}
 
+	const usedUp = pendingCardLines();
 	if (combat && combatant.id) {
 		await consumeCombatantAction({ combat, combatantId: combatant.id });
-		await spendHeldIgnoreDisadvantage(actor);
+		await spendHeldIgnoreDisadvantage(actor, null, usedUp);
 	}
 
 	const movementSpeeds = getMovementSpeeds(actor);
 	const primarySpeed = movementSpeeds.find((s) => s.type === 'walk') ?? movementSpeeds[0];
 
-	await ChatMessage.create({
+	const card = await ChatMessage.create({
 		author: game.user?.id,
 		speaker: ChatMessage.getSpeaker({ actor }),
 		type: 'moveAction',
@@ -56,4 +58,5 @@ export async function runMoveAction(actor: NimbleCharacter): Promise<void> {
 			speed: primarySpeed?.value ?? 0,
 		},
 	} as unknown as ChatMessage.CreateData);
+	await usedUp.postOn(card as never);
 }
