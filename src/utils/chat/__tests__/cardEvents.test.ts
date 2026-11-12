@@ -208,6 +208,87 @@ describe('addCardEvents with a move line', () => {
 	});
 });
 
+describe('a line that asks a player to act', () => {
+	const hero = {
+		name: 'Tessa',
+		testUserPermission: (user: { id: string }) => user.id === 'player',
+	};
+	const moveFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'movementOffer',
+		action: {
+			kind: 'movementOffer',
+			node: { id } as never,
+			offers: [{ tokenUuid: 'Scene.s.Token.tessa' } as never],
+		},
+	});
+
+	beforeEach(() => {
+		const users = [
+			{ id: 'gm', isGM: true },
+			{ id: 'player', isGM: false },
+			{ id: 'other', isGM: false },
+		];
+		globals.game.users = Object.assign(users, {
+			get: (id: string) => users.find((user) => user.id === id),
+			activeGM: { id: 'gm', query },
+		});
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid === 'Scene.s.Token.tessa' ? { actor: hero } : null)),
+		);
+	});
+
+	afterEach(() => vi.unstubAllGlobals());
+
+	it('goes on a card for its player and the GMs when the card is whispered to the GM only', async () => {
+		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
+
+		expect(await addCardEvents(card, [moveFor('move')])).toBe(true);
+
+		expect(card.update).not.toHaveBeenCalled();
+		expect(create).toHaveBeenCalledTimes(1);
+		const [data] = create.mock.calls[0] as [Record<string, any>];
+		expect(data.whisper).toEqual(['player', 'gm']);
+		expect(data.system.momentHeading).toEqual({
+			key: 'NIMBLE.chat.events.forHeading',
+			data: { names: 'Tessa' },
+		});
+		expect(idsOf(data.flags[SYSTEM_ID].events)).toEqual(['move']);
+	});
+
+	it.each([
+		['a public card', []],
+		['a card whispered to its player', ['gm', 'player']],
+	])('goes on %s', async (_name, whisper) => {
+		const card = makeCard('attack', { whisper });
+
+		expect(await addCardEvents(card, [moveFor('move')])).toBe(true);
+
+		expect(create).not.toHaveBeenCalled();
+		expect(idsOf(card.flags[SYSTEM_ID]?.events)).toEqual(['move']);
+	});
+
+	it('leaves the other lines of the batch on the card', async () => {
+		const card = makeCard('attack', { whisper: ['gm'] });
+
+		await addCardEvents(card, [line('a', 1), moveFor('move')]);
+
+		expect(idsOf(card.flags[SYSTEM_ID]?.events)).toEqual(['a']);
+		expect(create).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not go on a moment card for the GMs only', async () => {
+		await addMomentEvents({ key: 'k', heading: { key: 'heading' } }, [moveFor('move')], {
+			whisper: ['gm'],
+		});
+
+		expect(create).toHaveBeenCalledTimes(1);
+		const [data] = create.mock.calls[0] as [Record<string, any>];
+		expect(data.whisper).toEqual(['player', 'gm']);
+	});
+});
+
 describe('the GM query', () => {
 	function handler() {
 		const once = vi.fn();

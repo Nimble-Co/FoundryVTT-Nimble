@@ -22,10 +22,28 @@ interface EventCard {
 	type?: string;
 	timestamp?: number | null;
 	whisper?: readonly (string | null)[];
-	author?: { isGM?: boolean } | null;
+	author?: { id?: string | null; isGM?: boolean } | null;
 	flags?: Record<string, unknown>;
 	system?: unknown;
 	update?(changes: object): Promise<unknown>;
+}
+
+/** Who reads a card: its whisper list (empty: everyone) and its author, as a document or an id. */
+export interface CardReaders {
+	whisper?: readonly (string | null)[] | null;
+	author?: { id?: string | null } | string | null;
+}
+
+interface OwnedCreature {
+	name?: string | null;
+	testUserPermission?(user: unknown, level: string): boolean;
+}
+
+/** A group of lines that go on a card of their own, for the users who act on them. */
+export interface UnreadLines {
+	users: string[];
+	names: string[];
+	events: CardEvent[];
 }
 
 export interface MomentEventsOptions {
@@ -89,6 +107,90 @@ export function gmReaders(): string[] {
 	return (game.users?.filter((user) => user.isGM).map((user) => user.id ?? '') ?? []).filter(
 		Boolean,
 	);
+}
+
+function creatureAt(uuid: string | null | undefined): OwnedCreature | null {
+	if (!uuid) return null;
+	const found = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false }) as
+		| (OwnedCreature & { actor?: OwnedCreature | null })
+		| null;
+	if (!found) return null;
+	return 'actor' in found ? (found.actor ?? null) : found;
+}
+
+/** The creatures whose owners act on a line: the tokens a move is offered to. */
+export function lineCreatures(event: CardEvent): OwnedCreature[] {
+	const action = event.action;
+	if (action?.kind !== 'movementOffer') return [];
+	return action.offers
+		.map((offer) => creatureAt(offer.tokenUuid))
+		.filter((creature): creature is OwnedCreature => !!creature);
+}
+
+/** The users who act on a line for these creatures: their owners who are not GMs. */
+export function actingUsers(creatures: Iterable<OwnedCreature | null | undefined>): string[] {
+	const owned = [...creatures].filter((creature) => !!creature?.testUserPermission);
+	if (owned.length < 1) return [];
+	const users = Array.from((game.users ?? []) as Iterable<{ id?: string | null; isGM?: boolean }>);
+	const ids = new Set<string>();
+	for (const creature of owned) {
+		for (const user of users) {
+			if (!user.id || user.isGM) continue;
+			if (creature?.testUserPermission?.(user, 'OWNER')) ids.add(user.id);
+		}
+	}
+	return [...ids];
+}
+
+/** Whether each of `users` reads the card: it is public, or whispered to them, or they wrote it. */
+export function readByAll(card: CardReaders, users: readonly string[]): boolean {
+	const whisper = (card.whisper ?? []).filter((id): id is string => !!id);
+	if (whisper.length < 1) return true;
+	const author = typeof card.author === 'string' ? card.author : card.author?.id;
+	const readers = new Set(author ? [...whisper, author] : whisper);
+	return users.every((id) => readers.has(id));
+}
+
+/**
+ * The lines the card can take, and the lines it cannot: a line that asks a player to act goes on
+ * a card that player reads. GMs read every card they need, so they do not count.
+ */
+export function splitByReaders(
+	card: CardReaders,
+	events: CardEvent[],
+): { here: CardEvent[]; elsewhere: UnreadLines[] } {
+	const here: CardEvent[] = [];
+	const groups = new Map<string, UnreadLines>();
+	for (const event of events) {
+		const creatures = lineCreatures(event);
+		const users = actingUsers(creatures);
+		if (readByAll(card, users)) {
+			here.push(event);
+			continue;
+		}
+		const key = [...users].sort().join(',');
+		const group = groups.get(key) ?? { users, names: [], events: [] };
+		for (const creature of creatures) {
+			if (creature.name && !group.names.includes(creature.name)) group.names.push(creature.name);
+		}
+		group.events.push(event);
+		groups.set(key, group);
+	}
+	return { here, elsewhere: [...groups.values()] };
+}
+
+/** Posts the lines that their users could not read, each group on a card for them and the GMs. */
+export async function postUnreadLines(groups: readonly UnreadLines[]): Promise<boolean> {
+	let placed = true;
+	for (const group of groups) {
+		const moment: CardEventMoment = {
+			key: `once:${foundry.utils.randomID()}`,
+			heading: { key: 'NIMBLE.chat.events.forHeading', data: { names: group.names.join(', ') } },
+		};
+		const whisper = [...new Set([...group.users, ...gmReaders()])];
+		placed = (await addMomentEvents(moment, group.events, { whisper })) && placed;
+	}
+	return placed;
 }
 
 /**
@@ -190,8 +292,13 @@ async function askGm(data: QueryData): Promise<boolean> {
 export async function addCardEvents(card: EventCard, events: CardEvent[]): Promise<boolean> {
 	if (events.length < 1 || !card.id) return false;
 	try {
-		if (game.user?.isActiveGM) return await appendHere(card, events);
-		return await askGm({ op: 'add', messageId: card.id, events });
+		const { here, elsewhere } = splitByReaders(card, events);
+		const moved = elsewhere.length > 0 ? await postUnreadLines(elsewhere) : true;
+		if (here.length < 1) return moved;
+		const placed = game.user?.isActiveGM
+			? await appendHere(card, here)
+			: await askGm({ op: 'add', messageId: card.id, events: here });
+		return placed && moved;
 	} catch (error) {
 		console.error('Nimble | Could not add the events of a card.', error);
 		return false;
@@ -209,8 +316,13 @@ export async function addMomentEvents(
 ): Promise<boolean> {
 	if (events.length < 1) return false;
 	try {
-		if (game.user?.isActiveGM) return await momentHere(moment, events, options);
-		return await askGm({ op: 'moment', moment, events, options });
+		const { here, elsewhere } = splitByReaders({ whisper: options.whisper }, events);
+		const moved = elsewhere.length > 0 ? await postUnreadLines(elsewhere) : true;
+		if (here.length < 1) return moved;
+		const placed = game.user?.isActiveGM
+			? await momentHere(moment, here, options)
+			: await askGm({ op: 'moment', moment, events: here, options });
+		return placed && moved;
 	} catch (error) {
 		console.error('Nimble | Could not add the events of a moment.', error);
 		return false;

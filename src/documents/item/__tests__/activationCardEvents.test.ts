@@ -121,6 +121,61 @@ describe('the lines of an item use', () => {
 		expect(globals.ChatMessage.create).toHaveBeenCalledTimes(1);
 		expect(chatData.flags[SYSTEM_ID].events).toEqual([line('pool')]);
 	});
+	it('leave out a move for a player who does not read the card, and post it on a card for them', async () => {
+		const users = [
+			{ id: 'gm', isGM: true },
+			{ id: 'player', isGM: false },
+		];
+		const savedUsers = globals.game.users;
+		globals.game.users = Object.assign(users, {
+			get: (id: string) => users.find((u) => u.id === id),
+		});
+		const hero = {
+			name: 'Tessa',
+			testUserPermission: (user: { id: string }) => user.id === 'player',
+		};
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid === 'Scene.s.Token.tessa' ? { actor: hero } : null)),
+		);
+		const move: CardEvent = {
+			...line('move'),
+			kind: 'movementOffer',
+			action: {
+				kind: 'movementOffer',
+				node: { id: 'move' } as never,
+				offers: [{ tokenUuid: 'Scene.s.Token.tessa' } as never],
+			},
+		};
+		try {
+			const events = openActivationEvents(actor);
+			await events?.add([line('pool'), move]);
+			const chatData = Object.assign(chatDataWith([]), { whisper: ['gm'], author: 'gm' });
+
+			await itemStub()._createActivationCard(
+				chatData,
+				[],
+				{ effects: [] },
+				{},
+				{
+					events,
+					free: null,
+					hidden: true,
+				},
+			);
+
+			const created = vi.mocked(globals.ChatMessage.create).mock.calls as unknown as [
+				Record<string, any>,
+			][];
+			expect(chatData.flags[SYSTEM_ID].events).toEqual([line('pool')]);
+			const forPlayer = created.map(([data]) => data).find((data) => data.type === 'effectsEnded');
+			expect(forPlayer?.whisper).toEqual(['player', 'gm']);
+			expect(forPlayer?.flags[SYSTEM_ID].events).toEqual([move]);
+		} finally {
+			globals.game.users = savedUsers;
+			vi.unstubAllGlobals();
+		}
+	});
 });
 
 describe('a free use with nothing to click', () => {

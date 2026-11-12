@@ -6,7 +6,14 @@ import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
 import { applyEffectFromCard, type EffectCard } from '#utils/chat/applyEffectFromCard.js';
-import { addCardEvents, addMomentEvents, gmReaders } from '#utils/chat/cardEvents.js';
+import {
+	addCardEvents,
+	addMomentEvents,
+	type CardReaders,
+	gmReaders,
+	postUnreadLines,
+	splitByReaders,
+} from '#utils/chat/cardEvents.js';
 import {
 	freeUseEvent,
 	freeUseEventHost,
@@ -333,11 +340,13 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			Hooks.callAll(systemHookName('useItem'), this, null, { ...hookContext, eventHost });
 			return null;
 		}
-		if (events.length > 0) {
-			foundry.utils.setProperty(chatData as object, `flags.${SYSTEM_ID}.events`, events);
+		const { here, elsewhere } = splitByReaders(chatData as CardReaders, events);
+		if (here.length > 0) {
+			foundry.utils.setProperty(chatData as object, `flags.${SYSTEM_ID}.events`, here);
 		}
 		const chatCard = (await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null;
 		use.events?.posted(chatCard ? (lines) => addCardEvents(chatCard as never, lines) : null);
+		if (elsewhere.length > 0) await postUnreadLines(elsewhere);
 
 		if (chatCard) {
 			/**
