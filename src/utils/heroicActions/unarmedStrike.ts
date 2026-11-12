@@ -2,6 +2,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
+import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
@@ -266,7 +267,7 @@ export async function rollUnarmedStrike(
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);
-	await held.spend();
+	await held.spend(card ? { add: (events) => addCardEvents(card as never, events) } : null);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll)) {
 		await spendRuleCharge(actor, identifier);

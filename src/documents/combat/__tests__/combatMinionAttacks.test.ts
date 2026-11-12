@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import {
 	createCombatActorFixture,
 	createCombatantsCollectionFixture,
@@ -153,6 +154,53 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 
 		expect(fireAttackEvents).toHaveBeenCalledTimes(1);
 		expect(fireAttackEvents).toHaveBeenCalledWith(shared, { id: 'card' });
+	});
+
+	it('puts the ended line of a held change a member uses up on the group card', async () => {
+		const actor = minionActor('a');
+		const held = {
+			id: 'held',
+			uuid: 'Actor.a.ActiveEffect.held',
+			name: 'Opening',
+			img: 'opening.svg',
+			origin: null,
+			parent: actor,
+			toObject: () => ({ _id: 'held', name: 'Opening' }),
+			system: {
+				rules: [
+					{
+						id: 'held-rule',
+						type: 'heldRoll',
+						heldKind: 'primaryDie',
+						whichRoll: 'holderAttacks',
+						usedUp: true,
+						value: 1,
+					},
+				],
+			},
+			flags: {},
+		};
+		Object.assign(actor, {
+			uuid: 'Actor.a',
+			isOwner: true,
+			effects: [held],
+			deleteEmbeddedDocuments: vi.fn(async () => []),
+		});
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid.includes('ActiveEffect') ? held : actor)),
+		);
+		gameGlobal.user = { ...(gameGlobal.user as object), isActiveGM: true };
+		const update = vi.fn(async (_changes: Record<string, unknown>) => undefined);
+		vi.mocked(ChatMessage.create).mockResolvedValueOnce({ id: 'card', flags: {}, update } as never);
+
+		await attack([member('m-a', actor)]);
+
+		const events = update.mock.calls
+			.map(([changes]) => changes[`flags.${SYSTEM_ID}.events`])
+			.find(Boolean) as Array<{ kind: string }> | undefined;
+		expect(events).toEqual([expect.objectContaining({ kind: 'effectEnded' })]);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
 	});
 
 	it('does not end the Despair of a member itself: the attack event ends it', async () => {
