@@ -105,7 +105,7 @@ Turning off **Feature Effects** in the Automation settings turns this off with i
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, and a **Minor Status** box (a Minor Status ends when combat ends), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, and a **Minor Status** box (a Minor Status ends when combat ends), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 
