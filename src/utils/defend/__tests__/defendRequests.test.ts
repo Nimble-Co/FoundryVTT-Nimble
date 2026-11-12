@@ -13,9 +13,8 @@ const applyEffect = await vi.importActual<typeof import('../../actor/applyEffect
 );
 vi.doMock('../../actor/applyEffectToActor.js', () => ({ ...applyEffect, applyEffectHere }));
 vi.doMock('../../cost/costLedger.js', () => ({ giveBack: giveBack }));
-const { defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } = await import(
-	'../defendRequests.js'
-);
+const { applyAttackerEffects, defendRefusal, requestDefend, requestDefendAllyUse, undoDefend } =
+	await import('../defendRequests.js');
 
 const TOKEN = 'Scene.s.Token.pip';
 type TestEffect = { id: string; flags?: Record<string, Record<string, unknown>> };
@@ -209,6 +208,20 @@ describe('Defend options on the card', () => {
 		await requestDefend(request({ attackerEffects: [{ ...SAND, effectId: 'gone' }] }));
 
 		expect(applyEffectHere).not.toHaveBeenCalled();
+	});
+
+	it('an Interpose with no Defend puts the item effect on the attacker by the given apply', async () => {
+		const apply = vi.fn();
+
+		await applyAttackerEffects(ogre as never, [SAND], 'Actor.pip', apply);
+
+		expect(applyEffectHere).not.toHaveBeenCalled();
+		expect(apply).toHaveBeenCalledTimes(1);
+		expect(apply.mock.calls[0]?.[0]).toBe(ogre);
+		expect(apply.mock.calls[0]?.[1]).toMatchObject({
+			sourceItemUuid: 'Item.sand',
+			data: { name: 'Pocket Sand' },
+		});
 	});
 
 	it('does not take the attacker effect back on Undo', async () => {
