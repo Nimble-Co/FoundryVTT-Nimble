@@ -20,13 +20,18 @@ const reason = {
 };
 
 describe('useCardHasSomethingToClick', () => {
-	it('is false for self effects, pool steps and notes', () => {
+	it('is false for self effects, pool steps and empty notes', () => {
 		const effects = [
 			node({ type: 'applyEffect', recipient: 'self' }),
 			node({ type: 'pool', poolType: 'dice', action: 'rollDie' }),
-			node({ type: 'note', text: 'x' }),
+			node({ type: 'note', text: '  ' }),
 		];
 		expect(useCardHasSomethingToClick({ targets: [], activation: { effects } })).toBe(false);
+	});
+
+	it('is true with a note to read, so its text keeps the card', () => {
+		const effects = [node({ type: 'note', noteType: 'reminder', text: 'Move up to 3 spaces.' })];
+		expect(useCardHasSomethingToClick({ targets: [], activation: { effects } })).toBe(true);
 	});
 
 	it.each([

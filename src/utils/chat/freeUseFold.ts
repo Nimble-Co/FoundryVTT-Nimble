@@ -26,7 +26,7 @@ interface UseCardSystem {
 	} | null;
 }
 
-/** A step a reader can click or that a token carries: the card must be there for it. */
+/** A step a reader can click, a note to read, or a move a token carries: the card must be there. */
 function needsTheCard(node: EffectNode): boolean {
 	switch (node.type) {
 		case 'damage':
@@ -37,15 +37,17 @@ function needsTheCard(node: EffectNode): boolean {
 			return true;
 		case 'applyEffect':
 			return node.recipient !== 'self';
+		case 'note':
+			return !!node.text?.trim();
 		default:
 			return false;
 	}
 }
 
 /**
- * Whether the card of a use would have something to click: a target, a damage, healing or save
- * step, an Apply Effect step for targets, a move, or an area to place. Self Apply Effect steps,
- * pool steps and notes need no card.
+ * Whether the card of a use would have something to click or read: a target, a damage, healing or
+ * save step, an Apply Effect step for targets, a move, a note, or an area to place. Self Apply
+ * Effect steps and pool steps need no card.
  */
 export function useCardHasSomethingToClick(system: UseCardSystem | null | undefined): boolean {
 	if ((system?.targets?.length ?? 0) > 0) return true;

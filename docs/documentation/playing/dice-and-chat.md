@@ -136,7 +136,7 @@ The line under the name tells how many actions a hero starts combat with: 1, 2 w
 
 Some things happen because of a roll or a use: an effect ends, a feature is used for free, a pool gains dice, a creature can move for free, a hero Interposes. They show as lines in the **Events** strip at the bottom of the card that caused them, not as new messages. Each line says what happened and why.
 
-When nothing on the chat caused it, such as the start of a turn, the end of a round or a time that passes, the chat gets one message for that moment, with a line for each event. A feature used for free with nothing to click is one line, not a card of its own.
+When nothing on the chat caused it, such as the start of a turn, the end of a round or a time that passes, the chat gets one message for that moment, with a line for each event. A feature used for free with nothing to click or read is one line, not a card of its own. A note on the feature keeps its card.
 
 ![A Goblin's critical hit on Grug: in Events, Grug uses Rage for free, because an enemy hit them with a crit (Titan's Fury)](/images/documentation/events-free-use.png)
 
