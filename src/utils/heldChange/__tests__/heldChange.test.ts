@@ -15,6 +15,7 @@ import {
 	heldLines,
 	heldLinesForItem,
 	heldMaximizeForAttack,
+	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
 	keepAmount,
 	keptAmountEndedBy,
@@ -340,6 +341,30 @@ describe('heldMaximizeForAttack', () => {
 
 		expect(heldMaximizeForAttack({ attacker: { uuid: MIRA }, target, area: false })).not.toBeNull();
 		expect(heldMaximizeForAttack({ attacker: creature('B'), target, area: false })).toBeNull();
+	});
+});
+
+describe('heldMaximizeOnAreaTarget', () => {
+	const maximize = (spec: HeldSpec = {}): HeldSpec => ({
+		kind: 'maximize',
+		label: 'Doomed',
+		...spec,
+	});
+
+	it("reads a target's change on attacks against it", () => {
+		const target = creature('T', [maximize()]);
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)?.label).toBe('Doomed');
+	});
+
+	it("does not read a target's change on its own attacks", () => {
+		const target = creature('T', [maximize({ whichRoll: 'holderAttacks' })]);
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)).toBeNull();
+	});
+
+	it('reads a source-only change only on an area of the origin creature', () => {
+		const target = creature('T', [maximize({ fromSourceOnly: true })]);
+		expect(heldMaximizeOnAreaTarget(target, { uuid: MIRA }, undefined)).not.toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('B'), undefined)).toBeNull();
 	});
 });
 

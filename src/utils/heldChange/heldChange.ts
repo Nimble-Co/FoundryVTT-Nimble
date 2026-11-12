@@ -211,6 +211,25 @@ export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 	return changesForAttack(input, 'maximize')[0] ?? null;
 }
 
+/**
+ * The change on one target of an area attack that maximizes the roll against it. The area rolls
+ * once, so only this target takes the highest total; it is spent when the damage is applied.
+ */
+export function heldMaximizeOnAreaTarget(
+	target: Holder | null | undefined,
+	attacker: Holder | null | undefined,
+	melee: boolean | undefined,
+): HeldChange | null {
+	return (
+		heldChangesOn(target).find(
+			(held) =>
+				held.kind === 'maximize' &&
+				held.appliesTo === 'attacksOnHolder' &&
+				fitsAttack(held, attacker, melee),
+		) ?? null
+	);
+}
+
 /** The change that takes disadvantage out of the holder's next roll. */
 export function ignoreDisadvantageChange(attacker: Holder | null | undefined): HeldChange | null {
 	return (
