@@ -63,7 +63,9 @@ import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
+import { RemoveSpellsRule } from '../models/rules/removeSpells.js';
 import { RerollRule } from '../models/rules/reroll.js';
+import { RestrictSpellSchoolsRule } from '../models/rules/restrictSpellSchools.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -146,6 +148,8 @@ export const RULE_CLASSES = {
 	poolMaxBonus: PoolMaxBonusRule,
 	primaryDieBonus: PrimaryDieBonusRule,
 	reroll: RerollRule,
+	removeSpells: RemoveSpellsRule,
+	restrictSpellSchools: RestrictSpellSchoolsRule,
 	savingThrowBonus: SavingThrowBonusRule,
 	savingThrowRollMode: SavingThrowRollModeRule,
 	situationalRollMode: SituationalRollModeRule,
