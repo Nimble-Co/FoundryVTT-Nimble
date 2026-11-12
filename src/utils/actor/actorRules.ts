@@ -1,4 +1,5 @@
 import type { RuleOf, RuleType } from '#types/ruleTypes.d.ts';
+import { isEffectParent } from '../../models/rules/_ruleParent.js';
 
 /** The rules of an actor as an array. Empty when it has no rules to read. */
 export function actorRules<T>(actor: { rules?: unknown } | null | undefined): T[] {
@@ -44,7 +45,7 @@ export function runningRuleParent<T>(uuid: string | null | undefined): RuleParen
 		strict: false,
 	}) as RuleParentLike<T> | null;
 	if (!parent?.rules) return null;
-	if (parent.documentName === 'ActiveEffect' && !parent.modifiesActor) return null;
+	if (isEffectParent(parent) && !parent.modifiesActor) return null;
 	return parent;
 }
 

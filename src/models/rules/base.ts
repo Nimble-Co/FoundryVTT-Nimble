@@ -7,6 +7,7 @@ import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
 import { checkFormulaReferences, ruleOwner } from '../../utils/rolls/formulaReferences.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
+import { type EffectParent, isEffectParent } from './_ruleParent.js';
 import { actorAccumulatorPaths } from './accumulatorRegistry.js';
 
 // Rules are re-instantiated on every data-prep cycle; dedupe the late-predicate
@@ -30,17 +31,8 @@ interface NimbleBaseItem extends Item {
 	grantedBy: NimbleBaseItem | null;
 }
 
-type EffectParent = ActiveEffect & {
-	documentName: 'ActiveEffect';
-	target: foundry.abstract.Document.Any | null;
-};
-
 /** The document that holds a rule in its `system.rules`. */
 type RuleParentDocument = NimbleBaseItem | EffectParent;
-
-function isEffectParent(parent: RuleParentDocument): parent is EffectParent {
-	return parent?.documentName === 'ActiveEffect';
-}
 
 function schema() {
 	const { fields } = foundry.data;

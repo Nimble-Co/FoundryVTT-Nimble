@@ -1,6 +1,7 @@
 import type { RuleSource } from '#types/ruleSource.js';
 import localize from '#utils/localize.js';
-import type { NimbleBaseRule } from '../models/rules/base.js';
+import { isEffectParent } from '../models/rules/_ruleParent.js';
+import type { NimbleBaseRule, RuleParentDocument } from '../models/rules/base.js';
 
 export namespace RulesManager {
 	export interface AddOptions {
@@ -8,23 +9,8 @@ export namespace RulesManager {
 	}
 }
 
-interface EffectRuleParent {
-	documentName: 'ActiveEffect';
-	name: string;
-	uuid: string | null;
-	system: unknown;
-	update(data: Record<string, unknown>): Promise<unknown>;
-}
-
-/** A document that holds rules in `system.rules`. */
-type RuleParent = NimbleBaseItem | EffectRuleParent;
-
-function rulesOf(parent: RuleParent): RuleSource[] {
+function rulesOf(parent: RuleParentDocument): RuleSource[] {
 	return (parent.system as { rules?: RuleSource[] } | undefined)?.rules ?? [];
-}
-
-function isEffect(parent: RuleParent): parent is EffectRuleParent {
-	return parent.documentName === 'ActiveEffect';
 }
 
 /**
@@ -57,7 +43,7 @@ function describeValidationFailures(rule: InstanceType<typeof NimbleBaseRule>): 
 }
 
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
-	#parent: RuleParent;
+	#parent: RuleParentDocument;
 	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
 	/**
@@ -69,7 +55,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	 */
 	readonly failures: Map<string, RuleFailure> = new Map();
 
-	constructor(parent: RuleParent) {
+	constructor(parent: RuleParentDocument) {
 		super();
 
 		this.#parent = parent;
@@ -90,7 +76,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 				return;
 			}
 
-			if (isEffect(parent) && Cls.worksOnEffects === false) {
+			if (isEffectParent(parent) && Cls.worksOnEffects === false) {
 				this.failures.set(source.id, {
 					key: 'NIMBLE.rulesBuilder.ruleFailureNotOnEffect',
 					data: { type: source.type },
@@ -198,7 +184,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return RulesManager.deleteRule(this.#parent, id);
 	}
 
-	static async deleteRule(parent: RuleParent, id: string) {
+	static async deleteRule(parent: RuleParentDocument, id: string) {
 		return parent.update({
 			'system.rules': rulesOf(parent).filter((r) => r.id !== id),
 		} as Record<string, unknown>);
@@ -213,7 +199,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	 * not present in `idsInOrder` are appended in their original relative order
 	 * so an incomplete reorder does not silently drop data.
 	 */
-	static async reorderRules(parent: RuleParent, idsInOrder: string[]) {
+	static async reorderRules(parent: RuleParentDocument, idsInOrder: string[]) {
 		const existing = rulesOf(parent);
 		const byId = new Map(existing.map((r) => [r.id, r]));
 		const seen = new Set<string>();
@@ -244,7 +230,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	/**                   Static Methods                       */
 	/** ------------------------------------------------------ */
 	static async addRule(
-		parent: RuleParent,
+		parent: RuleParentDocument,
 		data: Record<string, unknown>,
 		options: RulesManager.AddOptions = {},
 	) {
@@ -282,7 +268,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			console.error('Nimble | Rule is not of a recognizable type.');
 			return undefined;
 		}
-		if (isEffect(parent) && Cls.worksOnEffects === false) {
+		if (isEffectParent(parent) && Cls.worksOnEffects === false) {
 			// eslint-disable-next-line no-console
 			console.error(`Nimble | A ${type} rule works only on an item.`);
 			return undefined;
@@ -292,4 +278,4 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 }
 
-export { RulesManager, type RuleParent };
+export { RulesManager };
