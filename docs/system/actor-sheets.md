@@ -41,7 +41,7 @@ actor.reactive ──adapter──▶ { actor: ActorLike, context: SheetContext 
 
 - `HeroActorLike`, `ItemLike`, `EffectLike` and `RuleLike` hold only the fields that the views read.
 - `HeroSheetContext` holds the facts from Foundry globals: the combat state (with the reactions used this round), the missed level choices, the names of conditions, damage types, languages, armor types and spell schools, the dice pools and charge pools, the names of the targets, and the `localize` and `format` functions.
-- `context.itemState` holds what the system works out for each item (`hero/heroItemState.ts`): the action cost with the action cost rules, the charge pools of the item (`getPoolsForItem`, hidden pools left out), the charge gate (`validateItemChargeConsumption`, only with resource spending on), the toggle effect and whether it is on, and the dice consumers in manual mode.
+- `context.itemState` holds what the system works out for each item (`hero/heroItemState.ts`): the action cost with the action cost rules, the charge pools of the item (`getPoolsForItem`, hidden pools left out), the charge gate (`validateItemChargeConsumption`, only with resource spending on), whether the actor has an active effect that a use of the item gave (`active`, from `activeOrigins()`), and the dice consumers in manual mode.
 
 The adapter is the only view model code that reads Foundry. Keep Foundry calls out of the view functions.
 
