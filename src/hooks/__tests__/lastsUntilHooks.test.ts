@@ -351,6 +351,28 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
 	});
 
+	it('a new effect is a gain of its name and its statuses, with their aliases', () => {
+		(CONFIG.NIMBLE as { conditionAliasedConditions?: unknown }).conditionAliasedConditions = {
+			stunned: ['incapacitated'],
+		};
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, {
+			effectName: 'Stunned',
+			statuses: ['stunned', 'incapacitated'],
+			gained: effect,
+			effect: 'Stunned',
+		});
+	});
+
 	it('a move of the token is a move of its actor', () => {
 		const actor = { name: 'Goblin' };
 

@@ -45,6 +45,7 @@ export function effectEndsAt(
 	combat?: Combat | null,
 ): boolean {
 	if (!(effect.parent instanceof Actor) || !effect.active) return false;
+	if (check.type === 'event' && check.gained === effect) return false;
 	const subject = effectSubject(effect, check, combat ?? undefined);
 	if (anyMomentReached(effect.lastsUntil ?? [], subject, check)) return true;
 	if (check.type === 'combatEnd' && effect.isMinor && subject.relatesTo(check.combatId)) {

@@ -37,6 +37,7 @@ export const LASTS_UNTIL_EVENTS = [
 	'chargeGained',
 	'rest',
 	'combatEnd',
+	'gain',
 ] as const;
 
 /** The saves an Escape can allow. The author picks any set of them. */

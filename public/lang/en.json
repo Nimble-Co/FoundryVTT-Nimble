@@ -1243,7 +1243,8 @@
 					"nextRoll": "{name} made a roll",
 					"nextDamage": "{name} dealt damage",
 					"nextSpell": "{name} cast a tiered spell",
-					"inactiveRound": "{name} went a round with no attack and no new use"
+					"inactiveRound": "{name} went a round with no attack and no new use",
+					"gain": "{name} gained {effect}"
 				}
 			},
 			"expiryEvents": {
@@ -4020,7 +4021,8 @@
 				"wounded": { "base": "are Bloodied", "third": "is Bloodied" },
 				"chargeGained": { "base": "gain a charge", "third": "gains a charge" },
 				"rest": { "base": "rest", "third": "rests" },
-				"combatEnd": { "base": "end", "third": "ends" }
+				"combatEnd": { "base": "end", "third": "ends" },
+				"gain": { "base": "gain {name}", "third": "gains {name}" }
 			}
 		},
 		"effectSheet": {
@@ -4097,7 +4099,8 @@
 					"zeroHp": "drop to 0 HP",
 					"die": "die",
 					"loseConcentration": "lose Concentration",
-					"useAgain": "use this again"
+					"useAgain": "use this again",
+					"gain": "gain"
 				},
 				"add": "add a moment...",
 				"addKind": {
@@ -4119,6 +4122,9 @@
 				},
 				"effectNamePlaceholder": "Rage",
 				"ofType": "of a type:",
+				"gainPick": "a condition...",
+				"gainNamed": "an effect named...",
+				"gainLabel": "The condition or effect",
 				"damageTypesLabel": "Damage types. None on is any type.",
 				"remove": "Remove moment {number}"
 			},

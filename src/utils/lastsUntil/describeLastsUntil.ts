@@ -161,6 +161,35 @@ function timePhrase(moment: Moment, input: DescribeInput): string {
 	return input.format(`${WORDS}.for`, { amount });
 }
 
+/** A status id reads as the condition's name; any other text is the name of an effect. */
+function gainedName(name: string, input: DescribeInput): string {
+	const entries = (CONFIG as { statusEffects?: { id: string; name?: unknown }[] }).statusEffects;
+	const entry = (entries ?? []).find((each) => each.id === name.trim());
+	return entry?.name ? input.localize(String(entry.name)) : name.trim();
+}
+
+/** The verb of an event row, with what is gained or the damage types when it has them. */
+function eventAction(
+	moment: Moment,
+	event: LastsUntilEvent,
+	person: Person,
+	input: DescribeInput,
+): string {
+	const form = person.kind === 'named' ? 'third' : 'base';
+	if (event === 'gain') {
+		return input.format(`${WORDS}.event.gain.${form}`, {
+			name: gainedName(moment.effectName, input),
+		});
+	}
+	const types = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
+	if (!types.length) return verb(event, person, input);
+	return input.format(`${WORDS}.typedDamage.${form}`, {
+		types: types
+			.map((type) => getDamageTypeLabel(type).toLocaleLowerCase())
+			.join(input.localize(`${WORDS}.orWord`)),
+	});
+}
+
 function eventPhrase(moment: Moment, input: DescribeInput): string {
 	const event = moment.event ?? 'attack';
 	if (event === 'effectEnds') {
@@ -175,14 +204,7 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.combatEnds`) });
 	}
 	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
-	const types = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
-	const action = types.length
-		? input.format(`${WORDS}.typedDamage.${person.kind === 'named' ? 'third' : 'base'}`, {
-				types: types
-					.map((type) => getDamageTypeLabel(type).toLocaleLowerCase())
-					.join(input.localize(`${WORDS}.orWord`)),
-			})
-		: verb(event, person, input);
+	const action = eventAction(moment, event, person, input);
 	return input.format(`${WORDS}.until`, {
 		moment: `${subjectWord(person, input)} ${action}`,
 	});

@@ -19,6 +19,7 @@ export const HOLDER_FORM_EVENTS = [
 	'healed',
 	'zeroHp',
 	'die',
+	'gain',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** What the user of the item does: "or until you drop to 0 HP". */
@@ -29,6 +30,7 @@ export const SOURCE_FORM_EVENTS = [
 	'die',
 	'loseConcentration',
 	'useAgain',
+	'gain',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** The "add a moment..." choices. */
@@ -133,7 +135,9 @@ export function withSubject(moment: Moment, subject: EventRowSubject): Moment {
 }
 
 export function withEvent(moment: Moment, event: LastsUntilEvent): Moment {
-	return event === 'takeDamage' ? { ...moment, event } : { ...moment, event, damageTypes: [] };
+	const damageTypes = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
+	const effectName = event === 'gain' ? moment.effectName : '';
+	return { ...moment, event, damageTypes, effectName };
 }
 
 /** Turns one damage type of "take damage" on or off. None on is any type. */

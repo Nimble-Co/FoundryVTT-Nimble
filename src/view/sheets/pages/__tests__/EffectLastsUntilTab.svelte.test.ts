@@ -157,6 +157,48 @@ describe('EffectLastsUntilTab', () => {
 		expect(saved(effect)).toEqual([{ ...newMoment('effectEnds'), effectName: 'Rage' }]);
 	});
 
+	it('the turn list counts up to the 5th next turn', async () => {
+		const effect = makeEffect([newMoment('turn')]);
+		const { container } = renderTab(effect);
+
+		await fireEvent.change(field(container, 'span'), { target: { value: 'nextTurn:2' } });
+
+		expect(saved(effect)).toEqual([{ ...newMoment('turn'), value: 2 }]);
+	});
+
+	it('"take damage" turns a damage type on', async () => {
+		const nimble = CONFIG.NIMBLE as { damageTypes?: unknown };
+		const before = nimble.damageTypes;
+		nimble.damageTypes = { fire: 'Fire', radiant: 'Radiant' };
+		const takeDamage = { ...newMoment('event'), event: 'takeDamage' as const };
+		const effect = makeEffect([takeDamage]);
+		const { getByRole } = renderTab(effect);
+
+		await fireEvent.click(getByRole('button', { name: 'Fire' }));
+
+		expect(saved(effect)).toEqual([{ ...takeDamage, damageTypes: ['fire'] }]);
+		nimble.damageTypes = before;
+	});
+
+	it('"gain" picks a condition, or shows a name field for an effect', async () => {
+		const config = CONFIG as { statusEffects?: unknown };
+		const before = config.statusEffects;
+		config.statusEffects = [{ id: 'incapacitated', name: 'Incapacitated' }];
+		const gain = { ...newMoment('event'), event: 'gain' as const };
+		const effect = makeEffect([gain]);
+		const { container } = renderTab(effect);
+		const pick = container.querySelector(
+			`[aria-label="${word(`${LU}.gainLabel`)}"]`,
+		) as HTMLSelectElement;
+
+		await fireEvent.change(pick, { target: { value: 'incapacitated' } });
+		expect(saved(effect)).toEqual([{ ...gain, effectName: 'incapacitated' }]);
+
+		await fireEvent.change(pick, { target: { value: '__named' } });
+		expect(field(container, 'effectName')).not.toBeNull();
+		config.statusEffects = before;
+	});
+
 	it('the trash removes that moment only', async () => {
 		const effect = makeEffect([newMoment('turn'), newMoment('time')]);
 		const { container } = renderTab(effect);

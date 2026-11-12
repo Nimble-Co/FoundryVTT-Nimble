@@ -44,14 +44,32 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
+	const NAMED = '__named';
+	const CONDITIONS = (CONFIG.statusEffects ?? [])
+		.map((entry) => ({ id: entry.id, label: localize(String(entry.name ?? entry.id)) }))
+		.sort((a, b) => a.label.localeCompare(b.label));
+	const isCondition = (name: string) => CONDITIONS.some((each) => each.id === name);
 
-	const state = createEffectLastsUntilTabState(() => effect);
-	const { change, remove, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = state;
-	const moments = $derived(state.moments);
-	const escapeData = $derived(state.escape);
-	const coreDuration = $derived(state.coreDuration);
-	const statusDefault = $derived(state.statusDefault);
-	const untilRemoved = $derived(state.untilRemoved);
+	/** Rows where "an effect named..." is picked and no name is typed yet. */
+	let namedRows = $state<Record<number, boolean>>({});
+
+	function gainChoiceOf(index: number, name: string): string {
+		if (isCondition(name)) return name;
+		return name || namedRows[index] ? NAMED : '';
+	}
+
+	function pickGain(index: number, moment: (typeof moments)[number], choice: string) {
+		namedRows[index] = choice === NAMED;
+		return change(index, withEffectName(moment, choice === NAMED ? '' : choice));
+	}
+
+	const tab = createEffectLastsUntilTabState(() => effect);
+	const { change, remove, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = tab;
+	const moments = $derived(tab.moments);
+	const escapeData = $derived(tab.escape);
+	const coreDuration = $derived(tab.coreDuration);
+	const statusDefault = $derived(tab.statusDefault);
+	const untilRemoved = $derived(tab.untilRemoved);
 
 	function spanLabel(choice: SpanChoice): string {
 		const [span, count] = choice.split(':');
@@ -201,6 +219,31 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 									<option value={event}>{eventLabel(event)}</option>
 								{/each}
 							</select>
+							{#if moment.event === 'gain'}
+								{@const choice = gainChoiceOf(index, moment.effectName)}
+								<select
+									aria-label={word('gainLabel')}
+									value={choice}
+									onchange={({ currentTarget }) => pickGain(index, moment, currentTarget.value)}
+								>
+									<option value="">{word('gainPick')}</option>
+									{#each CONDITIONS as condition (condition.id)}
+										<option value={condition.id}>{condition.label}</option>
+									{/each}
+									<option value={NAMED}>{word('gainNamed')}</option>
+								</select>
+								{#if choice === NAMED}
+									<input
+										class="nimble-lasts-until__name"
+										type="text"
+										aria-label={word('fields.effectName')}
+										placeholder={word('effectNamePlaceholder')}
+										value={moment.effectName}
+										onchange={({ currentTarget }) =>
+											change(index, withEffectName(moment, currentTarget.value))}
+									/>
+								{/if}
+							{/if}
 							{#if moment.event === 'takeDamage'}
 								<span>{word('ofType')}</span>
 								<span

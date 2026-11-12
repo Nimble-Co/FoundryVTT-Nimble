@@ -61,7 +61,7 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		if (moments.length || !(getEffect().parent instanceof Item)) return null;
 		const found = statusLastsUntil(getEffect().reactive.statuses ?? []);
 		if (!found) return null;
-		const entry = CONFIG.statusEffects.find((each) => each.id === found.status);
+		const entry = (CONFIG.statusEffects ?? []).find((each) => each.id === found.status);
 		return {
 			condition: localize(String(entry?.name ?? found.status)),
 			lasts: describeLastsUntil({

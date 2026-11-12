@@ -285,6 +285,40 @@ describe('take damage of a type', () => {
 	});
 });
 
+describe('gain an effect or a condition', () => {
+	const holder = { name: 'Grappler' };
+	const gain = (effectName: string) =>
+		moment({ kind: 'event', who: 'holder', event: 'gain', effectName });
+	const gained = (effectName: string, statuses: string[]): LastsUntilCheck => ({
+		type: 'event',
+		event: 'gain',
+		actor: holder,
+		effectName,
+		statuses,
+	});
+	const applied = () => subject({}, { holder });
+
+	it('a condition is matched by its status, with its aliases', () => {
+		expect(
+			momentReached(
+				gain('incapacitated'),
+				applied(),
+				gained('Stunned', ['stunned', 'incapacitated']),
+			),
+		).toBe(true);
+		expect(momentReached(gain('incapacitated'), applied(), gained('Prone', ['prone']))).toBe(false);
+	});
+
+	it('an effect is matched by its name', () => {
+		expect(momentReached(gain('FLAWED'), applied(), gained('Flawed', []))).toBe(true);
+		expect(momentReached(gain('FLAWED'), applied(), gained('Rage', []))).toBe(false);
+	});
+
+	it('a blank name is never reached', () => {
+		expect(momentReached(gain(''), applied(), gained('', []))).toBe(false);
+	});
+});
+
 describe('time moments', () => {
 	it('"for 1 round" lasts until the same place in the turn order one round later', () => {
 		const oneRound = moment({ kind: 'time', value: 1, units: 'rounds' });

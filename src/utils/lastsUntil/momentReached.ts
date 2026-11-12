@@ -58,6 +58,10 @@ export type LastsUntilCheck =
 			effectName?: string | null;
 			/** The types that dealt damage, for "take damage". */
 			damageTypes?: readonly string[] | null;
+			/** For "gain": the statuses of the new effect, with the statuses they alias. */
+			statuses?: readonly string[] | null;
+			/** For "gain": the new effect, which its own moments never end. */
+			gained?: object | null;
 	  };
 
 /** What a moment reads of its effect, resolved when the check runs. */
@@ -208,6 +212,11 @@ function eventMomentReached(
 	}
 	if (moment.event === 'useAgain') {
 		return !!subject.origin && check.itemUuid === subject.origin;
+	}
+	if (moment.event === 'gain') {
+		const wanted = moment.effectName.trim().toLowerCase();
+		const gained = sameName(check.effectName, wanted) || (check.statuses ?? []).includes(wanted);
+		if (!wanted || !gained) return false;
 	}
 	if (moment.event === 'takeDamage' && moment.damageTypes?.length) {
 		const dealt = check.damageTypes ?? [];

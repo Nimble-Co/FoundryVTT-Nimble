@@ -44,6 +44,17 @@ function read(moments: Moment[], reader: DescribeInput['reader'], hasEscape = fa
 describe('describeLastsUntil', () => {
 	const endOfTheirNextTurn = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
 
+	it('reads "gain" with the name of the effect', () => {
+		const gain = {
+			...blank,
+			kind: 'event' as const,
+			who: 'source' as const,
+			event: 'gain' as const,
+			effectName: 'FLAWED',
+		};
+		expect(read([gain], CARD_TARGETS_READER)).toBe('Until you gain FLAWED');
+	});
+
 	it('reads "take damage" with its types', () => {
 		const typed = {
 			...blank,

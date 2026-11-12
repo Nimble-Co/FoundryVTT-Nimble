@@ -139,6 +139,23 @@ function takeBackEffectTempHp(
 	if (given) void takeBackTempHp(effect.parent as never, given);
 }
 
+/** The statuses of a new effect, with each status they count as (Stunned counts as Incapacitated). */
+function gainedStatuses(effect: ActiveEffect): string[] {
+	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<string, readonly string[]>;
+	const statuses = [...(effect.statuses ?? [])];
+	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
+}
+
+function onCreateEffect(effect: ActiveEffect): void {
+	if (!isActiveGm() || !(effect.parent instanceof Actor) || !effect.active) return;
+	fireEvent('gain', effect.parent, {
+		effectName: effect.name,
+		statuses: gainedStatuses(effect),
+		gained: effect,
+		effect: effect.name,
+	});
+}
+
 function onDeleteEffect(
 	effect: ActiveEffect,
 	options?: Record<string, unknown>,
@@ -246,6 +263,7 @@ export default function registerLastsUntilHooks(): void {
 	on('updateWorldTime', onWorldTime);
 	on('updateActor', onUpdateActor);
 	on('updateToken', onUpdateToken);
+	on('createActiveEffect', onCreateEffect);
 	on('deleteActiveEffect', onDeleteEffect);
 	on(systemHookName('useItem'), onUseItem);
 	on(systemHookName('damageApplied'), onDamageApplied);
