@@ -4,7 +4,7 @@ title: "Effects and Lasts Until"
 
 # Effects and Lasts Until
 
-An effect is something that is on a creature for a time: a condition, a buff from a spell, a mark from a feature. Each effect has its own window, where you set what it does and how long it lasts.
+An effect is something that is on a creature for a time: a condition, a change to its numbers from a spell, a mark from a feature. Each effect has its own window, where you set what it does and how long it lasts.
 
 ## Open the effect window
 
