@@ -433,9 +433,18 @@ describe('events', () => {
 	it('damage is damage taken by the target', () => {
 		const target = { name: 'Ogre' };
 
-		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor: null });
+		hook(systemHookName('damageApplied'))({
+			targetActor: target,
+			sourceActor: null,
+			damageTypes: ['fire'],
+		});
 
-		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target, {}, null);
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'takeDamage',
+			target,
+			{ damageTypes: ['fire'] },
+			null,
+		);
 	});
 
 	it('damage applied from a card has that card as the host of both events', () => {
@@ -446,7 +455,7 @@ describe('events', () => {
 		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor, card });
 
 		expect(fireEventMock.mock.calls).toEqual([
-			['takeDamage', target, {}, card],
+			['takeDamage', target, { damageTypes: [] }, card],
 			['nextDamage', sourceActor, {}, card],
 		]);
 	});

@@ -257,6 +257,34 @@ describe('round moments', () => {
 	});
 });
 
+describe('take damage of a type', () => {
+	const holder = { name: 'Ogre' };
+	const fireOrRadiant = moment({
+		kind: 'event',
+		who: 'holder',
+		event: 'takeDamage',
+		damageTypes: ['fire', 'radiant'],
+	});
+	const hit = (damageTypes: string[]): LastsUntilCheck => ({
+		type: 'event',
+		event: 'takeDamage',
+		actor: holder,
+		damageTypes,
+	});
+
+	it('ends on damage of one of its types only', () => {
+		const applied = subject({}, { holder });
+
+		expect(momentReached(fireOrRadiant, applied, hit(['cold']))).toBe(false);
+		expect(momentReached(fireOrRadiant, applied, hit(['cold', 'radiant']))).toBe(true);
+	});
+
+	it('with no types, any damage ends it', () => {
+		const anyDamage = moment({ kind: 'event', who: 'holder', event: 'takeDamage' });
+		expect(momentReached(anyDamage, subject({}, { holder }), hit(['cold']))).toBe(true);
+	});
+});
+
 describe('time moments', () => {
 	it('"for 1 round" lasts until the same place in the turn order one round later', () => {
 		const oneRound = moment({ kind: 'time', value: 1, units: 'rounds' });

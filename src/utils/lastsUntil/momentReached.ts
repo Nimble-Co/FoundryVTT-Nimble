@@ -18,6 +18,8 @@ export interface Moment {
 	who: EventSubject | null;
 	event: LastsUntilEvent | null;
 	effectName: string;
+	/** "Take damage" of these types only. Empty or missing: any type. */
+	damageTypes?: string[];
 }
 
 /** Core's `start` of an effect: the turn in progress when it was applied. */
@@ -54,6 +56,8 @@ export type LastsUntilCheck =
 			actor: object | null;
 			itemUuid?: string | null;
 			effectName?: string | null;
+			/** The types that dealt damage, for "take damage". */
+			damageTypes?: readonly string[] | null;
 	  };
 
 /** What a moment reads of its effect, resolved when the check runs. */
@@ -204,6 +208,10 @@ function eventMomentReached(
 	}
 	if (moment.event === 'useAgain') {
 		return !!subject.origin && check.itemUuid === subject.origin;
+	}
+	if (moment.event === 'takeDamage' && moment.damageTypes?.length) {
+		const dealt = check.damageTypes ?? [];
+		if (!moment.damageTypes.some((type) => dealt.includes(type))) return false;
 	}
 	const creature = moment.who === 'source' ? subject.source : subject.holder;
 	return creature !== null && check.actor === creature;

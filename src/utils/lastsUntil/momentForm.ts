@@ -48,6 +48,7 @@ const BLANK: Moment = {
 	who: null,
 	event: null,
 	effectName: '',
+	damageTypes: [],
 };
 
 export function newMoment(kind: NewMomentKind): Moment {
@@ -132,7 +133,15 @@ export function withSubject(moment: Moment, subject: EventRowSubject): Moment {
 }
 
 export function withEvent(moment: Moment, event: LastsUntilEvent): Moment {
-	return { ...moment, event };
+	return event === 'takeDamage' ? { ...moment, event } : { ...moment, event, damageTypes: [] };
+}
+
+/** Turns one damage type of "take damage" on or off. None on is any type. */
+export function withDamageType(moment: Moment, type: string): Moment {
+	const on = new Set(moment.damageTypes ?? []);
+	if (on.has(type)) on.delete(type);
+	else on.add(type);
+	return { ...moment, damageTypes: [...on] };
 }
 
 export function withEffectName(moment: Moment, effectName: string): Moment {

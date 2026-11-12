@@ -84,6 +84,10 @@ const momentSchema = () =>
 		who: nullableChoice(EVENT_SUBJECTS),
 		event: nullableChoice(LASTS_UNTIL_EVENTS),
 		effectName: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		damageTypes: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, blank: false }),
+			{ required: true, nullable: false, initial: () => [] },
+		),
 	});
 
 const effectSchema = () => ({

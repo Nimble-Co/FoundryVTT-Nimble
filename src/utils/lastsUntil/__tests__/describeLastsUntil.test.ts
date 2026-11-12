@@ -44,6 +44,17 @@ function read(moments: Moment[], reader: DescribeInput['reader'], hasEscape = fa
 describe('describeLastsUntil', () => {
 	const endOfTheirNextTurn = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
 
+	it('reads "take damage" with its types', () => {
+		const typed = {
+			...blank,
+			kind: 'event' as const,
+			who: 'holder' as const,
+			event: 'takeDamage' as const,
+			damageTypes: ['fire', 'radiant'],
+		};
+		expect(read([typed], CARD_TARGETS_READER)).toBe('Until they take fire or radiant damage');
+	});
+
 	it('reads a counted turn as "2nd next turn"', () => {
 		const second = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
 		expect(read([second], CARD_TARGETS_READER)).toBe('Until the end of their 2nd next turn');

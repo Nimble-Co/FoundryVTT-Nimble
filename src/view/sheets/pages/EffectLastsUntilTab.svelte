@@ -15,6 +15,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		spanChoices,
 		withBoundary,
 		withClock,
+		withDamageType,
 		withEffectName,
 		withEvent,
 		withSpanChoice,
@@ -22,6 +23,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		withUnits,
 		withValue,
 	} from '#utils/lastsUntil/momentForm.js';
+	import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.js';
 	import localize from '#utils/localize.js';
 	import {
 		CLOCKS,
@@ -41,6 +43,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	let { effect }: EffectTabProps = $props();
 
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
+	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
 
 	const state = createEffectLastsUntilTabState(() => effect);
 	const { change, remove, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = state;
@@ -198,6 +201,25 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 									<option value={event}>{eventLabel(event)}</option>
 								{/each}
 							</select>
+							{#if moment.event === 'takeDamage'}
+								<span>{word('ofType')}</span>
+								<span
+									class="nimble-lasts-until__saves nimble-lasts-until__saves--wrap"
+									role="group"
+									aria-label={word('damageTypesLabel')}
+								>
+									{#each DAMAGE_TYPES as type (type)}
+										<button
+											class="nimble-lasts-until__save"
+											type="button"
+											aria-pressed={moment.damageTypes?.includes(type) ?? false}
+											onclick={() => change(index, withDamageType(moment, type))}
+										>
+											{getDamageTypeLabel(type)}
+										</button>
+									{/each}
+								</span>
+							{/if}
 						{/if}
 					{/if}
 				</span>
@@ -340,6 +362,10 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		&__saves {
 			display: inline-flex;
 			gap: 0.25rem;
+
+			&--wrap {
+				flex-wrap: wrap;
+			}
 		}
 
 		&__save {

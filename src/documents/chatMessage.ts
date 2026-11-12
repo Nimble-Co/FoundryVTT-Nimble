@@ -125,6 +125,8 @@ interface DamageApplicationTarget {
 	actor: HpMutableActor;
 	adjustedDamage: number;
 	usedVulnerabilities: HeldChange[];
+	/** The damage types that dealt more than 0 to this target. */
+	damageTypes: string[];
 }
 
 /**
@@ -770,6 +772,13 @@ function buildDamageApplicationPlan(params: {
 			actor,
 			adjustedDamage: resolved.total,
 			usedVulnerabilities: resolved.usedVulnerabilities,
+			damageTypes: [
+				...new Set(
+					resolved.components.flatMap((part) =>
+						part.damageType && part.adjustedDamage > 0 ? [part.damageType] : [],
+					),
+				),
+			],
 		});
 	}
 
@@ -1404,6 +1413,7 @@ class NimbleChatMessage extends ChatMessage {
 				sourceActor,
 				targetActor: target.actor,
 				card: this,
+				damageTypes: target.damageTypes,
 				isCritical: systemData.isCritical,
 				isMiss: systemData.isMiss,
 				discardedCritTriggers: systemData.discardedCritTriggers === true,

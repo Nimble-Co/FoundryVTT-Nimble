@@ -177,10 +177,16 @@ function onDamageApplied(payload: {
 	sourceActor?: Actor | null;
 	card?: { id?: string | null; speaker?: ChatMessage['speaker'] } | null;
 	isMiss?: boolean;
+	damageTypes?: readonly string[];
 }): void {
 	if (payload?.isMiss) return;
 	const card = payload?.card ?? null;
-	fireEvent('takeDamage', payload?.targetActor ?? null, {}, card);
+	fireEvent(
+		'takeDamage',
+		payload?.targetActor ?? null,
+		{ damageTypes: payload.damageTypes ?? [] },
+		card,
+	);
 	const dealer = card?.speaker
 		? (ChatMessage.getSpeakerActor(card.speaker) ?? payload.sourceActor)
 		: payload?.sourceActor;

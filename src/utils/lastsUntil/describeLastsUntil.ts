@@ -1,5 +1,6 @@
 import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
+import getDamageTypeLabel from '../damage/getDamageTypeLabel.js';
 import { isRoundSpan } from './momentForm.js';
 import { type Moment, turnCount } from './momentReached.js';
 
@@ -174,8 +175,16 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.combatEnds`) });
 	}
 	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
+	const types = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
+	const action = types.length
+		? input.format(`${WORDS}.typedDamage.${person.kind === 'named' ? 'third' : 'base'}`, {
+				types: types
+					.map((type) => getDamageTypeLabel(type).toLocaleLowerCase())
+					.join(input.localize(`${WORDS}.orWord`)),
+			})
+		: verb(event, person, input);
 	return input.format(`${WORDS}.until`, {
-		moment: `${subjectWord(person, input)} ${verb(event, person, input)}`,
+		moment: `${subjectWord(person, input)} ${action}`,
 	});
 }
 

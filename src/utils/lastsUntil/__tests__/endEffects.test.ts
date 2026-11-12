@@ -29,6 +29,7 @@ const UNTIL_THEY_ATTACK: Moment = {
 	who: 'holder',
 	event: 'attack',
 	effectName: '',
+	damageTypes: [],
 };
 
 function makeHolder(uuid: string, name: string) {

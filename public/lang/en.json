@@ -3972,6 +3972,8 @@
 				"nextRound": "the next round"
 			},
 			"nextTurnCount": { "2": "2nd next turn", "3": "3rd next turn", "4": "4th next turn", "5": "5th next turn" },
+			"typedDamage": { "base": "take {types} damage", "third": "takes {types} damage" },
+			"orWord": " or ",
 			"nextHero": "the next hero's turn",
 			"anyTurn": "the",
 			"your": "your",
@@ -4116,6 +4118,8 @@
 					"add": "Add a moment"
 				},
 				"effectNamePlaceholder": "Rage",
+				"ofType": "of a type:",
+				"damageTypesLabel": "Damage types. None on is any type.",
 				"remove": "Remove moment {number}"
 			},
 			"escape": {

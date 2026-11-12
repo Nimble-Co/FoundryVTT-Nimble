@@ -74,6 +74,7 @@ export function endingMoment(
 		who: found.who ?? null,
 		event: found.event ?? null,
 		effectName: found.effectName ?? '',
+		damageTypes: [...(found.damageTypes ?? [])],
 	};
 }
 
