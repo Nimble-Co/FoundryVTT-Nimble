@@ -4196,6 +4196,9 @@
 				"remove": "Remove change {number}",
 				"change": "Change {number}",
 				"none": "No changes."
+			},
+			"changeTypes": {
+				"multiplyDown": "Multiply, round down"
 			}
 		},
 		"sheets": {

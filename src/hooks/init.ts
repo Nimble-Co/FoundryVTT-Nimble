@@ -6,6 +6,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import { registerNimbleDieModifiers } from '../dice/nimbleDieModifiers.js';
 import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
 import { NimbleActiveEffect } from '../documents/activeEffect/activeEffect.js';
+import { registerMultiplyDownChange } from '../documents/activeEffect/multiplyDownChange.js';
 import ActorProxy from '../documents/actor/actorProxy.js';
 import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
 import { NimbleChatMessage } from '../documents/chatMessage.js';
@@ -73,6 +74,7 @@ export default function init() {
 	// Core's create dialog preselects this type.
 	(CONFIG.ActiveEffect as { defaultType?: string }).defaultType = NIMBLE_EFFECT_TYPE;
 	configureEffectExpiry();
+	registerMultiplyDownChange();
 	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
 	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
 	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;
