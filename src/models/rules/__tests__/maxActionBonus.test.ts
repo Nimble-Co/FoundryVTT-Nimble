@@ -10,9 +10,13 @@ function makeActor(maxActionBonus?: number) {
 	};
 }
 
-function makeRule(value: string, actor: ReturnType<typeof makeActor>) {
+function makeRule(
+	value: string,
+	actor: ReturnType<typeof makeActor>,
+	{ passes = true, isEmbedded = true } = {},
+) {
 	const item = {
-		isEmbedded: true,
+		isEmbedded,
 		actor,
 		name: 'Haste',
 		uuid: 'Item.haste',
@@ -33,7 +37,7 @@ function makeRule(value: string, actor: ReturnType<typeof makeActor>) {
 	(rule as { value: string }).value = value;
 	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
-		get: () => ({ size: 0, test: () => true }),
+		get: () => ({ size: passes ? 0 : 1, test: () => passes }),
 		configurable: true,
 	});
 	return rule;
@@ -44,6 +48,16 @@ describe('MaxActionBonusRule', () => {
 		const actor = makeActor(1);
 		makeRule('1', actor).afterPrepareData();
 		expect(actor.system.attributes.maxActionBonus).toBe(2);
+	});
+
+	it('adds nothing when the rule is off, its predicate fails, or it is not on a creature', () => {
+		const actor = makeActor(1);
+		const off = makeRule('1', actor);
+		off.disabled = true;
+		off.afterPrepareData();
+		makeRule('1', actor, { passes: false }).afterPrepareData();
+		makeRule('1', actor, { isEmbedded: false }).afterPrepareData();
+		expect(actor.system.attributes.maxActionBonus).toBe(1);
 	});
 
 	it('the combatant action max has the bonus of its creature', () => {

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { SYSTEM_ID, systemHookName } from '#system';
 
 const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
@@ -353,9 +353,12 @@ describe('events', () => {
 	});
 
 	it('a new effect is a gain of its name and its statuses, with their aliases', () => {
-		(CONFIG.NIMBLE as { conditionAliasedConditions?: unknown }).conditionAliasedConditions = {
-			stunned: ['incapacitated'],
-		};
+		const nimble = CONFIG.NIMBLE as { conditionAliasedConditions?: unknown };
+		const aliases = nimble.conditionAliasedConditions;
+		onTestFinished(() => {
+			nimble.conditionAliasedConditions = aliases;
+		});
+		nimble.conditionAliasedConditions = { stunned: ['incapacitated'] };
 		const holder = Object.create(Actor.prototype);
 		const effect = {
 			parent: holder,

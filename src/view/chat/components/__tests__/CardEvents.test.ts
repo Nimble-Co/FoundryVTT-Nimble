@@ -180,7 +180,8 @@ describe('CardEvents', () => {
 		const { unmount } = renderEvents(makeCard([saveLine('waiting')]));
 
 		expect(screen.queryByRole('button')).toBeNull();
-		expect(screen.getByRole('status')).toHaveTextContent('Waiting for Tessa');
+		expect(screen.getByText('Waiting for Tessa')).toBeInTheDocument();
+		expect(screen.queryByRole('status')).toBeNull();
 		unmount();
 
 		renderEvents(makeCard([saveLine('kept')]));

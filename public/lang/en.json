@@ -1516,7 +1516,7 @@
 		"healingTypes": {
 			"healing": "Healing",
 			"tempHealing": "Temporary Healing",
-			"tempHealingNotGranted": "{name} keeps their own {temp} temp HP, which is not less than {amount}."
+			"tempHealingNotGranted": "{name} keeps their {temp} temp HP in place of the new {amount}."
 		},
 		"languages": {
 			"common": "Common",

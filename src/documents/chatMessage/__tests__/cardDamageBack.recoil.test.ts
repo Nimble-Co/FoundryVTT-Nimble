@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CardDamageBack, type DamageBackRecord } from '../cardDamageBack.js';
 
 describe('damage recoil on the one who deals the damage', () => {
@@ -19,9 +19,14 @@ describe('damage recoil on the one who deals the damage', () => {
 		update.mock.calls[0]?.[0]?.['system.damageBack'] as DamageBackRecord[];
 
 	let automatic = true;
+	let settings: unknown;
 	beforeEach(() => {
 		automatic = true;
+		settings = (globalThis as any).game.settings;
 		(globalThis as any).game.settings = { get: () => automatic };
+	});
+	afterEach(() => {
+		(globalThis as any).game.settings = settings;
 	});
 
 	it('reads the active recoil rules of the attacker before the damage', () => {

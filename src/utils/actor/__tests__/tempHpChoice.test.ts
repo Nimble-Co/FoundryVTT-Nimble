@@ -53,6 +53,8 @@ describe('the temp HP choice', () => {
 		await chooseTempHp({ id: 'm1' }, event, false);
 
 		expect(tessa.update).not.toHaveBeenCalled();
+		expect(tessa.frost.update).not.toHaveBeenCalled();
+		expect(tessa.older.update).not.toHaveBeenCalled();
 		expect(replaceCardEvent).toHaveBeenCalledWith(
 			{ id: 'm1' },
 			event.id,
@@ -80,8 +82,19 @@ describe('the temp HP choice', () => {
 		);
 	});
 
+	it('Take with no effect that gave it sets the amount and clears the temp HP of every effect', async () => {
+		const event = tempHpChoiceEvent(tessa, { temp: 5, amount: 3 }, null, 7);
+		await chooseTempHp({ id: 'm1' }, event, true);
+
+		expect(tessa.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 3 });
+		expect(tessa.older.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		expect(tessa.frost.update).not.toHaveBeenCalled();
+	});
+
 	it('a choice already made is not made again', async () => {
 		const event = { ...line(), action: { ...line().action, state: 'kept' } } as never;
 		expect(await chooseTempHp({ id: 'm1' }, event, true)).toBe(false);
+		expect(tessa.update).not.toHaveBeenCalled();
+		expect(replaceCardEvent).not.toHaveBeenCalled();
 	});
 });

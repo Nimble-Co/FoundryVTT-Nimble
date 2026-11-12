@@ -24,6 +24,11 @@ describe('DamageRecoilRule', () => {
 		expect(makeRule().recoilFor(0)).toBe(0);
 	});
 
+	it('is 0 when the rule is off or its predicate fails', () => {
+		expect(makeRule({ disabled: true }).recoilFor(7)).toBe(0);
+		expect(makeRule({ predicate: { size: 1, test: () => false } }).recoilFor(7)).toBe(0);
+	});
+
 	it('is 0 on an item that is not on a creature', () => {
 		expect(makeRule({}, false).recoilFor(7)).toBe(0);
 	});

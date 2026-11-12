@@ -101,7 +101,7 @@
 								{localize('NIMBLE.chat.saveRequest.roll')}
 							</button>
 						{:else}
-							<span class="nimble-card-events__back" role="status">
+							<span class="nimble-card-events__back">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.waitingFor', { name: request.holderName })}
 							</span>
@@ -119,6 +119,7 @@
 										name: choice.holderName,
 										amount: String(choice.had),
 									})}
+									aria-busy={isBusy(event.id)}
 									aria-disabled={isBusy(event.id)}
 									onclick={() => choose(event, false)}
 								>
@@ -131,6 +132,7 @@
 										name: choice.holderName,
 										amount: String(choice.amount),
 									})}
+									aria-busy={isBusy(event.id)}
 									aria-disabled={isBusy(event.id)}
 									onclick={() => choose(event, true)}
 								>
@@ -138,7 +140,7 @@
 								</button>
 							</span>
 						{:else}
-							<span class="nimble-card-events__back" role="status">
+							<span class="nimble-card-events__back">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.waitingFor', { name: choice.holderName })}
 							</span>

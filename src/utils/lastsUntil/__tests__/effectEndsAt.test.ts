@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import registerConditionsConfig from '../../../config/registerConditionsConfig.js';
 import { effectEndsAt, turnsSeenAfter } from '../effectEndsAt.js';
 import { seatOf } from '../effectSubject.js';
@@ -214,7 +215,7 @@ describe('turnsSeenAfter', () => {
 	});
 
 	it('the turn that reaches the count ends the effect and counts nothing', () => {
-		const effect = makeEffect({ lastsUntil: [second], flags: { nimble: { turnsSeen: [1] } } });
+		const effect = makeEffect({ lastsUntil: [second], flags: { [SYSTEM_ID]: { turnsSeen: [1] } } });
 
 		expect(effectEndsAt(effect as never, turnEnd(goblinCombatant, 2), combat)).toBe(true);
 		expect(turnsSeenAfter(effect as never, turnEnd(goblinCombatant, 2), combat)).toBeNull();

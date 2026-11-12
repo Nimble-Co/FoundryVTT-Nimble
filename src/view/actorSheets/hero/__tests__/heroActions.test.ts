@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { baseMaxActions, mayAddAction } from '../heroActions.js';
 
-describe('the action max of the hero sheet', () => {
+describe('the action max of the character sheet', () => {
 	it('adds what the rules of the creature add', () => {
 		expect(baseMaxActions({ max: 3 })).toBe(3);
 		expect(baseMaxActions({ max: 3 }, 1)).toBe(4);

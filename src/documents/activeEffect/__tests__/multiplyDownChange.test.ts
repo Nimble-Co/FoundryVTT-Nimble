@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import {
 	applyMultiplyDown,
 	MULTIPLY_DOWN_CHANGE,
@@ -41,6 +41,12 @@ describe('applyMultiplyDown', () => {
 
 describe('registerMultiplyDownChange', () => {
 	it('adds the type to the change types core reads', () => {
+		const config = CONFIG.ActiveEffect as { changeTypes?: Record<string, unknown> };
+		const before = config.changeTypes;
+		onTestFinished(() => {
+			config.changeTypes = before;
+		});
+		config.changeTypes = { ...before };
 		registerMultiplyDownChange();
 		const types = (CONFIG.ActiveEffect as { changeTypes?: Record<string, { handler?: unknown }> })
 			.changeTypes;
