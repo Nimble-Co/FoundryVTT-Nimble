@@ -31,6 +31,7 @@
 				abilityKey: data.abilityKey,
 				saveKey: data.saveKey,
 				skillKey: data.skillKey,
+				rollTags: data.rollTags,
 			}),
 		),
 	];

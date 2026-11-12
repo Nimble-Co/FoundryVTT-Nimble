@@ -18,6 +18,8 @@ export interface ActorRollOptions {
 	checkHint?: string | undefined;
 	/** System flags for the card of a roll another card waits on. */
 	cardFlags?: Record<string, unknown> | undefined;
+	/** Tags of this roll for rule predicates, such as `save:keep:concentration`. */
+	rollTags?: string[] | undefined;
 	/** The DC the card reports the result against, when the source of the check gives one. */
 	dc?: number | null | undefined;
 	prompted?: boolean | undefined;

@@ -1,3 +1,4 @@
+import type { ActorRollOptions } from '#documents/actor/actorInterfaces.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, SaveRequestAction } from '#types/cardEvent.d.ts';
 import {
@@ -34,7 +35,7 @@ interface SaverActor {
 	getRollData(): Record<string, unknown>;
 	rollSavingThrowToChat(
 		save: string,
-		options: { dc?: number; cardFlags?: Record<string, unknown> },
+		options: Pick<ActorRollOptions, 'dc' | 'cardFlags' | 'rollTags'>,
 	): Promise<unknown>;
 }
 
@@ -165,7 +166,10 @@ interface SaveCard {
 const LINK_FLAG = 'saveRequest';
 const BOUND_FLAG = 'saveRequestRolls';
 
-/** Rolls the save to chat as a normal save card, so reroll rules and reactions act on it. */
+/**
+ * Rolls the save to chat as a normal save card, so reroll rules and reactions act on it. The
+ * roll has the tags `save:keep` and `save:keep:<status>` for each status of the effect it keeps.
+ */
 export async function rollRequestedSave(card: RequestCard, event: CardEvent): Promise<boolean> {
 	const action = event.action as SaveRequestAction | undefined;
 	if (action?.kind !== 'saveRequest' || action.state !== 'waiting' || !card.id) return false;
@@ -173,9 +177,11 @@ export async function rollRequestedSave(card: RequestCard, event: CardEvent): Pr
 	const holder = holderOfRequest(action);
 	if (!holder) return false;
 	const link: SaveRequestLink = { messageId: card.id, event };
+	const statuses = holder.effects.get(action.effectId)?.statuses ?? [];
 	const made = await holder.rollSavingThrowToChat(action.save, {
 		dc: action.dc,
 		cardFlags: { [LINK_FLAG]: link },
+		rollTags: ['save:keep', ...[...statuses].map((status) => `save:keep:${status}`)],
 	});
 	return !!made;
 }

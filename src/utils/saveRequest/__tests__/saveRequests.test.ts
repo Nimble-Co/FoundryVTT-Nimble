@@ -27,6 +27,7 @@ const concentrating = {
 	name: 'Concentration',
 	img: 'concentration.svg',
 	active: true,
+	statuses: new Set(['concentration']),
 	system: {
 		rules: [
 			{ id: 'r1', type: 'saveOnEvent', event: 'critReceived', saveType: 'strength', saveDC: '10' },
@@ -107,6 +108,7 @@ describe('save requests', () => {
 		expect(tessa.rollSavingThrowToChat).toHaveBeenCalledWith('strength', {
 			dc: 10,
 			cardFlags: { saveRequest: { messageId: 'm1', event: line } },
+			rollTags: ['save:keep', 'save:keep:concentration'],
 		});
 	});
 
