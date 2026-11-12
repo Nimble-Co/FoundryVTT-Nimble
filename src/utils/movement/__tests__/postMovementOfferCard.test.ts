@@ -345,6 +345,47 @@ describe('offerMovement', () => {
 		expect(create).toHaveBeenCalledTimes(1);
 	});
 
+	it('posts its own card when a reader of a whispered offer does not read the host card', async () => {
+		const users = ['gm', 'alice', 'bob'].map((id) => ({ id, isGM: id === 'gm' }));
+		vi.stubGlobal('game', { ...game, user: { ...users[0], isActiveGM: true }, users });
+		try {
+			const card = hostCard({ whisper: ['gm', 'alice'] });
+			await offerMovement(
+				input({ whisper: true, recipients: ['Scene.s.Token.gob', 'Scene.s.Token.ogre'] }),
+				{ card },
+			);
+
+			expect(card.update).not.toHaveBeenCalled();
+			expect(create).toHaveBeenCalledTimes(1);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it.each([
+		['puts a whispered offer on a whispered host card that a reader wrote', 'alice', true],
+		[
+			'posts its own card when the host card was written by someone who is not a reader',
+			'dave',
+			false,
+		],
+	])('%s', async (_name, author, hosted) => {
+		const users = ['gm', 'alice', 'bob', 'dave'].map((id) => ({ id, isGM: id === 'gm' }));
+		vi.stubGlobal('game', { ...game, user: { ...users[0], isActiveGM: true }, users });
+		try {
+			const card = hostCard({ whisper: ['gm', 'alice', 'bob'], author: { id: author } });
+			await offerMovement(
+				input({ whisper: true, recipients: ['Scene.s.Token.gob', 'Scene.s.Token.ogre'] }),
+				{ card },
+			);
+
+			expect(card.update).toHaveBeenCalledTimes(hosted ? 1 : 0);
+			expect(create).toHaveBeenCalledTimes(hosted ? 0 : 1);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it('posts its own card when the host card cannot store offers', async () => {
 		const card = hostCard({ type: 'skillCheck' });
 		await offerMovement(input(), { card });

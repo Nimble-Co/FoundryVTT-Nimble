@@ -110,13 +110,18 @@ function offerEvent(input: MovementOfferCardInput, built: BuiltOffer): CardEvent
 	};
 }
 
-/** A whispered offer goes only on a card that no one else reads. */
+/**
+ * A whispered offer goes only on a card that its readers read, and no one else. The author of the
+ * card reads it too.
+ */
 function readersWithin(card: EventHostCard, whisper: readonly string[]): boolean {
 	if (whisper.length < 1) return true;
-	const readers = card.whisper ?? [];
-	if (readers.length < 1) return false;
+	const readers = new Set((card.whisper ?? []).filter((id): id is string => !!id));
+	if (readers.size < 1) return false;
 	const allowed = new Set(whisper);
-	return readers.every((id) => !!id && allowed.has(id));
+	const author = card.author?.id;
+	if (author && !allowed.has(author)) return false;
+	return [...readers].every((id) => allowed.has(id)) && whisper.every((id) => readers.has(id));
 }
 
 async function placeOnHost(

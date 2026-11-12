@@ -95,6 +95,7 @@ export interface EventHostCard {
 	id?: string | null;
 	type?: string;
 	whisper?: readonly (string | null)[];
+	author?: { id?: string | null; isGM?: boolean } | null;
 	flags?: Record<string, unknown>;
 	update?(changes: object): Promise<unknown>;
 }
