@@ -342,6 +342,15 @@ describe('events', () => {
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
+	it('a Concentration that a new one replaces ends its activity', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Concentrating', statuses: new Set(['concentration']) };
+
+		hook('deleteActiveEffect')(effect, { nimbleConditionReplaced: true });
+
+		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
+	});
+
 	it('a move of the token is a move of its actor', () => {
 		const actor = { name: 'Goblin' };
 

@@ -146,12 +146,12 @@ function onDeleteEffect(
 ): void {
 	takeBackEffectTempHp(effect, options, userId);
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
-	if (options?.[CONDITION_REPLACED_OPTION]) return;
+	// A new Concentration ends the old activity; any other replaced copy only starts again.
+	const concentration = effect.statuses?.has(STATUS_EFFECT_IDS.concentration) ?? false;
+	if (options?.[CONDITION_REPLACED_OPTION] && !concentration) return;
 	const holder = effect.parent;
 	fireEvent('effectEnds', holder, { effectName: effect.name, effect: effect.name });
-	if (effect.statuses?.has(STATUS_EFFECT_IDS.concentration)) {
-		fireEvent('loseConcentration', holder);
-	}
+	if (concentration) fireEvent('loseConcentration', holder);
 }
 
 interface UseItemContext {
