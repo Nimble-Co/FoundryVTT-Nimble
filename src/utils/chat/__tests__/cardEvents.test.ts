@@ -18,6 +18,7 @@ interface TestCard {
 	type: string;
 	timestamp?: number;
 	whisper: string[];
+	author?: { isGM?: boolean };
 	flags: Record<string, { events?: CardEvent[] }>;
 	system: Record<string, unknown>;
 	update: Mock<(changes: object) => Promise<void>>;
@@ -201,7 +202,14 @@ describe('canHost', () => {
 	it('a GM-only line goes only on a card that only GMs read', () => {
 		expect(canHost(makeCard('c'), { gmOnly: true })).toBe(false);
 		expect(canHost(makeCard('c', { whisper: ['gm', 'player'] }), { gmOnly: true })).toBe(false);
-		expect(canHost(makeCard('c', { whisper: ['gm', 'gm2'] }), { gmOnly: true })).toBe(true);
+		expect(
+			canHost(makeCard('c', { whisper: ['gm', 'gm2'], author: { isGM: true } }), { gmOnly: true }),
+		).toBe(true);
+	});
+
+	it('a GM-only line skips a card that a player wrote, as its author reads it too', () => {
+		const card = makeCard('c', { whisper: ['gm', 'gm2'], author: { isGM: false } });
+		expect(canHost(card, { gmOnly: true })).toBe(false);
 	});
 });
 

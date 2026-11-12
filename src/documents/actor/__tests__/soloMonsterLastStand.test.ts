@@ -7,7 +7,13 @@ const g = globalThis as Globals;
 const game = g.game;
 
 function damageCard(whisper: string[]) {
-	return { id: 'attack', whisper, flags: {}, update: vi.fn(async () => undefined) };
+	return {
+		id: 'attack',
+		whisper,
+		author: { isGM: true },
+		flags: {},
+		update: vi.fn(async () => undefined),
+	};
 }
 
 function lastStandItem(description: string) {

@@ -21,6 +21,7 @@ interface EventCard {
 	type?: string;
 	timestamp?: number | null;
 	whisper?: readonly (string | null)[];
+	author?: { isGM?: boolean } | null;
 	flags?: Record<string, unknown>;
 	system?: unknown;
 	update?(changes: object): Promise<unknown>;
@@ -91,12 +92,13 @@ export function gmReaders(): string[] {
 
 /**
  * Whether the card can show a line. A line for the GMs only needs a card that only GMs read; a
- * card whispered to others shows them a placeholder, so its whisper list is who reads it.
+ * card whispered to others shows them a placeholder, so its whisper list is who reads it. The
+ * author of a whispered card reads it too, so a GM wrote it.
  */
 export function canHost(card: EventCard, { gmOnly = false }: { gmOnly?: boolean } = {}): boolean {
 	if (!gmOnly) return true;
 	const readers = card.whisper ?? [];
-	if (readers.length < 1) return false;
+	if (readers.length < 1 || card.author?.isGM !== true) return false;
 	return readers.every((id) => !!id && game.users?.get(id)?.isGM === true);
 }
 
