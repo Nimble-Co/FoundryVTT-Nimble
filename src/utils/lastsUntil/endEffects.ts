@@ -182,15 +182,21 @@ export async function endEffects(
 	}
 }
 
-/** End what `check` ends, on the card of that moment. */
+/**
+ * End what `check` ends, on the card of that moment, and count its turn for the effects that stay.
+ * What ends is read when the check happens, from the combat as it is then. The counts and ends go
+ * one check at a time, so the next check counts from the counts of this one.
+ */
 export function endEffectsAt(
 	check: LastsUntilCheck,
 	moment: EndMoment,
 	combat?: Combat | null,
 ): Promise<void> {
 	const ending = effectsEndingAt(check, combat);
-	void countTurns(check, combat, new Set(ending));
-	return endEffects(ending, moment, { check, combat });
+	return queue.run('at', async () => {
+		await countTurns(check, combat, new Set(ending));
+		await endEffects(ending, moment, { check, combat });
+	});
 }
 
 /** A clock turn that a "2nd next turn" moment counts, and that does not end it, goes on its count. */

@@ -108,7 +108,8 @@ export function effectSubject(
 	};
 }
 
-function turnsSeenOf(effect: ActiveEffect): number[] {
+/** The clock turns each moment counted so far, by moment index. */
+export function turnsSeenOf(effect: ActiveEffect): number[] {
 	const seen = (effect.flags as Record<string, { turnsSeen?: unknown } | undefined> | undefined)?.[
 		SYSTEM_ID
 	]?.turnsSeen;

@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { newMoment } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
@@ -227,6 +228,59 @@ describe('EffectLastsUntilTab', () => {
 		await fireEvent.click(first);
 
 		expect(saved(effect)).toEqual([newMoment('time')]);
+	});
+
+	describe('turn counts', () => {
+		const COUNTS = `flags.${SYSTEM_ID}.turnsSeen`;
+		const counted = (moments: Moment[], turnsSeen: number[]) =>
+			Object.assign(makeEffect(moments), { flags: { [SYSTEM_ID]: { turnsSeen } } });
+		const lastUpdate = (effect: ReturnType<typeof makeEffect>) =>
+			effect.update.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+		const removeRow = async (container: HTMLElement, number: number) => {
+			const buttons = container.querySelectorAll(
+				`[aria-label^="${word(`${LU}.remove`, { number: '1' }).slice(0, -1)}"]`,
+			);
+			await fireEvent.click(buttons[number - 1]);
+		};
+
+		it('the counts below a removed moment move up with their moments, in the same update', async () => {
+			const effect = counted([newMoment('turn'), newMoment('time'), newMoment('turn')], [1, 0, 2]);
+			const { container } = renderTab(effect);
+
+			await removeRow(container, 2);
+
+			expect(lastUpdate(effect)).toEqual({
+				'system.lastsUntil': [newMoment('turn'), newMoment('turn')],
+				[COUNTS]: [1, 2],
+			});
+		});
+
+		it('a removed moment with no count changes no count', async () => {
+			const effect = counted([newMoment('turn'), newMoment('time')], [1]);
+			const { container } = renderTab(effect);
+
+			await removeRow(container, 2);
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
+		it('a count stays while the moment counts the same turns', async () => {
+			const effect = counted([{ ...newMoment('turn'), value: 3 }], [2]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'span'), { target: { value: 'nextTurn:4' } });
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
+		it('a count goes back to 0 when the moment counts other turns', async () => {
+			const effect = counted([{ ...newMoment('turn'), value: 3 }], [2]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'clock'), { target: { value: 'source' } });
+
+			expect(lastUpdate(effect)).toMatchObject({ [COUNTS]: [0] });
+		});
 	});
 
 	it('saves the Escape DC', async () => {

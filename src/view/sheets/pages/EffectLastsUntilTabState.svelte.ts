@@ -1,5 +1,7 @@
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+import { SYSTEM_ID } from '#system';
 import { CARD_TARGETS_READER, describeLastsUntil } from '#utils/lastsUntil/describeLastsUntil.js';
+import { turnsSeenOf } from '#utils/lastsUntil/effectSubject.js';
 import {
 	formEventsOf,
 	type NewMomentKind,
@@ -90,12 +92,32 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		return getEffect().update({ 'system.lastsUntil': next } as never);
 	}
 
+	/** A turn count stays only while the moment counts the same turns. */
 	function change(index: number, next: Moment) {
-		return save(replaceAt(moments, index, next));
+		const seen = turnsSeenOf(getEffect());
+		const before = moments[index];
+		const sameTurns =
+			before?.kind === 'turn' &&
+			next.kind === 'turn' &&
+			before.clock === next.clock &&
+			before.boundary === next.boundary;
+		return getEffect().update({
+			'system.lastsUntil': replaceAt(moments, index, next),
+			...((seen[index] ?? 0) > 0 && !sameTurns
+				? { [`flags.${SYSTEM_ID}.turnsSeen`]: seen.map((count, at) => (at === index ? 0 : count)) }
+				: {}),
+		} as never);
 	}
 
+	/** The turn counts of the moments after a removed moment move up with them. */
 	function remove(index: number) {
-		return save(removeAt(moments, index));
+		const seen = turnsSeenOf(getEffect());
+		return getEffect().update({
+			'system.lastsUntil': removeAt(moments, index),
+			...(seen.length > index
+				? { [`flags.${SYSTEM_ID}.turnsSeen`]: seen.filter((_, at) => at !== index) }
+				: {}),
+		} as never);
 	}
 
 	function add(kind: NewMomentKind | '') {
