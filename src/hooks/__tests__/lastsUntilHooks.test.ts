@@ -200,7 +200,9 @@ describe('combat end', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
-		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combatEnd:combat1' });
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({
+			key: expect.stringMatching(/^combatEnd:combat1:/),
+		});
 	});
 
 	it('checks core durations as combat starts, and a restarted combat can end again', () => {
@@ -215,6 +217,26 @@ describe('combat end', () => {
 			'combatStart',
 			'combatEnd',
 		]);
+	});
+
+	it('gives each start and each end of a restarted combat its own card', () => {
+		const { combat } = makeCombat('combat4');
+
+		hook('updateCombat')(combat, { started: true });
+		hook('updateCombat')(combat, { started: false });
+		hook('updateCombat')(combat, { started: true });
+		hook('updateCombat')(combat, { started: false });
+
+		const keysOf = (type: string) =>
+			endEffectsAtMock.mock.calls
+				.filter(([check]) => (check as { type: string }).type === type)
+				.map(([, moment]) => (moment as { key: string }).key);
+		const starts = keysOf('combatStart');
+		const ends = keysOf('combatEnd');
+		expect(starts).toHaveLength(2);
+		expect(ends).toHaveLength(2);
+		expect(starts[0]).not.toBe(starts[1]);
+		expect(ends[0]).not.toBe(ends[1]);
 	});
 
 	it('ends when a running combat is deleted', () => {

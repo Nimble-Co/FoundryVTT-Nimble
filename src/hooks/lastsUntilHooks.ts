@@ -59,11 +59,12 @@ function onRound(type: 'roundStart' | 'roundEnd') {
 
 const endedCombats = new Set<string>();
 
+/** A combat can start and end again, so each start and each end has its own moment card. */
 function endCombat(combat: Combat): void {
 	if (!isActiveGm() || !combat?.id || endedCombats.has(combat.id)) return;
 	endedCombats.add(combat.id);
 	const moment = {
-		key: `combatEnd:${combat.id}`,
+		key: `combatEnd:${combat.id}:${foundry.utils.randomID()}`,
 		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatEnd' },
 	};
 	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, moment, combat);
@@ -74,7 +75,7 @@ function startCombat(combat: Combat): void {
 	if (!isActiveGm() || !combat.id) return;
 	endedCombats.delete(combat.id);
 	const moment = {
-		key: `combatStart:${combat.id}`,
+		key: `combatStart:${combat.id}:${foundry.utils.randomID()}`,
 		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatStart' },
 	};
 	void endEffectsAt({ type: 'combatStart', combatId: combat.id }, moment, combat);
