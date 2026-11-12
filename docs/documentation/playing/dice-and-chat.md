@@ -142,9 +142,11 @@ When nothing on the chat caused it, such as the start of a turn, the end of a ro
 
 **Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
 
-
-
 A line for the GM only goes on a card that only the GM sees, or in a whisper to the GM. An Interpose against an attack that only the GM sees gets its own message, so the players see it.
+
+::: details When a moment gets a second message
+The lines of one moment, such as the start of one turn, go on one message. The system looks for that message in the last 20 chat messages. When 20 or more messages came after it, the next line of that moment starts a new message.
+:::
 
 ## Targeting and roll visibility
 
