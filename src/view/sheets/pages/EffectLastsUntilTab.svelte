@@ -41,10 +41,12 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 
 	const state = createEffectLastsUntilTabState(() => effect);
-	const { change, remove, add, setEscapeDc, toggleEscapeSave } = state;
+	const { change, remove, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = state;
 	const moments = $derived(state.moments);
 	const escapeData = $derived(state.escape);
 	const coreDuration = $derived(state.coreDuration);
+	const statusDefault = $derived(state.statusDefault);
+	const untilRemoved = $derived(state.untilRemoved);
 
 	function onAdd(event: Event & { currentTarget: HTMLSelectElement }) {
 		const kind = event.currentTarget.value as NewMomentKind | '';
@@ -59,8 +61,21 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 		{#if coreDuration}
 			<p class="nimble-lasts-until__none">{word('coreDuration', { duration: coreDuration })}</p>
+		{:else if statusDefault && !untilRemoved}
+			<p class="nimble-lasts-until__none">{word('statusDefault', statusDefault)}</p>
 		{:else if moments.length === 0}
 			<p class="nimble-lasts-until__none">{word('none')}</p>
+		{/if}
+
+		{#if statusDefault && !coreDuration}
+			<label class="nimble-field">
+				<input
+					type="checkbox"
+					checked={untilRemoved}
+					onchange={({ currentTarget }) => setUntilRemoved(currentTarget.checked)}
+				/>
+				<span class="nimble-field__label">{word('untilRemoved')}</span>
+			</label>
 		{/if}
 
 		{#each moments as moment, index (index)}

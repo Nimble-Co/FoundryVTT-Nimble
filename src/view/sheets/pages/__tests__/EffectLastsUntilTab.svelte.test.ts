@@ -57,6 +57,24 @@ describe('EffectLastsUntilTab', () => {
 		expect(container.textContent).toContain(word(`${LU}.until`));
 	});
 
+	it("reads a condition's own Lasts Until for an effect on an item, never on a creature", () => {
+		const config = CONFIG as unknown as { statusEffects?: unknown };
+		const saved = config.statusEffects;
+		config.statusEffects = [
+			{ id: 'dazed', name: 'Dazed', system: { lastsUntil: [newMoment('turn')] } },
+		];
+		const withStatus = (parent: unknown) =>
+			Object.assign(makeEffect([]), { statuses: new Set(['dazed']), parent });
+		const onItem = renderTab(withStatus(Object.create(Item.prototype)));
+		const onCreature = renderTab(withStatus(Object.create(Actor.prototype)));
+		config.statusEffects = saved;
+
+		expect(onItem.container.textContent).toContain(word(`${LU}.untilRemoved`));
+		expect(onItem.container.textContent).not.toContain(word(`${LU}.none`));
+		expect(onCreature.container.textContent).toContain(word(`${LU}.none`));
+		expect(onCreature.container.textContent).not.toContain(word(`${LU}.untilRemoved`));
+	});
+
 	it('shows an older core duration, which still ends the effect', () => {
 		const { container } = renderTab(makeEffect([], { value: 1, units: 'rounds' }));
 

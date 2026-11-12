@@ -1,4 +1,5 @@
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+import { CARD_TARGETS_READER, describeLastsUntil } from '#utils/lastsUntil/describeLastsUntil.js';
 import {
 	formEventsOf,
 	type NewMomentKind,
@@ -7,6 +8,10 @@ import {
 	replaceAt,
 } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import {
+	untilRemoved as isUntilRemoved,
+	statusLastsUntil,
+} from '#utils/lastsUntil/statusLastsUntil.js';
 import localize from '#utils/localize.js';
 import {
 	ESCAPE_SAVES,
@@ -45,6 +50,32 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
 	const escapeData = $derived(system.escape ?? { dc: '', saves: [...DEFAULT_ESCAPE_SAVES] });
+
+	const untilRemoved = $derived(isUntilRemoved(system));
+
+	/**
+	 * With no moments: the status whose Lasts Until the effect gets once applied, in words. An
+	 * effect on a creature is applied already, so it has only its own moments.
+	 */
+	const statusDefault = $derived.by(() => {
+		if (moments.length || !(getEffect().parent instanceof Item)) return null;
+		const found = statusLastsUntil(getEffect().reactive.statuses ?? []);
+		if (!found) return null;
+		const entry = CONFIG.statusEffects.find((each) => each.id === found.status);
+		return {
+			condition: localize(String(entry?.name ?? found.status)),
+			lasts: describeLastsUntil({
+				moments: found.moments,
+				reader: CARD_TARGETS_READER,
+				localize,
+				format: localize,
+			}),
+		};
+	});
+
+	function setUntilRemoved(on: boolean) {
+		return getEffect().update({ 'system.untilRemoved': on } as never);
+	}
 
 	/** The label of an older core duration, which still ends the effect. */
 	const coreDuration = $derived.by(() => {
@@ -96,6 +127,13 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		get coreDuration() {
 			return coreDuration;
 		},
+		get statusDefault() {
+			return statusDefault;
+		},
+		get untilRemoved() {
+			return untilRemoved;
+		},
+		setUntilRemoved,
 		change,
 		remove,
 		add,

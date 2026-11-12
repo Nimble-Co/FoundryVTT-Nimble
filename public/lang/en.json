@@ -4045,6 +4045,8 @@
 				"until": "Until",
 				"orUntil": "Or until",
 				"none": "No moment: the effect stays until someone removes it.",
+				"statusDefault": "No moment of its own: it ends as {condition} ends. {lasts}.",
+				"untilRemoved": "Stays until someone removes it",
 				"coreDuration": "It also ends after its core duration: {duration}.",
 				"moment": "Moment {number}",
 				"the": "the",

@@ -3,6 +3,7 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import { type Application, newApplicationLastsLonger } from '../lastsUntil/lastsLonger.js';
 import type { Moment } from '../lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
+import { untilRemoved } from '../lastsUntil/statusLastsUntil.js';
 
 /** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
 export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
@@ -201,15 +202,15 @@ function hasCoreDuration(options: ApplyConditionOptions): boolean {
 }
 
 /**
- * The moments of the new effect: the caller's, else the authored effect's. With neither and no
- * core duration, the status entry's own moments stay.
+ * The moments of the new effect: the caller's, else the authored effect's. With neither, no core
+ * duration and no "until removed", the status entry's own moments stay.
  */
 function lastsUntilOf(conditionId: string, options: ApplyConditionOptions): Moment[] {
 	if (options.lastsUntil?.length) return options.lastsUntil;
 	const authored = (options.effectData?.system as { lastsUntil?: Moment[] } | undefined)
 		?.lastsUntil;
 	if (authored?.length) return authored;
-	if (hasCoreDuration(options)) return [];
+	if (hasCoreDuration(options) || untilRemoved(options.effectData?.system)) return [];
 	return findStatusEffectEntry(conditionId)?.system?.lastsUntil ?? [];
 }
 

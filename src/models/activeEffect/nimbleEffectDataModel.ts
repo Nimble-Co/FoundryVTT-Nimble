@@ -107,6 +107,8 @@ const effectSchema = () => ({
 		min: 0,
 	}),
 	minor: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+	/** With no moments: the status's own Lasts Until does not apply, so only removing it ends it. */
+	untilRemoved: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 });
 
 declare namespace NimbleEffectData {
