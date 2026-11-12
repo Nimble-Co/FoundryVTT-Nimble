@@ -132,9 +132,14 @@ function roundsReached(rounds: number, subject: MomentSubject, check: LastsUntil
 	const { start, startSeat } = subject;
 	const countsFromSeat = startSeat !== null && start.combat === check.combatId;
 	if (check.type === 'turnStart') {
-		return countsFromSeat && sameSeat(startSeat, check.seat)
-			? check.round >= (start.round ?? 0) + rounds
-			: false;
+		if (!countsFromSeat || !sameSeat(startSeat, check.seat)) return false;
+		const endRound = (start.round ?? 0) + rounds;
+		if (check.round !== endRound) return check.round > endRound;
+		return !(
+			typeof check.turn === 'number' &&
+			typeof start.turn === 'number' &&
+			check.turn < start.turn
+		);
 	}
 	return !countsFromSeat && check.round >= roundBase(subject, check.combatId) + rounds;
 }

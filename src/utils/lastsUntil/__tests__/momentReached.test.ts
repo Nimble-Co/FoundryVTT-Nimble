@@ -260,6 +260,22 @@ describe('time moments', () => {
 		expect(momentReached(oneRound, atInitiative, roundStart(2))).toBe(true);
 	});
 
+	it('"for 1 round" from a later turn of a solo monster waits for that turn', () => {
+		const oneRound = moment({ kind: 'time', value: 1, units: 'rounds' });
+		const applied = subject({ combatant: 'goblin', round: 1, turn: 2 });
+		const goblinTurn = (round: number, turn: number): LastsUntilCheck => ({
+			type: 'turnStart',
+			combatId: COMBAT,
+			seat: GOBLIN,
+			round,
+			turn,
+		});
+
+		expect(momentReached(oneRound, applied, goblinTurn(2, 0))).toBe(false);
+		expect(momentReached(oneRound, applied, goblinTurn(2, 2))).toBe(true);
+		expect(momentReached(oneRound, applied, goblinTurn(3, 0))).toBe(true);
+	});
+
 	it('"for 2 rounds" counts from the round of the start', () => {
 		const twoRounds = moment({ kind: 'time', value: 2, units: 'rounds' });
 		const applied = subject({ combatant: 'goblin', round: 3 });
