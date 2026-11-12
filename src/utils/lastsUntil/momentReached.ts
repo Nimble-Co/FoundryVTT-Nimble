@@ -213,7 +213,7 @@ function eventMomentReached(
 	if (moment.event === 'useAgain') {
 		return !!subject.origin && check.itemUuid === subject.origin;
 	}
-	if (moment.event === 'gain') {
+	if (moment.event === 'gain' || moment.event === 'applyEffect') {
 		const wanted = moment.effectName.trim().toLowerCase();
 		const gained = sameName(check.effectName, wanted) || (check.statuses ?? []).includes(wanted);
 		if (!wanted || !gained) return false;

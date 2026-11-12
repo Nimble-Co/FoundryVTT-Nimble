@@ -1267,7 +1267,8 @@
 					"nextDamage": "{name} dealt damage",
 					"nextSpell": "{name} cast a tiered spell",
 					"inactiveRound": "{name} went a round with no attack and no new use",
-					"gain": "{name} gained {effect}"
+					"gain": "{name} gained {effect}",
+					"applyEffect": "{name} applied {effect}"
 				}
 			},
 			"expiryEvents": {
@@ -2705,7 +2706,9 @@
 						"wounded": "You are Bloodied",
 						"chargeGained": "You gain a charge",
 						"rest": "You rest",
-						"combatEnd": "Combat ends"
+						"combatEnd": "Combat ends",
+						"gain": "You gain a condition or a named effect",
+						"applyEffect": "You apply a condition or a named effect"
 					}
 				}
 			},
@@ -4071,7 +4074,8 @@
 				"chargeGained": { "base": "gain a charge", "third": "gains a charge" },
 				"rest": { "base": "rest", "third": "rests" },
 				"combatEnd": { "base": "end", "third": "ends" },
-				"gain": { "base": "gain {name}", "third": "gains {name}" }
+				"gain": { "base": "gain {name}", "third": "gains {name}" },
+				"applyEffect": { "base": "apply {name}", "third": "applies {name}" }
 			}
 		},
 		"effectSheet": {
@@ -4149,7 +4153,8 @@
 					"die": "die",
 					"loseConcentration": "lose Concentration",
 					"useAgain": "use this again",
-					"gain": "gain"
+					"gain": "gain",
+					"applyEffect": "apply"
 				},
 				"add": "add a moment...",
 				"addKind": {

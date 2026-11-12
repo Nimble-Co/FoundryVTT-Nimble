@@ -8,6 +8,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	import {
 		eventRowSubject,
 		isRoundSpan,
+		namesAnEffect,
 		NEW_MOMENT_KINDS,
 		type NewMomentKind,
 		type SpanChoice,
@@ -219,7 +220,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 									<option value={event}>{eventLabel(event)}</option>
 								{/each}
 							</select>
-							{#if moment.event === 'gain'}
+							{#if namesAnEffect(moment.event)}
 								{@const choice = gainChoiceOf(index, moment.effectName)}
 								<select
 									aria-label={word('gainLabel')}

@@ -20,6 +20,7 @@ export const HOLDER_FORM_EVENTS = [
 	'zeroHp',
 	'die',
 	'gain',
+	'applyEffect',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** What the user of the item does: "or until you drop to 0 HP". */
@@ -31,7 +32,13 @@ export const SOURCE_FORM_EVENTS = [
 	'loseConcentration',
 	'useAgain',
 	'gain',
+	'applyEffect',
 ] as const satisfies readonly LastsUntilEvent[];
+
+/** The events that name a condition or an effect: "until they gain Prone". */
+export function namesAnEffect(event: LastsUntilEvent | null): boolean {
+	return event === 'gain' || event === 'applyEffect';
+}
 
 /** The "add a moment..." choices. */
 export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds'] as const;
@@ -136,7 +143,7 @@ export function withSubject(moment: Moment, subject: EventRowSubject): Moment {
 
 export function withEvent(moment: Moment, event: LastsUntilEvent): Moment {
 	const damageTypes = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
-	const effectName = event === 'gain' ? moment.effectName : '';
+	const effectName = namesAnEffect(event) ? moment.effectName : '';
 	return { ...moment, event, damageTypes, effectName };
 }
 

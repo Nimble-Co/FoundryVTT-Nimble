@@ -179,8 +179,8 @@ function eventAction(
 	input: DescribeInput,
 ): string {
 	const form = person.kind === 'named' ? 'third' : 'base';
-	if (event === 'gain') {
-		return input.format(`${WORDS}.event.gain.${form}`, {
+	if (event === 'gain' || event === 'applyEffect') {
+		return input.format(`${WORDS}.event.${event}.${form}`, {
 			name: gainedName(moment.effectName, input),
 		});
 	}

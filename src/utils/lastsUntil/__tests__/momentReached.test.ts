@@ -318,6 +318,22 @@ describe('gain an effect or a condition', () => {
 		expect(momentReached(gain(''), applied(), gained('', []))).toBe(false);
 	});
 
+	it('"until you apply" an effect matches its name or a status, as a gain does', () => {
+		const caster = { name: 'Hexbinder' };
+		const apply = moment({
+			kind: 'event',
+			who: 'source',
+			event: 'applyEffect',
+			effectName: 'affliction',
+		});
+		const waiting = subject({}, { holder: caster, source: caster });
+		const applied = (statuses: string[], event: 'applyEffect' | 'gain' = 'applyEffect') =>
+			({ type: 'event', event, actor: caster, effectName: 'Dimmed', statuses }) as LastsUntilCheck;
+		expect(momentReached(apply, waiting, applied(['affliction']))).toBe(true);
+		expect(momentReached(apply, waiting, applied([]))).toBe(false);
+		expect(momentReached(apply, waiting, applied(['affliction'], 'gain'))).toBe(false);
+	});
+
 	it('"until you gain Incapacitated" ends when the source gains it, not the holder', () => {
 		const grappler = { name: 'Ogre' };
 		const grappled = { name: 'Tessa' };

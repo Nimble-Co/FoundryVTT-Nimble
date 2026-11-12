@@ -55,6 +55,17 @@ describe('describeLastsUntil', () => {
 		expect(read([gain], CARD_TARGETS_READER)).toBe('Until you gain FLAWED');
 	});
 
+	it('reads "apply" with the name of the effect', () => {
+		const apply = {
+			...blank,
+			kind: 'event' as const,
+			who: 'source' as const,
+			event: 'applyEffect' as const,
+			effectName: 'Affliction',
+		};
+		expect(read([apply], CARD_TARGETS_READER)).toBe('Until you apply Affliction');
+	});
+
 	it('reads "take damage" with its types', () => {
 		const typed = {
 			...blank,

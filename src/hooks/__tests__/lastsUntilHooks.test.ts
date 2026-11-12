@@ -374,6 +374,30 @@ describe('events', () => {
 		});
 	});
 
+	it('a new effect is an apply by the creature it came from', () => {
+		const holder = Object.create(Actor.prototype);
+		const caster = Object.create(Actor.prototype);
+		const saved = (globalThis as { fromUuidSync?: unknown }).fromUuidSync;
+		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = vi.fn(() => caster);
+		const effect = {
+			parent: holder,
+			name: 'Dimmed',
+			origin: 'Actor.caster',
+			active: true,
+			statuses: new Set<string>(),
+		};
+
+		hook('createActiveEffect')(effect);
+		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = saved;
+
+		expect(fireEventMock).toHaveBeenCalledWith('applyEffect', caster, {
+			effectName: 'Dimmed',
+			statuses: [],
+			gained: effect,
+			effect: 'Dimmed',
+		});
+	});
+
 	it('a move of the token is a move of its actor', () => {
 		const actor = { name: 'Goblin' };
 

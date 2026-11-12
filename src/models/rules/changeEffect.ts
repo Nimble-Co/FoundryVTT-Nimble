@@ -4,8 +4,9 @@ import { NimbleBaseRule } from './base.js';
 
 const WORDS = 'NIMBLE.rules.changeEffect';
 
-// "Another effect ends" needs the other effect's name, which an added moment does not have.
-const ADDABLE_EVENTS = LASTS_UNTIL_EVENTS.filter((event) => event !== 'effectEnds');
+// These events need an effect's name, which an added moment does not have.
+const NAMED_EVENTS = new Set<LastsUntilEvent>(['effectEnds', 'gain', 'applyEffect']);
+const ADDABLE_EVENTS = LASTS_UNTIL_EVENTS.filter((event) => !NAMED_EVENTS.has(event));
 
 function momentsField(field: 'removeMoments' | 'addMoments') {
 	const { fields } = foundry.data;
