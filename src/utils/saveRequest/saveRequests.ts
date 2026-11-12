@@ -1,6 +1,11 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, SaveRequestAction } from '#types/cardEvent.d.ts';
-import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import {
+	addCardEvents,
+	cardEventsOf,
+	cardEventText,
+	replaceCardEvent,
+} from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
@@ -164,6 +169,13 @@ const queue = keyedQueue();
 
 const flagsOf = (card: { flags?: Record<string, unknown> } | null | undefined) =>
 	(card?.flags?.[SYSTEM_ID] ?? {}) as Record<string, unknown>;
+
+/** The words of a save card for the effect that asked for it, or null for any other save. */
+export function requestedSaveNote(saveCard: SaveCard | null | undefined): string | null {
+	const link = flagsOf(saveCard)[LINK_FLAG] as SaveRequestLink | undefined;
+	if (link?.event?.action?.kind !== 'saveRequest') return null;
+	return cardEventText(link.event.text);
+}
 
 /** A flag key for a line id, which has dots. */
 const boundKey = (eventId: string) => eventId.replaceAll('.', '_');

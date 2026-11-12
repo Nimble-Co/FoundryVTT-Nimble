@@ -16,6 +16,7 @@ const {
 	canRollRequest,
 	followSaveRequest,
 	releaseSaveRequest,
+	requestedSaveNote,
 	requestSaves,
 	rollRequestedSave,
 	saveRequestEvents,
@@ -107,6 +108,14 @@ describe('save requests', () => {
 			dc: 10,
 			cardFlags: { saveRequest: { messageId: 'm1', event: line } },
 		});
+	});
+
+	it('a save card names the effect that asked for it', () => {
+		const [line] = saveRequestEvents(tessa as never, 'critReceived', 5);
+		const saveCard = { flags: { [SYSTEM_ID]: { saveRequest: { messageId: 'm1', event: line } } } };
+
+		expect(requestedSaveNote(saveCard)).toBe('Tessa saves to keep Concentration');
+		expect(requestedSaveNote({ flags: {} })).toBeNull();
 	});
 
 	it('a line that has its save card is rolled no more', async () => {
