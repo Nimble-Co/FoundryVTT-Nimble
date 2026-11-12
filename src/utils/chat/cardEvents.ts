@@ -119,13 +119,25 @@ function creatureAt(uuid: string | null | undefined): OwnedCreature | null {
 	return 'actor' in found ? (found.actor ?? null) : found;
 }
 
-/** The creatures whose owners act on a line: the tokens a move is offered to. */
+/**
+ * The creatures whose owners act on a line: the tokens a move is offered to, or the creature that
+ * rolls the save or chooses its temp HP.
+ */
 export function lineCreatures(event: CardEvent): OwnedCreature[] {
 	const action = event.action;
-	if (action?.kind !== 'movementOffer') return [];
-	return action.offers
-		.map((offer) => creatureAt(offer.tokenUuid))
-		.filter((creature): creature is OwnedCreature => !!creature);
+	switch (action?.kind) {
+		case 'movementOffer':
+			return action.offers
+				.map((offer) => creatureAt(offer.tokenUuid))
+				.filter((creature): creature is OwnedCreature => !!creature);
+		case 'saveRequest':
+		case 'tempHpChoice': {
+			const holder = creatureAt(action.holderUuid);
+			return holder ? [holder] : [];
+		}
+		default:
+			return [];
+	}
 }
 
 /** The users who act on a line for these creatures: their owners who are not GMs. */
