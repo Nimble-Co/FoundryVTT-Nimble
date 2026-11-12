@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
-import { CONDITION_REPLACED_OPTION } from '../applyConditionToActor.js';
+import { CONDITION_REPLACED_OPTION, EFFECT_RECREATED_OPTION } from '../applyConditionToActor.js';
 
 const createEffect = vi.fn();
 const deleteDocuments = vi.fn();
@@ -187,6 +188,15 @@ describe('applyEffectToActor', () => {
 		expect(query).not.toHaveBeenCalled();
 	});
 
+	it('names the card of the use in the create options', async () => {
+		await applyEffectToActor(holder(), { ...plainPayload(), cardId: 'card1' });
+
+		expect(createEffect).toHaveBeenCalledWith(expect.anything(), {
+			parent: expect.objectContaining({ uuid: 'Actor.goblin' }),
+			[SYSTEM_ID]: { effectCardId: 'card1' },
+		});
+	});
+
 	it('asks the active GM for a target the user does not own', async () => {
 		const payload = plainPayload();
 
@@ -235,7 +245,10 @@ describe('applyEffectToActor', () => {
 			parent: expect.anything(),
 			[CONDITION_REPLACED_OPTION]: true,
 		});
-		expect(createEffect).toHaveBeenCalled();
+		expect(createEffect).toHaveBeenCalledWith(expect.anything(), {
+			parent: expect.anything(),
+			[EFFECT_RECREATED_OPTION]: true,
+		});
 	});
 
 	it('gives the temp HP of the card and records them on the effect', async () => {

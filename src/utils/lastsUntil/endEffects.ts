@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEventLastsUntil, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { addCardEvents, addMomentEvents, canHost } from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { effectEndsAt, endingMoment, turnsSeenAfter } from '#utils/lastsUntil/effectEndsAt.js';
@@ -239,6 +240,10 @@ export async function undoEndedEffect(row: EndedEffectRow): Promise<boolean> {
 				create(data: object, operation: object): Promise<unknown>;
 			};
 		}
-	).implementation.create(row.effect, { parent: holder, keepId: true });
+	).implementation.create(row.effect, {
+		parent: holder,
+		keepId: true,
+		[EFFECT_RECREATED_OPTION]: true,
+	});
 	return !!created;
 }

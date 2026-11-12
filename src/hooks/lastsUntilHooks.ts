@@ -8,9 +8,13 @@ import {
 	hpGained,
 } from '#utils/actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
-import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import {
+	CONDITION_REPLACED_OPTION,
+	EFFECT_RECREATED_OPTION,
+} from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
+import { effectCardIdOf } from '#utils/damage/damageCard.js';
 import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
@@ -151,17 +155,20 @@ function gainedStatuses(effect: ActiveEffect): string[] {
 	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
 }
 
-/** The holder gains the effect, and the creature it came from applies it. */
-function onCreateEffect(effect: ActiveEffect): void {
+/** The holder gains the effect, and the creature it came from applies it, on the card of the use. */
+function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
 	if (!isActiveGm() || !(effect.parent instanceof Actor) || !effect.active) return;
+	if (options?.[EFFECT_RECREATED_OPTION]) return;
+	const cardId = effectCardIdOf(options);
+	const card = cardId ? (game.messages?.get(cardId) ?? null) : null;
 	const named = {
 		effectName: effect.name,
 		statuses: gainedStatuses(effect),
 		gained: effect,
 		effect: effect.name,
 	};
-	fireEvent('gain', effect.parent, named);
-	fireEvent('applyEffect', sourceOf(effect), named);
+	fireEvent('gain', effect.parent, named, card);
+	fireEvent('applyEffect', sourceOf(effect), named, card);
 }
 
 function onDeleteEffect(

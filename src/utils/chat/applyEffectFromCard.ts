@@ -181,7 +181,11 @@ function warnTempHpKept(name: string, refused: { temp: number; amount: number })
 export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
 	const base = payloadOf(card, node);
 	if (!base) return;
-	const payload = { ...base, tempHp: linkedTempHealing(card, node)?.total ?? null };
+	const payload = {
+		...base,
+		tempHp: linkedTempHealing(card, node)?.total ?? null,
+		cardId: (card as { id?: string | null }).id ?? null,
+	};
 	const user = cardUser(card);
 	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
 	const results = await Promise.allSettled(

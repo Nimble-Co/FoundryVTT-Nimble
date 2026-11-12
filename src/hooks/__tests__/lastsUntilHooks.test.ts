@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 
 const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
 	vi.hoisted(() => ({
@@ -366,15 +366,20 @@ describe('events', () => {
 
 		hook('createActiveEffect')(effect);
 
-		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, {
-			effectName: 'Stunned',
-			statuses: ['stunned', 'incapacitated'],
-			gained: effect,
-			effect: 'Stunned',
-		});
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			{
+				effectName: 'Stunned',
+				statuses: ['stunned', 'incapacitated'],
+				gained: effect,
+				effect: 'Stunned',
+			},
+			null,
+		);
 	});
 
-	it('a new effect is an apply by the creature it came from', () => {
+	it('a new effect is an apply by the creature it came from, on the card of the use', () => {
 		const holder = Object.create(Actor.prototype);
 		const caster = Object.create(Actor.prototype);
 		const saved = (globalThis as { fromUuidSync?: unknown }).fromUuidSync;
@@ -387,15 +392,27 @@ describe('events', () => {
 			statuses: new Set<string>(),
 		};
 
-		hook('createActiveEffect')(effect);
+		const card = { id: 'card1' };
+		const messages = (game as { messages?: unknown }).messages;
+		(game as { messages?: unknown }).messages = {
+			get: (id: string) => (id === 'card1' ? card : null),
+		};
+		hook('createActiveEffect')(effect, { [SYSTEM_ID]: { effectCardId: 'card1' } });
 		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = saved;
+		(game as { messages?: unknown }).messages = messages;
 
-		expect(fireEventMock).toHaveBeenCalledWith('applyEffect', caster, {
-			effectName: 'Dimmed',
-			statuses: [],
-			gained: effect,
-			effect: 'Dimmed',
-		});
+		const named = { effectName: 'Dimmed', statuses: [], gained: effect, effect: 'Dimmed' };
+		expect(fireEventMock).toHaveBeenCalledWith('applyEffect', caster, named, card);
+		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, named, card);
+	});
+
+	it('a copy that is put back or replaced is no new gain', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Prone', active: true, statuses: new Set(['prone']) };
+
+		hook('createActiveEffect')(effect, { nimbleEffectRecreated: true });
+
+		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
 	it('a move of the token is a move of its actor', () => {

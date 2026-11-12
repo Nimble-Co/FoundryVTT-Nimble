@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { effectsEndingAt, endEffects, everyActor, undoEndedEffect } from '../endEffects.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
 
@@ -369,11 +370,12 @@ describe('undoEndedEffect', () => {
 		delete (ActiveEffect as unknown as { implementation?: unknown }).implementation;
 	});
 
-	it('makes the effect again with its id and old start', async () => {
+	it('makes the effect again with its id and old start, as no new gain', async () => {
 		expect(await undoEndedEffect(row())).toBe(true);
 		expect(effectCreate).toHaveBeenCalledWith(row().effect, {
 			parent: goblin.holder,
 			keepId: true,
+			[EFFECT_RECREATED_OPTION]: true,
 		});
 	});
 

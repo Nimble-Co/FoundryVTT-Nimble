@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { effectCardOption } from '#utils/damage/damageCard.js';
 import { newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
@@ -9,6 +10,7 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import applyConditionToActor, {
 	applicationOf,
 	CONDITION_REPLACED_OPTION,
+	EFFECT_RECREATED_OPTION,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
 import { giveTempHp, tempHpGrant } from './effectTempHp.js';
@@ -26,6 +28,8 @@ export interface EffectPayload {
 	sourceActorUuid: string | null;
 	/** The temp HP that the effect gives, from a temp healing roll of the card. */
 	tempHp?: number | null;
+	/** The card whose use applies it: the events of the new effect go on it. */
+	cardId?: string | null;
 }
 
 export interface AppliedEffect {
@@ -147,6 +151,7 @@ async function createPlainEffect(
 	target: EffectHolder,
 	data: Record<string, unknown>,
 	origin: string | null,
+	createOptions: Record<string, unknown> = {},
 ): Promise<{ created: CreatedEffect | null; stays?: string }> {
 	const ActiveEffectClass = CONFIG.ActiveEffect.documentClass as unknown as {
 		create(data: object, options: object): Promise<CreatedEffect | undefined>;
@@ -175,7 +180,11 @@ async function createPlainEffect(
 	}
 	const created = await ActiveEffectClass.create(
 		{ ...data, origin, type: NIMBLE_EFFECT_TYPE },
-		{ parent: target },
+		{
+			parent: target,
+			...createOptions,
+			...(current.length ? { [EFFECT_RECREATED_OPTION]: true } : {}),
+		},
 	);
 	return { created: created ?? null };
 }
@@ -193,6 +202,7 @@ export async function applyEffectHere(
 	const grantsBefore = tempHpGrants(target);
 	const statuses = Array.isArray(data.statuses) ? (data.statuses as string[]) : [];
 	const lastsUntil = (data.system as { lastsUntil?: Moment[] } | undefined)?.lastsUntil ?? [];
+	const createOptions = effectCardOption(payload.cardId);
 	let effect: CreatedEffect | null;
 	if (statuses.length) {
 		effect = (await applyConditionToActor(target as never, statuses[0], {
@@ -200,12 +210,14 @@ export async function applyEffectHere(
 			sourceActor,
 			lastsUntil,
 			effectData: data,
+			createOptions,
 		})) as CreatedEffect | null;
 	} else {
 		const plain = await createPlainEffect(
 			target,
 			data,
 			sourceItem?.uuid ?? sourceActor?.uuid ?? null,
+			createOptions,
 		);
 		if (plain.stays) return { effectUuid: plain.stays, actorName: target.name ?? '', stays: true };
 		effect = plain.created;
