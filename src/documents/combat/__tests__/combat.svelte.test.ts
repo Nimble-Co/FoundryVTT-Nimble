@@ -1337,6 +1337,35 @@ describe('NimbleCombat', () => {
 			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
 		});
 
+		it('gives the backstopped turn-start hook the round and the place of the turn', async () => {
+			const combatId = 'combat-start-turn-no-event-place';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & {
+					round?: number;
+					turn?: number;
+					combatant?: Combatant.Implementation | null;
+				},
+			) {
+				this.round = 2;
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			// Heroes sort before monsters, so the hero's turn is at index 0.
+			expect(combat.turns[0]).toBe(incomingHero);
+			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+			expect(call).toHaveBeenCalledWith('nimbleCombatTurnStart', incomingHero, {
+				round: 2,
+				turn: 0,
+			});
+		});
+
 		it('does not emit the turn-start hook twice when _onStartTurn also runs', async () => {
 			const combatId = 'combat-start-turn-no-double';
 			const { monster, incomingHero } = createTurnStartFixture(combatId);

@@ -777,7 +777,11 @@ class NimbleCombat extends Combat {
 	async #ensureIncomingTurnStarted(combatant: Combatant.Implementation | null): Promise<void> {
 		if (!combatant) return;
 		if (!this.#claimTurnStart(combatant)) return;
-		this.#emitTurnStart(combatant);
+		this.#emitTurnStart(combatant, {
+			round: Number(this.round) || 0,
+			turn: Number(this.turn) || 0,
+			skipped: false,
+		} as Combat.TurnEventContext);
 
 		if (!isMovementTrackingAutomationEnabled() || !game.user?.isActiveGM) return;
 		this.#backstopClearedHistoryCombatantId = combatant.id ?? null;
