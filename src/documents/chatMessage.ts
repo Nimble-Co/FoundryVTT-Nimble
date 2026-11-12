@@ -1391,7 +1391,7 @@ class NimbleChatMessage extends ChatMessage {
 			);
 
 			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
-			await spendHeldChanges(target.usedVulnerabilities);
+			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
 
 			const hpAfter = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1657,6 +1657,11 @@ class NimbleChatMessage extends ChatMessage {
 		return packets.length > 0 ? { ...resolveDamageForActor(actor, packets), actor } : null;
 	}
 
+	/** The Events strip of this card, for the ended lines of what the damage used up. */
+	#endedLines() {
+		return { add: (events: CardEvent[]) => addCardEvents(this, events) };
+	}
+
 	/** What a click would deal to the creature, or null when nothing can be dealt. */
 	latchedMissDamage(creatureUuid: string): number | null {
 		if (!this.isActivationCard()) return null;
@@ -1669,7 +1674,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!resolved) return;
 		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
 		await withDamageCard(this.id, () => resolved.actor.applyDamage(resolved.total));
-		await spendHeldChanges(resolved.usedVulnerabilities);
+		await spendHeldChanges(resolved.usedVulnerabilities, this.#endedLines());
 		await this.setFlag(SYSTEM_ID, LATCHED_DAMAGE_FLAG, true);
 	}
 
