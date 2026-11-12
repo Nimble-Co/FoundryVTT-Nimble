@@ -67,21 +67,43 @@ function escapeDc(formula: unknown, user: SourceUser | null): string {
 	return dc === null ? written : String(dc);
 }
 
-/** The `@` references of each extra damage formula, from the roll data of the one who used the item. */
-function resolveExtraDamage(rules: unknown, user: SourceUser | null): void {
+/** Text fields of a rule that are names, not formulas. */
+const NOT_FORMULAS = new Set([
+	'id',
+	'type',
+	'label',
+	'identifier',
+	'predicate',
+	'description',
+	'title',
+	'message',
+	'cardHint',
+]);
+
+/** Text with a link such as `@UUID[...]` or `@Check[...]` is no formula. */
+const ENRICHER = /@[A-Z][A-Za-z]*\[/;
+
+/**
+ * The `@` references of each rule formula, from the roll data of the one who used the item: the
+ * numbers of the caster at the time it is applied, not the holder's.
+ */
+function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 	if (!user || !Array.isArray(rules)) return;
 	let rollData: Record<string, unknown> | null = null;
-	for (const rule of rules as { type?: string; heldKind?: string; formula?: unknown }[]) {
-		if (rule?.type !== 'heldRoll' || rule.heldKind !== 'extraDamage') continue;
-		if (typeof rule.formula !== 'string' || !rule.formula.includes('@')) continue;
-		rollData ??= user.getRollData();
-		checkFormulaReferences(rule.formula, user, {}, { rollData });
-		// A reference the source has no value for is 0 here, not the holder's value at the roll.
-		rule.formula = Roll.replaceFormulaData(rule.formula, rollData, { missing: '0' });
+	for (const rule of rules as Record<string, unknown>[]) {
+		if (!rule || typeof rule !== 'object') continue;
+		for (const [key, value] of Object.entries(rule)) {
+			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@')) continue;
+			if (ENRICHER.test(value)) continue;
+			rollData ??= user.getRollData();
+			checkFormulaReferences(value, user, {}, { rollData });
+			// A reference the source has no value for is 0 here, not the holder's value at the roll.
+			rule[key] = Roll.replaceFormulaData(value, rollData, { missing: '0' });
+		}
 	}
 }
 
-/** A copy of an item's effect for an actor. The Escape DC and the extra damage dice are worked out now. */
+/** A copy of an item's effect for an actor. The Escape DC and the rule formulas are worked out now. */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
 	source: { itemUuid: string | null; user: SourceUser | null },
@@ -90,7 +112,7 @@ export function payloadFromEffect(
 	for (const key of NOT_COPIED) delete data[key];
 	const system = data.system as { escape?: { dc?: unknown }; rules?: unknown } | undefined;
 	if (system?.escape) system.escape.dc = escapeDc(system.escape.dc, source.user);
-	resolveExtraDamage(system?.rules, source.user);
+	resolveRuleFormulas(system?.rules, source.user);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,

@@ -98,7 +98,7 @@ describe('payloadFromEffect', () => {
 		});
 	});
 
-	it('replaces the @ references of an extra damage formula with the roll data of the source', () => {
+	it('replaces the @ references of every rule formula with the roll data of the source', () => {
 		vi.stubGlobal('Roll', {
 			replaceFormulaData: (formula: string, data: { pools: Record<string, { faces: number }> }) =>
 				formula.replace('@pools.judgment.faces', String(data.pools.judgment.faces)),
@@ -107,6 +107,7 @@ describe('payloadFromEffect', () => {
 			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' },
 			{ type: 'heldRoll', heldKind: 'advantage', formula: '@pools.judgment.faces' },
 			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '2' },
+			{ type: 'note', label: 'Judge @pools.judgment.faces', formula: '@pools.judgment.faces' },
 		];
 		const effect = { toObject: () => ({ name: 'Shining Mandate', system: { rules } }) };
 		const user = {
@@ -116,11 +117,44 @@ describe('payloadFromEffect', () => {
 		};
 
 		const payload = payloadFromEffect(effect, { itemUuid: 'Actor.paladin.Item.decree', user });
-		const copied = (payload.data.system as { rules: { formula: string }[] }).rules;
+		const copied = (payload.data.system as { rules: { formula: string; label?: string }[] }).rules;
 
-		expect(copied.map((rule) => rule.formula)).toEqual(['1d10', '@pools.judgment.faces', '2']);
+		expect(copied.map((rule) => rule.formula)).toEqual(['1d10', '10', '2', '10']);
+		expect(copied[3].label).toBe('Judge @pools.judgment.faces');
 		expect(rules[0].formula).toBe('1d@pools.judgment.faces');
 		expect(user.getRollData).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps the text of a rule and its links as they are', () => {
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string, data: Record<string, number>) =>
+				formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+		});
+		const effect = {
+			toObject: () => ({
+				name: 'Marked',
+				system: {
+					rules: [
+						{
+							id: 'n1',
+							type: 'note',
+							title: 'See @UUID[Item.x]',
+							description: 'Roll @Check[strength]',
+							formula: '@level',
+						},
+					],
+				},
+			}),
+		};
+		const user = { type: 'character', uuid: 'Actor.hero', getRollData: () => ({ level: 4 }) };
+		const { data } = payloadFromEffect(effect, { itemUuid: null, user });
+		const [rule] = (data.system as { rules: Record<string, string>[] }).rules;
+
+		expect(rule).toMatchObject({
+			title: 'See @UUID[Item.x]',
+			description: 'Roll @Check[strength]',
+			formula: '4',
+		});
 	});
 
 	it('keeps an extra damage formula as it is with no source', () => {
