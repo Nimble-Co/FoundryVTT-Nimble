@@ -1,8 +1,9 @@
 import { SYSTEM_ID } from '#system';
 import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
-import { areAllies } from '#utils/movement/alliesWithin.js';
+import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
+import { areAllies } from '#utils/movement/alliesWithin.js';
 import { pendingKeepOf } from '#utils/rolls/cardRollState.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
@@ -48,11 +49,6 @@ function isCardAuthorClient(card: ActivationCard): boolean {
 }
 
 const read = new Set<string>();
-
-/** The effect the item gives: its first effect that stays on the item. */
-function itemEffectOf(item: UsedItem | null | undefined): ItemEffect | null {
-	return [...(item?.effects ?? [])].find((effect) => effect.transfer === false) ?? null;
-}
 
 function cardItem(card: ActivationCard): UsedItem | null {
 	const uuid = card.flags?.[SYSTEM_ID]?.itemUuid;
@@ -123,7 +119,7 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 			.map((token) => token.actor as Parameters<typeof applyEffectToActor>[0]);
 		if (targets.length === 0) continue;
 		const item = rule.item as UsedItem | null;
-		const effect = itemEffectOf(item);
+		const effect = firstItemEffect(item);
 		if (!item?.uuid || !effect) continue;
 		const payload = payloadFromEffect(effect, { itemUuid: item.uuid, user });
 		const results = await Promise.allSettled(

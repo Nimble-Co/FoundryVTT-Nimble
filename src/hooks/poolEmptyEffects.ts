@@ -1,5 +1,6 @@
 import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectHere, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
 import { ruleChargesLeft } from '#utils/chargePool/ruleChargeGate.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
@@ -18,11 +19,6 @@ interface Owner {
 	uuid?: string;
 	rules?: unknown[];
 	effects?: Iterable<{ origin?: string | null }>;
-}
-
-/** The effect the item gives: its first effect that stays on the item. */
-function itemEffectOf(item: RuleItem | null | undefined): ItemEffect | null {
-	return [...(item?.effects ?? [])].find((effect) => effect.transfer === false) ?? null;
 }
 
 function hasEffectFrom(actor: Owner, itemUuid: string): boolean {
@@ -47,7 +43,7 @@ async function applyNow(actor: Owner): Promise<void> {
 	const rules = rulesOfType(actor, 'poolEmptyEffect').filter((rule) => rule.isLive());
 	for (const rule of rules) {
 		const item = rule.item as RuleItem | null;
-		const effect = itemEffectOf(item);
+		const effect = firstItemEffect(item);
 		if (!item?.uuid || !effect || hasEffectFrom(actor, item.uuid)) continue;
 		if (ruleChargesLeft(actor as never, rule.chargePoolIdentifier) !== 0) continue;
 		await applyEffectHere(

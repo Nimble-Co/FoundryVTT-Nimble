@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
 import { addBankedDamageReduction } from '#utils/damage/bankedDamageReduction.js';
 import type { DicePoolConsumer } from '#utils/dicePool/dicePoolConsumers.js';
 import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
@@ -73,7 +74,7 @@ function effectToGive(
 	const item = actor.items.get(consumer.itemId) as
 		| { uuid: string; effects?: Iterable<GivenEffect> }
 		| undefined;
-	const effect = [...(item?.effects ?? [])].find((entry) => entry.transfer === false);
+	const effect = firstItemEffect(item);
 	return item && effect ? { effect, itemUuid: item.uuid } : null;
 }
 
