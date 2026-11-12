@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
+import { queueMovementOfferWrite } from '#utils/movement/queueMovementOfferWrite.js';
 import {
 	addCardEvents,
 	addMomentEvents,
@@ -161,6 +162,49 @@ describe('addCardEvents', () => {
 
 		expect(await addCardEvents(card, [line('a', 1)])).toBe(false);
 		expect(error).toHaveBeenCalled();
+	});
+});
+
+describe('addCardEvents with a move line', () => {
+	const moveLine = (id: string, at: number): CardEvent => ({
+		...line(id, at),
+		kind: 'movementOffer',
+		action: { kind: 'movementOffer', node: { id } as never, offers: [] },
+	});
+
+	it('waits for a write of the offers that runs, so it cannot write back an offer it settles', async () => {
+		const card = makeCard('host');
+		let release = () => {};
+		const settle = queueMovementOfferWrite(
+			() => new Promise<void>((resolve) => (release = resolve)),
+		);
+
+		const written = addCardEvents(card, [moveLine('move', 1)]);
+		try {
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			expect(card.update).not.toHaveBeenCalled();
+		} finally {
+			release();
+		}
+
+		await settle;
+		expect(await written).toBe(true);
+		expect(idsOf(card.flags[SYSTEM_ID]?.events)).toEqual(['move']);
+	});
+
+	it('a line with no move does not wait for the offers', async () => {
+		const card = makeCard('host');
+		let release = () => {};
+		const settle = queueMovementOfferWrite(
+			() => new Promise<void>((resolve) => (release = resolve)),
+		);
+
+		try {
+			expect(await addCardEvents(card, [line('a', 1)])).toBe(true);
+		} finally {
+			release();
+		}
+		await settle;
 	});
 });
 

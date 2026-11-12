@@ -10,6 +10,7 @@ import { keyedQueue } from '#utils/keyedQueue.js';
 import { describeLastsUntil, holderReader } from '#utils/lastsUntil/describeLastsUntil.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import localize from '#utils/localize.js';
+import { queueMovementOfferWrite } from '#utils/movement/queueMovementOfferWrite.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.cardEvents`;
 const MOMENT_CARD_TYPE = 'effectsEnded';
@@ -108,11 +109,19 @@ function merged(existing: CardEvent[], added: CardEvent[]): CardEvent[] {
 	return [...existing, ...fresh].sort((a, b) => a.at - b.at);
 }
 
+/**
+ * A line with a move also writes the card's offers, so it runs after the settle and lapse writes
+ * of the offers, which run on this client too: it cannot write back an offer they settled.
+ */
 function appendHere(card: EventCard, events: CardEvent[]): Promise<boolean> {
 	return queue.run(`message:${card.id}`, async () => {
-		const next = merged(storedEvents(card), events);
-		await card.update?.({ [`flags.${SYSTEM_ID}.events`]: next });
-		return true;
+		const write = async () => {
+			const next = merged(storedEvents(card), events);
+			await card.update?.({ [`flags.${SYSTEM_ID}.events`]: next });
+			return true;
+		};
+		const hasMove = events.some((event) => event.action?.kind === 'movementOffer');
+		return hasMove ? queueMovementOfferWrite(write) : write();
 	});
 }
 
