@@ -42,6 +42,7 @@ import {
 import localize from '#utils/localize.ts';
 import { reconcileMovementOffers, withEventOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import { asksSave, requestSaves } from '#utils/saveRequest/saveRequests.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -179,6 +180,8 @@ interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
 	zeroDamageTargetNames: string[];
+	/** The creatures the card hits for 0 damage. A crit still hits them. */
+	zeroDamageActors: HpMutableActor[];
 	/** Targets whose banked one-shot reduction is consumed by this application */
 	bankedReductionActors: HpMutableActor[];
 }
@@ -765,6 +768,7 @@ function buildDamageApplicationPlan(params: {
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
+	const zeroDamageActors = new Set<HpMutableActor>();
 	const bankedReductionActors = new Set<HpMutableActor>();
 
 	for (const uuid of params.targets) {
@@ -775,6 +779,7 @@ function buildDamageApplicationPlan(params: {
 		// Before any reduction: this target's bank stays for an attack that hurts it.
 		const defend = params.defendEffects?.get(uuid);
 		if (params.noDamageTargets?.has(uuid) || defend?.zero) {
+			zeroDamageActors.add(actor);
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -792,6 +797,7 @@ function buildDamageApplicationPlan(params: {
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
+			zeroDamageActors.add(actor);
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -817,6 +823,7 @@ function buildDamageApplicationPlan(params: {
 		hasTargets: params.targets.length > 0,
 		applicableTargets,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
+		zeroDamageActors: [...zeroDamageActors],
 		bankedReductionActors: [...bankedReductionActors],
 	};
 }
@@ -1414,9 +1421,13 @@ class NimbleChatMessage extends ChatMessage {
 		for (const bankedActor of damageApplicationPlan.bankedReductionActors) {
 			await clearBankedDamageReduction(bankedActor);
 		}
+		const critSavers = this.#critSaversAtZero(damageApplicationPlan);
+		for (const actor of critSavers) {
+			void requestSaves(this as never, actor as never, 'critReceived');
+		}
 
 		if (damageApplicationPlan.applicableTargets.length < 1) {
-			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+			if (critSavers.length < 1) ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return null;
 		}
 
@@ -1578,8 +1589,16 @@ class NimbleChatMessage extends ChatMessage {
 		// absorbs the attack entirely, so the button must stay live for it.
 		return (
 			damageApplicationPlan.applicableTargets.length > 0 ||
-			damageApplicationPlan.bankedReductionActors.length > 0
+			damageApplicationPlan.bankedReductionActors.length > 0 ||
+			this.#critSaversAtZero(damageApplicationPlan).length > 0
 		);
+	}
+
+	/** A crit still hits a target it deals 0 damage: the targets that it asks for a save. */
+	#critSaversAtZero(plan: DamageApplicationPlan): HpMutableActor[] {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		if (!systemData.isCritical || systemData.isMiss) return [];
+		return plan.zeroDamageActors.filter((actor) => asksSave(actor as never, 'critReceived'));
 	}
 
 	/**

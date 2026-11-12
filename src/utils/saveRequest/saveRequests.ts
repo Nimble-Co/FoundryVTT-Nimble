@@ -104,6 +104,11 @@ export function saveRequestEvents(
 	return lines;
 }
 
+/** Whether the event asks the creature for a save. */
+export function asksSave(actor: SaverActor | null | undefined, event: SaveOnEvent): boolean {
+	return !!actor && saveRequestEvents(actor, event).length > 0;
+}
+
 /** Puts the save lines of the event on the card that caused it. */
 export async function requestSaves(
 	card: RequestCard | null | undefined,
