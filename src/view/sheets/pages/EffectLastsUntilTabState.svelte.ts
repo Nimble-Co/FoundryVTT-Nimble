@@ -8,6 +8,7 @@ import {
 	newMoment,
 	removeAt,
 	replaceAt,
+	withEffectName,
 } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import {
@@ -48,7 +49,18 @@ export function eventsFor(moment: Moment): LastsUntilEvent[] {
 	return events;
 }
 
+/** The "an effect named..." choice of a "gain" moment. */
+export const GAIN_NAMED = '__named';
+
 export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffect) {
+	const conditions = (CONFIG.statusEffects ?? [])
+		.map((entry) => ({ id: entry.id, label: localize(String(entry.name ?? entry.id)) }))
+		.sort((a, b) => a.label.localeCompare(b.label));
+	const isCondition = (name: string) => conditions.some((each) => each.id === name);
+
+	/** Rows where "an effect named..." is picked and no name is typed yet. */
+	let namedRows = $state<Record<number, boolean>>({});
+
 	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
 	const escapeData = $derived(system.escape ?? { dc: '', saves: [...DEFAULT_ESCAPE_SAVES] });
@@ -109,8 +121,28 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		} as never);
 	}
 
-	/** The turn counts of the moments after a removed moment move up with them. */
+	function gainChoiceOf(index: number, name: string): string {
+		if (isCondition(name)) return name;
+		return name || namedRows[index] ? GAIN_NAMED : '';
+	}
+
+	function pickGain(index: number, choice: string) {
+		namedRows[index] = choice === GAIN_NAMED;
+		return change(index, withEffectName(moments[index], choice === GAIN_NAMED ? '' : choice));
+	}
+
+	/**
+	 * The turn counts of the moments after a removed moment move up with them, and so does their
+	 * "an effect named..." pick.
+	 */
 	function remove(index: number) {
+		namedRows = Object.fromEntries(
+			Object.entries(namedRows).flatMap(([at, on]) => {
+				const row = Number(at);
+				if (row === index) return [];
+				return [[row > index ? row - 1 : row, on]];
+			}),
+		);
 		const seen = turnsSeenOf(getEffect());
 		return getEffect().update({
 			'system.lastsUntil': removeAt(moments, index),
@@ -155,6 +187,9 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		get untilRemoved() {
 			return untilRemoved;
 		},
+		conditions,
+		gainChoiceOf,
+		pickGain,
 		setUntilRemoved,
 		change,
 		remove,
