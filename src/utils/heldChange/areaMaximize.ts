@@ -1,5 +1,3 @@
-import type { HeldChange } from '#types/heldChange.d.ts';
-
 interface Packet {
 	value: number;
 	options: { outcome?: string; damageMultiplier?: number; roll?: object | null };
@@ -46,5 +44,3 @@ export function maximizedPackets<P extends Packet>(packets: readonly P[]): P[] {
 		return { ...packet, value: Math.max(packet.value, value) };
 	});
 }
-
-export type AreaMaximizeFor = (actor: object) => HeldChange | null;

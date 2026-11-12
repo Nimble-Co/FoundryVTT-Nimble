@@ -11,9 +11,9 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		namesAnEffect,
 		NEW_MOMENT_KINDS,
 		type NewMomentKind,
-		type SpanChoice,
 		spanChoiceOf,
 		spanChoices,
+		spanChoiceWord,
 		withBoundary,
 		withClock,
 		withDamageType,
@@ -24,6 +24,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		withUnits,
 		withValue,
 	} from '#utils/lastsUntil/momentForm.js';
+	import type { SpanChoice } from '#types/lastsUntilForm.js';
 	import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.js';
 	import localize from '#utils/localize.js';
 	import {
@@ -65,17 +66,24 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	}
 
 	const tab = createEffectLastsUntilTabState(() => effect);
-	const { change, remove, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = tab;
+	const { change, add, setEscapeDc, toggleEscapeSave, setUntilRemoved } = tab;
+
+	/** The rows below a removed one move up, and their "an effect named..." pick with them. */
+	function remove(index: number) {
+		namedRows = Object.fromEntries(
+			Object.entries(namedRows).flatMap(([at, on]) => {
+				const row = Number(at);
+				if (row === index) return [];
+				return [[row > index ? row - 1 : row, on]];
+			}),
+		);
+		return tab.remove(index);
+	}
 	const moments = $derived(tab.moments);
 	const escapeData = $derived(tab.escape);
 	const coreDuration = $derived(tab.coreDuration);
 	const statusDefault = $derived(tab.statusDefault);
 	const untilRemoved = $derived(tab.untilRemoved);
-
-	function spanLabel(choice: SpanChoice): string {
-		const [span, count] = choice.split(':');
-		return count ? word(`nextTurnCount.${count}`) : word(`span.${span}`);
-	}
 
 	function onAdd(event: Event & { currentTarget: HTMLSelectElement }) {
 		const kind = event.currentTarget.value as NewMomentKind | '';
@@ -154,7 +162,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 								change(index, withSpanChoice(moment, currentTarget.value as SpanChoice))}
 						>
 							{#each spanChoices(moment.clock) as choice (choice)}
-								<option value={choice}>{spanLabel(choice)}</option>
+								<option value={choice}>{word(spanChoiceWord(choice))}</option>
 							{/each}
 						</select>
 					{:else if moment.kind === 'time'}

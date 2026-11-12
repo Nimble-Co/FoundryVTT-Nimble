@@ -199,6 +199,24 @@ describe('EffectLastsUntilTab', () => {
 		config.statusEffects = before;
 	});
 
+	it('an "an effect named..." pick moves up with its row when a row above is removed', async () => {
+		const gain = { ...newMoment('event'), event: 'gain' as const };
+		const effect = makeEffect([newMoment('turn'), gain]);
+		const { container } = renderTab(effect);
+		const pick = container.querySelector(
+			`[aria-label="${word(`${LU}.gainLabel`)}"]`,
+		) as HTMLSelectElement;
+		await fireEvent.change(pick, { target: { value: '__named' } });
+
+		const [first] = container.querySelectorAll(
+			`[aria-label^="${word(`${LU}.remove`, { number: '1' }).slice(0, -1)}"]`,
+		);
+		await fireEvent.click(first);
+
+		expect(saved(effect)).toEqual([gain]);
+		expect(field(container, 'effectName')).not.toBeNull();
+	});
+
 	it('the trash removes that moment only', async () => {
 		const effect = makeEffect([newMoment('turn'), newMoment('time')]);
 		const { container } = renderTab(effect);

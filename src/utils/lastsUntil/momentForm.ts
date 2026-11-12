@@ -1,3 +1,4 @@
+import type { SpanChoice } from '#types/lastsUntilForm.js';
 import {
 	type Clock,
 	type EventSubject,
@@ -96,9 +97,6 @@ export function withSpan(moment: Moment, span: TurnSpan): Moment {
 	return { ...moment, span, clock: moment.clock ?? 'holder', value: null };
 }
 
-/** The turn list's entries: each span, with "2nd next turn" and up after "next turn". */
-export type SpanChoice = TurnSpan | `nextTurn:${(typeof NEXT_TURN_COUNTS)[number]}`;
-
 export function spanChoices(clock: Clock | null): SpanChoice[] {
 	const counts = clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
 	return TURN_SPANS.flatMap((span) => (span === 'nextTurn' ? [span, ...counts] : [span]));
@@ -109,6 +107,12 @@ export function spanChoiceOf(moment: Moment): SpanChoice {
 	const count = moment.value ?? 1;
 	if (span !== 'nextTurn' || count < 2) return span;
 	return `nextTurn:${count}` as SpanChoice;
+}
+
+/** The word of a turn list entry, under the tab's words: "span.nextTurn" or "nextTurnCount.2". */
+export function spanChoiceWord(choice: SpanChoice): string {
+	const [span, count] = choice.split(':');
+	return count ? `nextTurnCount.${count}` : `span.${span}`;
 }
 
 export function withSpanChoice(moment: Moment, choice: SpanChoice): Moment {

@@ -67,3 +67,6 @@ export interface HeldChange
 	effectId: string;
 	holderUuid: string;
 }
+
+/** An area card: the change on a target that maximizes the roll against it. */
+export type AreaMaximizeFor = (actor: object) => HeldChange | null;

@@ -5,7 +5,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
-import type { HeldChange } from '#types/heldChange.d.ts';
+import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
@@ -32,7 +32,7 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
-import { type AreaMaximizeFor, maximizedPackets } from '#utils/heldChange/areaMaximize.js';
+import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
 import {
 	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
