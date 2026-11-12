@@ -42,8 +42,16 @@ describe('conditionLastsUntil', () => {
 	});
 
 	it("Despair lasts until the holder's next attack, or combat ends", () => {
-		expect(registerConditionsConfig().conditionLastsUntil).toEqual({
-			despair: [event('attack', 'holder'), event('combatEnd', null)],
-		});
+		expect(registerConditionsConfig().conditionLastsUntil.despair).toEqual([
+			event('attack', 'holder'),
+			event('combatEnd', null),
+		]);
+	});
+
+	it('Concentrating lasts until the holder drops to 0 HP or gains Incapacitated', () => {
+		expect(registerConditionsConfig().conditionLastsUntil.concentration).toEqual([
+			event('zeroHp', 'holder'),
+			{ ...event('gain', 'holder'), effectName: 'incapacitated' },
+		]);
 	});
 });

@@ -201,6 +201,10 @@ export default function registerConditionsConfig() {
 	/** The Lasts Until a condition has when nothing else gives it one, copied into its status effect. */
 	const conditionLastsUntil: Record<string, Moment[]> = {
 		despair: [eventMoment('attack', 'holder'), eventMoment('combatEnd', null)],
+		concentration: [
+			eventMoment('zeroHp', 'holder'),
+			{ ...eventMoment('gain', 'holder'), effectName: 'incapacitated' },
+		],
 	};
 
 	// New: Automatic condition trigger relationships
