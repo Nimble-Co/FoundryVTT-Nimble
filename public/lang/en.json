@@ -730,6 +730,7 @@
 			"saveRequest": {
 				"ask": "{name} saves to keep {effect}",
 				"kept": "{name} keeps {effect}",
+				"noteFrom": "{note} - {item}",
 				"cause": {
 					"critReceived": "Critical hit - DC {dc} {save} save",
 					"takeDamage": "Took damage - DC {dc} {save} save"

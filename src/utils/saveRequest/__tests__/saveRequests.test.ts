@@ -118,6 +118,21 @@ describe('save requests', () => {
 		expect(requestedSaveNote({ flags: {} })).toBeNull();
 	});
 
+	it('the save card also names the item of the effect when its name is not the effect name', () => {
+		const fromSpell = { ...concentrating, origin: 'Actor.tessa.Item.flame' };
+		const caster = {
+			...tessa,
+			effects: Object.assign([fromSpell], { get: () => fromSpell }),
+		};
+		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.tessa.Item.flame' ? { documentName: 'Item', name: 'Flame Barrier' } : caster,
+		);
+		const [line] = saveRequestEvents(caster as never, 'critReceived', 5);
+		const saveCard = { flags: { [SYSTEM_ID]: { saveRequest: { messageId: 'm1', event: line } } } };
+
+		expect(requestedSaveNote(saveCard)).toBe('Tessa saves to keep Concentration - Flame Barrier');
+	});
+
 	it('a line that has its save card is rolled no more', async () => {
 		const [line] = saveRequestEvents(tessa as never, 'critReceived', 5);
 		const answered = { ...line, action: { ...line.action, saveMessageId: 's1' } };

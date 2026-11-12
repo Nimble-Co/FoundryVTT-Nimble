@@ -8,6 +8,7 @@ import {
 } from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import localize from '#utils/localize.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import type { SaveOnEvent } from '../../models/rules/saveOnEvent.js';
 
@@ -47,6 +48,18 @@ interface RequestCard {
 
 const saveWord = (save: string) => `NIMBLE.effectSheet.escape.saves.${save}`;
 
+/** The item in the effect's origin, when its name is not the effect's name. */
+function itemNameOf(effect: ActiveEffect): string | undefined {
+	if (!effect.origin) return undefined;
+	const origin = fromUuidSync(effect.origin as never, { strict: false }) as {
+		documentName?: string;
+		name?: string;
+	} | null;
+	if (origin?.documentName !== 'Item' || !origin.name || origin.name === effect.name)
+		return undefined;
+	return origin.name;
+}
+
 /** The live rules of the effect for the event. A prepared rule also checks its predicate. */
 function rulesOf(effect: ActiveEffect, event: SaveOnEvent): SaveOnEventData[] {
 	const prepared = (effect as { rules?: { values?(): Iterable<SaveOnEventData> } }).rules;
@@ -79,6 +92,7 @@ export function saveRequestEvents(
 	const lines: CardEvent[] = [];
 	for (const effect of actor.effects) {
 		if (!effect.active) continue;
+		const itemName = itemNameOf(effect);
 		for (const rule of rulesOf(effect, event)) {
 			const save = rule.saveType ?? 'strength';
 			const dc = dcOf(rule, actor);
@@ -88,6 +102,7 @@ export function saveRequestEvents(
 				holderName: actor.name ?? '',
 				effectId: effect.id ?? '',
 				effectName: effect.name ?? '',
+				...(itemName ? { itemName } : {}),
 				save,
 				dc,
 				state: 'waiting',
@@ -173,8 +188,10 @@ const flagsOf = (card: { flags?: Record<string, unknown> } | null | undefined) =
 /** The words of a save card for the effect that asked for it, or null for any other save. */
 export function requestedSaveNote(saveCard: SaveCard | null | undefined): string | null {
 	const link = flagsOf(saveCard)[LINK_FLAG] as SaveRequestLink | undefined;
-	if (link?.event?.action?.kind !== 'saveRequest') return null;
-	return cardEventText(link.event.text);
+	const action = link?.event?.action;
+	if (!link || action?.kind !== 'saveRequest') return null;
+	const note = cardEventText(link.event.text);
+	return action.itemName ? localize(`${WORDS}.noteFrom`, { note, item: action.itemName }) : note;
 }
 
 /** A flag key for a line id, which has dots. */

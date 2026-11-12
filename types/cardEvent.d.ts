@@ -52,6 +52,8 @@ export interface SaveRequestAction {
 	holderName: string;
 	effectId: string;
 	effectName: string;
+	/** The item the effect came from, when its name is not the effect's name. */
+	itemName?: string;
 	save: string;
 	dc: number;
 	state: 'waiting' | 'kept';
