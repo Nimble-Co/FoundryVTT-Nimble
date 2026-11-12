@@ -207,6 +207,19 @@ export default function registerConditionsConfig() {
 		],
 	};
 
+	/** The rules a condition's effect carries. A crit on a concentrating creature asks a save. */
+	const conditionRules: Record<string, Record<string, unknown>[]> = {
+		concentration: [
+			{
+				id: 'concentrationSave',
+				type: 'saveOnEvent',
+				event: 'critReceived',
+				saveType: 'strength',
+				saveDC: '10',
+			},
+		],
+	};
+
 	// New: Automatic condition trigger relationships
 	const conditionTriggerRelationships = {
 		hampered: {
@@ -220,6 +233,7 @@ export default function registerConditionsConfig() {
 	return {
 		conditions,
 		conditionAliasedConditions,
+		conditionRules,
 		conditionDescriptions,
 		conditionDefaultImages,
 		conditionLinkedConditions,

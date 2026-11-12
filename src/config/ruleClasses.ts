@@ -70,6 +70,7 @@ import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
+import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -134,6 +135,7 @@ export const RULE_CLASSES = {
 	maxDamage: MaxDamageRule,
 	critDice: CritDiceRule,
 	critDiceSave: CritDiceSaveRule,
+	saveOnEvent: SaveOnEventRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,

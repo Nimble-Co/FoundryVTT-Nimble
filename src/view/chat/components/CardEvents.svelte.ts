@@ -1,10 +1,11 @@
 import { tick } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
+import type { CardEvent, EndedEffectRow, SaveRequestAction } from '#types/cardEvent.d.ts';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
+import { canRollRequest, rollRequestedSave } from '#utils/saveRequest/saveRequests.js';
 
 const EFFECT_HOOKS = ['createActiveEffect', 'deleteActiveEffect'] as const;
 
@@ -62,6 +63,20 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	function canRollSave(action: SaveRequestAction): boolean {
+		return canRollRequest(action);
+	}
+
+	async function rollSave(event: CardEvent) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			await rollRequestedSave(getMessage() as never, event);
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
 	function backStatus(eventId: string) {
 		return (element: HTMLElement) => {
@@ -79,6 +94,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		isBack,
 		canUndo,
 		undo,
+		canRollSave,
+		rollSave,
 		backStatus,
 	};
 }

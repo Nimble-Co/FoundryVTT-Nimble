@@ -13,6 +13,17 @@ const { undoEndedEffect } = vi.hoisted(() => ({
 
 vi.mock('#utils/lastsUntil/endEffects.js', () => ({ undoEndedEffect }));
 
+const { rollRequestedSave } = vi.hoisted(() => ({
+	rollRequestedSave: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/saveRequest/saveRequests.js', () => ({
+	rollRequestedSave,
+	canRollRequest: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
 
@@ -34,6 +45,24 @@ const ended = (id: string, holderUuid: string, holderName: string, at = 1): Card
 	cause: { key: 'NIMBLE.chat.events.cause.source', data: { source: 'Cultist' } },
 	action: { kind: 'undoEnd', row: row(holderUuid, holderName) },
 	at,
+});
+
+const saveLine = (state: 'waiting' | 'kept'): CardEvent => ({
+	id: 'save1',
+	kind: 'saveRequest',
+	img: 'icons/concentration.svg',
+	text: { key: 'NIMBLE.chat.saveRequest.ask', data: { name: 'Tessa', effect: 'Concentration' } },
+	action: {
+		kind: 'saveRequest',
+		holderUuid: 'Actor.tessa',
+		holderName: 'Tessa',
+		effectId: 'eConc',
+		effectName: 'Concentration',
+		save: 'strength',
+		dc: 10,
+		state,
+	},
+	at: 1,
 });
 
 const poolLine = (id: string, at: number): CardEvent => ({
@@ -120,6 +149,31 @@ describe('CardEvents', () => {
 		expect(lines[0]).toHaveTextContent('Cultist');
 		expect(lines[1]).toHaveTextContent('Tessa n1 rested');
 		expect(lines[1].querySelector('i.fa-dice-d6')).not.toBeNull();
+	});
+
+	it('a save line has a Roll button for the owner of the creature and the GM', async () => {
+		renderEvents(makeCard([saveLine('waiting')]));
+
+		const roll = screen.getByRole('button', { name: /Roll the STR save of Tessa/ });
+		await fireEvent.click(roll);
+
+		expect(rollRequestedSave).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'save1' }),
+		);
+	});
+
+	it('other players see who the save waits for, and then that it was kept', () => {
+		globals.game.user = { isGM: false };
+		holders['Actor.tessa'].isOwner = false;
+		const { unmount } = renderEvents(makeCard([saveLine('waiting')]));
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByRole('status')).toHaveTextContent('Waiting for Tessa');
+		unmount();
+
+		renderEvents(makeCard([saveLine('kept')]));
+		expect(screen.getByRole('status')).toHaveTextContent('Kept');
 	});
 
 	it('a strip with no heading names itself', () => {

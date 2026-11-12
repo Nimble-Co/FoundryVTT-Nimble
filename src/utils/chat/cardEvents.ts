@@ -53,6 +53,7 @@ export interface MomentEventsOptions {
 
 type QueryData =
 	| { op: 'add'; messageId: string; events: CardEvent[] }
+	| { op: 'replace'; messageId: string; eventId: string; next: CardEvent | null }
 	| {
 			op: 'moment';
 			moment: CardEventMoment;
@@ -277,6 +278,16 @@ function momentHere(
 	});
 }
 
+function replaceHere(card: EventCard, eventId: string, next: CardEvent | null): Promise<boolean> {
+	return queue.run(`message:${card.id}`, async () => {
+		const events = storedEvents(card);
+		if (!events.some((event) => event.id === eventId)) return false;
+		const kept = events.flatMap((event) => (event.id !== eventId ? [event] : next ? [next] : []));
+		await card.update?.({ [`flags.${SYSTEM_ID}.events`]: kept });
+		return true;
+	});
+}
+
 async function askGm(data: QueryData): Promise<boolean> {
 	const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
 		?.activeGM;
@@ -301,6 +312,22 @@ export async function addCardEvents(card: EventCard, events: CardEvent[]): Promi
 		return placed && moved;
 	} catch (error) {
 		console.error('Nimble | Could not add the events of a card.', error);
+		return false;
+	}
+}
+
+/** Put another line in the place of one line of a card, or take it away with null. */
+export async function replaceCardEvent(
+	card: EventCard,
+	eventId: string,
+	next: CardEvent | null,
+): Promise<boolean> {
+	if (!card.id) return false;
+	try {
+		if (game.user?.isActiveGM) return await replaceHere(card, eventId, next);
+		return await askGm({ op: 'replace', messageId: card.id, eventId, next });
+	} catch (error) {
+		console.error('Nimble | Could not change a line of a card.', error);
 		return false;
 	}
 }
@@ -336,6 +363,7 @@ export function registerCardEventsQuery(): void {
 			if (data.op === 'moment') return momentHere(data.moment, data.events, data.options ?? {});
 			const card = game.messages?.get(data.messageId) as unknown as EventCard | undefined;
 			if (!card) return false;
+			if (data.op === 'replace') return replaceHere(card, data.eventId, data.next);
 			return appendHere(card, data.events);
 		};
 	});

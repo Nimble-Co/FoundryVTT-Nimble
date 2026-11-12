@@ -19,7 +19,7 @@ export interface Condition {
 	statuses?: string[] | undefined;
 	stackable: boolean;
 	/** Core copies this into the effect it builds from the status, so a hand-applied condition gets it too. */
-	system?: { lastsUntil: Moment[] };
+	system?: { lastsUntil: Moment[]; rules?: Record<string, unknown>[] };
 	/** The `[[/condition]]` enricher source for this condition, for callers that render it. */
 	enricherText: string;
 }
@@ -60,7 +60,10 @@ export class ConditionManager {
 			if (aliases.length) data.aliases = new Set(aliases);
 
 			const lastsUntil: Moment[] = CONFIG.NIMBLE.conditionLastsUntil?.[id] ?? [];
-			if (lastsUntil.length) data.system = { lastsUntil };
+			const rules: Record<string, unknown>[] = CONFIG.NIMBLE.conditionRules?.[id] ?? [];
+			if (lastsUntil.length || rules.length) {
+				data.system = { lastsUntil, ...(rules.length ? { rules } : {}) };
+			}
 
 			if (statuses.length) {
 				data.statuses = statuses;

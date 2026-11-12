@@ -30,7 +30,8 @@ export type CardEventKind =
 	| 'movementOffer'
 	| 'interpose'
 	| 'healthState'
-	| 'damage';
+	| 'damage'
+	| 'saveRequest';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -47,7 +48,21 @@ export interface EndedEffectRow {
  * What a line lets the reader do: Undo an end, or move as an offer lets. A Movement Offer line
  * holds its move and the offers it made; the card stores the same offers, so the token carries them.
  */
+/** A save that an event asks of a creature (Save on an Event), and how it stands. */
+export interface SaveRequestAction {
+	kind: 'saveRequest';
+	holderUuid: string;
+	holderName: string;
+	effectId: string;
+	effectName: string;
+	save: string;
+	dc: number;
+	state: 'waiting' | 'kept';
+	total?: number;
+}
+
 export type CardEventAction =
+	| SaveRequestAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

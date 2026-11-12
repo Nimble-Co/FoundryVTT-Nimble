@@ -717,6 +717,19 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
+			"saveRequest": {
+				"ask": "{name} saves to keep {effect}",
+				"kept": "{name} keeps {effect}",
+				"cause": {
+					"critReceived": "Critical hit - DC {dc} {save} save",
+					"takeDamage": "Took damage - DC {dc} {save} save"
+				},
+				"rolled": "{save} save {total} - DC {dc}",
+				"roll": "Roll",
+				"rollLabel": "Roll the {save} save of {name}",
+				"waiting": "Waiting for {name}",
+				"keptBadge": "Kept"
+			},
 			"events": {
 				"label": "Events",
 				"undo": "Undo",
@@ -1893,6 +1906,7 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
+			"saveOnEvent": "Save on an Event",
 			"damageMultiplier": "Damage Multiplier Tick",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
@@ -3391,6 +3405,16 @@
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
+			},
+			"saveOnEvent": {
+				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
+				"event": {
+					"label": "When",
+					"hint": "What asks for the save.",
+					"choices": { "critReceived": "A crit hits the creature", "takeDamage": "The creature takes damage" }
+				},
+				"saveType": { "label": "Save", "hint": "The save the creature makes." },
+				"saveDC": { "label": "DC", "hint": "The DC of the save, as a formula of the creature's stats." }
 			},
 			"critDiceSave": {
 				"description": "A row in Change This Roll on an attack with dice a crit adds. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",

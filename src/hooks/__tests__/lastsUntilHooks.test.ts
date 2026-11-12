@@ -1,19 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { systemHookName } from '#system';
 
-const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock } = vi.hoisted(
-	() => ({
+const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
+	vi.hoisted(() => ({
+		requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
 		endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
 		endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
 		fireEventMock: vi.fn((..._args: unknown[]) => undefined),
 		fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
-	}),
-);
+	}));
 
 vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
 	endEffects: endEffectsMock,
 	endEffectsAt: endEffectsAtMock,
 }));
+vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: requestSavesMock }));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({
 	eventHeading: (event: string, names: { name?: string | null }) => `${event}:${names.name}`,
 	fireEvent: fireEventMock,
@@ -467,6 +468,21 @@ describe('events', () => {
 			{ damageTypes: ['fire'] },
 			null,
 		);
+	});
+
+	it('a crit asks the saves of a crit and of damage on the card; a plain hit only of damage', () => {
+		const target = { name: 'Tessa' };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: target, card, isCritical: true });
+		expect(requestSavesMock.mock.calls).toEqual([
+			[card, target, 'critReceived'],
+			[card, target, 'takeDamage'],
+		]);
+
+		requestSavesMock.mockClear();
+		hook(systemHookName('damageApplied'))({ targetActor: target, card });
+		expect(requestSavesMock.mock.calls).toEqual([[card, target, 'takeDamage']]);
 	});
 
 	it('damage applied from a card has that card as the host of both events', () => {

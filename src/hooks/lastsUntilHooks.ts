@@ -15,6 +15,7 @@ import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { requestSaves } from '#utils/saveRequest/saveRequests.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
@@ -141,7 +142,10 @@ function takeBackEffectTempHp(
 
 /** The statuses of a new effect, with each status they count as (Stunned counts as Incapacitated). */
 function gainedStatuses(effect: ActiveEffect): string[] {
-	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<string, readonly string[]>;
+	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
+		string,
+		readonly string[]
+	>;
 	const statuses = [...(effect.statuses ?? [])];
 	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
 }
@@ -194,10 +198,14 @@ function onDamageApplied(payload: {
 	sourceActor?: Actor | null;
 	card?: { id?: string | null; speaker?: ChatMessage['speaker'] } | null;
 	isMiss?: boolean;
+	isCritical?: boolean;
 	damageTypes?: readonly string[];
 }): void {
 	if (payload?.isMiss) return;
 	const card = payload?.card ?? null;
+	const target = (payload?.targetActor ?? null) as Parameters<typeof requestSaves>[1];
+	if (payload?.isCritical) void requestSaves(card, target, 'critReceived');
+	void requestSaves(card, target, 'takeDamage');
 	fireEvent(
 		'takeDamage',
 		payload?.targetActor ?? null,
