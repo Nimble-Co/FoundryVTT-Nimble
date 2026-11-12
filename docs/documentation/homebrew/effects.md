@@ -62,7 +62,7 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 | They or you do something | until **they** **attack**; until **you** **drop to 0 HP** |
 | Another effect ends | until **the effect** **Rage** ends |
 
-"Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero.
+"Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero. "The" is the turn in progress, whoever's it is: until **the end of** **the** **turn**, for an effect that goes on during the turn of another creature.
 
 They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP or die. You can attack, cast a spell, drop to 0 HP, die, lose Concentration or use this again.
 
