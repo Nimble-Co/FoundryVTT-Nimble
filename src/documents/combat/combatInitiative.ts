@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getInitiativeStartingActions } from '../../utils/combat/initiativeStartingActions.js';
@@ -140,4 +141,16 @@ export async function rollInitiativeForCombatant(params: {
 		combatantUpdate: combatantUpdates,
 		chatData,
 	};
+}
+
+/** The Initiative card with the id of its roll, so a rule that the roll fires finds this card. */
+export function withInitiativeRollId(
+	chatData: ChatMessage.CreateData,
+	rollId: string,
+): ChatMessage.CreateData {
+	const flags = (chatData.flags ?? {}) as Record<string, Record<string, unknown> | undefined>;
+	return {
+		...chatData,
+		flags: { ...flags, [SYSTEM_ID]: { ...flags[SYSTEM_ID], initiativeRollId: rollId } },
+	} as ChatMessage.CreateData;
 }

@@ -33,7 +33,7 @@ import {
 	getCombatantResetActions,
 } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
-import { rollInitiativeForCombatant } from './combatInitiative.js';
+import { rollInitiativeForCombatant, withInitiativeRollId } from './combatInitiative.js';
 import { performMinionGroupAttack } from './combatMinionAttacks.js';
 import {
 	assignNcsTemporaryGroupFromAttackMembers,
@@ -1260,7 +1260,7 @@ class NimbleCombat extends Combat {
 			if (!rollOutcome) continue;
 			lockedRollOutcomes.push(rollOutcome);
 			updates.push(rollOutcome.outcome.combatantUpdate);
-			messages.push(rollOutcome.outcome.chatData);
+			messages.push(withInitiativeRollId(rollOutcome.outcome.chatData, rollOutcome.requestId));
 		}
 
 		try {
@@ -1281,7 +1281,11 @@ class NimbleCombat extends Combat {
 			const actor = combatant?.actor;
 			if (!actor) continue;
 			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch and chargePool/dicePool triggers
-			Hooks.callAll(systemHookName('initiativeRolled'), { actor, combatant });
+			Hooks.callAll(systemHookName('initiativeRolled'), {
+				actor,
+				combatant,
+				rollId: rollOutcome.requestId,
+			});
 		}
 
 		if (combatManaUpdates.length > 0) {

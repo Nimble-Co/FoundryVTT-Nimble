@@ -133,6 +133,8 @@ interface RestContext {
 interface InitiativeRolledContext {
 	actor: NimbleBaseActor;
 	combatant: Combatant;
+	/** The roll, as its Initiative card names it. */
+	rollId?: string;
 }
 
 // Context passed to onEncounterEnd. Fires once per combatant when a combat

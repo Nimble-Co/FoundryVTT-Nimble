@@ -78,6 +78,7 @@ interface NimbleRestPayload {
 interface NimbleInitiativePayload {
 	actor: ActorWithRules;
 	combatant: Combatant;
+	rollId?: string;
 }
 
 interface NimblePoolChangedPayload {
@@ -312,6 +313,7 @@ function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
 	const context: InitiativeRolledContext = {
 		actor: payload.actor as unknown as InitiativeRolledContext['actor'],
 		combatant: payload.combatant,
+		...(payload.rollId ? { rollId: payload.rollId } : {}),
 	};
 	void dispatch(payload.actor, 'onInitiativeRolled', context);
 }

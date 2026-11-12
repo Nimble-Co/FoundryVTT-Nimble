@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { FreeMoveRule as FreeMoveRuleType } from '../freeMove.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -823,8 +823,8 @@ describe('FreeMoveRule hosts', () => {
 		const harness = makeRule({ trigger: 'onInitiativeRolled' });
 		const card = {
 			type: 'initiative',
-			timestamp: Date.now(),
 			system: { combatantId: 'cb' },
+			flags: { [SYSTEM_ID]: { initiativeRollId: 'roll-1' } },
 		};
 		const messages = (globalThis as unknown as { game: { messages: unknown } }).game;
 		const saved = messages.messages;
@@ -833,6 +833,7 @@ describe('FreeMoveRule hosts', () => {
 			await harness.rule.onInitiativeRolled({
 				actor: harness.actor,
 				combatant: { id: 'cb', token: harness.heroToken },
+				rollId: 'roll-1',
 			} as never);
 		} finally {
 			messages.messages = saved;

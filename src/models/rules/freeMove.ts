@@ -207,7 +207,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onInitiativeRolled') return;
 		if (context.actor !== this.actor) return;
-		const card = await findInitiativeCard(context.combatant);
+		const card = await findInitiativeCard(context.combatant, context.rollId);
 		await this.#offer(
 			{ key: `${REASONS}.onInitiativeRolled` },
 			context.combatant?.token ?? null,
