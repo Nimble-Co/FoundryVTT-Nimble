@@ -394,7 +394,7 @@ describe('Beast of Nightmares', () => {
 	const item = readItem(FILES.beastOfNightmares);
 	const effect = effectNamed(item, 'Silent But Deadly');
 
-	it('is a marker until you attack, drop to 0 HP or cast a spell', () => {
+	it('is a marker until you attack, drop to 0 HP, cast a spell or take any damage (Tiny beast)', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe(
@@ -404,6 +404,7 @@ describe('Beast of Nightmares', () => {
 			exactMoment(onEvent('holder', 'attack')),
 			exactMoment(onEvent('holder', 'zeroHp')),
 			exactMoment(onEvent('holder', 'castSpell')),
+			exactMoment(onEvent('holder', 'takeDamage')),
 		]);
 	});
 
