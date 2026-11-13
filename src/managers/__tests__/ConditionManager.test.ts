@@ -66,7 +66,7 @@ describe('ConditionManager', () => {
 			expect(manager.get('hexed')?.name).toBe('Hexed');
 		});
 
-		it('records aliases, linked statuses, and a static id for linked conditions', () => {
+		it('records linked statuses and a static id for linked conditions', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', petrified: 'Petrified', wounded: 'Wounded' },
 				{
@@ -78,18 +78,18 @@ describe('ConditionManager', () => {
 
 			manager.initialize();
 
-			expect(manager.get('blinded')?.aliases).toEqual(new Set(['dazed']));
+			// "Counts as" reads conditionCountsAs; a status record keeps no copy of the alias table.
+			expect(manager.get('blinded')).not.toHaveProperty('aliases');
 			expect(manager.get('petrified')?.statuses).toEqual(['incapacitated']);
 			// getMetadata() matches effects on this padded id, so its exact shape matters.
 			expect(manager.get('petrified')?._id).toBe('petrified0000000');
 			expect(manager.get('wounded')?.stackable).toBe(true);
 		});
 
-		it('leaves aliases, statuses, and the static id unset for plain conditions', () => {
+		it('leaves statuses and the static id unset for plain conditions', () => {
 			manager.initialize();
 
 			const condition = manager.get('blinded');
-			expect(condition?.aliases).toBeUndefined();
 			expect(condition?.statuses).toBeUndefined();
 			expect(condition?._id).toBeUndefined();
 		});

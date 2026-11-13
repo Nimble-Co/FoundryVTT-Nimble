@@ -15,7 +15,6 @@ export interface Condition {
 	id: string;
 	name: string;
 	img: string;
-	aliases?: Set<string> | undefined;
 	statuses?: string[] | undefined;
 	stackable: boolean;
 	/** Core copies this into the effect it builds from the status, so a hand-applied condition gets it too. */
@@ -46,7 +45,6 @@ export class ConditionManager {
 		this.#conditions.clear();
 
 		for (const id of Object.keys(CONFIG.NIMBLE.conditions)) {
-			const aliases: string[] = CONFIG.NIMBLE.conditionAliasedConditions[id] ?? [];
 			const statuses: string[] = CONFIG.NIMBLE.conditionLinkedConditions[id] ?? [];
 
 			const data: Condition = {
@@ -56,8 +54,6 @@ export class ConditionManager {
 				stackable: CONFIG.NIMBLE.conditionStackableConditions.has(id),
 				enricherText: enricherText(id),
 			};
-
-			if (aliases.length) data.aliases = new Set(aliases);
 
 			const lastsUntil: Moment[] = CONFIG.NIMBLE.conditionLastsUntil?.[id] ?? [];
 			const rules: Record<string, unknown>[] = CONFIG.NIMBLE.conditionRules?.[id] ?? [];
