@@ -158,6 +158,96 @@ describe('payloadFromEffect', () => {
 		});
 	});
 
+	describe('with upcast raises', () => {
+		const user = { type: 'character', uuid: 'Actor.hero', getRollData: () => ({ key: 3 }) };
+		const effectWith = (rules: Record<string, unknown>[], lastsUntil: object[] = []) => ({
+			toObject: () => ({ name: 'Enchanted', system: { lastsUntil, rules } }),
+		});
+		const copied = (payload: EffectPayload) =>
+			payload.data.system as { rules: Record<string, unknown>[]; lastsUntil: object[] };
+
+		beforeEach(() => {
+			vi.stubGlobal('Roll', {
+				replaceFormulaData: (formula: string, data: Record<string, number>) =>
+					formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+			});
+		});
+
+		it('adds a formula once for each step before the @ references are read from the user', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '@key' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 2 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('3 + 3 + 3');
+		});
+
+		it('gives a blank formula field only the added terms, as separate dice', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '1d4', steps: 2 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('1d4 + 1d4');
+		});
+
+		it('adds the amount to a number field, and leaves a field of the wrong kind alone', () => {
+			const effect = effectWith([
+				{ id: 'held', type: 'heldRoll', value: 1, heldKind: 'advantage' },
+			]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [
+						{ ruleId: 'held', field: 'value', amount: 2 },
+						{ ruleId: 'held', field: 'heldKind', amount: 2 },
+						{ ruleId: 'held', field: 'value', amount: 0, formula: '@key', steps: 1 },
+					],
+				},
+			});
+
+			expect(copied(payload).rules[0]).toMatchObject({ value: 3, heldKind: 'advantage' });
+		});
+
+		it('adds a step count of 0 as nothing', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '@key' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 0 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('3');
+		});
+
+		it('raises the number of a moment of the Lasts Until', () => {
+			const effect = effectWith([], [{ ...turnMoment, value: 2 }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: { moments: [{ index: 0, amount: 1 }] },
+			});
+
+			expect(copied(payload).lastsUntil).toEqual([{ ...turnMoment, value: 3 }]);
+		});
+	});
+
 	it('keeps an extra damage formula as it is with no source', () => {
 		const rules = [
 			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' },

@@ -8,6 +8,7 @@ import {
 	replaceAt,
 	spanChoiceOf,
 	spanChoices,
+	spanChoiceWord,
 	withClock,
 	withCombatCount,
 	withEffectName,
@@ -114,6 +115,21 @@ describe('the turn list with counts', () => {
 			value: null,
 		});
 		expect(withClock(second, 'nextHero').value).toBeNull();
+	});
+});
+
+describe('the turn list for a count that an upcast raised', () => {
+	it('adds the count of the moment after "5th next turn", and reads it as "8th next turn"', () => {
+		const eighth = withSpanChoice(newMoment('turn'), 'nextTurn:5');
+		eighth.value = 8;
+
+		expect(spanChoices('holder', eighth)).toContain('nextTurn:8');
+		expect(spanChoices('holder', eighth).indexOf('nextTurn:8')).toBe(5);
+		expect(spanChoices('holder', { ...eighth, value: 3 })).not.toContain('nextTurn:8');
+		expect(spanChoiceOf(eighth)).toBe('nextTurn:8');
+		expect(spanChoiceWord('nextTurn:8')).toEqual(['nextTurnCountMany', { count: '8' }]);
+		expect(spanChoiceWord('nextTurn:2')).toEqual(['nextTurnCount.2', {}]);
+		expect(spanChoiceWord('currentTurn')).toEqual(['span.currentTurn', {}]);
 	});
 });
 

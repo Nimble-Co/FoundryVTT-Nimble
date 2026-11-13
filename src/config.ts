@@ -683,6 +683,7 @@ const spellUpcastDialog = {
 	increaseDieSize: 'NIMBLE.spells.spellUpcastDialog.increaseDieSize',
 	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	raiseEffectRule: 'NIMBLE.spells.spellUpcastDialog.raiseEffectRule',
+	extendLastsUntil: 'NIMBLE.spells.spellUpcastDialog.extendLastsUntil',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 	warnings: {

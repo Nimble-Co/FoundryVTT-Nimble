@@ -117,6 +117,87 @@ describe('applyEffectFromCard with upcast rule raises', () => {
 	});
 });
 
+describe('applyEffectFromCard with upcast moment raises', () => {
+	const createEffect = vi.fn();
+	let previousActiveEffect: unknown;
+	const nextTurns = (value: number | null) => ({
+		kind: 'turn',
+		boundary: 'end',
+		clock: 'holder',
+		span: 'nextTurn',
+		value,
+		units: null,
+		who: null,
+		event: null,
+		effectName: '',
+	});
+	const asleep = {
+		name: 'Asleep',
+		system: { lastsUntil: [nextTurns(2)] },
+		toObject: () => ({
+			_id: 'sleep',
+			name: 'Asleep',
+			statuses: [],
+			system: { lastsUntil: [nextTurns(2)] },
+		}),
+	};
+	const spell = {
+		uuid: 'Actor.hero.Item.cryo',
+		actor: { uuid: 'Actor.hero', type: 'character', getRollData: () => ({}) },
+		effects: { get: (id: string) => (id === 'sleep' ? asleep : undefined) },
+	};
+	const spellCard = { ...card, flags: { [SYSTEM_ID]: { itemUuid: spell.uuid } } };
+	const raised = applyNode({ effectId: 'sleep', momentRaises: [{ index: 0, amount: 1 }] });
+
+	beforeEach(() => {
+		createEffect.mockReset().mockResolvedValue({ uuid: 'Actor.goblin.ActiveEffect.new' });
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === spell.uuid ? spell : uuid === 'Scene.s.Token.goblin' ? { actor: goblin } : null,
+			),
+		);
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => ({ uuid })),
+		);
+		previousActiveEffect = (CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect;
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments: vi.fn() },
+		};
+	});
+
+	afterEach(() => {
+		(CONFIG as unknown as { ActiveEffect: unknown }).ActiveEffect = previousActiveEffect;
+		vi.unstubAllGlobals();
+	});
+
+	it('shows the raised moment on the card row', () => {
+		expect(applyEffectSource(spellCard, raised)?.lastsUntil).toEqual([nextTurns(3)]);
+		expect(applyEffectSource(spellCard, applyNode({ effectId: 'sleep' }))?.lastsUntil).toEqual([
+			nextTurns(2),
+		]);
+	});
+
+	it('puts the raised moment on the copy', async () => {
+		await applyEffectFromCard(spellCard, raised);
+
+		const [data] = createEffect.mock.calls[0] as [{ system: { lastsUntil: unknown[] } }];
+		expect(data.system.lastsUntil).toEqual([nextTurns(3)]);
+	});
+
+	it('raises the moment of a condition step', () => {
+		const node = applyNode({
+			effectId: null,
+			condition: 'dazed',
+			lastsUntil: [nextTurns(null)] as never,
+			momentRaises: [{ index: 0, amount: 2 }],
+		});
+
+		expect(applyEffectSource(spellCard, node)?.lastsUntil).toEqual([nextTurns(3)]);
+	});
+});
+
 describe('applyEffectFromCard for a node that a rule gives', () => {
 	const createEffect = vi.fn();
 	const fromStatusEffect = vi.fn();
@@ -180,6 +261,32 @@ describe('applyEffectFromCard for a node that a rule gives', () => {
 		expect(
 			applyEffectSource(card, applyNode({ effectId: 'mark', effectItemUuid: feature.uuid })),
 		).toMatchObject({ name: 'Marked' });
+	});
+
+	it('puts the raised moment on the copy of a condition step', async () => {
+		const moment = {
+			kind: 'turn',
+			boundary: 'end',
+			clock: 'holder',
+			span: 'nextTurn',
+			value: null,
+			units: null,
+			who: null,
+			event: null,
+			effectName: '',
+		};
+		await applyEffectFromCard(
+			card,
+			applyNode({
+				effectId: null,
+				condition: 'dazed',
+				lastsUntil: [moment] as never,
+				momentRaises: [{ index: 0, amount: 1 }],
+			}),
+		);
+
+		const [data] = createEffect.mock.calls[0] as [{ system: { lastsUntil: unknown[] } }];
+		expect(data.system.lastsUntil).toEqual([{ ...moment, value: 2 }]);
 	});
 
 	it('reads no core duration from a condition node', async () => {

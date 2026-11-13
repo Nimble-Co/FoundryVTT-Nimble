@@ -82,6 +82,11 @@ describe('describeLastsUntil', () => {
 		expect(read([second], CARD_TARGETS_READER)).toBe('Until the end of their 2nd next turn');
 	});
 
+	it('reads a count above 5 that an upcast gives as "8th next turn"', () => {
+		const eighth = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 8 });
+		expect(read([eighth], CARD_TARGETS_READER)).toBe('Until the end of their 8th next turn');
+	});
+
 	it('reads a turn moment from the card and from the holder', () => {
 		expect(read([endOfTheirNextTurn], CARD_TARGETS_READER)).toBe(
 			'Until the end of their next turn',

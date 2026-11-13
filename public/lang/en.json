@@ -4115,6 +4115,7 @@
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"raiseEffectRule": "{rule}: +{amount} {field}",
+				"extendLastsUntil": "{effect}: +{amount}",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier",
 				"warnings": {
@@ -4180,6 +4181,7 @@
 				"4": "4th next turn",
 				"5": "5th next turn"
 			},
+			"nextTurnCountMany": "{count}th next turn",
 			"typedDamage": { "base": "take {types} damage", "third": "takes {types} damage" },
 			"orWord": " or ",
 			"nextHero": "the next hero's turn",
@@ -4305,6 +4307,7 @@
 					"4": "4th next turn",
 					"5": "5th next turn"
 				},
+				"nextTurnCountMany": "{count}th next turn",
 				"combatCount": {
 					"1": "combat ends",
 					"2": "the 2nd combat ends",
@@ -5706,6 +5709,9 @@
 				"ruleField": "Number",
 				"chooseOne": "Choose one",
 				"noEffectRules": "Add an Apply Effect node with an effect in the Activation tab to pick its rule here.",
+				"formula": "Formula",
+				"moment": "Moment",
+				"noEffectMoments": "Add an Apply Effect node in the Activation tab whose effect lasts a count of turns or a time, to pick that moment here.",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -5718,7 +5724,8 @@
 					"addDuration": "Duration",
 					"addCondition": "Condition",
 					"increaseDieSize": "Increase Die Size",
-					"raiseEffectRule": "Raise Effect Rule"
+					"raiseEffectRule": "Raise Effect Rule",
+					"extendLastsUntil": "Lengthen Lasts Until"
 				}
 			}
 		},

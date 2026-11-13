@@ -30,6 +30,16 @@ describe('concentrationLastsUntil', () => {
 		});
 	});
 
+	it('reads the Duration it is given over the Duration of the item', () => {
+		expect(
+			concentrationLastsUntil(spell(1, 'minute'), { quantity: 2, type: 'minute' })?.[1],
+		).toMatchObject({
+			value: 2,
+			units: 'minutes',
+		});
+		expect(concentrationLastsUntil(spell(1, 'minute'), null)?.[1]).toMatchObject({ value: 1 });
+	});
+
 	it('gives nothing for a Duration that is not in minutes or hours', () => {
 		expect(concentrationLastsUntil(spell(1, 'round'))).toBeUndefined();
 		expect(concentrationLastsUntil(spell(null, 'minute'))).toBeUndefined();

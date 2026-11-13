@@ -9,6 +9,7 @@
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
+	import { effectMomentNumbers } from '../../utils/spell/effectMomentNumbers.js';
 	import { effectRuleNumbers } from '../../utils/spell/effectRuleNumbers.js';
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
@@ -171,6 +172,7 @@
 		const preview = deltas.map((delta: ScalingDelta) => {
 			if (delta.operation === 'increaseDieSize') return formatDieSizePreview(delta, upcastSteps);
 			if (delta.operation === 'raiseEffectRule') return formatRaisePreview(delta, upcastSteps);
+			if (delta.operation === 'extendLastsUntil') return formatLengthenPreview(delta, upcastSteps);
 
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
@@ -242,11 +244,39 @@
 		);
 		const rule = target?.rules.find((entry) => entry.id === delta.ruleId);
 		const field = rule?.fields.find((entry) => entry.name === delta.ruleField);
+		const amount = delta.formula
+			? formulaRaiseAmount(delta.formula, steps)
+			: String((delta.value ?? 0) * steps);
 		return format(spellUpcastDialog.raiseEffectRule, {
 			rule: rule?.label ?? target?.label ?? '',
-			amount: String((delta.value ?? 0) * steps),
+			amount,
 			field: field?.label ?? delta.ruleField ?? '',
 		});
+	}
+
+	// The terms the cast adds, worked out from the caster when they have no dice.
+	function formulaRaiseAmount(formula: string, steps: number) {
+		const terms = Array.from({ length: steps }, () => formula).join(' + ');
+		try {
+			const roll = new Roll(terms, actor.getRollData());
+			return roll.isDeterministic ? String(roll.evaluateSync().total) : roll.formula;
+		} catch {
+			return terms;
+		}
+	}
+
+	function formatLengthenPreview(delta: ScalingDelta, steps: number) {
+		const target = effectMomentNumbers(spell?.parent ?? {}).find(
+			(node) => node.nodeId === delta.targetEffectId,
+		);
+		const moment = target?.moments.find((entry) => entry.index === delta.momentIndex);
+		const value = (delta.value ?? 0) * steps;
+		const units = moment?.units ?? 'turns';
+		const amount =
+			value === 1
+				? localize(`NIMBLE.lastsUntilText.units.${units}.one`)
+				: format(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
+		return format(spellUpcastDialog.extendLastsUntil, { effect: target?.label ?? '', amount });
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null) {

@@ -1,7 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
-import type { RuleRaise } from '#types/spellScaling.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -15,6 +14,7 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
 import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { raiseMoments } from '#utils/lastsUntil/raiseMoments.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -89,7 +89,7 @@ export function applyEffectSource(
 		return {
 			name: effect.name,
 			img: effect.img ?? 'icons/svg/aura.svg',
-			lastsUntil: effect.system?.lastsUntil ?? [],
+			lastsUntil: raiseMoments(effect.system?.lastsUntil ?? [], node.momentRaises ?? []),
 			usedUp: usedUpOf(effect.system),
 			escape: hasEscape(effect.system),
 		};
@@ -97,7 +97,7 @@ export function applyEffectSource(
 	if (!node.condition) return null;
 	return {
 		...statusOf(node.condition),
-		lastsUntil: node.lastsUntil ?? [],
+		lastsUntil: raiseMoments(node.lastsUntil ?? [], node.momentRaises ?? []),
 		escape: false,
 	};
 }
@@ -117,30 +117,20 @@ export function cardTargets(card: EffectCard): CardActor[] {
 		.filter((actor): actor is CardActor => !!actor);
 }
 
-/** Adds each upcast raise to its rule's field, when that field holds a number. */
-function raiseRules(payload: EffectPayload, raises: readonly RuleRaise[]): void {
-	const rules = (payload.data.system as { rules?: Record<string, unknown>[] } | undefined)?.rules;
-	if (!rules) return;
-	for (const { ruleId, field, amount } of raises) {
-		const rule = rules.find((entry) => entry.id === ruleId);
-		const current = rule?.[field];
-		if (rule && typeof current === 'number' && Number.isFinite(current)) {
-			rule[field] = current + amount;
-		}
-	}
-}
-
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
 	const user = cardUser(card);
 	const effect = nodeEffect(card, node);
 	if (effect) {
 		const itemUuid = effectItem(card, node)?.uuid ?? null;
-		const payload = payloadFromEffect(effect, { itemUuid, user });
-		if (node.ruleRaises?.length) raiseRules(payload, node.ruleRaises);
-		return payload;
+		return payloadFromEffect(effect, {
+			itemUuid,
+			user,
+			raises: { rules: node.ruleRaises, moments: node.momentRaises },
+		});
 	}
 	if (!node.condition) return null;
-	return payloadFromCondition(node.condition, node.lastsUntil ?? [], {
+	const lastsUntil = raiseMoments(node.lastsUntil ?? [], node.momentRaises ?? []);
+	return payloadFromCondition(node.condition, lastsUntil, {
 		itemUuid: cardItem(card)?.uuid ?? null,
 		actorUuid: user?.uuid ?? null,
 	});

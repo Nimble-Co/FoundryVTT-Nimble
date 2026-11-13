@@ -1,11 +1,13 @@
 import type { EffectNode } from '#types/effectTree.js';
 import localize from '#utils/localize.js';
-import type { NimbleBaseRule } from '../../models/rules/base.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
+import type { NimbleBaseRule } from '../../models/rules/base.js';
 
 export interface EffectRuleNumberField {
 	name: string;
 	label: string;
+	/** A formula field gets a formula added for each step, a number field a number. */
+	kind: 'number' | 'formula';
 }
 
 export interface EffectRuleNumbers {
@@ -32,23 +34,41 @@ type RuleClass = Pick<typeof NimbleBaseRule, 'raisedFieldLabel'> & {
 /** Not a number of the rule's effect: it orders the rules. */
 const NOT_RAISED = new Set(['priority']);
 
+type FieldOptions = {
+	label?: string;
+	widget?: string | ((data: Record<string, unknown>) => string);
+	showWhen?: (data: Record<string, unknown>) => boolean;
+};
+
+const FORMULA_WIDGETS = new Set(['formula', 'diceFormula']);
+
+function isFormulaField(field: unknown, rule: Record<string, unknown>): boolean {
+	if (!(field instanceof foundry.data.fields.StringField)) return false;
+	const options = (field as unknown as { options?: FieldOptions }).options;
+	const widget = typeof options?.widget === 'function' ? options.widget(rule) : options?.widget;
+	if (!widget || !FORMULA_WIDGETS.has(widget)) return false;
+	return typeof options?.showWhen === 'function' ? options.showWhen(rule) : true;
+}
+
 function numberFields(type: string, rule: Record<string, unknown>): EffectRuleNumberField[] {
 	const RuleClass = (CONFIG.NIMBLE.ruleDataModels as Record<string, RuleClass | undefined>)[type];
 	if (!RuleClass) return [];
 	const { NumberField } = foundry.data.fields;
-	return Object.entries(RuleClass.defineSchema())
-		.filter(([name, field]) => field instanceof NumberField && !NOT_RAISED.has(name))
-		.map(([name, field]) => {
-			const raised = RuleClass.raisedFieldLabel(name, rule);
-			if (raised) return { name, label: raised };
-			const label = (field as { label?: string }).label;
-			return { name, label: label ? localize(label) : name };
-		});
+	return Object.entries(RuleClass.defineSchema()).flatMap(([name, field]) => {
+		if (NOT_RAISED.has(name)) return [];
+		const kind =
+			field instanceof NumberField ? 'number' : isFormulaField(field, rule) ? 'formula' : null;
+		if (!kind) return [];
+		const raised = RuleClass.raisedFieldLabel(name, rule);
+		if (raised) return [{ name, label: raised, kind }];
+		const label = (field as { label?: string }).label;
+		return [{ name, label: label ? localize(label) : name, kind }];
+	});
 }
 
 /**
  * The Apply Effect nodes of an item's activation, each with the rules of its effect and the number
- * fields of each rule, for an upcast step to raise.
+ * and formula fields of each rule, for an upcast step to raise.
  */
 export function effectRuleNumbers(item: ItemWithEffects): ApplyEffectRuleNumbers[] {
 	const ruleTypes = CONFIG.NIMBLE.ruleTypes as Record<string, string | undefined>;

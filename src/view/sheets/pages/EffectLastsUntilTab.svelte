@@ -147,8 +147,8 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 							onchange={({ currentTarget }) =>
 								change(index, withSpanChoice(moment, currentTarget.value as SpanChoice))}
 						>
-							{#each spanChoices(moment.clock) as choice (choice)}
-								<option value={choice}>{word(spanChoiceWord(choice))}</option>
+							{#each spanChoices(moment.clock, moment) as choice (choice)}
+								<option value={choice}>{word(...spanChoiceWord(choice))}</option>
 							{/each}
 						</select>
 					{:else if moment.kind === 'time'}

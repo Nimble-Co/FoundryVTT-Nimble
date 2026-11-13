@@ -307,7 +307,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 		let concentrating = false;
 		try {
-			const outcome = await applyCasterConcentration(this as object as ConcentrationSource);
+			const outcome = await applyCasterConcentration(
+				this as object as ConcentrationSource,
+				activation as Parameters<typeof applyCasterConcentration>[1],
+			);
 			concentrating = outcome === 'applied';
 
 			if (outcome === 'refused') {

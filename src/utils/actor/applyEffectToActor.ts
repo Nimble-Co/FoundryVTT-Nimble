@@ -1,9 +1,11 @@
 import { SYSTEM_ID } from '#system';
+import type { MomentRaise, RuleRaise } from '#types/spellScaling.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { effectCardOption } from '#utils/damage/damageCard.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { applicationOf, newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { raiseMoments } from '#utils/lastsUntil/raiseMoments.js';
 import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
 import { checkFormulaReferences } from '#utils/rolls/formulaReferences.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
@@ -128,15 +130,50 @@ function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 	}
 }
 
-/** A copy of an item's effect for an actor. The Escape DC and the rule formulas are worked out now. */
+/** What an upcast adds to the copy: to fields of its rules, and to numbers of its Lasts Until. */
+export interface EffectRaises {
+	rules?: readonly RuleRaise[];
+	moments?: readonly MomentRaise[];
+}
+
+/**
+ * Adds each upcast raise to its rule's field: the amount to a number, and the formula once for
+ * each step to a formula.
+ */
+function raiseRules(rules: unknown, raises: readonly RuleRaise[]): void {
+	if (!Array.isArray(rules)) return;
+	for (const { ruleId, field, amount, formula, steps } of raises) {
+		const rule = (rules as Record<string, unknown>[]).find((entry) => entry?.id === ruleId);
+		if (!rule) continue;
+		const current = rule[field];
+		if (formula) {
+			if (!steps || (typeof current !== 'string' && current != null)) continue;
+			const terms = Array.from({ length: steps }, () => formula).join(' + ');
+			rule[field] = typeof current === 'string' && current.trim() ? `${current} + ${terms}` : terms;
+		} else if (typeof current === 'number' && Number.isFinite(current)) {
+			rule[field] = current + amount;
+		}
+	}
+}
+
+/**
+ * A copy of an item's effect for an actor, with the upcast raises added. The Escape DC and the
+ * rule formulas are worked out now.
+ */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
-	source: { itemUuid: string | null; user: SourceUser | null },
+	source: { itemUuid: string | null; user: SourceUser | null; raises?: EffectRaises },
 ): EffectPayload {
 	const data = foundry.utils.deepClone(effect.toObject());
 	for (const key of NOT_COPIED) delete data[key];
-	const system = data.system as { escape?: { dc?: unknown }; rules?: unknown } | undefined;
+	const system = data.system as
+		| { escape?: { dc?: unknown }; rules?: unknown; lastsUntil?: Moment[] }
+		| undefined;
 	if (system?.escape) system.escape.dc = escapeDc(system.escape.dc, source.user);
+	if (source.raises?.rules?.length) raiseRules(system?.rules, source.raises.rules);
+	if (source.raises?.moments?.length && Array.isArray(system?.lastsUntil)) {
+		system.lastsUntil = raiseMoments(system.lastsUntil, source.raises.moments);
+	}
 	resolveRuleFormulas(system?.rules, source.user);
 	return {
 		data,

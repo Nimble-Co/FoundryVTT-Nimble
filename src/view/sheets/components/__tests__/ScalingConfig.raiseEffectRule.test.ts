@@ -73,7 +73,7 @@ describe('ScalingConfig raiseEffectRule', () => {
 		await fireEvent.change(fieldSelect, { target: { value: 'value' } });
 
 		expect(item.update).toHaveBeenCalledWith({
-			'system.scaling.deltas': [{ ...raise, ruleField: 'value' }],
+			'system.scaling.deltas': [{ ...raise, ruleField: 'value', formula: null }],
 		});
 	});
 

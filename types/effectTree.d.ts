@@ -1,5 +1,5 @@
 import type { HeldUsedUp } from './heldChange.d.ts';
-import type { RuleRaise } from './spellScaling.d.ts';
+import type { MomentRaise, RuleRaise } from './spellScaling.d.ts';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 export type EffectNode =
@@ -122,8 +122,10 @@ export type ApplyEffectNode = {
 	recipient: 'self' | 'targets' | 'savers';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
-	/** What the upcast adds to number fields of the effect's rules. */
+	/** What the upcast adds to fields of the effect's rules. */
 	ruleRaises?: RuleRaise[];
+	/** What the upcast adds to the numbers of the effect's Lasts Until, by moment index. */
+	momentRaises?: MomentRaise[];
 	parentContext: string | null;
 	parentNode: string | null;
 };

@@ -107,8 +107,14 @@ export function withSpan(moment: Moment, span: TurnSpan): Moment {
 	return { ...moment, span, clock: moment.clock ?? 'holder', value: null };
 }
 
-export function spanChoices(clock: Clock | null): SpanChoice[] {
-	const counts = clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+/** A count that an upcast raised above the list's counts is in the list too. */
+export function spanChoices(clock: Clock | null, moment?: Moment): SpanChoice[] {
+	const raised = moment?.span === 'nextTurn' ? (moment.value ?? 1) : 1;
+	const counts: SpanChoice[] =
+		clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+	if (clock !== 'nextHero' && raised > NEXT_TURN_COUNTS[NEXT_TURN_COUNTS.length - 1]) {
+		counts.push(`nextTurn:${raised}`);
+	}
 	return TURN_SPANS.flatMap((span) => (span === 'nextTurn' ? [span, ...counts] : [span]));
 }
 
@@ -116,13 +122,17 @@ export function spanChoiceOf(moment: Moment): SpanChoice {
 	const span = moment.span ?? 'nextTurn';
 	const count = moment.value ?? 1;
 	if (span !== 'nextTurn' || count < 2) return span;
-	return `nextTurn:${count}` as SpanChoice;
+	return `nextTurn:${count}`;
 }
 
-/** The word of a turn list entry, under the tab's words: "span.nextTurn" or "nextTurnCount.2". */
-export function spanChoiceWord(choice: SpanChoice): string {
+/** The word of a turn list entry, under the tab's words, and its data: "nextTurnCount.2". */
+export function spanChoiceWord(choice: SpanChoice): [string, Record<string, string>] {
 	const [span, count] = choice.split(':');
-	return count ? `nextTurnCount.${count}` : `span.${span}`;
+	if (!count) return [`span.${span}`, {}];
+	if ((NEXT_TURN_COUNTS as readonly number[]).includes(Number(count))) {
+		return [`nextTurnCount.${count}`, {}];
+	}
+	return ['nextTurnCountMany', { count }];
 }
 
 export function withSpanChoice(moment: Moment, choice: SpanChoice): Moment {
