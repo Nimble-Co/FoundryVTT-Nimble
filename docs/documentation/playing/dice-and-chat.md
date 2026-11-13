@@ -38,7 +38,7 @@ An item that rolls damage or healing opens the same window. The ticks also list 
 
 In combat, a line tells what the roll spends. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
 
-Some features add a tick to the window, for example **Max damage** or **Dual wield**. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
+Some features add a tick to the window, for example **Max damage** or **Dual wield**. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
 ::: details More about the Primary Die fields
 - With advantage, the dice drop first. The set or added number then goes on the die that stays.
@@ -140,7 +140,7 @@ When nothing on the chat caused it, such as the start of a turn, the end of a ro
 
 ![A Goblin's critical hit on Grug: in Events, Grug uses Rage for free, because an enemy hit them with a crit (Titan's Fury)](/images/documentation/events-free-use.png)
 
-**Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
+**Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](how-long-effects-last.md#lasts-until).
 
 Some lines ask the owner of a creature to choose or roll. Only that owner and the GM see the buttons.
 

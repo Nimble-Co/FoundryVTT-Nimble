@@ -49,8 +49,10 @@ Stuck on how to build something? Find an official item that does something simil
 | I want to make... | Read |
 | --- | --- |
 | A weapon, armor, shield, or piece of gear | [Items & Equipment](items.md) |
-| An item or feature that *does* something when used | [Activations](activations.md) |
-| An effect that ends at a turn, after a time, or when something happens | [Effects and Lasts Until](effects.md) |
+| An item or feature that *does* something when used | [Activations](activations.md) and [On Use Steps](activation-steps.md) |
+| An effect that an item or a step gives | [Effects](effects.md) |
+| An effect that ends at a turn, after a time, or when something happens | [Lasts Until, Stacks and Escape](lasts-until.md) |
+| An effect that changes a later attack, or deals damage each turn | [Held Changes and Damage Each Turn](held-changes.md) |
 | A spell (including upcasting) | [Spells](spells.md) |
 | A monster, minion, or solo boss | [Monsters](monsters.md) |
 | A class, subclass, ancestry, background, or boon | [Character Options](character-options.md) |
