@@ -83,6 +83,7 @@ export function escapeRulingEvent(
 	link: EscapeRollLink,
 	state: EscapeRulingAction['state'],
 	at = Date.now(),
+	rollMessageId?: string,
 ): CardEvent {
 	const action: EscapeRulingAction = {
 		kind: 'escapeRuling',
@@ -91,6 +92,7 @@ export function escapeRulingEvent(
 		effectId: link.effectId,
 		effectName: link.effectName,
 		state,
+		...(rollMessageId ? { rollMessageId } : {}),
 	};
 	const data = { name: link.holderName, effect: link.effectName };
 	return {
@@ -190,13 +192,23 @@ export async function endEscape(card: EscapeCard, event: CardEvent): Promise<boo
 	return ruleHere(card, event.id);
 }
 
+/**
+ * Escapes ends the effect as a pass does: on the roll card, which keeps the ended line and the
+ * damage when the waiting line moved to another card.
+ */
 function ruleHere(card: EscapeCard, eventId: string): Promise<boolean> {
-	const cardId = card.id ?? '';
-	return queue.run(cardId, async () => {
-		const line = cardEventsOf(card as never).find((each) => each.id === eventId);
-		const action = line?.action;
+	const line = cardEventsOf(card as never).find((each) => each.id === eventId);
+	const rollCardId =
+		line?.action?.kind === 'escapeRuling' ? (line.action.rollMessageId ?? card.id) : card.id;
+	const rollCard =
+		rollCardId === card.id
+			? card
+			: (game.messages?.get(rollCardId ?? '') as unknown as EscapeCard | undefined);
+	return queue.run(rollCard?.id ?? card.id ?? '', async () => {
+		const found = cardEventsOf(card as never).find((each) => each.id === eventId);
+		const action = found?.action;
 		if (action?.kind !== 'escapeRuling' || action.state !== 'waiting') return false;
-		if (!(await escapeNow(card, action, { key: `${WORDS}.ruled` }))) return false;
+		if (!(await escapeNow(rollCard ?? card, action, { key: `${WORDS}.ruled` }))) return false;
 		await replaceCardEvent(card as never, eventId, null);
 		return true;
 	});
@@ -205,39 +217,63 @@ function ruleHere(card: EscapeCard, eventId: string): Promise<boolean> {
 const sameEffect = (link: EscapeRollLink, row: { effectId: string; holderUuid: string }) =>
 	row.effectId === link.effectId && row.holderUuid === link.holderUuid;
 
+interface PlacedLine {
+	host: EscapeCard;
+	line: CardEvent;
+}
+
+/** The no-DC line of this roll card: on the card, or on the card it moved to for its readers. */
+function rulingLineOf(card: EscapeCard, link: EscapeRollLink): PlacedLine | undefined {
+	const isRuling = (event: CardEvent) =>
+		event.action?.kind === 'escapeRuling' && sameEffect(link, event.action);
+	const here = cardEventsOf(card as never).find(isRuling);
+	if (here) return { host: card, line: here };
+	const cards = ((game.messages as unknown as { contents?: EscapeCard[] })?.contents ?? []).slice();
+	for (const host of cards.reverse()) {
+		if (host.id === card.id) continue;
+		const line = cardEventsOf(host as never).find(
+			(event) =>
+				isRuling(event) &&
+				event.action?.kind === 'escapeRuling' &&
+				event.action.rollMessageId === card.id,
+		);
+		if (line) return { host, line };
+	}
+	return undefined;
+}
+
 async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): Promise<boolean> {
 	const events = cardEventsOf(card as never);
 	const ended = events.find(
 		(event) => event.action?.kind === 'undoEnd' && sameEffect(link, event.action.row),
 	);
-	const ruling = events.find(
-		(event) => event.action?.kind === 'escapeRuling' && sameEffect(link, event.action),
-	);
+	const ruling = rulingLineOf(card, link);
 	const effect = holderOf(link)?.effects.get(link.effectId);
 	/** The escape no longer stands: the effect and the damage of the escape go back. */
 	const putBack = async () => {
 		if (ended?.action?.kind === 'undoEnd' && !effect) await undoEndedEffect(ended.action.row);
 		await takeBackEscapeDamage(card, link);
 	};
-	/** The line of an Escape with no DC takes the place of `line`, or is added. */
-	const showRuling = (line: CardEvent | undefined, state: EscapeRulingAction['state']) => {
-		const next = escapeRulingEvent(link, state);
-		return line
-			? replaceCardEvent(card as never, line.id, { ...next, id: line.id })
+	/** The line of an Escape with no DC takes the place of `line` on its card, or is added. */
+	const showRuling = (placed: PlacedLine | undefined, state: EscapeRulingAction['state']) => {
+		const next = escapeRulingEvent(link, state, Date.now(), card.id ?? undefined);
+		return placed
+			? replaceCardEvent(placed.host as never, placed.line.id, { ...next, id: placed.line.id })
 			: addCardEvents(card as never, [next]);
 	};
+	const endedHere = ended ? { host: card, line: ended } : undefined;
 
 	if (outcome === 'pass') {
 		if (ended || !effect) return true;
 		await escapeNow(card, link, escapedReason(card));
-		if (ruling) await replaceCardEvent(card as never, ruling.id, null);
+		if (ruling) await replaceCardEvent(ruling.host as never, ruling.line.id, null);
 		return true;
 	}
 
 	if (outcome === 'fail') {
 		if (ended) {
 			await putBack();
-			if (link.noDc) await showRuling(ended, 'failed');
+			if (link.noDc) await showRuling(endedHere, 'failed');
 			else await replaceCardEvent(card as never, ended.id, null);
 		} else if (ruling && link.noDc) {
 			await showRuling(ruling, 'failed');
@@ -246,10 +282,11 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 	}
 
 	if (!link.noDc) return true;
+	const rulingAction = ruling?.line.action;
 	if (ended) {
 		await putBack();
-		await showRuling(ended, 'waiting');
-	} else if (ruling?.action?.kind !== 'escapeRuling' || ruling.action.state !== 'waiting') {
+		await showRuling(endedHere, 'waiting');
+	} else if (rulingAction?.kind !== 'escapeRuling' || rulingAction.state !== 'waiting') {
 		await showRuling(ruling, 'waiting');
 	}
 	return true;

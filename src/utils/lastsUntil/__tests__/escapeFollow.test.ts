@@ -55,6 +55,8 @@ let card: {
 	rolls: Array<{ total: number }>;
 	flags: Record<string, any>;
 };
+/** Cards after the roll card, such as the card a line moved to. */
+const otherCards: Array<{ id: string; flags: Record<string, any> }> = [];
 
 function setGM(isActiveGM: boolean) {
 	(game as { user?: unknown }).user = { isGM: isActiveGM, isActiveGM };
@@ -72,7 +74,13 @@ beforeEach(() => {
 		rolls: [{ total: 14 }],
 		flags: { [SYSTEM_ID]: { escapeRoll: link } },
 	};
-	(game as { messages?: unknown }).messages = { get: (id: string) => (id === 's1' ? card : null) };
+	otherCards.length = 0;
+	(game as { messages?: unknown }).messages = {
+		get: (id: string) => [card, ...otherCards].find((each) => each.id === id) ?? null,
+		get contents() {
+			return [card, ...otherCards];
+		},
+	};
 	(globalThis as { fromUuidSync?: unknown }).fromUuidSync = vi.fn((uuid: string) =>
 		uuid === 'Actor.tessa' ? tessa : null,
 	);
@@ -197,7 +205,7 @@ describe('followEscape', () => {
 
 describe('an Escape with no DC', () => {
 	const noDcLink = { ...link, noDc: true };
-	const waiting = escapeRulingEvent(noDcLink, 'waiting', 5);
+	const waiting = escapeRulingEvent(noDcLink, 'waiting', 5, 's1');
 
 	beforeEach(() => {
 		card.system.dc = null;
@@ -214,6 +222,7 @@ describe('an Escape with no DC', () => {
 			effectId: 'grab',
 			effectName: 'Grappled',
 			state: 'waiting',
+			rollMessageId: 's1',
 		});
 		const failed = escapeRulingEvent(noDcLink, 'failed', 6);
 		expect(cardEvents.cardEventText(failed.text)).toBe('Tessa fails to escape Grappled');
@@ -288,6 +297,73 @@ describe('an Escape with no DC', () => {
 		expect(addCardEvents).toHaveBeenCalledWith(card, [
 			expect.objectContaining({ action: expect.objectContaining({ state: 'waiting' }) }),
 		]);
+	});
+
+	describe('when the waiting line moved to another card (a whispered roll card)', () => {
+		const movedTo = () => {
+			const moved = { id: 'm1', flags: { [SYSTEM_ID]: { events: [waiting] } } };
+			otherCards.push(moved);
+			return moved;
+		};
+
+		it('a natural 20 takes the waiting line off the card it moved to', async () => {
+			const moved = movedTo();
+
+			await followEscape({ messageId: 's1', outcome: 'pass' });
+
+			expect(endEffects).toHaveBeenCalledWith(
+				[grappled],
+				expect.objectContaining({ hostId: 's1' }),
+			);
+			expect(replaceCardEvent).toHaveBeenCalledWith(moved, waiting.id, null);
+		});
+
+		it('a natural 1 turns the moved line into the failed line, on its card', async () => {
+			const moved = movedTo();
+
+			await followEscape({ messageId: 's1', outcome: 'fail' });
+
+			expect(replaceCardEvent).toHaveBeenCalledWith(
+				moved,
+				waiting.id,
+				expect.objectContaining({ action: expect.objectContaining({ state: 'failed' }) }),
+			);
+		});
+
+		it('a result that stays unknown adds no second waiting line', async () => {
+			movedTo();
+
+			await followEscape({ messageId: 's1', outcome: 'unknown' });
+
+			expect(addCardEvents).not.toHaveBeenCalled();
+			expect(replaceCardEvent).not.toHaveBeenCalled();
+		});
+
+		it('does not take the line of another roll of the same effect', async () => {
+			const older = escapeRulingEvent(noDcLink, 'waiting', 4, 's0');
+			const other = { id: 'm0', flags: { [SYSTEM_ID]: { events: [older] } } };
+			otherCards.push(other);
+
+			await followEscape({ messageId: 's1', outcome: 'fail' });
+
+			expect(replaceCardEvent).not.toHaveBeenCalled();
+		});
+
+		it('Escapes on the moved line ends the effect on the roll card, as a pass does', async () => {
+			escapeDamageRulesOf.mockReturnValueOnce([{ id: 'r1', formula: '2', damageType: '' }]);
+			const moved = movedTo();
+
+			expect(await endEscape(moved, waiting)).toBe(true);
+
+			expect(endEffects).toHaveBeenCalledWith(
+				[grappled],
+				expect.objectContaining({ hostId: 's1', reason: { key: 'NIMBLE.escape.chat.ruled' } }),
+			);
+			expect(dealEscapeDamage).toHaveBeenCalledWith(card, tessa, expect.anything(), [
+				expect.objectContaining({ id: 'r1' }),
+			]);
+			expect(replaceCardEvent).toHaveBeenCalledWith(moved, waiting.id, null);
+		});
 	});
 
 	describe('Escapes', () => {

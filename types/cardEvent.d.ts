@@ -85,6 +85,8 @@ export interface EscapeRulingAction {
 	effectId: string;
 	effectName: string;
 	state: 'waiting' | 'failed';
+	/** The roll card of the Escape. The line can move to another card that its readers read. */
+	rollMessageId?: string;
 }
 
 /** Damage or Wounds a Damage Each Turn rule gave at a turn moment, and how it stands. */

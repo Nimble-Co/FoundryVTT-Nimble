@@ -93,7 +93,7 @@ It estimates each in rounds and keeps the first moment: the end of the current t
 
 An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
 
-An Escape with no DC has the button **Escape** with no number. A natural 20 escapes and a natural 1 fails. On any other roll, the roll card gets the line "Tessa tries to escape Grappled" with an **Escapes** button. When the table judges that the roll escapes, the owner of the creature or the GM clicks **Escapes**. The effect ends, with its ended line and **Undo**. If nobody clicks, the effect stays.
+An Escape with no DC has the button **Escape** with no number. A natural 20 escapes and a natural 1 fails. On any other roll, the roll card gets the line "Tessa tries to escape Grappled" with an **Escapes** button. When the table judges that the roll escapes, the owner of the creature or the GM clicks **Escapes**. The effect ends, with its ended line and **Undo** on the roll card. If nobody clicks, the effect stays. When the owner cannot read the roll card (a GM's private roll), the line goes on a card for the owner and the GMs; a later reroll changes or removes it there.
 
 ### When an effect ends
 

@@ -195,7 +195,9 @@ export async function escapeEffect(
 		card.rolls?.[0],
 	);
 	if (link.noDc && settled === null) {
-		await addCardEvents(card as never, [escapeRulingEvent(link, 'waiting')]);
+		await addCardEvents(card as never, [
+			escapeRulingEvent(link, 'waiting', Date.now(), card.id ?? undefined),
+		]);
 	}
 	return 'rolled';
 }

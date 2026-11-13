@@ -282,7 +282,11 @@ describe('escapeEffect', () => {
 			expect(addCardEvents).toHaveBeenCalledWith(card, [
 				expect.objectContaining({
 					kind: 'escape',
-					action: expect.objectContaining({ kind: 'escapeRuling', state: 'waiting' }),
+					action: expect.objectContaining({
+						kind: 'escapeRuling',
+						state: 'waiting',
+						rollMessageId: 's1',
+					}),
 				}),
 			]);
 		});
