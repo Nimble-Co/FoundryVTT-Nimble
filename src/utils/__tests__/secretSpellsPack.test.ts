@@ -17,6 +17,7 @@ const SECRET_SPELL_NAMES = [
 	'Greater Windform',
 	'Hearth & Home',
 	'Lesser Windform',
+	'Longstrider',
 	'Memory Veil',
 	'Radiant Bond',
 	'Revive',

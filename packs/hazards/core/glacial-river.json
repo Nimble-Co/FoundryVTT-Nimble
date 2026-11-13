@@ -1,0 +1,104 @@
+{
+	"name": "Glacial River.",
+	"type": "monsterFeature",
+	"img": "icons/environment/wilderness/terrain-river-road-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "ngdQlDjpSaSazV4U",
+					"type": "applyEffect",
+					"effectId": "2uA42QpJ6tacxeI8",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>EXTREMELY cold. Soaks through clothing if walked through or pushed in. -1 speed until dried out.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "2uA42QpJ6tacxeI8",
+			"name": "Soaked",
+			"img": "icons/environment/wilderness/terrain-river-road-gray.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "wLIG18S9oB0iIBP0",
+						"identifier": "",
+						"label": "Soaked",
+						"predicate": {},
+						"priority": 1,
+						"value": "-1",
+						"movementType": null
+					}
+				],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Until dried out.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "VadadAFoozP0ySeM"
+}

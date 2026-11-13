@@ -28,6 +28,8 @@ For what the content *should say* mechanically, defer to the nimble-rules-agent 
 | `packs/secretSpells` | `nimble-secret-spells` | Item |
 | `packs/subclasses` | `nimble-subclasses` | Item |
 | `packs/monsters` | `nimble-monsters` | Actor |
+| `packs/monsterAbilities` | `nimble-monster-abilities` | Item (`monsterFeature`) |
+| `packs/hazards` | `nimble-hazards` | Item (`monsterFeature`) |
 | `packs/legendaryMonsters` | `nimble-legendary-monsters` | Actor |
 | `packs/tables` | `nimble-tables` | RollTable |
 

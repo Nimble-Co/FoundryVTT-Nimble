@@ -1,0 +1,108 @@
+{
+	"name": "Fearsome.",
+	"type": "monsterFeature",
+	"img": "icons/magic/control/fear-fright-jackolanter-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "oF88A0nu9PCF5q69",
+					"type": "savingThrow",
+					"savingThrowType": "will",
+					"saveDC": "",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "JvriSqEftQiqU8P4",
+								"type": "applyEffect",
+								"effectId": "sVFZFrz3r8prGUzo",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "oF88A0nu9PCF5q69"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Frighten enemies within Range on a failed WIL save. 1/encounter.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "sVFZFrz3r8prGUzo",
+			"name": "Frightened",
+			"img": "icons/svg/terror.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"frightened"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "OvVUUnsaP0cFHLdb"
+}

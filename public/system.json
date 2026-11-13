@@ -199,6 +199,20 @@
 			"system": "nimble"
 		},
 		{
+			"name": "nimble-monster-abilities",
+			"label": "Nimble Monster Abilities",
+			"path": "packs/monsterAbilities.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
+			"name": "nimble-hazards",
+			"label": "Nimble Hazards",
+			"path": "packs/hazards.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
 			"name": "nimble-spells",
 			"label": "Nimble Spells",
 			"path": "packs/spells.db",

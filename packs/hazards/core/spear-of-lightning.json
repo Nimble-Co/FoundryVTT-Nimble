@@ -1,0 +1,169 @@
+{
+	"name": "Spear of Lightning.",
+	"type": "monsterFeature",
+	"img": "icons/magic/lightning/strike-arrow-spear-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "nXHdznlLr8Dvtv37",
+					"type": "applyEffect",
+					"effectId": "HmASxTMqkHzVdSl3",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "ckHOlm70jEmDUqvV",
+					"type": "applyEffect",
+					"effectId": "Mdd0TZw730KJhR33",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Touching the spear grants the Charged condition, and +1d6 lightning damage on attacks for 1 minute. 1/day.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "HmASxTMqkHzVdSl3",
+			"name": "Charged",
+			"img": "systems/nimble/assets/icons/charged.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "minutes",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"charged"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "Mdd0TZw730KJhR33",
+			"name": "Spear of Lightning",
+			"img": "icons/magic/lightning/strike-arrow-spear-red.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBonus",
+						"disabled": false,
+						"id": "uIA0v6zvkdmwkUYK",
+						"identifier": "",
+						"label": "Spear of Lightning",
+						"predicate": {},
+						"priority": 1,
+						"value": "1d6",
+						"damageType": "lightning",
+						"delivery": "any",
+						"source": "any",
+						"itemIdentifier": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "minutes",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "uzLr2imPfsCMOola"
+}

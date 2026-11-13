@@ -1,0 +1,144 @@
+{
+	"name": "Longstrider",
+	"type": "spell",
+	"img": "icons/skills/movement/feet-winged-sandals-tan.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "hour"
+			},
+			"effects": [
+				{
+					"id": "RcMeC6nE6jkoEiYN",
+					"type": "applyEffect",
+					"effectId": "4BAnZ4yuCjMVtsWp",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<p>Give a creature you touch +2 speed for 1 hour.</p>",
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 creature.</p>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 6
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"secretSpell"
+			]
+		},
+		"school": "wind",
+		"tier": 1,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addTargets",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
+	},
+	"effects": [
+		{
+			"_id": "4BAnZ4yuCjMVtsWp",
+			"name": "Longstrider",
+			"img": "icons/skills/movement/feet-winged-sandals-tan.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "duNHXK97sCe74fgU",
+						"identifier": "",
+						"label": "Longstrider",
+						"predicate": {},
+						"priority": 1,
+						"value": "2",
+						"movementType": null
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "hours",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "pxWolaIQExZS615L"
+}

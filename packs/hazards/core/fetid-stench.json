@@ -1,0 +1,108 @@
+{
+	"name": "Fetid Stench.",
+	"type": "monsterFeature",
+	"img": "icons/magic/air/fog-gas-smoke-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "XVWQiYuNPQvfxOKH",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"saveDC": "",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "2BJgCsX9LY5LkVcT",
+								"type": "applyEffect",
+								"effectId": "cJuzFffc4BRa9aUr",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "XVWQiYuNPQvfxOKH"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Heroes must make a STR save each time they traverse from one location to another or be Poisoned while in that area. The DC increases as they go deeper.</p><p>The Path Below: DC 6. Echoing Cistern: DC 8. Feeding Chamber: DC 10. Explosive Tunnels: DC 12. Guttermaw's Lair: DC 14. Shrine to the Rat God: DC 16.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "cJuzFffc4BRa9aUr",
+			"name": "Fetid Stench",
+			"img": "icons/svg/poison.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "While in that area.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"poisoned"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jdWpwhoAlkwNU257"
+}

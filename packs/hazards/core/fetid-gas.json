@@ -1,0 +1,120 @@
+{
+	"name": "Fetid Gas.",
+	"type": "monsterFeature",
+	"img": "icons/magic/air/fog-gas-smoke-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "2AifHLexnt65DlGB",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"saveDC": "",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "4QOX6Q0oWNi391t3",
+								"type": "applyEffect",
+								"effectId": "as9n7SWEiKY28Gcy",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "2AifHLexnt65DlGB"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>STR save or Poisoned for 2 encounters.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "as9n7SWEiKY28Gcy",
+			"name": "Fetid Gas",
+			"img": "icons/svg/poison.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 2,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"poisoned"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "wT2Kv0EEkQcVxbsy"
+}

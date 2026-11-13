@@ -1,0 +1,128 @@
+{
+	"name": "Poison Vent.",
+	"type": "monsterFeature",
+	"img": "icons/commodities/tech/exhaust-vent-brass.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "4gwRUO6EWSouG5Sy",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"saveDC": "",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "GXI5EalYgiId6HGp",
+								"type": "applyEffect",
+								"effectId": "ZDpl9UGn8kskuL9I",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "4gwRUO6EWSouG5Sy"
+							},
+							{
+								"id": "Lmku5dzl1zBTVwHI",
+								"type": "note",
+								"noteType": "reminder",
+								"text": "Take half your level in poison damage.",
+								"parentContext": "failedSave",
+								"parentNode": "4gwRUO6EWSouG5Sy"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>A crack forms in the earth, spewing toxic fumes all around (STR save or take 1/2 LVL Poison damage and become Poisoned for the next 2 traveling encounters). Bearer of Trueflame has advantage.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "ZDpl9UGn8kskuL9I",
+			"name": "Poison Vent",
+			"img": "icons/svg/poison.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 2,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"poisoned"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "z8fLgHbn177vgGUb"
+}

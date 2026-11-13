@@ -1,0 +1,77 @@
+{
+	"name": "Disgusting/Venomous/Heavy Blows.",
+	"type": "monsterFeature",
+	"img": "icons/skills/melee/strike-dagger-poison-dripping-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "cQdvpqS7eWEON6aN",
+				"identifier": "",
+				"label": "Dazed",
+				"predicate": {},
+				"priority": 1,
+				"condition": "dazed",
+				"trigger": "onHit",
+				"effectId": ""
+			},
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "hYWhE65NQR8wmVoT",
+				"identifier": "",
+				"label": "Dazed",
+				"predicate": {},
+				"priority": 1,
+				"condition": "dazed",
+				"trigger": "onCrit",
+				"effectId": ""
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Attacks also Daze the target.</p>",
+		"subtype": "feature",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "UTuRg6UTzhR7TXGR"
+}

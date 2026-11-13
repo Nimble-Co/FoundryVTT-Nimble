@@ -64,7 +64,7 @@ Everything a monster *does* is a **Monster Feature** item on its sheet. In edit 
 | **Bloodied** | An ability that matters once the monster is bloodied. Listed in its own group so it is easy to find at the right moment. |
 | **Last Stand** | The Last Stand mechanic; see the Solo Monster section below. |
 
-The Abilities tab groups features by these subtypes, and you can drag entries to reorder them or to nest actions under an attack sequence.
+The Abilities tab groups features by these subtypes, and you can drag entries to reorder them or to nest actions under an attack sequence. For a ready-made ability, drag one from the **Nimble Monster Abilities** or **Nimble Hazards** compendium onto the sheet.
 
 Give the Bog Howler three features:
 

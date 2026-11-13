@@ -1,0 +1,142 @@
+{
+	"name": "Thorn Briars.",
+	"type": "monsterFeature",
+	"img": "icons/consumables/plants/thorned-curled-vine-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "IoQF1xRqrgtKopnl",
+					"type": "damage",
+					"damageType": "",
+					"formula": "1d4",
+					"canCrit": false,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "i6VfMq5K7kZKumFY",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "IoQF1xRqrgtKopnl"
+							}
+						]
+					}
+				},
+				{
+					"id": "Gl3JWt3KS8JcWVkn",
+					"type": "applyEffect",
+					"effectId": "GmUZVTEjgXya1SGJ",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>If pricked, suffer 1d4 damage and blood begins to be drained. Finesse check to remove thorn, repeat damage until success (or magically healed).</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "GmUZVTEjgXya1SGJ",
+			"name": "Draining Thorn",
+			"img": "icons/consumables/plants/thorned-curled-vine-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "turnDamage",
+						"disabled": false,
+						"id": "aykRRimQg9yEdmJP",
+						"identifier": "",
+						"label": "Draining Thorn",
+						"predicate": {},
+						"priority": 1,
+						"at": "turnStart",
+						"who": "holder",
+						"reach": 1,
+						"formula": "1d4",
+						"damageType": "",
+						"wounds": 0
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "healed",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [],
+					"noDc": true,
+					"skills": [
+						"finesse"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "AHMbfixH1nXzoPXO"
+}
