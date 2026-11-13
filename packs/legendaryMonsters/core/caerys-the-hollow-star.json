@@ -382,7 +382,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "20",
 							"on": {
 								"failedSave": [
@@ -797,7 +796,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "20",
 							"on": {
 								"failedSave": [

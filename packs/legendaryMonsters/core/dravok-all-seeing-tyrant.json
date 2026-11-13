@@ -917,7 +917,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "16",
 							"on": {
 								"passedSave": [

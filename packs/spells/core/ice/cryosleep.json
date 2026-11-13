@@ -26,7 +26,6 @@
 					"savingThrowType": "strength",
 					"parentContext": null,
 					"parentNode": null,
-					"saveType": "strength",
 					"on": {
 						"failedSave": [
 							{

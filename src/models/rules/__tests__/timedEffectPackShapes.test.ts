@@ -202,19 +202,12 @@ describe('timed effect shapes, in packs', () => {
 		expect(misses).toEqual([]);
 	});
 
-	it('has no save step whose old save type differs from its save type', () => {
+	it('has no save step with the old saveType field', () => {
 		const misses: string[] = [];
 		for (const { file, item } of items) {
 			for (const node of activationNodes(item)) {
-				if (node.type !== 'savingThrow' || !node.saveType) continue;
-				if (node.saveType !== node.savingThrowType) {
-					misses.push(
-						where(
-							file,
-							item,
-							`node ${node.id} saveType ${node.saveType} / ${node.savingThrowType}`,
-						),
-					);
+				if (node.type === 'savingThrow' && 'saveType' in node) {
+					misses.push(where(file, item, `node ${node.id} saveType ${node.saveType}`));
 				}
 			}
 		}
