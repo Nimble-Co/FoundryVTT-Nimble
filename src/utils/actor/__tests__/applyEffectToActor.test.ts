@@ -248,6 +248,72 @@ describe('payloadFromEffect', () => {
 		});
 	});
 
+	describe('the creature a rule formula reads', () => {
+		const user = {
+			type: 'character',
+			uuid: 'Actor.hero',
+			getRollData: () => ({ key: 3, intelligence: 2 }),
+		};
+		const effectWith = (system: Record<string, unknown>) => ({
+			toObject: () => ({ name: 'Winds', system }),
+		});
+		const rulesOf = (payload: EffectPayload) =>
+			(payload.data.system as { rules: Record<string, unknown>[] }).rules;
+		const escapeOf = (payload: EffectPayload) =>
+			(payload.data.system as { escape: { dc: string } }).escape.dc;
+
+		beforeEach(() => {
+			vi.stubGlobal('Roll', {
+				replaceFormulaData: (formula: string, data: Record<string, unknown>) =>
+					formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+				safeEval: (formula: string) => Function(`return ${formula}`)(),
+			});
+		});
+
+		it('keeps @speed for the creature that moves, and reads @key from the user', () => {
+			const payload = payloadFromEffect(
+				effectWith({ rules: [{ id: 'move', type: 'freeMove', distance: '@speed + @key' }] }),
+				{ itemUuid: null, user },
+			);
+
+			expect(rulesOf(payload)[0].distance).toBe('@speed + 3');
+		});
+
+		it('keeps every rule formula for the holder when the effect reads the creature that has it', () => {
+			const payload = payloadFromEffect(
+				effectWith({
+					readsHolder: true,
+					escape: { dc: '10 + @intelligence' },
+					rules: [{ id: 'bonus', type: 'damageBonus', value: '@key' }],
+				}),
+				{
+					itemUuid: null,
+					user,
+					raises: {
+						rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 1 }],
+					},
+				},
+			);
+
+			expect(rulesOf(payload)[0].value).toBe('@key + @key');
+			expect(escapeOf(payload)).toBe('12');
+		});
+
+		it('reads the user at apply time when the box is off, and the Escape DC too', () => {
+			const payload = payloadFromEffect(
+				effectWith({
+					readsHolder: false,
+					escape: { dc: '10 + @intelligence' },
+					rules: [{ id: 'bonus', type: 'damageBonus', value: '@key' }],
+				}),
+				{ itemUuid: null, user },
+			);
+
+			expect(rulesOf(payload)[0].value).toBe('3');
+			expect(escapeOf(payload)).toBe('12');
+		});
+	});
+
 	it('keeps an extra damage formula as it is with no source', () => {
 		const rules = [
 			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' },

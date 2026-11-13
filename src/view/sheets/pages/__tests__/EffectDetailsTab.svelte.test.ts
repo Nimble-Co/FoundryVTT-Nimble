@@ -91,3 +91,27 @@ describe('EffectDetailsTab stacks', () => {
 		expect(effect.update).toHaveBeenLastCalledWith({ 'system.stacks.count': 5 });
 	});
 });
+
+describe('EffectDetailsTab rule formulas', () => {
+	const NAME = /Rule formulas read the creature that has it/;
+	const withTransfer = (transfer: boolean, parent: object = { documentName: 'Item' }) =>
+		Object.assign(makeEffect([]), { transfer, parent, system: { readsHolder: false } });
+
+	it('turns on the box on an item effect that is applied by a step', async () => {
+		const effect = withTransfer(false);
+		render(EffectDetailsTab, { effect: effect as never });
+
+		await fireEvent.click(screen.getByRole('checkbox', { name: NAME }));
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.readsHolder': true });
+	});
+
+	it('has no box on an effect that applies to the actor, or on a creature', () => {
+		render(EffectDetailsTab, { effect: withTransfer(true) as never });
+		expect(screen.queryByRole('checkbox', { name: NAME })).toBeNull();
+	});
+
+	it('has no box on the copy that a creature has', () => {
+		render(EffectDetailsTab, { effect: withTransfer(false, { documentName: 'Actor' }) as never });
+		expect(screen.queryByRole('checkbox', { name: NAME })).toBeNull();
+	});
+});

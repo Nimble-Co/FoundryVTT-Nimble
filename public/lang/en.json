@@ -4261,6 +4261,8 @@
 				"offHint": "Its changes and rules do not apply.",
 				"transfer": "Apply to the actor",
 				"transferHint": "The actor that has this item gets the effect.",
+				"readsHolder": "Rule formulas read the creature that has it",
+				"readsHolderHint": "Off: they read the creature that applied it, when it was applied.",
 				"conditions": "Conditions",
 				"conditionsHint": "The creature that has this effect has these conditions.",
 				"stacks": "Stacks",

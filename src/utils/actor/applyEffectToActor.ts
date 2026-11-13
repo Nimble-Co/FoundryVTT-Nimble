@@ -121,8 +121,8 @@ function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 		for (const [key, value] of Object.entries(rule)) {
 			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@')) continue;
 			if (ENRICHER.test(value)) continue;
-			// The count of stacks is the holder's, read when the rule runs.
-			rollData ??= { ...user.getRollData(), stacks: '@stacks' };
+			// The count of stacks is the holder's, read when the rule runs. `@speed` is the mover's.
+			rollData ??= { ...user.getRollData(), stacks: '@stacks', speed: '@speed' };
 			checkFormulaReferences(value, user, {}, { rollData });
 			// A reference the source has no value for is 0 here, not the holder's value at the roll.
 			rule[key] = Roll.replaceFormulaData(value, rollData, { missing: '0' });
@@ -157,8 +157,8 @@ function raiseRules(rules: unknown, raises: readonly RuleRaise[]): void {
 }
 
 /**
- * A copy of an item's effect for an actor, with the upcast raises added. The Escape DC and the
- * rule formulas are worked out now.
+ * A copy of an item's effect for an actor, with the upcast raises added. The Escape DC is worked
+ * out now, and the rule formulas too unless the effect's rules read the creature that has it.
  */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
@@ -167,14 +167,14 @@ export function payloadFromEffect(
 	const data = foundry.utils.deepClone(effect.toObject());
 	for (const key of NOT_COPIED) delete data[key];
 	const system = data.system as
-		| { escape?: { dc?: unknown }; rules?: unknown; lastsUntil?: Moment[] }
+		| { escape?: { dc?: unknown }; rules?: unknown; lastsUntil?: Moment[]; readsHolder?: boolean }
 		| undefined;
 	if (system?.escape) system.escape.dc = escapeDc(system.escape.dc, source.user);
 	if (source.raises?.rules?.length) raiseRules(system?.rules, source.raises.rules);
 	if (source.raises?.moments?.length && Array.isArray(system?.lastsUntil)) {
 		system.lastsUntil = raiseMoments(system.lastsUntil, source.raises.moments);
 	}
-	resolveRuleFormulas(system?.rules, source.user);
+	if (!system?.readsHolder) resolveRuleFormulas(system?.rules, source.user);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,

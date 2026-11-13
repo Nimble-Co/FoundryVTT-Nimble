@@ -38,10 +38,10 @@ On the character or NPC sheet, go to the **Effects** tab and click the pen at th
 
 The window has four tabs:
 
-- **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect), the **Conditions** that the effect gives, and the description.
+- **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect) and, when that is off, **Rule formulas read the creature that has it**, the **Conditions** that the effect gives, and the description.
 - **Lasts Until**: the moments that end the effect, and its Escape.
 - **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority. The type **Multiply, round down** multiplies and rounds the result down, so a halved speed of 7 is 3 (core's **Multiply** rounds to the nearest number). An `@` reference in a value reads the creature that has the effect.
-- **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list.
+- **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list. On the copy that a step puts on a creature, an `@` reference in a rule formula reads the creature that applied it, at the time it was applied. With **Rule formulas read the creature that has it** on, each formula reads the creature that has the copy, each time the rule works. `@stacks` always reads the creature that has it, and `@speed` the creature that moves. The Escape DC always reads the creature that applied it.
 
 Each field saves when you change it.
 

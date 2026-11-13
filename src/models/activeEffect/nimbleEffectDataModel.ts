@@ -140,6 +140,8 @@ const effectSchema = () => ({
 	}),
 	/** With no moments: the status's own Lasts Until does not apply, so only removing it ends it. */
 	untilRemoved: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+	/** The rule formulas of a copy read the holder each time, not the applier at apply time. */
+	readsHolder: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 });
 
 declare namespace NimbleEffectData {

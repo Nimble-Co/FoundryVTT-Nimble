@@ -190,6 +190,14 @@ describe('Nimble effect data model', () => {
 		expect(minor.options).toMatchObject({ nullable: false, initial: false });
 	});
 
+	it("reads the user's numbers at apply time by default, so old effects keep their meaning", () => {
+		expect(schema().readsHolder.options).toMatchObject({
+			required: true,
+			nullable: false,
+			initial: false,
+		});
+	});
+
 	it('does not stack by default, so old effects keep their meaning', () => {
 		const stackFields = schema().stacks.fields ?? {};
 

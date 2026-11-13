@@ -34,6 +34,9 @@
 	const stacks = $derived(stackFieldsOf(reactive.system));
 	const stackItem = $derived(stackEffectItem(reactive as never));
 	const onCreature = $derived(effect.parent?.documentName === 'Actor');
+	const readsHolder = $derived(
+		(reactive.system as { readsHolder?: boolean } | undefined)?.readsHolder === true,
+	);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
@@ -75,6 +78,20 @@
 					<small>{localize(`${DETAILS}.transferHint`)}</small>
 				</span>
 			</label>
+			{#if !reactive.transfer}
+				<label class="nimble-field">
+					<input
+						type="checkbox"
+						checked={readsHolder}
+						onchange={({ currentTarget }) =>
+							update({ 'system.readsHolder': currentTarget.checked })}
+					/>
+					<span class="nimble-effect-details__text">
+						<span class="nimble-field__label">{localize(`${DETAILS}.readsHolder`)}</span>
+						<small>{localize(`${DETAILS}.readsHolderHint`)}</small>
+					</span>
+				</label>
+			{/if}
 		{/if}
 	</div>
 
