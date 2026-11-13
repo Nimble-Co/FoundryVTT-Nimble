@@ -27,7 +27,7 @@ Each condition is one step, and the steps stack and cancel as other advantage an
 **The target of an attack.** These count only when the attack has one target. A Multi-target or area attack ignores them (Core Rules).
 
 - Blinded, Grappled or Restrained, Incapacitated (also Paralyzed, Stunned, Unconscious, Petrified): advantage. Grappled and Restrained together are one step.
-- Prone: advantage on a melee attack, disadvantage on a ranged attack. A Reach attack is melee. A spell with no attack type is ranged with Range and melee with Reach. A weapon ability attacks as the weapon you pick. When the attack is neither (most monster attacks have no attack type), the window shows both lines with their ticks off, and you pick one.
+- Prone: advantage on a melee attack, disadvantage on a ranged attack. A Reach attack is melee. A spell with no attack type is ranged with Range and melee with Reach. A weapon ability attacks as the weapon you pick. A monster attack with no attack type is melee, unless it is an area attack. When the attack is neither, the window shows both lines with their ticks off, and you pick one.
 - Invisible: disadvantage.
 
 **The one who attacks.** These count also on Multi-target and area attacks.

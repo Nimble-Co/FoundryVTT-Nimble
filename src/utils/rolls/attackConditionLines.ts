@@ -1,14 +1,15 @@
 import type { ConditionCreature, ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
-import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
+import {
+	type AttackActivation,
+	type AttackDelivery,
+	deliveryOfAttack,
+} from '../damage/attackDelivery.js';
 import { isAttackRoll } from '../heldChange/heldChange.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { conditionRollModes } from './conditionRollModes.js';
 
-interface WindowActivation {
-	targets?: { attackType?: string } | null;
-	acquireTargetsFromTemplate?: boolean;
-	template?: { shape?: string } | null;
+interface WindowActivation extends AttackActivation {
 	effects?: unknown[];
 }
 
@@ -25,27 +26,28 @@ export function attackConditionLines(
 	const damage = flattenEffectsTree((activation?.effects ?? []) as EffectNode[]).find(
 		(node) => node.type === 'damage',
 	) as { canCrit?: boolean; canMiss?: boolean } | undefined;
-	if (!activation || !isAttackRoll(activation.targets?.attackType, damage)) return [];
+	if (!activation || !isAttackRoll(activation.targets?.attackType ?? undefined, damage)) return [];
 	const area = !!activation.acquireTargetsFromTemplate && !!activation.template?.shape;
 	return conditionRollModes({
 		kind: 'attack',
 		roller,
 		target: area ? null : soleTarget,
-		delivery: conditionDelivery(activation.targets?.attackType, properties),
+		delivery: conditionDelivery(activation, properties, roller),
 	});
 }
 
 /**
  * Melee or ranged, for Prone. With no attack type, a spell's Range or Reach
- * property says it (Core:1407); with both or neither, it is not known.
+ * property says it (Core:1407); with both or neither, the user's default does.
  */
 export function conditionDelivery(
-	attackType: string | null | undefined,
-	properties: readonly string[] = [],
+	activation: AttackActivation | null | undefined,
+	properties: readonly string[],
+	user: { type?: string | null } | null | undefined,
 ): AttackDelivery {
-	const delivery = attackDeliveryFromAttackType(attackType);
+	const delivery = deliveryOfAttack(activation, null);
 	if (delivery) return delivery;
 	const range = properties.includes('range');
-	if (range === properties.includes('reach')) return null;
-	return range ? 'ranged' : 'melee';
+	if (range !== properties.includes('reach')) return range ? 'ranged' : 'melee';
+	return deliveryOfAttack(activation, user);
 }

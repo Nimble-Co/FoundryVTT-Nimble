@@ -8,7 +8,7 @@ import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
+import { type AttackDelivery, deliveryOfAttack } from '../damage/attackDelivery.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.heldChange`;
 const MESSAGE_FLAG = 'heldChangeMessage';
@@ -75,6 +75,7 @@ interface HolderEffect {
 
 interface Holder {
 	uuid?: string | null;
+	type?: string | null;
 	isOwner?: boolean;
 	effects?: Iterable<HolderEffect>;
 	createEmbeddedDocuments?(type: string, data: object[]): Promise<unknown>;
@@ -353,7 +354,7 @@ export function heldLinesForItem(
 		attacker,
 		target: firstTargetActor(),
 		area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
-		melee: isMelee(attackDeliveryFromAttackType(activation.targets?.attackType)),
+		melee: isMelee(deliveryOfAttack(activation, attacker)),
 	};
 	const maximize = heldMaximizeForAttack(attack);
 	return [

@@ -5,7 +5,7 @@ import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
-import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
+import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -117,7 +117,7 @@ export async function rollUnarmedStrike(
 	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
 	const multiTarget = targets.length > 1;
 	const target = soleTarget(targets);
-	const delivery = attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE);
+	const delivery = deliveryOfAttack({ targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE } }, actor);
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
 		stats: statsInFormula(rollFormula),

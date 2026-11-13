@@ -1605,6 +1605,42 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			});
 		});
 
+		it.each([
+			['npc', '1d6 + 5'],
+			['character', '1d6'],
+		])('a melee bonus on a %s attack with no attack type gives %s', async (type, formula) => {
+			mockActor.type = type;
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 5, damageType: 'piercing', delivery: 'melee', source: 'weapon' },
+			];
+			mockItem.type = 'monsterFeature';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode], targets: { attackType: '' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(formula, expect.anything(), expect.anything());
+		});
+
 		it('should not apply melee weapon bonus to ranged weapon attacks', async () => {
 			(mockActor.system as Record<string, unknown>).damageBonuses = [
 				{ value: 5, damageType: 'bludgeoning', delivery: 'melee', source: 'weapon' },

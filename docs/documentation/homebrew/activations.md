@@ -32,7 +32,7 @@ Monster feature sheets hide the Activation Cost section. A monster's action econ
 
 On items that are not monster features, **Attack with a weapon** makes the ability attack with an equipped weapon. The roll window asks which one, and the first damage node rolls that weapon's damage, with its reach or range and its damage type. Hunter abilities such as Vital Shot use it.
 
-On monster features only, an **Attack Type** dropdown (None / Reach / Range) and a **Distance** field describe the attack's reach for the stat block.
+On monster features only, an **Attack Type** dropdown (None / Reach / Range) and a **Distance** field describe the attack's reach for the stat block. A monster attack with None is melee, because monster attacks have Reach 1 unless the stat block says otherwise (GM Guide). Every rule that is limited to melee or ranged attacks reads it so. A monster area attack (AoE targeting on) with None is neither melee nor ranged. Set Range on a ranged monster attack. On a hero item, an activation with no attack type is neither melee nor ranged.
 
 ## The On use sub-tab: the step tree
 

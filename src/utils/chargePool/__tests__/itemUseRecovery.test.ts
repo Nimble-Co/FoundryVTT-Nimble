@@ -104,17 +104,28 @@ describe('recoveryDomainOf', () => {
 	};
 
 	it('names the target and how the attack reaches it', () => {
-		expect(recoveryDomainOf(hunter, 'reach', [{ actor: { uuid: 'Actor.ogre' } }])).toEqual([
-			'target:quarry',
-			'attack:melee',
-		]);
+		expect(
+			recoveryDomainOf(hunter, { targets: { attackType: 'reach' } }, [
+				{ actor: { uuid: 'Actor.ogre' } },
+			]),
+		).toEqual(['target:quarry', 'attack:melee']);
 	});
 
 	it('names no mark on another creature', () => {
-		expect(recoveryDomainOf(hunter, 'range', [{ actor: { uuid: 'Actor.wolf' } }])).toEqual([
-			'attack:ranged',
-		]);
+		expect(
+			recoveryDomainOf(hunter, { targets: { attackType: 'range' } }, [
+				{ actor: { uuid: 'Actor.wolf' } },
+			]),
+		).toEqual(['attack:ranged']);
 	});
+	it('names a monster attack with no attack type melee, and a hero one by no delivery', () => {
+		const target = [{ actor: { uuid: 'Actor.wolf' } }];
+		expect(
+			recoveryDomainOf({ ...hunter, type: 'npc' }, { targets: { attackType: '' } }, target),
+		).toEqual(['attack:melee']);
+		expect(recoveryDomainOf(hunter, { targets: { attackType: '' } }, target)).toEqual([]);
+	});
+
 	describe('with a rule that counts every creature as the quarry for melee attacks', () => {
 		const resolve = {
 			type: 'countAsMarked',
@@ -123,23 +134,27 @@ describe('recoveryDomainOf', () => {
 		const resolute = { ...hunter, rules: [resolve] };
 
 		it('names the mark on any creature for a melee attack', () => {
-			expect(recoveryDomainOf(resolute, 'reach', [{ actor: { uuid: 'Actor.wolf' } }])).toEqual([
-				'target:quarry',
-				'attack:melee',
-			]);
+			expect(
+				recoveryDomainOf(resolute, { targets: { attackType: 'reach' } }, [
+					{ actor: { uuid: 'Actor.wolf' } },
+				]),
+			).toEqual(['target:quarry', 'attack:melee']);
 		});
 
 		it('names it once on the marked quarry', () => {
-			expect(recoveryDomainOf(resolute, 'reach', [{ actor: { uuid: 'Actor.ogre' } }])).toEqual([
-				'target:quarry',
-				'attack:melee',
-			]);
+			expect(
+				recoveryDomainOf(resolute, { targets: { attackType: 'reach' } }, [
+					{ actor: { uuid: 'Actor.ogre' } },
+				]),
+			).toEqual(['target:quarry', 'attack:melee']);
 		});
 
 		it('names no mark for a ranged attack', () => {
-			expect(recoveryDomainOf(resolute, 'range', [{ actor: { uuid: 'Actor.wolf' } }])).toEqual([
-				'attack:ranged',
-			]);
+			expect(
+				recoveryDomainOf(resolute, { targets: { attackType: 'range' } }, [
+					{ actor: { uuid: 'Actor.wolf' } },
+				]),
+			).toEqual(['attack:ranged']);
 		});
 	});
 });

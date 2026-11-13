@@ -13,8 +13,9 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
+	type AttackActivation,
 	type AttackDelivery,
-	attackDeliveryFromAttackType,
+	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
 import {
@@ -754,7 +755,7 @@ function areaMaximizeOf(
 		  }
 		| undefined;
 	if (!activation?.acquireTargetsFromTemplate || !activation.template?.shape) return undefined;
-	const melee = isMelee(attackDeliveryFromAttackType(activation.targets?.attackType as never));
+	const melee = isMelee(deliveryOfAttack(activation, attacker));
 	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, melee);
 }
 
@@ -1985,8 +1986,9 @@ class NimbleChatMessage extends ChatMessage {
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		return attackDeliveryFromAttackType(
-			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
+		return deliveryOfAttack(
+			systemData.activation as AttackActivation | undefined,
+			(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker),
 		);
 	}
 

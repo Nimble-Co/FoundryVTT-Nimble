@@ -11,7 +11,7 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import { attackDeliveryFromAttackType } from '../../utils/damage/attackDelivery.js';
+import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
@@ -281,12 +281,9 @@ async function rollSingleMinionAttack(params: {
 			area: false,
 			attack: true,
 			melee: isMelee(
-				attackDeliveryFromAttackType(
-					(
-						resolvedActionContext.selectedAction.system?.activation as
-							| { targets?: { attackType?: string } }
-							| undefined
-					)?.targets?.attackType,
+				deliveryOfAttack(
+					resolvedActionContext.selectedAction.system?.activation as AttackActivation | undefined,
+					resolvedActionContext.actor,
 				),
 			),
 			// Only the conditions give a minion group attack disadvantage.

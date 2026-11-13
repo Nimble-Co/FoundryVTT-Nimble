@@ -32,6 +32,7 @@ export interface ConditionEffect {
 /** A creature whose conditions change a roll: the one who rolls, or the target. */
 export interface ConditionCreature {
 	name?: string | null;
+	type?: string | null;
 	uuid?: string | null;
 	getDomain?(): Set<string>;
 	getTargetDomain?(): Set<string>;

@@ -38,10 +38,7 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
-import {
-	type AttackDelivery,
-	attackDeliveryFromAttackType,
-} from '../utils/damage/attackDelivery.js';
+import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -590,7 +587,7 @@ class ItemActivationManager {
 	}
 
 	#getAttackDelivery(): AttackDelivery {
-		return attackDeliveryFromAttackType(this.activationData?.targets?.attackType);
+		return deliveryOfAttack(this.activationData, this.actor);
 	}
 
 	/**
@@ -657,9 +654,8 @@ class ItemActivationManager {
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
 		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering.
-		// When attackType is empty (item has no attack), delivery is null and damage bonuses
-		// are skipped entirely — non-attack items (consumables, utilities) should not receive
-		// attack damage bonuses.
+		// A hero item with no attack type has no delivery, and damage bonuses are skipped
+		// entirely: non-attack items (consumables, utilities) receive no attack damage bonuses.
 		const delivery = this.#getAttackDelivery();
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
@@ -1745,7 +1741,7 @@ class ItemActivationManager {
 			kind: 'attack',
 			roller: this.actor,
 			target: area ? null : (this.#getSoleTargetToken()?.actor ?? null),
-			delivery: conditionDelivery(this.activationData?.targets?.attackType, properties?.selected),
+			delivery: conditionDelivery(this.activationData, properties?.selected ?? [], this.actor),
 		}).filter((line) => line.on);
 	}
 
