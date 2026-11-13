@@ -60,8 +60,10 @@
 			"effects": [
 				{
 					"id": "TsTauntCond01x9",
-					"type": "condition",
-					"condition": "taunted",
+					"type": "applyEffect",
+					"effectId": "6m6zkcBOqyp6h6bW",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -96,7 +98,37 @@
 			11
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "6m6zkcBOqyp6h6bW",
+			"name": "Taunted",
+			"img": "systems/nimble/assets/icons/taunted.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"taunted"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {

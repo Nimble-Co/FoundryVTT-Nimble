@@ -1,5 +1,8 @@
+import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
+
 export type EffectNode =
-	| ConditionNode
+	| ApplyEffectNode
 	| DamageNode
 	| DamageOutcomeNode
 	| HealingNode
@@ -72,13 +75,34 @@ export type ActionConsequence = {
 	passedSave?: EffectNode[];
 };
 
-export type ConditionNode = {
+/**
+ * Puts an effect on the card's targets or on the one who used the item. The
+ * effect is a `transfer: false` Active Effect on the same item (`effectId`), or,
+ * for a card a rule or an upcast makes, a condition with its Lasts Until.
+ */
+export type ApplyEffectNode = {
 	id: string;
-	type: 'condition';
-	condition: string;
+	type: 'applyEffect';
+	effectId: string | null;
+	condition?: string | null;
+	lastsUntil?: Moment[];
+	/** A core duration, for a card that a rule made. */
+	duration?: ConditionDuration | null;
+	recipient: 'self' | 'targets';
+	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
+	tempHealingNodeId?: string | null;
 	parentContext: string | null;
 	parentNode: string | null;
 };
+
+/** What a card shows of the effect: the item's effect, or the condition of a card a rule made. */
+export interface ApplyEffectSource {
+	name: string;
+	img: string;
+	lastsUntil: readonly Moment[];
+	coreDuration?: ConditionDuration | null;
+	escape: boolean;
+}
 
 export type EffectNodeDisposition = 'any' | 'friendly' | 'neutral' | 'hostile' | 'secret';
 

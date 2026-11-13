@@ -283,8 +283,10 @@
 								"failedSave": [
 									{
 										"id": "MYJf50s6lzNZThGc",
-										"type": "condition",
-										"condition": "frightened",
+										"type": "applyEffect",
+										"effectId": "DsGt2DpGYGbJGBRU",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "xZIueLkPzG1imQG4"
 									}
@@ -313,7 +315,37 @@
 			},
 			"_id": "RJV5MKgumWqo5XIY",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "DsGt2DpGYGbJGBRU",
+					"name": "Frightened",
+					"img": "icons/svg/terror.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"frightened"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

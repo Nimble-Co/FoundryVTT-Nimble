@@ -49,14 +49,14 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 
 ## Anatomy of a chat card
 
-![An attack chat card with a damage total, the Apply Damage button, the targets and a save button](/images/documentation/condition-chatcard-with-button.png)
+![An attack chat card with a damage total, the Apply Damage button, the targets and an Effects part with Slowed](/images/documentation/apply-effect-chat-card.png)
 
 - **Header:** the item, and **Critical Hit** or **Miss** when the Primary Die decided one.
 - **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice.
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
 - **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
-- **Conditions:** a button for each condition of the item. Click it to apply the condition to the selected tokens. See [Conditions](conditions.md).
+- **Effects:** a row for each effect of the item, with its Lasts Until and an **Apply to Targets** or **Apply to You** button. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 - **Change This Roll:** rerolls and changes from features. See below.
 - **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
 

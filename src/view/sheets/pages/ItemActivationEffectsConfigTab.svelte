@@ -5,6 +5,7 @@
 	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
 	import TagGroup from '../../components/TagGroup.svelte';
+	import ApplyEffectNodeConfig from '../components/ApplyEffectNodeConfig.svelte';
 	import {
 		POOL_PREDICATE_PLACEHOLDER,
 		getDamageOutcomes,
@@ -20,7 +21,7 @@
 		prepareSavingThrowOptions,
 	} from './itemActivationEffectsConfigTabHelpers.js';
 
-	const { conditions, damageTypes, healingTypes, savingThrows, saves } = CONFIG.NIMBLE;
+	const { damageTypes, healingTypes, savingThrows, saves } = CONFIG.NIMBLE;
 
 	const damageOutcomes = getDamageOutcomes();
 	const dispositionOptions = getDispositionOptions();
@@ -37,8 +38,8 @@
 	// so they cannot be lifted into a helper; this dispatcher must stay here.
 	function getNodeSnippet(nodeType) {
 		switch (nodeType) {
-			case 'condition':
-				return ConditionNode;
+			case 'applyEffect':
+				return ApplyEffectNode;
 			case 'damage':
 				return DamageNode;
 			case 'damageOutcome':
@@ -615,18 +616,18 @@
 	</li>
 {/snippet}
 
-{#snippet ConditionNode(node, _parentNode = null)}
+{#snippet ApplyEffectNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
 			<h4 class="nimble-heading" data-heading-variant="field">
-				{localize('NIMBLE.activationEffects.statusCondition')}
+				{localize('NIMBLE.activationEffects.applyEffect')}
 			</h4>
 
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
-				aria-label={localize('NIMBLE.activationEffects.deleteCondition')}
-				data-tooltip={localize('NIMBLE.activationEffects.deleteCondition')}
+				aria-label={localize('NIMBLE.activationEffects.applyEffectNode.delete')}
+				data-tooltip={localize('NIMBLE.activationEffects.applyEffectNode.delete')}
 				type="button"
 				onclick={() => deleteEffectNode(document, effects, node.id)}
 			>
@@ -634,20 +635,12 @@
 			</button>
 		</header>
 
-		<div class="nimble-effect-main-config nimble-effect-main-config--no-sub-config">
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
 			<div class="nimble-config-block nimble-card">
-				<label class="nimble-field" data-field-variant="stacked">
-					<select
-						onchange={({ target }) =>
-							updateEffectNode(document, effects, node, 'condition', target.value)}
-					>
-						{#each Object.entries(conditions) as [value, label]}
-							<option {value} selected={value === node.condition}>
-								{label}
-							</option>
-						{/each}
-					</select>
-				</label>
+				<ApplyEffectNodeConfig {node} {document} {effects} />
 			</div>
 		</div>
 	</li>

@@ -321,8 +321,10 @@
 									},
 									{
 										"id": "alojcP1loKXvZZvT",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "XwZZLLd0rM80QXco",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "ZGq6uX9MufxZo3xO"
 									},
@@ -357,7 +359,37 @@
 			},
 			"_id": "hm0nvCYJy2i4fCDa",
 			"img": "icons/magic/light/beam-rays-blue-large.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "XwZZLLd0rM80QXco",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import prepareActorConditions from '../prepareActorConditions.js';
 
 function createEffect({
@@ -23,6 +23,11 @@ function createEffect({
 describe('prepareActorConditions', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.stubGlobal('fromUuidSync', () => null);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	it('sorts conditions alphabetically by display name', () => {
@@ -124,6 +129,9 @@ describe('prepareActorConditions', () => {
 				durationSortMs: null,
 				sourceLabel: 'None',
 				originName: null,
+				lastsUntil: '',
+				effectId: null,
+				escape: null,
 				tooltipHtml: expect.stringContaining('Custom Condition'),
 			},
 		]);

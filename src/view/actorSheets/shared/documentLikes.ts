@@ -5,6 +5,11 @@
 import { SYSTEM_ID } from '#system';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
+import {
+	effectLastsUntil,
+	escapeOf,
+	originName,
+} from '#view/dataPreparationHelpers/effectLastsUntil.js';
 import type { ActorCondition } from '#view/dataPreparationHelpers/prepareActorConditions.js';
 import {
 	TOGGLE_EFFECT_ITEM_ID_FLAG,
@@ -75,9 +80,9 @@ export type EffectDocument = ActiveEffect & {
 	duration?: Parameters<typeof deriveDurationDetails>[0];
 };
 
-/** Same split as the old Conditions tab: an effect that no item keeps on is temporary. */
-function isTemporary(effect: EffectDocument, fromItem: boolean): boolean {
-	if (!fromItem) return true;
+/** An effect on the actor itself is temporary, also when an item put it there. */
+function isTemporary(effect: EffectDocument, onItem: boolean): boolean {
+	if (!onItem) return true;
 	if (typeof effect.isTemporary === 'boolean') return effect.isTemporary;
 	const duration = effect.duration as { remaining?: number; rounds?: number } | undefined;
 	return (
@@ -88,6 +93,10 @@ function isTemporary(effect: EffectDocument, fromItem: boolean): boolean {
 
 function durationWords(label: string): string {
 	return label === NO_END_LABEL ? '' : expandDurationLabel(label, (key) => localize(key));
+}
+
+function holderOf(effect: EffectDocument): { uuid?: string | null } | null {
+	return (effect as unknown as { actor?: { uuid?: string | null } | null }).actor ?? null;
 }
 
 export function effectLike(effect: EffectDocument): EffectLike {
@@ -106,8 +115,11 @@ export function effectLike(effect: EffectDocument): EffectLike {
 			typeof ruleId === 'string'
 				? { itemId: typeof toggleItemId === 'string' ? toggleItemId : '', ruleId }
 				: null,
-		temporary: isTemporary(effect, !!itemId || !!effect.origin),
+		temporary: isTemporary(effect, !!itemId),
 		duration: durationWords(deriveDurationDetails(effect.duration).label),
+		lastsUntil: effectLastsUntil(effect as never, holderOf(effect)),
+		sourceName: originName(effect as never),
+		escape: escapeOf(effect as never),
 		description: plainText(effect.description ?? ''),
 	};
 }
@@ -120,6 +132,9 @@ export function conditionLike(condition: ActorCondition): ConditionLike {
 		active: condition.active,
 		description: plainText(condition.descriptionHtml),
 		duration: durationWords(condition.durationLabel),
+		lastsUntil: condition.active ? condition.lastsUntil : '',
 		source: condition.active ? (condition.originName ?? '') : '',
+		effectId: condition.active ? condition.effectId : null,
+		escape: condition.active ? condition.escape : null,
 	};
 }

@@ -19,6 +19,8 @@ function itemUsage(
 		immunityRuleIds: [],
 		markTargetRuleIds: [],
 		nodeIds: [],
+		itemEffectIds: [],
+		itemEffectStatusIds: [],
 		...overrides,
 	} as ConditionItemUsage & { item: { update: ReturnType<typeof vi.fn> } };
 }
@@ -117,6 +119,35 @@ describe('removeConditionReferences', () => {
 			'system.activation.effects': { on: { hit: { id: string }[] } }[];
 		};
 		expect(written['system.activation.effects'][0].on.hit.map(({ id }) => id)).toEqual(['c2']);
+	});
+
+	it('deletes the item effects of the Apply Effect nodes it drops', async () => {
+		const usage = itemUsage(
+			{ activation: { effects: [{ id: 'a1', type: 'applyEffect', effectId: 'fx' }] } },
+			{ nodeIds: ['a1'], itemEffectIds: ['fx'] },
+		);
+		const deleteEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		Object.assign(usage.item, { deleteEmbeddedDocuments });
+
+		await removeConditionReferences(usageOf([usage]), 'hexed');
+
+		expect(usage.item.update).toHaveBeenCalledWith({ 'system.activation.effects': [] });
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
+	});
+
+	it('takes only the condition off an item effect that holds others too', async () => {
+		const usage = itemUsage({}, { itemEffectStatusIds: ['both'] });
+		const updateEmbeddedDocuments = vi.fn().mockResolvedValue(undefined);
+		Object.assign(usage.item, {
+			effects: { get: () => ({ statuses: new Set(['hexed', 'prone']) }) },
+			updateEmbeddedDocuments,
+		});
+
+		await removeConditionReferences(usageOf([usage]), 'hexed');
+
+		expect(updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'both', statuses: ['prone'] },
+		]);
 	});
 
 	it('deletes the carrying effects from whichever document owns them', async () => {

@@ -274,8 +274,10 @@
 								"hit": [
 									{
 										"id": "x1NTHvj33BiSHrLS",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "JjmcSIjAgkK0diH8",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "vgJWrDKCn1ZhdF6j"
 									},
@@ -309,7 +311,37 @@
 			},
 			"_id": "E60UdXxj5NhOhoKP",
 			"img": "icons/weapons/daggers/dagger-poisoned.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "JjmcSIjAgkK0diH8",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

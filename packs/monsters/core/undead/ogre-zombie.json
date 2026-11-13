@@ -218,8 +218,10 @@
 								"criticalHit": [
 									{
 										"id": "C8mxOGeznNlciF2v",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "StPpJIcwMAfc9Khj",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "lK2Gn85Bej0fIbU5"
 									}
@@ -255,7 +257,37 @@
 			},
 			"_id": "ZAqWQDdjFoTJZgI2",
 			"img": "icons/weapons/clubs/club-simple-black.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "StPpJIcwMAfc9Khj",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

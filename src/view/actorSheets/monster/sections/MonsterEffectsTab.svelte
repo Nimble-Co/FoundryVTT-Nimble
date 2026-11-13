@@ -50,7 +50,7 @@ The arrow keys, Home and End move the focus in the condition grid.
 					tag={row.tag}
 					tagOn={row.tagOn}
 					summary={row.summary}
-					cost={{ text: row.lasts }}
+					summaryIcon={row.summaryIcon}
 					description={row.description}
 					facts={row.facts}
 					state={row.state}
@@ -59,6 +59,13 @@ The arrow keys, Home and End move the focus in the condition grid.
 					onuse={row.use ? () => use(row) : undefined}
 					useLabel={row.use?.kind === 'ask' ? row.use.ask.label : row.use?.label}
 					useExpanded={row.use?.kind === 'ask' ? !!asking : undefined}
+					escapeButton={row.escape
+						? {
+								label: row.escape.label,
+								ariaLabel: row.escape.ariaLabel,
+								onclick: () => row.escape && perform(row.escape.intent),
+							}
+						: undefined}
 					onedit={row.edit ? () => row.edit && perform(row.edit) : undefined}
 					hasWindow={!!row.edit}
 				>

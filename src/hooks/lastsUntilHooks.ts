@@ -8,6 +8,7 @@ import {
 } from '#utils/actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { seatOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
@@ -118,7 +119,25 @@ function onUpdateToken(token: TokenDocument, changes: Record<string, unknown>): 
 	fireEvent('move', token.actor as Actor | null);
 }
 
-function onDeleteEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+/** The user who deleted the effect owns its holder, so the temp HP comes back on that client. */
+/** A replaced copy leaves its temp HP to the copy that takes its place. */
+function takeBackEffectTempHp(
+	effect: ActiveEffect,
+	options: Record<string, unknown> | undefined,
+	userId: string | undefined,
+): void {
+	if (userId !== game.user?.id || !(effect.parent instanceof Actor)) return;
+	if (options?.[CONDITION_REPLACED_OPTION]) return;
+	const given = (effect.system as { tempHp?: number | null } | undefined)?.tempHp;
+	if (given) void takeBackTempHp(effect.parent as never, given);
+}
+
+function onDeleteEffect(
+	effect: ActiveEffect,
+	options?: Record<string, unknown>,
+	userId?: string,
+): void {
+	takeBackEffectTempHp(effect, options, userId);
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
 	if (options?.[CONDITION_REPLACED_OPTION]) return;
 	const holder = effect.parent;

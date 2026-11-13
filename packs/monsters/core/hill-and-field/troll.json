@@ -269,8 +269,10 @@
 								"criticalHit": [
 									{
 										"id": "BlMEYKj9oGzAau4R",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "VDc78LJrDgF7n2cP",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "CpFlkQX8I8trFBiz"
 									}
@@ -306,7 +308,37 @@
 			},
 			"_id": "zxkIrJoeB1BqZPdz",
 			"img": "icons/skills/melee/strike-slashes-red.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "VDc78LJrDgF7n2cP",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

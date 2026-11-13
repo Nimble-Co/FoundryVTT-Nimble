@@ -105,6 +105,10 @@ export interface HeroRowView {
 	tag?: string;
 	tagOn?: boolean;
 	summary?: string;
+	/** Font Awesome class before the summary */
+	summaryIcon?: string;
+	/** a button at the end of the row: Escape DC 13 */
+	escape?: { label: string; ariaLabel: string; intent: HeroIntent };
 	/** warn: a risk, for example a container over its capacity */
 	summaryTone?: 'act' | 'warn';
 	cost: RowCostProps;

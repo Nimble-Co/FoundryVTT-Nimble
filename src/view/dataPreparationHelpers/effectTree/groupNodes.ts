@@ -3,7 +3,7 @@ import type { EffectNode } from '#types/effectTree.js';
 export function groupNodes(nodes: EffectNode[]) {
 	const damageNodes: EffectNode[] = [];
 	const healingNodes: EffectNode[] = [];
-	const conditionNodes: EffectNode[] = [];
+	const applyEffectNodes: EffectNode[] = [];
 	const moveNodes: EffectNode[] = [];
 	const poolNodes: EffectNode[] = [];
 	const savingThrowNodes: EffectNode[] = [];
@@ -19,8 +19,8 @@ export function groupNodes(nodes: EffectNode[]) {
 			damageNodes.push(node);
 		} else if (node.type === 'healing') {
 			healingNodes.push(node);
-		} else if (node.type === 'condition') {
-			conditionNodes.push(node);
+		} else if (node.type === 'applyEffect') {
+			applyEffectNodes.push(node);
 		} else if (node.type === 'note') {
 			const noteCategory = textNodes.get(node.noteType);
 
@@ -40,7 +40,7 @@ export function groupNodes(nodes: EffectNode[]) {
 		Array.from(textNodes.values()).flat(),
 		damageNodes,
 		healingNodes,
-		conditionNodes,
+		applyEffectNodes,
 		moveNodes,
 		poolNodes,
 		// To ensure each saving throw is in its own group, wrap each node in an array

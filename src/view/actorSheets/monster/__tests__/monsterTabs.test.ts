@@ -65,6 +65,9 @@ describe('monsterEffectsTab', () => {
 				toggle: { itemId: 'hahaMissedMe0001', ruleId: 'hideToggle' },
 				temporary: true,
 				duration: '',
+				lastsUntil: '',
+				sourceName: '',
+				escape: null,
 				description: '',
 			},
 		];

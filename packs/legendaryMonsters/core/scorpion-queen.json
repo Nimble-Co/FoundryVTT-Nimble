@@ -339,8 +339,10 @@
 								"hit": [
 									{
 										"id": "scorpClawGrabble1",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "vf8tj09dLfsPplWC",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "scorpClawDamage01"
 									},
@@ -373,7 +375,37 @@
 				"subtype": "action",
 				"parentItemId": "scorpAtkSeq00001"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "vf8tj09dLfsPplWC",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

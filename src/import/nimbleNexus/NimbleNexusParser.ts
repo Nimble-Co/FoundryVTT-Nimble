@@ -3,6 +3,7 @@
  */
 
 import { SYSTEM_ID } from '#system';
+import { conditionsToItemEffects } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import { buildImportCredit, IMPORT_CREDIT_FLAG } from '../importCredit.js';
 import {
 	DEFAULT_FEATURE_ICONS,
@@ -205,6 +206,8 @@ export function createActionItem(action: NimbleNexusAction, parentItemId?: strin
 		];
 	}
 
+	const itemEffects = conditionsToItemEffects(effects as never, generateId);
+
 	// Parse range/reach from description to supplement target info
 	const rangeReach = parseRangeReach(action.description, action.target);
 
@@ -287,7 +290,7 @@ export function createActionItem(action: NimbleNexusAction, parentItemId?: strin
 			subtype: FEATURE_SUBTYPES.action,
 			parentItemId: parentItemId || '',
 		},
-		effects: [],
+		effects: itemEffects,
 		folder: null,
 		sort: 0,
 		flags: {},

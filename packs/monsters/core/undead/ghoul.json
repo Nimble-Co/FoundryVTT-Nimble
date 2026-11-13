@@ -218,8 +218,10 @@
 								"hit": [
 									{
 										"id": "5qaHVGcnIxyL1y7M",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "TlkXZt2t3kzpCu0K",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "rCgoHtvBWhXjhtES"
 									},
@@ -253,7 +255,37 @@
 			},
 			"_id": "GP65jvncWt5ktWv9",
 			"img": "icons/creatures/claws/claw-hooked-barbed.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "TlkXZt2t3kzpCu0K",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

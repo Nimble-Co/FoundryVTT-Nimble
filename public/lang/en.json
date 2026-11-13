@@ -549,8 +549,17 @@
 			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
-			"applyConditionHint": "Left click to apply this condition to this card's targets.",
-			"applyConditionToTargets": "Apply condition to this card's targets",
+			"tempHpGivenByEffect": "The effect below gives these temp HP, and takes back what is left when it ends.",
+			"applyEffect": {
+				"heading": "Effects",
+				"applyToTargets": "Apply to Targets",
+				"applyToYou": "Apply to You",
+				"on": "On {names}",
+				"noTargets": "This card has no targets.",
+				"noneTook": "{name} did not go on any creature.",
+				"missingName": "Effect not found",
+				"missing": "The item no longer has this effect."
+			},
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"checkResult": {
@@ -3766,6 +3775,70 @@
 			"minMax": "Min-Max",
 			"standard": "Standard"
 		},
+		"escape": {
+			"button": "Escape DC {dc}",
+			"buttonNoDc": "Escape",
+			"label": "Escape {name}: roll a save against DC {dc}",
+			"labelNoDc": "Escape {name}: roll a save",
+			"title": "Escape {name}",
+			"pick": "Which save do you roll?"
+		},
+		"lastsUntilText": {
+			"until": "until {moment}",
+			"for": "for {amount}",
+			"or": ", or ",
+			"turn": "the {boundary} of {whose}",
+			"round": "the {boundary} of {round}",
+			"boundary": { "start": "start", "end": "end" },
+			"span": {
+				"nextTurn": "next turn",
+				"currentTurn": "turn",
+				"currentRound": "this round",
+				"nextRound": "the next round"
+			},
+			"nextHero": "the next hero's turn",
+			"your": "your",
+			"their": "their",
+			"possessive": "{name}'s",
+			"you": "you",
+			"they": "they",
+			"escape": "Escape",
+			"effectEnds": "{name} ends",
+			"anotherEffectEnds": "another effect ends",
+			"combatEnds": "combat ends",
+			"units": {
+				"rounds": { "one": "1 round", "many": "{value} rounds" },
+				"minutes": { "one": "1 minute", "many": "{value} minutes" },
+				"hours": { "one": "1 hour", "many": "{value} hours" },
+				"days": { "one": "1 day", "many": "{value} days" },
+				"turns": { "one": "1 turn", "many": "{value} turns" },
+				"seconds": { "one": "1 second", "many": "{value} seconds" }
+			},
+			"event": {
+				"attack": { "base": "attack", "third": "attacks" },
+				"move": { "base": "move", "third": "moves" },
+				"castSpell": { "base": "cast a spell", "third": "casts a spell" },
+				"takeDamage": { "base": "take damage", "third": "takes damage" },
+				"healed": { "base": "are Healed", "third": "is Healed" },
+				"zeroHp": { "base": "drop to 0 HP", "third": "drops to 0 HP" },
+				"die": { "base": "die", "third": "dies" },
+				"loseConcentration": { "base": "lose Concentration", "third": "loses Concentration" },
+				"useAgain": { "base": "use it again", "third": "uses it again" },
+				"effectEnds": { "base": "end", "third": "ends" },
+				"nextRoll": { "base": "make a roll", "third": "makes a roll" },
+				"nextDamage": { "base": "deal damage", "third": "deals damage" },
+				"nextSpell": { "base": "cast a tiered spell", "third": "casts a tiered spell" },
+				"nextAffliction": { "base": "apply an Affliction", "third": "applies an Affliction" },
+				"inactiveRound": {
+					"base": "spend a round with no attack and no new use",
+					"third": "spends a round with no attack and no new use"
+				},
+				"wounded": { "base": "are Bloodied", "third": "is Bloodied" },
+				"chargeGained": { "base": "gain a charge", "third": "gains a charge" },
+				"rest": { "base": "rest", "third": "rests" },
+				"combatEnd": { "base": "end", "third": "ends" }
+			}
+		},
 		"effectSheet": {
 			"tabs": {
 				"details": "Details",
@@ -3782,7 +3855,9 @@
 				"off": "Off",
 				"offHint": "Its changes and rules do not apply.",
 				"transfer": "Apply to the actor",
-				"transferHint": "The actor that has this item gets the effect."
+				"transferHint": "The actor that has this item gets the effect.",
+				"conditions": "Conditions",
+				"conditionsHint": "The creature that has this effect has these conditions."
 			},
 			"lastsUntil": {
 				"heading": "Lasts Until",
@@ -4683,7 +4758,20 @@
 		"activationEffects": {
 			"effects": "Effects",
 			"addEffect": "Add Effect",
-			"condition": "Condition",
+			"applyEffect": "Apply Effect",
+			"applyEffectNode": {
+				"delete": "Delete Apply Effect",
+				"effect": "Effect",
+				"noEffect": "No effect",
+				"newEffect": "New effect",
+				"edit": "Edit the effect",
+				"condition": "Condition: {name}",
+				"recipient": "Who takes it",
+				"recipients": { "targets": "The targets", "self": "The creature that uses this" },
+				"tempHealing": "Temp HP that it gives",
+				"noTempHealing": "None",
+				"tempHealingFormula": "Temp healing {formula}"
+			},
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
@@ -4733,10 +4821,8 @@
 			"customSaveDCHint": "A number or a formula against the data of the creature that uses this. When empty, a hero uses 10+@key and a monster has no DC.",
 			"sharedRolls": "Shared Rolls",
 			"none": "None",
-			"statusCondition": "Status Condition",
 			"noteType": "Note Type",
 			"deleteDamage": "Delete damage roll",
-			"deleteCondition": "Delete condition",
 			"deleteMove": "Delete move",
 			"deleteDamageOutcome": "Delete Damage Outcome",
 			"deleteNote": "Delete Note",

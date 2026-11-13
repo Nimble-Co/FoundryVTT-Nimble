@@ -23,8 +23,10 @@
 			"effects": [
 				{
 					"id": "5eSopLu5pAtjC1eH",
-					"type": "condition",
-					"condition": "invisible",
+					"type": "applyEffect",
+					"effectId": "i5y6fr6yOfrN659s",
+					"recipient": "self",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -51,7 +53,37 @@
 			11
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "i5y6fr6yOfrN659s",
+			"name": "Invisible",
+			"img": "icons/svg/invisible.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"invisible"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

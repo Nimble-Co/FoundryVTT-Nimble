@@ -207,15 +207,19 @@
 					"effects": [
 						{
 							"id": "MfjSOilSNlsrh2mc",
-							"type": "condition",
-							"condition": "hampered",
+							"type": "applyEffect",
+							"effectId": "G9crCQkiJNblvBai",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						},
 						{
 							"id": "uYpDvr5EZunKsGIU",
-							"type": "condition",
-							"condition": "dazed",
+							"type": "applyEffect",
+							"effectId": "ZpvDniNo2gCf7N30",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
 						}
@@ -239,7 +243,66 @@
 			},
 			"_id": "TWonhyB7gWas4zsh",
 			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "G9crCQkiJNblvBai",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "ZpvDniNo2gCf7N30",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

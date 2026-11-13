@@ -54,8 +54,16 @@ describe('attack change pack items', () => {
 
 	describe('Thrill of the Hunt', () => {
 		const HUNTER = 'packs/classFeatures/core/hunter';
-		const activation = (file: string) =>
-			JSON.parse(readFileSync(resolve(`${HUNTER}/${file}.json`), 'utf8')).system.activation;
+		const itemOf = (file: string) =>
+			JSON.parse(readFileSync(resolve(`${HUNTER}/${file}.json`), 'utf8'));
+		const activation = (file: string) => itemOf(file).system.activation;
+		/** The statuses of the item effects that the Apply Effect nodes put on. */
+		const appliedConditions = (file: string, nodes: { type: string; effectId?: string }[]) => {
+			const effects = itemOf(file).effects as { _id: string; statuses: string[] }[];
+			return nodes
+				.filter((node) => node.type === 'applyEffect')
+				.flatMap((node) => effects.find((effect) => effect._id === node.effectId)?.statuses ?? []);
+		};
 
 		it.each([
 			['incendiary-shot', 'ranged', true],
@@ -92,12 +100,8 @@ describe('attack change pack items', () => {
 			['pinning-shot', ['restrained']],
 			['hail-of-arrows', ['slowed']],
 		])('%s gives its condition on a hit', (name, conditions) => {
-			const hit = activation(`thrill-of-the-hunt/${name}`).effects[0].on.hit;
-			expect(
-				hit
-					.filter((node: { type: string }) => node.type === 'condition')
-					.map((node: { condition: string }) => node.condition),
-			).toEqual(conditions);
+			const file = `thrill-of-the-hunt/${name}`;
+			expect(appliedConditions(file, activation(file).effects[0].on.hit)).toEqual(conditions);
 		});
 
 		it('Hail of Arrows hits an area of 3x3', () => {
@@ -122,11 +126,8 @@ describe('attack change pack items', () => {
 				`${name}-use`,
 				'thrill-of-the-hunt',
 			]);
-			expect(
-				activation(`thrill-of-the-hunt/${name}`)
-					.effects.filter((node: { type: string }) => node.type === 'condition')
-					.map((node: { condition: string }) => node.condition),
-			).toEqual(conditions);
+			const item = `thrill-of-the-hunt/${name}`;
+			expect(appliedConditions(item, activation(item).effects)).toEqual(conditions);
 		});
 
 		it('Wild Instinct is a free Assess that spends a charge when there is one', () => {

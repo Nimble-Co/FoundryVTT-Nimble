@@ -28,6 +28,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		onequip,
 		equipped = false,
 		summary,
+		summaryIcon,
 		summaryTone,
 		cost = {},
 		description,
@@ -40,6 +41,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		useLabel,
 		useExpanded,
 		disabled,
+		escapeButton,
 		onedit,
 		hasWindow = true,
 		fields,
@@ -84,7 +86,11 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 				<em class="tag" class:on={tagOn}>{tag}</em>
 			{/if}
 		</span>
-		{#if summary}<span class="sm {summaryTone ?? ''}">{summary}</span>{/if}
+		{#if summary && summaryIcon}
+			<span class="sm si {summaryTone ?? ''}"
+				><i class={summaryIcon} aria-hidden="true"></i><span>{summary}</span></span
+			>
+		{:else if summary}<span class="sm {summaryTone ?? ''}">{summary}</span>{/if}
 	</span>
 	{#if withCost}<RowCost {...cost} />{/if}
 {/snippet}
@@ -125,6 +131,18 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 			</button>
 		{:else}
 			<div class="main">{@render face(true)}</div>
+		{/if}
+		{#if escapeButton && !fields}
+			<button
+				type="button"
+				class="nimble-u-reset-button eb"
+				aria-label={escapeButton.ariaLabel ?? escapeButton.label}
+				data-tooltip={escapeButton.ariaLabel ?? escapeButton.label}
+				onclick={escapeButton.onclick}
+			>
+				<i class="fa-solid fa-person-running" aria-hidden="true"></i>
+				<span>{escapeButton.label}</span>
+			</button>
 		{/if}
 		<RowButton kind={hasWindow ? 'edit' : 'spacer'} {name} {touch} onclick={onedit} />
 	</div>
@@ -294,6 +312,49 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		font-weight: 500;
 		line-height: 1.3;
 		color: var(--nimble-ui-ink-muted);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
+	}
+	.eb {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		min-height: 28px;
+		padding: 0 9px;
+		border-radius: 4px;
+		box-shadow: inset 0 0 0 1px var(--nimble-ui-ring);
+		font: 700 0.75rem/1 var(--nimble-primary-font);
+		color: var(--nimble-ui-ink);
+		white-space: nowrap;
+	}
+	.eb:hover {
+		background: var(--nimble-ui-hover);
+	}
+	.eb:active {
+		background: var(--nimble-ui-soft);
+	}
+	.eb:focus-visible {
+		outline: 2px solid var(--nimble-ui-focus);
+		outline-offset: 1px;
+	}
+	.touch .eb {
+		min-height: 40px;
+	}
+	.sm.si {
+		display: flex;
+		align-items: flex-start;
+		gap: 5px;
+	}
+	.sm.si i {
+		flex: none;
+		margin-block-start: 0.15em;
+		font-size: 0.7rem;
+	}
+	.sm.si span {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;

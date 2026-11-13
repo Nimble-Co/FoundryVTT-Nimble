@@ -363,8 +363,10 @@
 								"hit": [
 									{
 										"id": "3WDhouiKqzL4ZjL0",
-										"type": "condition",
-										"condition": "bloodied",
+										"type": "applyEffect",
+										"effectId": "pddiDaRdWdoeUw0n",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "cQYL8RTdiT3Qn4Sr"
 									},
@@ -399,7 +401,37 @@
 			},
 			"_id": "pm7AVHiCb0C7lHqK",
 			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "pddiDaRdWdoeUw0n",
+					"name": "Bloodied",
+					"img": "icons/svg/blood.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"bloodied"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

@@ -100,8 +100,9 @@ describe('getRelevantNodes', () => {
 				hit: [
 					{
 						id: 'grappled',
-						type: 'condition',
-						condition: 'grappled',
+						type: 'applyEffect',
+						effectId: 'grappled',
+						recipient: 'targets',
 						parentNode: 'root-damage',
 						parentContext: 'hit',
 					},

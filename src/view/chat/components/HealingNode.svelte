@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { hasDispositionTarget } from '#utils/treeManipulation/hasDispositionTarget.ts';
 	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
+	import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.ts';
 
 	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
 	const { actorType, permissions } = messageDocument.system as {
@@ -34,6 +35,7 @@
 
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
+	let givenByEffect = $derived(givenByAnEffect(messageDocument.reactive, effectId));
 
 	let targetDisposition = $derived(
 		node.recipient !== 'self' && hasDispositionTarget(node) ? node.targetDisposition : undefined,
@@ -88,7 +90,9 @@
 	</div>
 {/if}
 
-{#if canInteract}
+{#if givenByEffect}
+	<p class="healing-given-by-effect">{chatText('tempHpGivenByEffect')}</p>
+{:else if canInteract}
 	<div class="healing-actions">
 		{#if isApplied}
 			<div class="healing-applied">
@@ -141,6 +145,12 @@
 {/if}
 
 <style lang="scss">
+	.healing-given-by-effect {
+		margin: 0.25rem 0 0;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
+	}
+
 	.healing-max-damage {
 		margin-block-start: 0.25rem;
 		font-size: var(--nimble-xs-text);

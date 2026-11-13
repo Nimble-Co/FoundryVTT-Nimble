@@ -266,15 +266,19 @@
 								"hit": [
 									{
 										"id": "I6uW8cTObHq1tJJ4",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "jKudfriNVHsdHXks",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "1Jocofp3EKqEhzKR"
 									},
 									{
 										"id": "E0CsPmuPXa2mQFVP",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "2W86UGj5fgoMLDbA",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "1Jocofp3EKqEhzKR"
 									},
@@ -308,7 +312,66 @@
 			},
 			"_id": "TRT44zWDEobdx3S9",
 			"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "jKudfriNVHsdHXks",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "2W86UGj5fgoMLDbA",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -353,8 +416,10 @@
 								"failedSave": [
 									{
 										"id": "dLKx9z3Cr5qIeBEh",
-										"type": "condition",
-										"condition": "frightened",
+										"type": "applyEffect",
+										"effectId": "xhzQv4NKEmeEJoax",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "BCoZcbmil1eR0wrU"
 									}
@@ -382,7 +447,37 @@
 			},
 			"_id": "nEzel3FmAenjmI53",
 			"img": "icons/magic/death/skeleton-skull-soul-blue.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "xhzQv4NKEmeEJoax",
+					"name": "Frightened",
+					"img": "icons/svg/terror.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"frightened"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

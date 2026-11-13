@@ -14,6 +14,7 @@ export type SheetIntent<Flag extends string = string> =
 	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
+	| { kind: 'escape'; effectId: string }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'setFlag'; flag: Flag; value: boolean | number }
 	| { kind: 'setCurrency'; coin: string; value: number };
@@ -32,6 +33,7 @@ const SHEET_INTENT_KINDS: Record<SheetIntent['kind'], true> = {
 	endEffect: true,
 	openEffect: true,
 	removeEffect: true,
+	escape: true,
 	setCondition: true,
 	setFlag: true,
 	setCurrency: true,

@@ -43,14 +43,14 @@ describe('flattenEffectsTree', () => {
 
 	describe('String references', () => {
 		it('should parse valid string reference with single key-value pair', () => {
-			const input = ['@{id=test1; type=condition; condition=poisoned}'];
+			const input = ['@{id=test1; type=applyEffect; effectId=poisoned}'];
 			const result = flattenEffectsTree(input);
 
 			expect(result).toHaveLength(1);
 			expect(result[0]).toMatchObject({
 				id: 'test1',
-				type: 'condition',
-				condition: 'poisoned',
+				type: 'applyEffect',
+				effectId: 'poisoned',
 				parentNode: null,
 				parentContext: null,
 			});
@@ -146,12 +146,13 @@ describe('flattenEffectsTree', () => {
 	});
 
 	describe('Simple EffectNode objects (no nesting)', () => {
-		it('should flatten simple ConditionNode', () => {
+		it('should flatten a simple Apply Effect node', () => {
 			const input: EffectNode[] = [
 				{
 					id: 'cond1',
-					type: 'condition',
-					condition: 'poisoned',
+					type: 'applyEffect',
+					effectId: 'poisoned',
+					recipient: 'targets',
 					parentContext: null,
 					parentNode: null,
 				},
@@ -161,8 +162,9 @@ describe('flattenEffectsTree', () => {
 			expect(result).toHaveLength(1);
 			expect(result[0]).toMatchObject({
 				id: 'cond1',
-				type: 'condition',
-				condition: 'poisoned',
+				type: 'applyEffect',
+				effectId: 'poisoned',
+				recipient: 'targets',
 				parentNode: null,
 				parentContext: null,
 			});
@@ -239,8 +241,9 @@ describe('flattenEffectsTree', () => {
 			const input: EffectNode[] = [
 				{
 					id: 'node1',
-					type: 'condition',
-					condition: 'poisoned',
+					type: 'applyEffect',
+					effectId: 'poisoned',
+					recipient: 'targets',
 					parentContext: null,
 					parentNode: null,
 				},
@@ -258,8 +261,9 @@ describe('flattenEffectsTree', () => {
 			const input: EffectNode[] = [
 				{
 					id: 'node1',
-					type: 'condition',
-					condition: 'poisoned',
+					type: 'applyEffect',
+					effectId: 'poisoned',
+					recipient: 'targets',
 					parentContext: null,
 					parentNode: null,
 				},
@@ -286,8 +290,9 @@ describe('flattenEffectsTree', () => {
 						hit: [
 							{
 								id: 'cond1',
-								type: 'condition',
-								condition: 'burning',
+								type: 'applyEffect',
+								effectId: 'burning',
+								recipient: 'targets',
 								parentContext: null,
 								parentNode: null,
 							},
@@ -307,8 +312,9 @@ describe('flattenEffectsTree', () => {
 			expect(result[0]).not.toHaveProperty('on');
 			expect(result[1]).toMatchObject({
 				id: 'cond1',
-				type: 'condition',
-				condition: 'burning',
+				type: 'applyEffect',
+				effectId: 'burning',
+				recipient: 'targets',
 				parentNode: 'dmg1',
 				parentContext: 'hit',
 			});
@@ -506,8 +512,9 @@ describe('flattenEffectsTree', () => {
 						hit: [
 							{
 								id: 'cond1',
-								type: 'condition',
-								condition: 'burning',
+								type: 'applyEffect',
+								effectId: 'burning',
+								recipient: 'targets',
 								parentContext: null,
 								parentNode: null,
 							},
@@ -549,7 +556,7 @@ describe('flattenEffectsTree', () => {
 					damageType: 'fire',
 					formula: '1d6',
 					on: {
-						hit: ['@{id=cond1; type=condition; condition=burning}'],
+						hit: ['@{id=cond1; type=applyEffect; effectId=burning; recipient=targets}'],
 					},
 					parentContext: null,
 					parentNode: null,
@@ -560,8 +567,9 @@ describe('flattenEffectsTree', () => {
 			expect(result).toHaveLength(2);
 			expect(result[1]).toMatchObject({
 				id: 'cond1',
-				type: 'condition',
-				condition: 'burning',
+				type: 'applyEffect',
+				effectId: 'burning',
+				recipient: 'targets',
 				parentNode: 'dmg1',
 				parentContext: 'hit',
 			});
@@ -608,15 +616,17 @@ describe('flattenEffectsTree', () => {
 			const input = [
 				{
 					id: 'cond1',
-					type: 'condition',
-					condition: 'poisoned',
+					type: 'applyEffect',
+					effectId: 'poisoned',
+					recipient: 'targets',
 					// Testing edge case where on might be incorrectly added
 					on: {
 						hit: [
 							{
 								id: 'cond2',
-								type: 'condition',
-								condition: 'burning',
+								type: 'applyEffect',
+								effectId: 'burning',
+								recipient: 'targets',
 								parentContext: null,
 								parentNode: null,
 							},
@@ -826,8 +836,9 @@ describe('flattenEffectsTree', () => {
 									criticalHit: [
 										{
 											id: 'cond1',
-											type: 'condition',
-											condition: 'burning',
+											type: 'applyEffect',
+											effectId: 'burning',
+											recipient: 'targets',
 											parentContext: null,
 											parentNode: null,
 										},
@@ -870,8 +881,9 @@ describe('flattenEffectsTree', () => {
 						hit: [
 							{
 								id: 'cond1',
-								type: 'condition',
-								condition: 'burning',
+								type: 'applyEffect',
+								effectId: 'burning',
+								recipient: 'targets',
 								parentContext: null,
 								parentNode: null,
 							},
@@ -950,8 +962,9 @@ describe('flattenEffectsTree', () => {
 						hit: [
 							{
 								id: 'cond1',
-								type: 'condition',
-								condition: 'burning',
+								type: 'applyEffect',
+								effectId: 'burning',
+								recipient: 'targets',
 								parentContext: null,
 								parentNode: null,
 							},

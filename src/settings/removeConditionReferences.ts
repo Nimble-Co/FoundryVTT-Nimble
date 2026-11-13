@@ -11,6 +11,9 @@ interface UpdatableItem {
 	name?: string;
 	system?: { rules?: Record<string, unknown>[]; activation?: { effects?: EffectNode[] } };
 	update?: (data: Record<string, unknown>) => Promise<unknown>;
+	effects?: { get(id: string): { statuses?: Set<string> } | undefined };
+	deleteEmbeddedDocuments?: (type: 'ActiveEffect', ids: string[]) => Promise<unknown>;
+	updateEmbeddedDocuments?: (type: 'ActiveEffect', updates: object[]) => Promise<unknown>;
 }
 
 /**
@@ -62,15 +65,27 @@ async function stripFromItem(usage: ConditionItemUsage, conditionId: string): Pr
 	if (usage.nodeIds.length) {
 		const nodeIds = new Set(usage.nodeIds);
 		const flattened = flattenEffectsTree(item.system?.activation?.effects ?? []);
-		// Condition nodes are leaves, so dropping them cannot orphan a child.
+		// Condition and Apply Effect nodes are leaves, so dropping them cannot orphan a child.
 		update['system.activation.effects'] = reconstructEffectsTree(
 			flattened.filter((node) => !nodeIds.has(node.id)),
 		);
 	}
 
-	if (Object.keys(update).length === 0) return;
-
-	await item.update?.(update);
+	if (Object.keys(update).length) await item.update?.(update);
+	if (usage.itemEffectIds.length) {
+		await item.deleteEmbeddedDocuments?.('ActiveEffect', usage.itemEffectIds);
+	}
+	if (usage.itemEffectStatusIds.length) {
+		await item.updateEmbeddedDocuments?.(
+			'ActiveEffect',
+			usage.itemEffectStatusIds.map((id) => ({
+				_id: id,
+				statuses: [...(item.effects?.get(id)?.statuses ?? [])].filter(
+					(status) => status !== conditionId,
+				),
+			})),
+		);
+	}
 }
 
 /** Effects grouped by the document that can delete them, since an item-granted effect lives there. */

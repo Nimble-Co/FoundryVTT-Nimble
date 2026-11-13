@@ -22,8 +22,10 @@
 			"effects": [
 				{
 					"id": "S93xcM2MDdnLqBXI",
-					"type": "condition",
-					"condition": "charged",
+					"type": "applyEffect",
+					"effectId": "ODT8SBxBsXv1g9vQ",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -75,7 +77,37 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "ODT8SBxBsXv1g9vQ",
+			"name": "Charged",
+			"img": "systems/nimble/assets/icons/charged.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"charged"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

@@ -4,7 +4,7 @@
  */
 
 import type {
-	ConditionNode,
+	ApplyEffectNode,
 	DamageNode,
 	DamageOutcomeNode,
 	EffectNode,
@@ -399,17 +399,19 @@ function createDamageOutcomeNode(
 }
 
 /**
- * Create a ConditionNode
+ * An Apply Effect node that names its condition; `conditionsToItemEffects` gives it an effect on the item.
  */
-function createConditionNode(
+function createConditionEffectNode(
 	condition: string,
 	parentNode: string | null,
 	parentContext: string | null,
-): ConditionNode {
+): ApplyEffectNode {
 	return {
 		id: generateId(),
-		type: 'condition',
+		type: 'applyEffect',
+		effectId: null,
 		condition,
+		recipient: 'targets',
 		parentContext,
 		parentNode,
 	};
@@ -502,7 +504,7 @@ export function buildEffectTree(action: NimbleNexusAction): EffectNode[] {
 			// This is needed because conditions need a parent context
 			for (const cond of conditions) {
 				if (cond.context === 'hit') {
-					effects.push(createConditionNode(cond.condition, null, null));
+					effects.push(createConditionEffectNode(cond.condition, null, null));
 				}
 			}
 		}
@@ -564,7 +566,9 @@ function buildSavingThrowTree(
 		saveNode.on ??= {};
 		saveNode.on.failedSave ??= [];
 		for (const cond of failedSaveConditions) {
-			saveNode.on.failedSave.push(createConditionNode(cond.condition, saveNode.id, 'failedSave'));
+			saveNode.on.failedSave.push(
+				createConditionEffectNode(cond.condition, saveNode.id, 'failedSave'),
+			);
 		}
 	}
 
@@ -590,14 +594,14 @@ function buildDamageTree(damageInfo: ParsedDamage, conditions: ParsedCondition[]
 	const critConditions = conditions.filter((c) => c.context === 'criticalHit');
 
 	for (const cond of hitConditions) {
-		damageNode.on.hit!.push(createConditionNode(cond.condition, damageNode.id, 'hit'));
+		damageNode.on.hit!.push(createConditionEffectNode(cond.condition, damageNode.id, 'hit'));
 	}
 
 	if (critConditions.length > 0) {
 		damageNode.on.criticalHit = [];
 		for (const cond of critConditions) {
 			damageNode.on.criticalHit.push(
-				createConditionNode(cond.condition, damageNode.id, 'criticalHit'),
+				createConditionEffectNode(cond.condition, damageNode.id, 'criticalHit'),
 			);
 		}
 	}

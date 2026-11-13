@@ -33,8 +33,10 @@
 						"hit": [
 							{
 								"id": "IU4d6Xdpr2nATt3g",
-								"type": "condition",
-								"condition": "taunted",
+								"type": "applyEffect",
+								"effectId": "ZFJzL221oMGamSUP",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
 								"parentContext": "hit",
 								"parentNode": "6pEXpZ8znbQP6LiP"
 							},
@@ -106,7 +108,37 @@
 			"songweaver"
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "ZFJzL221oMGamSUP",
+			"name": "Taunted",
+			"img": "systems/nimble/assets/icons/taunted.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"taunted"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

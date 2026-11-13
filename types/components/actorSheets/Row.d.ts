@@ -16,6 +16,8 @@ export interface RowProps {
 	equipped?: boolean;
 	/** one line under the name */
 	summary?: string;
+	/** Font Awesome class before the summary, at the top of its first line */
+	summaryIcon?: string;
 	/** act = you just used it, warn = a risk (past the limit) */
 	summaryTone?: 'act' | 'warn';
 	cost?: RowCostProps;
@@ -39,6 +41,8 @@ export interface RowProps {
 	useExpanded?: boolean;
 	/** the thing cannot be used now; default: state out */
 	disabled?: boolean;
+	/** a button of its own at the end of the row, outside the row's main button: Escape DC 13 */
+	escapeButton?: { label: string; ariaLabel?: string; onclick: () => void };
 	/** the pen: open the window of the thing */
 	onedit?: () => void;
 	/** false = no window: an empty place in place of the pen */

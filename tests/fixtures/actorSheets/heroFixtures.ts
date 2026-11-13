@@ -500,6 +500,9 @@ export function effectLike(
 		toggle: null,
 		temporary: true,
 		duration: '',
+		lastsUntil: '',
+		sourceName: '',
+		escape: null,
 		description: '',
 		...overrides,
 	};
@@ -513,7 +516,10 @@ export function conditionLike(
 		active: false,
 		description: '',
 		duration: '',
+		lastsUntil: '',
 		source: '',
+		effectId: null,
+		escape: null,
 		...overrides,
 	};
 }

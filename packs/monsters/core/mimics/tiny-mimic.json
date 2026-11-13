@@ -218,8 +218,10 @@
 								"hit": [
 									{
 										"id": "fMgBEeRkZxyWoG80",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "T0DYBFyZj8HzFexQ",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "ZjiweZeONMLBciCh"
 									},
@@ -253,7 +255,37 @@
 			},
 			"_id": "23FHpmDUgXKOMS5J",
 			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "T0DYBFyZj8HzFexQ",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

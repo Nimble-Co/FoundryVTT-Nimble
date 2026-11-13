@@ -46,6 +46,12 @@ export interface EffectLike {
 	temporary: boolean;
 	/** how long it lasts, in words; empty for no end */
 	duration: string;
+	/** Lasts Until as the holder reads it: "Until the end of your next turn"; empty for none */
+	lastsUntil: string;
+	/** the name of the document in the origin: "Snowblind" */
+	sourceName: string;
+	/** the user owns the holder and the effect has an Escape DC; `dc` is null when it is not a number */
+	escape: { dc: number | null } | null;
 	description: string;
 }
 
@@ -59,8 +65,14 @@ export interface ConditionLike {
 	description: string;
 	/** how long it lasts, in words; empty for no end */
 	duration: string;
+	/** Lasts Until as the holder reads it; empty for none */
+	lastsUntil: string;
 	/** the name of the effect that gives it, if any */
 	source: string;
+	/** the effect that gives it; null for one the system sets */
+	effectId: string | null;
+	/** as on an effect: the user can try to Escape it */
+	escape: { dc: number | null } | null;
 }
 
 export interface DicePoolLike {

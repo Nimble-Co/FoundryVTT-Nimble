@@ -337,15 +337,19 @@
 								"criticalHit": [
 									{
 										"id": "MpDaOq8uDvrZ2wMS",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "Fcdh94q0vsFgapW4",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "Vmm3IICgQYD0xGC3"
 									},
 									{
 										"id": "bsAQa2WUYIGIyiqf",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "z4atxdvP9jXYNcl6",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "Vmm3IICgQYD0xGC3"
 									}
@@ -382,7 +386,66 @@
 			},
 			"_id": "35HP1npCJHxMtbS1",
 			"img": "icons/skills/melee/hand-grip-sword-red.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "Fcdh94q0vsFgapW4",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "z4atxdvP9jXYNcl6",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

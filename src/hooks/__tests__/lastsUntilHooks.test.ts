@@ -278,6 +278,26 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
 	});
 
+	it('the user who deletes an effect takes back the temp HP that it gave', () => {
+		const holder = Object.assign(Object.create(Actor.prototype), {
+			system: { attributes: { hp: { temp: 9 } } },
+			update: vi.fn(async () => undefined),
+		});
+		const effect = {
+			parent: holder,
+			name: 'Frost Shield',
+			statuses: new Set(),
+			system: { tempHp: 6 },
+		};
+
+		hook('deleteActiveEffect')(effect, {}, game.user?.id);
+		hook('deleteActiveEffect')(effect, {}, 'someone else');
+		hook('deleteActiveEffect')(effect, { nimbleConditionReplaced: true }, game.user?.id);
+
+		expect(holder.update, 'a replaced copy leaves its temp HP').toHaveBeenCalledTimes(1);
+		expect(holder.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 3 });
+	});
+
 	it('an item use hands the targets to the item use events', () => {
 		const item = { actor: {} };
 		const target = { name: 'Ogre' };

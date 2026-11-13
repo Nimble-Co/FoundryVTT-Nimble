@@ -80,8 +80,10 @@
 				},
 				{
 					"id": "snareTrapConsume0",
-					"type": "condition",
-					"condition": "restrained",
+					"type": "applyEffect",
+					"effectId": "aubE0PN4zGzA4nwT",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -116,7 +118,37 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "aubE0PN4zGzA4nwT",
+			"name": "Restrained",
+			"img": "icons/svg/net.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"restrained"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

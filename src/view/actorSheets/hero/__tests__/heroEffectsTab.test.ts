@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	blankHero,
 	conditionLike,
+	effectLike,
 	effectsContext,
 	effectsHero,
 	heroContext,
@@ -103,7 +104,9 @@ describe('heroEffectsTab', () => {
 			intent: { kind: 'endEffect', effectId: 'rageEffect' },
 		});
 		expect(row.state).toBe('active');
-		expect(row.cost.text).toBe(`${FX}.inactiveRound`);
+		expect(row.summary).toBe(`${FX}.inactiveRound`);
+		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
+		expect(row.cost, 'no duration text at the end of the row').toEqual({});
 	});
 
 	it('takes the duration of a toggle effect from the activation when the rule has no end', () => {
@@ -120,7 +123,7 @@ describe('heroEffectsTab', () => {
 
 		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-rageEffect');
 
-		expect(row.cost.text).toBe('10 NIMBLE.durationsPlural.minute');
+		expect(row.summary).toBe('10 NIMBLE.durationsPlural.minute');
 	});
 
 	it('asks before it removes a timed effect', () => {
@@ -135,7 +138,7 @@ describe('heroEffectsTab', () => {
 				intent: { kind: 'removeEffect', effectId: 'bless', itemId: null },
 			},
 		});
-		expect(row.cost.text).toBe('3 rounds');
+		expect(row.summary).toBe('3 rounds');
 		expect(row.description).toBe('Add 1d4.');
 		expect(row.edit).toEqual({ kind: 'openEffect', effectId: 'bless', itemId: null });
 	});
@@ -148,7 +151,54 @@ describe('heroEffectsTab', () => {
 			ask: { intent: { kind: 'setCondition', conditionId: 'dazed', active: false } },
 		});
 		expect(row.description).toBe('You lose 1 action.');
-		expect(row.summary, 'no source: the first sentence').toBe('You lose 1 action.');
+		expect(row.summary, 'the short text is in the open row').toBeUndefined();
+	});
+
+	it('the pen of a condition opens the effect that gives it; one the system sets has none', () => {
+		const context = effectsContext({
+			conditions: [
+				conditionLike({ id: 'dazed', name: 'Dazed', active: true, effectId: 'dazedEffect' }),
+				conditionLike({ id: 'prone', name: 'Prone', active: true }),
+			],
+		});
+		const view = heroEffectsTab(effectsHero(), context);
+
+		expect(rowOf(view, 'condition-dazed').edit).toEqual({
+			kind: 'openEffect',
+			effectId: 'dazedEffect',
+			itemId: null,
+		});
+		expect(rowOf(view, 'condition-prone').edit).toBeNull();
+	});
+
+	it('reads Lasts Until with the source on the facts line', () => {
+		const hero = effectsHero();
+		hero.effects.push(
+			effectLike({
+				id: 'snow',
+				name: 'Blinded',
+				lastsUntil: 'Until the end of your next turn',
+				sourceName: 'Snowblind',
+			}),
+		);
+
+		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-snow');
+
+		expect(row.summary).toBe('Until the end of your next turn - Snowblind');
+		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
+	});
+
+	it('gives an effect with an Escape DC an Escape button at the end of the row', () => {
+		const hero = effectsHero();
+		hero.effects.push(effectLike({ id: 'grab', name: 'Bound', escape: { dc: 13 } }));
+
+		const row = rowOf(heroEffectsTab(hero, effectsContext()), 'effect-grab');
+
+		expect(row.escape).toEqual({
+			label: 'NIMBLE.escape.button {"dc":"13"}',
+			ariaLabel: 'NIMBLE.escape.label {"name":"Bound","dc":"13"}',
+			intent: { kind: 'escape', effectId: 'grab' },
+		});
 	});
 
 	it('removes a passive effect of the hero after a question, and names the item of an item effect', () => {

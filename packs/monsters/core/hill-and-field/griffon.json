@@ -172,8 +172,10 @@
 								"hit": [
 									{
 										"id": "jXv6T3pmFkLPaIg7",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "YW1TAKBWtE4y6ANb",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "yNHg453ndmOkP02x"
 									},
@@ -205,7 +207,37 @@
 				"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>",
 				"subtype": "action"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "YW1TAKBWtE4y6ANb",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

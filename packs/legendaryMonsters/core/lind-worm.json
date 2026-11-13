@@ -311,8 +311,10 @@
 								"hit": [
 									{
 										"id": "lindConstrictGrab",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "wrlFUYz5svckZmys",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "lindConstrictDmg1"
 									},
@@ -345,7 +347,37 @@
 				"subtype": "action",
 				"parentItemId": "lindAtkSequence01"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "wrlFUYz5svckZmys",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -392,8 +424,10 @@
 								"criticalHit": [
 									{
 										"id": "lindAcidPoison01",
-										"type": "condition",
-										"condition": "poisoned",
+										"type": "applyEffect",
+										"effectId": "pj4cTepYoSYKpGoc",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "lindAcidDmgMain1"
 									}
@@ -428,7 +462,37 @@
 				"subtype": "action",
 				"parentItemId": "lindAtkSequence01"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "pj4cTepYoSYKpGoc",
+					"name": "Poisoned",
+					"img": "icons/svg/poison.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"poisoned"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

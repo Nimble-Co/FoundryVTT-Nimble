@@ -164,8 +164,10 @@
 								"criticalHit": [
 									{
 										"id": "IUSZgqqnVD7ev728",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "6iZ8g1ZlAA8D2P2y",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "criticalHit",
 										"parentNode": "Cih6Cm8XoauLM2HA"
 									}
@@ -201,7 +203,37 @@
 			},
 			"_id": "hUxZRnXtiZ5dHmnE",
 			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "6iZ8g1ZlAA8D2P2y",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

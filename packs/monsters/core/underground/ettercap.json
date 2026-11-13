@@ -170,22 +170,28 @@
 								"hit": [
 									{
 										"id": "gfmvkiuQsUQbZaXK",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "Zj7lgcSdsmDciBNB",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "3c21wnL6rWn5YikO"
 									},
 									{
 										"id": "Qt5yk5Gne9Sjso6i",
-										"type": "condition",
-										"condition": "grappled",
+										"type": "applyEffect",
+										"effectId": "V4xINB5KiKg3sXGs",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "3c21wnL6rWn5YikO"
 									},
 									{
 										"id": "iB2BKnJVGJiX7KYP",
-										"type": "condition",
-										"condition": "silenced",
+										"type": "applyEffect",
+										"effectId": "ZIa4q9UX46e8UG8X",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "3c21wnL6rWn5YikO"
 									},
@@ -219,7 +225,95 @@
 			},
 			"_id": "5LBNwGAHn4Jw3c6U",
 			"img": "icons/creatures/webs/webthin-blue.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "Zj7lgcSdsmDciBNB",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "V4xINB5KiKg3sXGs",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "ZIa4q9UX46e8UG8X",
+					"name": "Silenced",
+					"img": "systems/nimble/assets/icons/silenced.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"silenced"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

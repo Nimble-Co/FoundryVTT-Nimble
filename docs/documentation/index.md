@@ -19,7 +19,7 @@ Nimble for Foundry VTT is the official implementation of the Nimble 2 tabletop R
 
 ![The combat tracker at the top of the screen during an active combat](/images/documentation/combat-tracker.png)
 
-![An attack roll chat card in the chat log](/images/documentation/condition-chatcard-with-button.png)
+![An attack roll chat card in the chat log](/images/documentation/apply-effect-chat-card.png)
 
 ::: warning The system is not a rulebook
 This software automates Nimble; it does not teach it or replace it. You will want a copy of the Nimble rulebook at the table for the actual rules, and this documentation will point you there whenever a question is about the game rather than the software.

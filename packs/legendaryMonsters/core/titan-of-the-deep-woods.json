@@ -394,15 +394,19 @@
 								"hit": [
 									{
 										"id": "yFwlQsb7CX6sTfrG",
-										"type": "condition",
-										"condition": "hampered",
+										"type": "applyEffect",
+										"effectId": "apkxpj9tj87zsOSM",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "jzrLfKyxPi7ujvTJ"
 									},
 									{
 										"id": "B1YABCFhco1zvVrl",
-										"type": "condition",
-										"condition": "prone",
+										"type": "applyEffect",
+										"effectId": "zPgnX5v3WagTMMth",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "jzrLfKyxPi7ujvTJ"
 									},
@@ -437,7 +441,66 @@
 			},
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "apkxpj9tj87zsOSM",
+					"name": "Hampered",
+					"img": "systems/nimble/assets/icons/hampered.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"hampered"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "zPgnX5v3WagTMMth",
+					"name": "Prone",
+					"img": "icons/svg/falling.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"prone"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

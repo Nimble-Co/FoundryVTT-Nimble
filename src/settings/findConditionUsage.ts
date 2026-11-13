@@ -30,6 +30,10 @@ export interface ConditionItemUsage {
 	immunityRuleIds: string[];
 	markTargetRuleIds: string[];
 	nodeIds: string[];
+	/** The item's own effects (for Apply Effect nodes) that hold only this condition. */
+	itemEffectIds: string[];
+	/** The item's own effects that hold this condition and others: only the condition goes. */
+	itemEffectStatusIds: string[];
 }
 
 export interface ConditionUsage {
@@ -42,6 +46,7 @@ export interface ConditionUsage {
 interface EffectLike {
 	id?: string;
 	statuses?: Set<string>;
+	transfer?: boolean;
 	parent?: ConditionEffectUsage['parent'] & { name?: string };
 }
 
@@ -53,6 +58,7 @@ interface ItemLike {
 		rules?: Record<string, unknown>[];
 		activation?: { effects?: EffectNode[] };
 	};
+	effects?: Iterable<EffectLike>;
 }
 
 interface ActorLike {
@@ -109,6 +115,8 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		immunityRuleIds: [],
 		markTargetRuleIds: [],
 		nodeIds: [],
+		itemEffectIds: [],
+		itemEffectStatusIds: [],
 	};
 
 	for (const rule of rules) {
@@ -131,13 +139,24 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		}
 	}
 
+	for (const effect of item.effects ?? []) {
+		// A transferred effect is on the actor too, and goes with the actor's effects.
+		if (!effect.id || effect.transfer !== false || !effect.statuses?.has(conditionId)) continue;
+		if (effect.statuses.size === 1) usage.itemEffectIds.push(effect.id);
+		else usage.itemEffectStatusIds.push(effect.id);
+	}
+	const itemEffects = new Set(usage.itemEffectIds);
+
 	const effects = item.system?.activation?.effects;
 	if (Array.isArray(effects) && effects.length > 0) {
 		for (const node of flattenEffectsTree(effects)) {
-			if (node.type !== 'condition' || node.condition !== conditionId) continue;
+			if (node.type !== 'applyEffect') continue;
+			const names =
+				node.condition === conditionId || (!!node.effectId && itemEffects.has(node.effectId));
+			if (!names) continue;
 
 			usage.nodeIds.push(node.id);
-			usage.referenceLabels.push('NIMBLE.activationEffects.condition');
+			usage.referenceLabels.push('NIMBLE.activationEffects.applyEffect');
 		}
 	}
 
@@ -145,7 +164,9 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		usage.ruleIds.length +
 		usage.immunityRuleIds.length +
 		usage.markTargetRuleIds.length +
-		usage.nodeIds.length;
+		usage.nodeIds.length +
+		usage.itemEffectIds.length +
+		usage.itemEffectStatusIds.length;
 
 	if (referenced === 0) return null;
 

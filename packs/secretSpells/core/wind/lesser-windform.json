@@ -23,15 +23,19 @@
 			"effects": [
 				{
 					"id": "zZYtdX6Z0KjLKpK3",
-					"type": "condition",
-					"condition": "blinded",
+					"type": "applyEffect",
+					"effectId": "0tiSG4IAoOrWO7my",
+					"recipient": "self",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				},
 				{
 					"id": "z7U64ITrBXdEXOo5",
-					"type": "condition",
-					"condition": "invisible",
+					"type": "applyEffect",
+					"effectId": "ok7dXYg5WbXHEx9p",
+					"recipient": "self",
+					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -70,7 +74,66 @@
 		"school": "wind",
 		"tier": 0
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "0tiSG4IAoOrWO7my",
+			"name": "Blinded",
+			"img": "icons/svg/blind.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"blinded"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "ok7dXYg5WbXHEx9p",
+			"name": "Invisible",
+			"img": "icons/svg/invisible.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"invisible"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

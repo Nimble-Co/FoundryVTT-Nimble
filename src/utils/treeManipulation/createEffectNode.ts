@@ -1,6 +1,7 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleBoonItem } from '../../documents/item/boon.js';
-import { createConditionNode } from './createConditionNode.js';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { createApplyEffectNode } from './createApplyEffectNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
 import { createHealingNode } from './createHealingNode.js';
@@ -10,6 +11,15 @@ import { createSavingThrowNode } from './createSavingThrowNode.js';
 import { createTextNode } from './createTextNode.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
 import { reconstructEffectsTree } from './reconstructEffectsTree.js';
+
+/** A new effect on the item for an Apply Effect node; it stays on the item (`transfer: false`). */
+async function createItemEffect(document: NimbleBoonItem): Promise<string | null> {
+	const [effect] =
+		((await document.createEmbeddedDocuments('ActiveEffect', [
+			{ name: document.name, img: document.img, type: NIMBLE_EFFECT_TYPE, transfer: false },
+		] as never)) as unknown as { id: string }[] | undefined) ?? [];
+	return effect?.id ?? null;
+}
 
 export async function createEffectNode(
 	document: NimbleBoonItem,
@@ -30,8 +40,9 @@ export async function createEffectNode(
 
 	if (!nodeType) return;
 
-	if (nodeType === 'condition') newNode = createConditionNode(parentId, context);
-	else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
+	if (nodeType === 'applyEffect') {
+		newNode = createApplyEffectNode(parentId, context, await createItemEffect(document));
+	} else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
 	else if (nodeType === 'move') newNode = createMoveNode(parentId, context);

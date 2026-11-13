@@ -170,8 +170,10 @@
 								"hit": [
 									{
 										"id": "KaHnAM0UN20pTgvd",
-										"type": "condition",
-										"condition": "dazed",
+										"type": "applyEffect",
+										"effectId": "cixddTjOpUndtX9I",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "1LjoxbZ5WMcSpOS9"
 									},
@@ -205,7 +207,37 @@
 			},
 			"_id": "hQ2x8aw7Wg4DI6fX",
 			"img": "icons/magic/unholy/hand-claw-glow-orange.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "cixddTjOpUndtX9I",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

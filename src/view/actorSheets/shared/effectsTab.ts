@@ -5,7 +5,7 @@ import type { ConditionLike, EffectLike, Format, ItemLike, Localize } from './sh
 const FX = 'NIMBLE.actorSheet.shared.effects';
 
 /** States that the system sets from HP, wounds and spells; they show in the group of the actor while they are on. */
-const SET_BY_THE_SYSTEM = new Set([
+export const SET_BY_THE_SYSTEM = new Set([
 	'bloodied',
 	'dying',
 	'dead',
@@ -22,6 +22,7 @@ export type EffectIntent =
 	| { kind: 'endEffect'; effectId: string }
 	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
+	| { kind: 'escape'; effectId: string }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'openItem'; itemId: string };
 
@@ -38,8 +39,8 @@ export interface EffectRowView {
 	name: string;
 	img?: string;
 	summary?: string;
-	/** how long it lasts, at the end of the row */
-	lasts?: string;
+	/** Font Awesome class before the summary: the hourglass of a Lasts Until line */
+	summaryIcon?: string;
 	description?: string;
 	facts: [string, string][];
 	state?: 'active';
@@ -52,6 +53,8 @@ export interface EffectRowView {
 		| null;
 	/** the pen: open the effect window, or the item that keeps the effect on */
 	edit: EffectIntent | null;
+	/** a button at the end of the row: roll a save to Escape the effect */
+	escape?: { label: string; ariaLabel: string; intent: EffectIntent };
 }
 
 export interface EffectRowGroup {
@@ -106,26 +109,60 @@ function askRemove(name: string, intent: EffectIntent, input: EffectsTabInput): 
 	};
 }
 
+const HOURGLASS = 'fa-solid fa-hourglass-half';
+
+/** "Until the end of your next turn - Snowblind"; the source only when it is not the row's name. */
+function lastsLine(lasts: string, sourceName: string, name: string): string {
+	return sourceName && sourceName !== name ? `${lasts} - ${sourceName}` : lasts;
+}
+
+function escapeButton(
+	name: string,
+	effectId: string | null,
+	escapeData: { dc: number | null } | null,
+	input: EffectsTabInput,
+): EffectRowView['escape'] {
+	if (!escapeData || !effectId) return undefined;
+	const dc = escapeData.dc === null ? null : String(escapeData.dc);
+	return {
+		label: dc
+			? input.format('NIMBLE.escape.button', { dc })
+			: input.localize('NIMBLE.escape.buttonNoDc'),
+		ariaLabel: dc
+			? input.format('NIMBLE.escape.label', { name, dc })
+			: input.format('NIMBLE.escape.labelNoDc', { name }),
+		intent: { kind: 'escape', effectId },
+	};
+}
+
 function stateRow(
 	base: Pick<EffectRowView, 'id' | 'name' | 'img' | 'use'> & {
-		duration: string;
+		/** Lasts Until, or the older duration words */
+		lasts: string;
 		from: string;
+		sourceName: string;
 		description: string;
+		/** a condition keeps its short text in the open row */
+		textInSummary: boolean;
 	},
 	input: EffectsTabInput,
 	extra: Partial<EffectRowView> = {},
 ): EffectRowView {
 	const { localize } = input;
+	const summary = base.lasts
+		? lastsLine(base.lasts, base.sourceName, base.name)
+		: base.from ||
+			(base.textInSummary ? firstSentence(plainText(base.description), base.name) : '');
 	return {
 		id: base.id,
 		name: base.name,
 		img: base.img || undefined,
-		summary: base.from || firstSentence(plainText(base.description), base.name) || undefined,
-		lasts: base.duration || undefined,
+		summary: summary || undefined,
+		summaryIcon: base.lasts ? HOURGLASS : undefined,
 		description: base.description || undefined,
 		facts: [
 			...(base.from ? [[localize(`${FX}.facts.from`), base.from] as [string, string]] : []),
-			[localize(`${FX}.facts.lasts`), base.duration || localize(`${FX}.untilItEnds`)],
+			[localize(`${FX}.facts.lasts`), base.lasts || localize(`${FX}.untilItEnds`)],
 		],
 		use: base.use,
 		edit: null,
@@ -143,12 +180,16 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 		description: effect.description,
 	};
 	const from = item ? format(`${FX}.fromItem`, { name: item.name }) : '';
+	const sourceName = effect.sourceName || item?.name || '';
+	const lasts = effect.lastsUntil || effect.duration;
 	if (effect.toggle) {
 		return stateRow(
 			{
 				...base,
-				duration: effectDuration(effect, item, input),
+				lasts: effect.lastsUntil || effectDuration(effect, item, input),
 				from,
+				sourceName,
+				textInSummary: true,
 				use: {
 					kind: 'act',
 					label: format('NIMBLE.actorSheet.shared.endName', { name: effect.name }),
@@ -161,15 +202,17 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 	}
 	// an item keeps its passive effect on: you change it through the item
 	if (passive && item) {
-		return stateRow({ ...base, duration: effect.duration, from, use: null }, input, {
+		return stateRow({ ...base, lasts, from, sourceName, textInSummary: true, use: null }, input, {
 			edit: { kind: 'openItem', itemId: item.id },
 		});
 	}
 	return stateRow(
 		{
 			...base,
-			duration: effect.duration,
+			lasts,
 			from,
+			sourceName,
+			textInSummary: true,
 			use: {
 				kind: 'ask',
 				ask: askRemove(
@@ -180,7 +223,10 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 			},
 		},
 		input,
-		{ edit: { kind: 'openEffect', effectId: effect.id, itemId: effect.itemId } },
+		{
+			edit: { kind: 'openEffect', effectId: effect.id, itemId: effect.itemId },
+			escape: escapeButton(effect.name, effect.id, effect.escape, input),
+		},
 	);
 }
 
@@ -191,11 +237,13 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			name: condition.name,
 			img: condition.img,
 			description: condition.description,
-			duration: condition.duration,
+			lasts: condition.lastsUntil || condition.duration,
 			from:
 				condition.source && condition.source !== condition.name
 					? input.format(`${FX}.fromItem`, { name: condition.source })
 					: '',
+			sourceName: condition.source,
+			textInSummary: false,
 			use: {
 				kind: 'ask',
 				ask: askRemove(
@@ -206,6 +254,12 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			},
 		},
 		input,
+		{
+			escape: escapeButton(condition.name, condition.effectId, condition.escape, input),
+			edit: condition.effectId
+				? { kind: 'openEffect', effectId: condition.effectId, itemId: null }
+				: null,
+		},
 	);
 }
 
