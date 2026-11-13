@@ -36,6 +36,7 @@ function needsTheCard(node: EffectNode): boolean {
 		case 'move':
 			return true;
 		case 'applyEffect':
+			return node.recipient !== 'self' || !!node.waitsForClick;
 		case 'endConditions':
 		case 'wound':
 			return node.recipient !== 'self';

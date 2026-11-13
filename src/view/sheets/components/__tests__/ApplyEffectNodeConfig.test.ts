@@ -140,3 +140,37 @@ describe('ApplyEffectNodeConfig recipients under a save', () => {
 		expect(screen.queryByRole('button', { name: /Each creature/ })).toBeNull();
 	});
 });
+
+describe('ApplyEffectNodeConfig when a self step applies', () => {
+	it('stores On a click for a step for the creature that uses this', async () => {
+		const document = makeItem();
+		render(ApplyEffectNodeConfig, {
+			props: { document, effects: [node({ recipient: 'self' })] } as never,
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: 'On a click' }));
+
+		await waitFor(() =>
+			expect(document.update).toHaveBeenCalledWith({
+				'system.activation.effects': [expect.objectContaining({ waitsForClick: true })],
+			}),
+		);
+	});
+
+	it('stores When used back, and shows no choice for a step for the targets', async () => {
+		const document = makeItem();
+		const waiting = render(ApplyEffectNodeConfig, {
+			props: { document, effects: [node({ recipient: 'self', waitsForClick: true })] } as never,
+		});
+		await fireEvent.click(screen.getByRole('button', { name: 'When used' }));
+		await waitFor(() =>
+			expect(document.update).toHaveBeenCalledWith({
+				'system.activation.effects': [expect.objectContaining({ waitsForClick: false })],
+			}),
+		);
+		waiting.unmount();
+
+		render(ApplyEffectNodeConfig, { props: { document: makeItem(), effects: [node()] } as never });
+		expect(screen.queryByRole('button', { name: 'On a click' })).toBeNull();
+	});
+});

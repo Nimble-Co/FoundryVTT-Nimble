@@ -44,6 +44,10 @@ describe('useCardHasSomethingToClick', () => {
 		['effect for targets', { type: 'applyEffect', recipient: 'targets' }],
 		['Wound for targets', { type: 'wound', amount: 1, recipient: 'targets' }],
 		['End Conditions for targets', { type: 'endConditions', recipient: 'targets' }],
+		[
+			'self effect that waits for a click',
+			{ type: 'applyEffect', recipient: 'self', waitsForClick: true },
+		],
 	])('is true with a %s step', (_name, fields) => {
 		expect(useCardHasSomethingToClick({ activation: { effects: [node(fields)] } })).toBe(true);
 	});

@@ -365,6 +365,44 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
 		});
 
+		it('fires onSpellCast on the caster for a spell of the mana it asks or more', async () => {
+			const caster = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onSpellCast' },
+				caster,
+			);
+			(rule as unknown as { manaAtLeast: number }).manaAtLeast = 2;
+			type Ctx = Parameters<ApplyConditionRule['onItemActivated']>[0];
+			const cast = (manaSpent: number, type = 'spell', actor: MockActor = caster) =>
+				({ sourceItem: { type }, sourceActor: actor, card: null, manaSpent }) as unknown as Ctx;
+
+			await rule.onItemActivated(cast(1));
+			await rule.onItemActivated(cast(2, 'feature'));
+			await rule.onItemActivated(cast(3, 'spell', createMockActor()));
+			expect(conditionsAppliedTo(caster)).toEqual([]);
+
+			await rule.onItemActivated(cast(2));
+			expect(conditionsAppliedTo(caster)).toEqual(['focused']);
+		});
+
+		it('does not fire on a cast for a rule with another trigger', async () => {
+			const caster = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onTurnStart' },
+				caster,
+			);
+			type Ctx = Parameters<ApplyConditionRule['onItemActivated']>[0];
+
+			await rule.onItemActivated({
+				sourceItem: { type: 'spell' },
+				sourceActor: caster,
+				card: null,
+				manaSpent: 5,
+			} as unknown as Ctx);
+
+			expect(conditionsAppliedTo(caster)).toEqual([]);
+		});
+
 		it('does not fire onTurnStart for a rule with a different trigger', async () => {
 			const ownerActor = createMockActor();
 			const rule = createApplyConditionRule(

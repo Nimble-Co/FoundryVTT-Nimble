@@ -122,6 +122,8 @@ export type ApplyEffectNode = {
 	recipient: 'self' | 'targets' | 'savers';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
+	/** A self step that waits for its button and does not apply on use. Absent is false. */
+	waitsForClick?: boolean;
 	/** What the upcast adds to fields of the effect's rules. */
 	ruleRaises?: RuleRaise[];
 	/** What the upcast adds to the numbers of the effect's Lasts Until, by moment index. */

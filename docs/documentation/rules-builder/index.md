@@ -102,6 +102,7 @@ These rules work with the effects of an item. A state such as Rage uses them: se
 - With **Use limits** on, a free use does not count toward a limit such as 1/turn, and it needs no use left.
 - The rule does nothing while the Feature Effects automation setting is off.
 - Apply Condition uses the same list of triggers. The list has **An enemy crits you** and **You start Dying** too.
+- **You cast a spell** has a **Mana at least** field: the cast must cost that much mana or more, after any mana the cast is free of and the one less from a Chaos cast. A cast paid from a charge pool, and a cantrip, cost 0. 0 is any cast. Primordial Force (2+ mana) uses it.
 :::
 
 ## Worked example: Belt of Giant Strength

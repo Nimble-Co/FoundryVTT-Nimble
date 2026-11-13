@@ -102,6 +102,8 @@ interface ItemActivatedContext {
 	targetActors?: NimbleBaseActor[];
 	targetTokens?: TokenDocument[];
 	card: ChatMessage | null;
+	/** A spell cast: the mana it costs. */
+	manaSpent?: number;
 }
 
 interface TurnContext {

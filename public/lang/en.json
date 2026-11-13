@@ -2928,8 +2928,13 @@
 						"onRest": "You rest",
 						"onInitiative": "You roll Initiative",
 						"onCritReceived": "An enemy crits you",
-						"onDying": "You start Dying"
+						"onDying": "You start Dying",
+						"onSpellCast": "You cast a spell"
 					}
+				},
+				"manaAtLeast": {
+					"label": "Mana at least",
+					"hint": "For You cast a spell: the cast must cost this much mana or more, after any mana it is free of. A cast paid from a charge pool, and a cantrip, cost 0. 0 is any cast."
 				},
 				"freeOf": {
 					"label": "Free of",
@@ -2952,7 +2957,9 @@
 					"onRest": "you rested",
 					"onInitiative": "you rolled Initiative",
 					"onCritReceived": "an enemy hit you with a crit",
-					"onDying": "you started Dying"
+					"onDying": "you started Dying",
+					"onSpellCast": "you cast a spell",
+					"onSpellCastMana": "you spent {mana} or more mana on a spell"
 				}
 			},
 			"markTarget": {
@@ -5258,6 +5265,11 @@
 					"self": "The creature that uses this",
 					"saversFail": "Each creature that fails",
 					"saversPass": "Each creature that saves"
+				},
+				"applies": "Applies",
+				"appliesWhen": {
+					"used": "When used",
+					"click": "On a click"
 				},
 				"tempHealing": "Temp HP that it gives",
 				"noTempHealing": "None",

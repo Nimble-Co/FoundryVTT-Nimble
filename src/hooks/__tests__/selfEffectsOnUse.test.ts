@@ -95,6 +95,14 @@ describe('selfStepsOf', () => {
 		expect(ids(selfStepsOf(card({ isCritical: true })))).toEqual(['rootSelf', 'onCrit', 'onHit']);
 	});
 
+	it('leaves out a self step that waits for its button', () => {
+		const used = card();
+		const tree = used.system.activation.effects as EffectNode[];
+		tree.push({ ...applyStep('picked', 'self'), waitsForClick: true } as EffectNode);
+
+		expect(ids(selfStepsOf(used))).toEqual(['rootSelf', 'onHit']);
+	});
+
 	it('gives only the steps under a miss for a miss', () => {
 		expect(ids(selfStepsOf(card({ isMiss: true })))).toEqual(['rootSelf', 'onMiss']);
 	});

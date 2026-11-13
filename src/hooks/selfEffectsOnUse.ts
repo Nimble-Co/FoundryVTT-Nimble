@@ -32,13 +32,18 @@ export type SelfStep = ApplyEffectNode | EndConditionsNode | WoundNode;
 
 const SELF_STEP_TYPES = new Set(['applyEffect', 'endConditions', 'wound']);
 
-/** The Apply Effect, Wound and End Conditions steps for the user: at the root, or under the roll's outcome. */
+/**
+ * The Apply Effect, Wound and End Conditions steps for the user: at the root, or under the roll's
+ * outcome. A step that waits for its button is not one.
+ */
 export function selfStepsOf(card: EffectCard): SelfStep[] {
 	const system = (card.system ?? {}) as UseCardSystem;
 	const tree = system.activation?.effects ?? [];
 	return findNodesByContexts(tree, outcomesOf(system)).filter(
 		(node): node is SelfStep =>
-			SELF_STEP_TYPES.has(node.type) && (node as SelfStep).recipient === 'self',
+			SELF_STEP_TYPES.has(node.type) &&
+			(node as SelfStep).recipient === 'self' &&
+			!(node.type === 'applyEffect' && node.waitsForClick),
 	);
 }
 

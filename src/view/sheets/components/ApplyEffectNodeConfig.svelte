@@ -26,6 +26,10 @@
 		node.condition ? (CONFIG.NIMBLE.conditions[node.condition] ?? node.condition) : null,
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
+	const appliesOptions = [
+		{ value: 'used', label: localize(`${WORDS}.appliesWhen.used`) },
+		{ value: 'click', label: localize(`${WORDS}.appliesWhen.click`) },
+	];
 
 	function storeEffect(effectId: string | null) {
 		return updateEffectNode(document, effects, node, 'effectId', effectId);
@@ -65,6 +69,20 @@
 		toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
 	/>
 </div>
+
+{#if node.recipient === 'self'}
+	<div style="width: 100%;">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize(`${WORDS}.applies`)}
+		</h5>
+		<TagGroup
+			options={appliesOptions}
+			selectedOptions={[node.waitsForClick ? 'click' : 'used']}
+			toggleOption={(value) =>
+				updateEffectNode(document, effects, node, 'waitsForClick', value === 'click')}
+		/>
+	</div>
+{/if}
 
 {#if tempHealing.length}
 	<label class="nimble-field" data-field-variant="stacked">

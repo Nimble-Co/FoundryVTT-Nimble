@@ -17,13 +17,20 @@ import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { choiceLabels } from './_rollUseRule.js';
-import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
+import {
+	attackOutcomeMatches,
+	isAttackOutcomeTrigger,
+	picksSpellCast,
+	RULE_TRIGGERS,
+	spellCastMatches,
+} from './_triggers.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type ActivationCardContext,
 	type ActorDyingContext,
 	type ActorHealthContext,
 	type InitiativeRolledContext,
+	type ItemActivatedContext,
 	type ItemUsedContext,
 	NimbleBaseRule,
 	type RestContext,
@@ -123,6 +130,18 @@ function schema() {
 			label: 'NIMBLE.rules.applyCondition.wounds.label',
 			hint: 'NIMBLE.rules.applyCondition.wounds.hint',
 		}),
+		manaAtLeast: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+				label: 'NIMBLE.rules.useItemFree.manaAtLeast.label',
+				hint: 'NIMBLE.rules.useItemFree.manaAtLeast.hint',
+				showWhen: picksSpellCast,
+			}),
+		),
 	};
 }
 
@@ -141,6 +160,8 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	declare trigger: ApplyConditionTrigger;
 	declare effectId: string;
 	declare wounds: number;
+
+	declare manaAtLeast: number;
 
 	static override defineSchema(): ApplyConditionRule.Schema {
 		return {
@@ -161,6 +182,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				],
 				['effectId', 'string'],
 				['wounds', 'number'],
+				['manaAtLeast', 'number'],
 			]),
 		);
 	}
@@ -206,6 +228,13 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	#woundNodeId(): string {
 		return `wound-${this.id}`;
+	}
+
+	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
+		if (this.trigger !== 'onSpellCast') return;
+		if (context.sourceActor !== this.actor) return;
+		if (!spellCastMatches(context.sourceItem, context.manaSpent, this.manaAtLeast)) return;
+		await this.#applyConditionToSelf();
 	}
 
 	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
