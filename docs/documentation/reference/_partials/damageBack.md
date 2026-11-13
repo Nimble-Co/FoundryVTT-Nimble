@@ -25,9 +25,9 @@ A reaction spell cast from its row in the Defend window answers that attack. Whe
 
 - On the spell's effect: an **Attacker Takes** rule: **When** → `The owner is attacked`, **Attacks** → `Melee`, **Not on allies** → on, **Also the attack it answers** → on, **Amount** → `A formula`, **Damage** → `@key`, **Damage type** → `Fire`, **Effect on the attacker** → the Smoldering effect
 
-**Example: Hold the Line!** Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.
+**Example: Crystalline Armor.** Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.
 
-- On the ally's effect, which gives the temp HP: an **Attacker Takes** rule: **When** → `The attack takes the temp HP of this effect`, **Attacks** → `Melee`, **Not on allies** → on, **Only against crits** → off, **Amount** → `No damage`, **Effect on the attacker** → the Crystalline Armor effect
+- On the ally's effect, which gives the temp HP: an **Attacker Takes** rule: **When** → `The attack takes the temp HP of this effect`, **Attacks** → `Melee`, **Not on allies** → on, **Amount** → `No damage`, **Effect on the attacker** → an effect with a halved speed
 
 **Example: Spines.** Melee attackers take 3 damage.
 

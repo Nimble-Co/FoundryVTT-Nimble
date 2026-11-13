@@ -50,7 +50,7 @@ The *first* damage entry in the list is special: it is the attack roll. It alone
 Even with Can Crit on, some attacks never crit: template (AoE) attacks, attacks made by minions and flunkies, and attacks with a weapon whose type the wielder is not proficient with.
 :::
 
-Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, an End Conditions, a Wound, a saving throw, or a note.
+Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, an End Conditions, a Move, a Wound, a saving throw, or a note.
 
 A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
 
@@ -66,13 +66,17 @@ A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Tem
 A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity, Intelligence, or Will) and optionally a **Custom Save DC**, a number or a formula such as `12+@key`. The formula reads the creature that uses the item, at the time it uses the item: the card keeps that number, and a later change to the creature does not change it. When the field is empty, a hero uses `10+@key`, and a monster has no DC. When a creature rolls with the d20 button on the card, its save card tells the result against this DC, and the save has the [roll tags](../rules-builder/predicates.md) `save:from` and `save:from:<item>`. A save with a DC of the higher of 10 or the damage the monster took (a Stink Cloud, for example) uses `max(10, @damageTaken)`: the GM uses the feature after the hit, and the card keeps that DC. It has three sections:
 
 - **Shared Rolls**: damage that is rolled once and then split by the outcome. Add a damage entry here, then put **Damage Outcome** entries under On Failed Save (Full Damage) and On Passed Save (Half Damage) for the classic "half on a save" pattern.
-- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, Apply Effect, End Conditions or Wound entries, or notes.
+- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, Apply Effect, End Conditions, Move or Wound entries, or notes.
 
 ### Apply Effect
 
-Puts an effect of the item (one with **Apply to the actor** off) on the card's targets or on the user (**Who takes it**). A new entry makes an effect with the item's name; **Effect** picks another. The pen opens the [effect window](effects.md): the conditions it gives (Frightened, for example) are on **Details**, its Lasts Until and Escape on **Lasts Until**. **Temp HP that it gives** links a Temporary Healing entry: the effect gives those temp HP, and takes back what is left when it ends. The link holds only while the temp HP are that effect's: it ends when the temp HP reach 0, when another effect or a potion gives new temp HP, or when someone types a higher number in the Temp HP plate. After that, the effect takes back nothing when it ends. For an effect that lasts as long as its temp HP, pick "they lose its temp HP" in its Lasts Until.
+Puts an effect of the item (one with **Apply to the actor** off) on the card's targets or on the user (**Who takes it**). A new entry makes an effect with the item's name; **Effect** picks another. The pen opens the [effect window](effects.md): the conditions it gives (Frightened, for example) are on **Details**, its Lasts Until and Escape on **Lasts Until**. **Temp HP that it gives** links a Temporary Healing entry: the effect gives those temp HP, and takes back what is left when it ends.
 
 An entry for **The creature that uses this** applies by itself when the item is used, while the Feature Effects automation setting is on. Set its **Applies** to **On a click** and it waits for its **Apply to You** button: use it when the player picks one of several entries, such as one element of Primordial Force. Under **On Hit**, **On Critical Hit** or **On Miss**, it applies only when the card has that outcome. A new use while the user has the effect keeps one copy. An entry for **The targets** waits for the **Apply to Targets** button. Under **On Failed Save**, **Each creature that fails** puts the effect by itself on each creature whose save from this card fails (under **On Passed Save**: **Each creature that saves**). A reroll that changes the result takes it back, once. With Feature Effects off, the entry has the **Apply to Targets** button. To make a state such as Rage, see [Build a state such as Rage](effects.md#build-a-state-such-as-rage).
+
+::: details The temp HP link
+The link holds only while the temp HP are that effect's. It ends when the temp HP reach 0, when another effect or a potion gives new temp HP, or when someone types a higher number in the Temp HP plate. After that, the effect takes back nothing when it ends. For an effect that lasts as long as its temp HP, pick "they lose its temp HP" in its Lasts Until.
+:::
 
 ### Move
 
@@ -80,15 +84,26 @@ A move for free or Forced Movement for a creature. The card watches that creatur
 
 ### Wound
 
-Gives **Wounds** (1 or more) to the card's targets or to the user (**Who takes them**), for a hazard such as "suffer 1 Wound". A Wound goes up to the max of the track and no further. Monsters have no Wound track: the card says "Kobold has no Wounds", and nothing changes. An entry for the targets waits for the **Apply to Targets** button, which the card's author and the GM see. A player's click on a creature they do not own goes through the GM, so a GM must be online. An entry for **The creature that uses this** gives its Wounds by itself when the item is used, while the Feature Effects automation setting is on, as an Apply Effect entry does. Under **On Failed Save** or **On Passed Save** it keeps its button. There is no Undo on the row: take a Wound back on the sheet.
+Gives **Wounds** (1 or more) to the card's targets or to the user (**Who takes them**), for a hazard such as "suffer 1 Wound". An entry for the targets waits for the **Apply to Targets** button. An entry for **The creature that uses this** gives its Wounds by itself when the item is used, while the Feature Effects automation setting is on, as an Apply Effect entry does. Under **On Failed Save** or **On Passed Save** it keeps its button.
 
 For a monster whose attacks also Wound, use the **Wounds** field of an [Apply Condition](../reference/rules-triggers.md#apply-condition) rule in place of a step.
 
+::: details More about the Wound step
+- A Wound goes up to the max of the track and no further. Monsters have no Wound track: the card says "Kobold has no Wounds", and nothing changes.
+- The card's author and the GM see the button. A player's click on a creature they do not own goes through the GM, so a GM must be online.
+- There is no Undo on the row: take a Wound back on the sheet.
+:::
+
 ### End Conditions
 
-Ends conditions on the user or on the card's targets (**Who it helps**). **Ends** is **Every negative condition** (see [Negative conditions](../playing/conditions.md#negative-conditions)) or **These conditions**, with a toggle for each condition. A listed condition also ends a status that counts as it: listing Incapacitated ends Stunned. The step ends the whole effect that gives the condition, with its other changes: an effect with Poisoned and -1 speed goes as one. It ends only the creature's own effects. An effect of an item that is always on stays.
+Ends conditions on the user or on the card's targets (**Who it helps**). **Ends** is **Every negative condition** (see [Negative conditions](../playing/conditions.md#negative-conditions)) or **These conditions**, with a toggle for each condition. A listed condition also ends a status that counts as it: listing Incapacitated ends Stunned. The step ends the whole effect that gives the condition, with its other changes: an effect with Poisoned and -1 speed goes as one.
 
-Each ended effect gets a line with **Undo** in the Events strip of the card. The row then says "Ended on" and the names, or "Nothing to end on" a creature. An entry for **The creature that uses this** runs by itself when the item is used, while the Feature Effects automation setting is on. An entry for the targets waits for its button. A player's click goes through the GM, so a GM must be online; with no GM, nothing ends and the button stays.
+An entry for **The creature that uses this** runs by itself when the item is used, while the Feature Effects automation setting is on. An entry for the targets waits for its **Apply to Targets** button. Each ended effect gets a line with **Undo** in the Events strip of the card. The row then says "Ended on" and the names, or "Nothing to end on" a creature.
+
+::: details More about the End Conditions step
+- It ends only the creature's own effects. An effect of an item that is always on stays.
+- A player's click goes through the GM, so a GM must be online. With no GM, nothing ends and the button stays.
+:::
 
 ### Pool
 
@@ -142,7 +157,7 @@ Holding **Alt** while clicking the item skips the window and rolls with defaults
 - each **damage roll** as a summary line with the total, an expandable breakdown, and an **Apply Damage** button that applies it to the card's targets (on a miss the roll is still shown but the apply button is disabled; half-damage outcomes halve the total),
 - each **healing roll** with an **Apply Healing** button and an undo button after use,
 - each **saving throw** section with a d20 button that rolls that save for all currently selected tokens, plus its "On Failed Save" / "On Successful Save" contents,
-- an **Effects** part with a row for each Apply Effect, End Conditions and Wound entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows "On" and the name. With the Feature Effects automation setting off, or with **Applies** set to **On a click**, it has an **Apply to You** button,
+- an **Effects** part with a row for each Apply Effect, End Conditions and Wound entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows what it did, such as "On Grug" or "Ended on Grug". With the Feature Effects automation setting off, or with **Applies** set to **On a click**, it has an **Apply to You** button,
 - any **notes**, styled by their note type.
 
 ![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect that went on by itself, On Grug](/images/documentation/ghostwalk-draught-chat-card.png)

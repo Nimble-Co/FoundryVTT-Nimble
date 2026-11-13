@@ -83,21 +83,25 @@ When an effect has more than one moment, the first one to happen ends it. A turn
 
 On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
 
-**Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
+**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts. An effect with Stacks on adds a stack instead, and the row shows the count: see [Stacks](../homebrew/effects.md#stacks).
+
+::: details How the system compares two Lasts Until
+It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.
+:::
+
+### Escape
+
+An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
 
 An Escape with no DC has the button **Escape** with no number. A natural 20 escapes and a natural 1 fails. On any other roll, the roll card gets the line "Tessa tries to escape Grappled" with an **Escapes** button. When the table judges that the roll escapes, the owner of the creature or the GM clicks **Escapes**. The effect ends, with its ended line and **Undo**. If nobody clicks, the effect stays.
+
+### When an effect ends
 
 When effects end, each one gets a line in the **Events** strip of the card that ended it, such as the card of the attack that ended "until they attack". With no such card, the chat gets one message for that moment, such as "Start of Tessa's turn", with a line for each effect that ended. **Undo** on a line puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
 
 ![The message for the end of Grug's turn: True Strike ended on Grug, with Undo](/images/documentation/effect-life-4-moment.png)
 
 The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).
-
-**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts. An effect with Stacks on adds a stack instead, and the row shows the count: see [Stacks](../homebrew/effects.md#stacks).
-
-::: details How the system compares two Lasts Until
-It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.
-:::
 
 ## Concentration
 

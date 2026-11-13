@@ -23,7 +23,7 @@ References start with `@` and are filled in from the character carrying the item
 | `@strengthSave`, `@dexteritySave`, `@intelligenceSave`, `@willSave` | Saving throw modifiers. |
 | `@arcana`, `@examination`, `@finesse`, `@influence`, `@insight`, `@lore`, `@might`, `@naturecraft`, `@perception`, `@stealth` | Skill modifiers. |
 | `@auraReach` | The Reach of the character's aura in spaces: the sum of their **Aura Reach** rules, 0 with no aura. The Oathsworn aura features set 4 and Improved Aura adds 2. |
-| `@damageTaken` | The damage of the newest hit the creature took, after armor and before temp HP; 0 before any damage. Monsters have it too. A save DC of `max(10, @damageTaken)` is 10 or the damage taken, if that is higher. |
+| `@damageTaken` | The newest damage the creature took, after armor and before temp HP; 0 before any damage. Monsters have it too. A save DC of `max(10, @damageTaken)` is 10 or the damage taken, if that is higher. |
 | `@pools.<identifier>.faces` | The face count of the die of the charge pool or dice pool with that identifier, for example 8 for a d8, with the changes of Modify Pool rules. Only for pools with a die; when a charge pool and a dice pool have the same identifier, the charge pool counts. `1d@pools.combat-dice.faces` rolls one die of that size. |
 
 You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only `@level`, `@damageTaken` and the save shortcuts work, so use full paths for the other monster values. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
@@ -41,7 +41,7 @@ A few references are not read off the character sheet. They are filled in at the
 | `@poolMax` | **Dice Pool** → a refill's Value | The pool's maximum size. |
 | `@poolCurrent` | **Dice Pool** → a refill's Value | How many dice are in the pool right now. |
 | `@stacks` | Any formula of a rule on an effect | The stacks of the effect on the creature that has it ([Stacks](../homebrew/effects.md#stacks)). 1 for an effect that does not stack, and for a rule on an item. A Speed Bonus of `-@stacks` takes 1 space for each stack. |
-| `@speed` | **Free Move** → Distance, and the Distance of a Move step | The walk speed of the creature that moves, when the move is offered. On a rule of an effect it always reads the creature that moves, also when the other formulas read the creature that applied the effect. `@speed / 2` is half of it. |
+| `@speed` | **Move for Free** → Distance, and the Distance of a Move step | The walk speed of the creature that moves, when the move is offered. On a rule of an effect it always reads the creature that moves, also when the other formulas read the creature that applied the effect. `@speed / 2` is half of it. |
 
 These combine with the sheet references above, so a spend can scale with both the dice chosen and the character: `(@strength + @dexterity) * @n` reduces damage by STR+DEX for every die spent, and `2 * @sum` doubles the total rolled.
 

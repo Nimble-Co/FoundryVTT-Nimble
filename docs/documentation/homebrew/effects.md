@@ -38,10 +38,16 @@ On the character or NPC sheet, go to the **Effects** tab and click the pen at th
 
 The window has four tabs:
 
-- **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect) and, when that is off, **Rule formulas read the creature that has it**, the **Conditions** that the effect gives, and the description.
+- **Details**: **Off** (its changes and rules do not apply), for an effect on an item **Apply to the actor** (the actor that has the item gets the effect) and, when that is off, **Rule formulas read the creature that has it**, the **Conditions** that the effect gives, [Stacks](#stacks), and the description.
 - **Lasts Until**: the moments that end the effect, and its Escape.
-- **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority. The type **Multiply, round down** multiplies and rounds the result down, so a halved speed of 7 is 3 (core's **Multiply** rounds to the nearest number). It applies after every rule, so a halving also halves what a Speed Bonus or a granted speed adds. Two halvings from two effects both apply (7 is 3, then 1). A halved speed halves each movement type that has a row of its own. An `@` reference in a value reads the creature that has the effect.
-- **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list. On the copy that a step puts on a creature, an `@` reference in a rule formula reads the creature that applied it, at the time it was applied. With **Rule formulas read the creature that has it** on, each formula reads the creature that has the copy, each time the rule works. `@stacks` always reads the creature that has it, and `@speed` the creature that moves. The Escape DC always reads the creature that applied it.
+- **Changes**: core changes to the data of the creature, one row each: a key, a type, a value and a priority. The type **Multiply, round down** multiplies and rounds the result down, so a halved speed of 7 is 3 (core's **Multiply** rounds to the nearest number). An `@` reference in a value reads the creature that has the effect.
+- **Rules**: the [Rules Builder](../rules-builder/index.md), the same as on an item. The rule types that work only on an item, such as Grant Item, are not in its list.
+
+::: details Multiply, round down, and what a rule formula reads
+- **Multiply, round down** applies after every rule, so a halving also halves what a Speed Bonus or a granted speed adds. Two halvings from two effects both apply (7 is 3, then 1). A halved speed halves each movement type that has a row of its own.
+- On the copy that a step puts on a creature, an `@` reference in a rule formula reads the creature that applied it, at the time it was applied. With **Rule formulas read the creature that has it** on, each formula reads the creature that has the copy, each time the rule works.
+- `@stacks` always reads the creature that has the effect, and `@speed` the creature that moves. The Escape DC always reads the creature that applied it.
+:::
 
 Each field saves when you change it.
 
@@ -95,21 +101,25 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 
 "Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero. "The" is the turn in progress, whoever's it is: until **the end of** **the** **turn**, for an effect that goes on during the turn of another creature.
 
-They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP: the effect ends when the temp HP it gave are gone (they reach 0, or another effect or a potion takes their place). You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
+They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
 
 - **Take damage** can name damage types: turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
 - **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts its aliases: Stunned is a gain of Incapacitated. To end an effect on any of a group of effects, give each of them the same custom condition and name that condition. An effect never ends on its own gain.
 - **Apply** is the creature the new effect came from (its origin).
-- **Combat ends** counts each combat that the effect is part of: it went on in that combat, or the creature that has it, or the creature that applied it, is in it. The combat in progress when the effect goes on is the 1st. A combat that the GM deletes before round 1 counts for nothing and ends only the effects that went on in it.
 
 The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An effect with a condition takes the condition's own Lasts Until (Dazed: until the end of their next turn); turn on **Stays until someone removes it** to keep it on. An older effect can also have a core duration, such as 1 round; the tab shows it, and it still ends the effect. When an effect ends, a line in the **Events** part of a card says so, with **Undo**: see [How an effect works](#how-an-effect-works).
+
+::: details Temp HP and combat ends
+- **Lose its temp HP** ends the effect when the temp HP it gave are gone: they reach 0, or another effect or a potion takes their place.
+- **Combat ends** counts each combat that the effect is part of: it went on in that combat, or the creature that has it, or the creature that applied it, is in it. The combat in progress when the effect goes on is the 1st. A combat that the GM deletes before round 1 counts for nothing and ends only the effects that went on in it.
+:::
 
 ## Stacks
 
 Some effects build up: "Dazed 3 times = Petrified". On the effect's **Details** tab, under **Stacks**, turn on **A new application adds a stack**. When a creature that has the effect gets it again, it keeps one effect with a count, the stacks. "The same effect" is an effect with Stacks on, the same name and the same conditions, from any source. The timing follows the one that lasts longer, as for [the same condition again](../playing/conditions.md#how-long-a-condition-lasts). The effect ends as one: all its stacks go together.
 
 - **At [N] stacks, they gain [effect]**: when the count gets to N, the creature also gains another effect of the same item, once. The stacking effect stays on. The card gets the line "Tessa gains Petrified: 3 stacks of Dazed", with **Undo**. With Feature Effects off, the line is "Tessa has 3 stacks of Dazed", with an **Apply Petrified** button.
-- On a creature's effect, **Stacks now** shows the count, and you can change it there. The count that gives an effect, and that effect, come from the item. The sheet row has a tag such as **3 stacks**, and the card says "On Goblin (3 stacks)".
+- On a creature's effect, **Stacks now** shows the count, and you can change it there. Set **At [N] stacks** on the effect of the item. The sheet row has a tag such as **3 stacks**, and the card says "On Goblin (3 stacks)".
 - A rule formula on the effect can read the count as `@stacks`. A **Situational Roll Mode** with **For each stack** on gives its value once for each stack.
 - To count failed saves ("advantage on the save for each failure"), put a stacking effect under **On Failed Save** with **Each creature that fails**. Give it a Situational Roll Mode with **For each stack** on and the condition `save:from:<item>`, and a Lasts Until of **combat ends**.
 
@@ -148,19 +158,17 @@ It is not an attack: temp HP go first, then HP, with no armor and no Defend. Eac
 - **Undo** is not healing: an effect that lasts until its holder is healed stays.
 :::
 
-A **Damage on escape** rule works the same way, but only once: when the holder escapes the effect the rule is on. Its line goes on the roll card of the escape, after the ended line. The holder rolls the Escape and succeeds, or the table clicks **Escapes**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank: see [Raise Effect Rule](spells.md).
-
 ## Escape
 
 Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. The row under it, "or a ... check", turns on skill checks too, such as Finesse to pick a lock. One save or check always stays on. A new effect has STR and DEX on.
 
-A blank DC means the effect has no escape. Turn on **No DC** for an escape that the table judges, such as a monster grapple with no printed DC. A success ends the effect through the GM, with an ended line and **Undo** on the roll card (see [Conditions](../playing/conditions.md)).
+A blank DC means the effect has no escape. Turn on **No DC** for an escape that the table judges, such as a monster grapple with no printed DC. For what the holder sees, see [Escape](../playing/conditions.md#escape).
 
 ::: details A monster and a skill check escape
 Monsters have no skills. A monster rolls the save of the skill's stat instead, such as a DEX save for Finesse. When a save and a check use the same stat, the monster gets that save once.
 :::
 
-A **Damage on escape** rule on the effect hurts the holder when it escapes, such as the upcast of Shadow Trap. See [Damage each turn](#damage-each-turn).
+A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. It is not an attack, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
 
 ## Related pages
 
