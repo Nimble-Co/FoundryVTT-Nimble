@@ -1,5 +1,6 @@
 import type { CardEvent, TempHpChoiceAction } from '#types/cardEvent.d.ts';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 import { fireEvent } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { clearTempHpLinks, giveTempHp } from './effectTempHp.js';
 
@@ -62,7 +63,7 @@ function holderOf(action: TempHpChoiceAction): ChoiceHolder | null {
 
 /** The owner of the creature, or a GM, makes the choice. */
 export function canChooseTempHp(action: TempHpChoiceAction): boolean {
-	return !!game.user?.isGM || !!holderOf(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 /**

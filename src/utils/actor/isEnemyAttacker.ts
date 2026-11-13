@@ -12,7 +12,8 @@ interface AttackCard {
 	speaker?: { scene?: string | null; token?: string | null } | null;
 }
 
-function tokenOf(actor: SideActor): SideToken | null {
+/** The token that shows the actor's side: its own token, else its first active token. */
+export function sideTokenOf(actor: SideActor): SideToken | null {
 	if (actor.token) return actor.token;
 	const [token] = actor.getActiveTokens?.(false, true) ?? [];
 	return (token as SideToken | undefined) ?? null;
@@ -45,8 +46,8 @@ export function isEnemyAttacker(
 	if (!attacker || !holder || attacker === holder) return false;
 	const attackerActor = attacker as SideActor;
 	const holderActor = holder as SideActor;
-	const attackerSide = dispositionOf(speakerTokenOf(card) ?? tokenOf(attackerActor));
-	const holderSide = dispositionOf(tokenOf(holderActor));
+	const attackerSide = dispositionOf(speakerTokenOf(card) ?? sideTokenOf(attackerActor));
+	const holderSide = dispositionOf(sideTokenOf(holderActor));
 	if (attackerSide !== null && holderSide !== null) return attackerSide !== holderSide;
 	return (attackerActor.type === 'character') !== (holderActor.type === 'character');
 }

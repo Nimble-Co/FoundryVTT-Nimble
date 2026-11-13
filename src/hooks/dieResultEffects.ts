@@ -3,6 +3,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
+import { cardTargetTokens } from '#utils/chat/cardTargetTokens.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
 import { pendingKeepOf } from '#utils/rolls/cardRollState.js';
@@ -84,16 +85,6 @@ function bonusDieFace(effects: readonly EffectNode[], identifier: string): numbe
 	return null;
 }
 
-/** The card's target tokens, one for each actor. */
-function targetTokens(card: ActivationCard): SideToken[] {
-	const byActor = new Map<unknown, SideToken>();
-	for (const uuid of card.system?.targets ?? []) {
-		const token = fromUuidSync(uuid as never, { strict: false }) as SideToken | null;
-		if (token?.actor && !byActor.has(token.actor)) byActor.set(token.actor, token);
-	}
-	return [...byActor.values()];
-}
-
 /** The side of the user: the card speaker's token, else the actor's prototype token. */
 function userSide(card: ActivationCard, user: unknown): SideToken | null {
 	const { scene, token } = card.speaker ?? {};
@@ -128,7 +119,7 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 	await card.setFlag(SYSTEM_ID, DIE_RESULT_READ_FLAG, true);
 	if (card.system?.isMiss === true) return;
 
-	const tokens = targetTokens(card);
+	const tokens = cardTargetTokens<SideToken>(card);
 	if (tokens.length === 0) return;
 	const side = userSide(card, user);
 

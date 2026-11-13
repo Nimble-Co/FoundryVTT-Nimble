@@ -4,6 +4,7 @@ import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { giveWounds, takeBackWounds, woundsGiven } from '#utils/actor/giveWounds.js';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 import { fireEvent } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { requestSaves } from '#utils/saveRequest/saveRequests.js';
 
@@ -123,7 +124,7 @@ function holderOf(action: TurnDamageAction): TurnDamageHolder | null {
 
 /** The owner of the creature that took it, or a GM, deals a waiting line or undoes a dealt one. */
 export function canActOnTurnDamage(action: TurnDamageAction): boolean {
-	return !!game.user?.isGM || !!holderOf(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 function textAfter(event: CardEvent, action: TurnDamageAction): CardEvent {

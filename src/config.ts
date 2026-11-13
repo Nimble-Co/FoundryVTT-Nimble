@@ -6,6 +6,7 @@ import registerConditionsConfig from './config/registerConditionsConfig.js';
 import registerDocumentConfig from './config/registerDocumentConfig.js';
 import registerPredicateConfig from './config/registerPredicateConfig.js';
 import registerRulesConfig from './config/registerRulesConfig.js';
+import { defaultSkillAbilities } from './config/skillAbilities.js';
 
 /** --------------------------------------------- */
 /**                 CONSTANTS                     */
@@ -330,19 +331,6 @@ const damageTypes = {
 	radiant: 'NIMBLE.damageTypes.radiant',
 	slashing: 'NIMBLE.damageTypes.slashing',
 	thunder: 'NIMBLE.damageTypes.thunder',
-};
-
-const defaultSkillAbilities: Record<SkillKeyType, AbilityKeyType> = {
-	arcana: 'intelligence',
-	examination: 'intelligence',
-	finesse: 'dexterity',
-	influence: 'will',
-	insight: 'will',
-	might: 'strength',
-	lore: 'intelligence',
-	naturecraft: 'will',
-	perception: 'will',
-	stealth: 'dexterity',
 };
 
 const durationTypes = {
@@ -683,7 +671,7 @@ const spellUpcastDialog = {
 	increaseDieSize: 'NIMBLE.spells.spellUpcastDialog.increaseDieSize',
 	increaseDieSizeCapped: 'NIMBLE.spells.spellUpcastDialog.increaseDieSizeCapped',
 	raiseEffectRule: 'NIMBLE.spells.spellUpcastDialog.raiseEffectRule',
-	extendLastsUntil: 'NIMBLE.spells.spellUpcastDialog.extendLastsUntil',
+	lengthenLastsUntil: 'NIMBLE.spells.spellUpcastDialog.lengthenLastsUntil',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
 	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 	warnings: {

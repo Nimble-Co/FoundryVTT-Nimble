@@ -1,3 +1,4 @@
+import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -6,9 +7,6 @@ export const TURN_DAMAGE_WHO = ['holder', 'nearby'] as const;
 
 const key = (field: string, part: string) => `NIMBLE.rules.turnDamage.${field}.${part}`;
 
-const choicesOf = (field: string, values: readonly string[]) =>
-	Object.fromEntries(values.map((value) => [value, key(field, `choices.${value}`)]));
-
 function schema() {
 	const { fields } = foundry.data;
 	return {
@@ -16,7 +14,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'turnStart',
-			choices: choicesOf('at', TURN_DAMAGE_MOMENTS),
+			choices: choiceLabels('turnDamage', 'at', TURN_DAMAGE_MOMENTS),
 			label: key('at', 'label'),
 			hint: key('at', 'hint'),
 		}),
@@ -24,7 +22,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'holder',
-			choices: choicesOf('who', TURN_DAMAGE_WHO),
+			choices: choiceLabels('turnDamage', 'who', TURN_DAMAGE_WHO),
 			label: key('who', 'label'),
 			hint: key('who', 'hint'),
 		}),

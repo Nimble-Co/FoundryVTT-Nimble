@@ -3,6 +3,7 @@ import { SYSTEM_ID } from '#system';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import {
 	STACKED_OPTION,
+	stackFieldsOf,
 	stackingCopyOf,
 	stacksOf,
 	stackUp,
@@ -174,5 +175,17 @@ describe('takeBackStack', () => {
 		await takeBackStack(plain);
 
 		expect(plain.delete).toHaveBeenCalled();
+	});
+});
+
+describe('stackFieldsOf', () => {
+	it('reads the stack fields, with the defaults of an older effect', () => {
+		expect(stackFieldsOf({ stacks: { on: true, count: 3, at: 3, effectId: 'stone' } })).toEqual({
+			on: true,
+			count: 3,
+			at: 3,
+			effectId: 'stone',
+		});
+		expect(stackFieldsOf({})).toEqual({ on: false, count: 1, at: null, effectId: '' });
 	});
 });

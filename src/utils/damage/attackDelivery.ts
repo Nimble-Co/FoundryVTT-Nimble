@@ -1,3 +1,5 @@
+import { isMonsterActorType } from '#documents/actor/monsterActorTypes.js';
+
 /**
  * How an attack reaches its target, derived from the activation's attack type.
  * `null` covers hero activations that declare no attack type at all (most
@@ -25,8 +27,6 @@ function matchesAttackSource(
 	return (item?.type === 'spell' ? 'spell' : 'weapon') === filter;
 }
 
-const MONSTER_TYPES: ReadonlySet<string> = new Set(['npc', 'minion', 'soloMonster']);
-
 /** The parts of an activation that say how its attack is delivered. */
 interface AttackActivation {
 	targets?: { attackType?: string | null } | null;
@@ -46,7 +46,7 @@ function deliveryOfAttack(
 	const attackType = activation?.targets?.attackType;
 	if (attackType === 'reach') return 'melee';
 	if (attackType === 'range') return 'ranged';
-	if (attackType || !MONSTER_TYPES.has(user?.type ?? '')) return null;
+	if (attackType || !isMonsterActorType(user?.type)) return null;
 	const area = !!activation?.acquireTargetsFromTemplate && !!activation.template?.shape;
 	return area ? null : 'melee';
 }

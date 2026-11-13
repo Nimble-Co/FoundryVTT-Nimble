@@ -1,5 +1,6 @@
 import type { AttackedCreature, CardDamageBack } from '#documents/chatMessage/cardDamageBack.js';
 import { SYSTEM_ID } from '#system';
+import { cardTargetTokens } from '#utils/chat/cardTargetTokens.js';
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { isAttackUse } from '#utils/lastsUntil/lastsUntilEvents.js';
@@ -24,14 +25,10 @@ interface AttackCard {
 
 /** The creatures the card attacks, one for each actor, with the token the card names. */
 function attackedOn(card: AttackCard): AttackedCreature[] {
-	const byActor = new Map<unknown, AttackedCreature>();
-	for (const uuid of card.system?.targets ?? []) {
-		const token = fromUuidSync(uuid as never, { strict: false }) as TargetToken | null;
-		if (token?.actor && !byActor.has(token.actor)) {
-			byActor.set(token.actor, { actor: token.actor, token: token as never });
-		}
-	}
-	return [...byActor.values()];
+	return cardTargetTokens<TargetToken>(card).map((token) => ({
+		actor: token.actor as AttackedCreature['actor'],
+		token: token as never,
+	}));
 }
 
 function isAttackCard(card: AttackCard, attacked: readonly AttackedCreature[]): boolean {

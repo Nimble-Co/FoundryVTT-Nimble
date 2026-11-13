@@ -2,6 +2,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, CardEventText, EscapeRulingAction } from '#types/cardEvent.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 import {
 	dealEscapeDamage,
 	escapeDamageRulesOf,
@@ -108,7 +109,7 @@ const holderOf = (link: { holderUuid: string }) =>
 
 /** The owner of the holder, or a GM, judges an Escape with no DC. */
 export function canRuleEscape(action: EscapeRulingAction): boolean {
-	return !!game.user?.isGM || !!holderOf(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 const endMoment = (effectName: string, hostId: string, reason: CardEventText) => ({

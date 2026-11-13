@@ -1211,9 +1211,9 @@ describe('applyUpcastDeltas', () => {
 		});
 	});
 
-	describe('extendLastsUntil', () => {
+	describe('lengthenLastsUntil', () => {
 		const lengthen = (fields: Partial<ScalingDelta> = {}) => ({
-			...createDelta({ operation: 'extendLastsUntil', value: 1, targetEffectId: 'apply1' }),
+			...createDelta({ operation: 'lengthenLastsUntil', value: 1, targetEffectId: 'apply1' }),
 			momentIndex: 0,
 			...fields,
 		});

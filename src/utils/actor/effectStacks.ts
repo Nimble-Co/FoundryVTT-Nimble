@@ -34,16 +34,21 @@ interface StackHolder {
 	effects?: Iterable<object>;
 }
 
+/** The stack fields of an effect's system data, with the defaults of an older effect. */
+export function stackFieldsOf(system: unknown): StackFields {
+	const stacks = (system as { stacks?: Partial<StackFields> } | null | undefined)?.stacks;
+	return {
+		on: stacks?.on === true,
+		count: Math.max(1, Number(stacks?.count) || 1),
+		at: typeof stacks?.at === 'number' ? stacks.at : null,
+		effectId: stacks?.effectId ?? '',
+	};
+}
+
 /** The stack fields of an effect's system data, when Stacks is on. */
 export function stacksOf(system: unknown): StackFields | null {
-	const stacks = (system as { stacks?: Partial<StackFields> } | null | undefined)?.stacks;
-	if (!stacks?.on) return null;
-	return {
-		on: true,
-		count: Math.max(1, Number(stacks.count) || 1),
-		at: typeof stacks.at === 'number' ? stacks.at : null,
-		effectId: stacks.effectId ?? '',
-	};
+	const fields = stackFieldsOf(system);
+	return fields.on ? fields : null;
 }
 
 /** The effect has the wanted statuses, and no others than the ones they bring with them. */

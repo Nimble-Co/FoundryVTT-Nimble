@@ -5,12 +5,8 @@
 	import TagGroup from '../../components/TagGroup.svelte';
 	import Editor from '../components/Editor.svelte';
 	import { effectConditionOptions, toggledStatus } from './effectConditions.ts';
-	import {
-		stackAtUpdate,
-		stackCountUpdate,
-		stackEffectItem,
-		stackFieldsOf,
-	} from './effectStackFields.ts';
+	import { stackFieldsOf } from '#utils/actor/effectStacks.js';
+	import { stackAtUpdate, stackCountUpdate, stackEffectItem } from './effectStackFields.ts';
 
 	let { effect }: EffectTabProps = $props();
 

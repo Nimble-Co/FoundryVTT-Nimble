@@ -1,12 +1,15 @@
 import type { AttackerEffect } from '#types/defend.d.ts';
 import { ruleKey, ruleLabel } from '#utils/actor/actorRules.js';
+import { sideTokenOf } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { mayActFor, rejectCardRequest } from '#utils/chat/cardOperations.js';
 import { queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { payCost } from '#utils/cost/costLedger.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
+import type { CardAttacker as SharedCardAttacker } from '#utils/damage/cardAttackers.js';
 import { applyAttackerEffects } from '#utils/defend/defendRequests.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
+import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 /** Damage a creature gave back to the one who attacked it, as the card shows it. */
@@ -87,14 +90,7 @@ interface AttackerLike {
 	applyDamage?(amount: number): Promise<unknown>;
 }
 
-/** One creature that made the card's attack, with its token and how its attack reached. */
-export interface CardAttacker {
-	actor: AttackerLike;
-	token?: SideToken | null;
-	delivery: AttackDelivery;
-	/** False for a member of a minion group that missed. */
-	hit?: boolean;
-}
+type CardAttacker = SharedCardAttacker<AttackerLike>;
 
 /** The temp HP of a creature before the damage, and the rules that answer losing them. */
 export interface TempHpBefore {
@@ -141,15 +137,6 @@ function rulesOf(creature: HurtCreature): DamageBackRuleLike[] {
 	return Array.isArray(creature.rules) ? (creature.rules as DamageBackRuleLike[]) : [];
 }
 
-function sideTokenOf(actor: {
-	token?: SideToken | null;
-	getActiveTokens?: HurtCreature['getActiveTokens'];
-}) {
-	if (actor.token) return actor.token;
-	const [token] = actor.getActiveTokens?.(false, true) ?? [];
-	return (token as SideToken | undefined) ?? null;
-}
-
 function tempOf(actor: HurtCreature): number {
 	const temp = Number(foundry.utils.getProperty(actor, 'system.attributes.hp.temp') ?? 0);
 	return Number.isFinite(temp) ? temp : 0;
@@ -161,21 +148,6 @@ function attackerEffectOf(rule: DamageBackRuleLike): AttackerEffect | null {
 	const effect = effectId ? itemEffectOf(item, effectId) : null;
 	if (!effect || !item?.uuid || !effectId) return null;
 	return { itemUuid: item.uuid, effectId, name: effect.name ?? '' };
-}
-
-async function rollTotal(formula: string, rollData: Record<string, unknown>) {
-	try {
-		const roll = new Roll(formula, rollData);
-		await roll.evaluate();
-		const total = Math.floor(Number(roll.total));
-		return {
-			total: Number.isFinite(total) ? total : 0,
-			roll: roll.toJSON() as Record<string, unknown>,
-		};
-	} catch (error) {
-		console.warn(`Nimble | Could not roll the damage "${formula}" for the attacker.`, error);
-		return { total: 0, roll: null };
-	}
 }
 
 interface RecordContext {
@@ -214,7 +186,9 @@ export class CardDamageBack {
 	#attackers(): CardAttacker[] {
 		if (this.#host.attackers) return this.#host.attackers();
 		const attacker = this.#host.attacker();
-		return attacker ? [{ actor: attacker, delivery: this.#host.delivery?.() ?? null }] : [];
+		return attacker
+			? [{ actor: attacker, token: null, delivery: this.#host.delivery?.() ?? null }]
+			: [];
 	}
 
 	/**
@@ -242,10 +216,11 @@ export class CardDamageBack {
 		let amount = 0;
 		let roll: Record<string, unknown> | null = null;
 		if (rule.amount === 'formula' && rule.formula?.trim()) {
-			({ total: amount, roll } = await rollTotal(
-				rule.formula.trim(),
-				holder.actor.getRollData?.() ?? {},
-			));
+			const rolled = await rollAmount(rule.formula.trim(), holder.actor.getRollData?.() ?? {}, {
+				purpose: 'for the attacker',
+			});
+			amount = rolled.amount;
+			roll = rolled.roll ? (rolled.roll.toJSON() as Record<string, unknown>) : null;
 		} else if (context.trigger !== 'attacked' && rule.amount === 'critDice') {
 			amount = context.critDiceTotal;
 		} else if (context.trigger !== 'attacked' && (rule.amount ?? 'taken') === 'taken') {

@@ -1,23 +1,5 @@
 import type { ItemEffectSelectItem } from '#types/components/ItemEffectSelect.d.ts';
 
-/** The Stacks fields of the effect window, with the defaults of an older effect. */
-export interface StackFieldsView {
-	on: boolean;
-	count: number;
-	at: number | null;
-	effectId: string;
-}
-
-export function stackFieldsOf(system: unknown): StackFieldsView {
-	const stacks = (system as { stacks?: Partial<StackFieldsView> } | null | undefined)?.stacks;
-	return {
-		on: stacks?.on === true,
-		count: Math.max(1, Number(stacks?.count) || 1),
-		at: typeof stacks?.at === 'number' ? stacks.at : null,
-		effectId: stacks?.effectId ?? '',
-	};
-}
-
 /** "At [N] stacks": a whole number of 2 or more; blank or less is no count. */
 export function stackAtUpdate(text: string): Record<string, unknown> {
 	const whole = Math.floor(Number(text));

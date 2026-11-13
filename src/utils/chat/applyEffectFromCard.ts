@@ -117,6 +117,13 @@ export function cardTargets(card: EffectCard): CardActor[] {
 		.filter((actor): actor is CardActor => !!actor);
 }
 
+/** The creatures a step of the card goes to: its user, or the card's targets. */
+export function stepRecipients(card: EffectCard, node: { recipient: string }): CardActor[] {
+	if (node.recipient !== 'self') return cardTargets(card);
+	const user = cardUser(card);
+	return user ? [user] : [];
+}
+
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
 	const user = cardUser(card);
 	const effect = nodeEffect(card, node);
@@ -190,9 +197,7 @@ export async function applyEffectFromCard(
 		tempHp: linkedTempHealing(card, node)?.total ?? null,
 		cardId: (card as { id?: string | null }).id ?? null,
 	};
-	const user = cardUser(card);
-	const recipients =
-		options.recipients ?? (node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card));
+	const recipients = options.recipients ?? stepRecipients(card, node);
 	const results = await Promise.allSettled(
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);

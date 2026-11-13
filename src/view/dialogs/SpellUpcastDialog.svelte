@@ -172,7 +172,8 @@
 		const preview = deltas.map((delta: ScalingDelta) => {
 			if (delta.operation === 'increaseDieSize') return formatDieSizePreview(delta, upcastSteps);
 			if (delta.operation === 'raiseEffectRule') return formatRaisePreview(delta, upcastSteps);
-			if (delta.operation === 'extendLastsUntil') return formatLengthenPreview(delta, upcastSteps);
+			if (delta.operation === 'lengthenLastsUntil')
+				return formatLengthenPreview(delta, upcastSteps);
 
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
@@ -276,7 +277,7 @@
 			value === 1
 				? localize(`NIMBLE.lastsUntilText.units.${units}.one`)
 				: format(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
-		return format(spellUpcastDialog.extendLastsUntil, { effect: target?.label ?? '', amount });
+		return format(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null) {

@@ -1,25 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-	stackAtUpdate,
-	stackCountUpdate,
-	stackEffectItem,
-	stackFieldsOf,
-} from '../effectStackFields.js';
+import { stackAtUpdate, stackCountUpdate, stackEffectItem } from '../effectStackFields.js';
 
 afterEach(() => {
 	vi.unstubAllGlobals();
-});
-
-describe('stackFieldsOf', () => {
-	it('reads the stack fields, with the defaults of an older effect', () => {
-		expect(stackFieldsOf({ stacks: { on: true, count: 3, at: 3, effectId: 'stone' } })).toEqual({
-			on: true,
-			count: 3,
-			at: 3,
-			effectId: 'stone',
-		});
-		expect(stackFieldsOf({})).toEqual({ on: false, count: 1, at: null, effectId: '' });
-	});
 });
 
 describe('the number fields', () => {

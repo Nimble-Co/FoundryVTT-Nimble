@@ -148,7 +148,7 @@ For example, True Strike holds advantage for the next attack of its target, unti
 
 A **Damage each turn** rule deals damage, gives Wounds, or both, at each turn of a creature. Put it on an effect for a hazard that lasts ("1d20 fire damage/turn" while in a cauldron), or on an item for a monster that always hurts the creatures next to it (a burning aura). **Who takes it** is the creature that has the rule, or each other creature within **Reach** of it, allies too. **When** is the start of that creature's turn, or its end. **Damage** is dice or a number, rolled each time, with a **Damage type**. **Wounds** gives that many Wounds, up to the max of the track: "1 Wound/round" is Wounds 1 with no damage.
 
-It is not an attack: temp HP go first, then HP, with no armor and no Defend. Each time is a line in **Events** on the card of that turn start or end, with **Undo**, which gives back the HP, temp HP and Wounds it took. An effect that ends at that moment deals nothing at it. A dead or defeated creature takes nothing and deals nothing. With **Feature Effects** off, the line has a **Take Damage** button for the creature's owner or the GM.
+The damage ignores armor and Defend, as damage from outside an attack does: temp HP go first, then HP. Each time is a line in **Events** on the card of that turn start or end, with **Undo**, which gives back the HP, temp HP and Wounds it took. An effect that ends at that moment deals nothing at it. A dead or defeated creature takes nothing and deals nothing. With **Feature Effects** off, the line has a **Take Damage** button for the creature's owner or the GM.
 
 ::: details More about damage each turn
 - A creature with no Wound track (a monster) takes the damage and no Wounds.
@@ -168,7 +168,7 @@ A blank DC means the effect has no escape. Turn on **No DC** for an escape that 
 Monsters have no skills. A monster rolls the save of the skill's stat instead, such as a DEX save for Finesse. When a save and a check use the same stat, the monster gets that save once.
 :::
 
-A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. It is not an attack, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
+A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. The damage ignores armor and Defend, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
 
 ## Related pages
 

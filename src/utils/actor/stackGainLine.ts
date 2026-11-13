@@ -1,6 +1,7 @@
 import type { CardEvent, CardEventText, StackGainAction } from '#types/cardEvent.d.ts';
 import { applyEffectToActor, type StackReached } from '#utils/actor/applyEffectToActor.js';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 
 const WORDS = 'NIMBLE.chat.stackGain';
 
@@ -59,7 +60,7 @@ function holderOf(action: StackGainAction): StackHolder | null {
 
 /** The owner of the creature, or a GM, puts a waiting effect on or takes a gained one off. */
 export function canActOnStackGain(action: StackGainAction): boolean {
-	return !!game.user?.isGM || !!holderOf(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 async function gain(card: LineCard, event: CardEvent, action: StackGainAction): Promise<boolean> {

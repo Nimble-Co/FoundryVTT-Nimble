@@ -7,6 +7,7 @@ import {
 	cardEventText,
 	replaceCardEvent,
 } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
@@ -148,7 +149,7 @@ export function holderOfRequest(action: SaveRequestAction): SaverActor | null {
 /** The owner of the holder, or a GM, rolls the save, once. */
 export function canRollRequest(action: SaveRequestAction): boolean {
 	if (action.saveMessageId) return false;
-	return !!game.user?.isGM || !!holderOfRequest(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 /** On the save card: the line it answers, as it was when rolled. */

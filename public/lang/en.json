@@ -3556,7 +3556,7 @@
 				"value": { "label": "Actions", "hint": "How many max actions it adds, as a formula." }
 			},
 			"turnDamage": {
-				"description": "Damage, Wounds or both at the start or end of each turn of a creature: the one that has this rule, or each creature near it. On an effect, it stops when the effect ends. It is not an attack: no armor and no Defend.",
+				"description": "Damage, Wounds or both at the start or end of each turn of a creature: the one that has this rule, or each creature near it. On an effect, it stops when the effect ends. The damage ignores armor and Defend, as damage from outside an attack does.",
 				"at": {
 					"label": "When",
 					"hint": "The moment of each turn of the creature that takes it.",
@@ -3582,7 +3582,7 @@
 				}
 			},
 			"escapeDamage": {
-				"description": "Damage to the creature that has this effect when it escapes the effect: its Escape roll succeeds, or the table judges that it escapes. It is not an attack: no armor and no Defend.",
+				"description": "Damage to the creature that has this effect when it escapes the effect: its Escape roll succeeds, or the table judges that it escapes. The damage ignores armor and Defend, as damage from outside an attack does.",
 				"formula": {
 					"label": "Damage",
 					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
@@ -4142,7 +4142,7 @@
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"raiseEffectRule": "{rule}: +{amount} {field}",
-				"extendLastsUntil": "{effect}: +{amount}",
+				"lengthenLastsUntil": "{effect}: +{amount}",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier",
 				"warnings": {
@@ -5766,7 +5766,7 @@
 					"addCondition": "Condition",
 					"increaseDieSize": "Increase Die Size",
 					"raiseEffectRule": "Raise Effect Rule",
-					"extendLastsUntil": "Lengthen Lasts Until"
+					"lengthenLastsUntil": "Lengthen Lasts Until"
 				}
 			}
 		},

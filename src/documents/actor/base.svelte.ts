@@ -39,6 +39,7 @@ import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './
 import { conditionRollOptions } from './conditionRollOptions.js';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
+import { MONSTER_ACTOR_TYPES, type MonsterActorType } from './monsterActorTypes.js';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 
@@ -108,10 +109,6 @@ interface InitiativeRollData {
 }
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
-
-/** Actor subtypes that share the monster sheet and can be converted between each other. */
-const MONSTER_ACTOR_TYPES = ['npc', 'minion', 'soloMonster'] as const;
-type MonsterActorType = (typeof MONSTER_ACTOR_TYPES)[number];
 
 function toFiniteInteger(value: unknown): number {
 	const numericValue = Number(value);

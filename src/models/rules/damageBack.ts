@@ -16,7 +16,7 @@ type DamageBackTrigger = (typeof TRIGGER_CHOICES)[number];
 type DamageBackAmount = (typeof AMOUNT_CHOICES)[number];
 
 const key = (field: string, part: 'label' | 'hint') => `NIMBLE.rules.damageBack.${field}.${part}`;
-const isTrigger = (data: Record<string, unknown>) => (data.trigger ?? 'damaged') as string;
+const triggerOf = (data: Record<string, unknown>) => (data.trigger ?? 'damaged') as string;
 const dealsDamage = (data: Record<string, unknown>) => data.amount !== 'none';
 
 function schema() {
@@ -53,7 +53,7 @@ function schema() {
 				initial: true,
 				label: key('onlyCrits', 'label'),
 				hint: key('onlyCrits', 'hint'),
-				showWhen: (data: Record<string, unknown>) => isTrigger(data) !== 'attacked',
+				showWhen: (data: Record<string, unknown>) => triggerOf(data) !== 'attacked',
 			}),
 		),
 		answeredAttack: new fields.BooleanField(
@@ -63,7 +63,7 @@ function schema() {
 				initial: false,
 				label: key('answeredAttack', 'label'),
 				hint: key('answeredAttack', 'hint'),
-				showWhen: (data: Record<string, unknown>) => isTrigger(data) === 'attacked',
+				showWhen: (data: Record<string, unknown>) => triggerOf(data) === 'attacked',
 			}),
 		),
 		amount: new fields.StringField({

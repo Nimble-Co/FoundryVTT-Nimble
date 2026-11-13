@@ -1,7 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { WoundNode } from '#types/effectTree.js';
 import { giveWounds, type WoundRecord } from '#utils/actor/giveWounds.js';
-import { cardTargets, cardUser, type EffectCard } from './applyEffectFromCard.js';
+import { type EffectCard, stepRecipients } from './applyEffectFromCard.js';
 
 export const APPLIED_WOUNDS_FLAG = 'appliedWounds';
 
@@ -44,7 +44,6 @@ export async function giveWoundsOnCard(
 
 /** The step's Wounds go to the card's targets, or to its user. */
 export async function giveWoundsFromCard(card: EffectCard, node: WoundNode): Promise<void> {
-	const user = cardUser(card);
-	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
-	await giveWoundsOnCard(card, node.id, recipients as unknown as WoundTarget[], node.amount);
+	const recipients = stepRecipients(card, node) as unknown as WoundTarget[];
+	await giveWoundsOnCard(card, node.id, recipients, node.amount);
 }

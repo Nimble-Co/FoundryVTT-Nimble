@@ -13,7 +13,7 @@ export type ScalingOperation =
 	| 'addCondition'
 	| 'increaseDieSize'
 	| 'raiseEffectRule'
-	| 'extendLastsUntil';
+	| 'lengthenLastsUntil';
 
 export interface DiceValue {
 	count: number;
@@ -35,7 +35,7 @@ export interface ScalingDelta {
 	ruleField?: string | null;
 	/** `raiseEffectRule` on a formula field: the formula added for each step. */
 	formula?: string | null;
-	/** `extendLastsUntil`: the index of the moment in the effect's Lasts Until. */
+	/** `lengthenLastsUntil`: the index of the moment in the effect's Lasts Until. */
 	momentIndex?: number | null;
 }
 

@@ -6,7 +6,7 @@ import {
 	turnDamageEvent,
 	undoTurnDamage,
 } from '#utils/damage/turnDamageLine.js';
-import { showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
@@ -67,20 +67,6 @@ export function escapeDamageRulesOf(effect: {
 const lineIdPrefix = (holderUuid: string, effectId: string) =>
 	`escapeDamage.${holderUuid}.${effectId}.`;
 
-async function rolledAmount(formula: string, holder: EscapeHolder): Promise<number> {
-	if (!formula) return 0;
-	try {
-		const roll = new Roll(formula, holder.getRollData?.() ?? {});
-		await roll.evaluate();
-		await showDiceAnimation(roll);
-		const total = Math.floor(Number(roll.total));
-		return Number.isFinite(total) && total > 0 ? total : 0;
-	} catch (error) {
-		console.warn(`Nimble | Could not roll the damage "${formula}" of an escape.`, error);
-		return 0;
-	}
-}
-
 /**
  * On the active GM, after an Escape ended the effect: each rule's damage to the holder (not an
  * attack), with its line on the roll card. With Feature Effects off, the line waits for a click.
@@ -95,7 +81,10 @@ export async function dealEscapeDamage(
 	const lines: CardEvent[] = [];
 	for (const rule of rules) {
 		const formula = rule.formula.trim();
-		const amount = await rolledAmount(formula, holder);
+		const { amount } = await rollAmount(formula, holder.getRollData?.() ?? {}, {
+			purpose: 'of an escape',
+			show: true,
+		});
 		if (amount < 1) continue;
 		const action: TurnDamageAction = {
 			kind: 'turnDamage',

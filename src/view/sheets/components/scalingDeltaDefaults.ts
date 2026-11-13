@@ -38,7 +38,7 @@ export function applyOperationDefaults(
 	delta.momentIndex = null;
 	if (operation === 'raiseEffectRule') {
 		delta.targetEffectId = raiseTargets[0]?.nodeId ?? null;
-	} else if (operation === 'extendLastsUntil') {
+	} else if (operation === 'lengthenLastsUntil') {
 		delta.targetEffectId = momentTargets[0]?.nodeId ?? null;
 		delta.momentIndex = momentTargets[0]?.moments[0]?.index ?? null;
 	} else if (

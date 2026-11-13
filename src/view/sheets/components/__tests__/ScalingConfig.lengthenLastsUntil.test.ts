@@ -81,17 +81,17 @@ const delta = {
 	momentIndex: null,
 };
 
-describe('ScalingConfig extendLastsUntil', () => {
+describe('ScalingConfig lengthenLastsUntil', () => {
 	it('starts on the first step and moment with a number', async () => {
 		const item = makeItem(delta);
 		render(ScalingConfig, { context: new Map([['document', item]]) });
 
-		await fireEvent.change(selectNamed('operation'), { target: { value: 'extendLastsUntil' } });
+		await fireEvent.change(selectNamed('operation'), { target: { value: 'lengthenLastsUntil' } });
 
 		expect(item.update).toHaveBeenCalledWith({
 			'system.scaling.deltas': [
 				expect.objectContaining({
-					operation: 'extendLastsUntil',
+					operation: 'lengthenLastsUntil',
 					targetEffectId: 'apply1',
 					momentIndex: 1,
 					value: 1,
@@ -101,7 +101,7 @@ describe('ScalingConfig extendLastsUntil', () => {
 	});
 
 	it('lists only the moments with a number, in Lasts Until words, and picks one', async () => {
-		const item = makeItem({ ...delta, operation: 'extendLastsUntil', targetEffectId: 'apply1' });
+		const item = makeItem({ ...delta, operation: 'lengthenLastsUntil', targetEffectId: 'apply1' });
 		render(ScalingConfig, { context: new Map([['document', item]]) });
 
 		const momentSelect = selectNamed('moment');
@@ -114,7 +114,7 @@ describe('ScalingConfig extendLastsUntil', () => {
 
 		expect(item.update).toHaveBeenCalledWith({
 			'system.scaling.deltas': [
-				expect.objectContaining({ operation: 'extendLastsUntil', momentIndex: 1 }),
+				expect.objectContaining({ operation: 'lengthenLastsUntil', momentIndex: 1 }),
 			],
 		});
 	});

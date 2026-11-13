@@ -2,7 +2,7 @@ import { SYSTEM_ID } from '#system';
 import type { EndConditionsNode } from '#types/effectTree.js';
 import { effectsToEnd } from '#utils/actor/endConditions.js';
 import { endEffects } from '#utils/lastsUntil/endEffects.js';
-import { cardItem, cardTargets, cardUser, type EffectCard } from './applyEffectFromCard.js';
+import { cardItem, cardUser, type EffectCard, stepRecipients } from './applyEffectFromCard.js';
 
 export const ENDED_CONDITIONS_FLAG = 'endedConditions';
 
@@ -39,10 +39,8 @@ export async function endConditionsFromCard(
 	card: EffectCard,
 	node: EndConditionsNode,
 ): Promise<void> {
-	const user = cardUser(card) as unknown as EndHolder | null;
-	const recipients = (
-		node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card)
-	) as EndHolder[];
+	const user = cardUser(card);
+	const recipients = stepRecipients(card, node) as unknown as EndHolder[];
 	const item = cardItem(card)?.name ?? '';
 	const changes: Record<string, EndedConditionsRecord> = {};
 	for (const actor of recipients) {

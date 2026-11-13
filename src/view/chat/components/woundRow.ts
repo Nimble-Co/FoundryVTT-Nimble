@@ -1,6 +1,7 @@
 import type { WoundNode } from '#types/effectTree.js';
 import type { WoundRecord } from '#utils/actor/giveWounds.js';
 import type { Format, Localize } from '#utils/lastsUntil/describeLastsUntil.js';
+import { type StepButton, stepButton } from './stepButton.js';
 
 const WORDS = 'NIMBLE.chat.wound';
 const EFFECT_WORDS = 'NIMBLE.chat.applyEffect';
@@ -22,7 +23,7 @@ export interface WoundRowView {
 	appliedLines: string[];
 	/** after the click: "Kobold has no Wounds", one for each creature with no track */
 	noTrackLines: string[];
-	button: { label: string; disabled: boolean; tooltip: string | null } | null;
+	button: StepButton | null;
 }
 
 export function woundRow(input: WoundRowInput): WoundRowView {
@@ -47,17 +48,10 @@ export function woundRow(input: WoundRowInput): WoundRowView {
 			button: null,
 		};
 	}
-	const self = node.recipient === 'self';
 	return {
 		name,
 		appliedLines: [],
 		noTrackLines: [],
-		button: input.canApply
-			? {
-					label: localize(self ? `${EFFECT_WORDS}.applyToYou` : `${EFFECT_WORDS}.applyToTargets`),
-					disabled: !input.hasRecipient,
-					tooltip: input.hasRecipient ? null : localize(`${EFFECT_WORDS}.noTargets`),
-				}
-			: null,
+		button: stepButton({ ...input, recipient: node.recipient }),
 	};
 }

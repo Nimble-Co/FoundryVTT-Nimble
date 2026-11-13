@@ -374,7 +374,7 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 			break;
 		}
 
-		case 'extendLastsUntil': {
+		case 'lengthenLastsUntil': {
 			const index = delta.momentIndex;
 			if (!delta.targetEffectId || typeof index !== 'number') break;
 			const node = findEffectNode(activationData.effects, 'applyEffect', delta.targetEffectId);

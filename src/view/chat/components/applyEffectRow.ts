@@ -7,6 +7,7 @@ import {
 	type Format,
 	type Localize,
 } from '#utils/lastsUntil/describeLastsUntil.js';
+import { type StepButton, stepButton } from './stepButton.js';
 
 const WORDS = 'NIMBLE.chat.applyEffect';
 
@@ -31,7 +32,7 @@ export interface ApplyEffectRowView {
 	lasts: string;
 	/** after the click: "On Goblin, Kobold", and "Raging stays on Hero" for a holder that kept it */
 	appliedLines: string[];
-	button: { label: string; disabled: boolean; tooltip: string | null } | null;
+	button: StepButton | null;
 	/** a line in place of the button */
 	note: string | null;
 }
@@ -101,13 +102,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		img: source.img,
 		lasts,
 		appliedLines: [],
-		button: input.canApply
-			? {
-					label: localize(self ? `${WORDS}.applyToYou` : `${WORDS}.applyToTargets`),
-					disabled: !input.hasRecipient,
-					tooltip: input.hasRecipient ? null : localize(`${WORDS}.noTargets`),
-				}
-			: null,
+		button: stepButton({ ...input, recipient: input.node.recipient }),
 		note: null,
 	};
 }

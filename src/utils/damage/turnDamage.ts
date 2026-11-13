@@ -8,7 +8,7 @@ import type {
 import { ruleKey, ruleLabel, rulesOfType } from '#utils/actor/actorRules.js';
 import { addMomentEvents, momentEventIds } from '#utils/chat/cardEvents.js';
 import { spacesBetween } from '#utils/movement/spacesBetween.js';
-import { showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
@@ -91,21 +91,6 @@ function sourcesFor(
 	return sources;
 }
 
-async function rolledAmount(rule: TurnDamageRuleLike): Promise<number> {
-	const formula = rule.formula.trim();
-	if (!formula) return 0;
-	try {
-		const roll = new Roll(formula, rule.actor?.getRollData?.() ?? {});
-		await roll.evaluate();
-		await showDiceAnimation(roll);
-		const total = Math.floor(Number(roll.total));
-		return Number.isFinite(total) && total > 0 ? total : 0;
-	} catch (error) {
-		console.warn(`Nimble | Could not roll the damage "${formula}" of a turn.`, error);
-		return 0;
-	}
-}
-
 function causeOf({ rule, near }: Source): CardEventText {
 	const label = ruleLabel(rule as never);
 	const source: CardEventText | string = near
@@ -125,7 +110,10 @@ async function linesFor(
 	moment: CardEventMoment,
 ): Promise<CardEvent[]> {
 	const { rule } = source;
-	const amount = await rolledAmount(rule);
+	const { amount } = await rollAmount(rule.formula.trim(), rule.actor?.getRollData?.() ?? {}, {
+		purpose: 'of a turn',
+		show: true,
+	});
 	const wounds = rule.wounds > 0 && hasWoundTrack(target) ? rule.wounds : 0;
 	if (amount < 1 && wounds < 1) return [];
 	const action: TurnDamageAction = {
