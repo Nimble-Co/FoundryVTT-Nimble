@@ -1,5 +1,8 @@
 export const MULTIPLY_DOWN_CHANGE = 'multiplyDown';
 
+/** The phase after every rule of the actor: a Multiply, round down change applies here. */
+export const AFTER_RULES_PHASE = 'afterRules';
+
 interface ChangeField {
 	_castChangeDelta?: (raw: unknown, replacementData?: object) => unknown;
 }
@@ -27,9 +30,20 @@ export function applyMultiplyDown(
 	return update;
 }
 
-/** Core's multiply has priority 10; this one goes at the same step. */
+/**
+ * Core's multiply has priority 10; this one goes at the same step. It applies in its own phase
+ * after every rule, so a halving also halves the bonuses that rules give.
+ */
 export function registerMultiplyDownChange(): void {
-	const config = CONFIG.ActiveEffect as { changeTypes?: Record<string, object> };
+	const config = CONFIG.ActiveEffect as {
+		changeTypes?: Record<string, object>;
+		phases?: Record<string, { label: string; hint?: string }>;
+	};
+	config.phases ??= {};
+	config.phases[AFTER_RULES_PHASE] = {
+		label: 'NIMBLE.effectSheet.phases.afterRules.label',
+		hint: 'NIMBLE.effectSheet.phases.afterRules.hint',
+	};
 	config.changeTypes ??= {};
 	config.changeTypes[MULTIPLY_DOWN_CHANGE] = {
 		label: 'NIMBLE.effectSheet.changeTypes.multiplyDown',

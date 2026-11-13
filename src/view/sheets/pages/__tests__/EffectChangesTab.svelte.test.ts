@@ -86,6 +86,25 @@ describe('EffectChangesTab', () => {
 		expect(saved(effect)[0].value).toBe('@level');
 	});
 
+	it('says on the type that a Multiply, round down change applies after the rules', () => {
+		effectClass.CHANGE_TYPES = {
+			add: { label: 'Add', defaultPriority: 20 },
+			multiplyDown: { label: 'Multiply, round down', defaultPriority: 10 },
+		};
+		const { container } = render(EffectChangesTab, {
+			effect: makeEffect([
+				{ ...STRENGTH_BONUS, key: 'system.attributes.movement.walk', type: 'multiplyDown' },
+				STRENGTH_BONUS,
+			]) as never,
+		});
+
+		const [halving, bonus] = byLabel(container, 'type');
+		expect(halving.dataset.tooltip).toBe(
+			localize('NIMBLE.effectSheet.changeTypes.multiplyDownHint'),
+		);
+		expect(bonus.dataset.tooltip).toBeUndefined();
+	});
+
 	it('changes the type', async () => {
 		const effect = makeEffect([STRENGTH_BONUS]);
 		const { container } = render(EffectChangesTab, { effect: effect as never });

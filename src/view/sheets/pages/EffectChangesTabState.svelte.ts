@@ -1,6 +1,7 @@
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
 import type { EffectChange } from '#types/components/EffectSheet.d.ts';
 import localize from '#utils/localize.js';
+import { MULTIPLY_DOWN_CHANGE } from '../../../documents/activeEffect/multiplyDownChange.js';
 
 export const CHANGES_WORDS = 'NIMBLE.effectSheet.changes';
 
@@ -67,6 +68,13 @@ export function createEffectChangesTabState(getEffect: () => NimbleActiveEffect)
 		return changeTypes.find((each) => each.type === type)?.defaultPriority?.toString() ?? '';
 	}
 
+	/** Core keeps no hint of a change type, so the one type that needs one has it here. */
+	function typeHint(type: string): string | undefined {
+		return type === MULTIPLY_DOWN_CHANGE
+			? localize('NIMBLE.effectSheet.changeTypes.multiplyDownHint')
+			: undefined;
+	}
+
 	return {
 		get changes() {
 			return changes;
@@ -78,5 +86,6 @@ export function createEffectChangesTabState(getEffect: () => NimbleActiveEffect)
 		add,
 		remove,
 		priorityHint,
+		typeHint,
 	};
 }

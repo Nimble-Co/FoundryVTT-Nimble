@@ -1,6 +1,7 @@
 import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+import { AFTER_RULES_PHASE } from '#documents/activeEffect/multiplyDownChange.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { RollDialogType } from '#types/components/CheckRollDialog.d.ts';
@@ -399,13 +400,15 @@ class NimbleBaseActor<
 			rule.afterPrepareData?.();
 		});
 
+		this.applyActiveEffects(AFTER_RULES_PHASE as never);
+
 		this._onAfterPrepareData();
 	}
 
 	/** Subclass hook, before core data preparation. Reset memoized state here. */
 	protected _onBeforePrepareData(): void {}
 
-	/** Subclass hook, after the `afterPrepareData` rule sweep has run. */
+	/** Subclass hook, after the `afterPrepareData` rule sweep and the changes after the rules. */
 	protected _onAfterPrepareData(): void {}
 
 	override prepareBaseData(): void {

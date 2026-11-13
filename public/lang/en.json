@@ -4401,7 +4401,14 @@
 				"none": "No changes."
 			},
 			"changeTypes": {
-				"multiplyDown": "Multiply, round down"
+				"multiplyDown": "Multiply, round down",
+				"multiplyDownHint": "Applies after every rule, so it also multiplies what rules add, such as a Speed Bonus."
+			},
+			"phases": {
+				"afterRules": {
+					"label": "After rules",
+					"hint": "After every rule of the actor. Every Multiply, round down change applies here."
+				}
 			}
 		},
 		"sheets": {
