@@ -131,6 +131,7 @@ describe('Nimble effect data model', () => {
 			'combatEnd',
 			'gain',
 			'applyEffect',
+			'tempHpGone',
 		]);
 	});
 

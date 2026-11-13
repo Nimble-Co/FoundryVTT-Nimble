@@ -135,6 +135,9 @@ describe('describeLastsUntil', () => {
 		expect(read([event(null, 'effectEnds', 'Rage')], CARD_SELF_READER)).toBe('Until Rage ends');
 		expect(read([event(null, 'effectEnds')], CARD_SELF_READER)).toBe('Until another effect ends');
 		expect(read([event(null, 'combatEnd')], CARD_SELF_READER)).toBe('Until combat ends');
+		expect(read([event('holder', 'tempHpGone')], CARD_SELF_READER)).toBe(
+			'Until its temp HP are gone',
+		);
 	});
 
 	it('joins the moments with "or"', () => {

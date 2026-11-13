@@ -7,6 +7,8 @@ const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.j
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, replaceCardEvent }));
+const fireEvent = vi.fn();
+vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireEvent }));
 const { chooseTempHp, tempHpChoiceEvent } = await import('../tempHpChoice.js');
 const { tempGrantOptions } = await import('../effectTempHp.js');
 
@@ -110,6 +112,10 @@ describe('the temp HP choice', () => {
 
 		expect(tessa.older.update).toHaveBeenCalledWith({ 'system.tempHp': null });
 		expect(tessa.frost.update).toHaveBeenCalledWith({ 'system.tempHp': 5 });
+		expect(fireEvent).toHaveBeenCalledWith('tempHpGone', tessa, {
+			effectIds: ['eOld'],
+			effect: '',
+		});
 	});
 
 	it('a choice already made is not made again', async () => {

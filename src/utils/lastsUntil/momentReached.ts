@@ -62,6 +62,8 @@ export type LastsUntilCheck =
 			statuses?: readonly string[] | null;
 			/** For "gain": the new effect, which its own moments never end. */
 			gained?: object | null;
+			/** For "its temp HP are gone": the effects whose temp HP are gone. */
+			effectIds?: readonly string[] | null;
 	  };
 
 /** What a moment reads of its effect, resolved when the check runs. */
@@ -72,6 +74,8 @@ export interface MomentSubject {
 	holder: object | null;
 	source: object | null;
 	origin: string | null;
+	/** The id of the effect itself. */
+	effectId?: string | null;
 	holderInCombat: boolean;
 	isClockTurn(clock: Clock, seat: TurnSeat): boolean;
 	/** The effect belongs to this combat: applied in it, or its holder or source fights in it. */
@@ -209,6 +213,9 @@ function eventMomentReached(
 
 	if (moment.event === 'effectEnds') {
 		return check.actor === subject.holder && sameName(check.effectName, moment.effectName);
+	}
+	if (moment.event === 'tempHpGone') {
+		if (!subject.effectId || !(check.effectIds ?? []).includes(subject.effectId)) return false;
 	}
 	if (moment.event === 'useAgain') {
 		return !!subject.origin && check.itemUuid === subject.origin;

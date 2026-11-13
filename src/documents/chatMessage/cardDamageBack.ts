@@ -38,7 +38,12 @@ interface DamageBackRuleLike {
 	id?: string | null;
 	type?: string;
 	label?: string;
-	parentDocument?: { id?: string | null; uuid?: string | null; name?: string | null } | null;
+	parentDocument?: {
+		id?: string | null;
+		uuid?: string | null;
+		name?: string | null;
+		system?: unknown;
+	} | null;
 	woundDoubles?: boolean;
 	amount?: string;
 	formula?: string;
@@ -67,6 +72,7 @@ interface SideToken {
 interface HurtCreature {
 	uuid?: string;
 	rules?: unknown;
+	system?: unknown;
 	token?: SideToken | null;
 	getActiveTokens?(linked?: boolean, document?: boolean): unknown[];
 	getRollData?(): Record<string, unknown>;
@@ -86,6 +92,14 @@ export interface CardAttacker {
 	actor: AttackerLike;
 	token?: SideToken | null;
 	delivery: AttackDelivery;
+	/** False for a member of a minion group that missed. */
+	hit?: boolean;
+}
+
+/** The temp HP of a creature before the damage, and the rules that answer losing them. */
+export interface TempHpBefore {
+	temp: number;
+	answers: Array<{ rule: DamageBackRuleLike; attacker: CardAttacker }>;
 }
 
 /** A creature the card attacked, with the token the card names. */
@@ -134,6 +148,11 @@ function sideTokenOf(actor: {
 	if (actor.token) return actor.token;
 	const [token] = actor.getActiveTokens?.(false, true) ?? [];
 	return (token as SideToken | undefined) ?? null;
+}
+
+function tempOf(actor: HurtCreature): number {
+	const temp = Number(foundry.utils.getProperty(actor, 'system.attributes.hp.temp') ?? 0);
+	return Number.isFinite(temp) ? temp : 0;
 }
 
 function attackerEffectOf(rule: DamageBackRuleLike): AttackerEffect | null {
@@ -329,11 +348,41 @@ export class CardDamageBack {
 	}
 
 	/**
+	 * Read before the damage: the creature's temp HP, and for each attacker that hit, the rules
+	 * of an effect that owns temp HP now and answers an attack that takes them.
+	 */
+	beforeDamage(actor: HurtCreature, attack: { isCritical: boolean }): TempHpBefore {
+		const answers: TempHpBefore['answers'] = [];
+		for (const rule of rulesOf(actor)) {
+			if (rule?.type !== 'damageBack' || rule.disabled) continue;
+			const owned = Number(
+				(rule.parentDocument?.system as { tempHp?: number | null } | undefined)?.tempHp,
+			);
+			if (!(owned > 0)) continue;
+			for (const attacker of this.#attackers()) {
+				if (attacker.hit === false) continue;
+				const answering = rule.answersAttack?.({
+					trigger: 'tempHpReduced',
+					isCritical: attack.isCritical,
+					delivery: attacker.delivery,
+				});
+				if (answering === true) answers.push({ rule, attacker });
+			}
+		}
+		return { temp: tempOf(actor), answers };
+	}
+
+	/**
 	 * Give back the damage these creatures just took from the card's attack, and put the
 	 * attacker's recoil on the attacker.
 	 */
 	async afterDamage(
-		hurt: ReadonlyArray<{ actor: HurtCreature; taken: number; token?: SideToken | null }>,
+		hurt: ReadonlyArray<{
+			actor: HurtCreature;
+			taken: number;
+			token?: SideToken | null;
+			tempHp?: TempHpBefore;
+		}>,
 		attack: { isCritical: boolean; critDiceTotal?: number },
 		recoil: RecoilRules = [],
 	): Promise<void> {
@@ -347,7 +396,19 @@ export class CardDamageBack {
 		};
 		const records: Array<{ record: DamageBackRecord; attacker: AttackerLike }> = [];
 
-		for (const { actor, taken, token } of hurt) {
+		for (const { actor, taken, token, tempHp } of hurt) {
+			if (tempHp && tempOf(actor) < tempHp.temp) {
+				for (const answer of tempHp.answers) {
+					const record = await this.#recordFor(
+						answer.rule,
+						{ actor, token: token ?? null },
+						answer.attacker,
+						{ trigger: 'tempHpReduced', taken, critDiceTotal: attack.critDiceTotal ?? 0 },
+					);
+					if (record)
+						records.push({ record: { ...record, key: '' }, attacker: answer.attacker.actor });
+				}
+			}
 			if (taken <= 0 || !actor.uuid || actor.uuid === attacker.uuid) continue;
 			for (const rule of rulesOf(actor)) {
 				if (rule?.type !== 'damageBack' || rule.disabled) continue;

@@ -38,6 +38,7 @@ describe('cardAttackers', () => {
 		};
 
 		const attackers = cardAttackers(card, null, null);
+		expect(attackers.map((each) => each.hit)).toEqual([false, true]);
 
 		expect(attackers.map((each) => [(each.actor as { uuid: string }).uuid, each.delivery])).toEqual(
 			[

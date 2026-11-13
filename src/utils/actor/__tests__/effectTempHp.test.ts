@@ -122,6 +122,22 @@ describe('the temp HP link', () => {
 		await hero.update(tempChange(8));
 
 		expect([linkOf(hero, 'frost'), linkOf(hero, 'ward')]).toEqual([null, null]);
+		expect(
+			await followTempHpChange(hero, { system: { attributes: { hp: { temp: 8 } } } }, {}),
+			'no link is left to end',
+		).toEqual([]);
+	});
+
+	it('names the effects whose link it ends', async () => {
+		const hero = linkedHolder(0, { frost: 6, ward: 2 });
+
+		const ended = await followTempHpChange(
+			hero,
+			{ system: { attributes: { hp: { temp: 0 } } } },
+			{},
+		);
+
+		expect(ended).toEqual(['frost', 'ward']);
 	});
 
 	it('moves to the new grant: the other links end', async () => {

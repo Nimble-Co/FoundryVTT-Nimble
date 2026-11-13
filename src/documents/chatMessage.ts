@@ -1456,6 +1456,11 @@ class NimbleChatMessage extends ChatMessage {
 			hurt.push({
 				actor: target.actor as unknown as (typeof hurt)[number]['actor'],
 				taken: target.adjustedDamage,
+				// Read before the damage: the hit can take the temp HP, and with them the link.
+				tempHp: this.cardDamageBack.beforeDamage(
+					target.actor as unknown as (typeof hurt)[number]['actor'],
+					{ isCritical: systemData.isCritical === true },
+				),
 			});
 			const hpBefore = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,

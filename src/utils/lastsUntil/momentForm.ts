@@ -22,6 +22,7 @@ export const HOLDER_FORM_EVENTS = [
 	'die',
 	'gain',
 	'applyEffect',
+	'tempHpGone',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** What the user of the item does: "or until you drop to 0 HP". */

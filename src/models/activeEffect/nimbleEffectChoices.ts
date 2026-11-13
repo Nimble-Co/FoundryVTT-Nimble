@@ -39,6 +39,7 @@ export const LASTS_UNTIL_EVENTS = [
 	'combatEnd',
 	'gain',
 	'applyEffect',
+	'tempHpGone',
 ] as const;
 
 /** The saves an Escape can allow. The author picks any set of them. */

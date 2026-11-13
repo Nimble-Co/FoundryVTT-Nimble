@@ -8,6 +8,7 @@ interface TempHpHolder {
 
 interface LinkedEffect {
 	id?: string | null;
+	name?: string | null;
 	system?: unknown;
 	update(data: Record<string, unknown>): Promise<unknown>;
 }
@@ -65,40 +66,47 @@ export async function giveTempHp(
 	if (amount > 0) await holder.update({ [TEMP_PATH]: amount }, tempGrantOptions(effectId));
 }
 
-/** Every effect on the holder but `keepEffectId` owns no temp HP now. */
+/** Every effect on the holder but `keepEffectId` owns no temp HP now. Gives the ended links. */
 export async function clearTempHpLinks(
 	holder: LinkHolder,
 	keepEffectId: string | null,
-): Promise<void> {
+): Promise<LinkedEffect[]> {
+	const ended: LinkedEffect[] = [];
 	for (const effect of holder.effects ?? []) {
 		if (keepEffectId && effect.id === keepEffectId) continue;
 		const given = Number((effect.system as { tempHp?: number | null } | undefined)?.tempHp);
-		if (given > 0) await effect.update({ 'system.tempHp': null });
+		if (!(given > 0)) continue;
+		ended.push(effect);
+		await effect.update({ 'system.tempHp': null });
 	}
+	return ended;
 }
 
 /**
  * A link holds only while the temp HP are that grant's: an update that names a grant keeps that
- * link alone; temp HP that reach 0, or go up with no grant named, end every link.
+ * link alone; temp HP that reach 0, or go up with no grant named, end every link. Gives the ids of
+ * the effects whose link it ended.
  */
 export async function followTempHpChange(
 	holder: LinkHolder,
 	changes: Record<string, unknown>,
 	options: unknown,
-): Promise<void> {
-	if (foundry.utils.getProperty(changes, TEMP_PATH) === undefined) return;
+): Promise<string[]> {
+	if (foundry.utils.getProperty(changes, TEMP_PATH) === undefined) return [];
 	const recorded = (options as Record<string, Record<string, unknown> | undefined> | null)?.[
 		SYSTEM_ID
 	];
+	let ended: LinkedEffect[] = [];
 	if (recorded && GRANT_OPTION in recorded) {
-		await clearTempHpLinks(holder, (recorded[GRANT_OPTION] as string | null) ?? null);
-		return;
+		ended = await clearTempHpLinks(holder, (recorded[GRANT_OPTION] as string | null) ?? null);
+	} else {
+		const temp = currentTemp(holder);
+		const before = (recorded?.previousHp as { temp?: number } | undefined)?.temp;
+		if (temp <= 0 || (typeof before === 'number' && temp > before)) {
+			ended = await clearTempHpLinks(holder, null);
+		}
 	}
-	const temp = currentTemp(holder);
-	const before = (recorded?.previousHp as { temp?: number } | undefined)?.temp;
-	if (temp <= 0 || (typeof before === 'number' && temp > before)) {
-		await clearTempHpLinks(holder, null);
-	}
+	return ended.flatMap((effect) => (effect.id ? [effect.id] : []));
 }
 
 /** When the effect goes, the holder loses what is left of the temp HP that it gave. */

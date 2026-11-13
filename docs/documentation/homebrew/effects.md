@@ -94,7 +94,7 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 
 "Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero. "The" is the turn in progress, whoever's it is: until **the end of** **the** **turn**, for an effect that goes on during the turn of another creature.
 
-They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
+They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP: the effect ends when the temp HP it gave are gone (they reach 0, or another effect or a potion takes their place). You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
 
 - **Take damage** can name damage types: turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
 - **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts its aliases: Stunned is a gain of Incapacitated. To end an effect on any of a group of effects, give each of them the same custom condition and name that condition. An effect never ends on its own gain.

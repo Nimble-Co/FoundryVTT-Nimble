@@ -1,5 +1,6 @@
 import type { CardEvent, TempHpChoiceAction } from '#types/cardEvent.d.ts';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { fireEvent } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { clearTempHpLinks, giveTempHp } from './effectTempHp.js';
 
 const WORDS = 'NIMBLE.chat.tempHpChoice';
@@ -82,7 +83,13 @@ export async function chooseTempHp(
 		const unchanged = Number(foundry.utils.getProperty(holder, TEMP_PATH)) === action.amount;
 		await giveTempHp(holder, action.amount, effectId);
 		// The same amount makes no update, so the GM does not end the other links.
-		if (unchanged) await clearTempHpLinks(holder, effectId);
+		if (unchanged) {
+			const ended = await clearTempHpLinks(holder, effectId);
+			for (const effect of ended) {
+				if (!effect.id) continue;
+				fireEvent('tempHpGone', holder, { effectIds: [effect.id], effect: effect.name ?? '' });
+			}
+		}
 		const gave = action.effectUuid
 			? (fromUuidSync(action.effectUuid as never, { strict: false }) as {
 					update(data: object): Promise<unknown>;

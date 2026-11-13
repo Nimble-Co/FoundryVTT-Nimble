@@ -1274,7 +1274,8 @@
 					"nextSpell": "{name} cast a tiered spell",
 					"inactiveRound": "{name} went a round with no attack and no new use",
 					"gain": "{name} gained {effect}",
-					"applyEffect": "{name} applied {effect}"
+					"applyEffect": "{name} applied {effect}",
+					"tempHpGone": "The temp HP that {effect} gave {name} are gone"
 				}
 			},
 			"expiryEvents": {
@@ -2714,7 +2715,8 @@
 						"rest": "You rest",
 						"combatEnd": "Combat ends",
 						"gain": "You gain a condition or a named effect",
-						"applyEffect": "You apply a condition or a named effect"
+						"applyEffect": "You apply a condition or a named effect",
+						"tempHpGone": "Its temp HP are gone"
 					}
 				}
 			},
@@ -3128,7 +3130,7 @@
 				"effectGroup": { "label": "Effect" },
 				"trigger": {
 					"label": "When",
-					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Loses temp HP: when the attack takes temp HP that this effect gave.",
+					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Temp HP: when the damage of the attack takes temp HP that this effect gave; on an item it never acts.",
 					"choices": {
 						"damaged": "The owner takes damage from an attack",
 						"attacked": "The owner is attacked",
@@ -4102,6 +4104,7 @@
 			"effectEnds": "{name} ends",
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
+			"tempHpGone": "its temp HP are gone",
 			"them": "them",
 			"attack": "attack",
 			"meleeAttack": "melee attack",
@@ -4140,7 +4143,8 @@
 				"rest": { "base": "rest", "third": "rests" },
 				"combatEnd": { "base": "end", "third": "ends" },
 				"gain": { "base": "gain {name}", "third": "gains {name}" },
-				"applyEffect": { "base": "apply {name}", "third": "applies {name}" }
+				"applyEffect": { "base": "apply {name}", "third": "applies {name}" },
+				"tempHpGone": { "base": "lose its temp HP", "third": "loses its temp HP" }
 			}
 		},
 		"effectSheet": {
@@ -4219,7 +4223,8 @@
 					"loseConcentration": "lose Concentration",
 					"useAgain": "use this again",
 					"gain": "gain",
-					"applyEffect": "apply"
+					"applyEffect": "apply",
+					"tempHpGone": "lose its temp HP"
 				},
 				"add": "add a moment...",
 				"addKind": {

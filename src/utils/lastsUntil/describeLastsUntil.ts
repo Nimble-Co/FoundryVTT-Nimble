@@ -206,6 +206,9 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 	if (event === 'combatEnd') {
 		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.combatEnds`) });
 	}
+	if (event === 'tempHpGone') {
+		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.tempHpGone`) });
+	}
 	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
 	const action = eventAction(moment, event, person, input);
 	return input.format(`${WORDS}.until`, {

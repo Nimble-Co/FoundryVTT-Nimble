@@ -27,6 +27,8 @@ export interface CardAttacker<A = unknown> {
 	actor: A;
 	token: AttackerToken | null;
 	delivery: AttackDelivery;
+	/** False for a member of a minion group that missed. */
+	hit?: boolean;
 }
 
 function speakerToken(card: AttackCard): AttackerToken | null {
@@ -48,6 +50,7 @@ function groupAttackers(card: AttackCard): CardAttacker[] {
 	const rows = ((card.system as { rows?: unknown[] } | undefined)?.rows ?? []) as Array<{
 		memberCombatantId?: string;
 		actionId?: string;
+		isMiss?: boolean;
 	}>;
 	const attackers: CardAttacker[] = [];
 	for (const row of rows) {
@@ -59,6 +62,7 @@ function groupAttackers(card: AttackCard): CardAttacker[] {
 			actor,
 			token: member?.token ?? null,
 			delivery: deliveryOfAttack(activation, actor),
+			hit: row.isMiss !== true,
 		});
 	}
 	return attackers;

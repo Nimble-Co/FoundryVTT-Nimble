@@ -106,10 +106,22 @@ function onWorldTime(worldTime: number, delta: number): void {
 	void endEffectsAt({ type: 'worldTime', worldTime }, moment);
 }
 
+/** "Until its temp HP are gone": one event for each effect whose temp HP link ended. */
+function fireTempHpGone(actor: Actor, effectIds: readonly string[]): void {
+	for (const id of effectIds) {
+		const effect = [...((actor.effects ?? []) as Iterable<ActiveEffect>)].find(
+			(each) => each.id === id,
+		);
+		fireEvent('tempHpGone', actor, { effectIds: [id], effect: effect?.name ?? '' });
+	}
+}
+
 /** The HP events, read as the rule events read them (`ruleEventDispatch`). */
 function onUpdateActor(actor: Actor, changes: Record<string, unknown>, options: unknown): void {
 	if (!isActiveGm()) return;
-	void followTempHpChange(actor as never, changes, options);
+	void followTempHpChange(actor as never, changes, options).then((ended) =>
+		fireTempHpGone(actor, ended),
+	);
 	const hpChanged = hasAnyActorChangeAt(changes, [ACTOR_HP_PATHS.value]);
 	const woundsChanged = hasAnyActorChangeAt(changes, [ACTOR_WOUNDS_PATHS.value]);
 	if (!hpChanged && !woundsChanged) return;

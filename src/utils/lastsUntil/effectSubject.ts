@@ -92,6 +92,7 @@ export function effectSubject(
 		holder,
 		source,
 		origin: effect.origin ?? null,
+		effectId: effect.id ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,
 		isClockTurn(clock, seat) {
 			if (clock === 'any') return true;

@@ -316,7 +316,12 @@ describe('events', () => {
 
 	describe('the temp HP link', () => {
 		const linked = (temp: number) => {
-			const frost = { id: 'frost', system: { tempHp: 10 }, update: vi.fn(async () => undefined) };
+			const frost = {
+				id: 'frost',
+				name: 'Frost Shield',
+				system: { tempHp: 10 },
+				update: vi.fn(async () => undefined),
+			};
 			const actor = {
 				name: 'Tessa',
 				system: { attributes: { hp: { value: 10, max: 10, temp } } },
@@ -333,6 +338,19 @@ describe('events', () => {
 			await vi.waitFor(() => expect(frost.update).toHaveBeenCalled());
 
 			expect(frost.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		});
+
+		it('is the moment "until its temp HP are gone" of that effect', async () => {
+			const { actor } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+
+			await vi.waitFor(() =>
+				expect(fireEventMock).toHaveBeenCalledWith('tempHpGone', actor, {
+					effectIds: ['frost'],
+					effect: 'Frost Shield',
+				}),
+			);
 		});
 
 		it('is left to the active GM on other clients', async () => {

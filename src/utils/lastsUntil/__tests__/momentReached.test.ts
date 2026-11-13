@@ -465,6 +465,18 @@ describe('event moments', () => {
 		expect(momentReached(rageEnds, subject(), ended(caster))).toBe(false);
 	});
 
+	it('"until its temp HP are gone" ends only the effects whose temp HP are gone', () => {
+		const tempHpGone = moment({ kind: 'event', who: 'holder', event: 'tempHpGone' });
+		const gone = (actor: object, effectIds: string[]) =>
+			event({ event: 'tempHpGone', actor, effectIds });
+		const shield = subject({}, { effectId: 'eShield' });
+
+		expect(momentReached(tempHpGone, shield, gone(holder, ['eShield']))).toBe(true);
+		expect(momentReached(tempHpGone, shield, gone(holder, ['eOther']))).toBe(false);
+		expect(momentReached(tempHpGone, shield, gone(caster, ['eShield']))).toBe(false);
+		expect(momentReached(tempHpGone, subject(), gone(holder, ['eShield']))).toBe(false);
+	});
+
 	it('"until combat ends" ends at the end of its combat', () => {
 		const combatEnds = moment({ kind: 'event', event: 'combatEnd' });
 
