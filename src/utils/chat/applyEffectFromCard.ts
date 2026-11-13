@@ -181,17 +181,28 @@ function warnTempHpKept(name: string, refused: { temp: number; amount: number })
 	);
 }
 
-/** Puts the node's effect on the card's targets, or on its user, and records who took it. */
-export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
+const appliedPath = (nodeId: string) => `flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FLAG}.${nodeId}`;
+
+/**
+ * Puts the node's effect on the card's targets, or on its user, and records who took it. Given
+ * `recipients` (a save's saver), it puts it on them and adds them to the record. Gives the
+ * creatures that took it.
+ */
+export async function applyEffectFromCard(
+	card: EffectCard,
+	node: ApplyEffectNode,
+	options: { recipients?: CardActor[] } = {},
+): Promise<AppliedEffect[]> {
 	const base = payloadOf(card, node);
-	if (!base) return;
+	if (!base) return [];
 	const payload = {
 		...base,
 		tempHp: linkedTempHealing(card, node)?.total ?? null,
 		cardId: (card as { id?: string | null }).id ?? null,
 	};
 	const user = cardUser(card);
-	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
+	const recipients =
+		options.recipients ?? (node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card));
 	const results = await Promise.allSettled(
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);
@@ -224,9 +235,27 @@ export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNod
 		}
 	}
 	if (!applied.length) {
+		if (options.recipients) return [];
 		const name = applyEffectSource(card, node)?.name ?? '';
 		ui.notifications?.info(localize('NIMBLE.chat.applyEffect.noneTook', { name }));
-		return;
+		return [];
 	}
-	await card.update({ [`flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FLAG}.${node.id}`]: applied });
+	const record = options.recipients
+		? [...(appliedEffects(card, node.id) ?? []), ...applied]
+		: applied;
+	await card.update({ [appliedPath(node.id)]: record });
+	return applied;
+}
+
+/** Takes one creature's entry out of the record of the node, as a taken-back application. */
+export async function forgetAppliedEffect(
+	card: EffectCard,
+	nodeId: string,
+	effectUuid: string,
+): Promise<void> {
+	const record = [...(appliedEffects(card, nodeId) ?? [])];
+	const index = record.findIndex((entry) => entry.effectUuid === effectUuid);
+	if (index < 0) return;
+	record.splice(index, 1);
+	await card.update({ [appliedPath(nodeId)]: record });
 }

@@ -1,6 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.js';
+	import { saveFromCardOptions } from '#utils/rolls/saveFromCard.ts';
 	import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.ts';
 	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
@@ -62,6 +63,13 @@
 			? ChatMessage.getSpeakerActor(messageDocument.speaker)
 			: null;
 		const dc = resolveSaveNodeDC(node.saveDC, itemUser);
+		const fromCard = messageDocument
+			? saveFromCardOptions(messageDocument, node.id)
+			: { rollTags: ['save:from'] };
+		const cardFlags = {
+			...(itemUser?.uuid ? { causedBy: itemUser.uuid } : {}),
+			...fromCard.cardFlags,
+		};
 
 		for (const token of selectedTokens) {
 			const actor = token.document?.actor;
@@ -70,7 +78,8 @@
 
 			actor.rollSavingThrowToChat(saveKey, {
 				dc,
-				...(itemUser?.uuid ? { cardFlags: { causedBy: itemUser.uuid } } : {}),
+				rollTags: fromCard.rollTags,
+				...(Object.keys(cardFlags).length ? { cardFlags } : {}),
 			});
 		}
 	}

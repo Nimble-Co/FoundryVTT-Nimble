@@ -110,3 +110,33 @@ describe('ApplyEffectNodeConfig', () => {
 		expect(screen.getByRole('option', { name: 'Temp healing 2*@key' })).toBeTruthy();
 	});
 });
+
+describe('ApplyEffectNodeConfig recipients under a save', () => {
+	it('offers "each creature that fails" under On Failed Save, and stores it', async () => {
+		const document = makeItem();
+		const applyNode = node({ parentNode: 'save1', parentContext: 'failedSave' });
+		render(ApplyEffectNodeConfig, { props: { document, effects: [applyNode] } as never });
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Each creature that fails' }));
+
+		await waitFor(() =>
+			expect(document.update).toHaveBeenCalledWith({
+				'system.activation.effects': [expect.objectContaining({ recipient: 'savers' })],
+			}),
+		);
+	});
+
+	it('offers "each creature that saves" under On Successful Save, and neither elsewhere', () => {
+		const passed = render(ApplyEffectNodeConfig, {
+			props: {
+				document: makeItem(),
+				effects: [node({ parentNode: 'save1', parentContext: 'passedSave' })],
+			} as never,
+		});
+		expect(screen.getByRole('button', { name: 'Each creature that saves' })).toBeTruthy();
+		passed.unmount();
+
+		render(ApplyEffectNodeConfig, { props: { document: makeItem(), effects: [node()] } as never });
+		expect(screen.queryByRole('button', { name: /Each creature/ })).toBeNull();
+	});
+});

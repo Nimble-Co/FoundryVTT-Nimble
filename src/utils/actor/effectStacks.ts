@@ -99,3 +99,15 @@ export async function stackUp(
 	await copy.update(changes, { [STACKED_OPTION]: true, ...options });
 	return count;
 }
+
+/** Takes back one application: one stack off, or the effect off at its last stack. */
+export async function takeBackStack(
+	effect: StackingEffect & { delete(): Promise<unknown> },
+): Promise<void> {
+	const stacks = stacksOf(effect.system);
+	if (stacks && stacks.count > 1) {
+		await effect.update({ 'system.stacks.count': stacks.count - 1 });
+		return;
+	}
+	await effect.delete();
+}

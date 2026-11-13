@@ -10,10 +10,18 @@
 
 	let { node, document, effects }: ApplyEffectNodeConfigProps = $props();
 
-	const recipients = [
+	const SAVE_BRANCH_WORDS: Record<string, string> = {
+		failedSave: 'saversFail',
+		passedSave: 'saversPass',
+	};
+	const saversWord = $derived(SAVE_BRANCH_WORDS[node.parentContext ?? '']);
+	const recipients = $derived([
 		{ value: 'targets', label: localize(`${WORDS}.recipients.targets`) },
 		{ value: 'self', label: localize(`${WORDS}.recipients.self`) },
-	];
+		...(saversWord
+			? [{ value: 'savers', label: localize(`${WORDS}.recipients.${saversWord}`) }]
+			: []),
+	]);
 	const conditionName = $derived(
 		node.condition ? (CONFIG.NIMBLE.conditions[node.condition] ?? node.condition) : null,
 	);
@@ -41,7 +49,7 @@
 			item={document as never}
 			value={node.effectId}
 			onchange={storeEffect}
-			recipient={node.recipient}
+			recipient={node.recipient === 'self' ? 'self' : 'targets'}
 			labelledby={`${node.id}-effect-label`}
 		/>
 	</div>

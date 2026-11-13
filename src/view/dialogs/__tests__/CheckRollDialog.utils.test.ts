@@ -171,6 +171,23 @@ describe('the tags of the roll', () => {
 		expect(option).toMatchObject({ value: 1, on: true });
 	});
 
+	it('a save from a card offers the per-stack rule of that save ticked, once for each stack', () => {
+		const fromTag = 'save:from:confounding-pheromones';
+		const counter = createRule({
+			perStack: true,
+			stacks: 2,
+			appliesTo: vi.fn((domain?: Iterable<string>) => [...(domain ?? [])].includes(fromTag)),
+		});
+
+		const [option] = getSituationalRollModeOptions(actor([counter]), {
+			type: 'savingThrow',
+			saveKey: 'will',
+			rollTags: ['save:from', fromTag],
+		});
+
+		expect(option).toMatchObject({ value: 2, on: true });
+	});
+
 	it('without the tag the rule is not offered, and a rule that applies anyway starts off', () => {
 		expect(getSituationalRollModeOptions(actor([onlyForTheTag()]), strengthSave)).toEqual([]);
 

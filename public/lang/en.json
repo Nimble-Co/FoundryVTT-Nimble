@@ -555,6 +555,8 @@
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
 				"withStacks": "{name} ({count} stacks)",
+				"goesOnFailers": "Goes on each creature that fails the save",
+				"goesOnSavers": "Goes on each creature that makes the save",
 				"stays": "{name} stays on {holder}",
 				"noTargets": "This card has no targets.",
 				"noneTook": "{name} did not go on any creature.",
@@ -5231,7 +5233,12 @@
 				"edit": "Edit the effect",
 				"condition": "Condition: {name}",
 				"recipient": "Who takes it",
-				"recipients": { "targets": "The targets", "self": "The creature that uses this" },
+				"recipients": {
+					"targets": "The targets",
+					"self": "The creature that uses this",
+					"saversFail": "Each creature that fails",
+					"saversPass": "Each creature that saves"
+				},
 				"tempHealing": "Temp HP that it gives",
 				"noTempHealing": "None",
 				"tempHealingFormula": "Temp healing {formula}"

@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
-import { STACKED_OPTION, stackingCopyOf, stacksOf, stackUp } from '../effectStacks.js';
+import {
+	STACKED_OPTION,
+	stackingCopyOf,
+	stacksOf,
+	stackUp,
+	takeBackStack,
+} from '../effectStacks.js';
 
 const endOfNextTurn: Moment = {
 	kind: 'turn',
@@ -142,5 +148,31 @@ describe('stackUp', () => {
 			},
 			{ [STACKED_OPTION]: true },
 		);
+	});
+});
+
+describe('takeBackStack', () => {
+	it('takes one stack off, and takes the effect off at its last stack', async () => {
+		const deletable = (fields: Record<string, unknown> = {}) =>
+			Object.assign(held(fields), { delete: vi.fn(async () => undefined) });
+		const three = deletable({ system: { stacks: stacking(3), lastsUntil: [] } });
+		const one = deletable();
+
+		await takeBackStack(three);
+		await takeBackStack(one);
+
+		expect(three.update).toHaveBeenCalledWith({ 'system.stacks.count': 2 });
+		expect(three.delete).not.toHaveBeenCalled();
+		expect(one.delete).toHaveBeenCalled();
+	});
+
+	it('takes off an effect that does not stack', async () => {
+		const plain = Object.assign(held({ system: { lastsUntil: [] } }), {
+			delete: vi.fn(async () => undefined),
+		});
+
+		await takeBackStack(plain);
+
+		expect(plain.delete).toHaveBeenCalled();
 	});
 });

@@ -11,6 +11,7 @@
 		cardUser,
 	} from '#utils/chat/applyEffectFromCard.ts';
 	import localize from '#utils/localize.ts';
+	import { isRuleAutomationEnabled } from '../../../settings/automationSettings.ts';
 	import { applyEffectRow } from './applyEffectRow.ts';
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
@@ -27,6 +28,7 @@
 			source: applyEffectSource(card, node),
 			applied: appliedEffects(card, node.id),
 			canApply: !!game.user?.isGM || card.author?.id === game.user?.id,
+			saversApplyThemselves: isRuleAutomationEnabled(),
 			hasRecipient: node.recipient === 'self' ? !!cardUser(card) : cardTargets(card).length > 0,
 			localize,
 			format: localize,

@@ -118,7 +118,8 @@ export type ApplyEffectNode = {
 	effectItemUuid?: string | null;
 	condition?: string | null;
 	lastsUntil?: Moment[];
-	recipient: 'self' | 'targets';
+	/** `savers`: each creature whose save from the card has the result of the step's branch. */
+	recipient: 'self' | 'targets' | 'savers';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
 	/** What the upcast adds to number fields of the effect's rules. */

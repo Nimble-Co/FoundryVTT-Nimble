@@ -331,3 +331,74 @@ describe('applyEffectFromCard with stacks', () => {
 		expect(lines.map((line) => line.text.key)).toEqual(['NIMBLE.chat.stackGain.gains']);
 	});
 });
+
+describe('applyEffectFromCard for each creature that fails', () => {
+	const applyEffectToActor = vi.fn();
+	let fromCard: typeof import('#utils/chat/applyEffectFromCard.js');
+	const tessa = { uuid: 'Actor.tessa', name: 'Tessa', isOwner: true, effects: [] };
+	const before = { effectUuid: 'Actor.grug.ActiveEffect.fx', actorName: 'Grug' };
+	const savers = applyNode({ recipient: 'savers', parentContext: 'failedSave' });
+	const hostCard = () => ({
+		...card,
+		id: 'card1',
+		flags: { [SYSTEM_ID]: { itemUuid: item.uuid, appliedEffects: { node1: [before] } } },
+		update: vi.fn(async () => undefined),
+	});
+
+	beforeEach(async () => {
+		applyEffectToActor.mockReset().mockImplementation(async (actor: { name: string }) => ({
+			effectUuid: `Actor.${actor.name}.ActiveEffect.fx`,
+			actorName: actor.name,
+		}));
+		vi.resetModules();
+		vi.doMock('#utils/actor/applyEffectToActor.js', async (importOriginal) => ({
+			...(await importOriginal<object>()),
+			applyEffectToActor,
+		}));
+		fromCard = await import('#utils/chat/applyEffectFromCard.js');
+		vi.doUnmock('#utils/actor/applyEffectToActor.js');
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === item.uuid ? item : uuid === 'Scene.s.Token.goblin' ? { actor: goblin } : null,
+			),
+		);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('puts it on the one saver it is given, adds to the record, and gives what it applied', async () => {
+		const host = hostCard();
+
+		const applied = await fromCard.applyEffectFromCard(host, savers, {
+			recipients: [tessa as never],
+		});
+
+		expect(applyEffectToActor).toHaveBeenCalledTimes(1);
+		expect(applyEffectToActor).toHaveBeenCalledWith(
+			tessa,
+			expect.objectContaining({ cardId: 'card1' }),
+		);
+		const entry = { effectUuid: 'Actor.Tessa.ActiveEffect.fx', actorName: 'Tessa' };
+		expect(applied).toEqual([entry]);
+		expect(host.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [before, entry],
+		});
+	});
+
+	it('with a click, puts it on the targets of the card', async () => {
+		await fromCard.applyEffectFromCard(hostCard(), savers);
+
+		expect(applyEffectToActor).toHaveBeenCalledWith(goblin, expect.anything());
+	});
+
+	it('takes one entry out of the record', async () => {
+		const host = hostCard();
+
+		await fromCard.forgetAppliedEffect(host, 'node1', before.effectUuid);
+
+		expect(host.update).toHaveBeenCalledWith({ [`flags.${SYSTEM_ID}.appliedEffects.node1`]: [] });
+	});
+});

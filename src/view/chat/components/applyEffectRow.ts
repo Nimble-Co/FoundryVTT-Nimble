@@ -11,7 +11,9 @@ import {
 const WORDS = 'NIMBLE.chat.applyEffect';
 
 export interface ApplyEffectRowInput {
-	node: Pick<ApplyEffectNode, 'recipient'>;
+	node: Pick<ApplyEffectNode, 'recipient'> & { parentContext?: string | null };
+	/** Feature Effects on: a step for each creature that fails or saves goes on by itself */
+	saversApplyThemselves?: boolean;
 	/** null: the item no longer has the effect */
 	source: ApplyEffectSource | null;
 	applied: readonly AppliedEffect[] | undefined;
@@ -79,6 +81,19 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 			],
 			button: null,
 			note: null,
+		};
+	}
+	const branch = input.node.parentContext;
+	const underASave = branch === 'failedSave' || branch === 'passedSave';
+	if (input.node.recipient === 'savers' && input.saversApplyThemselves && underASave) {
+		const passed = branch === 'passedSave';
+		return {
+			name: source.name,
+			img: source.img,
+			lasts,
+			appliedLines: [],
+			button: null,
+			note: localize(`${WORDS}.${passed ? 'goesOnSavers' : 'goesOnFailers'}`),
 		};
 	}
 	return {

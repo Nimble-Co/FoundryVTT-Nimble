@@ -24,7 +24,7 @@ export interface UserItem extends UserRuleHolder {
 }
 
 export type ItemEffectUser =
-	| { kind: 'node'; nodeId: string; recipient: 'self' | 'targets' }
+	| { kind: 'node'; nodeId: string; recipient: 'self' | 'targets' | 'savers' }
 	| { kind: 'rule'; holder: UserRuleHolder; rule: UserRule; fields: string[] }
 	/** an effect of the item that gives this one at a stack count */
 	| { kind: 'stacks'; holder: UserRuleHolder };
