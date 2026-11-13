@@ -109,7 +109,7 @@ export function effectSubject(
 	};
 }
 
-/** The clock turns each moment counted so far, by moment index. */
+/** The clock turns or combat ends each moment counted so far, by moment index. */
 export function turnsSeenOf(effect: ActiveEffect): number[] {
 	const seen = (effect.flags as Record<string, { turnsSeen?: unknown } | undefined> | undefined)?.[
 		SYSTEM_ID

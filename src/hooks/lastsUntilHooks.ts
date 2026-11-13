@@ -77,7 +77,11 @@ function endCombat(combat: Combat): void {
 		key: `combatEnd:${combat.id}:${foundry.utils.randomID()}`,
 		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatEnd' },
 	};
-	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, moment, combat);
+	void endEffectsAt(
+		{ type: 'combatEnd', combatId: combat.id, started: Number(combat.round) > 0 },
+		moment,
+		combat,
+	);
 }
 
 /** A core duration can end as combat starts. */

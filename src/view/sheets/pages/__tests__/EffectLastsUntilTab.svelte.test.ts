@@ -167,6 +167,27 @@ describe('EffectLastsUntilTab', () => {
 		expect(saved(effect)).toEqual([{ ...newMoment('turn'), value: 2 }]);
 	});
 
+	it('"combat ends" counts up to the 5th combat end, with no subject or event', async () => {
+		const effect = makeEffect([newMoment('combatEnd')]);
+		const { container } = renderTab(effect);
+		const counts = [...(field(container, 'combatCount') as HTMLSelectElement).options];
+
+		expect(counts.map((option) => option.textContent?.trim())).toEqual([
+			word(`${LU}.combatCount.1`),
+			word(`${LU}.combatCount.2`),
+			word(`${LU}.combatCount.3`),
+			word(`${LU}.combatCount.4`),
+			word(`${LU}.combatCount.5`),
+		]);
+		expect(field(container, 'subject')).toBeNull();
+		expect(field(container, 'event')).toBeNull();
+		expect(container.textContent).not.toContain('combatEnd');
+
+		await fireEvent.change(field(container, 'combatCount'), { target: { value: '2' } });
+
+		expect(saved(effect)).toEqual([{ ...newMoment('combatEnd'), value: 2 }]);
+	});
+
 	it('"take damage" turns a damage type on', async () => {
 		const nimble = CONFIG.NIMBLE as { damageTypes?: unknown };
 		const before = nimble.damageTypes;
@@ -269,6 +290,15 @@ describe('EffectLastsUntilTab', () => {
 			const { container } = renderTab(effect);
 
 			await fireEvent.change(field(container, 'span'), { target: { value: 'nextTurn:4' } });
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
+		it('a count of combat ends stays when the count changes', async () => {
+			const effect = counted([{ ...newMoment('combatEnd'), value: 3 }], [1]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'combatCount'), { target: { value: '2' } });
 
 			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
 		});

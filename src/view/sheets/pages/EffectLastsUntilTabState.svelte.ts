@@ -118,7 +118,7 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		return getEffect().update({ 'system.lastsUntil': next } as never);
 	}
 
-	/** A turn count stays only while the moment counts the same turns. */
+	/** A count stays only while the moment counts the same turns, or combat ends. */
 	function change(index: number, next: Moment) {
 		const seen = turnsSeenOf(getEffect());
 		const before = moments[index];
@@ -127,9 +127,10 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 			next.kind === 'turn' &&
 			before.clock === next.clock &&
 			before.boundary === next.boundary;
+		const sameCombatEnds = before?.event === 'combatEnd' && next.event === 'combatEnd';
 		return getEffect().update({
 			'system.lastsUntil': replaceAt(moments, index, next),
-			...((seen[index] ?? 0) > 0 && !sameTurns
+			...((seen[index] ?? 0) > 0 && !sameTurns && !sameCombatEnds
 				? { [`flags.${SYSTEM_ID}.turnsSeen`]: seen.map((count, at) => (at === index ? 0 : count)) }
 				: {}),
 		} as never);

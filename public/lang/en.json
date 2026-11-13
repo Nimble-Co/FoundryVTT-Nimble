@@ -4177,6 +4177,12 @@
 			"effectEnds": "{name} ends",
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
+			"combatEndsCount": {
+				"2": "the 2nd combat ends",
+				"3": "the 3rd combat ends",
+				"4": "the 4th combat ends",
+				"5": "the 5th combat ends"
+			},
 			"tempHpGone": "its temp HP are gone",
 			"them": "them",
 			"attack": "attack",
@@ -4274,6 +4280,13 @@
 					"4": "4th next turn",
 					"5": "5th next turn"
 				},
+				"combatCount": {
+					"1": "combat ends",
+					"2": "the 2nd combat ends",
+					"3": "the 3rd combat ends",
+					"4": "the 4th combat ends",
+					"5": "the 5th combat ends"
+				},
 				"units": {
 					"rounds": "rounds",
 					"minutes": "minutes",
@@ -4304,7 +4317,8 @@
 					"turn": "a turn or a round",
 					"time": "rounds or time pass",
 					"event": "they or you do something",
-					"effectEnds": "another effect ends"
+					"effectEnds": "another effect ends",
+					"combatEnd": "combat ends"
 				},
 				"fields": {
 					"boundary": "Start or end",
@@ -4315,6 +4329,7 @@
 					"subject": "Who",
 					"event": "What happens",
 					"effectName": "The name of the other effect",
+					"combatCount": "Which combat end",
 					"add": "Add a moment"
 				},
 				"effectNamePlaceholder": "Rage",

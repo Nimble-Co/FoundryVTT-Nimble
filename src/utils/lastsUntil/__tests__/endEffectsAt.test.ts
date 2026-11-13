@@ -39,7 +39,7 @@ const turnEnd = (round: number): LastsUntilCheck => ({
 	round,
 });
 
-function makeEffect() {
+function makeEffect(lastsUntil: Moment[] = [thirdNextTurnEnd]) {
 	const effect = Object.assign(Object.create(ActiveEffect.prototype), {
 		id: 'slow',
 		parent: goblin,
@@ -48,7 +48,7 @@ function makeEffect() {
 		statuses: new Set<string>(),
 		isTemporary: false,
 		isMinor: false,
-		lastsUntil: [thirdNextTurnEnd],
+		lastsUntil,
 		start: { combat: COMBAT, combatant: 'cGoblin', round: 1, turn: 0, time: 0 },
 		flags: {} as Record<string, { turnsSeen?: number[] }>,
 		update: vi.fn(async (changes: Record<string, number[]>) => {
@@ -92,5 +92,24 @@ describe('endEffectsAt', () => {
 		]);
 
 		expect(effect.flags[SYSTEM_ID]?.turnsSeen).toEqual([2]);
+	});
+
+	it('a combat end that "the 2nd combat ends" counts goes on the count of the effect', async () => {
+		effect = makeEffect([
+			{
+				...thirdNextTurnEnd,
+				kind: 'event',
+				boundary: null,
+				clock: null,
+				span: null,
+				event: 'combatEnd',
+				value: 2,
+			},
+		]);
+		const end: LastsUntilCheck = { type: 'combatEnd', combatId: COMBAT, started: true };
+
+		await endEffectsAt(end, { heading: { key: 'combatEnd' } }, combat);
+
+		expect(effect.flags[SYSTEM_ID]?.turnsSeen).toEqual([1]);
 	});
 });

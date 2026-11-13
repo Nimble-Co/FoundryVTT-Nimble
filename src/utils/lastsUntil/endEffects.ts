@@ -197,18 +197,21 @@ export function endEffectsAt(
 ): Promise<void> {
 	const ending = effectsEndingAt(check, combat);
 	return queue.run('at', async () => {
-		await countTurns(check, combat, new Set(ending));
+		await countMoments(check, combat, new Set(ending));
 		await endEffects(ending, moment, { check, combat });
 	});
 }
 
-/** A clock turn that a "2nd next turn" moment counts, and that does not end it, goes on its count. */
-async function countTurns(
+/**
+ * A clock turn that a "2nd next turn" moment counts, or a combat end that a "2nd combat ends"
+ * moment counts, goes on its count when it does not end the effect.
+ */
+async function countMoments(
 	check: LastsUntilCheck,
 	combat: Combat | null | undefined,
 	ending: ReadonlySet<ActiveEffect>,
 ): Promise<void> {
-	if (check.type !== 'turnStart' && check.type !== 'turnEnd') return;
+	if (check.type !== 'turnStart' && check.type !== 'turnEnd' && check.type !== 'combatEnd') return;
 	for (const actor of everyActor()) {
 		for (const effect of actor.effects as Iterable<ActiveEffect>) {
 			if (ending.has(effect)) continue;

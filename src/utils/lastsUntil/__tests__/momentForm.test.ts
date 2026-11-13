@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+	COMBAT_COUNTS,
 	eventRowSubject,
+	NEW_MOMENT_KINDS,
 	newMoment,
 	removeAt,
 	replaceAt,
 	spanChoiceOf,
 	spanChoices,
 	withClock,
+	withCombatCount,
 	withEffectName,
 	withSpan,
 	withSpanChoice,
@@ -39,6 +42,29 @@ describe('newMoment', () => {
 			event: 'effectEnds',
 			effectName: '',
 		});
+	});
+});
+
+describe('"combat ends" with a count', () => {
+	it('is a choice of the add list, with no subject', () => {
+		expect(NEW_MOMENT_KINDS).toContain('combatEnd');
+		expect(newMoment('combatEnd')).toMatchObject({
+			kind: 'event',
+			who: null,
+			event: 'combatEnd',
+			value: null,
+		});
+	});
+
+	it('counts from "combat ends" to "the 5th combat ends"', () => {
+		expect(COMBAT_COUNTS).toEqual([1, 2, 3, 4, 5]);
+	});
+
+	it('a count of 1 is "combat ends", with no value', () => {
+		const combatEnds = newMoment('combatEnd');
+
+		expect(withCombatCount(combatEnds, 3).value).toBe(3);
+		expect(withCombatCount(withCombatCount(combatEnds, 3), 1).value).toBeNull();
 	});
 });
 

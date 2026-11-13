@@ -91,6 +91,7 @@ The tab is a sentence. Each row is one moment, and each word in a box is a choic
 | Rounds or time | until **1** **minutes** pass |
 | They or you do something | until **they** **attack**; until **you** **drop to 0 HP**; until **they** **take** **fire** damage; until **they** **gain** **Incapacitated** |
 | Another effect ends | until **the effect** **Rage** ends |
+| Combat ends | until **combat ends**, or until **the 2nd combat ends** up to the 5th |
 
 "Their" is the creature that has the effect. "Your" is the creature that used the item that applied it, as in the book. "The next hero's" is the next turn of any hero. "The" is the turn in progress, whoever's it is: until **the end of** **the** **turn**, for an effect that goes on during the turn of another creature.
 
@@ -99,6 +100,7 @@ They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack
 - **Take damage** can name damage types: turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
 - **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts its aliases: Stunned is a gain of Incapacitated. To end an effect on any of a group of effects, give each of them the same custom condition and name that condition. An effect never ends on its own gain.
 - **Apply** is the creature the new effect came from (its origin).
+- **Combat ends** counts each combat that the effect is part of: it went on in that combat, or the creature that has it, or the creature that applied it, is in it. The combat in progress when the effect goes on is the 1st. A combat that the GM deletes before round 1 counts for nothing and ends only the effects that went on in it.
 
 The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An effect with a condition takes the condition's own Lasts Until (Dazed: until the end of their next turn); turn on **Stays until someone removes it** to keep it on. An older effect can also have a core duration, such as 1 round; the tab shows it, and it still ends the effect. When an effect ends, a line in the **Events** part of a card says so, with **Undo**: see [How an effect works](#how-an-effect-works).
 

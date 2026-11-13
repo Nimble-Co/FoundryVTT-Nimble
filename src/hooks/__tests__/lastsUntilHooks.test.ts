@@ -229,7 +229,11 @@ describe('combat end', () => {
 		hook('deleteCombat')(combat);
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
-		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
+		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({
+			type: 'combatEnd',
+			combatId: 'combat1',
+			started: true,
+		});
 		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({
 			key: expect.stringMatching(/^combatEnd:combat1:/),
 		});
@@ -267,6 +271,19 @@ describe('combat end', () => {
 		expect(ends).toHaveLength(2);
 		expect(starts[0]).not.toBe(starts[1]);
 		expect(ends[0]).not.toBe(ends[1]);
+	});
+
+	it('tells the moments when a deleted combat never started', () => {
+		const { combat } = makeCombat('combat5');
+		combat.round = 0;
+
+		hook('deleteCombat')(combat);
+
+		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({
+			type: 'combatEnd',
+			combatId: 'combat5',
+			started: false,
+		});
 	});
 
 	it('ends when a running combat is deleted', () => {

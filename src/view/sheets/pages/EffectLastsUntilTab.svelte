@@ -6,6 +6,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 <script lang="ts">
 	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
 	import {
+		COMBAT_COUNTS,
 		eventRowSubject,
 		isRoundSpan,
 		namesAnEffect,
@@ -16,6 +17,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		spanChoiceWord,
 		withBoundary,
 		withClock,
+		withCombatCount,
 		withDamageType,
 		withEffectName,
 		withEvent,
@@ -174,6 +176,17 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 							{/each}
 						</select>
 						<span>{word('pass')}</span>
+					{:else if moment.event === 'combatEnd'}
+						<select
+							aria-label={word('fields.combatCount')}
+							value={String(moment.value ?? 1)}
+							onchange={({ currentTarget }) =>
+								change(index, withCombatCount(moment, Number(currentTarget.value)))}
+						>
+							{#each COMBAT_COUNTS as count (count)}
+								<option value={String(count)}>{word(`combatCount.${count}`)}</option>
+							{/each}
+						</select>
 					{:else}
 						{@const subject = eventRowSubject(moment)}
 						<select

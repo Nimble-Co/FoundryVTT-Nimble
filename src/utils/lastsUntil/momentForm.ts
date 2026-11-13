@@ -43,7 +43,7 @@ export function namesAnEffect(event: LastsUntilEvent | null): boolean {
 }
 
 /** The "add a moment..." choices. */
-export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds'] as const;
+export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds', 'combatEnd'] as const;
 export type NewMomentKind = (typeof NEW_MOMENT_KINDS)[number];
 
 /** The subject select of an event row: they, you, or another effect. */
@@ -72,7 +72,16 @@ export function newMoment(kind: NewMomentKind): Moment {
 			return { ...BLANK, kind: 'event', who: 'holder', event: 'attack' };
 		case 'effectEnds':
 			return { ...BLANK, kind: 'event', event: 'effectEnds' };
+		case 'combatEnd':
+			return { ...BLANK, kind: 'event', event: 'combatEnd' };
 	}
+}
+
+/** The count list of a "combat ends" moment: "combat ends" to "the 5th combat ends". */
+export const COMBAT_COUNTS = [1, ...NEXT_TURN_COUNTS] as const;
+
+export function withCombatCount(moment: Moment, count: number): Moment {
+	return { ...moment, value: count > 1 ? count : null };
 }
 
 export function isRoundSpan(span: TurnSpan | null): boolean {
