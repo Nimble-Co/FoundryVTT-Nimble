@@ -6,6 +6,7 @@
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
 	import DemandControlSaveRow from './components/DemandControlSaveRow.svelte';
 
+	import { escapeRollNote } from '#utils/lastsUntil/escapeFollow.js';
 	import { requestedSaveNote } from '#utils/saveRequest/saveRequests.js';
 
 	const { messageDocument } = $props();
@@ -18,7 +19,9 @@
 	const saveKey = $derived(system.saveKey);
 
 	const label = $derived(saves[`${saveKey}Save`]);
-	const note = $derived(requestedSaveNote(messageDocument.reactive));
+	const note = $derived(
+		requestedSaveNote(messageDocument.reactive) ?? escapeRollNote(messageDocument.reactive),
+	);
 </script>
 
 <CardHeader {messageDocument} />

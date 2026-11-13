@@ -30,6 +30,7 @@ function grappled(saves: string[] = ['strength', 'dexterity'], dc = '13') {
 function holder(effect: ReturnType<typeof grappled>, card: unknown) {
 	return {
 		uuid: 'Actor.hero',
+		name: 'Tessa',
 		type: 'character',
 		getRollData: () => ({ strength: 3 }),
 		effects: { get: (id: string) => (id === effect.id ? effect : undefined) },
@@ -70,33 +71,57 @@ describe('escapeSavesOf and escapeDcOf', () => {
 	});
 });
 
+const linkOf = (effectName = 'Grappled') => ({
+	escapeRoll: {
+		holderUuid: 'Actor.hero',
+		holderName: 'Tessa',
+		effectId: 'grab',
+		effectName,
+		noDc: false,
+	},
+});
+
 describe('escapeEffect', () => {
-	it('rolls the picked save, spends 1 action, and removes the effect on a success', async () => {
+	it('rolls the picked save with the link and the hint, and spends 1 action', async () => {
 		const effect = grappled();
 		const actor = holder(effect, saveCard(15));
 
 		const result = await escapeModule.escapeEffect(actor as never, 'grab');
 
 		expect(wait).toHaveBeenCalled();
-		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('dexterity', { dc: 13 });
+		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('dexterity', {
+			dc: 13,
+			checkHint: 'Escape Grappled (DC 13)',
+			cardFlags: linkOf(),
+		});
 		expect(consumeCombatantAction).toHaveBeenCalledWith(
 			expect.objectContaining({ combatantId: 'c1' }),
 		);
-		expect(effect.delete).toHaveBeenCalled();
-		expect(result).toBe('escaped');
+		expect(result).toBe('rolled');
 	});
 
-	it('keeps the effect on a failure, and still spends the action', async () => {
+	it('leaves the end to the active GM, also on a success', async () => {
 		const effect = grappled(['strength']);
-		const actor = holder(effect, saveCard(8));
+		const actor = holder(effect, saveCard(20, 20));
 
-		const result = await escapeModule.escapeEffect(actor as never, 'grab');
-
+		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBe('rolled');
 		expect(wait, 'one save: no question').not.toHaveBeenCalled();
-		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('strength', { dc: 13 });
-		expect(consumeCombatantAction).toHaveBeenCalled();
 		expect(effect.delete).not.toHaveBeenCalled();
-		expect(result).toBe('held');
+	});
+
+	it('spends no action out of combat', async () => {
+		(game as unknown as { combat: unknown }).combat = { started: false, combatants: [] };
+		const actor = holder(grappled(['strength']), saveCard(8));
+
+		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBe('rolled');
+		expect(consumeCombatantAction).not.toHaveBeenCalled();
+	});
+
+	it('spends no action when the roll window is closed', async () => {
+		const actor = holder(grappled(['strength']), null);
+
+		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBeNull();
+		expect(consumeCombatantAction).not.toHaveBeenCalled();
 	});
 
 	it('works out a DC formula from the creature that applied the effect', async () => {
@@ -111,8 +136,23 @@ describe('escapeEffect', () => {
 		effect.origin = 'Actor.bear';
 		const actor = holder(effect, saveCard(16));
 
-		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBe('escaped');
-		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('strength', { dc: 15 });
+		expect(await escapeModule.escapeEffect(actor as never, 'grab')).toBe('rolled');
+		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith(
+			'strength',
+			expect.objectContaining({ dc: 15 }),
+		);
+	});
+
+	it('a DC that is not a number rolls with no DC and the hint with no DC', async () => {
+		vi.stubGlobal('fromUuidSync', () => null);
+		const actor = holder(grappled(['strength'], '@missing'), saveCard(16));
+
+		await escapeModule.escapeEffect(actor as never, 'grab');
+
+		expect(actor.rollSavingThrowToChat).toHaveBeenCalledWith('strength', {
+			checkHint: 'Escape Grappled',
+			cardFlags: { escapeRoll: { ...linkOf().escapeRoll, noDc: true } },
+		});
 	});
 
 	it('cannot escape an effect that is not on the actor itself', async () => {

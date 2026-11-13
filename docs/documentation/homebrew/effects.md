@@ -123,7 +123,7 @@ For example, True Strike holds advantage for the next attack of its target, unti
 
 ## Escape
 
-Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. A new effect has STR and DEX on. With no DC, the effect has no escape.
+Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. A new effect has STR and DEX on. With no DC, the effect has no escape. A success on the save ends the effect through the GM, with an ended line and **Undo** on the save card (see [Conditions](../playing/conditions.md)).
 
 ## Related pages
 

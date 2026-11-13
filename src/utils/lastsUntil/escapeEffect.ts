@@ -1,9 +1,10 @@
+import type { ActorRollOptions } from '#documents/actor/actorInterfaces.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import localize from '#utils/localize.js';
-import { checkResultOfCard } from '#utils/rolls/checkResult.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { ESCAPE_SAVES } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { ESCAPE_ROLL_FLAG, type EscapeRollLink } from './escapeFollow.js';
 
 /** The saves that an Escape allows, in the order of the saves. With none, STR and DEX. */
 export function escapeSavesOf(saves: readonly string[] | null | undefined): SaveKeyType[] {
@@ -51,15 +52,12 @@ export function escapeDcOfEffect(
 
 interface EscapingActor extends DcRoller {
 	uuid: string;
+	name?: string | null;
 	effects: { get(id: string): EscapableEffect | undefined };
 	rollSavingThrowToChat(
 		save: SaveKeyType,
-		options: { dc?: number },
-	): Promise<{
-		type: string;
-		system: unknown;
-		rolls?: { total?: number | null; terms: unknown[] }[];
-	} | null>;
+		options: Pick<ActorRollOptions, 'dc' | 'checkHint' | 'cardFlags'>,
+	): Promise<unknown>;
 }
 
 interface EscapableEffect {
@@ -67,7 +65,6 @@ interface EscapableEffect {
 	name: string;
 	origin?: string | null;
 	system?: { escape?: { dc?: string; saves?: string[] } };
-	delete(): Promise<unknown>;
 }
 
 async function pickSave(saves: SaveKeyType[], name: string): Promise<SaveKeyType | null> {
@@ -94,28 +91,35 @@ async function spendOneAction(actor: EscapingActor): Promise<void> {
 
 /**
  * The holder tries to Escape: the owner picks one of the allowed saves, the save rolls against the
- * DC, 1 action is spent in combat, and a success removes the effect. A save with no DC leaves the
- * effect for the table to remove. Only an effect on the actor itself can be escaped.
+ * DC, and 1 action is spent in combat. The roll card names the effect, and the active GM ends it
+ * when the card passes. Only an effect on the actor itself can be escaped.
  */
 export async function escapeEffect(
 	actor: EscapingActor,
 	effectId: string,
-): Promise<'escaped' | 'held' | null> {
+): Promise<'rolled' | null> {
 	const effect = actor.effects.get(effectId);
-	if (!effect) return null;
+	if (!effect?.id) return null;
 	const escapeData = effect.system?.escape;
 	const save = await pickSave(escapeSavesOf(escapeData?.saves), effect.name);
 	if (!save) return null;
 	const dc = escapeDcOfEffect(effect, actor);
-	const card = await actor.rollSavingThrowToChat(save, dc === null ? {} : { dc });
+	const link: EscapeRollLink = {
+		holderUuid: actor.uuid,
+		holderName: actor.name ?? '',
+		effectId: effect.id,
+		effectName: effect.name,
+		noDc: dc === null,
+	};
+	const card = await actor.rollSavingThrowToChat(save, {
+		...(dc === null ? {} : { dc }),
+		checkHint:
+			dc === null
+				? localize('NIMBLE.escape.hintNoDc', { effect: effect.name })
+				: localize('NIMBLE.escape.hint', { effect: effect.name, dc: String(dc) }),
+		cardFlags: { [ESCAPE_ROLL_FLAG]: link },
+	});
 	if (!card) return null;
 	await spendOneAction(actor);
-	const result = checkResultOfCard(
-		card.type,
-		card.system as Record<string, unknown>,
-		card.rolls?.[0],
-	);
-	if (result !== 'succeeded' || dc === null) return 'held';
-	await effect.delete();
-	return 'escaped';
+	return 'rolled';
 }

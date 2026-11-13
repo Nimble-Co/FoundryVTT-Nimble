@@ -79,7 +79,7 @@ When an effect has more than one moment, the first one to happen ends it. A turn
 
 On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
 
-**Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save (you pick when more than one is allowed), spends 1 action in combat, and ends the effect on a success.
+**Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save (you pick when more than one is allowed) and spends 1 action in combat. The save card reads "Escape Grappled". On a success the effect ends, and the save card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
 
 When effects end, each one gets a line in the **Events** strip of the card that ended it, such as the card of the attack that ended "until they attack". With no such card, the chat gets one message for that moment, such as "Start of Tessa's turn", with a line for each effect that ended. **Undo** on a line puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
 

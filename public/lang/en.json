@@ -4070,7 +4070,15 @@
 			"label": "Escape {name}: roll a save against DC {dc}",
 			"labelNoDc": "Escape {name}: roll a save",
 			"title": "Escape {name}",
-			"pick": "Which save do you roll?"
+			"pick": "Which save do you roll?",
+			"save": "{save} save",
+			"hint": "Escape {effect} (DC {dc})",
+			"hintNoDc": "Escape {effect}",
+			"note": "Escape {effect}",
+			"chat": {
+				"escaped": "Escaped: {roll} {total} against DC {dc}",
+				"escapedNoDc": "Escaped: {roll} {total}"
+			}
 		},
 		"lastsUntilText": {
 			"until": "until {moment}",
@@ -4265,7 +4273,7 @@
 					"intelligence": "INT",
 					"will": "WIL"
 				},
-				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success removes the effect. With no DC, there is no escape."
+				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success ends the effect, and a reroll that fails puts it back. With no DC, there is no escape."
 			},
 			"changes": {
 				"key": "Key",
