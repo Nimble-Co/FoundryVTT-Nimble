@@ -236,3 +236,50 @@ describe('NimbleTokenDocument movementFinished report', () => {
 		expect(reports()).toEqual([]);
 	});
 });
+
+describe('NimbleTokenDocument.prepareData', () => {
+	const base = Object.getPrototypeOf(NimbleTokenDocument.prototype) as {
+		prepareData?: () => void;
+		applyActiveEffects?: (phase: string) => void;
+	};
+	const original = { prepareData: base.prepareData, applyActiveEffects: base.applyActiveEffects };
+	const phases: string[] = [];
+
+	beforeEach(() => {
+		phases.length = 0;
+		base.applyActiveEffects = vi.fn((phase: string) => {
+			phases.push(phase);
+		});
+		// Core's prepareData skips a lazy delta, else ends with the final phase.
+		base.prepareData = vi.fn(function (this: { isLazyDelta?: boolean; actor?: unknown }) {
+			if (this.isLazyDelta && this.actor) return;
+			base.applyActiveEffects?.call(this, 'final');
+		});
+	});
+
+	afterEach(() => {
+		base.prepareData = original.prepareData;
+		base.applyActiveEffects = original.applyActiveEffects;
+	});
+
+	function token(fields: Record<string, unknown>) {
+		const document = new NimbleTokenDocument({ id: 't1' } as never) as unknown as {
+			prepareData(): void;
+		};
+		Object.defineProperty(document, 'isLazyDelta', { value: fields.isLazyDelta ?? false });
+		Object.defineProperty(document, 'actor', { value: fields.actor ?? { id: 'a1' } });
+		return document;
+	}
+
+	it('applies the token changes of the phase after the rules (Multiply, round down), after final', () => {
+		token({}).prepareData();
+
+		expect(phases).toEqual(['final', 'afterRules']);
+	});
+
+	it('applies nothing for a lazy delta that core skips', () => {
+		token({ isLazyDelta: true }).prepareData();
+
+		expect(phases).toEqual([]);
+	});
+});
