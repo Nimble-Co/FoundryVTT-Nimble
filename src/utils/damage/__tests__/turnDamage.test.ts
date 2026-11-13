@@ -384,6 +384,60 @@ describe('dealTurnDamage', () => {
 		expect(addMomentEvents).not.toHaveBeenCalled();
 	});
 
+	describe("Swallowed's rule", () => {
+		const swallowed = () =>
+			rule(tessa, {
+				...CONFIG.NIMBLE.conditionRules.swallowed[0],
+				parentDocument: {
+					uuid: 'Actor.tessa.ActiveEffect.swallowed',
+					name: 'Swallowed',
+					img: 'swallowed.svg',
+				},
+			});
+
+		it('deals 20 at the start of the turn, on a line of the turn start card that has Undo', async () => {
+			tessa.rules = [swallowed()];
+
+			await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+			expect(tessa.applyDamage).toHaveBeenCalledWith(20);
+			expect(addMomentEvents).toHaveBeenCalledTimes(1);
+			expect(addMomentEvents.mock.calls[0][0]).toBe(moment);
+			const [line] = lines();
+			expect(line).toMatchObject({
+				kind: 'damage',
+				img: 'swallowed.svg',
+				text: {
+					key: 'NIMBLE.chat.turnDamage.takes',
+					data: { name: 'Tessa', damage: { key: 'NIMBLE.chat.turnDamage.plain' } },
+				},
+				cause: {
+					key: 'NIMBLE.chat.turnDamage.cause',
+					data: { source: 'Swallowed', formula: '20' },
+				},
+			});
+			expect(actionOf(line)).toMatchObject({ state: 'dealt', amount: 20, hpLost: 20 });
+		});
+
+		it('deals nothing at the end of the turn', async () => {
+			tessa.rules = [swallowed()];
+
+			await dealTurnDamage('turnEnd', turnOf(tessa, tessaToken), moment);
+
+			expect(tessa.applyDamage).not.toHaveBeenCalled();
+		});
+
+		it('with Feature Effects off, posts a waiting line with Take Damage and deals nothing', async () => {
+			automation = false;
+			tessa.rules = [swallowed()];
+
+			await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+			expect(tessa.applyDamage).not.toHaveBeenCalled();
+			expect(actionOf(lines()[0])).toMatchObject({ state: 'waiting', amount: 20 });
+		});
+	});
+
 	it('sends its damage type to "takes damage" on the moment, and adds the save lines that asks', async () => {
 		const save = { id: 'saveRequest.x', kind: 'saveRequest' } as CardEvent;
 		saveRequestEvents.mockReturnValue([save]);

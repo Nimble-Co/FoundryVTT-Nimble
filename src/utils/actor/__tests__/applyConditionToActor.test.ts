@@ -458,6 +458,37 @@ describe('applyConditionToActor effectData', () => {
 		expect(result).toBeNull();
 		expect(createEffect).not.toHaveBeenCalled();
 	});
+
+	describe("the status entry's rules", () => {
+		const swallowedDamage = { id: 'swallowedDamage', type: 'turnDamage', formula: '20' };
+
+		beforeEach(() => {
+			(CONFIG as { statusEffects?: unknown }).statusEffects = [
+				{ id: 'swallowed', system: { rules: [swallowedDamage] } },
+			];
+		});
+
+		async function rulesAfter(effectData: Record<string, unknown>) {
+			const effect = createFakeEffect();
+			fromStatusEffect.mockResolvedValueOnce(effect);
+			await applyConditionToActor(createTargetActor(), 'swallowed', { effectData });
+			return effect.sourceData['system.rules'];
+		}
+
+		it('stay on an authored effect that has no rules', async () => {
+			expect(await rulesAfter({ name: 'Swallow', system: { rules: [] } })).toEqual([
+				swallowedDamage,
+			]);
+		});
+
+		it('come after the authored rules, and an authored rule with the same id wins', async () => {
+			const own = { id: 'swallowedDamage', type: 'turnDamage', formula: '30' };
+			const other = { id: 'other', type: 'note' };
+
+			expect(await rulesAfter({ system: { rules: [own, other] } })).toEqual([own, other]);
+			expect(await rulesAfter({ system: { rules: [other] } })).toEqual([other, swallowedDamage]);
+		});
+	});
 });
 
 describe("applyConditionToActor the status entry's Lasts Until", () => {

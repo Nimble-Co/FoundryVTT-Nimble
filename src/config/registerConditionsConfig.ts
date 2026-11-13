@@ -254,7 +254,7 @@ export default function registerConditionsConfig() {
 		],
 	};
 
-	/** The rules a condition's effect carries. A crit on a concentrating creature asks a save. */
+	/** The rules a condition's effect carries. */
 	const conditionRules: Record<string, Record<string, unknown>[]> = {
 		concentration: [
 			{
@@ -263,6 +263,18 @@ export default function registerConditionsConfig() {
 				event: 'critReceived',
 				saveType: 'strength',
 				saveDC: '10',
+			},
+		],
+		swallowed: [
+			{
+				id: 'swallowedDamage',
+				type: 'turnDamage',
+				at: 'turnStart',
+				who: 'holder',
+				reach: 1,
+				formula: '20',
+				damageType: '',
+				wounds: 0,
 			},
 		],
 	};

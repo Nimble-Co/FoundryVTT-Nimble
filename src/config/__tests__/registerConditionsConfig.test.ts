@@ -123,3 +123,20 @@ describe('conditionCountsAs', () => {
 		});
 	});
 });
+
+describe('conditionRules', () => {
+	it('Swallowed deals 20 damage to its holder at the start of each of its turns', () => {
+		expect(registerConditionsConfig().conditionRules.swallowed).toEqual([
+			{
+				id: 'swallowedDamage',
+				type: 'turnDamage',
+				at: 'turnStart',
+				who: 'holder',
+				reach: 1,
+				formula: '20',
+				damageType: '',
+				wounds: 0,
+			},
+		]);
+	});
+});

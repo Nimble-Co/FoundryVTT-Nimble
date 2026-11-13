@@ -768,10 +768,6 @@
 				},
 				"apply": "Apply"
 			},
-			"swallowedDamage": {
-				"text": "{name} takes {amount} damage",
-				"cause": "Swallowed"
-			},
 			"critBack": {
 				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit.",
 				"attack": "Attack with {attack}"
