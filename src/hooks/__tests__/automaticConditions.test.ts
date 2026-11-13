@@ -157,6 +157,18 @@ describe('handleAutomaticConditionApplication.postDelete', () => {
 
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
+
+	it('does nothing for an effect on an item', async () => {
+		stubGame({ currentUserId: 'gm-1', currentUserIsGM: true, activeGmId: 'gm-1' });
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const document = { ...createDocument(actor), parent: { documentName: 'Item' } };
+
+		await handleAutomaticConditionApplication.postDelete(document as never, {} as never, 'gm-1');
+
+		expect(warn).not.toHaveBeenCalled();
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+		warn.mockRestore();
+	});
 });
 
 describe('derived-conditions automation toggle', () => {

@@ -89,6 +89,7 @@ export const handleAutomaticConditionApplication = {
 	): Promise<void> => {
 		if (!isDerivedConditionsAutomationEnabled()) return;
 		if (!isActiveGM()) return;
+		if (document.parent?.documentName !== 'Actor') return;
 
 		try {
 			const actor = document.parent as NimbleBaseActor;
