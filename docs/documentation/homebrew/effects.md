@@ -154,6 +154,7 @@ The damage ignores armor and Defend, as damage from outside an attack does: temp
 - A creature with no Wound track (a monster) takes the damage and no Wounds.
 - The damage counts as "they take damage" for Lasts Until and Save on an Event, with its type: lightning damage makes the creature Charged.
 - A turn played again after the GM goes back in the combat tracker deals nothing a second time.
+- The line goes on the card before the damage is dealt. When the line cannot be written, nothing is dealt.
 - A creature with more than one turn in a round takes it on each turn.
 - **Undo** is not healing: an effect that lasts until its holder is healed stays.
 :::

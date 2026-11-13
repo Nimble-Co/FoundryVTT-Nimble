@@ -3,6 +3,9 @@ import type { CardEvent, TurnDamageAction } from '#types/cardEvent.d.ts';
 
 const addMomentEvents = vi.fn(async (..._args: unknown[]) => true);
 const momentEventIds = vi.fn((_key: string) => new Set<string>());
+const momentCardEl = { id: 'momentCard' };
+const momentCard = vi.fn((_key: string): unknown => momentCardEl);
+const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 const spacesBetween = vi.fn((_a: unknown, _b: unknown) => 1);
 const fireEvent = vi.fn();
 const chargeOnLightning = vi.fn(async (..._args: unknown[]) => {});
@@ -82,13 +85,23 @@ function turnOf(actor: Creature, token: Record<string, unknown>, defeated = fals
 	return { actor, token, isDefeated: defeated } as never;
 }
 
-const lines = () => addMomentEvents.mock.calls.flatMap(([, events]) => events as CardEvent[]);
+/** The lines on the card of the moment: each written line, as its last change left it. */
+const lines = () =>
+	addMomentEvents.mock.calls
+		.flatMap(([, events]) => events as CardEvent[])
+		.map((line) => {
+			const changes = replaceCardEvent.mock.calls.filter(([, id]) => id === line.id);
+			return (changes.at(-1)?.[2] as CardEvent | undefined) ?? line;
+		});
 const actionOf = (event: CardEvent) => event.action as TurnDamageAction;
 
 beforeEach(async () => {
 	for (const mock of [addMomentEvents, spacesBetween, fireEvent, chargeOnLightning]) {
 		mock.mockClear();
 	}
+	addMomentEvents.mockImplementation(async () => true);
+	replaceCardEvent.mockClear();
+	momentCard.mockClear().mockReturnValue(momentCardEl);
 	momentEventIds.mockReset().mockImplementation(() => new Set<string>());
 	saveRequestEvents.mockClear().mockReturnValue([]);
 	spacesBetween.mockReturnValue(1);
@@ -98,6 +111,8 @@ beforeEach(async () => {
 		...(await importOriginal<object>()),
 		addMomentEvents,
 		momentEventIds,
+		momentCard,
+		replaceCardEvent,
 	}));
 	vi.doMock('#utils/movement/spacesBetween.js', () => ({ spacesBetween }));
 	vi.doMock('#utils/rolls/showDiceAnimation.js', () => ({ showDiceAnimation: async () => {} }));
@@ -161,6 +176,7 @@ describe('dealTurnDamage', () => {
 		expect(tessa.applyDamage).toHaveBeenCalledWith(7);
 		expect(addMomentEvents).toHaveBeenCalledTimes(1);
 		expect(addMomentEvents.mock.calls[0][0]).toBe(moment);
+		expect(lines()).toHaveLength(1);
 		const [line] = lines();
 		expect(line.text).toEqual({
 			key: 'NIMBLE.chat.turnDamage.takes',
@@ -177,6 +193,46 @@ describe('dealTurnDamage', () => {
 			data: { source: 'In the Cauldron', formula: '7' },
 		});
 		expect(actionOf(line)).toMatchObject({ state: 'dealt', hpLost: 7, tempLost: 0 });
+	});
+
+	it('writes the line before it deals the damage, then marks it dealt for Undo', async () => {
+		tessa.rules = [rule(tessa)];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		const [written] = addMomentEvents.mock.calls[0][1] as CardEvent[];
+		expect(actionOf(written)).toMatchObject({ state: 'waiting', amount: 7 });
+		expect(addMomentEvents.mock.invocationCallOrder[0]).toBeLessThan(
+			tessa.applyDamage.mock.invocationCallOrder[0],
+		);
+		expect(momentCard).toHaveBeenCalledWith(moment.key);
+		expect(replaceCardEvent).toHaveBeenCalledWith(
+			momentCardEl,
+			written.id,
+			expect.objectContaining({
+				id: written.id,
+				action: expect.objectContaining({ state: 'dealt', hpLost: 7 }),
+			}),
+		);
+	});
+
+	it('deals nothing when the line cannot be written', async () => {
+		addMomentEvents.mockImplementation(async () => false);
+		tessa.rules = [rule(tessa)];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		expect(tessa.applyDamage).not.toHaveBeenCalled();
+		expect(replaceCardEvent).not.toHaveBeenCalled();
+	});
+
+	it('deals nothing when the card of the moment is not found', async () => {
+		momentCard.mockReturnValue(undefined);
+		tessa.rules = [rule(tessa)];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		expect(tessa.applyDamage).not.toHaveBeenCalled();
 	});
 
 	it('does not fire a turn-end rule at the start of the turn', async () => {

@@ -127,7 +127,8 @@ export function canActOnTurnDamage(action: TurnDamageAction): boolean {
 	return mayActHere(action.holderUuid);
 }
 
-function textAfter(event: CardEvent, action: TurnDamageAction): CardEvent {
+/** The line with its action changed, and the words that go with it. */
+export function turnDamageLineAfter(event: CardEvent, action: TurnDamageAction): CardEvent {
 	return (
 		turnDamageEvent({
 			id: event.id,
@@ -150,7 +151,7 @@ export async function takeTurnDamage(card: LineCard, event: CardEvent): Promise<
 	return replaceCardEvent(
 		card as never,
 		event.id,
-		textAfter(event, { ...action, ...losses, state: 'dealt' }),
+		turnDamageLineAfter(event, { ...action, ...losses, state: 'dealt' }),
 	);
 }
 

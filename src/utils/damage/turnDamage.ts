@@ -6,7 +6,12 @@ import type {
 	TurnMomentType,
 } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleLabel, rulesOfType } from '#utils/actor/actorRules.js';
-import { addMomentEvents, momentEventIds } from '#utils/chat/cardEvents.js';
+import {
+	addMomentEvents,
+	momentCard,
+	momentEventIds,
+	replaceCardEvent,
+} from '#utils/chat/cardEvents.js';
 import { spacesBetween } from '#utils/movement/spacesBetween.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
@@ -16,6 +21,7 @@ import {
 	hasWoundTrack,
 	type TurnDamageHolder,
 	turnDamageEvent,
+	turnDamageLineAfter,
 } from './turnDamageLine.js';
 
 const WORDS = 'NIMBLE.chat.turnDamage';
@@ -102,20 +108,19 @@ function causeOf({ rule, near }: Source): CardEventText {
 		: { key: `${WORDS}.causeNoFormula`, data: { source } };
 }
 
-/** One rule on one creature: the line, with the damage dealt unless Feature Effects are off. */
-async function linesFor(
+/** One rule on one creature: its rolled line, waiting to be dealt, or null when it gives nothing. */
+async function waitingLineFor(
 	source: Source,
 	target: TurnCreature,
 	id: string,
-	moment: CardEventMoment,
-): Promise<CardEvent[]> {
+): Promise<CardEvent | null> {
 	const { rule } = source;
 	const { amount } = await rollAmount(rule.formula.trim(), rule.actor?.getRollData?.() ?? {}, {
 		purpose: 'of a turn',
 		show: true,
 	});
 	const wounds = rule.wounds > 0 && hasWoundTrack(target) ? rule.wounds : 0;
-	if (amount < 1 && wounds < 1) return [];
+	if (amount < 1 && wounds < 1) return null;
 	const action: TurnDamageAction = {
 		kind: 'turnDamage',
 		holderUuid: target.uuid,
@@ -126,24 +131,44 @@ async function linesFor(
 		sourceUuid: rule.actor?.uuid ?? null,
 		state: 'waiting',
 	};
-	const dealt = isRuleAutomationEnabled();
-	const losses = dealt ? await dealTurnDamageTo(target, action, { moment }) : null;
-	const line = turnDamageEvent({
+	return turnDamageEvent({
 		id,
-		action: losses ? { ...action, ...losses, state: 'dealt' } : action,
+		action,
 		cause: causeOf(source),
 		img: rule.parentDocument?.img ?? null,
 		at: Date.now(),
 	});
-	if (!line) return [];
-	const hurt = !!losses && losses.hpLost + losses.tempLost > 0;
-	return [line, ...(hurt ? saveRequestEvents(target as never, 'takeDamage') : [])];
+}
+
+/** Deals each written line and marks it dealt, with what it took, so Undo can give it back. */
+async function dealLines(
+	target: TurnCreature,
+	written: CardEvent[],
+	moment: CardEventMoment,
+): Promise<void> {
+	const card = momentCard(moment.key);
+	if (!card) return;
+	const saves: CardEvent[] = [];
+	for (const line of written) {
+		const action = line.action as TurnDamageAction;
+		const losses = await dealTurnDamageTo(target, action, { moment });
+		await replaceCardEvent(
+			card as never,
+			line.id,
+			turnDamageLineAfter(line, { ...action, ...losses, state: 'dealt' }),
+		);
+		if (losses.hpLost + losses.tempLost > 0) {
+			saves.push(...saveRequestEvents(target as never, 'takeDamage'));
+		}
+	}
+	if (saves.length > 0) await addMomentEvents(moment, saves);
 }
 
 /**
  * On the active GM, after the Lasts Until ends of the moment: the Damage Each Turn rules that
- * reach the creature whose turn starts or ends. The lines go on the card of the moment. A line
- * already on that card (a turn rewound and played again) is not dealt again.
+ * reach the creature whose turn starts or ends. The lines go on the card of the moment before the
+ * damage is dealt, so no damage is dealt without its line. A line already on that card (a turn
+ * rewound and played again) is not dealt again. With Feature Effects off, the lines wait.
  */
 export async function dealTurnDamage(
 	type: TurnMomentType,
@@ -159,7 +184,10 @@ export async function dealTurnDamage(
 	for (const source of sources) {
 		const id = `turnDamage.${ruleKey(source.rule as never)}.${target.uuid}.${moment.key}`;
 		if (seen.has(id)) continue;
-		lines.push(...(await linesFor(source, target, id, moment)));
+		const line = await waitingLineFor(source, target, id);
+		if (line) lines.push(line);
 	}
-	if (lines.length > 0) await addMomentEvents(moment, lines);
+	if (lines.length < 1) return;
+	if (!(await addMomentEvents(moment, lines))) return;
+	if (isRuleAutomationEnabled()) await dealLines(target, lines, moment);
 }
