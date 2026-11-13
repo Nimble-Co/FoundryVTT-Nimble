@@ -134,7 +134,7 @@ function schema() {
 				initial: false,
 				label: key('withInterpose', 'label'),
 				hint: key('withInterpose', 'hint'),
-				showWhen: isWay('freeDefend'),
+				showWhen: isWay('freeDefend', 'withDefend'),
 			}),
 		),
 		wholeRound: new fields.BooleanField(

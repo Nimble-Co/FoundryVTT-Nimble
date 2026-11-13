@@ -289,6 +289,28 @@ describe('defendWindowPlan', () => {
 			expect(tickIds('interpose:interpose-1')).toEqual(['Item.bunny:bunny']);
 		});
 
+		it('with "only when you Interpose", is left off the rows that have no Interpose', () => {
+			const faceMe = rule({ id: 'faceMe', alsoInterpose: true, withInterpose: true });
+			const free = rule({ id: 'slip', way: 'freeDefend' });
+			const { data } = defendWindowPlan(card as never, {
+				actor: hero([faceMe, free]) as never,
+				targetTokenUuid: TOKEN,
+				interposes: [interpose] as never,
+				defend: null,
+			});
+			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;
+
+			expect(tickIds('defend')).toEqual([]);
+			expect(tickIds('free:Item.slip:slip')).toEqual([]);
+			expect(tickIds('interpose:interpose-1')).toEqual(['Item.faceMe:faceMe']);
+			expect(tickIds('both:interpose-1')).toEqual(['Item.faceMe:faceMe']);
+		});
+
+		it('with "only when you Interpose" and no Interpose, is not shown', () => {
+			const { data } = plan([rule({ id: 'faceMe', alsoInterpose: true, withInterpose: true })]);
+			expect(data.ticks).toEqual([]);
+		});
+
 		it('goes with only an Interpose and a Defend when the option does not say "also when you Interpose"', () => {
 			const { data } = interposePlan([rule({ id: 'pocket', useReroll: true })]);
 			const tickIds = (id: string) => data.options.find((option) => option.id === id)?.tickIds;

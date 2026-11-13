@@ -95,7 +95,7 @@ describe('Face Me, Foul Creature!', () => {
 		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 	});
 
-	it('is a Defend window tick that also goes with an Interpose and gives the attacker Taunted', () => {
+	it('is a Defend window tick only on a row with an Interpose, and gives the attacker Taunted', () => {
 		const rules = rulesOfType(item.system.rules as Json[], 'defendOption');
 		expect(rules).toEqual([
 			expect.objectContaining({
@@ -108,7 +108,7 @@ describe('Face Me, Foul Creature!', () => {
 				attackerEffectId: effect._id,
 				reminder: '',
 				useItem: false,
-				withInterpose: false,
+				withInterpose: true,
 				wholeRound: false,
 				chargePoolIdentifier: '',
 				actionCost: 0,

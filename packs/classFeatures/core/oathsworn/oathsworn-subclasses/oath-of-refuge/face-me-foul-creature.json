@@ -24,7 +24,7 @@
 				"attackerEffectId": "ANRFdWU2mTm6aHPk",
 				"reminder": "",
 				"useItem": false,
-				"withInterpose": false,
+				"withInterpose": true,
 				"wholeRound": false,
 				"range": "2",
 				"chargePoolIdentifier": "",

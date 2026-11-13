@@ -3193,7 +3193,7 @@
 				},
 				"withInterpose": {
 					"label": "Only when you Interpose",
-					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend."
+					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend. On a tick: the tick shows only on a row with an Interpose, not on a Defend alone."
 				},
 				"wholeRound": {
 					"label": "Every attack this round",
