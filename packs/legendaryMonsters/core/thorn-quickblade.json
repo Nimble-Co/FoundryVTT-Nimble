@@ -336,15 +336,6 @@
 							"on": {
 								"criticalHit": [
 									{
-										"id": "MpDaOq8uDvrZ2wMS",
-										"type": "applyEffect",
-										"effectId": "Fcdh94q0vsFgapW4",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "criticalHit",
-										"parentNode": "Vmm3IICgQYD0xGC3"
-									},
-									{
 										"id": "bsAQa2WUYIGIyiqf",
 										"type": "applyEffect",
 										"effectId": "z4atxdvP9jXYNcl6",
@@ -387,35 +378,6 @@
 			"_id": "35HP1npCJHxMtbS1",
 			"img": "icons/skills/melee/hand-grip-sword-red.webp",
 			"effects": [
-				{
-					"_id": "Fcdh94q0vsFgapW4",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
 				{
 					"_id": "z4atxdvP9jXYNcl6",
 					"name": "Dazed",
@@ -465,7 +427,49 @@
 				"systemVersion": "0.1.8",
 				"modifiedTime": "1758805483,44308"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "TbAC0glw2qQSFoFv",
+					"name": "Invisible",
+					"img": "icons/svg/invisible.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "holder",
+								"span": "nextTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"invisible"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"flags": {},
 			"name": "Bloodied",
 			"img": "icons/svg/blood.svg",
@@ -498,7 +502,17 @@
 						"shape": "",
 						"length": 1
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "er3CPUvwn2OoFRDf",
+							"type": "applyEffect",
+							"effectId": "TbAC0glw2qQSFoFv",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},

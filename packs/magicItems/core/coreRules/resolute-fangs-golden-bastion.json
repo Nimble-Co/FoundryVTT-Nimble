@@ -32,7 +32,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "wH19XpeCESxoL8Jz",
+					"type": "applyEffect",
+					"effectId": "d7uecrEc77Yinpyc",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -79,7 +89,36 @@
 			"denomination": "gp"
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "d7uecrEc77Yinpyc",
+			"name": "Grappled",
+			"img": "systems/nimble/assets/icons/grappled.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "20",
+					"saves": [
+						"strength"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"grappled"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -157,7 +157,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "dYpEjaNDh5wsN5iZ",
+							"type": "applyEffect",
+							"effectId": "OsHyoUTq0J4OVDnC",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -172,7 +182,47 @@
 				},
 				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "OsHyoUTq0J4OVDnC",
+					"name": "Weave Web suppressed",
+					"img": "icons/creatures/webs/web-spider-glowing-purple.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "holder",
+								"span": "nextTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Fire critical hits suppress Weave Web.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

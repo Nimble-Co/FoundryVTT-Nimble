@@ -323,7 +323,19 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "time",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": 1,
+								"units": "rounds",
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

@@ -206,7 +206,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "7805ypURjG8HM4QA",
+							"type": "applyEffect",
+							"effectId": "N0WFohaUAcfpJQur",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -221,7 +231,47 @@
 				},
 				"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "N0WFohaUAcfpJQur",
+					"name": "Aura of Wind suppressed",
+					"img": "icons/magic/nature/root-vines-silhouette-teal.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "holder",
+								"span": "nextTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Necrotic damage suppresses Aura of Wind.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
