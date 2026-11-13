@@ -486,10 +486,34 @@ describe('Resolute Fangs, Golden Bastion', () => {
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
-	it('applies to the targets at the root', () => {
-		const step = stepApplying(item, effect._id);
-		expectNewId(step.id);
-		expect(step.recipient).toBe('targets');
-		expectAtRoot(item, step);
+	it('is a Defend window tick against a melee attack that gives the attacker Grappled', () => {
+		expect((item.system.rules as Json[]).map((rule) => rule.type)).toEqual([
+			'armorClass',
+			'defendOption',
+		]);
+		const [rule] = (item.system.rules as Json[]).filter((each) => each.type === 'defendOption');
+		expectNewId(rule.id);
+		expect(rule).toMatchObject({
+			disabled: false,
+			way: 'withDefend',
+			attackDelivery: 'melee',
+			outcome: 'none',
+			armorBonus: '',
+			useReroll: false,
+			alsoInterpose: false,
+			attackerEffectId: effect._id,
+			reminder: '',
+			useItem: false,
+			withInterpose: false,
+			wholeRound: false,
+			chargePoolIdentifier: '',
+			actionCost: 0,
+			manaCost: 0,
+			woundCost: 0,
+		});
+	});
+
+	it('has no step that applies Grappled: the Defend tick does', () => {
+		expect(stepsApplying(item, effect._id)).toEqual([]);
 	});
 });

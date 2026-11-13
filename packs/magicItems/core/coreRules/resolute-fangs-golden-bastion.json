@@ -17,6 +17,32 @@
 				"priority": 1,
 				"formula": "8",
 				"mode": "add"
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "io7sGnwZrWnq6p35",
+				"identifier": "",
+				"label": "Resolute Fangs, Golden Bastion",
+				"predicate": {},
+				"priority": 1,
+				"way": "withDefend",
+				"attackDelivery": "melee",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"alsoInterpose": false,
+				"attackerEffectId": "d7uecrEc77Yinpyc",
+				"reminder": "",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": "2",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
 			}
 		],
 		"activation": {
@@ -32,17 +58,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "wH19XpeCESxoL8Jz",
-					"type": "applyEffect",
-					"effectId": "d7uecrEc77Yinpyc",
-					"recipient": "targets",
-					"tempHealingNodeId": null,
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
