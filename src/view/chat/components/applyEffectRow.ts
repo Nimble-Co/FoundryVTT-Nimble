@@ -56,10 +56,14 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		format,
 	});
 	const applied = input.applied ?? [];
+	const nameOf = (entry: AppliedEffect) =>
+		entry.actorName && (entry.stacks ?? 1) > 1
+			? format(`${WORDS}.withStacks`, { name: entry.actorName, count: String(entry.stacks) })
+			: entry.actorName;
 	const namesOf = (stays: boolean) =>
 		applied
 			.filter((entry) => !!entry.stays === stays)
-			.map((entry) => entry.actorName)
+			.map(nameOf)
 			.filter(Boolean)
 			.join(', ');
 	const on = namesOf(false);

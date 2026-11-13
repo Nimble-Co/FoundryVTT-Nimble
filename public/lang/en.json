@@ -367,6 +367,7 @@
 					"noEffects": "No effects and no conditions.",
 					"fromItem": "From {name}",
 					"untilItEnds": "Until it ends",
+					"stacks": "{count} stacks",
 					"remove": "Remove",
 					"removeName": "Remove {name}",
 					"removeQuestion": "Remove {name}?",
@@ -553,6 +554,7 @@
 				"applyToTargets": "Apply to Targets",
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
+				"withStacks": "{name} ({count} stacks)",
 				"stays": "{name} stays on {holder}",
 				"noTargets": "This card has no targets.",
 				"noneTook": "{name} did not go on any creature.",
@@ -4256,7 +4258,16 @@
 				"transfer": "Apply to the actor",
 				"transferHint": "The actor that has this item gets the effect.",
 				"conditions": "Conditions",
-				"conditionsHint": "The creature that has this effect has these conditions."
+				"conditionsHint": "The creature that has this effect has these conditions.",
+				"stacks": "Stacks",
+				"stacksOn": "A new application adds a stack",
+				"stacksOnHint": "Each new application of the same effect adds 1 to its count. The effect starts again when the new one lasts longer.",
+				"stacksAt": "At",
+				"stacksAtLabel": "Stacks that give the effect",
+				"stacksGain": "stacks, they gain",
+				"stacksEffectLabel": "The effect they gain",
+				"stacksNow": "Stacks now:",
+				"stacksNowLabel": "Stacks now"
 			},
 			"lastsUntil": {
 				"heading": "Lasts Until",
@@ -5199,7 +5210,8 @@
 				"line": "Used by: {users}",
 				"nothing": "Nothing uses this effect.",
 				"onUse": "On use: Apply Effect",
-				"rule": "Rule: {name}"
+				"rule": "Rule: {name}",
+				"stacks": "Stacks of {name}"
 			},
 			"confirm": {
 				"title": "Delete {name}",

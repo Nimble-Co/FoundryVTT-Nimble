@@ -65,6 +65,16 @@ describe('effectLike', () => {
 		expect(applied.itemId).toBeNull();
 	});
 
+	it('gives the stacks of an effect with Stacks on, and none for one with Stacks off', () => {
+		const stacked = (on: boolean) =>
+			Object.assign(effectOn({ documentName: 'Actor', id: 'hero' }, null), {
+				system: { stacks: { on, count: 3 } },
+			});
+
+		expect(effectLike(stacked(true)).stacks).toBe(3);
+		expect(effectLike(stacked(false)).stacks).toBeUndefined();
+	});
+
 	it('keeps an effect on an item, with no duration, passive', () => {
 		const kept = effectLike(effectOn({ documentName: 'Item', id: 'frost' }, null));
 

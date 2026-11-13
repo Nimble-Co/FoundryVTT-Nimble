@@ -1,3 +1,4 @@
+import { stacksOf } from '../../utils/actor/effectStacks.js';
 import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
 import localize from '../../utils/localize.js';
 import { effectLastsUntil, escapeOf } from './effectLastsUntil.js';
@@ -20,6 +21,8 @@ export type ActorCondition = {
 	effectId: string | null;
 	/** the user owns the effect and it has an Escape DC */
 	escape: { dc: number | null } | null;
+	/** the stacks of that effect, when it has Stacks on */
+	stacks?: number;
 	tooltipHtml: string;
 };
 
@@ -38,6 +41,7 @@ type ConditionEffectCandidate = {
 	lastsUntil: string;
 	effectId: string | null;
 	escape: { dc: number | null } | null;
+	stacks?: number;
 };
 
 function escapeHtml(value: string): string {
@@ -86,6 +90,7 @@ function getBestEffectCandidate(
 			lastsUntil: effectLastsUntil(effect as never, holder),
 			effectId: effect.id ?? null,
 			escape: escapeOf(effect),
+			stacks: stacksOf(effect.system)?.count,
 		};
 	});
 
@@ -204,6 +209,7 @@ export default function prepareActorConditions(
 			lastsUntil: bestEffect.lastsUntil,
 			effectId: bestEffect.effectId,
 			escape: bestEffect.escape,
+			stacks: bestEffect.stacks,
 			tooltipHtml: buildConditionTooltip(baseCondition),
 		};
 	});

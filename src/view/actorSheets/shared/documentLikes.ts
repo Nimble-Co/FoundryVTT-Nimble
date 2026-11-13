@@ -2,6 +2,7 @@
  * The plain copies of Foundry documents that both sheet adapters give the view model.
  * Only the adapters import this file: it reads Foundry.
  */
+import { stacksOf } from '#utils/actor/effectStacks.js';
 import { poolsLostOnEnd } from '#utils/dicePool/poolsEmptiedAtEnd.js';
 import { deriveDurationDetails, expandDurationLabel, NO_END_LABEL } from '#utils/formatDuration.js';
 import localize from '#utils/localize.js';
@@ -112,6 +113,7 @@ export function effectLike(effect: EffectDocument): EffectLike {
 		escape: escapeOf(effect as never),
 		description: plainText(effect.description ?? ''),
 		poolsLost: poolsLostOnEnd(effect as never),
+		stacks: stacksOf(effect.system)?.count,
 	};
 }
 
@@ -127,5 +129,6 @@ export function conditionLike(condition: ActorCondition): ConditionLike {
 		source: condition.active ? (condition.originName ?? '') : '',
 		effectId: condition.active ? condition.effectId : null,
 		escape: condition.active ? condition.escape : null,
+		stacks: condition.active ? condition.stacks : undefined,
 	};
 }

@@ -69,6 +69,16 @@ describe('itemEffectUsers', () => {
 		]);
 	});
 
+	it('finds an effect of the item that gives it at a stack count', () => {
+		const dazed = {
+			id: 'dazed',
+			system: { stacks: { on: true, count: 1, at: 3, effectId: 'fx' } },
+		};
+		const item = itemWith({ effects: [dazed, { id: 'fx', system: {} }] });
+
+		expect(itemEffectUsers(item, 'fx')).toEqual([{ kind: 'stacks', holder: dazed }]);
+	});
+
 	it('finds nothing for an unused effect or no id', () => {
 		const item = itemWith({ tree: [applyNode('n', 'other')] });
 

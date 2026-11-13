@@ -48,6 +48,17 @@ describe('applyEffectRow', () => {
 		expect(view.appliedLines).toEqual(['On Goblin']);
 	});
 
+	it('names the stacks of a holder that has more than one', () => {
+		const view = row({
+			applied: [
+				{ effectUuid: 'x', actorName: 'Goblin', stacks: 3 },
+				{ effectUuid: 'y', actorName: 'Kobold', stacks: 1 },
+			],
+		});
+
+		expect(view.appliedLines).toEqual(['On Goblin (3 stacks), Kobold']);
+	});
+
 	it('says that the effect stays on a holder that kept the one it had', () => {
 		const view = row({
 			applied: [

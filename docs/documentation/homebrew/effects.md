@@ -109,7 +109,7 @@ The first moment that happens ends the effect. An effect with no moment stays un
 Some effects build up: "Dazed 3 times = Petrified". On the effect's **Details** tab, under **Stacks**, turn on **A new application adds a stack**. When a creature that has the effect gets it again, it keeps one effect with a count, the stacks. "The same effect" is an effect with Stacks on, the same name and the same conditions, from any source. The timing follows the one that lasts longer, as for [the same condition again](../playing/conditions.md#how-long-a-condition-lasts). The effect ends as one: all its stacks go together.
 
 - **At [N] stacks, they gain [effect]**: when the count gets to N, the creature also gains another effect of the same item, once. The stacking effect stays on. The card gets the line "Tessa gains Petrified: 3 stacks of Dazed", with **Undo**. With Feature Effects off, the line is "Tessa has 3 stacks of Dazed", with an **Apply Petrified** button.
-- On a creature's effect, **Stacks now** shows the count. The GM can change it there.
+- On a creature's effect, **Stacks now** shows the count, and you can change it there. The count that gives an effect, and that effect, come from the item. The sheet row has a tag such as **3 stacks**, and the card says "On Goblin (3 stacks)".
 - A rule formula on the effect can read the count as `@stacks`. A **Situational Roll Mode** with **For each stack** on gives its value once for each stack.
 
 An effect with Stacks off never stacks: a second Dazed keeps the one that lasts longer.

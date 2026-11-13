@@ -174,6 +174,21 @@ describe('heroEffectsTab', () => {
 		expect(row.summaryIcon).toBe('fa-solid fa-hourglass-half');
 	});
 
+	it('tags an effect or a condition that has more than one stack with the count', () => {
+		const hero = effectsHero();
+		hero.effects.push(effectLike({ id: 'song', name: 'Song', stacks: 3 }));
+		hero.effects.push(effectLike({ id: 'one', name: 'Once', stacks: 1 }));
+		const context = effectsContext();
+		context.conditions = context.conditions.map((condition) =>
+			condition.id === 'dazed' ? { ...condition, stacks: 2 } : condition,
+		);
+		const view = heroEffectsTab(hero, context);
+
+		expect(rowOf(view, 'effect-song').tag).toBe(`${FX}.stacks {"count":"3"}`);
+		expect(rowOf(view, 'effect-one').tag).toBeUndefined();
+		expect(rowOf(view, 'condition-dazed').tag).toBe(`${FX}.stacks {"count":"2"}`);
+	});
+
 	it('gives an effect with an Escape DC an Escape button at the end of the row', () => {
 		const hero = effectsHero();
 		hero.effects.push(effectLike({ id: 'grab', name: 'Bound', escape: { dc: 13 } }));

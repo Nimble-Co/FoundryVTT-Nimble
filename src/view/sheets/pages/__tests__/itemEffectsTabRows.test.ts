@@ -43,6 +43,22 @@ describe('itemEffectsTabRows', () => {
 		expect(row).toMatchObject({ id: 'fx', name: 'Taunted', img: 'taunt.svg', transfer: false });
 	});
 
+	it('names the stacking effect that gives an effect at a stack count', () => {
+		const item = itemWith([
+			{ id: 'fx', name: 'Petrified', transfer: false },
+			{
+				id: 'dz',
+				name: 'Dazed',
+				transfer: false,
+				system: { stacks: { on: true, at: 3, effectId: 'fx' } },
+			},
+		]);
+
+		const petrified = itemEffectsTabRows(item).find((row) => row.id === 'fx');
+
+		expect(petrified?.users).toEqual(['Stacks of Dazed']);
+	});
+
 	it('says nothing uses an effect that no node or rule points at', () => {
 		const [row] = itemEffectsTabRows(itemWith([{ id: 'fx', name: 'Loose', transfer: false }]));
 

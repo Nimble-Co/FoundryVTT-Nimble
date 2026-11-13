@@ -52,7 +52,12 @@ export async function deleteItemEffect(item: DeletableItem, effectId: string): P
 		byRule.set(user.rule.id, user.fields);
 		fieldsByHolder.set(user.holder, byRule);
 	}
-	const effectUpdates: Record<string, unknown>[] = [];
+	const byEffect = new Map<string, Record<string, unknown>>();
+	const effectUpdate = (id: string) => {
+		const found = byEffect.get(id) ?? { _id: id };
+		byEffect.set(id, found);
+		return found;
+	};
 	for (const [holder, byRule] of fieldsByHolder) {
 		if (holder !== item && (!holder.id || holder.id === effectId)) continue;
 		const rules = rulesOf(sourceOf(holder)).map((rule) => {
@@ -61,8 +66,14 @@ export async function deleteItemEffect(item: DeletableItem, effectId: string): P
 			return { ...rule, ...Object.fromEntries(fields.map((name) => [name, ''])) };
 		});
 		if (holder === item) itemUpdate['system.rules'] = rules;
-		else effectUpdates.push({ _id: holder.id, 'system.rules': rules });
+		else effectUpdate(holder.id as string)['system.rules'] = rules;
 	}
+	for (const user of users) {
+		if (user.kind === 'stacks' && user.holder.id) {
+			effectUpdate(user.holder.id)['system.stacks.effectId'] = '';
+		}
+	}
+	const effectUpdates = [...byEffect.values()];
 
 	if (Object.keys(itemUpdate).length) await item.update(itemUpdate);
 	if (effectUpdates.length) await item.updateEmbeddedDocuments('ActiveEffect', effectUpdates);
