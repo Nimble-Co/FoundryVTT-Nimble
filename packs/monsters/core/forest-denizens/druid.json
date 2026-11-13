@@ -158,6 +158,15 @@
 					},
 					"effects": [
 						{
+							"id": "R5TcdUuaNd7JvSMF",
+							"type": "applyEffect",
+							"effectId": "7WNP7cqlzLa6I6VX",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						},
+						{
 							"id": "uUjd30LadRcCzqeV",
 							"type": "damage",
 							"damageType": "slashing",
@@ -198,7 +207,62 @@
 			},
 			"_id": "79PyImNg7bNW6XFp",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "7WNP7cqlzLa6I6VX",
+					"name": "Beastshift",
+					"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [
+							{
+								"key": "system.attributes.armor",
+								"type": "override",
+								"value": "medium",
+								"phase": "initial",
+								"priority": null
+							}
+						],
+						"rules": [
+							{
+								"type": "speedBonus",
+								"value": "4",
+								"label": "Beastshift",
+								"id": "Uj2XlnMRTViIsleO"
+							}
+						],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": null,
+								"span": "currentRound",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

@@ -144,7 +144,15 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "applyCondition",
+						"condition": "despair",
+						"trigger": "onCrit",
+						"label": "Fanatical Zeal: Despair on crit",
+						"id": "mxNftjimzcHEnNC8"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
@@ -395,7 +403,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"on": {
 								"failedSave": [
 									{
@@ -461,7 +468,55 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "zeroHp",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "die",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "gain",
+								"effectName": "incapacitated"
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "takeDamage",
+								"effectName": "",
+								"damageTypes": [
+									"radiant"
+								]
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

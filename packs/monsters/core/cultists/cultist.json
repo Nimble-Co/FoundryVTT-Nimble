@@ -144,7 +144,15 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "applyCondition",
+						"condition": "despair",
+						"trigger": "onCrit",
+						"label": "Fanatical Zeal: Despair on crit",
+						"id": "w3QijfphVbI6UI6M"
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

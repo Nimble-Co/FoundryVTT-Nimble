@@ -315,7 +315,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "13",
 							"saves": [
 								"strength",
 								"dexterity"

@@ -214,7 +214,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "we5YbdMppJDnWUHY",
+							"type": "applyEffect",
+							"effectId": "kJnprDKLStooJmto",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -229,7 +239,49 @@
 				},
 				"description": "<p>You are invisible until you attack.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "kJnprDKLStooJmto",
+					"name": "Invisible",
+					"img": "icons/svg/invisible.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "attack",
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"invisible"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

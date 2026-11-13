@@ -265,15 +265,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "I6uW8cTObHq1tJJ4",
-										"type": "applyEffect",
-										"effectId": "jKudfriNVHsdHXks",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "1Jocofp3EKqEhzKR"
-									},
-									{
 										"id": "E0CsPmuPXa2mQFVP",
 										"type": "applyEffect",
 										"effectId": "2W86UGj5fgoMLDbA",
@@ -314,35 +305,6 @@
 			"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
 			"effects": [
 				{
-					"_id": "jKudfriNVHsdHXks",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "2W86UGj5fgoMLDbA",
 					"name": "Grappled",
 					"img": "systems/nimble/assets/icons/grappled.svg",
@@ -352,7 +314,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "16",
 							"saves": [
 								"strength",
 								"dexterity"

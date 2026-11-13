@@ -268,15 +268,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "dCHpp1egSvnTxHkE",
-										"type": "applyEffect",
-										"effectId": "wDCyAHul7TR2xiTY",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "JimMPPXV3TWIqq1y"
-									},
-									{
 										"id": "D3RTw5cFCK0COE4S",
 										"type": "applyEffect",
 										"effectId": "mE4s6QLBaUV13bPy",
@@ -316,35 +307,6 @@
 			"_id": "GHBtSPT1dK9s7nQ4",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",
 			"effects": [
-				{
-					"_id": "wDCyAHul7TR2xiTY",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
 				{
 					"_id": "mE4s6QLBaUV13bPy",
 					"name": "Prone",

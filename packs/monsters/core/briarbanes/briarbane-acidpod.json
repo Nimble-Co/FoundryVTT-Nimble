@@ -285,15 +285,6 @@
 							"on": {
 								"failedSave": [
 									{
-										"id": "QzzLXlXGYaCzv6mP",
-										"type": "applyEffect",
-										"effectId": "qLRW1UkDAVUDKFvj",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "failedSave",
-										"parentNode": "Eq4wmPFjrkCrjSso"
-									},
-									{
 										"id": "fNd6s6VVxcvkHsSc",
 										"type": "applyEffect",
 										"effectId": "bm0syBy0M81cxxBc",
@@ -328,35 +319,6 @@
 			"img": "icons/magic/nature/root-vine-fire-entangled-hand.webp",
 			"effects": [
 				{
-					"_id": "qLRW1UkDAVUDKFvj",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "bm0syBy0M81cxxBc",
 					"name": "Grappled",
 					"img": "systems/nimble/assets/icons/grappled.svg",
@@ -370,7 +332,8 @@
 							"saves": [
 								"strength",
 								"dexterity"
-							]
+							],
+							"noDc": true
 						},
 						"tempHp": null,
 						"minor": false

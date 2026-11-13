@@ -144,7 +144,28 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "UhQHd7PqJHyWeImo",
+						"identifier": "",
+						"label": "Spines",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "attacked",
+						"attackDelivery": "melee",
+						"notOnAllies": false,
+						"onlyCrits": false,
+						"answeredAttack": false,
+						"amount": "formula",
+						"formula": "3",
+						"damageType": "",
+						"ignoreArmor": true,
+						"woundDoubles": false,
+						"attackerEffectId": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

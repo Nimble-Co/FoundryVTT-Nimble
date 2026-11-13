@@ -172,7 +172,16 @@
 										"id": "3GCn8oRY2zLRA9RS",
 										"type": "applyEffect",
 										"effectId": "q5AOtsApLNEP2oHY",
-										"recipient": "targets",
+										"recipient": "savers",
+										"tempHealingNodeId": null,
+										"parentContext": "failedSave",
+										"parentNode": "8oSIyG74A90ERntm"
+									},
+									{
+										"id": "02ktG32lY9v4HHFK",
+										"type": "applyEffect",
+										"effectId": "B8qEKIEmNXxaqDBk",
+										"recipient": "savers",
 										"tempHealingNodeId": null,
 										"parentContext": "failedSave",
 										"parentNode": "8oSIyG74A90ERntm"
@@ -205,7 +214,19 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "holder",
+								"span": "currentTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [
@@ -223,6 +244,73 @@
 					"statuses": [
 						"confused"
 					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "B8qEKIEmNXxaqDBk",
+					"name": "Confounding Pheromones.",
+					"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [
+							{
+								"type": "situationalRollMode",
+								"disabled": false,
+								"id": "dKD86I9FP0N8c7zQ",
+								"identifier": "",
+								"label": "Confounding Pheromones",
+								"predicate": {
+									"$and": [
+										"save:from:confounding-pheromones"
+									]
+								},
+								"priority": 1,
+								"value": 1,
+								"perStack": true,
+								"checkType": "savingThrow",
+								"saves": [
+									"will"
+								],
+								"abilities": [],
+								"skills": []
+							}
+						],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": "combatEnd",
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false,
+						"stacks": {
+							"on": true,
+							"count": 1,
+							"at": null,
+							"effectId": ""
+						}
+					},
+					"description": "Advantage 1 on this save for each failure this combat.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
 					"flags": {},
 					"folder": null
 				}

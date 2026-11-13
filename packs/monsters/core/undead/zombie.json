@@ -222,7 +222,8 @@
 							"saves": [
 								"strength",
 								"dexterity"
-							]
+							],
+							"noDc": true
 						},
 						"tempHp": null,
 						"minor": false

@@ -169,15 +169,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "ah3pHtFYfzOZV6Zf",
-										"type": "applyEffect",
-										"effectId": "5oxaGV24dlNtRQRP",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "T9LWdmKADzv0aJSl"
-									},
-									{
 										"id": "JCm1vmnnng7ktqmp",
 										"type": "applyEffect",
 										"effectId": "1Y3BB4THhK04NKze",
@@ -218,35 +209,6 @@
 			"img": "icons/creatures/webs/web-clumped-blue.webp",
 			"effects": [
 				{
-					"_id": "5oxaGV24dlNtRQRP",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "1Y3BB4THhK04NKze",
 					"name": "Restrained",
 					"img": "icons/svg/net.svg",
@@ -254,9 +216,25 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "takeDamage",
+								"effectName": "",
+								"damageTypes": [
+									"slashing",
+									"fire"
+								]
+							}
+						],
 						"escape": {
-							"dc": "",
+							"dc": "12",
 							"saves": [
 								"strength",
 								"dexterity"

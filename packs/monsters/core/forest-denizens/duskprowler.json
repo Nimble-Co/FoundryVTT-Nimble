@@ -158,7 +158,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "hVulo3xAulds5JnN",
+							"type": "applyEffect",
+							"effectId": "SL1skTyKyKzNzXIZ",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -173,7 +183,47 @@
 				},
 				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage suppresses this effect until the end of the next hero's turn.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "SL1skTyKyKzNzXIZ",
+					"name": "Illusory Aura suppressed",
+					"img": "icons/magic/control/silhouette-aura-energy-purple.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "nextHero",
+								"span": "nextTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Attacks against the Duskprowler do not have Disadvantage 2.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
