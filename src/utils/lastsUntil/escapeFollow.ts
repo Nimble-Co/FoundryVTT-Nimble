@@ -1,6 +1,12 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, CardEventText, EscapeRulingAction } from '#types/cardEvent.d.ts';
+import { askActiveGm } from '#utils/askActiveGm.js';
 import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import {
+	dealEscapeDamage,
+	escapeDamageRulesOf,
+	takeBackEscapeDamage,
+} from '#utils/damage/escapeDamage.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
@@ -25,11 +31,16 @@ interface EscapeCard {
 }
 
 interface EscapeHolder {
+	uuid: string;
+	name?: string | null;
 	isOwner?: boolean;
 	effects: { get(id: string): ActiveEffect | undefined };
+	applyDamage(amount: number): Promise<unknown>;
+	update(data: Record<string, unknown>, options?: object): Promise<unknown>;
 }
 
 const WORDS = 'NIMBLE.escape.chat';
+const QUERY_NAME = `${SYSTEM_ID}.escapeRuling`;
 
 function linkOf(card: EscapeCard | null | undefined): EscapeRollLink | null {
 	const flags = (card?.flags?.[SYSTEM_ID] ?? {}) as Record<string, unknown>;
@@ -106,12 +117,52 @@ const endMoment = (effectName: string, hostId: string, reason: CardEventText) =>
 	reason,
 });
 
+/** The creature that applied the effect: the actor in its origin, or the actor of that item. */
+function sourceUuidOf(effect: ActiveEffect): string | null {
+	if (!effect.origin) return null;
+	const origin = fromUuidSync(effect.origin as never, { strict: false }) as {
+		documentName?: string;
+		uuid?: string;
+		actor?: { uuid?: string } | null;
+	} | null;
+	if (origin?.documentName === 'Actor') return origin.uuid ?? null;
+	return origin?.actor?.uuid ?? null;
+}
+
+type EscapeTarget = Pick<EscapeRollLink, 'holderUuid' | 'effectId' | 'effectName'>;
+
+/**
+ * Ends the effect for an Escape, with its ended line on the card. When this end removed it, the
+ * effect's Damage on Escape rules deal their damage on the same card.
+ */
+async function escapeNow(
+	card: EscapeCard,
+	target: EscapeTarget,
+	reason: CardEventText,
+): Promise<boolean> {
+	const holder = holderOf(target);
+	const effect = holder?.effects.get(target.effectId);
+	if (!holder || !effect || !card.id) return false;
+	const rules = escapeDamageRulesOf(effect);
+	const escaped = {
+		effectId: target.effectId,
+		effectName: target.effectName,
+		img: (effect.img as string | null) ?? null,
+		sourceUuid: sourceUuidOf(effect),
+	};
+	await endEffects([effect], endMoment(target.effectName, card.id, reason));
+	if (holder.effects.get(target.effectId)) return false;
+	if (rules.length > 0) await dealEscapeDamage(card, holder as never, escaped, rules);
+	return true;
+}
+
 const queue = keyedQueue();
 
 /**
  * On the active GM, each time the result of an Escape's roll card changes: a pass ends the effect,
- * with its ended line on that card; a fail after a pass puts the effect back and removes the line.
- * With no DC, a result that is not known waits for the table, and a fail says so.
+ * with its ended line and the escape damage on that card; a fail after a pass puts the effect
+ * back, gives back the damage and removes the lines. With no DC, a result that is not known waits
+ * for the table, and a fail says so.
  */
 export async function followEscape(payload: {
 	messageId?: string | null;
@@ -126,18 +177,26 @@ export async function followEscape(payload: {
 
 /**
  * Escapes on a waiting line: the effect ends as on a pass, with its ended line on the same card,
- * and the waiting line goes.
+ * and the waiting line goes. The active GM does it; another client asks the active GM.
  */
 export async function endEscape(card: EscapeCard, event: CardEvent): Promise<boolean> {
 	const action = event.action;
 	if (action?.kind !== 'escapeRuling' || action.state !== 'waiting' || !card.id) return false;
 	if (!canRuleEscape(action)) return false;
-	const cardId = card.id;
+	if (!game.user?.isActiveGM) {
+		return (await askActiveGm(QUERY_NAME, { messageId: card.id, eventId: event.id })) === true;
+	}
+	return ruleHere(card, event.id);
+}
+
+function ruleHere(card: EscapeCard, eventId: string): Promise<boolean> {
+	const cardId = card.id ?? '';
 	return queue.run(cardId, async () => {
-		const effect = holderOf(action)?.effects.get(action.effectId);
-		if (!effect) return false;
-		await endEffects([effect], endMoment(action.effectName, cardId, { key: `${WORDS}.ruled` }));
-		await replaceCardEvent(card as never, event.id, null);
+		const line = cardEventsOf(card as never).find((each) => each.id === eventId);
+		const action = line?.action;
+		if (action?.kind !== 'escapeRuling' || action.state !== 'waiting') return false;
+		if (!(await escapeNow(card, action, { key: `${WORDS}.ruled` }))) return false;
+		await replaceCardEvent(card as never, eventId, null);
 		return true;
 	});
 }
@@ -154,8 +213,10 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 		(event) => event.action?.kind === 'escapeRuling' && sameEffect(link, event.action),
 	);
 	const effect = holderOf(link)?.effects.get(link.effectId);
+	/** The escape no longer stands: the effect and the damage of the escape go back. */
 	const putBack = async () => {
 		if (ended?.action?.kind === 'undoEnd' && !effect) await undoEndedEffect(ended.action.row);
+		await takeBackEscapeDamage(card, link);
 	};
 	/** The line of an Escape with no DC takes the place of `line`, or is added. */
 	const showRuling = (line: CardEvent | undefined, state: EscapeRulingAction['state']) => {
@@ -167,7 +228,7 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 
 	if (outcome === 'pass') {
 		if (ended || !effect) return true;
-		await endEffects([effect], endMoment(link.effectName, card.id ?? '', escapedReason(card)));
+		await escapeNow(card, link, escapedReason(card));
 		if (ruling) await replaceCardEvent(card as never, ruling.id, null);
 		return true;
 	}
@@ -208,4 +269,12 @@ export function registerEscapeHooks(): void {
 	Hooks.on(systemHookName('saveResolved'), onResult);
 	// @ts-expect-error - nimble.skillCheckResolved is a custom Nimble hook
 	Hooks.on(systemHookName('skillCheckResolved'), onResult);
+	Hooks.once('init', () => {
+		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
+		queries[QUERY_NAME] = async (data: { messageId?: string; eventId?: string }) => {
+			const card = game.messages?.get(data.messageId ?? '') as unknown as EscapeCard | undefined;
+			if (!card?.id || !data.eventId) return false;
+			return ruleHere(card, data.eventId);
+		};
+	});
 }

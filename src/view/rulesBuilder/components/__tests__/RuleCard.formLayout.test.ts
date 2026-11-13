@@ -521,6 +521,7 @@ describe('RuleCard without a form layout', () => {
 		'optionWindow',
 		'saveOnEvent',
 		'damageBack',
+		'escapeDamage',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

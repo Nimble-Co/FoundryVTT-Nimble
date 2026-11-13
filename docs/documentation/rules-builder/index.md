@@ -91,6 +91,7 @@ These rules work with the effects of an item. A state such as Rage uses them: se
 
 - **Tags** (under **Conditions**) adds tags, such as `self:raging`, while its item or effect is on the creature. Other rules read them in their Condition box. An effect such as "considered undead" is a Tags rule with `target:undead`: the system makes no tag from a monster's creature type.
 - **Save on an Event** (under **Triggers**) asks the owner for a save on the card that caused the event: when a crit hits the creature, or when it takes damage. A failure ends the effect the rule is on. Concentration uses it for its DC 10 STR save on a crit.
+- **Damage on escape** (under **Triggers**) works only on an effect. When the holder escapes the effect, it takes the **Damage**, with a line on the roll card of the escape. It is not an attack.
 - **Max Actions Bonus** (under **Bonuses**) adds to the creature's max actions while it is on, for example "+1 max action". It also works on an effect.
 - **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path, the dice pools in **Pools** are emptied. A new use that replaces the effect is not an end.
 - **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made.

@@ -259,6 +259,12 @@ describe('rule types that need an effect', () => {
 			.map(([type]) => type)
 			.sort();
 
-		expect(effectOnly).toEqual(['emptyPoolsAtEnd', 'freeSpellCost', 'heldRoll', 'saveOnEvent']);
+		expect(effectOnly).toEqual([
+			'emptyPoolsAtEnd',
+			'escapeDamage',
+			'freeSpellCost',
+			'heldRoll',
+			'saveOnEvent',
+		]);
 	});
 });

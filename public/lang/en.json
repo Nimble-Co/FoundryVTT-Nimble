@@ -721,6 +721,9 @@
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"escapeDamage": {
+				"cause": "Escaped {effect} - {formula}"
+			},
 			"turnDamage": {
 				"takes": "{name} takes {damage}",
 				"gains": "{name} gains {wounds}",
@@ -2009,6 +2012,7 @@
 			"speedBonus": "Speed Bonus",
 			"tags": "Tags",
 			"turnDamage": "Damage each turn",
+			"escapeDamage": "Damage on escape",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
@@ -3576,6 +3580,14 @@
 					"label": "Wounds",
 					"hint": "The Wounds it gives each time, up to the max of the track. A creature with no Wound track takes none."
 				}
+			},
+			"escapeDamage": {
+				"description": "Damage to the creature that has this effect when it escapes the effect: its Escape roll succeeds, or the table judges that it escapes. It is not an attack: no armor and no Defend.",
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
+				},
+				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",

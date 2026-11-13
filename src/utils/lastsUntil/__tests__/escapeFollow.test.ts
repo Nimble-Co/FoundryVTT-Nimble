@@ -4,14 +4,27 @@ import { SYSTEM_ID } from '#system';
 // Setup loads these modules before a hoisted mock could apply.
 const replaceCardEvent = vi.fn(async () => true);
 const addCardEvents = vi.fn(async () => true);
-const endEffects = vi.fn(async () => {});
+// The GM deletes the effects it ends.
+const endEffects = vi.fn(async (ended: Array<{ id: string }>, _moment?: unknown) => {
+	for (const effect of ended) effects.delete(effect.id);
+});
 const undoEndedEffect = vi.fn(async () => true);
+const escapeDamageRulesOf = vi.fn((_effect: unknown): unknown[] => []);
+const dealEscapeDamage = vi.fn(async (..._args: unknown[]) => {});
+const takeBackEscapeDamage = vi.fn(async (..._args: unknown[]) => {});
+const askActiveGm = vi.fn(async (..._args: unknown[]): Promise<unknown> => true);
 vi.resetModules();
 const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.js')>(
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, addCardEvents, replaceCardEvent }));
 vi.doMock('#utils/lastsUntil/endEffects.js', () => ({ endEffects, undoEndedEffect }));
+vi.doMock('#utils/damage/escapeDamage.js', () => ({
+	escapeDamageRulesOf,
+	dealEscapeDamage,
+	takeBackEscapeDamage,
+}));
+vi.doMock('#utils/askActiveGm.js', () => ({ askActiveGm }));
 const { canRuleEscape, endEscape, escapeRollNote, escapeRulingEvent, followEscape } = await import(
 	'../escapeFollow.js'
 );
@@ -320,5 +333,88 @@ describe('an Escape by a skill check', () => {
 
 		const [[, moment]] = endEffects.mock.calls as unknown as [[unknown, { reason: never }]];
 		expect(cardEvents.cardEventText(moment.reason)).toBe('Escaped: Finesse check 14 against DC 12');
+	});
+});
+
+describe('the damage of an escape', () => {
+	const rules = [{ id: 'r1', formula: '1d12', damageType: '' }];
+
+	beforeEach(() => {
+		escapeDamageRulesOf.mockReturnValue(rules);
+	});
+
+	it('a pass deals the damage rules of the effect on the roll card, after the end', async () => {
+		await followEscape({ messageId: 's1', outcome: 'pass' });
+
+		expect(escapeDamageRulesOf).toHaveBeenCalledWith(grappled);
+		expect(dealEscapeDamage).toHaveBeenCalledTimes(1);
+		expect(dealEscapeDamage).toHaveBeenCalledWith(
+			card,
+			tessa,
+			{ effectId: 'grab', effectName: 'Grappled', img: null, sourceUuid: null },
+			rules,
+		);
+		expect(endEffects.mock.invocationCallOrder[0]).toBeLessThan(
+			dealEscapeDamage.mock.invocationCallOrder[0],
+		);
+	});
+
+	it('deals nothing when the end did not remove the effect', async () => {
+		endEffects.mockImplementationOnce(async () => {});
+
+		await followEscape({ messageId: 's1', outcome: 'pass' });
+
+		expect(dealEscapeDamage).not.toHaveBeenCalled();
+	});
+
+	it('deals nothing for an effect that is already gone, or a second pass', async () => {
+		effects.clear();
+		await followEscape({ messageId: 's1', outcome: 'pass' });
+		effects.set('grab', grappled);
+		card.flags[SYSTEM_ID].events = [endedLine()];
+		await followEscape({ messageId: 's1', outcome: 'pass' });
+
+		expect(dealEscapeDamage).not.toHaveBeenCalled();
+	});
+
+	it('a reroll to a fail gives the damage back with the effect', async () => {
+		card.flags[SYSTEM_ID].events = [endedLine()];
+		effects.clear();
+
+		await followEscape({ messageId: 's1', outcome: 'fail' });
+
+		expect(undoEndedEffect).toHaveBeenCalled();
+		expect(takeBackEscapeDamage).toHaveBeenCalledWith(card, link);
+	});
+
+	it('a fail with no escape on the card gives nothing back', async () => {
+		await followEscape({ messageId: 's1', outcome: 'fail' });
+
+		expect(takeBackEscapeDamage).not.toHaveBeenCalled();
+	});
+
+	it('Escapes deals the damage too', async () => {
+		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', 5);
+		card.flags[SYSTEM_ID].events = [waiting];
+
+		await endEscape(card, waiting);
+
+		expect(dealEscapeDamage).toHaveBeenCalledWith(card, tessa, expect.anything(), rules);
+	});
+
+	it('a player who clicks Escapes asks the active GM, who ends it', async () => {
+		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', 5);
+		card.flags[SYSTEM_ID].events = [waiting];
+		setGM(false);
+		(tessa as { isOwner?: boolean }).isOwner = true;
+
+		expect(await endEscape(card, waiting)).toBe(true);
+
+		(tessa as { isOwner?: boolean }).isOwner = undefined;
+		expect(askActiveGm).toHaveBeenCalledWith(`${SYSTEM_ID}.escapeRuling`, {
+			messageId: 's1',
+			eventId: waiting.id,
+		});
+		expect(endEffects).not.toHaveBeenCalled();
 	});
 });

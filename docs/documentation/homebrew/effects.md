@@ -148,6 +148,8 @@ It is not an attack: temp HP go first, then HP, with no armor and no Defend. Eac
 - **Undo** is not healing: an effect that lasts until its holder is healed stays.
 :::
 
+A **Damage on escape** rule works the same way, but only once: when the holder escapes the effect the rule is on. Its line goes on the roll card of the escape, after the ended line. The holder rolls the Escape and succeeds, or the table clicks **Escapes**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank: see [Raise Effect Rule](spells.md).
+
 ## Escape
 
 Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. The row under it, "or a ... check", turns on skill checks too, such as Finesse to pick a lock. One save or check always stays on. A new effect has STR and DEX on.
@@ -157,6 +159,8 @@ A blank DC means the effect has no escape. Turn on **No DC** for an escape that 
 ::: details A monster and a skill check escape
 Monsters have no skills. A monster rolls the save of the skill's stat instead, such as a DEX save for Finesse. When a save and a check use the same stat, the monster gets that save once.
 :::
+
+A **Damage on escape** rule on the effect hurts the holder when it escapes, such as the upcast of Shadow Trap. See [Damage each turn](#damage-each-turn).
 
 ## Related pages
 
