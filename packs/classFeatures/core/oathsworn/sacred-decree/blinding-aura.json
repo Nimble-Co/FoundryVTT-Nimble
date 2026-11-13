@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "blinding-aura-use-pool",
+				"identifier": "blinding-aura-use",
+				"label": "Blinding Aura use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "blinding-aura-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "blinding-aura-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +53,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "hMjxdBhgM7d5o5vQ",
+					"type": "applyEffect",
+					"effectId": "lLgA0vSbmAoT1lQ5",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -48,7 +91,49 @@
 			16
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "lLgA0vSbmAoT1lQ5",
+			"name": "Blinded",
+			"img": "icons/svg/blind.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"blinded"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -20,7 +20,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "AWSYzThdL6TwwAXN",
+					"type": "applyEffect",
+					"effectId": "b3LE6GHrQIKJltSQ",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +53,69 @@
 			5
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "b3LE6GHrQIKJltSQ",
+			"name": "Silent But Deadly",
+			"img": "icons/creatures/invertebrates/spider-skull-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "attack",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "zeroHp",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "castSpell",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Attackers cannot target you until you become conspicuous (for example, seen transforming or attacking).",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

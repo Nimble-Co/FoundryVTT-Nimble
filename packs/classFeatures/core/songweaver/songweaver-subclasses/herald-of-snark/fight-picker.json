@@ -6,7 +6,45 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "fight-picker-use-pool",
+				"identifier": "fight-picker-use",
+				"label": "Fight Picker use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onAnyTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "fight-picker-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "fight-picker-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +58,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "ZKRNaxL97UM87XXL",
+					"type": "applyEffect",
+					"effectId": "ufcjL0fn1ESWJrq4",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +91,47 @@
 			7
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "ufcjL0fn1ESWJrq4",
+			"name": "Fight Picker",
+			"img": "icons/magic/control/buff-strength-muscle-damage-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "currentTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Taunted by the ally the Songweaver chose, until the end of this creature's turn.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

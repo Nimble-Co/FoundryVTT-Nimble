@@ -6,7 +6,26 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useItemFree",
+				"disabled": false,
+				"id": "VpVfLXW6605I5Vc5",
+				"identifier": "",
+				"label": "Primordial Force",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "primordial-force",
+				"triggers": [
+					"onSpellCast"
+				],
+				"manaAtLeast": 2,
+				"freeOf": [
+					"uses",
+					"mana"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +39,69 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "uoktkenF4vkQs3Li",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "@will",
+					"recipient": "self",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "iCiDslSzYetvBvke",
+					"type": "damage",
+					"damageType": "",
+					"formula": "@will",
+					"canCrit": false,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "3YsilhhjwhfVU2ih",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "iCiDslSzYetvBvke"
+							}
+						]
+					}
+				},
+				{
+					"id": "e0EjxAqgWHj22YhM",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "@will",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "X68b2Yr6WIElmhNw",
+					"type": "applyEffect",
+					"effectId": "2O0NMTS096pDQNJa",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"waitsForClick": true,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "evFXvKTfH5Ho7GHX",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "6",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"upTo": true,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +124,59 @@
 			11
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "2O0NMTS096pDQNJa",
+			"name": "Primordial Force: Wind",
+			"img": "icons/magic/nature/meteorite-purple.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "rUhZamTJAHNG6gVW",
+						"identifier": "",
+						"label": "Primordial Force: Wind",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "@attributes.movement.walk"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "any",
+						"span": "currentTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

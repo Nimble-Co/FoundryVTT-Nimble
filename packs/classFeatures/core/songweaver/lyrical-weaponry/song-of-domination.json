@@ -6,13 +6,46 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "song-of-domination-use-pool",
+				"identifier": "song-of-domination-use",
+				"label": "Song of Domination use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "song-of-domination-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "song-of-domination-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 2,
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,7 +53,31 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "EYL5ZP4OHuNC0RoK",
+					"type": "savingThrow",
+					"savingThrowType": "will",
+					"saveDC": "",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "DKHIJBHBwAcuejk6",
+								"type": "applyEffect",
+								"effectId": "guDBMgfOhL0vScyS",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "EYL5ZP4OHuNC0RoK"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -46,7 +103,47 @@
 			17
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "guDBMgfOhL0vScyS",
+			"name": "Song of Domination",
+			"img": "icons/magic/control/debuff-chains-shackles-movement-blue.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Cannot move on its next turn.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

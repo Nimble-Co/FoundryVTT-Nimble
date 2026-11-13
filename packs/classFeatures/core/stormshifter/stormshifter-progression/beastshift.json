@@ -58,7 +58,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "pBs0JHEdprC9DMsZ",
+					"type": "applyEffect",
+					"effectId": "UGH9aoRlew2qPKoT",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -81,7 +91,58 @@
 			1
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "UGH9aoRlew2qPKoT",
+			"name": "Beastshift",
+			"img": "icons/creatures/birds/corvid-watchful-glowing-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "zeroHp",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "castSpell",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "You are a harmless beast (squirrel, pigeon, etc.) and can speak with animals.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -6,21 +6,82 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "glacial-resilience-use-pool",
+				"identifier": "glacial-resilience-use",
+				"label": "Glacial Resilience use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "glacial-resilience-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "glacial-resilience-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "",
+				"details": "whenever you are attacked or would gain a condition",
 				"quantity": 1,
-				"type": "none",
-				"isReaction": false
+				"type": "action",
+				"isReaction": true
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "5amz9MoZqpjUKoEt",
+					"type": "endConditions",
+					"recipient": "self",
+					"which": "negative",
+					"conditions": [],
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "sf1DhjR3y8b2pTb9",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "10*@level",
+					"recipient": "self",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "phljSF19laaKgXyY",
+					"type": "applyEffect",
+					"effectId": "S3vCDSiEK85jfNpA",
+					"recipient": "self",
+					"tempHealingNodeId": "sf1DhjR3y8b2pTb9",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +104,47 @@
 			11
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "S3vCDSiEK85jfNpA",
+			"name": "Glacial Resilience",
+			"img": "icons/magic/water/barrier-ice-shield.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
