@@ -69,7 +69,6 @@ import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	isAttackRoll,
-	isMelee,
 	keptAmountEndedBy,
 	keptAmountFor,
 	spendHeldChanges,
@@ -763,7 +762,7 @@ class ItemActivationManager {
 						target: this.free ? null : firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
-						melee: isMelee(delivery),
+						delivery,
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,

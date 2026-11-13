@@ -16,7 +16,6 @@ import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	type heldChangesForAttack,
-	isMelee,
 } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
@@ -280,11 +279,9 @@ async function rollSingleMinionAttack(params: {
 			target: params.targetActor,
 			area: false,
 			attack: true,
-			melee: isMelee(
-				deliveryOfAttack(
-					resolvedActionContext.selectedAction.system?.activation as AttackActivation | undefined,
-					resolvedActionContext.actor,
-				),
+			delivery: deliveryOfAttack(
+				resolvedActionContext.selectedAction.system?.activation as AttackActivation | undefined,
+				resolvedActionContext.actor,
 			),
 			// Only the conditions give a minion group attack disadvantage.
 			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),

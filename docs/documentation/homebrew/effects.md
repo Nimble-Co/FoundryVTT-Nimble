@@ -134,7 +134,7 @@ For example, True Strike holds advantage for the next attack of its target, unti
 ![The roll window of Grug's Battleaxe: True Strike, +1 advantage, this roll spends it](/images/documentation/held-roll-window.png)
 
 ::: details More about held changes
-- **Melee attacks only**: only a melee attack uses the change. An attack with no attack type counts as melee.
+- **Melee attacks only**: only a melee attack uses the change. A monster attack with no attack type is melee, but a monster area attack with none is neither melee nor ranged. A hero attack with no attack type is neither.
 - **Only attacks by the creature that applied it**: for the next attack against the holder, only the creature that put the effect on uses it, as with Advance!.
 - An area attack uses only the attacker's own changes, not the changes on a target. The one exception is **every die at its highest number** on a target: that target alone takes the highest total of the area roll, and the change is used up when the damage is applied.
 - **Ranged attacks only** is the opposite of melee only.

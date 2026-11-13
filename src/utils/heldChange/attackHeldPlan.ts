@@ -1,5 +1,6 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { createBonusDamageNode } from '#utils/treeManipulation/createBonusDamageNode.js';
 import { removeDisadvantage } from '../../managers/itemActivation/keptAmountActivation.js';
 import {
@@ -19,8 +20,8 @@ interface AttackHeldInput {
 	target: Holder;
 	/** An area roll has no Primary Die, so it uses no Primary Die change. */
 	area: boolean;
-	/** A melee attack; unknown counts as melee. */
-	melee?: boolean;
+	/** How the attack is delivered (`deliveryOfAttack`); none fits no melee-only or ranged-only change. */
+	delivery?: AttackDelivery;
 	/** The roll is an attack roll. Only an attack roll uses Primary Die changes and ignores disadvantage. */
 	attack: boolean;
 	/** The amount the roll keeps in place of dice, or null when it rolls. */
@@ -143,7 +144,7 @@ function attackHeldPlanOf(input: AttackHeldInput): AttackHeldPlan {
 		attacker: input.attacker,
 		target: input.target,
 		area: input.area,
-		melee: input.melee,
+		delivery: input.delivery,
 	};
 	return planOf(
 		{

@@ -39,7 +39,6 @@ import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
 import {
 	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
-	isMelee,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
@@ -757,8 +756,8 @@ function areaMaximizeOf(
 		  }
 		| undefined;
 	if (!activation?.acquireTargetsFromTemplate || !activation.template?.shape) return undefined;
-	const melee = isMelee(deliveryOfAttack(activation, attacker));
-	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, melee);
+	const delivery = deliveryOfAttack(activation, attacker);
+	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, delivery);
 }
 
 function buildDamageApplicationPlan(params: {

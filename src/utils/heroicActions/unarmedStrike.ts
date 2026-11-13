@@ -139,7 +139,7 @@ export async function rollUnarmedStrike(
 		target: firstTargetActor(),
 		area: false,
 		attack: true,
-		melee: true,
+		delivery,
 		kept,
 		keptToEnd: keptAmount,
 		extraDamage: true,

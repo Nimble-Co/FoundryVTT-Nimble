@@ -8,7 +8,11 @@ import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { type AttackDelivery, deliveryOfAttack } from '../damage/attackDelivery.js';
+import {
+	type AttackDelivery,
+	deliveryOfAttack,
+	matchesAttackDelivery,
+} from '../damage/attackDelivery.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.heldChange`;
 const MESSAGE_FLAG = 'heldChangeMessage';
@@ -148,14 +152,14 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 	return held;
 }
 
-/** The change can go on an attack by `attacker`, melee or not. */
+/** The change can go on an attack by `attacker` with this delivery. Melee-only wins over ranged-only. */
 function fitsAttack(
 	held: HeldChange,
 	attacker: Holder | null | undefined,
-	melee: boolean | undefined,
+	delivery: AttackDelivery | undefined,
 ): boolean {
-	if (held.meleeOnly && melee === false) return false;
-	if (held.rangedOnly && melee !== false) return false;
+	const filter = held.meleeOnly ? 'melee' : held.rangedOnly ? 'ranged' : 'any';
+	if (!matchesAttackDelivery(filter, delivery ?? null)) return false;
 	// A lost source ('') fits no attacker.
 	return held.onlyFromUuid === null || held.onlyFromUuid === attacker?.uuid;
 }
@@ -165,8 +169,8 @@ interface AttackInput {
 	target: Holder | null | undefined;
 	/** An area attack: a change on a target does not go on it. */
 	area: boolean;
-	/** A melee attack; unknown counts as melee. */
-	melee?: boolean;
+	/** How the attack is delivered (`deliveryOfAttack`); none fits no melee-only or ranged-only change. */
+	delivery?: AttackDelivery;
 }
 
 /** The attacker's own changes of `kind`, and those on the single target, that fit this attack. */
@@ -176,7 +180,7 @@ function changesForAttack(input: AttackInput, kind: HeldChangeData['kind']): Hel
 		? []
 		: heldChangesOn(input.target).filter((held) => held.appliesTo === 'attacksOnHolder');
 	return [...own, ...onTarget].filter(
-		(held) => held.kind === kind && fitsAttack(held, input.attacker, input.melee),
+		(held) => held.kind === kind && fitsAttack(held, input.attacker, input.delivery),
 	);
 }
 
@@ -219,14 +223,14 @@ export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 export function heldMaximizeOnAreaTarget(
 	target: Holder | null | undefined,
 	attacker: Holder | null | undefined,
-	melee: boolean | undefined,
+	delivery: AttackDelivery,
 ): HeldChange | null {
 	return (
 		heldChangesOn(target).find(
 			(held) =>
 				held.kind === 'maximize' &&
 				held.appliesTo === 'attacksOnHolder' &&
-				fitsAttack(held, attacker, melee),
+				fitsAttack(held, attacker, delivery),
 		) ?? null
 	);
 }
@@ -354,7 +358,7 @@ export function heldLinesForItem(
 		attacker,
 		target: firstTargetActor(),
 		area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
-		melee: isMelee(deliveryOfAttack(activation, attacker)),
+		delivery: deliveryOfAttack(activation, attacker),
 	};
 	const maximize = heldMaximizeForAttack(attack);
 	return [
@@ -368,11 +372,6 @@ export function heldLinesForItem(
 			...heldExtraDamageForAttack(attack),
 		]),
 	];
-}
-
-/** Melee, ranged, or unknown (an attack with no attack type). */
-export function isMelee(delivery: AttackDelivery): boolean | undefined {
-	return delivery === null ? undefined : delivery === 'melee';
 }
 
 /** The amount the holder keeps for its next attack. Any damage that can harm is an attack (C:452); an area does not use it. */

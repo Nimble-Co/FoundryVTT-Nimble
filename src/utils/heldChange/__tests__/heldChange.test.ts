@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
+import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	type HeldRollEffectSpec,
 	heldRollEffect,
@@ -241,32 +242,37 @@ describe('heldAdvantageForAttack', () => {
 			attacker: creature('A'),
 			target,
 			area: false,
-			melee: false,
+			delivery: 'ranged',
 		});
 		expect(held).toEqual([]);
 	});
 
-	it('reads a melee-only change on an attack of unknown delivery', () => {
+	it('does not read a melee-only change on an attack with no delivery', () => {
 		const target = creature('T', [advantage({ meleeOnly: true })]);
-		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
-		expect(held).toHaveLength(1);
+		const held = heldAdvantageForAttack({
+			attacker: creature('A'),
+			target,
+			area: false,
+			delivery: null,
+		});
+		expect(held).toEqual([]);
 	});
 
 	it('reads a ranged-only change only on an attack known to be ranged', () => {
 		const target = creature('T', [advantage({ rangedOnly: true })]);
-		const on = (melee: boolean | undefined) =>
-			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
-		expect(on(false)).toHaveLength(1);
-		expect(on(true)).toEqual([]);
-		expect(on(undefined)).toEqual([]);
+		const on = (delivery: AttackDelivery) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, delivery });
+		expect(on('ranged')).toHaveLength(1);
+		expect(on('melee')).toEqual([]);
+		expect(on(null)).toEqual([]);
 	});
 
 	it('reads a change that is both melee-only and ranged-only as melee-only', () => {
 		const target = creature('T', [advantage({ meleeOnly: true, rangedOnly: true })]);
-		const on = (melee: boolean | undefined) =>
-			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
-		expect(on(true)).toHaveLength(1);
-		expect(on(false)).toEqual([]);
+		const on = (delivery: AttackDelivery) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, delivery });
+		expect(on('melee')).toHaveLength(1);
+		expect(on('ranged')).toEqual([]);
 	});
 
 	it('reads a source-only change only on an attack by the origin creature', () => {
@@ -331,7 +337,12 @@ describe('heldMaximizeForAttack', () => {
 	it('does not read a melee-only change on an attack that is not melee', () => {
 		const target = creature('T', [maximize({ meleeOnly: true })]);
 		expect(
-			heldMaximizeForAttack({ attacker: creature('A'), target, area: false, melee: false }),
+			heldMaximizeForAttack({
+				attacker: creature('A'),
+				target,
+				area: false,
+				delivery: 'ranged',
+			}),
 		).toBeNull();
 	});
 
@@ -353,18 +364,24 @@ describe('heldMaximizeOnAreaTarget', () => {
 
 	it("reads a target's change on attacks against it", () => {
 		const target = creature('T', [maximize()]);
-		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)?.label).toBe('Doomed');
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)?.label).toBe('Doomed');
 	});
 
 	it("does not read a target's change on its own attacks", () => {
 		const target = creature('T', [maximize({ whichRoll: 'holderAttacks' })]);
-		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
+	});
+
+	it('does not read a melee-only change on an area with no delivery', () => {
+		const target = creature('T', [maximize({ meleeOnly: true })]);
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), 'melee')?.label).toBe('Doomed');
 	});
 
 	it('reads a source-only change only on an area of the origin creature', () => {
 		const target = creature('T', [maximize({ fromSourceOnly: true })]);
-		expect(heldMaximizeOnAreaTarget(target, { uuid: MIRA }, undefined)).not.toBeNull();
-		expect(heldMaximizeOnAreaTarget(target, creature('B'), undefined)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, { uuid: MIRA }, null)).not.toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('B'), null)).toBeNull();
 	});
 });
 
@@ -661,6 +678,46 @@ describe('heldLines', () => {
 		expect(heldLinesForItem(holder, attack).map((line) => line.text)).toEqual([
 			'Shining Mandate: 1d8 Radiant damage on a hit',
 		]);
+	});
+});
+
+describe('the delivery a Held Roll filter reads (decisions 127, 133)', () => {
+	const own = (spec: HeldSpec): HeldSpec => ({
+		kind: 'advantage',
+		whichRoll: 'holderAttacks',
+		...spec,
+	});
+	const withType = (type: string) =>
+		Object.assign(
+			creature('A', [
+				own({ label: 'Melee', meleeOnly: true }),
+				own({ label: 'Ranged', rangedOnly: true }),
+			]),
+			{ type },
+		);
+	const untyped = (activation: Record<string, unknown> = {}) => ({
+		system: {
+			activation: {
+				effects: [{ type: 'damage', canCrit: true, canMiss: true }],
+				targets: {},
+				...activation,
+			},
+		},
+	});
+	const lineTexts = (attacker: ReturnType<typeof withType>, item: ReturnType<typeof untyped>) =>
+		heldLinesForItem(attacker, item).map((line) => line.text);
+
+	it('reads a melee-only change on a monster attack with no attack type (Reach 1)', () => {
+		expect(lineTexts(withType('npc'), untyped())).toEqual(['Melee: +1 advantage']);
+	});
+
+	it('reads neither filter on a monster area attack with no attack type', () => {
+		const area = untyped({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+		expect(lineTexts(withType('npc'), area)).toEqual([]);
+	});
+
+	it('reads neither filter on a hero attack with no attack type', () => {
+		expect(lineTexts(withType('character'), untyped())).toEqual([]);
 	});
 });
 
