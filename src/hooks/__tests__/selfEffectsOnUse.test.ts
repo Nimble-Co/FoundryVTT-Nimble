@@ -131,6 +131,27 @@ describe('applySelfEffectsOnUse', () => {
 		]);
 	});
 
+	it('applies each step once when the card is read twice at the same time', async () => {
+		const used = card();
+		applyEffectFromCard.mockImplementation(async (target: unknown, node: unknown) => {
+			await Promise.resolve();
+			const flags = (target as typeof used).flags[SYSTEM_ID] as {
+				appliedEffects: Record<string, unknown[]>;
+			};
+			flags.appliedEffects[(node as { id: string }).id] = [
+				{ effectUuid: 'Actor.hero.ActiveEffect.a', actorName: 'Hero' },
+			];
+		});
+
+		await Promise.all([applySelfEffectsOnUse(used), applySelfEffectsOnUse(used)]);
+
+		expect(applyEffectFromCard.mock.calls.map(([, node]) => (node as { id: string }).id)).toEqual([
+			'rootSelf',
+			'onHit',
+		]);
+		applyEffectFromCard.mockImplementation(async () => {});
+	});
+
 	it('leaves every step to its button with Feature Effects off, and does nothing with no card', async () => {
 		await applySelfEffectsOnUse(null);
 		automation = false;

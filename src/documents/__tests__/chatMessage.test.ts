@@ -2980,4 +2980,23 @@ describe('healing that goes to the one who used the item', () => {
 
 		expect(actor.applyHealing).not.toHaveBeenCalled();
 	});
+
+	it('leaves temp healing that an Apply Effect step gives to that step', async () => {
+		const { actor, message } = selfHealingMessage();
+		(message.system as unknown as { activation: { effects: unknown[] } }).activation.effects = [
+			{ id: 'temp', type: 'healing', healingType: 'tempHealing', recipient: 'self' },
+			{
+				id: 'fx',
+				type: 'applyEffect',
+				effectId: 'e1',
+				recipient: 'self',
+				tempHealingNodeId: 'temp',
+			},
+		];
+
+		await message.applySelfHealing();
+
+		expect(actor.applyHealing).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
 });

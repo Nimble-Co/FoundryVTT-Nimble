@@ -9,6 +9,7 @@ import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
+import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -1918,6 +1919,7 @@ class NimbleChatMessage extends ChatMessage {
 			for (const node of group) {
 				const healing = node as HealingNode;
 				if (healing.type !== 'healing' || healing.recipient !== 'self') continue;
+				if (givenByAnEffect(this, healing.id)) continue;
 				const total = Number(healing.roll?.total);
 				if (total > 0) await this.applyHealing(total, healing.healingType, healing.id, 'self');
 			}

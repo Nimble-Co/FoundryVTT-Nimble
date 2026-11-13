@@ -12,6 +12,7 @@ import {
 } from '#utils/chat/applyEffectFromCard.js';
 import { endConditionsFromCard, endedConditions } from '#utils/chat/endConditionsFromCard.js';
 import { appliedWounds, giveWoundsFromCard } from '#utils/chat/woundFromCard.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
 import { findNodesByContexts } from '#utils/treeManipulation/findNodesByContexts.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
@@ -47,8 +48,15 @@ export function selfStepsOf(card: EffectCard): SelfStep[] {
 	);
 }
 
+const steps = keyedQueue();
+
 /** Applies one self step, unless the card shows that it already did. */
-export async function applySelfStep(card: EffectCard, node: SelfStep): Promise<void> {
+export function applySelfStep(card: EffectCard, node: SelfStep): Promise<void> {
+	if (!card.id) return applyStepOnce(card, node);
+	return steps.run(`${card.id}:${node.id}`, () => applyStepOnce(card, node));
+}
+
+async function applyStepOnce(card: EffectCard, node: SelfStep): Promise<void> {
 	if (node.type === 'endConditions') {
 		if (Object.keys(endedConditions(card, node.id) ?? {}).length) return;
 		await endConditionsFromCard(card, node);
