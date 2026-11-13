@@ -47,7 +47,8 @@ function canUseHere(actor: FreeUser): boolean {
 
 /**
  * The actor uses its item with this identifier, with no window, as `free` says. The active GM or a
- * player who owns the actor makes the use; another client asks the active GM.
+ * player who owns the actor makes the use; another client asks the active GM. `free.host` is the
+ * card that can show the use as one line.
  */
 export async function useItemForFree(
 	actor: FreeUser,

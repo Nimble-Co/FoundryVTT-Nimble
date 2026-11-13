@@ -1,7 +1,9 @@
+import type { FreeUseHost, TurnMomentType } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleLabel } from '#utils/actor/actorRules.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { useItemForFree } from '#utils/actor/useItemForFree.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
+import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { cardAttackOutcome } from '#utils/rolls/cardAttackOutcome.js';
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
@@ -99,6 +101,12 @@ declare namespace UseItemFreeRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
+/** The card of the turn boundary, where its other lines go. */
+function turnHost(type: TurnMomentType, context: TurnContext): FreeUseHost | undefined {
+	const found = turnMoment(type, context.combatant as never, context.place);
+	return found ? { moment: found.moment } : undefined;
+}
+
 /**
  * On each of its triggers, while its predicate passes, the actor uses the item named by
  * `itemIdentifier` with no window and no action spent, and per `freeOf` with no use limit and no
@@ -155,11 +163,11 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 	}
 
 	override async onActiveGmTurnStart(context: TurnContext): Promise<void> {
-		await this.#on('onTurnStart', context.actor);
+		await this.#on('onTurnStart', context.actor, turnHost('turnStart', context));
 	}
 
 	override async onTurnEnd(context: TurnContext): Promise<void> {
-		await this.#on('onTurnEnd', context.actor);
+		await this.#on('onTurnEnd', context.actor, turnHost('turnEnd', context));
 	}
 
 	override async onActorKilled(context: ActorHealthContext): Promise<void> {
@@ -194,11 +202,12 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 		return !!identifier && identifier === this.itemIdentifier.trim();
 	}
 
-	async #on(trigger: RuleTrigger, actor: unknown): Promise<void> {
+	async #on(trigger: RuleTrigger, actor: unknown, host?: FreeUseHost): Promise<void> {
 		if (actor !== this.actor) return;
-		await this.#use(trigger);
+		await this.#use(trigger, undefined, host);
 	}
 
+	/** The card of the attack is the host of the use. */
 	async #useOnce(trigger: RuleTrigger, card: ChatMessage | null): Promise<void> {
 		const cardId = card?.id;
 		if (!cardId) {
@@ -208,7 +217,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 		const key = `${ruleKey(this)}:${trigger}:${cardId}`;
 		if (usedForCard.has(key) || !this.#fires(trigger)) return;
 		markUsedForCard(key);
-		await this.#use(trigger, cardId);
+		await this.#use(trigger, cardId, { cardId });
 	}
 
 	#fires(trigger: RuleTrigger): boolean {
@@ -218,7 +227,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 		return this.isOnActor && this.test();
 	}
 
-	async #use(trigger: RuleTrigger, cardId?: string): Promise<void> {
+	async #use(trigger: RuleTrigger, cardId?: string, host?: FreeUseHost): Promise<void> {
 		if (!this.#fires(trigger)) return;
 		const key = [ruleKey(this), trigger, ...(cardId ? [cardId] : [])].join(':');
 		if (inFlight.has(key)) return;
@@ -230,6 +239,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 					key: `${WORDS}.cardLine`,
 					data: { trigger: { key: `${WORDS}.reasons.${trigger}` }, feature: ruleLabel(this) },
 				},
+				...(host ? { host } : {}),
 			});
 		} finally {
 			inFlight.delete(key);

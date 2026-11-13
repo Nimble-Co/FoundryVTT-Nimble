@@ -1,21 +1,34 @@
 import { SYSTEM_ID } from '#system';
+import type { CardEventLastsUntil, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import { addCardEvents, addMomentEvents, canHost } from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { effectEndsAt } from '#utils/lastsUntil/effectEndsAt.js';
+import { effectEndsAt, endingMoment } from '#utils/lastsUntil/effectEndsAt.js';
 import { sourceOf } from '#utils/lastsUntil/effectSubject.js';
-import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
+import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
+import type { LastsUntilCheck, Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.endTimedEffects`;
 
-/** One row of the message: what ended, on whom, and the data to make it again. */
-export interface EndedEffectRow {
-	effectId: string;
-	holderUuid: string;
-	holderName: string;
-	name: string;
-	img: string;
-	sourceName: string;
-	effect: Record<string, unknown>;
+/** The moment that ends the effects: its card and why they ended. */
+export interface EndMoment {
+	/** Finds the card of the moment (`momentKeys`). Without a key, the ends get their own card. */
+	key?: string;
+	heading: CardEventText;
+	/** Why they ended, on each line, when the heading does not say it. */
+	reason?: CardEventText;
+	/** The card of the action that ended them. Its Events strip takes the lines, not a moment card. */
+	hostId?: string;
+	/** The Lasts Until moment that ended each effect, by effect UUID. */
+	endedBy?: Record<string, Moment>;
+	/** Who sees the card of the moment. Empty or missing: everyone. */
+	whisper?: string[];
+}
+
+/** Where the check happened: the moments it reached are read here, before the effects go. */
+export interface EndCheck {
+	check: LastsUntilCheck;
+	combat?: Combat | null;
 }
 
 const queue = keyedQueue();
@@ -59,7 +72,8 @@ function sourceNameOf(effect: ActiveEffect): string {
 	return origin?.name ?? sourceOf(effect)?.name ?? '';
 }
 
-function rowOf(effect: ActiveEffect): EndedEffectRow {
+/** What an ended line keeps of the effect, so Undo can put it back. */
+export function endedEffectRow(effect: ActiveEffect): EndedEffectRow {
 	const holder = effect.parent as Actor;
 	return {
 		effectId: effect.id ?? '',
@@ -72,26 +86,40 @@ function rowOf(effect: ActiveEffect): EndedEffectRow {
 	};
 }
 
-async function postEndedMessage(heading: string, rows: EndedEffectRow[]): Promise<void> {
-	const chatData = {
-		author: game.user?.id,
-		speaker: { alias: game.user?.name ?? '' },
-		type: 'effectsEnded',
-		system: {
-			actorName: game.user?.name ?? '',
-			actorType: '',
-			image: '',
-			permissions: 0,
-			rollMode: 0,
-			heading,
-			rows,
-		},
-	};
-	await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+/** The moment that ended the effect, read by its holder, with the creature that put it on. */
+function endedByOf(effect: ActiveEffect, moment: EndMoment): CardEventLastsUntil | undefined {
+	const found = moment.endedBy?.[effect.uuid ?? ''];
+	if (!found) return undefined;
+	const source = sourceOf(effect);
+	const holder = effect.parent as Actor;
+	const named = source && source !== holder && source.uuid !== holder.uuid ? source.name : null;
+	return { lastsUntil: found, ...(named ? { source: named } : {}) };
 }
 
-/** On the active GM: delete the effects, then post one message for the moment. */
-async function endHere(effects: ActiveEffect[], heading: string): Promise<void> {
+interface EndedLine {
+	row: EndedEffectRow;
+	endedBy?: CardEventLastsUntil;
+}
+
+/**
+ * The lines go on the host card when there is one, else on the card of the moment. That card keeps
+ * the readers of a whispered host card.
+ */
+async function postEnded(moment: EndMoment, lines: EndedLine[]): Promise<boolean> {
+	const at = Date.now();
+	const events = lines.map(({ row, endedBy }) => endedEffectEvent(row, at, moment.reason, endedBy));
+	const host = moment.hostId ? game.messages?.get(moment.hostId) : null;
+	if (host && canHost(host as never) && (await addCardEvents(host as never, events))) return true;
+	const key = moment.key ?? `once:${foundry.utils.randomID()}`;
+	const hostReaders = ((host as { whisper?: string[] } | null)?.whisper ?? []).filter(Boolean);
+	const whisper = moment.whisper ?? (hostReaders.length > 0 ? hostReaders : undefined);
+	return addMomentEvents({ key, heading: moment.heading }, events, {
+		...(whisper ? { whisper } : {}),
+	});
+}
+
+/** On the active GM: delete the effects, then add a line each to the card of the moment. */
+async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void> {
 	const live = effects.filter((effect) => {
 		const holder = effect.parent as Actor | null;
 		const uuid = effect.uuid ?? '';
@@ -100,7 +128,10 @@ async function endHere(effects: ActiveEffect[], heading: string): Promise<void> 
 	if (live.length < 1) return;
 	for (const effect of live) ending.add(effect.uuid ?? '');
 	try {
-		const rows = live.map(rowOf);
+		const lines = live.map((effect) => ({
+			row: endedEffectRow(effect),
+			endedBy: endedByOf(effect, moment),
+		}));
 		const byHolder = new Map<Actor, string[]>();
 		for (const effect of live) {
 			const holder = effect.parent as Actor;
@@ -109,48 +140,64 @@ async function endHere(effects: ActiveEffect[], heading: string): Promise<void> 
 		for (const [holder, ids] of byHolder) {
 			await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
 		}
-		await postEndedMessage(heading, rows);
+		await postEnded(moment, lines);
 	} finally {
 		for (const effect of live) ending.delete(effect.uuid ?? '');
 	}
 }
 
+function withEndedBy(effects: ActiveEffect[], moment: EndMoment, at?: EndCheck): EndMoment {
+	if (!at) return moment;
+	const endedBy: Record<string, Moment> = { ...moment.endedBy };
+	for (const effect of effects) {
+		const found = endingMoment(effect, at.check, at.combat);
+		if (found && effect.uuid) endedBy[effect.uuid] = found;
+	}
+	return Object.keys(endedBy).length > 0 ? { ...moment, endedBy } : moment;
+}
+
 /**
- * End `effects` for one moment. The active GM deletes them and posts the
- * message; another client asks the active GM. With no GM online, nothing ends.
+ * End `effects` for one moment. The active GM deletes them and writes the
+ * lines; another client asks the active GM. With no GM online, nothing ends.
+ * With `at`, each line says which Lasts Until moment ended its effect.
  */
-export async function endEffects(effects: ActiveEffect[], heading: string): Promise<void> {
+export async function endEffects(
+	effects: ActiveEffect[],
+	endMoment: EndMoment,
+	at?: EndCheck,
+): Promise<void> {
 	if (effects.length < 1) return;
 	try {
+		const moment = withEndedBy(effects, endMoment, at);
 		if (game.user?.isActiveGM) {
-			await queue.run('end', () => endHere(effects, heading));
+			await queue.run('end', () => endHere(effects, moment));
 			return;
 		}
 		const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
 			.activeGM;
-		await gm?.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), heading });
+		await gm?.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), moment });
 	} catch (error) {
 		console.error('Nimble | Could not end the Timed Effects of a moment.', error);
 	}
 }
 
-/** End what `check` ends, with the message heading of that moment. */
+/** End what `check` ends, on the card of that moment. */
 export function endEffectsAt(
 	check: LastsUntilCheck,
-	heading: string,
+	moment: EndMoment,
 	combat?: Combat | null,
 ): Promise<void> {
-	return endEffects(effectsEndingAt(check, combat), heading);
+	return endEffects(effectsEndingAt(check, combat), moment, { check, combat });
 }
 
 export function registerEndTimedEffectsQuery(): void {
 	Hooks.once('init', () => {
 		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
-		queries[QUERY_NAME] = async (data: { uuids?: string[]; heading?: string }) => {
+		queries[QUERY_NAME] = async (data: { uuids?: string[]; moment: EndMoment }) => {
 			const effects = (data.uuids ?? [])
 				.map((uuid) => fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false }))
 				.filter((effect): effect is ActiveEffect => effect instanceof ActiveEffect);
-			await queue.run('end', () => endHere(effects, data.heading ?? ''));
+			await queue.run('end', () => endHere(effects, data.moment));
 			return true;
 		};
 	});

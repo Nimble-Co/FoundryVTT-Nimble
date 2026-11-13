@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import {
 	createCombatActorFixture,
 	createCombatantsCollectionFixture,
@@ -1337,6 +1338,35 @@ describe('NimbleCombat', () => {
 			expect(turnStartCalls()).toEqual([['nimbleCombatTurnStart', incomingHero]]);
 		});
 
+		it('gives the backstopped turn-start hook the round and the place of the turn', async () => {
+			const combatId = 'combat-start-turn-no-event-place';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+			const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+			superNextTurn.mockImplementation(async function (
+				this: Combat & {
+					round?: number;
+					turn?: number;
+					combatant?: Combatant.Implementation | null;
+				},
+			) {
+				this.round = 2;
+				this.turn = 1;
+				this.combatant = incomingHero;
+				return this;
+			});
+
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+			await combat.nextTurn();
+
+			// Heroes sort before monsters, so the hero's turn is at index 0.
+			expect(combat.turns[0]).toBe(incomingHero);
+			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+			expect(call).toHaveBeenCalledWith('nimbleCombatTurnStart', incomingHero, {
+				round: 2,
+				turn: 0,
+			});
+		});
+
 		it('does not emit the turn-start hook twice when _onStartTurn also runs', async () => {
 			const combatId = 'combat-start-turn-no-double';
 			const { monster, incomingHero } = createTurnStartFixture(combatId);
@@ -2221,6 +2251,74 @@ describe('NimbleCombat', () => {
 
 		expect(combatant.initiative).toBe(15);
 		expect(combat.update).not.toHaveBeenCalled();
+	});
+
+	it('gives the Initiative card and the initiativeRolled hook the same roll id', async () => {
+		globals().game.user = { isGM: true, role: 4 };
+		const combatId = 'combat-initiative-roll-id';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-roll-id',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+		const combatant = createMockCombatant({
+			id: 'character-initiative-roll-id',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & { getInitiativeRoll: ReturnType<typeof vi.fn> };
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue({
+			total: 12,
+			terms: [],
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			combatant,
+			turns: [combatant],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_name: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					for (const [path, value] of Object.entries(update)) {
+						if (path !== '_id') foundry.utils.setProperty(combatant, path, value);
+					}
+				}
+				return [];
+			});
+		const create = (
+			globalThis as unknown as {
+				ChatMessage: { implementation: { create: ReturnType<typeof vi.fn> } };
+			}
+		).ChatMessage.implementation.create;
+		create.mockClear();
+		const callAll = vi.mocked(Hooks.callAll);
+		callAll.mockClear();
+
+		await combat.rollInitiative([combatant.id ?? '']);
+
+		const [payload] = callAll.mock.calls
+			.find(([name]) => (name as string) === 'nimble.initiativeRolled')
+			?.slice(1) as [{ rollId?: string }];
+		const [[card]] = create.mock.calls[0] as [
+			[{ flags?: Record<string, { initiativeRollId?: string }> }],
+		];
+		expect(payload.rollId).toEqual(expect.any(String));
+		expect(card.flags?.[SYSTEM_ID]?.initiativeRollId).toBe(payload.rollId);
 	});
 
 	it('does not change turn order when rolling initiative (initiative is decoupled from turn order)', async () => {

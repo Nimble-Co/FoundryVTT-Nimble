@@ -3,6 +3,7 @@
 
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import localize from '../../utils/localize.js';
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 
 	const { messageDocument }: MoveActionCardProps = $props();
@@ -42,6 +43,8 @@
 	<div class="move-action-card__message">
 		{@html localize('NIMBLE.ui.heroicActions.move.chatMessage', { name: actorName, speed })}
 	</div>
+
+	<CardEvents {messageDocument} />
 </article>
 
 <style lang="scss">

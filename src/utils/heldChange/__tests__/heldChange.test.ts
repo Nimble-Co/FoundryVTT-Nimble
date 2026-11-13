@@ -21,6 +21,7 @@ import {
 	keptAmountFor,
 	mustAttackOtherChange,
 	spendHeldChanges,
+	spendHeldIgnoreDisadvantage,
 	takeBackHeldChanges,
 } from '../heldChange.js';
 
@@ -336,6 +337,40 @@ describe('spendHeldChanges', () => {
 		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 
+	it('puts an ended line with Undo in the lines of the use before it deletes the change', async () => {
+		const target = creature('T', [{ label: 'True Strike' }]);
+		documents.set('T.ActiveEffect.e0', {
+			id: 'e0',
+			uuid: 'T.ActiveEffect.e0',
+			name: 'True Strike',
+			img: 'strike.webp',
+			origin: MIRA,
+			parent: { uuid: 'T', name: 'Grug' },
+			toObject: () => ({ name: 'True Strike' }),
+		});
+		const add = vi.fn(async () => true);
+
+		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		await spendHeldChanges(held, { add });
+
+		expect(add).toHaveBeenCalledWith([
+			expect.objectContaining({
+				kind: 'effectEnded',
+				text: {
+					key: 'NIMBLE.lastsUntil.chat.ended',
+					data: { effect: 'True Strike', name: 'Grug' },
+				},
+				cause: expect.objectContaining({
+					data: expect.objectContaining({ reason: { key: 'NIMBLE.chat.events.cause.usedUp' } }),
+				}),
+				action: expect.objectContaining({ kind: 'undoEnd' }),
+			}),
+		]);
+		expect(add.mock.invocationCallOrder[0]).toBeLessThan(
+			target.deleteEmbeddedDocuments.mock.invocationCallOrder[0],
+		);
+	});
+
 	it('asks the GM when the player does not own the holder', async () => {
 		const target = creature('T', [{}], false);
 		const query = vi.fn(async () => true);
@@ -352,6 +387,38 @@ describe('spendHeldChanges', () => {
 			actorUuid: 'T',
 			effectId: 'e0',
 		});
+	});
+});
+
+describe('spendHeldIgnoreDisadvantage', () => {
+	it('puts the ended line of the change in the lines of the use that spends it', async () => {
+		const hero = creature('H', [
+			{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks', label: 'Nullify' },
+		]);
+		documents.set('H.ActiveEffect.e0', {
+			id: 'e0',
+			uuid: 'H.ActiveEffect.e0',
+			name: 'Nullify',
+			img: 'nullify.webp',
+			origin: MIRA,
+			parent: { uuid: 'H', name: 'Tessa' },
+			toObject: () => ({ name: 'Nullify' }),
+		});
+		const add = vi.fn(async () => true);
+
+		await spendHeldIgnoreDisadvantage(hero as never, 'Shove', { add });
+
+		expect(add).toHaveBeenCalledWith([
+			expect.objectContaining({
+				kind: 'effectEnded',
+				cause: expect.objectContaining({
+					data: expect.objectContaining({
+						reason: { key: 'NIMBLE.chat.events.cause.usedByAction' },
+					}),
+				}),
+			}),
+		]);
+		expect(hero.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 });
 

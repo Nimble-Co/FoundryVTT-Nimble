@@ -2,20 +2,22 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { MoveNodeProps } from '#types/components/MoveNode.d.ts';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import localize from '#utils/localize.ts';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import { isTargetsSectionShown } from '../targetsSection.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { moveNodeText } from './moveNodeText.ts';
 
-	let { node }: MoveNodeProps = $props();
+	let { node, card, allRows = false }: MoveNodeProps = $props();
 
-	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
+	const contextCard = getContext<NimbleChatMessage | undefined>('messageDocument');
+	// Not reactive: Foundry mounts a new card on each message update.
+	const messageDocument = untrack(() => card) ?? contextCard;
 
 	// Not reactive: Foundry mounts a new card on each message update.
 	const tracking = isMovementOffersAutomationEnabled();
-	const targetsShown = isTargetsSectionShown();
+	const targetsShown = !untrack(() => allRows) && isTargetsSectionShown();
 	const targetUuids = new Set(
 		((messageDocument?.system ?? {}) as { targets?: string[] }).targets ?? [],
 	);

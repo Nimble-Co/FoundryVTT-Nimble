@@ -630,9 +630,10 @@ describe('a vulnerability to the next fire damage', () => {
 
 	it('deals more, and is gone after the first fire damage', async () => {
 		const actor = greased();
-		globals().fromUuidSync = vi.fn((uuid: string) =>
-			uuid === 'Actor.greased' ? actor : { actor },
-		);
+		globals().fromUuidSync = vi.fn((uuid: string) => {
+			if (uuid.includes('ActiveEffect')) return null;
+			return uuid === 'Actor.greased' ? actor : { actor };
+		});
 
 		const card = createCard([{ damageType: 'fire', total: 5 }]);
 		const previewed = card.getDamageBreakdownForTarget('Scene.scene.Token.token');
@@ -641,6 +642,37 @@ describe('a vulnerability to the next fire damage', () => {
 
 		expect(actor.applyDamage).toHaveBeenCalledWith(previewed?.total);
 		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['grease']);
+	});
+
+	it('puts the ended line of a used-up vulnerability on the damage card', async () => {
+		const actor = greased();
+		const effect = Object.assign(actor.effects[0], {
+			uuid: 'Actor.greased.ActiveEffect.grease',
+			img: 'grease.svg',
+			parent: actor,
+			toObject: () => ({ _id: 'grease', name: 'Grease Trap' }),
+		});
+		globals().fromUuidSync = vi.fn((uuid: string) => {
+			if (uuid === effect.uuid) return effect;
+			return uuid === 'Actor.greased' ? actor : { actor };
+		});
+		const user = globals().game.user as { isActiveGM?: boolean };
+		const wasActiveGM = user.isActiveGM;
+		user.isActiveGM = true;
+		const card = createCard([{ damageType: 'fire', total: 5 }]);
+		const update = vi.fn(async (_changes: Record<string, unknown>) => card);
+		Object.assign(card, { id: 'fire-card', update });
+
+		try {
+			await card.applyAllDamage();
+		} finally {
+			user.isActiveGM = wasActiveGM;
+		}
+
+		const events = update.mock.calls
+			.map(([changes]) => changes[`flags.${SYSTEM_ID}.events`])
+			.find(Boolean) as Array<{ kind: string }> | undefined;
+		expect(events).toEqual([expect.objectContaining({ kind: 'effectEnded' })]);
 	});
 
 	it('stays through other damage', async () => {

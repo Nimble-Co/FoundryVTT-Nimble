@@ -125,4 +125,41 @@ describe('useItemForFree', () => {
 		expect(answer).toBe(true);
 		expect(actor.activateItem).toHaveBeenCalledWith('b', { fastForward: true, free });
 	});
+
+	it('the host of the use goes through the GM query to the activation', async () => {
+		const { useItemForFree, registerUseItemForFreeQuery } = await load();
+		isActiveGM.mockReturnValue(false);
+		const actor = actorWith([{ id: 'b', identifier: 'rage' }]);
+		const hosted = {
+			...free,
+			host: {
+				moment: {
+					key: 'combat1:2:0:turnStart',
+					heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
+				},
+			},
+		};
+
+		await useItemForFree(actor, 'rage', hosted);
+		const request = askActiveGm.mock.calls[0]?.[1] as Record<string, unknown>;
+		expect(request.free).toEqual(hosted);
+
+		const queries: Record<string, (data: unknown) => Promise<unknown>> = {};
+		const globals = getTestGlobals<{ CONFIG: { queries?: unknown }; Hooks: { once: unknown } }>();
+		const previousQueries = globals.CONFIG.queries;
+		globals.CONFIG.queries = queries;
+		vi.stubGlobal('Hooks', {
+			...(globals.Hooks as object),
+			once: (_e: string, f: () => void) => f(),
+		});
+		vi.stubGlobal('fromUuid', async () => actor);
+		try {
+			registerUseItemForFreeQuery();
+			await Object.values(queries)[0]?.(JSON.parse(JSON.stringify(request)));
+		} finally {
+			globals.CONFIG.queries = previousQueries;
+		}
+
+		expect(actor.activateItem).toHaveBeenCalledWith('b', { fastForward: true, free: hosted });
+	});
 });

@@ -2,6 +2,7 @@ import {
 	incomingReactions,
 	metadata,
 	migrateIncomingReactions,
+	movementOffers,
 	rerollHistory,
 	resultChanges,
 	roller,
@@ -30,6 +31,7 @@ declare namespace NimbleInitiativeCardData {
 		ReturnType<typeof initiativeCardSchema> &
 		ReturnType<typeof roller> &
 		ReturnType<typeof incomingReactions> &
+		ReturnType<typeof movementOffers> &
 		ReturnType<typeof rerollHistory> &
 		ReturnType<typeof resultChanges>;
 	interface BaseData extends Record<string, unknown> {}
@@ -48,6 +50,8 @@ class NimbleInitiativeCardData extends foundry.abstract.TypeDataModel<
 			...metadata(),
 			...roller(),
 			...incomingReactions(),
+			// The offers of its Events lines.
+			...movementOffers(),
 			...rerollHistory(),
 			...resultChanges(),
 		};

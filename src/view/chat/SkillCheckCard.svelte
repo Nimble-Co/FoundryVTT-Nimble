@@ -1,6 +1,7 @@
 <script>
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
 
@@ -24,4 +25,6 @@
 	data-card-type="check"
 >
 	<CheckCardRolls {messageDocument} {label} />
+
+	<CardEvents {messageDocument} />
 </article>

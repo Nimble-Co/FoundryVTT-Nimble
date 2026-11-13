@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { FreeMoveRule as FreeMoveRuleType } from '../freeMove.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -12,8 +12,16 @@ beforeAll(async () => {
 });
 
 const postMovementOfferCard = vi.fn(async (_input: unknown) => ({ id: 'card' }) as unknown);
+const offerHosts: unknown[] = [];
 vi.mock('../../../utils/movement/postMovementOfferCard.js', () => ({
 	postMovementOfferCard: (input: unknown) => postMovementOfferCard(input),
+	offerMovement: async (input: { reason: unknown }, host: unknown) => {
+		offerHosts.push(host);
+		const { cardEventText } = await import('#utils/chat/cardEvents.js');
+		const reason =
+			typeof input.reason === 'string' ? input.reason : cardEventText(input.reason as never);
+		return !!(await postMovementOfferCard({ ...input, reason }));
+	},
 }));
 
 const distances = new Map<string, number>();
@@ -733,5 +741,103 @@ describe('FreeMoveRule', () => {
 		} as never);
 		expect(postMovementOfferCard).toHaveBeenCalledTimes(2);
 		expect(lastOffer().node.distance).toBe('2');
+	});
+});
+
+describe('FreeMoveRule hosts', () => {
+	beforeEach(() => {
+		postMovementOfferCard.mockClear();
+		offerHosts.length = 0;
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('puts the offer of an item use on its card', async () => {
+		const harness = makeRule();
+		const card = { id: 'use-card' };
+		await harness.rule.onItemActivated({
+			sourceItem: harness.item,
+			sourceActor: harness.actor,
+			card,
+		} as never);
+		expect(offerHosts.at(-1)).toEqual({ card });
+	});
+
+	it('puts the offer of a use with no card on the use that is going on', async () => {
+		const { openActivationEvents } = await import('#utils/chat/activationEvents.js');
+		const harness = makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' });
+		const use = openActivationEvents(harness.actor as never);
+		await harness.rule.onPoolGain({
+			actor: harness.actor,
+			poolIdentifier: 'fury',
+			poolLabel: 'Fury Dice',
+		} as never);
+		expect(offerHosts.at(-1)).toEqual({ activation: use });
+		use?.close();
+	});
+
+	it('has no host for a pool gain outside an item use', async () => {
+		const harness = makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' });
+		await harness.rule.onPoolGain({ actor: harness.actor, poolIdentifier: 'fury' } as never);
+		expect(offerHosts.at(-1)).toBeNull();
+	});
+
+	it('puts the offer of a crit on the attack card', async () => {
+		const harness = makeRule({ trigger: 'onCritReceived' });
+		const card = { id: 'attack', system: { targets: [] } };
+		await harness.rule.onAttackReceived({
+			sourceItem: {},
+			sourceActor: {},
+			targetActor: harness.actor,
+			card,
+			isCritical: true,
+			isMiss: false,
+		} as never);
+		expect(offerHosts.at(-1)).toEqual({ card });
+	});
+
+	it('puts the offer of a turn start on the card of that turn start', async () => {
+		const harness = makeRule({ trigger: 'onTurnStart' });
+		await harness.rule.onActiveGmTurnStart({
+			combat: {},
+			combatant: {
+				id: 'cb',
+				name: 'Hero',
+				token: harness.heroToken,
+				combat: { id: 'c1', round: 2 },
+			},
+			actor: harness.actor,
+			place: { round: 2, turn: 1 },
+		} as never);
+		expect(offerHosts.at(-1)).toEqual({
+			moment: {
+				key: 'c1:2:cb:turnStart',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Hero' } },
+			},
+		});
+	});
+
+	it('puts the offer of an Initiative roll on its card', async () => {
+		const harness = makeRule({ trigger: 'onInitiativeRolled' });
+		const card = {
+			type: 'initiative',
+			system: { combatantId: 'cb' },
+			flags: { [SYSTEM_ID]: { initiativeRollId: 'roll-1' } },
+		};
+		const messages = (globalThis as unknown as { game: { messages: unknown } }).game;
+		const saved = messages.messages;
+		messages.messages = { contents: [card] };
+		try {
+			await harness.rule.onInitiativeRolled({
+				actor: harness.actor,
+				combatant: { id: 'cb', token: harness.heroToken },
+				rollId: 'roll-1',
+			} as never);
+		} finally {
+			messages.messages = saved;
+		}
+		expect(offerHosts.at(-1)).toEqual({ card });
 	});
 });

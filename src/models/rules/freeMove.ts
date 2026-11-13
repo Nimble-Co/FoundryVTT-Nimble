@@ -1,12 +1,15 @@
+import type { CardEventText, MovementOfferHost } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
-import localize from '#utils/localize.js';
+import { activationEventsOf } from '#utils/chat/activationEvents.js';
+import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
-import { postMovementOfferCard } from '../../utils/movement/postMovementOfferCard.js';
+import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
+import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type InitiativeRolledContext,
@@ -128,9 +131,12 @@ interface SceneTokens {
 	tokens?: Iterable<TokenDocument>;
 }
 
+const REASONS = 'NIMBLE.rules.freeMove.reasons';
+
 /**
- * Offers a Free Move on a standalone Movement Offer card when its trigger
- * fires. The card only offers the move; the player still decides where to go.
+ * Offers a Free Move when its trigger fires: a line with the move on the card of what set it off
+ * (the item use, the attack, the Initiative roll, the turn start), or a Movement Offer card of its
+ * own when there is none. It only offers the move; the player still decides where to go.
  */
 class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	static override group = 'grants';
@@ -183,9 +189,16 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onActivation') return;
 		if (!this.item || context.sourceItem?.uuid !== this.item.uuid) return;
+		const use = activationEventsOf(this.actor);
+		const host: MovementOfferHost | null = context.card
+			? { card: context.card }
+			: use
+				? { activation: use }
+				: null;
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.onActivation', { item: this.parentDocument.name }),
+			{ key: `${REASONS}.onActivation`, data: { item: this.parentDocument.name ?? '' } },
 			speakerToken(context.card),
+			host,
 		);
 	}
 
@@ -194,9 +207,11 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onInitiativeRolled') return;
 		if (context.actor !== this.actor) return;
+		const card = await findInitiativeCard(context.combatant, context.rollId);
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.onInitiativeRolled'),
+			{ key: `${REASONS}.onInitiativeRolled` },
 			context.combatant?.token ?? null,
+			card ? { card } : null,
 		);
 	}
 
@@ -206,9 +221,11 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.test()) return;
 		if (this.trigger !== 'onTurnStart') return;
 		if (context.actor !== this.actor) return;
+		const turn = turnMoment('turnStart', context.combatant as never, context.place);
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.onTurnStart'),
+			{ key: `${REASONS}.onTurnStart` },
 			context.combatant?.token ?? null,
+			turn ? { moment: turn.moment } : null,
 		);
 	}
 
@@ -218,8 +235,9 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (this.trigger !== 'onCritReceived') return;
 		if (!firesCritTriggers(context) || context.targetActor !== this.actor) return;
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.onCritReceived'),
+			{ key: `${REASONS}.onCritReceived` },
 			targetTokenOf(context.card, this.actor),
+			context.card ? { card: context.card } : null,
 		);
 	}
 
@@ -230,20 +248,30 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		const identifier = this.poolIdentifier.trim();
 		if (!identifier || identifier !== context.poolIdentifier) return;
 		const pool = context.poolLabel || identifier;
-		await this.#offer(localize('NIMBLE.rules.freeMove.reasons.onPoolGain', { pool }));
+		await this.#offer({ key: `${REASONS}.onPoolGain`, data: { pool } }, null, this.#useHost());
 	}
 
 	/** A rule of this item raised pool dice, or would with some held. */
 	async offerAfterPoolDice(): Promise<void> {
 		if (!this.isOnActor || !this.test() || this.trigger !== 'afterPoolDiceToMax') return;
 		await this.#offer(
-			localize('NIMBLE.rules.freeMove.reasons.afterPoolDiceToMax', {
-				item: this.parentDocument.name,
-			}),
+			{ key: `${REASONS}.afterPoolDiceToMax`, data: { item: this.parentDocument.name ?? '' } },
+			null,
+			this.#useHost(),
 		);
 	}
 
-	async #offer(reason: string, contextToken: TokenDocument | null = null): Promise<void> {
+	/** The item use of the actor that is going on now, as the host of a line. */
+	#useHost(): MovementOfferHost | null {
+		const use = activationEventsOf(this.actor);
+		return use ? { activation: use } : null;
+	}
+
+	async #offer(
+		reason: CardEventText,
+		contextToken: TokenDocument | null,
+		host: MovementOfferHost | null,
+	): Promise<void> {
 		if (!isMovementOffersAutomationEnabled()) return;
 		const { actor } = this;
 		await withRuleCharge(actor, this.chargePoolIdentifier, async () => {
@@ -252,21 +280,25 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			const recipients = this.#recipients(token);
 			if (recipients !== 'self' && recipients.length === 0) return null;
 
-			return postMovementOfferCard({
-				actor,
-				token,
-				name: this.label || this.parentDocument.name,
-				image: this.parentDocument.img ?? undefined,
-				reason,
-				node: {
-					kind: 'free',
-					distance: this.distance,
-					direction: this.direction,
-					ignoreDifficultTerrain: this.ignoresDifficultTerrain,
+			const offered = await offerMovement(
+				{
+					actor,
+					token,
+					name: this.label || this.parentDocument.name,
+					image: this.parentDocument.img ?? undefined,
+					reason,
+					node: {
+						kind: 'free',
+						distance: this.distance,
+						direction: this.direction,
+						ignoreDifficultTerrain: this.ignoresDifficultTerrain,
+					},
+					recipients,
+					whisper: this.whisper,
 				},
-				recipients,
-				whisper: this.whisper,
-			});
+				host,
+			);
+			return offered || null;
 		});
 	}
 

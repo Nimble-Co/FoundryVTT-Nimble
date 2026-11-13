@@ -1,3 +1,4 @@
+import type { TurnPlace } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import type { FormulaActor, FormulaCheckOptions } from '#types/formulaReferences.d.ts';
 import type { MovementRecord } from '#types/movement.js';
@@ -106,6 +107,7 @@ interface TurnContext {
 	combat: Combat;
 	combatant: Combatant;
 	actor: NimbleBaseActor;
+	place?: TurnPlace;
 }
 
 interface ActorHealthContext {
@@ -131,6 +133,8 @@ interface RestContext {
 interface InitiativeRolledContext {
 	actor: NimbleBaseActor;
 	combatant: Combatant;
+	/** The roll, as its Initiative card names it. */
+	rollId?: string;
 }
 
 // Context passed to onEncounterEnd. Fires once per combatant when a combat

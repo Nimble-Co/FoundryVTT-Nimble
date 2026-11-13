@@ -73,7 +73,10 @@ describe('turn and round moments', () => {
 				round: 1,
 				turn: null,
 			},
-			expect.any(String),
+			{
+				key: 'combat1:1:cGoblin:turnEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+			},
 			combat,
 		);
 	});
@@ -102,7 +105,13 @@ describe('turn and round moments', () => {
 
 		hook('nimbleCombatTurnEnd')(goblin, { round: 2 });
 
-		expect(endEffectsMock).toHaveBeenCalledWith([idle], 'inactiveRound:Goblin');
+		// The same card as the other ends of that turn, with the reason on the line.
+		expect(endEffectsMock).toHaveBeenCalledWith([idle], {
+			key: 'combat1:2:cGoblin:turnEnd',
+			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+			reason: 'inactiveRound:Goblin',
+		});
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combat1:2:cGoblin:turnEnd' });
 		expect(endEffectsAtMock.mock.calls[0][2]).toBe(combat);
 	});
 
@@ -163,7 +172,10 @@ describe('turn and round moments', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledWith(
 			{ type: 'roundEnd', combatId: 'combat1', round: 3 },
-			expect.any(String),
+			{
+				key: 'combat1:3::roundEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.roundEnd', data: { round: 3 } },
+			},
 			combat,
 		);
 	});
@@ -188,6 +200,9 @@ describe('combat end', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({
+			key: expect.stringMatching(/^combatEnd:combat1:/),
+		});
 	});
 
 	it('checks core durations as combat starts, and a restarted combat can end again', () => {
@@ -202,6 +217,26 @@ describe('combat end', () => {
 			'combatStart',
 			'combatEnd',
 		]);
+	});
+
+	it('gives each start and each end of a restarted combat its own card', () => {
+		const { combat } = makeCombat('combat4');
+
+		hook('updateCombat')(combat, { started: true });
+		hook('updateCombat')(combat, { started: false });
+		hook('updateCombat')(combat, { started: true });
+		hook('updateCombat')(combat, { started: false });
+
+		const keysOf = (type: string) =>
+			endEffectsAtMock.mock.calls
+				.filter(([check]) => (check as { type: string }).type === type)
+				.map(([, moment]) => (moment as { key: string }).key);
+		const starts = keysOf('combatStart');
+		const ends = keysOf('combatEnd');
+		expect(starts).toHaveLength(2);
+		expect(ends).toHaveLength(2);
+		expect(starts[0]).not.toBe(starts[1]);
+		expect(ends[0]).not.toBe(ends[1]);
 	});
 
 	it('ends when a running combat is deleted', () => {
@@ -220,6 +255,7 @@ describe('world time', () => {
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
 		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'worldTime', worldTime: 600 });
+		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'time:600' });
 	});
 });
 
@@ -355,7 +391,28 @@ describe('events', () => {
 
 		hook(systemHookName('useItem'))(item, null, { targets: [{ actor: target }, null] });
 
-		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [target]);
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [target], null);
+	});
+
+	it('an item use hands its card to the item use events, as the host of the lines', () => {
+		const item = { actor: { name: 'Tessa' } };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('useItem'))(item, card, { targets: [] });
+
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [], card);
+	});
+
+	it('an item use with no card hands on where its lines went, so its ends go there too', () => {
+		const item = { actor: { name: 'Tessa' } };
+		const eventHost = {
+			moment: { key: 'once:abc', heading: { key: 'NIMBLE.chat.events.useHeading' } },
+			whisper: [],
+		};
+
+		hook(systemHookName('useItem'))(item, null, { targets: [], eventHost });
+
+		expect(fireItemUseEventsMock).toHaveBeenCalledWith(item, [], eventHost);
 	});
 
 	it('damage on a miss is no damage', () => {
@@ -369,7 +426,20 @@ describe('events', () => {
 
 		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor: null });
 
-		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target);
+		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target, {}, null);
+	});
+
+	it('damage applied from a card has that card as the host of both events', () => {
+		const target = { name: 'Ogre' };
+		const sourceActor = { name: 'Tessa' };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor, card });
+
+		expect(fireEventMock.mock.calls).toEqual([
+			['takeDamage', target, {}, card],
+			['nextDamage', sourceActor, {}, card],
+		]);
 	});
 
 	it('damage is the next damage of the speaker actor of the card', () => {
@@ -378,26 +448,20 @@ describe('events', () => {
 		const speaker = { actor: 'tessa' };
 		speakerActorIs(speakerActor);
 
-		hook(systemHookName('damageApplied'))({
-			targetActor: { name: 'Ogre' },
-			sourceActor,
-			card: { speaker },
-		});
+		const card = { speaker };
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor, card });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', speakerActor, {}, card);
 	});
 
 	it('damage is the next damage of the source actor when the card has no speaker actor', () => {
 		const sourceActor = { name: 'Tessa' };
 		speakerActorIs(null);
 
-		hook(systemHookName('damageApplied'))({
-			targetActor: { name: 'Ogre' },
-			sourceActor,
-			card: { speaker: { actor: 'gone' } },
-		});
+		const card = { speaker: { actor: 'gone' } };
+		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor, card });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor, {}, card);
 	});
 
 	it('damage with no card is the next damage of the source actor', () => {
@@ -405,7 +469,7 @@ describe('events', () => {
 
 		hook(systemHookName('damageApplied'))({ targetActor: { name: 'Ogre' }, sourceActor });
 
-		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor);
+		expect(fireEventMock).toHaveBeenCalledWith('nextDamage', sourceActor, {}, null);
 	});
 
 	it('damage on a miss is not the next damage', () => {
@@ -425,9 +489,10 @@ describe('events', () => {
 			Object.assign(user, { id: 'me' });
 			speakerActorIs(actor);
 
-			hook('createChatMessage')({ type, speaker: { actor: 'tessa' } }, {}, 'me');
+			const card = { id: 'roll1', type, speaker: { actor: 'tessa' } };
+			hook('createChatMessage')(card, {}, 'me');
 
-			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor);
+			expect(fireEventMock).toHaveBeenCalledWith('nextRoll', actor, {}, card);
 		},
 	);
 

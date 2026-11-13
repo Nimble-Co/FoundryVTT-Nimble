@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import {
 	createHeroicCharacter,
 	createHeroicCombatant,
@@ -208,7 +209,7 @@ describe('rollUnarmedStrike', () => {
 				},
 			],
 		});
-		globals.fromUuidSync = vi.fn(() => actor);
+		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'Actor.hero' ? actor : null));
 
 		await rollUnarmedStrike(actor);
 
@@ -218,6 +219,60 @@ describe('rollUnarmedStrike', () => {
 			expect.objectContaining({ rollMode: 0 }),
 		);
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
+	});
+
+	it('puts the ended line of a held change it uses up on its card', async () => {
+		dialogResult({ rollMode: -1 });
+		const actor = createHeroicCharacter({ proficient: true });
+		const held = {
+			id: 'held',
+			uuid: 'Actor.hero.ActiveEffect.held',
+			name: 'Nullify',
+			img: 'nullify.svg',
+			origin: null,
+			parent: actor,
+			toObject: () => ({ _id: 'held', name: 'Nullify' }),
+			system: {
+				rules: [
+					{
+						id: 'held-rule',
+						type: 'heldRoll',
+						heldKind: 'ignoreDisadvantage',
+						whichRoll: 'holderAttacks',
+						usedUp: true,
+						value: 0,
+					},
+				],
+			},
+			flags: {},
+		};
+		Object.assign(actor, {
+			uuid: 'Actor.hero',
+			name: 'Hero',
+			deleteEmbeddedDocuments: vi.fn(async () => []),
+			effects: [held],
+		});
+		globals.fromUuidSync = vi.fn((uuid: string) => (uuid.includes('ActiveEffect') ? held : actor));
+		const user = heroicGlobals().game.user as { isActiveGM?: boolean };
+		const wasActiveGM = user.isActiveGM;
+		user.isActiveGM = true;
+		const update = vi.fn(async (_changes: Record<string, unknown>) => undefined);
+		vi.mocked(ChatMessage.create).mockResolvedValueOnce({
+			id: 'strike',
+			flags: {},
+			update,
+		} as never);
+
+		try {
+			await rollUnarmedStrike(actor);
+		} finally {
+			user.isActiveGM = wasActiveGM;
+		}
+
+		const events = update.mock.calls
+			.map(([changes]) => changes[`flags.${SYSTEM_ID}.events`])
+			.find(Boolean) as Array<{ kind: string }> | undefined;
+		expect(events).toEqual([expect.objectContaining({ kind: 'effectEnded' })]);
 	});
 
 	it('writes the recovery flags on its card, so a reroll can follow them', async () => {
@@ -279,7 +334,8 @@ describe('rollUnarmedStrike', () => {
 		await rollUnarmedStrike(actor);
 
 		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
-		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		// The card of the strike hosts the lines of what the attack ends.
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor, { id: 'chat-message-id' });
 	});
 
 	it('does not end a Despair line itself: the attack event ends it', async () => {
@@ -289,7 +345,7 @@ describe('rollUnarmedStrike', () => {
 
 		await rollUnarmedStrike(actor);
 
-		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor);
+		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor, { id: 'chat-message-id' });
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 

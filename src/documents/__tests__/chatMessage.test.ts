@@ -2772,22 +2772,103 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 		expect(entriesById.get('reroll-other-target')?.used).toBe(false);
 	});
 
-	it('posts an interpose reaction announcement card for the protector', async () => {
-		const message = createReactionMessage({ entries: [createRedirectEntry()] });
+	describe('the Interpose line', () => {
+		const user = () => reactionGlobals().game.user as { isActiveGM?: boolean };
 
-		await message.resolveRedirectReaction('redirect-1', 'gm-user');
+		function attackCard(whisper: string[] = []) {
+			const message = createReactionMessage({ entries: [createRedirectEntry()] });
+			Object.defineProperty(message, 'id', { value: 'attack-card' });
+			Object.assign(message, { whisper });
+			return message;
+		}
 
-		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledTimes(1);
-		expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
-			expect.objectContaining({
-				type: 'reaction',
-				system: expect.objectContaining({
-					actorName: 'Protector',
-					reactionType: 'interpose',
-					targets: ['Scene.scene.Token.victim'],
+		function eventsWritten(message: ReturnType<typeof attackCard>) {
+			return message.update.mock.calls
+				.map(([changes]) => (changes as Record<string, unknown>)[`flags.${SYSTEM_ID}.events`])
+				.find(Boolean) as Array<Record<string, unknown>> | undefined;
+		}
+
+		function expectReactionCard() {
+			expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: 'reaction',
+					system: expect.objectContaining({
+						actorName: 'Protector',
+						reactionType: 'interpose',
+						targets: ['Scene.scene.Token.victim'],
+					}),
 				}),
-			}),
-		);
+			);
+		}
+
+		beforeEach(() => {
+			user().isActiveGM = true;
+		});
+
+		afterEach(() => {
+			delete user().isActiveGM;
+		});
+
+		it('names the protector and the protected target on a public attack card', async () => {
+			reactionGlobals().fromUuidSync.mockImplementation((uuid: string) => {
+				if (uuid === 'Scene.scene.Token.protector') return { actor: protectorActor };
+				if (uuid === 'Scene.scene.Token.victim') return { name: 'Victim' };
+				return null;
+			});
+			const message = attackCard();
+
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+			expect(eventsWritten(message)).toEqual([
+				expect.objectContaining({
+					id: 'interpose.redirect-1',
+					kind: 'interpose',
+					text: {
+						key: 'NIMBLE.chat.events.interpose.text',
+						data: { name: 'Protector', target: 'Victim' },
+					},
+				}),
+			]);
+		});
+
+		it('posts no reaction card when the line is on a public attack card', async () => {
+			const message = attackCard();
+
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+			expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+		});
+
+		it('uses the no-target text when the protected target cannot be found', async () => {
+			const message = attackCard();
+
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+			expect(eventsWritten(message)).toEqual([
+				expect.objectContaining({
+					text: expect.objectContaining({ key: 'NIMBLE.chat.events.interpose.textNoTarget' }),
+				}),
+			]);
+		});
+
+		it('posts the reaction card, and no line, for a whispered attack card', async () => {
+			const message = attackCard(['gm-user']);
+
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+			expect(eventsWritten(message)).toBeUndefined();
+			expectReactionCard();
+		});
+
+		it('posts the reaction card when no GM can write the line', async () => {
+			user().isActiveGM = false;
+			const message = attackCard();
+
+			await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+			expect(eventsWritten(message)).toBeUndefined();
+			expectReactionCard();
+		});
 	});
 
 	it('does nothing on non-GM clients', async () => {

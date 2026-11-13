@@ -1,5 +1,7 @@
 import { systemHookName } from '#system';
 import { isChatNotificationsAutomationEnabled } from '../settings/automationSettings.js';
+import { activationEventsOf } from '../utils/chat/activationEvents.js';
+import { poolGainEvent } from '../utils/dicePool/poolEvents.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 
 let registered = false;
@@ -14,6 +16,7 @@ type PoolChangedPayload = {
 
 type PoolGainMessageRuleLike = {
 	type?: string;
+	parentDocument?: { name?: string | null; img?: string | null } | null;
 	disabled?: boolean;
 	poolIdentifier?: string;
 	appliesTo?: () => boolean;
@@ -24,12 +27,20 @@ type ActorWithRules = Actor.Implementation & {
 	rules?: Iterable<PoolGainMessageRuleLike>;
 };
 
+function postNotice(actor: ActorWithRules, content: string): void {
+	void ChatMessage.create({
+		speaker: ChatMessage.getSpeaker({ actor }),
+		content: `<p>${content}</p>`,
+	} as unknown as ChatMessage.CreateData);
+}
+
 /**
  * Posts each matching poolGainMessage rule's chat reminder when a dice pool
  * gains dice. Listens to the pool-changed event, which fires locally on the
  * client that performed the change, so the message posts exactly once
  * regardless of how the gain happened (activation roll, refill trigger, or
- * manual sheet edit). Spent dice that are refunded are not a gain.
+ * manual sheet edit). Spent dice that are refunded are not a gain. During an
+ * item use the reminder is a line on the item card instead.
  */
 export function registerPoolGainMessageHooks(): void {
 	if (registered) return;
@@ -51,10 +62,14 @@ export function registerPoolGainMessageHooks(): void {
 			const content = rule.resolveMessage?.();
 			if (!content) continue;
 
-			void ChatMessage.create({
-				speaker: ChatMessage.getSpeaker({ actor }),
-				content: `<p>${content}</p>`,
-			} as unknown as ChatMessage.CreateData);
+			const use = activationEventsOf(actor);
+			if (!use) {
+				postNotice(actor, content);
+				continue;
+			}
+			void use.add([poolGainEvent(rule.parentDocument, content)]).then((placed) => {
+				if (!placed) postNotice(actor, content);
+			});
 		}
 	});
 }

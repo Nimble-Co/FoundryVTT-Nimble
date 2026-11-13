@@ -118,6 +118,11 @@ describe('moveNodeText', () => {
 			);
 		});
 
+		it('names the creature that gives the move, not the actor of the card that hosts it', () => {
+			const node = moveNode({ kind: 'free', direction: 'toward', sourceName: 'Kara' });
+			expect(summaryOf(node, [offer({ kind: 'free', spaces: 3 })])).toContain('toward Kara');
+		});
+
 		it('hides the direction when the feature user is the only creature that moves', () => {
 			expect(
 				summaryOf(moveNode({ recipient: 'self' }), [offer({ tokenUuid: SPEAKER_TOKEN })]),

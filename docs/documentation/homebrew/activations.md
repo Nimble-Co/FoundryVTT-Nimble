@@ -11,7 +11,7 @@ An **activation** is everything that happens when a player clicks an item: what 
 
 The **Activation** tab appears on objects, spells, features, and monster features, and is split into three sub-tabs: **Core**, **Targets**, and **On use**. The effects that the item holds are on its own **Effects** tab: see [Item effects](effects.md#item-effects).
 
-![The Activation tab of an item with the Core / Targets / Effects sub-tab bar visible](/images/documentation/item-activation-and-effects.png)
+![The Activation tab of an item with the Core / Targets / On use sub-tab bar visible](/images/documentation/item-activation-and-effects.png)
 
 ## The Core sub-tab
 
@@ -133,7 +133,7 @@ Holding **Alt** while clicking the item skips the window and rolls with defaults
 - an **Effects** part with a row for each Apply Effect entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows "On" and the name. With the Feature Effects automation setting off, it has an **Apply to You** button,
 - any **notes**, styled by their note type.
 
-![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect with Apply to You](/images/documentation/ghostwalk-draught-chat-card.png)
+![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect that went on by itself, On Grug](/images/documentation/ghostwalk-draught-chat-card.png)
 
 ## The Macro tab
 

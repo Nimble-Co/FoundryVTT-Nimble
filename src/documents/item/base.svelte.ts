@@ -1,11 +1,30 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { CardEvent, CardEventMoment, EventHost, EventSink } from '#types/cardEvent.d.ts';
 import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
+import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
+import { applyEffectFromCard, type EffectCard } from '#utils/chat/applyEffectFromCard.js';
+import {
+	addCardEvents,
+	addMomentEvents,
+	type CardReaders,
+	gmReaders,
+	postUnreadLines,
+	splitByReaders,
+} from '#utils/chat/cardEvents.js';
+import {
+	freeUseEvent,
+	freeUseEventHost,
+	freeUseSink,
+	useCardHasSomethingToClick,
+} from '#utils/chat/freeUseFold.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -16,8 +35,89 @@ import {
 import { giveBack, receiptOf } from '../../utils/cost/costLedger.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
+/** What the activation card needs to know of the use beyond its data. */
+interface UseCardOptions {
+	/** The lines of the use so far. */
+	events: ActivationEvents | null;
+	free: ItemActivationManager.FreeUse | null;
+	/** The card goes to the GMs only. */
+	hidden: boolean;
+}
+
 /** The card types whose schema carries `system.concentration`. */
 const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object']);
+
+interface UsedItem {
+	actor?: { name?: string | null } | null;
+	name: string;
+	img?: string | null;
+}
+
+/**
+ * A free use whose card would have nothing to click is one line on its host instead, with the
+ * other lines of the use. It still does all the use does: the self Apply Effect steps apply here,
+ * as no card is made for the hook that applies them. Null: the card is posted. Else where the
+ * line went, so what the use ends goes there too.
+ */
+async function foldFreeUse(
+	item: UsedItem,
+	chatData: OfferCard,
+	events: CardEvent[],
+	use: UseCardOptions,
+): Promise<EventHost> {
+	const host = use.free?.host;
+	if (!host || !use.free || useCardHasSomethingToClick(chatData.system as never)) return null;
+	const sink = freeUseSink(host, { gmOnly: use.hidden });
+	if (!sink) return null;
+	const line = freeUseEvent({
+		actorName: item.actor?.name ?? '',
+		item: { name: item.name, img: item.img },
+		reason: use.free.reason,
+		effects: (chatData.system?.activation?.effects ?? []) as EffectNode[],
+	});
+	if (!(await sink([line, ...events]))) return null;
+	use.events?.posted(sink);
+	await applySelfStepsWithoutCard(chatData);
+	return freeUseEventHost(host, { gmOnly: use.hidden });
+}
+
+/**
+ * A use whose card a rule holds back: its lines go on a card of their own, headed by the use, and
+ * so do the lines that come after and what the use ends.
+ */
+async function postWithoutCard(
+	item: UsedItem,
+	events: CardEvent[],
+	use: UseCardOptions,
+): Promise<EventHost> {
+	const moment: CardEventMoment = {
+		key: `once:${foundry.utils.randomID()}`,
+		heading: {
+			key: 'NIMBLE.chat.events.useHeading',
+			data: { name: item.actor?.name ?? '', item: item.name },
+		},
+	};
+	const whisper = use.hidden ? gmReaders() : [];
+	const sink: EventSink = (lines) => addMomentEvents(moment, lines, { whisper });
+	use.events?.posted(sink);
+	if (events.length > 0) await sink(events);
+	return { moment, whisper };
+}
+
+async function applySelfStepsWithoutCard(chatData: OfferCard): Promise<void> {
+	if (!isRuleAutomationEnabled()) return;
+	const card: EffectCard = {
+		id: null,
+		flags: (chatData as { flags?: Record<string, unknown> }).flags,
+		system: chatData.system,
+		update: async () => undefined,
+	};
+	for (const node of selfStepsOf(card)) {
+		await applyEffectFromCard(card, node).catch((error) =>
+			console.error('Nimble | Could not apply the effects of the item to its user.', error),
+		);
+	}
+}
 
 export type { SystemItemTypes } from './itemInterfaces.js';
 
@@ -200,6 +300,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		rolls: unknown[],
 		activation: { effects?: unknown[] } | null,
 		hookContext: Record<string, unknown>,
+		use: UseCardOptions = { events: null, free: null, hidden: false },
 	): Promise<ChatMessage | null> {
 		const suppressCard = this._shouldSuppressActivationCard(rolls, activation);
 
@@ -226,23 +327,42 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				source: this.actor as unknown as OfferActor | null,
 			});
 		}
-		const chatCard = suppressCard
-			? null
-			: ((await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null);
+		const events = use.events?.take() ?? [];
+		const folded = suppressCard ? null : await foldFreeUse(this, card, events, use);
+		if (folded) {
+			// @ts-expect-error - nimble.useItem is custom
+			Hooks.callAll(systemHookName('useItem'), this, null, { ...hookContext, eventHost: folded });
+			return null;
+		}
+		if (suppressCard) {
+			const eventHost = await postWithoutCard(this, events, use);
+			// @ts-expect-error - nimble.useItem is custom
+			Hooks.callAll(systemHookName('useItem'), this, null, { ...hookContext, eventHost });
+			return null;
+		}
+		const { here, elsewhere } = splitByReaders(chatData as CardReaders, events);
+		if (here.length > 0) {
+			foundry.utils.setProperty(chatData as object, `flags.${SYSTEM_ID}.events`, here);
+		}
+		const chatCard = (await ChatMessage.create(chatData as ChatMessage.CreateData)) ?? null;
+		use.events?.posted(chatCard ? (lines) => addCardEvents(chatCard as never, lines) : null);
+		if (elsewhere.length > 0) await postUnreadLines(elsewhere);
 
-		if (chatCard || suppressCard) {
+		if (chatCard) {
 			/**
 			 * A hook event that fires after an item has been used.
 			 * @function nimble.useItem
 			 * @memberof hookEvents
 			 * @param {Item} item                The item that was used
 			 * @param {ChatMessage|null} chatMessage The chat message created by the item use,
-			 *                                       or null when a rule suppressed the card
+			 *                                       or null when a rule suppressed the card or the
+			 *                                       use went on another card as one line
 			 * @param {Object} context            Additional context about the item use
 			 * @param {Roll[]} context.rolls      The rolls associated with the item use
 			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
 			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
 			 * @param {Token[]} context.targets   The targets of the item use
+			 * @param {Object} [context.eventHost] With no card: where the lines of the use went
 			 */
 			// @ts-expect-error - nimble.useItem is custom
 			Hooks.callAll(systemHookName('useItem'), this, chatCard, hookContext);
@@ -324,10 +444,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const receipt = await this._payForUse(manager);
 		if (!receipt) return null;
 
+		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
 		try {
 			// Pool-node side effects run only after the gate allowed the use and it is paid for.
-			await manager.applyDeferredPoolNodes();
+			await manager.applyDeferredPoolNodes(useEvents);
 
 			// Only allow hiding rolls for GM users rolling for non-PC actors
 			const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
@@ -397,15 +518,22 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				(chatData as Record<string, unknown>).whisper = gmUsers;
 			}
 
-			card = await this._createActivationCard(chatData, rolls, activation, {
+			card = await this._createActivationCard(
+				chatData,
 				rolls,
-				isCritical,
-				isMiss,
-				discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-				targets: manager.targets,
-				...useContext,
-			});
+				activation,
+				{
+					rolls,
+					isCritical,
+					isMiss,
+					discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
+					targets: manager.targets,
+					...useContext,
+				},
+				{ events: useEvents, free: manager.free, hidden: !!shouldHide },
+			);
 		} catch (error) {
+			useEvents?.close();
 			// The use did not happen, so it costs nothing.
 			await giveBack(this.actor, receipt).catch((refundError) =>
 				console.error('Nimble | Could not give back the cost of a failed use.', refundError),

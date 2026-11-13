@@ -1,8 +1,8 @@
+import type { CardEventText, EventHost } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
-import { effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
+import { type EndMoment, effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
 import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
-import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
 
@@ -34,27 +34,46 @@ interface HeadingNames {
 	effect?: string | null;
 }
 
-export function eventHeading(event: LastsUntilEvent, names: HeadingNames): string {
-	return localize(`NIMBLE.lastsUntil.chat.heading.${event}`, {
-		name: names.name ?? '',
-		item: names.item ?? '',
-		effect: names.effect ?? '',
-	});
+export function eventHeading(event: LastsUntilEvent, names: HeadingNames): CardEventText {
+	return {
+		key: `NIMBLE.lastsUntil.chat.heading.${event}`,
+		data: { name: names.name ?? '', item: names.item ?? '', effect: names.effect ?? '' },
+	};
 }
 
 type EventCheck = Extract<LastsUntilCheck, { type: 'event' }>;
 
 /**
- * End what each event ends, one message for each event. An effect that more
- * than one of them ends goes with the first. Run where the event happens: the
- * effects are found now, before what happens next changes them.
+ * Where the ends of an event go: the host card, or the card of the host moment with the event as
+ * the reason, or else a card of their own headed by the event.
  */
-export function fireEvents(events: readonly { check: EventCheck; heading: string }[]): void {
+function endMomentOn(heading: CardEventText, host: EventHost): EndMoment {
+	if (host && 'moment' in host) {
+		return {
+			key: host.moment.key,
+			heading: host.moment.heading,
+			reason: heading,
+			...(host.whisper?.length ? { whisper: host.whisper } : {}),
+		};
+	}
+	const hostId = host?.id ?? undefined;
+	return { heading, ...(hostId ? { hostId } : {}) };
+}
+
+/**
+ * End what each event ends, one message for each event, or lines on `host`. An effect that more
+ * than one of them ends goes with the first. Run where the event happens: the effects are found
+ * now, before what happens next changes them.
+ */
+export function fireEvents(
+	events: readonly { check: EventCheck; heading: CardEventText }[],
+	host?: EventHost,
+): void {
 	const taken = new Set<ActiveEffect>();
 	for (const { check, heading } of events) {
 		const effects = effectsEndingAt(check).filter((effect) => !taken.has(effect));
 		for (const effect of effects) taken.add(effect);
-		void endEffects(effects, heading);
+		void endEffects(effects, endMomentOn(heading, host), { check });
 	}
 }
 
@@ -62,32 +81,45 @@ export function fireEvent(
 	event: LastsUntilEvent,
 	actor: { name?: string | null } | null,
 	extra: Partial<Omit<EventCheck, 'type' | 'event' | 'actor'>> & HeadingNames = {},
+	host?: EventHost,
 ): void {
 	if (!actor) return;
 	const { item, effect, ...check } = extra;
-	fireEvents([
-		{
-			check: { type: 'event', event, actor, ...check },
-			heading: eventHeading(event, { name: actor.name, item, effect }),
-		},
-	]);
+	fireEvents(
+		[
+			{
+				check: { type: 'event', event, actor, ...check },
+				heading: eventHeading(event, { name: actor.name, item, effect }),
+			},
+		],
+		host,
+	);
 }
 
 /**
  * An attack that is not an item use: an attack, and so a roll. Resolves when the activity of the
  * attacker is saved.
  */
-export function fireAttackEvents(actor: { name?: string | null } | null): Promise<void> {
+export function fireAttackEvents(
+	actor: { name?: string | null } | null,
+	host?: EventHost,
+): Promise<void> {
 	if (!actor) return Promise.resolve();
 	const noted = noteActivity(actor, { attack: true });
 	const name = actor.name;
-	fireEvents([
-		{ check: { type: 'event', event: 'attack', actor }, heading: eventHeading('attack', { name }) },
-		{
-			check: { type: 'event', event: 'nextRoll', actor },
-			heading: eventHeading('nextRoll', { name }),
-		},
-	]);
+	fireEvents(
+		[
+			{
+				check: { type: 'event', event: 'attack', actor },
+				heading: eventHeading('attack', { name }),
+			},
+			{
+				check: { type: 'event', event: 'nextRoll', actor },
+				heading: eventHeading('nextRoll', { name }),
+			},
+		],
+		host,
+	);
 	return noted;
 }
 
@@ -98,15 +130,20 @@ function isTieredSpell(item: UsedItem): boolean {
 
 /**
  * The events of one item use: an attack (also a roll), a spell cast, a tiered spell cast, and a
- * use of the item again. Resolves when the activity of the user is saved.
+ * use of the item again, with lines on the item card `host`. Resolves when the activity of the
+ * user is saved.
  */
-export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[]): Promise<void> {
+export function fireItemUseEvents(
+	item: UsedItem,
+	targetActors: readonly object[],
+	host?: EventHost,
+): Promise<void> {
 	const actor = item.actor as { name?: string | null } | null;
 	if (!actor) return Promise.resolve();
 	const attack = isAttackUse(item, targetActors);
 	const noted = noteActivity(actor, { attack, itemUuid: item.uuid });
 	const name = actor.name;
-	const events: { check: EventCheck; heading: string }[] = [];
+	const events: { check: EventCheck; heading: CardEventText }[] = [];
 	if (attack) {
 		events.push({
 			check: { type: 'event', event: 'attack', actor },
@@ -135,6 +172,6 @@ export function fireItemUseEvents(item: UsedItem, targetActors: readonly object[
 			heading: eventHeading('useAgain', { name, item: item.name }),
 		});
 	}
-	fireEvents(events);
+	fireEvents(events, host);
 	return noted;
 }

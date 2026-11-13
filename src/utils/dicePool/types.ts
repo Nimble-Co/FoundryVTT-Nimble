@@ -110,6 +110,9 @@ type CharacterActorLike = Actor.Implementation & {
 	getRollData(): Record<string, unknown>;
 };
 
+/** A die that came up below the pool's lowest face and was raised to it. */
+type RaisedFace = { rolled: number; face: number };
+
 export type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
@@ -131,5 +134,6 @@ export type {
 	DiceRestType,
 	ModifyPoolRuleLike,
 	NumericInput,
+	RaisedFace,
 	RuleBackedItem,
 };

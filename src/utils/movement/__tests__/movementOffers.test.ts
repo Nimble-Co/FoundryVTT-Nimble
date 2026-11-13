@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import {
@@ -10,6 +11,7 @@ import {
 	reconcileMovementOffers,
 	settleMovementOffer,
 	untrackMovementOffers,
+	withEventOffers,
 } from '../movementOffers.js';
 
 const RollGlobal = Roll as unknown as {
@@ -298,6 +300,55 @@ describe('findArmedMovementOffer', () => {
 		expect(armed?.messageId).toBe('new');
 	});
 
+	const offerLine = (nodeId: string, at: number) => ({
+		id: `movementOffer.${nodeId}`,
+		kind: 'movementOffer',
+		icon: 'x',
+		text: { key: 'k' },
+		action: { kind: 'movementOffer', node: { id: nodeId }, offers: [] },
+		at,
+	});
+	const hosting = (id: string, timestamp: number, offers: MovementOffer[], at: number[]) =>
+		({
+			...message(id, offers),
+			timestamp,
+			flags: {
+				[SYSTEM_ID]: { events: offers.map((each, index) => offerLine(each.nodeId, at[index])) },
+			},
+		}) as OfferCard;
+
+	it('takes the first move of its own card when the card has two moves to the token', () => {
+		const first = offer({ id: 'n1.gob', nodeId: 'n1', spaces: 2 });
+		const second = offer({ id: 'n2.gob', nodeId: 'n2', spaces: 5 });
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [{ ...message('m1', [first, second]), timestamp: 10 } as OfferCard],
+			enabled: true,
+		});
+		expect(armed?.spaces).toBe(2);
+	});
+
+	it('takes the newest offer line when one card hosts two offers to the token', () => {
+		const first = offer({ id: 'n1.gob', nodeId: 'n1', spaces: 2 });
+		const second = offer({ id: 'n2.gob', nodeId: 'n2', spaces: 5 });
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [hosting('m1', 10, [first, second], [20, 30])],
+			enabled: true,
+		});
+		expect(armed?.spaces).toBe(5);
+	});
+
+	it('takes a newer offer line on an older card over an older offer on a newer card', () => {
+		const late = offer({ id: 'n2.gob', nodeId: 'n2', spaces: 5 });
+		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
+			messages: [
+				hosting('old', 10, [late], [50]),
+				{ ...message('new', [offer()]), timestamp: 40 } as OfferCard,
+			],
+			enabled: true,
+		});
+		expect(armed?.messageId).toBe('old');
+	});
+
 	it('passes over a settled offer to an older open one', () => {
 		const armed = findArmedMovementOffer('Scene.s.Token.gob', {
 			messages: [message('old', [offer()]), message('new', [offer({ state: 'taken' })])],
@@ -493,5 +544,24 @@ describe('movementOfferOutcome', () => {
 	it('has no moved spaces for an open or unused offer', () => {
 		expect(movementOfferOutcome(offer()).moved).toBeNull();
 		expect(movementOfferOutcome(offer({ state: 'unused' })).moved).toBeNull();
+	});
+});
+
+describe('offers of an Events line', () => {
+	const lineOffer = offer({ id: 'line.hero', nodeId: 'line', tokenUuid: 'Scene.s.Token.hero' });
+
+	it('stay on the card when its targets change', () => {
+		const next = reconcileMovementOffers(card([moveNode()], [], [offer(), lineOffer]), lookups);
+		expect(next.map((each) => each.id)).toEqual(['line.hero']);
+	});
+
+	it('are added to the card offers that lack them', () => {
+		const events = [
+			{ action: { kind: 'movementOffer', offers: [lineOffer] } },
+			{ action: undefined },
+		];
+		expect(withEventOffers([offer()], events)).toEqual([offer(), lineOffer]);
+		expect(withEventOffers([offer(), lineOffer], events)).toBeNull();
+		expect(withEventOffers([], [{ action: { kind: 'undoEnd' } }])).toBeNull();
 	});
 });

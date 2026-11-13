@@ -37,6 +37,7 @@ import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { addCardEvents } from '../../utils/chat/cardEvents.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
@@ -2484,7 +2485,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 						actionCost,
 					});
 				}
-				await spendHeldIgnoreDisadvantage(this, item.name);
+				await spendHeldIgnoreDisadvantage(this, item.name, {
+					add: (events) => addCardEvents(result as never, events),
+				});
 			}
 		}
 

@@ -1,3 +1,4 @@
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { DefendEffect } from '#types/defend.d.ts';
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
@@ -7,6 +8,7 @@ import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTr
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
@@ -31,7 +33,7 @@ import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.j
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { heldVulnerabilityTo, spendHeldChanges } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
-import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
+import { reconcileMovementOffers, withEventOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
@@ -47,6 +49,7 @@ import {
 	getBankedDamageReductionEntries,
 } from '../utils/damage/bankedDamageReduction.js';
 import { sendCritBack } from '../utils/damage/critBack.js';
+import { withDamageCard } from '../utils/damage/damageCard.js';
 import { applyHitConditions } from '../utils/damage/hitCondition.js';
 import type { PoolSpendSelection } from '../utils/incomingReactions/incomingAttackReactions.js';
 import {
@@ -1031,7 +1034,10 @@ class NimbleChatMessage extends ChatMessage {
 		...args: Parameters<ChatMessage['_preCreate']>
 	): ReturnType<ChatMessage['_preCreate']> {
 		const allowed = await super._preCreate(...args);
-		if (allowed === false || !this.isActivationCard()) return allowed;
+		if (allowed === false) return allowed;
+		const eventOffers = this.#eventOfferChanges(this.flags, undefined);
+		if (eventOffers) this.updateSource({ 'system.movementOffers': eventOffers } as never);
+		if (!this.isActivationCard()) return allowed;
 		const { incomingReactions } = this.#noDamageRowChanges(
 			(this.system as ActivationCardSystemData).targets ?? [],
 		);
@@ -1042,6 +1048,38 @@ class NimbleChatMessage extends ChatMessage {
 			>);
 		}
 		return allowed;
+	}
+
+	protected override async _preUpdate(
+		...args: Parameters<ChatMessage['_preUpdate']>
+	): ReturnType<ChatMessage['_preUpdate']> {
+		const allowed = await super._preUpdate(...args);
+		if (allowed === false) return allowed;
+		// Foundry hands `_preUpdate` the changes expanded.
+		const changed = args[0] as {
+			flags?: Record<string, { events?: unknown } | undefined>;
+			system?: { movementOffers?: MovementOffer[] };
+		};
+		const flags = changed.flags?.[SYSTEM_ID]?.events ? changed.flags : this.flags;
+		const eventOffers = this.#eventOfferChanges(flags, changed.system?.movementOffers);
+		if (eventOffers) changed.system = { ...changed.system, movementOffers: eventOffers };
+		return allowed;
+	}
+
+	/**
+	 * The offers of the card's Events lines that its offers lack. A line's offers live on the card,
+	 * so the tokens carry them; a write of the offers never drops them.
+	 */
+	#eventOfferChanges(
+		flags: Record<string, unknown> | undefined,
+		offers: MovementOffer[] | undefined,
+	): MovementOffer[] | null {
+		if (!cardSchemaHas(this.type, 'movementOffers')) return null;
+		const events = (flags?.[SYSTEM_ID] as { events?: unknown } | undefined)?.events;
+		if (!Array.isArray(events) || events.length < 1) return null;
+		const current =
+			offers ?? (this.system as { movementOffers?: MovementOffer[] }).movementOffers ?? [];
+		return withEventOffers(current, events as CardEvent[]);
 	}
 
 	/** ------------------------------------------------------ */
@@ -1352,8 +1390,8 @@ class NimbleChatMessage extends ChatMessage {
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
 			);
 
-			await target.actor.applyDamage(target.adjustedDamage);
-			await spendHeldChanges(target.usedVulnerabilities);
+			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
+			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
 
 			const hpAfter = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1619,6 +1657,11 @@ class NimbleChatMessage extends ChatMessage {
 		return packets.length > 0 ? { ...resolveDamageForActor(actor, packets), actor } : null;
 	}
 
+	/** The Events strip of this card, for the ended lines of what the damage used up. */
+	#endedLines() {
+		return { add: (events: CardEvent[]) => addCardEvents(this, events) };
+	}
+
 	/** What a click would deal to the creature, or null when nothing can be dealt. */
 	latchedMissDamage(creatureUuid: string): number | null {
 		if (!this.isActivationCard()) return null;
@@ -1630,8 +1673,8 @@ class NimbleChatMessage extends ChatMessage {
 		const resolved = this.#missedDamageOn(creatureUuid);
 		if (!resolved) return;
 		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
-		await resolved.actor.applyDamage(resolved.total);
-		await spendHeldChanges(resolved.usedVulnerabilities);
+		await withDamageCard(this.id, () => resolved.actor.applyDamage(resolved.total));
+		await spendHeldChanges(resolved.usedVulnerabilities, this.#endedLines());
 		await this.setFlag(SYSTEM_ID, LATCHED_DAMAGE_FLAG, true);
 	}
 
@@ -2131,6 +2174,29 @@ class NimbleChatMessage extends ChatMessage {
 		const protector = (tokenDoc?.actor ??
 			fromUuidSync(entry.actorUuid)) as Actor.Implementation | null;
 		if (!protector) return;
+
+		const protectedName =
+			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)
+				?.name ?? '';
+		const isPublic = (this.whisper ?? []).length < 1;
+		const hosted =
+			isPublic &&
+			(await addCardEvents(this, [
+				{
+					id: `interpose.${entry.id}`,
+					kind: 'interpose',
+					...(protector.img ? { img: protector.img } : { icon: 'fa-solid fa-people-arrows' }),
+					text: {
+						key: protectedName
+							? 'NIMBLE.chat.events.interpose.text'
+							: 'NIMBLE.chat.events.interpose.textNoTarget',
+						data: { name: protector.name ?? '', target: protectedName },
+					},
+					cause: { key: 'NIMBLE.chat.events.interpose.cause' },
+					at: Date.now(),
+				},
+			]));
+		if (hosted) return;
 
 		await ChatMessage.create({
 			author: game.user?.id,

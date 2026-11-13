@@ -1,6 +1,7 @@
 import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import { pendingCardLines } from '#utils/chat/cardEvents.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
@@ -245,6 +246,8 @@ async function rollSingleMinionAttack(params: {
 	/** The attack's only target, whose conditions change the roll mode. */
 	soleTargetActor: ConditionCreature | null;
 	selectionsByMemberId: ReadonlyMap<string, string>;
+	/** Takes the ended lines of the Held Changes the roll uses up, for the group card. */
+	usedUp: ReturnType<typeof pendingCardLines>;
 }): Promise<MinionGroupAttackRollOutcome> {
 	const resolvedActionContext = resolveMinionAttackActionContext(params);
 	if (isMinionAttackRollOutcome(resolvedActionContext)) {
@@ -311,7 +314,7 @@ async function rollSingleMinionAttack(params: {
 		held.applyToRoll(rollOptions);
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
-		await held.spend();
+		await held.spend(params.usedUp);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -407,9 +410,9 @@ async function buildNcsAttackChatData(params: {
 	skippedMembers: MinionGroupAttackSkippedMember[];
 	unsupportedWarnings: string[];
 	attackMembers: Combatant.Implementation[];
-}): Promise<{ chatMessageId: string | null; totalDamage: number }> {
+}): Promise<{ chatMessageId: string | null; totalDamage: number; chatCard: ChatMessage | null }> {
 	if (params.rollEntries.length < 1) {
-		return { chatMessageId: null, totalDamage: 0 };
+		return { chatMessageId: null, totalDamage: 0, chatCard: null };
 	}
 
 	const totalDamage = params.rollEntries.reduce((sum, entry) => sum + entry.totalDamage, 0);
@@ -431,23 +434,25 @@ async function buildNcsAttackChatData(params: {
 	return {
 		chatMessageId: chatCard?.id ?? null,
 		totalDamage,
+		chatCard,
 	};
 }
 
 /**
  * The attack event of each actor whose member rolled. Resolves when their activity is saved, so the
- * turn does not end before the round has the attack.
+ * turn does not end before the round has the attack. The group attack card hosts the lines.
  */
 async function fireMemberAttackEvents(
 	attackMembers: Combatant.Implementation[],
 	rolledCombatantIds: string[],
+	chatCard: ChatMessage | null,
 ): Promise<void> {
 	const rolled = new Set(rolledCombatantIds);
 	const attackers = new Set<Actor>();
 	for (const member of attackMembers) {
 		if (member.actor && rolled.has(member.id ?? '')) attackers.add(member.actor as Actor);
 	}
-	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor)));
+	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor, chatCard)));
 }
 
 async function maybeAdvanceTurnAfterAttack(params: {
@@ -535,7 +540,9 @@ async function collectMinionAttackRollData(params: {
 	actionUpdates: Record<string, unknown>[];
 	rollEntries: MinionGroupAttackRollEntry[];
 	unsupportedWarnings: string[];
+	usedUp: ReturnType<typeof pendingCardLines>;
 }> {
+	const usedUp = pendingCardLines();
 	const actionUpdates: Record<string, unknown>[] = [];
 	const unsupportedWarnings = new Set<string>();
 	const rollEntries: MinionGroupAttackRollEntry[] = [];
@@ -548,6 +555,7 @@ async function collectMinionAttackRollData(params: {
 			targetActor,
 			soleTargetActor,
 			selectionsByMemberId: params.selectionsByMemberId,
+			usedUp,
 		});
 		appendMinionAttackRollOutcome({
 			rollOutcome,
@@ -561,6 +569,7 @@ async function collectMinionAttackRollData(params: {
 		actionUpdates,
 		rollEntries,
 		unsupportedWarnings: [...unsupportedWarnings],
+		usedUp,
 	};
 }
 
@@ -610,7 +619,8 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
-	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
+	await rollData.usedUp.postOn(chatData.chatCard as never);
+	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds, chatData.chatCard);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,
 		endTurn: normalizedParams.endTurn,

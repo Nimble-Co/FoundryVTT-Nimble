@@ -1,4 +1,5 @@
 import type { DamageRoll } from '../src/dice/DamageRoll.ts';
+import type { CardEvent } from './cardEvent.d.ts';
 import type { DamageNode } from './effectTree.d.ts';
 import type { HeldChange } from './heldChange.d.ts';
 
@@ -23,6 +24,6 @@ export interface AttackHeldPlan {
 	rollExtraDamage(rollData: Record<string, unknown>): Promise<{ node: DamageNode; roll: Roll }[]>;
 	/** The same plan for a roll that has no Primary Die to add to. */
 	withoutPrimaryDie(): AttackHeldPlan;
-	/** Remove what the attack spent. */
-	spend(): Promise<void>;
+	/** Remove what the attack spent; with `lines`, each spent change is an ended line on the card. */
+	spend(lines?: { add(events: CardEvent[]): Promise<boolean> } | null): Promise<void>;
 }

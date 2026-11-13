@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import * as chargePoolRecoverModule from '../../utils/chargePool/chargePoolRecover.js';
 import * as dicePoolRefillModule from '../../utils/dicePool/dicePoolRefill.js';
@@ -11,7 +12,9 @@ import { ItemActivationManager, testDependencies } from '../ItemActivationManage
 const mockRollDieIntoPool = vi
 	.spyOn(dicePoolRefillModule, 'rollDieIntoPool')
 	.mockResolvedValue({ applied: true, face: 4 });
-const mockRollPoolFresh = vi.spyOn(dicePoolRefillModule, 'rollPoolFresh').mockResolvedValue(true);
+const mockRollPoolFresh = vi
+	.spyOn(dicePoolRefillModule, 'rollPoolFresh')
+	.mockResolvedValue({ applied: true, raised: [] });
 const mockEmitDicePoolChanged = vi
 	.spyOn(dicePoolRefillModule, 'emitDicePoolChanged')
 	.mockImplementation(() => {});
@@ -78,7 +81,7 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockRollDieIntoPool.mockResolvedValue({ applied: true, face: 4 });
-		mockRollPoolFresh.mockResolvedValue(true);
+		mockRollPoolFresh.mockResolvedValue({ applied: true, raised: [] });
 		mockSetPoolFaces.mockResolvedValue(true);
 		mockAdjustPool.mockResolvedValue(true);
 		// Ensure game.user.targets is iterable for the manager's _targets collection.
@@ -187,7 +190,7 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 
 		it('rollDie: announces the faces before the rolls first, then the faces after them', async () => {
 			const pool = { label: 'Fury Dice', faces: [2] };
-			const item = { id: 'rage', flags: { nimble: { dicePools: { fury: pool } } } };
+			const item = { id: 'rage', flags: { [SYSTEM_ID]: { dicePools: { fury: pool } } } };
 			const actor = makeActor(3, { items: { contents: [item] } });
 			mockRollDieIntoPool.mockImplementation(async () => {
 				pool.faces = [...pool.faces, 4];
@@ -412,6 +415,52 @@ describe('ItemActivationManager: pool effect node dispatch', () => {
 			expect(out.result?.applied).toBe(false);
 			expect(out.result?.skipReason).toBe('noActor');
 			expect(mockRollDieIntoPool).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('in an item use', () => {
+		it('rolls into the pool with no card of its own and puts a line on the item card', async () => {
+			const { openActivationEvents } = await import('../../utils/chat/activationEvents.js');
+			const actor = makeActor(3, {
+				uuid: 'Actor.in-use',
+				flags: { [SYSTEM_ID]: { dicePools: { 'actor:fury': { label: 'Fury Dice', faces: [] } } } },
+			});
+			const use = openActivationEvents(actor);
+			const manager = buildManager(actor, [
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 1, poolIdentifier: 'actor:fury' }),
+			]);
+			await manager.getData();
+			await manager.applyDeferredPoolNodes(use);
+
+			expect(mockRollDieIntoPool).toHaveBeenCalledWith(
+				actor,
+				'actor:fury',
+				expect.objectContaining({ suppressChat: true }),
+			);
+			expect(use?.take()).toEqual([
+				expect.objectContaining({
+					kind: 'poolRoll',
+					text: {
+						key: 'NIMBLE.chat.events.poolRoll.text',
+						data: { pool: 'Fury Dice', faces: '4' },
+					},
+				}),
+			]);
+			use?.close();
+		});
+
+		it('adds no line for a node that already shows its roll on the card', async () => {
+			const { openActivationEvents } = await import('../../utils/chat/activationEvents.js');
+			const actor = makeActor(3, { uuid: 'Actor.suppressed' });
+			const use = openActivationEvents(actor);
+			const manager = buildManager(actor, [
+				poolNode({ poolType: 'dice', action: 'rollDie', value: 1, suppressChat: true }),
+			]);
+			await manager.getData();
+			await manager.applyDeferredPoolNodes(use);
+
+			expect(use?.take()).toEqual([]);
+			use?.close();
 		});
 	});
 });

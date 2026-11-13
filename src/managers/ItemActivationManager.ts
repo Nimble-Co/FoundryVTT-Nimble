@@ -1,4 +1,5 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
+import type { FreeUseHost } from '#types/cardEvent.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
@@ -23,7 +24,9 @@ import type {
 	ChargeConsumptionDetail,
 	RuleBackedItem,
 } from '#utils/chargePool/types.js';
+import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { FreeUseReason } from '#utils/chat/freeUseReason.js';
+import type { RaisedFace } from '#utils/dicePool/types.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -64,6 +67,7 @@ import {
 	setPoolFaces,
 } from '../utils/dicePool/dicePoolRefill.js';
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
+import { poolRollEvent } from '../utils/dicePool/poolEvents.js';
 import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
@@ -239,6 +243,7 @@ class ItemActivationManager {
 		return {
 			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
 			reason: free.reason,
+			...(free.host ? { host: free.host } : {}),
 		};
 	}
 
@@ -1246,11 +1251,11 @@ class ItemActivationManager {
 	 * same node objects the activation data references, so the chat card still
 	 * renders them. Safe to call once per activation.
 	 */
-	async applyDeferredPoolNodes(): Promise<void> {
+	async applyDeferredPoolNodes(events: ActivationEvents | null = null): Promise<void> {
 		const nodes = this.#deferredPoolNodes;
 		this.#deferredPoolNodes = [];
 		for (const node of nodes) {
-			await this.#applyPoolNode(node);
+			await this.#applyPoolNode(node, events);
 		}
 		await this.#consumePoolDice();
 		await this.#consumeChargePools();
@@ -1259,8 +1264,8 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		if (this.#heldPlan) await this.#heldPlan.spend();
-		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
+		if (this.#heldPlan) await this.#heldPlan.spend(events);
+		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd], events);
 		this.#heldPlan = null;
 		this.#keptAmountToEnd = null;
 		await spendCritDiceUses(this.actor as Actor | null, this.#primaryRoll);
@@ -1284,7 +1289,7 @@ class ItemActivationManager {
 	 * Skipped (with a skipReason) if predicate fails, actor missing, or the
 	 * action is not meaningful for the pool type.
 	 */
-	async #applyPoolNode(node: PoolNode): Promise<void> {
+	async #applyPoolNode(node: PoolNode, events: ActivationEvents | null): Promise<void> {
 		const actor = this.actor as Actor.Implementation | null;
 		if (!actor) {
 			node.result = { applied: false, skipReason: 'noActor' };
@@ -1344,7 +1349,19 @@ class ItemActivationManager {
 			// effect node: set when the feature's activation card already
 			// displays the rolled faces (e.g. Rage). Defaults to false so
 			// existing data keeps emitting the standalone roll card.
-			const suppressChat = node.suppressChat === true;
+			// In an item use the roll is a line on the item card, not a card of its own; the
+			// 3D dice still show.
+			const asLine = node.suppressChat !== true && !!events;
+			const suppressChat = node.suppressChat === true || asLine;
+			const showDice = asLine;
+			const rollLine = async (
+				label: string | undefined,
+				faces: number[],
+				raised: RaisedFace[] = [],
+			) => {
+				if (!asLine || !events || faces.length < 1) return;
+				await events.add([poolRollEvent(this.#item, label ?? poolId, faces, raised)]);
+			};
 
 			if (node.action === 'rollDie') {
 				const before = readPool();
@@ -1355,9 +1372,17 @@ class ItemActivationManager {
 				// which ones to keep." The chat card displays these so the
 				// player can see what was rolled.
 				const rolledFaces: number[] = [];
+				const raised: RaisedFace[] = [];
 				for (let i = 0; i < count; i += 1) {
-					const result = await rollDieIntoPool(actor, poolId, { suppressChat, emitChange: false });
+					const result = await rollDieIntoPool(actor, poolId, {
+						suppressChat,
+						showDice,
+						emitChange: false,
+					});
 					if (result.face !== null) rolledFaces.push(result.face);
+					if (result.face !== null && result.raisedFrom !== undefined) {
+						raised.push({ rolled: result.raisedFrom, face: result.face });
+					}
 					if (result.applied) applied = true;
 				}
 				const after = readPool();
@@ -1376,12 +1401,17 @@ class ItemActivationManager {
 					previousCount: before.faces.length,
 					newCount: after.faces.length,
 					rolledFaces,
+					faces: [...after.faces],
 				};
+				await rollLine(after.label ?? before.label, rolledFaces, raised);
 				return;
 			}
 			if (node.action === 'rollPool') {
 				const before = readPool();
-				const ok = await rollPoolFresh(actor, poolId, { suppressChat });
+				const { applied: ok, raised } = await rollPoolFresh(actor, poolId, {
+					suppressChat,
+					showDice,
+				});
 				const after = readPool();
 				node.result = {
 					applied: ok,
@@ -1389,7 +1419,9 @@ class ItemActivationManager {
 					previousCount: before.faces.length,
 					newCount: after.faces.length,
 					rolledFaces: after.faces,
+					faces: [...after.faces],
 				};
+				if (ok) await rollLine(after.label ?? before.label, after.faces, raised);
 				return;
 			}
 			if (node.action === 'clear') {
@@ -1413,6 +1445,7 @@ class ItemActivationManager {
 					poolLabel: after.label ?? before.label,
 					previousCount: before.faces.length,
 					newCount: after.faces.length,
+					faces: [...after.faces],
 				};
 				return;
 			}
@@ -1794,6 +1827,8 @@ namespace ItemActivationManager {
 		of: FreeOf[];
 		/** The line the card shows for it. */
 		reason: FreeUseReason;
+		/** The card that shows the use as one line, when its own card would have nothing to click. */
+		host?: FreeUseHost;
 	}
 
 	/**

@@ -7,11 +7,15 @@ import {
 	getActorHpValue,
 	getActorLastStandHp,
 } from '../../utils/actor/actorResources.js';
+import { damageCardIdOf } from '../../utils/damage/damageCard.js';
 
 let didRegisterCombatantHealthStateSync = false;
 
 type SoloMonsterLike = Actor.Implementation & {
-	activateLastStandFeature?: (options: { visibilityMode?: string }) => Promise<unknown>;
+	activateLastStandFeature?: (options: {
+		visibilityMode?: string;
+		hostCardId?: string | null;
+	}) => Promise<unknown>;
 };
 
 /**
@@ -26,7 +30,10 @@ type SoloMonsterLike = Actor.Implementation & {
  * existing run dirty and bail; the in-flight run loops once more so the
  * latest actor state is reflected without losing updates.
  */
-const actorSyncState = new Map<string, { running: boolean; dirty: boolean }>();
+const actorSyncState = new Map<
+	string,
+	{ running: boolean; dirty: boolean; damageCardId: string | null }
+>();
 
 /**
  * If an actor's HP just hit 0 without the lastStand status and the actor has
@@ -35,7 +42,10 @@ const actorSyncState = new Map<string, { running: boolean; dirty: boolean }>();
  * fire the GM chat card. Returns true when handled — the resulting heal
  * triggers another hook firing which proceeds through normal status sync.
  */
-async function tryEnterLastStand(actor: Actor.Implementation): Promise<boolean> {
+async function tryEnterLastStand(
+	actor: Actor.Implementation,
+	damageCardId: string | null,
+): Promise<boolean> {
 	if (hasLastStandStatus(actor)) return false;
 
 	const hpValue = getActorHpValue(actor);
@@ -74,16 +84,21 @@ async function tryEnterLastStand(actor: Actor.Implementation): Promise<boolean> 
 	}
 
 	const soloMonster = actor as SoloMonsterLike;
-	soloMonster.activateLastStandFeature?.({ visibilityMode: 'gmroll' }).catch((error) => {
-		console.warn('Nimble | Failed to post Last Stand chat card', error);
-	});
+	soloMonster
+		.activateLastStandFeature?.({ visibilityMode: 'gmroll', hostCardId: damageCardId })
+		.catch((error) => {
+			console.warn('Nimble | Failed to post Last Stand chat card', error);
+		});
 	return true;
 }
 
-async function runSyncOnce(actor: Actor.Implementation): Promise<void> {
+async function runSyncOnce(
+	actor: Actor.Implementation,
+	damageCardId: string | null,
+): Promise<void> {
 	// May heal HP back up to lastStandHp and apply the lastStand status.
 	// We still fall through to the bloodied check so it reflects the post-heal HP.
-	await tryEnterLastStand(actor);
+	await tryEnterLastStand(actor, damageCardId);
 
 	// Bloodied is independent of Last Stand — both can coexist. Only the
 	// bloodied status sync is gated by the health-state automation toggle;
@@ -104,23 +119,33 @@ async function runSyncOnce(actor: Actor.Implementation): Promise<void> {
 	// GMs can manually toggle it off via the token HUD if needed.
 }
 
-async function syncActorHealthState(actor: Actor.Implementation): Promise<void> {
+/**
+ * `damageCardId`: the card whose Apply Damage changed the HP, where a phase line can go. Null for
+ * an HP change with no card; left out when the HP did not change.
+ */
+async function syncActorHealthState(
+	actor: Actor.Implementation,
+	damageCardId?: string | null,
+): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!actor.id) return;
 
 	const existing = actorSyncState.get(actor.id);
 	if (existing?.running) {
 		existing.dirty = true;
+		if (damageCardId !== undefined) existing.damageCardId = damageCardId;
 		return;
 	}
 
-	const state = { running: true, dirty: false };
+	const state = { running: true, dirty: false, damageCardId: damageCardId ?? null };
 	actorSyncState.set(actor.id, state);
 
 	try {
 		do {
 			state.dirty = false;
-			await runSyncOnce(actor);
+			const cardId = state.damageCardId;
+			state.damageCardId = null;
+			await runSyncOnce(actor, cardId);
 		} while (state.dirty);
 	} finally {
 		actorSyncState.delete(actor.id);
@@ -142,12 +167,15 @@ export default function registerCombatantHealthStateSync() {
 	if (didRegisterCombatantHealthStateSync) return;
 	didRegisterCombatantHealthStateSync = true;
 
-	Hooks.on('updateActor', (actor: Actor.Implementation, changes: Record<string, unknown>) => {
-		const watched = [ACTOR_HP_PATHS.value, ACTOR_HP_PATHS.max];
-		if (!hasAnyActorChangeAt(changes, watched)) return;
+	Hooks.on(
+		'updateActor',
+		(actor: Actor.Implementation, changes: Record<string, unknown>, options: unknown) => {
+			const watched = [ACTOR_HP_PATHS.value, ACTOR_HP_PATHS.max];
+			if (!hasAnyActorChangeAt(changes, watched)) return;
 
-		void syncActorHealthState(actor);
-	});
+			void syncActorHealthState(actor, damageCardIdOf(options));
+		},
+	);
 
 	Hooks.on('createCombatant', (combatant: Combatant.Implementation) => {
 		// Use the combatant's actor directly to avoid cross-contamination

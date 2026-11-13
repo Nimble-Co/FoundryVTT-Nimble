@@ -1,7 +1,10 @@
 import {
+	asActiveGm,
 	createHeroicCharacter,
 	createHeroicCombatant,
+	giveUsedUpHeldChange,
 	heroicGlobals,
+	nextEventsCard,
 	resetHeroicGlobals,
 	setActionTracking,
 	setHeroicCombat,
@@ -108,12 +111,27 @@ describe('runAssess', () => {
 			deleteEmbeddedDocuments,
 		});
 		setHeroicCombat(createHeroicCombatant(actor));
-		globals.fromUuidSync = vi.fn(() => actor);
+		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'Actor.hero' ? actor : null));
 
 		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
 
 		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['nullify']);
+	});
+
+	it('puts the ended line of the held change a paid Assess uses up on its card', async () => {
+		const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
+		const actor = createHeroicCharacter({
+			rollSkillCheck,
+			system: { skills: { insight: { defaultRollMode: -1 } } },
+		});
+		setHeroicCombat(createHeroicCombatant(actor));
+		giveUsedUpHeldChange(actor);
+		const events = nextEventsCard();
+
+		await asActiveGm(() => runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' }));
+
+		expect(events()).toEqual([expect.objectContaining({ kind: 'effectEnded' })]);
 	});
 
 	describe('what a success holds', () => {

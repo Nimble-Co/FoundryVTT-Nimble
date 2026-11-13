@@ -2,6 +2,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { systemHookName } from '#system';
+import type { TurnPlace } from '#types/cardEvent.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import { requestSetActiveCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
@@ -32,7 +33,7 @@ import {
 	getCombatantResetActions,
 } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
-import { rollInitiativeForCombatant } from './combatInitiative.js';
+import { rollInitiativeForCombatant, withInitiativeRollId } from './combatInitiative.js';
 import { performMinionGroupAttack } from './combatMinionAttacks.js';
 import {
 	assignNcsTemporaryGroupFromAttackMembers,
@@ -776,7 +777,11 @@ class NimbleCombat extends Combat {
 	async #ensureIncomingTurnStarted(combatant: Combatant.Implementation | null): Promise<void> {
 		if (!combatant) return;
 		if (!this.#claimTurnStart(combatant)) return;
-		this.#emitTurnStart(combatant);
+		this.#emitTurnStart(combatant, {
+			round: Number(this.round) || 0,
+			turn: Number(this.turn) || 0,
+			skipped: false,
+		} as Combat.TurnEventContext);
 
 		if (!isMovementTrackingAutomationEnabled() || !game.user?.isActiveGM) return;
 		this.#backstopClearedHistoryCombatantId = combatant.id ?? null;
@@ -821,7 +826,7 @@ class NimbleCombat extends Combat {
 
 		if (endingCombatant.type === 'character') {
 			if (shouldRefillCharacter) {
-				await this.#applyCharacterTurnEndRefill(endingCombatant, context);
+				await this.#applyCharacterTurnEndRefill(endingCombatant, turnOf(context));
 			}
 		} else {
 			// @ts-expect-error Custom hook
@@ -838,12 +843,12 @@ class NimbleCombat extends Combat {
 	 */
 	async #applyCharacterTurnEndRefill(
 		combatant: Combatant.Implementation,
-		context?: Combat.TurnEventContext,
+		place: TurnPlace,
 	): Promise<void> {
 		if (combatant.type !== 'character') return;
 
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', combatant, context ? turnOf(context) : undefined);
+		Hooks.call('nimbleCombatTurnEnd', combatant, place);
 
 		await combatant.update(buildCharacterTurnRefillUpdate(combatant));
 	}
@@ -855,7 +860,10 @@ class NimbleCombat extends Combat {
 	 * computes an empty interval and skips the outgoing hero's end-of-turn entirely — leaving that
 	 * hero at 0 actions. This backstops that case; it is a no-op when `_onEndTurn` already ran.
 	 */
-	async #ensureOutgoingCharacterRefilled(outgoingCombatantId: string | null): Promise<void> {
+	async #ensureOutgoingCharacterRefilled(
+		outgoingCombatantId: string | null,
+		outgoingRound: number,
+	): Promise<void> {
 		if (!outgoingCombatantId) return;
 		if (this.#endingTurnRefilledCharacterId === outgoingCombatantId) return;
 		const combatant = this.combatants.get(outgoingCombatantId);
@@ -863,7 +871,7 @@ class NimbleCombat extends Combat {
 
 		// Claim before any await so a late-dispatched `_onEndTurn` skips its own refill.
 		this.#endingTurnRefilledCharacterId = outgoingCombatantId;
-		await this.#applyCharacterTurnEndRefill(combatant);
+		await this.#applyCharacterTurnEndRefill(combatant, { round: outgoingRound });
 	}
 
 	/**
@@ -1252,7 +1260,7 @@ class NimbleCombat extends Combat {
 			if (!rollOutcome) continue;
 			lockedRollOutcomes.push(rollOutcome);
 			updates.push(rollOutcome.outcome.combatantUpdate);
-			messages.push(rollOutcome.outcome.chatData);
+			messages.push(withInitiativeRollId(rollOutcome.outcome.chatData, rollOutcome.requestId));
 		}
 
 		try {
@@ -1273,7 +1281,11 @@ class NimbleCombat extends Combat {
 			const actor = combatant?.actor;
 			if (!actor) continue;
 			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch and chargePool/dicePool triggers
-			Hooks.callAll(systemHookName('initiativeRolled'), { actor, combatant });
+			Hooks.callAll(systemHookName('initiativeRolled'), {
+				actor,
+				combatant,
+				rollId: rollOutcome.requestId,
+			});
 		}
 
 		if (combatManaUpdates.length > 0) {
@@ -1358,7 +1370,7 @@ class NimbleCombat extends Combat {
 		if (getCombatantCurrentActions(combatant) !== 0) return;
 
 		// @ts-expect-error Custom hook
-		Hooks.call('nimbleCombatTurnEnd', combatant);
+		Hooks.call('nimbleCombatTurnEnd', combatant, { round: this.round });
 
 		await this.updateEmbeddedDocuments('Combatant', [
 			{
@@ -1414,6 +1426,7 @@ class NimbleCombat extends Combat {
 		// `super.nextTurn`) refills the right one. Cleared in `finally` so it never leaks.
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
 		const outgoingCombatantId = this.#endingTurnCombatantId;
+		const outgoingRound = this.round;
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
 		this.#backstopClearedHistoryCombatantId = null;
@@ -1438,7 +1451,7 @@ class NimbleCombat extends Combat {
 		// Backstop: Foundry can skip `_onEndTurn` for the outgoing hero when its cached turn
 		// history desyncs from our expanded turn order (e.g. the last hero before a solo-monster
 		// wrap), leaving them at 0 actions. Refill them here if that happened.
-		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
+		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId, outgoingRound);
 		// The same desync skips `_onStartTurn` for the incoming combatant. Emit the turn-start
 		// hook here if that happened, after the outgoing turn-end so the ordering matches a
 		// normal advance.
@@ -1453,6 +1466,7 @@ class NimbleCombat extends Combat {
 		// `_onEndTurn` targets the right one. Cleared in `finally` so it never leaks.
 		this.#endingTurnCombatantId = this.combatant?.id ?? null;
 		const outgoingCombatantId = this.#endingTurnCombatantId;
+		const outgoingRound = this.round;
 		this.#endingTurnRefilledCharacterId = null;
 		this.#turnStartedCombatantId = null;
 		this.#backstopClearedHistoryCombatantId = null;
@@ -1473,7 +1487,7 @@ class NimbleCombat extends Combat {
 		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		// Backstop the outgoing hero's refill in case Foundry skipped `_onEndTurn` for them
 		// (see `nextTurn`); no-op when `_onEndTurn` already handled it.
-		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId);
+		await this.#ensureOutgoingCharacterRefilled(outgoingCombatantId, outgoingRound);
 		// Same for the incoming combatant's turn-start hook when `_onStartTurn` was skipped.
 		await this.#ensureIncomingTurnStarted(this.combatant ?? null);
 		return result;

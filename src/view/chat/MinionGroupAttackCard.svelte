@@ -8,6 +8,7 @@
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import DamageBackLines from './components/DamageBackLines.svelte';
 	import DefendReactions from './components/DefendReactions.svelte';
@@ -240,6 +241,8 @@
 	</section>
 
 	<IncomingReactionPrompts place="options" />
+
+	<CardEvents {messageDocument} />
 </article>
 
 <style lang="scss">

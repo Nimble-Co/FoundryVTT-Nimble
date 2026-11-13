@@ -1341,7 +1341,6 @@
 			},
 			"rollDamage": "Roll Damage",
 			"rollDamageFailed": "Could not roll this damage.",
-			"swallowedDamage": "{name} takes {amount} damage: Swallowed.",
 			"targetSkippedZeroDamage": "Ignoré {tokenName} car le résultat est 0.",
 			"undo": "Annuler",
 			"undoHealing": "Annuler le Soin"

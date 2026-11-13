@@ -15,6 +15,7 @@ import { isMovementTrackingAutomationEnabled } from '../../settings/automationSe
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
 import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
+import { currentDamageCard, damageCardOption } from '../../utils/damage/damageCard.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
@@ -718,6 +719,7 @@ class NimbleBaseActor<
 	}
 
 	async applyDamage(damage: number): Promise<void> {
+		const cardId = currentDamageCard();
 		const damageAmount = Math.floor(Math.abs(Number(damage)));
 		if (!Number.isFinite(damageAmount) || damageAmount <= 0) return;
 
@@ -732,7 +734,8 @@ class NimbleBaseActor<
 		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
 
 		if (Object.keys(updates).length < 1) return;
-		await this.update(updates as Actor.UpdateData);
+		if (cardId) await this.update(updates as Actor.UpdateData, damageCardOption(cardId) as never);
+		else await this.update(updates as Actor.UpdateData);
 	}
 
 	async setCurrentHP(value: number): Promise<void> {

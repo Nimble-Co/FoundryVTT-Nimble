@@ -1,6 +1,7 @@
 <script>
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
+	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
 	import DemandControlSaveRow from './components/DemandControlSaveRow.svelte';
@@ -26,4 +27,6 @@
 >
 	<CheckCardRolls {messageDocument} {label} />
 	<DemandControlSaveRow {messageDocument} />
+
+	<CardEvents {messageDocument} />
 </article>

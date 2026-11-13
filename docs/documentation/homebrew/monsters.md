@@ -81,7 +81,7 @@ Activating features works like any item activation. Click **Edit** to turn off e
 A **Solo Monster** uses the same sheet and features, but two subtypes are made for it:
 
 - **Bloodied**: solo monsters from the compendium ship with a Bloodied feature describing what changes at half HP; the Hit Points plate tells you when the monster is bloodied, so you know when to use it.
-- **Last Stand**: a feature with subtype Last Stand gains a **Last Stand HP** field on its Config tab. When the monster's HP would hit zero, the system instead heals it to that value, applies the *lastStand* and *dying* conditions, and posts a GM chat card. Set the field to 0 to disable the mechanic. The compendium's legendary monsters (for example *Vael, Undying Necromancer*, who returns at 90 HP) are worked examples.
+- **Last Stand**: a feature with subtype Last Stand gains a **Last Stand HP** field on its Config tab. When the monster's HP would hit zero, the system instead heals it to that value, applies the *lastStand* and *dying* conditions, and posts a GM chat card with the feature's description. A Last Stand feature with no description is a line on the damage card instead, when only the GM sees that card. Set the field to 0 to disable the mechanic. The compendium's legendary monsters (for example *Vael, Undying Necromancer*, who returns at 90 HP) are worked examples.
 
 ## Minion setup
 

@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { MovementOffer } from '#types/movement.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -215,5 +216,65 @@ describe('removing a target from a card with a move node', () => {
 		await message.removeTarget(OGRE);
 
 		expect(written(message).movementOffers).toEqual([offerTo(GOBLIN)]);
+	});
+});
+
+describe('offers of the Events lines of a card', () => {
+	type Lifecycle = { _preUpdate?: unknown; _preCreate?: unknown };
+	const base = Object.getPrototypeOf(NimbleChatMessage.prototype) as Lifecycle;
+	const saved = { _preUpdate: base._preUpdate, _preCreate: base._preCreate };
+	const lineOffer = offerTo(HERO, { id: 'line.hero', nodeId: 'line' });
+	const line = {
+		id: 'movementOffer.line',
+		kind: 'movementOffer',
+		text: { key: 'x' },
+		action: { kind: 'movementOffer', node: { ...pushNode(), id: 'line' }, offers: [lineOffer] },
+		at: 1,
+	};
+
+	beforeAll(() => {
+		base._preUpdate = async () => true;
+		base._preCreate = async () => true;
+	});
+
+	afterAll(() => {
+		base._preUpdate = saved._preUpdate;
+		base._preCreate = saved._preCreate;
+	});
+
+	function preUpdate(message: MockedMessage, changes: Record<string, unknown>) {
+		return (
+			message as unknown as { _preUpdate(c: object, o: object, u: object): Promise<unknown> }
+		)._preUpdate(changes, {}, {});
+	}
+
+	it('go on the card with the line, so the tokens carry them', async () => {
+		const message = createCard([GOBLIN], [offerTo(GOBLIN)]);
+		const changes: Record<string, any> = { flags: { [SYSTEM_ID]: { events: [line] } } };
+		await preUpdate(message, changes);
+		expect(changes.system.movementOffers.map((each: MovementOffer) => each.id)).toEqual([
+			'n1.gob',
+			'line.hero',
+		]);
+	});
+
+	it('are not dropped by a later write of the offers', async () => {
+		const message = createCard([GOBLIN], [offerTo(GOBLIN), lineOffer]);
+		(message as unknown as { flags: object }).flags = { [SYSTEM_ID]: { events: [line] } };
+		const changes: Record<string, any> = {
+			system: { movementOffers: [offerTo(GOBLIN, { state: 'lapsed' })] },
+		};
+		await preUpdate(message, changes);
+		expect(changes.system.movementOffers.map((each: MovementOffer) => each.id)).toEqual([
+			'n1.gob',
+			'line.hero',
+		]);
+	});
+
+	it('leave an update with no line alone', async () => {
+		const message = createCard([GOBLIN], [offerTo(GOBLIN)]);
+		const changes: Record<string, any> = { system: { targets: [GOBLIN] } };
+		await preUpdate(message, changes);
+		expect(changes.system.movementOffers).toBeUndefined();
 	});
 });

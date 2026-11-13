@@ -1,10 +1,15 @@
-import { metadata } from './common.js';
+import { metadata, movementOffers } from './common.js';
 
 const { fields } = foundry.data;
 
 const effectsEndedCardSchema = () => ({
-	/** The moment, already in words: "Start of Tessa's turn". */
+	/** The moment in words, on cards from before `momentHeading`. */
 	heading: new fields.StringField({ required: true, nullable: false, initial: '' }),
+	/** Finds the card of a moment, so all lines of the moment go on one card. */
+	momentKey: new fields.StringField({ required: true, nullable: false, initial: '' }),
+	/** The moment as a lang key and data, localized on each client. */
+	momentHeading: new fields.ObjectField({ required: false, nullable: true, initial: null }),
+	/** The ended effects of cards from before the Events strip. New lines are in the events flag. */
 	rows: new fields.ArrayField(
 		new fields.SchemaField({
 			effectId: new fields.StringField({ required: true, nullable: false, initial: '' }),
@@ -23,12 +28,13 @@ const effectsEndedCardSchema = () => ({
 declare namespace NimbleEffectsEndedCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof metadata> &
+		ReturnType<typeof movementOffers> &
 		ReturnType<typeof effectsEndedCardSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
-/** One message for each moment: the effects that ended at it, each with Undo. */
+/** One card for each moment with no host card: the events of the moment, in order. */
 class NimbleEffectsEndedCardData extends foundry.abstract.TypeDataModel<
 	NimbleEffectsEndedCardData.Schema,
 	ChatMessage.ConfiguredInstance,
@@ -39,6 +45,8 @@ class NimbleEffectsEndedCardData extends foundry.abstract.TypeDataModel<
 		return {
 			...effectsEndedCardSchema(),
 			...metadata(),
+			// The offers of its Events lines.
+			...movementOffers(),
 		};
 	}
 }

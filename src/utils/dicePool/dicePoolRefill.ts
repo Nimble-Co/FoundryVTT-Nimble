@@ -2,6 +2,7 @@ import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { isResourceRecoveryAutomationEnabled } from '../../settings/automationSettings.js';
 import localize from '../localize.js';
 import { poolOwner } from '../rolls/formulaReferences.js';
+import { showDiceAnimation } from '../rolls/showDiceAnimation.js';
 import { emitForCharacter } from './dicePoolHooks.js';
 import {
 	applyFaceFloor,
@@ -19,6 +20,7 @@ import type {
 	DicePoolState,
 	DiceRefillTrigger,
 	DiceRestType,
+	RaisedFace,
 } from './types.js';
 
 type RefilledEntry = {
@@ -260,6 +262,28 @@ function emitRefillEvents(
 	}
 }
 
+interface PoolRollOptions {
+	flavor?: string;
+	suppressChat?: boolean;
+	/** With `suppressChat`, still throw the 3D dice when Dice So Nice is on. */
+	showDice?: boolean;
+}
+
+/** The roll card, or with no card the 3D dice when the caller asks for them. */
+async function showPoolRoll(
+	actor: CharacterActorLike,
+	roll: Roll,
+	flavor: string,
+	options: PoolRollOptions,
+): Promise<void> {
+	if (options.suppressChat) {
+		if (options.showDice) await showDiceAnimation(roll);
+		return;
+	}
+	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
+	await roll.toMessage({ speaker: ChatMessageCls.getSpeaker({ actor }), flavor });
+}
+
 /**
  * Roll a single die of the pool's dieSize and push it onto the pool's faces.
  * Posts a chat message with the roll. No-op if the pool is already at max.
@@ -267,12 +291,17 @@ function emitRefillEvents(
  * activation-style "roll a die into the pool" (e.g. Berserker Rage adding a
  * Fury Die).
  */
-type RollDieIntoPoolResult = { applied: boolean; face: number | null };
+type RollDieIntoPoolResult = {
+	applied: boolean;
+	face: number | null;
+	/** The face that came up, when it was below the pool's lowest face and `face` is raised. */
+	raisedFrom?: number;
+};
 
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string; suppressChat?: boolean; emitChange?: boolean } = {},
+	options: PoolRollOptions & { emitChange?: boolean } = {},
 ): Promise<RollDieIntoPoolResult> {
 	if (!isCharacterActor(actor)) return { applied: false, face: null };
 	if (typeof poolId !== 'string' || poolId.length < 1) return { applied: false, face: null };
@@ -286,31 +315,25 @@ async function rollDieIntoPool(
 	await roll.evaluate();
 	const rolledFace = roll.total ?? 1;
 	const face = applyFaceFloor(rolledFace, pool.minFace);
+	const raised = face !== rolledFace ? { raisedFrom: rolledFace } : {};
 
-	if (!options.suppressChat) {
-		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
-			.ChatMessage;
-		const baseFlavor = options.flavor ?? pool.label;
-		const flavor =
-			face !== rolledFace
-				? localize('NIMBLE.dicePoolTracker.raisedToFloor', {
-						flavor: baseFlavor,
-						rolled: String(rolledFace),
-						face: String(face),
-					})
-				: baseFlavor;
-		await roll.toMessage({
-			speaker: ChatMessageCls.getSpeaker({ actor }),
-			flavor,
-		});
-	}
+	const baseFlavor = options.flavor ?? pool.label;
+	const flavor =
+		face !== rolledFace
+			? localize('NIMBLE.dicePoolTracker.raisedToFloor', {
+					flavor: baseFlavor,
+					rolled: String(rolledFace),
+					face: String(face),
+				})
+			: baseFlavor;
+	await showPoolRoll(actor, roll, flavor, options);
 
 	// At max: the die is rolled (RAW: "If you are already at your max, roll as
 	// normal and decide which ones to keep") but the pool is untouched. The
 	// caller (and the chat card) gets the face so the player can see what
 	// came up. Per-pool "decide which to keep" semantics layer on top of this.
 	if (pool.faces.length >= pool.max) {
-		return { applied: false, face };
+		return { applied: false, face, ...raised };
 	}
 
 	const previousFaces = [...pool.faces];
@@ -322,7 +345,7 @@ async function rollDieIntoPool(
 		emitDicePoolChanged(actor, poolId, pool.label, previousFaces, pool.faces);
 	}
 
-	return { applied: true, face };
+	return { applied: true, face, ...raised };
 }
 
 /**
@@ -347,6 +370,12 @@ function emitDicePoolChanged(
 	});
 }
 
+type RollPoolFreshResult = {
+	applied: boolean;
+	/** The dice that came up below the pool's lowest face, and what they were raised to. */
+	raised: RaisedFace[];
+};
+
 /**
  * Roll `max` dice of the pool's dieSize and replace the pool's faces.
  * Posts a chat message with all rolls. Called by ItemActivationManager's
@@ -356,33 +385,30 @@ function emitDicePoolChanged(
 async function rollPoolFresh(
 	actor: Actor | null | undefined,
 	poolId: string,
-	options: { flavor?: string; suppressChat?: boolean } = {},
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
+	options: PoolRollOptions = {},
+): Promise<RollPoolFreshResult> {
+	const none = { applied: false, raised: [] };
+	if (!isCharacterActor(actor)) return none;
+	if (typeof poolId !== 'string' || poolId.length < 1) return none;
 
 	const currentPools = buildEffectiveDicePoolMap(actor);
 	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.max < 1) return false;
+	if (!pool) return none;
+	if (pool.max < 1) return none;
 
 	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
 	const roll = new RollCls(`${pool.max}d${dieSizeToMaxFace(pool.dieSize)}`);
 	await roll.evaluate();
-	if (!options.suppressChat) {
-		const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage })
-			.ChatMessage;
-		await roll.toMessage({
-			speaker: ChatMessageCls.getSpeaker({ actor }),
-			flavor: options.flavor ?? pool.label,
-		});
-	}
+	await showPoolRoll(actor, roll, options.flavor ?? pool.label, options);
 
 	const previousFaces = [...pool.faces];
 	const newFaces: number[] = [];
+	const raised: RaisedFace[] = [];
 	for (const die of roll.dice) {
 		for (const result of die.results) {
-			newFaces.push(applyFaceFloor(result.result, pool.minFace));
+			const face = applyFaceFloor(result.result, pool.minFace);
+			newFaces.push(face);
+			if (face !== result.result) raised.push({ rolled: result.result, face });
 		}
 	}
 	pool.faces = newFaces.slice(0, pool.max);
@@ -399,7 +425,7 @@ async function rollPoolFresh(
 		trigger: 'manual',
 	});
 
-	return true;
+	return { applied: true, raised };
 }
 
 type MaximizePoolDieResult = {

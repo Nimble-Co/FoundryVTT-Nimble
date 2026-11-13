@@ -91,6 +91,44 @@ function firedEvents(): unknown[] {
 	return effectsEndingAtMock.mock.calls.map(([check]) => (check as { event: string }).event);
 }
 
+describe('fireItemUseEvents with an item card', () => {
+	it('every event of the use has the item card as its host', () => {
+		fireItemUseEvents(item({ type: 'spell' }, [{ type: 'damage' }]), [], { id: 'itemCard' });
+
+		const hosts = endEffectsMock.mock.calls.map(
+			([, moment]) => (moment as { hostId?: string }).hostId,
+		);
+		expect(hosts).toEqual(['itemCard', 'itemCard', 'itemCard', 'itemCard']);
+	});
+
+	it('a use that went on a moment card puts its ends on that card, for the same readers', () => {
+		const moment = {
+			key: 'combat1:2:cHero:turnStart',
+			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Tessa' } },
+		};
+
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), [], { moment, whisper: ['gm'] });
+
+		expect(endEffectsMock.mock.calls[0][1]).toEqual({
+			key: 'combat1:2:cHero:turnStart',
+			heading: moment.heading,
+			reason: {
+				key: 'NIMBLE.lastsUntil.chat.heading.attack',
+				data: { name: 'Tessa', item: '', effect: '' },
+			},
+			whisper: ['gm'],
+		});
+	});
+
+	it('a use with no card (a rule hid it) has no host', () => {
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), [], null);
+
+		expect(endEffectsMock.mock.calls.every(([, moment]) => !('hostId' in (moment as object)))).toBe(
+			true,
+		);
+	});
+});
+
 describe('fireItemUseEvents for a roll and a spell', () => {
 	it('an attack also checks the next roll', () => {
 		fireItemUseEvents(item({}, [{ type: 'damage' }]), []);
@@ -141,7 +179,32 @@ describe('fireEvent', () => {
 			event: 'takeDamage',
 			actor: user,
 		});
-		expect(endEffectsMock).toHaveBeenCalledWith([effect], expect.any(String));
+		expect(endEffectsMock).toHaveBeenCalledWith(
+			[effect],
+			{
+				heading: {
+					key: 'NIMBLE.lastsUntil.chat.heading.takeDamage',
+					data: { name: user.name, item: '', effect: '' },
+				},
+			},
+			{ check: { type: 'event', event: 'takeDamage', actor: user } },
+		);
+	});
+
+	it('with a host card, the ends go on that card', () => {
+		effectsEndingAtMock.mockReturnValue([{ id: 'e' }]);
+
+		fireEvent('takeDamage', user, {}, { id: 'card1' });
+
+		expect(endEffectsMock.mock.calls[0][1]).toMatchObject({ hostId: 'card1' });
+	});
+
+	it('a host with no id is no host', () => {
+		effectsEndingAtMock.mockReturnValue([{ id: 'e' }]);
+
+		fireEvent('takeDamage', user, {}, { id: null });
+
+		expect(endEffectsMock.mock.calls[0][1]).not.toHaveProperty('hostId');
 	});
 
 	it('no creature, no event', () => {
@@ -156,6 +219,17 @@ describe('fireAttackEvents', () => {
 		fireAttackEvents(user);
 
 		expect(firedEvents()).toEqual(['attack', 'nextRoll']);
+	});
+
+	it('the attack card is the host of the ends of both events', () => {
+		effectsEndingAtMock.mockReturnValueOnce([{ id: 'a' }]).mockReturnValueOnce([{ id: 'b' }]);
+
+		fireAttackEvents(user, { id: 'attack1' });
+
+		expect(endEffectsMock.mock.calls.map(([, moment]) => moment)).toEqual([
+			expect.objectContaining({ hostId: 'attack1' }),
+			expect.objectContaining({ hostId: 'attack1' }),
+		]);
 	});
 
 	it('no creature, no event', () => {

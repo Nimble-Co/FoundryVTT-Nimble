@@ -132,9 +132,21 @@ The **Defend** and **Interpose** rows on the Actions tab of the sheet, and the h
 
 The line under the name tells how many actions a hero starts combat with: 1, 2 with a total of 10 or more, 3 with 20 or more or a natural 20. A monster's card has no line. A change from **Change This Roll**, such as **Change to 10**, also goes to the combat tracker: the Initiative, the starting actions, and your current actions if you did not spend them yet. **Remove** does the reverse.
 
-## Effects that ended
+## Events on a card
 
-When effects end by themselves, at a turn, a round, the end of combat, a time or an event, the chat gets one message for that moment with a row for each effect. **Undo** on a row puts that effect back. See [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
+Some things happen because of a roll or a use: an effect ends, a feature is used for free, a pool gains dice, a creature can move for free, a hero Interposes. They show as lines in the **Events** strip at the bottom of the card that caused them, not as new messages. Each line says what happened and why.
+
+When nothing on the chat caused it, such as the start of a turn, the end of a round or a time that passes, the chat gets one message for that moment, with a line for each event. A feature used for free with nothing to click or read is one line, not a card of its own. A note on the feature keeps its card.
+
+![A Goblin's critical hit on Grug: in Events, Grug uses Rage for free, because an enemy hit them with a crit (Titan's Fury)](/images/documentation/events-free-use.png)
+
+**Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
+
+A line for the GM only goes on a card that only the GM sees, or in a whisper to the GM. An Interpose against an attack that only the GM sees gets its own message, so the players see it. A line that asks a player to act, such as a move, goes on a card that player sees. When the card that caused it is a whisper the player does not see, the line goes on a message of its own for that player and the GMs.
+
+::: details When a moment gets a second message
+The lines of one moment, such as the start of one turn, go on one message. The system looks for that message in the last 20 chat messages. When 20 or more messages came after it, the next line of that moment starts a new message.
+:::
 
 ## Targeting and roll visibility
 

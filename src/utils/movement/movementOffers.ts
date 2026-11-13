@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { EffectNode, MoveNode } from '#types/effectTree.js';
 import type {
 	ArmedMovementOffer,
@@ -107,7 +108,7 @@ export function movementOfferId(nodeId: string, tokenUuid: string): string {
  * zero spaces stays only as that record: no token carries it, the card does not
  * list it, and it never lapses. A settled offer stays as the record of what
  * happened; an open or untracked one goes with its recipient, or with the
- * outcome that made it.
+ * outcome that made it. An offer of an Events line is not the card's to drop.
  */
 export function reconcileMovementOffers(
 	card: OfferCard,
@@ -156,8 +157,17 @@ export function reconcileMovementOffers(
 		}
 	}
 
+	// An offer of a line on the card has no move node in the card's activation; it stays.
+	const cardNodes = new Set(
+		flattenEffectsTree(card.system?.activation?.effects ?? [])
+			.filter((node) => node.type === 'move')
+			.map((node) => node.id),
+	);
 	const kept = existing.filter(
-		(offer) => wanted.has(offer.id) || (offer.state !== 'open' && offer.state !== 'untracked'),
+		(offer) =>
+			wanted.has(offer.id) ||
+			!cardNodes.has(offer.nodeId) ||
+			(offer.state !== 'open' && offer.state !== 'untracked'),
 	);
 	return [...kept, ...made];
 }
@@ -165,18 +175,36 @@ export function reconcileMovementOffers(
 /** The offer each token carries in the chat log, until a chat message changes. */
 let armedOffers: Map<string, ArmedMovementOffer> | null = null;
 
+/** When each move of the card was offered: the time of its Events line, else of the card. */
+function offerTimes(message: OfferCard): Map<string, number> {
+	const events = (message.flags?.[SYSTEM_ID] as { events?: unknown } | undefined)?.events;
+	const times = new Map<string, number>();
+	for (const event of Array.isArray(events) ? (events as OfferEvent[]) : []) {
+		const nodeId = event.action?.kind === 'movementOffer' ? event.action.node?.id : undefined;
+		if (nodeId) times.set(nodeId, Number(event.at) || 0);
+	}
+	return times;
+}
+
+/**
+ * The newest open offer to each token, by when it was offered. On a tie the later card wins, and
+ * on one card the first move.
+ */
 function armedOffersByToken(messages: readonly OfferCard[]): Map<string, ArmedMovementOffer> {
-	const armed = new Map<string, ArmedMovementOffer>();
-	for (let index = messages.length - 1; index >= 0; index--) {
-		const message = messages[index];
+	const armed = new Map<string, ArmedMovementOffer & { at: number }>();
+	for (const message of messages) {
 		if (!message?.id) continue;
+		const times = offerTimes(message);
 		for (const offer of message.system?.movementOffers ?? []) {
 			if (offer.state !== 'open' || offer.conditional || !(offer.spaces > 0)) continue;
-			if (!armed.has(offer.tokenUuid))
-				armed.set(offer.tokenUuid, { ...offer, messageId: message.id });
+			const at = times.get(offer.nodeId) ?? (Number(message.timestamp) || 0);
+			const current = armed.get(offer.tokenUuid);
+			const newer =
+				!current || at > current.at || (at === current.at && current.messageId !== message.id);
+			if (newer) armed.set(offer.tokenUuid, { ...offer, messageId: message.id, at });
 		}
 	}
-	return armed;
+	return new Map([...armed].map(([token, { at: _, ...offer }]) => [token, offer]));
 }
 
 /** Drops the carried offers read from the chat log, so the next lookup reads it again. */
@@ -297,4 +325,24 @@ export function movementOfferOutcome(offer: MovementOffer): MovementOfferOutcome
 		shortfall,
 		damageOwed: offer.kind === 'forced' && shortfall > 0,
 	};
+}
+
+interface OfferEvent {
+	action?: { kind: string; offers?: MovementOffer[]; node?: { id?: string } };
+	at?: number;
+}
+
+/**
+ * The card's offers with the offers of its Events lines, which the card must store so the tokens
+ * carry them. Null when every one is already there.
+ */
+export function withEventOffers(
+	offers: readonly MovementOffer[],
+	events: readonly OfferEvent[],
+): MovementOffer[] | null {
+	const ids = new Set(offers.map((offer) => offer.id));
+	const missing = events
+		.flatMap((event) => (event.action?.kind === 'movementOffer' ? (event.action.offers ?? []) : []))
+		.filter((offer) => !ids.has(offer.id));
+	return missing.length > 0 ? [...offers, ...missing] : null;
 }

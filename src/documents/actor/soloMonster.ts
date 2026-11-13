@@ -1,3 +1,4 @@
+import { addCardEvents, canHost } from '#utils/chat/cardEvents.js';
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
@@ -66,6 +67,25 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 		return item?.system?.description ?? '';
 	}
 
+	/**
+	 * Last Stand as a line on the card whose Apply Damage caused it. The line is for the GMs, so
+	 * only a card that only GMs read can show it. False: the phase gets its own card.
+	 */
+	async #lastStandLineOnCard(cardId: string | null | undefined): Promise<boolean> {
+		const card = cardId ? game.messages?.get(cardId) : null;
+		if (!card || !canHost(card as never, { gmOnly: true })) return false;
+		const at = Date.now();
+		return addCardEvents(card as never, [
+			{
+				id: `healthState.lastStand.${this.uuid}.${at}`,
+				kind: 'healthState',
+				icon: 'fa-solid fa-skull',
+				text: { key: 'NIMBLE.chat.events.healthState.lastStand', data: { name: this.name } },
+				at,
+			},
+		]);
+	}
+
 	async activateBloodiedFeature(options: { visibilityMode?: string } = {}) {
 		const chatData = {
 			author: game.user?.id,
@@ -93,7 +113,11 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 		return chatCard ?? null;
 	}
 
-	async activateLastStandFeature(options: { visibilityMode?: string } = {}) {
+	async activateLastStandFeature(
+		options: { visibilityMode?: string; hostCardId?: string | null } = {},
+	) {
+		const description = this.#getPhaseDescription('lastStand');
+		if (!description && (await this.#lastStandLineOnCard(options.hostCardId))) return null;
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
@@ -103,7 +127,7 @@ export class NimbleSoloMonster extends NimbleBaseActor<'soloMonster'> {
 			whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id) as string[],
 			system: {
 				actorName: this.name,
-				description: this.#getPhaseDescription('lastStand'),
+				description,
 				image: 'icons/svg/combat.svg',
 				name: 'Last Stand',
 				permissions: this.permission,

@@ -145,6 +145,8 @@ export interface OfferActor {
 export interface OfferCard {
 	id?: string | null;
 	type?: string;
+	timestamp?: number | null;
+	flags?: Record<string, unknown>;
 	speaker?: { scene?: string | null; token?: string | null; actor?: string | null };
 	system?: {
 		targets?: string[];
