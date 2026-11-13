@@ -10,17 +10,62 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "",
+				"details": "ally is crit within 12 spaces",
 				"quantity": 1,
 				"type": "action",
-				"isReaction": false
+				"isReaction": true
 			},
 			"duration": {
-				"details": "",
+				"details": "until you drop to 0 HP",
 				"quantity": 1,
-				"type": "none"
+				"type": "special"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "Ah1SdLjDdt7RAeeE",
+					"type": "damage",
+					"damageType": "radiant",
+					"formula": "(@strength)d8",
+					"canCrit": false,
+					"canMiss": false,
+					"ignoreArmor": true,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "XSdjpqQuifGqjdM8",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "Ah1SdLjDdt7RAeeE"
+							}
+						]
+					}
+				},
+				{
+					"id": "JS6aVir2JQJC5pb0",
+					"type": "move",
+					"kind": "forced",
+					"recipient": "targets",
+					"distance": "4",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": true,
+					"upTo": true,
+					"direction": "toward",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "WxhJoYxaUvkBDy0J",
+					"type": "applyEffect",
+					"effectId": "tu7s4O5SQGiR38VX",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +88,49 @@
 			1
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "tu7s4O5SQGiR38VX",
+			"name": "Taunted",
+			"img": "systems/nimble/assets/icons/taunted.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "zeroHp",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"taunted"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
