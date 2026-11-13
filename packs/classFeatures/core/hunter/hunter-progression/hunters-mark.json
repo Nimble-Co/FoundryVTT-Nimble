@@ -17,7 +17,8 @@
 				"priority": 1,
 				"flagKey": "quarry",
 				"statusCondition": "marked",
-				"maxTargets": 1
+				"maxTargets": 1,
+				"effectId": "AQRuhHnF7yeFPR47"
 			},
 			{
 				"type": "conditionalBonus",
@@ -98,7 +99,47 @@
 			1
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "AQRuhHnF7yeFPR47",
+			"name": "Hunter's Mark",
+			"img": "icons/weapons/bows/shortbow-recurve-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "days",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

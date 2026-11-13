@@ -100,13 +100,61 @@
 	"effects": [
 		{
 			"_id": "dNLZfEe90lFwHQRD",
-			"name": "Slowed",
-			"img": "systems/nimble/assets/icons/slowed.svg",
+			"name": "Hail of Arrows",
+			"img": "icons/skills/ranged/arrows-flying-salvo-blue.webp",
 			"type": "nimble",
 			"system": {
-				"changes": [],
+				"changes": [
+					{
+						"key": "system.attributes.movement.walk",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.fly",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.climb",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.swim",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.burrow",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					}
+				],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -121,9 +169,7 @@
 			"disabled": false,
 			"origin": null,
 			"transfer": false,
-			"statuses": [
-				"slowed"
-			],
+			"statuses": [],
 			"flags": {},
 			"folder": null
 		}

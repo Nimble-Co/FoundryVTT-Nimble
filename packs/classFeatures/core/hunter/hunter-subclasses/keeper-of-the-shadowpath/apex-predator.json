@@ -30,6 +30,20 @@
 						"predicate": {}
 					}
 				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "apexPredatorUses",
+				"identifier": "",
+				"label": "Apex Predator",
+				"predicate": {},
+				"priority": 1,
+				"poolType": "charge",
+				"poolIdentifier": "primal-predator-use",
+				"dieSize": null,
+				"maxDelta": "1",
+				"addRefills": []
 			}
 		],
 		"activation": {

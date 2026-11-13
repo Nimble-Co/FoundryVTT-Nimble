@@ -98,7 +98,6 @@ describe('attack change pack items', () => {
 		it.each([
 			['come-get-some', ['taunted']],
 			['pinning-shot', ['restrained']],
-			['hail-of-arrows', ['slowed']],
 		])('%s gives its condition on a hit', (name, conditions) => {
 			const file = `thrill-of-the-hunt/${name}`;
 			expect(appliedConditions(file, activation(file).effects[0].on.hit)).toEqual(conditions);

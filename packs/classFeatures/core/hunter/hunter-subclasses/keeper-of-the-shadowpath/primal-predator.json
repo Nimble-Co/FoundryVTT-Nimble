@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "primal-predator-use-pool",
+				"identifier": "primal-predator-use",
+				"label": "Primal Predator use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "primal-predator-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "primal-predator-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +53,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "vrAsZrHpbWR6gRsM",
+					"type": "applyEffect",
+					"effectId": "6NEIVje9jZbNQgjD",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +86,71 @@
 			7
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "6NEIVje9jZbNQgjD",
+			"name": "Primal Predator",
+			"img": "icons/skills/melee/shield-damaged-broken-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "eSnaEgASKQC6wa9G",
+						"identifier": "",
+						"label": "Primal Predator",
+						"predicate": {},
+						"priority": 1,
+						"side": "yourAttacks",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "none",
+						"ignoreArmor": true,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "any",
+						"thisItemOnly": false,
+						"attackSource": "weapon",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "currentTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Your weapon attacks also ignore cover.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
