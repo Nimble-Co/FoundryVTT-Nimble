@@ -36,7 +36,7 @@ On monster features only, an **Attack Type** dropdown (None / Reach / Range) and
 
 ## The On use sub-tab: the step tree
 
-The steps that run when the item is used are built as a tree. Click the **+** button next to **On use** to add a top-level entry: **Damage**, **Healing**, **Apply Effect**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+The steps that run when the item is used are built as a tree. Click the **+** button next to **On use** to add a top-level entry: **Damage**, **Healing**, **Apply Effect**, **Move**, **Pool**, **Save**, or **Wound**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
@@ -50,7 +50,7 @@ The *first* damage entry in the list is special: it is the attack roll. It alone
 Even with Can Crit on, some attacks never crit: template (AoE) attacks, attacks made by minions and flunkies, and attacks with a weapon whose type the wielder is not proficient with.
 :::
 
-Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, a saving throw, or a note.
+Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, a Wound, a saving throw, or a note.
 
 A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
 
@@ -66,7 +66,7 @@ A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Tem
 A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity, Intelligence, or Will) and optionally a **Custom Save DC**, a number or a formula such as `12+@key`. The formula reads the creature that uses the item, at the time it uses the item: the card keeps that number, and a later change to the creature does not change it. When the field is empty, a hero uses `10+@key`, and a monster has no DC. When a creature rolls with the d20 button on the card, its save card tells the result against this DC. A save with a DC of the higher of 10 or the damage the monster took (a Stink Cloud, for example) uses `max(10, @damageTaken)`: the GM uses the feature after the hit, and the card keeps that DC. It has three sections:
 
 - **Shared Rolls**: damage that is rolled once and then split by the outcome. Add a damage entry here, then put **Damage Outcome** entries under On Failed Save (Full Damage) and On Passed Save (Half Damage) for the classic "half on a save" pattern.
-- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, Apply Effect entries, or notes.
+- **On Failed Save** / **On Passed Save** are buckets for child effects: damage, healing, Apply Effect or Wound entries, or notes.
 
 ### Apply Effect
 
@@ -77,6 +77,12 @@ An entry for **The creature that uses this** applies by itself when the item is 
 ### Move
 
 A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to"; turn it off for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
+
+### Wound
+
+Gives **Wounds** (1 or more) to the card's targets or to the user (**Who takes them**), for a hazard such as "suffer 1 Wound". A Wound goes up to the max of the track and no further. Monsters have no Wound track: the card says "Kobold has no Wounds", and nothing changes. An entry for the targets waits for the **Apply to Targets** button, which the card's author and the GM see. A player's click on a creature they do not own goes through the GM, so a GM must be online. An entry for **The creature that uses this** gives its Wounds by itself when the item is used, while the Feature Effects automation setting is on, as an Apply Effect entry does. Under **On Failed Save** or **On Passed Save** it keeps its button. There is no Undo on the row: take a Wound back on the sheet.
+
+For a monster whose attacks also Wound, use the **Wounds** field of an [Apply Condition](../reference/rules-triggers.md#apply-condition) rule in place of a step.
 
 ### Pool
 
@@ -130,7 +136,7 @@ Holding **Alt** while clicking the item skips the window and rolls with defaults
 - each **damage roll** as a summary line with the total, an expandable breakdown, and an **Apply Damage** button that applies it to the card's targets (on a miss the roll is still shown but the apply button is disabled; half-damage outcomes halve the total),
 - each **healing roll** with an **Apply Healing** button and an undo button after use,
 - each **saving throw** section with a d20 button that rolls that save for all currently selected tokens, plus its "On Failed Save" / "On Successful Save" contents,
-- an **Effects** part with a row for each Apply Effect entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows "On" and the name. With the Feature Effects automation setting off, it has an **Apply to You** button,
+- an **Effects** part with a row for each Apply Effect and Wound entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows "On" and the name. With the Feature Effects automation setting off, it has an **Apply to You** button,
 - any **notes**, styled by their note type.
 
 ![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect that went on by itself, On Grug](/images/documentation/ghostwalk-draught-chat-card.png)

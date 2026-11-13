@@ -3,6 +3,7 @@ import { SYSTEM_ID } from '#system';
 import type { EffectNode } from '#types/effectTree.js';
 
 const applyEffectFromCard = vi.fn(async (..._args: unknown[]) => {});
+const giveWoundsFromCard = vi.fn(async (..._args: unknown[]) => {});
 let automation = true;
 
 let applySelfEffectsOnUse: typeof import('../selfEffectsOnUse.js').applySelfEffectsOnUse;
@@ -10,11 +11,16 @@ let selfStepsOf: typeof import('../selfEffectsOnUse.js').selfStepsOf;
 
 beforeEach(async () => {
 	applyEffectFromCard.mockClear();
+	giveWoundsFromCard.mockClear();
 	automation = true;
 	vi.resetModules();
 	vi.doMock('#utils/chat/applyEffectFromCard.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		applyEffectFromCard,
+	}));
+	vi.doMock('#utils/chat/woundFromCard.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		giveWoundsFromCard,
 	}));
 	vi.doMock('../../settings/automationSettings.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
@@ -22,6 +28,7 @@ beforeEach(async () => {
 	}));
 	({ applySelfEffectsOnUse, selfStepsOf } = await import('../selfEffectsOnUse.js'));
 	vi.doUnmock('#utils/chat/applyEffectFromCard.js');
+	vi.doUnmock('#utils/chat/woundFromCard.js');
 	vi.doUnmock('../../settings/automationSettings.js');
 });
 
@@ -115,5 +122,66 @@ describe('applySelfEffectsOnUse', () => {
 		await applySelfEffectsOnUse(card());
 
 		expect(applyEffectFromCard).not.toHaveBeenCalled();
+	});
+});
+
+describe('a Wound step for the user', () => {
+	function woundStep(id: string, recipient: 'self' | 'targets', parentContext: string | null) {
+		return {
+			id,
+			type: 'wound',
+			amount: 1,
+			recipient,
+			parentContext,
+			parentNode: parentContext ? 'save' : null,
+		} as EffectNode;
+	}
+
+	function hazardCard(applied = {}) {
+		return {
+			id: 'message-2',
+			flags: { [SYSTEM_ID]: { appliedWounds: applied } },
+			system: {
+				activation: {
+					effects: [
+						woundStep('rootSelf', 'self', null),
+						woundStep('rootTargets', 'targets', null),
+						{
+							id: 'save',
+							type: 'savingThrow',
+							savingThrowType: 'strength',
+							parentContext: null,
+							parentNode: null,
+							on: { failedSave: [woundStep('onFail', 'self', 'failedSave')] },
+						},
+					] as EffectNode[],
+				},
+			},
+			update: vi.fn(async () => undefined),
+		};
+	}
+
+	it('gives the Wounds of a root self step on use; a step under a save outcome waits', async () => {
+		const used = hazardCard();
+
+		expect(ids(selfStepsOf(used))).toEqual(['rootSelf']);
+		await applySelfEffectsOnUse(used);
+
+		expect(giveWoundsFromCard).toHaveBeenCalledTimes(1);
+		expect(giveWoundsFromCard).toHaveBeenCalledWith(
+			used,
+			expect.objectContaining({ id: 'rootSelf' }),
+		);
+		expect(applyEffectFromCard).not.toHaveBeenCalled();
+	});
+
+	it('skips a step that already gave its Wounds, and gives none with Feature Effects off', async () => {
+		await applySelfEffectsOnUse(
+			hazardCard({ rootSelf: { Actor_hero: { actorName: 'Hero', before: 0, after: 1 } } }),
+		);
+		automation = false;
+		await applySelfEffectsOnUse(hazardCard());
+
+		expect(giveWoundsFromCard).not.toHaveBeenCalled();
 	});
 });

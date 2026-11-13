@@ -10,7 +10,19 @@ export type EffectNode =
 	| MoveNode
 	| PoolNode
 	| SavingThrowNode
-	| TextNode;
+	| TextNode
+	| WoundNode;
+
+/** Gives Wounds to the card's targets or to the one who used the item. */
+export type WoundNode = {
+	id: string;
+	type: 'wound';
+	/** A whole number, 1 or more. */
+	amount: number;
+	recipient: 'self' | 'targets';
+	parentContext: string | null;
+	parentNode: string | null;
+};
 
 /**
  * A Movement Offer: a Free Move or Forced Movement the card offers to the

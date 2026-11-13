@@ -62,6 +62,7 @@ interface ApplyConditionSource {
 	condition: string;
 	trigger: ApplyConditionTrigger;
 	effectId?: string;
+	wounds?: number;
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -75,6 +76,7 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
 	trigger: ApplyConditionTrigger;
 	effectId: string;
+	wounds: number;
 	disabled: boolean;
 	label: string;
 }
@@ -139,6 +141,7 @@ function createApplyConditionRule(
 		condition: config.condition,
 		trigger: config.trigger,
 		effectId: config.effectId ?? '',
+		wounds: config.wounds ?? 0,
 		disabled: config.disabled ?? false,
 		label: config.label ?? 'Test Apply Condition',
 		id: config.id ?? 'test-apply-condition-id',
@@ -158,6 +161,8 @@ function createApplyConditionRule(
 	rule.condition = config.condition;
 	rule.trigger = config.trigger;
 	rule.effectId = sourceData.effectId;
+	rule.wounds = sourceData.wounds;
+	rule.id = sourceData.id;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Apply Condition';
 
@@ -225,6 +230,7 @@ describe('ApplyConditionRule', () => {
 			expect(schema).toHaveProperty('condition');
 			expect(schema).toHaveProperty('trigger');
 			expect(schema).toHaveProperty('effectId');
+			expect(schema).toHaveProperty('wounds');
 			expect(schema).not.toHaveProperty('duration');
 		});
 
@@ -931,6 +937,43 @@ describe('ApplyConditionRule', () => {
 			expect(rule.getActivationCardNodes({ isCritical: false, isMiss: true })).toEqual([]);
 		});
 
+		it('adds a Wound row for the targets, also with no condition and no effect', () => {
+			const actor = createMockActor();
+			const rule = createApplyConditionRule({ condition: '', trigger: 'onHit', wounds: 1 }, actor);
+
+			expect(rule.getActivationCardNodes({ isCritical: false, isMiss: false })).toEqual([
+				{
+					id: 'wound-test-apply-condition-id',
+					type: 'wound',
+					amount: 1,
+					recipient: 'targets',
+					parentContext: null,
+					parentNode: null,
+				},
+			]);
+		});
+
+		it('adds the Wound row after the condition row, and none with 0 Wounds', () => {
+			const actor = createMockActor();
+			const both = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit', wounds: 2 },
+				actor,
+			);
+			const conditionOnly = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit' },
+				actor,
+			);
+			const context = { isCritical: false, isMiss: false };
+
+			expect(both.getActivationCardNodes(context).map((node) => node.type)).toEqual([
+				'applyEffect',
+				'wound',
+			]);
+			expect(conditionOnly.getActivationCardNodes(context).map((node) => node.type)).toEqual([
+				'applyEffect',
+			]);
+		});
+
 		it('returns nothing for non-attack triggers', () => {
 			const actor = createMockActor();
 			const rule = createApplyConditionRule(
@@ -939,6 +982,166 @@ describe('ApplyConditionRule', () => {
 			);
 
 			expect(rule.getActivationCardNodes({ isCritical: true, isMiss: false })).toEqual([]);
+		});
+	});
+
+	describe('Wounds', () => {
+		function hero(value: number) {
+			const actor = Object.assign(createMockActor(), {
+				uuid: 'Actor.tessa',
+				name: 'Tessa',
+				system: { attributes: { wounds: { value, max: 6 } } },
+				update: vi.fn(async (_data: Record<string, unknown>) => undefined as unknown),
+			});
+			return actor;
+		}
+
+		it('gives the target its Wounds when the attack lands, and records them on the card', async () => {
+			const attacker = createMockActor();
+			const target = hero(1);
+			const card = { id: 'card-1', update: vi.fn(async () => undefined) };
+			const rule = createApplyConditionRule(
+				{ condition: '', trigger: 'onHit', wounds: 1 },
+				attacker,
+			);
+
+			await rule.onItemUsed({
+				...buildItemUsedContext(attacker, target),
+				card: card as never,
+			});
+
+			expect(target.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 2 });
+			expect(card.update).toHaveBeenCalledWith({
+				[`flags.${SYSTEM_ID}.appliedWounds.wound-test-apply-condition-id.Actor_tessa`]: {
+					actorName: 'Tessa',
+					before: 1,
+					after: 2,
+				},
+			});
+		});
+
+		it('gives the condition and the Wounds together', async () => {
+			const attacker = createMockActor();
+			const target = hero(0);
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit', wounds: 2 },
+				attacker,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attacker, target));
+
+			expect(conditionsAppliedTo(target)).toEqual(['dazed']);
+			expect(target.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 2 });
+		});
+
+		it('gives its own holder the Wounds on a trigger of its own', async () => {
+			const holder = hero(3);
+			const rule = createApplyConditionRule(
+				{ condition: '', trigger: 'onTurnStart', wounds: 1 },
+				holder,
+			);
+			type Ctx = Parameters<ApplyConditionRule['onTurnStart']>[0];
+
+			await rule.onTurnStart({ actor: holder } as unknown as Ctx);
+
+			expect(holder.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 4 });
+		});
+
+		describe('on a failed save that a reroll turns into a success', () => {
+			const globals = globalThis as unknown as { game: { messages?: unknown } };
+			let savedMessages: unknown;
+			let saveCards: Map<
+				string,
+				{ flags: Record<string, unknown>; update: ReturnType<typeof vi.fn> }
+			>;
+
+			function saveCard(id: string) {
+				const card = {
+					flags: {} as Record<string, unknown>,
+					update: vi.fn(async (changes: Record<string, unknown>) => {
+						for (const [path, value] of Object.entries(changes)) {
+							foundry.utils.setProperty(card, path, value);
+						}
+					}),
+				};
+				saveCards.set(id, card);
+				return card;
+			}
+
+			function woundsOf(actor: ReturnType<typeof hero>) {
+				return actor.system.attributes.wounds.value;
+			}
+
+			function trackingHero(value: number) {
+				const actor = hero(value);
+				actor.update.mockImplementation(async (data: Record<string, unknown>) => {
+					actor.system.attributes.wounds.value = data['system.attributes.wounds.value'] as number;
+				});
+				return actor;
+			}
+
+			beforeEach(() => {
+				savedMessages = globals.game.messages;
+				saveCards = new Map();
+				globals.game.messages = { get: (id: string) => saveCards.get(id) };
+				saveCard('card-1');
+				saveCard('card-2');
+			});
+
+			afterEach(() => {
+				globals.game.messages = savedMessages;
+			});
+
+			it('takes back the Wounds that the fail gave, with its condition', async () => {
+				const actor = trackingHero(1);
+				const rule = createApplyConditionRule(
+					{ condition: 'prone', trigger: 'onSaveFail', wounds: 2 },
+					actor,
+				);
+
+				await saveResolved(rule, actor as never, 'fail');
+				expect(woundsOf(actor)).toBe(3);
+
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(1);
+				expect(actor.effects).toHaveLength(0);
+
+				await saveResolved(rule, actor as never, 'unknown');
+				expect(woundsOf(actor)).toBe(1);
+			});
+
+			it('takes back no more than it gave, never below 0, and only from its own card', async () => {
+				const actor = trackingHero(5);
+				const rule = createApplyConditionRule(
+					{ condition: '', trigger: 'onSaveFail', wounds: 3 },
+					actor,
+				);
+
+				await saveResolved(rule, actor as never, 'fail');
+				expect(woundsOf(actor)).toBe(6);
+
+				await saveResolved(rule, actor as never, 'pass', 'card-2');
+				expect(woundsOf(actor)).toBe(6);
+
+				actor.system.attributes.wounds.value = 0;
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(0);
+
+				actor.system.attributes.wounds.value = 4;
+				await saveResolved(rule, actor as never, 'fail');
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(4);
+			});
+		});
+
+		it('gives no Wounds with 0, as before', async () => {
+			const attacker = createMockActor();
+			const target = hero(1);
+			const rule = createApplyConditionRule({ condition: 'dazed', trigger: 'onHit' }, attacker);
+
+			await rule.onItemUsed(buildItemUsedContext(attacker, target));
+
+			expect(target.update).not.toHaveBeenCalled();
 		});
 	});
 

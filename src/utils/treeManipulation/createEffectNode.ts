@@ -9,6 +9,7 @@ import { createMoveNode } from './createMoveNode.js';
 import { createPoolNode } from './createPoolNode.js';
 import { createSavingThrowNode } from './createSavingThrowNode.js';
 import { createTextNode } from './createTextNode.js';
+import { createWoundNode } from './createWoundNode.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
 import { reconstructEffectsTree } from './reconstructEffectsTree.js';
 
@@ -49,6 +50,7 @@ export async function createEffectNode(
 	else if (nodeType === 'note') newNode = createTextNode(parentId, context);
 	else if (nodeType === 'pool') newNode = createPoolNode(parentId, context);
 	else if (nodeType === 'savingThrow') newNode = createSavingThrowNode(parentId, context);
+	else if (nodeType === 'wound') newNode = createWoundNode(parentId, context);
 	else throw new Error('Invalid node type');
 
 	newNode.parentNode = parentId ?? null;

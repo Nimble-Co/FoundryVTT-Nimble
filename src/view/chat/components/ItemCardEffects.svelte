@@ -16,6 +16,8 @@
 	let messageDocument = getContext('messageDocument');
 
 	let nodes = messageDocument?.effectNodes ?? [];
+	const EFFECT_ROW_TYPES = ['applyEffect', 'wound'];
+	const isEffectRows = (group) => EFFECT_ROW_TYPES.includes(group[0]?.type);
 	const firstDamageGroup = nodes.find((group) => group.length && isDamageGroup(group));
 </script>
 
@@ -23,9 +25,9 @@
 	{#if nodeGroup.length}
 		<section
 			class="nimble-card-section"
-			class:nimble-card-section--apply-effects={nodeGroup[0]?.type === 'applyEffect'}
+			class:nimble-card-section--apply-effects={isEffectRows(nodeGroup)}
 		>
-			{#if nodeGroup[0]?.type === 'applyEffect'}
+			{#if isEffectRows(nodeGroup)}
 				<header class="nimble-section-header">
 					<h3 class="nimble-heading" data-heading-variant="section">
 						{localize('NIMBLE.chat.applyEffect.heading')}

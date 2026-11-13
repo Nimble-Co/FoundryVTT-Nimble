@@ -54,6 +54,8 @@
 				return SaveNode;
 			case 'note':
 				return TextNode;
+			case 'wound':
+				return WoundNode;
 		}
 
 		return null;
@@ -931,6 +933,65 @@
 						/>
 					</div>
 				{/if}
+			</div>
+		</div>
+	</li>
+{/snippet}
+
+{#snippet WoundNode(node, _parentNode = null)}
+	<li data-node-id={node.id}>
+		<header>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.wound')}
+			</h4>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				aria-label={localize('NIMBLE.activationEffects.woundNode.delete')}
+				data-tooltip={localize('NIMBLE.activationEffects.woundNode.delete')}
+				type="button"
+				onclick={() => deleteEffectNode(document, effects, node.id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
+			<div class="nimble-config-block nimble-card">
+				<label class="nimble-field" style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.woundNode.amount')}
+					</h5>
+					<input
+						type="number"
+						min="1"
+						step="1"
+						value={node.amount}
+						onchange={({ target }) =>
+							updateEffectNode(
+								document,
+								effects,
+								node,
+								'amount',
+								Math.max(1, Math.floor(Number(target.value)) || 1),
+							)}
+					/>
+				</label>
+
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.woundNode.recipient')}
+					</h5>
+					<TagGroup
+						options={moveRecipients}
+						selectedOptions={[node.recipient]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
+					/>
+				</div>
 			</div>
 		</div>
 	</li>

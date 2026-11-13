@@ -10,9 +10,9 @@ export const POOL_PREDICATE_PLACEHOLDER = '{ "level": { "min": 5 } }';
 /**
  * Available child-node options for the "Add Effect" picker. The set depends
  * on the parent node type: top-level adds (node === null) can create
- * applyEffect, damage, healing, move, pool, savingThrow; damage children can
- * additionally create damageOutcome and note; savingThrow children only
- * create applyEffect, damage, healing, move, note.
+ * applyEffect, damage, healing, move, pool, savingThrow, wound; damage children
+ * can additionally create damageOutcome and note; savingThrow children only
+ * create applyEffect, damage, healing, move, note, wound.
  */
 export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 	const { saves } = CONFIG.NIMBLE;
@@ -25,12 +25,21 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 		['note', localize('NIMBLE.activationEffects.note')],
 		['pool', localize('NIMBLE.activationEffects.pool')],
 		['savingThrow', saves.save],
+		['wound', localize('NIMBLE.activationEffects.wound')],
 	]);
 
 	const includedOptions: string[] = [];
 
 	if (node === null) {
-		includedOptions.push('applyEffect', 'damage', 'healing', 'move', 'pool', 'savingThrow');
+		includedOptions.push(
+			'applyEffect',
+			'damage',
+			'healing',
+			'move',
+			'pool',
+			'savingThrow',
+			'wound',
+		);
 	} else if (node.type === 'damage') {
 		includedOptions.push(
 			'applyEffect',
@@ -40,9 +49,10 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 			'move',
 			'savingThrow',
 			'note',
+			'wound',
 		);
 	} else if (node.type === 'savingThrow') {
-		includedOptions.push('applyEffect', 'damage', 'healing', 'move', 'note');
+		includedOptions.push('applyEffect', 'damage', 'healing', 'move', 'note', 'wound');
 	}
 
 	return includedOptions.sort().map((option) => ({

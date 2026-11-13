@@ -1,10 +1,11 @@
 import { systemHookName } from '#system';
-import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode, WoundNode } from '#types/effectTree.js';
 import {
 	appliedEffects,
 	applyEffectFromCard,
 	type EffectCard,
 } from '#utils/chat/applyEffectFromCard.js';
+import { appliedWounds, giveWoundsFromCard } from '#utils/chat/woundFromCard.js';
 import { findNodesByContexts } from '#utils/treeManipulation/findNodesByContexts.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
@@ -21,25 +22,36 @@ function outcomesOf(system: UseCardSystem): string[] {
 	return ['hit'];
 }
 
-/** The Apply Effect steps for the user of the item: at the root, or under the outcome the roll had. */
-export function selfStepsOf(card: EffectCard): ApplyEffectNode[] {
+export type SelfStep = ApplyEffectNode | WoundNode;
+
+/** The Apply Effect and Wound steps for the user: at the root, or under the outcome the roll had. */
+export function selfStepsOf(card: EffectCard): SelfStep[] {
 	const system = (card.system ?? {}) as UseCardSystem;
 	const tree = system.activation?.effects ?? [];
 	return findNodesByContexts(tree, outcomesOf(system)).filter(
-		(node): node is ApplyEffectNode => node.type === 'applyEffect' && node.recipient === 'self',
+		(node): node is SelfStep =>
+			(node.type === 'applyEffect' || node.type === 'wound') && node.recipient === 'self',
 	);
 }
 
+/** Applies one self step, unless the card shows that it already did. */
+export async function applySelfStep(card: EffectCard, node: SelfStep): Promise<void> {
+	if (node.type === 'wound') {
+		if (Object.keys(appliedWounds(card, node.id) ?? {}).length) return;
+		await giveWoundsFromCard(card, node);
+		return;
+	}
+	if (appliedEffects(card, node.id)?.length) return;
+	await applyEffectFromCard(card, node);
+}
+
 /**
- * Puts each self step's effect on the user once the card exists. A step that did not take keeps
- * its button on the card. With Feature Effects off, every step keeps its button.
+ * Applies each self step to the user once the card exists. A step that did not take keeps its
+ * button on the card. With Feature Effects off, every step keeps its button.
  */
 export async function applySelfEffectsOnUse(card: EffectCard | null): Promise<void> {
 	if (!card?.id || !isRuleAutomationEnabled()) return;
-	for (const node of selfStepsOf(card)) {
-		if (appliedEffects(card, node.id)?.length) continue;
-		await applyEffectFromCard(card, node);
-	}
+	for (const node of selfStepsOf(card)) await applySelfStep(card, node);
 }
 
 let registered = false;

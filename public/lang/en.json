@@ -559,6 +559,11 @@
 				"missingName": "Effect not found",
 				"missing": "The item no longer has this effect."
 			},
+			"wound": {
+				"one": "1 Wound",
+				"many": "{count} Wounds",
+				"noTrack": "{name} has no Wounds"
+			},
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"checkResult": {
@@ -2033,7 +2038,7 @@
 				}
 			},
 			"applyCondition": {
-				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
+				"description": "Apply a status condition, an effect or Wounds to a target (or self) when a trigger fires: on a hit, crit, miss, save fail, turn start, and more.",
 				"condition": {
 					"label": "Condition",
 					"hint": "The condition to apply."
@@ -2045,6 +2050,10 @@
 				"effectId": {
 					"label": "Effect",
 					"hint": "An effect of this item to apply in place of the condition, with its Lasts Until. Pick none to apply the condition alone, until someone removes it."
+				},
+				"wounds": {
+					"label": "Wounds",
+					"hint": "The Wounds the trigger also gives, up to the max of the track. A creature with no Wound track takes none. 0: no Wounds."
 				}
 			},
 			"armorClass": {
@@ -5144,6 +5153,12 @@
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
 			"move": "Move",
+			"wound": "Wound",
+			"woundNode": {
+				"amount": "Wounds",
+				"recipient": "Who takes them",
+				"delete": "Delete Wound"
+			},
 			"moveNode": {
 				"kind": "Kind",
 				"kinds": { "free": "Move for free", "forced": "Forced Movement" },

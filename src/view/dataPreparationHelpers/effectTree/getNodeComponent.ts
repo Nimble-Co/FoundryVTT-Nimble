@@ -6,6 +6,7 @@ import MoveNode from '../../chat/components/MoveNode.svelte';
 import PoolNode from '../../chat/components/PoolNode.svelte';
 import SavingThrowNode from '../../chat/components/SavingThrowNode.svelte';
 import TextNode from '../../chat/components/TextNode.svelte';
+import WoundNode from '../../chat/components/WoundNode.svelte';
 
 export function getNodeComponent(nodeType: string) {
 	switch (nodeType) {
@@ -25,6 +26,8 @@ export function getNodeComponent(nodeType: string) {
 			return PoolNode;
 		case 'savingThrow':
 			return SavingThrowNode;
+		case 'wound':
+			return WoundNode;
 		default:
 			return null;
 	}

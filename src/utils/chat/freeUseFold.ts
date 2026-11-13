@@ -36,6 +36,7 @@ function needsTheCard(node: EffectNode): boolean {
 		case 'move':
 			return true;
 		case 'applyEffect':
+		case 'wound':
 			return node.recipient !== 'self';
 		case 'note':
 			return !!node.text?.trim();
@@ -46,8 +47,8 @@ function needsTheCard(node: EffectNode): boolean {
 
 /**
  * Whether the card of a use would have something to click or read: a target, a damage, healing or
- * save step, an Apply Effect step for targets, a move, a note, or an area to place. Self Apply
- * Effect steps and pool steps need no card.
+ * save step, an Apply Effect or Wound step for targets, a move, a note, or an area to place. Self
+ * Apply Effect and Wound steps and pool steps need no card.
  */
 export function useCardHasSomethingToClick(system: UseCardSystem | null | undefined): boolean {
 	if ((system?.targets?.length ?? 0) > 0) return true;

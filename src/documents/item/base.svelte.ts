@@ -5,7 +5,7 @@ import type { CostReceipt } from '#types/costReceipt.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
-import { applyEffectFromCard, type EffectCard } from '#utils/chat/applyEffectFromCard.js';
+import type { EffectCard } from '#utils/chat/applyEffectFromCard.js';
 import {
 	addCardEvents,
 	addMomentEvents,
@@ -25,7 +25,7 @@ import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { ANSWERS_CARD_FLAG } from '../../hooks/damageBackOnAttack.js';
-import { selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
+import { applySelfStep, selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -114,7 +114,7 @@ async function applySelfStepsWithoutCard(chatData: OfferCard): Promise<void> {
 		update: async () => undefined,
 	};
 	for (const node of selfStepsOf(card)) {
-		await applyEffectFromCard(card, node).catch((error) =>
+		await applySelfStep(card, node).catch((error) =>
 			console.error('Nimble | Could not apply the effects of the item to its user.', error),
 		);
 	}
