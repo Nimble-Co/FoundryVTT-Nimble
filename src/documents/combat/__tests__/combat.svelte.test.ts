@@ -1294,8 +1294,24 @@ describe('NimbleCombat', () => {
 
 		function turnStartCalls(): unknown[][] {
 			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
-			return call.mock.calls.filter(([hook]) => hook === 'nimbleCombatTurnStart');
+			return call.mock.calls
+				.filter(([hook]) => hook === 'nimbleCombatTurnStart')
+				.map(([hook, combatant]) => [hook, combatant]);
 		}
+
+		it('gives the turn-start hook the round and the place of the turn', async () => {
+			const combatId = 'combat-start-turn-round';
+			const { monster, incomingHero } = createTurnStartFixture(combatId);
+			const combat = buildCombat(combatId, [monster, incomingHero], monster);
+
+			await combat._onStartTurn(incomingHero, { round: 3, turn: 1, skipped: false });
+
+			const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+			expect(call).toHaveBeenCalledWith('nimbleCombatTurnStart', incomingHero, {
+				round: 3,
+				turn: 1,
+			});
+		});
 
 		it('emits the turn-start hook for the incoming combatant when Foundry never fires _onStartTurn', async () => {
 			// Regression: under the expanded solo-monster turn order, Foundry's cached turn history
@@ -3920,7 +3936,7 @@ describe('NimbleCombat', () => {
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		combat.update = vi.fn().mockResolvedValue(combat);
 
-		await combat._onEndRound();
+		await combat._onEndRound({ round: 1, skipped: false } as never);
 
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledTimes(2);
 		const dissolveUpdates = combat.updateEmbeddedDocuments.mock.calls[1][1] as Array<
@@ -3930,6 +3946,25 @@ describe('NimbleCombat', () => {
 			{ _id: 'ncs-round-minion-a', 'flags.nimble.minionGroup': null },
 			{ _id: 'ncs-round-minion-b', 'flags.nimble.minionGroup': null },
 		]);
+	});
+
+	it('emits the round hooks with the round', async () => {
+		const combat = new NimbleCombat({
+			id: 'combat-round-hooks',
+			combatants: createCombatantsCollectionFixture([]),
+			turns: [],
+			turn: 0,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat._onEndRound({ round: 2, skipped: false } as never);
+		await combat._onStartRound({ round: 3, skipped: false } as never);
+
+		const call = globals().Hooks.call as unknown as ReturnType<typeof vi.fn>;
+		expect(call).toHaveBeenCalledWith('nimbleCombatRoundEnd', combat, { round: 2 });
+		expect(call).toHaveBeenCalledWith('nimbleCombatRoundStart', combat, { round: 3 });
 	});
 
 	it('performs a minion group attack, consumes member actions, and can end turn', async () => {

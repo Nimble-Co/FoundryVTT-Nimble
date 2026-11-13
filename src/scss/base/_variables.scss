@@ -164,6 +164,8 @@
 	--nimble-card-background-color: hsl(48, 17%, 97%);
 	--nimble-card-border-color: hsla(41, 18%, 54%, 25%);
 	--nimble-card-box-shadow: hsla(0, 0%, 0%, 0.24) 0 3px 8px;
+	// Status icons are white, so they sit on a dark plate in both themes.
+	--nimble-card-status-icon-plate: hsl(0, 0%, 13%);
 
 	--nimble-code-editor-background-color: hsl(0, 0%, 24%);
 	--nimble-navigation-border-color: hsl(150, 3%, 25%);

@@ -6,6 +6,7 @@ import NimbleChaosCard from '../view/chat/ChaosCard.svelte';
 import NimbleChargeAdjustmentCard from '../view/chat/ChargeAdjustmentCard.svelte';
 import NimbleCritBackCard from '../view/chat/CritBackCard.svelte';
 import NimbleDemandControlCard from '../view/chat/DemandControlCard.svelte';
+import NimbleEffectsEndedCard from '../view/chat/EffectsEndedCard.svelte';
 import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
 import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
 import NimbleInitiativeCard from '../view/chat/InitiativeCard.svelte';
@@ -107,6 +108,7 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleMovementOfferCard
 		| typeof NimbleChaosCard
 		| typeof NimbleDemandControlCard
+		| typeof NimbleEffectsEndedCard
 		| typeof NimbleCritBackCard
 		| typeof NimbleMovementTriggerCard
 		| typeof NimbleReactionCard
@@ -162,6 +164,9 @@ export default function renderChatMessageHTML(message, html) {
 			break;
 		case 'critBack':
 			component = NimbleCritBackCard;
+			break;
+		case 'effectsEnded':
+			component = NimbleEffectsEndedCard;
 			break;
 		case 'movementOffer':
 			component = NimbleMovementOfferCard;

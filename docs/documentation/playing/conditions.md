@@ -59,9 +59,25 @@ Some conditions come bundled together, and the system tracks the relationships f
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
 
-## Conditions with a duration
+## How long a condition lasts
 
-A condition can have a duration: a feature's rules can give it one, and the GM can set one on the condition's effect. When the duration ends, the system removes the condition, the same as removing it by hand: Hampered follows the rules above, and the condition can be applied again. A GM must be connected for a duration to end.
+A condition, or any other effect, can have a **Lasts Until**: one or more moments that end it, in the book's words.
+
+- **A turn.** "Until the end of their next turn" follows the turns of the creature with the effect. "Until the start of your next turn" follows the turns of the creature that applied it. "Their next turn" is the first turn that starts after the effect goes on, so an effect applied in their own turn lasts through their next one.
+- **A time.** "For 1 minute" follows world time. "For 1 round" lasts until the same place in the turn order one round later; applied at Initiative, it lasts all of round 1.
+- **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
+
+When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
+
+When effects end, the chat gets one message for that moment, such as "Start of Tessa's turn", with a row for each effect that ended. **Undo** on a row puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
+
+![The message for one moment: three effects ended, one put back with Undo](/images/documentation/effects-ended-message.png)
+
+**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts.
+
+::: details How the system compares two Lasts Until
+It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.
+:::
 
 ## Concentration
 
@@ -89,7 +105,7 @@ Turning off **Feature Effects** in the Automation settings turns this off with i
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions** — handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, and an icon, and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, and a **Minor Status** box (a Minor Status ends when combat ends), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 

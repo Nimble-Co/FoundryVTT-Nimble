@@ -21,12 +21,13 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 	const builtInIds = getBuiltInConditionIds();
 
 	const rows = $state<ConditionEditorRow[]>(
-		getCustomConditions().map(({ id, name, description, img }) => ({
+		getCustomConditions().map(({ id, name, description, img, minor }) => ({
 			uid: foundry.utils.randomID(),
 			id,
 			name,
 			description,
 			img,
+			minor,
 			idEdited: true,
 			persisted: true,
 		})),
@@ -63,6 +64,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 			name: '',
 			description: '',
 			img: DEFAULT_CUSTOM_CONDITION_ICON,
+			minor: false,
 			idEdited: false,
 			persisted: false,
 		});
@@ -136,7 +138,7 @@ export function createCustomConditionsEditorState(dialog: () => GenericDialog) {
 			const name = row.name.trim() || id.charAt(0).toUpperCase() + id.slice(1);
 			const description = row.description.trim();
 			const img = row.img.trim() || DEFAULT_CUSTOM_CONDITION_ICON;
-			return { id, name, description, img };
+			return { id, name, description, img, minor: row.minor };
 		});
 
 		saving = true;

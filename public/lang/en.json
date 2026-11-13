@@ -1162,6 +1162,50 @@
 			"stormshifter": "Stormshifter",
 			"zephyr": "Zephyr"
 		},
+		"lastsUntil": {
+			"chat": {
+				"ended": "{effect} ended on {name}",
+				"undo": "Undo",
+				"undoLabel": "Undo: put {effect} back on {name}",
+				"backOn": "On {name}",
+				"alreadyOn": "{effect} is already on {name}.",
+				"heading": {
+					"turnStart": "Start of {name}'s turn",
+					"turnEnd": "End of {name}'s turn",
+					"roundStart": "Start of round {round}",
+					"roundEnd": "End of round {round}",
+					"combatStart": "Combat started",
+					"combatEnd": "Combat ended",
+					"worldTime": "Time passed",
+					"attack": "{name} attacked",
+					"move": "{name} moved",
+					"castSpell": "{name} cast a spell",
+					"takeDamage": "{name} took damage",
+					"healed": "{name} was Healed",
+					"zeroHp": "{name} dropped to 0 HP",
+					"die": "{name} died",
+					"loseConcentration": "{name} is no longer Concentrating",
+					"useAgain": "{name} used {item} again",
+					"effectEnds": "{effect} ended on {name}",
+					"wounded": "{name} is Bloodied",
+					"rest": "{name} rested",
+					"chargeGained": "{name} gained a charge"
+				}
+			},
+			"expiryEvents": {
+				"attack": "It attacks",
+				"move": "It moves",
+				"castSpell": "It casts a spell",
+				"takeDamage": "It takes damage",
+				"healed": "It is Healed",
+				"zeroHp": "It drops to 0 HP",
+				"die": "It dies",
+				"loseConcentration": "It is no longer Concentrating",
+				"wounded": "It is Bloodied",
+				"rest": "It rests",
+				"chargeGained": "It gains a charge"
+			}
+		},
 		"conditions": {
 			"blinded": "Blinded",
 			"bloodied": "Bloodied",
@@ -5157,6 +5201,8 @@
 				"idPlaceholder": "e.g. hexed",
 				"namePlaceholder": "e.g. Hexed",
 				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
+				"minor": "Minor Status",
+				"minorHint": "Ends when combat ends.",
 				"chooseIcon": "Choose icon",
 				"addCondition": "Add Condition",
 				"remove": "Remove condition",

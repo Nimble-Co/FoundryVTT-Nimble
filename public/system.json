@@ -100,6 +100,7 @@
 			"chaos": {},
 			"critBack": {},
 			"demandControl": {},
+			"effectsEnded": {},
 			"movementTrigger": {},
 			"object": {},
 			"reaction": {},

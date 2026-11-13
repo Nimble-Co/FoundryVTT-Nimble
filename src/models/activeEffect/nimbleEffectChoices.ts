@@ -12,7 +12,7 @@ export const CLOCKS = ['holder', 'source', 'nextHero'] as const;
 
 export const TURN_SPANS = ['nextTurn', 'currentTurn', 'currentRound', 'nextRound'] as const;
 
-export const TIME_UNITS = ['minutes', 'hours', 'days'] as const;
+export const TIME_UNITS = ['rounds', 'minutes', 'hours', 'days'] as const;
 
 export const EVENT_SUBJECTS = ['holder', 'source'] as const;
 
