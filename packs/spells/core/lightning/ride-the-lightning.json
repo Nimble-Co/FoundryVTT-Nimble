@@ -9,7 +9,7 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "When an ally is attacked.",
+				"details": "",
 				"quantity": 3,
 				"type": "action",
 				"isReaction": false
@@ -37,13 +37,21 @@
 								"savingThrowType": "strength",
 								"parentContext": "hit",
 								"parentNode": "Z0pDW8XaeZPeKJyR",
-								"saveType": "strength",
 								"on": {
 									"failedSave": [
 										{
 											"id": "RPmekslPbF0Hwizv",
 											"type": "applyEffect",
 											"effectId": "788vgfV6Pg9YOm1M",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
+											"parentContext": "failedSave",
+											"parentNode": "sklq8bAt2H8fc8lm"
+										},
+										{
+											"id": "mq6CBETA8odtLKmU",
+											"type": "applyEffect",
+											"effectId": "vDX2ZgOdmYmaU0AX",
 											"recipient": "targets",
 											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
@@ -136,6 +144,45 @@
 			"statuses": [
 				"prone"
 			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "vDX2ZgOdmYmaU0AX",
+			"name": "Deafened",
+			"img": "icons/magic/lightning/bolt-blue.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "days",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Deafened for 1 day.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
 			"flags": {},
 			"folder": null
 		}

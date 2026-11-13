@@ -20,7 +20,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"attackerEffectId": "",
-				"reminder": "Remove these temp HP at the start of your next turn.",
+				"reminder": "",
 				"useItem": true,
 				"withInterpose": false,
 				"wholeRound": false,
@@ -51,6 +51,15 @@
 					"type": "healing",
 					"healingType": "tempHealing",
 					"formula": "2*@key",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "HB9k6HtANkUwJLKp",
+					"type": "applyEffect",
+					"effectId": "9vxriZ4GM352c7s2",
+					"recipient": "self",
+					"tempHealingNodeId": "jp65MQRRustJoDbN",
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -86,7 +95,47 @@
 		"school": "ice",
 		"tier": 1
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "9vxriZ4GM352c7s2",
+			"name": "Frost Shield",
+			"img": "icons/magic/water/barrier-ice-shield.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

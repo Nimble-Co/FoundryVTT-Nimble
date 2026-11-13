@@ -40,6 +40,15 @@
 							}
 						]
 					}
+				},
+				{
+					"id": "gfcLhIX3UDPcVLkQ",
+					"type": "applyEffect",
+					"effectId": "XVIoQ1lyWRAwwMmF",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -76,7 +85,95 @@
 		"school": "lightning",
 		"tier": 9
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "XVIoQ1lyWRAwwMmF",
+			"name": "Seething Storm",
+			"img": "icons/magic/lightning/bolts-salvo-clouds-sky.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "7nUZGECxpy8Jn0ad",
+						"identifier": "",
+						"label": "Seething Storm",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "@attributes.movement.walk"
+					},
+					{
+						"type": "freeMove",
+						"disabled": false,
+						"id": "8Azjg8Ac63Jjayhg",
+						"identifier": "",
+						"label": "Seething Storm",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "onTurnStart",
+						"poolIdentifier": "",
+						"distance": "@speed",
+						"recipient": "self",
+						"within": 12,
+						"direction": "any",
+						"ignoresDifficultTerrain": false,
+						"chargePoolIdentifier": "",
+						"whisper": false
+					},
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "g5SUbD1cfZoFgsbD",
+						"identifier": "",
+						"label": "Seething Storm",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": -1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": false,
+						"meleeOnly": false,
+						"rangedOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false,
+				"readsHolder": true
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {
