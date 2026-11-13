@@ -99,6 +99,7 @@ export function createItemActivationConfigDialogState(
 		firstTargetActor,
 	);
 	const defaultConditionalChoice = (option: ConditionalBonusOption): ConditionalChoice => {
+		if (option.startsChosen === false) return 'none';
 		if (option.doubled) return 'damage';
 		if (option.advantage > 0) return 'advantage';
 		if (option.damageValue !== null || option.damageFormula !== null) return 'damage';
@@ -304,7 +305,7 @@ export function createItemActivationConfigDialogState(
 	// Credited to their source via `[label]` flavor.
 	const conditionalDamageFormula = $derived(
 		chosenDamageOptions
-			.filter((o) => o.damageType === '')
+			.filter((o) => o.damageType === '' && !o.fromItemIdentifier)
 			.map((o) => {
 				const term = o.damageFormula ?? `${o.damageValue ?? 0}`;
 				return `+${term}[${o.label}]`;
@@ -314,14 +315,16 @@ export function createItemActivationConfigDialogState(
 
 	// Choices whose rule specifies a damage type are emitted as their own typed
 	// damage effects (see the manager's #getRolls) so the chosen type actually
-	// applies instead of being absorbed into the primary roll's type.
+	// applies instead of being absorbed into the primary roll's type. The damage of
+	// an item is its own step too, so its dice can be read on the card.
 	const conditionalTypedDamages = $derived(
 		chosenDamageOptions
-			.filter((o) => o.damageType !== '')
+			.filter((o) => o.damageType !== '' || !!o.fromItemIdentifier)
 			.map((o) => ({
 				formula: o.damageFormula ?? `${o.damageValue ?? 0}`,
 				damageType: o.damageType,
 				label: o.label,
+				...(o.fromItemIdentifier ? { fromItemIdentifier: o.fromItemIdentifier } : {}),
 			})),
 	);
 

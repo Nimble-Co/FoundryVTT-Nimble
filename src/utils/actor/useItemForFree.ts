@@ -1,12 +1,13 @@
 import { SYSTEM_ID } from '#system';
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { askActiveGm } from '../askActiveGm.js';
+import { identifierOf } from '../documents/itemIdentifier.js';
 import { isActiveGM } from '../isActiveGM.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.useItemForFree`;
 
 interface IdentifiedItem {
-	id: string | null;
+	id?: string | null;
 	identifier?: string;
 	system?: { identifier?: string };
 }
@@ -22,10 +23,6 @@ interface FreeUseRequest {
 	actorUuid: string;
 	itemIdentifier: string;
 	free: ItemActivationManager.FreeUse;
-}
-
-function identifierOf(item: IdentifiedItem): string {
-	return item.identifier || item.system?.identifier || '';
 }
 
 async function useHere(

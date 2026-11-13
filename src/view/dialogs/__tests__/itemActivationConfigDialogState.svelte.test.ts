@@ -54,6 +54,70 @@ describe('the activation dialog conditional bonuses', () => {
 	});
 });
 
+describe('the activation dialog bonus of an item damage', () => {
+	const assist = {
+		key: 'Item.assist:rule',
+		label: 'Assist Me',
+		advantage: 0,
+		damageValue: null,
+		damageFormula: '1d6+@will',
+		damageType: '',
+		fromItemIdentifier: 'lifebinding-spirit',
+		startsChosen: false,
+	};
+
+	function open(options: object[]) {
+		user.targets = new Set();
+		conditionalBonuses.mockReturnValueOnce(options as never);
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: {
+						activation: {
+							effects: [{ id: 'd', type: 'damage', formula: '1d8', damageType: 'bludgeoning' }],
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('starts on None when the bonus does not start chosen', () => {
+		const state = open([assist, { ...assist, key: 'Item.other:rule', startsChosen: true }]);
+
+		expect(state.conditionalChoices).toEqual({
+			'Item.assist:rule': 'none',
+			'Item.other:rule': 'damage',
+		});
+		expect(state.conditionalTypedDamages).toEqual([
+			{
+				formula: '1d6+@will',
+				damageType: '',
+				label: 'Assist Me',
+				fromItemIdentifier: 'lifebinding-spirit',
+			},
+		]);
+	});
+
+	it('rolls the chosen damage of an item as its own step, never in the first damage', () => {
+		const state = open([assist]);
+
+		state.setConditionalChoice(assist.key, 'damage');
+
+		expect(state.conditionalTypedDamages).toEqual([
+			{
+				formula: '1d6+@will',
+				damageType: '',
+				label: 'Assist Me',
+				fromItemIdentifier: 'lifebinding-spirit',
+			},
+		]);
+		expect(state.damagePreviews[0].formula).toBe('1d8');
+	});
+});
+
 describe('the activation dialog Max Damage tick', () => {
 	function openWithRule(rule: object, effects: object[]) {
 		user.targets = new Set();

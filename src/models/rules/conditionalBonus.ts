@@ -1,3 +1,6 @@
+import type { DamageNode, EffectNode } from '#types/effectTree.js';
+import { identifierOf } from '#utils/documents/itemIdentifier.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -17,7 +20,20 @@ interface ResolvedConditionalDamage {
 	value: number | null;
 	/** Raw dice formula (null when numeric or no damage offered). */
 	formula: string | null;
+	/** The damage type of the item whose damage this is. */
+	damageType?: string;
+	/** The identifier of the item whose damage this is. */
+	fromItemIdentifier?: string;
 }
+
+interface ItemWithDamage {
+	identifier?: string;
+	system?: { identifier?: string; activation?: { effects?: EffectNode[] } };
+}
+
+const DAMAGE_OF_ITEM_SET = (data: Record<string, unknown>) =>
+	String(data.damageOfItem ?? '').trim() !== '';
+const NO_DAMAGE_OF_ITEM = (data: Record<string, unknown>) => !DAMAGE_OF_ITEM_SET(data);
 
 function schema() {
 	const { fields } = foundry.data;
@@ -41,16 +57,35 @@ function schema() {
 				label: 'NIMBLE.rules.conditionalBonus.damageBonus.label',
 				hint: 'NIMBLE.rules.conditionalBonus.damageBonus.hint',
 				widget: 'formula',
+				showWhen: NO_DAMAGE_OF_ITEM,
 			}),
 		),
-		damageType: new fields.StringField({
+		damageType: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: 'NIMBLE.rules.conditionalBonus.damageType.label',
+				hint: 'NIMBLE.rules.conditionalBonus.damageType.hint',
+				choices: () => CONFIG.NIMBLE.damageTypes,
+				showWhen: NO_DAMAGE_OF_ITEM,
+			}),
+		),
+		damageOfItem: new fields.StringField({
 			required: true,
 			nullable: false,
 			blank: true,
 			initial: '',
-			label: 'NIMBLE.rules.conditionalBonus.damageType.label',
-			hint: 'NIMBLE.rules.conditionalBonus.damageType.hint',
-			choices: () => CONFIG.NIMBLE.damageTypes,
+			label: 'NIMBLE.rules.conditionalBonus.damageOfItem.label',
+			hint: 'NIMBLE.rules.conditionalBonus.damageOfItem.hint',
+		}),
+		startsChosen: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: true,
+			label: 'NIMBLE.rules.conditionalBonus.startsChosen.label',
+			hint: 'NIMBLE.rules.conditionalBonus.startsChosen.hint',
 		}),
 		doubleFor: new fields.ArrayField(
 			new fields.SchemaField({
@@ -122,6 +157,8 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	declare advantage: number;
 	declare doubleFor: { source: string; onlyNoArmor: boolean }[];
 	declare damageBonus: string;
+	declare damageOfItem: string;
+	declare startsChosen: boolean;
 	// `damageType` is inferred from the schema's `choices` (damage-type keys plus the
 	// blank sentinel); re-declaring it as the wider `string` clashes with that type.
 	declare delivery: ConditionalBonusDelivery;
@@ -140,6 +177,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 				['advantage', 'number'],
 				['damageBonus', 'string'],
 				['damageType', 'string'],
+				['damageOfItem', 'string'],
 				['delivery', 'string'],
 				['source', 'string'],
 				['targetCondition', 'object'],
@@ -152,8 +190,24 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	}
 
 	offersDamage(): boolean {
+		if (this.#itemIdentifier()) return this.#itemDamage() !== null;
 		const trimmed = this.damageBonus.trim();
 		return trimmed !== '' && trimmed !== '0';
+	}
+
+	#itemIdentifier(): string {
+		return this.damageOfItem?.trim() ?? '';
+	}
+
+	/** The first damage step of the named item on the actor, read now. */
+	#itemDamage(): DamageNode | null {
+		const identifier = this.#itemIdentifier();
+		const items = (this.actor as { items?: Iterable<ItemWithDamage> } | null)?.items ?? [];
+		const item = [...items].find((each) => identifierOf(each) === identifier);
+		const node = flattenEffectsTree(item?.system?.activation?.effects ?? []).find(
+			(each): each is DamageNode => each.type === 'damage' && !!each.formula?.trim(),
+		);
+		return node ?? null;
 	}
 
 	/** True when this bonus is relevant to an attack of the given delivery/source. */
@@ -178,12 +232,21 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	/** Resolves the offered damage to a number (numeric formula) or raw dice formula. */
 	resolveDamage(): ResolvedConditionalDamage {
 		if (!this.offersDamage()) return { value: null, formula: null };
-		if (DICE_PATTERN.test(this.damageBonus)) {
-			this.checkReferences(this.damageBonus);
-			return { value: null, formula: this.damageBonus };
+		const itemDamage = this.#itemIdentifier() ? this.#itemDamage() : null;
+		const formula = itemDamage?.formula ?? this.damageBonus;
+		const fromItem = itemDamage
+			? { damageType: itemDamage.damageType, fromItemIdentifier: this.#itemIdentifier() }
+			: {};
+		if (DICE_PATTERN.test(formula)) {
+			this.checkReferences(formula);
+			if (!itemDamage) return { value: null, formula, ...fromItem };
+			// The roll window shows the item's damage with the attacker's numbers, as it rolls.
+			const rollData = this.actor?.getRollData?.() ?? {};
+			const shown = Roll.replaceFormulaData(formula, rollData, { missing: '0' });
+			return { value: null, formula: shown, ...fromItem };
 		}
-		const resolved = this.resolveFormula(this.damageBonus);
-		return { value: resolved ?? 0, formula: null };
+		const resolved = this.resolveFormula(formula);
+		return { value: resolved ?? 0, formula: null, ...fromItem };
 	}
 }
 

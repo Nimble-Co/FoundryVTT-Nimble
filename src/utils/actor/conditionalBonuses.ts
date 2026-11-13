@@ -30,6 +30,10 @@ interface ConditionalBonusOption {
 	damageType: string;
 	/** The item of the attack doubles this bonus. */
 	doubled?: boolean;
+	/** The identifier of the item whose damage this is: it rolls as its own damage step. */
+	fromItemIdentifier?: string;
+	/** The roll window starts on this bonus. */
+	startsChosen: boolean;
 }
 
 interface AttackingActor {
@@ -118,8 +122,10 @@ function getActiveConditionalBonuses(
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value === null ? null : damage.value * (doubled ? 2 : 1),
 			damageFormula: damage.formula && doubled ? `(${damage.formula})*2` : damage.formula,
-			damageType: rule.damageType ?? '',
+			damageType: damage.damageType ?? rule.damageType ?? '',
 			...(doubled ? { doubled } : {}),
+			...(damage.fromItemIdentifier ? { fromItemIdentifier: damage.fromItemIdentifier } : {}),
+			startsChosen: rule.startsChosen !== false,
 		});
 	}
 

@@ -161,6 +161,8 @@ export type DamageNode = {
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
 	targetDisposition?: EffectNodeDisposition;
+	/** A bonus step that is the damage of another item of the attacker: that item's identifier. */
+	fromItemIdentifier?: string | null;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;

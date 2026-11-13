@@ -190,6 +190,33 @@ describe('conditionalBonuses', () => {
 				damageValue: 7,
 				damageFormula: null,
 				damageType: 'radiant',
+				startsChosen: true,
+			});
+		});
+
+		it('carries the item whose damage it is, with its type, and a bonus that starts on None', () => {
+			const rule = createRule({
+				advantage: 0,
+				startsChosen: false,
+				offersAdvantage: vi.fn(() => false),
+				offersDamage: vi.fn(() => true),
+				resolveDamage: vi.fn(() => ({
+					value: null,
+					formula: '1d6+@will',
+					damageType: 'radiant',
+					fromItemIdentifier: 'lifebinding-spirit',
+				})),
+			});
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]) as never,
+				weaponItem,
+				undefined,
+			);
+			expect(option).toMatchObject({
+				damageFormula: '1d6+@will',
+				damageType: 'radiant',
+				fromItemIdentifier: 'lifebinding-spirit',
+				startsChosen: false,
 			});
 		});
 

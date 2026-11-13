@@ -980,6 +980,7 @@ class ItemActivationManager {
 					damageType: conditional.damageType,
 					formula,
 					roll: roll.toJSON() as Record<string, unknown>,
+					fromItemIdentifier: conditional.fromItemIdentifier,
 				}),
 			);
 			rolls.push(roll);
@@ -1813,7 +1814,12 @@ namespace ItemActivationManager {
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
-		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		conditionalDamages?: Array<{
+			formula: string;
+			damageType: string;
+			label: string;
+			fromItemIdentifier?: string;
+		}>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
@@ -1906,7 +1912,12 @@ namespace ItemActivationManager {
 		 * chosen type applies, rather than being folded into the primary roll's type.
 		 * Untyped conditional damage is already baked into `rollFormula`.
 		 */
-		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		conditionalDamages?: Array<{
+			formula: string;
+			damageType: string;
+			label: string;
+			fromItemIdentifier?: string;
+		}>;
 	}
 }
 

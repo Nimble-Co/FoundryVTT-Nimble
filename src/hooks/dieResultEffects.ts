@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { EffectNode } from '#types/effectTree.js';
 import { rulesOfType } from '#utils/actor/actorRules.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
@@ -6,6 +7,7 @@ import { isActiveGM } from '#utils/isActiveGM.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
 import { pendingKeepOf } from '#utils/rolls/cardRollState.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
+import { bonusStepOf } from '../models/rules/dieResultEffect.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 const ACTIVATION_CARD_TYPES = new Set(['feature', 'spell', 'object']);
@@ -36,7 +38,12 @@ interface ActivationCard {
 	type?: string;
 	speaker?: { scene?: string | null; token?: string | null };
 	flags?: Record<string, Record<string, unknown> | undefined>;
-	system?: { isMiss?: boolean; targets?: string[]; pendingKeep?: unknown };
+	system?: {
+		isMiss?: boolean;
+		targets?: string[];
+		pendingKeep?: unknown;
+		activation?: { effects?: EffectNode[] };
+	};
 	rolls?: unknown[];
 	getFlag(scope: string, key: string): unknown;
 	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
@@ -66,6 +73,17 @@ function primaryDieFace(card: ActivationCard): number | null {
 	return typeof face === 'number' ? face : null;
 }
 
+/** The first die that counts of the card's bonus step that is the damage of the named item. */
+function bonusDieFace(effects: readonly EffectNode[], identifier: string): number | null {
+	const roll = bonusStepOf(effects, identifier)?.roll as { terms?: unknown[] } | undefined;
+	for (const term of roll?.terms ?? []) {
+		const results = (term as { results?: { result?: unknown; active?: boolean }[] }).results;
+		const kept = results?.find((result) => result.active !== false);
+		if (kept) return typeof kept.result === 'number' ? kept.result : null;
+	}
+	return null;
+}
+
 /** The card's target tokens, one for each actor. */
 function targetTokens(card: ActivationCard): SideToken[] {
 	const byActor = new Map<unknown, SideToken>();
@@ -85,8 +103,11 @@ function userSide(card: ActivationCard, user: unknown): SideToken | null {
 		null) as SideToken | null;
 }
 
-/** Each target of the card gets the effect of every rule that the Primary Die face meets. */
-/** A card that waits for Keep a Result is read when the result is kept, and each card only once. */
+/**
+ * Each target of the card gets the effect of every rule that the die face meets: the Primary Die
+ * of a use of the rule's item, or the first die of a bonus step that is that item's damage. A card
+ * that waits for Keep a Result is read when the result is kept, and each card only once.
+ */
 export async function applyDieResultEffects(card: ActivationCard): Promise<void> {
 	if (!card.id || !ACTIVATION_CARD_TYPES.has(card.type ?? '') || !isRuleAutomationEnabled()) return;
 	if (pendingKeepOf(card.system)) return;
@@ -98,22 +119,24 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 		| (NonNullable<Parameters<typeof payloadFromEffect>[1]['user']> & { rules?: unknown })
 		| undefined;
 	if (!used || !user) return;
+	const effects = card.system?.activation?.effects ?? [];
 	const rules = rulesOfType(user, 'dieResultEffect').filter(
-		(rule) => rule.isLive() && rule.readsUseOf(used),
+		(rule) => rule.isLive() && (rule.readsUseOf(used) || rule.readsBonusOf(effects)),
 	);
 	if (rules.length === 0) return;
 	read.add(card.id);
 	await card.setFlag(SYSTEM_ID, DIE_RESULT_READ_FLAG, true);
 	if (card.system?.isMiss === true) return;
 
-	const face = primaryDieFace(card);
-	if (face === null) return;
 	const tokens = targetTokens(card);
 	if (tokens.length === 0) return;
 	const side = userSide(card, user);
 
 	for (const rule of rules) {
-		if (face < rule.atLeast) continue;
+		const face = rule.readsUseOf(used)
+			? primaryDieFace(card)
+			: bonusDieFace(effects, rule.itemIdentifier.trim());
+		if (face === null || face < rule.atLeast) continue;
 		const targets = tokens
 			.filter((token) => !rule.notOnAllies || !side || !areAllies(side as never, token as never))
 			.map((token) => token.actor as Parameters<typeof applyEffectToActor>[0]);

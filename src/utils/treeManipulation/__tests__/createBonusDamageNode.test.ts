@@ -23,6 +23,19 @@ describe('createBonusDamageNode', () => {
 		expect(node.parentContext).toBeNull();
 	});
 
+	it('records the item whose damage it is, and ignores no armor', () => {
+		const node = createBonusDamageNode({
+			damageType: 'radiant',
+			formula: '1d6+3',
+			roll: { class: 'Roll', total: 7 },
+			fromItemIdentifier: 'lifebinding-spirit',
+		});
+
+		expect(node.fromItemIdentifier).toBe('lifebinding-spirit');
+		expect(node.ignoreArmor).toBeUndefined();
+		expect(bonusNode()).not.toHaveProperty('fromItemIdentifier');
+	});
+
 	it('hangs a single hit outcome child off itself', () => {
 		const node = bonusNode();
 

@@ -418,6 +418,62 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(added?.roll).toBeDefined();
 		});
 
+		it('marks the damage of an item on its own step, which cannot crit and ignores no armor', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [
+						{
+							formula: '1d6+3',
+							damageType: 'radiant',
+							label: 'Assist Me',
+							fromItemIdentifier: 'lifebinding-spirit',
+						},
+					],
+				},
+			);
+			manager.activationData = {
+				effects: [
+					{
+						id: 'damage-1',
+						type: 'damage',
+						damageType: 'bludgeoning',
+						formula: '1d8',
+						canCrit: true,
+						canMiss: true,
+						parentContext: null,
+						parentNode: null,
+					} as EffectNode,
+				],
+			};
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function spiritRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 7 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			const spirit = (result.activation?.effects as EffectNode[]).find(
+				(node) => node.type === 'damage' && node.damageType === 'radiant',
+			) as Record<string, unknown> | undefined;
+			expect(spirit).toMatchObject({
+				fromItemIdentifier: 'lifebinding-spirit',
+				formula: '1d6+3',
+				canCrit: false,
+			});
+			expect(spirit?.ignoreArmor).toBeUndefined();
+		});
+
 		it('surfaces the typed conditional damage on a hit card', async () => {
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],

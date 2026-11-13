@@ -30,6 +30,8 @@ export function createBonusDamageNode(params: {
 	roll: Record<string, unknown>;
 	parentNode?: string | null;
 	parentContext?: string | null;
+	/** The item whose damage this is, for a rule that reads its dice. */
+	fromItemIdentifier?: string | null;
 }): DamageNode {
 	const id = foundry.utils.randomID();
 	const parentNode = params.parentNode ?? null;
@@ -46,6 +48,7 @@ export function createBonusDamageNode(params: {
 		parentNode,
 		roll: params.roll,
 	};
+	if (params.fromItemIdentifier) node.fromItemIdentifier = params.fromItemIdentifier;
 
 	if (!parentNode) {
 		node.on = { hit: [createDamageOutcomeNode(id, 'hit')] };
