@@ -19,7 +19,26 @@
 				"quantity": 1,
 				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "NaqJuyWdIbPeWtQS",
+					"type": "applyEffect",
+					"effectId": "Qb2H87dnDF5AZmLB",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "cG8E5hRmORQFx61b",
+					"type": "applyEffect",
+					"effectId": "Qb2H87dnDF5AZmLB",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -86,7 +105,94 @@
 			]
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "Qb2H87dnDF5AZmLB",
+			"name": "Boisterous Winds",
+			"img": "icons/magic/air/air-pressure-shield-blue.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "zj96Z8PYc8qJ8Txz",
+						"identifier": "",
+						"label": "Boisterous Winds",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "12"
+					},
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "FTIfQsSu1DJsQ121",
+						"identifier": "",
+						"label": "Boisterous Winds",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": -1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": false,
+						"meleeOnly": false,
+						"rangedOnly": true,
+						"fromSourceOnly": false,
+						"damageType": ""
+					},
+					{
+						"type": "freeMove",
+						"disabled": false,
+						"id": "imTipk4NfoFlqg0s",
+						"identifier": "",
+						"label": "Boisterous Winds",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "onTurnStart",
+						"poolIdentifier": "",
+						"distance": "@speed",
+						"recipient": "self",
+						"within": 12,
+						"direction": "any",
+						"ignoresDifficultTerrain": false,
+						"chargePoolIdentifier": "",
+						"whisper": false
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

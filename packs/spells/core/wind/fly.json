@@ -9,7 +9,7 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "When attacked at Range.",
+				"details": "",
 				"quantity": 1,
 				"type": "action",
 				"isReaction": false
@@ -19,7 +19,17 @@
 				"quantity": 10,
 				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "Il9yUNby2iwVOFa1",
+					"type": "applyEffect",
+					"effectId": "N1AgVgb2ThOkFSd7",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -67,7 +77,59 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "N1AgVgb2ThOkFSd7",
+			"name": "Fly",
+			"img": "icons/magic/control/debuff-energy-hold-levitate-blue-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "6J72BRo2GMO87FbZ",
+						"identifier": "",
+						"label": "Fly",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "12"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {
