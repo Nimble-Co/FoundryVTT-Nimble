@@ -5,6 +5,7 @@
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import FreeUseLine from './components/FreeUseLine.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import ConcentrationNode from './components/ConcentrationNode.svelte';
 	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
@@ -54,6 +55,8 @@
 		heading={isIdentified ? name.public : name.unidentified}
 		{subheading}
 	/>
+
+	<FreeUseLine />
 
 	<Targets />
 

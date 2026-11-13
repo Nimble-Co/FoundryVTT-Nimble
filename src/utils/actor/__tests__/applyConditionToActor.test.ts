@@ -446,3 +446,62 @@ describe('applyConditionToActor effectData', () => {
 		expect(createEffect).not.toHaveBeenCalled();
 	});
 });
+
+describe("applyConditionToActor the status entry's Lasts Until", () => {
+	const event = (name: string, who: string | null) => ({
+		kind: 'event',
+		boundary: null,
+		clock: null,
+		span: null,
+		value: null,
+		units: null,
+		who,
+		event: name,
+		effectName: '',
+	});
+	const entryMoments = [event('attack', 'holder'), event('combatEnd', null)];
+	const oneMinute = {
+		...event('attack', 'holder'),
+		kind: 'time',
+		who: null,
+		event: null,
+		value: 1,
+		units: 'minutes',
+	};
+
+	beforeEach(() => {
+		(CONFIG as { statusEffects?: unknown }).statusEffects = [
+			{ id: 'despair', system: { lastsUntil: entryMoments } },
+		];
+	});
+
+	async function applied(options: Parameters<typeof applyConditionToActor>[2] = {}) {
+		const effect = createFakeEffect();
+		fromStatusEffect.mockResolvedValue(effect);
+		await applyConditionToActor(createTargetActor(), 'despair', options);
+		return effect.sourceData['system.lastsUntil'];
+	}
+
+	it('keeps the moments when the caller gives no moments and no duration', async () => {
+		expect(await applied()).toEqual(entryMoments);
+		expect(await applied({ lastsUntil: [] })).toEqual(entryMoments);
+	});
+
+	it('keeps them when the authored effect has no moments', async () => {
+		expect(await applied({ effectData: { system: { lastsUntil: [] } } })).toEqual(entryMoments);
+	});
+
+	it('uses the moments the caller gives', async () => {
+		expect(await applied({ lastsUntil: [oneMinute] as never })).toEqual([oneMinute]);
+	});
+
+	it("uses the authored effect's moments", async () => {
+		expect(await applied({ effectData: { system: { lastsUntil: [oneMinute] } } })).toEqual([
+			oneMinute,
+		]);
+	});
+
+	it('drops them when the caller gives a core duration', async () => {
+		expect(await applied({ duration: { rounds: 1 } })).toEqual([]);
+	});
+});

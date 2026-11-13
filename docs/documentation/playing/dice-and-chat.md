@@ -56,7 +56,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
 - **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
-- **Effects:** a row for each effect of the item, with its Lasts Until and an **Apply to Targets** or **Apply to You** button. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
+- **Effects:** a row for each effect of the item, with its Lasts Until. An effect for the targets has an **Apply to Targets** button. An effect for the user goes on by itself, or has an **Apply to You** button while Feature Effects is off. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 - **Change This Roll:** rerolls and changes from features. See below.
 - **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
 
@@ -122,7 +122,7 @@ The button opens the Defend window. Its heading tells the attack, the hero and t
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-Pick a row and click the button. When the reaction is spent, you have no actions or it is your turn, a window asks first. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do.
+Pick a row and click the button. When the reaction is spent, you have no actions or it is your turn, a window asks first. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do. An effect that a feature puts on the attacker goes on it when you Defend, with a line on the card; **Undo** does not take it off. A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
 
 After a Defend, the target row shows a green shield and the damage after Armor. Until the damage is applied, the GM can click the shield when the damage cannot be avoided (no Armor comes off), or click **Undo** to give back the reaction and its actions.
 

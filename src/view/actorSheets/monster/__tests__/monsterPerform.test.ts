@@ -2,7 +2,6 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MonsterDocument } from '../monsterAdapter.ts';
 import type { MonsterIntent } from '../monsterIntent.ts';
 
-const endToggleEffectFromAE = vi.fn();
 const adjustPool = vi.fn();
 const updateDocumentImage = vi.fn();
 
@@ -10,7 +9,6 @@ let createMonsterPerform: typeof import('../monsterPerform.ts').createMonsterPer
 
 beforeAll(async () => {
 	vi.resetModules();
-	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({ endToggleEffectFromAE }));
 	vi.doMock('#utils/chargePool/chargePoolRecover.js', () => ({ adjustPool }));
 	vi.doMock('#view/handlers/updateDocumentImage.js', () => ({ default: updateDocumentImage }));
 	({ createMonsterPerform } = await import('../monsterPerform.ts'));
@@ -144,12 +142,6 @@ describe('createMonsterPerform', () => {
 		expect(actor.updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
 			{ _id: 'stab', sort: 0, 'system.parentItemId': null },
 		]);
-	});
-
-	it('ends a toggle effect through the toggle lifecycle', async () => {
-		await perform({ kind: 'endEffect', effectId: 'bless' });
-
-		expect(endToggleEffectFromAE).toHaveBeenCalledWith(actor, bless);
 	});
 
 	it('removes an effect of the monster, and an effect that an item holds', async () => {

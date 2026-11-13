@@ -10,8 +10,9 @@ import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { seatOf } from '#utils/lastsUntil/effectSubject.js';
-import { endEffectsAt } from '#utils/lastsUntil/endEffects.js';
-import { fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
+import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
+import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
+import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import localize from '#utils/localize.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
@@ -43,11 +44,18 @@ function onTurn(type: 'turnStart' | 'turnEnd') {
 		const heading = localize(`NIMBLE.lastsUntil.chat.heading.${type}`, {
 			name: combatant.name ?? '',
 		});
+		const seat = seatOf(combatant);
 		void endEffectsAt(
-			{ type, combatId: combat.id, seat: seatOf(combatant), round, turn: context?.turn ?? null },
+			{ type, combatId: combat.id, seat, round, turn: context?.turn ?? null },
 			heading,
 			combat,
 		);
+		if (type === 'turnEnd') {
+			void endEffects(
+				effectsInactiveAt(combat, seat, round),
+				eventHeading('inactiveRound', { name: combatant.name }),
+			);
+		}
 	};
 }
 
@@ -159,7 +167,7 @@ function onUseItem(
 	const targets = (context?.targets ?? []).flatMap((target) =>
 		target?.actor ? [target.actor] : [],
 	);
-	fireItemUseEvents(item, targets);
+	void fireItemUseEvents(item, targets);
 }
 
 function onDamageApplied(payload: {

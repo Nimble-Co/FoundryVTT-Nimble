@@ -12,12 +12,13 @@ The **Spells** compendium is full of finished examples. *Glacier Strike* shows s
 
 ## Step 1: Create the spell
 
-In the **Items** sidebar, click **Create Item**, name it *Emberlance*, and choose the **Spell** type. The spell sheet has five tabs:
+In the **Items** sidebar, click **Create Item**, name it *Emberlance*, and choose the **Spell** type. The spell sheet has six tabs:
 
 - **Summary**: a read-only view of the spell's descriptions, formatted the way players will read it.
 - **Description**: three text editors (**Base Spell Effect**, **Upcast Effect**, and **Higher Level Effect**). The Summary tab only shows the upcast section for tiered, non-utility spells.
 - **Configuration**: tier, school, properties, and scaling.
 - **Activation**: cost, targets, and the damage itself. This works exactly like item activations; see [Item Activations & Effects](activations.md).
+- **Effects**: the effects that the spell gives. See [Item effects](effects.md#item-effects).
 - **Macro**: an advanced scripting slot; see [Macros](../gm/macros.md).
 
 Spell sheets have no Rules tab. Passive bonuses belong on features and objects, not on spells.
@@ -49,7 +50,7 @@ The Configuration tab has a small code button in its top corner that swaps the f
 The spell's effect is a standard activation. For Emberlance:
 
 1. On **Activation → Core**, set the cost to 1 **Action**.
-2. On **Activation → Effects**, add a **Damage** entry: formula `2d8`, damage type **Fire**, with **Can Miss** and **Can Crit** on, and a **Damage Outcome** of Full Damage under **On Hit**.
+2. On **Activation → On use**, add a **Damage** entry: formula `2d8`, damage type **Fire**, with **Can Miss** and **Can Crit** on, and a **Damage Outcome** of Full Damage under **On Hit**.
 
 Anything an item activation can do, a spell can do: saving throws with half-damage outcomes, conditions, templates for area spells, notes. All of it is covered on [Item Activations & Effects](activations.md). Configure it there, and it just works when the spell is cast.
 

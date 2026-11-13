@@ -9,6 +9,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import SpellConfigTab from './pages/SpellConfigTab.svelte';
 	import SpellDescriptionTab from './pages/SpellDescriptionTab.svelte';
@@ -43,6 +44,12 @@
 			icon: 'fa-solid fa-play',
 			tooltip: 'Activation',
 			name: 'activationConfig',
+		},
+		{
+			component: ItemEffectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: ItemMacroTab,

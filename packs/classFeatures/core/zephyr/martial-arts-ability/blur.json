@@ -42,7 +42,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "First move up to half your speed away; take no damage if you are now out of range or have Full Cover.",
 				"useItem": false,
 				"withInterpose": false,

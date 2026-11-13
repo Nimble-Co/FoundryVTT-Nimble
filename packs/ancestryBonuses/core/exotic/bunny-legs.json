@@ -42,7 +42,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"alsoInterpose": true,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Hop up to your speed in any direction, before you Interpose or after the damage of a Defend.",
 				"useItem": false,
 				"withInterpose": false,

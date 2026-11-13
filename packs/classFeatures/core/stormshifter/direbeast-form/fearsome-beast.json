@@ -52,7 +52,7 @@
 				"armorBonus": "",
 				"useReroll": true,
 				"alsoInterpose": true,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "",
 				"useItem": false,
 				"withInterpose": false,

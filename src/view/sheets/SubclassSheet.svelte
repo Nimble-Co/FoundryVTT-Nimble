@@ -5,6 +5,7 @@
 
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import ItemTabs from './components/ItemTabs.svelte';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
@@ -23,6 +24,12 @@
 			icon: 'fa-solid fa-gears',
 			tooltip: 'Config',
 			name: 'config',
+		},
+		{
+			component: effectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: rulesTab,
@@ -86,6 +93,10 @@
 			/>
 		</section>
 	{/key}
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet rulesTab()}

@@ -4,7 +4,6 @@ import {
 	defends,
 	incomingReactions,
 	metadata,
-	migrateDefends,
 	targets,
 } from './common.js';
 
@@ -81,7 +80,6 @@ class NimbleMinionGroupAttackCardData extends foundry.abstract.TypeDataModel<
 	}
 
 	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
-		migrateDefends(source);
 		return super.migrateData(source);
 	}
 }

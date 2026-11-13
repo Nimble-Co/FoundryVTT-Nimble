@@ -62,8 +62,14 @@ export function cardUser(card: EffectCard): CardActor | null {
 	return actorId ? ((game.actors?.get(actorId) as unknown as CardActor | undefined) ?? null) : null;
 }
 
+/** The item that has the node's effect: the card's item, or the item the node names. */
+function effectItem(card: EffectCard, node: ApplyEffectNode): CardItem | null {
+	if (!node.effectItemUuid) return cardItem(card);
+	return fromUuidSync(node.effectItemUuid as never, { strict: false }) as CardItem | null;
+}
+
 function nodeEffect(card: EffectCard, node: ApplyEffectNode): CardEffect | null {
-	return node.effectId ? (cardItem(card)?.effects?.get(node.effectId) ?? null) : null;
+	return node.effectId ? (effectItem(card, node)?.effects?.get(node.effectId) ?? null) : null;
 }
 
 /** What the card row shows; null when the item no longer has the effect. */
@@ -85,7 +91,6 @@ export function applyEffectSource(
 	return {
 		...statusOf(node.condition),
 		lastsUntil: node.lastsUntil ?? [],
-		coreDuration: node.duration ?? null,
 		escape: false,
 	};
 }
@@ -119,21 +124,19 @@ function raiseRules(payload: EffectPayload, raises: readonly RuleRaise[]): void 
 }
 
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
-	const item = cardItem(card);
 	const user = cardUser(card);
 	const effect = nodeEffect(card, node);
 	if (effect) {
-		const payload = payloadFromEffect(effect, { itemUuid: item?.uuid ?? null, user });
+		const itemUuid = effectItem(card, node)?.uuid ?? null;
+		const payload = payloadFromEffect(effect, { itemUuid, user });
 		if (node.ruleRaises?.length) raiseRules(payload, node.ruleRaises);
 		return payload;
 	}
 	if (!node.condition) return null;
-	return payloadFromCondition(
-		node.condition,
-		node.lastsUntil ?? [],
-		{ itemUuid: item?.uuid ?? null, actorUuid: user?.uuid ?? null },
-		node.duration ?? null,
-	);
+	return payloadFromCondition(node.condition, node.lastsUntil ?? [], {
+		itemUuid: cardItem(card)?.uuid ?? null,
+		actorUuid: user?.uuid ?? null,
+	});
 }
 
 /** The temp healing node of the card that an Apply Effect node gives, when it has a roll. */

@@ -47,27 +47,6 @@
 				"cost": "1"
 			},
 			{
-				"type": "toggleEffect",
-				"disabled": false,
-				"id": "2i7Yf6hCi1N9nB93",
-				"identifier": "heads-i-win",
-				"label": "Heads I Win, Tails You Lose",
-				"predicate": {},
-				"priority": 1,
-				"tags": [
-					"self:heads-i-win"
-				],
-				"turnOff": [
-					"onRoundEnd",
-					"onEncounterEnd",
-					"onRest",
-					"onActorKilled"
-				],
-				"confirmEndPrompt": "",
-				"clearPoolsOnEnd": [],
-				"endAfterInactiveRounds": null
-			},
-			{
 				"type": "attackOutcome",
 				"disabled": false,
 				"id": "QXFhwkP6x084VaKU",
@@ -110,6 +89,15 @@
 					"parentContext": null,
 					"parentNode": null,
 					"recipient": "self"
+				},
+				{
+					"id": "L97QcdfHI9n8iQMu",
+					"type": "applyEffect",
+					"effectId": "ZDb20ITwPZlXAe7u",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -134,7 +122,93 @@
 			15
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "ZDb20ITwPZlXAe7u",
+			"name": "Heads I Win, Tails You Lose",
+			"img": "icons/commodities/currency/coin-inset-crown-gold.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "tags",
+						"disabled": false,
+						"id": "GmjYnExJr2Wjtc2X",
+						"identifier": "",
+						"label": "Heads I Win, Tails You Lose",
+						"predicate": {},
+						"priority": 1,
+						"tags": [
+							"self:heads-i-win"
+						]
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": null,
+						"span": "currentRound",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "rest",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "die",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

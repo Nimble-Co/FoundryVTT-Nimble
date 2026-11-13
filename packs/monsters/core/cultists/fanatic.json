@@ -312,7 +312,30 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "attack",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": "combatEnd",
+								"effectName": ""
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

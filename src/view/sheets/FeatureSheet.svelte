@@ -7,6 +7,7 @@
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import ItemTabs from './components/ItemTabs.svelte';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
@@ -27,6 +28,7 @@
 		description: descriptionTab,
 		config: configTab,
 		activationConfig: activationConfigTab,
+		effects: effectsTab,
 		rules: rulesTab,
 		macro: macroTab,
 	};
@@ -165,6 +167,10 @@
 
 {#snippet macroTab()}
 	<ItemMacroTab></ItemMacroTab>
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet rulesTab()}

@@ -1,5 +1,6 @@
 import type { DefendEffect, DefendRecord, DefendRecordWay } from '#types/defend.d.ts';
 import { DEFEND_OPTION_OUTCOMES } from '../../models/rules/defendOption.js';
+import localize from '../localize.js';
 
 export const DEFEND_RECORD_WAYS: readonly DefendRecordWay[] = ['action', 'free', 'extra', 'round'];
 
@@ -30,16 +31,25 @@ export function defendsOf(system: unknown): DefendRecord[] {
 		reminders: Array.isArray(record.reminders)
 			? record.reminders.filter((line) => typeof line === 'string')
 			: [],
-		attackerConditions: Array.isArray(record.attackerConditions)
-			? record.attackerConditions
-					.filter((each) => typeof each?.condition === 'string')
+		attackerEffects: Array.isArray(record.attackerEffects)
+			? record.attackerEffects
+					.filter((each) => typeof each?.itemUuid === 'string' && typeof each.effectId === 'string')
 					.map((each) => ({
-						condition: each.condition,
-						endsOnAttackerTurn: each.endsOnAttackerTurn === true,
+						itemUuid: each.itemUuid,
+						effectId: each.effectId,
+						name: typeof each.name === 'string' ? each.name : '',
 					}))
 			: [],
 		way: DEFEND_RECORD_WAYS.includes(record.way) ? record.way : 'action',
 	}));
+}
+
+/** The lines a Defend shows on its card: its reminders, then each effect it put on the attacker. */
+export function defendLinesOf(record: DefendRecord): string[] {
+	const effects = record.attackerEffects
+		.filter((each) => !!each.name)
+		.map((each) => localize('NIMBLE.chat.defend.attackerEffect', { name: each.name }));
+	return [...record.reminders, ...effects];
 }
 
 /**

@@ -104,8 +104,6 @@ describe('conditionRollModes', () => {
 		]);
 		expect(lines.every((line) => line.on && line.name === 'Kael')).toBe(true);
 		expect(lines.find((line) => line.condition === 'frightened')?.ask).toBe('fearNearby');
-		expect(lines.find((line) => line.condition === 'despair')?.ends).toBe(true);
-		expect(lines.filter((line) => line.ends)).toHaveLength(1);
 	});
 
 	describe('Taunted', () => {

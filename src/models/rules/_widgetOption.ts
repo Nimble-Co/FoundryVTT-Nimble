@@ -27,6 +27,7 @@ export const WIDGET_HINTS = [
 	'hidden',
 	'dicePoolPicker',
 	'chargePoolPicker',
+	'itemEffectPicker',
 	'chips',
 ] as const;
 
@@ -51,6 +52,8 @@ export interface WidgetExtras {
 	 */
 	widget?: WidgetHint | WidgetResolver;
 	showWhen?: (data: Record<string, unknown>) => boolean;
+	/** Who gets the picked effect, for the words of its Lasts Until line. Default: the targets. */
+	recipient?: 'self' | 'targets' | ((data: Record<string, unknown>) => 'self' | 'targets');
 	/**
 	 * The choices the builder offers for the whole rule's data, a subset of the
 	 * field's `choices`. A field inside a list row reads the rule, not the row.

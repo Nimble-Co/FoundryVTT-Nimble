@@ -9,7 +9,7 @@ An **activation** is everything that happens when a player clicks an item: what 
 - **Frostbrand Dagger**: a weapon that deals 1d4 + Dexterity piercing damage and, *only on a hit*, an extra 1d6 cold damage.
 - **Ghostwalk Draught**: a potion that heals 1d4 + 2 and turns the drinker Invisible.
 
-The **Activation** tab appears on objects, spells, features, and monster features, and is split into three sub-tabs: **Core**, **Targets**, and **Effects**.
+The **Activation** tab appears on objects, spells, features, and monster features, and is split into three sub-tabs: **Core**, **Targets**, and **On use**. The effects that the item holds are on its own **Effects** tab: see [Item effects](effects.md#item-effects).
 
 ![The Activation tab of an item with the Core / Targets / Effects sub-tab bar visible](/images/documentation/item-activation-and-effects.png)
 
@@ -34,9 +34,9 @@ On items that are not monster features, **Attack with a weapon** makes the abili
 
 On monster features only, an **Attack Type** dropdown (None / Reach / Range) and a **Distance** field describe the attack's reach for the stat block.
 
-## The Effects sub-tab: the effect tree
+## The On use sub-tab: the step tree
 
-Effects are built as a tree. Click the **+** button next to **Effects** to add a top-level entry: **Damage**, **Healing**, **Apply Effect**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
+The steps that run when the item is used are built as a tree. Click the **+** button next to **On use** to add a top-level entry: **Damage**, **Healing**, **Apply Effect**, **Move**, **Pool**, or **Save**. Damage and Save entries can then hold child effects that trigger on specific outcomes.
 
 ### Damage
 
@@ -72,6 +72,8 @@ A save entry prompts a saving throw: pick the **Save Type** (Strength, Dexterity
 
 Puts an effect of the item (one with **Apply to the actor** off) on the card's targets or on the user (**Who takes it**). A new entry makes an effect with the item's name; **Effect** picks another. The pen opens the [effect window](effects.md): the conditions it gives (Frightened, for example) are on **Details**, its Lasts Until and Escape on **Lasts Until**. **Temp HP that it gives** links a Temporary Healing entry: the effect gives those temp HP, and takes back what is left when it ends.
 
+An entry for **The creature that uses this** applies by itself when the item is used, while the Feature Effects automation setting is on. Under **On Hit**, **On Critical Hit** or **On Miss**, it applies only when the card has that outcome. A new use while the user has the effect keeps one copy. An entry for **The targets** waits for the **Apply to Targets** button. To make a state such as Rage, see [Build a state such as Rage](effects.md#build-a-state-such-as-rage).
+
 ### Move
 
 A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to"; turn it off for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
@@ -88,7 +90,7 @@ Pool entries only take effect once the activation is allowed to proceed, so an i
 
 1. Create an Object, set Object Type to **Weapon**, and pick your weapon properties.
 2. On **Activation → Core**, set the cost to 1 **Action**.
-3. On **Activation → Effects**, add a **Damage** entry: formula `1d4+@dexterity`, type **Piercing**, **Can Miss** and **Can Crit** on.
+3. On **Activation → On use**, add a **Damage** entry: formula `1d4+@dexterity`, type **Piercing**, **Can Miss** and **Can Crit** on.
 4. Under that entry's **On Hit** bucket, click **+** and add a **Damage Outcome** of **Full Damage**. This is the weapon's own damage landing.
 5. In the same **On Hit** bucket, add a second **Damage** entry: formula `1d6`, type **Cold**.
 
@@ -100,7 +102,7 @@ The placement is the point: because the cold damage sits *under On Hit*, it only
 
 1. Create an Object and set Object Type to **Consumable** (size 0.5 slots is the potion convention).
 2. On **Activation → Core**, set the cost to 1 **Action** and leave the description output on.
-3. On **Activation → Effects**, add a **Healing** entry: formula `1d4+2`, type **Healing**.
+3. On **Activation → On use**, add a **Healing** entry: formula `1d4+2`, type **Healing**.
 4. Add a top-level **Apply Effect** entry, and set **Who takes it** to **The creature that uses this**. Click the pen, and on **Details** pick **Invisible**.
 
 Because the item has a healing effect, drinking it with no target selected automatically targets the drinker's own token.
@@ -128,7 +130,7 @@ Holding **Alt** while clicking the item skips the window and rolls with defaults
 - each **damage roll** as a summary line with the total, an expandable breakdown, and an **Apply Damage** button that applies it to the card's targets (on a miss the roll is still shown but the apply button is disabled; half-damage outcomes halve the total),
 - each **healing roll** with an **Apply Healing** button and an undo button after use,
 - each **saving throw** section with a d20 button that rolls that save for all currently selected tokens, plus its "On Failed Save" / "On Successful Save" contents,
-- an **Effects** part with a row for each Apply Effect entry and an **Apply to Targets** or **Apply to You** button,
+- an **Effects** part with a row for each Apply Effect entry. An entry for the targets has an **Apply to Targets** button. An entry for the user applies by itself and shows "On" and the name. With the Feature Effects automation setting off, it has an **Apply to You** button,
 - any **notes**, styled by their note type.
 
 ![A chat card for the Ghostwalk Draught: the healing it gave the drinker, and the effect with Apply to You](/images/documentation/ghostwalk-draught-chat-card.png)

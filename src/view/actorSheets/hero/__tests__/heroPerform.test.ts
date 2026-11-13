@@ -9,9 +9,6 @@ const setPoolFaces = vi.fn();
 const updateDocumentImage = vi.fn();
 const requestAdvanceCombatTurn = vi.fn();
 const getActiveCombatForCurrentScene = vi.fn();
-const toggleEffectAE = vi.fn();
-const findToggleEffectRuleById = vi.fn();
-const endToggleEffectFromAE = vi.fn();
 const openPdfExportDialog = vi.fn();
 const exportCharacterToJson = vi.fn();
 const getDicePools = vi.fn();
@@ -33,11 +30,6 @@ beforeAll(async () => {
 	vi.doMock('#view/handlers/updateDocumentImage.js', () => ({ default: updateDocumentImage }));
 	vi.doMock('#utils/combat/combatTurnActions.js', () => ({
 		requestAdvanceCombatTurn,
-	}));
-	vi.doMock('#utils/actor/toggleEffectControl.js', () => ({
-		toggleEffectAE,
-		findToggleEffectRuleById,
-		endToggleEffectFromAE,
 	}));
 	vi.doMock('#view/dialogs/openPdfExportDialog.ts', () => ({ openPdfExportDialog }));
 	vi.doMock('#utils/documents/exportCharacterToJson.ts', () => ({ exportCharacterToJson }));
@@ -358,16 +350,6 @@ describe('createHeroPerform', () => {
 			expect(actor.activateItem).toHaveBeenCalledWith('rage');
 		});
 
-		it('ends a toggle through toggleEffectAE', async () => {
-			const rule = { id: 'rageToggle' };
-			findToggleEffectRuleById.mockReturnValueOnce(rule);
-
-			await perform({ kind: 'endToggle', itemId: 'rage', ruleId: 'rageToggle' });
-
-			expect(findToggleEffectRuleById).toHaveBeenCalledWith(item, 'rageToggle');
-			expect(toggleEffectAE).toHaveBeenCalledWith(actor, item, rule);
-		});
-
 		it('opens the window of an item', async () => {
 			await perform({ kind: 'openItem', itemId: 'rage' });
 
@@ -429,12 +411,6 @@ describe('createHeroPerform', () => {
 			await perform({ kind: 'setCurrency', coin: 'gp', value: 15 });
 
 			expect(actor.update).toHaveBeenCalledWith({ 'system.currency.gp': 15 });
-		});
-
-		it('ends a toggle effect through the toggle lifecycle', async () => {
-			await perform({ kind: 'endEffect', effectId: 'rageEffect' });
-
-			expect(endToggleEffectFromAE).toHaveBeenCalledWith(actor, rageEffect);
 		});
 
 		it('removes an effect of the hero, and an effect that an item holds', async () => {

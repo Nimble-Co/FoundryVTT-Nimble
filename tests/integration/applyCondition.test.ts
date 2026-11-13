@@ -1,8 +1,8 @@
 /**
  * Live regression tests for the applyCondition rule merged from dev. They cover
  * trigger-driven condition application through the real dispatch machinery:
- * an hp drop firing onWound (with an ActiveEffect duration that real turn
- * advancement removes), and real combat turn advancement firing
+ * an hp drop firing onWound (a copy of an item effect, whose Lasts Until real
+ * turn advancement reaches), and real combat turn advancement firing
  * onTurnStart/onTurnEnd. All dispatch runs through ruleEventDispatch, gated on
  * `automation.applyRuleEffects`.
  */
@@ -23,18 +23,45 @@ import {
 const TEST_PREFIX = 'V14 Apply Condition';
 const DERIVED_CONDITIONS_SETTING = 'automation.derivedConditions';
 
+const nextTurnStart = {
+	kind: 'turn',
+	boundary: 'start',
+	clock: 'holder',
+	span: 'nextTurn',
+	value: null,
+	units: null,
+	who: null,
+	event: null,
+	effectName: '',
+};
+
+interface LiveEffect {
+	id: string;
+	name: string;
+	origin: string | null;
+	statuses: Set<string>;
+	system: { lastsUntil: unknown[] };
+}
+
 interface ConditionActor {
 	id: string;
 	type: string;
 	statuses: Set<string>;
 	effects: {
-		contents: Array<{
-			id: string;
-			statuses: Set<string>;
-			duration: { value: number | null; units: string; expiry: string | null; expired: boolean };
-		}>;
+		contents: LiveEffect[];
 	};
-	createEmbeddedDocuments(type: 'Item', data: object[]): Promise<Array<{ id: string }>>;
+	items: {
+		get(id: string):
+			| {
+					effects: { contents: Array<{ id: string }> };
+					update(changes: Record<string, unknown>): Promise<unknown>;
+			  }
+			| undefined;
+	};
+	createEmbeddedDocuments(
+		type: 'Item',
+		data: object[],
+	): Promise<Array<{ id: string; uuid: string }>>;
 	deleteEmbeddedDocuments(type: 'Item', ids: string[]): Promise<unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
 	toggleStatusEffect(statusId: string, options?: { active?: boolean }): Promise<unknown>;
@@ -79,6 +106,25 @@ describe('applyCondition rule', () => {
 		await purgeTestDocuments(TEST_PREFIX);
 	});
 
+	/** A feature with an applyCondition rule that names its own effect. */
+	async function createFeatureWithEffect(
+		name: string,
+		rule: Record<string, unknown>,
+		effect: Record<string, unknown>,
+	) {
+		const [created] = await actor.createEmbeddedDocuments('Item', [
+			{
+				...ruleFeatureData(name, [rule]),
+				effects: [{ type: 'nimble', transfer: false, ...effect }],
+			},
+		]);
+		const item = actor.items.get(created.id)!;
+		await item.update({
+			'system.rules': [{ ...rule, effectId: item.effects.contents[0]!.id }],
+		});
+		return created;
+	}
+
 	/**
 	 * Clear a status, tolerating the linked-condition auto-removal racing the
 	 * explicit toggle (hampered auto-removes when its last source condition
@@ -91,28 +137,21 @@ describe('applyCondition rule', () => {
 		await waitFor(() => !actor.statuses.has(statusId), `${statusId} to clear`);
 	}
 
-	test('onWound applies the condition when the actor becomes bloodied, with duration', async () => {
-		const [item] = await actor.createEmbeddedDocuments('Item', [
-			ruleFeatureData(`${TEST_PREFIX} Concussive Wounds`, [
-				{
-					type: 'applyCondition',
-					trigger: 'onWound',
-					condition: 'dazed',
-					duration: { rounds: 2 },
-				},
-			]),
-		]);
+	test('onWound applies a copy of the item effect when the actor becomes bloodied', async () => {
+		const item = await createFeatureWithEffect(
+			`${TEST_PREFIX} Concussive Wounds`,
+			{ type: 'applyCondition', trigger: 'onWound', condition: 'dazed' },
+			{ name: 'Concussed', statuses: ['dazed'], system: { lastsUntil: [nextTurnStart] } },
+		);
 
 		expect(actor.statuses.has('dazed')).toBe(false);
 		await actor.update({ 'system.attributes.hp.value': 5 });
 		await waitFor(() => actor.statuses.has('dazed'), 'dazed to be applied on wound');
 
 		const effect = actor.effects.contents.find((candidate) => candidate.statuses.has('dazed'))!;
-		await waitFor(
-			() => effect.duration.value === 2 && effect.duration.units === 'rounds',
-			'the duration patch to land',
-		);
-		expect(effect.duration.expiry).toBe('turnStart');
+		expect(effect.name).toBe('Concussed');
+		expect(effect.origin).toBe(item.uuid);
+		expect(effect.system.lastsUntil).toHaveLength(1);
 
 		await actor.deleteEmbeddedDocuments('Item', [item.id]);
 		await clearStatus('dazed');
@@ -122,7 +161,7 @@ describe('applyCondition rule', () => {
 		await settle(600);
 	}, 60_000);
 
-	test('a condition with a rounds duration is removed when real turns reach the next round', async () => {
+	test('the copy ends when real turns reach its Lasts Until', async () => {
 		await actor.update({ 'system.attributes.hp.value': 10 });
 		await settle(800);
 		await clearStatus('slowed');
@@ -132,16 +171,11 @@ describe('applyCondition rule', () => {
 			name: `${TEST_PREFIX} Goblin`,
 			type: 'npc',
 		})) as unknown as ConditionActor;
-		const [item] = await actor.createEmbeddedDocuments('Item', [
-			ruleFeatureData(`${TEST_PREFIX} Slowing Wounds`, [
-				{
-					type: 'applyCondition',
-					trigger: 'onWound',
-					condition: 'slowed',
-					duration: { rounds: 1 },
-				},
-			]),
-		]);
+		const item = await createFeatureWithEffect(
+			`${TEST_PREFIX} Slowing Wounds`,
+			{ type: 'applyCondition', trigger: 'onWound', condition: 'slowed' },
+			{ name: 'Slowing Wound', statuses: ['slowed'], system: { lastsUntil: [nextTurnStart] } },
+		);
 
 		const combat = await createCombatWith([
 			{ actor: actor as unknown as Actor },
@@ -155,12 +189,11 @@ describe('applyCondition rule', () => {
 		await waitFor(() => actor.statuses.has('slowed'), 'slowed to be applied on wound');
 		await waitFor(() => actor.statuses.has('hampered'), 'hampered to follow slowed');
 		const effect = actor.effects.contents.find((candidate) => candidate.statuses.has('slowed'))!;
-		await waitFor(() => effect.duration.value === 1, 'the duration patch to land');
+		expect(effect.system.lastsUntil).toHaveLength(1);
 
 		await combat.nextTurn();
 		await waitFor(() => combat.combatant?.actorId === npc.id, 'the npc turn');
 		await settle(500);
-		expect(effect.duration.expired).toBe(false);
 		expect(actor.statuses.has('slowed')).toBe(true);
 
 		await combat.nextTurn();

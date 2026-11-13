@@ -8,7 +8,7 @@ import {
 	canReactFor,
 	defendReactors,
 } from '#utils/defend/defendReactors.js';
-import { defendsOf } from '#utils/defend/defendRecords.js';
+import { defendLinesOf, defendsOf } from '#utils/defend/defendRecords.js';
 import { openDefendWindow } from '#utils/defend/openDefendWindow.js';
 
 /** The Reactions section of an attack card: hero buttons, ally buttons and reminder lines. */
@@ -37,7 +37,7 @@ export function createDefendReactionsState(getMessage: () => NimbleChatMessage) 
 		blocked ? [] : defendReactors(card).filter((reactor) => canReactFor(reactor.actor)),
 	);
 	const open = $derived(inCombat ? reactors.filter((reactor) => !reactor.defend) : []);
-	const reminders = $derived(defendsOf(card.system).flatMap((defend) => defend.reminders));
+	const reminders = $derived(defendsOf(card.system).flatMap(defendLinesOf));
 	const allyOffers = $derived(inCombat && !blocked ? allyDefendOffers(card) : []);
 	const solo = $derived(
 		!isGM && open.length === 1 && reminders.length === 0 && allyOffers.length === 0,

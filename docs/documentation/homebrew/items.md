@@ -14,11 +14,12 @@ Every weapon, armor piece, and magic item that ships with the system is built wi
 
 In the **Items** tab of the sidebar, click **Create Item**, name it *Flaming Longsword*, and pick the **Object** type. "Object" is the catch-all type for physical gear: weapons, armor, shields, potions, torches, wands, and anything else a character can carry.
 
-The item sheet opens with five tabs:
+The item sheet opens with six tabs:
 
 - **Description**: the text players read, in three flavors (more below).
 - **Config**: what the item *is*, covering kind, price, inventory size, and weapon properties.
 - **Activation**: what happens when a player *uses* the item, such as rolls, damage, saves, and conditions. See [Item Activations & Effects](activations.md).
+- **Effects**: the effects that the item gives or keeps on its holder. See [Item effects](effects.md#item-effects).
 - **Rules**: passive effects the item applies just by being carried and equipped. See [Rules Builder Basics](../rules-builder/index.md).
 - **Macro**: an advanced scripting slot; see [Macros](../gm/macros.md).
 
@@ -156,13 +157,13 @@ For the Flaming Longsword, toggle **2-Handed**, set the Strength Requirement to 
 
 ## Step 4: Damage (the Activation tab)
 
-You may have noticed there is no "damage" field on the Config tab. Damage is part of what happens when the weapon is *used*, so it lives on the **Activation** tab, in the **Effects** sub-tab.
+You may have noticed there is no "damage" field on the Config tab. Damage is part of what happens when the weapon is *used*, so it lives on the **Activation** tab, in the **On use** sub-tab.
 
 The short version for our sword:
 
 1. On **Activation → Core**, set the Activation Cost to 1 **Action**.
 2. On **Activation → Targets**, describe the targeting (target count, restrictions).
-3. On **Activation → Effects**, add a **Damage** effect: formula `1d8+@strength`, damage type **Slashing**, with **Can Miss** and **Can Crit** on.
+3. On **Activation → On use**, add a **Damage** effect: formula `1d8+@strength`, damage type **Slashing**, with **Can Miss** and **Can Crit** on.
 4. Add a second **Damage** effect for the magic: formula `1d6`, damage type **Fire**.
 
 That second damage entry is the whole "flaming" part. When a player clicks the sword, the chat card shows both the slashing roll and the fire roll, each with its own apply button. The Activation tab has much more depth (nested on-hit effects, saving throws, conditions), and it is covered step by step on [Item Activations & Effects](activations.md).

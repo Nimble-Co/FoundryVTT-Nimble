@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import registerConditionsConfig from '../../../config/registerConditionsConfig.js';
 import { effectEndsAt } from '../effectEndsAt.js';
 import { seatOf } from '../effectSubject.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
@@ -176,6 +177,28 @@ describe('effectEndsAt', () => {
 			expect(effectEndsAt(legacy(Number.POSITIVE_INFINITY), attack(tessa), combat)).toBe(false);
 			expect(effectEndsAt(legacy(Number.POSITIVE_INFINITY), attack(goblin), combat)).toBe(true);
 			expect(coreIsExpiryEvent).toHaveBeenCalledWith('attack', { combat });
+		});
+	});
+
+	describe('Despair', () => {
+		const despair = () =>
+			makeEffect({
+				statuses: new Set(['despair']),
+				lastsUntil: registerConditionsConfig().conditionLastsUntil.despair,
+			});
+		const attack = (actor: object): LastsUntilCheck => ({ type: 'event', event: 'attack', actor });
+
+		it("ends at the holder's attack, and not at another creature's", () => {
+			expect(effectEndsAt(despair(), attack(goblin), combat)).toBe(true);
+			expect(effectEndsAt(despair(), attack(tessa), combat)).toBe(false);
+		});
+
+		it('ends when the combat ends', () => {
+			expect(effectEndsAt(despair(), { type: 'combatEnd', combatId: COMBAT }, combat)).toBe(true);
+		});
+
+		it('does not end at a turn end', () => {
+			expect(effectEndsAt(despair(), turnEnd(goblinCombatant, 2), combat)).toBe(false);
 		});
 	});
 });

@@ -8,6 +8,7 @@
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import ItemTabs from './components/ItemTabs.svelte';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 
@@ -38,6 +39,12 @@
 			icon: 'fa-solid fa-gears',
 			tooltip: 'Config',
 			name: 'config',
+		},
+		{
+			component: effectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: rulesTab,
@@ -116,6 +123,10 @@
 
 {#snippet macroTab()}
 	<ItemMacroTab></ItemMacroTab>
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet rulesTab()}

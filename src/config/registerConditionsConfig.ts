@@ -1,4 +1,5 @@
 import { SYSTEM_PATH } from '#system';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 /**
  * Canonical status-effect IDs for the conditions that ship with the system. The keys here are
@@ -51,6 +52,20 @@ export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFE
 /** Points core's blindness (vision, detection, the blindness vision mode) at the Blinded condition. */
 export function registerSpecialStatusEffects() {
 	CONFIG.specialStatusEffects.BLIND = STATUS_EFFECT_IDS.blinded;
+}
+
+function eventMoment(event: Moment['event'], who: Moment['who']): Moment {
+	return {
+		kind: 'event',
+		boundary: null,
+		clock: null,
+		span: null,
+		value: null,
+		units: null,
+		who,
+		event,
+		effectName: '',
+	};
 }
 
 /** Every built-in ID required, any GM-supplied ID readable. */
@@ -183,6 +198,11 @@ export default function registerConditionsConfig() {
 	/** Minor Statuses end when combat ends. A custom condition can join with its Minor box. */
 	const conditionMinorConditions = new Set<string>(['charged', 'distracted', 'smoldering']);
 
+	/** The Lasts Until a condition has when nothing else gives it one, copied into its status effect. */
+	const conditionLastsUntil: Record<string, Moment[]> = {
+		despair: [eventMoment('attack', 'holder'), eventMoment('combatEnd', null)],
+	};
+
 	// New: Automatic condition trigger relationships
 	const conditionTriggerRelationships = {
 		hampered: {
@@ -202,6 +222,7 @@ export default function registerConditionsConfig() {
 		conditionStackableConditions,
 		conditionOverlayConditions,
 		conditionMinorConditions,
+		conditionLastsUntil,
 		conditionTriggerRelationships,
 	};
 }

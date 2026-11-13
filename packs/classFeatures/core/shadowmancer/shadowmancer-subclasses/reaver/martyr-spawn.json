@@ -20,7 +20,7 @@
 				"outcome": "noDamage",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Sacrifice a shadow minion.",
 				"useItem": false,
 				"withInterpose": false,

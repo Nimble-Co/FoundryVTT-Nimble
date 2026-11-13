@@ -166,7 +166,7 @@ describe('applyEffectToActor', () => {
 		expect(result?.effectUuid).toBe('Actor.goblin.ActiveEffect.gm');
 	});
 
-	it('keeps the same effect from the same item when it lasts longer', async () => {
+	it('keeps the same effect from the same item when it lasts longer, and says that it stays', async () => {
 		const current = {
 			id: 'old',
 			name: 'Snowblind',
@@ -177,8 +177,13 @@ describe('applyEffectToActor', () => {
 
 		const result = await applyEffectToActor(holder({ effects: [current] }), plainPayload());
 
-		expect(result).toBeNull();
+		expect(result).toEqual({
+			effectUuid: 'Actor.goblin.ActiveEffect.old',
+			actorName: 'Goblin',
+			stays: true,
+		});
 		expect(createEffect).not.toHaveBeenCalled();
+		expect(deleteDocuments).not.toHaveBeenCalled();
 	});
 
 	it('replaces the same effect from the same item when the new one lasts longer', async () => {

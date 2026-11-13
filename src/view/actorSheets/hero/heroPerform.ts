@@ -6,7 +6,6 @@ import {
 import type { RestManager } from '#managers/RestManager.js';
 import { SYSTEM_ID } from '#system';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
-import { findToggleEffectRuleById, toggleEffectAE } from '#utils/actor/toggleEffectControl.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { requestAdvanceCombatTurn } from '#utils/combat/combatTurnActions.js';
 import { initiativeRollLock } from '#utils/combat/initiativeRollLock.js';
@@ -149,21 +148,6 @@ async function spendDice(
 	await spendDicePool({ actor, pool, consumer, selectedIndices: intent.indices });
 }
 
-async function endToggle(actor: NimbleCharacter, itemId: string, ruleId: string): Promise<void> {
-	const item = actor.items.get(itemId);
-	if (!item) return;
-	const rule = findToggleEffectRuleById(
-		item as unknown as Parameters<typeof findToggleEffectRuleById>[0],
-		ruleId,
-	);
-	if (!rule) return;
-	await toggleEffectAE(
-		actor as unknown as Parameters<typeof toggleEffectAE>[0],
-		item as unknown as Parameters<typeof toggleEffectAE>[1],
-		rule,
-	);
-}
-
 async function endTurn(actor: NimbleCharacter): Promise<void> {
 	const found = combatantOf(actor.id);
 	if (!found) return;
@@ -291,9 +275,6 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'rollSkill':
 				await actor.rollSkillCheckToChat(intent.skill);
-				return;
-			case 'endToggle':
-				await endToggle(actor, intent.itemId, intent.ruleId);
 				return;
 			case 'createItem':
 				await actor.createItem({

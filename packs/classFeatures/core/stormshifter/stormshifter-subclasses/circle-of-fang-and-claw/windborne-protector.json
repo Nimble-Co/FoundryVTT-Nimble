@@ -42,7 +42,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Shift into a Fearsome Beast; you may Interpose from up to 12 spaces away.",
 				"useItem": false,
 				"withInterpose": true,

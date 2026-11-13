@@ -120,7 +120,9 @@ async function applyGiveEffect(
 	const names = targets.flatMap((target, index) => {
 		const result = results[index];
 		if (result.status === 'rejected') console.error(result.reason);
-		return result.status === 'fulfilled' && result.value ? [target.name] : [];
+		return result.status === 'fulfilled' && result.value && !result.value.stays
+			? [target.name]
+			: [];
 	});
 	if (names.length < 1) {
 		ui.notifications?.warn(

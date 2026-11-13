@@ -8,6 +8,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 
 	const navigation = [
@@ -22,6 +23,12 @@
 			icon: 'fa-solid fa-gears',
 			tooltip: 'NIMBLE.ancestryBonusSheet.configTab',
 			name: 'config',
+		},
+		{
+			component: effectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: rulesTab,
@@ -86,6 +93,10 @@
 
 <!-- Wrapped rather than listed as a component so every navigation entry is a Snippet;
      a mixed array widens `component` to a union `{@render}` won't accept. -->
+{#snippet effectsTab()}
+	<ItemEffectsTab />
+{/snippet}
+
 {#snippet rulesTab()}
 	<ItemRulesTab />
 {/snippet}

@@ -293,7 +293,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			return null;
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
-		const useContext = { freeUse: manager.freeUse, ...this._useContext(manager) };
+		const useContext = {
+			freeUse: manager.freeUse,
+			...(manager.free ? { free: manager.free } : {}),
+			...this._useContext(manager),
+		};
 
 		/**
 		 * A hook event that fires before an item is used.
@@ -312,7 +316,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			rolls,
 			isCritical,
 			isMiss,
-			targets: Array.from(game.user?.targets ?? []),
+			targets: manager.targets,
 			...useContext,
 		});
 		if (!allowed) return null;
@@ -329,7 +333,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 			const shouldHide = rollHidden && canHideRoll;
 
-			let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
+			let targets = manager.targets.map((token) => token.document.uuid);
 			const hasHealingEffect = activation.effects?.some(
 				(effect: { type: string }) => effect.type === 'healing',
 			);
@@ -359,6 +363,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 							...(manager.chargeConsumption.length > 0
 								? { chargeConsumption: manager.chargeConsumption }
 								: {}),
+							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
 						},
 					},
 					system: {
@@ -397,7 +402,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				isCritical,
 				isMiss,
 				discardedCritTriggers: rerollHistory?.discardedCritTriggers ?? false,
-				targets: Array.from(game.user?.targets ?? []),
+				targets: manager.targets,
 				...useContext,
 			});
 		} catch (error) {

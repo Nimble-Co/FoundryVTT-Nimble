@@ -1,14 +1,26 @@
-import { activationCost, enabledRules } from './itemFields.ts';
+import type { EffectNode } from '#types/effectTree.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
+import { activationCost, activationOf, enabledRules } from './itemFields.ts';
 import type { ItemLike } from './sheetSource.ts';
 
 /** Where a feature shows: on Actions, in Reactions, or only on Features (passive). */
 export type ItemPlace = 'action' | 'reaction' | 'passive';
 
-const ACT_RULES = new Set(['chargeConsumer', 'toggleEffect', 'markTarget']);
+const ACT_RULES = new Set(['chargeConsumer', 'markTarget']);
+
+/** A step of the item's activation gives the user an effect. */
+function givesSelfEffect(item: ItemLike): boolean {
+	const steps = activationOf(item).effects;
+	if (!Array.isArray(steps)) return false;
+	return flattenEffectsTree(steps as (EffectNode | string)[]).some(
+		(step) => step?.type === 'applyEffect' && step.recipient === 'self',
+	);
+}
 
 /**
  * A reaction cost puts the item in Reactions. An action cost, a consumer that you spend
- * by hand, or a rule that you turn on or aim puts it on Actions. All else is passive.
+ * by hand, a rule that you aim, or a step that gives you an effect puts it on Actions.
+ * All else is passive.
  */
 export function placeOf(item: ItemLike): ItemPlace {
 	const cost = activationCost(item);
@@ -19,5 +31,5 @@ export function placeOf(item: ItemLike): ItemPlace {
 			ACT_RULES.has(rule.type) ||
 			(rule.type === 'diceConsumer' && (rule.fields.mode ?? 'manual') === 'manual'),
 	);
-	return acts ? 'action' : 'passive';
+	return acts || givesSelfEffect(item) ? 'action' : 'passive';
 }

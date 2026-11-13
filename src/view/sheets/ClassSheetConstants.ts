@@ -4,6 +4,7 @@ export const CLASS_SHEET_TAB_CONFIG = [
 	{ icon: 'fa-solid fa-file-lines', tooltip: 'NIMBLE.classSheet.description', name: 'description' },
 	{ icon: 'fa-solid fa-gears', tooltip: 'NIMBLE.classSheet.config', name: 'config' },
 	{ icon: 'fa-solid fa-stairs', tooltip: 'NIMBLE.classSheet.progression', name: 'progression' },
+	{ icon: 'fa-solid fa-heart-pulse', tooltip: 'NIMBLE.itemEffectsTab.tab', name: 'effects' },
 	{ icon: 'fa-solid fa-bolt', tooltip: 'NIMBLE.classSheet.rules', name: 'rules' },
 ] as const;
 

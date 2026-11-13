@@ -12,7 +12,7 @@ How much the system does on its own is controlled from one place: the **Configur
 
 **Features and Effects**
 
-- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, rerolls happen, and timed effects end on their own. Casting a Concentration spell starts Concentration. When off, the chat card shows a button for each one instead. Activating toggle effects and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
+- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, rerolls happen, and timed effects end on their own. Casting a Concentration spell starts Concentration. An effect that an item gives to its user goes on when the item is used, and features that use an item for free do so. When off, the chat card shows a button for each one instead, such as **Apply to You**, and nothing is used for free. Using an item and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
 - **Linked Conditions.** A condition adds and removes the conditions that come with it, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
 
 **Resources**
@@ -33,9 +33,9 @@ How much the system does on its own is controlled from one place: the **Configur
 
 **Chat**
 
-- **Chat Notes.** Short notes in chat, such as initiative bonus reminders, pool gain notices, and when a toggle effect such as Rage starts or ends.
+- **Chat Notes.** Short notes in chat, such as initiative bonus reminders and pool gain notices.
 
-Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, toggle effect activation, combat mana grants, pool syncing, and hit point clamping are always on. The Moves on the ruler are always on too, because they only show distance. See [Running Combat](combat.md#moves-on-the-ruler).
+Some behaviors are deliberately not toggleable because removing them would break basic play rather than reduce bookkeeping: Last Stand handling, defeat syncing to the tracker, the dice pool spend prompt, combat mana grants, pool syncing, and hit point clamping are always on. The Moves on the ruler are always on too, because they only show distance. See [Running Combat](combat.md#moves-on-the-ruler).
 
 ::: info Flipping a toggle mid-combat
 Toggles only stop future events. Effects that were already applied linger until removed by hand, and refills skipped while a toggle was off are not replayed when you turn it back on.

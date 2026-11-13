@@ -16,13 +16,10 @@ import {
 interface MarkRuleLike {
 	type: string;
 	flagKey?: string;
-	endsAtEncounterEnd?: boolean;
 	disabled?: boolean;
-	item?: { uuid: string };
 }
 
 interface MarkOwner {
-	rules?: Iterable<MarkRuleLike>;
 	getFlag(scope: string, key: string): unknown;
 	setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
 }
@@ -41,24 +38,6 @@ async function markedActor(entry: ToggledTargetEntry): Promise<MarkEffectTarget 
 	return (await fromUuid(
 		entry.actorUuid as Parameters<typeof fromUuid>[0],
 	)) as MarkEffectTarget | null;
-}
-
-/** Ends the marks of the owner's Mark Target rules that end at the end of the encounter. */
-export async function endEncounterMarks(owner: MarkOwner): Promise<void> {
-	const ending = markRules(owner.rules).filter((rule) => rule.endsAtEncounterEnd && rule.flagKey);
-	const flag: ToggledEffectsFlag = { ...readToggledEffects(owner) };
-	const ended = ending.flatMap((rule) =>
-		(flag[rule.flagKey as string] ?? []).map((entry) => ({ rule, entry })),
-	);
-	if (ended.length === 0) return;
-
-	for (const rule of ending) flag[rule.flagKey as string] = [];
-	await owner.setFlag(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, flag);
-
-	for (const { rule, entry } of ended) {
-		const target = await markedActor(entry);
-		if (target && rule.item) await removeMarkEffect({ target, sourceItemUuid: rule.item.uuid });
-	}
 }
 
 interface MarkingItem {
@@ -120,8 +99,8 @@ export function markerEffectIds(actor: MarkedActor, statusId: string): string[] 
 }
 
 /**
- * Ends the mark a marker effect stands for, when someone takes the marker off
- * the creature by hand. A mark that is already gone changes nothing.
+ * Ends the mark a marker effect stands for, when the marker goes: by hand, or
+ * at a moment of its Lasts Until. A mark that is already gone changes nothing.
  */
 export async function endMarkOfRemovedMarker(effect: MarkerEffect): Promise<void> {
 	const itemUuid = effect.getFlag(SYSTEM_ID, MARK_TARGET_ITEM_FLAG);

@@ -1,16 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { applyEncounterRefillMock, endEncounterMarksMock, isActiveGMMock } = vi.hoisted(() => ({
+const { applyEncounterRefillMock } = vi.hoisted(() => ({
 	applyEncounterRefillMock: vi.fn(async () => undefined),
-	endEncounterMarksMock: vi.fn(async () => undefined),
-	isActiveGMMock: vi.fn(() => true),
 }));
 
 vi.mock('#utils/dicePool/dicePoolRefill.js', () => ({
 	applyEncounterRefill: applyEncounterRefillMock,
 }));
-vi.mock('#utils/actor/markLifecycle.js', () => ({ endEncounterMarks: endEncounterMarksMock }));
-vi.mock('#utils/isActiveGM.js', () => ({ isActiveGM: isActiveGMMock }));
 
 type HookCallback = (...args: unknown[]) => unknown;
 type HookCallbackMap = Map<string, HookCallback>;
@@ -110,19 +106,21 @@ describe('registerEncounterEndTriggerHooks', () => {
 		expect(applyEncounterRefillMock).toHaveBeenCalledWith(actor, 'encounterEnd');
 	});
 
-	it('ends the marks that end with the encounter, on the active GM only', async () => {
+	it('does not end marks: a marker ends by its own Lasts Until', async () => {
 		const hooks = captureHooks();
 		const { registerEncounterEndTriggerHooks } = await import('../encounterEndTrigger.js');
 		registerEncounterEndTriggerHooks();
-		const actor = createCharacterActor('character-6');
+		const setFlag = vi.fn(async () => undefined);
+		const actor = {
+			...createCharacterActor('character-6'),
+			getFlag: vi.fn(() => ({ quarry: [{ actorUuid: 'Actor.goblin' }] })),
+			setFlag,
+		} as unknown as Actor.Implementation;
 
 		hooks.get('deleteCombat')?.(createCombat('combat-6', actor));
-		expect(endEncounterMarksMock).toHaveBeenCalledWith(actor);
 
-		endEncounterMarksMock.mockClear();
-		isActiveGMMock.mockReturnValueOnce(false);
-		hooks.get('deleteCombat')?.(createCombat('combat-7', actor));
-		expect(endEncounterMarksMock).not.toHaveBeenCalled();
+		expect(applyEncounterRefillMock).toHaveBeenCalledWith(actor, 'encounterEnd');
+		expect(setFlag).not.toHaveBeenCalled();
 	});
 
 	it('ignores updateCombat changes that are not end transitions', async () => {

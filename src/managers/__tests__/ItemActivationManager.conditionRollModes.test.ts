@@ -229,28 +229,14 @@ describe('ItemActivationManager: conditions that change the roll mode', () => {
 		expect(second.rollModeSources.reduce((sum: number, n: number) => sum + n, 0)).toBe(1);
 	});
 
-	describe('Despair', () => {
-		it('ends after the attack that used it, once the use is allowed', async () => {
-			setTargets(target('Goblin'));
-			const actor = attacker(['despair']);
+	it('gives a Despair attack disadvantage, and leaves its end to the Lasts Until engine', async () => {
+		setTargets(target('Goblin'));
+		const actor = attacker(['despair']);
 
-			const { manager, rollOptions } = await attack(actor);
-			expect(used(rollOptions)).toEqual(['self:despair:-1']);
-			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
+		const { manager, rollOptions } = await attack(actor);
+		await manager.applyDeferredPoolNodes();
 
-			await manager.applyDeferredPoolNodes();
-			expect(actor.toggleStatusEffect).toHaveBeenCalledWith('despair', { active: false });
-		});
-
-		it('stays when the player took its tick off', async () => {
-			setTargets(target('Goblin'));
-			const actor = attacker(['despair']);
-			dialogState.result = { rollMode: 0, conditionRollModes: [] };
-
-			const { manager } = await attack(actor, {});
-			await manager.applyDeferredPoolNodes();
-
-			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
-		});
+		expect(used(rollOptions)).toEqual(['self:despair:-1']);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 });

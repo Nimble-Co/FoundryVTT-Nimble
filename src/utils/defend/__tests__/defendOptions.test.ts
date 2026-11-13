@@ -10,21 +10,27 @@ vi.doMock('../../cost/useCost.js', () => ({
 vi.doMock('../../cost/costLedger.js', () => ({ payCost: vi.fn() }));
 const { defendOptionEffect, defendOptionsOf, tickCost } = await import('../defendOptions.js');
 
+const ITEM_EFFECTS = {
+	sand: { name: 'Pocket Sand', transfer: false },
+	aura: { name: 'Aura', transfer: true },
+};
+
 function rule(fields: Record<string, unknown> = {}) {
 	return {
 		id: String(fields.id ?? 'r1'),
 		type: 'defendOption',
 		label: '',
 		parentDocument: {
-			uuid: 'Item.feature',
+			uuid: String(fields.itemUuid ?? 'Item.feature'),
 			name: String(fields.name ?? 'Feature'),
 			getDomain: () => new Set(),
+			effects: new Map(Object.entries(ITEM_EFFECTS)),
 		},
 		way: 'withDefend',
 		attackDelivery: 'any',
 		outcome: 'none',
 		reminder: '',
-		attackerCondition: '',
+		attackerEffectId: '',
 		wholeRound: false,
 		useItem: false,
 		optionCost: {},
@@ -62,33 +68,42 @@ describe('defendOptionEffect', () => {
 		expect(defendOptionEffect([]).outcome).toBe('none');
 	});
 
-	it('adds the armor of every option and keeps each reminder and condition once', () => {
+	it('adds the armor of every option and keeps each reminder and attacker effect once', () => {
 		const effect = defendOptionEffect([
 			rule({
 				name: 'Decoy',
 				bonus: 2,
 				reminder: 'Move half your speed.',
-				attackerCondition: 'blinded',
+				attackerEffectId: 'sand',
 			}),
-			rule({ name: 'Mana Infusion', bonus: 4, attackerCondition: 'blinded', wholeRound: true }),
+			rule({ name: 'Mana Infusion', bonus: 4, attackerEffectId: 'sand', wholeRound: true }),
 		] as unknown as DefendRules);
 		expect(effect.armorBonus).toBe(6);
 		expect(effect.reminders).toEqual(['Decoy: Move half your speed.']);
-		expect(effect.attackerConditions).toEqual([
-			{ condition: 'blinded', endsOnAttackerTurn: false },
+		expect(effect.attackerEffects).toEqual([
+			{ itemUuid: 'Item.feature', effectId: 'sand', name: 'Pocket Sand' },
 		]);
 		expect(effect.wholeRound).toBe(true);
 	});
 
-	it('lists the conditions that end at the start of the attacker next turn', () => {
+	it('keeps the same effect id of two items apart', () => {
 		const effect = defendOptionEffect([
-			rule({ attackerCondition: 'blinded', attackerConditionEnds: 'attackerTurn' }),
-			rule({ attackerCondition: 'frightened' }),
+			rule({ attackerEffectId: 'sand' }),
+			rule({ itemUuid: 'Item.other', attackerEffectId: 'sand' }),
 		] as unknown as DefendRules);
-		expect(effect.attackerConditions).toEqual([
-			{ condition: 'blinded', endsOnAttackerTurn: true },
-			{ condition: 'frightened', endsOnAttackerTurn: false },
+		expect(effect.attackerEffects.map((each) => each.itemUuid)).toEqual([
+			'Item.feature',
+			'Item.other',
 		]);
+	});
+
+	it('puts nothing on the attacker with no pick, a lost effect, or an effect applied to the actor', () => {
+		const effect = defendOptionEffect([
+			rule({}),
+			rule({ attackerEffectId: 'gone' }),
+			rule({ attackerEffectId: 'aura' }),
+		] as unknown as DefendRules);
+		expect(effect.attackerEffects).toEqual([]);
 	});
 });
 

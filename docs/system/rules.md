@@ -43,6 +43,8 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 
 `src/hooks/saveResolved.ts` fires the system hook `nimble.saveResolved` on the active GM, from `createChatMessage` and `updateChatMessage`. It fires when a save card has a known result (`checkResultOfCard`) that differs from the card's `system.reportedSaveResult`, and writes that field first, so a reload or an unchanged write does not fire again. A card that never had a result fires nothing. A result that stops being known (for example after Remove on a save with no DC) fires `unknown`. The context holds `actor`, `saveType` (the save key), `outcome` (`pass | fail | unknown`) and `messageId`.
 
+`applyCondition` with an `effectId` (picked with the `itemEffectPicker` widget, read through `itemEffectOf`) applies a copy of that item effect in place of the bare condition: the self triggers and `onItemUsed` go through `payloadFromEffect` and `applyEffectToActor`, with the rule's item as source. Its card nodes (`getActivationCardNodes`) carry the `effectId` and `effectItemUuid` (the rule's item, which is not always the card's item), so the card's Apply Effect button applies the same copy. With no effect, the rule applies the bare condition with no Lasts Until.
+
 `applyCondition` with trigger `onSaveFail` stamps the effect it creates with the flag `saveFailSource` (`messageId`, `itemUuid` and `condition`). The flag does not use the rule id, because a rule source with no id gets a new one each time it is built. On `pass` or `unknown` the rule deletes only the effects whose flag matches the card, its item and its condition, and does not test its predicate. A condition the actor already held gets no flag, so it stays. `applyCondition` lists `onSaveResolved` in `alwaysDispatchedEvents`: with Feature Effects (`applyRuleEffects`) off, a `fail` adds nothing, but a `pass` or `unknown` still deletes the effect of an earlier fail. `ruleEventDispatch.ts` sends the results of one card to the rules one at a time, so a `pass` that comes right after a `fail` finds the effect of that fail.
 
 ### `onMovementFinished(context)`
@@ -246,10 +248,9 @@ Who the other creature is depends on the side (`otherCreature()` in `src/utils/r
 
 ## Ending marks (`markTarget`)
 
-A mark is an entry in the marking actor's toggled effects flag (`src/utils/actor/toggledEffects.ts`), with an optional marker ActiveEffect on the marked creature that carries `MARK_TARGET_ITEM_FLAG`. `src/utils/actor/markLifecycle.ts` ends marks in two ways:
+A mark is an entry in the marking actor's toggled effects flag (`src/utils/actor/toggledEffects.ts`), with an optional marker ActiveEffect on the marked creature that carries `MARK_TARGET_ITEM_FLAG`. The marker has its own name, `statuses: [statusCondition]` and the marking item as `origin`. With an `effectId` (an item effect with `transfer: false`, see `itemEffectOf`), the marker also copies that effect's `img`, `changes`, `system.lastsUntil`, `system.escape` and `system.rules` (through `payloadFromEffect`). The marker is created with `createEmbeddedDocuments` (relayed to the GM by `applyMarkEffect`), not with `applyConditionToActor`, so the markers of two hunters can be on one creature.
 
-- **`endEncounterMarks(owner)`.** `encounterEndTrigger.ts` calls it on the active GM for each character combatant when the encounter ends. For each enabled `markTarget` rule with `endsAtEncounterEnd`, it clears the rule's flag list in one `setFlag`, then removes the marker effects of the rule's item from each marked creature (`removeMarkEffect`).
-- **`endMarkOfRemovedMarker(effect)`.** `registerMarkLifecycleHooks()` (called from `src/nimble.ts`) listens on `deleteActiveEffect`, on the active GM only. When the deleted effect has `MARK_TARGET_ITEM_FLAG`, it finds the marking item and its actor, and takes the marked creature's `actorUuid` out of the flag list of each `markTarget` rule on that item. A mark that is already gone changes nothing.
+A mark ends when the owner marks past capacity (eviction), and when its marker goes. **`endMarkOfRemovedMarker(effect)`** in `src/utils/actor/markLifecycle.ts`: `registerMarkLifecycleHooks()` (called from `src/nimble.ts`) listens on `deleteActiveEffect`, on the active GM only. When the deleted effect has `MARK_TARGET_ITEM_FLAG`, it finds the marking item and its actor, and takes the marked creature's `actorUuid` out of the flag list of each `markTarget` rule on that item. This covers a marker that someone deletes and a marker that a moment of its Lasts Until ends. A mark that is already gone changes nothing. Combat end does nothing special to marks.
 
 Only a GM or the owner of the marked creature can delete the marker effect. The token HUD status toggle uses the static status `_id`, so it does not delete the marker effects and does not end the mark.
 
@@ -269,50 +270,26 @@ The `extraDamage` kind adds one damage part of `formula` and `damageType` to the
 
 `freeSpellCost` (`worksOnItems = false`) lives on an effect. While the effect changes its holder, a class spell cost paid from a charge pool resolves to 0: `createSpellCostResolver` (`src/utils/spell/spellCost.ts`) reads the holder's prepared rules (`rulesOfType`) and asks `makesFree(poolIdentifier)`. A blank `poolIdentifier` matches every pool. With the cost at 0 there is no overdraw prompt or consequence, and `spendSpellCost` writes nothing. A mana cost, and a cantrip (no cost), do not change. As with the other costs, `applyRuleEffects` does not stop it. The rule never ends the effect itself: give the effect a Lasts Until such as `nextSpell` for the holder. That event fires from the `useItem` hook, after `_payForUse`, so the cast that uses the free cost is free and then ends the effect.
 
-## `toggleEffect` (player-controlled tag pushes)
+## States on effects: `tags`, `emptyPoolsAtEnd`, `changeEffect`, `useItemFree`
 
-`toggleEffect` is a foundation rule that pushes one or more domain tags into the actor's domain while a backing Foundry `ActiveEffect` is enabled. The rule itself doesn't carry nested rules or express any modifiers; its only job is the tag push. Sibling rules elsewhere predicate on those tags via the standard `predicate` field.
+A state (raging, a stance) is an Active Effect that an item gives with an Apply Effect step. "On" means the creature has the enabled effect; ending it by hand is deleting it. What the state does while it lasts is rules on the effect; features that change a state from another item name that item by identifier (`item.identifier`: `system.identifier`, else the slug of the name).
 
-```jsonc
-{
-  "type": "toggleEffect",
-  "label": "Rage",
-  "tags": ["self:raging"],
-  "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
-}
-```
+- **`tags`** (items and effects): `prePrepareData()` adds each of `tags` to `actor.tags` while the rule is on its actor (an item on the actor, or an enabled effect that changes it) and its predicate passes. A rule that reads these tags in its own `prePrepareData()` needs a higher priority than the Tags rule (default 1).
+- **`emptyPoolsAtEnd`** (`worksOnItems = false`): `src/hooks/emptyPoolsAtEnd.ts` empties the dice pools named in `pools` when the effect is deleted by any path (`deleteActiveEffect`, once, on the client of the user who deleted it, so no GM needs to be online). A replace (`CONDITION_REPLACED_OPTION`) is not an end, and an Undo of the end does not give the dice back. `poolsEmptiedAtEnd` (`src/utils/dicePool/poolsEmptiedAtEnd.ts`) finds each pool: the item-scope pool of the effect's origin item first, else the actor-scope pool. `poolsLostOnEnd(effect)` gives the labels of those pools that hold dice now, for a delete confirm.
+- **`changeEffect`** (`worksOnEffects = false`): `src/hooks/changeEffectOnCreate.ts` runs on `preCreateActiveEffect` (the creating client) for every path that makes an effect on an actor. When the effect's `origin` item has the rule's `itemIdentifier`, and the actor has a live rule for it (`changesEffectsOf`: enabled, on the actor, predicate passes), the event moments in `removeMoments` are taken out and an event moment (`who: 'holder'`, or `null` for `effectEnds`) is added for each id in `addMoments` that is not there. The changes of several rules add up. Effects already on the actor do not change.
+- **`useItemFree`** (`worksOnEffects = false`): on each trigger in `triggers` (the shared list in `src/models/rules/_triggers.ts`), while the predicate passes, the actor uses the item with `itemIdentifier` through `useItemForFree` (`src/utils/actor/useItemForFree.ts`): `actor.activateItem(id, { fastForward: true, free })`. The active GM makes the use; another client asks it with the `useItemForFree` query. Events that reach every client (`onKill`, `onWound`, `onDying`) act only on the active GM; `onTurnStart` uses `onActiveGmTurnStart`. An attack card gives one use for each rule and trigger, though it reaches the rule once for each target. Rule automation gates it.
 
-### Lifecycle
+### Free uses
 
-- **Toggle on**: the player activates the item. The rule's `onItemActivated` hook creates a Foundry `ActiveEffect` on the actor (or re-enables a disabled one), flagged with `nimble.toggleEffectRuleId` and `nimble.toggleEffectItemId`. The AE shows up in the Foundry effects panel. Re-activating the item while the AE is already enabled is a no-op. Item use is "ensure on," never "flip off," so re-rolling resources mid-rage can't accidentally drop the effect.
-- **Toggle off (manual)**: the player disables (or deletes) the AE via the effects panel.
-- **Toggle off (event)**: any event listed in `turnOff` deletes the AE when it fires for the rule's owning actor.
-- **Tag push**: during `prePrepareData()` the rule scans the actor's effects; if a matching AE exists and is not disabled, every entry in `tags` is added to `actor.tags`. Tags drop on the next prep when the AE is gone or disabled.
+`ItemActivationManager.ActivationOptions.free` is `{ of: ('action' | 'uses' | 'mana')[], reason }`; `manager.free` always adds `action`. The character's `activateItem` spends no action and asks no confirm for a free use. `uses`: the `preUseItem` and `useItem` hook context has `free`, and the charge system checks and spends no charge consumer (`freeOfUses`); recoveries on use still run. `mana`: a mana spell cost resolves to `{ type: 'none' }` and the upcast does not enforce mana. The card stores `reason` in `flags.<system>.freeUseReason`, and the feature, spell and object cards show it (`FreeUseLine.svelte`).
 
-### `turnOff` triggers
+### The `inactiveRound` moment
 
-| Value | Fires from |
-|---|---|
-| `onRoundEnd` | `updateCombat` when the round number changes |
-| `onActorKilled` | `updateActor` when HP drops to 0 with a full wound track (or no wound track, e.g. monsters) |
-| `onActorWounded` | `updateActor` on bloodied / lastStand transition |
-| `onActorHealed` | `updateActor` when HP goes up (temp HP and a level-up max HP rise do not count; `hpGained`) |
-| `onRest` | `nimble.rest` hook |
-| `onTurnStart` | `combatTurn` start of owner's turn |
-| `onTurnEnd` | `combatTurn` end of owner's turn |
-| `onEncounterEnd` | `updateCombat(started:false)` or `deleteCombat` (dedup'd) |
-| `onActorDying` | `updateActor` when HP drops to 0 with the wound track below max, or `nimble.conditionApplied` with `condition: 'dying'` |
-
-### Modifying a toggle from another feature: `modifyToggle`
-
-A `modifyToggle` rule (matched to the target toggle by `toggleIdentifier`, falling back to the toggle rule's `id`) can adjust the toggle's lifecycle from any of the actor's items:
-
-- `suppressTurnOff`: turn-off events the target toggle should ignore while the modifier's predicate passes.
-- `turnOn` (`onTurnStart` | `onActorDying` | `onCritReceived`): events on which the target toggle switches **on** automatically. The modifier's own predicate gates the turn-on, so the granting feature carries its condition (e.g. `{ "self": "dying" }` for a while-Dying auto-activation). Auto-turn-on restores the toggle's state only — it creates or re-enables the backing AE (GM-side, with a chat announcement) but does not run the owning item's activation effects. `onCritReceived` is driven by the defender-side `onAttackReceived` dispatch, which fires when damage from a critical hit is applied to the actor.
+"A round passes with no attack and no new use." `noteActivity` (`src/utils/lastsUntil/inactiveRound.ts`) runs where an `attack` event or an item use fires (`lastsUntilEvents.ts`), on that client. It writes `flags.nimble.lastActivity` (`{ combatId, round }`) on each effect of the holder with this moment: an attack counts for every such effect, an item use only for the effects whose `origin` is that item. At the end of the holder's turn (`nimbleCombatTurnEnd`, active GM, `lastsUntilHooks.ts`), an effect ends through `endEffects` when it has no activity in that round of that combat and did not start in that round. A rewind of the round is not tracked.
 
 ### Adding to a reroll from another feature: `modifyReroll`
 
-A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by `rerollIdentifier` against the reroll rule's `identifier`. Like `modifyToggle` it has no hooks: the card's reroll code (`src/documents/chatMessage/cardRerolls.ts`) scans the reroll owner's items for enabled `modifyReroll` rules whose `appliesTo()` passes (`modifyRerollRules` in `src/utils/reroll/modifyReroll.ts`).
+A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by `rerollIdentifier` against the reroll rule's `identifier`. It has no hooks: the card's reroll code (`src/documents/chatMessage/cardRerolls.ts`) scans the reroll owner's items for enabled `modifyReroll` rules whose `appliesTo()` passes (`modifyRerollRules` in `src/utils/reroll/modifyReroll.ts`).
 
 - **Roll changes** (`rollModeChange`, `extraDamage`) count once per card. Each has a key (`<item uuid>#<rule id>:<kind>`); the card stores the applied ones in `system.rollChanges`, and the reroll record lists those of that use in `changes`. `rollModeChange` adds to the reroll's own roll mode. On a one-die reroll it rolls that die two times and keeps the higher or lower (`rerollOneDie`), and the record keeps the other result in `dropped`. `extraDamage` is attacks only: it is rolled when the reroll is used and folded into the primary damage roll as a flavoured bonus named by the item, when the result stands (at once, or on whichever result a player keeps). The damage card target folds every extra damage roll change of the card in again on each later reroll, the way it carries folded pool spends.
 - **Cannot fail** (`cannotFail`) comes with each clicked use (`cannotFailModifier`). On a check, the place step adds a `succeed` `ResultChange` named by the modifier's item, with nothing in `paid`, and there is no keep chooser. On an attack, the new roll has `canMiss: false` (`cannotMissOptions`), the record has `cannotMissBy`, and the next reroll restores `canMiss` (`withoutCannotMiss`). Automatic rerolls do not read it.
@@ -320,15 +297,16 @@ A `modifyReroll` rule adds to a `reroll` rule on the **same actor**, matched by 
 
 ### Worked example: Rage
 
-The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "while raging" features (Intensifying Fury, etc.) live on their own items and just predicate on `self:raging`:
+The Rage item gives its "Raging" effect (`transfer: false`) with an Apply Effect step (recipient: the creature that uses it). The effect carries the state's rules; the damage bonus stays on the item and reads the tag. Other "while raging" features (Intensifying Fury, etc.) live on their own items and predicate on `self:raging`:
 
 ```jsonc
+// rules on the Raging effect
 [
-  {
-    "type": "toggleEffect",
-    "tags": ["self:raging"],
-    "turnOff": ["onActorKilled", "onEncounterEnd", "onRest"]
-  },
+  { "type": "tags", "tags": ["self:raging"] },
+  { "type": "emptyPoolsAtEnd", "pools": ["fury"] }
+]
+// a rule on the Rage item
+[
   {
     "type": "damageBonus",
     "value": "@level",
@@ -339,9 +317,11 @@ The Rage item carries the `toggleEffect` plus its sibling modifiers. Other "whil
 ]
 ```
 
+A later feature changes the state from its own item: `{ "type": "changeEffect", "itemIdentifier": "rage", "removeMoments": ["zeroHp"] }`, or uses Rage by itself: `{ "type": "useItemFree", "itemIdentifier": "rage", "triggers": ["onCritReceived", "onMiss"] }`.
+
 ### Priority note
 
-`toggleEffect.prePrepareData()` pushes tags during the `prePrepareData` pass. The default priority is `1` (the base default). Bonus-style rules that consume the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If a sibling rule also runs in `prePrepareData` and predicates on the pushed tag, set the `toggleEffect` rule's priority **lower** than the sibling's (e.g. `0`) so it runs first and the tag is in place when the sibling tests its predicate.
+`tags.prePrepareData()` adds tags during the `prePrepareData` pass. The default priority is `1` (the base default), and rules run from the lowest priority up. Bonus-style rules that read the tag in `afterPrepareData` (the common case: `damageBonus`, `damageReduction`, etc.) always see the tags because `afterPrepareData` runs after every rule's `prePrepareData`. If another rule also runs in `prePrepareData` and predicates on the tag, give it a higher priority than the Tags rule, so the tag is in place when it tests its predicate.
 
 ## Roll modes: default vs. situational
 
@@ -421,7 +401,7 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 - `damageMultiplier`: a tick in the roll window of this item that multiplies its damage. The tick starts off, and a roll with no window does not use it. The node keeps the number, so a reroll keeps it. The label says when it applies, and the system checks nothing.
 - `holdOnTarget`: a use that does not miss puts a Held Change on each target, as `heldKind` says: `mustAttackOther` is a line on the next attack of the target, and `vulnerableOnce` lasts for the next damage of `damageType` (with no type, nothing is held). Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.
 - `critBack`: after the damage of this item is applied, the GM gets a card for each creature that lives. The chosen attack is free, targets the owner and is a crit. With Feature Effects off, nothing happens.
-- `defendOption`: something a hero can do with a Defend, read by the Defend window when it opens (`src/utils/defend/`). `way` picks a tick with a Defend, a free Defend row, a second Defend each round, or a card button when an ally within `range` Defends. The Defend record on the card keeps the outcome, the extra armor, what each option paid (Undo gives it back) and the reminder lines.
+- `defendOption`: something a hero can do with a Defend, read by the Defend window when it opens (`src/utils/defend/`). `way` picks a tick with a Defend, a free Defend row, a second Defend each round, or a card button when an ally within `range` Defends. The Defend record on the card keeps the outcome, the extra armor, what each option paid (Undo gives it back), the reminder lines, and the name of each `attackerEffectId` effect. On the GM, a copy of that item effect (`transfer: false`) goes on the attacker through `applyEffectHere`, with the item as source; Undo does not remove it. `wholeRound` makes a Timed Effect on the hero (flag `roundDefend`, Lasts Until the start of the holder's next turn) that `wholeRoundDefendOf` reads; Undo deletes it by `recordId`.
 - `freeAssess`: a use of this item opens Assess, free and with advantage. It spends a charge from `chargePoolIdentifier` when the pool has one; with none, it costs nothing. 1/round is reported, not blocked.
 - `hitCondition`: when the damage of this item is applied, `condition` goes on each creature hit (`recipient: target`) or on the attacker (`self`), on any hit or only a crit (`when`). On the attacker, it also stores the creature that was hit. With Feature Effects off, the GM applies the condition.
 
@@ -470,7 +450,7 @@ value: new fields.StringField(
 ),
 ```
 
-The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | dicePoolPicker | chargePoolPicker | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
+The closed widget catalog is **`formula | diceFormula | documentUuid | predicate | templateString | richText | dicePoolPicker | chargePoolPicker | itemEffectPicker | hidden`**. `withWidget()` validates the hint in dev and warns on typos.
 
 For `widget: 'documentUuid'`, set `documentTypes: ['Item.spell']` (or `['Item']`, `['Actor']`) to gate accepted drops.
 
@@ -506,7 +486,7 @@ count: new fields.NumberField({
 ```
 
 ::: tip Type cast quirk
-SchemaField/ArrayField options don't accept `showWhen` through `withWidget()`'s leaf-only generic, so use a raw `as unknown as never` cast at the option-object site. See `applyCondition.ts` and `grantSpells.ts` for live examples.
+SchemaField/ArrayField options don't accept `showWhen` through `withWidget()`'s leaf-only generic, so use a raw `as unknown as never` cast at the option-object site. See `grantSpells.ts` for a live example.
 :::
 
 ### Default field-type rendering

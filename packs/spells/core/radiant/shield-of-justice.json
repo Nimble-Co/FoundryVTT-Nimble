@@ -19,7 +19,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "Deal radiant damage back to the attacker equal to the damage you blocked (ignoring armor).",
 				"useItem": true,
 				"upcastArmor": 5,

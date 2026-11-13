@@ -366,8 +366,6 @@
 					"otherConditions": "Other conditions",
 					"noEffects": "No effects and no conditions.",
 					"fromItem": "From {name}",
-					"inactiveRound": "Ends after 1 round with no attack and no new use",
-					"inactiveRounds": "Ends after {rounds} rounds with no attack and no new use",
 					"untilItEnds": "Until it ends",
 					"remove": "Remove",
 					"removeName": "Remove {name}",
@@ -555,6 +553,7 @@
 				"applyToTargets": "Apply to Targets",
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
+				"stays": "{name} stays on {holder}",
 				"noTargets": "This card has no targets.",
 				"noneTook": "{name} did not go on any creature.",
 				"missingName": "Effect not found",
@@ -755,6 +754,7 @@
 				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
+				"attackerEffect": "The attacker gets {name}.",
 				"refused": {
 					"noCard": "This card cannot take a Defend.",
 					"notTarget": "That hero is not a target of this attack.",
@@ -1201,7 +1201,8 @@
 					"chargeGained": "{name} gained a charge",
 					"nextRoll": "{name} made a roll",
 					"nextDamage": "{name} dealt damage",
-					"nextSpell": "{name} cast a tiered spell"
+					"nextSpell": "{name} cast a tiered spell",
+					"inactiveRound": "{name} went a round with no attack and no new use"
 				}
 			},
 			"expiryEvents": {
@@ -1767,6 +1768,10 @@
 				"empty": "No charge pools defined on this actor",
 				"notFound": "⚠ {identifier} (not found)"
 			},
+			"itemEffectPicker": {
+				"missing": "Missing effect ({id})",
+				"noItem": "This rule is not on an item, so there are no effects to list"
+			},
 			"poolIdentifierPlaceholder": "Type a pool identifier",
 			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"templateValueHintBefore": "Use",
@@ -1873,7 +1878,8 @@
 			"modifyIncomingAttack": "Modify Incoming Attack",
 			"modifyPool": "Modify Pool",
 			"modifyReroll": "Modify Reroll",
-			"modifyToggle": "Modify Toggle",
+			"changeEffect": "Change an effect",
+			"emptyPoolsAtEnd": "Empty pools at end",
 			"movementTrigger": "Movement Trigger",
 			"note": "Note",
 			"optionSwap": "Option Swap",
@@ -1887,7 +1893,8 @@
 			"skillPointMove": "Skill Point Move",
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
-			"toggleEffect": "Toggle Effect",
+			"tags": "Tags",
+			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
 		},
@@ -1958,6 +1965,10 @@
 				"trigger": {
 					"label": "Trigger",
 					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+				},
+				"effectId": {
+					"label": "Effect",
+					"hint": "An effect of this item to apply in place of the condition, with its Lasts Until. Pick none to apply the condition alone, until someone removes it."
 				}
 			},
 			"armorClass": {
@@ -2593,24 +2604,48 @@
 					"hint": "On a save or a check, the new roll succeeds, with no choice of result. On an attack, the new roll cannot miss, and it is a crit only if the die makes it a crit. It counts on each use that is clicked."
 				}
 			},
-			"modifyToggle": {
-				"description": "Modify the behavior of a toggleEffect rule (by identifier), such as suppressing specific automatic turn-off triggers. Typically attached to a level-up feature that upgrades an earlier feature's toggle.",
-				"toggleIdentifier": {
-					"label": "Toggle identifier",
-					"hint": "Identifier (or rule id) of the toggleEffect rule to modify. Matches the target rule's `identifier` field, falling back to its `id`."
+			"changeEffect": {
+				"description": "Changes the Lasts Until of the effects that another item gives to this creature, when each effect is made. Effects already on the creature do not change.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The identifier of the item that gives the effects."
 				},
-				"suppressTurnOff": {
-					"label": "Does not turn off",
-					"hint": "The toggle stays on when one of these happens."
+				"removeMoments": {
+					"label": "Does not end when",
+					"hint": "These moments are taken out of the effect. Its other moments stay."
 				},
-				"turnOn": {
-					"label": "Turn on by itself",
-					"hint": "The toggle turns on when one of these happens. Add an \"Only while\" condition to limit when it applies.",
+				"addMoments": {
+					"label": "Also ends when",
+					"hint": "These moments are added to the effect, when it does not have them yet."
+				},
+				"moments": {
 					"choices": {
-						"onTurnStart": "When its turn starts",
-						"onActorDying": "When the creature starts dying",
-						"onCritReceived": "When the creature is crit"
+						"attack": "You attack",
+						"move": "You move",
+						"castSpell": "You cast a spell",
+						"takeDamage": "You take damage",
+						"healed": "You are Healed",
+						"zeroHp": "You drop to 0 HP",
+						"die": "You die",
+						"loseConcentration": "You lose Concentration",
+						"useAgain": "You use it again",
+						"effectEnds": "Another effect ends",
+						"nextRoll": "You make a roll",
+						"nextDamage": "You deal damage",
+						"nextSpell": "You cast a tiered spell",
+						"inactiveRound": "A round passes with no attack and no new use",
+						"wounded": "You are Bloodied",
+						"chargeGained": "You gain a charge",
+						"rest": "You rest",
+						"combatEnd": "Combat ends"
 					}
+				}
+			},
+			"emptyPoolsAtEnd": {
+				"description": "When this effect ends, by any path, the named dice pools are emptied. A new copy of the effect that replaces it is not an end. This rule works only on an effect.",
+				"pools": {
+					"label": "Pools",
+					"hint": "Identifiers of dice pools. The pool of the item that gave the effect is used first, then a pool of the creature."
 				}
 			},
 			"note": {
@@ -2735,65 +2770,63 @@
 					"rageEndConfirm": "Are you sure you want to end Rage? Your Fury Dice will be lost."
 				}
 			},
-			"toggleEffect": {
-				"description": "Player-controlled on/off switch backed by an ActiveEffect that pushes domain tags while active. Sibling rules predicate on those tags to deliver the actual bonuses.",
+			"tags": {
+				"description": "Adds tags to the creature while this is on it: while the item is on the creature, or while the effect is on the creature and on. Other rules can read the tags in their \"Only while\" condition.",
 				"tags": {
 					"label": "Tags",
-					"hint": "Domain tags added while the toggle is active. Sibling rules with matching predicates fire while these tags are present."
+					"hint": "Tags such as self:raging. A rule that reads these tags before the other rules run needs a higher Priority than this rule."
+				}
+			},
+			"useItemFree": {
+				"description": "When one of the triggers happens and the \"Only while\" condition is true, the creature uses another item with no window. The use spends no action, and its card says why it was free.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The identifier of the item to use."
 				},
-				"turnOff": {
-					"label": "Turn off",
-					"hint": "The effect turns off by itself when one of these happens. Select none to turn it off only by hand.",
+				"triggers": {
+					"label": "Triggers",
+					"hint": "When the item is used. Add an \"Only while\" condition to limit when it applies.",
 					"choices": {
-						"onActorKilled": "When the creature dies",
-						"onActorWounded": "When the creature gets a Wound",
-						"onActorHealed": "When the creature is healed",
-						"onRest": "After a rest",
-						"onTurnStart": "When its turn starts",
-						"onTurnEnd": "When its turn ends",
-						"onEncounterEnd": "When the encounter ends",
-						"onActorDying": "When the creature starts dying",
-						"onRoundEnd": "When the round ends"
+						"onHit": "You hit with an attack",
+						"onCrit": "You crit with an attack",
+						"onMiss": "You miss with an attack",
+						"onTurnStart": "Your turn starts",
+						"onTurnEnd": "Your turn ends",
+						"onKill": "You die",
+						"onWound": "You are Bloodied",
+						"onSaveFail": "You fail a save",
+						"onRest": "You rest",
+						"onInitiative": "You roll Initiative",
+						"onCritReceived": "An enemy crits you",
+						"onDying": "You start Dying"
 					}
 				},
-				"confirmEndPrompt": {
-					"label": "End confirm prompt",
-					"hint": "When set, the explicit on/off switch shows a confirm dialog before turning the effect off. Accepts plain text or a localization key as the dialog body. Leave empty to disable the prompt."
+				"freeOf": {
+					"label": "Free of",
+					"hint": "The use never spends an action. Use limits: the use does not count toward the uses of the item, such as 1/turn, and needs none left. Mana: a spell costs no mana.",
+					"choices": {
+						"uses": "Use limits",
+						"mana": "Mana"
+					}
 				},
-				"clearPoolsOnEnd": {
-					"label": "Clear pools on end",
-					"hint": "Pool identifiers to empty when the toggle ends, either via a turnOff trigger or the player switching it off. Use for rules like 'resources are lost when the effect ends'."
-				},
-				"endAfterInactiveRounds": {
-					"label": "End after inactive rounds",
-					"hint": "Rounds of combat inactivity after which the toggle ends at the actor's turn end. Activity means re-activating this item or activating any item with a damage effect (an attack). Leave blank to disable."
-				},
-				"confirmDialogTitle": "End {name}?",
-				"confirmDialogConfirm": "End",
-				"confirmDialogCancel": "Cancel",
-				"inactivityPrompt": "{actor} has gone {rounds} round(s) without attacking or re-activating {name}. End it?",
-				"endedMessage": "{name} ended: {reason}.",
-				"endReasons": {
-					"onActorKilled": "died",
-					"onActorWounded": "took a wound",
-					"onActorHealed": "was healed",
-					"onRest": "completed a rest",
-					"onTurnStart": "turn started",
-					"onTurnEnd": "turn ended",
-					"onEncounterEnd": "combat ended",
-					"onActorDying": "started dying",
-					"onRoundEnd": "round ended",
-					"inactivity": "went {rounds} round(s) without attacking or re-activating"
-				},
-				"startedMessage": "{name} activated automatically: {reason}.",
-				"startReasons": {
-					"onTurnStart": "turn started",
-					"onActorDying": "started dying",
-					"onCritReceived": "was critically hit"
+				"cardLine": "For free: {trigger} ({feature})",
+				"reasons": {
+					"onHit": "you hit with an attack",
+					"onCrit": "you hit with a crit",
+					"onMiss": "you missed an attack",
+					"onTurnStart": "your turn started",
+					"onTurnEnd": "your turn ended",
+					"onKill": "you died",
+					"onWound": "you were Bloodied",
+					"onSaveFail": "you failed a save",
+					"onRest": "you rested",
+					"onInitiative": "you rolled Initiative",
+					"onCritReceived": "an enemy hit you with a crit",
+					"onDying": "you started Dying"
 				}
 			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark can also end at the end of the encounter, or when its marker effect is deleted from the creature.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark also ends when its marker effect ends on the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -2806,9 +2839,9 @@
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
 				},
-				"endsAtEncounterEnd": {
-					"label": "Ends at the end of the encounter",
-					"hint": "The marks end when the encounter ends. Taking the marker off a creature ends its mark at any time."
+				"effectId": {
+					"label": "Effect",
+					"hint": "The effect of this item that the marker on each target copies: its image, Lasts Until, Escape, changes and rules. The mark ends when the marker ends. Needs a status condition. Pick none for a marker that ends only when you mark another creature or someone takes it off."
 				}
 			},
 			"unarmedDamage": {
@@ -2950,12 +2983,9 @@
 					"label": "Use this item's reroll",
 					"hint": "Rerolls the attack with this item's Reroll rule. Its Change This Roll row does not show on the card."
 				},
-				"attackerCondition": {
-					"label": "Condition on the attacker",
-					"hint": "The attacker gets this condition.",
-					"choices": {
-						"none": "None"
-					}
+				"attackerEffectId": {
+					"label": "Effect on the attacker",
+					"hint": "An effect of this item (Apply to the actor off). A copy goes on the attacker when you Defend. Set its Lasts Until in the effect window."
 				},
 				"reminder": {
 					"label": "Reminder",
@@ -2976,14 +3006,6 @@
 				"alsoInterpose": {
 					"label": "Also when you Interpose",
 					"hint": "The tick also goes with an Interpose and no Defend. Its cost, reroll and reminder work; what it does to the Defend does not."
-				},
-				"attackerConditionEnds": {
-					"label": "Condition ends",
-					"hint": "When the condition on the attacker ends.",
-					"choices": {
-						"none": "When removed",
-						"attackerTurn": "At the start of the attacker's next turn"
-					}
 				},
 				"upcastArmor": {
 					"label": "More armor per upcast",
@@ -4307,8 +4329,7 @@
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
 				"feature": "Feature",
-				"toggleOn": "Activate {name}",
-				"toggleOff": "Deactivate {name}",
+				"active": "Active",
 				"mana": "{cost} Mana",
 				"poolCost": "{cost} {pool}",
 				"thrown": "Thrown: {distance}",
@@ -4477,14 +4498,14 @@
 			"noEffects": "No effects",
 			"temporaryEffects": "Temporary Effects",
 			"passiveEffects": "Passive Effects",
-			"endToggledEffect": "Turn off {name}",
-			"endToggledEffectTooltip": "Turn off",
 			"searchConditions": "Search conditions",
 			"showActiveOnly": "Show Active",
 			"showAllConditions": "Show All",
 			"removeCondition": "Remove condition",
 			"removeEffect": "Remove effect",
 			"removeEffectConfirmation": "Delete {name}? This effect was granted by an item and cannot be restored without re-adding the item.",
+			"removeEffectQuestion": "Delete {name}?",
+			"effectPoolLost": "Your {pool} are lost.",
 			"conditionReplacementLost": "A condition was removed to make room for a new one, and neither could be put back.",
 			"failedToRemoveCondition": "Failed to remove condition.",
 			"failedToUpdateCondition": "Failed to update condition.",
@@ -4874,8 +4895,28 @@
 		"chatEffects": {
 			"noEffect": "No Effect"
 		},
+		"itemEffectsTab": {
+			"tab": "Effects",
+			"given": "Given when something uses them",
+			"alwaysOn": "Always on while you have this item",
+			"newEffect": "New effect",
+			"empty": "No effects.",
+			"edit": "Edit {name}",
+			"delete": "Delete {name}",
+			"usedBy": {
+				"line": "Used by: {users}",
+				"nothing": "Nothing uses this effect.",
+				"onUse": "On use: Apply Effect",
+				"rule": "Rule: {name}"
+			},
+			"confirm": {
+				"title": "Delete {name}",
+				"message": "Delete the effect {name}?",
+				"users": "Used by: {users}. The delete clears the effect from each of them."
+			}
+		},
 		"activationEffects": {
-			"effects": "Effects",
+			"onUse": "On use",
 			"addEffect": "Add Effect",
 			"applyEffect": "Apply Effect",
 			"applyEffectNode": {
@@ -5474,7 +5515,7 @@
 			},
 			"chatNotifications": {
 				"name": "Chat Notes",
-				"hint": "Short notes in chat, such as initiative reminders and when Rage starts or ends."
+				"hint": "Short notes in chat, such as initiative reminders and pool gains."
 			},
 			"movementOffers": {
 				"name": "Pushes, Pulls and Moves for Free",

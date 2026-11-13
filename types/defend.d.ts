@@ -1,4 +1,3 @@
-import type { AttackerCondition } from '#types/attackerCondition.d.ts';
 import type { PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.js';
 import type { DefendOptionOutcome, DefendOptionRule } from '../src/models/rules/defendOption.js';
@@ -29,6 +28,14 @@ export interface DefendOptionUse {
  */
 export type DefendRecordWay = 'action' | 'free' | 'extra' | 'round';
 
+/** An item effect a Defend puts on the attacker. */
+export interface AttackerEffect {
+	itemUuid: string;
+	effectId: string;
+	/** The effect's name, for the line on the card. */
+	name: string;
+}
+
 /** One hero's Defend against an attack card, as the card stores it. */
 export interface DefendRecord {
 	id: string;
@@ -52,8 +59,8 @@ export interface DefendRecord {
 	options: DefendOptionUse[];
 	/** Lines for the table: what the hero may do now. */
 	reminders: string[];
-	/** The GM puts these conditions on the attacker. */
-	attackerConditions: AttackerCondition[];
+	/** The GM puts a copy of each of these item effects on the attacker. */
+	attackerEffects: AttackerEffect[];
 	/** How the Defend was paid. */
 	way: DefendRecordWay;
 }
@@ -101,7 +108,10 @@ export interface RoundMark {
 	turn: number;
 }
 
-/** A Defend that covers every attack on the hero until their own turn begins. */
+/**
+ * A Defend that covers every attack on the hero until their own turn begins. It is
+ * kept in the flags of a Timed Effect on the hero.
+ */
 export interface WholeRoundDefend extends RoundMark {
 	label: string;
 	armorBonus: number;

@@ -4,6 +4,7 @@
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import FreeUseLine from './components/FreeUseLine.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
@@ -73,6 +74,8 @@
 		heading={name}
 		{subheading}
 	/>
+
+	<FreeUseLine />
 
 	{#if attackTypeLabel}
 		<section class="nimble-card-section nimble-card-section--attack-type">

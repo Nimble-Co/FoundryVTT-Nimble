@@ -72,7 +72,7 @@
 <section>
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.activationEffects.effects')}
+			{localize('NIMBLE.activationEffects.onUse')}
 		</h3>
 
 		<button

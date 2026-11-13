@@ -83,7 +83,7 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 		const file = `${FEATURES}/the-cheat/the-cheat-subclasses/tools-of-the-scoundrel/heads-i-win-tails-you-lose.json`;
 		const rule = ruleOfType(file, 'attackOutcome');
 
-		it('gives "cannot miss" and crit on 1 less only while its toggle is on', () => {
+		it('gives "cannot miss" and crit on 1 less only while its effect tags the user', () => {
 			expect(changeOf(rule, {})).toBeNull();
 			expect(changeOf(rule, {}, ['self:heads-i-win'])).toMatchObject({
 				cannotMiss: true,
@@ -91,11 +91,15 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 			});
 		});
 
-		it('turns its toggle off when the round ends, and spends one use to turn it on', () => {
-			expect(ruleOfType(file, 'toggleEffect')).toMatchObject({
-				tags: ['self:heads-i-win'],
-				turnOff: expect.arrayContaining(['onRoundEnd']),
-			});
+		it('applies an effect that tags the user, and spends one use', () => {
+			const item = JSON.parse(readFileSync(resolve(file), 'utf8'));
+			const step = item.system.activation.effects.at(-1);
+			expect(step).toMatchObject({ type: 'applyEffect', recipient: 'self' });
+			const effect = item.effects.find((each: { _id: string }) => each._id === step.effectId);
+			expect(effect.system.rules).toEqual([
+				expect.objectContaining({ type: 'tags', tags: ['self:heads-i-win'] }),
+			]);
+			expect(packRules(file).map((each) => each.type)).not.toContain('toggleEffect');
 			expect(ruleOfType(file, 'chargeConsumer')).toMatchObject({ poolIdentifier: 'heads-i-win' });
 			expect(ruleOfType(file, 'chargePool').recoveries).toEqual(
 				expect.arrayContaining([expect.objectContaining({ trigger: 'encounterStart' })]),
@@ -110,6 +114,7 @@ describe('the pack items of Attack Outcome and Make It a Crit', () => {
 					formula: '@level',
 					recipient: 'self',
 				}),
+				expect.objectContaining({ type: 'applyEffect', recipient: 'self' }),
 			]);
 		});
 	});

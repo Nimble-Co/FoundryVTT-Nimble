@@ -1751,6 +1751,72 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('targets', () => {
+		const globals = globalThis as unknown as { game: { user: { targets: unknown[] } } };
+
+		afterEach(() => {
+			globals.game.user.targets = [];
+		});
+
+		it('are what the user targets on a normal use', () => {
+			const goblin = { document: { uuid: 'Token.goblin' } };
+			globals.game.user.targets = [goblin];
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+
+			expect(manager.targets).toEqual([goblin]);
+		});
+
+		async function critWithTwoTargets(options: ItemActivationManager.ActivationOptions) {
+			globals.game.user.targets = [
+				{ document: { uuid: 'Token.goblin' } },
+				{ document: { uuid: 'Token.kobold' } },
+			];
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				options,
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 6 }),
+				}),
+			);
+
+			await manager.getData();
+
+			return vi.mocked(DamageRoll).mock.calls.at(-1)?.[2]?.canCrit;
+		}
+
+		it('make a normal use with two targets a Multi-target Attack, which cannot crit', async () => {
+			expect(await critWithTwoTargets({ fastForward: true })).toBe(false);
+		});
+
+		it('are none on a free use, so the user targets do not make it a Multi-target Attack', async () => {
+			const canCrit = await critWithTwoTargets({
+				fastForward: true,
+				free: { of: [], reason: { key: 'For free' } },
+			});
+
+			expect(manager.targets).toEqual([]);
+			expect(canCrit).toBe(true);
+		});
+	});
+
 	describe('Edge cases', () => {
 		it('should handle effects with no roll types (condition, note, etc.)', async () => {
 			manager = new ItemActivationManager(
@@ -2591,6 +2657,41 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				expect(result.activation).not.toBeNull();
 				expect(manager.pinnedCastTier).toBe(5);
 				expect(manager.upcastResult).toBeNull();
+				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
+			});
+
+			it('costs no mana on a use a rule gives free of mana, and always free of actions', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, free: { of: ['mana'], reason: { key: 'For free' } } },
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				await manager.getData();
+
+				expect(manager.spellCost).toEqual({ type: 'none' });
+				expect(manager.free).toEqual({ of: ['action', 'mana'], reason: { key: 'For free' } });
+			});
+
+			it('still costs mana on a use free only of its uses', async () => {
+				pinCastTier(5);
+				mockItem.type = 'spell';
+				mockItem.system.tier = 1;
+				mockItem.system.scaling = { mode: 'none' };
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true, free: { of: ['uses'], reason: { key: 'For free' } } },
+				);
+				manager.activationData = { effects: [], skipRollDialog: true };
+				mockReconstructEffectsTree.mockReturnValue([]);
+
+				await manager.getData();
+
 				expect(manager.spellCost).toEqual({ type: 'mana', amount: 1 });
 			});
 

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import ActorConditionsList from '../ActorConditionsList.svelte';
 
 function confirmMock(): Mock {
@@ -215,45 +215,45 @@ describe('ActorConditionsList', () => {
 		expect(screen.queryByRole('button', { name: 'Toggle Blinded' })).not.toBeInTheDocument();
 	});
 
-	describe('active toggles section', () => {
-		function createToggleAE({
-			id = 'ae-rage',
-			name = 'Rage',
-			ruleId = 'rage-toggle',
-			itemId = 'rage-item',
-		} = {}) {
+	describe('an effect that an item use gave', () => {
+		const ITEM_UUID = 'Actor.actor-1.Item.rage-item';
+
+		function createGivenEffect() {
 			return {
-				id,
-				name,
+				id: 'ae-rage',
+				name: 'Rage',
 				img: 'icons/svg/aura.svg',
+				origin: ITEM_UUID,
 				statuses: new Set<string>(),
-				getFlag: (scope: string, key: string): unknown => {
-					if (scope !== 'nimble') return undefined;
-					if (key === 'toggleEffectRuleId') return ruleId;
-					if (key === 'toggleEffectItemId') return itemId;
-					return undefined;
-				},
+				parent: { documentName: 'Actor' },
+				delete: vi.fn().mockResolvedValue(undefined),
 			};
 		}
 
-		function withToggleItem(actor: Actor.Implementation, ruleId = 'rage-toggle') {
-			(actor as unknown as Record<string, unknown>).items = {
-				get: (id: string) =>
-					id === 'rage-item'
-						? {
-								id: 'rage-item',
-								name: 'Rage',
-								rules: new Map([['0', { type: 'toggleEffect', id: ruleId }]]),
-							}
-						: undefined,
-			};
-			return actor;
+		function stubOriginItem(effects: { id: string; name: string; transfer: boolean }[] | null) {
+			const item = effects
+				? {
+						documentName: 'Item',
+						effects: Object.assign([...effects], {
+							get: (id: string) => effects.find((each) => each.id === id),
+						}),
+					}
+				: null;
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn((uuid: string) => (uuid === ITEM_UUID ? item : null)),
+			);
 		}
 
-		it('renders toggle-backed AEs in the Temporary Effects section, not the passive bucket', () => {
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it('lists it in the Temporary Effects with the trash button', () => {
+			stubOriginItem(null);
 			const actor = createActor({
 				statuses: [],
-				effects: [createToggleAE()] as unknown as ActiveEffect[],
+				effects: [createGivenEffect()] as unknown as ActiveEffect[],
 			});
 
 			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
@@ -262,84 +262,53 @@ describe('ActorConditionsList', () => {
 				.getByText('Temporary Effects')
 				.closest('.nimble-actor-conditions__section') as HTMLElement;
 			expect(temporarySection).toHaveTextContent('Rage');
-
-			const passiveSection = screen
-				.getByText('Passive Effects')
-				.closest('.nimble-actor-conditions__section') as HTMLElement;
-			expect(passiveSection).not.toHaveTextContent('Rage');
-			expect(passiveSection).toHaveTextContent('No effects');
+			expect(screen.getByRole('button', { name: 'Remove effect' })).toBeInTheDocument();
 		});
 
-		it('shows the off switch instead of the trash button for toggle-backed AEs', () => {
-			const actor = createActor({
-				statuses: [],
-				effects: [createToggleAE()] as unknown as ActiveEffect[],
-			});
+		it('asks a plain question when the item still has the effect and can give it again', async () => {
+			stubOriginItem([{ id: 'raging', name: 'Rage', transfer: false }]);
+			confirmMock().mockResolvedValue(true);
+			const effect = createGivenEffect();
+			const actor = createActor({ statuses: [], effects: [effect] as unknown as ActiveEffect[] });
 
 			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
 
-			expect(screen.getByRole('button', { name: 'Turn off Rage' })).toBeInTheDocument();
-			expect(screen.queryByRole('button', { name: 'Remove effect' })).not.toBeInTheDocument();
+			expect(confirmMock()).toHaveBeenCalledWith(
+				expect.objectContaining({ content: '<p>Delete Rage?</p>' }),
+			);
+			expect(effect.delete).toHaveBeenCalledTimes(1);
 		});
 
-		it('renders toggle-backed AEs as canvas icons and ends them on right click', async () => {
-			const actor = withToggleItem(
-				createActor({
-					statuses: [],
-					effects: [createToggleAE()] as unknown as ActiveEffect[],
+		it('escapes the effect name in the question', async () => {
+			stubOriginItem([{ id: 'raging', name: '<b>Rage</b>', transfer: false }]);
+			confirmMock().mockResolvedValue(false);
+			const effect = { ...createGivenEffect(), name: '<b>Rage</b>' };
+			const actor = createActor({ statuses: [], effects: [effect] as unknown as ActiveEffect[] });
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
+
+			expect(confirmMock()).toHaveBeenCalledWith(
+				expect.objectContaining({ content: '<p>Delete &lt;b&gt;Rage&lt;/b&gt;?</p>' }),
+			);
+		});
+
+		it('says that it cannot come back when the item no longer has the effect', async () => {
+			stubOriginItem([{ id: 'other', name: 'Stoneskin', transfer: false }]);
+			confirmMock().mockResolvedValue(false);
+			const effect = createGivenEffect();
+			const actor = createActor({ statuses: [], effects: [effect] as unknown as ActiveEffect[] });
+
+			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+			await fireEvent.click(screen.getByRole('button', { name: 'Remove effect' }));
+
+			expect(confirmMock()).toHaveBeenCalledWith(
+				expect.objectContaining({
+					content: expect.stringContaining('cannot be restored without re-adding the item'),
 				}),
 			);
-
-			render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
-
-			const iconButton = screen.getByRole('button', { name: 'Rage' });
-			await fireEvent.contextMenu(iconButton);
-
-			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
-		});
-
-		it('ends the toggle through the rule path when the off switch is clicked', async () => {
-			const actor = withToggleItem(
-				createActor({
-					statuses: [],
-					effects: [createToggleAE()] as unknown as ActiveEffect[],
-				}),
-			);
-
-			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
-			const offSwitch = screen.getByRole('button', { name: 'Turn off Rage' });
-			await fireEvent.click(offSwitch);
-
-			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
-		});
-
-		it('falls back to deleting the AE when the owning item no longer exists', async () => {
-			const actor = createActor({
-				statuses: [],
-				effects: [createToggleAE()] as unknown as ActiveEffect[],
-			});
-			(actor as unknown as Record<string, unknown>).items = { get: () => undefined };
-
-			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
-			await fireEvent.click(screen.getByRole('button', { name: 'Turn off Rage' }));
-
-			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['ae-rage']);
-		});
-
-		it('hides the off switch when the actor is not editable', () => {
-			const actor = createActor({
-				owner: false,
-				statuses: [],
-				effects: [createToggleAE()] as unknown as ActiveEffect[],
-			});
-
-			render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
-
-			const temporarySection = screen
-				.getByText('Temporary Effects')
-				.closest('.nimble-actor-conditions__section') as HTMLElement;
-			expect(temporarySection).toHaveTextContent('Rage');
-			expect(screen.queryByRole('button', { name: 'Turn off Rage' })).not.toBeInTheDocument();
+			expect(effect.delete).not.toHaveBeenCalled();
 		});
 	});
 

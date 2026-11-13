@@ -11,6 +11,7 @@
 	import ItemHeader from './components/ItemHeader.svelte';
 	import SizeOptionsSelect from './components/SizeOptionsSelect.svelte';
 	import VariantOptionsInput from './components/VariantOptionsInput.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 
 	const navigation = [
@@ -25,6 +26,12 @@
 			icon: 'fa-solid fa-gears',
 			tooltip: 'Config',
 			name: 'config',
+		},
+		{
+			component: ItemEffectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: ItemRulesTab,

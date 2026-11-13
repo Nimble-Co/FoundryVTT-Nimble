@@ -3,7 +3,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { escapeEffect } from '#utils/lastsUntil/escapeEffect.js';
 import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
-import { endEffect, openEffect, removeEffect, setCondition } from './effectActions.ts';
+import { openEffect, removeEffect, setCondition } from './effectActions.ts';
 import type { SheetIntent } from './sheetIntent.ts';
 
 /** What the shared perform calls on the actor of either sheet. */
@@ -48,9 +48,6 @@ export async function performSheetIntent(actor: SheetActor, intent: SheetIntent)
 			return;
 		case 'openItem':
 			await actor.items.get(intent.itemId)?.sheet?.render(true);
-			return;
-		case 'endEffect':
-			await endEffect(document, intent.effectId);
 			return;
 		case 'openEffect':
 			await openEffect(document, intent.effectId, intent.itemId);

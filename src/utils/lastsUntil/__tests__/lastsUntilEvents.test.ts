@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { effectsEndingAtMock, endEffectsMock } = vi.hoisted(() => ({
-	effectsEndingAtMock: vi.fn((..._args: unknown[]): object[] => []),
-	endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
-}));
+const effectsEndingAtMock = vi.fn((..._args: unknown[]): object[] => []);
+const endEffectsMock = vi.fn(async (..._args: unknown[]) => undefined);
+const noteActivityMock = vi.fn(async (..._args: unknown[]): Promise<void> => {});
 
-vi.mock('../endEffects.js', () => ({
+// Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
+vi.resetModules();
+vi.doMock('../endEffects.js', () => ({
 	effectsEndingAt: effectsEndingAtMock,
 	endEffects: endEffectsMock,
 }));
+vi.doMock('../inactiveRound.js', () => ({ noteActivity: noteActivityMock }));
 
-const { fireEvent, fireItemUseEvents, isAttackUse } = await import('../lastsUntilEvents.js');
+const { fireAttackEvents, fireEvent, fireItemUseEvents, isAttackUse } = await import(
+	'../lastsUntilEvents.js'
+);
 
 const user = { name: 'Tessa' };
 const ally = { name: 'Bruno' };
@@ -144,5 +148,46 @@ describe('fireEvent', () => {
 		fireEvent('takeDamage', null);
 
 		expect(effectsEndingAtMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('fireAttackEvents', () => {
+	it('an attack that is not an item use checks the attack and the next roll', () => {
+		fireAttackEvents(user);
+
+		expect(firedEvents()).toEqual(['attack', 'nextRoll']);
+	});
+
+	it('no creature, no event', () => {
+		fireAttackEvents(null);
+
+		expect(effectsEndingAtMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('activity for an inactive round', () => {
+	it('an attack that is not an item use is activity of the attacker', () => {
+		fireAttackEvents(user);
+
+		expect(noteActivityMock).toHaveBeenCalledWith(user, { attack: true });
+	});
+
+	it('an item use is activity: an attack for every effect, a use for the effects of that item', () => {
+		fireItemUseEvents(item({}, [{ type: 'damage' }]), [ally]);
+		fireItemUseEvents(item(), []);
+
+		expect(noteActivityMock.mock.calls).toEqual([
+			[user, { attack: true, itemUuid: 'Actor.t.Item.i' }],
+			[user, { attack: false, itemUuid: 'Actor.t.Item.i' }],
+		]);
+	});
+
+	it('the events resolve when the activity is saved', async () => {
+		const noted = Promise.resolve();
+		noteActivityMock.mockReturnValueOnce(noted).mockReturnValueOnce(noted);
+
+		expect(fireAttackEvents(user)).toBe(noted);
+		expect(fireItemUseEvents(item(), [])).toBe(noted);
+		await expect(fireAttackEvents(null)).resolves.toBeUndefined();
 	});
 });

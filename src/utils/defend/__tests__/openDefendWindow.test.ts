@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { defendWindowPlan } from '../openDefendWindow.js';
 
 const TOKEN = 'Scene.s.Token.pip';
@@ -23,7 +24,7 @@ function rule(fields: Record<string, unknown>) {
 		attackDelivery: 'any',
 		outcome: 'none',
 		reminder: '',
-		attackerCondition: '',
+		attackerEffectId: '',
 		wholeRound: false,
 		withInterpose: false,
 		useItem: false,
@@ -156,6 +157,68 @@ describe('defendWindowPlan', () => {
 	it('shows a free Defend that needs an Interpose only with one', () => {
 		const { data } = plan([rule({ id: 'paragon', way: 'freeDefend', withInterpose: true })]);
 		expect(data.options.map((option) => option.id)).toEqual(['defend']);
+	});
+
+	describe('a Defend for the whole round', () => {
+		const roundMark = {
+			combatId: 'combat-1',
+			round: 2,
+			turn: 0,
+			label: 'Whirling Defense',
+			armorBonus: 2,
+			outcome: 'none',
+			messageId: 'm0',
+			recordId: 'r0',
+		};
+
+		function planWithMark(effect: Record<string, unknown>, turn = 0) {
+			const pip = { id: 'c-pip', actorId: 'pip', tokenId: 'pip-token' };
+			const turns = [{ id: 'c-ogre' }, pip];
+			(globalThis as unknown as Globals).game.combat = {
+				id: 'combat-1',
+				started: true,
+				round: 2,
+				turn,
+				turns,
+				combatants: { find: (fn: (c: unknown) => boolean) => [pip].find(fn) },
+			};
+			return defendWindowPlan(card as never, {
+				actor: { ...hero([]), effects: [effect] } as never,
+				targetTokenUuid: TOKEN,
+				interposes: [],
+				defend: null,
+			});
+		}
+
+		it('reads the mark from the Timed Effect on the hero', () => {
+			const { data, rows } = planWithMark({
+				id: 'e1',
+				flags: { [SYSTEM_ID]: { roundDefend: roundMark } },
+			});
+
+			const round = data.options.find((option) => option.id === 'round');
+			expect(round).toMatchObject({ defend: true, takes: 12 });
+			expect(rows.get('round')?.whole).toMatchObject({ label: 'Whirling Defense', recordId: 'r0' });
+		});
+
+		it('has no round row once the hero turn has begun', () => {
+			const { data } = planWithMark(
+				{ id: 'e1', flags: { [SYSTEM_ID]: { roundDefend: roundMark } } },
+				1,
+			);
+
+			expect(data.options.map((option) => option.id)).not.toContain('round');
+		});
+
+		it('has no round row when the effect is turned off', () => {
+			const { data } = planWithMark({
+				id: 'e1',
+				disabled: true,
+				flags: { [SYSTEM_ID]: { roundDefend: roundMark } },
+			});
+
+			expect(data.options.map((option) => option.id)).not.toContain('round');
+		});
 	});
 
 	describe('the cost of an Interpose', () => {

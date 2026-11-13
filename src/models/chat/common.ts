@@ -254,27 +254,6 @@ export function migrateIncomingReactions(source: Record<string, unknown>): void 
 	}
 }
 
-/** Gives the Defends of an old card their attacker conditions as one list. */
-export function migrateDefends(source: Record<string, unknown>): void {
-	const defends = source.defends;
-	if (!Array.isArray(defends)) return;
-	for (const defend of defends as Record<string, unknown>[]) {
-		if (!defend || typeof defend !== 'object') continue;
-		const conditions = Array.isArray(defend.attackerConditions) ? defend.attackerConditions : [];
-		const isOld =
-			'conditionsEndOnAttackerTurn' in defend ||
-			conditions.some((each) => typeof each === 'string');
-		if (!isOld) continue;
-		const endsOnTurn = Array.isArray(defend.conditionsEndOnAttackerTurn)
-			? defend.conditionsEndOnAttackerTurn
-			: [];
-		defend.attackerConditions = conditions
-			.filter((each) => typeof each === 'string')
-			.map((condition) => ({ condition, endsOnAttackerTurn: endsOnTurn.includes(condition) }));
-		delete defend.conditionsEndOnAttackerTurn;
-	}
-}
-
 const rerollDieResult = () =>
 	new fields.SchemaField(
 		{
@@ -594,14 +573,11 @@ export const defends = () => ({
 				nullable: false,
 				initial: [],
 			}),
-			attackerConditions: new fields.ArrayField(
+			attackerEffects: new fields.ArrayField(
 				new fields.SchemaField({
-					condition: new fields.StringField({ required: true, nullable: false }),
-					endsOnAttackerTurn: new fields.BooleanField({
-						required: true,
-						nullable: false,
-						initial: false,
-					}),
+					itemUuid: new fields.StringField({ required: true, nullable: false }),
+					effectId: new fields.StringField({ required: true, nullable: false }),
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
 				}),
 				{ required: false, nullable: false, initial: [] },
 			),

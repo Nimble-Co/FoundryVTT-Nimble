@@ -1,9 +1,3 @@
-export interface WeaponCardToggle {
-	enabled: boolean;
-	ariaLabel: string;
-	onClick: (event: MouseEvent) => void | Promise<void>;
-}
-
 import type { NimbleCharacter } from '../../src/documents/actor/character.js';
 import type { ChargeIndicatorPoolState } from './ChargeIndicator.js';
 
@@ -25,7 +19,8 @@ export interface WeaponCardProps {
 	disabled?: boolean;
 	showImage?: boolean;
 	itemId?: string | null;
-	toggle?: WeaponCardToggle | null;
+	/** the actor has an effect that a use of this item gave */
+	active?: boolean;
 	onToggleDescription?: ((event: MouseEvent) => void) | null;
 	onclick?: () => void;
 	ondragstart?: ((event: DragEvent) => void) | null;

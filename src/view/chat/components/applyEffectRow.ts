@@ -27,8 +27,8 @@ export interface ApplyEffectRowView {
 	name: string;
 	img: string;
 	lasts: string;
-	/** after the click: "On Goblin, Kobold" */
-	appliedLine: string | null;
+	/** after the click: "On Goblin, Kobold", and "Raging stays on Hero" for a holder that kept it */
+	appliedLines: string[];
 	button: { label: string; disabled: boolean; tooltip: string | null } | null;
 	/** a line in place of the button */
 	note: string | null;
@@ -41,7 +41,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 			name: localize(`${WORDS}.missingName`),
 			img: 'icons/svg/hazard.svg',
 			lasts: '',
-			appliedLine: null,
+			appliedLines: [],
 			button: null,
 			note: localize(`${WORDS}.missing`),
 		};
@@ -50,19 +50,29 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 	const lasts = describeLastsUntil({
 		moments: source.lastsUntil,
 		usedUp: source.usedUp ?? null,
-		coreDuration: source.coreDuration ?? null,
 		escape: source.escape,
 		reader: self ? CARD_SELF_READER : CARD_TARGETS_READER,
 		localize,
 		format,
 	});
-	const names = (input.applied ?? []).map((entry) => entry.actorName).filter(Boolean);
-	if (names.length) {
+	const applied = input.applied ?? [];
+	const namesOf = (stays: boolean) =>
+		applied
+			.filter((entry) => !!entry.stays === stays)
+			.map((entry) => entry.actorName)
+			.filter(Boolean)
+			.join(', ');
+	const on = namesOf(false);
+	const stays = namesOf(true);
+	if (on || stays) {
 		return {
 			name: source.name,
 			img: source.img,
 			lasts,
-			appliedLine: format(`${WORDS}.on`, { names: names.join(', ') }),
+			appliedLines: [
+				...(on ? [format(`${WORDS}.on`, { names: on })] : []),
+				...(stays ? [format(`${WORDS}.stays`, { name: source.name, holder: stays })] : []),
+			],
 			button: null,
 			note: null,
 		};
@@ -71,7 +81,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		name: source.name,
 		img: source.img,
 		lasts,
-		appliedLine: null,
+		appliedLines: [],
 		button: input.canApply
 			? {
 					label: localize(self ? `${WORDS}.applyToYou` : `${WORDS}.applyToTargets`),

@@ -156,7 +156,7 @@ export function itemStateOf(context: HeroSheetContext, item: ItemLike): HeroItem
 		actionCost: cost.type === 'action' ? cost.quantity : 0,
 		pools: [],
 		gate: null,
-		toggle: null,
+		active: false,
 		diceConsumers: [],
 	};
 }
@@ -425,18 +425,11 @@ export function itemRow(
 			: [when, weapon ? formula : '', range, ...(weapon ? weaponPropertyWords(item, context) : [])]
 	).filter(Boolean);
 
-	const toggle = state.toggle;
-	const gate = toggle?.on ? null : state.gate;
+	const gate = state.gate;
 	const reason = gate ? gateReason(gate, context) : '';
 
 	let use: HeroRowUse;
-	if (toggle?.on) {
-		use = {
-			kind: 'act',
-			label: format(`${SHARED}.endName`, { name }),
-			intent: { kind: 'endToggle', itemId: item.id, ruleId: toggle.ruleId },
-		};
-	} else if (gate) {
+	if (gate) {
 		use = { kind: 'blocked', label: `${name}. ${reason}`, reason };
 	} else {
 		use = {
@@ -466,8 +459,8 @@ export function itemRow(
 		id: item.id,
 		name,
 		img: item.img || undefined,
-		tag: toggle?.on ? localize(`${SHARED}.active`) : undefined,
-		tagOn: toggle?.on,
+		tag: state.active ? localize(`${SHARED}.active`) : undefined,
+		tagOn: state.active || undefined,
 		summary: summary || undefined,
 		cost: {
 			...actionCost(state.actionCost, context),
@@ -484,7 +477,7 @@ export function itemRow(
 		description: description || undefined,
 		descriptionHtml: context.enrichedDescriptions[item.id],
 		facts,
-		state: toggle?.on ? 'active' : gate ? 'out' : undefined,
+		state: state.active ? 'active' : gate ? 'out' : undefined,
 		use,
 		choice: diceStep(item, state, context),
 		edit: { kind: 'openItem', itemId: item.id },

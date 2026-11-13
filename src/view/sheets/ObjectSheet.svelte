@@ -6,6 +6,7 @@
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import ItemTabs from './components/ItemTabs.svelte';
 	import WindowHead from '#view/actorSheets/parts/WindowHead.svelte';
@@ -109,6 +110,12 @@
 			icon: 'fa-solid fa-play',
 			tooltip: 'Activation',
 			name: 'activationConfig',
+		},
+		{
+			component: effectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: rulesTab,
@@ -403,6 +410,10 @@
 
 {#snippet macroTab()}
 	<ItemMacroTab></ItemMacroTab>
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet rulesTab()}

@@ -105,4 +105,19 @@ describe('WeaponCard', () => {
 
 		expect(onclick).toHaveBeenCalledTimes(1);
 	});
+
+	it('tags the card Active while the actor has an effect that the item gave, and keeps it usable', () => {
+		const onclick = vi.fn();
+		render(WeaponCard, { name: 'Rage', active: true, onclick });
+
+		expect(screen.getByText('Active')).toBeInTheDocument();
+		screen.getByRole('button', { name: /rage/i }).click();
+		expect(onclick).toHaveBeenCalledTimes(1);
+	});
+
+	it('has no Active tag otherwise', () => {
+		render(WeaponCard, { name: 'Rage', onclick: vi.fn() });
+
+		expect(screen.queryByText('Active')).toBeNull();
+	});
 });

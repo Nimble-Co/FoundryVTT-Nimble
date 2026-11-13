@@ -25,9 +25,9 @@ import {
 	computeIncomingAttackPlan,
 } from '#utils/incomingReactions/incomingAttackModifiers.js';
 import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers.js';
+import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import localize from '#utils/localize.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
-import { endUsedConditions } from '#utils/rolls/endUsedConditions.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
@@ -262,11 +262,11 @@ export async function rollUnarmedStrike(
 	};
 
 	const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+	void fireAttackEvents(actor);
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);
 	await card?.update?.(recoveryFlags);
 	await held.spend();
-	await endUsedConditions(actor, conditions);
 	if (result.dualWield) await markDualWieldUse(actor as never);
 	for (const identifier of attackOutcomeChargesToSpend(attackOutcome.charges, roll)) {
 		await spendRuleCharge(actor, identifier);

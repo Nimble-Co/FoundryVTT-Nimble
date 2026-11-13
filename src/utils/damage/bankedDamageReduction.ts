@@ -42,8 +42,8 @@ function effectDescription(value: number): string {
  * Berserker's "That all you got?!").
  *
  * The bank is stored as an Active Effect on the actor so the pending
- * reduction is visible ("Damage Reduction (8)") in the same effects surface
- * as toggleEffect toggles, syncs to the GM's client, and can be dropped
+ * reduction is visible ("Damage Reduction (8)") with the other effects on the
+ * actor, syncs to the GM's client, and can be dropped
  * (delete) or suspended (disable) by the player. It is consumed and removed
  * by the next damage applied to the actor.
  */

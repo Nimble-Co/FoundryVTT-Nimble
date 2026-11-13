@@ -9,7 +9,6 @@ import {
 	incomingReactions,
 	keptAmount,
 	metadata,
-	migrateDefends,
 	migrateIncomingReactions,
 	movementOffers,
 	primaryDieBonuses,
@@ -87,7 +86,6 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 	}
 
 	static override migrateData(source: Record<string, unknown>): Record<string, unknown> {
-		migrateDefends(source);
 		migrateIncomingReactions(source);
 		return super.migrateData(source);
 	}

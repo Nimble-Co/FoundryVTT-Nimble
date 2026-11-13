@@ -10,7 +10,7 @@ Conditions are status markers (Prone, Frightened, Grappled, and friends) that si
 
 1. **The token.** Select a token and open its overhead controls (right-click the token). The status panel lists every condition by name. Click one to toggle it on or off, and use the clear-all button to wipe them.
 2. **The sheet's Effects tab.** Both the character sheet and the NPC sheet have an Effects tab. Under **All conditions**, a grid shows each condition that you set by hand. Click a condition to apply or remove it. A condition that is on is crimson, with a check. Charged, Distracted, Marked and Smoldering are small buttons under **Other conditions**. The system sets Bloodied, Dying, Dead, Wounded, Last Stand and Concentration itself, so they are not in the grid. Each condition that is on, also these six, shows in the list above the grid. Click its row to remove it: the sheet asks first. The active and passive effects on the actor are listed on the same tab.
-3. **The Effects part of a chat card.** A card that gives an effect has a row for it under **Effects**, with its Lasts Until. **Apply to Targets** puts it on the card's targets, **Apply to You** on the user. The user who rolled the card and the GM can click. Then the row tells who has it: "✓ On Goblin". For a creature you do not own, a GM must be connected.
+3. **The Effects part of a chat card.** A card that gives an effect has a row for it under **Effects**, with its Lasts Until. **Apply to Targets** puts it on the card's targets. An effect for the user goes on by itself when the item is used. With the Feature Effects automation setting off, the row has an **Apply to You** button. The user who rolled the card and the GM can click. Then the row tells who has it: "✓ On Goblin". For a creature you do not own, a GM must be connected.
 
 ![A chat card for Ice Lance: the cold damage, and an Effects part with Slowed and Apply to Targets](/images/documentation/apply-effect-chat-card.png)
 
@@ -35,7 +35,7 @@ Each condition is one step, and the steps stack and cancel as other advantage an
 - Blinded, Prone, Taunted, Despair: disadvantage.
 - Invisible: advantage.
 - Taunted gives no disadvantage when the only target is the most recent taunter. The system knows the taunter when a feature applied Taunted. When you applied it by hand, the tick is on and you take it off for an attack on the taunter.
-- Despair ends after the attack that used it. When you take its tick off, Despair stays.
+- Despair lasts until your next attack or until combat ends. Your next attack ends it, also when you take its tick off. Despair applied by hand ends the same way.
 
 **Every roll.** Poisoned and Frightened give disadvantage on attacks, saves, checks and initiative. Only a character rolls for initiative, so a monster's initiative has no condition lines. The Frightened line says "source of fear nearby": take it off when the source is not near.
 

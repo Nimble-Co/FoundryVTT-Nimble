@@ -20,7 +20,7 @@
 				"outcome": "none",
 				"armorBonus": "",
 				"useReroll": false,
-				"attackerCondition": "",
+				"attackerEffectId": "",
 				"reminder": "If you take no damage, you may swap places with the attacker and choose another target now within the attack's reach; that target is hit instead.",
 				"useItem": false,
 				"withInterpose": false,

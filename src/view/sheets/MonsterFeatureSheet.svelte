@@ -7,6 +7,7 @@
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
+	import ItemEffectsTab from './pages/ItemEffectsTab.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 
 	const navigation = [
@@ -27,6 +28,12 @@
 			icon: 'fa-solid fa-play',
 			tooltip: 'Activation',
 			name: 'activationConfig',
+		},
+		{
+			component: effectsTab,
+			icon: 'fa-solid fa-heart-pulse',
+			tooltip: 'NIMBLE.itemEffectsTab.tab',
+			name: 'effects',
 		},
 		{
 			component: macroTab,
@@ -133,6 +140,10 @@
 			/>
 		</section>
 	{/key}
+{/snippet}
+
+{#snippet effectsTab()}
+	<ItemEffectsTab />
 {/snippet}
 
 {#snippet macroTab()}

@@ -23,6 +23,7 @@ import type {
 	ChargeConsumptionDetail,
 	RuleBackedItem,
 } from '#utils/chargePool/types.js';
+import type { FreeUseReason } from '#utils/chat/freeUseReason.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -85,7 +86,6 @@ import { statsInFormula } from '../utils/reroll/rollStat.js';
 import { withConditionSources } from '../utils/rolls/appliedConditionRollModes.js';
 import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
-import { endUsedConditions } from '../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import {
@@ -232,6 +232,25 @@ class ItemActivationManager {
 	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
 	freeUse = false;
 
+	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
+	get free(): ItemActivationManager.FreeUse | null {
+		const free = this.#options.free;
+		if (!free) return null;
+		return {
+			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
+			reason: free.reason,
+		};
+	}
+
+	/**
+	 * The tokens this use targets. A free use starts from a trigger, not from the user's aim, so it
+	 * has none; its card can still get targets.
+	 */
+	get targets(): Token.Implementation[] {
+		if (this.free) return [];
+		return Array.from(game.user?.targets ?? []) as Token.Implementation[];
+	}
+
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
 	#appliedIncomingReactions: IncomingReactionEntry[] = [];
 
@@ -284,9 +303,6 @@ class ItemActivationManager {
 
 	/** The Held Changes this attack uses, which the roll spends. */
 	#heldPlan: AttackHeldPlan | null = null;
-
-	/** The conditions that changed the attack's roll mode, for what ends after it. */
-	#usedConditions: ConditionRollMode[] = [];
 
 	/** The kept amount this attack uses in place of a roll. */
 	#keptAmount: HeldChange | null = null;
@@ -428,7 +444,8 @@ class ItemActivationManager {
 			// Mana affordability only applies when mana is what the cast
 			// costs; a class-declared pool cost is validated at spend time.
 			const flatCost = this.spellCost?.type === 'pool';
-			const enforceManaCost = isResourceSpendingAutomationEnabled() && !flatCost;
+			const enforceManaCost =
+				isResourceSpendingAutomationEnabled() && !flatCost && !this.free?.of.includes('mana');
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
 				resources: actorSystem.resources,
@@ -492,13 +509,16 @@ class ItemActivationManager {
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
+		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
+			this.spellCost = { type: 'none' };
+		}
+
 		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
 			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
 			this.invokesChaos = true;
 		}
 
-		// Get Targets — resolve the first target's domain for targetCondition evaluation
-		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
+		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
 		this.#applyChosenWeapon(dialogData);
 
@@ -671,7 +691,7 @@ class ItemActivationManager {
 					// The acquireTargetsFromTemplate flag marks intentional AoE items;
 					// a bare template shape can be a stale leftover in item data.
 					const isAoE = !!activation?.acquireTargetsFromTemplate && templateShape !== '';
-					const targetCount = Array.from(game.user?.targets ?? []).length;
+					const targetCount = this.targets.length;
 					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
@@ -737,7 +757,7 @@ class ItemActivationManager {
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
 					this.#heldPlan = attackHeldPlanOf({
 						attacker: this.actor,
-						target: firstTargetActor(),
+						target: this.free ? null : firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
 						melee: isMelee(delivery),
@@ -803,16 +823,16 @@ class ItemActivationManager {
 					if (Array.isArray(this.#options.rollModeSources)) {
 						damageOptions.rollModeSources = this.#options.rollModeSources;
 					}
-					this.#usedConditions =
+					const usedConditions: ConditionRollMode[] =
 						isAttack && !this.#keptAmount && !this.#maxDamage
 							? (dialogData.conditionRollModes ?? this.#conditionsWithNoWindow(isAoE))
 							: [];
-					if (this.#usedConditions.length > 0) {
+					if (usedConditions.length > 0) {
 						damageOptions.rollModeSources = withConditionSources(
 							damageOptions.rollModeSources ?? [damageOptions.rollMode],
-							this.#usedConditions,
+							usedConditions,
 						);
-						damageOptions.conditionRollModes = this.#usedConditions;
+						damageOptions.conditionRollModes = usedConditions;
 					}
 
 					// The target's incoming-attack rules only apply to actual attacks
@@ -1239,8 +1259,6 @@ class ItemActivationManager {
 		for (const identifier of attackOutcomeChargesToSpend(outcomeCharges, this.#primaryRoll)) {
 			await spendRuleCharge(this.actor, identifier);
 		}
-		await endUsedConditions(this.actor, this.#usedConditions);
-		this.#usedConditions = [];
 		if (this.#heldPlan) await this.#heldPlan.spend();
 		else if (this.#keptAmountToEnd) await spendHeldChanges([this.#keptAmountToEnd]);
 		this.#heldPlan = null;
@@ -1679,7 +1697,7 @@ class ItemActivationManager {
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */
 	#getSoleTargetToken(): Token.Implementation | null {
-		return soleTarget(game.user?.targets, {
+		return soleTarget(this.targets, {
 			firstDecides: this.#isSingleTargetAttack(),
 		}) as Token.Implementation | null;
 	}
@@ -1765,6 +1783,17 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
 		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		/** A use that a rule gives for free. */
+		free?: FreeUse;
+	}
+
+	/** What a free use does not spend or check. `action` is always part of it. */
+	export type FreeOf = 'action' | 'uses' | 'mana';
+
+	export interface FreeUse {
+		of: FreeOf[];
+		/** The line the card shows for it. */
+		reason: FreeUseReason;
 	}
 
 	/**

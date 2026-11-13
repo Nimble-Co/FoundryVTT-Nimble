@@ -1,5 +1,5 @@
-import type { AttackerCondition } from '#types/attackerCondition.d.ts';
 import type {
+	AttackerEffect,
 	DefendCardLike,
 	DefendOptionPick,
 	DefendOptionUse,
@@ -9,6 +9,7 @@ import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
 import { actorRules, ruleKey, ruleLabel, runningRuleParent } from '../actor/actorRules.js';
+import { itemEffectOf } from '../actor/itemEffectOf.js';
 import { payCost } from '../cost/costLedger.js';
 import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
@@ -23,7 +24,7 @@ interface DefendOptionEffect {
 	outcome: DefendOutcome;
 	armorBonus: number;
 	reminders: string[];
-	attackerConditions: AttackerCondition[];
+	attackerEffects: AttackerEffect[];
 	wholeRound: boolean;
 }
 
@@ -54,21 +55,27 @@ export function defendOptionsOf(
 		.map((rule) => ({ key: ruleKey(rule), label: ruleLabel(rule), rule }));
 }
 
-/** Each condition once; it ends on the attacker's turn when one of its options says so. */
-function attackerConditionsOf(rules: readonly DefendOptionRule[]): AttackerCondition[] {
-	const endsOnTurn = new Map<string, boolean>();
+interface ItemWithEffects {
+	uuid?: string | null;
+	effects?: { get(id: string): { name?: string | null; transfer?: boolean } | undefined } | null;
+}
+
+/** The item effect of each option that names one, each effect once. A missing effect is left out. */
+function attackerEffectsOf(rules: readonly DefendOptionRule[]): AttackerEffect[] {
+	const effects = new Map<string, AttackerEffect>();
 	for (const rule of rules) {
-		if (!rule.attackerCondition) continue;
-		const ends = rule.attackerConditionEnds === 'attackerTurn';
-		endsOnTurn.set(
-			rule.attackerCondition,
-			(endsOnTurn.get(rule.attackerCondition) ?? false) || ends,
-		);
+		const item = rule.parentDocument as ItemWithEffects | null;
+		const effect = itemEffectOf(item, rule.attackerEffectId);
+		if (!effect || !item?.uuid) continue;
+		const key = `${item.uuid}:${rule.attackerEffectId}`;
+		if (effects.has(key)) continue;
+		effects.set(key, {
+			itemUuid: item.uuid,
+			effectId: rule.attackerEffectId,
+			name: effect.name ?? '',
+		});
 	}
-	return [...endsOnTurn].map(([condition, endsOnAttackerTurn]) => ({
-		condition,
-		endsOnAttackerTurn,
-	}));
+	return [...effects.values()];
 }
 
 const OUTCOME_ORDER: readonly DefendOutcome[] = ['miss', 'noDamage', 'halve', 'none'];
@@ -87,7 +94,7 @@ export function defendOptionEffect(rules: readonly DefendOptionRule[]): DefendOp
 			const text = (rule.reminder ?? '').trim();
 			return text ? [`${ruleLabel(rule)}: ${text}`] : [];
 		}),
-		attackerConditions: attackerConditionsOf(rules),
+		attackerEffects: attackerEffectsOf(rules),
 		wholeRound: rules.some((rule) => rule.wholeRound),
 	};
 }

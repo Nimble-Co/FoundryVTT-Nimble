@@ -121,16 +121,44 @@ describe('itemRow', () => {
 		).toBe(enriched);
 	});
 
-	it('ends a toggle that is on, and tags the row ACTIVE', () => {
+	it('tags the row ACTIVE while the hero has an effect that the item gave, and still uses the item', () => {
 		const hero = dicePoolHero();
 		const context = dicePoolContext({
-			itemState: { rage: itemState({ actionCost: 1, toggle: { ruleId: 'rageToggle', on: true } }) },
+			itemState: { rage: itemState({ actionCost: 1, active: true }) },
 		});
 
 		expect(itemRow(hero, item(hero, 'rage'), context)).toMatchObject({
 			state: 'active',
 			tag: `${SHARED}.active`,
-			use: { kind: 'act', intent: { kind: 'endToggle', itemId: 'rage', ruleId: 'rageToggle' } },
+			tagOn: true,
+			use: { kind: 'act', intent: { kind: 'activate', itemId: 'rage' } },
+		});
+	});
+
+	it('has no ACTIVE tag while the item gave no effect', () => {
+		const hero = dicePoolHero();
+		const view = itemRow(hero, item(hero, 'rage'), dicePoolContext());
+
+		expect(view.state).toBeUndefined();
+		expect(view.tag).toBeUndefined();
+		expect(view.use).toMatchObject({ kind: 'act', intent: { kind: 'activate', itemId: 'rage' } });
+	});
+
+	it('keeps the gate of an active item: a use with no charge left is blocked', () => {
+		const hero = dicePoolHero();
+		const gate = {
+			code: 'insufficientCharges' as const,
+			poolLabel: 'Charges',
+			poolMax: 1,
+			per: null,
+		};
+		const context = dicePoolContext({
+			itemState: { rage: itemState({ actionCost: 1, active: true, gate }) },
+		});
+
+		expect(itemRow(hero, item(hero, 'rage'), context)).toMatchObject({
+			state: 'active',
+			use: { kind: 'blocked' },
 		});
 	});
 

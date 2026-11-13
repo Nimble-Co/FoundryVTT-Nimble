@@ -43,16 +43,8 @@ describe('monsterEffectsTab', () => {
 		});
 	});
 
-	it('ends a toggle effect at once, and names the item of an item effect', () => {
+	it('names the item that gave an effect, and the pools that its end empties', () => {
 		const monster = goblin();
-		monster.items[0].rules = [
-			{
-				id: 'hideToggle',
-				type: 'toggleEffect',
-				active: true,
-				fields: { endAfterInactiveRounds: 0 },
-			},
-		];
 		monster.effects = [
 			{
 				id: 'hide',
@@ -60,21 +52,27 @@ describe('monsterEffectsTab', () => {
 				img: '',
 				disabled: false,
 				statuses: [],
-				origin: null,
+				origin: 'Actor.goblin.Item.hahaMissedMe0001',
 				itemId: null,
-				toggle: { itemId: 'hahaMissedMe0001', ruleId: 'hideToggle' },
 				temporary: true,
 				duration: '',
 				lastsUntil: '',
 				sourceName: '',
 				escape: null,
 				description: '',
+				poolsLost: ['Shadow Dice'],
 			},
 		];
 
 		const [row] = monsterEffectsTab(monster, monsterContext()).groups[0].rows;
 
-		expect(row.use).toMatchObject({ kind: 'act', intent: { kind: 'endEffect', effectId: 'hide' } });
+		expect(row.use).toMatchObject({
+			kind: 'ask',
+			ask: {
+				question: `${FX}.removeQuestion {"name":"Hide"} NIMBLE.ui.effectPoolLost {"pool":"Shadow Dice"}`,
+				intent: { kind: 'removeEffect', effectId: 'hide', itemId: null },
+			},
+		});
 		expect(row.summary).toBe(`${FX}.fromItem {"name":"Haha, Missed Me!"}`);
 	});
 

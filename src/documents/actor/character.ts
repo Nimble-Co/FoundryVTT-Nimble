@@ -2431,13 +2431,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		options: Record<string, unknown> = {},
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
+		const paysActions = !options.skipActionDeduction && !options.free;
 
 		// Soft-block gate: when the activation costs more actions than the
 		// combatant has remaining, confirm before any activation side effects
 		// (dialogs, rolls, card creation) so a cancelled overspend leaves no
 		// trace. `force` bypasses the prompt; paths that manage the cost
 		// themselves pass `skipActionDeduction` and are never prompted.
-		if (item && !options.skipActionDeduction) {
+		if (item && paysActions) {
 			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
@@ -2463,12 +2464,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			...(rushed > 0 && options.rollMode === undefined
 				? { rollMode: -rushed, rushedAttack: rushed + 1 }
 				: {}),
-			spendsActions: this.#actionsSpentBy(item, options),
+			spendsActions: paysActions ? this.#actionsSpentBy(item) : 0,
 		});
 
 		if (result && countsAsAttack(item)) await recordAttack(this);
 
-		if (result && item && !options.skipActionDeduction) {
+		if (result && item && paysActions) {
 			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
@@ -2490,9 +2491,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return result;
 	}
 
-	/** The actions that a use spends: only in a started combat, and not when the caller pays them. */
-	#actionsSpentBy(item: unknown, options: Record<string, unknown>): number {
-		if (!item || options.skipActionDeduction || !isActionTrackingAutomationEnabled()) return 0;
+	/** The actions that a use spends: only in a started combat. */
+	#actionsSpentBy(item: unknown): number {
+		if (!item || !isActionTrackingAutomationEnabled()) return 0;
 		const combat = game.combat as Combat | null;
 		const inCombat =
 			combat?.started && combat.combatants?.some((entry) => entry.actorId === this.id);

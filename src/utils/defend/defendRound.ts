@@ -1,8 +1,36 @@
 import { SYSTEM_ID } from '#system';
 import type { RoundMark, WholeRoundDefend } from '#types/defend.d.ts';
+import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 export const EXTRA_DEFEND_FLAG = 'extraDefendUsed';
-export const WHOLE_ROUND_DEFEND_FLAG = 'wholeRoundDefend';
+/** The flag of the Timed Effect that holds a Defend for the whole round. */
+export const ROUND_DEFEND_FLAG = 'roundDefend';
+
+const ROUND_DEFEND_IMG = 'icons/svg/shield.svg';
+
+/** Until the start of the holder's next turn. */
+const UNTIL_HOLDER_TURN_STARTS: Moment = {
+	kind: 'turn',
+	boundary: 'start',
+	clock: 'holder',
+	span: 'nextTurn',
+	value: null,
+	units: null,
+	who: null,
+	event: null,
+	effectName: '',
+};
+
+interface MarkEffect {
+	id?: string | null;
+	disabled?: boolean;
+	flags?: Record<string, Record<string, unknown> | undefined> | null;
+}
+
+interface MarkHolder {
+	effects?: Iterable<MarkEffect> | null;
+}
 
 export function roundMarkNow(): RoundMark | null {
 	const combat = game.combat;
@@ -45,10 +73,46 @@ export function extraDefendUsed(
 	return roundMarkHolds(flagOf<RoundMark>(actor, EXTRA_DEFEND_FLAG), combatantId);
 }
 
+function wholeRoundOfEffect(effect: MarkEffect): WholeRoundDefend | null {
+	const whole = effect.flags?.[SYSTEM_ID]?.[ROUND_DEFEND_FLAG] as WholeRoundDefend | undefined;
+	return whole && typeof whole === 'object' ? whole : null;
+}
+
+/** The ids of the actor's whole-round Defend effects; with a record id, only that Defend's. */
+export function roundDefendEffectIds(
+	actor: MarkHolder | null | undefined,
+	recordId?: string,
+): string[] {
+	return [...(actor?.effects ?? [])].flatMap((effect) => {
+		const whole = wholeRoundOfEffect(effect);
+		if (!whole || !effect.id) return [];
+		return recordId === undefined || whole.recordId === recordId ? [effect.id] : [];
+	});
+}
+
 export function wholeRoundDefendOf(
 	actor: Actor.Implementation | null | undefined,
 	combatantId: string | null | undefined,
 ): WholeRoundDefend | null {
-	const flag = flagOf<WholeRoundDefend>(actor, WHOLE_ROUND_DEFEND_FLAG);
-	return flag && roundMarkHolds(flag, combatantId) ? flag : null;
+	for (const effect of ((actor as MarkHolder | null)?.effects ?? []) as Iterable<MarkEffect>) {
+		if (effect.disabled) continue;
+		const whole = wholeRoundOfEffect(effect);
+		if (whole && roundMarkHolds(whole, combatantId)) return whole;
+	}
+	return null;
+}
+
+/** The Timed Effect that holds a Defend for the whole round, on its hero. */
+export function roundDefendEffectData(
+	whole: WholeRoundDefend,
+	source: { name: string; img?: string | null; origin: string | null },
+): Record<string, unknown> {
+	return {
+		name: source.name,
+		img: source.img || ROUND_DEFEND_IMG,
+		type: NIMBLE_EFFECT_TYPE,
+		origin: source.origin,
+		system: { lastsUntil: [UNTIL_HOLDER_TURN_STARTS] },
+		flags: { [SYSTEM_ID]: { [ROUND_DEFEND_FLAG]: whole } },
+	};
 }

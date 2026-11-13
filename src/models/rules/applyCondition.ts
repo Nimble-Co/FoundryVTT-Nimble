@@ -3,9 +3,18 @@ import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
+import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
+import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
+import { isActiveGM } from '#utils/isActiveGM.js';
+import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { choiceLabels } from './_rollUseRule.js';
+import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
+import { withWidget } from './_widgetOption.js';
 import {
 	type ActivationCardContext,
+	type ActorDyingContext,
 	type ActorHealthContext,
 	type InitiativeRolledContext,
 	type ItemUsedContext,
@@ -15,18 +24,7 @@ import {
 	type TurnContext,
 } from './base.js';
 
-const ATTACK_OUTCOME_TRIGGERS = ['onHit', 'onCrit', 'onMiss'] as const;
-const SELF_TRIGGERS = [
-	'onTurnStart',
-	'onTurnEnd',
-	'onKill',
-	'onWound',
-	'onSaveFail',
-	'onRest',
-	'onInitiative',
-] as const;
-
-const TRIGGER_CHOICES = [...ATTACK_OUTCOME_TRIGGERS, ...SELF_TRIGGERS] as const;
+const TRIGGER_CHOICES = RULE_TRIGGERS;
 
 type ApplyConditionTrigger = (typeof TRIGGER_CHOICES)[number];
 
@@ -44,6 +42,18 @@ interface OwnedConditionEffect {
 	id?: string | null;
 	getFlag?(scope: string, key: string): unknown;
 }
+
+interface ItemEffect {
+	transfer?: boolean;
+	toObject(): Record<string, unknown>;
+}
+
+interface EffectItem {
+	effects?: { get(id: string): ItemEffect | undefined | null } | null;
+}
+
+type EffectSourceUser = Parameters<typeof payloadFromEffect>[1]['user'];
+type EffectTarget = Parameters<typeof applyEffectToActor>[0];
 
 interface ConditionOwner {
 	effects?: Iterable<OwnedConditionEffect>;
@@ -71,24 +81,21 @@ function schema() {
 			initial: 'onCrit',
 			label: 'NIMBLE.rules.applyCondition.trigger.label',
 			hint: 'NIMBLE.rules.applyCondition.trigger.hint',
-			choices: TRIGGER_CHOICES as unknown as string[],
+			// The same triggers, and words, as Use an item for free.
+			choices: choiceLabels('useItemFree', 'triggers', TRIGGER_CHOICES),
 		}),
-		duration: new fields.SchemaField(
-			{
-				rounds: new fields.NumberField({ required: false, nullable: true, initial: null }),
-				turns: new fields.NumberField({ required: false, nullable: true, initial: null }),
-				seconds: new fields.NumberField({ required: false, nullable: true, initial: null }),
-			},
-			{
+		effectId: new fields.StringField(
+			withWidget({
 				required: true,
 				nullable: false,
-				// Self-target triggers fire on the rule owner; duration is the actor's,
-				// not an applied effect — hide the field rather than mislead authors.
-				showWhen: (data: Record<string, unknown>) => {
-					const trigger = data.trigger as ApplyConditionTrigger | undefined;
-					return trigger !== 'onTurnStart' && trigger !== 'onTurnEnd' && trigger !== 'onRest';
-				},
-			} as unknown as never,
+				blank: true,
+				initial: '',
+				label: 'NIMBLE.rules.applyCondition.effectId.label',
+				hint: 'NIMBLE.rules.applyCondition.effectId.hint',
+				widget: 'itemEffectPicker',
+				recipient: (data: Record<string, unknown>): 'self' | 'targets' =>
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')) ? 'targets' : 'self',
+			}),
 		),
 	};
 }
@@ -106,7 +113,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	declare condition: string;
 	declare trigger: ApplyConditionTrigger;
-	declare duration: { rounds: number | null; turns: number | null; seconds: number | null };
+	declare effectId: string;
 
 	static override defineSchema(): ApplyConditionRule.Schema {
 		return {
@@ -125,7 +132,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 						' <span class="nimble-type-summary__operator">|</span> ',
 					),
 				],
-				['duration', '{ rounds?, turns?, seconds? } | null'],
+				['effectId', 'string'],
 			]),
 		);
 	}
@@ -140,18 +147,34 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
 		if (!this.#isAttackTrigger()) return [];
 		if (!this.#matchesAttackContext(context)) return [];
-		if (!this.condition) return [];
+		const effect = this.#itemEffect();
+		if (!effect && !this.condition) return [];
 		const node: ApplyEffectNode = {
 			id: `apply-condition-${this.id}`,
 			type: 'applyEffect',
-			effectId: null,
-			condition: this.condition,
-			duration: this.duration,
+			effectId: effect ? this.effectId : null,
+			effectItemUuid: effect ? (this.item?.uuid ?? null) : null,
+			condition: this.condition || null,
 			recipient: 'targets',
 			parentContext: null,
 			parentNode: null,
 		};
 		return [node];
+	}
+
+	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
+		if (this.trigger !== 'onCritReceived') return;
+		if (context.targetActor !== this.actor) return;
+		if (!firesCritTriggers(context)) return;
+		if (!isEnemyAttacker(context.sourceActor, this.actor, context.card)) return;
+		await this.#applyConditionToSelf();
+	}
+
+	// onActorDying reaches every client.
+	override async onActorDying(context: ActorDyingContext): Promise<void> {
+		if (this.trigger !== 'onDying') return;
+		if (context.actor !== this.actor || !isActiveGM()) return;
+		await this.#applyConditionToSelf();
 	}
 
 	override async onTurnStart(context: TurnContext): Promise<void> {
@@ -213,14 +236,11 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	}
 
 	#matchesAttackContext(context: { isCritical: boolean; isMiss: boolean }): boolean {
-		if (this.trigger === 'onHit') return !context.isCritical && !context.isMiss;
-		if (this.trigger === 'onCrit') return context.isCritical;
-		if (this.trigger === 'onMiss') return context.isMiss;
-		return false;
+		return attackOutcomeMatches(this.trigger, context);
 	}
 
 	#isAttackTrigger(): boolean {
-		return this.trigger === 'onHit' || this.trigger === 'onCrit' || this.trigger === 'onMiss';
+		return isAttackOutcomeTrigger(this.trigger);
 	}
 
 	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<void> {
@@ -252,19 +272,44 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (ids.length > 0) await owner.deleteEmbeddedDocuments('ActiveEffect', ids);
 	}
 
+	#itemEffect(): ItemEffect | null {
+		return itemEffectOf(this.item as unknown as EffectItem | null, this.effectId);
+	}
+
 	async #applyConditionTo(
 		target: ConditionTargetActor,
 		systemFlags?: Record<string, unknown>,
 	): Promise<void> {
+		const effect = this.#itemEffect();
+		if (effect) {
+			await this.#applyEffectCopyTo(target, effect, systemFlags);
+			return;
+		}
 		if (!this.condition) return;
 
 		await applyConditionToActor(target, this.condition, {
 			sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
 			sourceActor: this.actor as unknown as { uuid?: string } | null,
-			duration: this.duration,
 			rule: this,
 			systemFlags: systemFlags ?? null,
 		});
+	}
+
+	async #applyEffectCopyTo(
+		target: ConditionTargetActor,
+		effect: ItemEffect,
+		systemFlags?: Record<string, unknown>,
+	): Promise<void> {
+		const user = this.actor as unknown as EffectSourceUser | null;
+		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user });
+		if (systemFlags) {
+			const flags = (payload.data.flags ?? {}) as Record<string, Record<string, unknown>>;
+			payload.data.flags = {
+				...flags,
+				[SYSTEM_ID]: { ...(flags[SYSTEM_ID] ?? {}), ...systemFlags },
+			};
+		}
+		await applyEffectToActor(target as unknown as EffectTarget, payload);
 	}
 }
 

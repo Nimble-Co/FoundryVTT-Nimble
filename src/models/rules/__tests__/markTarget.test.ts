@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../activeEffect/nimbleEffectChoices.js';
 import { MarkTargetRule } from '../markTarget.js';
@@ -17,6 +17,7 @@ interface MockTargetActor {
 	effects: MockMarkEffect[];
 	createEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
+	updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 }
 
 function createTargetToken(uuid: string, name: string) {
@@ -47,11 +48,15 @@ function createTargetToken(uuid: string, name: string) {
 			}
 			return ids;
 		}),
+		updateEmbeddedDocuments: vi.fn(async () => []),
 	};
 	return { uuid: `Token.${uuid}`, actor };
 }
 
 interface MarkOwner {
+	name?: string;
+	type?: string;
+	uuid?: string;
 	getFlag: ReturnType<typeof vi.fn>;
 	setFlag: ReturnType<typeof vi.fn>;
 	rules: MarkTargetRule[];
@@ -67,12 +72,30 @@ function createOwner(): MarkOwner {
 	};
 }
 
+interface MockItemEffect {
+	transfer: boolean;
+	toObject(): Record<string, unknown>;
+}
+
 function createRule(
-	config: { flagKey?: string; statusCondition?: string; maxTargets?: number },
+	config: {
+		flagKey?: string;
+		statusCondition?: string;
+		maxTargets?: number;
+		effectId?: string;
+		effects?: Record<string, MockItemEffect>;
+	},
 	owner: MarkOwner,
 	itemUuid = 'item-uuid',
 ): { rule: MarkTargetRule; item: { uuid: string } } {
-	const item = { isEmbedded: true, actor: owner, name: "Hunter's Mark", uuid: itemUuid };
+	const effects = config.effects ?? {};
+	const item = {
+		isEmbedded: true,
+		actor: owner,
+		name: "Hunter's Mark",
+		uuid: itemUuid,
+		effects: { get: (id: string) => effects[id] },
+	};
 	const sourceData = {
 		type: 'markTarget',
 		flagKey: config.flagKey ?? 'quarry',
@@ -96,6 +119,7 @@ function createRule(
 	(rule as unknown as { statusCondition: string }).statusCondition =
 		config.statusCondition ?? 'marked';
 	rule.maxTargets = config.maxTargets ?? 1;
+	rule.effectId = config.effectId ?? '';
 
 	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
@@ -113,7 +137,15 @@ function activation(sourceItem: { uuid: string }, tokens: ReturnType<typeof crea
 	} as never;
 }
 
+function effectStartStub() {
+	return CONFIG.ActiveEffect.documentClass as unknown as Record<string, unknown>;
+}
+
 describe('MarkTargetRule', () => {
+	afterEach(() => {
+		delete effectStartStub().getEffectStart;
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Eviction resolves token actors via the global fromUuid; reset per test so a
@@ -216,9 +248,14 @@ describe('MarkTargetRule', () => {
 			getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'item-uuid' : undefined),
 		});
 
+		effectStartStub().getEffectStart = () => ({ time: 60 });
+
 		await rule.onItemActivated(activation(item, [token]));
 
 		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(token.actor.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'Effect.existing', start: { time: 60 } },
+		]);
 	});
 
 	it('raises capacity to the largest sibling maxTargets (finite Nemesis upgrade)', async () => {
@@ -282,9 +319,130 @@ describe('MarkTargetRule', () => {
 		expect(token.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
-	it('keeps a mark past the end of the encounter unless the rule says so', () => {
-		const fields = MarkTargetRule.defineSchema() as Record<string, { initial?: unknown }>;
-		expect(fields.endsAtEncounterEnd?.initial).toBe(false);
+	describe('with an item effect', () => {
+		const oneMinute = {
+			kind: 'time',
+			boundary: null,
+			clock: null,
+			span: null,
+			value: 1,
+			units: 'minutes',
+			who: null,
+			event: null,
+			effectName: '',
+		};
+
+		function itemEffect(transfer = false): MockItemEffect {
+			const source = {
+				_id: 'exploit',
+				name: 'Exploit Weakness',
+				img: 'exploit.webp',
+				transfer,
+				disabled: false,
+				origin: 'Compendium.x',
+				start: { round: 4 },
+				statuses: ['dazed'],
+				flags: { other: { keep: 1 } },
+				system: {
+					changes: [{ key: 'system.x', type: 'add', value: '1' }],
+					lastsUntil: [oneMinute],
+					escape: { dc: '', saves: ['strength'] },
+					rules: [{ type: 'heldRoll', heldKind: 'advantage' }],
+					tempHp: null,
+				},
+			};
+			return { transfer, toObject: () => structuredClone(source) };
+		}
+
+		function markedWith(effect: MockItemEffect | null, effectId = 'exploit') {
+			const owner = createOwner();
+			owner.name = 'Cheat';
+			owner.type = 'character';
+			owner.uuid = 'Actor.cheat';
+			const { rule, item } = createRule(
+				{ effectId, effects: effect ? { exploit: effect } : {} },
+				owner,
+			);
+			owner.rules = [rule];
+			return { owner, rule, item };
+		}
+
+		it("copies the effect's img, Lasts Until, Escape, changes and rules onto the marker", async () => {
+			const { rule, item } = markedWith(itemEffect());
+			const token = createTargetToken('goblin', 'Goblin');
+
+			await rule.onItemActivated(activation(item, [token]));
+
+			const data = token.actor.createEmbeddedDocuments.mock.calls[0][1][0];
+			expect(data).toMatchObject({
+				img: 'exploit.webp',
+				system: {
+					changes: [{ key: 'system.x', type: 'add', value: '1' }],
+					lastsUntil: [oneMinute],
+					escape: { dc: '', saves: ['strength'] },
+					rules: [{ type: 'heldRoll', heldKind: 'advantage' }],
+				},
+			});
+		});
+
+		it('keeps its own name, statuses, origin and flag, and no start of the item effect', async () => {
+			const { rule, item } = markedWith(itemEffect());
+			const token = createTargetToken('goblin', 'Goblin');
+
+			await rule.onItemActivated(activation(item, [token]));
+
+			const data = token.actor.createEmbeddedDocuments.mock.calls[0][1][0];
+			expect(data.type).toBe(NIMBLE_EFFECT_TYPE);
+			expect(data.name).toMatch(/\(Cheat\)$/);
+			expect(data.name).not.toContain('Exploit Weakness');
+			expect(data.statuses).toEqual(['marked']);
+			expect(data.origin).toBe('item-uuid');
+			expect(data.flags).toEqual({ [SYSTEM_ID]: { markTargetItemUuid: 'item-uuid' } });
+			expect(data).not.toHaveProperty('start');
+			expect(data).not.toHaveProperty('changes');
+		});
+
+		it("still puts its marker on a creature that has a second hunter's marker", async () => {
+			const { rule, item } = markedWith(itemEffect());
+			const token = createTargetToken('goblin', 'Goblin');
+			token.actor.effects.push({
+				id: 'Effect.other',
+				getFlag: (_s, k) => (k === 'markTargetItemUuid' ? 'other-item' : undefined),
+			});
+
+			await rule.onItemActivated(activation(item, [token]));
+
+			expect(token.actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+			expect(token.actor.effects.map((effect) => effect.id)).toEqual(['Effect.other', 'Effect.1']);
+		});
+
+		it("gives today's marker with no pick, or a pick that is not the item's own effect", async () => {
+			for (const [effect, effectId] of [
+				[itemEffect(), ''],
+				[null, 'exploit'],
+				[itemEffect(true), 'exploit'],
+			] as const) {
+				const { rule, item } = markedWith(effect, effectId);
+				const token = createTargetToken('goblin', 'Goblin');
+
+				await rule.onItemActivated(activation(item, [token]));
+
+				const data = token.actor.createEmbeddedDocuments.mock.calls[0][1][0];
+				expect(data.statuses).toEqual(['marked']);
+				expect(data).not.toHaveProperty('system');
+				expect(data).not.toHaveProperty('changes');
+				expect(data.img).not.toBe('exploit.webp');
+			}
+		});
+	});
+
+	it('picks its effect with the item effect picker, none by default', () => {
+		const fields = MarkTargetRule.defineSchema() as Record<
+			string,
+			{ initial?: unknown; options?: { widget?: string } }
+		>;
+		expect(fields.effectId?.initial).toBe('');
+		expect(fields).not.toHaveProperty('endsAtEncounterEnd');
 	});
 
 	it('exposes the picker group and description key', () => {

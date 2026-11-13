@@ -36,13 +36,48 @@ describe('placeOf', () => {
 		expect(placeOf(feature({}, [rule('diceConsumer', { mode: 'autoBonus' })]))).toBe('passive');
 	});
 
-	it('puts a feature that you turn on, or that marks a target, on Actions', () => {
-		expect(placeOf(feature({}, [rule('toggleEffect')]))).toBe('action');
+	it('puts a feature that marks a target on Actions', () => {
 		expect(placeOf(feature({}, [rule('markTarget')]))).toBe('action');
 	});
 
+	it('puts a feature whose use gives you an effect on Actions, not one that gives it to targets', () => {
+		const withStep = (recipient: string) =>
+			heroItem({
+				type: 'feature',
+				system: {
+					activation: {
+						cost: { type: 'none', quantity: 1, isReaction: false },
+						effects: [{ id: 'a', type: 'applyEffect', recipient }],
+					},
+				},
+			});
+
+		expect(placeOf(withStep('self'))).toBe('action');
+		expect(placeOf(withStep('targets'))).toBe('passive');
+	});
+
+	it('puts a feature whose hit gives you an effect on Actions', () => {
+		const item = heroItem({
+			type: 'feature',
+			system: {
+				activation: {
+					cost: { type: 'none', quantity: 1, isReaction: false },
+					effects: [
+						{
+							id: 'd',
+							type: 'damage',
+							on: { criticalHit: [{ id: 'a', type: 'applyEffect', recipient: 'self' }] },
+						},
+					],
+				},
+			},
+		});
+
+		expect(placeOf(item)).toBe('action');
+	});
+
 	it('ignores a disabled rule', () => {
-		expect(placeOf(feature({}, [rule('toggleEffect', { disabled: true })]))).toBe('passive');
+		expect(placeOf(feature({}, [rule('markTarget', { disabled: true })]))).toBe('passive');
 	});
 
 	it('puts a reaction in Reactions, also the legacy reaction cost type', () => {

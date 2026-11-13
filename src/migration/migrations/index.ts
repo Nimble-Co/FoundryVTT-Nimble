@@ -85,3 +85,4 @@ export { Migration084CombatDiceMaxReference } from './Migration084CombatDiceMaxR
 export { Migration085NimbleEffectType } from './Migration085NimbleEffectType.js';
 export { Migration086ApplyEffectNodes } from './Migration086ApplyEffectNodes.js';
 export { Migration087HeldChangeEffects } from './Migration087HeldChangeEffects.js';
+export { Migration088LastsUntilVocabularies } from './Migration088LastsUntilVocabularies.js';

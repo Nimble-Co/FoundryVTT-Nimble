@@ -13,8 +13,6 @@ export interface ConditionRollMode {
 	name: string;
 	/** What the table decides, which the line names. */
 	ask?: 'fearNearby' | 'taunter';
-	/** The condition ends after the attack that used the line. */
-	ends?: boolean;
 }
 
 /**

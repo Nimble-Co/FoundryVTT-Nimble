@@ -22,12 +22,15 @@ import type {
 	RuleBackedItem,
 } from './types.js';
 
-/** With `freeUse`, a consumer that allows a use with no charge asks for none. */
+/**
+ * With `freeUse`, a consumer that allows a use with no charge asks for none. With `freeOfUses`,
+ * no consumer asks for any.
+ */
 function validateItemChargeConsumption(
 	item: Item | null | undefined,
-	{ freeUse = false }: { freeUse?: boolean } = {},
+	{ freeUse = false, freeOfUses = false }: { freeUse?: boolean; freeOfUses?: boolean } = {},
 ): ChargeValidationResult {
-	if (!item) return { ok: true };
+	if (!item || freeOfUses) return { ok: true };
 	const ruleBackedItem = item as RuleBackedItem;
 	const actor = item.actor;
 	if (!isCharacterActor(actor)) return { ok: true };
@@ -133,9 +136,9 @@ async function consumeOnResolvedItemUse(
 	if (!isCharacterActor(actor)) return { ok: true };
 
 	const currentPools = buildEffectiveChargePoolMap(actor);
-	const consumers = getChargeConsumers(actor, ruleBackedItem, {
-		freeUse: context.freeUse === true,
-	});
+	const consumers = context.freeOfUses
+		? []
+		: getChargeConsumers(actor, ruleBackedItem, { freeUse: context.freeUse === true });
 
 	const consumption: ChargeConsumptionDetail[] = [];
 	const consumptionByPoolId = new Map<string, ChargeConsumptionDetail>();

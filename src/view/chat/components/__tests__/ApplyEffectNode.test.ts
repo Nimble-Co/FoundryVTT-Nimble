@@ -44,7 +44,22 @@ describe('applyEffectRow', () => {
 	it('shows who took it in place of the button', () => {
 		const view = row({ applied: [{ effectUuid: 'x', actorName: 'Goblin' }] });
 		expect(view.button).toBeNull();
-		expect(view.appliedLine).toBe('On Goblin');
+		expect(view.appliedLines).toEqual(['On Goblin']);
+	});
+
+	it('says that the effect stays on a holder that kept the one it had', () => {
+		const view = row({
+			applied: [
+				{ effectUuid: 'x', actorName: 'Goblin' },
+				{ effectUuid: 'y', actorName: 'Kobold', stays: true },
+			],
+		});
+
+		expect(view.button).toBeNull();
+		expect(view.appliedLines).toEqual(['On Goblin', 'Taunted stays on Kobold']);
+		expect(
+			row({ applied: [{ effectUuid: 'y', actorName: 'Hero', stays: true }] }).appliedLines,
+		).toEqual(['Taunted stays on Hero']);
 	});
 
 	it('has no button for a user who did not roll the card, and a disabled one with no targets', () => {

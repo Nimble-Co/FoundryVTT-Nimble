@@ -9,7 +9,6 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import applyConditionToActor, {
 	applicationOf,
 	CONDITION_REPLACED_OPTION,
-	type ConditionDuration,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
 import { giveTempHp, tempHpGrant } from './effectTempHp.js';
@@ -25,8 +24,6 @@ export interface EffectPayload {
 	data: Record<string, unknown>;
 	sourceItemUuid: string | null;
 	sourceActorUuid: string | null;
-	/** A core duration, for a card that a rule made. */
-	duration?: ConditionDuration | null;
 	/** The temp HP that the effect gives, from a temp healing roll of the card. */
 	tempHp?: number | null;
 }
@@ -34,6 +31,8 @@ export interface EffectPayload {
 export interface AppliedEffect {
 	effectUuid: string;
 	actorName: string;
+	/** the holder had the same effect from the same origin, and it lasts as long or longer: it stays */
+	stays?: boolean;
 	/** the holder kept more temp HP than the effect gives */
 	tempHpRefused?: { temp: number; amount: number };
 }
@@ -50,7 +49,9 @@ interface EffectHolder {
 	isOwner?: boolean;
 	system?: unknown;
 	update(data: Record<string, unknown>): Promise<unknown>;
-	effects?: Iterable<ExistingConditionEffect & { origin?: string | null; name?: string | null }>;
+	effects?: Iterable<
+		ExistingConditionEffect & { uuid?: string; origin?: string | null; name?: string | null }
+	>;
 }
 
 interface CreatedEffect {
@@ -102,13 +103,11 @@ export function payloadFromCondition(
 	condition: string,
 	lastsUntil: Moment[],
 	source: { itemUuid: string | null; actorUuid: string | null },
-	duration: ConditionDuration | null = null,
 ): EffectPayload {
 	return {
 		data: { statuses: [condition], system: { lastsUntil } },
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.actorUuid,
-		duration,
 	};
 }
 
@@ -118,12 +117,15 @@ async function documentOrUuid(uuid: string | null): Promise<{ uuid: string } | n
 	return document ?? { uuid };
 }
 
-/** An effect with no status: the same effect from the same origin again keeps the one that lasts longer. */
+/**
+ * An effect with no status: the same effect from the same origin again keeps the one that lasts
+ * longer. `stays` is the old one when it is kept.
+ */
 async function createPlainEffect(
 	target: EffectHolder,
 	data: Record<string, unknown>,
 	origin: string | null,
-): Promise<CreatedEffect | null> {
+): Promise<{ created: CreatedEffect | null; stays?: string }> {
 	const ActiveEffectClass = CONFIG.ActiveEffect.documentClass as unknown as {
 		create(data: object, options: object): Promise<CreatedEffect | undefined>;
 		deleteDocuments(ids: string[], options: object): Promise<unknown>;
@@ -140,18 +142,20 @@ async function createPlainEffect(
 			duration: data.duration as { value?: number | null; units?: string | null } | null,
 		};
 		const context = { roundSeconds: roundSeconds(), secondsOf };
-		if (!newApplicationLastsLonger(next, current.map(applicationOf), context)) return null;
+		if (!newApplicationLastsLonger(next, current.map(applicationOf), context)) {
+			const kept = current[0];
+			return { created: null, stays: kept.uuid ?? `${target.uuid}.ActiveEffect.${kept.id}` };
+		}
 		await ActiveEffectClass.deleteDocuments(
 			current.map((effect) => effect.id).filter((id): id is string => !!id),
 			{ parent: target, [CONDITION_REPLACED_OPTION]: true },
 		);
 	}
-	return (
-		(await ActiveEffectClass.create(
-			{ ...data, origin, type: NIMBLE_EFFECT_TYPE },
-			{ parent: target },
-		)) ?? null
+	const created = await ActiveEffectClass.create(
+		{ ...data, origin, type: NIMBLE_EFFECT_TYPE },
+		{ parent: target },
 	);
+	return { created: created ?? null };
 }
 
 /** Puts the effect on the target on this client. The user must own the target. */
@@ -167,15 +171,23 @@ export async function applyEffectHere(
 	const grantsBefore = tempHpGrants(target);
 	const statuses = Array.isArray(data.statuses) ? (data.statuses as string[]) : [];
 	const lastsUntil = (data.system as { lastsUntil?: Moment[] } | undefined)?.lastsUntil ?? [];
-	const effect = statuses.length
-		? ((await applyConditionToActor(target as never, statuses[0], {
-				sourceItem,
-				sourceActor,
-				lastsUntil,
-				duration: payload.duration ?? null,
-				effectData: data,
-			})) as CreatedEffect | null)
-		: await createPlainEffect(target, data, sourceItem?.uuid ?? sourceActor?.uuid ?? null);
+	let effect: CreatedEffect | null;
+	if (statuses.length) {
+		effect = (await applyConditionToActor(target as never, statuses[0], {
+			sourceItem,
+			sourceActor,
+			lastsUntil,
+			effectData: data,
+		})) as CreatedEffect | null;
+	} else {
+		const plain = await createPlainEffect(
+			target,
+			data,
+			sourceItem?.uuid ?? sourceActor?.uuid ?? null,
+		);
+		if (plain.stays) return { effectUuid: plain.stays, actorName: target.name ?? '', stays: true };
+		effect = plain.created;
+	}
 	if (!effect?.uuid) return null;
 	const ids = new Set([...(target.effects ?? [])].map((entry) => entry.id));
 	const replaced = grantsBefore

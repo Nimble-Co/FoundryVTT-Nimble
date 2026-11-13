@@ -10,7 +10,9 @@ interface FieldExtras {
 	widget?: string | ((data: Record<string, unknown>) => string);
 	documentTypes?: string[];
 	choicesFor?: (ruleData: Record<string, unknown>) => readonly string[];
+	recipient?: EffectRecipient | ((ruleData: Record<string, unknown>) => EffectRecipient);
 }
+type EffectRecipient = 'self' | 'targets';
 type FieldWithOptions = { options?: FieldExtras };
 
 /** The label of a field inside a list row or group: its `label`, else its name as words. */
@@ -49,6 +51,12 @@ export function createSchemaFieldRendererState(
 		(getField() as unknown as FieldWithOptions).options?.documentTypes,
 	);
 	const isHidden = $derived(!isFieldShown(getField(), getParentData()));
+	/** Who gets the effect an `itemEffectPicker` field holds; its Lasts Until line reads for them. */
+	const recipient = $derived.by((): EffectRecipient => {
+		const raw = (getField() as unknown as FieldWithOptions).options?.recipient;
+		const resolved = typeof raw === 'function' ? raw(getRuleData()) : raw;
+		return resolved === 'self' ? 'self' : 'targets';
+	});
 
 	function setupUnknownWidgetWarning(): void {
 		// Warn if a rule schema set a widget hint we don't recognise — typos
@@ -134,6 +142,9 @@ export function createSchemaFieldRendererState(
 		},
 		get documentTypes() {
 			return documentTypes;
+		},
+		get recipient() {
+			return recipient;
 		},
 		get ruleData() {
 			return getRuleData();

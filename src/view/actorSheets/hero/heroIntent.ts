@@ -64,7 +64,6 @@ export type HeroIntent =
 	| { kind: 'endTurn' }
 	| { kind: 'rollAbilityCheck'; ability: AbilityKeyType }
 	| { kind: 'rollSkill'; skill: SkillKeyType }
-	| { kind: 'endToggle'; itemId: string; ruleId: string }
 	| { kind: 'createItem'; itemType: 'spell' | 'object' | 'feature' }
 	| { kind: 'toggleEquip'; itemId: string }
 	| { kind: 'setQuantity'; itemId: string; value: number }

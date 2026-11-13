@@ -292,8 +292,8 @@
 	--nimble-chat-upcast-color: hsl(150, 50%, 32%);
 
 	/** WEAPON CARD COLORS **/
-	--nimble-weapon-toggle-on-color: hsl(120, 45%, 40%);
-	--nimble-weapon-toggle-on-color-hover: hsl(120, 45%, 50%);
+	// Small tag text: ~5:1 on the tag background.
+	--nimble-weapon-active-color: hsl(120, 50%, 25%);
 
 	/** CLASS PROGRESSION BADGE COLORS **/
 	--nimble-badge-primary-bg: hsl(120, 55%, 22%);

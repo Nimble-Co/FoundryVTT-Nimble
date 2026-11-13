@@ -13,6 +13,7 @@
 	import ChargePoolPicker from './ChargePoolPicker.svelte';
 	import DicePoolPicker from './DicePoolPicker.svelte';
 	import FormulaInput from './FormulaInput.svelte';
+	import ItemEffectPicker from './ItemEffectPicker.svelte';
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import RichTextEditor from './RichTextEditor.svelte';
 	// Self-import for recursive rendering (nested SchemaFields, ArrayField
@@ -92,6 +93,15 @@
 			{disabled}
 			{document}
 			required={(field as unknown as { required?: boolean }).required ?? false}
+		/>
+	{:else if state.widget === 'itemEffectPicker'}
+		<ItemEffectPicker
+			value={String(value ?? '')}
+			onChange={(v) => onChange(v)}
+			{disabled}
+			{document}
+			label={childFieldLabel(name, field)}
+			recipient={state.recipient}
 		/>
 	{:else if state.widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />

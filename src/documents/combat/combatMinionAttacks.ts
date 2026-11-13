@@ -1,6 +1,7 @@
 import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
@@ -19,7 +20,6 @@ import {
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
-import { endUsedConditions } from '../../utils/rolls/endUsedConditions.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import { soleTarget } from '../../utils/tokens/soleTarget.js';
 import {
@@ -312,7 +312,6 @@ async function rollSingleMinionAttack(params: {
 		const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, rollOptions);
 		await damageRoll.evaluate();
 		await held.spend();
-		await endUsedConditions(resolvedActionContext.actor, conditions);
 
 		const actionCost = resolveMinionAttackActionCost(resolvedActionContext.selectedAction);
 		return {
@@ -433,6 +432,22 @@ async function buildNcsAttackChatData(params: {
 		chatMessageId: chatCard?.id ?? null,
 		totalDamage,
 	};
+}
+
+/**
+ * The attack event of each actor whose member rolled. Resolves when their activity is saved, so the
+ * turn does not end before the round has the attack.
+ */
+async function fireMemberAttackEvents(
+	attackMembers: Combatant.Implementation[],
+	rolledCombatantIds: string[],
+): Promise<void> {
+	const rolled = new Set(rolledCombatantIds);
+	const attackers = new Set<Actor>();
+	for (const member of attackMembers) {
+		if (member.actor && rolled.has(member.id ?? '')) attackers.add(member.actor as Actor);
+	}
+	await Promise.all([...attackers].map((actor) => fireAttackEvents(actor)));
 }
 
 async function maybeAdvanceTurnAfterAttack(params: {
@@ -595,6 +610,7 @@ export async function performMinionGroupAttack(params: {
 	});
 	result.totalDamage = chatData.totalDamage;
 	result.chatMessageId = chatData.chatMessageId;
+	await fireMemberAttackEvents(attackMembers, result.rolledCombatantIds);
 	result.endTurnApplied = await maybeAdvanceTurnAfterAttack({
 		combat: params.combat,
 		endTurn: normalizedParams.endTurn,

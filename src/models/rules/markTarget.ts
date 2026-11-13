@@ -1,4 +1,6 @@
 import { SYSTEM_ID } from '#system';
+import { payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import {
 	applyMarkEffect,
 	MARK_TARGET_ITEM_FLAG,
@@ -12,6 +14,7 @@ import {
 } from '#utils/actor/toggledEffects.js';
 import localize from '#utils/localize.js';
 import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
+import { withWidget } from './_widgetOption.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -44,13 +47,17 @@ function schema() {
 			label: 'NIMBLE.rules.markTarget.maxTargets.label',
 			hint: 'NIMBLE.rules.markTarget.maxTargets.hint',
 		}),
-		endsAtEncounterEnd: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: 'NIMBLE.rules.markTarget.endsAtEncounterEnd.label',
-			hint: 'NIMBLE.rules.markTarget.endsAtEncounterEnd.hint',
-		}),
+		effectId: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: 'NIMBLE.rules.markTarget.effectId.label',
+				hint: 'NIMBLE.rules.markTarget.effectId.hint',
+				widget: 'itemEffectPicker',
+			}),
+		),
 	};
 }
 
@@ -72,6 +79,15 @@ interface MarkableActor {
 		data: Array<Record<string, unknown>>,
 	): Promise<unknown>;
 	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+	updateEmbeddedDocuments(
+		type: 'ActiveEffect',
+		updates: Array<Record<string, unknown>>,
+	): Promise<unknown>;
+}
+
+interface MarkSourceEffect {
+	transfer?: boolean;
+	toObject(): Record<string, unknown>;
 }
 
 interface FlaggedActor {
@@ -92,10 +108,10 @@ interface FlaggedActor {
  * independent. Capacity is the largest `maxTargets` among the actor's enabled markTarget rules
  * sharing this `flagKey` (a value of 0 means unlimited) — this lets a separate upgrade
  * feature raise the cap (e.g. the Hunter's level-20 Nemesis) without the primary rule
- * knowing about it. Marking beyond capacity evicts the oldest mark. There is no time-based
- * expiry: "until you mark another creature" is exactly the capacity-eviction behaviour.
- * A rule can end its marks at the end of the encounter, and taking a marker effect off a
- * creature ends that mark (see `markLifecycle.ts`).
+ * knowing about it. Marking beyond capacity evicts the oldest mark: "until you mark another
+ * creature" is exactly the capacity-eviction behaviour. An `effectId` gives the marker the
+ * item effect's Lasts Until, changes and rules. Any end of the marker (its Lasts Until, or
+ * someone taking it off the creature) ends that mark (see `markLifecycle.ts`).
  */
 class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	static override worksOnEffects = false;
@@ -107,6 +123,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	// `statusCondition` is inferred from the schema's `choices` (condition keys plus the
 	// blank sentinel). Re-declaring as the wider `string` clashes with the inferred type.
 	declare maxTargets: number;
+	declare effectId: string;
 
 	static override defineSchema(): MarkTargetRule.Schema {
 		return {
@@ -121,7 +138,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 				['flagKey', 'string'],
 				['statusCondition', 'string'],
 				['maxTargets', 'number'],
-				['endsAtEncounterEnd', 'boolean'],
+				['effectId', 'string'],
 			]),
 		);
 	}
@@ -222,22 +239,46 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		}
 	}
 
-	/** Creation payload for a marker ActiveEffect, named for the marking actor. */
+	/**
+	 * Creation payload for a marker ActiveEffect, named for the marking actor. With an item
+	 * effect, the marker also takes that effect's img, Lasts Until, Escape, changes and rules.
+	 * The name, status, origin and flag stay the marker's own: the mark code reads them.
+	 */
 	#buildMarkEffectData(): Record<string, unknown> {
 		const conditions = CONFIG.NIMBLE.conditions as Record<string, string>;
 		const images = CONFIG.NIMBLE.conditionDefaultImages as Record<string, string>;
 		const conditionName = localize(conditions[this.statusCondition] ?? this.statusCondition);
 		const markerName = (this.actor as object as { name?: string })?.name ?? '';
+		const itemUuid = this.parentItem.uuid;
 
-		return {
+		const marker: Record<string, unknown> = {
 			type: NIMBLE_EFFECT_TYPE,
 			name: markerName ? `${conditionName} (${markerName})` : conditionName,
 			img: images[this.statusCondition],
 			statuses: [this.statusCondition],
 			// Origin surfaces the source item in the effects panel; the flag is what
 			// eviction matches on so it never touches another marker's effect.
-			origin: this.parentItem.uuid,
-			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: this.parentItem.uuid } },
+			origin: itemUuid,
+			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: itemUuid } },
+		};
+
+		const effect = itemEffectOf<MarkSourceEffect>(this.parentItem, this.effectId);
+		if (!effect) return marker;
+
+		const { data } = payloadFromEffect(effect, {
+			itemUuid,
+			user: this.actor as unknown as Parameters<typeof payloadFromEffect>[1]['user'],
+		});
+		const system = (data.system ?? {}) as Record<string, unknown>;
+		return {
+			...marker,
+			img: (data.img as string | null | undefined) || marker.img,
+			system: {
+				changes: Array.isArray(system.changes) ? system.changes : [],
+				lastsUntil: Array.isArray(system.lastsUntil) ? system.lastsUntil : [],
+				...(system.escape ? { escape: system.escape } : {}),
+				rules: Array.isArray(system.rules) ? system.rules : [],
+			},
 		};
 	}
 }

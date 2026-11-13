@@ -137,8 +137,8 @@ export interface HeroItemState {
 	pools: ItemPoolLike[];
 	/** null: the gate lets the use go, or resource spending is off */
 	gate: ChargeGateLike | null;
-	/** the item has a toggle effect rule; on = its effect is on the hero */
-	toggle: { ruleId: string; on: boolean } | null;
+	/** the hero has an enabled effect that a use of this item gave */
+	active: boolean;
 	diceConsumers: DiceConsumerLike[];
 }
 
@@ -167,7 +167,7 @@ export interface HeroSheetContext {
 	skillAbilities: Partial<Record<SkillKeyType, AbilityKeyType>>;
 	dicePools: DicePoolLike[];
 	chargePools: ChargePoolLike[];
-	/** by item id; an item with no entry has no cost, pools, gate, toggle or consumers */
+	/** by item id; an item with no entry has no cost, pools, gate or consumers, and is not active */
 	itemState: Record<string, HeroItemState>;
 	/** the names of the tokens that the user targets, not the hero */
 	targets: string[];
