@@ -410,6 +410,23 @@ describe('events', () => {
 			);
 		});
 
+		it('stays, with its effect, when an Undo of damage gives back temp HP', async () => {
+			const { actor, frost } = linked(10);
+			const options = {
+				nimble: { previousHp: { value: 10, max: 10, temp: 4 }, undoesDamage: true },
+			};
+
+			hook('updateActor')(actor, tempTo(10), options);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			expect(frost.update).not.toHaveBeenCalled();
+			expect(fireEventMock).not.toHaveBeenCalledWith(
+				'tempHpGone',
+				expect.anything(),
+				expect.anything(),
+			);
+		});
+
 		it('is left to the active GM on other clients', async () => {
 			user.isActiveGM = false;
 			const { actor, frost } = linked(0);
@@ -493,6 +510,23 @@ describe('events', () => {
 			statuses: string[];
 		};
 		expect(named.statuses).toContain('incapacitated');
+	});
+
+	it('a gain of Stunned is a gain of Incapacitated alone, with no gain of Unconscious', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		const named = fireEventMock.mock.calls.find(([event]) => event === 'gain')?.[2] as {
+			statuses: string[];
+		};
+		expect(named.statuses).toEqual(['stunned', 'incapacitated']);
 	});
 
 	it('a new effect is a gain of its name and its statuses, with what they count as', () => {

@@ -111,16 +111,15 @@ describe('conditionNegativeConditions', () => {
 });
 
 describe('conditionCountsAs', () => {
-	const { conditionCountsAs, conditionAliasedConditions } = registerConditionsConfig();
+	const { conditionCountsAs } = registerConditionsConfig();
 
-	it('reads one way: Stunned counts as Incapacitated, and Incapacitated counts as nothing', () => {
-		expect(conditionCountsAs.stunned).toContain('incapacitated');
-		expect(conditionCountsAs).not.toHaveProperty('incapacitated');
-	});
-
-	it('keeps every other link of the aliased conditions, Grappled and Restrained both ways', () => {
-		expect(conditionCountsAs.grappled).toEqual(['restrained']);
-		expect(conditionCountsAs.restrained).toEqual(['grappled']);
-		expect(conditionCountsAs.paralyzed).toEqual(conditionAliasedConditions.paralyzed);
+	it('is the book table: three conditions count as Incapacitated, Grappled and Restrained as each other', () => {
+		expect(conditionCountsAs).toEqual({
+			paralyzed: ['incapacitated'],
+			stunned: ['incapacitated'],
+			unconscious: ['incapacitated'],
+			grappled: ['restrained'],
+			restrained: ['grappled'],
+		});
 	});
 });

@@ -199,13 +199,14 @@ export default function registerConditionsConfig() {
 		unconscious: ['incapacitated', 'paralyzed', 'stunned'] as const,
 	};
 
-	/**
-	 * What a condition counts as, one way (Core: Paralyzed, Stunned and Unconscious are Incapacitated).
-	 * The aliased table also links Incapacitated to those three; Incapacitated counts as none of them.
-	 */
-	const conditionCountsAs: Record<string, readonly string[]> = Object.fromEntries(
-		Object.entries(conditionAliasedConditions).filter(([id]) => id !== 'incapacitated'),
-	);
+	/** What a condition counts as, one way, as the book says it. Nothing else counts as another. */
+	const conditionCountsAs: Record<string, readonly string[]> = {
+		paralyzed: ['incapacitated'],
+		stunned: ['incapacitated'],
+		unconscious: ['incapacitated'],
+		grappled: ['restrained'],
+		restrained: ['grappled'],
+	};
 
 	const conditionLinkedConditions = {
 		petrified: ['incapacitated'] as const,

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { undoDamageOption } from '../actorHpChangePaths.js';
 import {
 	followTempHpChange,
 	giveTempHp,
@@ -155,6 +156,16 @@ describe('the temp HP link', () => {
 		await giveTempHp(hero, 4, null);
 
 		expect(linkOf(hero, 'frost')).toBeNull();
+	});
+
+	it('stays when an Undo of damage gives back temp HP that are still the grant', async () => {
+		const hero = linkedHolder(10, { armor: 10 });
+
+		await hero.update(tempChange(4));
+		await hero.update(tempChange(10), undoDamageOption());
+
+		expect(linkOf(hero, 'armor')).toBe(10);
+		expect(hero.effects[0]?.update).not.toHaveBeenCalled();
 	});
 
 	it('does not change for an update that leaves the temp HP alone', async () => {

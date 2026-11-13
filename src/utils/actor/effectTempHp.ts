@@ -84,8 +84,9 @@ export async function clearTempHpLinks(
 
 /**
  * A link holds only while the temp HP are that grant's: an update that names a grant keeps that
- * link alone; temp HP that reach 0, or go up with no grant named, end every link. Gives the ids of
- * the effects whose link it ended.
+ * link alone; temp HP that reach 0, or go up with no grant named, end every link. An Undo of damage
+ * gives back temp HP that are still the grant's, so it keeps every link. Gives the ids of the
+ * effects whose link it ended.
  */
 export async function followTempHpChange(
 	holder: LinkHolder,
@@ -96,6 +97,7 @@ export async function followTempHpChange(
 	const recorded = (options as Record<string, Record<string, unknown> | undefined> | null)?.[
 		SYSTEM_ID
 	];
+	if (recorded?.undoesDamage === true) return [];
 	let ended: LinkedEffect[] = [];
 	if (recorded && GRANT_OPTION in recorded) {
 		ended = await clearTempHpLinks(holder, (recorded[GRANT_OPTION] as string | null) ?? null);

@@ -54,7 +54,7 @@ With Feature Effects off, the GM applies them by hand and there is no damage at 
 
 Some conditions come bundled together, and the system tracks the relationships for you:
 
-- **Counts as.** Some conditions imply others: Grappled also counts as Restrained (and the reverse), and Stunned counts as Incapacitated, Restrained, Paralyzed, and Unconscious for anything that checks those. It works one way: Incapacitated alone does not count as Stunned, Paralyzed or Unconscious. You'll only see the icon you applied, but rules that look for the implied condition will find it.
+- **Counts as.** Some conditions imply others, as the book says: Paralyzed, Stunned and Unconscious each count as Incapacitated, and Grappled and Restrained count as each other. It works one way: Incapacitated alone does not count as Stunned, Paralyzed or Unconscious, and Stunned counts only as Incapacitated. You'll only see the icon you applied, but rules that look for the implied condition will find it.
 - **Applied together.** Petrified automatically carries Incapacitated with it.
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.

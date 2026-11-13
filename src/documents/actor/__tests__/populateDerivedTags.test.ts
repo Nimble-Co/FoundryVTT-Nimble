@@ -353,6 +353,13 @@ describe('_populateDerivedTags — self / target state tags', () => {
 			expect(tags.has('self:unconscious')).toBe(false);
 		});
 
+		it('gives Stunned the Incapacitated tag and no Restrained tag', () => {
+			const tags = runPopulate(makeStub({ statuses: ['stunned'] }));
+			expect(tags.has('target:incapacitated')).toBe(true);
+			expect(tags.has('target:restrained')).toBe(false);
+			expect(tags.has('self:restrained')).toBe(false);
+		});
+
 		it('keeps Grappled and Restrained counting as each other', () => {
 			expect(runPopulate(makeStub({ statuses: ['grappled'] })).has('target:restrained')).toBe(true);
 			expect(runPopulate(makeStub({ statuses: ['restrained'] })).has('target:grappled')).toBe(true);

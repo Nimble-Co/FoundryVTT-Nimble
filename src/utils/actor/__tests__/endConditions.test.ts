@@ -110,6 +110,17 @@ describe('effectsToEnd', () => {
 		).toEqual(['down', 'stun']);
 	});
 
+	it('keeps a Stunned effect when the list names Paralyzed or Restrained', () => {
+		const actor = holder(effect('stun', 'stunned'));
+
+		expect(ids(effectsToEnd(actor, step({ which: 'listed', conditions: ['paralyzed'] })))).toEqual(
+			[],
+		);
+		expect(ids(effectsToEnd(actor, step({ which: 'listed', conditions: ['restrained'] })))).toEqual(
+			[],
+		);
+	});
+
 	it('reads a custom condition marked negative, and skips an effect that is off', () => {
 		const off = { ...effect('old', 'poisoned'), disabled: true };
 		const actor = holder(effect('hex', 'hexed'), off);
