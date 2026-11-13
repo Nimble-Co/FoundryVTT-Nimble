@@ -19,7 +19,26 @@
 				"quantity": 1,
 				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "aks7nF11pwIVIfMf",
+					"type": "applyEffect",
+					"effectId": "DqECTfssrYRjnaJ4",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "tMKcIjUuCK7ZyHrw",
+					"type": "applyEffect",
+					"effectId": "LKpfSEV9chhMqD8n",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -68,7 +87,115 @@
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "DqECTfssrYRjnaJ4",
+			"name": "Fiery Embrace (ally)",
+			"img": "icons/magic/fire/projectile-smoke-swirl-red.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBonus",
+						"disabled": false,
+						"id": "k6QHjykqc1NTUWLn",
+						"identifier": "",
+						"label": "Fiery Embrace",
+						"predicate": {},
+						"priority": 1,
+						"value": "@key",
+						"damageType": "",
+						"delivery": "any",
+						"source": "weapon",
+						"itemIdentifier": ""
+					},
+					{
+						"type": "applyCondition",
+						"disabled": false,
+						"id": "UIFBhSyAZv9jhngs",
+						"identifier": "",
+						"label": "Fiery Embrace",
+						"predicate": {},
+						"priority": 1,
+						"condition": "smoldering",
+						"trigger": "onCrit",
+						"effectId": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "LKpfSEV9chhMqD8n",
+			"name": "Fiery Embrace (enemy)",
+			"img": "icons/svg/fire.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Loses damage resistance. Damage immunity becomes resistance. Only while within Reach 8 of the caster.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"smoldering"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

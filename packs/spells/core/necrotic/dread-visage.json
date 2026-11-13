@@ -21,7 +21,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"attackerEffectId": "",
-				"reminder": "Frighten melee attackers; deal 1d12 damage (+2 for each upcast) to each one that attacks you this round.",
+				"reminder": "",
 				"useItem": true,
 				"upcastArmor": 2,
 				"withInterpose": false,
@@ -49,54 +49,13 @@
 			},
 			"effects": [
 				{
-					"id": "OafObDpPG61HaLlo",
+					"id": "QB49N89czZgERxtx",
 					"type": "applyEffect",
-					"effectId": "HKrFk8DTg4qJdTrU",
-					"recipient": "targets",
+					"effectId": "eHFq7YEnd8NUFncp",
+					"recipient": "self",
 					"tempHealingNodeId": null,
 					"parentContext": null,
 					"parentNode": null
-				},
-				{
-					"id": "6QvkMIw5PbhBn0pO",
-					"type": "damage",
-					"damageType": "necrotic",
-					"formula": "1d12",
-					"parentContext": null,
-					"parentNode": null,
-					"canCrit": true,
-					"canMiss": true,
-					"on": {
-						"miss": [
-							{
-								"id": "KHwFZkHjkDV1JWUL",
-								"type": "note",
-								"noteType": "warning",
-								"text": "MISS",
-								"parentContext": "miss",
-								"parentNode": "6QvkMIw5PbhBn0pO"
-							}
-						],
-						"criticalHit": [
-							{
-								"id": "Ub1liA2sh7t8CFZu",
-								"type": "note",
-								"noteType": "warning",
-								"text": "CRIT",
-								"parentContext": "criticalHit",
-								"parentNode": "6QvkMIw5PbhBn0pO"
-							}
-						],
-						"hit": [
-							{
-								"id": "FA8JXTxV92LO7v9m",
-								"type": "damageOutcome",
-								"outcome": "fullDamage",
-								"parentContext": "hit",
-								"parentNode": "6QvkMIw5PbhBn0pO"
-							}
-						]
-					}
 				}
 			],
 			"showDescription": true,
@@ -128,7 +87,26 @@
 			"selected": []
 		},
 		"school": "necrotic",
-		"tier": 2
+		"tier": 2,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "raiseEffectRule",
+					"value": null,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "QB49N89czZgERxtx",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "7ck5TFN2L7DK9bEF",
+					"ruleField": "formula",
+					"formula": "2",
+					"momentIndex": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [
 		{
@@ -139,7 +117,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": null,
+						"span": "currentRound",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -157,6 +147,66 @@
 			"statuses": [
 				"frightened"
 			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "eHFq7YEnd8NUFncp",
+			"name": "Dread Visage",
+			"img": "icons/magic/unholy/hands-circle-light-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "7ck5TFN2L7DK9bEF",
+						"identifier": "",
+						"label": "Dread Visage",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "attacked",
+						"attackDelivery": "melee",
+						"notOnAllies": false,
+						"onlyCrits": false,
+						"answeredAttack": true,
+						"amount": "formula",
+						"formula": "1d12",
+						"damageType": "",
+						"ignoreArmor": false,
+						"woundDoubles": false,
+						"attackerEffectId": "HKrFk8DTg4qJdTrU"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": null,
+						"span": "currentRound",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
 			"flags": {},
 			"folder": null
 		}
