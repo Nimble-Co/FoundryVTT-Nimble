@@ -30,7 +30,7 @@ function makeRule(actor: ReturnType<typeof makeActor>, value: string) {
 		strict: false,
 	});
 	Object.assign(rule, { disabled: false, predicate: new Predicate({}), value });
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'actor', { get: () => actor, configurable: true });
 	return rule;
 }

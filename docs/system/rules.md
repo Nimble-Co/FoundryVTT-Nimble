@@ -59,7 +59,8 @@ The `movementTrigger` rule reads these records. It tests its predicate, stops un
 
 ## Key Patterns
 
-- **Guard with `isEmbedded`**: Always start `prePrepareData()` with `if (!this.item.isEmbedded) return;`. Rules on un-embedded items have no actor to mutate.
+- **Guard with `isOnActor`**: Always start `prePrepareData()` with `if (!this.isOnActor) return;`. A rule on an item that is not on an actor, or on an effect that does not change an actor, has no actor to change.
+- **Parent document**: a rule's parent is an item or an Active Effect. `this.parentDocument` holds the rule; use it for keys and labels. `this.actor` is the creature the rule changes. `this.item` is the item, or for an effect the item in its `origin`, and can be null or on another actor. A rule type that needs an item as parent sets `static worksOnEffects = false`; an effect's rules manager refuses it.
 - **Predicate testing**: `this.test()` checks domain tags from the predicate. An empty predicate always passes.
 - **Formula resolution**: `this.resolveFormula(formula)` evaluates against the actor's roll data and returns a number.
 - **Forward declarations**: Use local interfaces for `NimbleBaseActor` / `NimbleBaseItem` to avoid circular imports — see the pattern in `base.ts`.
@@ -386,8 +387,8 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
   }
 
   prePrepareData(): void {
-    if (!this.item.isEmbedded) return;
-    const actor = this.item.actor as NimbleCharacter;
+    if (!this.isOnActor) return;
+    const actor = this.actor as NimbleCharacter;
     const value = this.resolveFormula(this.value);
     for (const ability of this.abilities) {
       const baseBonus = actor.system.abilities[ability]?.bonus ?? 0;

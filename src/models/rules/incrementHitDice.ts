@@ -41,10 +41,9 @@ class IncrementHitDiceRule extends NimbleBaseRule<IncrementHitDiceRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		if (actor.type !== 'character') return;
 
 		if (!this.test()) return;

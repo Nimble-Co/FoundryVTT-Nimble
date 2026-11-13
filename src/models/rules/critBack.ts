@@ -16,6 +16,8 @@ declare namespace CritBackRule {
  * attack on the owner as a crit. The GM chooses the attack.
  */
 class CritBackRule extends NimbleBaseRule<CritBackRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.critBack.description';
 	static override icon = 'fa-solid fa-reply';

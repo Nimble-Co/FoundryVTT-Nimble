@@ -77,6 +77,8 @@ declare namespace ActionDeltaRule {
  * allied character combatant.
  */
 class ActionDeltaRule extends NimbleBaseRule<ActionDeltaRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.actionDelta.description';
 	static override icon = 'fa-solid fa-plus-minus';

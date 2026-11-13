@@ -37,7 +37,7 @@ function makeAccumulatingRule(actor: ActorStub, path: string, entry: unknown) {
 
 	return {
 		afterPrepareData() {
-			push.call({ item: { actor } } as unknown as NimbleBaseRule, path, entry);
+			push.call({ actor } as unknown as NimbleBaseRule, path, entry);
 		},
 	};
 }

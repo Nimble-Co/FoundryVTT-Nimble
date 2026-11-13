@@ -11,7 +11,7 @@ import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 interface FreeMoveRuleLike {
 	type?: string;
 	trigger?: string;
-	item?: { uuid?: string };
+	parentDocument?: { uuid?: string | null };
 	offerAfterPoolDice?(): Promise<void>;
 }
 
@@ -32,7 +32,7 @@ async function useRule(
 	if (isRuleAutomationEnabled()) await rule.raiseDice?.(count);
 	for (const move of actorRules<FreeMoveRuleLike>(actor)) {
 		if (move?.type !== 'freeMove' || move.trigger !== 'afterPoolDiceToMax') continue;
-		if (move.item?.uuid === rule.item?.uuid) await move.offerAfterPoolDice?.();
+		if (move.parentDocument?.uuid === rule.parentDocument?.uuid) await move.offerAfterPoolDice?.();
 	}
 }
 

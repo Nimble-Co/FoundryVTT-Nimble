@@ -519,7 +519,7 @@ abstract class RollUseRule<
 
 	/** Whether this rule's limits cover this roll and side. Not its cost, and not the card. */
 	protected coversRoll(context: RollUseContext): boolean {
-		if (!this.item.isEmbedded) return false;
+		if (!this.isOnActor) return false;
 		if (!this.test()) return false;
 		const { side, roll } = context;
 		if (!this.usesOnRolls().includes(roll.kind)) return false;
@@ -527,7 +527,7 @@ abstract class RollUseRule<
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return false;
 		if (roll.kind === 'attack') {
 			if (!matchesAttackDelivery(this.attackDelivery, roll.delivery)) return false;
-			if (this.thisItemOnly && roll.itemUuid !== this.item.uuid) return false;
+			if (this.thisItemOnly && (!this.item || roll.itemUuid !== this.item.uuid)) return false;
 			if ((this.attackSource ?? 'any') !== 'any') {
 				const item = roll.itemUuid ? fromUuidSync(roll.itemUuid) : null;
 				if (!matchesAttackSource(this.attackSource, item as { type?: string } | null)) return false;

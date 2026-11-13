@@ -231,7 +231,7 @@ class ChangeResultRule extends RollUseRule<ChangeResultRule.Schema> {
 			(change) =>
 				change.change === 'succeed' &&
 				change.ruleId === this.id &&
-				change.itemUuid === this.item.uuid,
+				change.itemUuid === this.parentDocument.uuid,
 		);
 	}
 }

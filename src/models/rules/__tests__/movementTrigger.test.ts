@@ -63,7 +63,7 @@ function makeRule(
 		strict: false,
 	});
 	Object.assign(rule, { ...DEFAULTS, disabled: false, id: 'rule-1', label: '', ...config });
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	const predicate = options.predicate;
 	Object.defineProperty(rule, 'predicate', {
 		get: () => (predicate ? { size: 1, test: predicate } : { size: 0 }),
@@ -242,6 +242,36 @@ describe('MovementTriggerRule', () => {
 				},
 				context.record.token.parent.tokens,
 			);
+		});
+
+		it('offers its own item on the card', async () => {
+			const { rule, item } = makeRule();
+			await rule.onMovementFinished(makeContext() as never);
+			expect(lastCard().item).toBe(item);
+		});
+
+		it('offers no item on the card from an effect whose item is on another creature', async () => {
+			const { rule, actor } = makeRule();
+			Object.setPrototypeOf(actor, Actor.prototype);
+			const casterItem = Object.setPrototypeOf(
+				{ uuid: 'Actor.caster.Item.spell', actor: { id: 'caster' } },
+				Item.prototype,
+			);
+			vi.stubGlobal('fromUuidSync', () => casterItem);
+			const effect = {
+				documentName: 'ActiveEffect',
+				uuid: 'Actor.observer.ActiveEffect.e',
+				name: 'Warding Aura',
+				img: 'icons/aura.webp',
+				parent: actor,
+				target: actor,
+				origin: casterItem.uuid,
+			};
+			Object.defineProperty(rule, 'parent', { get: () => effect, configurable: true });
+
+			await rule.onMovementFinished(makeContext() as never);
+
+			expect(lastCard().item).toEqual({ uuid: null, name: 'Warding Aura', img: 'icons/aura.webp' });
 		});
 
 		describe('combat', () => {

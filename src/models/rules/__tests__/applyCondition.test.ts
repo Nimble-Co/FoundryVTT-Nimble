@@ -147,7 +147,7 @@ function createApplyConditionRule(
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Apply Condition';
 
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0 }),
 		configurable: true,
@@ -508,7 +508,7 @@ describe('ApplyConditionRule', () => {
 			await saveResolved(rule, actor, 'fail');
 
 			const otherRule = createSaveRule(actor);
-			Object.defineProperty(otherRule, 'item', {
+			Object.defineProperty(otherRule, 'parent', {
 				get: () => ({ ...createMockItem(actor), uuid: 'other-item-uuid' }),
 			});
 			await saveResolved(otherRule, actor, 'pass');
@@ -614,6 +614,58 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
 			expect(lastAppliedEffect()?.sourceData).not.toHaveProperty('duration');
+		});
+	});
+
+	describe('on an Active Effect', () => {
+		const globals = globalThis as { fromUuidSync?: unknown };
+		let previous: unknown;
+		beforeEach(() => {
+			previous = globals.fromUuidSync;
+			globals.fromUuidSync = () => null;
+		});
+		afterEach(() => {
+			globals.fromUuidSync = previous;
+		});
+
+		function asActor(actor: MockActor): MockActor {
+			return Object.assign(Object.create(Actor.prototype), actor) as MockActor;
+		}
+
+		function ruleOnEffect(holder: MockActor, caster: MockActor) {
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onTurnStart' },
+				caster,
+			);
+			const effect = {
+				documentName: 'ActiveEffect',
+				uuid: 'Actor.holder.ActiveEffect.e',
+				name: 'Focus Spell',
+				parent: holder,
+				target: holder,
+				origin: 'test-item-uuid',
+			};
+			Object.defineProperty(rule, 'parent', { get: () => effect, configurable: true });
+			return rule;
+		}
+
+		const turnStart = (actor: MockActor) => ({
+			combat: {} as Combat,
+			combatant: {} as Combatant,
+			actor: actor as unknown as Parameters<ApplyConditionRule['onTurnStart']>[0]['actor'],
+		});
+
+		it('fires on the turn of the creature with the effect, and gives it the condition', async () => {
+			const holder = asActor(createMockActor());
+			const caster = asActor(createMockActor());
+			const rule = ruleOnEffect(holder, caster);
+
+			await rule.onTurnStart(turnStart(caster));
+			expect(appliedEffects).toHaveLength(0);
+
+			await rule.onTurnStart(turnStart(holder));
+			expect(conditionsAppliedTo(holder)).toEqual(['focused']);
+			expect(conditionsAppliedTo(caster)).toEqual([]);
 		});
 	});
 

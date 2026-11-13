@@ -78,6 +78,8 @@ declare namespace ModifyConsumerRule {
  * each matching consumer's effect formula.
  */
 class ModifyConsumerRule extends NimbleBaseRule<ModifyConsumerRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.modifyConsumer.description';
 
@@ -109,7 +111,7 @@ class ModifyConsumerRule extends NimbleBaseRule<ModifyConsumerRule.Schema> {
 
 	/** The dice count and their sum are filled in when the player spends dice. */
 	override afterPrepareData(): void {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		this.checkReferences(this.appendFormula, this.actor, { extraRollData: { n: 1, sum: 1 } });
 	}
 }

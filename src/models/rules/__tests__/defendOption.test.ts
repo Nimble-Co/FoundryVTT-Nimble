@@ -30,7 +30,7 @@ function makeRule(config: Record<string, unknown> = {}) {
 		armorBonus: '',
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'actor', { get: () => actor, configurable: true });
 	return rule;
 }

@@ -52,11 +52,10 @@ class DyingActionLimitRule extends NimbleBaseRule<DyingActionLimitRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const limit = this.resolveFormula(this.value) ?? DYING_MAX_ACTIONS;
 		const current =
 			(foundry.utils.getProperty(actor.system, DYING_ACTION_LIMIT_PATH) as number | undefined) ??

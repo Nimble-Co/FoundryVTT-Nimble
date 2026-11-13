@@ -62,7 +62,7 @@ class TableRollRule extends NimbleBaseRule<TableRollRule.Schema> {
 	}
 
 	get invokesChaos(): boolean {
-		return this.item.isEmbedded && this.test();
+		return this.isOnActor && this.test();
 	}
 }
 

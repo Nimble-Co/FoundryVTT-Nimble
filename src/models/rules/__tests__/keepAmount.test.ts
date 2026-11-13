@@ -8,7 +8,7 @@ function make(parent: object = { isEmbedded: true, name: 'Rampage', uuid: 'Item.
 		{ parent, strict: false } as never,
 	);
 	Object.assign(rule, { predicate: new Predicate({}), id: 'r1' });
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	return rule;
 }
 

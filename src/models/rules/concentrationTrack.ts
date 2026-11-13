@@ -63,8 +63,7 @@ class ConcentrationTrackRule extends NimbleBaseRule<ConcentrationTrackRule.Schem
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
 		for (const school of this.schools) {

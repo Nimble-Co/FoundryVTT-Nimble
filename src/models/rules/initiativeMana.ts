@@ -63,7 +63,7 @@ class InitiativeManaRule extends NimbleBaseRule<InitiativeManaRule.Schema> {
 
 	/** What the rule gives now. Null when its condition does not hold. */
 	get initiativeManaSpec(): { feature: string; flat: number; dice: string } | null {
-		if (!this.item.isEmbedded || !this.test()) return null;
+		if (!this.isOnActor || !this.test()) return null;
 		return {
 			feature: ruleLabel(this),
 			flat: Math.max(0, Math.trunc(Number(this.resolveFormula(this.flat)) || 0)),

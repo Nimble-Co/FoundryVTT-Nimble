@@ -6,6 +6,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
+import { runningRule } from '#utils/actor/actorRules.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
@@ -1820,12 +1821,8 @@ class NimbleChatMessage extends ChatMessage {
 
 		if (!mayActFor(entry.actorUuid, { userId: requestingUserId, viaSocket })) return null;
 
-		if (entry.source === 'rule' && entry.itemUuid) {
-			const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
-				rules?: Map<string, { id?: string; disabled?: boolean }>;
-			} | null;
-			const rule = item?.rules ? [...item.rules.values()].find((r) => r.id === entry.ruleId) : null;
-			if (!rule || rule.disabled) return null;
+		if (entry.source === 'rule' && entry.itemUuid && !runningRule(entry.itemUuid, entry.ruleId)) {
+			return null;
 		}
 
 		return entry;

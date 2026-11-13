@@ -442,7 +442,7 @@ describe('rollDeferredDamage', () => {
 				type: 'reroll',
 				id: 'reroll-1',
 				label: '',
-				item: { name: 'Second Chance', uuid: 'Item.chance' },
+				parentDocument: { name: 'Second Chance', uuid: 'Item.chance' },
 				outcome: 'always',
 				automatic: false,
 				rollUseCost: {
@@ -649,7 +649,7 @@ describe('rollDeferredDamage', () => {
 				id: 'reroll-1',
 				disabled: false,
 				label: '',
-				item: { name: 'Second Chance', uuid: 'Item.chance' },
+				parentDocument: { name: 'Second Chance', uuid: 'Item.chance' },
 				outcome: 'always',
 				automatic: false,
 				discardedCritTriggers: false,

@@ -1,4 +1,5 @@
 import type { RuleOf, RuleType } from '#types/ruleTypes.d.ts';
+import { isEffectParent } from '../../models/rules/_ruleParent.js';
 
 /** The rules of an actor as an array. Empty when it has no rules to read. */
 export function actorRules<T>(actor: { rules?: unknown } | null | undefined): T[] {
@@ -18,15 +19,42 @@ export function rulesOfType<T extends RuleType>(
 /** What a card or a window calls a rule: its label, or the name of its item. */
 export function ruleLabel(rule: {
 	label?: string;
-	item?: { name?: string | null } | null;
+	parentDocument?: { name?: string | null } | null;
 }): string {
-	return rule.label || rule.item?.name || '';
+	return rule.label || rule.parentDocument?.name || '';
 }
 
 /** The key of a rule on its item. */
 export function ruleKey(rule: {
 	id?: string | null;
-	item?: { uuid?: string | null } | null;
+	parentDocument?: { uuid?: string | null } | null;
 }): string {
-	return `${rule.item?.uuid ?? ''}:${rule.id ?? ''}`;
+	return `${rule.parentDocument?.uuid ?? ''}:${rule.id ?? ''}`;
+}
+
+interface RuleParentLike<T> {
+	documentName?: string;
+	modifiesActor?: boolean;
+	rules?: Map<string, T>;
+}
+
+/** The document that holds rules, found from its uuid. Null for an effect that does not change its actor now. */
+export function runningRuleParent<T>(uuid: string | null | undefined): RuleParentLike<T> | null {
+	if (!uuid) return null;
+	const parent = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], {
+		strict: false,
+	}) as RuleParentLike<T> | null;
+	if (!parent?.rules) return null;
+	if (isEffectParent(parent) && !parent.modifiesActor) return null;
+	return parent;
+}
+
+/** A rule found from the uuid of its parent and its id, while it runs. */
+export function runningRule<T extends { id?: string; disabled?: boolean }>(
+	parentUuid: string | null | undefined,
+	ruleId: string | null | undefined,
+): T | null {
+	const parent = runningRuleParent<T>(parentUuid);
+	const rule = parent?.rules ? [...parent.rules.values()].find((r) => r.id === ruleId) : null;
+	return rule && !rule.disabled ? rule : null;
 }

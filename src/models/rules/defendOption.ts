@@ -302,7 +302,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 			actionCost: Math.max(0, Number(this.actionCost) || 0),
 			heroicReaction: '',
 			// One turn use for every option of the item, as a feature's 1/turn reads.
-			...(this.oncePerTurn ? { turnUseKey: `${this.item?.uuid ?? ''}:defendOption` } : {}),
+			...(this.oncePerTurn ? { turnUseKey: `${this.parentDocument.uuid ?? ''}:defendOption` } : {}),
 		};
 	}
 

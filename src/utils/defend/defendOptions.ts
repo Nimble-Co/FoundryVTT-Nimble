@@ -8,7 +8,7 @@ import type {
 import type { UseCost } from '#types/useCost.d.ts';
 import { ruleOtherCreatureMatches } from '../../models/rules/_otherCreatureMatches.js';
 import type { DefendOptionRule, DefendOptionWay } from '../../models/rules/defendOption.js';
-import { actorRules, ruleKey, ruleLabel } from '../actor/actorRules.js';
+import { actorRules, ruleKey, ruleLabel, runningRuleParent } from '../actor/actorRules.js';
 import { payCost } from '../cost/costLedger.js';
 import { canPayUseCost } from '../cost/useCost.js';
 import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
@@ -132,11 +132,13 @@ export function tickCost(
 	tokenUuid?: string | null,
 ): UseCost {
 	if (rule.way !== 'withDefend' || !rule.useReroll) return rule.optionCost;
-	const rules = (rule.item as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
+	const rules = (rule.parentDocument as { rules?: Map<string, ItemRerollRule> } | null)?.rules;
 	const rerolls = [...(rules?.values() ?? [])].filter(
 		(each) => each.type === 'reroll' && !each.disabled,
 	);
-	const entryRuleId = card ? cardRerollFor(card, rule.item?.uuid, tokenUuid)?.ruleId : undefined;
+	const entryRuleId = card
+		? cardRerollFor(card, rule.parentDocument?.uuid, tokenUuid)?.ruleId
+		: undefined;
 	const reroll =
 		rerolls.find((each) => entryRuleId && each.id === entryRuleId) ??
 		rerolls.find((each) => each.rolls?.includes('attack'));
@@ -145,11 +147,8 @@ export function tickCost(
 
 /** Whether a Defend option uses this item's reroll, so the reroll waits for the Defend window. */
 export function rerollIsUsedByDefend(itemUuid: string | null | undefined): boolean {
-	if (!itemUuid) return false;
-	const item = fromUuidSync(itemUuid as `Item.${string}`) as {
-		rules?: Map<string, DefendOptionRule>;
-	} | null;
-	return [...(item?.rules?.values() ?? [])].some(
+	const parent = runningRuleParent<DefendOptionRule>(itemUuid);
+	return [...(parent?.rules?.values() ?? [])].some(
 		(rule) => rule.type === RULE_TYPE && rule.useReroll && !rule.disabled,
 	);
 }
@@ -168,7 +167,7 @@ export async function payDefendOption(
 	return {
 		actorUuid: actor.uuid ?? '',
 		ruleId: pick.rule.id ?? '',
-		itemUuid: pick.rule.item?.uuid ?? '',
+		itemUuid: pick.rule.parentDocument?.uuid ?? '',
 		label: pick.label,
 		cost,
 		paid,
@@ -183,7 +182,7 @@ export function defendOptionUse(
 	return {
 		actorUuid: actor.uuid ?? '',
 		ruleId: pick.rule.id ?? '',
-		itemUuid: pick.rule.item?.uuid ?? '',
+		itemUuid: pick.rule.parentDocument?.uuid ?? '',
 		label: pick.label,
 		cost: null,
 		paid: null,

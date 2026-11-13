@@ -13,7 +13,7 @@ const warned = new Set<string>();
 
 /** The owner of a formula that a rule holds. */
 function ruleOwner(rule: FormulaRule): FormulaOwner {
-	return { item: rule.item, rule: rule.label || rule.type || '' };
+	return { item: rule.parentDocument, rule: rule.label || rule.type || '' };
 }
 
 /** The owner of a formula that a pool holds, read from the item that grants the pool. */

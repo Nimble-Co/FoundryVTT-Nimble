@@ -16,7 +16,7 @@ function make(
 		oncePerTurn: false,
 		...data,
 	});
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	Object.defineProperty(rule, 'actor', {
 		get: () => ({ getRollData: () => ({}) }),
 		configurable: true,

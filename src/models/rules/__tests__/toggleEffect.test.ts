@@ -191,7 +191,7 @@ function createToggleEffectRule(
 		writable: true,
 	});
 
-	Object.defineProperty(rule, 'item', { get: () => parentItem, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parentItem, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
 		get: () => ({ size: 0, test: () => true }),
 		configurable: true,
@@ -269,7 +269,7 @@ describe('ToggleEffectRule', () => {
 			);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-1', disabled: false },
 				),
 			);
@@ -294,7 +294,7 @@ describe('ToggleEffectRule', () => {
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-1', disabled: true },
 				),
 			);
@@ -312,7 +312,7 @@ describe('ToggleEffectRule', () => {
 			);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-1', disabled: false },
 				),
 			);
@@ -332,7 +332,7 @@ describe('ToggleEffectRule', () => {
 			);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-1', disabled: false },
 				),
 			);
@@ -348,7 +348,10 @@ describe('ToggleEffectRule', () => {
 			actor.effects.push(
 				createMockActiveEffect(
 					{
-						nimble: { toggleEffectRuleId: 'some-other-rule-id', toggleEffectItemId: rule.item.id },
+						nimble: {
+							toggleEffectRuleId: 'some-other-rule-id',
+							toggleEffectItemId: rule.parentDocument.id,
+						},
 					},
 					{ id: 'ae-1', disabled: false },
 				),
@@ -390,7 +393,7 @@ describe('ToggleEffectRule', () => {
 				flags: {
 					nimble: {
 						toggleEffectRuleId: rule.id,
-						toggleEffectItemId: rule.item.id,
+						toggleEffectItemId: rule.parentDocument.id,
 					},
 				},
 			});
@@ -416,7 +419,7 @@ describe('ToggleEffectRule', () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			const existing = createMockActiveEffect(
-				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 				{ id: 'ae-existing', disabled: false },
 			);
 			actor.effects.push(existing);
@@ -432,7 +435,7 @@ describe('ToggleEffectRule', () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			const disabledEffect = createMockActiveEffect(
-				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+				{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 				{ id: 'ae-disabled', disabled: true },
 			);
 			actor.effects.push(disabledEffect);
@@ -486,7 +489,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onActorKilled'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorKilled']>[0];
 			await rule.onActorKilled({
@@ -501,7 +504,7 @@ describe('ToggleEffectRule', () => {
 		it('onActorKilled does NOT delete the AE when not listed in turnOff', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorKilled']>[0];
 			await rule.onActorKilled({
@@ -516,7 +519,7 @@ describe('ToggleEffectRule', () => {
 		it('onRest deletes the AE when listed in turnOff', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onRest']>[0];
 			await rule.onRest({
@@ -533,7 +536,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onTurnStart'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onTurnStart']>[0];
 			await rule.onTurnStart({
@@ -548,7 +551,7 @@ describe('ToggleEffectRule', () => {
 		it('onTurnEnd deletes the AE when listed in turnOff', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onTurnEnd'] }, actor);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onTurnEnd']>[0];
 			await rule.onTurnEnd({
@@ -563,7 +566,7 @@ describe('ToggleEffectRule', () => {
 		it('onRoundEnd deletes the AE when the round changes', async () => {
 			const actor = createMockActor();
 			const rule = createToggleEffectRule({ tags: ['self:heads'], turnOff: ['onRoundEnd'] }, actor);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
 			await rule.onRoundChanged({
@@ -583,8 +586,8 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:heads'], turnOff: ['onRoundEnd'] },
 				otherActor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
-			pushAE(otherActor, other.id, other.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
+			pushAE(otherActor, other.id, other.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onRoundChanged']>[0];
 			const context = {
@@ -605,7 +608,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onActorWounded'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorWounded']>[0];
 			await rule.onActorWounded({
@@ -623,7 +626,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:poisoned'], turnOff: ['onActorHealed'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorHealed']>[0];
 			await rule.onActorHealed({
@@ -641,7 +644,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onEncounterEnd'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onEncounterEnd']>[0];
 			await rule.onEncounterEnd({
@@ -658,7 +661,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onActorDying'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorDying']>[0];
 			await rule.onActorDying({
@@ -676,7 +679,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onRest'] },
 				ownerActor,
 			);
-			pushAE(ownerActor, rule.id, rule.item.id);
+			pushAE(ownerActor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onRest']>[0];
 			await rule.onRest({
@@ -708,7 +711,7 @@ describe('ToggleEffectRule', () => {
 				{ tags: ['self:raging'], turnOff: ['onActorKilled'] },
 				actor,
 			);
-			pushAE(actor, rule.id, rule.item.id);
+			pushAE(actor, rule.id, rule.parentDocument.id);
 
 			type Ctx = Parameters<ToggleEffectRule['onActorKilled']>[0];
 			await rule.onActorKilled({
@@ -1509,7 +1512,7 @@ describe('ToggleEffectRule', () => {
 			const rule = createToggleEffectRule({ tags: ['self:raging'], turnOff: ['onRest'] }, actor);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-orphan', disabled: false },
 				),
 			);
@@ -1534,7 +1537,10 @@ describe('ToggleEffectRule', () => {
 			actor.effects.push(
 				createMockActiveEffect(
 					{
-						nimble: { toggleEffectRuleId: 'some-other-rule-id', toggleEffectItemId: rule.item.id },
+						nimble: {
+							toggleEffectRuleId: 'some-other-rule-id',
+							toggleEffectItemId: rule.parentDocument.id,
+						},
 					},
 					{ id: 'ae-other', disabled: false },
 				),
@@ -1555,7 +1561,7 @@ describe('ToggleEffectRule', () => {
 			);
 			actor.effects.push(
 				createMockActiveEffect(
-					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.item.id } },
+					{ nimble: { toggleEffectRuleId: rule.id, toggleEffectItemId: rule.parentDocument.id } },
 					{ id: 'ae-1', disabled: false },
 				),
 			);

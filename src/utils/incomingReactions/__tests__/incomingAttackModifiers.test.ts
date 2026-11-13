@@ -36,7 +36,7 @@ interface MockRule {
 	modifier?: 'disadvantage' | 'redirectToSelf' | 'autoMiss' | 'raiseMissThreshold';
 	missThreshold?: number;
 	resolveRange?: () => number;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string } | null;
 	appliesTo?: () => boolean;
 }
 
@@ -68,7 +68,7 @@ function createRule({
 		label: 'Test Rule',
 		modifier: 'disadvantage',
 		resolveRange: () => range,
-		item: { name: 'Test Item', uuid: 'Item.test-item' },
+		parentDocument: { name: 'Test Item', uuid: 'Item.test-item' },
 		appliesTo: () => true,
 		...overrides,
 	};
@@ -80,7 +80,7 @@ function createTargetRerollRule(id: string) {
 		type: 'reroll',
 		id,
 		label: '',
-		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+		parentDocument: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always',
 		offersUseOn: (context: { side: string }) => context.side === 'target',
 	};
@@ -197,7 +197,7 @@ describe('collectTargetIncomingModifiers', () => {
 
 	it('falls back to the owning item name when the rule has no label', () => {
 		const actor = createActor({
-			rules: [createRule({ label: '', item: { name: 'Blur Cloak', uuid: 'Item.blur' } })],
+			rules: [createRule({ label: '', parentDocument: { name: 'Blur Cloak', uuid: 'Item.blur' } })],
 		});
 
 		const entries = collectTargetIncomingModifiers(actor);
@@ -328,7 +328,7 @@ describe('collectRedirectCandidates', () => {
 						range: 5,
 						id: 'bodyguard-rule',
 						label: 'Bodyguard',
-						item: { name: 'Bodyguard Feature', uuid: 'Item.bodyguard' },
+						parentDocument: { name: 'Bodyguard Feature', uuid: 'Item.bodyguard' },
 					}),
 				],
 			}),
@@ -815,7 +815,7 @@ describe('Reroll rules on the attack', () => {
 			type: 'reroll',
 			id: 'reroll-1',
 			label: '',
-			item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+			parentDocument: { name: 'Pocket Sand', uuid: 'Item.sand' },
 			outcome: 'always',
 			automatic: false,
 			discardedCritTriggers: false,
@@ -1067,7 +1067,7 @@ describe('Reroll rules on the attack', () => {
 				id: `${name}-rule`,
 				type: 'modifyReroll',
 				rerollIdentifier: 'inspiration',
-				item: { name, uuid: `Item.${name}` },
+				parentDocument: { name, uuid: `Item.${name}` },
 				...config,
 			});
 			const owner = {

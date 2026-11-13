@@ -9,7 +9,7 @@ function createRule(overrides: Record<string, unknown> = {}) {
 		type: 'conditionalBonus',
 		id: 'rule-id',
 		label: 'Quarry',
-		item: { name: "Hunter's Mark", uuid: 'Item.hm1' },
+		parentDocument: { name: "Hunter's Mark", uuid: 'Item.hm1' },
 		advantage: 1,
 		damageType: '',
 		appliesTo: vi.fn(() => true),
@@ -198,7 +198,7 @@ describe('conditionalBonuses', () => {
 		});
 
 		it('falls back to the item name when the label is empty', () => {
-			const rule = createRule({ label: '', item: { name: 'Longbow' } });
+			const rule = createRule({ label: '', parentDocument: { name: 'Longbow' } });
 			const [option] = getActiveConditionalBonuses(
 				createAttacker([rule]) as never,
 				weaponItem,
@@ -208,7 +208,7 @@ describe('conditionalBonuses', () => {
 		});
 
 		it('falls back to the localized rule type when label and item name are empty', () => {
-			const rule = createRule({ label: '', item: undefined });
+			const rule = createRule({ label: '', parentDocument: undefined });
 			const [option] = getActiveConditionalBonuses(
 				createAttacker([rule]) as never,
 				weaponItem,
@@ -222,8 +222,14 @@ describe('conditionalBonuses', () => {
 		it('scopes the option key by the owning item uuid so same-id rules on different items stay distinct', () => {
 			// Rule ids are only unique within an item, so two copies of the same feature
 			// share `rule.id`; the item uuid keeps their dialog keys apart.
-			const ruleA = createRule({ id: 'hunters-mark-bonus', item: { name: 'A', uuid: 'Item.a' } });
-			const ruleB = createRule({ id: 'hunters-mark-bonus', item: { name: 'B', uuid: 'Item.b' } });
+			const ruleA = createRule({
+				id: 'hunters-mark-bonus',
+				parentDocument: { name: 'A', uuid: 'Item.a' },
+			});
+			const ruleB = createRule({
+				id: 'hunters-mark-bonus',
+				parentDocument: { name: 'B', uuid: 'Item.b' },
+			});
 			const options = getActiveConditionalBonuses(
 				createAttacker([ruleA, ruleB]) as never,
 				weaponItem,

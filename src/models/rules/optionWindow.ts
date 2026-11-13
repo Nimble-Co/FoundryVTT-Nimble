@@ -90,7 +90,7 @@ class OptionWindowRule extends NimbleBaseRule<OptionWindowRule.Schema> {
 
 	/** A spell that missed, on the attack of the owner. */
 	offersUseOn(context: RollUseContext): boolean {
-		if (!this.cardRow || !this.item.isEmbedded || !this.test()) return false;
+		if (!this.cardRow || !this.isOnActor || !this.test()) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack') return false;
 		const uuid = context.roll.itemUuid;
 		const item = uuid ? (fromUuidSync(uuid) as { type?: string } | null) : null;

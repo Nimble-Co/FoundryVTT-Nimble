@@ -418,7 +418,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> = {}) {
 		type: 'reroll',
 		id: 'rule-1',
 		label: '',
-		item: { name: 'Clear Head', uuid: 'Item.head' },
+		parentDocument: { name: 'Clear Head', uuid: 'Item.head' },
 		rerollsByItself: false,
 		rollUseCost: FREE,
 		offersUseOn: vi.fn(
@@ -506,7 +506,7 @@ describe('the rerolls of a posted check', () => {
 			type: 'modifyReroll',
 			rerollIdentifier: 'inspiration',
 			rollModeChange: 1,
-			item: { name: 'Courage', uuid: 'Item.courage' },
+			parentDocument: { name: 'Courage', uuid: 'Item.courage' },
 		};
 		const rule = rerollRule({
 			rerollsByItself: true,

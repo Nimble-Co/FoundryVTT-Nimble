@@ -100,6 +100,8 @@ declare namespace DicePoolRule {
 }
 
 class DicePoolRule extends NimbleBaseRule<DicePoolRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.dicePool.description';
 

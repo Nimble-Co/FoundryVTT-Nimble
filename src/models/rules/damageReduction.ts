@@ -105,8 +105,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
 		if (this.mode === 'half') {
@@ -114,7 +113,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 				value: 0,
 				damageTypes: [...this.damageTypes],
 				mode: 'half',
-				label: this.label || item.name,
+				label: this.label || this.parentDocument.name,
 				...(this.onlyCrits ? { onlyCrits: true } : {}),
 			});
 			return;
@@ -122,7 +121,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 
 		if (this.isDiceExpression(this.value)) {
 			console.warn(
-				`Nimble | damageReduction rule "${this.label}" on "${item.name}" has a dice-expression value ("${this.value}"); only deterministic formulas are supported. Skipping.`,
+				`Nimble | damageReduction rule "${this.label}" on "${this.parentDocument.name}" has a dice-expression value ("${this.value}"); only deterministic formulas are supported. Skipping.`,
 			);
 			return;
 		}
@@ -133,7 +132,7 @@ class DamageReductionRule extends NimbleBaseRule<DamageReductionRule.Schema> {
 		this.pushToActorSystemArray<DamageReductionEntry>('damageReductions', {
 			value: resolvedValue,
 			damageTypes: [...this.damageTypes],
-			label: this.label || item.name,
+			label: this.label || this.parentDocument.name,
 			...(this.onlyCrits ? { onlyCrits: true } : {}),
 		});
 	}

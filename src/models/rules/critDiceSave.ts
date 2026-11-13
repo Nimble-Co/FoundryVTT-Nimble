@@ -89,7 +89,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 
 	/** It needs one target to make the save, and a use left. */
 	offersUseOn(context: RollUseContext): boolean {
-		if (!this.item.isEmbedded || !this.test()) return false;
+		if (!this.isOnActor || !this.test()) return false;
 		if (context.side !== 'roller' || context.roll.kind !== 'attack' || !context.other) return false;
 		return canPayUseCost(this.actor as Actor | null, this.rollUseCost);
 	}
@@ -115,7 +115,7 @@ class CritDiceSaveRule extends NimbleBaseRule<CritDiceSaveRule.Schema> {
 	}
 
 	override afterPrepareData(): void {
-		if (this.item.isEmbedded) this.checkReferences(this.saveDC);
+		if (this.isOnActor) this.checkReferences(this.saveDC);
 	}
 }
 

@@ -1175,7 +1175,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				return {
 					type: 'primaryDieBonus',
 					label: '',
-					item: { name: label, uuid: `Item.${label}` },
+					parentDocument: { name: label, uuid: `Item.${label}` },
 					bonusFor: vi.fn((context: { delivery: string | null }) =>
 						delivery === 'any' || context.delivery === delivery ? value : 0,
 					),

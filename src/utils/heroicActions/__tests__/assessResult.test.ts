@@ -43,7 +43,7 @@ function bumblewiseRule() {
 		onlyIfLower: false,
 		outcome: 'always',
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	return rule;
 }
 

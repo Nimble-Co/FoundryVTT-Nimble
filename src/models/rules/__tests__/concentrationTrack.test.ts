@@ -44,7 +44,7 @@ function createRule(
 	(rule as any).schools = sourceData.schools;
 	(rule as any).disabled = sourceData.disabled;
 
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 
 	// Size 0 always passes; a non-empty stub exercises the predicate-gated path.
 	const predicatePasses = config.predicatePasses ?? true;

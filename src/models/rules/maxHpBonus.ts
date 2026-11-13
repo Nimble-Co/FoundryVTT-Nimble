@@ -69,8 +69,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	 * the fact.
 	 */
 	resolvedBonus(): number {
-		const { item } = this;
-		if (!item?.isEmbedded) return 0;
+		if (!this.isOnActor) return 0;
 
 		if (!this.test()) {
 			this.#rejectedInEarlyPass = true;
@@ -102,8 +101,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		if (!this.#rejectedInEarlyPass) return;
 		if (!this.predicate.size) return;
 
-		const { item } = this;
-		if (!item?.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
 		const dedupeKey = ruleKey(this);
@@ -111,7 +109,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		warnedPhaseMismatchRules.add(dedupeKey);
 
 		console.warn(
-			`Nimble | maxHpBonus rule "${this.label || this.id}" on "${item.name}" predicates on tags ` +
+			`Nimble | maxHpBonus rule "${this.label || this.id}" on "${this.parentDocument.name}" predicates on tags ` +
 				'that are computed after max HP, so it added nothing. Max HP is calculated before the ' +
 				"actor's class, level, subclass, ancestry and self: tags exist; only size, disposition " +
 				"and the item's own tags can be tested by this rule.",

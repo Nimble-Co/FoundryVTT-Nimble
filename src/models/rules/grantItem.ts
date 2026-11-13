@@ -43,6 +43,8 @@ declare namespace ItemGrantRule {
 }
 
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.grantItem.description';
 	static override icon = 'fa-solid fa-gift';
@@ -118,7 +120,7 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 			rules: { type: string }[];
 		}
 
-		if (this.item.sourceId === (grantedSource._stats.compendiumSource ?? '')) {
+		if (this.item?.sourceId === (grantedSource._stats.compendiumSource ?? '')) {
 			const systemWithRules = grantedSource.system as ItemSourceWithRules;
 			systemWithRules.rules = systemWithRules.rules.filter((r) => r.type !== 'GrantItem');
 		}

@@ -27,6 +27,8 @@ declare namespace FreeAssessRule {
  * when there is one. With none, it costs nothing.
  */
 class FreeAssessRule extends NimbleBaseRule<FreeAssessRule.Schema> {
+	static override worksOnEffects = false;
+
 	declare chargePoolIdentifier: string;
 
 	static override group = 'triggers';

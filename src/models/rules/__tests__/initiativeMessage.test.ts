@@ -40,7 +40,7 @@ function createRule(overrides: Record<string, unknown> = {}) {
 			strict: false,
 		},
 	);
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	rule.formula = (overrides.formula as string) ?? '6';
 	rule.message = (overrides.message as string) ?? 'Move {value} spaces!';
 	rule.label = (overrides.label as string) ?? 'Test Rule';

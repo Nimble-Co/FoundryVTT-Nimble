@@ -16,7 +16,7 @@ function makeRule(config: Record<string, unknown> = {}, isEmbedded = true) {
 		predicate: new Predicate({}),
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	return rule;
 }
 

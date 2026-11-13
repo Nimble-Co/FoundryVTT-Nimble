@@ -67,7 +67,7 @@ describe('the activation dialog Max Damage tick', () => {
 		type: 'maxDamage',
 		id: 'heal',
 		use: 'healing',
-		item: { name: 'Powerful Healer', uuid: 'Actor.h.Item.p' },
+		parentDocument: { name: 'Powerful Healer', uuid: 'Actor.h.Item.p' },
 		tempHpChoice: true,
 		chargePoolIdentifier: 'powerful-healer',
 		chargeCost: 1,

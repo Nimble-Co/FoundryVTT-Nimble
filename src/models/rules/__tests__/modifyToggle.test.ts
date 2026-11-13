@@ -71,7 +71,7 @@ function createModifyToggleRule(config: ModifyToggleSource): ModifyToggleRule {
 	rule.disabled = sourceData.disabled;
 	rule.label = sourceData.label;
 
-	Object.defineProperty(rule, 'item', { get: () => parentItem, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parentItem, configurable: true });
 
 	return rule;
 }

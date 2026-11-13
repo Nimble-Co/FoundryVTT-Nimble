@@ -96,7 +96,7 @@ function liveRule<T extends ChangeResultRule | RerollRule>(
 		// The charge gate has its own tests. These test what the items ask for.
 		chargePoolIdentifier: '',
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	return rule;
 }
 

@@ -55,11 +55,10 @@ class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		if (actor.type !== 'character') return;
 
 		// If dieSize is 0, use the character's class hit die size

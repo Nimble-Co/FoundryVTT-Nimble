@@ -42,11 +42,10 @@ class AuraReachRule extends NimbleBaseRule<AuraReachRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const value = Number(this.resolveFormula(this.value)) || 0;
 		const current = Number(foundry.utils.getProperty(actor.system, 'attributes.auraReach')) || 0;
 		foundry.utils.setProperty(actor.system, 'attributes.auraReach', current + value);

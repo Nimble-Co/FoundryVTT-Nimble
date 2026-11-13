@@ -16,7 +16,7 @@ interface ModifyRerollRuleLike {
 	tempHp?: string;
 	tempHpWithin?: number;
 	appliesTo?: () => boolean;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 }
 
 interface ModifierOwner {
@@ -69,8 +69,8 @@ function modifyRerollChanges(
 ): ModifyRerollChange[] {
 	const changes: ModifyRerollChange[] = [];
 	for (const modifier of modifyRerollRules(reroll)) {
-		const label = modifier.item?.name ?? '';
-		const base = `${modifier.item?.uuid ?? ''}#${modifier.id ?? ''}`;
+		const label = modifier.parentDocument?.name ?? '';
+		const base = `${modifier.parentDocument?.uuid ?? ''}#${modifier.id ?? ''}`;
 		const value = Math.sign(Number(modifier.rollModeChange) || 0);
 		if (value !== 0) changes.push({ key: `${base}:rollMode`, kind: 'rollMode', label, value });
 		const formula = kind === 'attack' ? (modifier.extraDamage ?? '').trim() : '';
@@ -126,7 +126,7 @@ async function grantModifiers(reroll: {
 		);
 		if (actions < 1 && tempHp < 1) continue;
 		modifiers.push({
-			label: modifier.item?.name ?? '',
+			label: modifier.parentDocument?.name ?? '',
 			actions,
 			tempHp,
 			tempHpWithin: Math.max(0, Number(modifier.tempHpWithin) || 0),

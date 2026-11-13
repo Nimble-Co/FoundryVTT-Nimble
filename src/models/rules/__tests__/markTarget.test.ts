@@ -97,7 +97,7 @@ function createRule(
 		config.statusCondition ?? 'marked';
 	rule.maxTargets = config.maxTargets ?? 1;
 
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
 
 	return { rule, item };
@@ -259,7 +259,7 @@ describe('MarkTargetRule', () => {
 		const owner = createOwner();
 		const { rule } = createRule({}, owner);
 		owner.rules = [rule];
-		Object.defineProperty(rule, 'item', {
+		Object.defineProperty(rule, 'parent', {
 			get: () => ({ isEmbedded: false, uuid: 'item-uuid', actor: owner }),
 			configurable: true,
 		});

@@ -63,7 +63,7 @@ function createDyingActionLimitRule(
 	(rule as any).value = config.value ?? '2';
 	(rule as any).disabled = config.disabled ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

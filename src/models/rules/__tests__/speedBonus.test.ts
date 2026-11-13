@@ -135,7 +135,7 @@ function createSpeedBonusRule(
 	rule.label = config.label ?? 'Test Rule';
 
 	// Override the item getter to return our mock
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

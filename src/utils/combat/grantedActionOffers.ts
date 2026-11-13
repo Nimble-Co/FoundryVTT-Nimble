@@ -95,7 +95,7 @@ export function collectGrantedActionOffers(
 			offersByKey.set(key, {
 				id: foundry.utils.randomID(),
 				targetActorUuid,
-				label: ruleLabel({ label: rule.label, item }),
+				label: ruleLabel({ label: rule.label, parentDocument: item }),
 				activationType: rule.activationType ?? 'weaponAttack',
 				ruleId: rule.id ?? '',
 				sourceItemUuid: item.uuid ?? '',

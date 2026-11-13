@@ -55,7 +55,7 @@ function createDiceConsumerRule(config: {
 	(rule as any).bonusOnAttackDelivery = config.bonusOnAttackDelivery ?? null;
 	(rule as any).id = 'test-consumer-id';
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

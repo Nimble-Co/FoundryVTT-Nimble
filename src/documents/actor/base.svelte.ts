@@ -1,5 +1,6 @@
 import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
+import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { RollDialogType } from '#types/components/CheckRollDialog.d.ts';
@@ -441,9 +442,14 @@ class NimbleBaseActor<
 		this.rules = this.prepareRules();
 	}
 
+	/** The rules of the actor's items, and of the Active Effects that change the actor now. */
 	protected prepareRules() {
-		return this.items.contents
-			.flatMap((i) => [...i.rules.values()])
+		const itemRules = this.items.contents.flatMap((i) => [...i.rules.values()]);
+		const effectRules = [...this.allApplicableEffects()].flatMap((effect) => {
+			const { rules, modifiesActor } = effect as NimbleActiveEffect;
+			return modifiesActor && rules ? [...rules.values()] : [];
+		});
+		return [...itemRules, ...effectRules]
 			.filter((r) => !r.disabled)
 			.sort((a, b) => a.priority - b.priority);
 	}

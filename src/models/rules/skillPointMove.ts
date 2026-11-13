@@ -42,6 +42,8 @@ declare namespace SkillPointMoveRule {
  * and it may not exceed the +12 cap.
  */
 class SkillPointMoveRule extends NimbleBaseRule<SkillPointMoveRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'grants';
 	static override description = 'NIMBLE.rules.skillPointMove.description';
 

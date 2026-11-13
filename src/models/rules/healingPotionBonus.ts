@@ -44,11 +44,10 @@ class HealingPotionBonusRule extends NimbleBaseRule<HealingPotionBonusRule.Schem
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const actor = item.actor as NimbleCharacter;
+		const actor = this.actor as NimbleCharacter;
 		const value = this.resolveFormula(this.value) ?? 0;
 
 		// Store the bonus on the actor for use during item activation

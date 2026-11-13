@@ -133,7 +133,7 @@ interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
 interface PrimaryDieBonusRuleLike {
 	type?: string;
 	label?: string;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	bonusFor?: (context: { delivery: AttackDelivery; other: OtherCreature | null }) => number;
 }
 
@@ -154,7 +154,7 @@ function collectPrimaryDieBonuses(
 		lines.push({
 			label: ruleLabel(rule),
 			value,
-			itemUuid: rule.item?.uuid ?? '',
+			itemUuid: rule.parentDocument?.uuid ?? '',
 		});
 	}
 	return lines;

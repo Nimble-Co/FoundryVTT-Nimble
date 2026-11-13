@@ -2,7 +2,7 @@ import type { CritDiceSpec } from '#types/critDice.d.ts';
 import type { DieChange } from '#types/dieChange.d.ts';
 import type { ResultCardView, ResultUse } from '#types/resultChange.d.ts';
 import type { UseCost } from '#types/useCost.d.ts';
-import { ruleLabel } from '#utils/actor/actorRules.js';
+import { ruleLabel, runningRule } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { useCostCharges } from '../cost/useCost.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
@@ -115,7 +115,7 @@ interface RerollRuleLike {
 	identifier?: string;
 	label?: string;
 	disabled?: boolean;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	actor?: unknown;
 	outcome?: RerollTrigger;
 	rerollsByItself?: boolean;
@@ -427,7 +427,7 @@ function collectRerollEntries(context: RerollRollContext): {
 						side,
 						label: ruleLabel(rule),
 						ruleId: rule.id ?? '',
-						itemUuid: rule.item?.uuid ?? '',
+						itemUuid: rule.parentDocument?.uuid ?? '',
 						used: false,
 						outcomeTrigger: trigger,
 						oncePerRoll: rule.oncePerRoll === true,
@@ -525,14 +525,8 @@ function nextAutomaticReroll(
 /** The live roll use rule an entry came from, or null when it is gone or off. */
 function findRerollRule(entry: IncomingReactionEntry): RerollRuleLike | null {
 	if (entry.ruleId === INCAPACITATED_TARGET_RULE_ID) return incapacitatedTargetRule(null);
-	if (!entry.itemUuid) return null;
-	const item = fromUuidSync(entry.itemUuid as `Item.${string}`) as {
-		rules?: Map<string, RerollRuleLike>;
-	} | null;
-	const rule = item?.rules
-		? [...item.rules.values()].find((candidate) => candidate.id === entry.ruleId)
-		: null;
-	if (!rule || !isRollUseRule(rule.type) || rule.disabled) return null;
+	const rule = runningRule<RerollRuleLike>(entry.itemUuid, entry.ruleId);
+	if (!rule || !isRollUseRule(rule.type)) return null;
 	return rule;
 }
 

@@ -50,7 +50,7 @@ function rerollRule(overrides: Partial<RerollRuleLike> & { usedBy?: RerollSide }
 		type: 'reroll',
 		id: 'rule-1',
 		label: '',
-		item: { name: 'Pocket Sand', uuid: 'Item.sand' },
+		parentDocument: { name: 'Pocket Sand', uuid: 'Item.sand' },
 		outcome: 'always' as RerollTrigger,
 		rerollsByItself: false,
 		rollUseCost: FREE,

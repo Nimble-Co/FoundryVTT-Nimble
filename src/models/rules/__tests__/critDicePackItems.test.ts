@@ -36,7 +36,7 @@ function liveRule<T>(RuleClass: new (...args: never[]) => T, data: RuleData, lev
 	};
 	const rule = new RuleClass({ type: data.type } as never, { parent, strict: false } as never);
 	Object.assign(rule as object, { ...data, predicate: new Predicate(data.predicate ?? {}) });
-	Object.defineProperty(rule, 'item', { get: () => parent, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
 	return rule;
 }
 

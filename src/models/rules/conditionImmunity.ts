@@ -59,12 +59,11 @@ class ConditionImmunityRule extends NimbleBaseRule<ConditionImmunityRule.Schema>
 	}
 
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (this.conditions.length === 0) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const actorSystem = actor as object as ActorSystem;
 
 		if (!actorSystem.system.conditionImmunities) {

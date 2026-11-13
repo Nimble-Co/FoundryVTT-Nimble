@@ -124,7 +124,7 @@ type ModifyPoolRuleLike = {
 	dieSize?: string | null;
 	maxDelta?: string | null;
 	addRefills?: unknown;
-	item?: { name?: string } | null;
+	parentDocument?: { name?: string } | null;
 };
 
 type PoolMaxBonusRuleLike = {

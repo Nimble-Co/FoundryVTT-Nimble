@@ -309,3 +309,91 @@ describe('RulesManager failure reporting', () => {
 		expect(manager.failureFor('rule-1')).toBeUndefined();
 	});
 });
+
+describe('RulesManager on an Active Effect', () => {
+	class ItemOnlyRule extends MockRuleDataModel {
+		static worksOnEffects = false;
+	}
+
+	function createMockEffect(rules: RuleSource[]) {
+		return {
+			...createMockItem(rules),
+			name: 'Bless',
+			uuid: 'Actor.a.ActiveEffect.e',
+			documentName: 'ActiveEffect',
+		};
+	}
+
+	beforeEach(() => {
+		const config = CONFIG as unknown as { NIMBLE: { ruleDataModels: Record<string, unknown> } };
+		config.NIMBLE.ruleDataModels = { ...config.NIMBLE.ruleDataModels, grantItem: ItemOnlyRule };
+	});
+
+	it('builds the rules of an effect with the effect as parent', () => {
+		const Cls = vi.fn(function (
+			this: Record<string, unknown>,
+			source: RuleSource,
+			_options: unknown,
+		) {
+			this.id = source.id;
+			this.type = source.type;
+		});
+		const config = CONFIG as unknown as { NIMBLE: { ruleDataModels: Record<string, unknown> } };
+		config.NIMBLE.ruleDataModels.savingThrowBonus = Cls;
+		const effect = createMockEffect([
+			{ id: 'rule-1', type: 'savingThrowBonus', label: '', disabled: false },
+		]);
+
+		const manager = new RulesManager(effect as never);
+
+		expect(manager.has('rule-1')).toBe(true);
+		expect(Cls.mock.calls[0][1]).toEqual({ parent: effect, strict: true });
+	});
+
+	it('refuses a rule type that works only on an item, and says why', () => {
+		const effect = createMockEffect([
+			{ id: 'rule-1', type: 'grantItem', label: '', disabled: false },
+		]);
+
+		const manager = new RulesManager(effect as never);
+
+		expect(manager.has('rule-1')).toBe(false);
+		expect(manager.failures.get('rule-1')).toEqual({
+			key: 'NIMBLE.rulesBuilder.ruleFailureNotOnEffect',
+			data: { type: 'grantItem' },
+		});
+	});
+
+	it('keeps an item-only rule type on an item', () => {
+		const item = createMockItem([{ id: 'rule-1', type: 'grantItem', label: '', disabled: false }]);
+
+		const manager = new RulesManager(item as never);
+
+		expect(manager.has('rule-1')).toBe(true);
+	});
+
+	it('builds no item-only rule for an effect without writing it', async () => {
+		const effect = createMockEffect([]);
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const rule = await RulesManager.addRule(
+			effect as never,
+			{ type: 'grantItem', id: 'rule-9' },
+			{ update: false },
+		);
+
+		expect(rule).toBeUndefined();
+		expect(effect.update).not.toHaveBeenCalled();
+		error.mockRestore();
+	});
+
+	it('writes a new rule to the effect', async () => {
+		const effect = createMockEffect([]);
+
+		await RulesManager.addRule(effect as never, { type: 'armorClass', id: 'rule-9' });
+
+		expect(effect.update).toHaveBeenCalledWith({
+			'system.rules': [{ type: 'armorClass', id: 'rule-9' }],
+		});
+	});
+});

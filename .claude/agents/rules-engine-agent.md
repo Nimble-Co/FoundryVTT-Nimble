@@ -32,11 +32,11 @@ Dual-phase rules (e.g. `speedBonus`) split on whether the configured value is nu
 Rule automation can be toggled off by the user; the dispatcher then skips every event except those a class lists in `static alwaysDispatchedEvents`. Reserve that list for core plumbing a player cannot reproduce by hand.
 
 ## Base class essentials
-Inherited fields: `disabled`, `id`, `identifier`, `label`, `predicate`, `priority`, `type`. Getters: `this.item`, `this.actor`.
+Inherited fields: `disabled`, `id`, `identifier`, `label`, `predicate`, `priority`, `type`. Getters: `this.parentDocument` (the item or Active Effect that holds the rule; use it for keys and labels), `this.actor` (the creature the rule changes), `this.item` (the item, or an effect's origin item; can be null). A type that needs an item parent sets `static worksOnEffects = false`.
 
 Non-negotiable guards at the top of every lifecycle method:
 ```ts
-if (!this.item.isEmbedded) return;
+if (!this.isOnActor) return;
 if (!this.test()) return;
 ```
 `this.test()` honours `disabled` and the predicate; an empty predicate always passes. `this.resolveFormula(formula)` evaluates against actor roll data and returns `null` on an invalid formula — handle that.
@@ -44,7 +44,7 @@ if (!this.test()) return;
 Mutate actor data only through `foundry.utils.setProperty(actor.system, path, value)`, never direct assignment. For list-valued paths use `this.pushToActorSystemArray(path, entry)` from `base.ts`, which registers the path so the array resets each prepare cycle; never push by hand.
 
 ## Testing
-Mock actor and item as plain objects, construct the rule with `{ parent: mockItem, strict: false }`, and override the `item` getter via `Object.defineProperty`. Copy the setup from a neighbouring `.test.ts`. Always cover: happy path, the non-embedded guard, the disabled guard, predicate gating, and stacking of multiple instances.
+Mock actor and item as plain objects, construct the rule with `{ parent: mockItem, strict: false }`, and stub `parent` via `Object.defineProperty` (the test DataModel keeps no parent). Copy the setup from a neighbouring `.test.ts`. Always cover: happy path, the non-embedded guard, the disabled guard, predicate gating, and stacking of multiple instances.
 
 Run `pnpm test`. Before handing work back: `pnpm type-check` and `pnpm lint`.
 

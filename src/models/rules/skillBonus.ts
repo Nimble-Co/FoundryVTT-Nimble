@@ -62,11 +62,10 @@ class SkillBonusRule extends NimbleBaseRule<SkillBonusRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const actor = item.actor as NimbleCharacter;
+		const actor = this.actor as NimbleCharacter;
 		const value = this.resolveFormula(this.value);
 		let { skills } = this;
 

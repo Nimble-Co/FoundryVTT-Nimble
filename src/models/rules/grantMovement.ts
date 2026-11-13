@@ -129,12 +129,11 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 	 * where (liveSpeed - sourceBase) captures bonuses applied in earlier phases.
 	 */
 	private applyGrantedMovement(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 		if (!ALLOWED_MODES.has(this.mode)) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		const resolvedSpeed = this.resolveFormula(this.speed);
 		if (resolvedSpeed === null || resolvedSpeed <= 0) return;
 

@@ -4,7 +4,7 @@ import { maxDamageOffers, maxDamageRuleOf } from '../maxDamageOffers.js';
 const rule = (overrides: object = {}) => ({
 	type: 'maxDamage',
 	id: 'r',
-	item: { name: 'Stormborn (2)', uuid: 'Actor.h.Item.s' },
+	parentDocument: { name: 'Stormborn (2)', uuid: 'Actor.h.Item.s' },
 	use: 'damage',
 	chargePoolIdentifier: '',
 	chargeCost: 1,

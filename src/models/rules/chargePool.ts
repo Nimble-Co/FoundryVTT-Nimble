@@ -141,6 +141,8 @@ declare namespace ChargePoolRule {
 }
 
 class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'resource';
 	static override description = 'NIMBLE.rules.chargePool.description';
 	static override icon = 'fa-solid fa-battery-three-quarters';

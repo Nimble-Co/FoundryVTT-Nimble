@@ -1,6 +1,7 @@
 import type { RuleSource } from '#types/ruleSource.js';
 import localize from '#utils/localize.js';
-import type { NimbleBaseRule } from '../models/rules/base.js';
+import { isEffectParent } from '../models/rules/_ruleParent.js';
+import type { NimbleBaseRule, RuleParentDocument } from '../models/rules/base.js';
 
 export namespace RulesManager {
 	export interface AddOptions {
@@ -8,14 +9,8 @@ export namespace RulesManager {
 	}
 }
 
-/** Interface for item system data that includes rules */
-interface ItemSystemWithRules {
-	rules: RuleSource[];
-}
-
-/** Helper to get system data with rules */
-function getSystemWithRules(item: NimbleBaseItem): ItemSystemWithRules {
-	return item.system as object as ItemSystemWithRules;
+function rulesOf(parent: RuleParentDocument): RuleSource[] {
+	return (parent.system as { rules?: RuleSource[] } | undefined)?.rules ?? [];
 }
 
 /**
@@ -48,7 +43,7 @@ function describeValidationFailures(rule: InstanceType<typeof NimbleBaseRule>): 
 }
 
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
-	#item: NimbleBaseItem;
+	#parent: RuleParentDocument;
 	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
 	/**
@@ -60,15 +55,14 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	 */
 	readonly failures: Map<string, RuleFailure> = new Map();
 
-	constructor(item: NimbleBaseItem) {
+	constructor(parent: RuleParentDocument) {
 		super();
 
-		this.#item = item;
+		this.#parent = parent;
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
 		this.rulesTypeMap = new Map();
 
-		const system = getSystemWithRules(item);
-		system.rules.forEach((source) => {
+		rulesOf(parent).forEach((source) => {
 			const Cls = dataModels[source.type];
 			if (!Cls) {
 				this.failures.set(source.id, {
@@ -77,13 +71,21 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 				});
 				// eslint-disable-next-line no-console
 				console.warn(
-					`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is not of a recognizable type.`,
+					`Nimble | Rule ${source.id} on ${parent.name}(${parent.uuid}) is not of a recognizable type.`,
 				);
 				return;
 			}
 
+			if (isEffectParent(parent) && Cls.worksOnEffects === false) {
+				this.failures.set(source.id, {
+					key: 'NIMBLE.rulesBuilder.ruleFailureNotOnEffect',
+					data: { type: source.type },
+				});
+				return;
+			}
+
 			try {
-				const rule = new Cls(source, { parent: item, strict: true });
+				const rule = new Cls(source, { parent, strict: true });
 				this.set(rule.id, rule);
 				this.rulesTypeMap.set(source.type, rule);
 
@@ -98,7 +100,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 						: { key: 'NIMBLE.rulesBuilder.ruleFailureMalformed' },
 				);
 				// eslint-disable-next-line no-console
-				console.warn(`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is malformed.`);
+				console.warn(`Nimble | Rule ${source.id} on ${parent.name}(${parent.uuid}) is malformed.`);
 				// eslint-disable-next-line no-console
 				console.error(err);
 			}
@@ -143,9 +145,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			updateData as object as InstanceType<typeof NimbleBaseRule>,
 		);
 
-		const system = getSystemWithRules(this.#item);
-		await this.#item.update({
-			'system.rules': system.rules.map((r) => (r.id === id ? updateData : r)),
+		await this.#parent.update({
+			'system.rules': rulesOf(this.#parent).map((r) => (r.id === id ? updateData : r)),
 		} as Record<string, unknown>);
 
 		return true;
@@ -166,15 +167,13 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	 * end up disagreeing.
 	 */
 	withAllRulesDisabled(disabled: boolean): RuleSource[] {
-		const system = getSystemWithRules(this.#item);
-
-		return (system.rules ?? []).map((rule) => ({ ...rule, disabled }));
+		return rulesOf(this.#parent).map((rule) => ({ ...rule, disabled }));
 	}
 
 	async #setAllRulesDisabledState(disabled: boolean) {
 		const updatedRules = this.withAllRulesDisabled(disabled);
 
-		await this.#item.update({
+		await this.#parent.update({
 			'system.rules': updatedRules,
 		} as Record<string, unknown>);
 
@@ -182,18 +181,17 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	async deleteRule(id: string) {
-		return RulesManager.deleteRule(this.#item, id);
+		return RulesManager.deleteRule(this.#parent, id);
 	}
 
-	static async deleteRule(item: NimbleBaseItem, id: string) {
-		const system = getSystemWithRules(item);
-		return item.update({
-			'system.rules': system.rules?.filter((r) => r.id !== id) ?? [],
+	static async deleteRule(parent: RuleParentDocument, id: string) {
+		return parent.update({
+			'system.rules': rulesOf(parent).filter((r) => r.id !== id),
 		} as Record<string, unknown>);
 	}
 
 	async reorderRules(idsInOrder: string[]) {
-		return RulesManager.reorderRules(this.#item, idsInOrder);
+		return RulesManager.reorderRules(this.#parent, idsInOrder);
 	}
 
 	/**
@@ -201,9 +199,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	 * not present in `idsInOrder` are appended in their original relative order
 	 * so an incomplete reorder does not silently drop data.
 	 */
-	static async reorderRules(item: NimbleBaseItem, idsInOrder: string[]) {
-		const system = getSystemWithRules(item);
-		const existing = system.rules ?? [];
+	static async reorderRules(parent: RuleParentDocument, idsInOrder: string[]) {
+		const existing = rulesOf(parent);
 		const byId = new Map(existing.map((r) => [r.id, r]));
 		const seen = new Set<string>();
 
@@ -218,7 +215,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			if (!seen.has(rule.id)) reordered.push(rule);
 		}
 
-		await item.update({
+		await parent.update({
 			'system.rules': reordered,
 		} as Record<string, unknown>);
 
@@ -226,19 +223,18 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	async addRule(data: Record<string, unknown>, options: RulesManager.AddOptions = {}) {
-		return RulesManager.addRule(this.#item, data, options);
+		return RulesManager.addRule(this.#parent, data, options);
 	}
 
 	/** ------------------------------------------------------ */
 	/**                   Static Methods                       */
 	/** ------------------------------------------------------ */
 	static async addRule(
-		item: NimbleBaseItem,
+		parent: RuleParentDocument,
 		data: Record<string, unknown>,
 		options: RulesManager.AddOptions = {},
 	) {
-		const system = getSystemWithRules(item);
-		const existingRules = system.rules;
+		const existingRules = rulesOf(parent);
 
 		// Set defaults
 		options.update ??= true;
@@ -251,12 +247,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			typeof data.id === 'string' && data.id ? data : { ...data, id: foundry.utils.randomID() };
 
 		if (options.update) {
-			await item.update({
+			await parent.update({
 				'system.rules': [...existingRules, ruleData],
 			} as Record<string, unknown>);
 
-			const updatedSystem = getSystemWithRules(item);
-			return updatedSystem.rules.find((r) => r.id === ruleData.id);
+			return rulesOf(parent).find((r) => r.id === ruleData.id);
 		}
 
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
@@ -273,9 +268,13 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			console.error('Nimble | Rule is not of a recognizable type.');
 			return undefined;
 		}
+		if (isEffectParent(parent) && Cls.worksOnEffects === false) {
+			// eslint-disable-next-line no-console
+			console.error(`Nimble | A ${type} rule works only on an item.`);
+			return undefined;
+		}
 
-		const rule = new Cls(ruleData, { parent: item });
-		return rule;
+		return new Cls(ruleData, { parent });
 	}
 }
 

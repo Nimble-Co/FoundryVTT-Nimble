@@ -32,19 +32,14 @@
 	let ruleBonuses = $derived.by(() => {
 		const bonuses = [];
 
-		for (const item of document.items ?? []) {
-			if (!item.rules) continue;
+		for (const rule of document.rules ?? []) {
+			if (rule.type !== 'maxHpBonus') continue;
 
-			for (const rule of item.rules.values()) {
-				if (rule.type !== 'maxHpBonus') continue;
-				if (rule.disabled) continue;
-
-				bonuses.push({
-					name: item.name,
-					value: rule.resolvedBonus(),
-					perLevel: rule.perLevel,
-				});
-			}
+			bonuses.push({
+				name: rule.parentDocument.name,
+				value: rule.resolvedBonus(),
+				perLevel: rule.perLevel,
+			});
 		}
 
 		return bonuses;

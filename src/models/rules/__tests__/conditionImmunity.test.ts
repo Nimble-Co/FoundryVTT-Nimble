@@ -66,7 +66,7 @@ function createConditionImmunityRule(
 	(rule as any).conditions = config.conditions ?? ['frightened'];
 	(rule as any).disabled = config.disabled ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

@@ -485,7 +485,7 @@ describe('resolveRerollReaction', () => {
 
 	it('adds a new entry for a feature that can still be used on the new roll', async () => {
 		const { target, rule } = setupWorld();
-		target.rules = [{ ...rule, item: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
+		target.rules = [{ ...rule, parentDocument: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
 		const message = createMessage();
 
 		await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
@@ -896,7 +896,7 @@ describe('resolveRerollReaction', () => {
 				tempHp: '',
 				tempHpWithin: 0,
 				appliesTo: () => true,
-				item: { name: itemName, uuid: `Item.${itemName}` },
+				parentDocument: { name: itemName, uuid: `Item.${itemName}` },
 				...config,
 			};
 		}
@@ -1275,7 +1275,7 @@ describe('resolveRerollReaction', () => {
 			'offers the feature again after the %s result is kept',
 			async (choice) => {
 				const { target, rule } = setupWorld();
-				target.rules = [{ ...rule, item: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
+				target.rules = [{ ...rule, parentDocument: { name: 'Pocket Sand', uuid: 'Item.sand' } }];
 				const message = waitingMessage();
 
 				await message.cardRerolls.resolveKeepChoice(choice, 'gm-user');
@@ -1381,7 +1381,7 @@ describe('resolveRerollReaction', () => {
 				outcome: 'criticalHit',
 				automatic: true,
 				rerollsByItself: true,
-				item: WARD_ITEM,
+				parentDocument: WARD_ITEM,
 				actor: world.target,
 			});
 			world.target.rules = [ward];
@@ -1915,7 +1915,7 @@ describe('a reroll from a rule with a stat to pick', () => {
 			tempHp: '',
 			tempHpWithin: 0,
 			appliesTo: () => true,
-			item: { name: 'Sure Song', uuid: 'Item.song' },
+			parentDocument: { name: 'Sure Song', uuid: 'Item.song' },
 		};
 		const owner = Object.assign(world.target, {
 			getRollData: () => ({}),

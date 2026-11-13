@@ -77,10 +77,9 @@ class HitDiceAdvantageRule extends NimbleBaseRule<HitDiceAdvantageRule.Schema> {
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		if (actor.type !== 'character') return;
 
 		if (!this.test()) return;
@@ -105,7 +104,7 @@ class HitDiceAdvantageRule extends NimbleBaseRule<HitDiceAdvantageRule.Schema> {
 			condition: this.condition,
 			amount: this.amount,
 			rollContext: this.rollContext,
-			sourceId: item.sourceId ?? item.uuid,
+			sourceId: this.item?.sourceId ?? this.parentDocument.uuid ?? '',
 		});
 
 		foundry.utils.setProperty(actor.system, 'attributes.hitDiceAdvantageRules', advantageRules);

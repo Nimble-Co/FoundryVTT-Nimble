@@ -43,11 +43,10 @@ class UnarmedDamageRule extends NimbleBaseRule<UnarmedDamageRule.Schema> {
 	 * Apply the unarmed damage formula to the actor
 	 */
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
+		const { actor } = this;
 		this.checkReferences(this.value);
 
 		// Set the unarmed damage formula on the actor

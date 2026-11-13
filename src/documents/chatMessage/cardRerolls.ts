@@ -148,15 +148,15 @@ function withCannotMiss<TRoll>(found: RerollableRoll<TRoll>): RerollableRoll<TRo
 /** The change that says a check's new roll succeeds, named by the rule that says it cannot fail. */
 function cannotFailChange(
 	entry: IncomingReactionEntry,
-	modifier: { id?: string; item?: { name?: string; uuid?: string } | null },
+	modifier: { id?: string; parentDocument?: { name?: string; uuid?: string | null } | null },
 ): ResultChange {
 	return {
 		...newResultChange({
 			entry: {
 				...entry,
-				itemUuid: modifier.item?.uuid ?? '',
+				itemUuid: modifier.parentDocument?.uuid ?? '',
 				ruleId: modifier.id ?? '',
-				label: modifier.item?.name ?? '',
+				label: modifier.parentDocument?.name ?? '',
 			},
 			use: { change: 'succeed', value: 0, stat: '' },
 			changes: [],
@@ -580,7 +580,7 @@ export class CardRerolls {
 
 	/** Give creatures what this use gave, once the new roll is on the card or waits for a keep. */
 	async #applyGrants(reroll: RerollRecord, rule: RerollRuleLike): Promise<void> {
-		if (reroll.grants?.length) await applyGrants(reroll.grants, rule.item?.uuid ?? '');
+		if (reroll.grants?.length) await applyGrants(reroll.grants, rule.parentDocument?.uuid ?? '');
 	}
 
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */
@@ -983,7 +983,7 @@ export class CardRerolls {
 				...(dice?.length ? { dieCount: dice.length } : {}),
 				makeRoll: (formula, options, changes) => target.makeRoll(formula, options, changes),
 				...(usable.rule.usesAnotherStat && stat ? { stat } : {}),
-				...(cannotMiss ? { cannotMissBy: cannotMiss.item?.name ?? '' } : {}),
+				...(cannotMiss ? { cannotMissBy: cannotMiss.parentDocument?.name ?? '' } : {}),
 				place: async (done) => {
 					await this.#addGrants(done, usable.rule, rollTarget);
 					if (chooserUuid) return this.#waitForKeep(entry, target, done, chooserUuid);

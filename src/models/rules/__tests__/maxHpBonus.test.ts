@@ -54,7 +54,7 @@ describe('MaxHpBonusRule', () => {
 		// source values have to be assigned onto the instance directly.
 		Object.assign(rule, { value, perLevel, disabled: false });
 
-		Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+		Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 		Object.defineProperty(rule, 'actor', { get: () => actor, configurable: true });
 		Object.defineProperty(rule, 'predicate', {
 			get: () => predicate ?? { size: 0 },

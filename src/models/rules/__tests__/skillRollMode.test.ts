@@ -83,7 +83,7 @@ function createSkillRollModeRule(
 	rule.mode = config.mode ?? 'adjust';
 	rule.disabled = config.disabled ?? false;
 
-	Object.defineProperty(rule, 'item', {
+	Object.defineProperty(rule, 'parent', {
 		get: () => item,
 		configurable: true,
 	});

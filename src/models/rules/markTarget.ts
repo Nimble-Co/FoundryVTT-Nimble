@@ -98,6 +98,8 @@ interface FlaggedActor {
  * creature ends that mark (see `markLifecycle.ts`).
  */
 class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.markTarget.description';
 
@@ -144,8 +146,8 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	}
 
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (!this.item.isEmbedded) return;
-		if (context.sourceItem?.uuid !== this.item.uuid) return;
+		if (!this.isOnActor) return;
+		if (context.sourceItem?.uuid !== this.parentItem.uuid) return;
 		if (!this.test()) return;
 
 		// Pair each target token with its actor; tokenless targets keep a null token uuid.
@@ -204,7 +206,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		if (!this.statusCondition) return;
 
 		const markData = this.#buildMarkEffectData();
-		const sourceItemUuid = this.item.uuid;
+		const sourceItemUuid = this.parentItem.uuid;
 		for (const { actor } of targets) {
 			await applyMarkEffect({ target: actor, sourceItemUuid, effectData: markData });
 		}
@@ -234,8 +236,8 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 			statuses: [this.statusCondition],
 			// Origin surfaces the source item in the effects panel; the flag is what
 			// eviction matches on so it never touches another marker's effect.
-			origin: this.item.uuid,
-			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: this.item.uuid } },
+			origin: this.parentItem.uuid,
+			flags: { [SYSTEM_ID]: { [MARK_TARGET_ITEM_FLAG]: this.parentItem.uuid } },
 		};
 	}
 }

@@ -68,8 +68,9 @@ export function getSituationalRollModeOptions(
 		if (!rule.appliesTo()) continue;
 
 		options.push({
-			key: `${rule.item?.uuid ?? ''}:${rule.id}`,
-			label: rule.label || rule.item?.name || localize('NIMBLE.ruleTypes.situationalRollMode'),
+			key: `${rule.parentDocument?.uuid ?? ''}:${rule.id}`,
+			label:
+				rule.label || rule.parentDocument?.name || localize('NIMBLE.ruleTypes.situationalRollMode'),
 			icon: rule.iconPath(),
 			value: rule.value,
 		});

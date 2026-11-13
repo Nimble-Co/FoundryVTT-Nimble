@@ -12,7 +12,7 @@ const LOW_RESULT = 1;
 interface NaturalRuleLike {
 	id?: string;
 	label?: string;
-	item?: { name?: string; uuid?: string } | null;
+	parentDocument?: { name?: string; uuid?: string | null } | null;
 	countsAsNat20On?: (roll: RollToReroll) => boolean;
 }
 
@@ -104,7 +104,7 @@ function naturalResultChange(input: {
 		id,
 		lineId: id,
 		entryId: '',
-		itemUuid: rule.item?.uuid ?? '',
+		itemUuid: rule.parentDocument?.uuid ?? '',
 		ruleId: rule.id ?? '',
 		label: ruleLabel(rule),
 		actorUuid: input.roller?.uuid ?? '',

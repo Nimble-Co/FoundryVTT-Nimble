@@ -42,7 +42,7 @@ function makeRule(
 		predicate: new Predicate({}),
 		...config,
 	});
-	Object.defineProperty(rule, 'item', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	return rule;
 }
 
@@ -135,6 +135,22 @@ describe('AttackOutcomeRule', () => {
 
 		expect(rule.changeFor(attack())).toBeNull();
 		expect(rule.changeFor(attack({ itemUuid: ITEM_UUID }))).not.toBeNull();
+	});
+
+	it('never applies as this item only when it is on an effect with no item', () => {
+		vi.stubGlobal('fromUuidSync', () => null);
+		const rule = makeRule({ thisItemOnly: true });
+		const holder = Object.setPrototypeOf({ getDomain: () => new Set<string>() }, Actor.prototype);
+		const effect = {
+			documentName: 'ActiveEffect',
+			uuid: 'Actor.hero.ActiveEffect.e',
+			parent: holder,
+			target: holder,
+			origin: null,
+		};
+		Object.defineProperty(rule, 'parent', { get: () => effect, configurable: true });
+
+		expect(rule.changeFor(attack({ itemUuid: undefined }))).toBeNull();
 	});
 
 	it('applies only when the other creature is what it asks for', () => {

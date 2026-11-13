@@ -171,6 +171,8 @@ interface ActorWithEffects {
 }
 
 class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
+	static override worksOnEffects = false;
+
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.toggleEffect.description';
 
@@ -216,7 +218,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * rule's priority (default 1).
 	 */
 	prePrepareData(): void {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		if (this.disabled) return;
 		const effect = this.#findActiveEffect();
 		if (!effect || effect.disabled) return;
@@ -239,7 +241,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * - existing AE enabled → no-op
 	 */
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (context.sourceItem !== this.item) {
+		if (context.sourceItem !== this.parentItem) {
 			// A different item on the same actor was activated. If it carries a
 			// damage effect, that's an attack: record it as activity for the
 			// inactivity timer.
@@ -417,7 +419,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		if (!isChatNotificationsAutomationEnabled()) return;
 		const actor = this.actor as unknown as Actor | null;
 		if (!actor) return;
-		const name = this.label || (this.item as unknown as { name: string }).name;
+		const name = this.label || this.parentItem.name;
 		try {
 			await ChatMessage.create({
 				speaker: ChatMessage.getSpeaker({ actor }),
@@ -509,7 +511,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 		if (round - recordedRound < inactiveRounds) return;
 
-		const name = this.label || (this.item as unknown as { name: string }).name;
+		const name = this.label || this.parentItem.name;
 		const actorName = (this.actor as unknown as { name?: string })?.name ?? '';
 		const confirmed = await foundry.applications.api.DialogV2.confirm({
 			window: {
@@ -549,7 +551,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 		if (!isChatNotificationsAutomationEnabled()) return;
 		const actor = this.actor as unknown as Actor | null;
 		if (!actor) return;
-		const name = this.label || (this.item as unknown as { name: string }).name;
+		const name = this.label || this.parentItem.name;
 		try {
 			await ChatMessage.create({
 				speaker: ChatMessage.getSpeaker({ actor }),
@@ -626,7 +628,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 
 	async #createActiveEffect(): Promise<void> {
 		const actor = this.actor as unknown as ActorWithEffects;
-		const item = this.item as unknown as ToggleEffectAEItemSource;
+		const item = this.parentItem as unknown as ToggleEffectAEItemSource;
 		await actor.createEmbeddedDocuments('ActiveEffect', [
 			buildToggleEffectAEData(item, this.id, this.label),
 		]);
@@ -644,7 +646,7 @@ class ToggleEffectRule extends NimbleBaseRule<ToggleEffectRule.Schema> {
 	 * no rule left to turn it off.
 	 */
 	async afterDelete(): Promise<void> {
-		if (!this.item.isEmbedded) return;
+		if (!this.isOnActor) return;
 		const existing = this.#findActiveEffect();
 		if (!existing) return;
 		await this.#deleteActiveEffect(existing.id);
