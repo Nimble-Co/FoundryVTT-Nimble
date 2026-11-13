@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { SYSTEM_ID, systemHookName } from '#system';
 
 const {
+	dropToZeroOnDeleteMock,
 	dealTurnDamageMock,
 	endEffectsAtMock,
 	endEffectsMock,
@@ -9,6 +10,7 @@ const {
 	fireItemUseEventsMock,
 	requestSavesMock,
 } = vi.hoisted(() => ({
+	dropToZeroOnDeleteMock: vi.fn(async (..._args: unknown[]) => undefined),
 	dealTurnDamageMock: vi.fn(async (..._args: unknown[]) => undefined),
 	requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
 	endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
@@ -21,6 +23,9 @@ vi.mock('../../utils/lastsUntil/endEffects.js', () => ({ endEffects: endEffectsM
 vi.mock('../../utils/lastsUntil/endEffectsAt.js', async (importOriginal) => ({
 	...(await importOriginal<typeof import('../../utils/lastsUntil/endEffectsAt.js')>()),
 	endEffectsAt: endEffectsAtMock,
+}));
+vi.mock('../../utils/lastsUntil/zeroHpAtEnd.js', () => ({
+	dropToZeroOnDelete: dropToZeroOnDeleteMock,
 }));
 vi.mock('../../utils/damage/turnDamage.js', () => ({ dealTurnDamage: dealTurnDamageMock }));
 vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: requestSavesMock }));
@@ -647,6 +652,16 @@ describe('events', () => {
 			effect: 'Rage',
 		});
 		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
+	});
+
+	it('an effect that ends drops its holder to 0 HP when a rule of it says so', () => {
+		const holder = Object.assign(Object.create(Actor.prototype), { name: 'Tessa' });
+		const effect = { parent: holder, name: 'Dragonform', statuses: new Set() };
+		const options = { nimbleConditionReplaced: true };
+
+		hook('deleteActiveEffect')(effect, options);
+
+		expect(dropToZeroOnDeleteMock).toHaveBeenCalledWith(effect, options, 'effectEnds:Tessa');
 	});
 
 	it('the user who deletes an effect takes back the temp HP that it gave', () => {

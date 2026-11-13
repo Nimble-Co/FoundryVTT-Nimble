@@ -273,7 +273,9 @@ describe('endEffectsAt with Feature Effects off', () => {
 
 		await endEffectsAt(attackBy(goblin.holder), { key: 'k', heading: { key: 'Time passed' } });
 
-		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a']);
+		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a'], {
+			nimbleEndLines: true,
+		});
 	});
 });
 
@@ -362,6 +364,8 @@ describe('the pools of an ended effect', () => {
 		await endEffects([addEffect(goblin, 'a')], { heading: { key: 'Step' }, hostId: 'stepCard' });
 
 		expect(emptyPoolEvents).not.toHaveBeenCalled();
-		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a']);
+		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a'], {
+			nimbleEndLines: true,
+		});
 	});
 });

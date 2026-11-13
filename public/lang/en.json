@@ -738,6 +738,14 @@
 				"undoLabel": "Undo: give back to {name} what this line took",
 				"undone": "Undone"
 			},
+			"zeroHpAtEnd": {
+				"drops": "{name} drops to 0 HP",
+				"cause": "{effect} ended",
+				"drop": "Drop to 0 HP",
+				"dropLabel": "{name} drops to 0 HP: {effect} ended",
+				"undoLabel": "Undo: give back to {name} the HP this line took",
+				"undone": "Undone"
+			},
 			"stackGain": {
 				"gains": "{name} gains {effect}: {count} stacks of {stacked}",
 				"has": "{name} has {count} stacks of {stacked}",
@@ -2035,6 +2043,7 @@
 			"tags": "Tags",
 			"turnDamage": "Damage each turn",
 			"escapeDamage": "Damage on escape",
+			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
@@ -3614,6 +3623,9 @@
 					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
 				},
 				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
+			},
+			"zeroHpAtEnd": {
+				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it is not an end. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",

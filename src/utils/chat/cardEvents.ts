@@ -145,7 +145,8 @@ export function lineCreatures(event: CardEvent): OwnedCreature[] {
 		case 'tempHpChoice':
 		case 'escapeRuling':
 		case 'waitingEnd':
-		case 'emptyPool': {
+		case 'emptyPool':
+		case 'zeroHp': {
 			const holder = creatureAt(action.holderUuid);
 			return holder ? [holder] : [];
 		}

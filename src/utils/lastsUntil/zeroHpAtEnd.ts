@@ -1,0 +1,165 @@
+import type { CardEvent, CardEventText, ZeroHpAction } from '#types/cardEvent.d.ts';
+import { undoDamageOption } from '#utils/actor/actorHpChangePaths.js';
+import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { addMomentEvents, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
+import { END_LINES_OPTION } from '#utils/dicePool/emptyPoolLine.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+
+export { END_LINES_OPTION };
+
+const WORDS = 'NIMBLE.chat.zeroHpAtEnd';
+const HP_PATH = 'system.attributes.hp';
+
+interface RuleSource {
+	type?: string;
+	disabled?: boolean;
+	appliesTo?(): boolean;
+}
+
+/** An effect as it ends: its prepared rules, else its rule data, and its holder. */
+export interface ZeroHpEffect {
+	id?: string | null;
+	name?: string | null;
+	img?: string | null;
+	parent?: unknown;
+	rules?: unknown;
+	system?: unknown;
+}
+
+interface ZeroHpHolder {
+	uuid: string;
+	name?: string | null;
+	system?: unknown;
+	update(data: Record<string, unknown>, options?: object): Promise<unknown>;
+}
+
+interface LineCard {
+	id?: string | null;
+	flags?: Record<string, unknown>;
+}
+
+/** Whether the effect has a 0 HP at End rule that is on: its prepared rules, else its rule data. */
+export function dropsToZeroAtEnd(effect: ZeroHpEffect): boolean {
+	const prepared = effect.rules as { values?(): Iterable<RuleSource> } | undefined;
+	const rules =
+		typeof prepared?.values === 'function'
+			? [...prepared.values()]
+			: ((effect.system as { rules?: RuleSource[] } | undefined)?.rules ?? []);
+	return rules.some(
+		(rule) =>
+			rule?.type === 'zeroHpAtEnd' &&
+			!rule.disabled &&
+			(typeof rule.appliesTo !== 'function' || rule.appliesTo()),
+	);
+}
+
+function hpOf(holder: ZeroHpHolder): { value: number; max: number } {
+	const read = (field: string) =>
+		Number(foundry.utils.getProperty(holder, `${HP_PATH}.${field}`)) || 0;
+	return { value: read('value'), max: read('max') };
+}
+
+/** Sets the HP to 0 and says how many it took. */
+async function dropToZero(holder: ZeroHpHolder): Promise<number> {
+	const { value } = hpOf(holder);
+	if (value <= 0) return 0;
+	await holder.update({ [`${HP_PATH}.value`]: 0 });
+	return value;
+}
+
+function lineOf(action: ZeroHpAction, img: string | null | undefined, at: number): CardEvent {
+	return {
+		id: `zeroHp.${action.holderUuid}.${at}`,
+		kind: 'healthState',
+		...(img ? { img } : { icon: 'fa-solid fa-heart-crack' }),
+		text: { key: `${WORDS}.drops`, data: { name: action.holderName } },
+		cause: { key: `${WORDS}.cause`, data: { effect: action.effectName } },
+		action,
+		at,
+	};
+}
+
+/**
+ * On the active GM, after the effects ended: each holder with a 0 HP at End rule on an ended effect
+ * drops to 0 HP, with a line and Undo. With Feature Effects off, the line waits for a click. A
+ * holder at 0 HP already gets no line.
+ */
+export async function zeroHpAtEndEvents(
+	effects: readonly ZeroHpEffect[],
+	at: number,
+): Promise<CardEvent[]> {
+	const lines: CardEvent[] = [];
+	for (const effect of effects) {
+		if (!dropsToZeroAtEnd(effect) || !(effect.parent instanceof Actor)) continue;
+		const holder = effect.parent as unknown as ZeroHpHolder;
+		if (hpOf(holder).value <= 0) continue;
+		const action: ZeroHpAction = {
+			kind: 'zeroHp',
+			holderUuid: holder.uuid,
+			holderName: holder.name ?? '',
+			effectName: effect.name ?? '',
+			state: 'waiting',
+		};
+		if (isRuleAutomationEnabled()) {
+			action.hpLost = await dropToZero(holder);
+			action.state = 'dropped';
+		}
+		lines.push(lineOf(action, effect.img, at));
+	}
+	return lines;
+}
+
+/**
+ * An end with no line of its own (a removal by hand, a deleted origin item): on the active GM, the
+ * drop and its line go on a card of their own. A copy that replaces the effect is not an end.
+ */
+export async function dropToZeroOnDelete(
+	effect: ZeroHpEffect,
+	options: Record<string, unknown> | undefined,
+	heading: CardEventText,
+): Promise<void> {
+	if (!game.user?.isActiveGM) return;
+	if (options?.[END_LINES_OPTION] || options?.[CONDITION_REPLACED_OPTION]) return;
+	try {
+		const lines = await zeroHpAtEndEvents([effect], Date.now());
+		if (lines.length < 1) return;
+		await addMomentEvents({ key: `once:${foundry.utils.randomID()}`, heading }, lines);
+	} catch (error) {
+		console.error('Nimble | Could not drop the holder of an ended effect to 0 HP.', error);
+	}
+}
+
+/** The owner of the holder, or a GM, drops a waiting line or undoes a dropped one. */
+export function canActOnZeroHp(action: ZeroHpAction): boolean {
+	return mayActHere(action.holderUuid);
+}
+
+/** A click on the line: a waiting line drops the HP to 0, a dropped one gives them back. */
+export async function actOnZeroHp(card: LineCard, event: CardEvent): Promise<boolean> {
+	const action = event.action as ZeroHpAction | undefined;
+	if (action?.kind !== 'zeroHp' || !card.id) return false;
+	if (action.state === 'undone') return false;
+	const holder = fromUuidSync(action.holderUuid as never, {
+		strict: false,
+	}) as ZeroHpHolder | null;
+	if (!holder) return false;
+	if (action.state === 'waiting') {
+		const hpLost = await dropToZero(holder);
+		return replaceCardEvent(card as never, event.id, {
+			...event,
+			action: { ...action, state: 'dropped', hpLost },
+		});
+	}
+	if (action.hpLost) {
+		const { value, max } = hpOf(holder);
+		await holder.update(
+			{ [`${HP_PATH}.value`]: Math.min(max, value + action.hpLost) },
+			undoDamageOption(),
+		);
+	}
+	return replaceCardEvent(card as never, event.id, {
+		...event,
+		action: { ...action, state: 'undone' },
+	});
+}

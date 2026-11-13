@@ -4,6 +4,7 @@ import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { effectsEndingAt, endEffects, everyActor, undoEndedEffect } from '../endEffects.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
+import { END_LINES_OPTION } from '../zeroHpAtEnd.js';
 
 const moment = (text: string, key?: string) => ({
 	...(key ? { key } : {}),
@@ -140,8 +141,12 @@ describe('endEffects', () => {
 
 		await endEffects([a, b, c], moment('Start of Tessa turn', 'combat:1:0:turnStart'));
 
-		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a', 'b']);
-		expect(ogre.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['c']);
+		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a', 'b'], {
+			[END_LINES_OPTION]: true,
+		});
+		expect(ogre.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['c'], {
+			[END_LINES_OPTION]: true,
+		});
 		expect(create).toHaveBeenCalledTimes(1);
 		const card = createdCard();
 		expect(card.type).toBe('effectsEnded');
@@ -238,6 +243,32 @@ describe('endEffects', () => {
 
 		user.isActiveGM = false;
 		await expect(endEffects([addEffect(goblin, 'b')], moment('Asked'))).resolves.toBe(true);
+	});
+});
+
+describe('an effect with a 0 HP at End rule', () => {
+	it('drops its holder to 0 HP, with a line after the ended line on the same card', async () => {
+		const update = vi.fn(async (data: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(data)) {
+				foundry.utils.setProperty(goblin.holder, path, value);
+			}
+		});
+		Object.assign(goblin.holder, {
+			system: { attributes: { hp: { value: 9, temp: 0, max: 12 } } },
+			update,
+		});
+		const dragon = addEffect(goblin, 'dragon', {
+			name: 'Dragonform',
+			rules: new Map([['r', { type: 'zeroHpAtEnd', appliesTo: () => true }]]),
+		});
+
+		await endEffects([dragon], moment('Time passed', 'time:1'));
+
+		expect(update).toHaveBeenCalledWith({ 'system.attributes.hp.value': 0 });
+		const events = createdCard().flags[SYSTEM_ID].events;
+		expect(events.map((event) => event.action?.kind)).toEqual(['undoEnd', 'zeroHp']);
+		expect(events[1].action).toMatchObject({ state: 'dropped', hpLost: 9, holderName: 'Goblin' });
+		expect(create).toHaveBeenCalledTimes(1);
 	});
 });
 

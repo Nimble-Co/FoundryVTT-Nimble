@@ -282,7 +282,7 @@ describe('Withering Touch', () => {
 });
 
 describe('Dragonform', () => {
-	it('gives the caster 10xLVL temp HP, fly 12 and LVL armor until those temp HP are gone, at most 10 minutes', () => {
+	it('gives the caster 10xLVL temp HP, fly 12 and LVL armor until those temp HP are gone, at most 10 minutes, then 0 HP', () => {
 		const item = readItem(`${FIRE}/dragonform.json`);
 		const effect = effectNamed(item, 'Dragonform');
 		expect(effect.transfer).toBe(false);
@@ -293,6 +293,7 @@ describe('Dragonform', () => {
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({ type: 'grantMovement', mode: 'fly', speed: '12' }),
 			expect.objectContaining({ type: 'armorClass', formula: '@level', mode: 'add' }),
+			expect.objectContaining({ type: 'zeroHpAtEnd', disabled: false }),
 		]);
 
 		const step = stepApplying(item, effect._id);
