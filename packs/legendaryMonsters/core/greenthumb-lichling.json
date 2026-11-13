@@ -255,10 +255,9 @@
 						{
 							"id": "greenRootSave001",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "11",
 							"on": {
 								"failedSave": [

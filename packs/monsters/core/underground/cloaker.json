@@ -407,10 +407,9 @@
 						{
 							"id": "BCoZcbmil1eR0wrU",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "16",
 							"on": {
 								"failedSave": [

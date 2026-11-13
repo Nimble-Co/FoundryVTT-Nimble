@@ -648,10 +648,9 @@
 						{
 							"id": "GghZB0H4VODtiT8Y",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "16",
 							"on": {
 								"passedSave": [

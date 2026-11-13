@@ -375,10 +375,9 @@
 						{
 							"id": "b2eM1wlJ1rVqDhMw",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "12",
 							"on": {
 								"failedSave": [

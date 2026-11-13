@@ -301,10 +301,9 @@
 						{
 							"id": "sEd9SUKZgwyZ5Eog",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "13",
 							"sharedRolls": [
 								{

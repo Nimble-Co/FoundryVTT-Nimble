@@ -517,10 +517,9 @@
 						{
 							"id": "aIBlZ7tsC4YTyKyT",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "20",
 							"on": {
 								"failedSave": [
@@ -594,10 +593,9 @@
 						{
 							"id": "g8nyLDD2EKXHEM7l",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "20",
 							"sharedRolls": [
 								{

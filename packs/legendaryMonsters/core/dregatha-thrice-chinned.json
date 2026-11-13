@@ -314,10 +314,9 @@
 									{
 										"id": "dregCritSave00001",
 										"type": "savingThrow",
-										"savingThrowType": "strength",
+										"savingThrowType": "intelligence",
 										"parentContext": "criticalHit",
 										"parentNode": "dregClawDmg000001",
-										"saveType": "intelligence",
 										"saveDC": "12",
 										"on": {
 											"failedSave": [

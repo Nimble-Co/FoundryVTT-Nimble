@@ -24,12 +24,11 @@
 				{
 					"id": "UwlrMMyPLgwUatZb",
 					"type": "savingThrow",
-					"savingThrowType": "strength",
+					"savingThrowType": "will",
 					"sharedRolls": [],
 					"on": {},
 					"parentContext": null,
-					"parentNode": null,
-					"saveType": "will"
+					"parentNode": null
 				}
 			],
 			"showDescription": true,

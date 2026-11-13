@@ -23,10 +23,9 @@
 				{
 					"id": "oxqXAFiQHWjMWDWg",
 					"type": "savingThrow",
-					"savingThrowType": "strength",
+					"savingThrowType": "dexterity",
 					"parentContext": null,
 					"parentNode": null,
-					"saveType": "dexterity",
 					"on": {
 						"passedSave": [
 							{
