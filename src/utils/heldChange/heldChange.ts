@@ -3,6 +3,7 @@ import type { HeldChange, HeldChangeData } from '#types/heldChange.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.heldChange`;
 const FLAG = 'heldChange';
@@ -274,6 +275,7 @@ export function firstTargetActor(): Holder | null {
 async function createHere(holder: Holder, change: HeldChangeData): Promise<void> {
 	await holder.createEmbeddedDocuments?.('ActiveEffect', [
 		{
+			type: NIMBLE_EFFECT_TYPE,
 			name: change.label,
 			img: ICONS[change.kind],
 			disabled: false,

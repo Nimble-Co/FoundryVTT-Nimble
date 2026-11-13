@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
 const { mockSetPoolFaces, mockBuildEffectiveDicePoolMap } = vi.hoisted(() => ({
 	mockSetPoolFaces: vi.fn().mockResolvedValue(true),
@@ -124,7 +125,7 @@ describe('toggleEffectControl', () => {
 	});
 
 	describe('toggleEffectAE: enable path', () => {
-		it('creates a new AE when none exists, flagged with rule + item ids', async () => {
+		it('creates a new Nimble AE when none exists, flagged with rule + item ids', async () => {
 			const createSpy = vi.fn().mockResolvedValue([]);
 			const actor = {
 				effects: [] as Array<{
@@ -145,6 +146,7 @@ describe('toggleEffectControl', () => {
 			const [type, payload] = createSpy.mock.calls[0];
 			expect(type).toBe('ActiveEffect');
 			expect(payload[0]).toMatchObject({
+				type: NIMBLE_EFFECT_TYPE,
 				name: 'Rage',
 				img: 'rage.webp',
 				disabled: false,

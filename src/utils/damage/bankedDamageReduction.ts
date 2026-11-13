@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import localize from '#utils/localize.ts';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 const BANKED_DAMAGE_REDUCTION_FLAG = 'bankedDamageReduction';
 const BANKED_DAMAGE_REDUCTION_SOURCE_FLAG = 'bankedDamageReductionSource';
@@ -105,6 +106,7 @@ async function addBankedDamageReduction(
 
 	await actorWithEffects.createEmbeddedDocuments('ActiveEffect', [
 		{
+			type: NIMBLE_EFFECT_TYPE,
 			name: effectName(addition),
 			description: effectDescription(addition),
 			img: img || 'icons/svg/shield.svg',

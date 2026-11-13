@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 export interface ConditionDuration {
 	rounds?: number | null;
@@ -198,10 +199,11 @@ async function createConditionEffect(
 	if (options.systemFlags) patch[`flags.${SYSTEM_ID}`] = options.systemFlags;
 	if (Object.keys(patch).length > 0) effect.updateSource(patch);
 
-	const created = await activeEffectClass.create(effect.toObject?.() ?? effect, {
-		parent: target,
-		keepId: true,
-	});
+	const source = effect.toObject?.() ?? effect;
+	const created = await activeEffectClass.create(
+		{ ...source, type: NIMBLE_EFFECT_TYPE },
+		{ parent: target, keepId: true },
+	);
 	return created ?? null;
 }
 

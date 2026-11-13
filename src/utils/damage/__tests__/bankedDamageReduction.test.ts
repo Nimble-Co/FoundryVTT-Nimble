@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	addBankedDamageReduction,
 	clearBankedDamageReduction,
@@ -57,13 +58,14 @@ describe('getBankedDamageReduction', () => {
 });
 
 describe('addBankedDamageReduction', () => {
-	it('creates a named active effect carrying the banked amount', async () => {
+	it('creates a named Nimble effect carrying the banked amount', async () => {
 		const actor = createMockActor();
 
 		await addBankedDamageReduction(actor, 8);
 
 		expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
 			expect.objectContaining({
+				type: NIMBLE_EFFECT_TYPE,
 				name: 'Damage Reduction (8)',
 				description: expect.stringContaining('8'),
 				img: 'icons/svg/shield.svg',

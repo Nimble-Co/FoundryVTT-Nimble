@@ -33,6 +33,7 @@ import activateEnricherListeners from '../enrichers/activateEnricherListeners.js
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 import { NIMBLE_GAME } from '../game.js';
 import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
+import { NIMBLE_EFFECT_TYPE } from '../models/activeEffect/nimbleEffectChoices.js';
 import actorDataModels from '../models/actor/actorDataModels.js';
 import chatDataModels from '../models/chat/chatDataModels.js';
 import combatantDataModels from '../models/combatant/combatantDataModels.js';
@@ -64,6 +65,8 @@ export default function init() {
 	// `changes` schema — wiping it breaks every base-type effect, including all
 	// status effects created by Actor#toggleStatusEffect.
 	Object.assign(CONFIG.ActiveEffect.dataModels, activeEffectDataModels);
+	// Core's create dialog preselects this type.
+	(CONFIG.ActiveEffect as { defaultType?: string }).defaultType = NIMBLE_EFFECT_TYPE;
 	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
 	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
 	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;

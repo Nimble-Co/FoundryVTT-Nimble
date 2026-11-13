@@ -4,6 +4,7 @@ import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isChatNotificationsAutomationEnabled } from '../../settings/automationSettings.js';
+import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
 import { choiceLabels } from './_rollUseRule.js';
 import {
 	type ActorDyingContext,
@@ -63,6 +64,7 @@ function buildToggleEffectAEData(
 	label = '',
 ): Record<string, unknown> {
 	return {
+		type: NIMBLE_EFFECT_TYPE,
 		name: label || item.name,
 		img: item.img,
 		disabled: false,

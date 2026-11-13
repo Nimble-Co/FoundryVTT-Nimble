@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { ConditionManager } from '../ConditionManager.js';
 
 function setConfiguredConditions(
@@ -130,6 +131,14 @@ describe('ConditionManager', () => {
 			manager.configureStatusEffects();
 
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded', 'prone']);
+		});
+
+		it('gives every status entry the Nimble type, so core builds Nimble effects from it', () => {
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			const types = CONFIG.statusEffects.map((effect) => (effect as { type?: string }).type);
+			expect(types).toEqual([NIMBLE_EFFECT_TYPE, NIMBLE_EFFECT_TYPE]);
 		});
 
 		it('sorts the published snapshot by name rather than config order', () => {

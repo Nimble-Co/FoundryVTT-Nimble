@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
+import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	cardDamageTotal,
 	createHeldChange,
@@ -167,13 +168,14 @@ describe('spendHeldChanges', () => {
 });
 
 describe('createHeldChange', () => {
-	it('makes an effect with a token icon on the holder', async () => {
+	it('makes a Nimble effect with a token icon on the holder', async () => {
 		const target = creature('T');
 		await createHeldChange(target, data());
 
 		const [[, [effect]]] = target.createEmbeddedDocuments.mock.calls as unknown as [
 			[string, [Record<string, any>]],
 		];
+		expect(effect.type).toBe(NIMBLE_EFFECT_TYPE);
 		expect(effect.name).toBe('Create an Opening');
 		expect(effect.showIcon).toBe(2);
 		expect(effect.flags.nimble.heldChange.value).toBe(1);
