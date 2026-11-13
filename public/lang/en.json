@@ -559,6 +559,13 @@
 				"missingName": "Effect not found",
 				"missing": "The item no longer has this effect."
 			},
+			"endConditions": {
+				"negative": "End negative conditions",
+				"listed": "End {names}",
+				"endedOn": "Ended on {names}",
+				"nothingOn": "Nothing to end on {name}",
+				"endedBy": "Ended by {item}"
+			},
 			"wound": {
 				"one": "1 Wound",
 				"many": "{count} Wounds",
@@ -5153,6 +5160,13 @@
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
 			"move": "Move",
+			"endConditions": "End Conditions",
+			"endConditionsNode": {
+				"recipient": "Who it helps",
+				"which": "Ends",
+				"whichOptions": { "negative": "Every negative condition", "listed": "These conditions" },
+				"delete": "Delete End Conditions"
+			},
 			"wound": "Wound",
 			"woundNode": {
 				"amount": "Wounds",
@@ -5794,6 +5808,8 @@
 				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
 				"minor": "Minor Status",
 				"minorHint": "Ends when combat ends.",
+				"negative": "Negative",
+				"negativeHint": "It harms its holder: an End Conditions step ends it.",
 				"chooseIcon": "Choose icon",
 				"addCondition": "Add Condition",
 				"remove": "Remove condition",

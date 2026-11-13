@@ -1,6 +1,7 @@
 import ApplyEffectNode from '../../chat/components/ApplyEffectNode.svelte';
 import DamageNode from '../../chat/components/DamageNode.svelte';
 import DamageOutcomeNode from '../../chat/components/DamageOutcomeNode.svelte';
+import EndConditionsNode from '../../chat/components/EndConditionsNode.svelte';
 import HealingNode from '../../chat/components/HealingNode.svelte';
 import MoveNode from '../../chat/components/MoveNode.svelte';
 import PoolNode from '../../chat/components/PoolNode.svelte';
@@ -16,6 +17,8 @@ export function getNodeComponent(nodeType: string) {
 			return DamageNode;
 		case 'damageOutcome':
 			return DamageOutcomeNode;
+		case 'endConditions':
+			return EndConditionsNode;
 		case 'healing':
 			return HealingNode;
 		case 'move':

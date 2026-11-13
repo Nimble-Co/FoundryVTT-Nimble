@@ -3,6 +3,7 @@ import type {
 	LabeledOption,
 	NodeOption,
 } from '#types/components/ItemActivationEffectsConfigTab.d.ts';
+import { NEVER_ENDED } from '#utils/actor/endConditions.js';
 import localize from '#utils/localize.js';
 
 export const POOL_PREDICATE_PLACEHOLDER = '{ "level": { "min": 5 } }';
@@ -10,9 +11,10 @@ export const POOL_PREDICATE_PLACEHOLDER = '{ "level": { "min": 5 } }';
 /**
  * Available child-node options for the "Add Effect" picker. The set depends
  * on the parent node type: top-level adds (node === null) can create
- * applyEffect, damage, healing, move, pool, savingThrow, wound; damage children
- * can additionally create damageOutcome and note; savingThrow children only
- * create applyEffect, damage, healing, move, note, wound.
+ * applyEffect, damage, endConditions, healing, move, pool, savingThrow, wound;
+ * damage children can additionally create damageOutcome and note; savingThrow
+ * children only create applyEffect, damage, endConditions, healing, move, note,
+ * wound.
  */
 export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 	const { saves } = CONFIG.NIMBLE;
@@ -20,6 +22,7 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 		['applyEffect', localize('NIMBLE.activationEffects.applyEffect')],
 		['damage', localize('NIMBLE.activationEffects.damage')],
 		['damageOutcome', localize('NIMBLE.activationEffects.damageOutcome')],
+		['endConditions', localize('NIMBLE.activationEffects.endConditions')],
 		['healing', localize('NIMBLE.activationEffects.healing')],
 		['move', localize('NIMBLE.activationEffects.move')],
 		['note', localize('NIMBLE.activationEffects.note')],
@@ -34,6 +37,7 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 		includedOptions.push(
 			'applyEffect',
 			'damage',
+			'endConditions',
 			'healing',
 			'move',
 			'pool',
@@ -49,10 +53,19 @@ export function getNodeOptions(node: { type?: string } | null): NodeOption[] {
 			'move',
 			'savingThrow',
 			'note',
+			'endConditions',
 			'wound',
 		);
 	} else if (node.type === 'savingThrow') {
-		includedOptions.push('applyEffect', 'damage', 'healing', 'move', 'note', 'wound');
+		includedOptions.push(
+			'applyEffect',
+			'damage',
+			'endConditions',
+			'healing',
+			'move',
+			'note',
+			'wound',
+		);
 	}
 
 	return includedOptions.sort().map((option) => ({
@@ -169,4 +182,23 @@ export function getMoveDirections(): LabeledOption[] {
 		value,
 		label: localize(`NIMBLE.activationEffects.moveNode.directions.${value}`),
 	}));
+}
+
+export function getEndConditionsWhich(): LabeledOption[] {
+	return ['negative', 'listed'].map((value) => ({
+		value,
+		label: localize(`NIMBLE.activationEffects.endConditionsNode.whichOptions.${value}`),
+	}));
+}
+
+/** The conditions an End Conditions step can list: all but the states the system sets. */
+export function getEndableConditions(): LabeledOption[] {
+	return Object.entries(CONFIG.NIMBLE.conditions as Record<string, string>)
+		.filter(([id]) => !NEVER_ENDED.has(id))
+		.map(([value, label]) => ({ value, label }));
+}
+
+/** The listed conditions with `id` added, or taken out when it is in. */
+export function toggleListedCondition(conditions: readonly string[], id: string): string[] {
+	return conditions.includes(id) ? conditions.filter((entry) => entry !== id) : [...conditions, id];
 }

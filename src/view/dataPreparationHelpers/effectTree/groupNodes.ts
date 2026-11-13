@@ -19,7 +19,11 @@ export function groupNodes(nodes: EffectNode[]) {
 			damageNodes.push(node);
 		} else if (node.type === 'healing') {
 			healingNodes.push(node);
-		} else if (node.type === 'applyEffect' || node.type === 'wound') {
+		} else if (
+			node.type === 'applyEffect' ||
+			node.type === 'wound' ||
+			node.type === 'endConditions'
+		) {
 			applyEffectNodes.push(node);
 		} else if (node.type === 'note') {
 			const noteCategory = textNodes.get(node.noteType);

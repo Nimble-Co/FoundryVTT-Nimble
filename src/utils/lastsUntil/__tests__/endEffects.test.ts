@@ -205,7 +205,7 @@ describe('endEffects', () => {
 		const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		goblin.holder.deleteEmbeddedDocuments.mockRejectedValueOnce(new Error('locked'));
 
-		await expect(endEffects([addEffect(goblin, 'a')], moment('First'))).resolves.toBeUndefined();
+		await expect(endEffects([addEffect(goblin, 'a')], moment('First'))).resolves.toBe(false);
 		await endEffects([addEffect(goblin, 'b')], moment('Second'));
 
 		expect(error).toHaveBeenCalled();
@@ -218,17 +218,26 @@ describe('endEffects', () => {
 		user.isActiveGM = false;
 		activeGM?.query.mockRejectedValueOnce(new Error('timeout'));
 
-		await expect(endEffects([addEffect(goblin, 'a')], moment('Heading'))).resolves.toBeUndefined();
+		await expect(endEffects([addEffect(goblin, 'a')], moment('Heading'))).resolves.toBe(false);
 		expect(error).toHaveBeenCalled();
 	});
 
-	it('with no GM online, ends nothing', async () => {
+	it('with no GM online, ends nothing and says the ends were not taken', async () => {
 		user.isActiveGM = false;
 		activeGM = null;
 
-		await endEffects([addEffect(goblin, 'a')], moment('Goblin attacked'));
+		await expect(endEffects([addEffect(goblin, 'a')], moment('Goblin attacked'))).resolves.toBe(
+			false,
+		);
 
 		expect(goblin.holder.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('says the ends were taken, on the active GM and through the GM', async () => {
+		await expect(endEffects([addEffect(goblin, 'a')], moment('Here'))).resolves.toBe(true);
+
+		user.isActiveGM = false;
+		await expect(endEffects([addEffect(goblin, 'b')], moment('Asked'))).resolves.toBe(true);
 	});
 });
 

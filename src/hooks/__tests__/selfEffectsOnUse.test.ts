@@ -4,6 +4,7 @@ import type { EffectNode } from '#types/effectTree.js';
 
 const applyEffectFromCard = vi.fn(async (..._args: unknown[]) => {});
 const giveWoundsFromCard = vi.fn(async (..._args: unknown[]) => {});
+const endConditionsFromCard = vi.fn(async (..._args: unknown[]) => {});
 let automation = true;
 
 let applySelfEffectsOnUse: typeof import('../selfEffectsOnUse.js').applySelfEffectsOnUse;
@@ -12,6 +13,7 @@ let selfStepsOf: typeof import('../selfEffectsOnUse.js').selfStepsOf;
 beforeEach(async () => {
 	applyEffectFromCard.mockClear();
 	giveWoundsFromCard.mockClear();
+	endConditionsFromCard.mockClear();
 	automation = true;
 	vi.resetModules();
 	vi.doMock('#utils/chat/applyEffectFromCard.js', async (importOriginal) => ({
@@ -22,6 +24,10 @@ beforeEach(async () => {
 		...(await importOriginal<object>()),
 		giveWoundsFromCard,
 	}));
+	vi.doMock('#utils/chat/endConditionsFromCard.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		endConditionsFromCard,
+	}));
 	vi.doMock('../../settings/automationSettings.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		isRuleAutomationEnabled: () => automation,
@@ -29,6 +35,7 @@ beforeEach(async () => {
 	({ applySelfEffectsOnUse, selfStepsOf } = await import('../selfEffectsOnUse.js'));
 	vi.doUnmock('#utils/chat/applyEffectFromCard.js');
 	vi.doUnmock('#utils/chat/woundFromCard.js');
+	vi.doUnmock('#utils/chat/endConditionsFromCard.js');
 	vi.doUnmock('../../settings/automationSettings.js');
 });
 
@@ -183,5 +190,48 @@ describe('a Wound step for the user', () => {
 		await applySelfEffectsOnUse(hazardCard());
 
 		expect(giveWoundsFromCard).not.toHaveBeenCalled();
+	});
+});
+
+describe('an End Conditions step for the user', () => {
+	function endStep(id: string, recipient: 'self' | 'targets') {
+		return {
+			id,
+			type: 'endConditions',
+			recipient,
+			which: 'negative',
+			conditions: [],
+			parentContext: null,
+			parentNode: null,
+		} as EffectNode;
+	}
+
+	function reactionCard(ended = {}) {
+		return {
+			id: 'message-3',
+			flags: { [SYSTEM_ID]: { endedConditions: ended } },
+			system: { activation: { effects: [endStep('self', 'self'), endStep('targets', 'targets')] } },
+			update: vi.fn(async () => undefined),
+		};
+	}
+
+	it('ends the conditions of a root self step on use, and leaves the target step to its button', async () => {
+		const used = reactionCard();
+
+		await applySelfEffectsOnUse(used);
+
+		expect(endConditionsFromCard).toHaveBeenCalledTimes(1);
+		expect(endConditionsFromCard).toHaveBeenCalledWith(
+			used,
+			expect.objectContaining({ id: 'self' }),
+		);
+	});
+
+	it('skips a step that the card shows it ran', async () => {
+		await applySelfEffectsOnUse(
+			reactionCard({ self: { Actor_hero: { actorName: 'Hero', ended: [] } } }),
+		);
+
+		expect(endConditionsFromCard).not.toHaveBeenCalled();
 	});
 });

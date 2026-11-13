@@ -169,6 +169,7 @@ describe('CustomConditionsEditor', () => {
 				description: 'Cursed by a hex.',
 				img: DEFAULT_CUSTOM_CONDITION_ICON,
 				minor: false,
+				negative: true,
 			},
 		]);
 		expect(dialog.close).toHaveBeenCalled();
@@ -203,7 +204,14 @@ describe('CustomConditionsEditor', () => {
 		await fireEvent.click(saveButton());
 
 		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, [
-			{ id: 'shaken', name: 'Shaken', description: '', img: 'icons/svg/shaken.svg', minor: false },
+			{
+				id: 'shaken',
+				name: 'Shaken',
+				description: '',
+				img: 'icons/svg/shaken.svg',
+				minor: false,
+				negative: true,
+			},
 		]);
 	});
 
@@ -217,6 +225,21 @@ describe('CustomConditionsEditor', () => {
 
 		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, [
 			expect.objectContaining({ id: 'shaken', minor: true }),
+		]);
+	});
+
+	it('saves the Negative box, which starts on', async () => {
+		const { settingsMock } = renderEditor([
+			{ id: 'blessed', name: 'Blessed', description: '', img: 'icons/svg/blessed.svg' },
+		]);
+
+		const box = screen.getByRole('checkbox', { name: /Negative/ });
+		expect(box).toBeChecked();
+		await fireEvent.click(box);
+		await fireEvent.click(saveButton());
+
+		expect(settingsMock.set).toHaveBeenCalledWith(SYSTEM_ID, CUSTOM_CONDITIONS_SETTING_KEY, [
+			expect.objectContaining({ id: 'blessed', negative: false }),
 		]);
 	});
 

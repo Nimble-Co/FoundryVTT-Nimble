@@ -4,6 +4,7 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import { createApplyEffectNode } from './createApplyEffectNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
+import { createEndConditionsNode } from './createEndConditionsNode.js';
 import { createHealingNode } from './createHealingNode.js';
 import { createMoveNode } from './createMoveNode.js';
 import { createPoolNode } from './createPoolNode.js';
@@ -45,6 +46,7 @@ export async function createEffectNode(
 		newNode = createApplyEffectNode(parentId, context, await createItemEffect(document));
 	} else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
+	else if (nodeType === 'endConditions') newNode = createEndConditionsNode(parentId, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
 	else if (nodeType === 'move') newNode = createMoveNode(parentId, context);
 	else if (nodeType === 'note') newNode = createTextNode(parentId, context);

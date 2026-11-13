@@ -6,12 +6,25 @@ export type EffectNode =
 	| ApplyEffectNode
 	| DamageNode
 	| DamageOutcomeNode
+	| EndConditionsNode
 	| HealingNode
 	| MoveNode
 	| PoolNode
 	| SavingThrowNode
 	| TextNode
 	| WoundNode;
+
+/** Ends the effects that give a negative condition, or a listed one, on the targets or the user. */
+export type EndConditionsNode = {
+	id: string;
+	type: 'endConditions';
+	recipient: 'self' | 'targets';
+	/** negative: every negative condition. listed: only `conditions`. */
+	which: 'negative' | 'listed';
+	conditions: string[];
+	parentContext: string | null;
+	parentNode: string | null;
+};
 
 /** Gives Wounds to the card's targets or to the one who used the item. */
 export type WoundNode = {

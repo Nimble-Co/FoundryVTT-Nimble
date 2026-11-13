@@ -83,3 +83,44 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 });
+
+describe('conditionNegativeConditions', () => {
+	const negative = registerConditionsConfig().conditionNegativeConditions;
+
+	it('holds the conditions that harm their holder, Grappled and Swallowed too', () => {
+		for (const id of ['blinded', 'dazed', 'poisoned', 'grappled', 'swallowed', 'charged']) {
+			expect(negative.has(id)).toBe(true);
+		}
+	});
+
+	it('leaves out the states the system sets and the conditions that help or do nothing', () => {
+		for (const id of [
+			'wounded',
+			'dying',
+			'dead',
+			'bloodied',
+			'lastStand',
+			'concentration',
+			'invisible',
+			'riding',
+			'latched',
+		]) {
+			expect(negative.has(id)).toBe(false);
+		}
+	});
+});
+
+describe('conditionCountsAs', () => {
+	const { conditionCountsAs, conditionAliasedConditions } = registerConditionsConfig();
+
+	it('reads one way: Stunned counts as Incapacitated, and Incapacitated counts as nothing', () => {
+		expect(conditionCountsAs.stunned).toContain('incapacitated');
+		expect(conditionCountsAs).not.toHaveProperty('incapacitated');
+	});
+
+	it('keeps every other link of the aliased conditions, Grappled and Restrained both ways', () => {
+		expect(conditionCountsAs.grappled).toEqual(['restrained']);
+		expect(conditionCountsAs.restrained).toEqual(['grappled']);
+		expect(conditionCountsAs.paralyzed).toEqual(conditionAliasedConditions.paralyzed);
+	});
+});

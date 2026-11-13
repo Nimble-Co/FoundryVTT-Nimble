@@ -16,7 +16,7 @@
 	let messageDocument = getContext('messageDocument');
 
 	let nodes = messageDocument?.effectNodes ?? [];
-	const EFFECT_ROW_TYPES = ['applyEffect', 'wound'];
+	const EFFECT_ROW_TYPES = ['applyEffect', 'wound', 'endConditions'];
 	const isEffectRows = (group) => EFFECT_ROW_TYPES.includes(group[0]?.type);
 	const firstDamageGroup = nodes.find((group) => group.length && isDamageGroup(group));
 </script>

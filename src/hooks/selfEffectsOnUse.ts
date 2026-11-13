@@ -1,10 +1,16 @@
 import { systemHookName } from '#system';
-import type { ApplyEffectNode, EffectNode, WoundNode } from '#types/effectTree.js';
+import type {
+	ApplyEffectNode,
+	EffectNode,
+	EndConditionsNode,
+	WoundNode,
+} from '#types/effectTree.js';
 import {
 	appliedEffects,
 	applyEffectFromCard,
 	type EffectCard,
 } from '#utils/chat/applyEffectFromCard.js';
+import { endConditionsFromCard, endedConditions } from '#utils/chat/endConditionsFromCard.js';
 import { appliedWounds, giveWoundsFromCard } from '#utils/chat/woundFromCard.js';
 import { findNodesByContexts } from '#utils/treeManipulation/findNodesByContexts.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
@@ -22,20 +28,27 @@ function outcomesOf(system: UseCardSystem): string[] {
 	return ['hit'];
 }
 
-export type SelfStep = ApplyEffectNode | WoundNode;
+export type SelfStep = ApplyEffectNode | EndConditionsNode | WoundNode;
 
-/** The Apply Effect and Wound steps for the user: at the root, or under the outcome the roll had. */
+const SELF_STEP_TYPES = new Set(['applyEffect', 'endConditions', 'wound']);
+
+/** The Apply Effect, Wound and End Conditions steps for the user: at the root, or under the roll's outcome. */
 export function selfStepsOf(card: EffectCard): SelfStep[] {
 	const system = (card.system ?? {}) as UseCardSystem;
 	const tree = system.activation?.effects ?? [];
 	return findNodesByContexts(tree, outcomesOf(system)).filter(
 		(node): node is SelfStep =>
-			(node.type === 'applyEffect' || node.type === 'wound') && node.recipient === 'self',
+			SELF_STEP_TYPES.has(node.type) && (node as SelfStep).recipient === 'self',
 	);
 }
 
 /** Applies one self step, unless the card shows that it already did. */
 export async function applySelfStep(card: EffectCard, node: SelfStep): Promise<void> {
+	if (node.type === 'endConditions') {
+		if (Object.keys(endedConditions(card, node.id) ?? {}).length) return;
+		await endConditionsFromCard(card, node);
+		return;
+	}
 	if (node.type === 'wound') {
 		if (Object.keys(appliedWounds(card, node.id) ?? {}).length) return;
 		await giveWoundsFromCard(card, node);

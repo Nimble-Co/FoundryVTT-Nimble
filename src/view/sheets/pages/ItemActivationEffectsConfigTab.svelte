@@ -10,6 +10,8 @@
 		POOL_PREDICATE_PLACEHOLDER,
 		getDamageOutcomes,
 		getDispositionOptions,
+		getEndableConditions,
+		getEndConditionsWhich,
 		getMoveDirections,
 		getMoveKinds,
 		getMoveRecipients,
@@ -19,6 +21,7 @@
 		getPoolTypes,
 		getValidActionConsequences,
 		prepareSavingThrowOptions,
+		toggleListedCondition,
 	} from './itemActivationEffectsConfigTabHelpers.js';
 
 	const { damageTypes, healingTypes, savingThrows, saves } = CONFIG.NIMBLE;
@@ -33,6 +36,8 @@
 	const poolTypes = getPoolTypes();
 	const poolActions = getPoolActions();
 	const savingThrowOptions = prepareSavingThrowOptions(savingThrows);
+	const endConditionsWhich = getEndConditionsWhich();
+	const endableConditions = getEndableConditions();
 
 	// Maps a node.type back to its render snippet. Snippets are template-bound
 	// so they cannot be lifted into a helper; this dispatcher must stay here.
@@ -44,6 +49,8 @@
 				return DamageNode;
 			case 'damageOutcome':
 				return DamageOutcomeNode;
+			case 'endConditions':
+				return EndConditionsNode;
 			case 'healing':
 				return HealingNode;
 			case 'move':
@@ -930,6 +937,73 @@
 							selectedOptions={[node.direction]}
 							toggleOption={(value) =>
 								updateEffectNode(document, effects, node, 'direction', value)}
+						/>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</li>
+{/snippet}
+
+{#snippet EndConditionsNode(node, _parentNode = null)}
+	<li data-node-id={node.id}>
+		<header>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.endConditions')}
+			</h4>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				aria-label={localize('NIMBLE.activationEffects.endConditionsNode.delete')}
+				data-tooltip={localize('NIMBLE.activationEffects.endConditionsNode.delete')}
+				type="button"
+				onclick={() => deleteEffectNode(document, effects, node.id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
+			<div class="nimble-config-block nimble-card">
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.endConditionsNode.recipient')}
+					</h5>
+					<TagGroup
+						options={moveRecipients}
+						selectedOptions={[node.recipient]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
+					/>
+				</div>
+
+				<div style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.endConditionsNode.which')}
+					</h5>
+					<TagGroup
+						options={endConditionsWhich}
+						selectedOptions={[node.which]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'which', value)}
+					/>
+				</div>
+
+				{#if node.which === 'listed'}
+					<div style="width: 100%;">
+						<TagGroup
+							options={endableConditions}
+							selectedOptions={node.conditions ?? []}
+							toggleOption={(value) =>
+								updateEffectNode(
+									document,
+									effects,
+									node,
+									'conditions',
+									toggleListedCondition(node.conditions ?? [], value),
+								)}
 						/>
 					</div>
 				{/if}

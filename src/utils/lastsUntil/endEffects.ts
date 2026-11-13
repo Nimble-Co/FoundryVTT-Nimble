@@ -161,24 +161,27 @@ function withEndedBy(effects: ActiveEffect[], moment: EndMoment, at?: EndCheck):
  * End `effects` for one moment. The active GM deletes them and writes the
  * lines; another client asks the active GM. With no GM online, nothing ends.
  * With `at`, each line says which Lasts Until moment ended its effect.
+ * Whether the active GM took the ends: false with no GM, or when they failed.
  */
 export async function endEffects(
 	effects: ActiveEffect[],
 	endMoment: EndMoment,
 	at?: EndCheck,
-): Promise<void> {
-	if (effects.length < 1) return;
+): Promise<boolean> {
+	if (effects.length < 1) return true;
 	try {
 		const moment = withEndedBy(effects, endMoment, at);
 		if (game.user?.isActiveGM) {
 			await queue.run('end', () => endHere(effects, moment));
-			return;
+			return true;
 		}
 		const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
 			.activeGM;
-		await gm?.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), moment });
+		if (!gm) return false;
+		return !!(await gm.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), moment }));
 	} catch (error) {
 		console.error('Nimble | Could not end the Timed Effects of a moment.', error);
+		return false;
 	}
 }
 

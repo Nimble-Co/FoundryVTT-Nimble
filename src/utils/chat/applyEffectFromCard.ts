@@ -22,6 +22,7 @@ export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
 
 interface CardItem {
 	uuid: string;
+	name?: string | null;
 	actor?: CardActor | null;
 	effects?: { get(id: string): CardEffect | undefined };
 }
@@ -53,7 +54,8 @@ function cardFlags(card: EffectCard): {
 	return (card.flags?.[SYSTEM_ID] ?? {}) as never;
 }
 
-function cardItem(card: EffectCard): CardItem | null {
+/** The item that was used for the card. */
+export function cardItem(card: EffectCard): CardItem | null {
 	const uuid = cardFlags(card).itemUuid;
 	return uuid ? (fromUuidSync(uuid as never, { strict: false }) as CardItem | null) : null;
 }

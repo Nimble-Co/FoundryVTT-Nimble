@@ -59,6 +59,10 @@ Some conditions come bundled together, and the system tracks the relationships f
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
 
+## Negative conditions
+
+A negative condition harms its holder. An End Conditions step (a reaction that "ends all negative conditions", for example) ends each effect that gives one. All conditions are negative except the states the system sets (Bloodied, Dying, Dead, Wounded, Last Stand, Concentrating) and the ones that help or do nothing on their own (Invisible, Riding, Latched). Grappled and Swallowed are negative. A Hampered that Dazed, Grappled, Prone, Slowed or Restrained gives goes when that condition goes. A custom condition is negative unless its **Negative** box is off. The [Conditions Reference](../reference/conditions.md) marks each negative condition.
+
 ## How long a condition lasts
 
 A condition, or any other effect, can have a **Lasts Until**: one or more moments that end it, in the book's words.
@@ -121,7 +125,7 @@ Turning off **Feature Effects** in the Automation settings turns this off with i
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, and a **Minor Status** box (a Minor Status ends when combat ends), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, a **Minor Status** box (a Minor Status ends when combat ends) and a **Negative** box (an End Conditions step ends a [negative condition](#negative-conditions); it starts on), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 

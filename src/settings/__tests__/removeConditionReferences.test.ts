@@ -19,6 +19,7 @@ function itemUsage(
 		immunityRuleIds: [],
 		markTargetRuleIds: [],
 		nodeIds: [],
+		endConditionsNodeIds: [],
 		itemEffectIds: [],
 		itemEffectStatusIds: [],
 		...overrides,
@@ -119,6 +120,28 @@ describe('removeConditionReferences', () => {
 			'system.activation.effects': { on: { hit: { id: string }[] } }[];
 		};
 		expect(written['system.activation.effects'][0].on.hit.map(({ id }) => id)).toEqual(['c2']);
+	});
+
+	it('takes the condition off an End Conditions step, and drops a step with none left', async () => {
+		const step = (id: string, conditions: string[]) => ({
+			id,
+			type: 'endConditions',
+			recipient: 'self',
+			which: 'listed',
+			conditions,
+			parentNode: null,
+			parentContext: null,
+		});
+		const usage = itemUsage(
+			{ activation: { effects: [step('e1', ['hexed', 'prone']), step('e2', ['hexed'])] } },
+			{ endConditionsNodeIds: ['e1', 'e2'] },
+		);
+
+		await removeConditionReferences(usageOf([usage]), 'hexed');
+
+		expect(usage.item.update).toHaveBeenCalledWith({
+			'system.activation.effects': [step('e1', ['prone'])],
+		});
 	});
 
 	it('deletes the item effects of the Apply Effect nodes it drops', async () => {
