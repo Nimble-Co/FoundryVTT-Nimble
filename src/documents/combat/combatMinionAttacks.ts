@@ -13,10 +13,7 @@ import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
 import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
-import {
-	firstTargetActor,
-	type heldChangesForAttack,
-} from '../../utils/heldChange/heldChange.js';
+import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';

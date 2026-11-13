@@ -293,6 +293,21 @@ describe('NimbleBaseRule', () => {
 			expect(effect({ on: true, count: 3 }).resolve('@stacks * 2')).toBe(6);
 			expect(ruleOn({ uuid: 'Actor.a.Item.i', actor }).resolve('@stacks + @level')).toBe(3);
 		});
+
+		it('is in the roll data of the rule, for a formula that rolls later', () => {
+			expect(effect({ on: true, count: 3 }).rollData()).toEqual({ stacks: 3 });
+			expect(ruleOn({ uuid: 'Actor.a.Item.i', actor }).rollData()).toEqual({
+				level: 2,
+				stacks: 1,
+			});
+		});
+
+		it('goes into a formula kept as text for another roll, and the rest stays', () => {
+			const rule = effect({ on: true, count: 3 });
+			expect(rule.withStacks('(@stacks)d6 + @level + @stacksBonus')).toBe(
+				'(3)d6 + @level + @stacksBonus',
+			);
+		});
 	});
 
 	describe('schema', () => {

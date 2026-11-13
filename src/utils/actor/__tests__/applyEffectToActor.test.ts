@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import { CONDITION_REPLACED_OPTION, EFFECT_RECREATED_OPTION } from '../applyConditionToActor.js';
 
@@ -7,11 +8,7 @@ const createEffect = vi.fn();
 const deleteDocuments = vi.fn();
 const query = vi.fn();
 
-import {
-	applyEffectToActor,
-	type EffectPayload,
-	payloadFromEffect,
-} from '../applyEffectToActor.js';
+import { applyEffectToActor, payloadFromEffect } from '../applyEffectToActor.js';
 
 const turnMoment = {
 	kind: 'turn',
@@ -405,6 +402,21 @@ describe('applyEffectToActor', () => {
 			parent: expect.anything(),
 			[EFFECT_RECREATED_OPTION]: true,
 		});
+	});
+
+	it('says what it replaced, so a take-back can put the old copy back', async () => {
+		const current = {
+			id: 'old',
+			name: 'Snowblind',
+			origin: 'Actor.hero.Item.spell',
+			statuses: new Set(),
+			system: { lastsUntil: [{ ...turnMoment, span: 'currentTurn' }] },
+			toObject: () => ({ _id: 'old', name: 'Snowblind' }),
+		};
+
+		const result = await applyEffectToActor(holder({ effects: [current] }), plainPayload());
+
+		expect(result?.replaced).toEqual([{ _id: 'old', name: 'Snowblind' }]);
 	});
 
 	it('gives the temp HP of the card and records them on the effect', async () => {

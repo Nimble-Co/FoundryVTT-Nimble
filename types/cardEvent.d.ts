@@ -1,5 +1,5 @@
 import type { MoveNode } from '#types/effectTree.js';
-import type { EffectPayload } from '#utils/actor/applyEffectToActor.js';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { MovementOffer } from '#types/movement.js';
 import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';

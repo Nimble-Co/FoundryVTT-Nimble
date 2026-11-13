@@ -13,6 +13,7 @@ import {
 	heldAdvantageForAttack,
 	heldChangeEffect,
 	heldChangesForAttack,
+	heldExtraDamageForAttack,
 	heldLines,
 	heldLinesForItem,
 	heldMaximizeForAttack,
@@ -718,6 +719,19 @@ describe('the delivery a Held Roll filter reads (decisions 127, 133)', () => {
 
 	it('reads neither filter on a hero attack with no attack type', () => {
 		expect(lineTexts(withType('character'), untyped())).toEqual([]);
+	});
+});
+
+describe('the formula of an extra damage change', () => {
+	it('reads the stacks of the effect that holds it', () => {
+		const holder = creature('A', [
+			{ kind: 'extraDamage', label: 'Stacked', whichRoll: 'holderAttacks', formula: '(@stacks)d6' },
+		]);
+		Object.assign(holder.effects[0].system, { stacks: { on: true, count: 3 } });
+
+		const [held] = heldExtraDamageForAttack({ attacker: holder, target: null, area: false });
+
+		expect(held.formula).toBe('(3)d6');
 	});
 });
 

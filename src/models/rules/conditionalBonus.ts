@@ -233,7 +233,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	resolveDamage(): ResolvedConditionalDamage {
 		if (!this.offersDamage()) return { value: null, formula: null };
 		const itemDamage = this.#itemIdentifier() ? this.#itemDamage() : null;
-		const formula = itemDamage?.formula ?? this.damageBonus;
+		const formula = itemDamage?.formula ?? this.withStacks(this.damageBonus);
 		const fromItem = itemDamage
 			? { damageType: itemDamage.damageType, fromItemIdentifier: this.#itemIdentifier() }
 			: {};
@@ -241,8 +241,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 			this.checkReferences(formula);
 			if (!itemDamage) return { value: null, formula, ...fromItem };
 			// The roll window shows the item's damage with the attacker's numbers, as it rolls.
-			const rollData = this.actor?.getRollData?.() ?? {};
-			const shown = Roll.replaceFormulaData(formula, rollData, { missing: '0' });
+			const shown = Roll.replaceFormulaData(formula, this.rollData(), { missing: '0' });
 			return { value: null, formula: shown, ...fromItem };
 		}
 		const resolved = this.resolveFormula(formula);

@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
-import type { StackReached } from '../applyEffectToActor.js';
+import type { StackReached } from '#types/effectPayload.d.ts';
 
 const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 const applyEffectToActor = vi.fn();
 
 let line: typeof import('../stackGainLine.js');
+let stackGainEvent: typeof import('../stackGainEvent.js').stackGainEvent;
 
 const tessa = { uuid: 'Actor.tessa', name: 'Tessa', isOwner: true };
 const card = { id: 'gaze-card' };
@@ -36,6 +37,7 @@ beforeEach(async () => {
 		applyEffectToActor,
 	}));
 	line = await import('../stackGainLine.js');
+	({ stackGainEvent } = await import('../stackGainEvent.js'));
 	vi.doUnmock('#utils/chat/cardEvents.js');
 	vi.doUnmock('#utils/actor/applyEffectToActor.js');
 	vi.stubGlobal(
@@ -50,7 +52,7 @@ afterEach(() => {
 
 describe('stackGainEvent', () => {
 	it('says what the holder gained, with Undo', () => {
-		const event = line.stackGainEvent(
+		const event = stackGainEvent(
 			tessa,
 			reached({ gainedUuid: 'Actor.tessa.ActiveEffect.stone' }),
 			5,
@@ -70,7 +72,7 @@ describe('stackGainEvent', () => {
 
 	it('with Feature Effects off, says the count and waits for a click', () => {
 		const payload = { data: gained, sourceItemUuid: null, sourceActorUuid: null };
-		const event = line.stackGainEvent(tessa, reached({ payload }), 5);
+		const event = stackGainEvent(tessa, reached({ payload }), 5);
 
 		expect(event.text).toEqual({
 			key: 'NIMBLE.chat.stackGain.has',
@@ -80,7 +82,7 @@ describe('stackGainEvent', () => {
 	});
 
 	it('with no effect to gain, only says the count', () => {
-		const event = line.stackGainEvent(tessa, reached({ gainedName: '', img: undefined }), 5);
+		const event = stackGainEvent(tessa, reached({ gainedName: '', img: undefined }), 5);
 
 		expect(event.text.key).toBe('NIMBLE.chat.stackGain.has');
 		expect(event).not.toHaveProperty('action');
@@ -90,7 +92,7 @@ describe('stackGainEvent', () => {
 
 describe('the clicks of the line', () => {
 	const waiting = () =>
-		line.stackGainEvent(
+		stackGainEvent(
 			tessa,
 			reached({ payload: { data: gained, sourceItemUuid: null, sourceActorUuid: null } }),
 			5,
@@ -117,7 +119,7 @@ describe('the clicks of the line', () => {
 			'fromUuidSync',
 			vi.fn((uuid: string) => (uuid === 'Actor.tessa' ? tessa : stone)),
 		);
-		const event = line.stackGainEvent(
+		const event = stackGainEvent(
 			tessa,
 			reached({ gainedUuid: 'Actor.tessa.ActiveEffect.stone' }),
 			5,

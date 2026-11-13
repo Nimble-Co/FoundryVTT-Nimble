@@ -1,4 +1,5 @@
 import type { CardEvent, TurnDamageAction } from '#types/cardEvent.d.ts';
+import { formulaWithStacks, stacksOf } from '#utils/actor/effectStacks.js';
 import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import {
 	dealTurnDamageTo,
@@ -50,6 +51,7 @@ export function escapeDamageRulesOf(effect: {
 		typeof prepared?.values === 'function'
 			? [...prepared.values()]
 			: ((effect.system as { rules?: RuleSource[] } | undefined)?.rules ?? []);
+	const stacks = stacksOf(effect.system)?.count ?? 1;
 	return rules
 		.filter(
 			(rule) =>
@@ -59,7 +61,7 @@ export function escapeDamageRulesOf(effect: {
 		)
 		.map((rule) => ({
 			id: rule.id ?? null,
-			formula: rule.formula ?? '',
+			formula: formulaWithStacks(rule.formula ?? '', stacks),
 			damageType: rule.damageType ?? '',
 		}));
 }

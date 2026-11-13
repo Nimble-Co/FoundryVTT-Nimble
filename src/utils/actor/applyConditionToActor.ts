@@ -115,6 +115,8 @@ export interface ApplyConditionOptions {
 	 * replacement fails.
 	 */
 	replaces?: ReplaceableConditionEffect[] | null;
+	/** Told the source data of the effects this application replaced, once it is on. */
+	onReplaced?: (sources: Record<string, unknown>[]) => void;
 }
 
 interface StatusEffectEntry {
@@ -490,6 +492,7 @@ export default async function applyConditionToActor(
 		return null;
 	}
 
+	if (replacedSources.length) options.onReplaced?.(replacedSources);
 	announceApplied(target, conditionId, effect, options);
 	return effect;
 }

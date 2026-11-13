@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { EffectNode } from '#types/effectTree.js';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 
 const applyEffectFromCard = vi.fn();
 const forgetAppliedEffect = vi.fn(async (..._args: unknown[]) => {});
 const takeBackStack = vi.fn(async (..._args: unknown[]) => {});
+const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 let automation = true;
 
 let followSaverSteps: typeof import('../saverStepsOnSave.js').followSaverSteps;
@@ -36,7 +38,7 @@ const saveNode = {
 
 const tessa = { uuid: 'Actor.tessa', name: 'Tessa' };
 const counterEffect = { uuid: 'Actor.tessa.ActiveEffect.count' };
-let host: { id: string; system: object };
+let host: { id: string; system: object; flags?: object };
 let saveCard: {
 	id: string;
 	flags: Record<string, Record<string, unknown>>;
@@ -61,6 +63,7 @@ beforeEach(async () => {
 		]);
 	forgetAppliedEffect.mockClear();
 	takeBackStack.mockClear();
+	replaceCardEvent.mockClear();
 	host = { id: 'card1', system: { activation: { effects: [saveNode] } } };
 	saveCard = {
 		id: 'save-card',
@@ -80,6 +83,10 @@ beforeEach(async () => {
 		applyEffectFromCard,
 		forgetAppliedEffect,
 	}));
+	vi.doMock('#utils/chat/cardEvents.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		replaceCardEvent,
+	}));
 	vi.doMock('#utils/actor/effectStacks.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		takeBackStack,
@@ -91,6 +98,7 @@ beforeEach(async () => {
 	({ followSaverSteps } = await import('../saverStepsOnSave.js'));
 	vi.doUnmock('#utils/chat/applyEffectFromCard.js');
 	vi.doUnmock('#utils/actor/effectStacks.js');
+	vi.doUnmock('#utils/chat/cardEvents.js');
 	vi.doUnmock('../../settings/automationSettings.js');
 });
 
@@ -142,6 +150,143 @@ describe('followSaverSteps', () => {
 		expect(saveCard.flags[SYSTEM_ID].saverSteps).toEqual([
 			{ stepId: 'steady', effectUuid: 'Actor.tessa.ActiveEffect.steady' },
 		]);
+	});
+
+	it('a take-back also removes the "At N stacks" effect that the fail gave', async () => {
+		const stone = { uuid: 'Actor.tessa.ActiveEffect.stone', delete: vi.fn(async () => {}) };
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === counterEffect.uuid ? counterEffect : uuid === stone.uuid ? stone : null,
+			),
+		);
+		applyEffectFromCard.mockImplementationOnce(async () => [
+			{
+				effectUuid: counterEffect.uuid,
+				actorName: 'Tessa',
+				stacks: 3,
+				stackReached: {
+					count: 3,
+					stackedName: 'Dazed',
+					gainedName: 'Stone',
+					gainedUuid: stone.uuid,
+				},
+			},
+		]);
+
+		await resolved('fail');
+		expect(saveCard.flags[SYSTEM_ID].saverSteps).toEqual([
+			{ stepId: 'counter', effectUuid: counterEffect.uuid, gainedUuid: stone.uuid },
+		]);
+		await resolved('pass');
+
+		expect(takeBackStack).toHaveBeenCalledWith(counterEffect);
+		expect(stone.delete).toHaveBeenCalledTimes(1);
+	});
+
+	it('a take-back marks the "At N stacks" line on the card undone, as its Undo does', async () => {
+		const stone = { uuid: 'Actor.tessa.ActiveEffect.stone', delete: vi.fn(async () => {}) };
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === counterEffect.uuid ? counterEffect : uuid === stone.uuid ? stone : null,
+			),
+		);
+		const line = {
+			id: 'stackGain.Actor.tessa.5',
+			kind: 'stackGain',
+			icon: 'fa-solid fa-layer-group',
+			text: { key: 'NIMBLE.chat.stackGain.gains' },
+			at: 5,
+			action: {
+				kind: 'stackGain',
+				holderUuid: 'Actor.tessa',
+				holderName: 'Tessa',
+				count: 3,
+				stackedName: 'Dazed',
+				gainedName: 'Stone',
+				state: 'gained',
+				gainedUuid: stone.uuid,
+			},
+		};
+		host = { ...host, flags: { [SYSTEM_ID]: { events: [line] } } } as typeof host;
+		applyEffectFromCard.mockImplementationOnce(async () => [
+			{
+				effectUuid: counterEffect.uuid,
+				actorName: 'Tessa',
+				stackReached: {
+					count: 3,
+					stackedName: 'Dazed',
+					gainedName: 'Stone',
+					gainedUuid: stone.uuid,
+				},
+			},
+		]);
+
+		await resolved('fail');
+		await resolved('pass');
+
+		expect(stone.delete).toHaveBeenCalledTimes(1);
+		expect(replaceCardEvent).toHaveBeenCalledWith(host, line.id, {
+			...line,
+			action: { ...line.action, state: 'undone' },
+		});
+	});
+
+	it('a take-back puts back the older copy that the fail replaced', async () => {
+		const create = vi.fn(async () => []);
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create },
+		};
+		const holder = { uuid: 'Actor.tessa', effects: new Map() };
+		const counter = { ...counterEffect, parent: holder };
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid === counterEffect.uuid ? counter : null)),
+		);
+		takeBackStack.mockImplementationOnce(async () => {
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn(() => null),
+			);
+		});
+		const old = { _id: 'old', name: 'Counter' };
+		applyEffectFromCard.mockImplementationOnce(async () => [
+			{ effectUuid: counterEffect.uuid, actorName: 'Tessa', replaced: [old] },
+		]);
+
+		await resolved('fail');
+		expect(saveCard.flags[SYSTEM_ID].saverSteps).toEqual([
+			{ stepId: 'counter', effectUuid: counterEffect.uuid, replaced: [old] },
+		]);
+		await resolved('pass');
+
+		expect(takeBackStack).toHaveBeenCalledWith(counter);
+		expect(create).toHaveBeenCalledWith([old], {
+			parent: holder,
+			keepId: true,
+			[EFFECT_RECREATED_OPTION]: true,
+		});
+	});
+
+	it('puts back nothing while a stack of the new copy stays', async () => {
+		const create = vi.fn(async () => []);
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create },
+		};
+		const counter = { ...counterEffect, parent: { uuid: 'Actor.tessa' } };
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid === counterEffect.uuid ? counter : null)),
+		);
+		applyEffectFromCard.mockImplementationOnce(async () => [
+			{ effectUuid: counterEffect.uuid, actorName: 'Tessa', replaced: [{ _id: 'old' }] },
+		]);
+
+		await resolved('fail');
+		await resolved('pass');
+
+		expect(create).not.toHaveBeenCalled();
 	});
 
 	it('a result no longer known takes everything back', async () => {

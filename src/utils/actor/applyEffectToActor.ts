@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { EffectPayload, StackReached } from '#types/effectPayload.d.ts';
 import type { MomentRaise, RuleRaise } from '#types/spellScaling.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { effectCardOption } from '#utils/damage/damageCard.js';
@@ -18,24 +19,13 @@ import applyConditionToActor, {
 } from './applyConditionToActor.js';
 import { type StackingEffect, stackingCopyOf, stacksOf, stackUp } from './effectStacks.js';
 import { giveTempHp, tempHpGrant } from './effectTempHp.js';
+import { postStackGain } from './stackGainEvent.js';
 import { itemEffectOf } from './itemEffectOf.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.applyEffect`;
 
 /** Fields of the item's effect that the copy on the holder does not keep. */
 const NOT_COPIED = ['_id', '_stats', 'origin', 'start', 'transfer', 'disabled', 'sort', 'folder'];
-
-/** What puts one effect on one actor. It goes to the GM as it is, so it holds only plain data. */
-export interface EffectPayload {
-	/** Active Effect source data: name, img, description, statuses, duration, system. */
-	data: Record<string, unknown>;
-	sourceItemUuid: string | null;
-	sourceActorUuid: string | null;
-	/** The temp HP that the effect gives, from a temp healing roll of the card. */
-	tempHp?: number | null;
-	/** The card whose use applies it: the events of the new effect go on it. */
-	cardId?: string | null;
-}
 
 export interface AppliedEffect {
 	effectUuid: string;
@@ -48,18 +38,8 @@ export interface AppliedEffect {
 	stacks?: number;
 	/** This application reached the "At N stacks" count of the effect. */
 	stackReached?: StackReached;
-}
-
-/** What the holder gains at the "At N stacks" count. No gained name: the item has no such effect. */
-export interface StackReached {
-	count: number;
-	stackedName: string;
-	gainedName: string;
-	img?: string;
-	/** The effect the holder gained. */
-	gainedUuid?: string;
-	/** Feature Effects off: what a click puts on. */
-	payload?: EffectPayload;
+	/** The source data of the older copies this application replaced. */
+	replaced?: Record<string, unknown>[];
 }
 
 interface SourceUser {
@@ -210,7 +190,11 @@ async function createPlainEffect(
 	data: Record<string, unknown>,
 	origin: string | null,
 	createOptions: Record<string, unknown> = {},
-): Promise<{ created: CreatedEffect | null; stays?: string }> {
+): Promise<{
+	created: CreatedEffect | null;
+	stays?: string;
+	replaced?: Record<string, unknown>[];
+}> {
 	const ActiveEffectClass = CONFIG.ActiveEffect.documentClass as unknown as {
 		create(data: object, options: object): Promise<CreatedEffect | undefined>;
 		deleteDocuments(ids: string[], options: object): Promise<unknown>;
@@ -236,6 +220,10 @@ async function createPlainEffect(
 			{ parent: target, [CONDITION_REPLACED_OPTION]: true },
 		);
 	}
+	const replaced = current.flatMap((effect): Record<string, unknown>[] => {
+		const source = (effect as { toObject?(): Record<string, unknown> }).toObject?.();
+		return source ? [source] : [];
+	});
 	const created = await ActiveEffectClass.create(
 		{ ...data, origin, type: NIMBLE_EFFECT_TYPE },
 		{
@@ -244,7 +232,7 @@ async function createPlainEffect(
 			...(current.length ? { [EFFECT_RECREATED_OPTION]: true } : {}),
 		},
 	);
-	return { created: created ?? null };
+	return { created: created ?? null, ...(replaced.length ? { replaced } : {}) };
 }
 
 type SourceDocument = { uuid: string; getRollData?: () => Record<string, unknown> } | null;
@@ -334,6 +322,7 @@ async function applyHere(
 	const copy = stackingCopyOf(target, data);
 	const before = copy ? (stacksOf(copy.system)?.count ?? 1) : 0;
 	let effect: CreatedEffect | null;
+	let replacedCopies: Record<string, unknown>[] = [];
 	if (copy && !statuses.length) {
 		await stackUp(
 			copy,
@@ -348,6 +337,9 @@ async function applyHere(
 			lastsUntil,
 			effectData: data,
 			createOptions,
+			onReplaced: (sources) => {
+				replacedCopies = sources;
+			},
 		})) as CreatedEffect | null;
 	} else {
 		const plain = await createPlainEffect(
@@ -358,6 +350,7 @@ async function applyHere(
 		);
 		if (plain.stays) return { effectUuid: plain.stays, actorName: target.name ?? '', stays: true };
 		effect = plain.created;
+		replacedCopies = plain.replaced ?? [];
 	}
 	if (!effect?.uuid) return null;
 	const ids = new Set([...(target.effects ?? [])].map((entry) => entry.id));
@@ -371,6 +364,7 @@ async function applyHere(
 		effectUuid: effect.uuid,
 		actorName: target.name ?? '',
 		...(grant.refused ? { tempHpRefused: grant.refused } : {}),
+		...(replacedCopies.length ? { replaced: replacedCopies } : {}),
 	};
 	if (!stacking) return applied;
 	const count = effect === copy ? before + 1 : stacking.count;
@@ -388,6 +382,7 @@ async function applyHere(
 		payload,
 		sourceActor,
 	);
+	await postStackGain(target, applied.stackReached, payload.cardId);
 	return applied;
 }
 

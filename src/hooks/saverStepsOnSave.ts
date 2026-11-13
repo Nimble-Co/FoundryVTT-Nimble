@@ -1,11 +1,15 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
 import { takeBackStack } from '#utils/actor/effectStacks.js';
+import { actOnStackGain } from '#utils/actor/stackGainLine.js';
 import {
 	applyEffectFromCard,
 	type EffectCard,
 	forgetAppliedEffect,
 } from '#utils/chat/applyEffectFromCard.js';
+import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { askedByOf } from '#utils/rolls/saveFromCard.js';
@@ -15,10 +19,14 @@ import type { NimbleSavePayload } from './ruleEventDispatch.js';
 
 const RECORD_FLAG = 'saverSteps';
 
-/** What a save card put on its saver: the step, and the effect it went on as. */
+/** What a save card put on its saver: the step, the effect it went on as, and what came with it. */
 interface SaverRecord {
 	stepId: string;
 	effectUuid: string;
+	/** The "At N stacks" effect this application gave. */
+	gainedUuid?: string;
+	/** The source data of the older copies it replaced. */
+	replaced?: Record<string, unknown>[];
 }
 
 interface SaveCard {
@@ -47,10 +55,55 @@ function saverStepsOf(host: EffectCard, saveNodeId: string): ApplyEffectNode[] {
 	);
 }
 
+/** The older copies come back when the take-back removed the copy that replaced them. */
+async function putBackReplaced(record: SaverRecord, holder: unknown): Promise<void> {
+	if (!record.replaced?.length || !holder) return;
+	if (fromUuidSync(record.effectUuid as never, { strict: false })) return;
+	const ActiveEffectClass = CONFIG.ActiveEffect.documentClass as unknown as {
+		create(data: object[], options: object): Promise<unknown>;
+	};
+	await ActiveEffectClass.create(record.replaced, {
+		parent: holder,
+		keepId: true,
+		[EFFECT_RECREATED_OPTION]: true,
+	});
+}
+
 async function takeBack(host: EffectCard, record: SaverRecord): Promise<void> {
-	const effect = fromUuidSync(record.effectUuid as never, { strict: false });
-	if (effect) await takeBackStack(effect as never);
+	const effect = fromUuidSync(record.effectUuid as never, { strict: false }) as {
+		parent?: unknown;
+	} | null;
+	if (effect) {
+		await takeBackStack(effect as never);
+		await putBackReplaced(record, effect.parent);
+	}
+	if (record.gainedUuid) await takeBackGained(host, record.gainedUuid);
 	await forgetAppliedEffect(host, record.stepId, record.effectUuid);
+}
+
+/** The "At N stacks" effect goes as the Undo of its line does, so the line reads undone. */
+async function takeBackGained(host: EffectCard, gainedUuid: string): Promise<void> {
+	const line = cardEventsOf(host as never).find(
+		(event) =>
+			event.action?.kind === 'stackGain' &&
+			event.action.state === 'gained' &&
+			event.action.gainedUuid === gainedUuid,
+	);
+	if (line && (await actOnStackGain(host, line))) return;
+	const gained = fromUuidSync(gainedUuid as never, { strict: false }) as {
+		delete(): Promise<unknown>;
+	} | null;
+	await gained?.delete();
+}
+
+function recordOf(stepId: string, applied: AppliedEffect): SaverRecord {
+	const gainedUuid = applied.stackReached?.gainedUuid;
+	return {
+		stepId,
+		effectUuid: applied.effectUuid,
+		...(gainedUuid ? { gainedUuid } : {}),
+		...(applied.replaced?.length ? { replaced: applied.replaced } : {}),
+	};
 }
 
 const queue = keyedQueue();
@@ -85,7 +138,7 @@ export function followSaverSteps(payload: NimbleSavePayload): Promise<void> {
 			const [applied] = await applyEffectFromCard(host, step, {
 				recipients: [payload.actor as never],
 			});
-			if (applied && !applied.stays) kept.push({ stepId: step.id, effectUuid: applied.effectUuid });
+			if (applied && !applied.stays) kept.push(recordOf(step.id, applied));
 		}
 		await saveCard.update({ [`flags.${SYSTEM_ID}.${RECORD_FLAG}`]: kept });
 	});

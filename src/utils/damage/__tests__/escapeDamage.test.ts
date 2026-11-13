@@ -108,6 +108,19 @@ describe('escapeDamageRulesOf', () => {
 	});
 });
 
+describe('escapeDamageRulesOf with stacks', () => {
+	it('puts the stacks of the effect into the formula, as the effect is gone when it rolls', () => {
+		const effect = {
+			system: {
+				stacks: { on: true, count: 2 },
+				rules: [{ id: 'a', type: 'escapeDamage', formula: '(@stacks)d4', damageType: '' }],
+			},
+		};
+
+		expect(module.escapeDamageRulesOf(effect)[0].formula).toBe('(2)d4');
+	});
+});
+
 describe('dealEscapeDamage', () => {
 	it('rolls the damage on the holder, deals it, and puts the line on the roll card', async () => {
 		await module.dealEscapeDamage(card, holder as never, escaped, [

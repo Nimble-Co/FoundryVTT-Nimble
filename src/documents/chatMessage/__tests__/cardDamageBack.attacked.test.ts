@@ -113,6 +113,30 @@ afterEach(() => {
 const holderAt = (rules: unknown[]) => ({ actor: mira(rules), token: token(1) });
 
 describe('Attacker Takes, when the holder is attacked', () => {
+	it('rolls its formula with the roll data of the rule, so @stacks reads its effect', async () => {
+		globals.Roll = class {
+			total = 0;
+			constructor(
+				public formula: string,
+				public data: { [key: string]: number } = {},
+			) {}
+			async evaluate() {
+				this.total = Number(this.formula.replace('@stacks', String(this.data.stacks)));
+				return this;
+			}
+			toJSON() {
+				return { formula: this.formula, total: this.total };
+			}
+		};
+		const attacker = goblin();
+		const { back } = setup([{ actor: attacker, delivery: 'melee' }]);
+		const stacked = rule({ formula: '@stacks', rollData: () => ({ key: 3, stacks: 4 }) });
+
+		await back.afterAttack([holderAt([stacked])]);
+
+		expect(attacker.applyDamage).toHaveBeenCalledWith(4);
+	});
+
 	it('deals the damage and gives the effect to each attacker, once for each rule', async () => {
 		const first = goblin();
 		const second = goblin('Goblin 2', 'Actor.goblin2');

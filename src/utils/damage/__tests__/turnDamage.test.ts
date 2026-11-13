@@ -235,6 +235,28 @@ describe('dealTurnDamage', () => {
 		expect(tessa.applyDamage).not.toHaveBeenCalled();
 	});
 
+	it('rolls the formula with the roll data of the rule, so @stacks reads its effect', async () => {
+		vi.stubGlobal(
+			'Roll',
+			class {
+				total = 0;
+				constructor(
+					public formula: string,
+					public data: Record<string, number> = {},
+				) {}
+				async evaluate() {
+					this.total = Number(this.formula.replace('@stacks', String(this.data.stacks)));
+					return this;
+				}
+			},
+		);
+		tessa.rules = [rule(tessa, { formula: '@stacks', rollData: () => ({ stacks: 4 }) })];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		expect(tessa.applyDamage).toHaveBeenCalledWith(4);
+	});
+
 	it('does not fire a turn-end rule at the start of the turn', async () => {
 		tessa.rules = [rule(tessa, { at: 'turnEnd' })];
 

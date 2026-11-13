@@ -190,12 +190,15 @@ describe('applyDieResultEffects', () => {
 	it.each([6, 7])('applies the effect to the target at a face of %i', async (face) => {
 		setup();
 
-		await applyDieResultEffects(card({ rolls: [new FakeDamageRoll(face)] }));
+		const attack = card({ rolls: [new FakeDamageRoll(face)] });
+		await applyDieResultEffects(attack);
 
 		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+		// The card of the attack takes the lines of the effect, such as "At N stacks".
 		expect(applyEffectToActorMock).toHaveBeenCalledWith(TARGET_A, {
 			data: { name: 'Glow' },
 			source: { itemUuid: GUIDE_UUID, user: expect.objectContaining({ uuid: 'Actor.a' }) },
+			cardId: attack.id,
 		});
 	});
 

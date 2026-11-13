@@ -286,7 +286,10 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				itemUuid: this.parentDocument.uuid ?? '',
 				condition: this.condition,
 			};
-			const wounds = await this.#applyConditionToSelf({ [SAVE_FAIL_SOURCE_FLAG]: source });
+			const wounds = await this.#applyConditionToSelf(
+				{ [SAVE_FAIL_SOURCE_FLAG]: source },
+				context.messageId,
+			);
 			await this.#recordSaveFailWounds(context.messageId, woundsGiven(wounds));
 			return;
 		}
@@ -320,11 +323,14 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return isAttackOutcomeTrigger(this.trigger);
 	}
 
-	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<WoundRecord | null> {
+	async #applyConditionToSelf(
+		systemFlags?: Record<string, unknown>,
+		cardId?: string | null,
+	): Promise<WoundRecord | null> {
 		if (!this.test()) return null;
 		const selfActor = this.actor as unknown as ConditionTargetActor | null;
 		if (!selfActor) return null;
-		return this.#applyConditionTo(selfActor, systemFlags);
+		return this.#applyConditionTo(selfActor, systemFlags, null, cardId);
 	}
 
 	/** The save card's key for this rule: its item and condition, as the rule id is not stable. */
@@ -383,15 +389,19 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return itemEffectOf(this.item as unknown as EffectItem | null, this.effectId);
 	}
 
-	/** The condition or the effect, then the Wounds. With a card, the card records the Wounds. */
+	/**
+	 * The condition or the effect, then the Wounds. With a card, the card records the Wounds.
+	 * The lines of the effect go on `card`, else on the card named by `cardId`.
+	 */
 	async #applyConditionTo(
 		target: ConditionTargetActor,
 		systemFlags?: Record<string, unknown>,
 		card?: WoundCard | null,
+		cardId?: string | null,
 	): Promise<WoundRecord | null> {
 		const effect = this.#itemEffect();
 		if (effect) {
-			await this.#applyEffectCopyTo(target, effect, systemFlags);
+			await this.#applyEffectCopyTo(target, effect, systemFlags, card?.id ?? cardId ?? null);
 		} else if (this.condition) {
 			await applyConditionToActor(target, this.condition, {
 				sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
@@ -413,10 +423,14 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	async #applyEffectCopyTo(
 		target: ConditionTargetActor,
 		effect: ItemEffect,
-		systemFlags?: Record<string, unknown>,
+		systemFlags: Record<string, unknown> | undefined,
+		cardId: string | null,
 	): Promise<void> {
 		const user = this.actor as unknown as EffectSourceUser | null;
-		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user });
+		const payload = {
+			...payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user }),
+			...(cardId ? { cardId } : {}),
+		};
 		if (systemFlags) {
 			const flags = (payload.data.flags ?? {}) as Record<string, Record<string, unknown>>;
 			payload.data.flags = {

@@ -135,7 +135,10 @@ export async function applyDieResultEffects(card: ActivationCard): Promise<void>
 		const item = rule.item as UsedItem | null;
 		const effect = firstItemEffect(item);
 		if (!item?.uuid || !effect) continue;
-		const payload = payloadFromEffect(effect, { itemUuid: item.uuid, user });
+		const payload = {
+			...payloadFromEffect(effect, { itemUuid: item.uuid, user }),
+			cardId: card.id,
+		};
 		const results = await Promise.allSettled(
 			targets.map((target) => applyEffectToActor(target, payload)),
 		);

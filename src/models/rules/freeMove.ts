@@ -289,7 +289,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 					reason,
 					node: {
 						kind: 'free',
-						distance: this.distance,
+						distance: this.withStacks(this.distance),
 						direction: this.direction,
 						ignoreDifficultTerrain: this.ignoresDifficultTerrain,
 					},

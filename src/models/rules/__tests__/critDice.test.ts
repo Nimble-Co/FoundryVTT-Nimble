@@ -38,6 +38,17 @@ describe('Crit Dice rule', () => {
 		});
 	});
 
+	it('reads @stacks of the effect that holds it', () => {
+		const replaceFormulaData = vi.fn((formula: string, _data: object) => formula);
+		vi.stubGlobal('Roll', { replaceFormulaData });
+		const rule = make({ formula: '(@stacks)d6' });
+		Object.defineProperty(rule, 'stacks', { get: () => 3, configurable: true });
+
+		rule.specFor(null);
+
+		expect(replaceFormulaData).toHaveBeenCalledWith('(@stacks)d6', { stacks: 3 }, { missing: '0' });
+	});
+
 	it('gives nothing on an attack of another delivery', () => {
 		expect(make({ attackDelivery: 'melee' }).specFor('ranged' as never)).toBeNull();
 	});

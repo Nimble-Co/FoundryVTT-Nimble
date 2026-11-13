@@ -248,7 +248,12 @@ function onDamageApplied(payload: {
 	const target = (payload?.targetActor ?? null) as Parameters<typeof requestSaves>[1];
 	if (payload?.isCritical) void requestSaves(card, target, 'critReceived');
 	void requestSaves(card, target, 'takeDamage');
-	void chargeOnLightning(target as never, payload?.damageTypes, payload?.sourceActor?.uuid ?? null);
+	void chargeOnLightning(
+		target as never,
+		payload?.damageTypes,
+		payload?.sourceActor?.uuid ?? null,
+		card?.id ?? null,
+	);
 	fireEvent(
 		'takeDamage',
 		payload?.targetActor ?? null,

@@ -144,6 +144,12 @@ describe('ConditionalBonusRule', () => {
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: '1d6' });
 		});
 
+		it('puts the stacks of its effect into a dice formula', () => {
+			const rule = createRule({ damageBonus: '(@stacks)d6' }, createMockActor());
+			Object.defineProperty(rule, 'stacks', { get: () => 2, configurable: true });
+			expect(rule.resolveDamage()).toEqual({ value: null, formula: '(2)d6' });
+		});
+
 		it('returns nulls when no damage is offered', () => {
 			const rule = createRule({ damageBonus: '' }, createMockActor());
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: null });

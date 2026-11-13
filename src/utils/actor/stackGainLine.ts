@@ -1,9 +1,8 @@
-import type { CardEvent, CardEventText, StackGainAction } from '#types/cardEvent.d.ts';
-import { applyEffectToActor, type StackReached } from '#utils/actor/applyEffectToActor.js';
+import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
+import { applyEffectToActor } from '#utils/actor/applyEffectToActor.js';
+import { stackGainText } from '#utils/actor/stackGainEvent.js';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
-
-const WORDS = 'NIMBLE.chat.stackGain';
 
 interface StackHolder {
 	uuid: string;
@@ -14,44 +13,6 @@ interface StackHolder {
 interface LineCard {
 	id?: string | null;
 	flags?: Record<string, unknown>;
-}
-
-function textOf(
-	action: Pick<StackGainAction, 'holderName' | 'count' | 'stackedName' | 'gainedName'>,
-	gained: boolean,
-): CardEventText {
-	const data = { name: action.holderName, count: action.count, stacked: action.stackedName };
-	if (!gained) return { key: `${WORDS}.has`, data };
-	return { key: `${WORDS}.gains`, data: { ...data, effect: action.gainedName } };
-}
-
-/**
- * The line of the "At N stacks" count: what the holder gained, with Undo; with Feature Effects
- * off, the count and a button that puts the effect on. With no effect to gain, the count only.
- */
-export function stackGainEvent(
-	holder: StackHolder,
-	reached: StackReached,
-	at = Date.now(),
-): CardEvent {
-	const base = {
-		holderName: holder.name ?? '',
-		count: reached.count,
-		stackedName: reached.stackedName,
-		gainedName: reached.gainedName,
-	};
-	const plate = reached.img ? { img: reached.img } : { icon: 'fa-solid fa-layer-group' };
-	const event = { id: `stackGain.${holder.uuid}.${at}`, kind: 'stackGain' as const, ...plate, at };
-	if (!reached.gainedUuid && !reached.payload) return { ...event, text: textOf(base, false) };
-	const action: StackGainAction = {
-		kind: 'stackGain',
-		holderUuid: holder.uuid,
-		...base,
-		...(reached.gainedUuid
-			? { state: 'gained', gainedUuid: reached.gainedUuid }
-			: { state: 'waiting', payload: reached.payload }),
-	};
-	return { ...event, text: textOf(base, action.state === 'gained'), action };
 }
 
 function holderOf(action: StackGainAction): StackHolder | null {
@@ -72,7 +33,7 @@ async function gain(card: LineCard, event: CardEvent, action: StackGainAction): 
 	const next: StackGainAction = { ...rest, state: 'gained', gainedUuid: applied.effectUuid };
 	return replaceCardEvent(card as never, event.id, {
 		...event,
-		text: textOf(next, true),
+		text: stackGainText(next, true),
 		action: next,
 	});
 }

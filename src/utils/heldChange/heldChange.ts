@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
+import { formulaWithStacks, stacksOf } from '#utils/actor/effectStacks.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
@@ -129,6 +130,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 		const rules = heldRollsOf(effect, all);
 		if (!rules.length) continue;
 		const origin = originOf(effect);
+		const stacks = stacksOf(effect.system)?.count ?? 1;
 		const messageId = effect.flags?.[SYSTEM_ID]?.[MESSAGE_FLAG];
 		for (const rule of rules) {
 			held.push({
@@ -142,7 +144,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				...(rule.rangedOnly && !rule.meleeOnly ? { rangedOnly: true } : {}),
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
-				...(rule.formula ? { formula: rule.formula } : {}),
+				...(rule.formula ? { formula: formulaWithStacks(rule.formula, stacks) } : {}),
 				...(typeof messageId === 'string' ? { sourceMessageId: messageId } : {}),
 				effectId: effect.id,
 				holderUuid: holder?.uuid ?? '',

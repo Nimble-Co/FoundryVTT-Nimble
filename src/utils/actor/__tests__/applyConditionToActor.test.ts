@@ -358,6 +358,19 @@ describe('applyConditionToActor same condition again', () => {
 		expect(createEffect).toHaveBeenCalledTimes(1);
 	});
 
+	it('tells the caller the source data of what it replaced, so a take-back can put it back', async () => {
+		const old = {
+			...existing('old', ['dazed'], [endOfTheirNextTurn]),
+			toObject: () => ({ _id: 'old', name: 'Dazed' }),
+		};
+		const target = createTargetActor({ statuses: ['dazed'], effects: [old] });
+		const onReplaced = vi.fn();
+
+		await applyConditionToActor(target, 'dazed', { lastsUntil: [oneMinute] as never, onReplaced });
+
+		expect(onReplaced).toHaveBeenCalledWith([{ _id: 'old', name: 'Dazed' }]);
+	});
+
 	it('a shorter application does not replace a longer one', async () => {
 		const old = existing('old', ['dazed'], [oneMinute]);
 		const target = createTargetActor({ statuses: ['dazed'], effects: [old] });

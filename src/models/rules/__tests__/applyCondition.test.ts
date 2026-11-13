@@ -793,6 +793,22 @@ describe('ApplyConditionRule', () => {
 			});
 		});
 
+		it('names the card of the attack or of the failed save, so the lines of the effect go on it', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const createOptions = () => createEffect.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+
+			await ruleWithEffect(attacker, 'onCrit').onItemUsed({
+				...buildItemUsedContext(attacker, target, { isCritical: true }),
+				card: { id: 'attack-card' } as never,
+			});
+			expect(createOptions()).toMatchObject({ [SYSTEM_ID]: { effectCardId: 'attack-card' } });
+
+			const owner = createMockActor();
+			await saveResolved(ruleWithEffect(owner, 'onSaveFail'), owner, 'fail');
+			expect(createOptions()).toMatchObject({ [SYSTEM_ID]: { effectCardId: 'card-1' } });
+		});
+
 		it('gives the bare condition when the rule names no effect', async () => {
 			const owner = createMockActor();
 			const rule = createApplyConditionRule({ condition: 'slowed', trigger: 'onWound' }, owner);

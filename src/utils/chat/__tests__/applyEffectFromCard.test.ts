@@ -426,7 +426,7 @@ describe('applyEffectFromCard with stacks', () => {
 		vi.unstubAllGlobals();
 	});
 
-	it('records the count, and puts the line of the count reached on the card', async () => {
+	it('records the count; the stack-up writes the line of the count reached, not the card', async () => {
 		await fromCard.applyEffectFromCard(card, applyNode());
 
 		expect(card.update).toHaveBeenCalledWith({
@@ -434,8 +434,13 @@ describe('applyEffectFromCard with stacks', () => {
 				{ effectUuid: 'Actor.goblin.ActiveEffect.fx', actorName: 'Goblin', stacks: 3 },
 			],
 		});
-		const [, lines] = addCardEvents.mock.calls[0] as [unknown, { text: { key: string } }[]];
-		expect(lines.map((line) => line.text.key)).toEqual(['NIMBLE.chat.stackGain.gains']);
+		expect(addCardEvents).not.toHaveBeenCalled();
+	});
+
+	it('gives the caller what the count reached, which the record does not keep', async () => {
+		const [applied] = await fromCard.applyEffectFromCard(card, applyNode());
+
+		expect(applied.stackReached?.gainedUuid).toBe('Actor.goblin.ActiveEffect.stone');
 	});
 });
 

@@ -50,6 +50,8 @@ interface DamageBackRuleLike {
 	woundDoubles?: boolean;
 	amount?: string;
 	formula?: string;
+	/** The holder's roll data and `@stacks`. */
+	rollData?(): Record<string, unknown>;
 	damageType?: string;
 	ignoreArmor?: boolean;
 	notOnAllies?: boolean;
@@ -216,7 +218,8 @@ export class CardDamageBack {
 		let amount = 0;
 		let roll: Record<string, unknown> | null = null;
 		if (rule.amount === 'formula' && rule.formula?.trim()) {
-			const rolled = await rollAmount(rule.formula.trim(), holder.actor.getRollData?.() ?? {}, {
+			const rollData = rule.rollData?.() ?? holder.actor.getRollData?.() ?? {};
+			const rolled = await rollAmount(rule.formula.trim(), rollData, {
 				purpose: 'for the attacker',
 			});
 			amount = rolled.amount;

@@ -37,6 +37,8 @@ interface TurnDamageRuleLike {
 	damageType: string;
 	wounds: number;
 	actor?: { uuid?: string | null; getRollData?(): Record<string, unknown> } | null;
+	/** The actor's roll data and `@stacks`. */
+	rollData?(): Record<string, unknown>;
 	parentDocument?: { uuid?: string | null; name?: string | null; img?: string | null } | null;
 	appliesTo(): boolean;
 }
@@ -115,7 +117,8 @@ async function waitingLineFor(
 	id: string,
 ): Promise<CardEvent | null> {
 	const { rule } = source;
-	const { amount } = await rollAmount(rule.formula.trim(), rule.actor?.getRollData?.() ?? {}, {
+	const rollData = rule.rollData?.() ?? rule.actor?.getRollData?.() ?? {};
+	const { amount } = await rollAmount(rule.formula.trim(), rollData, {
 		purpose: 'of a turn',
 		show: true,
 	});

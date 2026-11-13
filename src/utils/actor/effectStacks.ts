@@ -51,6 +51,11 @@ export function stacksOf(system: unknown): StackFields | null {
 	return fields.on ? fields : null;
 }
 
+/** A formula with `@stacks` put in as the count, for a roll that reads other roll data. */
+export function formulaWithStacks(formula: string, count: number): string {
+	return formula.replace(/@stacks\b/g, String(count));
+}
+
 /** The effect has the wanted statuses, and no others than the ones they bring with them. */
 function sameStatuses(held: Set<string> | undefined, wanted: readonly string[]): boolean {
 	const linked = (CONFIG.NIMBLE?.conditionLinkedConditions ?? {}) as Record<

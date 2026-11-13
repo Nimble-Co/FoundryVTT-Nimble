@@ -1,14 +1,13 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
-	type EffectPayload,
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
-import { stackGainEvent } from '#utils/actor/stackGainLine.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
@@ -182,8 +181,8 @@ const appliedPath = (nodeId: string) => `flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FL
 
 /**
  * Puts the node's effect on the card's targets, or on its user, and records who took it. Given
- * `recipients` (a save's saver), it puts it on them and adds them to the record. Gives the
- * creatures that took it.
+ * `recipients` (a save's saver), it puts it on them and adds them to the record. Gives what each
+ * creature that took it got, with what the record does not keep (the "At N stacks" effect, the copies it replaced).
  */
 export async function applyEffectFromCard(
 	card: EffectCard,
@@ -202,15 +201,18 @@ export async function applyEffectFromCard(
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);
 	const applied: AppliedEffect[] = [];
+	const taken: AppliedEffect[] = [];
 	const lines: CardEvent[] = [];
 	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);
 		else if (result.value) {
-			const { tempHpRefused, stackReached, ...entry } = result.value;
+			const {
+				tempHpRefused,
+				stackReached: _stackReached,
+				replaced: _replaced,
+				...entry
+			} = result.value;
 			const holder = recipients[index] as { uuid?: string | null; name?: string | null };
-			if (stackReached && holder?.uuid) {
-				lines.push(stackGainEvent({ uuid: holder.uuid, name: holder.name }, stackReached));
-			}
 			if (tempHpRefused && holder?.uuid) {
 				lines.push(
 					tempHpChoiceEvent(
@@ -221,6 +223,7 @@ export async function applyEffectFromCard(
 				);
 			}
 			applied.push(entry);
+			taken.push(result.value);
 		}
 	});
 	if (lines.length && !(await addCardEvents(card as never, lines))) {
@@ -239,7 +242,7 @@ export async function applyEffectFromCard(
 		? [...(appliedEffects(card, node.id) ?? []), ...applied]
 		: applied;
 	await card.update({ [appliedPath(node.id)]: record });
-	return applied;
+	return taken;
 }
 
 /** Takes one creature's entry out of the record of the node, as a taken-back application. */
