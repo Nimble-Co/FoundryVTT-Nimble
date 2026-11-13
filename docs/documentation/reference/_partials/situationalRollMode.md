@@ -11,4 +11,6 @@ The option's icon is the granting item's own artwork, so there is nothing to aut
 
 Use this rule whenever a feature's condition is something the system cannot see: what a save is against, what a skill check is being used for, who the target is out of fiction. For conditions the system does know about (bloodied, unarmored, a charge pool being empty, a toggle being on), put them in the rule's predicate instead and the option is only offered when they hold. The two compose: a predicate-gated rule that is also situational is offered only when the predicate passes, and still only applies when checked. A condition on a tag of the roll itself, such as `save:keep:concentration` on a save that keeps Concentration, is something the system knows, so that option starts checked (see [The Condition Box](../rules-builder/predicates.md)).
 
+On an effect with [Stacks](../homebrew/effects.md#stacks) on, turn on **For each stack** to give the value once for each stack: a value of `-1` with 3 stacks is three levels of disadvantage.
+
 Reach for **Skill Roll Mode**, **Save Roll Mode**, or **Initiative Roll Mode** instead when the advantage is unconditional, since those adjust the character's default roll mode and need no per-roll click. For attack rolls, use **Conditional Bonus**, which offers its choice in the item activation dialog.

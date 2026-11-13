@@ -13,6 +13,7 @@ import {
 	EFFECT_RECREATED_OPTION,
 } from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
+import { STACKED_OPTION } from '#utils/actor/effectStacks.js';
 import { followTempHpChange, takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
 import { dealTurnDamage } from '#utils/damage/turnDamage.js';
@@ -174,9 +175,8 @@ function gainedStatuses(effect: ActiveEffect): string[] {
 }
 
 /** The holder gains the effect, and the creature it came from applies it, on the card of the use. */
-function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+function fireGained(effect: ActiveEffect, options?: Record<string, unknown>): void {
 	if (!isActiveGm() || !(effect.parent instanceof Actor) || !effect.active) return;
-	if (options?.[EFFECT_RECREATED_OPTION]) return;
 	const cardId = effectCardIdOf(options);
 	const card = cardId ? (game.messages?.get(cardId) ?? null) : null;
 	const named = {
@@ -187,6 +187,19 @@ function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>)
 	};
 	fireEvent('gain', effect.parent, named, card);
 	fireEvent('applyEffect', sourceOf(effect), named, card);
+}
+
+function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+	if (!options?.[EFFECT_RECREATED_OPTION]) fireGained(effect, options);
+}
+
+/** A stack is one more application: the holder gains the effect again. */
+function onUpdateEffect(
+	effect: ActiveEffect,
+	_changes: unknown,
+	options?: Record<string, unknown>,
+): void {
+	if (options?.[STACKED_OPTION]) fireGained(effect, options);
 }
 
 function onDeleteEffect(
@@ -302,6 +315,7 @@ export default function registerLastsUntilHooks(): void {
 	on('updateActor', onUpdateActor);
 	on('updateToken', onUpdateToken);
 	on('createActiveEffect', onCreateEffect);
+	on('updateActiveEffect', onUpdateEffect);
 	on('deleteActiveEffect', onDeleteEffect);
 	on(systemHookName('useItem'), onUseItem);
 	on(systemHookName('damageApplied'), onDamageApplied);

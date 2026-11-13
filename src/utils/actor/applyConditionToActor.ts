@@ -1,9 +1,14 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { type Application, newApplicationLastsLonger } from '../lastsUntil/lastsLonger.js';
+import {
+	type Application,
+	applicationOf,
+	newApplicationLastsLonger,
+} from '../lastsUntil/lastsLonger.js';
 import type { Moment } from '../lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
 import { untilRemoved } from '../lastsUntil/statusLastsUntil.js';
+import { type StackingEffect, stackingCopyOf, stackUp } from './effectStacks.js';
 
 /** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
 export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
@@ -159,15 +164,6 @@ function conditionEffectsOn(
 	return [...effects].filter(
 		(effect) => effect.statuses?.size === 1 && effect.statuses.has(conditionId),
 	);
-}
-
-export function applicationOf(effect: ExistingConditionEffect): Application {
-	const now = game.time?.worldTime ?? 0;
-	return {
-		lastsUntil: effect.system?.lastsUntil ?? [],
-		duration: effect.duration,
-		elapsedSeconds: Math.max(0, now - (effect.start?.time ?? now)),
-	};
 }
 
 /**
@@ -391,6 +387,42 @@ function extraStatuses(options: ApplyConditionOptions): string[] {
 	return Array.isArray(statuses) ? statuses.filter((id) => typeof id === 'string') : [];
 }
 
+/** The same stacking effect again: one more stack on the effect the holder has. */
+async function addStack(
+	target: ConditionTargetActor,
+	conditionId: string,
+	copy: StackingEffect,
+	options: ApplyConditionOptions,
+): Promise<AppliedConditionEffect> {
+	await stackUp(
+		copy,
+		{
+			lastsUntil: lastsUntilOf(conditionId, options),
+			duration: buildDurationPatch(options.duration),
+		},
+		options.createOptions,
+	);
+	const effect = copy as unknown as AppliedConditionEffect;
+	announceApplied(target, conditionId, effect, options);
+	return effect;
+}
+
+function announceApplied(
+	target: ConditionTargetActor,
+	conditionId: string,
+	effect: AppliedConditionEffect,
+	options: ApplyConditionOptions,
+): void {
+	// @ts-expect-error - conditionApplied is a custom system hook
+	Hooks.callAll(systemHookName('conditionApplied'), {
+		target,
+		condition: conditionId,
+		effect,
+		source: options.sourceItem ?? options.sourceActor ?? null,
+		rule: options.rule ?? null,
+	});
+}
+
 /**
  * Apply a single condition to a single actor, recording what caused it.
  *
@@ -399,7 +431,8 @@ function extraStatuses(options: ApplyConditionOptions): string[] {
  * `preApplyCondition` hook that condition immunity listens on, a recorded
  * origin, an optional Lasts Until, and a `conditionApplied` hook once the
  * effect exists. A caller replacing instances it names keeps the
- * duplicate decision and gets the swap done transactionally.
+ * duplicate decision and gets the swap done transactionally. The same
+ * stacking effect again adds a stack to the one the target has.
  *
  * @returns the created effect, or `null` when nothing was applied.
  */
@@ -409,8 +442,15 @@ export default async function applyConditionToActor(
 	options: ApplyConditionOptions = {},
 ): Promise<AppliedConditionEffect | null> {
 	if (!target || !conditionId) return null;
-	const replaces =
-		options.replaces === undefined ? reapplication(target, conditionId, options) : options.replaces;
+	const stacked =
+		options.replaces === undefined && options.effectData
+			? stackingCopyOf(target, options.effectData)
+			: null;
+	const replaces = stacked
+		? []
+		: options.replaces === undefined
+			? reapplication(target, conditionId, options)
+			: options.replaces;
 	if (replaces === null) return null;
 
 	const source = options.sourceItem ?? options.sourceActor ?? null;
@@ -427,6 +467,8 @@ export default async function applyConditionToActor(
 		});
 		if (allowed === false) return null;
 	}
+
+	if (stacked) return addStack(target, conditionId, stacked, options);
 
 	const replacedSources = await removeReplacedEffects(target, replaces);
 
@@ -448,14 +490,6 @@ export default async function applyConditionToActor(
 		return null;
 	}
 
-	// @ts-expect-error - conditionApplied is a custom system hook
-	Hooks.callAll(systemHookName('conditionApplied'), {
-		target,
-		condition: conditionId,
-		effect,
-		source,
-		rule: options.rule ?? null,
-	});
-
+	announceApplied(target, conditionId, effect, options);
 	return effect;
 }

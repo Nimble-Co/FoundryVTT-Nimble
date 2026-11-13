@@ -23,6 +23,8 @@
 		choose,
 		canActOnDamage,
 		actOnDamage,
+		canActOnStack,
+		actOnStack,
 		backStatus,
 	} = strip;
 </script>
@@ -209,6 +211,39 @@
 								{#if damage.state === 'waiting'}
 									<i class="fa-solid fa-heart-crack" aria-hidden="true"></i>
 									{localize('NIMBLE.chat.turnDamage.take')}
+								{:else}
+									<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+									{localize('NIMBLE.chat.events.undo')}
+								{/if}
+							</button>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'stackGain'}
+						{@const stack = event.action}
+						{@const names = { effect: stack.gainedName, name: stack.holderName }}
+						{#if stack.state === 'undone'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.stackGain.undone')}
+							</span>
+						{:else if canActOnStack(stack)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize(
+									stack.state === 'waiting'
+										? 'NIMBLE.chat.stackGain.applyLabel'
+										: 'NIMBLE.chat.stackGain.undoLabel',
+									names,
+								)}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => actOnStack(event)}
+							>
+								{#if stack.state === 'waiting'}
+									<i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+									{localize('NIMBLE.chat.stackGain.apply', { effect: stack.gainedName })}
 								{:else}
 									<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
 									{localize('NIMBLE.chat.events.undo')}

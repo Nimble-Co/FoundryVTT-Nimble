@@ -552,6 +552,32 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, named, card);
 	});
 
+	it('a stack is a new gain of the effect, on the card of the use; another update is none', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Dazed', active: true, statuses: new Set(['dazed']) };
+		const card = { id: 'card1' };
+		const messages = (game as { messages?: unknown }).messages;
+		(game as { messages?: unknown }).messages = {
+			get: (id: string) => (id === 'card1' ? card : null),
+		};
+
+		hook('updateActiveEffect')(
+			effect,
+			{},
+			{ nimbleEffectStacked: true, [SYSTEM_ID]: { effectCardId: 'card1' } },
+		);
+		hook('updateActiveEffect')(effect, {}, {});
+		(game as { messages?: unknown }).messages = messages;
+
+		expect(fireEventMock).toHaveBeenCalledTimes(2);
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			expect.objectContaining({ effectName: 'Dazed', gained: effect }),
+			card,
+		);
+	});
+
 	it('a copy that is put back or replaced is no new gain', () => {
 		const holder = Object.create(Actor.prototype);
 		const effect = { parent: holder, name: 'Prone', active: true, statuses: new Set(['prone']) };

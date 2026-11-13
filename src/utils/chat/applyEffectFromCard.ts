@@ -9,6 +9,7 @@ import {
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
+import { stackGainEvent } from '#utils/actor/stackGainLine.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
@@ -195,14 +196,17 @@ export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNod
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);
 	const applied: AppliedEffect[] = [];
-	const choices: CardEvent[] = [];
+	const lines: CardEvent[] = [];
 	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);
 		else if (result.value) {
-			const { tempHpRefused, ...entry } = result.value;
+			const { tempHpRefused, stackReached, ...entry } = result.value;
 			const holder = recipients[index] as { uuid?: string | null; name?: string | null };
+			if (stackReached && holder?.uuid) {
+				lines.push(stackGainEvent({ uuid: holder.uuid, name: holder.name }, stackReached));
+			}
 			if (tempHpRefused && holder?.uuid) {
-				choices.push(
+				lines.push(
 					tempHpChoiceEvent(
 						{ uuid: holder.uuid, name: holder.name },
 						tempHpRefused,
@@ -213,10 +217,10 @@ export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNod
 			applied.push(entry);
 		}
 	});
-	if (choices.length && !(await addCardEvents(card as never, choices))) {
-		for (const choice of choices) {
-			const action = choice.action as { holderName: string; had: number; amount: number };
-			warnTempHpKept(action.holderName, { temp: action.had, amount: action.amount });
+	if (lines.length && !(await addCardEvents(card as never, lines))) {
+		for (const line of lines) {
+			if (line.action?.kind !== 'tempHpChoice') continue;
+			warnTempHpKept(line.action.holderName, { temp: line.action.had, amount: line.action.amount });
 		}
 	}
 	if (!applied.length) {

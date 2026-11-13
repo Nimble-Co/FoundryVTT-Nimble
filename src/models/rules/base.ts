@@ -5,6 +5,7 @@ import type { MovementRecord } from '#types/movement.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { Predicate, type PredicateLike } from '../../etc/Predicate.js';
+import { stacksOf } from '../../utils/actor/effectStacks.js';
 import { checkFormulaReferences, ruleOwner } from '../../utils/rolls/formulaReferences.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import type { RuleFormGroup } from './_formLayout.js';
@@ -362,6 +363,12 @@ abstract class NimbleBaseRule<
 		return isEffectParent(parent) ? originItemOf(parent) : parent;
 	}
 
+	/** The stacks of the effect that holds this rule (`@stacks`). 1 for an item or an effect that does not stack. */
+	get stacks(): number {
+		const parent = this.parentDocument;
+		return isEffectParent(parent) ? (stacksOf(parent.system)?.count ?? 1) : 1;
+	}
+
 	/** The parent item of a rule type with `worksOnEffects = false`. */
 	protected get parentItem(): NimbleBaseItem {
 		return this.parentDocument as NimbleBaseItem;
@@ -462,8 +469,9 @@ abstract class NimbleBaseRule<
 
 	/** A formula read against the roll data of the given actor, such as the one who rolled. */
 	protected resolveFormulaFor(formula: string, actor: FormulaActor | null | undefined) {
-		const rollData = actor?.getRollData?.() ?? {};
-		this.checkReferences(formula, actor, { rollData });
+		const extraRollData = { stacks: this.stacks };
+		const rollData = { ...(actor?.getRollData?.() ?? {}), ...extraRollData };
+		this.checkReferences(formula, actor, { rollData, extraRollData });
 		return getDeterministicBonus(formula, rollData as NimbleRollData);
 	}
 

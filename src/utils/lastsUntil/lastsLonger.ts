@@ -52,6 +52,22 @@ export function estimateRounds(application: Application, context: EstimateContex
 	return Math.min(...rounds);
 }
 
+/** What an estimate reads of an effect on a creature. */
+export interface AppliedEffectTiming {
+	system?: { lastsUntil?: Moment[] };
+	duration?: { value?: number | null; units?: string | null } | null;
+	start?: { time?: number } | null;
+}
+
+export function applicationOf(effect: AppliedEffectTiming): Application {
+	const now = game.time?.worldTime ?? 0;
+	return {
+		lastsUntil: effect.system?.lastsUntil ?? [],
+		duration: effect.duration,
+		elapsedSeconds: Math.max(0, now - (effect.start?.time ?? now)),
+	};
+}
+
 /** A new application replaces the ones on the creature only when it lasts longer. */
 export function newApplicationLastsLonger(
 	next: Application,

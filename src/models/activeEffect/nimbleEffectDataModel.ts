@@ -117,6 +117,27 @@ const effectSchema = () => ({
 		min: 0,
 	}),
 	minor: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+	stacks: new fields.SchemaField({
+		/** A new application of the same effect adds 1 to `count`. */
+		on: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		count: new fields.NumberField({
+			required: true,
+			nullable: false,
+			integer: true,
+			min: 1,
+			initial: 1,
+		}),
+		/** At this count the holder gains `effectId`. Null: nothing happens at a count. */
+		at: new fields.NumberField({
+			required: true,
+			nullable: true,
+			integer: true,
+			min: 2,
+			initial: null,
+		}),
+		/** An effect of the item that applies this one. */
+		effectId: new fields.StringField({ required: true, nullable: false, blank: true, initial: '' }),
+	}),
 	/** With no moments: the status's own Lasts Until does not apply, so only removing it ends it. */
 	untilRemoved: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 });

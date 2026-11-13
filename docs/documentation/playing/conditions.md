@@ -93,7 +93,7 @@ When effects end, each one gets a line in the **Events** strip of the card that 
 
 The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).
 
-**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts.
+**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts. An effect with Stacks on adds a stack instead, and the row shows the count: see [Stacks](../homebrew/effects.md#stacks).
 
 ::: details How the system compares two Lasts Until
 It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.

@@ -6,9 +6,11 @@ import type {
 	EndedEffectRow,
 	EscapeRulingAction,
 	SaveRequestAction,
+	StackGainAction,
 	TempHpChoiceAction,
 	TurnDamageAction,
 } from '#types/cardEvent.d.ts';
+import { actOnStackGain, canActOnStackGain } from '#utils/actor/stackGainLine.js';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import {
@@ -138,6 +140,23 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	function canActOnStack(action: StackGainAction): boolean {
+		return canActOnStackGain(action);
+	}
+
+	/** Puts a waiting effect on, or takes a gained one off. */
+	async function actOnStack(event: CardEvent) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			await actOnStackGain(getMessage() as never, event).catch((error) =>
+				console.error('Nimble | Could not change the effect of a stack count.', error),
+			);
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
 	function backStatus(eventId: string) {
 		return (element: HTMLElement) => {
@@ -163,6 +182,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		choose,
 		canActOnDamage,
 		actOnDamage,
+		canActOnStack,
+		actOnStack,
 		backStatus,
 	};
 }

@@ -40,6 +40,7 @@ A few references are not read off the character sheet. They are filled in at the
 | `@sum` | **Dice Consumer** → Effect formula, **Modify Consumer** → Append formula | The total of the faces they picked. |
 | `@poolMax` | **Dice Pool** → a refill's Value | The pool's maximum size. |
 | `@poolCurrent` | **Dice Pool** → a refill's Value | How many dice are in the pool right now. |
+| `@stacks` | Any formula of a rule on an effect | The stacks of the effect on the creature that has it ([Stacks](../homebrew/effects.md#stacks)). 1 for an effect that does not stack, and for a rule on an item. A Speed Bonus of `-@stacks` takes 1 space for each stack. |
 
 These combine with the sheet references above, so a spend can scale with both the dice chosen and the character: `(@strength + @dexterity) * @n` reduces damage by STR+DEX for every die spent, and `2 * @sum` doubles the total rolled.
 

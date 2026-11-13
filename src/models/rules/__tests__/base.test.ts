@@ -263,6 +263,38 @@ describe('NimbleBaseRule', () => {
 		});
 	});
 
+	describe('stacks', () => {
+		class FormulaRule extends NimbleBaseRule {
+			resolve(formula: string) {
+				return this.resolveFormula(formula);
+			}
+		}
+
+		function ruleOn(parent: object) {
+			const rule = new FormulaRule({} as never, {
+				parent: parent as unknown as foundry.abstract.DataModel.Any,
+				strict: false,
+			}) as FormulaRule;
+			Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
+			return rule;
+		}
+
+		const actor = { getRollData: () => ({ level: 2 }) };
+		const effect = (stacks: object) =>
+			ruleOn({ documentName: 'ActiveEffect', system: { stacks }, target: null, actor });
+
+		it('is the count of a stacking effect, and 1 for any other parent', () => {
+			expect(effect({ on: true, count: 3 }).stacks).toBe(3);
+			expect(effect({ on: false, count: 3 }).stacks).toBe(1);
+			expect(ruleOn({ uuid: 'Actor.a.Item.i', actor }).stacks).toBe(1);
+		});
+
+		it('is @stacks in a formula of the rule', () => {
+			expect(effect({ on: true, count: 3 }).resolve('@stacks * 2')).toBe(6);
+			expect(ruleOn({ uuid: 'Actor.a.Item.i', actor }).resolve('@stacks + @level')).toBe(3);
+		});
+	});
+
 	describe('schema', () => {
 		it('defines the expected base fields inherited by every rule', () => {
 			const schema = NimbleBaseRule.defineSchema();

@@ -731,6 +731,14 @@
 				"undoLabel": "Undo: give back to {name} what this line took",
 				"undone": "Undone"
 			},
+			"stackGain": {
+				"gains": "{name} gains {effect}: {count} stacks of {stacked}",
+				"has": "{name} has {count} stacks of {stacked}",
+				"apply": "Apply {effect}",
+				"applyLabel": "Apply {effect} to {name}",
+				"undoLabel": "Undo: take {effect} off {name}",
+				"undone": "Undone"
+			},
 			"swallowedDamage": {
 				"text": "{name} takes {amount} damage",
 				"cause": "Swallowed"
@@ -2962,6 +2970,10 @@
 				"value": {
 					"label": "Roll mode value",
 					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"perStack": {
+					"label": "For each stack",
+					"hint": "On an effect with Stacks on, the value counts once for each stack. A value of 1 with 3 stacks gives 3 levels."
 				},
 				"checkType": {
 					"label": "Offer on",

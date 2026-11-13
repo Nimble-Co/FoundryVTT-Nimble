@@ -1,4 +1,5 @@
 import type { MoveNode } from '#types/effectTree.js';
+import type { EffectPayload } from '#utils/actor/applyEffectToActor.js';
 import type { MovementOffer } from '#types/movement.js';
 import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -33,7 +34,8 @@ export type CardEventKind =
 	| 'damage'
 	| 'saveRequest'
 	| 'tempHpChoice'
-	| 'escape';
+	| 'escape'
+	| 'stackGain';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -103,6 +105,21 @@ export interface TurnDamageAction {
 	woundsGained?: number;
 }
 
+/** The "At N stacks" effect of a stacking effect, and how it stands. */
+export interface StackGainAction {
+	kind: 'stackGain';
+	holderUuid: string;
+	holderName: string;
+	count: number;
+	stackedName: string;
+	gainedName: string;
+	/** waiting: Feature Effects off, a click puts it on. gained: on the creature. undone: taken off. */
+	state: 'waiting' | 'gained' | 'undone';
+	gainedUuid?: string;
+	/** What a click on a waiting line puts on. */
+	payload?: EffectPayload;
+}
+
 /**
  * What a line lets the reader do: Undo an end, roll a save, keep or take temp HP, or move as an
  * offer lets. A Movement Offer line holds its move and the offers it made; the card stores the same
@@ -113,6 +130,7 @@ export type CardEventAction =
 	| TempHpChoiceAction
 	| EscapeRulingAction
 	| TurnDamageAction
+	| StackGainAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

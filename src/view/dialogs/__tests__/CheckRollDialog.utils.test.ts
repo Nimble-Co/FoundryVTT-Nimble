@@ -30,6 +30,17 @@ function createActor(rules: unknown[]) {
 const willSave = { type: 'savingThrow', saveKey: 'will' } as const;
 
 describe('getSituationalRollModeOptions', () => {
+	it('gives the value for each stack when the rule says so', () => {
+		const each = createRule({ value: 1, perStack: true, stacks: 3 });
+		const once = createRule({ id: 'once', value: 1, perStack: false, stacks: 3 });
+
+		const values = getSituationalRollModeOptions(createActor([each, once]), willSave).map(
+			(option) => option.value,
+		);
+
+		expect(values).toEqual([3, 1]);
+	});
+
 	describe('target key mapping', () => {
 		it('passes the save key for saving throws', () => {
 			const rule = createRule();

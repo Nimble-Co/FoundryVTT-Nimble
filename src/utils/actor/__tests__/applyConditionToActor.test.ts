@@ -511,3 +511,70 @@ describe("applyConditionToActor the status entry's Lasts Until", () => {
 		).toEqual([]);
 	});
 });
+
+describe('applyConditionToActor stacks', () => {
+	const stacks = (on: boolean, count = 1) => ({ on, count, at: null, effectId: '' });
+	const effectData = (on = true) => ({
+		name: 'Flesh to Stone',
+		statuses: ['dazed'],
+		system: { stacks: stacks(on), lastsUntil: [] },
+	});
+	function heldDazed(on = true) {
+		return Object.assign(createFakeEffect('dazed1', ['dazed']), {
+			name: 'Flesh to Stone',
+			system: { stacks: stacks(on, 2), lastsUntil: [] },
+			update: vi.fn(async () => undefined),
+		});
+	}
+
+	beforeEach(() => {
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { getEffectStart: () => ({ time: 0 }) },
+		};
+	});
+
+	it('adds a stack to the same stacking effect, and the holder gains it again', async () => {
+		const copy = heldDazed();
+		const target = createTargetActor({ statuses: ['dazed'], effects: [copy] });
+
+		const result = await applyConditionToActor(target, 'dazed', {
+			effectData: effectData(),
+			createOptions: { card: 'c1' },
+		});
+
+		expect(result).toBe(copy);
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(copy.update).toHaveBeenCalledWith(
+			{ 'system.stacks.count': 3 },
+			expect.objectContaining({ nimbleEffectStacked: true, card: 'c1' }),
+		);
+		expect(hooksCallAll).toHaveBeenCalledWith(
+			'nimble.conditionApplied',
+			expect.objectContaining({ condition: 'dazed', effect: copy }),
+		);
+	});
+
+	it('an immune creature gets no stack', async () => {
+		hooksCall.mockReturnValue(false);
+		const copy = heldDazed();
+		const target = createTargetActor({ statuses: ['dazed'], effects: [copy] });
+
+		expect(await applyConditionToActor(target, 'dazed', { effectData: effectData() })).toBeNull();
+		expect(copy.update).not.toHaveBeenCalled();
+	});
+
+	it('a plain effect on either side keeps the one that lasts longer', async () => {
+		const plain = heldDazed(false);
+		const target = createTargetActor({ statuses: ['dazed'], effects: [plain] });
+
+		expect(await applyConditionToActor(target, 'dazed', { effectData: effectData() })).toBeNull();
+		expect(plain.update).not.toHaveBeenCalled();
+
+		const copy = heldDazed();
+		const other = createTargetActor({ statuses: ['dazed'], effects: [copy] });
+		expect(
+			await applyConditionToActor(other, 'dazed', { effectData: effectData(false) }),
+		).toBeNull();
+		expect(copy.update).not.toHaveBeenCalled();
+	});
+});

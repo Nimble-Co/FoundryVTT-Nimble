@@ -189,6 +189,15 @@ describe('Nimble effect data model', () => {
 		expect(tempHp.options).toMatchObject({ nullable: true, initial: null, integer: true, min: 0 });
 		expect(minor.options).toMatchObject({ nullable: false, initial: false });
 	});
+
+	it('does not stack by default, so old effects keep their meaning', () => {
+		const stackFields = schema().stacks.fields ?? {};
+
+		expect(stackFields.on.options).toMatchObject({ nullable: false, initial: false });
+		expect(stackFields.count.options).toMatchObject({ initial: 1, integer: true, min: 1 });
+		expect(stackFields.at.options).toMatchObject({ nullable: true, initial: null, min: 2 });
+		expect(stackFields.effectId.options).toMatchObject({ blank: true, initial: '' });
+	});
 });
 
 describe('Nimble effect registration', () => {

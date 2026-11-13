@@ -305,3 +305,157 @@ describe('applyEffectToActor', () => {
 		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
 	});
 });
+
+describe('stacks', () => {
+	const stacks = (count: number, at: number | null = null) => ({
+		on: true,
+		count,
+		at,
+		effectId: at ? 'stone' : '',
+	});
+	const stackingPayload = (at: number | null = null): EffectPayload => ({
+		data: {
+			name: 'Snowblind',
+			statuses: [],
+			system: { lastsUntil: [turnMoment], stacks: stacks(1, at) },
+		},
+		sourceItemUuid: 'Actor.basilisk.Item.gaze',
+		sourceActorUuid: 'Actor.basilisk',
+		cardId: 'card1',
+	});
+	function copyWith(count: number) {
+		const copy = {
+			id: 'snow',
+			uuid: 'Actor.goblin.ActiveEffect.snow',
+			name: 'Snowblind',
+			origin: 'Actor.basilisk.Item.gaze',
+			statuses: new Set<string>(),
+			system: { lastsUntil: [turnMoment], stacks: stacks(count) },
+			update: vi.fn(async (changes: Record<string, number>) => {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				copy.system.stacks.count = changes['system.stacks.count'];
+			}),
+		};
+		return copy;
+	}
+	const stone = {
+		transfer: false,
+		toObject: () => ({ _id: 'stone', name: 'Stone', img: 'stone.webp', statuses: [], system: {} }),
+	};
+	const gaze = {
+		uuid: 'Actor.basilisk.Item.gaze',
+		effects: { get: (id: string) => (id === 'stone' ? stone : null) },
+	};
+	const settings = game as unknown as { settings?: unknown };
+	let hadSettings: unknown;
+
+	beforeEach(() => {
+		hadSettings = settings.settings;
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments, getEffectStart: () => ({ time: 0 }) },
+		};
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => (uuid === gaze.uuid ? gaze : { uuid })),
+		);
+	});
+	afterEach(() => {
+		settings.settings = hadSettings;
+	});
+
+	it('a stacking effect the holder has gets a stack, and the record has the count', async () => {
+		const copy = copyWith(1);
+
+		const result = await applyEffectToActor(holder({ effects: [copy] }), stackingPayload());
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(copy.update).toHaveBeenCalledWith(
+			{ 'system.stacks.count': 2 },
+			expect.objectContaining({
+				nimbleEffectStacked: true,
+				[SYSTEM_ID]: { effectCardId: 'card1' },
+			}),
+		);
+		expect(result).toEqual({ effectUuid: copy.uuid, actorName: 'Goblin', stacks: 2 });
+	});
+
+	it('a new stacking effect starts at 1 stack', async () => {
+		const result = await applyEffectToActor(holder(), stackingPayload());
+
+		expect(createEffect).toHaveBeenCalledTimes(1);
+		expect(result?.stacks).toBe(1);
+	});
+
+	it('two applications at the same time give two stacks', async () => {
+		const copy = copyWith(1);
+		const target = holder({ effects: [copy] });
+
+		await Promise.all([
+			applyEffectToActor(target, stackingPayload()),
+			applyEffectToActor(target, stackingPayload()),
+		]);
+
+		expect(copy.system.stacks.count).toBe(3);
+	});
+
+	it('at the count the holder gains the effect of the item, once', async () => {
+		const copy = copyWith(2);
+		const target = holder({ effects: [copy] });
+
+		const third = await applyEffectToActor(target, stackingPayload(3));
+
+		expect(createEffect).toHaveBeenCalledWith(
+			expect.objectContaining({ name: 'Stone', origin: 'Actor.basilisk.Item.gaze' }),
+			{ parent: target, [SYSTEM_ID]: { effectCardId: 'card1' } },
+		);
+		expect(third?.stackReached).toEqual({
+			count: 3,
+			stackedName: 'Snowblind',
+			gainedName: 'Stone',
+			img: 'stone.webp',
+			gainedUuid: 'Actor.goblin.ActiveEffect.new',
+		});
+
+		createEffect.mockClear();
+		const fourth = await applyEffectToActor(target, stackingPayload(3));
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(fourth).not.toHaveProperty('stackReached');
+	});
+
+	it('with Feature Effects off, the effect waits for a click', async () => {
+		settings.settings = { get: () => false };
+
+		const result = await applyEffectToActor(holder({ effects: [copyWith(2)] }), stackingPayload(3));
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(result?.stackReached).toMatchObject({ count: 3, gainedName: 'Stone' });
+		expect(result?.stackReached?.payload?.data).toMatchObject({ name: 'Stone' });
+		expect(result?.stackReached).not.toHaveProperty('gainedUuid');
+	});
+
+	it('looks for the effect on the item of the stacked effect, and with none, only counts', async () => {
+		const fromOrigin = copyWith(2);
+		const other = { ...stackingPayload(3), sourceItemUuid: 'Actor.basilisk2.Item.gaze' };
+
+		const found = await applyEffectToActor(holder({ effects: [fromOrigin] }), other);
+		expect(found?.stackReached?.gainedName).toBe('Stone');
+
+		const lost = Object.assign(copyWith(2), { origin: 'Actor.gone.Item.gaze' });
+		const none = await applyEffectToActor(holder({ effects: [lost] }), other);
+		expect(none?.stackReached).toEqual({ count: 3, stackedName: 'Snowblind', gainedName: '' });
+	});
+
+	it('keeps @stacks in a rule formula, for the count of the holder', () => {
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string, data: Record<string, unknown>) =>
+				formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+		});
+		const rules = [{ id: 'r1', type: 'speedBonus', value: '-@stacks * @level' }];
+		const effect = { toObject: () => ({ name: 'Slowing', system: { rules } }) };
+		const user = { type: 'npc', uuid: 'Actor.slug', getRollData: () => ({ level: 2 }) };
+
+		const { data } = payloadFromEffect(effect, { itemUuid: null, user });
+
+		expect((data.system as { rules: { value: string }[] }).rules[0].value).toBe('-@stacks * 2');
+	});
+});

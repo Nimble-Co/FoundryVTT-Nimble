@@ -49,6 +49,17 @@ vi.mock('#utils/damage/turnDamageLine.js', () => ({
 		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
 }));
 
+const { actOnStackGain } = vi.hoisted(() => ({
+	actOnStackGain: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/actor/stackGainLine.js', () => ({
+	actOnStackGain,
+	canActOnStackGain: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 const { endEscape } = vi.hoisted(() => ({
 	endEscape: vi.fn(async (..._args: unknown[]) => true),
 }));
@@ -350,6 +361,55 @@ describe('CardEvents', () => {
 		other.unmount();
 
 		renderEvents(makeCard([damage('undone')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByRole('status')).toHaveTextContent('Undone');
+	});
+
+	it('a stack line has Apply while it waits, Undo once gained, and a badge once undone', async () => {
+		const stackLine = (
+			state: 'waiting' | 'gained' | 'undone',
+			holderUuid = 'Actor.tessa',
+		): CardEvent => ({
+			id: 'stack1',
+			kind: 'stackGain',
+			icon: 'fa-solid fa-layer-group',
+			text: {
+				key: state === 'waiting' ? 'NIMBLE.chat.stackGain.has' : 'NIMBLE.chat.stackGain.gains',
+				data: { name: 'Tessa', count: 3, stacked: 'Dazed', effect: 'Petrified' },
+			},
+			action: {
+				kind: 'stackGain',
+				holderUuid,
+				holderName: 'Tessa',
+				count: 3,
+				stackedName: 'Dazed',
+				gainedName: 'Petrified',
+				state,
+			},
+			at: 1,
+		});
+		globals.game.user = { isGM: false };
+
+		const waiting = renderEvents(makeCard([stackLine('waiting')]));
+		expect(screen.getByText('Tessa has 3 stacks of Dazed')).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: 'Apply Petrified to Tessa' }));
+		expect(actOnStackGain).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'stack1' }),
+		);
+		waiting.unmount();
+
+		const gained = renderEvents(makeCard([stackLine('gained')]));
+		expect(screen.getByText('Tessa gains Petrified: 3 stacks of Dazed')).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: /take Petrified off Tessa/ }));
+		expect(actOnStackGain).toHaveBeenCalledTimes(2);
+		gained.unmount();
+
+		const other = renderEvents(makeCard([stackLine('gained', 'Actor.goblin')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		other.unmount();
+
+		renderEvents(makeCard([stackLine('undone')]));
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.getByRole('status')).toHaveTextContent('Undone');
 	});

@@ -275,3 +275,59 @@ describe('applyEffectFromCard when the holder keeps the effect it had', () => {
 		});
 	});
 });
+
+describe('applyEffectFromCard with stacks', () => {
+	const applyEffectToActor = vi.fn();
+	const addCardEvents = vi.fn(async (..._args: unknown[]) => true);
+	let fromCard: typeof import('#utils/chat/applyEffectFromCard.js');
+
+	beforeEach(async () => {
+		card.update.mockClear();
+		addCardEvents.mockClear();
+		applyEffectToActor.mockReset().mockResolvedValue({
+			effectUuid: 'Actor.goblin.ActiveEffect.fx',
+			actorName: 'Goblin',
+			stacks: 3,
+			stackReached: {
+				count: 3,
+				stackedName: 'Condemned',
+				gainedName: 'Stone',
+				gainedUuid: 'Actor.goblin.ActiveEffect.stone',
+			},
+		});
+		vi.resetModules();
+		vi.doMock('#utils/actor/applyEffectToActor.js', async (importOriginal) => ({
+			...(await importOriginal<object>()),
+			applyEffectToActor,
+		}));
+		vi.doMock('#utils/chat/cardEvents.js', async (importOriginal) => ({
+			...(await importOriginal<object>()),
+			addCardEvents,
+		}));
+		fromCard = await import('#utils/chat/applyEffectFromCard.js');
+		vi.doUnmock('#utils/actor/applyEffectToActor.js');
+		vi.doUnmock('#utils/chat/cardEvents.js');
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === item.uuid ? item : uuid === 'Scene.s.Token.goblin' ? { actor: goblin } : null,
+			),
+		);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('records the count, and puts the line of the count reached on the card', async () => {
+		await fromCard.applyEffectFromCard(card, applyNode());
+
+		expect(card.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [
+				{ effectUuid: 'Actor.goblin.ActiveEffect.fx', actorName: 'Goblin', stacks: 3 },
+			],
+		});
+		const [, lines] = addCardEvents.mock.calls[0] as [unknown, { text: { key: string } }[]];
+		expect(lines.map((line) => line.text.key)).toEqual(['NIMBLE.chat.stackGain.gains']);
+	});
+});
