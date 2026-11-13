@@ -1,13 +1,7 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-
-type Json = Record<string, any>;
+import { hours, type Json, readItem } from '../../../../tests/fixtures/packContent.js';
 
 const FILE = 'packs/secretSpells/core/wind/longstrider.json';
-
-const readItem = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
 
 describe('Longstrider', () => {
 	it('is a tier 1 wind secret spell for 1 action that lasts 1 hour, with no Concentration', () => {
@@ -30,19 +24,7 @@ describe('Longstrider', () => {
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({ type: 'speedBonus', value: '2', movementType: null }),
 		]);
-		expect(effect.system.lastsUntil).toEqual([
-			{
-				kind: 'time',
-				boundary: null,
-				clock: null,
-				span: null,
-				value: 1,
-				units: 'hours',
-				who: null,
-				event: null,
-				effectName: '',
-			},
-		]);
+		expect(effect.system.lastsUntil).toEqual([hours(1)]);
 		expect(item.system.activation.effects).toEqual([
 			expect.objectContaining({
 				type: 'applyEffect',

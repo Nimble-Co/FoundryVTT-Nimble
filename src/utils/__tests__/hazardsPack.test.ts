@@ -1,10 +1,21 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { globSync } from 'glob';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	combatEnds,
+	effectEnds,
+	effectNamed,
+	expectLastsUntil,
+	hours,
+	type Json,
+	looseMoment,
+	minutes,
+	NO_DC_ESCAPE,
+	onEvent,
+	readItem,
+	rootSteps,
+	rounds,
+} from '../../../tests/fixtures/packContent.js';
 
 const DIR = 'packs/hazards/core';
 
@@ -26,24 +37,9 @@ const HAZARDS = [
 	'A Sleepy Trick.',
 ];
 
-const MOMENT_KEYS = [
-	'kind',
-	'boundary',
-	'clock',
-	'span',
-	'value',
-	'units',
-	'who',
-	'event',
-	'effectName',
-].sort();
-
-const readDoc = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
 const files = (): string[] => globSync(`${DIR}/*.json`).sort();
 
-const hazards = (): Json[] => files().map(readDoc);
+const hazards = (): Json[] => files().map(readItem);
 
 function hazard(name: string): Json {
 	const found = hazards().find((each) => each.name === name);
@@ -51,27 +47,8 @@ function hazard(name: string): Json {
 	return found;
 }
 
-const steps = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-const roots = (item: Json): Json[] => item.system.activation.effects as Json[];
-
-function effectNamed(item: Json, name: string): Json {
-	const effect = ((item.effects ?? []) as Json[]).find((each) => each.name === name);
-	if (!effect) throw new Error(`${item.name} has no effect ${name}`);
-	expect(effect.transfer).toBe(false);
-	return effect;
-}
-
-function expectMoments(effect: Json, moments: unknown[]): void {
-	expect(effect.system.lastsUntil).toEqual(moments);
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual(MOMENT_KEYS);
-	}
-}
-
 function rootSave(item: Json, saveType: string, dc: string): Json {
-	const save = roots(item).find((node) => node.type === 'savingThrow');
+	const save = rootSteps(item).find((node) => node.type === 'savingThrow');
 	if (!save) throw new Error(`${item.name} has no save step`);
 	expect(save).toMatchObject({
 		savingThrowType: saveType,
@@ -100,7 +77,7 @@ function expectFailApplies(save: Json, effectIds: string[]): void {
 }
 
 function expectUntypedDamage(item: Json, formula: string): void {
-	const damage = roots(item).find((node) => node.type === 'damage');
+	const damage = rootSteps(item).find((node) => node.type === 'damage');
 	expect(damage).toMatchObject({ formula, damageType: '', parentContext: null, parentNode: null });
 	expect(damage?.on.hit).toEqual([
 		expect.objectContaining({ type: 'damageOutcome', outcome: 'fullDamage' }),
@@ -110,13 +87,6 @@ function expectUntypedDamage(item: Json, formula: string): void {
 const turnDamage = (fields: Json) =>
 	expect.objectContaining({ type: 'turnDamage', at: 'turnStart', who: 'holder', ...fields });
 const speedMinusOne = expect.objectContaining({ type: 'speedBonus', value: '-1' });
-const noDcEscape = { dc: '', saves: ['strength', 'dexterity'], noDc: true };
-const time = (value: number, units: string) =>
-	expect.objectContaining({ kind: 'time', value, units, effectName: '' });
-const holderEvent = (event: string, effectName = '') =>
-	expect.objectContaining({ kind: 'event', who: 'holder', event, effectName });
-const combatEnds = (value: number | null) =>
-	expect.objectContaining({ kind: 'event', who: null, event: 'combatEnd', value });
 
 describe('Hazards pack', () => {
 	it('holds the 15 hazards, flat, and nothing else', () => {
@@ -144,11 +114,12 @@ describe('Rootbreaker Pit.', () => {
 	it('Grapples a creature that fails a DC 10 DEX save, with an Escape that has no DC', () => {
 		const item = hazard('Rootbreaker Pit.');
 		const grappled = effectNamed(item, 'Grappled');
+		expect(grappled.transfer).toBe(false);
 		expect(grappled.statuses).toEqual(['grappled']);
-		expect(grappled.system.escape).toEqual(noDcEscape);
-		expectMoments(grappled, []);
+		expect(grappled.system.escape).toEqual(NO_DC_ESCAPE);
+		expectLastsUntil(grappled, []);
 		expectFailApplies(rootSave(item, 'dexterity', '10'), [grappled._id]);
-		expect(steps(item)).toHaveLength(2);
+		expect(allSteps(item)).toHaveLength(2);
 	});
 });
 
@@ -156,8 +127,9 @@ describe('Fetid Stench.', () => {
 	it('Poisons a creature that fails a STR save, with the six DCs in the text', () => {
 		const item = hazard('Fetid Stench.');
 		const poisoned = effectNamed(item, 'Fetid Stench');
+		expect(poisoned.transfer).toBe(false);
 		expect(poisoned.statuses).toEqual(['poisoned']);
-		expectMoments(poisoned, []);
+		expectLastsUntil(poisoned, []);
 		expectFailApplies(rootSave(item, 'strength', ''), [poisoned._id]);
 		for (const dc of ['6', '8', '10', '12', '14', '16']) {
 			expect(item.system.description).toContain(`DC ${dc}`);
@@ -170,8 +142,9 @@ describe('Rat Bite.', () => {
 		const item = hazard('Rat Bite.');
 		expectUntypedDamage(item, '1');
 		const poisoned = effectNamed(item, 'Rat Bite');
+		expect(poisoned.transfer).toBe(false);
 		expect(poisoned.statuses).toEqual(['poisoned']);
-		expectMoments(poisoned, [holderEvent('healed')]);
+		expectLastsUntil(poisoned, [looseMoment(onEvent('holder', 'healed'), 'effectName')]);
 		expectFailApplies(rootSave(item, 'strength', '10'), [poisoned._id]);
 	});
 });
@@ -180,19 +153,21 @@ describe('Explosive Tunnels Gas.', () => {
 	it('has a step for each result: Dizzy, Fumesick and its Wound, with no save step', () => {
 		const item = hazard('Explosive Tunnels Gas.');
 		const dizzy = effectNamed(item, 'Dizzy');
+		expect(dizzy.transfer).toBe(false);
 		const fumesick = effectNamed(item, 'Fumesick');
+		expect(fumesick.transfer).toBe(false);
 		expect(dizzy.statuses).toEqual([]);
 		expect(dizzy.system.rules).toEqual([speedMinusOne]);
-		expectMoments(dizzy, []);
+		expectLastsUntil(dizzy, []);
 		expect(fumesick.statuses).toEqual(['poisoned']);
 		expect(fumesick.system.rules).toEqual([speedMinusOne]);
-		expectMoments(fumesick, []);
-		expect(roots(item)).toEqual([
+		expectLastsUntil(fumesick, []);
+		expect(rootSteps(item)).toEqual([
 			atRoot(dizzy._id),
 			atRoot(fumesick._id),
 			expect.objectContaining({ type: 'wound', amount: 1, recipient: 'targets' }),
 		]);
-		expect(steps(item).some((node) => node.type === 'savingThrow')).toBe(false);
+		expect(allSteps(item).some((node) => node.type === 'savingThrow')).toBe(false);
 	});
 });
 
@@ -200,13 +175,15 @@ describe('Pill Bugs.', () => {
 	it('Grapples and Smothers a creature that fails a DC 12 DEX save: 1 Wound each turn until it escapes', () => {
 		const item = hazard('Pill Bugs.');
 		const grappled = effectNamed(item, 'Grappled');
+		expect(grappled.transfer).toBe(false);
 		const smothered = effectNamed(item, 'Smothered');
+		expect(smothered.transfer).toBe(false);
 		expect(grappled.statuses).toEqual(['grappled']);
-		expect(grappled.system.escape).toEqual(noDcEscape);
-		expectMoments(grappled, []);
+		expect(grappled.system.escape).toEqual(NO_DC_ESCAPE);
+		expectLastsUntil(grappled, []);
 		expect(smothered.statuses).toEqual(['blinded']);
 		expect(smothered.system.rules).toEqual([turnDamage({ formula: '', wounds: 1 })]);
-		expectMoments(smothered, [holderEvent('effectEnds', 'Grappled')]);
+		expectLastsUntil(smothered, [looseMoment(effectEnds('Grappled'), 'effectName')]);
 		expectFailApplies(rootSave(item, 'dexterity', '12'), [grappled._id, smothered._id]);
 	});
 });
@@ -215,10 +192,11 @@ describe("Adventurer's Bane.", () => {
 	it('marks the creature that eats it for 1 round', () => {
 		const item = hazard("Adventurer's Bane.");
 		const bane = effectNamed(item, "Adventurer's Bane");
+		expect(bane.transfer).toBe(false);
 		expect(bane.statuses).toEqual([]);
 		expect(bane.description).toContain('Sees allies as enemies.');
-		expectMoments(bane, [time(1, 'rounds')]);
-		expect(roots(item)).toEqual([atRoot(bane._id)]);
+		expectLastsUntil(bane, [looseMoment(rounds(1), 'effectName')]);
+		expect(rootSteps(item)).toEqual([atRoot(bane._id)]);
 	});
 });
 
@@ -226,9 +204,10 @@ describe('Sleepy Oasis.', () => {
 	it('puts the drinker to sleep for an hour and gives 1 Wound', () => {
 		const item = hazard('Sleepy Oasis.');
 		const sleep = effectNamed(item, 'Oasis Sleep');
+		expect(sleep.transfer).toBe(false);
 		expect(sleep.statuses).toEqual(['unconscious']);
-		expectMoments(sleep, [time(1, 'hours')]);
-		expect(roots(item)).toEqual([
+		expectLastsUntil(sleep, [looseMoment(hours(1), 'effectName')]);
+		expect(rootSteps(item)).toEqual([
 			atRoot(sleep._id),
 			expect.objectContaining({ type: 'wound', amount: 1, recipient: 'targets' }),
 		]);
@@ -239,6 +218,7 @@ describe('Sand Madness.', () => {
 	it('gives disadvantage on attacks on a failed WIL save, for 3 hours or until the next encounter ends', () => {
 		const item = hazard('Sand Madness.');
 		const madness = effectNamed(item, 'Sand Madness');
+		expect(madness.transfer).toBe(false);
 		expect(madness.statuses).toEqual([]);
 		expect(madness.description).toContain('You cannot take reactions.');
 		expect(madness.system.rules).toEqual([
@@ -250,7 +230,10 @@ describe('Sand Madness.', () => {
 				usedUp: false,
 			}),
 		]);
-		expectMoments(madness, [time(3, 'hours'), combatEnds(null)]);
+		expectLastsUntil(madness, [
+			looseMoment(hours(3), 'effectName'),
+			looseMoment(combatEnds(null), 'value'),
+		]);
 		expectFailApplies(rootSave(item, 'will', ''), [madness._id]);
 	});
 });
@@ -259,9 +242,10 @@ describe('Glacial River.', () => {
 	it('gives -1 speed until removed', () => {
 		const item = hazard('Glacial River.');
 		const soaked = effectNamed(item, 'Soaked');
+		expect(soaked.transfer).toBe(false);
 		expect(soaked.system.rules).toEqual([speedMinusOne]);
-		expectMoments(soaked, []);
-		expect(roots(item)).toEqual([atRoot(soaked._id)]);
+		expectLastsUntil(soaked, []);
+		expect(rootSteps(item)).toEqual([atRoot(soaked._id)]);
 	});
 });
 
@@ -269,9 +253,11 @@ describe('Spear of Lightning.', () => {
 	it('gives Charged and +1d6 lightning damage for 1 minute', () => {
 		const item = hazard('Spear of Lightning.');
 		const charged = effectNamed(item, 'Charged');
+		expect(charged.transfer).toBe(false);
 		const spear = effectNamed(item, 'Spear of Lightning');
+		expect(spear.transfer).toBe(false);
 		expect(charged.statuses).toEqual(['charged']);
-		expectMoments(charged, [time(1, 'minutes')]);
+		expectLastsUntil(charged, [looseMoment(minutes(1), 'effectName')]);
 		expect(spear.statuses).toEqual([]);
 		expect(spear.system.rules).toEqual([
 			expect.objectContaining({
@@ -282,8 +268,8 @@ describe('Spear of Lightning.', () => {
 				source: 'any',
 			}),
 		]);
-		expectMoments(spear, [time(1, 'minutes')]);
-		expect(roots(item)).toEqual([atRoot(charged._id), atRoot(spear._id)]);
+		expectLastsUntil(spear, [looseMoment(minutes(1), 'effectName')]);
+		expect(rootSteps(item)).toEqual([atRoot(charged._id), atRoot(spear._id)]);
 	});
 });
 
@@ -292,10 +278,11 @@ describe('Thorn Briars.', () => {
 		const item = hazard('Thorn Briars.');
 		expectUntypedDamage(item, '1d4');
 		const thorn = effectNamed(item, 'Draining Thorn');
+		expect(thorn.transfer).toBe(false);
 		expect(thorn.system.escape).toEqual({ dc: '', saves: [], noDc: true, skills: ['finesse'] });
 		expect(thorn.system.rules).toEqual([turnDamage({ formula: '1d4', damageType: '', wounds: 0 })]);
-		expectMoments(thorn, [holderEvent('healed')]);
-		expect(roots(item)).toContainEqual(atRoot(thorn._id));
+		expectLastsUntil(thorn, [looseMoment(onEvent('holder', 'healed'), 'effectName')]);
+		expect(rootSteps(item)).toContainEqual(atRoot(thorn._id));
 	});
 });
 
@@ -303,8 +290,9 @@ describe('Fetid Gas.', () => {
 	it('Poisons a creature that fails a STR save for 2 encounters', () => {
 		const item = hazard('Fetid Gas.');
 		const gas = effectNamed(item, 'Fetid Gas');
+		expect(gas.transfer).toBe(false);
 		expect(gas.statuses).toEqual(['poisoned']);
-		expectMoments(gas, [combatEnds(2)]);
+		expectLastsUntil(gas, [looseMoment(combatEnds(2), 'value')]);
 		expectFailApplies(rootSave(item, 'strength', ''), [gas._id]);
 	});
 });
@@ -313,12 +301,13 @@ describe('Cauldron.', () => {
 	it('deals 1d20 fire at each turn start to a creature pushed in on a failed DC 10 DEX save, until it moves', () => {
 		const item = hazard('Cauldron.');
 		const cauldron = effectNamed(item, 'In the Cauldron');
+		expect(cauldron.transfer).toBe(false);
 		expect(cauldron.system.rules).toEqual([
 			turnDamage({ formula: '1d20', damageType: 'fire', wounds: 0 }),
 		]);
-		expectMoments(cauldron, [holderEvent('move')]);
+		expectLastsUntil(cauldron, [looseMoment(onEvent('holder', 'move'), 'effectName')]);
 		expectFailApplies(rootSave(item, 'dexterity', '10'), [cauldron._id]);
-		expect(steps(item).some((node) => node.type === 'damage')).toBe(false);
+		expect(allSteps(item).some((node) => node.type === 'damage')).toBe(false);
 	});
 });
 
@@ -326,8 +315,9 @@ describe('Poison Vent.', () => {
 	it('Poisons a creature that fails a STR save for 2 encounters, with a note for the damage', () => {
 		const item = hazard('Poison Vent.');
 		const vent = effectNamed(item, 'Poison Vent');
+		expect(vent.transfer).toBe(false);
 		expect(vent.statuses).toEqual(['poisoned']);
-		expectMoments(vent, [combatEnds(2)]);
+		expectLastsUntil(vent, [looseMoment(combatEnds(2), 'value')]);
 		const save = rootSave(item, 'strength', '');
 		expectFailApplies(save, [vent._id]);
 		expect(save.on.failedSave).toContainEqual(
@@ -340,8 +330,9 @@ describe('A Sleepy Trick.', () => {
 	it('puts a creature that fails an INT save to sleep, with no end', () => {
 		const item = hazard('A Sleepy Trick.');
 		const asleep = effectNamed(item, 'Asleep');
+		expect(asleep.transfer).toBe(false);
 		expect(asleep.statuses).toEqual(['unconscious']);
-		expectMoments(asleep, []);
+		expectLastsUntil(asleep, []);
 		expectFailApplies(rootSave(item, 'intelligence', ''), [asleep._id]);
 	});
 });

@@ -1,13 +1,30 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
 	AFTER_RULES_PHASE,
 	MULTIPLY_DOWN_CHANGE,
 } from '#documents/activeEffect/multiplyDownChange.js';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	days,
+	effectById,
+	effectNamed,
+	endOfHoldersCurrentTurn,
+	endOfHoldersNextTurn,
+	exactMoment,
+	expectAtRoot,
+	expectNineKeys,
+	expectOnFailedSave,
+	type Json,
+	MOVEMENT_MODES,
+	minutes,
+	onEvent,
+	rawStepById,
+	readItem,
+	rulesOfType,
+	startOfHoldersNextTurn,
+	startOfSourcesNextTurn,
+	stepApplying,
+} from '../../../../tests/fixtures/packContent.js';
 
 const CHEAT = 'packs/classFeatures/core/the-cheat';
 const HUNTER = 'packs/classFeatures/core/hunter';
@@ -26,137 +43,13 @@ const FILES = {
 	huntersMark: `${HUNTER}/hunter-progression/hunters-mark.json`,
 };
 
-const MOMENT_KEYS = [
-	'boundary',
-	'clock',
-	'effectName',
-	'event',
-	'kind',
-	'span',
-	'units',
-	'value',
-	'who',
-];
-
-const MOVEMENT_MODES = ['walk', 'fly', 'climb', 'swim', 'burrow'];
-
-const readItem = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
-const nodesOf = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-function effectById(item: Json, id: string): Json {
-	const effect = (item.effects as Json[]).find((each) => each._id === id);
-	if (!effect) throw new Error(`${item.name} has no effect ${id}`);
-	return effect;
-}
-
-function effectNamed(item: Json, name: string): Json {
-	const found = (item.effects as Json[]).filter((each) => each.name === name);
-	if (found.length !== 1) throw new Error(`${item.name} has ${found.length} effects named ${name}`);
-	return found[0] as Json;
-}
-
-/** The one Apply Effect step of the item that applies this effect. */
-function stepOf(item: Json, effectId: string): Json {
-	const steps = nodesOf(item).filter(
-		(node) => node.type === 'applyEffect' && node.effectId === effectId,
-	);
-	if (steps.length !== 1) throw new Error(`${item.name} has ${steps.length} steps for ${effectId}`);
-	return steps[0] as Json;
-}
-
-/** A node as the pack stores it, with its children. */
-function rawNode(nodes: Json[], id: string): Json | undefined {
-	for (const node of nodes) {
-		if (node.id === id) return node;
-		const children = Object.values((node.on ?? {}) as Record<string, Json[]>).flat();
-		const found = rawNode(children, id);
-		if (found) return found;
-	}
-	return undefined;
-}
-
-function rulesOfType(rules: Json[], type: string): Json[] {
-	return rules.filter((rule) => rule.type === type);
-}
-
-function expectAtRoot(item: Json, step: Json): void {
-	expect(step.parentNode).toBeNull();
-	expect(step.parentContext).toBeNull();
-	expect((item.system.activation.effects as Json[]).map((node) => node.id)).toContain(step.id);
-}
-
 function expectOnHit(item: Json, step: Json, damageId: string): void {
 	expect(step.parentNode).toBe(damageId);
 	expect(step.parentContext).toBe('hit');
-	const damage = rawNode(item.system.activation.effects as Json[], damageId) as Json;
+	const damage = rawStepById(item, damageId) as Json;
 	expect(damage.type).toBe('damage');
 	expect((damage.on.hit as Json[]).map((node) => node.id)).toContain(step.id);
 }
-
-function expectOnFailedSave(item: Json, step: Json, saveId: string): void {
-	expect(step.parentNode).toBe(saveId);
-	expect(step.parentContext).toBe('failedSave');
-	const save = rawNode(item.system.activation.effects as Json[], saveId) as Json;
-	expect(save.type).toBe('savingThrow');
-	expect((save.on.failedSave as Json[]).map((node) => node.id)).toContain(step.id);
-}
-
-function expectNineKeys(effect: Json): void {
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual(MOMENT_KEYS);
-	}
-}
-
-const turn = (
-	boundary: 'start' | 'end',
-	clock: 'holder' | 'source',
-	span: 'nextTurn' | 'currentTurn',
-) =>
-	expect.objectContaining({
-		kind: 'turn',
-		boundary,
-		clock,
-		span,
-		value: null,
-		units: null,
-		who: null,
-		event: null,
-		effectName: '',
-	});
-
-const TE = turn('end', 'holder', 'nextTurn');
-const TS = turn('start', 'holder', 'nextTurn');
-const TEc = turn('end', 'holder', 'currentTurn');
-const TSs = turn('start', 'source', 'nextTurn');
-
-const time = (value: number, units: string) =>
-	expect.objectContaining({
-		kind: 'time',
-		boundary: null,
-		clock: null,
-		span: null,
-		value,
-		units,
-		who: null,
-		event: null,
-		effectName: '',
-	});
-
-const event = (who: string, name: string) =>
-	expect.objectContaining({
-		kind: 'event',
-		boundary: null,
-		clock: null,
-		span: null,
-		value: null,
-		units: null,
-		who,
-		event: name,
-		effectName: '',
-	});
 
 describe("I'm Outta Here!", () => {
 	const item = readItem(FILES.imOuttaHere);
@@ -164,12 +57,12 @@ describe("I'm Outta Here!", () => {
 
 	it('Invisible lasts until the end of your next turn', () => {
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -181,12 +74,15 @@ describe('Amidst All This Commotion', () => {
 
 	it('Invisible lasts until you attack or the start of your next turn', () => {
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([event('holder', 'attack'), TS]);
+		expect(effect.system.lastsUntil).toEqual([
+			exactMoment(onEvent('holder', 'attack')),
+			exactMoment(startOfHoldersNextTurn),
+		]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -196,7 +92,7 @@ describe('Low Blow', () => {
 	const item = readItem(FILES.lowBlow);
 	const incapacitated = effectById(item, 'v0YvmeL7XTwk2mYu');
 	const taunted = effectById(item, 'VbE63saZhyxxIbjE');
-	const saves = nodesOf(item).filter((node) => node.type === 'savingThrow');
+	const saves = allSteps(item).filter((node) => node.type === 'savingThrow');
 
 	it('has one STR save at the root with DC 10+INT', () => {
 		expect(saves).toHaveLength(1);
@@ -209,9 +105,9 @@ describe('Low Blow', () => {
 
 	it('Incapacitated lasts for their next turn and comes on a failed save', () => {
 		expect(incapacitated.statuses).toEqual(['incapacitated']);
-		expect(incapacitated.system.lastsUntil).toEqual([TE]);
+		expect(incapacitated.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(incapacitated);
-		const step = stepOf(item, incapacitated._id);
+		const step = stepApplying(item, incapacitated._id);
 		expect(step.id).toBe('r5ukBBJ3p1I8awLr');
 		expect(step.recipient).toBe('targets');
 		expectOnFailedSave(item, step, (saves[0] as Json).id);
@@ -219,9 +115,9 @@ describe('Low Blow', () => {
 
 	it('Taunted lasts until you drop to 0 HP and comes save or fail', () => {
 		expect(taunted.statuses).toEqual(['taunted']);
-		expect(taunted.system.lastsUntil).toEqual([event('source', 'zeroHp')]);
+		expect(taunted.system.lastsUntil).toEqual([exactMoment(onEvent('source', 'zeroHp'))]);
 		expectNineKeys(taunted);
-		const step = stepOf(item, taunted._id);
+		const step = stepApplying(item, taunted._id);
 		expect(step.id).toBe('TadcniVBHxG6oYAs');
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
@@ -241,7 +137,7 @@ describe('Sunder Armor (Medium)', () => {
 	it('lets melee attacks against the target ignore armor until the start of your next turn', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([TSs]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(startOfSourcesNextTurn)]);
 		expectNineKeys(effect);
 		const rules = effect.system.rules as Json[];
 		expect(rules).toHaveLength(1);
@@ -262,7 +158,7 @@ describe('Sunder Armor (Medium)', () => {
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -280,12 +176,15 @@ describe('Escape Plan', () => {
 
 	it('Invisible lasts 1 minute or until you attack', () => {
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([time(1, 'minutes'), event('holder', 'attack')]);
+		expect(effect.system.lastsUntil).toEqual([
+			exactMoment(minutes(1)),
+			exactMoment(onEvent('holder', 'attack')),
+		]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -297,12 +196,12 @@ describe('Come Get Some!', () => {
 
 	it('Taunted lasts until the end of their next turn', () => {
 		expect(effect.statuses).toEqual(['taunted']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectOnHit(item, step, 'comeGetSomeDmg00');
 	});
@@ -331,12 +230,12 @@ describe('Hail of Arrows', () => {
 	});
 
 	it('lasts until the end of their next turn', () => {
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectOnHit(item, step, 'hailOfArrowsDmg0');
 	});
@@ -350,7 +249,7 @@ describe('Primal Predator', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe('Your weapon attacks also ignore cover.');
-		expect(effect.system.lastsUntil).toEqual([TEc]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersCurrentTurn)]);
 		expectNineKeys(effect);
 		const rules = effect.system.rules as Json[];
 		expect(rules).toHaveLength(1);
@@ -371,7 +270,7 @@ describe('Primal Predator', () => {
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -428,7 +327,7 @@ describe.each([
 	});
 
 	it('applies to the targets', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		if (damageId) expectOnHit(item, step, damageId);
 		else expectAtRoot(item, step);
@@ -442,7 +341,7 @@ describe("Hunter's Mark", () => {
 	it('the mark lasts 1 day', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([time(1, 'days')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(days(1))]);
 		expectNineKeys(effect);
 	});
 

@@ -1,85 +1,41 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	actorItem,
+	allSteps,
+	combatEnds,
+	effectById,
+	effectEnds,
+	effectNamed,
+	endOfHoldersCurrentTurn,
+	endOfNextHerosTurn,
+	endOfRound,
+	escapeDc,
+	exactMoment,
+	expectAtRoot,
+	expectNineKeys,
+	GRAPPLED_IMG,
+	grappleEnds,
+	holderTakesDamage,
+	type Json,
+	minutes,
+	NO_DC_ESCAPE,
+	onEvent,
+	rawStepById,
+	readActor,
+	stepApplying,
+} from '../../../../tests/fixtures/packContent.js';
 
 const M = 'packs/monsters/core';
 
-const MOMENT_KEYS = [
-	'boundary',
-	'clock',
-	'effectName',
-	'event',
-	'kind',
-	'span',
-	'units',
-	'value',
-	'who',
-];
+const monsterFile = (file: string): string => `${M}/${file}.json`;
 
-const GRAPPLED_IMG = 'systems/nimble/assets/icons/grappled.svg';
-const ESCAPE_SAVES = ['strength', 'dexterity'];
-
-const readActor = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), `${M}/${file}.json`), 'utf-8'));
-
-function itemOf(file: string, name: string): Json {
-	const found = (readActor(file).items as Json[]).filter((item) => item.name === name);
-	if (found.length !== 1) throw new Error(`${file} has ${found.length} items named ${name}`);
-	return found[0] as Json;
-}
-
-const nodesOf = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-function effectById(item: Json, id: string): Json {
-	const effect = ((item.effects ?? []) as Json[]).find((each) => each._id === id);
-	if (!effect) throw new Error(`${item.name} has no effect ${id}`);
-	return effect;
-}
-
-function effectNamed(item: Json, name: string): Json {
-	const found = ((item.effects ?? []) as Json[]).filter((each) => each.name === name);
-	if (found.length !== 1) throw new Error(`${item.name} has ${found.length} effects named ${name}`);
-	return found[0] as Json;
-}
-
-/** The one Apply Effect step of the item that applies this effect. */
-function stepOf(item: Json, effectId: string): Json {
-	const steps = nodesOf(item).filter(
-		(node) => node.type === 'applyEffect' && node.effectId === effectId,
-	);
-	if (steps.length !== 1) throw new Error(`${item.name} has ${steps.length} steps for ${effectId}`);
-	return steps[0] as Json;
-}
-
-/** A node as the pack stores it, with its children. */
-function rawNode(nodes: Json[], id: string): Json | undefined {
-	for (const node of nodes) {
-		if (node.id === id) return node;
-		const children = [
-			...Object.values((node.on ?? {}) as Record<string, Json[]>).flat(),
-			...((node.sharedRolls ?? []) as Json[]),
-		];
-		const found = rawNode(children, id);
-		if (found) return found;
-	}
-	return undefined;
-}
-
-function expectAtRoot(item: Json, step: Json): void {
-	expect(step.parentNode).toBeNull();
-	expect(step.parentContext).toBeNull();
-	expect((item.system.activation.effects as Json[]).map((node) => node.id)).toContain(step.id);
-}
+const itemOf = (file: string, name: string): Json => actorItem(monsterFile(file), name);
 
 /** The step sits in this branch of this node, and in no other branch. */
 function expectUnder(item: Json, step: Json, parentId: string, branch: string): void {
 	expect(step.parentNode).toBe(parentId);
 	expect(step.parentContext).toBe(branch);
-	const parent = rawNode(item.system.activation.effects as Json[], parentId) as Json;
+	const parent = rawStepById(item, parentId) as Json;
 	for (const [context, children] of Object.entries((parent.on ?? {}) as Record<string, Json[]>)) {
 		const ids = children.map((node) => node.id);
 		if (context === branch) expect(ids).toContain(step.id);
@@ -87,58 +43,14 @@ function expectUnder(item: Json, step: Json, parentId: string, branch: string): 
 	}
 }
 
-function expectNineKeys(effect: Json, extra: string[] = []): void {
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		const keys = Object.keys(moment).filter((key) => !extra.includes(key));
-		expect(keys.sort()).toEqual(MOMENT_KEYS);
-	}
-}
-
-const escapeDc = (dc: string) => ({ dc, saves: ESCAPE_SAVES });
-const ESC0 = { dc: '', saves: ESCAPE_SAVES, noDc: true };
-const NO_ESCAPE = { dc: '', saves: ESCAPE_SAVES };
-
-const event = (who: string | null, name: string, extra: Json = {}) =>
-	expect.objectContaining({
-		kind: 'event',
-		boundary: null,
-		clock: null,
-		span: null,
-		value: null,
-		units: null,
-		who,
-		event: name,
-		effectName: '',
-		...extra,
-	});
-
-const GR = [
-	event('source', 'zeroHp'),
-	event('source', 'die'),
-	event('source', 'gain', { effectName: 'incapacitated' }),
-];
-
-const hurt = (...damageTypes: string[]) => event('holder', 'takeDamage', { damageTypes });
-
-const turn = (boundary: string, clock: string | null, span: string) =>
-	expect.objectContaining({
-		kind: 'turn',
-		boundary,
-		clock,
-		span,
-		value: null,
-		units: null,
-		who: null,
-		event: null,
-		effectName: '',
-	});
+const NO_ESCAPE = escapeDc('');
 
 function expectNoHampered(item: Json): void {
 	for (const effect of (item.effects ?? []) as Json[]) {
 		expect(effect.statuses).not.toContain('hampered');
 	}
 	const ids = new Set(((item.effects ?? []) as Json[]).map((effect) => effect._id));
-	for (const node of nodesOf(item)) {
+	for (const node of allSteps(item)) {
 		if (node.type === 'applyEffect') expect(ids.has(node.effectId)).toBe(true);
 	}
 }
@@ -154,7 +66,7 @@ describe('Kobold Trapper: [Trap] - HIDDEN NET!', () => {
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -177,7 +89,7 @@ describe.each([
 	});
 
 	it('applies to the targets on a crit only', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, damageId as string, 'criticalHit');
 	});
@@ -194,7 +106,7 @@ describe('Snakeman Minion: Strike.', () => {
 	});
 
 	it('applies to the targets on a crit', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'Cih6Cm8XoauLM2HA', 'criticalHit');
 	});
@@ -228,7 +140,7 @@ describe.each([
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, damageId, 'hit');
 	});
@@ -248,12 +160,12 @@ describe.each([
 
 	it('Grappled with an escape that has no DC', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC0);
+		expect(effect.system.escape).toEqual(NO_DC_ESCAPE);
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, damageId, 'hit');
 	});
@@ -314,7 +226,7 @@ describe('Bulette: Burst Forth!', () => {
 	});
 
 	it('applies Grappled to the targets on a failed save', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, save.id, 'failedSave');
 	});
@@ -342,12 +254,15 @@ describe.each([
 	it('Grappled (escape DC 12), or until fire or slashing damage', () => {
 		expect(effect.statuses).toEqual(['grappled']);
 		expect(effect.system.escape).toEqual(escapeDc('12'));
-		expect(effect.system.lastsUntil).toEqual([...GR, hurt('fire', 'slashing')]);
+		expect(effect.system.lastsUntil).toEqual([
+			...grappleEnds.map(exactMoment),
+			exactMoment(holderTakesDamage('fire', 'slashing')),
+		]);
 		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to the targets on a hit, with no Hampered effect or step', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, damageId, 'hit');
 		expectNoHampered(item);
@@ -362,15 +277,18 @@ describe('Fanatic: Whispers of Madness.', () => {
 	it('Grappled with no escape button, ends with the Grappled ends or radiant damage', () => {
 		expect(effect.statuses).toEqual(['grappled']);
 		expect(effect.system.escape).toEqual(NO_ESCAPE);
-		expect(effect.system.lastsUntil).toEqual([...GR, hurt('radiant')]);
+		expect(effect.system.lastsUntil).toEqual([
+			...grappleEnds.map(exactMoment),
+			exactMoment(holderTakesDamage('radiant')),
+		]);
 		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to the targets on a failed STR save', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'I4FAutwqUV25q4Qs', 'failedSave');
-		const save = rawNode(item.system.activation.effects, 'I4FAutwqUV25q4Qs') as Json;
+		const save = rawStepById(item, 'I4FAutwqUV25q4Qs') as Json;
 		expect(save.savingThrowType).toBe('strength');
 		expect(save.saveType).toBeUndefined();
 	});
@@ -420,12 +338,12 @@ describe.each([
 		expect(effect.img).toBe(img);
 		expect(effect.statuses).toEqual(['restrained']);
 		expect(effect.system.escape).toEqual(escapeDc('12'));
-		expect(effect.system.lastsUntil).toEqual([hurt('slashing', 'fire')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(holderTakesDamage('slashing', 'fire'))]);
 		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to the targets on a hit, with no Hampered effect or step', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, damageId, 'hit');
 		expectNoHampered(item);
@@ -447,15 +365,13 @@ describe('Ettercap: Web Garrote.', () => {
 	it('Silenced until the target escapes the Grappled', () => {
 		expect(silenced.statuses).toEqual(['silenced']);
 		expect(silenced.system.escape).toEqual(NO_ESCAPE);
-		expect(silenced.system.lastsUntil).toEqual([
-			event('holder', 'effectEnds', { effectName: 'Grappled' }),
-		]);
+		expect(silenced.system.lastsUntil).toEqual([exactMoment(effectEnds('Grappled'))]);
 		expectNineKeys(silenced);
 	});
 
 	it('applies both to the targets on a hit, with no Hampered effect or step', () => {
 		for (const effect of [grappled, silenced]) {
-			const step = stepOf(item, effect._id);
+			const step = stepApplying(item, effect._id);
 			expect(step.recipient).toBe('targets');
 			expectUnder(item, step, '3c21wnL6rWn5YikO', 'hit');
 		}
@@ -472,7 +388,7 @@ describe('Briarbane Acidpod: Grab.', () => {
 	const effect = effectById(item, 'bm0syBy0M81cxxBc');
 
 	it('has a DC 12 DEX save with only the new save type field', () => {
-		const save = rawNode(item.system.activation.effects, 'Eq4wmPFjrkCrjSso') as Json;
+		const save = rawStepById(item, 'Eq4wmPFjrkCrjSso') as Json;
 		expect(save.savingThrowType).toBe('dexterity');
 		expect(save.saveType).toBeUndefined();
 		expect(save.saveDC).toBe('12');
@@ -480,12 +396,12 @@ describe('Briarbane Acidpod: Grab.', () => {
 
 	it('Grappled with an escape that has no DC', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC0);
+		expect(effect.system.escape).toEqual(NO_DC_ESCAPE);
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies to the targets on a failed save, with no Hampered effect or step', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'Eq4wmPFjrkCrjSso', 'failedSave');
 		expectNoHampered(item);
@@ -499,7 +415,7 @@ describe('Briarbane Treant: Slam.', () => {
 	it('knocks Prone on a hit, with no Hampered effect or step', () => {
 		expectNoHampered(item);
 		expect((item.effects as Json[]).map((each) => each._id)).toEqual(['mE4s6QLBaUV13bPy']);
-		const step = stepOf(item, 'mE4s6QLBaUV13bPy');
+		const step = stepApplying(item, 'mE4s6QLBaUV13bPy');
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'JimMPPXV3TWIqq1y', 'hit');
 	});
@@ -512,19 +428,7 @@ describe('Basilisk: Stone Gaze.', () => {
 
 	it('Dazed lasts 10 minutes and stacks to Petrified at 3', () => {
 		expect(dazed.statuses).toEqual(['dazed']);
-		expect(dazed.system.lastsUntil).toEqual([
-			expect.objectContaining({
-				kind: 'time',
-				boundary: null,
-				clock: null,
-				span: null,
-				value: 10,
-				units: 'minutes',
-				who: null,
-				event: null,
-				effectName: '',
-			}),
-		]);
+		expect(dazed.system.lastsUntil).toEqual([exactMoment(minutes(10))]);
 		expectNineKeys(dazed);
 		expect(dazed.system.stacks).toEqual({
 			on: true,
@@ -540,16 +444,16 @@ describe('Basilisk: Stone Gaze.', () => {
 		expect(petrified.statuses).toEqual(['petrified']);
 		expect(petrified.system.lastsUntil).toEqual([]);
 		expect(String(petrified._id)).toMatch(/^[A-Za-z0-9]{16}$/);
-		const steps = nodesOf(item).filter((node) => node.effectId === petrified._id);
+		const steps = allSteps(item).filter((node) => node.effectId === petrified._id);
 		expect(steps).toEqual([]);
 	});
 
 	it('applies Dazed to the targets at the root, with no Hampered effect or step', () => {
-		const step = stepOf(item, dazed._id);
+		const step = stepApplying(item, dazed._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 		expectNoHampered(item);
-		expect(nodesOf(item).map((node) => node.id)).toEqual(['uYpDvr5EZunKsGIU']);
+		expect(allSteps(item).map((node) => node.id)).toEqual(['uYpDvr5EZunKsGIU']);
 	});
 
 	it('keeps Flesh to Stone as text', () => {
@@ -564,7 +468,7 @@ describe('Gray Ooze: Acidic Touch (2×).', () => {
 
 	it('deals its damage and applies no Blinded', () => {
 		expect(item.effects).toEqual([]);
-		expect(nodesOf(item).map((node) => node.type)).toEqual(['damage', 'damageOutcome']);
+		expect(allSteps(item).map((node) => node.type)).toEqual(['damage', 'damageOutcome']);
 	});
 });
 
@@ -575,7 +479,7 @@ describe('Umber Hulk: Confounding Pheromones.', () => {
 	const SAVE = '8oSIyG74A90ERntm';
 
 	it('has a DC 15 WIL save at the root', () => {
-		const save = rawNode(item.system.activation.effects, SAVE) as Json;
+		const save = rawStepById(item, SAVE) as Json;
 		expect(save.savingThrowType).toBe('will');
 		expect(save.saveType).toBeUndefined();
 		expect(save.saveDC).toBe('15');
@@ -584,7 +488,7 @@ describe('Umber Hulk: Confounding Pheromones.', () => {
 
 	it('Confused lasts this turn', () => {
 		expect(confused.statuses).toEqual(['confused']);
-		expect(confused.system.lastsUntil).toEqual([turn('end', 'holder', 'currentTurn')]);
+		expect(confused.system.lastsUntil).toEqual([exactMoment(endOfHoldersCurrentTurn)]);
 		expectNineKeys(confused);
 	});
 
@@ -593,7 +497,7 @@ describe('Umber Hulk: Confounding Pheromones.', () => {
 		expect(counter.statuses).toEqual([]);
 		expect(counter.description).toBe('Advantage 1 on this save for each failure this combat.');
 		expect(counter.system.stacks).toEqual({ on: true, count: 1, at: null, effectId: '' });
-		expect(counter.system.lastsUntil).toEqual([event(null, 'combatEnd')]);
+		expect(counter.system.lastsUntil).toEqual([exactMoment(combatEnds())]);
 		expectNineKeys(counter);
 		const rules = counter.system.rules as Json[];
 		expect(rules).toHaveLength(1);
@@ -614,11 +518,11 @@ describe('Umber Hulk: Confounding Pheromones.', () => {
 
 	it('both go on each creature that fails, by themselves', () => {
 		for (const effect of [confused, counter]) {
-			const step = stepOf(item, effect._id);
+			const step = stepApplying(item, effect._id);
 			expect(step.recipient).toBe('savers');
 			expectUnder(item, step, SAVE, 'failedSave');
 		}
-		expect(stepOf(item, confused._id).id).toBe('3GCn8oRY2zLRA9RS');
+		expect(stepApplying(item, confused._id).id).toBe('3GCn8oRY2zLRA9RS');
 	});
 });
 
@@ -631,12 +535,12 @@ describe('Duskprowler: Illusory Aura.', () => {
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe('Attacks against the Duskprowler do not have Disadvantage 2.');
 		expect(effect.system.rules).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([turn('end', 'nextHero', 'nextTurn')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfNextHerosTurn)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the Duskprowler at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -661,15 +565,15 @@ describe('Druid: Beastshift.', () => {
 				priority: null,
 			},
 		]);
-		expect(effect.system.lastsUntil).toEqual([turn('end', null, 'currentRound')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfRound)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the Druid at the root, beside its attack', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
-		expect(nodesOf(item).map((node) => node.id)).toEqual(
+		expect(allSteps(item).map((node) => node.id)).toEqual(
 			expect.arrayContaining(['uUjd30LadRcCzqeV', 'AmwVAK4KOM4ZgSKL']),
 		);
 	});
@@ -683,12 +587,12 @@ describe('Bandit Assassin: Sneak.', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.img).toBe('icons/svg/invisible.svg');
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([event('holder', 'attack')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(onEvent('holder', 'attack'))]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the assassin at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -729,7 +633,7 @@ describe('monsters, in packs', () => {
 			'briarbanes/briarbane-tangler',
 			'briarbanes/briarbane-acidpod',
 		]) {
-			for (const item of readActor(file).items as Json[]) {
+			for (const item of readActor(monsterFile(file)).items as Json[]) {
 				for (const effect of (item.effects ?? []) as Json[]) {
 					if (effect.statuses?.includes('hampered')) hits.push(`${file} ${item.name}`);
 				}

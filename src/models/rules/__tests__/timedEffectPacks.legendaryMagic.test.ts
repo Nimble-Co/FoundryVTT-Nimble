@@ -1,9 +1,31 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	actorItem,
+	allSteps,
+	effectById,
+	effectNamed,
+	endOfHoldersNextTurn,
+	endOfNextHerosTurn,
+	endOfRound,
+	escapeDc,
+	exactMoment,
+	expectAtRoot,
+	expectNineKeys,
+	GRAPPLED_IMG,
+	grappleEnds,
+	holderTakesDamage,
+	type Json,
+	NO_DC_ESCAPE,
+	onEvent,
+	rawStepById,
+	readActor,
+	readItem,
+	rounds,
+	sourceGains,
+	stepApplying,
+	stepById,
+	stepsApplying,
+} from '../../../../tests/fixtures/packContent.js';
 
 const L = 'packs/legendaryMonsters/core';
 const FILES = {
@@ -26,91 +48,11 @@ const FILES = {
 	resoluteFangs: 'packs/magicItems/core/coreRules/resolute-fangs-golden-bastion.json',
 };
 
-const MOMENT_KEYS = [
-	'boundary',
-	'clock',
-	'effectName',
-	'event',
-	'kind',
-	'span',
-	'units',
-	'value',
-	'who',
-];
-
-const GRAPPLED_IMG = 'systems/nimble/assets/icons/grappled.svg';
-
-const readDoc = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
-/** An item embedded in a legendary monster actor. */
-function actorItem(file: string, name: string): Json {
-	const found = (readDoc(file).items as Json[]).filter((item) => item.name === name);
-	if (found.length !== 1) throw new Error(`${file} has ${found.length} items named ${name}`);
-	return found[0] as Json;
-}
-
-const nodesOf = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-const rootNodes = (item: Json): Json[] => item.system.activation.effects as Json[];
-
-function nodeById(item: Json, id: string): Json | undefined {
-	return nodesOf(item).find((node) => node.id === id);
-}
-
-function effectById(item: Json, id: string): Json {
-	const effect = (item.effects as Json[]).find((each) => each._id === id);
-	if (!effect) throw new Error(`${item.name} has no effect ${id}`);
-	return effect;
-}
-
-function effectNamed(item: Json, name: string): Json {
-	const found = (item.effects as Json[]).filter((each) => each.name === name);
-	if (found.length !== 1) throw new Error(`${item.name} has ${found.length} effects named ${name}`);
-	return found[0] as Json;
-}
-
-function stepsOf(item: Json, effectId: string): Json[] {
-	return nodesOf(item).filter((node) => node.type === 'applyEffect' && node.effectId === effectId);
-}
-
-function onlyStepOf(item: Json, effectId: string): Json {
-	const steps = stepsOf(item, effectId);
-	expect(steps).toHaveLength(1);
-	return steps[0] as Json;
-}
-
-function expectAtRoot(item: Json, step: Json): void {
-	expect(step.parentNode).toBeNull();
-	expect(step.parentContext).toBeNull();
-	expect(rootNodes(item).map((node) => node.id)).toContain(step.id);
-}
-
 function expectUnder(item: Json, step: Json, parentId: string, context: string): void {
 	expect(step.parentNode).toBe(parentId);
 	expect(step.parentContext).toBe(context);
-	const parent = rawNodeById(item.system.activation.effects as Json[], parentId) as Json;
+	const parent = rawStepById(item, parentId) as Json;
 	expect((parent.on[context] as Json[]).map((node) => node.id)).toContain(step.id);
-}
-
-/** A node as the pack stores it, with its `on` branches. */
-function rawNodeById(nodes: Json[], id: string): Json | undefined {
-	for (const node of nodes) {
-		if (node.id === id) return node;
-		for (const branch of Object.values((node.on ?? {}) as Record<string, Json[]>)) {
-			const found = rawNodeById(branch, id);
-			if (found) return found;
-		}
-	}
-	return undefined;
-}
-
-function expectMomentKeys(effect: Json): void {
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		const keys = Object.keys(moment).filter((key) => key !== 'damageTypes');
-		expect(keys.sort()).toEqual(MOMENT_KEYS);
-	}
 }
 
 function expectNewId(id: string): void {
@@ -118,59 +60,10 @@ function expectNewId(id: string): void {
 }
 
 function expectNoHampered(item: Json, nodeId: string, effectId: string): void {
-	expect(nodeById(item, nodeId)).toBeUndefined();
+	expect(stepById(item, nodeId)).toBeUndefined();
 	expect((item.effects as Json[]).some((each) => each._id === effectId)).toBe(false);
 	expect((item.effects as Json[]).some((each) => each.statuses.includes('hampered'))).toBe(false);
 }
-
-const turn = (fields: Json) =>
-	expect.objectContaining({
-		kind: 'turn',
-		boundary: 'end',
-		value: null,
-		units: null,
-		who: null,
-		event: null,
-		effectName: '',
-		...fields,
-	});
-
-const TE = turn({ clock: 'holder', span: 'nextTurn' });
-const TNH = turn({ clock: 'nextHero', span: 'nextTurn' });
-const ROUND = turn({ clock: null, span: 'currentRound' });
-
-const R1 = expect.objectContaining({
-	kind: 'time',
-	boundary: null,
-	clock: null,
-	span: null,
-	value: 1,
-	units: 'rounds',
-	who: null,
-	event: null,
-	effectName: '',
-});
-
-const event = (who: string, name: string, extra: Json = {}) =>
-	expect.objectContaining({
-		kind: 'event',
-		boundary: null,
-		clock: null,
-		span: null,
-		value: null,
-		units: null,
-		who,
-		event: name,
-		effectName: '',
-		...extra,
-	});
-
-const GAIN = (name: string) => event('source', 'gain', { effectName: name });
-const HURT = (...types: string[]) => event('holder', 'takeDamage', { damageTypes: types });
-const GR = [event('source', 'zeroHp'), event('source', 'die'), GAIN('incapacitated')];
-
-const ESC = (dc: string) => ({ dc, saves: ['strength', 'dexterity'] });
-const ESC0 = { dc: '', saves: ['strength', 'dexterity'], noDc: true };
 
 describe('Thorn Quickblade :: Bloodied', () => {
 	const item = actorItem(FILES.thorn, 'Bloodied');
@@ -180,12 +73,12 @@ describe('Thorn Quickblade :: Bloodied', () => {
 		expectNewId(effect._id);
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to Thorn himself at the root', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
@@ -200,7 +93,7 @@ describe('Thorn Quickblade :: Heart Piercer (Rapier).', () => {
 	});
 
 	it('keeps Dazed on a crit', () => {
-		const step = onlyStepOf(item, 'z4atxdvP9jXYNcl6');
+		const step = stepApplying(item, 'z4atxdvP9jXYNcl6');
 		expectUnder(item, step, 'Vmm3IICgQYD0xGC3', 'criticalHit');
 	});
 });
@@ -216,12 +109,12 @@ describe('Dravok :: Weakness', () => {
 		expect(effect.description).toBe(
 			"Dravok's plans are FLAWED: My plans, flawless! does not apply.",
 		);
-		expect(effect.system.lastsUntil).toEqual([TNH]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfNextHerosTurn)]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to Dravok himself at the root', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
@@ -237,8 +130,8 @@ describe('Dravok :: 2. Petrification Ray', () => {
 		expectNewId(dazed._id);
 		expect(dazed.transfer).toBe(false);
 		expect(dazed.statuses).toEqual(['dazed']);
-		expect(dazed.system.lastsUntil).toEqual([event('holder', 'healed')]);
-		expectMomentKeys(dazed);
+		expect(dazed.system.lastsUntil).toEqual([exactMoment(onEvent('holder', 'healed'))]);
+		expectNineKeys(dazed, ['damageTypes']);
 		expect(dazed.system.stacks).toEqual({ on: true, count: 1, at: 3, effectId: petrified._id });
 	});
 
@@ -247,11 +140,11 @@ describe('Dravok :: 2. Petrification Ray', () => {
 		expect(petrified.transfer).toBe(false);
 		expect(petrified.statuses).toEqual(['petrified']);
 		expect(petrified.system.lastsUntil).toEqual([]);
-		expect(stepsOf(item, petrified._id)).toEqual([]);
+		expect(stepsApplying(item, petrified._id)).toEqual([]);
 	});
 
 	it('applies Dazed to the targets at the root', () => {
-		const step = onlyStepOf(item, dazed._id);
+		const step = stepApplying(item, dazed._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
@@ -270,8 +163,8 @@ describe('Dravok :: 3. Terror Ray', () => {
 		expect(effect.description).toBe(
 			'Cannot spend resources; spent actions come back afterward. Your screams give allies within 6 spaces disadvantage on rolls.',
 		);
-		expect(effect.system.lastsUntil).toEqual([GAIN('FLAWED')]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(sourceGains('FLAWED'))]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('the gained name is the Weakness marker name', () => {
@@ -280,18 +173,18 @@ describe('Dravok :: 3. Terror Ray', () => {
 	});
 
 	it('applies to the targets on a hit, and the old note is gone', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'hp79M6PwhC6h3dXu', 'hit');
-		expect(nodeById(item, '5qyte95rBYaomW24')).toBeUndefined();
+		expect(stepById(item, '5qyte95rBYaomW24')).toBeUndefined();
 	});
 });
 
 describe('Poppy, Giant Stinkbug :: Stink Cloud.', () => {
 	const item = actorItem(FILES.poppy, 'Stink Cloud.');
 	const effect = effectNamed(item, 'Stink Cloud');
-	const saves = nodesOf(item).filter((node) => node.type === 'savingThrow');
+	const saves = allSteps(item).filter((node) => node.type === 'savingThrow');
 
 	it('asks a STR save at the higher of 10 or the damage', () => {
 		expect(saves).toHaveLength(1);
@@ -310,12 +203,12 @@ describe('Poppy, Giant Stinkbug :: Stink Cloud.', () => {
 		expect(effect.description).toBe(
 			'Cannot take reactions this round. Must spend the next action vomiting.',
 		);
-		expect(effect.system.lastsUntil).toEqual([ROUND]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfRound)]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to the targets on a failed save', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, (saves[0] as Json).id, 'failedSave');
@@ -327,19 +220,19 @@ describe('Grimbeak :: Savage Screech. (1 use)', () => {
 	const effect = effectById(item, 'DsGt2DpGYGbJGBRU');
 
 	it('the save is WIL', () => {
-		const save = nodeById(item, 'xZIueLkPzG1imQG4') as Json;
+		const save = stepById(item, 'xZIueLkPzG1imQG4') as Json;
 		expect(save.savingThrowType).toBe('will');
 		expect(save.saveType).toBeUndefined();
 	});
 
 	it('Frightened lasts 1 round', () => {
 		expect(effect.statuses).toEqual(['frightened']);
-		expect(effect.system.lastsUntil).toEqual([R1]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(rounds(1))]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies on a failed save', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'xZIueLkPzG1imQG4', 'failedSave');
+		expectUnder(item, stepApplying(item, effect._id), 'xZIueLkPzG1imQG4', 'failedSave');
 	});
 });
 
@@ -352,12 +245,12 @@ describe('Queen Aranya :: Weave Web.', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe('Fire critical hits suppress Weave Web.');
-		expect(effect.system.lastsUntil).toEqual([TE]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to herself at the root', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
@@ -373,12 +266,12 @@ describe('Florindris :: Wither', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe('Necrotic damage suppresses Aura of Wind.');
-		expect(effect.system.lastsUntil).toEqual([TE]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies to herself at the root', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
@@ -391,12 +284,12 @@ describe('Lind Worm :: Squeeze & Spit Acid.', () => {
 
 	it('Poisoned lasts until healed', () => {
 		expect(effect.statuses).toEqual(['poisoned']);
-		expect(effect.system.lastsUntil).toEqual([event('holder', 'healed')]);
-		expectMomentKeys(effect);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(onEvent('holder', 'healed'))]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies on a crit', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'lindAcidDmgMain1', 'criticalHit');
+		expectUnder(item, stepApplying(item, effect._id), 'lindAcidDmgMain1', 'criticalHit');
 	});
 });
 
@@ -406,12 +299,12 @@ describe('Lind Worm :: Constrict.', () => {
 
 	it('Grappled has escape DC 10', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC('10'));
+		expect(effect.system.escape).toEqual(escapeDc('10'));
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies on a hit', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'lindConstrictDmg1', 'hit');
+		expectUnder(item, stepApplying(item, effect._id), 'lindConstrictDmg1', 'hit');
 	});
 });
 
@@ -421,13 +314,16 @@ describe('Azriel :: Crackling Whip.', () => {
 
 	it('Grappled has escape DC 17 and ends when Azriel uses the whip again', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC('17'));
-		expect(effect.system.lastsUntil).toEqual([...GR, event('source', 'useAgain')]);
-		expectMomentKeys(effect);
+		expect(effect.system.escape).toEqual(escapeDc('17'));
+		expect(effect.system.lastsUntil).toEqual([
+			...grappleEnds.map(exactMoment),
+			exactMoment(onEvent('source', 'useAgain')),
+		]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies on a hit', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'WTN0fnMszWjCsCmH', 'hit');
+		expectUnder(item, stepApplying(item, effect._id), 'WTN0fnMszWjCsCmH', 'hit');
 	});
 
 	it('has no Hampered step or effect', () => {
@@ -441,12 +337,12 @@ describe('Krogg :: Manglemaul.', () => {
 
 	it('Grappled has escape DC 10', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC('10'));
+		expect(effect.system.escape).toEqual(escapeDc('10'));
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies on a hit', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'kroggMangleDmg1', 'hit');
+		expectUnder(item, stepApplying(item, effect._id), 'kroggMangleDmg1', 'hit');
 	});
 });
 
@@ -455,20 +351,20 @@ describe('Greenthumb :: Root.', () => {
 	const effect = effectById(item, 'fOFSCnZsv5MVN9Mr');
 
 	it('the save is DEX', () => {
-		const save = nodeById(item, 'greenRootSave001') as Json;
+		const save = stepById(item, 'greenRootSave001') as Json;
 		expect(save.savingThrowType).toBe('dexterity');
 		expect(save.saveType).toBeUndefined();
 	});
 
 	it('Restrained has escape DC 11 and ends on slashing or fire damage', () => {
 		expect(effect.statuses).toEqual(['restrained']);
-		expect(effect.system.escape).toEqual(ESC('11'));
-		expect(effect.system.lastsUntil).toEqual([HURT('slashing', 'fire')]);
-		expectMomentKeys(effect);
+		expect(effect.system.escape).toEqual(escapeDc('11'));
+		expect(effect.system.lastsUntil).toEqual([exactMoment(holderTakesDamage('slashing', 'fire'))]);
+		expectNineKeys(effect, ['damageTypes']);
 	});
 
 	it('applies on a failed save', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'greenRootSave001', 'failedSave');
+		expectUnder(item, stepApplying(item, effect._id), 'greenRootSave001', 'failedSave');
 	});
 });
 
@@ -478,12 +374,12 @@ describe('Scorpion Queen :: Claw.', () => {
 
 	it('Grappled has escape DC 12', () => {
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC('12'));
+		expect(effect.system.escape).toEqual(escapeDc('12'));
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies on a hit', () => {
-		expectUnder(item, onlyStepOf(item, effect._id), 'scorpClawDamage01', 'hit');
+		expectUnder(item, stepApplying(item, effect._id), 'scorpClawDamage01', 'hit');
 	});
 });
 
@@ -496,12 +392,12 @@ describe('Ulvek :: Consume.', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.img).toBe(GRAPPLED_IMG);
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC0);
+		expect(effect.system.escape).toEqual(NO_DC_ESCAPE);
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'zJ04oIjTSeF6cw0b', 'hit');
@@ -512,33 +408,33 @@ describe('Hampered steps removed from legendary monsters', () => {
 	it('Titan :: Crushing Stomp.', () => {
 		const item = actorItem(FILES.titan, 'Crushing Stomp.');
 		expectNoHampered(item, 'yFwlQsb7CX6sTfrG', 'apkxpj9tj87zsOSM');
-		expectUnder(item, onlyStepOf(item, 'zPgnX5v3WagTMMth'), 'jzrLfKyxPi7ujvTJ', 'hit');
+		expectUnder(item, stepApplying(item, 'zPgnX5v3WagTMMth'), 'jzrLfKyxPi7ujvTJ', 'hit');
 	});
 
 	it('Pudge :: Move & Smack.', () => {
 		const item = actorItem(FILES.pudge, 'Move & Smack.');
 		expectNoHampered(item, '58PWXSKjDsRMohWr', 'Fn9JoExpzFFZmQkc');
-		expectUnder(item, onlyStepOf(item, 'PT1M1r4VlGV4K7T8'), 'fpYTjiKcPYII10tZ', 'hit');
+		expectUnder(item, stepApplying(item, 'PT1M1r4VlGV4K7T8'), 'fpYTjiKcPYII10tZ', 'hit');
 	});
 
 	it('Nalzar :: Tail Swipe.', () => {
 		const item = actorItem(FILES.nalzar, 'Tail Swipe.');
 		expectNoHampered(item, '7Xvl3e22HkkWcTGi', 'CjJd3Ft3JDj1h6UJ');
-		expectAtRoot(item, onlyStepOf(item, '9rRHeEWnuaYAQ4B5'));
+		expectAtRoot(item, stepApplying(item, '9rRHeEWnuaYAQ4B5'));
 	});
 
 	it('Nalzar :: Wing Buffet.', () => {
 		const item = actorItem(FILES.nalzar, 'Wing Buffet.');
 		expectNoHampered(item, 'LwJ8iS6H76SUg9YT', 'wiSSsa3KBuGd8TkW');
-		const save = nodeById(item, 'XSsMqXrm3eke0Gj6') as Json;
+		const save = stepById(item, 'XSsMqXrm3eke0Gj6') as Json;
 		expect(save.savingThrowType).toBe('strength');
 		expect(save).not.toHaveProperty('saveType');
-		expectUnder(item, onlyStepOf(item, 'UzjyEJKtYZ2z8AB6'), 'XSsMqXrm3eke0Gj6', 'failedSave');
+		expectUnder(item, stepApplying(item, 'UzjyEJKtYZ2z8AB6'), 'XSsMqXrm3eke0Gj6', 'failedSave');
 	});
 
 	it('no legendary monster item has a Hampered effect', () => {
 		for (const file of Object.values(FILES).filter((each) => each.startsWith(L))) {
-			for (const item of readDoc(file).items as Json[]) {
+			for (const item of readActor(file).items as Json[]) {
 				for (const effect of (item.effects ?? []) as Json[]) {
 					expect(effect.statuses, `${file} ${item.name}`).not.toContain('hampered');
 				}
@@ -548,7 +444,7 @@ describe('Hampered steps removed from legendary monsters', () => {
 });
 
 describe('Manglemaul (magic item)', () => {
-	const item = readDoc(FILES.manglemaul);
+	const item = readItem(FILES.manglemaul);
 	const effect = effectNamed(item, 'Grappled');
 
 	it('Grappled has escape DC 10', () => {
@@ -556,12 +452,12 @@ describe('Manglemaul (magic item)', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.img).toBe(GRAPPLED_IMG);
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual(ESC('10'));
+		expect(effect.system.escape).toEqual(escapeDc('10'));
 		expect(effect.system.lastsUntil).toEqual([]);
 	});
 
 	it('applies to the targets on a hit', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectUnder(item, step, 'ManglemaulDmg', 'hit');
@@ -569,7 +465,7 @@ describe('Manglemaul (magic item)', () => {
 });
 
 describe('Resolute Fangs, Golden Bastion', () => {
-	const item = readDoc(FILES.resoluteFangs);
+	const item = readItem(FILES.resoluteFangs);
 	const effect = effectNamed(item, 'Grappled');
 
 	it('Grappled has escape DC 20 STR', () => {
@@ -582,7 +478,7 @@ describe('Resolute Fangs, Golden Bastion', () => {
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = onlyStepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expectNewId(step.id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);

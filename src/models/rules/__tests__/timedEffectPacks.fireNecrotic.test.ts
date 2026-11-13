@@ -1,44 +1,25 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	effectNamed,
+	endOfRound,
+	expectLastsUntil,
+	expectNewIds,
+	expectRootRecipient,
+	type Json,
+	looseMoment,
+	type Moment,
+	minutes,
+	readItem,
+	rounds,
+	startOfHoldersNextTurn,
+	stepApplying,
+	tempHpGone,
+	whileConcentrating,
+} from '../../../../tests/fixtures/packContent.js';
 
 const FIRE = 'packs/spells/core/fire';
 const NECROTIC = 'packs/spells/core/necrotic';
-
-const MOMENT_KEYS = [
-	'kind',
-	'boundary',
-	'clock',
-	'span',
-	'value',
-	'units',
-	'who',
-	'event',
-	'effectName',
-];
-
-const readItem = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
-const steps = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-function effectNamed(item: Json, name: string): Json {
-	const effect = ((item.effects ?? []) as Json[]).find((each) => each.name === name);
-	if (!effect) throw new Error(`${item.name} has no effect ${name}`);
-	return effect;
-}
-
-function stepFor(item: Json, effectId: string): Json {
-	const found = steps(item).filter(
-		(node) => node.type === 'applyEffect' && node.effectId === effectId,
-	);
-	expect(found).toHaveLength(1);
-	return found[0] as Json;
-}
 
 function ruleOf(effect: Json, type: string): Json {
 	const rule = ((effect.system.rules ?? []) as Json[]).find((each) => each.type === type);
@@ -53,49 +34,12 @@ function onlyDelta(item: Json): Json {
 	return item.system.scaling.deltas[0] as Json;
 }
 
-const startOfNextTurn = expect.objectContaining({
-	kind: 'turn',
-	boundary: 'start',
-	clock: 'holder',
-	span: 'nextTurn',
-});
-const endOfRound = expect.objectContaining({
-	kind: 'turn',
-	boundary: 'end',
-	clock: null,
-	span: 'currentRound',
-});
-const loseConcentration = expect.objectContaining({
-	kind: 'event',
-	who: 'source',
-	event: 'loseConcentration',
-});
-const oneRound = expect.objectContaining({ kind: 'time', value: 1, units: 'rounds' });
-const tempHpGone = expect.objectContaining({ kind: 'event', who: 'holder', event: 'tempHpGone' });
-
-function expectMoments(effect: Json, moments: unknown[]): void {
-	expect(effect.system.lastsUntil).toEqual(moments);
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual([...MOMENT_KEYS].sort());
-		expect(moment.effectName).toBe('');
-	}
-}
-
-function expectRoot(step: Json, recipient: string): void {
-	expect(step).toMatchObject({ recipient, parentContext: null, parentNode: null });
-}
-
-function expectIds(item: Json): void {
-	const ids = [
-		...((item.effects ?? []) as Json[]).map((effect) => effect._id),
-		...steps(item).map((node) => node.id),
-	];
-	const ruleIds = ((item.effects ?? []) as Json[]).flatMap((effect) =>
-		((effect.system.rules ?? []) as Json[]).map((rule) => rule.id),
+/** The fields of each moment's kind, an empty effect name, and the nine keys. */
+function expectLooseMoments(effect: Json, moments: Moment[]): void {
+	expectLastsUntil(
+		effect,
+		moments.map((moment) => looseMoment(moment, 'effectName')),
 	);
-	for (const id of [...ids, ...ruleIds]) expect(String(id)).toMatch(/^[A-Za-z0-9]{16}$/);
-	expect(new Set(ids).size).toBe(ids.length);
-	expect(new Set(ruleIds).size).toBe(ruleIds.length);
 }
 
 /** Melee attackers take damage and gain the attacker effect while the holder has it. */
@@ -126,7 +70,7 @@ function expectFlameBarrier(file: string, answeredAttack: boolean): void {
 	expect(barrier.transfer).toBe(false);
 	expect(barrier.img).toBe(item.img);
 	expect(barrier.statuses).toEqual([]);
-	expectMoments(barrier, [startOfNextTurn]);
+	expectLooseMoments(barrier, [startOfHoldersNextTurn]);
 	expect((barrier.system.rules as Json[]).map((rule) => rule.type)).toEqual(['damageBack']);
 	expectAttackerTakes(ruleOf(barrier, 'damageBack'), {
 		formula: '@key',
@@ -139,9 +83,9 @@ function expectFlameBarrier(file: string, answeredAttack: boolean): void {
 	expect(smoldering.statuses).toEqual(['smoldering']);
 	expect(smoldering.system.lastsUntil).toEqual([]);
 
-	const step = stepFor(item, barrier._id);
-	expectRoot(step, 'self');
-	expect(steps(item).filter((node) => node.effectId === smoldering._id)).toEqual([]);
+	const step = stepApplying(item, barrier._id);
+	expectRootRecipient(step, 'self');
+	expect(allSteps(item).filter((node) => node.effectId === smoldering._id)).toEqual([]);
 
 	expect(onlyDelta(item)).toMatchObject({
 		operation: 'raiseEffectRule',
@@ -150,7 +94,7 @@ function expectFlameBarrier(file: string, answeredAttack: boolean): void {
 		ruleField: 'formula',
 		formula: '@key',
 	});
-	expectIds(item);
+	expectNewIds(item);
 }
 
 /** Enchant Weapon and Fiery Embrace's ally: +KEY weapon damage and Smoldering on a crit. */
@@ -201,11 +145,11 @@ describe('Dread Visage', () => {
 
 		expect(frightened._id).toBe('HKrFk8DTg4qJdTrU');
 		expect(frightened.statuses).toEqual(['frightened']);
-		expectMoments(frightened, [endOfRound]);
+		expectLooseMoments(frightened, [endOfRound]);
 
 		expect(visage.transfer).toBe(false);
 		expect(visage.statuses).toEqual([]);
-		expectMoments(visage, [endOfRound]);
+		expectLooseMoments(visage, [endOfRound]);
 		expect((visage.system.rules as Json[]).map((rule) => rule.type)).toEqual(['damageBack']);
 		expectAttackerTakes(ruleOf(visage, 'damageBack'), {
 			formula: '1d12',
@@ -218,12 +162,12 @@ describe('Dread Visage', () => {
 	it('has only the self step, and upcasts +2 damage', () => {
 		const item = readItem(file);
 		const visage = effectNamed(item, 'Dread Visage');
-		const all = steps(item);
+		const all = allSteps(item);
 		expect(all.map((node) => node.id)).not.toContain('OafObDpPG61HaLlo');
 		expect(all.map((node) => node.id)).not.toContain('6QvkMIw5PbhBn0pO');
 		expect(all).toHaveLength(1);
-		const step = stepFor(item, visage._id);
-		expectRoot(step, 'self');
+		const step = stepApplying(item, visage._id);
+		expectRootRecipient(step, 'self');
 
 		expect(onlyDelta(item)).toMatchObject({
 			operation: 'raiseEffectRule',
@@ -232,7 +176,7 @@ describe('Dread Visage', () => {
 			ruleField: 'formula',
 			formula: '2',
 		});
-		expectIds(item);
+		expectNewIds(item);
 	});
 
 	it('keeps +2 armor per upcast on its Defend option, with no reminder line', () => {
@@ -248,11 +192,11 @@ describe('Enchant Weapon', () => {
 		const effect = effectNamed(item, 'Enchant Weapon');
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
-		expectMoments(effect, [loseConcentration]);
+		expectLooseMoments(effect, [whileConcentrating]);
 		expectEnchantedWeapon(effect);
 
-		const step = stepFor(item, effect._id);
-		expectRoot(step, 'targets');
+		const step = stepApplying(item, effect._id);
+		expectRootRecipient(step, 'targets');
 		expect(onlyDelta(item)).toMatchObject({
 			operation: 'raiseEffectRule',
 			targetEffectId: step.id,
@@ -260,7 +204,7 @@ describe('Enchant Weapon', () => {
 			ruleField: 'value',
 			formula: '@key',
 		});
-		expectIds(item);
+		expectNewIds(item);
 	});
 });
 
@@ -270,21 +214,21 @@ describe('Fiery Embrace', () => {
 		const ally = effectNamed(item, 'Fiery Embrace (ally)');
 		const enemy = effectNamed(item, 'Fiery Embrace (enemy)');
 
-		expectMoments(ally, [loseConcentration]);
+		expectLooseMoments(ally, [whileConcentrating]);
 		expect(ally.statuses).toEqual([]);
 		expectEnchantedWeapon(ally);
 
-		expectMoments(enemy, [loseConcentration]);
+		expectLooseMoments(enemy, [whileConcentrating]);
 		expect(enemy.statuses).toEqual(['smoldering']);
 		expect(enemy.system.rules).toEqual([]);
 		expect(enemy.description).toBe(
 			'Loses damage resistance. Damage immunity becomes resistance. Only while within Reach 8 of the caster.',
 		);
 
-		expectRoot(stepFor(item, ally._id), 'targets');
-		expectRoot(stepFor(item, enemy._id), 'targets');
+		expectRootRecipient(stepApplying(item, ally._id), 'targets');
+		expectRootRecipient(stepApplying(item, enemy._id), 'targets');
 		expect(onlyDelta(item)).toMatchObject({ operation: 'addTargets', value: 1 });
-		expectIds(item);
+		expectNewIds(item);
 	});
 });
 
@@ -295,12 +239,12 @@ describe('Shadow Trap', () => {
 		expect(restrained.img).toBe('icons/svg/net.svg');
 		expect(restrained.statuses).toEqual(['restrained']);
 		expect(restrained.system.escape).toEqual({ dc: '10+@key', saves: ['strength', 'dexterity'] });
-		expectMoments(restrained, [loseConcentration]);
+		expectLooseMoments(restrained, [whileConcentrating]);
 		expect(restrained.system.rules).toEqual([
 			expect.objectContaining({ type: 'escapeDamage', formula: '', damageType: '' }),
 		]);
 
-		const step = stepFor(item, restrained._id);
+		const step = stepApplying(item, restrained._id);
 		expect(step).toMatchObject({
 			recipient: 'targets',
 			parentContext: 'hit',
@@ -313,7 +257,7 @@ describe('Shadow Trap', () => {
 			ruleField: 'formula',
 			formula: '1d12',
 		});
-		expectIds(item);
+		expectNewIds(item);
 	});
 });
 
@@ -323,16 +267,16 @@ describe('Withering Touch', () => {
 		const effect = effectNamed(item, 'Considered Undead');
 		expect(effect.description).toBe('This creature counts as undead.');
 		expect(effect.statuses).toEqual([]);
-		expectMoments(effect, [oneRound]);
+		expectLooseMoments(effect, [rounds(1)]);
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({ type: 'tags', tags: ['target:undead'] }),
 		]);
-		expect(stepFor(item, effect._id)).toMatchObject({
+		expect(stepApplying(item, effect._id)).toMatchObject({
 			recipient: 'targets',
 			parentContext: 'hit',
 			parentNode: 'pJVehDWw1M3Synrn',
 		});
-		expectIds(item);
+		expectNewIds(item);
 	});
 });
 
@@ -344,18 +288,15 @@ describe('Dragonform', () => {
 		expect(effect.img).toBe(item.img);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.system.tempHp).toBeNull();
-		expectMoments(effect, [
-			tempHpGone,
-			expect.objectContaining({ kind: 'time', value: 10, units: 'minutes' }),
-		]);
+		expectLooseMoments(effect, [tempHpGone, minutes(10)]);
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({ type: 'grantMovement', mode: 'fly', speed: '12' }),
 			expect.objectContaining({ type: 'armorClass', formula: '@level', mode: 'add' }),
 		]);
 
-		const step = stepFor(item, effect._id);
-		expectRoot(step, 'self');
-		const healing = steps(item).find((node) => node.id === step.tempHealingNodeId);
+		const step = stepApplying(item, effect._id);
+		expectRootRecipient(step, 'self');
+		const healing = allSteps(item).find((node) => node.id === step.tempHealingNodeId);
 		expect(healing).toMatchObject({
 			type: 'healing',
 			healingType: 'tempHealing',
@@ -363,6 +304,6 @@ describe('Dragonform', () => {
 			parentContext: null,
 			parentNode: null,
 		});
-		expectIds(item);
+		expectNewIds(item);
 	});
 });

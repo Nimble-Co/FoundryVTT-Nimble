@@ -1,9 +1,21 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	effectNamed,
+	endOfAnyTurn,
+	endOfHoldersCurrentTurn,
+	endOfHoldersNextTurn,
+	exactMoment,
+	expectAtRoot,
+	expectNineKeys,
+	type Json,
+	onEvent,
+	readItem,
+	rootSteps,
+	rounds,
+	rulesOfType,
+	stepApplying,
+} from '../../../../tests/fixtures/packContent.js';
 
 const CF = 'packs/classFeatures/core';
 const FILES = {
@@ -21,55 +33,10 @@ const FILES = {
 	primordialForce: `${CF}/stormshifter/stormshifter-subclasses/circle-of-sky-and-storm/primordial-force.json`,
 };
 
-const MOMENT_KEYS = [
-	'boundary',
-	'clock',
-	'effectName',
-	'event',
-	'kind',
-	'span',
-	'units',
-	'value',
-	'who',
-];
-
-const readItem = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
-const nodesOf = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-const rootNodes = (item: Json): Json[] => item.system.activation.effects as Json[];
-
-function effectNamed(item: Json, name: string): Json {
-	const found = (item.effects as Json[]).filter((each) => each.name === name);
-	if (found.length !== 1) throw new Error(`${item.name} has ${found.length} effects named ${name}`);
-	return found[0] as Json;
-}
-
-/** The one Apply Effect step of the item that applies this effect. */
-function stepOf(item: Json, effectId: string): Json {
-	const steps = nodesOf(item).filter(
-		(node) => node.type === 'applyEffect' && node.effectId === effectId,
-	);
-	if (steps.length !== 1) throw new Error(`${item.name} has ${steps.length} steps for ${effectId}`);
-	return steps[0] as Json;
-}
-
-function rulesOfType(rules: Json[], type: string): Json[] {
-	return rules.filter((rule) => rule.type === type);
-}
-
-function expectAtRoot(item: Json, step: Json): void {
-	expect(step.parentNode).toBeNull();
-	expect(step.parentContext).toBeNull();
-	expect(rootNodes(item).map((node) => node.id)).toContain(step.id);
-}
-
 function expectOnFailedSave(item: Json, step: Json, saveId: string): void {
 	expect(step.parentNode).toBe(saveId);
 	expect(step.parentContext).toBe('failedSave');
-	const save = rootNodes(item).find((node) => node.id === saveId) as Json;
+	const save = rootSteps(item).find((node) => node.id === saveId) as Json;
 	expect(save.type).toBe('savingThrow');
 	expect((save.on.failedSave as Json[]).map((node) => node.id)).toContain(step.id);
 }
@@ -78,9 +45,7 @@ function expectOnFailedSave(item: Json, step: Json, saveId: string): void {
 function expectTimedEffect(effect: Json): void {
 	expect(effect.transfer).toBe(false);
 	expect(effect.type).toBe('nimble');
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual(MOMENT_KEYS);
-	}
+	expectNineKeys(effect);
 }
 
 /** A pool of 1 use on the item with its consumer, as Hold the Line! has. */
@@ -99,53 +64,6 @@ function expectUsePool(item: Json, identifier: string, triggers: string[]): void
 	]);
 }
 
-const turn = (
-	boundary: 'start' | 'end',
-	clock: 'holder' | 'any',
-	span: 'nextTurn' | 'currentTurn',
-) =>
-	expect.objectContaining({
-		kind: 'turn',
-		boundary,
-		clock,
-		span,
-		value: null,
-		units: null,
-		who: null,
-		event: null,
-		effectName: '',
-	});
-
-const TE = turn('end', 'holder', 'nextTurn');
-const TEc = turn('end', 'holder', 'currentTurn');
-const TANY = turn('end', 'any', 'currentTurn');
-
-const time = (value: number, units: string) =>
-	expect.objectContaining({
-		kind: 'time',
-		boundary: null,
-		clock: null,
-		span: null,
-		value,
-		units,
-		who: null,
-		event: null,
-		effectName: '',
-	});
-
-const event = (who: string, name: string) =>
-	expect.objectContaining({
-		kind: 'event',
-		boundary: null,
-		clock: null,
-		span: null,
-		value: null,
-		units: null,
-		who,
-		event: name,
-		effectName: '',
-	});
-
 describe('Blinding Aura', () => {
 	const item = readItem(FILES.blindingAura);
 	const effect = effectNamed(item, 'Blinded');
@@ -153,11 +71,11 @@ describe('Blinding Aura', () => {
 	it('Blinded lasts until the end of their next turn', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual(['blinded']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -174,7 +92,7 @@ describe('Face Me, Foul Creature!', () => {
 	it('Taunted lasts until the end of their next turn', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual(['taunted']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 	});
 
 	it('is a Defend window tick that also goes with an Interpose and gives the attacker Taunted', () => {
@@ -201,7 +119,7 @@ describe('Face Me, Foul Creature!', () => {
 	});
 
 	it('has no step of its own', () => {
-		expect(rootNodes(item)).toEqual([]);
+		expect(rootSteps(item)).toEqual([]);
 	});
 });
 
@@ -214,11 +132,11 @@ describe('Rhapsody of the Normal', () => {
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toContain('untrained average villager');
 		expect(effect.description).toContain('attack once for 1d4 damage and move up to 6 spaces');
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -239,7 +157,7 @@ describe('Rhapsody of the Normal', () => {
 describe('Song of Domination', () => {
 	const item = readItem(FILES.songOfDomination);
 	const effect = effectNamed(item, 'Song of Domination');
-	const saves = nodesOf(item).filter((node) => node.type === 'savingThrow');
+	const saves = allSteps(item).filter((node) => node.type === 'savingThrow');
 
 	it('costs 2 actions', () => {
 		expect(item.system.activation.cost).toEqual(
@@ -260,8 +178,8 @@ describe('Song of Domination', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.description).toBe('Cannot move on its next turn.');
-		expect(effect.system.lastsUntil).toEqual([TE]);
-		const step = stepOf(item, effect._id);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectOnFailedSave(item, step, (saves[0] as Json).id);
 	});
@@ -281,11 +199,11 @@ describe('Fight Picker', () => {
 		expect(effect.description).toBe(
 			"Taunted by the ally the Songweaver chose, until the end of this creature's turn.",
 		);
-		expect(effect.system.lastsUntil).toEqual([TEc]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersCurrentTurn)]);
 	});
 
 	it('applies to the targets at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -308,11 +226,14 @@ describe('One with Shadows', () => {
 	it('Invisible lasts until you move or attack', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual(['invisible']);
-		expect(effect.system.lastsUntil).toEqual([event('holder', 'move'), event('holder', 'attack')]);
+		expect(effect.system.lastsUntil).toEqual([
+			exactMoment(onEvent('holder', 'move')),
+			exactMoment(onEvent('holder', 'attack')),
+		]);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -321,7 +242,7 @@ describe('One with Shadows', () => {
 describe('Glacial Resilience', () => {
 	const item = readItem(FILES.glacialResilience);
 	const effect = effectNamed(item, 'Glacial Resilience');
-	const roots = rootNodes(item);
+	const roots = rootSteps(item);
 
 	it('is a reaction when you are attacked or would gain a condition', () => {
 		expect(item.system.activation.cost).toEqual({
@@ -358,8 +279,8 @@ describe('Glacial Resilience', () => {
 		]);
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([TE]);
-		const step = stepOf(item, effect._id);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expect(step.tempHealingNodeId).toBe((healing[0] as Json).id);
 		expectAtRoot(item, step);
@@ -380,7 +301,7 @@ describe('Illuminate Soul', () => {
 		const effect = effectNamed(item, name);
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([time(1, 'rounds')]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(rounds(1))]);
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({
 				type: 'heldRoll',
@@ -390,7 +311,7 @@ describe('Illuminate Soul', () => {
 				usedUp: false,
 			}),
 		]);
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('targets');
 		expectAtRoot(item, step);
 	});
@@ -447,13 +368,13 @@ describe('Beastshift', () => {
 			'You are a harmless beast (squirrel, pigeon, etc.) and can speak with animals.',
 		);
 		expect(effect.system.lastsUntil).toEqual([
-			event('holder', 'zeroHp'),
-			event('holder', 'castSpell'),
+			exactMoment(onEvent('holder', 'zeroHp')),
+			exactMoment(onEvent('holder', 'castSpell')),
 		]);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -480,14 +401,14 @@ describe('Beast of Nightmares', () => {
 			'Attackers cannot target you until you become conspicuous (for example, seen transforming or attacking).',
 		);
 		expect(effect.system.lastsUntil).toEqual([
-			event('holder', 'attack'),
-			event('holder', 'zeroHp'),
-			event('holder', 'castSpell'),
+			exactMoment(onEvent('holder', 'attack')),
+			exactMoment(onEvent('holder', 'zeroHp')),
+			exactMoment(onEvent('holder', 'castSpell')),
 		]);
 	});
 
 	it('applies to you at the root', () => {
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expectAtRoot(item, step);
 	});
@@ -496,7 +417,7 @@ describe('Beast of Nightmares', () => {
 describe('Primordial Force', () => {
 	const item = readItem(FILES.primordialForce);
 	const effect = effectNamed(item, 'Primordial Force: Wind');
-	const roots = rootNodes(item);
+	const roots = rootSteps(item);
 
 	it('is used for free when you spend 2 or more mana on a spell', () => {
 		expect(item.system.rules).toEqual([
@@ -545,7 +466,7 @@ describe('Primordial Force', () => {
 	it('Wind: a fly speed for the turn, applied to you only on a click', () => {
 		expectTimedEffect(effect);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([TANY]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfAnyTurn)]);
 		expect(effect.system.rules).toEqual([
 			expect.objectContaining({
 				type: 'grantMovement',
@@ -553,7 +474,7 @@ describe('Primordial Force', () => {
 				speed: '@attributes.movement.walk',
 			}),
 		]);
-		const step = stepOf(item, effect._id);
+		const step = stepApplying(item, effect._id);
 		expect(step.recipient).toBe('self');
 		expect(step.waitsForClick).toBe(true);
 		expectAtRoot(item, step);

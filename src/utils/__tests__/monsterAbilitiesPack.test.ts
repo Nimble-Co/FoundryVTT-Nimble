@@ -1,10 +1,17 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { globSync } from 'glob';
 import { describe, expect, it } from 'vitest';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	combatEnds,
+	endOfHoldersNextTurn,
+	expectLastsUntil,
+	type Json,
+	looseMoment,
+	NO_DC_ESCAPE,
+	onEvent,
+	readItem,
+	rounds,
+} from '../../../tests/fixtures/packContent.js';
 
 const DIR = 'packs/monsterAbilities/core';
 
@@ -86,25 +93,10 @@ const ACTIONS = [
 	'Size Up/Spot Weakness/Pin Down.',
 ];
 
-const MOMENT_KEYS = [
-	'kind',
-	'boundary',
-	'clock',
-	'span',
-	'value',
-	'units',
-	'who',
-	'event',
-	'effectName',
-].sort();
-
-const readDoc = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
 const files = (): string[] => globSync(`${DIR}/*.json`).sort();
 
 function abilities(): Json[] {
-	return files().map(readDoc);
+	return files().map(readItem);
 }
 
 function ability(name: string): Json {
@@ -113,21 +105,11 @@ function ability(name: string): Json {
 	return found;
 }
 
-const steps = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
 function onlyEffect(item: Json): Json {
 	expect(item.effects).toHaveLength(1);
 	const effect = item.effects[0] as Json;
 	expect(effect.transfer).toBe(false);
 	return effect;
-}
-
-function expectMoments(effect: Json, moments: unknown[]): void {
-	expect(effect.system.lastsUntil).toEqual(moments);
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual(MOMENT_KEYS);
-	}
 }
 
 /** One save step at the root, with one Apply Effect step for the effect in its failed branch. */
@@ -157,7 +139,7 @@ function expectSaveThenApply(
 			parentNode: save.id,
 		}),
 	]);
-	expect(steps(item)).toHaveLength(2);
+	expect(allSteps(item)).toHaveLength(2);
 }
 
 function expectRootApply(item: Json, effectId: string, recipient: string): void {
@@ -171,13 +153,6 @@ function expectRootApply(item: Json, effectId: string, recipient: string): void 
 		}),
 	]);
 }
-
-const oneRound = expect.objectContaining({
-	kind: 'time',
-	value: 1,
-	units: 'rounds',
-	effectName: '',
-});
 
 describe('Monster Abilities pack', () => {
 	it('holds the 45 abilities of the book, flat, and nothing else', () => {
@@ -220,7 +195,7 @@ describe('Hypnotic Gaze.', () => {
 		const item = ability('Hypnotic Gaze.');
 		const effect = onlyEffect(item);
 		expect(effect.statuses).toEqual(['confused']);
-		expectMoments(effect, [oneRound]);
+		expectLastsUntil(effect, [looseMoment(rounds(1), 'effectName')]);
 		expectSaveThenApply(item, 'will', effect._id, 'targets');
 	});
 });
@@ -230,7 +205,7 @@ describe('Blinding Spit.', () => {
 		const item = ability('Blinding Spit.');
 		const effect = onlyEffect(item);
 		expect(effect.statuses).toEqual(['blinded']);
-		expectMoments(effect, [oneRound]);
+		expectLastsUntil(effect, [looseMoment(rounds(1), 'effectName')]);
 		expectSaveThenApply(item, 'dexterity', effect._id, 'targets');
 		expect(item.system.activation.targets.count).toBe(1);
 	});
@@ -293,9 +268,7 @@ describe('Sneak.', () => {
 		const effect = onlyEffect(item);
 		expect(effect.name).toBe('Invisible');
 		expect(effect.statuses).toEqual(['invisible']);
-		expectMoments(effect, [
-			expect.objectContaining({ kind: 'event', who: 'holder', event: 'attack' }),
-		]);
+		expectLastsUntil(effect, [looseMoment(onEvent('holder', 'attack'))]);
 		expectRootApply(item, effect._id, 'self');
 	});
 });
@@ -324,7 +297,7 @@ describe('Fearsome.', () => {
 		const item = ability('Fearsome.');
 		const effect = onlyEffect(item);
 		expect(effect.statuses).toEqual(['frightened']);
-		expectMoments(effect, []);
+		expectLastsUntil(effect, []);
 		expectSaveThenApply(item, 'will', effect._id, 'targets');
 	});
 });
@@ -335,12 +308,8 @@ describe('Grappler.', () => {
 		const effect = onlyEffect(item);
 		expect(effect.name).toBe('Grappled');
 		expect(effect.statuses).toEqual(['grappled']);
-		expect(effect.system.escape).toEqual({
-			dc: '',
-			saves: ['strength', 'dexterity'],
-			noDc: true,
-		});
-		expectMoments(effect, []);
+		expect(effect.system.escape).toEqual(NO_DC_ESCAPE);
+		expectLastsUntil(effect, []);
 		expectHitAndCrit(item, { condition: 'grappled', effectId: effect._id });
 	});
 });
@@ -351,12 +320,8 @@ describe('Webslinger.', () => {
 		const effect = onlyEffect(item);
 		expect(effect.name).toBe('Webbed');
 		expect(effect.statuses).toEqual(['restrained']);
-		expect(effect.system.escape).toEqual({
-			dc: '',
-			saves: ['strength', 'dexterity'],
-			noDc: true,
-		});
-		expectMoments(effect, []);
+		expect(effect.system.escape).toEqual(NO_DC_ESCAPE);
+		expectLastsUntil(effect, []);
 		expectRootApply(item, effect._id, 'targets');
 	});
 });
@@ -366,14 +331,7 @@ describe('Terrible Roar/Creepy Monologue/Taunt.', () => {
 		const item = ability('Terrible Roar/Creepy Monologue/Taunt.');
 		const effect = onlyEffect(item);
 		expect(effect.statuses).toEqual(['frightened']);
-		expectMoments(effect, [
-			expect.objectContaining({
-				kind: 'turn',
-				boundary: 'end',
-				clock: 'holder',
-				span: 'nextTurn',
-			}),
-		]);
+		expectLastsUntil(effect, [looseMoment(endOfHoldersNextTurn)]);
 		expectSaveThenApply(item, 'will', effect._id, 'targets');
 	});
 });
@@ -383,7 +341,7 @@ describe('Toss Around/Telekinetic Shove.', () => {
 		const item = ability('Toss Around/Telekinetic Shove.');
 		const effect = onlyEffect(item);
 		expect(effect.statuses).toEqual(['prone']);
-		expectMoments(effect, []);
+		expectLastsUntil(effect, []);
 		expectSaveThenApply(item, 'strength', effect._id, 'targets');
 	});
 });
@@ -404,10 +362,10 @@ describe('Size Up/Spot Weakness/Pin Down.', () => {
 				usedUp: true,
 			}),
 		]);
-		expectMoments(effect, [
-			expect.objectContaining({ kind: 'event', who: null, event: 'combatEnd', value: null }),
-		]);
+		expectLastsUntil(effect, [looseMoment(combatEnds(), 'value')]);
 		expectSaveThenApply(item, 'dexterity', effect._id, 'self');
-		expect(steps(item).find((node) => node.type === 'applyEffect')?.waitsForClick).toBeUndefined();
+		expect(
+			allSteps(item).find((node) => node.type === 'applyEffect')?.waitsForClick,
+		).toBeUndefined();
 	});
 });

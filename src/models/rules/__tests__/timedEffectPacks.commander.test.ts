@@ -1,13 +1,25 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
 	AFTER_RULES_PHASE,
 	MULTIPLY_DOWN_CHANGE,
 } from '#documents/activeEffect/multiplyDownChange.js';
-import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-type Json = Record<string, any>;
+import {
+	allSteps,
+	effectById,
+	effectNamed,
+	endOfHoldersNextTurn,
+	exactMoment,
+	expectAtRoot,
+	expectNineKeys,
+	type Json,
+	MOVEMENT_MODES,
+	onEvent,
+	readItem,
+	rootSteps,
+	rounds,
+	stepsApplying,
+	tempHpGone,
+} from '../../../../tests/fixtures/packContent.js';
 
 const COMMANDER = 'packs/classFeatures/core/commander';
 const SPELLBLADE = `${COMMANDER}/commander-subclasses/spellblade`;
@@ -22,58 +34,8 @@ const FILES = {
 	witheringStrike: `${SPELLBLADE}/withering-strike.json`,
 };
 
-const MOMENT_KEYS = [
-	'boundary',
-	'clock',
-	'effectName',
-	'event',
-	'kind',
-	'span',
-	'units',
-	'value',
-	'who',
-];
-
-const MOVEMENT_MODES = ['walk', 'fly', 'climb', 'swim', 'burrow'];
-
-const readItem = (file: string): Json =>
-	JSON.parse(readFileSync(path.resolve(process.cwd(), file), 'utf-8'));
-
-const nodesOf = (item: Json): Json[] =>
-	flattenEffectsTree(item.system?.activation?.effects ?? []) as Json[];
-
-const rootNodes = (item: Json): Json[] => item.system.activation.effects as Json[];
-
-function effectById(item: Json, id: string): Json {
-	const effect = (item.effects as Json[]).find((each) => each._id === id);
-	if (!effect) throw new Error(`${item.name} has no effect ${id}`);
-	return effect;
-}
-
-function effectNamed(item: Json, name: string): Json {
-	const found = (item.effects as Json[]).filter((each) => each.name === name);
-	if (found.length !== 1) throw new Error(`${item.name} has ${found.length} effects named ${name}`);
-	return found[0] as Json;
-}
-
-function stepsOf(item: Json, effectId: string): Json[] {
-	return nodesOf(item).filter((node) => node.type === 'applyEffect' && node.effectId === effectId);
-}
-
 function nodesOfType(item: Json, type: string): Json[] {
-	return nodesOf(item).filter((node) => node.type === type);
-}
-
-function expectAtRoot(item: Json, step: Json): void {
-	expect(step.parentNode).toBeNull();
-	expect(step.parentContext).toBeNull();
-	expect(rootNodes(item).map((node) => node.id)).toContain(step.id);
-}
-
-function expectNineKeys(effect: Json): void {
-	for (const moment of effect.system.lastsUntil as Json[]) {
-		expect(Object.keys(moment).sort()).toEqual(MOMENT_KEYS);
-	}
+	return allSteps(item).filter((node) => node.type === type);
 }
 
 function expectUnique16(ids: string[]): void {
@@ -81,65 +43,25 @@ function expectUnique16(ids: string[]): void {
 	expect(new Set(ids).size).toBe(ids.length);
 }
 
-const TE = expect.objectContaining({
-	kind: 'turn',
-	boundary: 'end',
-	clock: 'holder',
-	span: 'nextTurn',
-	value: null,
-	units: null,
-	who: null,
-	event: null,
-	effectName: '',
-});
-
-const R1 = expect.objectContaining({
-	kind: 'time',
-	boundary: null,
-	clock: null,
-	span: null,
-	value: 1,
-	units: 'rounds',
-	who: null,
-	event: null,
-	effectName: '',
-});
-
-const event = (who: string, name: string) =>
-	expect.objectContaining({
-		kind: 'event',
-		boundary: null,
-		clock: null,
-		span: null,
-		value: null,
-		units: null,
-		who,
-		event: name,
-		effectName: '',
-	});
-
-const SOURCE_AT_ZERO = event('source', 'zeroHp');
-const TEMP_GONE = event('holder', 'tempHpGone');
-
 describe('Taunting Strike', () => {
 	const item = readItem(FILES.tauntingStrike);
 	const effect = effectById(item, '6m6zkcBOqyp6h6bW');
 
 	it('Taunted lasts until the end of their next turn', () => {
 		expect(effect.statuses).toEqual(['taunted']);
-		expect(effect.system.lastsUntil).toEqual([TE]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the targets at the root', () => {
-		const [step] = stepsOf(item, effect._id);
-		expect(stepsOf(item, effect._id)).toHaveLength(1);
+		const [step] = stepsApplying(item, effect._id);
+		expect(stepsApplying(item, effect._id)).toHaveLength(1);
 		expect(step?.recipient).toBe('targets');
 		expectAtRoot(item, step as Json);
 	});
 
 	it('the note says when to use it, not how long', () => {
-		const note = nodesOf(item).find((node) => node.id === 'TsTauntNote01x9');
+		const note = allSteps(item).find((node) => node.id === 'TsTauntNote01x9');
 		expect(note?.text).toBe('Use after you hit a creature.');
 	});
 });
@@ -172,7 +94,7 @@ describe('Crystalline Armor', () => {
 		expect(temp.formula).toBe('3 * @level');
 		expect(temp.recipient).toBeUndefined();
 		expectAtRoot(item, temp);
-		const steps = stepsOf(item, grant._id);
+		const steps = stepsApplying(item, grant._id);
 		expect(steps).toHaveLength(1);
 		const step = steps[0] as Json;
 		expect(step.recipient).toBe('targets');
@@ -186,7 +108,7 @@ describe('Crystalline Armor', () => {
 		expect(grant.description).toBe(
 			'Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.',
 		);
-		expect(grant.system.lastsUntil).toEqual([TEMP_GONE]);
+		expect(grant.system.lastsUntil).toEqual([exactMoment(tempHpGone)]);
 		expectNineKeys(grant);
 		expect(grant.system.changes).toEqual([]);
 		const rules = grant.system.rules as Json[];
@@ -218,9 +140,9 @@ describe('Crystalline Armor', () => {
 				priority: null,
 			})),
 		);
-		expect(halved.system.lastsUntil).toEqual([TE]);
+		expect(halved.system.lastsUntil).toEqual([exactMoment(endOfHoldersNextTurn)]);
 		expectNineKeys(halved);
-		expect(stepsOf(item, halved._id)).toEqual([]);
+		expect(stepsApplying(item, halved._id)).toEqual([]);
 	});
 
 	it('has a 1/encounter use pool on the item', () => {
@@ -247,11 +169,11 @@ describe('Crystalline Armor', () => {
 
 	it('uses new ids', () => {
 		expectUnique16([
-			...nodesOf(item).map((node) => node.id),
+			...allSteps(item).map((node) => node.id),
 			...(item.effects as Json[]).map((each) => each._id),
 		]);
-		const theirs = new Set(nodesOf(holdTheLine).map((node) => node.id));
-		for (const node of nodesOf(item)) expect(theirs.has(node.id)).toBe(false);
+		const theirs = new Set(allSteps(holdTheLine).map((node) => node.id));
+		for (const node of allSteps(item)) expect(theirs.has(node.id)).toBe(false);
 	});
 });
 
@@ -262,7 +184,7 @@ describe('Move it! Move it!', () => {
 	it('+3 speed for 1 round', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([R1]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(rounds(1))]);
 		expectNineKeys(effect);
 		const rules = effect.system.rules as Json[];
 		expect(rules).toHaveLength(1);
@@ -272,13 +194,13 @@ describe('Move it! Move it!', () => {
 	});
 
 	it('applies to you and to the targets at the root', () => {
-		const steps = stepsOf(item, effect._id);
+		const steps = stepsApplying(item, effect._id);
 		expect(steps.map((step) => step.recipient).sort()).toEqual(['self', 'targets']);
 		for (const step of steps) expectAtRoot(item, step);
 	});
 
 	it('the note keeps the Initiative advantage only', () => {
-		const note = nodesOf(item).find((node) => node.id === 'JyS0bPpvH6ttPAoG');
+		const note = allSteps(item).find((node) => node.id === 'JyS0bPpvH6ttPAoG');
 		expect(note?.text).toBe(
 			'Roll Initiative with advantage, and give one ally advantage on theirs.',
 		);
@@ -304,7 +226,7 @@ describe('Borne Upon the Wind', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
 		expect(effect.system.readsHolder).toBe(true);
-		expect(effect.system.lastsUntil).toEqual([R1]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(rounds(1))]);
 		expectNineKeys(effect);
 		const rules = effect.system.rules as Json[];
 		expect(rules).toHaveLength(2);
@@ -319,7 +241,7 @@ describe('Borne Upon the Wind', () => {
 	});
 
 	it('applies to you and to the targets at the root', () => {
-		const steps = stepsOf(item, effect._id);
+		const steps = stepsApplying(item, effect._id);
 		expect(steps.map((step) => step.recipient).sort()).toEqual(['self', 'targets']);
 		for (const step of steps) expectAtRoot(item, step);
 	});
@@ -342,12 +264,12 @@ describe('Face Me!', () => {
 
 	it('Taunted lasts until you drop to 0 HP', () => {
 		expect(effect.statuses).toEqual(['taunted']);
-		expect(effect.system.lastsUntil).toEqual([SOURCE_AT_ZERO]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(onEvent('source', 'zeroHp'))]);
 		expectNineKeys(effect);
 	});
 
 	it('applies to the targets at the root', () => {
-		const steps = stepsOf(item, effect._id);
+		const steps = stepsApplying(item, effect._id);
 		expect(steps).toHaveLength(1);
 		expect((steps[0] as Json).recipient).toBe('targets');
 		expectAtRoot(item, steps[0] as Json);
@@ -378,7 +300,7 @@ describe('Glimmering Decree', () => {
 			}),
 		);
 		expectAtRoot(item, damage);
-		const raw = rootNodes(item).find((node) => node.id === damage.id) as Json;
+		const raw = rootSteps(item).find((node) => node.id === damage.id) as Json;
 		expect(raw.on.hit).toEqual([
 			expect.objectContaining({ type: 'damageOutcome', outcome: 'fullDamage' }),
 		]);
@@ -403,9 +325,9 @@ describe('Glimmering Decree', () => {
 	it('Taunted lasts until you drop to 0 HP and applies to the targets at the root', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual(['taunted']);
-		expect(effect.system.lastsUntil).toEqual([SOURCE_AT_ZERO]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(onEvent('source', 'zeroHp'))]);
 		expectNineKeys(effect);
-		const steps = stepsOf(item, effect._id);
+		const steps = stepsApplying(item, effect._id);
 		expect(steps).toHaveLength(1);
 		expect((steps[0] as Json).recipient).toBe('targets');
 		expectAtRoot(item, steps[0] as Json);
@@ -419,7 +341,7 @@ describe('Withering Strike', () => {
 	it('the enemy counts as undead for 1 round', () => {
 		expect(effect.transfer).toBe(false);
 		expect(effect.statuses).toEqual([]);
-		expect(effect.system.lastsUntil).toEqual([R1]);
+		expect(effect.system.lastsUntil).toEqual([exactMoment(rounds(1))]);
 		expectNineKeys(effect);
 		const rules = effect.system.rules as Json[];
 		expect(rules).toHaveLength(1);
@@ -427,7 +349,7 @@ describe('Withering Strike', () => {
 	});
 
 	it('applies to the targets at the root, with no damage step', () => {
-		const steps = stepsOf(item, effect._id);
+		const steps = stepsApplying(item, effect._id);
 		expect(steps).toHaveLength(1);
 		expect((steps[0] as Json).recipient).toBe('targets');
 		expectAtRoot(item, steps[0] as Json);
