@@ -82,6 +82,7 @@ export default defineConfig({
 						{ text: "What You Can (and Can't) Change", link: '/documentation/homebrew/' },
 						{ text: 'Weapons, Armor & Gear', link: '/documentation/homebrew/items' },
 						{ text: 'Item Activations & Effects', link: '/documentation/homebrew/activations' },
+						{ text: 'Effects and Lasts Until', link: '/documentation/homebrew/effects' },
 						{ text: 'Spells', link: '/documentation/homebrew/spells' },
 						{ text: 'Monsters', link: '/documentation/homebrew/monsters' },
 						{ text: 'Character Options', link: '/documentation/homebrew/character-options' },

@@ -3,9 +3,9 @@
 	import { createRuleTypePickerState } from '#view/rulesBuilder/components/RuleTypePicker.svelte.js';
 	import type { RuleTypePickerProps } from '#view/rulesBuilder/types.js';
 
-	let { onPick, disabled = false }: RuleTypePickerProps = $props();
+	let { onPick, disabled = false, forEffect = false }: RuleTypePickerProps = $props();
 
-	const state = createRuleTypePickerState();
+	const state = createRuleTypePickerState(() => forEffect);
 	state.setupDevWarningsEffect();
 </script>
 

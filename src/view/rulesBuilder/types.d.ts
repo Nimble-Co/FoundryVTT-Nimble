@@ -8,8 +8,12 @@
  * rules.
  */
 
-import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
+
+/** A document that holds rules in `system.rules`: an item or an Active Effect. */
+export type RuleHolder = NimbleBaseItem | NimbleActiveEffect;
 
 export interface RuleSource {
 	id: string;
@@ -20,7 +24,7 @@ export interface RuleSource {
 }
 
 export interface RulesBuilderWindowProps {
-	document: NimbleBaseItem;
+	document: RuleHolder;
 }
 
 export interface SchemaFieldRendererProps {
@@ -38,9 +42,9 @@ export interface SchemaFieldRendererProps {
 	name: string;
 	/** Disabled state (read-only mode). */
 	disabled?: boolean;
-	/** Parent item — passed through to widgets that need a document context
+	/** Rule holder — passed through to widgets that need a document context
 	 *  (e.g. RichTextEditor for enrichHTML / documentUUID wiring). */
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface FormulaInputProps {
@@ -58,7 +62,7 @@ export interface RichTextEditorProps {
 	placeholder?: string;
 	/** Optional parent document — used to drive enrichHTML's rollData / secrets
 	 *  context and the underlying form-control's documentUUID binding. */
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface PredicateBuilderProps {
@@ -81,7 +85,7 @@ export interface PredicateBuilderProps {
 export interface RuleCardProps {
 	/** The reactive rule source object — typed loosely so the card stays generic. */
 	rule: Record<string, unknown>;
-	/** RulesManager instance bound to the parent item. */
+	/** RulesManager instance bound to the rule holder. */
 	manager: {
 		updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown>;
 		failureFor?: (id: string) => string | undefined;
@@ -93,8 +97,8 @@ export interface RuleCardProps {
 	/** Hide the body + advanced section, keeping just the header visible. */
 	collapsed?: boolean;
 	onToggleCollapse?: () => void;
-	/** Parent item — threaded through to rich-text widgets. */
-	document?: NimbleBaseItem;
+	/** Rule holder — threaded through to rich-text widgets. */
+	document?: RuleHolder;
 }
 
 export interface ResolvedFormField {
@@ -123,11 +127,13 @@ export interface RuleFormLayoutProps {
 	fieldHint: (field: foundry.data.fields.DataField.Any) => string;
 	previewDomain?: Set<string>;
 	appliesInPrePrepareData?: boolean;
-	document?: NimbleBaseItem;
+	document?: RuleHolder;
 }
 
 export interface RuleTypePickerProps {
 	onPick: (ruleKey: string) => void;
+	/** Hide the rule types that work only on an item. */
+	forEffect?: boolean;
 	disabled?: boolean;
 }
 

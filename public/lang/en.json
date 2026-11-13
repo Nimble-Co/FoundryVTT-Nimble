@@ -3766,6 +3766,118 @@
 			"minMax": "Min-Max",
 			"standard": "Standard"
 		},
+		"effectSheet": {
+			"tabs": {
+				"details": "Details",
+				"lastsUntil": "Lasts Until",
+				"changes": "Changes",
+				"rules": "Rules"
+			},
+			"changeImage": "Change the effect image",
+			"namePlaceholder": "Effect name",
+			"details": {
+				"description": "Description",
+				"from": "From",
+				"state": "State",
+				"off": "Off",
+				"offHint": "Its changes and rules do not apply.",
+				"transfer": "Apply to the actor",
+				"transferHint": "The actor that has this item gets the effect."
+			},
+			"lastsUntil": {
+				"heading": "Lasts Until",
+				"until": "Until",
+				"orUntil": "Or until",
+				"none": "No moment: the effect stays until someone removes it.",
+				"coreDuration": "It also ends after its core duration: {duration}.",
+				"moment": "Moment {number}",
+				"the": "the",
+				"pass": "pass",
+				"ends": "ends",
+				"boundary": {
+					"start": "the start of",
+					"end": "the end of"
+				},
+				"clock": {
+					"holder": "their",
+					"source": "your",
+					"nextHero": "the next hero's"
+				},
+				"span": {
+					"nextTurn": "next turn",
+					"currentTurn": "current turn",
+					"currentRound": "current round",
+					"nextRound": "next round"
+				},
+				"units": {
+					"rounds": "rounds",
+					"minutes": "minutes",
+					"hours": "hours",
+					"days": "days"
+				},
+				"subject": {
+					"holder": "they",
+					"source": "you",
+					"effect": "the effect"
+				},
+				"event": {
+					"attack": "attack",
+					"move": "move",
+					"castSpell": "cast a spell",
+					"takeDamage": "take damage",
+					"healed": "are Healed",
+					"zeroHp": "drop to 0 HP",
+					"die": "die",
+					"loseConcentration": "lose Concentration",
+					"useAgain": "use this again"
+				},
+				"add": "add a moment...",
+				"addKind": {
+					"turn": "a turn or a round",
+					"time": "rounds or time pass",
+					"event": "they or you do something",
+					"effectEnds": "another effect ends"
+				},
+				"fields": {
+					"boundary": "Start or end",
+					"clock": "Whose turn",
+					"span": "Which turn or round",
+					"value": "How many",
+					"units": "Units",
+					"subject": "Who",
+					"event": "What happens",
+					"effectName": "The name of the other effect",
+					"add": "Add a moment"
+				},
+				"effectNamePlaceholder": "Rage",
+				"remove": "Remove moment {number}"
+			},
+			"escape": {
+				"heading": "Escape",
+				"dc": "DC",
+				"dcLabel": "Escape DC",
+				"withA": "with a",
+				"save": "save",
+				"savesLabel": "Saves for the escape",
+				"saves": {
+					"strength": "STR",
+					"dexterity": "DEX",
+					"intelligence": "INT",
+					"will": "WIL"
+				},
+				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success removes the effect. With no DC, there is no escape."
+			},
+			"changes": {
+				"key": "Key",
+				"type": "Type",
+				"value": "Value",
+				"priority": "Priority",
+				"add": "Add a change",
+				"remove": "Remove change {number}",
+				"change": "Change {number}",
+				"none": "No changes."
+			}
+		},
 		"sheets": {
 			"background": "Nimble Background Sheet",
 			"boon": "Nimble Boon Sheet",
@@ -3781,7 +3893,8 @@
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",
 			"spell": "Nimble Spell Sheet",
-			"subclass": "Nimble Subclass Sheet"
+			"subclass": "Nimble Subclass Sheet",
+			"effect": "Nimble Effect Sheet"
 		},
 		"templateShapes": {
 			"circle": "Circle",

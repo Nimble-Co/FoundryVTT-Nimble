@@ -22,4 +22,8 @@ export const SHEET_DEFAULTS = {
 		width: 500,
 		height: 500,
 	},
+	effect: {
+		width: 560,
+		height: 600,
+	},
 } as const;

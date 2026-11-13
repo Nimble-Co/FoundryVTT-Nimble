@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 
-import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+import type { RuleHolder } from '#view/rulesBuilder/types.js';
 
 type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
 type EnrichOptions = Parameters<
@@ -12,11 +12,17 @@ interface ProseMirrorElement extends HTMLElement {
 	_refresh?(): void;
 }
 
+function rollDataOf(document: RuleHolder | undefined): object {
+	if (!document) return {};
+	if (document.actor) return document.actor.getRollData();
+	return 'getRollData' in document ? document.getRollData() : {};
+}
+
 export function createRichTextEditorState(
 	getValue: () => string,
 	getOnChange: () => (next: string) => void,
 	getDisabled: () => boolean,
-	getDocument: () => NimbleBaseItem | undefined,
+	getDocument: () => RuleHolder | undefined,
 	getContainer: () => HTMLElement | undefined,
 	getMountPoint: () => HTMLElement | undefined,
 ) {
@@ -68,11 +74,7 @@ export function createRichTextEditorState(
 		const document = getDocument();
 		const enrichOptions: EnrichOptions = {
 			secrets: Boolean(document?.isOwner || game.user?.isGM),
-			rollData: document
-				? document.isEmbedded && document.actor
-					? document.actor.getRollData()
-					: document.getRollData()
-				: {},
+			rollData: rollDataOf(document),
 			relativeTo: document,
 		} as EnrichOptions;
 

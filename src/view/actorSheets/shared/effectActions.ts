@@ -1,7 +1,7 @@
 import { endToggleEffectFromAE } from '#utils/actor/toggleEffectControl.js';
 import localize from '#utils/localize.js';
 
-/** What the Effects tab of both sheets does to an actor: End, Remove, and a condition on or off. */
+/** What the Effects tab of both sheets does to an actor: End, Remove, open the effect window, and a condition on or off. */
 
 type EffectHolder = { effects?: { get(id: string): ActiveEffect | undefined } };
 
@@ -22,6 +22,15 @@ export async function endEffect(actor: Actor.Implementation, effectId: string): 
 	} catch (_error) {
 		ui.notifications?.error(localize('NIMBLE.ui.failedToRemoveEffect'));
 	}
+}
+
+/** The effect window of an effect on the actor or on one of its items. */
+export async function openEffect(
+	actor: Actor.Implementation,
+	effectId: string,
+	itemId: string | null,
+): Promise<void> {
+	await effectOf(actor, effectId, itemId)?.sheet?.render(true);
 }
 
 export async function removeEffect(

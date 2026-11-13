@@ -12,6 +12,7 @@ export type SheetIntent<Flag extends string = string> =
 	| { kind: 'activate'; itemId: string }
 	| { kind: 'openItem'; itemId: string }
 	| { kind: 'endEffect'; effectId: string }
+	| { kind: 'openEffect'; effectId: string; itemId: string | null }
 	| { kind: 'removeEffect'; effectId: string; itemId: string | null }
 	| { kind: 'setCondition'; conditionId: string; active: boolean }
 	| { kind: 'setFlag'; flag: Flag; value: boolean | number }
@@ -29,6 +30,7 @@ const SHEET_INTENT_KINDS: Record<SheetIntent['kind'], true> = {
 	activate: true,
 	openItem: true,
 	endEffect: true,
+	openEffect: true,
 	removeEffect: true,
 	setCondition: true,
 	setFlag: true,

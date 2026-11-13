@@ -22,7 +22,7 @@ function getTokenizer(): { tokenizeActor(actor: Actor): void } | null {
 }
 
 export default async function updateDocumentImage(
-	document: Actor | Item,
+	document: Actor | Item | ActiveEffect,
 	options = { shiftKey: false },
 ) {
 	// Hand off to Tokenizer when it can take over, holding shift to bypass it. If it can't, fall

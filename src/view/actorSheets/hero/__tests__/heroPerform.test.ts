@@ -98,13 +98,18 @@ const ACTOR_METHODS = [
 	'deleteEmbeddedDocuments',
 ] as const;
 
-const armorEffect = { id: 'armorEffect', delete: vi.fn() };
+const armorEffect = { id: 'armorEffect', delete: vi.fn(), sheet: { render: vi.fn() } };
 const item = {
 	id: 'rage',
 	sheet: { render: vi.fn() },
 	effects: new Map([[armorEffect.id, armorEffect]]),
 };
-const rageEffect = { id: 'rageEffect', statuses: new Set<string>(), delete: vi.fn() };
+const rageEffect = {
+	id: 'rageEffect',
+	statuses: new Set<string>(),
+	delete: vi.fn(),
+	sheet: { render: vi.fn() },
+};
 const customEffect = { id: 'customEffect', statuses: new Set(['homebrewHex']), delete: vi.fn() };
 const actorEffects = new Map([
 	[rageEffect.id, rageEffect],
@@ -438,6 +443,14 @@ describe('createHeroPerform', () => {
 
 			expect(rageEffect.delete).toHaveBeenCalledOnce();
 			expect(armorEffect.delete).toHaveBeenCalledOnce();
+		});
+
+		it('opens the window of an effect of the hero, and of an effect that an item holds', async () => {
+			await perform({ kind: 'openEffect', effectId: 'rageEffect', itemId: null });
+			await perform({ kind: 'openEffect', effectId: 'armorEffect', itemId: 'rage' });
+
+			expect(rageEffect.sheet.render).toHaveBeenCalledWith(true);
+			expect(armorEffect.sheet.render).toHaveBeenCalledWith(true);
 		});
 
 		it('turns a condition on and off through toggleStatusEffect', async () => {

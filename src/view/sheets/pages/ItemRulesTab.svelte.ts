@@ -1,9 +1,8 @@
 import { SvelteSet } from 'svelte/reactivity';
 
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
-import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 import localize from '#utils/localize.js';
-import type { RuleSource } from '#view/rulesBuilder/types.js';
+import type { RuleHolder, RuleSource } from '#view/rulesBuilder/types.js';
 
 // Internal clipboard drag-drop type, set and matched by the same code; never
 // crosses the Foundry system-id boundary, so the literal is intentional.
@@ -12,7 +11,7 @@ export const COPY_TYPE = 'nimble.Rule'; // allow-hardcoded-system-id
 type DialogComponent = Parameters<typeof GenericDialog.getOrCreate>[1];
 
 export function createItemRulesTabState(
-	getItem: () => NimbleBaseItem,
+	getItem: () => RuleHolder,
 	getRulesBuilderComponent: () => DialogComponent,
 ) {
 	const rawRules = $derived(

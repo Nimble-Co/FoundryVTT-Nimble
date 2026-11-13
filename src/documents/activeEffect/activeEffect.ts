@@ -1,3 +1,4 @@
+import { createSubscriber } from 'svelte/reactivity';
 import { RulesManager } from '#managers/RulesManager.js';
 import {
 	type EffectSource,
@@ -17,6 +18,8 @@ interface NimbleEffectSystem {
 class NimbleActiveEffect extends ActiveEffect {
 	declare rules: RulesManager;
 
+	#subscribe?: ReturnType<typeof createSubscriber>;
+
 	/** New effects are Nimble effects: the legacy type stays loadable, and `base` would become Nimble on create anyway. */
 	static override async createDialog<
 		Options extends ActiveEffect.CreateDialogOptions | undefined = undefined,
@@ -29,10 +32,26 @@ class NimbleActiveEffect extends ActiveEffect {
 		const types = (options?.types ?? NimbleActiveEffect.TYPES).filter(
 			(type) => type !== LEGACY_CONDITION_EFFECT_TYPE && type !== CONST.BASE_DOCUMENT_TYPE,
 		);
+		if (types.length !== 1) {
+			return ActiveEffect.createDialog(
+				data,
+				createOptions,
+				{ ...options, types } as Options,
+				renderOptions,
+			);
+		}
+		// Core shows its type select for one type too; hide it, and drop core's
+		// render callback, which reads that select.
+		const dialogOptions = options as { context?: object; render?: unknown } | undefined;
 		return ActiveEffect.createDialog(
-			data,
+			{ ...data, type: types[0] } as ActiveEffect.CreateDialogData,
 			createOptions,
-			{ ...options, types } as Options,
+			{
+				...options,
+				types,
+				context: { ...dialogOptions?.context, hasTypes: false },
+				render: dialogOptions?.render ?? (() => undefined),
+			} as unknown as Options,
 			renderOptions,
 		);
 	}
@@ -63,6 +82,18 @@ class NimbleActiveEffect extends ActiveEffect {
 		}
 
 		this.rules = new RulesManager(this);
+	}
+
+	/** The effect, read so that Svelte follows its updates. */
+	get reactive(): this {
+		this.#subscribe ??= createSubscriber((update) => {
+			const id = Hooks.on('updateActiveEffect', (effect) => {
+				if (effect.uuid === this.uuid) update();
+			});
+			return () => Hooks.off('updateActiveEffect', id);
+		});
+		this.#subscribe();
+		return this;
 	}
 
 	get lastsUntil(): Moment[] {
