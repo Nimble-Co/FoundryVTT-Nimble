@@ -13,7 +13,7 @@ import {
 	EFFECT_RECREATED_OPTION,
 } from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
-import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
+import { followTempHpChange, takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
 import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
@@ -109,6 +109,7 @@ function onWorldTime(worldTime: number, delta: number): void {
 /** The HP events, read as the rule events read them (`ruleEventDispatch`). */
 function onUpdateActor(actor: Actor, changes: Record<string, unknown>, options: unknown): void {
 	if (!isActiveGm()) return;
+	void followTempHpChange(actor as never, changes, options);
 	const hpChanged = hasAnyActorChangeAt(changes, [ACTOR_HP_PATHS.value]);
 	const woundsChanged = hasAnyActorChangeAt(changes, [ACTOR_WOUNDS_PATHS.value]);
 	if (!hpChanged && !woundsChanged) return;

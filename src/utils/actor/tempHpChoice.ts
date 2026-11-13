@@ -1,5 +1,6 @@
 import type { CardEvent, TempHpChoiceAction } from '#types/cardEvent.d.ts';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { clearTempHpLinks, giveTempHp } from './effectTempHp.js';
 
 const WORDS = 'NIMBLE.chat.tempHpChoice';
 const TEMP_PATH = 'system.attributes.hp.temp';
@@ -13,7 +14,7 @@ interface ChoiceHolder {
 		system?: unknown;
 		update(data: object): Promise<unknown>;
 	}>;
-	update(data: Record<string, unknown>): Promise<unknown>;
+	update(data: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
 }
 
 interface ChoiceCard {
@@ -77,13 +78,11 @@ export async function chooseTempHp(
 	const holder = holderOf(action);
 	if (!holder) return false;
 	if (take) {
-		await holder.update({ [TEMP_PATH]: action.amount });
-		for (const effect of holder.effects ?? []) {
-			const given = Number((effect.system as { tempHp?: number | null } | undefined)?.tempHp);
-			if (!(given > 0)) continue;
-			if (action.effectUuid?.endsWith(`.${effect.id}`)) continue;
-			await effect.update({ 'system.tempHp': null });
-		}
+		const effectId = action.effectUuid?.split('.').pop() ?? null;
+		const unchanged = Number(foundry.utils.getProperty(holder, TEMP_PATH)) === action.amount;
+		await giveTempHp(holder, action.amount, effectId);
+		// The same amount makes no update, so the GM does not end the other links.
+		if (unchanged) await clearTempHpLinks(holder, effectId);
 		const gave = action.effectUuid
 			? (fromUuidSync(action.effectUuid as never, { strict: false }) as {
 					update(data: object): Promise<unknown>;

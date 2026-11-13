@@ -59,6 +59,7 @@ interface EffectHolder {
 }
 
 interface CreatedEffect {
+	id?: string | null;
 	uuid?: string;
 	update?(data: Record<string, unknown>): Promise<unknown>;
 }
@@ -228,7 +229,7 @@ export async function applyEffectHere(
 		.filter(([id]) => !ids.has(id))
 		.reduce((sum, [, amount]) => sum + amount, 0);
 	const grant = tempHpGrant(target, payload.tempHp, replaced);
-	await giveTempHp(target, grant.give);
+	await giveTempHp(target, grant.give, effect.id ?? null);
 	if (grant.owned) await effect.update?.({ 'system.tempHp': grant.owned });
 	return {
 		effectUuid: effect.uuid,

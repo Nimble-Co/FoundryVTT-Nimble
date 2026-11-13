@@ -254,11 +254,19 @@ describe('applyEffectToActor', () => {
 	it('gives the temp HP of the card and records them on the effect', async () => {
 		const target = holder({ temp: 2 });
 		const update = vi.fn(async () => undefined);
-		createEffect.mockResolvedValueOnce({ uuid: 'Actor.goblin.ActiveEffect.new', update });
+		createEffect.mockResolvedValueOnce({
+			id: 'new',
+			uuid: 'Actor.goblin.ActiveEffect.new',
+			update,
+		});
 
 		const applied = await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
 
-		expect(target.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 6 });
+		// The update names the new effect's grant, so the other links end.
+		expect(target.update).toHaveBeenCalledWith(
+			{ 'system.attributes.hp.temp': 6 },
+			{ [SYSTEM_ID]: { tempGrantEffectId: 'new' } },
+		);
 		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
 		expect(applied).not.toHaveProperty('tempHpRefused');
 	});

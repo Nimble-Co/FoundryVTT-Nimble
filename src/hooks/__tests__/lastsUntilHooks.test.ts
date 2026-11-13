@@ -314,6 +314,38 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('healed', actor);
 	});
 
+	describe('the temp HP link', () => {
+		const linked = (temp: number) => {
+			const frost = { id: 'frost', system: { tempHp: 10 }, update: vi.fn(async () => undefined) };
+			const actor = {
+				name: 'Tessa',
+				system: { attributes: { hp: { value: 10, max: 10, temp } } },
+				effects: [frost],
+			};
+			return { actor, frost };
+		};
+		const tempTo = (temp: number) => ({ system: { attributes: { hp: { temp } } } });
+
+		it('ends on the active GM when the temp HP reach 0', async () => {
+			const { actor, frost } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+			await vi.waitFor(() => expect(frost.update).toHaveBeenCalled());
+
+			expect(frost.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		});
+
+		it('is left to the active GM on other clients', async () => {
+			user.isActiveGM = false;
+			const { actor, frost } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+			await Promise.resolve();
+
+			expect(frost.update).not.toHaveBeenCalled();
+		});
+	});
+
 	it('a rest is a rest of that creature', () => {
 		const actor = { name: 'Tessa' };
 
