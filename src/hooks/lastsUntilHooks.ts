@@ -160,10 +160,7 @@ function takeBackEffectTempHp(
 
 /** The statuses of a new effect, with each status they count as (Stunned counts as Incapacitated). */
 function gainedStatuses(effect: ActiveEffect): string[] {
-	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
-		string,
-		readonly string[]
-	>;
+	const aliases = (CONFIG.NIMBLE?.conditionCountsAs ?? {}) as Record<string, readonly string[]>;
 	const statuses = [...(effect.statuses ?? [])];
 	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
 }

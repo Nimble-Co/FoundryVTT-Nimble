@@ -129,12 +129,12 @@ const OWN_TAGS = new Set<string>([STATUS_EFFECT_IDS.bloodied, STATUS_EFFECT_IDS.
 
 /**
  * The conditions a creature with these statuses has, for its `self:` and
- * `target:` tags: each condition among the statuses, and the conditions an
- * alias stands for.
+ * `target:` tags: each condition among the statuses, and the conditions it
+ * counts as (Stunned counts as Incapacitated, not the reverse).
  */
 function conditionTags(statuses: ReadonlySet<string>): Set<string> {
 	const conditions = (CONFIG.NIMBLE?.conditions ?? {}) as Record<string, string>;
-	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
+	const aliases = (CONFIG.NIMBLE?.conditionCountsAs ?? {}) as Record<
 		string,
 		readonly string[] | undefined
 	>;

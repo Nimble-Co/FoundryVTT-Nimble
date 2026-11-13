@@ -402,13 +402,49 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
 	});
 
-	it('a new effect is a gain of its name and its statuses, with their aliases', () => {
-		const nimble = CONFIG.NIMBLE as { conditionAliasedConditions?: unknown };
-		const aliases = nimble.conditionAliasedConditions;
+	it('a gain of Incapacitated is not a gain of Stunned, Paralyzed or Unconscious', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Frozen',
+			active: true,
+			statuses: new Set(['incapacitated']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			expect.objectContaining({ statuses: ['incapacitated'] }),
+			null,
+		);
+	});
+
+	it('a gain of Stunned is a gain of Incapacitated, so it ends a Concentrating that waits for one', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		const named = fireEventMock.mock.calls.find(([event]) => event === 'gain')?.[2] as {
+			statuses: string[];
+		};
+		expect(named.statuses).toContain('incapacitated');
+	});
+
+	it('a new effect is a gain of its name and its statuses, with what they count as', () => {
+		const nimble = CONFIG.NIMBLE as { conditionCountsAs?: unknown };
+		const countsAs = nimble.conditionCountsAs;
 		onTestFinished(() => {
-			nimble.conditionAliasedConditions = aliases;
+			nimble.conditionCountsAs = countsAs;
 		});
-		nimble.conditionAliasedConditions = { stunned: ['incapacitated'] };
+		nimble.conditionCountsAs = { stunned: ['incapacitated'] };
 		const holder = Object.create(Actor.prototype);
 		const effect = {
 			parent: holder,
