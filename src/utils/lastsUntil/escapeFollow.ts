@@ -41,6 +41,7 @@ interface EscapeHolder {
 }
 
 const WORDS = 'NIMBLE.escape.chat';
+const RULED = `${WORDS}.ruled`;
 const QUERY_NAME = `${SYSTEM_ID}.escapeRuling`;
 
 function linkOf(card: EscapeCard | null | undefined): EscapeRollLink | null {
@@ -208,7 +209,7 @@ function ruleHere(card: EscapeCard, eventId: string): Promise<boolean> {
 		const found = cardEventsOf(card as never).find((each) => each.id === eventId);
 		const action = found?.action;
 		if (action?.kind !== 'escapeRuling' || action.state !== 'waiting') return false;
-		if (!(await escapeNow(rollCard ?? card, action, { key: `${WORDS}.ruled` }))) return false;
+		if (!(await escapeNow(rollCard ?? card, action, { key: RULED }))) return false;
 		await replaceCardEvent(card as never, eventId, null);
 		return true;
 	});
@@ -240,6 +241,14 @@ function rulingLineOf(card: EscapeCard, link: EscapeRollLink): PlacedLine | unde
 		if (line) return { host, line };
 	}
 	return undefined;
+}
+
+/** The ended line says the table ruled the escape (**Escapes**), with or without a source. */
+function wasRuled(event: CardEvent): boolean {
+	const cause = event.cause;
+	if (cause?.key === RULED) return true;
+	const reason = cause?.data?.reason;
+	return typeof reason === 'object' && reason !== null && 'key' in reason && reason.key === RULED;
 }
 
 async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): Promise<boolean> {
@@ -283,6 +292,8 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 
 	if (!link.noDc) return true;
 	const rulingAction = ruling?.line.action;
+	// A result the table must judge again does not undo the table's ruling.
+	if (ended && wasRuled(ended)) return true;
 	if (ended) {
 		await putBack();
 		await showRuling(endedHere, 'waiting');

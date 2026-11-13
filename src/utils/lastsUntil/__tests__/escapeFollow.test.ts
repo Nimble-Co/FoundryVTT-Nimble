@@ -291,6 +291,34 @@ describe('an Escape with no DC', () => {
 		);
 	});
 
+	describe('after the table clicked Escapes', () => {
+		const ruled = { key: 'NIMBLE.escape.chat.ruled' };
+		const ruledLines = [
+			{ ...endedLine(), cause: ruled },
+			{
+				...endedLine(),
+				cause: {
+					key: 'NIMBLE.chat.events.cause.reasonAndSource',
+					data: { reason: ruled, source: 'Goblin' },
+				},
+			},
+		];
+
+		it.each(ruledLines)('a natural 20 and then a plain reroll keep the ruling', async (line) => {
+			card.flags[SYSTEM_ID].events = [line];
+			effects.clear();
+
+			await followEscape({ messageId: 's1', outcome: 'pass' });
+			await followEscape({ messageId: 's1', outcome: 'unknown' });
+
+			expect(endEffects).not.toHaveBeenCalled();
+			expect(undoEndedEffect).not.toHaveBeenCalled();
+			expect(takeBackEscapeDamage).not.toHaveBeenCalled();
+			expect(replaceCardEvent).not.toHaveBeenCalled();
+			expect(addCardEvents).not.toHaveBeenCalled();
+		});
+	});
+
 	it('a result that is no longer known after a natural 1 adds the waiting line', async () => {
 		await followEscape({ messageId: 's1', outcome: 'unknown' });
 
