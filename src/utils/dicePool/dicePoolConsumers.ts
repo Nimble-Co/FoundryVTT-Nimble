@@ -1,5 +1,5 @@
 import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
-import { isCharacterActor, normalizeIdentifier } from './helpers.js';
+import { isCharacterActor, normalizeIdentifier, resolveFormulaToInteger } from './helpers.js';
 import type {
 	CharacterActorLike,
 	DiceAttackDeliveryFilter,
@@ -28,6 +28,25 @@ type DicePoolConsumer = {
 	/** Narrows a card offer to melee or ranged attacks; null = unrestricted */
 	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
 };
+
+/** A spend that only consumes dice, without an outcome on them or a given effect. */
+function isPlainSpend(
+	consumer: Pick<DicePoolConsumer, 'selectionOutcome' | 'effectType'>,
+): boolean {
+	return consumer.selectionOutcome === 'consume' && consumer.effectType !== 'giveEffect';
+}
+
+/**
+ * How many dice a consumer may act on: its cost for a transforming outcome or a given effect, so a
+ * "change 1 die" feature offers exactly one pick; null for a plain spend ("expend 1 or more").
+ */
+function dicePoolConsumerSelectionCap(
+	actor: CharacterActorLike,
+	consumer: Pick<DicePoolConsumer, 'selectionOutcome' | 'effectType' | 'cost'>,
+): number | null {
+	if (isPlainSpend(consumer)) return null;
+	return Math.max(1, resolveFormulaToInteger(actor, consumer.cost));
+}
 
 /** Narrow a stored `cardOffer` to a trigger the executor knows, else null. */
 function toCardOfferTrigger(value: unknown): DiceCardOfferTrigger | null {
@@ -125,7 +144,8 @@ function applyConsumerModifiers(
  *   - rule.poolIdentifier matches pool.identifier
  *   - rule.poolScope matches pool.scope
  *   - the consumer has something for the panel to do: an effectFormula to
- *     evaluate, or a selection outcome that transforms the picked dice.
+ *     evaluate, an effect to give, or a selection outcome that transforms the
+ *     picked dice.
  *     Formula-less consumers that only spend have no UX hook to advertise —
  *     they spend silently via the sheet's per-die click.
  */
@@ -170,13 +190,12 @@ function getDicePoolConsumers(
 					? (consumer as { selectionOutcome: string }).selectionOutcome
 					: 'consume';
 
-			const baseEffectFormula = readEffectFormula(consumer);
-			if (baseEffectFormula === null && selectionOutcome === 'consume') continue;
-
 			const effectType =
 				typeof consumer.effectType === 'string' && consumer.effectType.length > 0
 					? consumer.effectType
 					: 'generic';
+			const baseEffectFormula = readEffectFormula(consumer);
+			if (baseEffectFormula === null && isPlainSpend({ selectionOutcome, effectType })) continue;
 			const effectFormula =
 				baseEffectFormula === null
 					? null
@@ -213,5 +232,5 @@ function getDicePoolConsumers(
 	return consumers.sort((a, b) => a.itemName.localeCompare(b.itemName));
 }
 
-export { getDicePoolConsumers };
+export { dicePoolConsumerSelectionCap, getDicePoolConsumers };
 export type { DicePoolConsumer };

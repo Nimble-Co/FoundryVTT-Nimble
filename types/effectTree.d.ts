@@ -1,3 +1,5 @@
+import type { HeldUsedUp } from './heldChange.d.ts';
+import type { RuleRaise } from './spellScaling.d.ts';
 import type { ConditionDuration } from '#utils/actor/applyConditionToActor.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
@@ -91,6 +93,8 @@ export type ApplyEffectNode = {
 	recipient: 'self' | 'targets';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
+	/** What the upcast adds to number fields of the effect's rules. */
+	ruleRaises?: RuleRaise[];
 	parentContext: string | null;
 	parentNode: string | null;
 };
@@ -100,6 +104,8 @@ export interface ApplyEffectSource {
 	name: string;
 	img: string;
 	lastsUntil: readonly Moment[];
+	/** The attack that uses up its Held Roll rule. */
+	usedUp?: HeldUsedUp | null;
 	coreDuration?: ConditionDuration | null;
 	escape: boolean;
 }

@@ -97,6 +97,44 @@ describe('payloadFromEffect', () => {
 			sourceActorUuid: 'Actor.worg',
 		});
 	});
+
+	it('replaces the @ references of an extra damage formula with the roll data of the source', () => {
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string, data: { pools: Record<string, { faces: number }> }) =>
+				formula.replace('@pools.judgment.faces', String(data.pools.judgment.faces)),
+		});
+		const rules = [
+			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' },
+			{ type: 'heldRoll', heldKind: 'advantage', formula: '@pools.judgment.faces' },
+			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '2' },
+		];
+		const effect = { toObject: () => ({ name: 'Shining Mandate', system: { rules } }) };
+		const user = {
+			type: 'character',
+			uuid: 'Actor.paladin',
+			getRollData: vi.fn(() => ({ pools: { judgment: { faces: 10 } } })),
+		};
+
+		const payload = payloadFromEffect(effect, { itemUuid: 'Actor.paladin.Item.decree', user });
+		const copied = (payload.data.system as { rules: { formula: string }[] }).rules;
+
+		expect(copied.map((rule) => rule.formula)).toEqual(['1d10', '@pools.judgment.faces', '2']);
+		expect(rules[0].formula).toBe('1d@pools.judgment.faces');
+		expect(user.getRollData).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps an extra damage formula as it is with no source', () => {
+		const rules = [
+			{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' },
+		];
+		const effect = { toObject: () => ({ name: 'Shining Mandate', system: { rules } }) };
+
+		const payload = payloadFromEffect(effect, { itemUuid: null, user: null });
+
+		expect((payload.data.system as { rules: { formula: string }[] }).rules[0].formula).toBe(
+			'1d@pools.judgment.faces',
+		);
+	});
 });
 
 describe('applyEffectToActor', () => {

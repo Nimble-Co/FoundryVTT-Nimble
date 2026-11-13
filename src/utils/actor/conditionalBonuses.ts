@@ -1,7 +1,7 @@
 import type { ConditionalBonusRule } from '../../models/rules/conditionalBonus.js';
 import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
 import localize from '../localize.js';
-import { getToggledTargetTags } from './toggledEffects.js';
+import { countedMarkTags, getToggledTargetTags } from './toggledEffects.js';
 
 /**
  * Discovery + target-domain helpers for the `conditionalBonus` rule. The activation
@@ -58,9 +58,11 @@ function getDelivery(item: ActivationItem): AttackDelivery {
 function buildTargetDomain(
 	attacker: AttackingActor | null | undefined,
 	targetActor: TargetActor | null | undefined,
+	delivery?: AttackDelivery,
 ): Set<string> {
 	const domain = new Set<string>(targetActor?.getTargetDomain?.() ?? []);
 	for (const tag of getToggledTargetTags(attacker, targetActor)) domain.add(tag);
+	if (targetActor) for (const tag of countedMarkTags(attacker, delivery)) domain.add(tag);
 	return domain;
 }
 
@@ -97,7 +99,7 @@ function getActiveConditionalBonuses(
 	// for the current rules; a future author wanting to distinguish them will need a
 	// finer source mapping here.
 	const source = item.type === 'spell' ? 'spell' : 'weapon';
-	const targetDomain = buildTargetDomain(attacker, targetActor);
+	const targetDomain = buildTargetDomain(attacker, targetActor, delivery);
 
 	const options: ConditionalBonusOption[] = [];
 	for (const rule of rules) {

@@ -3,6 +3,9 @@
 	import TagGroup from '../../components/TagGroup.svelte';
 	import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 	import localize from '../../../utils/localize.js';
+	import ScalingRaiseEffectRule from './ScalingRaiseEffectRule.svelte';
+	import { createRaiseTargets, reshapeRaise } from './ScalingRaiseEffectRule.svelte.ts';
+	import { applyOperationDefaults, createEmptyDelta } from './scalingDeltaDefaults.ts';
 
 	let item = getContext('document');
 
@@ -30,6 +33,7 @@
 		{ label: t('operations.addDuration'), value: 'addDuration' },
 		{ label: t('operations.addCondition'), value: 'addCondition' },
 		{ label: t('operations.increaseDieSize'), value: 'increaseDieSize' },
+		{ label: t('operations.raiseEffectRule'), value: 'raiseEffectRule' },
 	];
 
 	const diceFaceOptions = [4, 6, 8, 10, 12, 20];
@@ -37,64 +41,28 @@
 	// Operations that can target a specific effect node
 	const targetableOperations = new Set(['addFlatDamage', 'addDice', 'addDC', 'increaseDieSize']);
 
-	// Build a list of targetable effect nodes from the spell's activation effects
-	let targetableEffects = $derived.by(() => {
-		const effects = item.reactive.system.activation?.effects ?? [];
-		const flattened = flattenEffectsTree(effects);
-		return flattened
+	let effectNodes = $derived(flattenEffectsTree(item.reactive.system.activation?.effects ?? []));
+
+	// Effect nodes that a targetable operation can point at
+	let targetableEffects = $derived(
+		effectNodes
 			.filter(
 				(node) => node.type === 'damage' || node.type === 'healing' || node.type === 'savingThrow',
 			)
 			.map((node) => ({
 				id: node.id,
 				label: formatEffectLabel(node),
-			}));
-	});
+			})),
+	);
+
+	const raise = createRaiseTargets(() => item);
+	let raiseTargets = $derived(raise.targets);
 
 	function formatEffectLabel(node) {
 		const type = node.type === 'savingThrow' ? 'Save' : node.type;
 		const detail = node.damageType || node.saveType || node.formula || '';
 		const context = node.parentContext ? ` (${node.parentContext})` : '';
 		return `${type}${detail ? ': ' + detail : ''}${context}`;
-	}
-
-	function createEmptyDelta() {
-		return {
-			operation: 'addFlatDamage',
-			value: 1,
-			dice: null,
-			condition: null,
-			targetEffectId: null,
-			durationType: null,
-			maxDieFaces: null,
-		};
-	}
-
-	// Reshape a delta's payload fields so only the ones the new operation uses stay populated
-	function applyOperationDefaults(delta, operation) {
-		delta.operation = operation;
-
-		if (operation === 'addDice') {
-			delta.dice = delta.dice ?? { count: 1, faces: 6 };
-			delta.value = null;
-			delta.condition = null;
-			delta.maxDieFaces = null;
-		} else if (operation === 'addCondition') {
-			delta.condition = delta.condition ?? '';
-			delta.value = null;
-			delta.dice = null;
-			delta.maxDieFaces = null;
-		} else if (operation === 'increaseDieSize') {
-			delta.value = delta.value ?? 1;
-			delta.maxDieFaces = delta.maxDieFaces ?? 12;
-			delta.dice = null;
-			delta.condition = null;
-		} else {
-			delta.value = delta.value ?? 1;
-			delta.dice = null;
-			delta.condition = null;
-			delta.maxDieFaces = null;
-		}
 	}
 
 	async function toggleScalingMode(mode) {
@@ -120,9 +88,11 @@
 	async function updateDelta(index, field, value) {
 		const deltas = foundry.utils.deepClone(scalingDeltas);
 		if (field === 'operation') {
-			applyOperationDefaults(deltas[index], value);
+			applyOperationDefaults(deltas[index], value, raiseTargets, effectNodes);
 		} else if (field === 'dice') {
 			deltas[index].dice = value;
+		} else if (deltas[index].operation === 'raiseEffectRule') {
+			reshapeRaise(deltas[index], field, value);
 		} else {
 			deltas[index][field] = value;
 		}
@@ -163,9 +133,11 @@
 		const choices = foundry.utils.deepClone(scalingChoices ?? []);
 		const delta = choices[choiceIndex].deltas[deltaIndex];
 		if (field === 'operation') {
-			applyOperationDefaults(delta, value);
+			applyOperationDefaults(delta, value, raiseTargets, effectNodes);
 		} else if (field === 'dice') {
 			delta.dice = value;
+		} else if (delta.operation === 'raiseEffectRule') {
+			reshapeRaise(delta, field, value);
 		} else {
 			delta[field] = value;
 		}
@@ -183,7 +155,7 @@
 					onchange={({ target }) => onUpdate(index, 'operation', target.value)}
 				>
 					{#each operationOptions as { value, label }}
-						<option {value} selected={value === delta.operation}>{label}</option>
+						<option {value}>{label}</option>
 					{/each}
 				</select>
 			</label>
@@ -213,7 +185,7 @@
 							})}
 					>
 						{#each diceFaceOptions as faces}
-							<option value={faces} selected={faces === (delta.dice?.faces ?? 6)}>d{faces}</option>
+							<option value={faces}>d{faces}</option>
 						{/each}
 					</select>
 				</label>
@@ -235,9 +207,9 @@
 						onchange={({ target }) =>
 							onUpdate(index, 'maxDieFaces', target.value ? Number(target.value) : null)}
 					>
-						<option value="" selected={delta.maxDieFaces == null}>{t('maxDieNone')}</option>
+						<option value="">{t('maxDieNone')}</option>
 						{#each diceFaceOptions as faces}
-							<option value={faces} selected={faces === delta.maxDieFaces}>d{faces}</option>
+							<option value={faces}>d{faces}</option>
 						{/each}
 					</select>
 				</label>
@@ -251,6 +223,12 @@
 						onchange={({ target }) => onUpdate(index, 'condition', target.value || null)}
 					/>
 				</label>
+			{:else if delta.operation === 'raiseEffectRule'}
+				<ScalingRaiseEffectRule
+					{delta}
+					targets={raiseTargets}
+					onUpdate={(field, value) => onUpdate(index, field, value)}
+				/>
 			{:else}
 				<label class="nimble-field" data-field-variant="stacked">
 					<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
@@ -276,9 +254,7 @@
 						>
 							<option value="">{t('targetEffectAuto')}</option>
 							{#each targetableEffects as effect}
-								<option value={effect.id} selected={effect.id === delta.targetEffectId}
-									>{effect.label}</option
-								>
+								<option value={effect.id}>{effect.label}</option>
 							{/each}
 						</select>
 					{:else}

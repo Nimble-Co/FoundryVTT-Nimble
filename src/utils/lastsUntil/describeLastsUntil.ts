@@ -1,3 +1,4 @@
+import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { isRoundSpan } from './momentForm.js';
 import type { Moment } from './momentReached.js';
@@ -46,8 +47,35 @@ const CORE_UNITS: readonly CoreDurationUnits[] = [
 	'rounds',
 ];
 
+interface HeldRollLike {
+	type?: string;
+	disabled?: boolean;
+	usedUp?: boolean;
+	whichRoll?: HeldAppliesTo;
+	meleeOnly?: boolean;
+	fromSourceOnly?: boolean;
+}
+
+/** The attack that uses up an effect's Held Roll rule, if one of its rules is used up. */
+export function usedUpOf(system: unknown): HeldUsedUp | null {
+	const rules = (system as { rules?: unknown } | null | undefined)?.rules;
+	if (!Array.isArray(rules)) return null;
+	const rule = (rules as HeldRollLike[]).find(
+		(entry) => entry?.type === 'heldRoll' && !entry.disabled && entry.usedUp !== false,
+	);
+	if (!rule) return null;
+	const by = rule.whichRoll ?? 'holderAttacks';
+	return {
+		by,
+		melee: rule.meleeOnly === true,
+		fromSource: by === 'attacksOnHolder' && rule.fromSourceOnly === true,
+	};
+}
+
 export interface DescribeInput {
 	moments: readonly Moment[];
+	/** A Held Roll rule that the next attack uses up; it reads first. */
+	usedUp?: HeldUsedUp | null;
 	/** A core duration of an older effect or a rule; it reads after the moments. */
 	coreDuration?: Partial<Record<CoreDurationUnits, number | null>> | null;
 	/** The effect has an Escape DC. */
@@ -72,6 +100,33 @@ function verb(event: LastsUntilEvent, person: Person, input: DescribeInput): str
 	return input.localize(`${WORDS}.event.${event}.${form}`);
 }
 
+function objectWord(person: Person, input: DescribeInput): string {
+	if (person.kind === 'named') return person.name;
+	return input.localize(`${WORDS}.${person.kind === 'you' ? 'you' : 'them'}`);
+}
+
+function sameReader(a: Person, b: Person): boolean {
+	return a.kind === b.kind && (a.kind !== 'named' || a.name === (b as { name: string }).name);
+}
+
+function usedUpPhrase(usedUp: HeldUsedUp, input: DescribeInput): string {
+	const { holder, source } = input.reader;
+	const attack = input.localize(`${WORDS}.${usedUp.melee ? 'meleeAttack' : 'attack'}`);
+	let moment: string;
+	if (usedUp.by === 'holderAttacks') {
+		moment = input.format(`${WORDS}.nextAttack`, { whose: possessive(holder, input), attack });
+	} else if (usedUp.fromSource && !sameReader(source, holder)) {
+		moment = input.format(`${WORDS}.nextAttackFrom`, {
+			whose: possessive(source, input),
+			attack,
+			whom: objectWord(holder, input),
+		});
+	} else {
+		moment = input.format(`${WORDS}.nextAttackOn`, { attack, whom: objectWord(holder, input) });
+	}
+	return input.format(`${WORDS}.until`, { moment });
+}
+
 function turnPhrase(moment: Moment, input: DescribeInput): string {
 	const boundary = input.localize(`${WORDS}.boundary.${moment.boundary ?? 'end'}`);
 	const span = moment.span ?? 'nextTurn';
@@ -83,10 +138,14 @@ function turnPhrase(moment: Moment, input: DescribeInput): string {
 			}),
 		});
 	}
-	const whose =
-		moment.clock === 'nextHero'
-			? input.localize(`${WORDS}.nextHero`)
-			: `${possessive(moment.clock === 'source' ? input.reader.source : input.reader.holder, input)} ${input.localize(`${WORDS}.span.${span}`)}`;
+	const spanWord = input.localize(`${WORDS}.span.${span}`);
+	let whose: string;
+	if (moment.clock === 'nextHero') whose = input.localize(`${WORDS}.nextHero`);
+	else if (moment.clock === 'any') whose = `${input.localize(`${WORDS}.anyTurn`)} ${spanWord}`;
+	else {
+		const person = moment.clock === 'source' ? input.reader.source : input.reader.holder;
+		whose = `${possessive(person, input)} ${spanWord}`;
+	}
 	return input.format(`${WORDS}.until`, {
 		moment: input.format(`${WORDS}.turn`, { boundary, whose }),
 	});
@@ -145,7 +204,10 @@ function phraseOf(moment: Moment, input: DescribeInput): string {
  * turn, or until you drop to 0 HP". Empty when nothing ends the effect.
  */
 export function describeLastsUntil(input: DescribeInput): string {
-	const phrases = input.moments.map((moment) => phraseOf(moment, input));
+	const phrases = [
+		...(input.usedUp ? [usedUpPhrase(input.usedUp, input)] : []),
+		...input.moments.map((moment) => phraseOf(moment, input)),
+	];
 	const core = corePhrase(input);
 	if (core) phrases.push(core);
 	if (!phrases.length && input.escape) {

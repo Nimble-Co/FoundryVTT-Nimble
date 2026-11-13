@@ -11,6 +11,7 @@ import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 interface UsedItem {
 	id?: string | null;
 	name?: string;
+	uuid?: string;
 	actor?: unknown;
 	rules?: Iterable<unknown> | Map<string, unknown>;
 }
@@ -23,19 +24,15 @@ interface RuleOfItem {
 	item?: { id?: string | null };
 }
 
-function holdIgnoreDisadvantage(actor: never, label: string): Promise<void> {
-	const combat = game.combat;
+function holdIgnoreDisadvantage(actor: never, item: UsedItem): Promise<void> {
 	return createHeldChange(actor, {
 		kind: 'ignoreDisadvantage',
 		value: 0,
-		label,
-		sourceName: label,
+		label: item.name ?? '',
 		appliesTo: 'holderAttacks',
 		spentBy: 'oneRoll',
 		ends: 'turn',
-		combatId: combat?.started ? (combat.id ?? '') : '',
-		round: combat?.round ?? 0,
-		turn: combat?.turn ?? 0,
+		origin: item.uuid ?? null,
 	});
 }
 
@@ -52,7 +49,7 @@ export function registerDemandControlHooks(): void {
 				(each) => (each as RuleOfItem).item?.id === item.id && each.opensOnUse,
 			);
 			if (!rule) return;
-			if (rule.ignoresDisadvantage) await holdIgnoreDisadvantage(actor, item.name ?? '');
+			if (rule.ignoresDisadvantage) await holdIgnoreDisadvantage(actor, item);
 			await openDemandControl(actor, { reportsRound: rule.oncePerRound === true });
 		}) as never,
 	);

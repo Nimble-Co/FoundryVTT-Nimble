@@ -447,6 +447,29 @@ function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[]
 }
 
 /**
+ * The die size of each dice pool, by identifier, with its `modifyPool` changes. It reads the rules
+ * only and resolves no formula, so roll data can call it.
+ */
+function getDicePoolDieFaces(actor: CharacterActorLike): Record<string, { faces: number }> {
+	const pools: Record<string, { faces: number }> = {};
+	const modifiersByIdentifier = getDicePoolModifiers(actor);
+	for (const item of actor.items.contents) {
+		for (const rule of (item as RuleBackedItem).rules?.values() ?? []) {
+			if (rule.type !== 'dicePool' || rule.disabled) continue;
+			const poolRule = rule as DicePoolRuleLike;
+			const identifier = normalizeIdentifier(poolRule.identifier || poolRule.id);
+			if (identifier.length < 1 || identifier in pools) continue;
+			let dieSize = toDieSize(poolRule.dieSize);
+			for (const modifier of modifiersByIdentifier.get(identifier) ?? []) {
+				if (modifier.dieSize?.trim()) dieSize = toDieSize(modifier.dieSize, dieSize);
+			}
+			pools[identifier] = { faces: dieSizeToMaxFace(dieSize) };
+		}
+	}
+	return pools;
+}
+
+/**
  * Roll a single die of the given size and return its face value.
  * Uses Foundry's randomID-style synchronous evaluation via a Roll.
  */
@@ -732,6 +755,7 @@ export {
 	buildPoolUpdatePayload,
 	dieSizeToMaxFace,
 	getDicePoolDefinitions,
+	getDicePoolDieFaces,
 	getDicePoolMapFromActor,
 	getDicePoolModifiers,
 	isCharacterActor,

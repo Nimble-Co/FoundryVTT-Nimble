@@ -84,3 +84,4 @@ export { Migration083FreeReactionCost } from './Migration083FreeReactionCost.js'
 export { Migration084CombatDiceMaxReference } from './Migration084CombatDiceMaxReference.js';
 export { Migration085NimbleEffectType } from './Migration085NimbleEffectType.js';
 export { Migration086ApplyEffectNodes } from './Migration086ApplyEffectNodes.js';
+export { Migration087HeldChangeEffects } from './Migration087HeldChangeEffects.js';

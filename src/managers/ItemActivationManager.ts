@@ -67,6 +67,7 @@ import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	isAttackRoll,
+	isMelee,
 	keptAmountEndedBy,
 	keptAmountFor,
 	spendHeldChanges,
@@ -739,9 +740,11 @@ class ItemActivationManager {
 						target: firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
+						melee: isMelee(delivery),
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
+						extraDamage: true,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
 					const offerSource = this.#offerSource();
@@ -957,6 +960,10 @@ class ItemActivationManager {
 				}),
 			);
 			rolls.push(roll);
+		}
+		for (const part of (await this.#heldPlan?.rollExtraDamage(this.actor!.getRollData())) ?? []) {
+			updatedEffects.push(part.node);
+			rolls.push(part.roll);
 		}
 
 		// Pool nodes mutate actor state, so their application is deferred until
@@ -1667,7 +1674,7 @@ class ItemActivationManager {
 			| { getFlag(scope: string, key: string): unknown }
 			| null
 			| undefined;
-		return buildTargetDomain(attacker, targetActor);
+		return buildTargetDomain(attacker, targetActor, this.#getAttackDelivery());
 	}
 
 	/** The targeted token when there is exactly one, matching #getSoleTargetDomain. */

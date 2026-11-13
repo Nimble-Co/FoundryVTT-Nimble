@@ -9,6 +9,7 @@
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
+	import { effectRuleNumbers } from '../../utils/spell/effectRuleNumbers.js';
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
@@ -169,6 +170,7 @@
 
 		const preview = deltas.map((delta: ScalingDelta) => {
 			if (delta.operation === 'increaseDieSize') return formatDieSizePreview(delta, upcastSteps);
+			if (delta.operation === 'raiseEffectRule') return formatRaisePreview(delta, upcastSteps);
 
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
@@ -232,6 +234,19 @@
 		}
 
 		return format(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
+	}
+
+	function formatRaisePreview(delta: ScalingDelta, steps: number) {
+		const target = effectRuleNumbers(spell?.parent ?? {}).find(
+			(node) => node.nodeId === delta.targetEffectId,
+		);
+		const rule = target?.rules.find((entry) => entry.id === delta.ruleId);
+		const field = rule?.fields.find((entry) => entry.name === delta.ruleField);
+		return format(spellUpcastDialog.raiseEffectRule, {
+			rule: rule?.label ?? target?.label ?? '',
+			amount: String((delta.value ?? 0) * steps),
+			field: field?.label ?? delta.ruleField ?? '',
+		});
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null) {

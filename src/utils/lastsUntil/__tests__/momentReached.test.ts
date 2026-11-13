@@ -56,10 +56,11 @@ function subject(start: Partial<EffectStart> = {}, fields: Partial<MomentSubject
 		source: caster,
 		origin: 'Actor.tessa.Item.sand',
 		holderInCombat: true,
-		isClockTurn: (clock, turn) =>
-			clock === 'nextHero'
-				? turn.isHero
-				: turn.combatantId === (clock === 'holder' ? 'goblin' : 'tessa'),
+		isClockTurn: (clock, turn) => {
+			if (clock === 'any') return true;
+			if (clock === 'nextHero') return turn.isHero;
+			return turn.combatantId === (clock === 'holder' ? 'goblin' : 'tessa');
+		},
 		relatesTo: (combatId) => combatId === COMBAT,
 		secondsOf: (units, n) => n * ({ rounds: 6, minutes: 60, hours: 3600, days: 86400 }[units] ?? 0),
 		...fields,
@@ -113,6 +114,21 @@ describe('turn moments', () => {
 
 		expect(momentReached(current, applied, turnEnd(GOBLIN, 1))).toBe(true);
 	});
+
+	it.each([
+		['the source', TESSA],
+		['the holder', GOBLIN],
+		['another hero', BRUNO],
+	])(
+		'"the end of the current turn" applied in the turn of %s ends at that turn end',
+		(_who, turn) => {
+			const endOfTheTurn = moment({ boundary: 'end', clock: 'any', span: 'currentTurn' });
+			const applied = subject({ combatant: turn.combatantId, round: 1 });
+
+			expect(momentReached(endOfTheTurn, applied, turnStart(turn, 1))).toBe(false);
+			expect(momentReached(endOfTheTurn, applied, turnEnd(turn, 1))).toBe(true);
+		},
+	);
 
 	it('"the start of your next turn" ends as the source turn starts', () => {
 		const startOfYourNextTurn = moment({ boundary: 'start', clock: 'source', span: 'nextTurn' });

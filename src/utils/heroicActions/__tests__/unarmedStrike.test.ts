@@ -39,10 +39,13 @@ function dialogResult(result: unknown) {
 	});
 }
 
+const globals = globalThis as unknown as Record<string, unknown>;
 let restore: () => void;
+let savedFromUuidSync: unknown;
 
 beforeEach(() => {
 	restore = resetHeroicGlobals();
+	savedFromUuidSync = globals.fromUuidSync;
 	dialogMock.mockReset();
 	damageRollMock.mockReset();
 	damageRollMock.mockImplementation(function roll() {
@@ -50,7 +53,10 @@ beforeEach(() => {
 	});
 });
 
-afterEach(() => restore());
+afterEach(() => {
+	globals.fromUuidSync = savedFromUuidSync;
+	restore();
+});
 
 describe('rollUnarmedStrike', () => {
 	it('posts the unarmed strike card with the damage bonuses', async () => {
@@ -171,31 +177,33 @@ describe('rollUnarmedStrike', () => {
 
 	it('takes out disadvantage with a Held Change that ignores it', async () => {
 		dialogResult({ rollMode: -1 });
-		(heroicGlobals().game as unknown as { combats: unknown }).combats = new Map([
-			['c1', { started: true }],
-		]);
 		const actor = createHeroicCharacter({ proficient: true });
-		const remove = vi.fn(async () => undefined);
+		const deleteEmbeddedDocuments = vi.fn(async () => []);
 		Object.assign(actor, {
+			uuid: 'Actor.hero',
+			deleteEmbeddedDocuments,
 			effects: [
 				{
 					id: 'held',
-					delete: remove,
-					flags: {
-						nimble: {
-							heldChange: {
-								kind: 'ignoreDisadvantage',
-								appliesTo: 'holderAttacks',
+					name: 'Nullify',
+					origin: null,
+					system: {
+						rules: [
+							{
+								id: 'held-rule',
+								type: 'heldRoll',
+								heldKind: 'ignoreDisadvantage',
+								whichRoll: 'holderAttacks',
+								usedUp: true,
 								value: 0,
-								label: 'Nullify',
-								combatId: 'c1',
-								ends: 'combat',
 							},
-						},
+						],
 					},
+					flags: {},
 				},
 			],
 		});
+		globals.fromUuidSync = vi.fn(() => actor);
 
 		await rollUnarmedStrike(actor);
 
@@ -204,6 +212,7 @@ describe('rollUnarmedStrike', () => {
 			{},
 			expect.objectContaining({ rollMode: 0 }),
 		);
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
 	});
 
 	it('writes the recovery flags on its card, so a reroll can follow them', async () => {

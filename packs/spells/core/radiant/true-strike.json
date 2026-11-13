@@ -19,7 +19,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "jznDVdsHl8S4MAvj",
+					"type": "applyEffect",
+					"effectId": "6QGjDXudZTzc83uI",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -53,7 +63,64 @@
 		"school": "radiant",
 		"tier": 0
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "6QGjDXudZTzc83uI",
+			"name": "True Strike",
+			"img": "icons/magic/holy/projectiles-blades-salvo-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "GhNCEqM18ebfX8WT",
+						"identifier": "",
+						"label": "True Strike",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": 1,
+						"whichRoll": "holderAttacks",
+						"usedUp": true,
+						"meleeOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

@@ -176,3 +176,141 @@ describe('spendDicePool', () => {
 		expect(postedRolls).toHaveLength(0);
 	});
 });
+
+describe('spendDicePool with a giveEffect consumer', () => {
+	const createEffect = vi.fn();
+	const globals = globalThis as unknown as Record<string, any>;
+	let savedTargets: unknown;
+	let savedActiveEffect: unknown;
+
+	const mandate = {
+		name: 'Shining Mandate',
+		transfer: false,
+		toObject: () => ({
+			_id: 'eff1',
+			name: 'Shining Mandate',
+			transfer: false,
+			system: {
+				rules: [{ type: 'heldRoll', heldKind: 'extraDamage', formula: '1d@pools.judgment.faces' }],
+			},
+		}),
+	};
+
+	function oathsworn(faces: number[]) {
+		const created = createActor(faces);
+		const item = created.raw.items.contents[0] as Record<string, unknown>;
+		item.uuid = 'Actor.paladin.Item.item-rage';
+		item.effects = [{ name: 'Aura', transfer: true, toObject: () => ({}) }, mandate];
+		Object.assign(created.raw, {
+			uuid: 'Actor.paladin',
+			getRollData: () => ({ pools: { judgment: { faces: 10 } } }),
+		});
+		return created;
+	}
+
+	function ally(name: string) {
+		return {
+			uuid: `Actor.${name}`,
+			name,
+			isOwner: true,
+			effects: [],
+			system: { attributes: { hp: { temp: 0 } } },
+			update: vi.fn(async () => undefined),
+		};
+	}
+
+	function target(...actors: ReturnType<typeof ally>[]) {
+		globals.game.user.targets = new Set(actors.map((actor) => ({ actor })));
+	}
+
+	const give = () => consumer({ effectFormula: null, effectType: 'giveEffect' });
+
+	beforeEach(() => {
+		savedTargets = globals.game.user?.targets;
+		savedActiveEffect = globals.CONFIG.ActiveEffect;
+		globals.game.user ??= {};
+		createEffect.mockReset().mockImplementation(async (_data: unknown, { parent }) => ({
+			uuid: `${parent.uuid}.ActiveEffect.new`,
+		}));
+		globals.CONFIG.ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments: vi.fn() },
+		};
+		globals.Roll.replaceFormulaData = (formula: string, data: any) =>
+			formula.replace('@pools.judgment.faces', String(data.pools.judgment.faces));
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => ({ uuid })),
+		);
+	});
+
+	let warn: ReturnType<typeof vi.spyOn> | null = null;
+
+	afterEach(() => {
+		globals.game.user.targets = savedTargets;
+		globals.CONFIG.ActiveEffect = savedActiveEffect;
+		vi.unstubAllGlobals();
+		warn?.mockRestore();
+		warn = null;
+	});
+
+	it('spends nothing and warns when the user has no target', async () => {
+		const { actor, persistedFaces } = oathsworn([4, 7]);
+		target();
+		warn = vi.spyOn(ui.notifications!, 'warn');
+
+		await spendDicePool({ actor, pool: pool([4, 7]), consumer: give(), selectedIndices: [1] });
+
+		expect(warn).toHaveBeenCalledWith('Target a creature to give Rage to. No dice were spent.');
+		expect(persistedFaces()).toEqual([4, 7]);
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(globals.ChatMessage.create).not.toHaveBeenCalled();
+	});
+
+	it('spends nothing and warns when no target takes the effect', async () => {
+		const { actor, persistedFaces } = oathsworn([4, 7]);
+		const mira = ally('Mira');
+		(mira as { effects: unknown[] }).effects = [
+			{
+				origin: 'Actor.paladin.Item.item-rage',
+				name: 'Shining Mandate',
+				statuses: new Set(),
+				system: { lastsUntil: [] },
+			},
+		];
+		target(mira);
+		warn = vi.spyOn(ui.notifications!, 'warn');
+
+		await spendDicePool({ actor, pool: pool([4, 7]), consumer: give(), selectedIndices: [1] });
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(warn).toHaveBeenCalledWith(
+			'No target took Shining Mandate: each one has it already. No dice were spent.',
+		);
+		expect(persistedFaces()).toEqual([4, 7]);
+		expect(globals.ChatMessage.create).not.toHaveBeenCalled();
+	});
+
+	it('removes the picked die, gives the effect to each target, and posts the note', async () => {
+		const { actor, persistedFaces } = oathsworn([4, 7]);
+		const mira = ally('Mira');
+		const tor = ally('Tor');
+		target(mira, tor);
+
+		await spendDicePool({ actor, pool: pool([4, 7]), consumer: give(), selectedIndices: [1] });
+
+		expect(persistedFaces()).toEqual([4]);
+		expect(createEffect).toHaveBeenCalledTimes(2);
+		const [data, options] = createEffect.mock.calls[0];
+		expect(options.parent).toBe(mira);
+		expect(createEffect.mock.calls[1][1].parent).toBe(tor);
+		expect(data).toMatchObject({
+			name: 'Shining Mandate',
+			origin: 'Actor.paladin.Item.item-rage',
+			system: { rules: [{ formula: '1d10' }] },
+		});
+		expect(postedRolls).toHaveLength(0);
+		const content = globals.ChatMessage.create.mock.calls[0][0].content as string;
+		expect(content).toContain('Spent 1 Fury Dice (7)');
+		expect(content).toContain('Gave Shining Mandate to Mira, Tor');
+	});
+});

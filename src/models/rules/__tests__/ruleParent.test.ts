@@ -229,6 +229,7 @@ describe('rule types that need an item', () => {
 				'damageMultiplier',
 				'diceConsumer',
 				'dicePool',
+				'dieResultEffect',
 				'freeAssess',
 				'grantActivation',
 				'grantItem',
@@ -242,10 +243,22 @@ describe('rule types that need an item', () => {
 				'modifyReroll',
 				'modifyToggle',
 				'optionSwap',
+				'poolEmptyEffect',
 				'savingThrowRollMode',
 				'skillPointMove',
 				'toggleEffect',
 			].sort(),
 		);
+	});
+});
+
+describe('rule types that need an effect', () => {
+	it('are the types that only an effect on a creature reads', () => {
+		const effectOnly = Object.entries(RULE_CLASSES)
+			.filter(([, Cls]) => (Cls as typeof NimbleBaseRule).worksOnItems === false)
+			.map(([type]) => type)
+			.sort();
+
+		expect(effectOnly).toEqual(['freeSpellCost', 'heldRoll']);
 	});
 });

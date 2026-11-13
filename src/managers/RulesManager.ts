@@ -84,6 +84,14 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 				return;
 			}
 
+			if (!isEffectParent(parent) && Cls.worksOnItems === false) {
+				this.failures.set(source.id, {
+					key: 'NIMBLE.rulesBuilder.ruleFailureNotOnItem',
+					data: { type: source.type },
+				});
+				return;
+			}
+
 			try {
 				const rule = new Cls(source, { parent, strict: true });
 				this.set(rule.id, rule);
@@ -271,6 +279,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		if (isEffectParent(parent) && Cls.worksOnEffects === false) {
 			// eslint-disable-next-line no-console
 			console.error(`Nimble | A ${type} rule works only on an item.`);
+			return undefined;
+		}
+		if (!isEffectParent(parent) && Cls.worksOnItems === false) {
+			// eslint-disable-next-line no-console
+			console.error(`Nimble | A ${type} rule works only on an effect.`);
 			return undefined;
 		}
 

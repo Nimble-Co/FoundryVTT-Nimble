@@ -1,4 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { firstItemEffect } from '#utils/actor/firstItemEffect.js';
 import { addBankedDamageReduction } from '#utils/damage/bankedDamageReduction.js';
 import type { DicePoolConsumer } from '#utils/dicePool/dicePoolConsumers.js';
 import { maximizePoolDie, setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
@@ -56,11 +58,107 @@ async function applyMaximizeOutcome(
 	} as ChatMessage.CreateData);
 }
 
+interface GivenEffect {
+	name: string;
+	transfer?: boolean;
+	toObject(): Record<string, unknown>;
+}
+
+type TargetActor = Parameters<typeof applyEffectToActor>[0];
+
+/** The first effect of the consumer's item that does not go on its owner. */
+function effectToGive(
+	actor: NimbleCharacter,
+	consumer: DicePoolConsumer,
+): { effect: GivenEffect; itemUuid: string } | null {
+	const item = actor.items.get(consumer.itemId) as
+		| { uuid: string; effects?: Iterable<GivenEffect> }
+		| undefined;
+	const effect = firstItemEffect(item);
+	return item && effect ? { effect, itemUuid: item.uuid } : null;
+}
+
+function targetActors(): { actor: TargetActor; name: string }[] {
+	return Array.from(game.user?.targets ?? []).flatMap((token) => {
+		const target = (token as { actor?: TargetActor | null }).actor;
+		return target ? [{ actor: target, name: target.name ?? '' }] : [];
+	});
+}
+
+/**
+ * The item's effect goes on each target, then the picked dice leave the pool. With no target, or
+ * when no target takes the effect (it has one that lasts as long), nothing is spent.
+ */
+async function applyGiveEffect(
+	request: SpendDicePoolRequest,
+	spentFaces: number[],
+	nextFaces: number[],
+): Promise<void> {
+	const { actor, pool, consumer } = request;
+	const targets = targetActors();
+	if (targets.length < 1) {
+		ui.notifications?.warn(
+			localize('NIMBLE.dicePoolTracker.panel.useFeature.giveEffectNoTarget', {
+				name: consumer.itemName,
+			}),
+		);
+		return;
+	}
+	const given = effectToGive(actor, consumer);
+	if (!given) {
+		console.warn(`Nimble | ${consumer.itemName} has no effect to give.`);
+		return;
+	}
+
+	const payload = payloadFromEffect(given.effect, {
+		itemUuid: given.itemUuid,
+		user: actor as unknown as Parameters<typeof payloadFromEffect>[1]['user'],
+	});
+	const results = await Promise.allSettled(
+		targets.map((target) => applyEffectToActor(target.actor, payload)),
+	);
+	const names = targets.flatMap((target, index) => {
+		const result = results[index];
+		if (result.status === 'rejected') console.error(result.reason);
+		return result.status === 'fulfilled' && result.value ? [target.name] : [];
+	});
+	if (names.length < 1) {
+		ui.notifications?.warn(
+			localize('NIMBLE.dicePoolTracker.panel.useFeature.giveEffectNotTaken', {
+				name: given.effect.name,
+			}),
+		);
+		return;
+	}
+	await setPoolFaces(actor, pool.id, nextFaces);
+
+	const lines = [
+		localize('NIMBLE.dicePoolTracker.panel.useFeature.spentNote', {
+			count: String(spentFaces.length),
+			label: pool.label,
+			faces: spentFaces.join(', '),
+		}),
+		localize('NIMBLE.dicePoolTracker.panel.useFeature.givenNote', {
+			effect: given.effect.name,
+			names: names.join(', '),
+		}),
+	];
+	const ChatMessageCls = chatMessageClass();
+	await ChatMessageCls.create({
+		speaker: ChatMessageCls.getSpeaker({ actor }),
+		content: spendFlavor(
+			consumer.itemName,
+			lines.map((line) => foundry.utils.escapeHTML(line)).join('<br />'),
+		),
+	} as ChatMessage.CreateData);
+}
+
 /**
  * Use the picked dice of a rolled pool for one consumer. A `maximize` consumer
- * raises the dice in place. Any other consumer removes them from the pool,
- * rolls its effect formula with `@n` and `@sum`, banks the total for a
- * `damageReduction` effect, and posts the roll to chat.
+ * raises the dice in place. A `giveEffect` consumer gives its item's effect to
+ * each target. Any other consumer removes them from the pool, rolls its effect
+ * formula with `@n` and `@sum`, banks the total for a `damageReduction` effect,
+ * and posts the roll to chat.
  */
 export async function spendDicePool(request: SpendDicePoolRequest): Promise<void> {
 	const { actor, pool, consumer } = request;
@@ -77,6 +175,11 @@ export async function spendDicePool(request: SpendDicePoolRequest): Promise<void
 	const pickedSet = new Set(picked);
 	const spentFaces = pool.faces.filter((_, index) => pickedSet.has(index));
 	const nextFaces = pool.faces.filter((_, index) => !pickedSet.has(index));
+
+	if (consumer.effectType === 'giveEffect') {
+		await applyGiveEffect(request, spentFaces, nextFaces);
+		return;
+	}
 
 	await setPoolFaces(actor, pool.id, nextFaces);
 

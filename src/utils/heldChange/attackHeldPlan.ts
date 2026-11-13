@@ -1,8 +1,12 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import { createBonusDamageNode } from '#utils/treeManipulation/createBonusDamageNode.js';
 import { removeDisadvantage } from '../../managers/itemActivation/keptAmountActivation.js';
 import {
+	heldAdvantageForAttack,
 	heldChangesForAttack,
+	heldExtraDamageForAttack,
+	heldMaximizeForAttack,
 	ignoreDisadvantageChange,
 	mustAttackOtherChange,
 	spendHeldChanges,
@@ -15,6 +19,8 @@ interface AttackHeldInput {
 	target: Holder;
 	/** An area roll has no Primary Die, so it uses no Primary Die change. */
 	area: boolean;
+	/** A melee attack; unknown counts as melee. */
+	melee?: boolean;
 	/** The roll is an attack roll. Only an attack roll uses Primary Die changes and ignores disadvantage. */
 	attack: boolean;
 	/** The amount the roll keeps in place of dice, or null when it rolls. */
@@ -23,10 +29,46 @@ interface AttackHeldInput {
 	keptToEnd?: HeldChange | null;
 	/** The roll has no disadvantage of its own to take out (max damage, or it ignores it already). */
 	noDisadvantageToIgnore?: boolean;
+	/** The card shows the extra damage parts, so the attack uses and spends them. */
+	extraDamage?: boolean;
+}
+
+/** Each extra damage part as its own damage node with a hit outcome, so a miss deals none of it. */
+async function rollExtraDamage(changes: HeldChange[], rollData: Record<string, unknown>) {
+	const parts: { node: ReturnType<typeof createBonusDamageNode>; roll: Roll }[] = [];
+	for (const change of changes) {
+		const formula = change.formula?.trim() ?? '';
+		try {
+			const roll = new Roll(formula, rollData) as Roll;
+			await roll.evaluate();
+			parts.push({
+				node: createBonusDamageNode({
+					damageType: change.damageType ?? '',
+					formula,
+					roll: roll.toJSON() as Record<string, unknown>,
+				}),
+				roll,
+			});
+		} catch (error) {
+			console.warn(
+				`Nimble | Could not roll the extra damage "${formula}" of ${change.label}.`,
+				error,
+			);
+		}
+	}
+	return parts;
 }
 
 function planOf(
-	parts: Pick<AttackHeldPlan, 'primaryDie' | 'ignoreDisadvantage' | 'mustAttackOther'>,
+	parts: Pick<
+		AttackHeldPlan,
+		| 'primaryDie'
+		| 'advantage'
+		| 'maximize'
+		| 'ignoreDisadvantage'
+		| 'mustAttackOther'
+		| 'extraDamage'
+	>,
 	keptToEnd: HeldChange | null,
 ): AttackHeldPlan {
 	const plan: AttackHeldPlan = {
@@ -39,7 +81,24 @@ function planOf(
 				itemUuid: '',
 			})),
 		applyToRoll(options) {
+			// One source for each change, so ignoring disadvantage takes out only the minus ones.
+			const steps = parts.advantage.map((change) => change.value).filter((value) => value !== 0);
+			if (steps.length > 0) {
+				options.rollModeSources = [
+					...(Array.isArray(options.rollModeSources)
+						? options.rollModeSources
+						: [options.rollMode ?? 0]),
+					...steps,
+				];
+			}
 			if (parts.ignoreDisadvantage) removeDisadvantage(options);
+			if (parts.maximize && !options.maxDamage) {
+				options.maxDamage = options.canCrit === false ? 'hit' : 'crit';
+				options.outcomeSources = {
+					...options.outcomeSources,
+					maxDamage: [parts.maximize.label],
+				};
+			}
 			if (parts.mustAttackOther) {
 				options.outcomeSources = {
 					...options.outcomeSources,
@@ -47,12 +106,19 @@ function planOf(
 				};
 			}
 		},
+		rollExtraDamage: (rollData) => rollExtraDamage(parts.extraDamage, rollData),
 		withoutPrimaryDie: () => planOf({ ...parts, primaryDie: [] }, keptToEnd),
 		spend: () =>
 			spendHeldChanges(
-				[...parts.primaryDie, parts.ignoreDisadvantage, keptToEnd, parts.mustAttackOther].filter(
-					(change): change is HeldChange => !!change,
-				),
+				[
+					...parts.primaryDie,
+					...parts.advantage,
+					parts.maximize,
+					parts.ignoreDisadvantage,
+					keptToEnd,
+					parts.mustAttackOther,
+					...parts.extraDamage,
+				].filter((change): change is HeldChange => !!change),
 			),
 	};
 	return plan;
@@ -62,6 +128,8 @@ function planOf(
  * The Held Changes one attack uses. A kept amount replaces the roll, so the
  * roll uses no Primary Die change and has no disadvantage to take out.
  * Ignoring disadvantage also ignores the negative Primary Die changes.
+ * Advantage changes add their steps to the roll mode; a maximize change rolls every die at its
+ * highest number. An extra damage change goes on any attack of the holder, kept amount or not.
  */
 function attackHeldPlanOf(input: AttackHeldInput): AttackHeldPlan {
 	const kept = input.kept ?? null;
@@ -69,17 +137,24 @@ function attackHeldPlanOf(input: AttackHeldInput): AttackHeldPlan {
 		input.attack && !kept && !input.noDisadvantageToIgnore
 			? ignoreDisadvantageChange(input.attacker)
 			: null;
-	const primaryDie =
-		input.attack && !kept
-			? heldChangesForAttack({
-					attacker: input.attacker,
-					target: input.target,
-					area: input.area,
-					ignoresNegative: !!ignoreDisadvantage,
-				})
-			: [];
+	const rolls = input.attack && !kept;
+	const attack = {
+		attacker: input.attacker,
+		target: input.target,
+		area: input.area,
+		melee: input.melee,
+	};
 	return planOf(
-		{ primaryDie, ignoreDisadvantage, mustAttackOther: mustAttackOtherChange(input.attacker) },
+		{
+			primaryDie: rolls
+				? heldChangesForAttack({ ...attack, ignoresNegative: !!ignoreDisadvantage })
+				: [],
+			advantage: rolls ? heldAdvantageForAttack(attack) : [],
+			maximize: rolls ? heldMaximizeForAttack(attack) : null,
+			ignoreDisadvantage,
+			mustAttackOther: mustAttackOtherChange(input.attacker),
+			extraDamage: input.attack && input.extraDamage ? heldExtraDamageForAttack(attack) : [],
+		},
 		input.keptToEnd ?? null,
 	);
 }

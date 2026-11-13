@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
 
 const conditionalBonuses = vi.fn(() => []);
@@ -143,30 +143,23 @@ describe('the activation dialog tick for a use with no charge', () => {
 });
 
 describe('the activation dialog kept amount', () => {
-	beforeEach(() => {
-		(globalThis as unknown as Record<string, any>).game.combats = new Map([
-			['c1', { started: true, round: 0, turn: 0 }],
-		]);
-	});
-
 	const kept = {
 		id: 'kept',
-		flags: {
-			nimble: {
-				heldChange: {
-					kind: 'wholeAmount',
+		name: 'Rampage',
+		origin: null,
+		system: {
+			rules: [
+				{
+					id: 'kept-rule',
+					type: 'heldRoll',
+					heldKind: 'wholeAmount',
 					value: 13,
-					label: 'Rampage',
-					sourceName: 'Rampage',
-					appliesTo: 'holderAttacks',
-					spentBy: 'oneRoll',
-					ends: 'turn',
-					combatId: 'c1',
-					round: 0,
-					turn: 0,
+					whichRoll: 'holderAttacks',
+					usedUp: true,
 				},
-			},
+			],
 		},
+		flags: {},
 	};
 
 	function openAttack(effects: object[]) {

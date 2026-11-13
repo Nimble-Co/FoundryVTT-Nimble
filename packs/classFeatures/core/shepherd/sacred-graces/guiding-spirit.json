@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "dieResultEffect",
+				"disabled": false,
+				"id": "yxgnbfXPq4Ei7Kqz",
+				"identifier": "",
+				"label": "Guiding Spirit",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "lifebinding-spirit",
+				"atLeast": 6,
+				"notOnAllies": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -48,7 +61,64 @@
 			"5": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "wRCFf3kKTfvROOFr",
+			"name": "Guiding Spirit",
+			"img": "icons/magic/light/projectile-smoke-pink.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "Og7uwQa7RBrsXCm3",
+						"identifier": "",
+						"label": "Guiding Spirit",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": 1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": true,
+						"meleeOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

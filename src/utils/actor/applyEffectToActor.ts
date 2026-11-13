@@ -3,6 +3,7 @@ import { askActiveGm } from '#utils/askActiveGm.js';
 import { newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
+import { checkFormulaReferences } from '#utils/rolls/formulaReferences.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import applyConditionToActor, {
@@ -65,15 +66,30 @@ function escapeDc(formula: unknown, user: SourceUser | null): string {
 	return dc === null ? written : String(dc);
 }
 
-/** A copy of an item's effect for an actor. The Escape DC is worked out now. */
+/** The `@` references of each extra damage formula, from the roll data of the one who used the item. */
+function resolveExtraDamage(rules: unknown, user: SourceUser | null): void {
+	if (!user || !Array.isArray(rules)) return;
+	let rollData: Record<string, unknown> | null = null;
+	for (const rule of rules as { type?: string; heldKind?: string; formula?: unknown }[]) {
+		if (rule?.type !== 'heldRoll' || rule.heldKind !== 'extraDamage') continue;
+		if (typeof rule.formula !== 'string' || !rule.formula.includes('@')) continue;
+		rollData ??= user.getRollData();
+		checkFormulaReferences(rule.formula, user, {}, { rollData });
+		// A reference the source has no value for is 0 here, not the holder's value at the roll.
+		rule.formula = Roll.replaceFormulaData(rule.formula, rollData, { missing: '0' });
+	}
+}
+
+/** A copy of an item's effect for an actor. The Escape DC and the extra damage dice are worked out now. */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
 	source: { itemUuid: string | null; user: SourceUser | null },
 ): EffectPayload {
 	const data = foundry.utils.deepClone(effect.toObject());
 	for (const key of NOT_COPIED) delete data[key];
-	const system = data.system as { escape?: { dc?: unknown } } | undefined;
+	const system = data.system as { escape?: { dc?: unknown }; rules?: unknown } | undefined;
 	if (system?.escape) system.escape.dc = escapeDc(system.escape.dc, source.user);
+	resolveExtraDamage(system?.rules, source.user);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,

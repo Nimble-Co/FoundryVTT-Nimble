@@ -48,6 +48,37 @@ describe('effectLastsUntil', () => {
 		expect(effectLastsUntil(effect, boss)).toBe('Until you drop to 0 HP');
 	});
 
+	describe('with a used-up Held Roll rule', () => {
+		const advance = {
+			type: 'heldRoll',
+			whichRoll: 'attacksOnHolder',
+			usedUp: true,
+			meleeOnly: true,
+			fromSourceOnly: true,
+		};
+
+		it('reads the melee attack of the source against the holder first', () => {
+			const effect = { origin: faceMe.uuid, system: { lastsUntil: [zeroHp], rules: [advance] } };
+
+			expect(effectLastsUntil(effect, { uuid: 'Actor.hero' })).toBe(
+				"Until Goblin Boss's next melee attack against you, or until Goblin Boss drops to 0 HP",
+			);
+		});
+
+		it('reads the next attack against the holder when the holder is the source', () => {
+			const effect = { origin: faceMe.uuid, system: { lastsUntil: [], rules: [advance] } };
+
+			expect(effectLastsUntil(effect, boss)).toBe('Until the next melee attack against you');
+		});
+
+		it('reads no attack for a rule that is not used up', () => {
+			const rule = { ...advance, usedUp: false };
+			const effect = { origin: faceMe.uuid, system: { lastsUntil: [zeroHp], rules: [rule] } };
+
+			expect(effectLastsUntil(effect, boss)).toBe('Until you drop to 0 HP');
+		});
+	});
+
 	it('reads the core duration of an older effect, and an Escape with no moment', () => {
 		expect(effectLastsUntil({ _source: { duration: { value: 3, units: 'rounds' } } }, null)).toBe(
 			'For 3 rounds',

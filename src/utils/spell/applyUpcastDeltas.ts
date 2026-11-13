@@ -1,5 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
-import type { ScalingDelta, UpcastResult } from '#types/spellScaling.js';
+import type { RuleRaise, ScalingDelta, UpcastResult } from '#types/spellScaling.js';
 import { addToSaveDC } from '../rolls/saveNodeDC.js';
 import { stepFormulaDieSize } from './stepFormulaDieSize.js';
 
@@ -340,6 +340,21 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 			if (activationData.duration && delta.value) {
 				activationData.duration.quantity += delta.value * upcastSteps;
 			}
+			break;
+		}
+
+		case 'raiseEffectRule': {
+			if (!delta.targetEffectId || !delta.ruleId || !delta.ruleField) break;
+			const node = findEffectNode(activationData.effects, 'applyEffect', delta.targetEffectId);
+			if (!node) break;
+			const amount = (delta.value ?? 0) * upcastSteps;
+			const raises: RuleRaise[] = node.ruleRaises ?? [];
+			const entry = raises.find(
+				(raise) => raise.ruleId === delta.ruleId && raise.field === delta.ruleField,
+			);
+			if (entry) entry.amount += amount;
+			else raises.push({ ruleId: delta.ruleId, field: delta.ruleField, amount });
+			node.ruleRaises = raises;
 			break;
 		}
 

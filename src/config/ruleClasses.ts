@@ -13,6 +13,7 @@ import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConcentrationTrackRule } from '../models/rules/concentrationTrack.js';
 import { ConditionalBonusRule } from '../models/rules/conditionalBonus.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { CountAsMarkedRule } from '../models/rules/countAsMarked.js';
 import { CritBackRule } from '../models/rules/critBack.js';
 import { CritDiceRule } from '../models/rules/critDice.js';
 import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
@@ -23,15 +24,18 @@ import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DefendOptionRule } from '../models/rules/defendOption.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
+import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
+import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
 import { GrantActivationRule } from '../models/rules/grantActivation.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
+import { HeldRollRule } from '../models/rules/heldRoll.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { HoldOnTargetRule } from '../models/rules/holdOnTarget.js';
@@ -60,6 +64,7 @@ import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { OptionWindowRule } from '../models/rules/optionWindow.js';
 import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
+import { PoolEmptyEffectRule } from '../models/rules/poolEmptyEffect.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
@@ -99,6 +104,7 @@ export const RULE_CLASSES = {
 	damageReduction: DamageReductionRule,
 	dyingActionLimit: DyingActionLimitRule,
 	freeMove: FreeMoveRule,
+	freeSpellCost: FreeSpellCostRule,
 	grantActivation: GrantActivationRule,
 	grantMovement: GrantMovementRule,
 	diceConsumer: DiceConsumerRule,
@@ -114,6 +120,10 @@ export const RULE_CLASSES = {
 	initiativeRollMode: InitiativeRollModeRule,
 	optionWindow: OptionWindowRule,
 	damageMultiplier: DamageMultiplierRule,
+	heldRoll: HeldRollRule,
+	countAsMarked: CountAsMarkedRule,
+	poolEmptyEffect: PoolEmptyEffectRule,
+	dieResultEffect: DieResultEffectRule,
 	holdOnTarget: HoldOnTargetRule,
 	keepAmount: KeepAmountRule,
 	makeCrit: MakeCritRule,

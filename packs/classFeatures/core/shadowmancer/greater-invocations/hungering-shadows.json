@@ -20,7 +20,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "VsLg65AUwKPD4ZMD",
+					"type": "applyEffect",
+					"effectId": "kKCtA4FnYQCNgNWT",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -47,7 +57,69 @@
 			18
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "kKCtA4FnYQCNgNWT",
+			"name": "Hungering Shadows",
+			"img": "icons/magic/unholy/hand-claw-glow-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "freeSpellCost",
+						"disabled": false,
+						"id": "CJ1I5u0yWYCtRGDo",
+						"identifier": "",
+						"label": "Hungering Shadows",
+						"predicate": {},
+						"priority": 1,
+						"poolIdentifier": "pilfered-power"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "nextSpell",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

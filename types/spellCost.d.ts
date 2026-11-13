@@ -23,6 +23,8 @@ export interface SpellCostActorLike {
 	items?: { contents?: Array<{ type?: string; identifier?: string; system?: unknown }> };
 	/** Read when a declared cost amount is a formula. */
 	getRollData?: () => Record<string, unknown>;
+	/** The prepared rules; a `freeSpellCost` rule makes a pool cost free. */
+	rules?: unknown;
 	system?: {
 		resources?: {
 			mana?: { current?: number; max?: number; baseMax?: number };

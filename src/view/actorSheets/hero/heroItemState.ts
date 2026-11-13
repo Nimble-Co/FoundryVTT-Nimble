@@ -7,9 +7,11 @@ import { validateItemChargeConsumption } from '#utils/chargePool/chargePoolConsu
 import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 import { getChargeConsumers } from '#utils/chargePool/helpers.js';
 import type { ChargePoolState, RuleBackedItem } from '#utils/chargePool/types.js';
-import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import {
+	dicePoolConsumerSelectionCap,
+	getDicePoolConsumers,
+} from '#utils/dicePool/dicePoolConsumers.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
 import { isResourceSpendingAutomationEnabled } from '../../../settings/automationSettings.js';
 import { recoveryOf } from '../shared/poolRecovery.ts';
 import type {
@@ -78,16 +80,10 @@ function diceConsumersByItem(actor: NimbleCharacter): Map<string, DiceConsumerLi
 				ruleId: consumer.ruleId,
 				poolId: pool.id,
 				label: consumer.ruleLabel || consumer.itemName,
-				cap:
-					consumer.selectionOutcome === 'consume'
-						? null
-						: Math.max(
-								1,
-								resolveFormulaToInteger(
-									document as unknown as Parameters<typeof resolveFormulaToInteger>[0],
-									consumer.cost,
-								),
-							),
+				cap: dicePoolConsumerSelectionCap(
+					document as unknown as Parameters<typeof dicePoolConsumerSelectionCap>[0],
+					consumer,
+				),
 				maximize: consumer.selectionOutcome === 'maximize',
 			};
 			byItem.set(consumer.itemId, [...(byItem.get(consumer.itemId) ?? []), entry]);

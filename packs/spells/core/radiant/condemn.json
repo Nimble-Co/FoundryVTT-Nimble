@@ -10,7 +10,7 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "Attacked",
-				"quantity": 1,
+				"quantity": 2,
 				"type": "action",
 				"isReaction": false
 			},
@@ -40,6 +40,15 @@
 					},
 					"canCrit": false,
 					"canMiss": false
+				},
+				{
+					"id": "NT5oFI0fdWqXXIqI",
+					"type": "applyEffect",
+					"effectId": "CVXg8CsjSoKK8OTz",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -84,12 +93,80 @@
 					"condition": null,
 					"targetEffectId": null,
 					"durationType": null
+				},
+				{
+					"operation": "raiseEffectRule",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "NT5oFI0fdWqXXIqI",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "WKt5tVwEzRIdL9hG",
+					"ruleField": "value"
 				}
 			],
 			"choices": null
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "CVXg8CsjSoKK8OTz",
+			"name": "Condemn",
+			"img": "icons/magic/holy/saint-glass-portrait-halo.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "WKt5tVwEzRIdL9hG",
+						"identifier": "",
+						"label": "Condemn",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": 1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": true,
+						"meleeOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

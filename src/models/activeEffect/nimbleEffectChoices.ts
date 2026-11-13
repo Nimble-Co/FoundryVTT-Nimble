@@ -8,7 +8,7 @@ export const LASTS_UNTIL_KINDS = ['turn', 'time', 'event'] as const;
 
 export const TURN_BOUNDARIES = ['start', 'end'] as const;
 
-export const CLOCKS = ['holder', 'source', 'nextHero'] as const;
+export const CLOCKS = ['holder', 'source', 'nextHero', 'any'] as const;
 
 export const TURN_SPANS = ['nextTurn', 'currentTurn', 'currentRound', 'nextRound'] as const;
 
@@ -30,7 +30,6 @@ export const LASTS_UNTIL_EVENTS = [
 	'nextRoll',
 	'nextDamage',
 	'nextSpell',
-	'nextAffliction',
 	'inactiveRound',
 	'wounded',
 	'chargeGained',

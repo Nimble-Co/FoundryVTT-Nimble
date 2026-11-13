@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getDicePoolConsumers } from '../dicePoolConsumers.js';
+import { dicePoolConsumerSelectionCap, getDicePoolConsumers } from '../dicePoolConsumers.js';
 import type { CharacterActorLike, DicePoolRuleAny, DicePoolState } from '../types.js';
 
 type MockRule = DicePoolRuleAny & { type: string; label?: string };
@@ -157,6 +157,32 @@ describe('getDicePoolConsumers', () => {
 		]);
 
 		expect(getDicePoolConsumers(actor, createFuryPool())).toEqual([]);
+	});
+
+	it('lists a manual consumer with no effectFormula that gives an effect', () => {
+		const actor = createMockActor([
+			createMockItem('mandate', 'Shining Mandate', [
+				{
+					type: 'diceConsumer',
+					id: 'mandate-consumer',
+					poolIdentifier: 'fury',
+					poolScope: 'item',
+					mode: 'manual',
+					cost: '1',
+					bonusOnAttackDelivery: null,
+					effectFormula: null,
+					effectType: 'giveEffect',
+				} as MockRule,
+			]),
+		]);
+
+		expect(getDicePoolConsumers(actor, createFuryPool())).toEqual([
+			expect.objectContaining({
+				ruleId: 'mandate-consumer',
+				effectFormula: null,
+				effectType: 'giveEffect',
+			}),
+		]);
 	});
 
 	it('excludes consumers targeting a different pool identifier', () => {
@@ -558,5 +584,39 @@ describe('selectionOutcome', () => {
 		]);
 
 		expect(getDicePoolConsumers(actor, createFuryPool())).toHaveLength(0);
+	});
+});
+
+describe('dicePoolConsumerSelectionCap', () => {
+	const actor = createMockActor([]);
+
+	it('leaves a plain spend uncapped', () => {
+		expect(
+			dicePoolConsumerSelectionCap(actor, {
+				selectionOutcome: 'consume',
+				effectType: 'generic',
+				cost: '2',
+			}),
+		).toBeNull();
+	});
+
+	it('caps a transforming outcome at its cost', () => {
+		expect(
+			dicePoolConsumerSelectionCap(actor, {
+				selectionOutcome: 'maximize',
+				effectType: 'generic',
+				cost: '2',
+			}),
+		).toBe(2);
+	});
+
+	it('caps a spend that gives an effect at its cost, and at 1 or more', () => {
+		expect(
+			dicePoolConsumerSelectionCap(actor, {
+				selectionOutcome: 'consume',
+				effectType: 'giveEffect',
+				cost: '0',
+			}),
+		).toBe(1);
 	});
 });

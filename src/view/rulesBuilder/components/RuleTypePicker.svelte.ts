@@ -31,8 +31,10 @@ export function createRuleTypePickerState(getForEffect: () => boolean = () => fa
 				description?: string;
 				icon?: string;
 				worksOnEffects?: boolean;
+				worksOnItems?: boolean;
 			};
 			if (forEffect && Cls.worksOnEffects === false) continue;
+			if (!forEffect && Cls.worksOnItems === false) continue;
 			const group = Cls.group ?? 'unsorted';
 			const descriptionKey = Cls.description ?? '';
 			const localizedDescription = descriptionKey ? localize(descriptionKey) : '';

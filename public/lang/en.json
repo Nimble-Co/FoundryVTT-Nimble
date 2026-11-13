@@ -1198,7 +1198,10 @@
 					"effectEnds": "{effect} ended on {name}",
 					"wounded": "{name} is Bloodied",
 					"rest": "{name} rested",
-					"chargeGained": "{name} gained a charge"
+					"chargeGained": "{name} gained a charge",
+					"nextRoll": "{name} made a roll",
+					"nextDamage": "{name} dealt damage",
+					"nextSpell": "{name} cast a tiered spell"
 				}
 			},
 			"expiryEvents": {
@@ -1709,6 +1712,7 @@
 			"ruleNotRunning": "This rule is not running:",
 			"ruleFailureUnknownType": "\"{type}\" is not a recognized rule type.",
 			"ruleFailureNotOnEffect": "A \"{type}\" rule works only on an item, not on an effect.",
+			"ruleFailureNotOnItem": "A \"{type}\" rule works only on an effect, not on an item.",
 			"ruleFailureValidation": "The rule failed validation and has been disabled.",
 			"ruleFailureMalformed": "The rule source is malformed.",
 			"addRule": "Add Rule",
@@ -1824,6 +1828,7 @@
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
 			"freeMove": "Move for Free",
+			"freeSpellCost": "Free Spell Cost",
 			"grantMovement": "Grant Movement Mode",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -1842,6 +1847,10 @@
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
 			"damageMultiplier": "Damage Multiplier Tick",
+			"heldRoll": "Held Roll Change",
+			"countAsMarked": "Count All As Marked",
+			"poolEmptyEffect": "Effect When Pool Empty",
+			"dieResultEffect": "Effect on a Die Result",
 			"holdOnTarget": "Hold a Change on the Target",
 			"keepAmount": "Keep the Amount of a Hit",
 			"critBack": "Crit Back",
@@ -1996,7 +2005,7 @@
 				"description": "Spend or auto-apply dice from an item or actor dice pool. \"Manual\" mode prompts the player at activation; \"Auto-bonus\" adds every rolled die face to qualifying attacks without consuming the pool.",
 				"effectType": {
 					"label": "Effect type",
-					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken."
+					"hint": "What a manual spend's effect roll produces. \"Generic\" posts the total to chat; \"Damage Reduction\" also banks the total as a one-shot reduction applied to the next damage taken; \"Give Effect\" rolls nothing and puts the item's effect (one that does not go on the owner) on each creature the user targets."
 				},
 				"damageType": {
 					"inherit": "Inherit the attack's type",
@@ -3202,6 +3211,105 @@
 				"tick": "x{multiplier} damage: {label}",
 				"onCard": "x{multiplier} damage"
 			},
+			"heldRoll": {
+				"description": "Only on an effect. The effect changes a later roll: the next attack of the creature that has it, or the next attack against that creature. The roll that uses it ends the effect; the Lasts Until of the effect ends it in time.",
+				"heldKind": {
+					"label": "Change",
+					"hint": "What the roll gets.",
+					"choices": {
+						"advantage": "Advantage",
+						"primaryDie": "Add to the Primary Die",
+						"wholeAmount": "Use a set amount in place of the roll",
+						"ignoreDisadvantage": "Ignore all disadvantage",
+						"mustAttackOther": "Must attack the closest other creature",
+						"vulnerableOnce": "Vulnerable to the next damage of one type",
+						"maximize": "Every die rolls its highest number",
+						"extraDamage": "Extra damage on a hit"
+					}
+				},
+				"value": {
+					"label": "Amount",
+					"hint": "Steps of advantage, the number added to the Primary Die, or the set amount. A minus number takes away."
+				},
+				"whichRoll": {
+					"label": "Which roll",
+					"hint": "The roll of the creature that has the effect, or a roll against it.",
+					"choices": {
+						"holderAttacks": "Its next attack",
+						"attacksOnHolder": "The next attack against it"
+					}
+				},
+				"usedUp": {
+					"label": "The roll uses it up",
+					"hint": "On: the first roll that uses it ends the effect. Off: every roll uses it until the effect ends."
+				},
+				"meleeOnly": {
+					"label": "Melee attacks only",
+					"hint": "Only a melee attack uses it."
+				},
+				"fromSourceOnly": {
+					"label": "Only attacks by the creature that applied it",
+					"hint": "For the next attack against it: only an attack by the creature that put the effect on uses it."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "For a one-use vulnerability or extra damage: the damage type, such as fire."
+				},
+				"raised": {
+					"advantage": "advantage",
+					"primaryDie": "to the Primary Die",
+					"wholeAmount": "to the set amount"
+				},
+				"formula": {
+					"label": "Damage",
+					"hint": "The dice of the extra damage, such as 1d6. An @ reference takes the number from the creature that applied the effect, when it is applied."
+				}
+			},
+			"countAsMarked": {
+				"description": "Every creature counts as marked by the owner, for the attacks you choose. A bonus that needs a marked target, such as one for your quarry, then works against any target.",
+				"flagKey": {
+					"label": "Mark",
+					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry."
+				},
+				"delivery": {
+					"label": "Attacks",
+					"hint": "The attacks for which every creature counts as marked.",
+					"choices": {
+						"melee": "Melee attacks",
+						"ranged": "Ranged attacks",
+						"any": "All attacks"
+					}
+				}
+			},
+			"freeSpellCost": {
+				"description": "Only on an effect. While the effect is on, a tiered spell that your class pays for from a charge pool costs nothing from that pool, so it cannot go past the pool's limit. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
+				"poolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool that the spell cost would come from. Blank means any pool."
+				}
+			},
+			"poolEmptyEffect": {
+				"description": "On your own turn, when the charge pool has no charges, you get the effect of this item: its first effect with Apply to the actor off. It shows at the start of your turn, or when you spend the last charge. The Lasts Until of the effect ends it.",
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "The pool to watch."
+				}
+			},
+			"dieResultEffect": {
+				"description": "When a use of an item does not miss and its Primary Die rolls a high number, each target of the use gets the effect of this item: its first effect with Apply to the actor off. The number is the face of the die before any bonus. A healing roll does not count. The Lasts Until of the effect ends it.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The item whose roll to read. Leave blank to read this item."
+				},
+				"atLeast": {
+					"label": "Lowest die result",
+					"hint": "The Primary Die must roll this number or higher."
+				},
+				"notOnAllies": {
+					"label": "Not on allies",
+					"hint": "A target on the same side as the creature that uses the item (the same token disposition) does not get the effect."
+				}
+			},
 			"holdOnTarget": {
 				"description": "A use of this item that does not miss puts a Held Change on each target. It lasts until spent, or until the combat ends. Nothing is held outside combat. A new roll that turns the hit into a miss takes the holds back, and a new hit gives them.",
 				"heldKind": {
@@ -3641,7 +3749,10 @@
 					"maximize": "Maximize",
 					"maximizedNote": "Maximized {count} {label} ({changes})",
 					"spentNote": "Spent {count} {label} ({faces})",
-					"bankedReductionNote": "Applied automatically as damage reduction against damage taken."
+					"bankedReductionNote": "Applied automatically as damage reduction against damage taken.",
+					"givenNote": "Gave {effect} to {names}",
+					"giveEffectNoTarget": "Target a creature to give {name} to. No dice were spent.",
+					"giveEffectNotTaken": "No target took {name}: each one has it already. No dice were spent."
 				}
 			}
 		},
@@ -3753,6 +3864,7 @@
 				"chooseEnhancement": "Choose Enhancement",
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
+				"raiseEffectRule": "{rule}: +{amount} {field}",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier",
 				"warnings": {
@@ -3797,6 +3909,7 @@
 				"nextRound": "the next round"
 			},
 			"nextHero": "the next hero's turn",
+			"anyTurn": "the",
 			"your": "your",
 			"their": "their",
 			"possessive": "{name}'s",
@@ -3806,6 +3919,12 @@
 			"effectEnds": "{name} ends",
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
+			"them": "them",
+			"attack": "attack",
+			"meleeAttack": "melee attack",
+			"nextAttack": "{whose} next {attack}",
+			"nextAttackFrom": "{whose} next {attack} against {whom}",
+			"nextAttackOn": "the next {attack} against {whom}",
 			"units": {
 				"rounds": { "one": "1 round", "many": "{value} rounds" },
 				"minutes": { "one": "1 minute", "many": "{value} minutes" },
@@ -3828,7 +3947,6 @@
 				"nextRoll": { "base": "make a roll", "third": "makes a roll" },
 				"nextDamage": { "base": "deal damage", "third": "deals damage" },
 				"nextSpell": { "base": "cast a tiered spell", "third": "casts a tiered spell" },
-				"nextAffliction": { "base": "apply an Affliction", "third": "applies an Affliction" },
 				"inactiveRound": {
 					"base": "spend a round with no attack and no new use",
 					"third": "spends a round with no attack and no new use"
@@ -3876,7 +3994,8 @@
 				"clock": {
 					"holder": "their",
 					"source": "your",
-					"nextHero": "the next hero's"
+					"nextHero": "the next hero's",
+					"any": "the"
 				},
 				"span": {
 					"nextTurn": "next turn",
@@ -4916,6 +5035,10 @@
 				"wholeAmount": "{label}: {value}",
 				"mustAttackOther": "{label}: this attack must be against the closest other creature, chosen at random",
 				"wholeAmountEnds": "{label}: an area attack does not use {value}",
+				"advantage": "{label}: {value} advantage",
+				"disadvantage": "{label}: {value} disadvantage",
+				"maximize": "{label}: every die rolls its highest number",
+				"extraDamage": "{label}: {formula} {damageType} damage on a hit",
 				"endsSource": "From {source}. This roll ends it.",
 				"spends": "From {source}. This roll spends it.",
 				"stays": "From {source}. It stays until its time ends."
@@ -5214,6 +5337,10 @@
 				"steps": "Steps",
 				"maxDie": "Max Die",
 				"maxDieNone": "No maximum",
+				"effectRule": "Rule",
+				"ruleField": "Number",
+				"chooseOne": "Choose one",
+				"noEffectRules": "Add an Apply Effect node with an effect in the Activation tab to pick its rule here.",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -5225,7 +5352,8 @@
 					"addArmor": "Armor",
 					"addDuration": "Duration",
 					"addCondition": "Condition",
-					"increaseDieSize": "Increase Die Size"
+					"increaseDieSize": "Increase Die Size",
+					"raiseEffectRule": "Raise Effect Rule"
 				}
 			}
 		},

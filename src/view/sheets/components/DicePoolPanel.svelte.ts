@@ -2,10 +2,14 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { systemHookName } from '#system';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
-import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
+import {
+	type DicePoolConsumer,
+	dicePoolConsumerSelectionCap,
+	getDicePoolConsumers,
+} from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
-import { dieSizeToMaxFace, resolveFormulaToInteger } from '#utils/dicePool/helpers.js';
+import { dieSizeToMaxFace } from '#utils/dicePool/helpers.js';
 import { spendDicePool } from '#utils/dicePool/spendDicePool.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import type { DicePoolState, DieSize } from '#utils/dicePool/types.js';
@@ -104,16 +108,10 @@ export function createDicePoolPanelState(
 	/** True when the chosen dice are transformed in place rather than spent. */
 	const isMaximizeOutcome = $derived(selectedConsumer?.selectionOutcome === 'maximize');
 
-	/**
-	 * How many dice the chosen consumer may act on. Transforming outcomes are
-	 * capped at the consumer's cost so a "change 1 die" feature offers exactly
-	 * one pick; spending outcomes stay uncapped ("expend 1 or more").
-	 */
-	const selectionCap = $derived.by((): number | null => {
-		const consumer = selectedConsumer;
-		if (!consumer || consumer.selectionOutcome === 'consume') return null;
-		return Math.max(1, resolveFormulaToInteger(getActor(), consumer.cost));
-	});
+	/** How many dice the chosen consumer may act on; null when it is uncapped. */
+	const selectionCap = $derived(
+		selectedConsumer ? dicePoolConsumerSelectionCap(getActor(), selectedConsumer) : null,
+	);
 
 	/**
 	 * Dice already showing their highest face cannot be raised, so they are not

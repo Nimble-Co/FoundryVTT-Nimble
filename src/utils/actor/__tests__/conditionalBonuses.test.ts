@@ -26,6 +26,16 @@ function createAttacker(rules: unknown[]) {
 	return { rules, getFlag: () => ({}) };
 }
 
+/** A fake count-as-marked rule that tags the target for attacks of `delivery`. */
+function countAsMarkedRule(delivery: 'melee' | 'ranged') {
+	return {
+		type: 'countAsMarked',
+		markedTagFor: vi.fn((attack: string | null | undefined) =>
+			attack === delivery ? 'target:quarry' : null,
+		),
+	};
+}
+
 const weaponItem = { type: 'weapon', system: { activation: { targets: { attackType: 'reach' } } } };
 
 describe('conditionalBonuses', () => {
@@ -286,6 +296,39 @@ describe('conditionalBonuses', () => {
 
 		it('returns an empty set when there is no attacker or target', () => {
 			expect(buildTargetDomain(null, null).size).toBe(0);
+		});
+
+		it('adds the counted mark for an attack of the rule delivery', () => {
+			const attacker = createAttacker([countAsMarkedRule('melee')]);
+
+			const domain = buildTargetDomain(attacker, { uuid: 'Actor.t' }, 'melee');
+
+			expect([...domain]).toEqual(['target:quarry']);
+		});
+
+		it('adds no counted mark for an attack of another delivery', () => {
+			const attacker = createAttacker([countAsMarkedRule('melee')]);
+
+			expect(buildTargetDomain(attacker, { uuid: 'Actor.t' }, 'ranged').size).toBe(0);
+		});
+
+		it('adds no counted mark with no target', () => {
+			const attacker = createAttacker([countAsMarkedRule('melee')]);
+
+			expect(buildTargetDomain(attacker, null, 'melee').size).toBe(0);
+		});
+
+		it('counts the mark for a conditional bonus on that target', () => {
+			const bonus = createRule({
+				matchesTarget: vi.fn((domain: Set<string>) => domain.has('target:quarry')),
+			});
+			const attacker = createAttacker([countAsMarkedRule('melee'), bonus]);
+
+			const options = getActiveConditionalBonuses(attacker as never, weaponItem, {
+				uuid: 'Actor.t',
+			});
+
+			expect(options).toHaveLength(1);
 		});
 	});
 });

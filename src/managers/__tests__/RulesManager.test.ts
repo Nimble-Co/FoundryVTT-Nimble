@@ -315,6 +315,10 @@ describe('RulesManager on an Active Effect', () => {
 		static worksOnEffects = false;
 	}
 
+	class EffectOnlyRule extends MockRuleDataModel {
+		static worksOnItems = false;
+	}
+
 	function createMockEffect(rules: RuleSource[]) {
 		return {
 			...createMockItem(rules),
@@ -326,7 +330,11 @@ describe('RulesManager on an Active Effect', () => {
 
 	beforeEach(() => {
 		const config = CONFIG as unknown as { NIMBLE: { ruleDataModels: Record<string, unknown> } };
-		config.NIMBLE.ruleDataModels = { ...config.NIMBLE.ruleDataModels, grantItem: ItemOnlyRule };
+		config.NIMBLE.ruleDataModels = {
+			...config.NIMBLE.ruleDataModels,
+			grantItem: ItemOnlyRule,
+			heldRoll: EffectOnlyRule,
+		};
 	});
 
 	it('builds the rules of an effect with the effect as parent', () => {
@@ -384,6 +392,43 @@ describe('RulesManager on an Active Effect', () => {
 
 		expect(rule).toBeUndefined();
 		expect(effect.update).not.toHaveBeenCalled();
+		error.mockRestore();
+	});
+
+	it('refuses a rule type that works only on an effect on an item, and says why', () => {
+		const item = createMockItem([{ id: 'rule-1', type: 'heldRoll', label: '', disabled: false }]);
+
+		const manager = new RulesManager(item as never);
+
+		expect(manager.has('rule-1')).toBe(false);
+		expect(manager.failures.get('rule-1')).toEqual({
+			key: 'NIMBLE.rulesBuilder.ruleFailureNotOnItem',
+			data: { type: 'heldRoll' },
+		});
+	});
+
+	it('keeps an effect-only rule type on an effect', () => {
+		const effect = createMockEffect([
+			{ id: 'rule-1', type: 'heldRoll', label: '', disabled: false },
+		]);
+
+		const manager = new RulesManager(effect as never);
+
+		expect(manager.has('rule-1')).toBe(true);
+	});
+
+	it('builds no effect-only rule for an item without writing it', async () => {
+		const item = createMockItem([]);
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const rule = await RulesManager.addRule(
+			item as never,
+			{ type: 'heldRoll', id: 'rule-9' },
+			{ update: false },
+		);
+
+		expect(rule).toBeUndefined();
+		expect(item.update).not.toHaveBeenCalled();
 		error.mockRestore();
 	});
 

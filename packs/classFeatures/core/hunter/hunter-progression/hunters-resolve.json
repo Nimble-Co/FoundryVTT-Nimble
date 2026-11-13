@@ -6,7 +6,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "poolEmptyEffect",
+				"disabled": false,
+				"id": "vFgwlRG6YfcAplJ1",
+				"identifier": "",
+				"label": "Hunter's Resolve",
+				"predicate": {},
+				"priority": 1,
+				"chargePoolIdentifier": "thrill-of-the-hunt"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -43,7 +54,70 @@
 			5
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "rsXh76k9KpvHlyxD",
+			"name": "Hunter's Resolve",
+			"img": "icons/creatures/eyes/lizard-single-slit-blue.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "countAsMarked",
+						"disabled": false,
+						"id": "YyOOoRHD4brEby2l",
+						"identifier": "",
+						"label": "Hunter's Resolve",
+						"predicate": {},
+						"priority": 1,
+						"flagKey": "quarry",
+						"delivery": "melee"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "currentTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "chargeGained",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

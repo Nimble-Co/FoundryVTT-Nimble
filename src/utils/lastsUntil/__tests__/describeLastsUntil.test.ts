@@ -6,6 +6,7 @@ import {
 	type DescribeInput,
 	describeLastsUntil,
 	holderReader,
+	usedUpOf,
 } from '../describeLastsUntil.js';
 import type { Moment } from '../momentReached.js';
 
@@ -64,6 +65,12 @@ describe('describeLastsUntil', () => {
 		expect(
 			read([turn({ boundary: 'start', clock: 'nextHero', span: 'nextTurn' })], CARD_SELF_READER),
 		).toBe("Until the start of the next hero's turn");
+	});
+
+	it('reads a turn of any creature without a person', () => {
+		const endOfTheTurn = turn({ boundary: 'end', clock: 'any', span: 'currentTurn' });
+		expect(read([endOfTheTurn], CARD_TARGETS_READER)).toBe('Until the end of the turn');
+		expect(read([endOfTheTurn], holderReader('Goblin Boss'))).toBe('Until the end of the turn');
 	});
 
 	it('reads time with one and many units', () => {
@@ -128,5 +135,122 @@ describe('describeLastsUntil', () => {
 				format: localize,
 			}),
 		).toBe('Until you drop to 0 HP, or for 1 turn');
+	});
+});
+
+describe('describeLastsUntil with a used-up Held Roll', () => {
+	const namedHolder: DescribeInput['reader'] = {
+		holder: { kind: 'named', name: 'Kobold' },
+		source: { kind: 'you' },
+	};
+
+	const own = { by: 'holderAttacks', melee: false, fromSource: false } as const;
+	const against = { by: 'attacksOnHolder', melee: false, fromSource: false } as const;
+
+	function readUsedUp(
+		usedUp: DescribeInput['usedUp'],
+		reader: DescribeInput['reader'],
+		moments: Moment[] = [],
+	): string {
+		return describeLastsUntil({ moments, usedUp, reader, localize, format: localize });
+	}
+
+	it("reads the holder's next attack for each reader", () => {
+		expect(readUsedUp(own, CARD_SELF_READER)).toBe('Until your next attack');
+		expect(readUsedUp(own, CARD_TARGETS_READER)).toBe('Until their next attack');
+		expect(readUsedUp(own, namedHolder)).toBe("Until Kobold's next attack");
+	});
+
+	it('reads the next attack against the holder for each reader', () => {
+		expect(readUsedUp(against, CARD_SELF_READER)).toBe('Until the next attack against you');
+		expect(readUsedUp(against, CARD_TARGETS_READER)).toBe('Until the next attack against them');
+		expect(readUsedUp(against, namedHolder)).toBe('Until the next attack against Kobold');
+	});
+
+	it('reads the used-up phrase before the moments', () => {
+		const endOfTurn = turn({ boundary: 'end', clock: 'holder', span: 'currentTurn' });
+		expect(readUsedUp(own, CARD_SELF_READER, [endOfTurn])).toBe(
+			'Until your next attack, or until the end of your turn',
+		);
+	});
+
+	it('reads a melee attack by the source against the holder', () => {
+		const advance = { by: 'attacksOnHolder', melee: true, fromSource: true } as const;
+		expect(readUsedUp(advance, CARD_TARGETS_READER)).toBe(
+			'Until your next melee attack against them',
+		);
+		expect(readUsedUp({ ...advance, fromSource: false }, CARD_TARGETS_READER)).toBe(
+			'Until the next melee attack against them',
+		);
+	});
+
+	it('reads the next attack against the holder when the source is the holder', () => {
+		const fromSelf = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		expect(readUsedUp(fromSelf, CARD_SELF_READER)).toBe('Until the next attack against you');
+	});
+
+	it('reads the attack of a named source against a holder of the same name', () => {
+		const fromSource = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		const sameName: DescribeInput['reader'] = {
+			holder: { kind: 'named', name: 'Kobold' },
+			source: { kind: 'named', name: 'Kobold' },
+		};
+		expect(readUsedUp(fromSource, sameName)).toBe('Until the next attack against Kobold');
+	});
+
+	it('reads the attack of a named source against a holder of another name', () => {
+		const fromSource = { by: 'attacksOnHolder', melee: false, fromSource: true } as const;
+		const otherName: DescribeInput['reader'] = {
+			holder: { kind: 'named', name: 'Kobold' },
+			source: { kind: 'named', name: 'Mira' },
+		};
+		expect(readUsedUp(fromSource, otherName)).toBe("Until Mira's next attack against Kobold");
+	});
+
+	it('reads no used-up phrase when usedUp is null', () => {
+		expect(readUsedUp(null, CARD_SELF_READER)).toBe('');
+	});
+});
+
+describe('usedUpOf', () => {
+	const heldRoll = (fields: Record<string, unknown> = {}) => ({
+		type: 'heldRoll',
+		whichRoll: 'attacksOnHolder',
+		usedUp: true,
+		...fields,
+	});
+
+	it('gives the whichRoll of a used-up Held Roll rule', () => {
+		expect(usedUpOf({ rules: [heldRoll()] })).toEqual({
+			by: 'attacksOnHolder',
+			melee: false,
+			fromSource: false,
+		});
+	});
+
+	it('gives melee and source when the rule says so', () => {
+		expect(usedUpOf({ rules: [heldRoll({ meleeOnly: true, fromSourceOnly: true })] })).toEqual({
+			by: 'attacksOnHolder',
+			melee: true,
+			fromSource: true,
+		});
+	});
+
+	it("gives the holder's attacks when the rule has no whichRoll", () => {
+		expect(usedUpOf({ rules: [heldRoll({ whichRoll: undefined })] })?.by).toBe('holderAttacks');
+	});
+
+	it('gives null for a Held Roll rule that is not used up', () => {
+		expect(usedUpOf({ rules: [heldRoll({ usedUp: false })] })).toBeNull();
+	});
+
+	it('gives null for a disabled Held Roll rule', () => {
+		expect(usedUpOf({ rules: [heldRoll({ disabled: true })] })).toBeNull();
+	});
+
+	it('gives null for other rules and for no rules', () => {
+		expect(usedUpOf({ rules: [{ type: 'speedBonus' }] })).toBeNull();
+		expect(usedUpOf({})).toBeNull();
+		expect(usedUpOf(null)).toBeNull();
 	});
 });

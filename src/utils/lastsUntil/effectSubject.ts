@@ -93,6 +93,7 @@ export function effectSubject(
 		origin: effect.origin ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,
 		isClockTurn(clock, seat) {
+			if (clock === 'any') return true;
 			if (clock === 'nextHero') return seat.isHero;
 			const seats = clock === 'holder' ? holderSeats : sourceSeats;
 			return seats.some((each) => sameSeat(each, seat));

@@ -9,8 +9,13 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
+import { attackDeliveryFromAttackType } from '../../utils/damage/attackDelivery.js';
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
-import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
+import {
+	firstTargetActor,
+	type heldChangesForAttack,
+	isMelee,
+} from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
@@ -272,6 +277,15 @@ async function rollSingleMinionAttack(params: {
 			target: params.targetActor,
 			area: false,
 			attack: true,
+			melee: isMelee(
+				attackDeliveryFromAttackType(
+					(
+						resolvedActionContext.selectedAction.system?.activation as
+							| { targets?: { attackType?: string } }
+							| undefined
+					)?.targets?.attackType,
+				),
+			),
 			// Only the conditions give a minion group attack disadvantage.
 			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),
 		});
