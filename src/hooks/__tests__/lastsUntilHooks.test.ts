@@ -1,19 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { SYSTEM_ID, systemHookName } from '#system';
 
-const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
-	vi.hoisted(() => ({
-		requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
-		endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
-		endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
-		fireEventMock: vi.fn((..._args: unknown[]) => undefined),
-		fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
-	}));
+const {
+	dealTurnDamageMock,
+	endEffectsAtMock,
+	endEffectsMock,
+	fireEventMock,
+	fireItemUseEventsMock,
+	requestSavesMock,
+} = vi.hoisted(() => ({
+	dealTurnDamageMock: vi.fn(async (..._args: unknown[]) => undefined),
+	requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
+	endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
+	endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
+	fireEventMock: vi.fn((..._args: unknown[]) => undefined),
+	fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
+}));
 
 vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
 	endEffects: endEffectsMock,
 	endEffectsAt: endEffectsAtMock,
 }));
+vi.mock('../../utils/damage/turnDamage.js', () => ({ dealTurnDamage: dealTurnDamageMock }));
 vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: requestSavesMock }));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({
 	eventHeading: (event: string, names: { name?: string | null }) => `${event}:${names.name}`,
@@ -60,6 +68,27 @@ beforeEach(async () => {
 });
 
 describe('turn and round moments', () => {
+	it('deals the damage of the turn after the Lasts Until ends of the same moment', async () => {
+		const { add } = makeCombat();
+		const goblin = add('cGoblin', 'Goblin');
+		let endsDone: () => void = () => undefined;
+		endEffectsAtMock.mockImplementationOnce(
+			() => new Promise<undefined>((resolve) => (endsDone = () => resolve(undefined))),
+		);
+
+		hook('nimbleCombatTurnStart')(goblin, { round: 2 });
+		await Promise.resolve();
+		expect(dealTurnDamageMock).not.toHaveBeenCalled();
+
+		endsDone();
+		await vi.waitFor(() =>
+			expect(dealTurnDamageMock).toHaveBeenCalledWith('turnStart', goblin, {
+				key: 'combat1:2:cGoblin:turnStart',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Goblin' } },
+			}),
+		);
+	});
+
 	it('a turn end checks the turn of that combatant, with the round of the turn', () => {
 		const { combat, add } = makeCombat();
 		const goblin = add('cGoblin', 'Goblin');
@@ -312,6 +341,17 @@ describe('events', () => {
 		hook('updateActor')(actor, { system: { attributes: { hp: { value: 9 } } } }, options);
 
 		expect(fireEventMock).toHaveBeenCalledWith('healed', actor);
+	});
+
+	it('HP that an Undo of damage gives back is no heal, so "until healed" stays', () => {
+		const actor = actorAt(9);
+		const options = {
+			nimble: { previousHp: { value: 4, max: 10, temp: 0 }, undoesDamage: true },
+		};
+
+		hook('updateActor')(actor, { system: { attributes: { hp: { value: 9 } } } }, options);
+
+		expect(fireEventMock).not.toHaveBeenCalledWith('healed', actor);
 	});
 
 	describe('the temp HP link', () => {

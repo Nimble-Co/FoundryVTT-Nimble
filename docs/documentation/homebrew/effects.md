@@ -121,6 +121,20 @@ For example, True Strike holds advantage for the next attack of its target, unti
 - **Ignore all disadvantage** lasts for your next action. A Move, a paid Assess or an item use that costs an action and is not an attack also ends it. The card of that action has the line in **Events**, with **Undo**.
 :::
 
+## Damage each turn
+
+A **Damage each turn** rule deals damage, gives Wounds, or both, at each turn of a creature. Put it on an effect for a hazard that lasts ("1d20 fire damage/turn" while in a cauldron), or on an item for a monster that always hurts the creatures next to it (a burning aura). **Who takes it** is the creature that has the rule, or each other creature within **Reach** of it, allies too. **When** is the start of that creature's turn, or its end. **Damage** is dice or a number, rolled each time, with a **Damage type**. **Wounds** gives that many Wounds, up to the max of the track: "1 Wound/round" is Wounds 1 with no damage.
+
+It is not an attack: temp HP go first, then HP, with no armor and no Defend. Each time is a line in **Events** on the card of that turn start or end, with **Undo**, which gives back the HP, temp HP and Wounds it took. An effect that ends at that moment deals nothing at it. A dead or defeated creature takes nothing and deals nothing. With **Feature Effects** off, the line has a **Take Damage** button for the creature's owner or the GM.
+
+::: details More about damage each turn
+- A creature with no Wound track (a monster) takes the damage and no Wounds.
+- The damage counts as "they take damage" for Lasts Until and Save on an Event, with its type: lightning damage makes the creature Charged.
+- A turn played again after the GM goes back in the combat tracker deals nothing a second time.
+- A creature with more than one turn in a round takes it on each turn.
+- **Undo** is not healing: an effect that lasts until its holder is healed stays.
+:::
+
 ## Escape
 
 Escape is the way out of an effect such as Restrained. Set the **DC** (a number or a formula, such as `10 + @intelligence`) and turn on the saves the holder can roll: STR, DEX, INT, WIL, or any set of them. The row under it, "or a ... check", turns on skill checks too, such as Finesse to pick a lock. One save or check always stays on. A new effect has STR and DEX on.

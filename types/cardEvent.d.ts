@@ -85,6 +85,24 @@ export interface EscapeRulingAction {
 	state: 'waiting' | 'failed';
 }
 
+/** Damage or Wounds a Damage Each Turn rule gave at a turn moment, and how it stands. */
+export interface TurnDamageAction {
+	kind: 'turnDamage';
+	holderUuid: string;
+	holderName: string;
+	amount: number;
+	damageType: string;
+	wounds: number;
+	/** The creature whose rule it is, for the damage types' follow-ups. */
+	sourceUuid: string | null;
+	/** waiting: Feature Effects off, a click deals it. dealt: on the creature. undone: taken back. */
+	state: 'waiting' | 'dealt' | 'undone';
+	/** What the damage took, so Undo gives back the same. */
+	hpLost?: number;
+	tempLost?: number;
+	woundsGained?: number;
+}
+
 /**
  * What a line lets the reader do: Undo an end, roll a save, keep or take temp HP, or move as an
  * offer lets. A Movement Offer line holds its move and the offers it made; the card stores the same
@@ -94,6 +112,7 @@ export type CardEventAction =
 	| SaveRequestAction
 	| TempHpChoiceAction
 	| EscapeRulingAction
+	| TurnDamageAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

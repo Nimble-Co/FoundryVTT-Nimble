@@ -36,6 +36,19 @@ vi.mock('#utils/saveRequest/saveRequests.js', () => ({
 			!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner),
 }));
 
+const { takeTurnDamage, undoTurnDamage } = vi.hoisted(() => ({
+	takeTurnDamage: vi.fn(async (..._args: unknown[]) => true),
+	undoTurnDamage: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/damage/turnDamageLine.js', () => ({
+	takeTurnDamage,
+	undoTurnDamage,
+	canActOnTurnDamage: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 const { endEscape } = vi.hoisted(() => ({
 	endEscape: vi.fn(async (..._args: unknown[]) => true),
 }));
@@ -287,6 +300,58 @@ describe('CardEvents', () => {
 
 		renderEvents(makeCard([choice('kept')]));
 		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	it('a turn damage line has Take Damage while it waits, Undo once dealt, and a badge once undone', async () => {
+		const damage = (
+			state: 'waiting' | 'dealt' | 'undone',
+			holderUuid = 'Actor.tessa',
+		): CardEvent => ({
+			id: 'turnDamage1',
+			kind: 'damage',
+			icon: 'fa-solid fa-fire-flame-curved',
+			text: {
+				key: 'NIMBLE.chat.turnDamage.takes',
+				data: {
+					name: 'Tessa',
+					damage: { key: 'NIMBLE.chat.turnDamage.plain', data: { amount: 7 } },
+				},
+			},
+			action: {
+				kind: 'turnDamage',
+				holderUuid,
+				holderName: 'Tessa',
+				amount: 7,
+				damageType: '',
+				wounds: 0,
+				sourceUuid: null,
+				state,
+			},
+			at: 1,
+		});
+		globals.game.user = { isGM: false };
+
+		const waiting = renderEvents(makeCard([damage('waiting')]));
+		expect(screen.getByText('Tessa takes 7 damage')).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: /Tessa takes the damage/ }));
+		expect(takeTurnDamage).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'turnDamage1' }),
+		);
+		waiting.unmount();
+
+		const dealt = renderEvents(makeCard([damage('dealt')]));
+		await fireEvent.click(screen.getByRole('button', { name: /give back to Tessa/ }));
+		expect(undoTurnDamage).toHaveBeenCalled();
+		dealt.unmount();
+
+		const other = renderEvents(makeCard([damage('dealt', 'Actor.goblin')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		other.unmount();
+
+		renderEvents(makeCard([damage('undone')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByRole('status')).toHaveTextContent('Undone');
 	});
 
 	it('a strip with no heading names itself', () => {

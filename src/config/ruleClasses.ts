@@ -83,6 +83,7 @@ import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { TableRollRule } from '../models/rules/tableRoll.js';
 import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
 import { TagsRule } from '../models/rules/tags.js';
+import { TurnDamageRule } from '../models/rules/turnDamage.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 import { UseItemFreeRule } from '../models/rules/useItemFree.js';
 
@@ -173,6 +174,7 @@ export const RULE_CLASSES = {
 	skillRollMode: SkillRollModeRule,
 	speedBonus: SpeedBonusRule,
 	tags: TagsRule,
+	turnDamage: TurnDamageRule,
 	useItemFree: UseItemFreeRule,
 	unarmedDamage: UnarmedDamageRule,
 } as const;

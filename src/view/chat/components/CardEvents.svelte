@@ -21,6 +21,8 @@
 		rule,
 		canChoose,
 		choose,
+		canActOnDamage,
+		actOnDamage,
 		backStatus,
 	} = strip;
 </script>
@@ -180,6 +182,38 @@
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.waitingFor', { name: choice.holderName })}
 							</span>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'turnDamage'}
+						{@const damage = event.action}
+						{#if damage.state === 'undone'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.turnDamage.undone')}
+							</span>
+						{:else if canActOnDamage(damage)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize(
+									damage.state === 'waiting'
+										? 'NIMBLE.chat.turnDamage.takeLabel'
+										: 'NIMBLE.chat.turnDamage.undoLabel',
+									{ name: damage.holderName },
+								)}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => actOnDamage(event)}
+							>
+								{#if damage.state === 'waiting'}
+									<i class="fa-solid fa-heart-crack" aria-hidden="true"></i>
+									{localize('NIMBLE.chat.turnDamage.take')}
+								{:else}
+									<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+									{localize('NIMBLE.chat.events.undo')}
+								{/if}
+							</button>
 						{/if}
 					{/if}
 

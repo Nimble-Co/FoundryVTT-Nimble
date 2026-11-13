@@ -33,6 +33,13 @@ export interface ActorUpdateBefore {
 	previousWounds?: number;
 	/** HP the update adds only because max HP rose, set by the one who updates (a level up). */
 	hpFollowingMax?: number;
+	/** The update gives back what damage took (an Undo): no HP it adds is healing. */
+	undoesDamage?: boolean;
+}
+
+/** The update options of an Undo of damage, so the HP it gives back is not healing. */
+export function undoDamageOption(): Record<string, ActorUpdateBefore> {
+	return { nimble: { undoesDamage: true } }; // allow-hardcoded-system-id: _preUpdate and hpGained use this literal key
 }
 
 function recordedBefore(options: unknown): ActorUpdateBefore {
@@ -57,11 +64,13 @@ export function hpBeforeUpdate(options: unknown): number | undefined {
 
 /**
  * HP the update healed; 0 when it healed none or did not record the HP before it.
- * HP that only follows a higher max HP (a level up) is not healing: the amount the
- * update gives in `hpFollowingMax`, else the max HP rise in this update.
+ * HP that an Undo of damage gives back is not healing. HP that only follows a higher max HP (a
+ * level up) is not healing either: the amount the update gives in `hpFollowingMax`, else the max
+ * HP rise in this update.
  */
 export function hpGained(actor: unknown, options: unknown): number {
 	const recorded = recordedBefore(options);
+	if (recorded.undoesDamage) return 0;
 	const before = recorded.previousHp;
 	if (typeof before?.value !== 'number') return 0;
 	const valueRise = numberAt(actor, ACTOR_HP_PATHS.value) - before.value;

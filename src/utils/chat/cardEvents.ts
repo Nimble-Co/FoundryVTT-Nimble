@@ -259,6 +259,12 @@ function findMomentCard(key: string, whisper: readonly string[]): EventCard | un
 	return undefined;
 }
 
+/** The ids of the lines on the public card of a moment, so a second pass does not add a line twice. */
+export function momentEventIds(key: string): Set<string> {
+	const card = findMomentCard(key, []);
+	return new Set(card ? storedEvents(card).map((event) => event.id) : []);
+}
+
 function momentHere(
 	moment: CardEventMoment,
 	events: CardEvent[],

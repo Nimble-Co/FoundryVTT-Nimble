@@ -15,6 +15,7 @@ import {
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { followTempHpChange, takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
+import { dealTurnDamage } from '#utils/damage/turnDamage.js';
 import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
@@ -37,11 +38,14 @@ function onTurn(type: TurnMomentType) {
 		if (!found) return;
 		const { moment, round } = found;
 		const seat = seatOf(combatant);
+		// An effect that ends at this moment deals no damage at it.
 		void endEffectsAt(
 			{ type, combatId: combat.id, seat, round, turn: place?.turn ?? null },
 			moment,
 			combat,
-		);
+		)
+			.then(() => dealTurnDamage(type, combatant as never, moment))
+			.catch((error) => console.error('Nimble | Could not deal the damage of a turn.', error));
 		if (type === 'turnEnd') {
 			void endEffects(effectsInactiveAt(combat, seat, round), {
 				...moment,

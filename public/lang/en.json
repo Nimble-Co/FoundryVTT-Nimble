@@ -717,6 +717,20 @@
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"turnDamage": {
+				"takes": "{name} takes {damage}",
+				"gains": "{name} gains {wounds}",
+				"takesAndGains": "{name} takes {damage} and gains {wounds}",
+				"typed": "{amount} {type} damage",
+				"plain": "{amount} damage",
+				"cause": "{source} - {formula}",
+				"causeNoFormula": "{source}",
+				"nearSource": "{source} of {creature}",
+				"take": "Take Damage",
+				"takeLabel": "{name} takes the damage of this line",
+				"undoLabel": "Undo: give back to {name} what this line took",
+				"undone": "Undone"
+			},
 			"swallowedDamage": {
 				"text": "{name} takes {amount} damage",
 				"cause": "Swallowed"
@@ -1982,6 +1996,7 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"tags": "Tags",
+			"turnDamage": "Damage each turn",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
@@ -3504,6 +3519,32 @@
 			"maxActionBonus": {
 				"description": "Adds to the creature's max actions while it is on, for example \"+1 max action\". A turn starts with the new max.",
 				"value": { "label": "Actions", "hint": "How many max actions it adds, as a formula." }
+			},
+			"turnDamage": {
+				"description": "Damage, Wounds or both at the start or end of each turn of a creature: the one that has this rule, or each creature near it. On an effect, it stops when the effect ends. It is not an attack: no armor and no Defend.",
+				"at": {
+					"label": "When",
+					"hint": "The moment of each turn of the creature that takes it.",
+					"choices": { "turnStart": "Its turn starts", "turnEnd": "Its turn ends" }
+				},
+				"who": {
+					"label": "Who takes it",
+					"hint": "The creature that has this rule, or every other creature within Reach of it at the start or end of that creature's turn, allies too.",
+					"choices": {
+						"holder": "The creature that has this",
+						"nearby": "Each creature within Reach"
+					}
+				},
+				"reach": { "label": "Reach", "hint": "How many spaces from the creature that has this." },
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice or a number, rolled each time. Empty: no damage."
+				},
+				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." },
+				"wounds": {
+					"label": "Wounds",
+					"hint": "The Wounds it gives each time, up to the max of the track. A creature with no Wound track takes none."
+				}
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",

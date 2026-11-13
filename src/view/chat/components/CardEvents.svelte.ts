@@ -7,9 +7,15 @@ import type {
 	EscapeRulingAction,
 	SaveRequestAction,
 	TempHpChoiceAction,
+	TurnDamageAction,
 } from '#types/cardEvent.d.ts';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
+import {
+	canActOnTurnDamage,
+	takeTurnDamage,
+	undoTurnDamage,
+} from '#utils/damage/turnDamageLine.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { canRuleEscape, endEscape } from '#utils/lastsUntil/escapeFollow.js';
 import localize from '#utils/localize.js';
@@ -113,6 +119,25 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	function canActOnDamage(action: TurnDamageAction): boolean {
+		return canActOnTurnDamage(action);
+	}
+
+	/** Deals a waiting line, or gives back what a dealt line took. */
+	async function actOnDamage(event: CardEvent) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			const action = event.action as TurnDamageAction;
+			const run = action.state === 'waiting' ? takeTurnDamage : undoTurnDamage;
+			await run(getMessage() as never, event).catch((error) =>
+				console.error('Nimble | Could not change the damage of a turn.', error),
+			);
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
 	function backStatus(eventId: string) {
 		return (element: HTMLElement) => {
@@ -136,6 +161,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		rule,
 		canChoose,
 		choose,
+		canActOnDamage,
+		actOnDamage,
 		backStatus,
 	};
 }
