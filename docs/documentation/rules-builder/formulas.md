@@ -23,9 +23,10 @@ References start with `@` and are filled in from the character carrying the item
 | `@strengthSave`, `@dexteritySave`, `@intelligenceSave`, `@willSave` | Saving throw modifiers. |
 | `@arcana`, `@examination`, `@finesse`, `@influence`, `@insight`, `@lore`, `@might`, `@naturecraft`, `@perception`, `@stealth` | Skill modifiers. |
 | `@auraReach` | The Reach of the character's aura in spaces: the sum of their **Aura Reach** rules, 0 with no aura. The Oathsworn aura features set 4 and Improved Aura adds 2. |
+| `@damageTaken` | The damage of the newest hit the creature took, after armor and before temp HP; 0 before any damage. Monsters have it too. A save DC of `max(10, @damageTaken)` is 10 or the damage taken, if that is higher. |
 | `@pools.<identifier>.faces` | The face count of the die of the charge pool or dice pool with that identifier, for example 8 for a d8, with the changes of Modify Pool rules. Only for pools with a die; when a charge pool and a dice pool have the same identifier, the charge pool counts. `1d@pools.combat-dice.faces` rolls one die of that size. |
 
-You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only `@level` and the save shortcuts work, so use full paths for the other monster values. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
+You can also reach any value on the sheet by its full path, such as `@attributes.hp.max` or `@attributes.wounds.value`. On NPCs and monsters only `@level`, `@damageTaken` and the save shortcuts work, so use full paths for the other monster values. The [Formula Reference](../reference/formula-reference.md) lists every shortcut and full path, and which kinds of actor have each one.
 
 Formulas support basic math (`+`, `-`, `*`, `/`, parentheses) and rounding helpers: `floor(@level / 2)` gives half the character's level, rounded down.
 

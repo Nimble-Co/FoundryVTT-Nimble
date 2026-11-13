@@ -809,6 +809,12 @@ function generateFormulaReferencePage(): void {
 			'Yes',
 			'',
 		],
+		[
+			'`@damageTaken`',
+			'The damage of the newest hit the creature took, after armor and before temp HP. 0 before any damage.',
+			'Yes',
+			'Yes',
+		],
 	].map((row) => `| ${row.map(cell).join(' | ')} |`);
 
 	const ruleTypes: Record<string, string> = NIMBLE.ruleTypes;

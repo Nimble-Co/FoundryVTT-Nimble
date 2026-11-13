@@ -89,6 +89,7 @@ import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
+import { fixSaveDCs } from '../utils/rolls/saveNodeDC.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,
@@ -563,6 +564,7 @@ class ItemActivationManager {
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
+		fixSaveDCs(this.activationData?.effects, this.actor as never);
 
 		return {
 			rolls,

@@ -734,6 +734,7 @@ class NimbleBaseActor<
 		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
 
 		if (Object.keys(updates).length < 1) return;
+		updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
 		if (cardId) await this.update(updates as Actor.UpdateData, damageCardOption(cardId) as never);
 		else await this.update(updates as Actor.UpdateData);
 	}
@@ -827,6 +828,12 @@ class NimbleBaseActor<
 
 		const monsterLevel = parseMonsterLevel(systemData.details?.level);
 		if (monsterLevel !== undefined) data.level = monsterLevel;
+
+		const damageTaken = Number(
+			(this.flags as Record<string, { damageTaken?: unknown } | undefined>)?.[SYSTEM_ID]
+				?.damageTaken,
+		);
+		data.damageTaken = Number.isFinite(damageTaken) ? damageTaken : 0;
 
 		return data;
 	}

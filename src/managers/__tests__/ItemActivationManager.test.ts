@@ -283,6 +283,90 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('the save DC of a use', () => {
+		const RollGlobal = Roll as unknown as {
+			replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+			safeEval?: (expression: string) => number;
+		};
+		const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+		beforeEach(() => {
+			RollGlobal.replaceFormulaData = (formula, data) =>
+				formula.replace(/@(\w+)/g, (match, term: string) => String(data[term] ?? match));
+			RollGlobal.safeEval = (expression) =>
+				Function('max', `"use strict"; return (${expression});`)(Math.max) as number;
+			mockActor.type = 'character';
+			mockActor.getRollData = vi.fn(() => ({ key: 3, damageTaken: 14 }));
+		});
+
+		afterEach(() => {
+			RollGlobal.replaceFormulaData = original.replace;
+			RollGlobal.safeEval = original.safeEval;
+		});
+
+		const saveNode = (saveDC: string) =>
+			({
+				id: 'save-1',
+				type: 'savingThrow',
+				savingThrowType: 'strength',
+				saveDC,
+				parentContext: null,
+				parentNode: null,
+			}) as unknown as EffectNode;
+		const cardDC = (activation: unknown) =>
+			(activation as { effects: Array<{ saveDC?: unknown }> }).effects[0]?.saveDC;
+
+		it('puts the number on the card, worked out from the user now', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const node = saveNode('max(10, @damageTaken)');
+			manager.activationData = { effects: [node] };
+			mockReconstructEffectsTree.mockReturnValue([node]);
+
+			const result = await manager.getData();
+
+			expect(cardDC(result.activation)).toBe(14);
+		});
+
+		it('adds an upcast DC raise before it fixes the number', async () => {
+			mockActor.items = { contents: [], get: () => undefined };
+			mockActor.system.resources = {
+				mana: { current: 10, max: 10 },
+				highestUnlockedSpellTier: 5,
+			};
+			mockItem.type = 'spell';
+			mockItem.system.tier = 1;
+			mockItem.system.scaling = {
+				mode: 'upcast',
+				deltas: [
+					{
+						operation: 'addDC',
+						value: 1,
+						dice: null,
+						condition: null,
+						targetEffectId: 'save-1',
+						durationType: null,
+						maxDieFaces: null,
+					},
+				],
+			};
+			dialogState.result = { rollMode: 0, upcast: { manaToSpend: 3 } };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [saveNode('')] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+
+			const result = await manager.getData();
+
+			expect(manager.upcastResult?.upcastSteps).toBe(2);
+			expect(cardDC(result.activation)).toBe(15);
+		});
+	});
+
 	describe('Typed conditional-bonus damage', () => {
 		it('rolls typed conditional damage as its own damage effect with the chosen type', async () => {
 			manager = new ItemActivationManager(
