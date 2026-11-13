@@ -473,6 +473,34 @@ describe('RuleCard for an effect change', () => {
 	});
 });
 
+describe('RuleCard with a form layout (damageBack)', () => {
+	it('keeps an old rule to its fields: when, damage, effect', () => {
+		const { container } = render(RuleCard, { rule: initialRule('damageBack'), manager });
+		expect(shownFields(container)).toEqual([
+			'trigger',
+			'attackDelivery',
+			'notOnAllies',
+			'onlyCrits',
+			'amount',
+			'ignoreArmor',
+			'woundDoubles',
+			'attackerEffectId',
+		]);
+	});
+
+	it('asks for the formula and the answered attack of an Attacked rule', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('damageBack', { trigger: 'attacked', amount: 'formula' }),
+			manager,
+		});
+		const shown = shownFields(container);
+		expect(shown).toContain('answeredAttack');
+		expect(shown).toContain('formula');
+		expect(shown).toContain('damageType');
+		expect(shown).not.toContain('onlyCrits');
+	});
+});
+
 describe('RuleCard without a form layout', () => {
 	const others = Object.entries(CONFIG.NIMBLE.ruleDataModels).filter(
 		([, RuleClass]) => !(RuleClass as unknown as RuleClassLike).formLayout,
@@ -492,6 +520,7 @@ describe('RuleCard without a form layout', () => {
 		'offerAttackBonus',
 		'optionWindow',
 		'saveOnEvent',
+		'damageBack',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

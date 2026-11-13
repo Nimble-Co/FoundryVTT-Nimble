@@ -1816,6 +1816,8 @@ namespace ItemActivationManager {
 		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
+		/** The attack card this use answers, as a reaction from the Defend window does. */
+		answersCardId?: string;
 	}
 
 	/** What a free use does not spend or check. `action` is always part of it. */

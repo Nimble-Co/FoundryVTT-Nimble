@@ -132,19 +132,24 @@ async function affectAttacker(card: DefendCard, record: DefendRecord): Promise<v
 	await applyAttackerEffects(attacker, record.attackerEffects, record.actorUuid);
 }
 
-/** Each item effect goes on the attacker. The item's actor, else the defender, is the user. */
+/**
+ * Each item effect goes on the attacker. The item's actor, else the defender, is the user. With
+ * `cardId`, the events of the new effect go on that card.
+ */
 export async function applyAttackerEffects(
 	attacker: Actor.Implementation,
 	effects: readonly AttackerEffect[],
 	defenderUuid: string,
 	apply: typeof applyEffectHere = applyEffectHere,
+	cardId: string | null = null,
 ): Promise<void> {
 	for (const { itemUuid, effectId } of effects) {
 		const item = fromUuidSync(itemUuid) as Item.Implementation | null;
 		const effect = itemEffectOf(item, effectId) as ActiveEffect.Implementation | null;
 		if (!item || !effect) continue;
 		const user = (item.actor ?? fromUuidSync(defenderUuid) ?? null) as never;
-		await apply(attacker as never, payloadFromEffect(effect, { itemUuid, user }));
+		const payload = payloadFromEffect(effect, { itemUuid, user });
+		await apply(attacker as never, cardId ? { ...payload, cardId } : payload);
 	}
 }
 

@@ -24,6 +24,7 @@ import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { ANSWERS_CARD_FLAG } from '../../hooks/damageBackOnAttack.js';
 import { selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
@@ -485,6 +486,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 								? { chargeConsumption: manager.chargeConsumption }
 								: {}),
 							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
+							...(options.answersCardId ? { [ANSWERS_CARD_FLAG]: options.answersCardId } : {}),
 						},
 					},
 					system: {

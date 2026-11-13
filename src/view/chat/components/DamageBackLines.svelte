@@ -20,13 +20,32 @@
 		return mayActHere(record.actorUuid);
 	}
 
+	const WORDS = 'NIMBLE.chat.damageBack';
+
+	/** The sentence: the damage (with or without armor), the effect, or both. */
+	function shapeOf(record: DamageBackRecord): string {
+		const armor = record.ignoreArmor === false ? 'Armor' : '';
+		if (record.amount <= 0) return 'Gains';
+		return record.effect ? `${armor}Effect` : armor;
+	}
+
 	function textOf(record: DamageBackRecord): string {
 		const amount = String(record.doubled ? record.amount * 2 : record.amount);
-		const data = { label: record.label, name: record.attackerName, amount };
-		return localize(
-			record.dealt ? 'NIMBLE.chat.damageBack.dealt' : 'NIMBLE.chat.damageBack.waiting',
-			data,
-		);
+		const data = {
+			label: record.label,
+			name: record.attackerName,
+			amount,
+			effect: record.effect?.name ?? '',
+		};
+		const shape = shapeOf(record);
+		// A waiting line has the same words; its button shows that it waits.
+		return localize(shape === 'Gains' ? `${WORDS}.gains` : `${WORDS}.dealt${shape}`, data);
+	}
+
+	function buttonOf(record: DamageBackRecord): string {
+		const data = { amount: String(record.amount), effect: record.effect?.name ?? '' };
+		if (record.amount <= 0) return localize(`${WORDS}.apply`, data);
+		return localize(record.effect ? `${WORDS}.dealAndApply` : `${WORDS}.deal`, data);
 	}
 
 	const use = (record: DamageBackRecord, action: DamageBackAction) =>
@@ -41,7 +60,7 @@
 		</p>
 		{#if canUse(record) && !record.dealt}
 			<button class="nimble-button" type="button" onclick={() => use(record, 'deal')}>
-				{localize('NIMBLE.chat.damageBack.deal', { amount: String(record.amount) })}
+				{buttonOf(record)}
 			</button>
 		{:else if canUse(record) && record.woundDoubles && !record.doubled}
 			<button class="nimble-button" type="button" onclick={() => use(record, 'double')}>

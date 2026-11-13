@@ -22,6 +22,7 @@ import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
 } from '#utils/damage/buildDeferredDamagePatch.js';
+import { cardAttackers } from '#utils/damage/cardAttackers.js';
 import {
 	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
@@ -893,6 +894,19 @@ class NimbleChatMessage extends ChatMessage {
 			) as unknown as ReturnType<DamageBackCard['attacker']>,
 		records: () => (this.system as { damageBack?: DamageBackRecord[] }).damageBack ?? [],
 		update: (changes) => this.update(changes),
+		attackers: () =>
+			cardAttackers(
+				this as never,
+				(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker),
+				this.#attackDelivery(),
+			) as ReturnType<NonNullable<DamageBackCard['attackers']>>,
+		delivery: () => this.#attackDelivery(),
+		damageAfterDefenses: (actor, amount, { damageType, roll }) =>
+			resolveDamageForActor(
+				actor as unknown as Actor.Implementation,
+				[{ value: amount, options: { damageType, ...(roll ? { roll: roll as never } : {}) } }],
+				0,
+			).total,
 	});
 
 	/** Rerolls, roll changes and kept results on this card. */
@@ -2266,6 +2280,8 @@ class NimbleChatMessage extends ChatMessage {
 		const protector = (tokenDoc?.actor ??
 			fromUuidSync(entry.actorUuid)) as Actor.Implementation | null;
 		if (!protector) return;
+		// The protector is the new target of the attack (Core 516). Queued behind this write.
+		void this.cardDamageBack.afterAttack([{ actor: protector as never, token: tokenDoc as never }]);
 
 		const protectedName =
 			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)

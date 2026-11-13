@@ -65,6 +65,13 @@
 	</section>
 {/each}
 
+{#if !firstDamageGroup && (messageDocument?.reactive?.system?.damageBack ?? []).length}
+	<!-- A save-only attack has no damage group, so its lines go after the last section. -->
+	<section class="nimble-card-section">
+		<DamageBackLines />
+	</section>
+{/if}
+
 <style lang="scss">
 	.nimble-effect {
 		--nimble-hint-block-end-margin: 0;

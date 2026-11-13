@@ -695,8 +695,13 @@
 			},
 			"damageBack": {
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
-				"waiting": "{label}: {name} takes {amount} damage, ignoring armor (not dealt)",
+				"dealtArmor": "{label}: {name} takes {amount} damage",
+				"dealtEffect": "{label}: {name} takes {amount} damage, ignoring armor, and gains {effect}",
+				"dealtArmorEffect": "{label}: {name} takes {amount} damage and gains {effect}",
+				"gains": "{label}: {name} gains {effect}",
 				"deal": "Deal {amount} damage",
+				"apply": "Apply {effect}",
+				"dealAndApply": "Deal {amount} damage and apply {effect}",
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
@@ -1938,7 +1943,7 @@
 			"tableRollOptions": "Table Roll Options",
 			"initiativeMana": "Initiative Mana",
 			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
-			"damageBack": "Damage Back",
+			"damageBack": "Attacker Takes",
 			"defendOption": "Defend Option",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -3117,15 +3122,60 @@
 				}
 			},
 			"damageBack": {
-				"description": "When the owner takes damage from an attack (a crit, unless you turn off Only against crits), the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"description": "The one who attacks the owner takes damage, gains an effect, or both. It goes on the attack card. With Feature Effects off, the card shows a button.",
+				"whenGroup": { "label": "When" },
+				"damageGroup": { "label": "Damage" },
+				"effectGroup": { "label": "Effect" },
+				"trigger": {
+					"label": "When",
+					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Loses temp HP: when the attack takes temp HP that this effect gave.",
+					"choices": {
+						"damaged": "The owner takes damage from an attack",
+						"attacked": "The owner is attacked",
+						"tempHpReduced": "The attack takes the temp HP of this effect"
+					}
+				},
+				"attackDelivery": {
+					"label": "Attacks",
+					"hint": "Which attacks this works against. A monster attack with no attack type is melee."
+				},
+				"notOnAllies": {
+					"label": "Not on allies",
+					"hint": "An attacker on the owner's side takes nothing."
+				},
+				"answeredAttack": {
+					"label": "Also the attack it answers",
+					"hint": "On an effect from a reaction cast in the Defend window: the attack that the reaction answers counts too."
+				},
 				"onlyCrits": {
 					"label": "Only against crits",
 					"hint": "Give damage back only when the attack is a crit."
 				},
 				"amount": {
 					"label": "Amount",
-					"hint": "The damage the owner took, or what the attack's crit dice came to.",
-					"choices": { "taken": "The damage taken", "critDice": "The crit dice" }
+					"hint": "The damage the owner took, what the attack's crit dice came to, a formula, or no damage. When the owner is attacked, no damage was taken yet: use a formula.",
+					"choices": {
+						"taken": "The damage taken",
+						"critDice": "The crit dice",
+						"formula": "A formula",
+						"none": "No damage"
+					}
+				},
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice are rolled for each attacker. @ values on an effect are those of the one who applied it."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "The type of the damage, for the attacker's resistances and immunities."
+				},
+				"ignoreArmor": {
+					"label": "Ignore armor",
+					"hint": "Off: the attacker's armor, resistances, immunities and reductions apply to the damage."
+				},
+				"attackerEffectId": {
+					"label": "Effect on the attacker",
+					"hint": "An effect of this item (Apply to the actor off). A copy goes on the attacker. Set its Lasts Until in the effect window."
 				},
 				"woundDoubles": {
 					"label": "A Wound doubles it",
