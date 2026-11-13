@@ -114,6 +114,7 @@ function expectEnchantedWeapon(effect: Json): void {
 		condition: 'smoldering',
 		trigger: 'onCrit',
 		effectId: '',
+		attackSource: 'weapon',
 	});
 }
 

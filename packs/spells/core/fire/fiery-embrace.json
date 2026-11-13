@@ -120,7 +120,8 @@
 						"priority": 1,
 						"condition": "smoldering",
 						"trigger": "onCrit",
-						"effectId": ""
+						"effectId": "",
+						"attackSource": "weapon"
 					}
 				],
 				"lastsUntil": [

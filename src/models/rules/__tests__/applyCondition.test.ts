@@ -64,6 +64,7 @@ interface ApplyConditionSource {
 	trigger: ApplyConditionTrigger;
 	effectId?: string;
 	wounds?: number;
+	attackSource?: 'any' | 'weapon' | 'spell';
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -78,6 +79,7 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	trigger: ApplyConditionTrigger;
 	effectId: string;
 	wounds: number;
+	attackSource: 'any' | 'weapon' | 'spell';
 	disabled: boolean;
 	label: string;
 }
@@ -143,6 +145,7 @@ function createApplyConditionRule(
 		trigger: config.trigger,
 		effectId: config.effectId ?? '',
 		wounds: config.wounds ?? 0,
+		attackSource: config.attackSource ?? 'any',
 		disabled: config.disabled ?? false,
 		label: config.label ?? 'Test Apply Condition',
 		id: config.id ?? 'test-apply-condition-id',
@@ -163,6 +166,7 @@ function createApplyConditionRule(
 	rule.trigger = config.trigger;
 	rule.effectId = sourceData.effectId;
 	rule.wounds = sourceData.wounds;
+	rule.attackSource = sourceData.attackSource;
 	rule.id = sourceData.id;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Apply Condition';
@@ -182,9 +186,10 @@ function buildItemUsedContext(
 	overrides: {
 		isCritical?: boolean;
 		isMiss?: boolean;
+		itemType?: string;
 	} = {},
 ) {
-	const item = createMockItem(sourceActor);
+	const item = Object.assign(createMockItem(sourceActor), { type: overrides.itemType ?? 'weapon' });
 	type Ctx = Parameters<ApplyConditionRule['onItemUsed']>[0];
 	return {
 		sourceItem: item as unknown as Ctx['sourceItem'],
@@ -1162,6 +1167,109 @@ describe('ApplyConditionRule', () => {
 			);
 
 			expect(rule.getActivationCardNodes({ isCritical: true, isMiss: false })).toEqual([]);
+		});
+	});
+
+	describe('attack source', () => {
+		it('has an Any source by default, with the choices any, weapon and spell', () => {
+			const field = ApplyConditionRule.defineSchema().attackSource as unknown as {
+				initial: string;
+				choices: Record<string, string>;
+			};
+
+			expect(field.initial).toBe('any');
+			expect(Object.keys(field.choices)).toEqual(['any', 'weapon', 'spell']);
+		});
+
+		it('with Any, a spell crit still applies the condition', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit' },
+				attacker,
+			);
+
+			await rule.onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true, itemType: 'spell' }),
+			);
+
+			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+			expect(
+				rule.getActivationCardNodes({
+					isCritical: true,
+					isMiss: false,
+					sourceItem: { type: 'spell' },
+				}),
+			).toHaveLength(1);
+		});
+
+		it('with Weapon, a weapon crit applies the condition and a spell crit does not', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', attackSource: 'weapon' },
+				attacker,
+			);
+
+			await rule.onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true, itemType: 'spell' }),
+			);
+			expect(conditionsAppliedTo(target)).toEqual([]);
+
+			await rule.onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true, itemType: 'weapon' }),
+			);
+			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+		});
+
+		it('with Weapon, the card of a spell crit gets no row, and that of a weapon crit does', () => {
+			const actor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', attackSource: 'weapon' },
+				actor,
+			);
+			const crit = { isCritical: true, isMiss: false };
+
+			expect(rule.getActivationCardNodes({ ...crit, sourceItem: { type: 'spell' } })).toEqual([]);
+			expect(rule.getActivationCardNodes({ ...crit, sourceItem: { type: 'weapon' } })).toHaveLength(
+				1,
+			);
+		});
+
+		it('with Spell, only a spell crit counts', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', attackSource: 'spell' },
+				attacker,
+			);
+
+			await rule.onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true, itemType: 'weapon' }),
+			);
+			expect(conditionsAppliedTo(target)).toEqual([]);
+			await rule.onItemUsed(
+				buildItemUsedContext(attacker, target, { isCritical: true, itemType: 'spell' }),
+			);
+			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+		});
+
+		it('limits a crit received to the source of the attack against the holder', async () => {
+			const owner = Object.assign(createMockActor(), { token: { disposition: 1 } });
+			const attacker = Object.assign(createMockActor(), { token: { disposition: -1 } });
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onCritReceived', attackSource: 'weapon' },
+				owner,
+			);
+
+			await rule.onAttackReceived(
+				buildItemUsedContext(attacker, owner, { isCritical: true, itemType: 'spell' }),
+			);
+			expect(conditionsAppliedTo(owner)).toEqual([]);
+			await rule.onAttackReceived(
+				buildItemUsedContext(attacker, owner, { isCritical: true, itemType: 'weapon' }),
+			);
+			expect(conditionsAppliedTo(owner)).toEqual(['focused']);
 		});
 	});
 

@@ -1063,6 +1063,7 @@ class NimbleChatMessage extends ChatMessage {
 		const ruleNodes = this.#collectRuleActivationCardNodes({
 			isCritical: systemData.isCritical,
 			isMiss: systemData.isMiss,
+			sourceItem: this.#cardSourceItem(),
 		});
 		if (ruleNodes.length > 0) {
 			nodes.push(ruleNodes);
@@ -1071,7 +1072,21 @@ class NimbleChatMessage extends ChatMessage {
 		return nodes;
 	}
 
-	#collectRuleActivationCardNodes(context: { isCritical: boolean; isMiss: boolean }): EffectNode[] {
+	/** The item of the card; with none found, the card type stands for it. */
+	#cardSourceItem(): { type?: string } {
+		const uuid = (this.flags?.[SYSTEM_ID] as { itemUuid?: unknown } | undefined)?.itemUuid;
+		const item =
+			typeof uuid === 'string' && uuid
+				? (fromUuidSync(uuid as never, { strict: false }) as { type?: string } | null)
+				: null;
+		return item ?? { type: this.type };
+	}
+
+	#collectRuleActivationCardNodes(context: {
+		isCritical: boolean;
+		isMiss: boolean;
+		sourceItem: { type?: string };
+	}): EffectNode[] {
 		const actorId = this.speaker?.actor;
 		const actor = actorId ? game.actors?.get(actorId) : null;
 		const rules = (
