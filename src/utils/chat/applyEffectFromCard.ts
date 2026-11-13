@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
 import type { RuleRaise } from '#types/spellScaling.js';
 import {
@@ -8,6 +9,8 @@ import {
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
+import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
+import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
@@ -178,19 +181,39 @@ function warnTempHpKept(name: string, refused: { temp: number; amount: number })
 export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
 	const base = payloadOf(card, node);
 	if (!base) return;
-	const payload = { ...base, tempHp: linkedTempHealing(card, node)?.total ?? null };
+	const payload = {
+		...base,
+		tempHp: linkedTempHealing(card, node)?.total ?? null,
+		cardId: (card as { id?: string | null }).id ?? null,
+	};
 	const user = cardUser(card);
 	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
 	const results = await Promise.allSettled(
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);
 	const applied: AppliedEffect[] = [];
-	for (const result of results) {
+	const choices: CardEvent[] = [];
+	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);
 		else if (result.value) {
 			const { tempHpRefused, ...entry } = result.value;
-			if (tempHpRefused) warnTempHpKept(entry.actorName, tempHpRefused);
+			const holder = recipients[index] as { uuid?: string | null; name?: string | null };
+			if (tempHpRefused && holder?.uuid) {
+				choices.push(
+					tempHpChoiceEvent(
+						{ uuid: holder.uuid, name: holder.name },
+						tempHpRefused,
+						entry.effectUuid,
+					),
+				);
+			}
 			applied.push(entry);
+		}
+	});
+	if (choices.length && !(await addCardEvents(card as never, choices))) {
+		for (const choice of choices) {
+			const action = choice.action as { holderName: string; had: number; amount: number };
+			warnTempHpKept(action.holderName, { temp: action.had, amount: action.amount });
 		}
 	}
 	if (!applied.length) {

@@ -2,6 +2,8 @@ import { SYSTEM_ID } from '#system';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isConditionImmune } from '../../hooks/conditionImmunityGuard.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import type { Moment } from '../lastsUntil/momentReached.js';
+import { statusLastsUntil } from '../lastsUntil/statusLastsUntil.js';
 import { getSpellScrollData } from '../spell/createScrollFromSpell.js';
 import applyConditionToActor from './applyConditionToActor.js';
 
@@ -91,6 +93,33 @@ export interface ConcentrationSource {
 	flags?: Record<string, unknown>;
 	tags: Set<string>;
 	actor?: ConcentratingActor | null;
+	system?: { activation?: { duration?: { quantity?: unknown; type?: unknown } | null } | null };
+}
+
+const DURATION_UNITS = { minute: 'minutes', hour: 'hours' } as const;
+
+/**
+ * Concentrating's own moments, and "for <Duration>" when the spell's Duration is in minutes or
+ * hours ("Concentration: Up to 1 minute").
+ */
+export function concentrationLastsUntil(item: ConcentrationSource): Moment[] | undefined {
+	const duration = item.system?.activation?.duration;
+	const units = DURATION_UNITS[String(duration?.type) as keyof typeof DURATION_UNITS];
+	const value = Math.floor(Number(duration?.quantity));
+	if (!units || !(value >= 1)) return undefined;
+	const own = statusLastsUntil([STATUS_EFFECT_IDS.concentration])?.moments ?? [];
+	const time: Moment = {
+		kind: 'time',
+		boundary: null,
+		clock: null,
+		span: null,
+		value,
+		units,
+		who: null,
+		event: null,
+		effectName: '',
+	};
+	return [...own, time];
 }
 
 /** The school of the spell being cast, read off a scroll's inscription when it is one. */
@@ -128,6 +157,7 @@ export async function applyCasterConcentration(
 		sourceActor: caster,
 		systemFlags: { [CONCENTRATION_TRACK_FLAG]: track },
 		replaces: concentrationsEndedBy(caster, track),
+		lastsUntil: concentrationLastsUntil(item),
 	});
 
 	return effect ? 'applied' : 'refused';

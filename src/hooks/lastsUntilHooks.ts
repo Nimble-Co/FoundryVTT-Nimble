@@ -8,13 +8,19 @@ import {
 	hpGained,
 } from '#utils/actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
-import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import {
+	CONDITION_REPLACED_OPTION,
+	EFFECT_RECREATED_OPTION,
+} from '#utils/actor/applyConditionToActor.js';
+import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
-import { seatOf } from '#utils/lastsUntil/effectSubject.js';
+import { effectCardIdOf } from '#utils/damage/damageCard.js';
+import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
 import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { requestSaves } from '#utils/saveRequest/saveRequests.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
 type HookFn = (...args: never[]) => unknown;
@@ -139,6 +145,32 @@ function takeBackEffectTempHp(
 	if (given) void takeBackTempHp(effect.parent as never, given);
 }
 
+/** The statuses of a new effect, with each status they count as (Stunned counts as Incapacitated). */
+function gainedStatuses(effect: ActiveEffect): string[] {
+	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
+		string,
+		readonly string[]
+	>;
+	const statuses = [...(effect.statuses ?? [])];
+	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
+}
+
+/** The holder gains the effect, and the creature it came from applies it, on the card of the use. */
+function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+	if (!isActiveGm() || !(effect.parent instanceof Actor) || !effect.active) return;
+	if (options?.[EFFECT_RECREATED_OPTION]) return;
+	const cardId = effectCardIdOf(options);
+	const card = cardId ? (game.messages?.get(cardId) ?? null) : null;
+	const named = {
+		effectName: effect.name,
+		statuses: gainedStatuses(effect),
+		gained: effect,
+		effect: effect.name,
+	};
+	fireEvent('gain', effect.parent, named, card);
+	fireEvent('applyEffect', sourceOf(effect), named, card);
+}
+
 function onDeleteEffect(
 	effect: ActiveEffect,
 	options?: Record<string, unknown>,
@@ -146,12 +178,12 @@ function onDeleteEffect(
 ): void {
 	takeBackEffectTempHp(effect, options, userId);
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
-	if (options?.[CONDITION_REPLACED_OPTION]) return;
+	// A new Concentration ends the old activity; any other replaced copy only starts again.
+	const concentration = effect.statuses?.has(STATUS_EFFECT_IDS.concentration) ?? false;
+	if (options?.[CONDITION_REPLACED_OPTION] && !concentration) return;
 	const holder = effect.parent;
 	fireEvent('effectEnds', holder, { effectName: effect.name, effect: effect.name });
-	if (effect.statuses?.has(STATUS_EFFECT_IDS.concentration)) {
-		fireEvent('loseConcentration', holder);
-	}
+	if (concentration) fireEvent('loseConcentration', holder);
 }
 
 interface UseItemContext {
@@ -177,10 +209,21 @@ function onDamageApplied(payload: {
 	sourceActor?: Actor | null;
 	card?: { id?: string | null; speaker?: ChatMessage['speaker'] } | null;
 	isMiss?: boolean;
+	isCritical?: boolean;
+	damageTypes?: readonly string[];
 }): void {
 	if (payload?.isMiss) return;
 	const card = payload?.card ?? null;
-	fireEvent('takeDamage', payload?.targetActor ?? null, {}, card);
+	const target = (payload?.targetActor ?? null) as Parameters<typeof requestSaves>[1];
+	if (payload?.isCritical) void requestSaves(card, target, 'critReceived');
+	void requestSaves(card, target, 'takeDamage');
+	void chargeOnLightning(target as never, payload?.damageTypes, payload?.sourceActor?.uuid ?? null);
+	fireEvent(
+		'takeDamage',
+		payload?.targetActor ?? null,
+		{ damageTypes: payload.damageTypes ?? [] },
+		card,
+	);
 	const dealer = card?.speaker
 		? (ChatMessage.getSpeakerActor(card.speaker) ?? payload.sourceActor)
 		: payload?.sourceActor;
@@ -240,6 +283,7 @@ export default function registerLastsUntilHooks(): void {
 	on('updateWorldTime', onWorldTime);
 	on('updateActor', onUpdateActor);
 	on('updateToken', onUpdateToken);
+	on('createActiveEffect', onCreateEffect);
 	on('deleteActiveEffect', onDeleteEffect);
 	on(systemHookName('useItem'), onUseItem);
 	on(systemHookName('damageApplied'), onDamageApplied);

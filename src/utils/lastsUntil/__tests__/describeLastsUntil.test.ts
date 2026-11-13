@@ -44,6 +44,44 @@ function read(moments: Moment[], reader: DescribeInput['reader'], hasEscape = fa
 describe('describeLastsUntil', () => {
 	const endOfTheirNextTurn = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
 
+	it('reads "gain" with the name of the effect', () => {
+		const gain = {
+			...blank,
+			kind: 'event' as const,
+			who: 'source' as const,
+			event: 'gain' as const,
+			effectName: 'FLAWED',
+		};
+		expect(read([gain], CARD_TARGETS_READER)).toBe('Until you gain FLAWED');
+	});
+
+	it('reads "apply" with the name of the effect', () => {
+		const apply = {
+			...blank,
+			kind: 'event' as const,
+			who: 'source' as const,
+			event: 'applyEffect' as const,
+			effectName: 'Affliction',
+		};
+		expect(read([apply], CARD_TARGETS_READER)).toBe('Until you apply Affliction');
+	});
+
+	it('reads "take damage" with its types', () => {
+		const typed = {
+			...blank,
+			kind: 'event' as const,
+			who: 'holder' as const,
+			event: 'takeDamage' as const,
+			damageTypes: ['fire', 'radiant'],
+		};
+		expect(read([typed], CARD_TARGETS_READER)).toBe('Until they take fire or radiant damage');
+	});
+
+	it('reads a counted turn as "2nd next turn"', () => {
+		const second = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
+		expect(read([second], CARD_TARGETS_READER)).toBe('Until the end of their 2nd next turn');
+	});
+
 	it('reads a turn moment from the card and from the holder', () => {
 		expect(read([endOfTheirNextTurn], CARD_TARGETS_READER)).toBe(
 			'Until the end of their next turn',

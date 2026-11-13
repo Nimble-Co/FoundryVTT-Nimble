@@ -1,7 +1,8 @@
 import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
+import getDamageTypeLabel from '../damage/getDamageTypeLabel.js';
 import { isRoundSpan } from './momentForm.js';
-import type { Moment } from './momentReached.js';
+import { type Moment, turnCount } from './momentReached.js';
 
 const WORDS = 'NIMBLE.lastsUntilText';
 
@@ -53,6 +54,7 @@ interface HeldRollLike {
 	usedUp?: boolean;
 	whichRoll?: HeldAppliesTo;
 	meleeOnly?: boolean;
+	rangedOnly?: boolean;
 	fromSourceOnly?: boolean;
 }
 
@@ -68,6 +70,7 @@ export function usedUpOf(system: unknown): HeldUsedUp | null {
 	return {
 		by,
 		melee: rule.meleeOnly === true,
+		...(rule.rangedOnly ? { ranged: true } : {}),
 		fromSource: by === 'attacksOnHolder' && rule.fromSourceOnly === true,
 	};
 }
@@ -111,7 +114,8 @@ function sameReader(a: Person, b: Person): boolean {
 
 function usedUpPhrase(usedUp: HeldUsedUp, input: DescribeInput): string {
 	const { holder, source } = input.reader;
-	const attack = input.localize(`${WORDS}.${usedUp.melee ? 'meleeAttack' : 'attack'}`);
+	const attackWord = usedUp.melee ? 'meleeAttack' : usedUp.ranged ? 'rangedAttack' : 'attack';
+	const attack = input.localize(`${WORDS}.${attackWord}`);
 	let moment: string;
 	if (usedUp.by === 'holderAttacks') {
 		moment = input.format(`${WORDS}.nextAttack`, { whose: possessive(holder, input), attack });
@@ -138,7 +142,11 @@ function turnPhrase(moment: Moment, input: DescribeInput): string {
 			}),
 		});
 	}
-	const spanWord = input.localize(`${WORDS}.span.${span}`);
+	const count = turnCount(moment);
+	const spanWord =
+		count > 1
+			? input.localize(`${WORDS}.nextTurnCount.${count}`)
+			: input.localize(`${WORDS}.span.${span}`);
 	let whose: string;
 	if (moment.clock === 'nextHero') whose = input.localize(`${WORDS}.nextHero`);
 	else if (moment.clock === 'any') whose = `${input.localize(`${WORDS}.anyTurn`)} ${spanWord}`;
@@ -156,6 +164,35 @@ function timePhrase(moment: Moment, input: DescribeInput): string {
 	return input.format(`${WORDS}.for`, { amount });
 }
 
+/** A status id reads as the condition's name; any other text is the name of an effect. */
+function gainedName(name: string, input: DescribeInput): string {
+	const entries = (CONFIG as { statusEffects?: { id: string; name?: unknown }[] }).statusEffects;
+	const entry = (entries ?? []).find((each) => each.id === name.trim());
+	return entry?.name ? input.localize(String(entry.name)) : name.trim();
+}
+
+/** The verb of an event row, with what is gained or the damage types when it has them. */
+function eventAction(
+	moment: Moment,
+	event: LastsUntilEvent,
+	person: Person,
+	input: DescribeInput,
+): string {
+	const form = person.kind === 'named' ? 'third' : 'base';
+	if (event === 'gain' || event === 'applyEffect') {
+		return input.format(`${WORDS}.event.${event}.${form}`, {
+			name: gainedName(moment.effectName, input),
+		});
+	}
+	const types = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
+	if (!types.length) return verb(event, person, input);
+	return input.format(`${WORDS}.typedDamage.${form}`, {
+		types: types
+			.map((type) => getDamageTypeLabel(type).toLocaleLowerCase())
+			.join(input.localize(`${WORDS}.orWord`)),
+	});
+}
+
 function eventPhrase(moment: Moment, input: DescribeInput): string {
 	const event = moment.event ?? 'attack';
 	if (event === 'effectEnds') {
@@ -170,8 +207,9 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.combatEnds`) });
 	}
 	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
+	const action = eventAction(moment, event, person, input);
 	return input.format(`${WORDS}.until`, {
-		moment: `${subjectWord(person, input)} ${verb(event, person, input)}`,
+		moment: `${subjectWord(person, input)} ${action}`,
 	});
 }
 

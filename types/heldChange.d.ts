@@ -17,6 +17,8 @@ export interface HeldUsedUp {
 	by: HeldAppliesTo;
 	/** Only a melee attack uses it. */
 	melee: boolean;
+	/** Only a ranged attack uses it. */
+	ranged?: boolean;
 	/** Only an attack by the creature that applied it uses it. */
 	fromSource: boolean;
 }
@@ -58,8 +60,13 @@ export interface HeldChange
 	> {
 	sourceName: string;
 	meleeOnly: boolean;
+	/** Only a ranged attack uses it. An attack that is not known to be ranged does not. */
+	rangedOnly?: boolean;
 	/** Only attacks by this creature use it; empty when that creature is lost. Null: any attacker. */
 	onlyFromUuid: string | null;
 	effectId: string;
 	holderUuid: string;
 }
+
+/** An area card: the change on a target that maximizes the roll against it. */
+export type AreaMaximizeFor = (actor: object) => HeldChange | null;

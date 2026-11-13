@@ -717,11 +717,35 @@
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
+			"tempHpChoice": {
+				"ask": "{name} has {had} temp HP and would gain {amount}",
+				"askCause": "Temp HP do not add up: keep one amount",
+				"chose": "{name} chose to keep {amount} temp HP",
+				"choseCause": "Temp HP do not add up",
+				"keep": "Keep {amount}",
+				"take": "Take {amount}",
+				"keepLabel": "{name} keeps the {amount} temp HP they have",
+				"takeLabel": "{name} takes {amount} temp HP"
+			},
+			"saveRequest": {
+				"ask": "{name} saves to keep {effect}",
+				"kept": "{name} keeps {effect}",
+				"noteFrom": "{note} - {item}",
+				"cause": {
+					"critReceived": "Critical hit - DC {dc} {save} save",
+					"takeDamage": "Took damage - DC {dc} {save} save"
+				},
+				"rolled": "{save} save {total} - DC {dc}",
+				"roll": "Roll",
+				"rollLabel": "Roll the {save} save of {name}",
+				"keptBadge": "Kept"
+			},
 			"events": {
 				"label": "Events",
 				"undo": "Undo",
 				"undoLabel": "Undo: put {effect} back on {name}",
 				"backOn": "On {name}",
+				"waitingFor": "Waiting for {name}",
 				"useHeading": "{name} uses {item}",
 				"forHeading": "For {names}",
 				"cause": {
@@ -944,8 +968,8 @@
 					"tempHpGain": "{names} gain {amount} temp HP.",
 					"tempHpGainOne": "{names} gains {amount} temp HP.",
 					"tempHpReplaced": "{name} had {had}, now has {amount}.",
-					"tempHpKeeps": "{name} keeps {had}, not {amount}.",
-					"tempHpChoice": "Temp HP does not add up. A creature can keep the other amount: change it on its sheet.",
+					"tempHpKeeps": "{name} keeps {had} temp HP.",
+					"tempHpChoice": "Temp HP do not add up. The owner chooses on the Events line.",
 					"offTempHpAndAction": "Feature Effects is off. Give the temp HP and the action by hand.",
 					"offTempHp": "Feature Effects is off. Give the temp HP by hand.",
 					"offAction": "Feature Effects is off. Give the action by hand.",
@@ -1243,7 +1267,9 @@
 					"nextRoll": "{name} made a roll",
 					"nextDamage": "{name} dealt damage",
 					"nextSpell": "{name} cast a tiered spell",
-					"inactiveRound": "{name} went a round with no attack and no new use"
+					"inactiveRound": "{name} went a round with no attack and no new use",
+					"gain": "{name} gained {effect}",
+					"applyEffect": "{name} applied {effect}"
 				}
 			},
 			"expiryEvents": {
@@ -1491,7 +1517,7 @@
 		"healingTypes": {
 			"healing": "Healing",
 			"tempHealing": "Temporary Healing",
-			"tempHealingNotGranted": "{name} keeps their own {temp} temp HP, which is not less than {amount}."
+			"tempHealingNotGranted": "{name} keeps their {temp} temp HP in place of the new {amount}."
 		},
 		"languages": {
 			"common": "Common",
@@ -1892,6 +1918,9 @@
 			"maxDamage": "Max Damage",
 			"critDice": "Crit Dice",
 			"critDiceSave": "Save for Max Crit Dice",
+			"saveOnEvent": "Save on an Event",
+			"maxActionBonus": "Max Actions Bonus",
+			"damageRecoil": "Damage Recoil",
 			"damageMultiplier": "Damage Multiplier Tick",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
@@ -2624,7 +2653,7 @@
 				},
 				"tempHp": {
 					"label": "Temp HP for the one who rolled and allies",
-					"hint": "The one who rolled and their allies gain this temp HP. This character does not gain it. A creature with more temp HP keeps its own. Values such as @will come from this character."
+					"hint": "The one who rolled and their allies gain this temp HP. This character does not gain it. Temp HP do not add up: a creature that already has as much temp HP or more chooses which amount to keep. Values such as @will come from this character."
 				},
 				"tempHpWithin": {
 					"label": "Reach",
@@ -2678,7 +2707,9 @@
 						"wounded": "You are Bloodied",
 						"chargeGained": "You gain a charge",
 						"rest": "You rest",
-						"combatEnd": "Combat ends"
+						"combatEnd": "Combat ends",
+						"gain": "You gain a condition or a named effect",
+						"applyEffect": "You apply a condition or a named effect"
 					}
 				}
 			},
@@ -3310,6 +3341,10 @@
 					"label": "Melee attacks only",
 					"hint": "Only a melee attack uses it."
 				},
+				"rangedOnly": {
+					"label": "Ranged attacks only",
+					"hint": "Only a ranged attack uses it."
+				},
 				"fromSourceOnly": {
 					"label": "Only attacks by the creature that applied it",
 					"hint": "For the next attack against it: only an attack by the creature that put the effect on uses it."
@@ -3390,6 +3425,33 @@
 			},
 			"keepAmount": {
 				"description": "A row on the owner's card with a hit, 1/turn. It keeps the damage total of that card. The owner's next attack this turn uses that amount: no die is rolled, no modifier is added, it is a hit with no crit. Armor applies as normal."
+			},
+			"damageRecoil": {
+				"description": "When the owner deals damage, the owner takes that damage times the multiplier, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"multiplier": {
+					"label": "Multiplier",
+					"hint": "2 takes twice the damage dealt. The result rounds down."
+				}
+			},
+			"maxActionBonus": {
+				"description": "Adds to the creature's max actions while it is on, for example \"+1 max action\". A turn starts with the new max.",
+				"value": { "label": "Actions", "hint": "How many max actions it adds, as a formula." }
+			},
+			"saveOnEvent": {
+				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
+				"event": {
+					"label": "When",
+					"hint": "What asks for the save.",
+					"choices": {
+						"critReceived": "A crit hits the creature",
+						"takeDamage": "The creature takes damage"
+					}
+				},
+				"saveType": { "label": "Save", "hint": "The save the creature makes." },
+				"saveDC": {
+					"label": "DC",
+					"hint": "The DC of the save, as a formula of the creature's stats."
+				}
 			},
 			"critDiceSave": {
 				"description": "A row in Change This Roll on an attack with dice a crit adds. It spends a use, and the target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back.",
@@ -3971,6 +4033,14 @@
 				"currentRound": "this round",
 				"nextRound": "the next round"
 			},
+			"nextTurnCount": {
+				"2": "2nd next turn",
+				"3": "3rd next turn",
+				"4": "4th next turn",
+				"5": "5th next turn"
+			},
+			"typedDamage": { "base": "take {types} damage", "third": "takes {types} damage" },
+			"orWord": " or ",
 			"nextHero": "the next hero's turn",
 			"anyTurn": "the",
 			"your": "your",
@@ -3985,6 +4055,7 @@
 			"them": "them",
 			"attack": "attack",
 			"meleeAttack": "melee attack",
+			"rangedAttack": "ranged attack",
 			"nextAttack": "{whose} next {attack}",
 			"nextAttackFrom": "{whose} next {attack} against {whom}",
 			"nextAttackOn": "the next {attack} against {whom}",
@@ -4017,7 +4088,9 @@
 				"wounded": { "base": "are Bloodied", "third": "is Bloodied" },
 				"chargeGained": { "base": "gain a charge", "third": "gains a charge" },
 				"rest": { "base": "rest", "third": "rests" },
-				"combatEnd": { "base": "end", "third": "ends" }
+				"combatEnd": { "base": "end", "third": "ends" },
+				"gain": { "base": "gain {name}", "third": "gains {name}" },
+				"applyEffect": { "base": "apply {name}", "third": "applies {name}" }
 			}
 		},
 		"effectSheet": {
@@ -4045,6 +4118,8 @@
 				"until": "Until",
 				"orUntil": "Or until",
 				"none": "No moment: the effect stays until someone removes it.",
+				"statusDefault": "No moment of its own: it ends as {condition} ends. {lasts}.",
+				"untilRemoved": "Stays until someone removes it",
 				"coreDuration": "It also ends after its core duration: {duration}.",
 				"moment": "Moment {number}",
 				"the": "the",
@@ -4066,6 +4141,12 @@
 					"currentRound": "current round",
 					"nextRound": "next round"
 				},
+				"nextTurnCount": {
+					"2": "2nd next turn",
+					"3": "3rd next turn",
+					"4": "4th next turn",
+					"5": "5th next turn"
+				},
 				"units": {
 					"rounds": "rounds",
 					"minutes": "minutes",
@@ -4086,7 +4167,9 @@
 					"zeroHp": "drop to 0 HP",
 					"die": "die",
 					"loseConcentration": "lose Concentration",
-					"useAgain": "use this again"
+					"useAgain": "use this again",
+					"gain": "gain",
+					"applyEffect": "apply"
 				},
 				"add": "add a moment...",
 				"addKind": {
@@ -4107,6 +4190,11 @@
 					"add": "Add a moment"
 				},
 				"effectNamePlaceholder": "Rage",
+				"ofType": "of a type:",
+				"gainPick": "a condition...",
+				"gainNamed": "an effect named...",
+				"gainLabel": "The condition or effect",
+				"damageTypesLabel": "Damage types. None on is any type.",
 				"remove": "Remove moment {number}"
 			},
 			"escape": {
@@ -4133,6 +4221,9 @@
 				"remove": "Remove change {number}",
 				"change": "Change {number}",
 				"none": "No changes."
+			},
+			"changeTypes": {
+				"multiplyDown": "Multiply, round down"
 			}
 		},
 		"sheets": {

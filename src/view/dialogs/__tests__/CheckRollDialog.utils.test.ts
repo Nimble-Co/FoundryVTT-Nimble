@@ -140,3 +140,33 @@ describe('getSituationalRollModeOptions', () => {
 		});
 	});
 });
+
+describe('the tags of the roll', () => {
+	const keepTag = 'save:keep:concentration';
+	const onlyForTheTag = () =>
+		createRule({
+			appliesTo: vi.fn((domain?: Iterable<string>) => [...(domain ?? [])].includes(keepTag)),
+		});
+	const actor = (rules: unknown[]) =>
+		({ rules, getDomain: () => new Set(['self:concentration']) }) as never;
+	const strengthSave = { type: 'savingThrow', saveKey: 'strength' } as const;
+
+	it('a rule that only the roll tags make apply is offered ticked', () => {
+		const [option] = getSituationalRollModeOptions(actor([onlyForTheTag()]), {
+			...strengthSave,
+			rollTags: [keepTag],
+		});
+
+		expect(option).toMatchObject({ value: 1, on: true });
+	});
+
+	it('without the tag the rule is not offered, and a rule that applies anyway starts off', () => {
+		expect(getSituationalRollModeOptions(actor([onlyForTheTag()]), strengthSave)).toEqual([]);
+
+		const [option] = getSituationalRollModeOptions(actor([createRule()]), {
+			...strengthSave,
+			rollTags: [keepTag],
+		});
+		expect(option.on).toBe(false);
+	});
+});

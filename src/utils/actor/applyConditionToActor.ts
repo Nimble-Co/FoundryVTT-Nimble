@@ -3,9 +3,13 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import { type Application, newApplicationLastsLonger } from '../lastsUntil/lastsLonger.js';
 import type { Moment } from '../lastsUntil/momentReached.js';
 import { roundSeconds, secondsOf } from '../lastsUntil/secondsOf.js';
+import { untilRemoved } from '../lastsUntil/statusLastsUntil.js';
 
 /** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
 export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
+
+/** A create that puts back or replaces a copy: the holder gains nothing new. */
+export const EFFECT_RECREATED_OPTION = 'nimbleEffectRecreated';
 
 /** A second Taunted takes the place of the first, whatever their Lasts Until. */
 const NEWEST_WINS = new Set(['taunted']);
@@ -73,6 +77,8 @@ export interface ConditionStart {
 }
 
 export interface ApplyConditionOptions {
+	/** More create options, such as the card whose use applies the condition. */
+	createOptions?: Record<string, unknown>;
 	/** The feature, spell or object that caused the condition, when there is one. */
 	sourceItem?: ConditionSourceDocument | null;
 	/** The creature that caused the condition, used when no item is known. */
@@ -201,15 +207,15 @@ function hasCoreDuration(options: ApplyConditionOptions): boolean {
 }
 
 /**
- * The moments of the new effect: the caller's, else the authored effect's. With neither and no
- * core duration, the status entry's own moments stay.
+ * The moments of the new effect: the caller's, else the authored effect's. With neither, no core
+ * duration and no "until removed", the status entry's own moments stay.
  */
 function lastsUntilOf(conditionId: string, options: ApplyConditionOptions): Moment[] {
 	if (options.lastsUntil?.length) return options.lastsUntil;
 	const authored = (options.effectData?.system as { lastsUntil?: Moment[] } | undefined)
 		?.lastsUntil;
 	if (authored?.length) return authored;
-	if (hasCoreDuration(options)) return [];
+	if (hasCoreDuration(options) || untilRemoved(options.effectData?.system)) return [];
 	return findStatusEffectEntry(conditionId)?.system?.lastsUntil ?? [];
 }
 
@@ -249,7 +255,7 @@ interface ActiveEffectImplementation {
 	): Promise<AppliedConditionEffect>;
 	create(
 		data: AppliedConditionEffect | Record<string, unknown>,
-		operation: { parent: unknown; keepId: boolean },
+		operation: { parent: unknown; keepId: boolean; [option: string]: unknown },
 	): Promise<AppliedConditionEffect | undefined>;
 	deleteDocuments(
 		ids: string[],
@@ -304,7 +310,7 @@ async function createConditionEffect(
 	const source = effect.toObject?.() ?? effect;
 	const created = await activeEffectClass.create(
 		{ ...source, type: NIMBLE_EFFECT_TYPE },
-		{ parent: target, keepId: true },
+		{ parent: target, keepId: true, ...(options.createOptions ?? {}) },
 	);
 	return created ?? null;
 }
@@ -363,7 +369,11 @@ async function restoreReplacedEffects(
 		try {
 			// A refusing `preCreateActiveEffect` hook resolves undefined rather than
 			// throwing, and that is a loss too.
-			const restored = await activeEffectClass.create(source, { parent: target, keepId: true });
+			const restored = await activeEffectClass.create(source, {
+				parent: target,
+				keepId: true,
+				[EFFECT_RECREATED_OPTION]: true,
+			});
 			if (!restored) lost += 1;
 		} catch (error) {
 			lost += 1;
@@ -420,9 +430,12 @@ export default async function applyConditionToActor(
 
 	const replacedSources = await removeReplacedEffects(target, replaces);
 
+	const createOptions = replacedSources.length
+		? { ...options.createOptions, [EFFECT_RECREATED_OPTION]: true }
+		: options.createOptions;
 	let effect: AppliedConditionEffect | null;
 	try {
-		effect = await createConditionEffect(target, conditionId, options);
+		effect = await createConditionEffect(target, conditionId, { ...options, createOptions });
 	} catch (error) {
 		await restoreReplacedEffects(target, replacedSources);
 		throw error;

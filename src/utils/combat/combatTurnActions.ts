@@ -1,5 +1,9 @@
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
-import { getActorDyingActionLimit, isActorDying } from '../actor/actorHealthState.js';
+import {
+	getActorDyingActionLimit,
+	getActorMaxActionBonus,
+	isActorDying,
+} from '../actor/actorHealthState.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import { isCombatantDead } from './isCombatantDead.js';
@@ -53,8 +57,10 @@ export function getCombatantCurrentActions(combatant: Combatant.Implementation):
 }
 
 export function getCombatantMaxActions(combatant: Combatant.Implementation): number {
-	const baseMax = toFiniteNonNegativeNumber(
-		foundry.utils.getProperty(combatant, COMBATANT_ACTIONS_MAX_PATH),
+	const baseMax = Math.max(
+		0,
+		toFiniteNonNegativeNumber(foundry.utils.getProperty(combatant, COMBATANT_ACTIONS_MAX_PATH)) +
+			getActorMaxActionBonus(combatant.actor),
 	);
 	if (isActorDying(combatant.actor)) {
 		return Math.min(baseMax, getActorDyingActionLimit(combatant.actor));

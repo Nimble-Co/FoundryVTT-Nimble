@@ -40,6 +40,10 @@ describe('ChangeEffectRule', () => {
 		expect(Object.keys(schema.addMoments.element?.choices ?? {})).toContain('inactiveRound');
 		expect(Object.keys(schema.addMoments.element?.choices ?? {})).not.toContain('effectEnds');
 		expect(Object.keys(schema.removeMoments.element?.choices ?? {})).toContain('effectEnds');
+		for (const named of ['gain', 'applyEffect']) {
+			expect(Object.keys(schema.addMoments.element?.choices ?? {})).not.toContain(named);
+			expect(Object.keys(schema.removeMoments.element?.choices ?? {})).toContain(named);
+		}
 	});
 
 	it('changes the effects of the item it names, while it is on an actor', () => {

@@ -229,7 +229,7 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 				kind: 'tempHp',
 				label: '3 temp HP to 3 creatures',
 				tooltip:
-					'3 temp HP to 3 creatures, from Inspiring Presence. Wren, Pip gain 3 temp HP. Tam had 1, now has 3. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
+					'3 temp HP to 3 creatures, from Inspiring Presence. Wren, Pip gain 3 temp HP. Tam had 1, now has 3. Bram keeps 5 temp HP. Temp HP do not add up. The owner chooses on the Events line.',
 				off: false,
 			},
 		]);
@@ -267,7 +267,7 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 		expect(one.tags[0].tooltip).toBe('3 temp HP to Pip, from Inspiring Presence.');
 		expect(none.tags[0].label).toBe('3 temp HP: nobody gains it');
 		expect(none.tags[0].tooltip).toBe(
-			'3 temp HP: nobody gains it, from Inspiring Presence. Bram keeps 5, not 3. Temp HP does not add up. A creature can keep the other amount: change it on its sheet.',
+			'3 temp HP: nobody gains it, from Inspiring Presence. Bram keeps 5 temp HP. Temp HP do not add up. The owner chooses on the Events line.',
 		);
 	});
 

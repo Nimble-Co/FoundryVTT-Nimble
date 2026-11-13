@@ -10,7 +10,8 @@
 
 	const headingId = $props.id();
 	const strip = createCardEventsState(() => messageDocument);
-	const { isBusy, isBack, canUndo, undo, backStatus } = strip;
+	const { isBusy, isBack, canUndo, undo, canRollSave, rollSave, canChoose, choose, backStatus } =
+		strip;
 </script>
 
 {#if strip.events.length > 0}
@@ -73,6 +74,76 @@
 								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.undo')}
 							</button>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'saveRequest'}
+						{@const request = event.action}
+						{@const save = localize(`NIMBLE.effectSheet.escape.saves.${request.save}`)}
+						{#if request.state === 'kept'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-check" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.saveRequest.keptBadge')}
+							</span>
+						{:else if canRollSave(request)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize('NIMBLE.chat.saveRequest.rollLabel', {
+									save,
+									name: request.holderName,
+								})}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => rollSave(event)}
+							>
+								<i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.saveRequest.roll')}
+							</button>
+						{:else}
+							<span class="nimble-card-events__back">
+								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.events.waitingFor', { name: request.holderName })}
+							</span>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'tempHpChoice' && event.action.state === 'waiting'}
+						{@const choice = event.action}
+						{#if canChoose(choice)}
+							<span class="nimble-card-events__choice">
+								<button
+									class="nimble-card-events__action"
+									type="button"
+									aria-label={localize('NIMBLE.chat.tempHpChoice.keepLabel', {
+										name: choice.holderName,
+										amount: String(choice.had),
+									})}
+									aria-busy={isBusy(event.id)}
+									aria-disabled={isBusy(event.id)}
+									onclick={() => choose(event, false)}
+								>
+									{localize('NIMBLE.chat.tempHpChoice.keep', { amount: String(choice.had) })}
+								</button>
+								<button
+									class="nimble-card-events__action"
+									type="button"
+									aria-label={localize('NIMBLE.chat.tempHpChoice.takeLabel', {
+										name: choice.holderName,
+										amount: String(choice.amount),
+									})}
+									aria-busy={isBusy(event.id)}
+									aria-disabled={isBusy(event.id)}
+									onclick={() => choose(event, true)}
+								>
+									{localize('NIMBLE.chat.tempHpChoice.take', { amount: String(choice.amount) })}
+								</button>
+							</span>
+						{:else}
+							<span class="nimble-card-events__back">
+								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.events.waitingFor', { name: choice.holderName })}
+							</span>
 						{/if}
 					{/if}
 
@@ -187,6 +258,11 @@
 
 		&__move {
 			grid-column: 1 / -1;
+		}
+
+		&__choice {
+			display: inline-flex;
+			gap: 0.25rem;
 		}
 
 		&__back {

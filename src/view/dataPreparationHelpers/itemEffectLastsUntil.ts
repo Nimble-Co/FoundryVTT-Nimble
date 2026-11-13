@@ -4,7 +4,7 @@ import {
 	describeLastsUntil,
 	usedUpOf,
 } from '#utils/lastsUntil/describeLastsUntil.js';
-import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { appliedLastsUntil } from '#utils/lastsUntil/statusLastsUntil.js';
 import localize from '#utils/localize.js';
 
 /**
@@ -12,13 +12,13 @@ import localize from '#utils/localize.js';
  * next turn". `self` reads it for the creature that uses the item. Empty when nothing ends it.
  */
 export function itemEffectLastsUntil(
-	effect: { system?: unknown } | null | undefined,
+	effect: { system?: unknown; statuses?: Iterable<string> | null } | null | undefined,
 	recipient: 'self' | 'targets',
 ): string {
 	if (!effect) return '';
-	const system = (effect.system ?? {}) as { lastsUntil?: Moment[]; escape?: { dc?: string } };
+	const system = (effect.system ?? {}) as { escape?: { dc?: string } };
 	return describeLastsUntil({
-		moments: system.lastsUntil ?? [],
+		moments: appliedLastsUntil(effect),
 		usedUp: usedUpOf(system),
 		escape: !!system.escape?.dc?.trim(),
 		reader: recipient === 'self' ? CARD_SELF_READER : CARD_TARGETS_READER,

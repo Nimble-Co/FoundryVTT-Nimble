@@ -11,6 +11,8 @@ export const TURN_BOUNDARIES = ['start', 'end'] as const;
 export const CLOCKS = ['holder', 'source', 'nextHero', 'any'] as const;
 
 export const TURN_SPANS = ['nextTurn', 'currentTurn', 'currentRound', 'nextRound'] as const;
+/** The counts a "2nd next turn" moment can wait for. */
+export const NEXT_TURN_COUNTS = [2, 3, 4, 5] as const;
 
 export const TIME_UNITS = ['rounds', 'minutes', 'hours', 'days'] as const;
 
@@ -35,6 +37,8 @@ export const LASTS_UNTIL_EVENTS = [
 	'chargeGained',
 	'rest',
 	'combatEnd',
+	'gain',
+	'applyEffect',
 ] as const;
 
 /** The saves an Escape can allow. The author picks any set of them. */

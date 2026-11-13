@@ -7,6 +7,7 @@ import {
 	type MomentSubject,
 	momentReached,
 	type TurnSeat,
+	turnCountedAt,
 } from '../momentReached.js';
 
 const COMBAT = 'combat1';
@@ -166,6 +167,20 @@ describe('turn moments', () => {
 		expect(momentReached(endOfTheirNextTurn, applied, turnEnd(leader, 2))).toBe(true);
 	});
 
+	it('"the end of their 2nd next turn" ends at the second turn end that counts', () => {
+		const second = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 2 });
+		const applied = subject({ combatant: 'goblin', round: 1 });
+
+		expect(momentReached(second, applied, turnEnd(GOBLIN, 1))).toBe(false);
+		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 1), 0)).toBe(false);
+		expect(momentReached(second, applied, turnEnd(GOBLIN, 2))).toBe(false);
+		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 2), 0)).toBe(true);
+
+		const once = subject({ combatant: 'goblin', round: 1 }, { turnsSeen: [1] });
+		expect(momentReached(second, once, turnEnd(GOBLIN, 3))).toBe(true);
+		expect(turnCountedAt(second, once, turnEnd(GOBLIN, 3), 0)).toBe(false);
+	});
+
 	it('a solo monster turn later in the same round is its next turn', () => {
 		const applied = subject({ combatant: 'goblin', round: 1, turn: 0 });
 		const turnEndAt = (turn: number): LastsUntilCheck => ({
@@ -242,6 +257,105 @@ describe('round moments', () => {
 	});
 });
 
+describe('take damage of a type', () => {
+	const holder = { name: 'Ogre' };
+	const fireOrRadiant = moment({
+		kind: 'event',
+		who: 'holder',
+		event: 'takeDamage',
+		damageTypes: ['fire', 'radiant'],
+	});
+	const hit = (damageTypes: string[]): LastsUntilCheck => ({
+		type: 'event',
+		event: 'takeDamage',
+		actor: holder,
+		damageTypes,
+	});
+
+	it('ends on damage of one of its types only', () => {
+		const applied = subject({}, { holder });
+
+		expect(momentReached(fireOrRadiant, applied, hit(['cold']))).toBe(false);
+		expect(momentReached(fireOrRadiant, applied, hit(['cold', 'radiant']))).toBe(true);
+	});
+
+	it('with no types, any damage ends it', () => {
+		const anyDamage = moment({ kind: 'event', who: 'holder', event: 'takeDamage' });
+		expect(momentReached(anyDamage, subject({}, { holder }), hit(['cold']))).toBe(true);
+	});
+});
+
+describe('gain an effect or a condition', () => {
+	const holder = { name: 'Grappler' };
+	const gain = (effectName: string) =>
+		moment({ kind: 'event', who: 'holder', event: 'gain', effectName });
+	const gained = (effectName: string, statuses: string[]): LastsUntilCheck => ({
+		type: 'event',
+		event: 'gain',
+		actor: holder,
+		effectName,
+		statuses,
+	});
+	const applied = () => subject({}, { holder });
+
+	it('a condition is matched by its status, with its aliases', () => {
+		expect(
+			momentReached(
+				gain('incapacitated'),
+				applied(),
+				gained('Stunned', ['stunned', 'incapacitated']),
+			),
+		).toBe(true);
+		expect(momentReached(gain('incapacitated'), applied(), gained('Prone', ['prone']))).toBe(false);
+	});
+
+	it('an effect is matched by its name', () => {
+		expect(momentReached(gain('FLAWED'), applied(), gained('Flawed', []))).toBe(true);
+		expect(momentReached(gain('FLAWED'), applied(), gained('Rage', []))).toBe(false);
+	});
+
+	it('a blank name is never reached', () => {
+		expect(momentReached(gain(''), applied(), gained('', []))).toBe(false);
+	});
+
+	it('"until you apply" an effect matches its name or a status, as a gain does', () => {
+		const caster = { name: 'Hexbinder' };
+		const apply = moment({
+			kind: 'event',
+			who: 'source',
+			event: 'applyEffect',
+			effectName: 'affliction',
+		});
+		const waiting = subject({}, { holder: caster, source: caster });
+		const applied = (statuses: string[], event: 'applyEffect' | 'gain' = 'applyEffect') =>
+			({ type: 'event', event, actor: caster, effectName: 'Dimmed', statuses }) as LastsUntilCheck;
+		expect(momentReached(apply, waiting, applied(['affliction']))).toBe(true);
+		expect(momentReached(apply, waiting, applied([]))).toBe(false);
+		expect(momentReached(apply, waiting, applied(['affliction'], 'gain'))).toBe(false);
+	});
+
+	it('"until you gain Incapacitated" ends when the source gains it, not the holder', () => {
+		const grappler = { name: 'Ogre' };
+		const grappled = { name: 'Tessa' };
+		const yours = moment({
+			kind: 'event',
+			who: 'source',
+			event: 'gain',
+			effectName: 'incapacitated',
+		});
+		const held = subject({}, { holder: grappled, source: grappler });
+		const stunned = (actor: object): LastsUntilCheck => ({
+			type: 'event',
+			event: 'gain',
+			actor,
+			effectName: 'Stunned',
+			statuses: ['stunned', 'incapacitated'],
+		});
+		expect(momentReached(yours, held, stunned(grappler))).toBe(true);
+		expect(momentReached(yours, held, stunned(grappled))).toBe(false);
+	});
+});
+
 describe('time moments', () => {
 	it('"for 1 round" lasts until the same place in the turn order one round later', () => {
 		const oneRound = moment({ kind: 'time', value: 1, units: 'rounds' });
@@ -258,6 +372,22 @@ describe('time moments', () => {
 		expect(momentReached(oneRound, atInitiative, roundStart(1))).toBe(false);
 		expect(momentReached(oneRound, atInitiative, turnStart(GOBLIN, 1))).toBe(false);
 		expect(momentReached(oneRound, atInitiative, roundStart(2))).toBe(true);
+	});
+
+	it('"for 1 round" from a later turn of a solo monster waits for that turn', () => {
+		const oneRound = moment({ kind: 'time', value: 1, units: 'rounds' });
+		const applied = subject({ combatant: 'goblin', round: 1, turn: 2 });
+		const goblinTurn = (round: number, turn: number): LastsUntilCheck => ({
+			type: 'turnStart',
+			combatId: COMBAT,
+			seat: GOBLIN,
+			round,
+			turn,
+		});
+
+		expect(momentReached(oneRound, applied, goblinTurn(2, 0))).toBe(false);
+		expect(momentReached(oneRound, applied, goblinTurn(2, 2))).toBe(true);
+		expect(momentReached(oneRound, applied, goblinTurn(3, 0))).toBe(true);
 	});
 
 	it('"for 2 rounds" counts from the round of the start', () => {

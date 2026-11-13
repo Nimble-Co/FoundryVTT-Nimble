@@ -20,10 +20,13 @@ export interface SituationalRollModeOption {
 	icon: string;
 	/** Roll mode adjustment: positive for advantage, negative for disadvantage. */
 	value: number;
+	/** Ticked when the window opens: only the tags of this roll make the rule apply. */
+	on: boolean;
 }
 
 interface RollingActor {
 	rules?: unknown[];
+	getDomain?(): Set<string>;
 }
 
 export interface SituationalRollContext {
@@ -31,6 +34,8 @@ export interface SituationalRollContext {
 	abilityKey?: string | undefined;
 	saveKey?: string | undefined;
 	skillKey?: string | undefined;
+	/** Tags of this roll for rule predicates, such as `save:keep:concentration`. */
+	rollTags?: readonly string[] | undefined;
 }
 
 function targetKeyFor(context: SituationalRollContext): string | undefined {
@@ -49,7 +54,8 @@ function targetKeyFor(context: SituationalRollContext): string | undefined {
 /**
  * Returns the situational adjustments offered to `actor` for the roll described by
  * `context`. An adjustment is offered when its predicate passes, its check type and
- * target key match the roll, and its value is non-zero.
+ * target key match the roll, and its value is non-zero. The predicate also reads the
+ * roll's own tags; an adjustment that only those tags make apply starts ticked.
  */
 export function getSituationalRollModeOptions(
 	actor: RollingActor | null | undefined,
@@ -59,13 +65,15 @@ export function getSituationalRollModeOptions(
 
 	const rules = (actor.rules ?? []) as SituationalRollModeRule[];
 	const targetKey = targetKeyFor(context);
+	const tags = context.rollTags ?? [];
+	const domain = tags.length ? [...(actor.getDomain?.() ?? []), ...tags] : undefined;
 
 	const options: SituationalRollModeOption[] = [];
 	for (const rule of rules) {
 		if (rule.type !== 'situationalRollMode') continue;
 		if (!rule.offersAdjustment()) continue;
 		if (!rule.matchesRoll(context.type, targetKey)) continue;
-		if (!rule.appliesTo()) continue;
+		if (!rule.appliesTo(domain)) continue;
 
 		options.push({
 			key: `${rule.parentDocument?.uuid ?? ''}:${rule.id}`,
@@ -73,6 +81,7 @@ export function getSituationalRollModeOptions(
 				rule.label || rule.parentDocument?.name || localize('NIMBLE.ruleTypes.situationalRollMode'),
 			icon: rule.iconPath(),
 			value: rule.value,
+			on: !!domain && !rule.appliesTo(),
 		});
 	}
 

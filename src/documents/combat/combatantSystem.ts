@@ -1,4 +1,8 @@
-import { getActorDyingActionLimit, isActorDying } from '#utils/actor/actorHealthState.js';
+import {
+	getActorDyingActionLimit,
+	getActorMaxActionBonus,
+	isActorDying,
+} from '#utils/actor/actorHealthState.js';
 import { getAllHeroicReactionAvailabilityUpdate } from '#utils/incomingReactions/heroicActions.js';
 import type { CombatantBaseActions, NimbleCombatantSystem } from './combatTypes.js';
 
@@ -48,8 +52,10 @@ export function getCombatantBaseActionCurrent(combatant: Combatant.Implementatio
 	return getCombatantBaseActions(combatant).current;
 }
 
+/** The combatant's action max, with what the rules of its creature add. */
 export function getCombatantBaseActionMax(combatant: Combatant.Implementation): number {
-	return getCombatantBaseActions(combatant).max;
+	const max = getCombatantBaseActions(combatant).max + getActorMaxActionBonus(combatant.actor);
+	return Math.max(0, max);
 }
 
 export function getCombatantManualSortValue(combatant: Combatant.Implementation): number {

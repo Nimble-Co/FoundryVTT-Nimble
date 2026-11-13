@@ -27,6 +27,19 @@ export function damageCardOption(cardId: string | null | undefined): Record<stri
 	return cardId ? { [SYSTEM_ID]: { damageCardId: cardId } } : {};
 }
 
+/** The create option that names the card whose use applied the effect. */
+export function effectCardOption(cardId: string | null | undefined): Record<string, unknown> {
+	return cardId ? { [SYSTEM_ID]: { effectCardId: cardId } } : {};
+}
+
+/** The card whose use applied this effect, from its create options. */
+export function effectCardIdOf(options: unknown): string | null {
+	const scope = (options as Record<string, { effectCardId?: unknown } | undefined> | null)?.[
+		SYSTEM_ID
+	];
+	return typeof scope?.effectCardId === 'string' ? scope.effectCardId : null;
+}
+
 /** The card whose Apply Damage made this actor update, from its update options. */
 export function damageCardIdOf(options: unknown): string | null {
 	const scope = (options as Record<string, { damageCardId?: unknown } | undefined> | null)?.[

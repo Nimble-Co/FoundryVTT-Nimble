@@ -1,4 +1,4 @@
-import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { type Moment, turnCount } from '#utils/lastsUntil/momentReached.js';
 import type { TimeUnit } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 /** What an estimate reads of one application of a condition. */
@@ -19,8 +19,8 @@ function turnRounds(moment: Moment): number {
 	const { boundary, span } = moment;
 	if (span === 'currentRound') return 1;
 	if (span === 'nextRound') return boundary === 'start' ? 1 : 2;
-	if (boundary === 'start') return 1;
-	return span === 'currentTurn' ? 0.5 : 1.5;
+	if (boundary === 'start') return turnCount(moment);
+	return span === 'currentTurn' ? 0.5 : turnCount(moment) + 0.5;
 }
 
 function momentRounds(moment: Moment, elapsed: number, context: EstimateContext): number {

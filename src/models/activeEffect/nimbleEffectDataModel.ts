@@ -84,6 +84,10 @@ const momentSchema = () =>
 		who: nullableChoice(EVENT_SUBJECTS),
 		event: nullableChoice(LASTS_UNTIL_EVENTS),
 		effectName: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		damageTypes: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, blank: false }),
+			{ required: true, nullable: false, initial: () => [] },
+		),
 	});
 
 const effectSchema = () => ({
@@ -107,6 +111,8 @@ const effectSchema = () => ({
 		min: 0,
 	}),
 	minor: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+	/** With no moments: the status's own Lasts Until does not apply, so only removing it ends it. */
+	untilRemoved: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 });
 
 declare namespace NimbleEffectData {

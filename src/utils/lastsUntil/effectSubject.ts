@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import {
 	type EffectStart,
 	type LastsUntilCheck,
@@ -103,5 +104,14 @@ export function effectSubject(
 			return combat?.id === combatId && (holderSeats.length > 0 || sourceSeats.length > 0);
 		},
 		secondsOf,
+		turnsSeen: turnsSeenOf(effect),
 	};
+}
+
+/** The clock turns each moment counted so far, by moment index. */
+export function turnsSeenOf(effect: ActiveEffect): number[] {
+	const seen = (effect.flags as Record<string, { turnsSeen?: unknown } | undefined> | undefined)?.[
+		SYSTEM_ID
+	]?.turnsSeen;
+	return Array.isArray(seen) ? seen.map((each) => Number(each) || 0) : [];
 }

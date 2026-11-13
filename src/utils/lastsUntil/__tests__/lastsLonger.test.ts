@@ -30,6 +30,13 @@ describe('estimateRounds', () => {
 		expect(rounds([moment({ boundary: 'end', span: 'nextRound' })])).toBe(2);
 	});
 
+	it('a counted next turn lasts that many turns', () => {
+		const third = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 3 });
+		const second = moment({ boundary: 'start', clock: 'source', span: 'nextTurn', value: 2 });
+		expect(rounds([third])).toBe(3.5);
+		expect(rounds([second])).toBe(2);
+	});
+
 	it('counts N rounds as N, and world time by what is left', () => {
 		expect(rounds([moment({ kind: 'time', value: 3, units: 'rounds' })])).toBe(3);
 		expect(rounds([moment({ kind: 'time', value: 1, units: 'minutes' })])).toBe(10);
@@ -66,5 +73,13 @@ describe('newApplicationLastsLonger', () => {
 		expect(newApplicationLastsLonger(long, [short], context)).toBe(true);
 		expect(newApplicationLastsLonger(short, [long], context)).toBe(false);
 		expect(newApplicationLastsLonger(long, [short, long], context)).toBe(false);
+	});
+
+	it('a later counted turn replaces the next turn', () => {
+		const third = {
+			lastsUntil: [moment({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 3 })],
+		};
+		expect(newApplicationLastsLonger(third, [short], context)).toBe(true);
+		expect(newApplicationLastsLonger(short, [third], context)).toBe(false);
 	});
 });

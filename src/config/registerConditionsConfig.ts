@@ -68,6 +68,18 @@ function eventMoment(event: Moment['event'], who: Moment['who']): Moment {
 	};
 }
 
+const HOLDER_NEXT_TURN_END: Moment = {
+	kind: 'turn',
+	boundary: 'end',
+	clock: 'holder',
+	span: 'nextTurn',
+	value: null,
+	units: null,
+	who: null,
+	event: null,
+	effectName: '',
+};
+
 /** Every built-in ID required, any GM-supplied ID readable. */
 export type ConditionDictionary = Record<StatusEffectId, string> & Record<string, string>;
 
@@ -200,7 +212,31 @@ export default function registerConditionsConfig() {
 
 	/** The Lasts Until a condition has when nothing else gives it one, copied into its status effect. */
 	const conditionLastsUntil: Record<string, Moment[]> = {
+		dazed: [HOLDER_NEXT_TURN_END],
 		despair: [eventMoment('attack', 'holder'), eventMoment('combatEnd', null)],
+		grappled: [
+			eventMoment('zeroHp', 'source'),
+			eventMoment('die', 'source'),
+			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
+		],
+		slowed: [HOLDER_NEXT_TURN_END],
+		concentration: [
+			eventMoment('zeroHp', 'holder'),
+			{ ...eventMoment('gain', 'holder'), effectName: 'incapacitated' },
+		],
+	};
+
+	/** The rules a condition's effect carries. A crit on a concentrating creature asks a save. */
+	const conditionRules: Record<string, Record<string, unknown>[]> = {
+		concentration: [
+			{
+				id: 'concentrationSave',
+				type: 'saveOnEvent',
+				event: 'critReceived',
+				saveType: 'strength',
+				saveDC: '10',
+			},
+		],
 	};
 
 	// New: Automatic condition trigger relationships
@@ -216,6 +252,7 @@ export default function registerConditionsConfig() {
 	return {
 		conditions,
 		conditionAliasedConditions,
+		conditionRules,
 		conditionDescriptions,
 		conditionDefaultImages,
 		conditionLinkedConditions,

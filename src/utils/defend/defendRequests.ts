@@ -1,5 +1,10 @@
 import { SYSTEM_ID } from '#system';
-import type { DefendOptionUse, DefendRecord, WholeRoundDefend } from '#types/defend.d.ts';
+import type {
+	AttackerEffect,
+	DefendOptionUse,
+	DefendRecord,
+	WholeRoundDefend,
+} from '#types/defend.d.ts';
 import { CONDITION_REPLACED_OPTION } from '../actor/applyConditionToActor.js';
 import { applyEffectHere, payloadFromEffect } from '../actor/applyEffectToActor.js';
 import { itemEffectOf } from '../actor/itemEffectOf.js';
@@ -124,12 +129,22 @@ async function affectAttacker(card: DefendCard, record: DefendRecord): Promise<v
 	if (record.attackerEffects.length < 1) return;
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	if (!attacker) return;
-	for (const { itemUuid, effectId } of record.attackerEffects) {
+	await applyAttackerEffects(attacker, record.attackerEffects, record.actorUuid);
+}
+
+/** Each item effect goes on the attacker. The item's actor, else the defender, is the user. */
+export async function applyAttackerEffects(
+	attacker: Actor.Implementation,
+	effects: readonly AttackerEffect[],
+	defenderUuid: string,
+	apply: typeof applyEffectHere = applyEffectHere,
+): Promise<void> {
+	for (const { itemUuid, effectId } of effects) {
 		const item = fromUuidSync(itemUuid) as Item.Implementation | null;
 		const effect = itemEffectOf(item, effectId) as ActiveEffect.Implementation | null;
 		if (!item || !effect) continue;
-		const user = (item.actor ?? fromUuidSync(record.actorUuid) ?? null) as never;
-		await applyEffectHere(attacker as never, payloadFromEffect(effect, { itemUuid, user }));
+		const user = (item.actor ?? fromUuidSync(defenderUuid) ?? null) as never;
+		await apply(attacker as never, payloadFromEffect(effect, { itemUuid, user }));
 	}
 }
 

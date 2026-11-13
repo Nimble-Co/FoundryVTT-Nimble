@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { newMoment } from '#utils/lastsUntil/momentForm.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
@@ -55,6 +56,24 @@ describe('EffectLastsUntilTab', () => {
 
 		expect(container.textContent).toContain(word(`${LU}.none`));
 		expect(container.textContent).toContain(word(`${LU}.until`));
+	});
+
+	it("reads a condition's own Lasts Until for an effect on an item, never on a creature", () => {
+		const config = CONFIG as unknown as { statusEffects?: unknown };
+		const saved = config.statusEffects;
+		config.statusEffects = [
+			{ id: 'dazed', name: 'Dazed', system: { lastsUntil: [newMoment('turn')] } },
+		];
+		const withStatus = (parent: unknown) =>
+			Object.assign(makeEffect([]), { statuses: new Set(['dazed']), parent });
+		const onItem = renderTab(withStatus(Object.create(Item.prototype)));
+		const onCreature = renderTab(withStatus(Object.create(Actor.prototype)));
+		config.statusEffects = saved;
+
+		expect(onItem.container.textContent).toContain(word(`${LU}.untilRemoved`));
+		expect(onItem.container.textContent).not.toContain(word(`${LU}.none`));
+		expect(onCreature.container.textContent).toContain(word(`${LU}.none`));
+		expect(onCreature.container.textContent).not.toContain(word(`${LU}.untilRemoved`));
 	});
 
 	it('shows an older core duration, which still ends the effect', () => {
@@ -139,6 +158,66 @@ describe('EffectLastsUntilTab', () => {
 		expect(saved(effect)).toEqual([{ ...newMoment('effectEnds'), effectName: 'Rage' }]);
 	});
 
+	it('the turn list counts up to the 5th next turn', async () => {
+		const effect = makeEffect([newMoment('turn')]);
+		const { container } = renderTab(effect);
+
+		await fireEvent.change(field(container, 'span'), { target: { value: 'nextTurn:2' } });
+
+		expect(saved(effect)).toEqual([{ ...newMoment('turn'), value: 2 }]);
+	});
+
+	it('"take damage" turns a damage type on', async () => {
+		const nimble = CONFIG.NIMBLE as { damageTypes?: unknown };
+		const before = nimble.damageTypes;
+		nimble.damageTypes = { fire: 'Fire', radiant: 'Radiant' };
+		const takeDamage = { ...newMoment('event'), event: 'takeDamage' as const };
+		const effect = makeEffect([takeDamage]);
+		const { getByRole } = renderTab(effect);
+
+		await fireEvent.click(getByRole('button', { name: 'Fire' }));
+
+		expect(saved(effect)).toEqual([{ ...takeDamage, damageTypes: ['fire'] }]);
+		nimble.damageTypes = before;
+	});
+
+	it('"gain" picks a condition, or shows a name field for an effect', async () => {
+		const config = CONFIG as { statusEffects?: unknown };
+		const before = config.statusEffects;
+		config.statusEffects = [{ id: 'incapacitated', name: 'Incapacitated' }];
+		const gain = { ...newMoment('event'), event: 'gain' as const };
+		const effect = makeEffect([gain]);
+		const { container } = renderTab(effect);
+		const pick = container.querySelector(
+			`[aria-label="${word(`${LU}.gainLabel`)}"]`,
+		) as HTMLSelectElement;
+
+		await fireEvent.change(pick, { target: { value: 'incapacitated' } });
+		expect(saved(effect)).toEqual([{ ...gain, effectName: 'incapacitated' }]);
+
+		await fireEvent.change(pick, { target: { value: '__named' } });
+		expect(field(container, 'effectName')).not.toBeNull();
+		config.statusEffects = before;
+	});
+
+	it('an "an effect named..." pick moves up with its row when a row above is removed', async () => {
+		const gain = { ...newMoment('event'), event: 'gain' as const };
+		const effect = makeEffect([newMoment('turn'), gain]);
+		const { container } = renderTab(effect);
+		const pick = container.querySelector(
+			`[aria-label="${word(`${LU}.gainLabel`)}"]`,
+		) as HTMLSelectElement;
+		await fireEvent.change(pick, { target: { value: '__named' } });
+
+		const [first] = container.querySelectorAll(
+			`[aria-label^="${word(`${LU}.remove`, { number: '1' }).slice(0, -1)}"]`,
+		);
+		await fireEvent.click(first);
+
+		expect(saved(effect)).toEqual([gain]);
+		expect(field(container, 'effectName')).not.toBeNull();
+	});
+
 	it('the trash removes that moment only', async () => {
 		const effect = makeEffect([newMoment('turn'), newMoment('time')]);
 		const { container } = renderTab(effect);
@@ -149,6 +228,59 @@ describe('EffectLastsUntilTab', () => {
 		await fireEvent.click(first);
 
 		expect(saved(effect)).toEqual([newMoment('time')]);
+	});
+
+	describe('turn counts', () => {
+		const COUNTS = `flags.${SYSTEM_ID}.turnsSeen`;
+		const counted = (moments: Moment[], turnsSeen: number[]) =>
+			Object.assign(makeEffect(moments), { flags: { [SYSTEM_ID]: { turnsSeen } } });
+		const lastUpdate = (effect: ReturnType<typeof makeEffect>) =>
+			effect.update.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+		const removeRow = async (container: HTMLElement, number: number) => {
+			const buttons = container.querySelectorAll(
+				`[aria-label^="${word(`${LU}.remove`, { number: '1' }).slice(0, -1)}"]`,
+			);
+			await fireEvent.click(buttons[number - 1]);
+		};
+
+		it('the counts below a removed moment move up with their moments, in the same update', async () => {
+			const effect = counted([newMoment('turn'), newMoment('time'), newMoment('turn')], [1, 0, 2]);
+			const { container } = renderTab(effect);
+
+			await removeRow(container, 2);
+
+			expect(lastUpdate(effect)).toEqual({
+				'system.lastsUntil': [newMoment('turn'), newMoment('turn')],
+				[COUNTS]: [1, 2],
+			});
+		});
+
+		it('a removed moment with no count changes no count', async () => {
+			const effect = counted([newMoment('turn'), newMoment('time')], [1]);
+			const { container } = renderTab(effect);
+
+			await removeRow(container, 2);
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
+		it('a count stays while the moment counts the same turns', async () => {
+			const effect = counted([{ ...newMoment('turn'), value: 3 }], [2]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'span'), { target: { value: 'nextTurn:4' } });
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
+		it('a count goes back to 0 when the moment counts other turns', async () => {
+			const effect = counted([{ ...newMoment('turn'), value: 3 }], [2]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'clock'), { target: { value: 'source' } });
+
+			expect(lastUpdate(effect)).toMatchObject({ [COUNTS]: [0] });
+		});
 	});
 
 	it('saves the Escape DC', async () => {

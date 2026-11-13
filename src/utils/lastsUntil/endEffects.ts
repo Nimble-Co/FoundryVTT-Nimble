@@ -1,8 +1,9 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEventLastsUntil, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { addCardEvents, addMomentEvents, canHost } from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { effectEndsAt, endingMoment } from '#utils/lastsUntil/effectEndsAt.js';
+import { effectEndsAt, endingMoment, turnsSeenAfter } from '#utils/lastsUntil/effectEndsAt.js';
 import { sourceOf } from '#utils/lastsUntil/effectSubject.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { LastsUntilCheck, Moment } from '#utils/lastsUntil/momentReached.js';
@@ -181,13 +182,37 @@ export async function endEffects(
 	}
 }
 
-/** End what `check` ends, on the card of that moment. */
+/**
+ * End what `check` ends, on the card of that moment, and count its turn for the effects that stay.
+ * What ends is read when the check happens, from the combat as it is then. The counts and ends go
+ * one check at a time, so the next check counts from the counts of this one.
+ */
 export function endEffectsAt(
 	check: LastsUntilCheck,
 	moment: EndMoment,
 	combat?: Combat | null,
 ): Promise<void> {
-	return endEffects(effectsEndingAt(check, combat), moment, { check, combat });
+	const ending = effectsEndingAt(check, combat);
+	return queue.run('at', async () => {
+		await countTurns(check, combat, new Set(ending));
+		await endEffects(ending, moment, { check, combat });
+	});
+}
+
+/** A clock turn that a "2nd next turn" moment counts, and that does not end it, goes on its count. */
+async function countTurns(
+	check: LastsUntilCheck,
+	combat: Combat | null | undefined,
+	ending: ReadonlySet<ActiveEffect>,
+): Promise<void> {
+	if (check.type !== 'turnStart' && check.type !== 'turnEnd') return;
+	for (const actor of everyActor()) {
+		for (const effect of actor.effects as Iterable<ActiveEffect>) {
+			if (ending.has(effect)) continue;
+			const seen = turnsSeenAfter(effect, check, combat);
+			if (seen) await effect.update({ [`flags.${SYSTEM_ID}.turnsSeen`]: seen } as never);
+		}
+	}
 }
 
 export function registerEndTimedEffectsQuery(): void {
@@ -221,6 +246,10 @@ export async function undoEndedEffect(row: EndedEffectRow): Promise<boolean> {
 				create(data: object, operation: object): Promise<unknown>;
 			};
 		}
-	).implementation.create(row.effect, { parent: holder, keepId: true });
+	).implementation.create(row.effect, {
+		parent: holder,
+		keepId: true,
+		[EFFECT_RECREATED_OPTION]: true,
+	});
 	return !!created;
 }

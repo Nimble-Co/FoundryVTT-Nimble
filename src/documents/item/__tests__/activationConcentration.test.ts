@@ -1,4 +1,5 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 
 const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
@@ -193,7 +194,7 @@ describe('NimbleBaseItem#_createActivationCard concentration replacement', () =>
 		expect(deletedEffectIds()).toEqual([held.id]);
 		expect(createEffect).toHaveBeenLastCalledWith(
 			expect.objectContaining({ _id: 'concentration-default' }),
-			{ parent: item.actor, keepId: true },
+			{ parent: item.actor, keepId: true, [EFFECT_RECREATED_OPTION]: true },
 		);
 	});
 
@@ -206,7 +207,7 @@ describe('NimbleBaseItem#_createActivationCard concentration replacement', () =>
 
 		expect(createEffect).toHaveBeenLastCalledWith(
 			expect.objectContaining({ _id: 'concentration-default' }),
-			{ parent: item.actor, keepId: true },
+			{ parent: item.actor, keepId: true, [EFFECT_RECREATED_OPTION]: true },
 		);
 		expect(chatData.system.concentration).toBe(false);
 	});

@@ -580,7 +580,9 @@ export class CardRerolls {
 
 	/** Give creatures what this use gave, once the new roll is on the card or waits for a keep. */
 	async #applyGrants(reroll: RerollRecord, rule: RerollRuleLike): Promise<void> {
-		if (reroll.grants?.length) await applyGrants(reroll.grants, rule.parentDocument?.uuid ?? '');
+		if (!reroll.grants?.length) return;
+		const card = game.messages?.get(this.#host.id() ?? '') ?? null;
+		await applyGrants(reroll.grants, rule.parentDocument?.uuid ?? '', { card });
 	}
 
 	/** The card's entries with `entry` stamped used; added when the card does not have it yet. */

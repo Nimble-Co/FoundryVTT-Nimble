@@ -129,6 +129,8 @@ describe('Nimble effect data model', () => {
 			'chargeGained',
 			'rest',
 			'combatEnd',
+			'gain',
+			'applyEffect',
 		]);
 	});
 

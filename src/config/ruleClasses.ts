@@ -21,6 +21,7 @@ import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { DamageMultiplierRule } from '../models/rules/damageMultiplier.js';
+import { DamageRecoilRule } from '../models/rules/damageRecoil.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
 import { DefendOptionRule } from '../models/rules/defendOption.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
@@ -50,6 +51,7 @@ import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
 import { KeepAmountRule } from '../models/rules/keepAmount.js';
 import { MakeCritRule } from '../models/rules/makeCrit.js';
 import { MarkTargetRule } from '../models/rules/markTarget.js';
+import { MaxActionBonusRule } from '../models/rules/maxActionBonus.js';
 import { MaxDamageRule } from '../models/rules/maxDamage.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
@@ -70,6 +72,7 @@ import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
+import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SituationalRollModeRule } from '../models/rules/situationalRollMode.js';
@@ -103,6 +106,7 @@ export const RULE_CLASSES = {
 	conditionImmunity: ConditionImmunityRule,
 	damageBonus: DamageBonusRule,
 	damageBack: DamageBackRule,
+	damageRecoil: DamageRecoilRule,
 	defendOption: DefendOptionRule,
 	damageReduction: DamageReductionRule,
 	dyingActionLimit: DyingActionLimitRule,
@@ -132,8 +136,10 @@ export const RULE_CLASSES = {
 	keepAmount: KeepAmountRule,
 	makeCrit: MakeCritRule,
 	maxDamage: MaxDamageRule,
+	maxActionBonus: MaxActionBonusRule,
 	critDice: CritDiceRule,
 	critDiceSave: CritDiceSaveRule,
+	saveOnEvent: SaveOnEventRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,

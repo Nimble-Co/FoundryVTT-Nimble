@@ -30,7 +30,9 @@ export type CardEventKind =
 	| 'movementOffer'
 	| 'interpose'
 	| 'healthState'
-	| 'damage';
+	| 'damage'
+	| 'saveRequest'
+	| 'tempHpChoice';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -43,11 +45,43 @@ export interface EndedEffectRow {
 	effect: Record<string, unknown>;
 }
 
+/** A save that an event asks of a creature (Save on an Event), and how it stands. */
+export interface SaveRequestAction {
+	kind: 'saveRequest';
+	holderUuid: string;
+	holderName: string;
+	effectId: string;
+	effectName: string;
+	/** The item the effect came from, when its name is not the effect's name. */
+	itemName?: string;
+	save: string;
+	dc: number;
+	state: 'waiting' | 'kept';
+	total?: number;
+	/** The save card that answers the line, once its result is known. */
+	saveMessageId?: string;
+}
+
+/** Temp HP do not combine: the owner keeps the amount the creature has or takes the new one. */
+export interface TempHpChoiceAction {
+	kind: 'tempHpChoice';
+	holderUuid: string;
+	holderName: string;
+	had: number;
+	amount: number;
+	/** The effect that gives the new amount, which owns it once taken. */
+	effectUuid: string | null;
+	state: 'waiting' | 'kept' | 'took';
+}
+
 /**
- * What a line lets the reader do: Undo an end, or move as an offer lets. A Movement Offer line
- * holds its move and the offers it made; the card stores the same offers, so the token carries them.
+ * What a line lets the reader do: Undo an end, roll a save, keep or take temp HP, or move as an
+ * offer lets. A Movement Offer line holds its move and the offers it made; the card stores the same
+ * offers, so the token carries them.
  */
 export type CardEventAction =
+	| SaveRequestAction
+	| TempHpChoiceAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

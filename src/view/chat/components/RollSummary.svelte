@@ -63,7 +63,7 @@
 		<span class="roll__subheading roll__subheading--pieces">
 			<!-- Hidden while the dice are in the air, so they cannot tell the result early. -->
 			{#if note}
-				<span class:roll__note--hidden={rolling}>{note}</span>
+				<span class="roll__note" class:roll__note--hidden={rolling}>{note}</span>
 			{/if}
 
 			{#if checkResult}
@@ -212,6 +212,11 @@
 			&--hidden {
 				visibility: hidden;
 			}
+		}
+
+		// A note can be longer than the card, so it wraps inside itself.
+		&__subheading--pieces > &__note {
+			white-space: normal;
 		}
 
 		&__note--hidden {

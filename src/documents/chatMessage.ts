@@ -5,9 +5,10 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTree.js';
-import type { HeldChange } from '#types/heldChange.d.ts';
+import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -31,10 +32,17 @@ import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { substituteSpendFormula } from '#utils/dicePool/substituteSpendFormula.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
-import { heldVulnerabilityTo, spendHeldChanges } from '#utils/heldChange/heldChange.js';
+import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
+import {
+	heldMaximizeOnAreaTarget,
+	heldVulnerabilityTo,
+	isMelee,
+	spendHeldChanges,
+} from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
 import { reconcileMovementOffers, withEventOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
+import { asksSave, requestSaves } from '#utils/saveRequest/saveRequests.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
@@ -125,6 +133,10 @@ interface DamageApplicationTarget {
 	actor: HpMutableActor;
 	adjustedDamage: number;
 	usedVulnerabilities: HeldChange[];
+	/** The change that maximized an area roll against this target. */
+	usedMaximize: HeldChange | null;
+	/** The damage types that dealt more than 0 to this target. */
+	damageTypes: string[];
 }
 
 /**
@@ -168,6 +180,8 @@ interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
 	zeroDamageTargetNames: string[];
+	/** The creatures the card hits for 0 damage. A crit still hits them. */
+	zeroDamageActors: HpMutableActor[];
 	/** Targets whose banked one-shot reduction is consumed by this application */
 	bankedReductionActors: HpMutableActor[];
 }
@@ -727,14 +741,34 @@ function resolveDamageForActor(
 	};
 }
 
+/** An area attack rolls once; a target that holds a maximize change takes the highest total alone. */
+function areaMaximizeOf(
+	system: ActivationCardSystemData,
+	attacker: Actor | null,
+): AreaMaximizeFor | undefined {
+	const activation = system.activation as
+		| {
+				acquireTargetsFromTemplate?: boolean;
+				template?: { shape?: string };
+				targets?: { attackType?: string };
+		  }
+		| undefined;
+	if (!activation?.acquireTargetsFromTemplate || !activation.template?.shape) return undefined;
+	const melee = isMelee(attackDeliveryFromAttackType(activation.targets?.attackType as never));
+	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, melee);
+}
+
 function buildDamageApplicationPlan(params: {
 	targets: string[];
 	packets: DamagePacket[];
 	noDamageTargets?: ReadonlyMap<string, unknown>;
 	defendEffects?: ReadonlyMap<string, DefendEffect>;
+	/** An area card: the change on a target that maximizes the roll against it. */
+	areaMaximizeFor?: AreaMaximizeFor;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
+	const zeroDamageActors = new Set<HpMutableActor>();
 	const bankedReductionActors = new Set<HpMutableActor>();
 
 	for (const uuid of params.targets) {
@@ -745,6 +779,7 @@ function buildDamageApplicationPlan(params: {
 		// Before any reduction: this target's bank stays for an attack that hurts it.
 		const defend = params.defendEffects?.get(uuid);
 		if (params.noDamageTargets?.has(uuid) || defend?.zero) {
+			zeroDamageActors.add(actor);
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -756,10 +791,13 @@ function buildDamageApplicationPlan(params: {
 		// only consumed when the attack would otherwise deal damage — immunity or
 		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
-		const resolved = resolveDamageForActor(actor, params.packets, availableBank, defend);
+		const usedMaximize = params.areaMaximizeFor?.(actor) ?? null;
+		const packets = usedMaximize ? maximizedPackets(params.packets) : params.packets;
+		const resolved = resolveDamageForActor(actor, packets, availableBank, defend);
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
+			zeroDamageActors.add(actor);
 			zeroDamageTargetNames.add(
 				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
 			);
@@ -770,6 +808,14 @@ function buildDamageApplicationPlan(params: {
 			actor,
 			adjustedDamage: resolved.total,
 			usedVulnerabilities: resolved.usedVulnerabilities,
+			usedMaximize,
+			damageTypes: [
+				...new Set(
+					resolved.components.flatMap((part) =>
+						part.damageType && part.adjustedDamage > 0 ? [part.damageType] : [],
+					),
+				),
+			],
 		});
 	}
 
@@ -777,6 +823,7 @@ function buildDamageApplicationPlan(params: {
 		hasTargets: params.targets.length > 0,
 		applicableTargets,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
+		zeroDamageActors: [...zeroDamageActors],
 		bankedReductionActors: [...bankedReductionActors],
 	};
 }
@@ -1352,11 +1399,17 @@ class NimbleChatMessage extends ChatMessage {
 		// narrowing does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const targets = systemData.targets || [];
+		const sourceActorId = this.speaker?.actor;
+		const sourceActor = sourceActorId ? (game.actors?.get(sourceActorId) ?? null) : null;
 		const damageApplicationPlan = buildDamageApplicationPlan({
 			targets,
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
 			defendEffects: defendEffectsOf(systemData),
+			areaMaximizeFor: areaMaximizeOf(
+				systemData,
+				(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker) as Actor | null,
+			),
 		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
@@ -1368,18 +1421,21 @@ class NimbleChatMessage extends ChatMessage {
 		for (const bankedActor of damageApplicationPlan.bankedReductionActors) {
 			await clearBankedDamageReduction(bankedActor);
 		}
+		const critSavers = this.#critSaversAtZero(damageApplicationPlan);
+		for (const actor of critSavers) {
+			void requestSaves(this as never, actor as never, 'critReceived');
+		}
 
 		if (damageApplicationPlan.applicableTargets.length < 1) {
-			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+			if (critSavers.length < 1) ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return null;
 		}
 
-		const sourceActorId = this.speaker?.actor;
-		const sourceActor = sourceActorId ? (game.actors?.get(sourceActorId) ?? null) : null;
 		const sourceItemId = (this.flags as Record<string, { itemId?: string } | undefined>)?.nimble
 			?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
+		const recoil = this.cardDamageBack.recoilRules();
 		const hurt: Array<Parameters<CardDamageBack['afterDamage']>[0][number]> = [];
 		for (const target of damageApplicationPlan.applicableTargets) {
 			hurt.push({
@@ -1392,6 +1448,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
 			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
+			if (target.usedMaximize) await spendHeldChanges([target.usedMaximize], this.#endedLines());
 
 			const hpAfter = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1404,6 +1461,7 @@ class NimbleChatMessage extends ChatMessage {
 				sourceActor,
 				targetActor: target.actor,
 				card: this,
+				damageTypes: target.damageTypes,
 				isCritical: systemData.isCritical,
 				isMiss: systemData.isMiss,
 				discardedCritTriggers: systemData.discardedCritTriggers === true,
@@ -1421,7 +1479,7 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		await this.#markDamageApplied(targets);
-		return { damageApplicationPlan, hurt, sourceActor, sourceItem };
+		return { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem };
 	}
 
 	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
@@ -1430,16 +1488,20 @@ class NimbleChatMessage extends ChatMessage {
 			this.#applyDamageToTargets(packets),
 		);
 		if (!applied) return;
-		const { damageApplicationPlan, hurt, sourceActor, sourceItem } = applied;
+		const { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem } = applied;
 		const systemData = this.system as unknown as ActivationCardSystemData;
 
 		const attackRoll = (this.rolls ?? []).find((roll) => roll instanceof DamageRoll) as
 			| DamageRoll
 			| undefined;
-		await this.cardDamageBack.afterDamage(hurt, {
-			isCritical: systemData.isCritical === true,
-			critDiceTotal: attackRoll?.critDiceTotal ?? 0,
-		});
+		await this.cardDamageBack.afterDamage(
+			hurt,
+			{
+				isCritical: systemData.isCritical === true,
+				critDiceTotal: attackRoll?.critDiceTotal ?? 0,
+			},
+			recoil,
+		);
 		const speakerActor = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
 		await applyHitConditions({
 			attacker: speakerActor,
@@ -1527,8 +1589,16 @@ class NimbleChatMessage extends ChatMessage {
 		// absorbs the attack entirely, so the button must stay live for it.
 		return (
 			damageApplicationPlan.applicableTargets.length > 0 ||
-			damageApplicationPlan.bankedReductionActors.length > 0
+			damageApplicationPlan.bankedReductionActors.length > 0 ||
+			this.#critSaversAtZero(damageApplicationPlan).length > 0
 		);
+	}
+
+	/** A crit still hits a target it deals 0 damage: the targets that it asks for a save. */
+	#critSaversAtZero(plan: DamageApplicationPlan): HpMutableActor[] {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		if (!systemData.isCritical || systemData.isMiss) return [];
+		return plan.zeroDamageActors.filter((actor) => asksSave(actor as never, 'critReceived'));
 	}
 
 	/**
@@ -1606,7 +1676,12 @@ class NimbleChatMessage extends ChatMessage {
 		// Deliberately the same resolver `applyAllDamage` runs, so the number this
 		// previews and the number the GM removes cannot drift apart.
 		const defend = defendEffectsOf(this.system).get(targetUuid);
-		const { components, total } = resolveDamageForActor(actor, damageRolls, undefined, defend);
+		const attacker = (this.constructor as typeof ChatMessage).getSpeakerActor(
+			this.speaker,
+		) as Actor | null;
+		const maximize = areaMaximizeOf(this.system as never, attacker)?.(actor);
+		const packets = maximize ? maximizedPackets(damageRolls) : damageRolls;
+		const { components, total } = resolveDamageForActor(actor, packets, undefined, defend);
 		if (noDamageTargetsOf(this.system).has(targetUuid) || defend?.zero) {
 			return {
 				total: 0,
@@ -1722,6 +1797,7 @@ class NimbleChatMessage extends ChatMessage {
 			appliedAt: Date.now(),
 		};
 
+		const tempHpChoices: CardEvent[] = [];
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 			const actor = actorOfHealingTarget(tokenDocument);
@@ -1734,7 +1810,8 @@ class NimbleChatMessage extends ChatMessage {
 			const previousHp = typeof hpData?.value === 'number' ? hpData.value : 0;
 			const previousTempHp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 
-			await actor.applyHealing(healing, healingType);
+			const refused = await actor.applyHealing(healing, healingType, { quiet: true });
+			if (refused) tempHpChoices.push(tempHpChoiceEvent(actor as never, refused));
 
 			// Get new HP values after healing
 			const newHpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
@@ -1751,6 +1828,19 @@ class NimbleChatMessage extends ChatMessage {
 				newHp,
 				newTempHp,
 			});
+		}
+
+		if (tempHpChoices.length && !(await addCardEvents(this as never, tempHpChoices))) {
+			for (const { action } of tempHpChoices) {
+				const choice = action as { holderName: string; had: number; amount: number };
+				ui.notifications?.warn(
+					localize('NIMBLE.healingTypes.tempHealingNotGranted', {
+						name: choice.holderName,
+						temp: String(choice.had),
+						amount: String(choice.amount),
+					}),
+				);
+			}
 		}
 
 		// Store the healing record on the message

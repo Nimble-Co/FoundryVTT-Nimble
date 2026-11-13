@@ -132,6 +132,19 @@ describe('changeNewEffect', () => {
 		expect(noOrigin.updateSource).not.toHaveBeenCalled();
 	});
 
+	it('drops the "you" events of an effect on a creature that came from no one', () => {
+		const yours = { ...eventMoment('zeroHp'), who: 'source' as const };
+		const handSet = newEffect(holderWith([]), [yours, minute], '');
+		const applied = newEffect(holderWith([]), [yours, minute], 'Actor.ogre');
+		const onItem = newEffect(rage, [yours], '');
+
+		for (const effect of [handSet, applied, onItem]) changeNewEffect(effect);
+
+		expect(handSet.updateSource).toHaveBeenCalledWith({ 'system.lastsUntil': [minute] });
+		expect(applied.updateSource).not.toHaveBeenCalled();
+		expect(onItem.updateSource).not.toHaveBeenCalled();
+	});
+
 	it('runs from the preCreateActiveEffect hook', async () => {
 		vi.resetModules();
 		const callbacks = createHookCapture(

@@ -142,7 +142,12 @@ When nothing on the chat caused it, such as the start of a turn, the end of a ro
 
 **Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](conditions.md#how-long-a-condition-lasts).
 
-A line for the GM only goes on a card that only the GM sees, or in a whisper to the GM. An Interpose against an attack that only the GM sees gets its own message, so the players see it. A line that asks a player to act, such as a move, goes on a card that player sees. When the card that caused it is a whisper the player does not see, the line goes on a message of its own for that player and the GMs.
+Some lines ask the owner of a creature to choose or roll. Only that owner and the GM see the buttons.
+
+- **A save.** "Tessa saves to keep Concentration", with **Roll**. The roll uses the save window and makes a save card with "Tessa saves to keep Concentration - Flame Barrier" next to its result (the item part shows when the item has another name), so rerolls and reactions work on it as on any save. A success makes the line "Tessa keeps Concentration" with **Kept**; a failure ends the effect, and the line of the ended effect has **Undo**. The line follows the save card: a reroll that turns the failure into a success puts the effect back.
+- **Temp HP.** Temp HP do not add up. When a creature that has temp HP would gain an amount that is not more, the line says "Tessa has 5 temp HP and would gain 3", with **Keep 5** and **Take 3**. Then it says "Tessa chose to keep 5 temp HP". A larger amount takes the place of the old one with no question.
+
+A line for the GM only goes on a card that only the GM sees, or in a whisper to the GM. An Interpose against an attack that only the GM sees gets its own message, so the players see it. A line that asks a player to act, such as a save, a temp HP choice or a move, goes on a card that player sees. When the card that caused it is a whisper the player does not see, the line goes on a message of its own for that player and the GMs.
 
 ::: details When a moment gets a second message
 The lines of one moment, such as the start of one turn, go on one message. The system looks for that message in the last 20 chat messages. When 20 or more messages came after it, the next line of that moment starts a new message.

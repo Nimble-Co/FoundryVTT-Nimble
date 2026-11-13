@@ -6,6 +6,8 @@
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
 	import DemandControlSaveRow from './components/DemandControlSaveRow.svelte';
 
+	import { requestedSaveNote } from '#utils/saveRequest/saveRequests.js';
+
 	const { messageDocument } = $props();
 
 	const system = $derived(messageDocument.reactive.system);
@@ -16,6 +18,7 @@
 	const saveKey = $derived(system.saveKey);
 
 	const label = $derived(saves[`${saveKey}Save`]);
+	const note = $derived(requestedSaveNote(messageDocument.reactive));
 </script>
 
 <CardHeader {messageDocument} />
@@ -25,7 +28,7 @@
 	style="--nimble-user-background-color: {headerBackgroundColor}; --nimble-user-text-color: {headerTextColor};"
 	data-card-type="check"
 >
-	<CheckCardRolls {messageDocument} {label} />
+	<CheckCardRolls {messageDocument} {label} {note} />
 	<DemandControlSaveRow {messageDocument} />
 
 	<CardEvents {messageDocument} />

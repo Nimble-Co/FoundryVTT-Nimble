@@ -1,19 +1,20 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { systemHookName } from '#system';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { SYSTEM_ID, systemHookName } from '#system';
 
-const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock } = vi.hoisted(
-	() => ({
+const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
+	vi.hoisted(() => ({
+		requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
 		endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
 		endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
 		fireEventMock: vi.fn((..._args: unknown[]) => undefined),
 		fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
-	}),
-);
+	}));
 
 vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
 	endEffects: endEffectsMock,
 	endEffectsAt: endEffectsAtMock,
 }));
+vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: requestSavesMock }));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({
 	eventHeading: (event: string, names: { name?: string | null }) => `${event}:${names.name}`,
 	fireEvent: fireEventMock,
@@ -342,6 +343,81 @@ describe('events', () => {
 		expect(fireEventMock).not.toHaveBeenCalled();
 	});
 
+	it('a Concentration that a new one replaces ends its activity', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Concentrating', statuses: new Set(['concentration']) };
+
+		hook('deleteActiveEffect')(effect, { nimbleConditionReplaced: true });
+
+		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
+	});
+
+	it('a new effect is a gain of its name and its statuses, with their aliases', () => {
+		const nimble = CONFIG.NIMBLE as { conditionAliasedConditions?: unknown };
+		const aliases = nimble.conditionAliasedConditions;
+		onTestFinished(() => {
+			nimble.conditionAliasedConditions = aliases;
+		});
+		nimble.conditionAliasedConditions = { stunned: ['incapacitated'] };
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			{
+				effectName: 'Stunned',
+				statuses: ['stunned', 'incapacitated'],
+				gained: effect,
+				effect: 'Stunned',
+			},
+			null,
+		);
+	});
+
+	it('a new effect is an apply by the creature it came from, on the card of the use', () => {
+		const holder = Object.create(Actor.prototype);
+		const caster = Object.create(Actor.prototype);
+		const saved = (globalThis as { fromUuidSync?: unknown }).fromUuidSync;
+		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = vi.fn(() => caster);
+		const effect = {
+			parent: holder,
+			name: 'Dimmed',
+			origin: 'Actor.caster',
+			active: true,
+			statuses: new Set<string>(),
+		};
+
+		const card = { id: 'card1' };
+		const messages = (game as { messages?: unknown }).messages;
+		(game as { messages?: unknown }).messages = {
+			get: (id: string) => (id === 'card1' ? card : null),
+		};
+		hook('createActiveEffect')(effect, { [SYSTEM_ID]: { effectCardId: 'card1' } });
+		(globalThis as { fromUuidSync?: unknown }).fromUuidSync = saved;
+		(game as { messages?: unknown }).messages = messages;
+
+		const named = { effectName: 'Dimmed', statuses: [], gained: effect, effect: 'Dimmed' };
+		expect(fireEventMock).toHaveBeenCalledWith('applyEffect', caster, named, card);
+		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, named, card);
+	});
+
+	it('a copy that is put back or replaced is no new gain', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Prone', active: true, statuses: new Set(['prone']) };
+
+		hook('createActiveEffect')(effect, { nimbleEffectRecreated: true });
+
+		expect(fireEventMock).not.toHaveBeenCalled();
+	});
+
 	it('a move of the token is a move of its actor', () => {
 		const actor = { name: 'Goblin' };
 
@@ -424,9 +500,33 @@ describe('events', () => {
 	it('damage is damage taken by the target', () => {
 		const target = { name: 'Ogre' };
 
-		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor: null });
+		hook(systemHookName('damageApplied'))({
+			targetActor: target,
+			sourceActor: null,
+			damageTypes: ['fire'],
+		});
 
-		expect(fireEventMock).toHaveBeenCalledWith('takeDamage', target, {}, null);
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'takeDamage',
+			target,
+			{ damageTypes: ['fire'] },
+			null,
+		);
+	});
+
+	it('a crit asks the saves of a crit and of damage on the card; a plain hit only of damage', () => {
+		const target = { name: 'Tessa' };
+		const card = { id: 'card1' };
+
+		hook(systemHookName('damageApplied'))({ targetActor: target, card, isCritical: true });
+		expect(requestSavesMock.mock.calls).toEqual([
+			[card, target, 'critReceived'],
+			[card, target, 'takeDamage'],
+		]);
+
+		requestSavesMock.mockClear();
+		hook(systemHookName('damageApplied'))({ targetActor: target, card });
+		expect(requestSavesMock.mock.calls).toEqual([[card, target, 'takeDamage']]);
 	});
 
 	it('damage applied from a card has that card as the host of both events', () => {
@@ -437,7 +537,7 @@ describe('events', () => {
 		hook(systemHookName('damageApplied'))({ targetActor: target, sourceActor, card });
 
 		expect(fireEventMock.mock.calls).toEqual([
-			['takeDamage', target, {}, card],
+			['takeDamage', target, { damageTypes: [] }, card],
 			['nextDamage', sourceActor, {}, card],
 		]);
 	});

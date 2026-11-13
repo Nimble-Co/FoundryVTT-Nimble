@@ -8,17 +8,24 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	import {
 		eventRowSubject,
 		isRoundSpan,
+		namesAnEffect,
 		NEW_MOMENT_KINDS,
 		type NewMomentKind,
+		spanChoiceOf,
+		spanChoices,
+		spanChoiceWord,
 		withBoundary,
 		withClock,
+		withDamageType,
 		withEffectName,
 		withEvent,
-		withSpan,
+		withSpanChoice,
 		withSubject,
 		withUnits,
 		withValue,
 	} from '#utils/lastsUntil/momentForm.js';
+	import type { SpanChoice } from '#types/lastsUntilForm.js';
+	import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.js';
 	import localize from '#utils/localize.js';
 	import {
 		CLOCKS,
@@ -26,11 +33,11 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		type LastsUntilEvent,
 		TIME_UNITS,
 		TURN_BOUNDARIES,
-		TURN_SPANS,
 	} from '../../../models/activeEffect/nimbleEffectChoices.js';
 	import {
 		createEffectLastsUntilTabState,
 		ESCAPE_WORDS,
+		GAIN_NAMED,
 		eventLabel,
 		eventsFor,
 		lastsUntilWord as word,
@@ -39,12 +46,24 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	let { effect }: EffectTabProps = $props();
 
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
-
-	const state = createEffectLastsUntilTabState(() => effect);
-	const { change, remove, add, setEscapeDc, toggleEscapeSave } = state;
-	const moments = $derived(state.moments);
-	const escapeData = $derived(state.escape);
-	const coreDuration = $derived(state.coreDuration);
+	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
+	const tab = createEffectLastsUntilTabState(() => effect);
+	const {
+		change,
+		add,
+		remove,
+		setEscapeDc,
+		toggleEscapeSave,
+		setUntilRemoved,
+		conditions,
+		gainChoiceOf,
+		pickGain,
+	} = tab;
+	const moments = $derived(tab.moments);
+	const escapeData = $derived(tab.escape);
+	const coreDuration = $derived(tab.coreDuration);
+	const statusDefault = $derived(tab.statusDefault);
+	const untilRemoved = $derived(tab.untilRemoved);
 
 	function onAdd(event: Event & { currentTarget: HTMLSelectElement }) {
 		const kind = event.currentTarget.value as NewMomentKind | '';
@@ -59,8 +78,21 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 		{#if coreDuration}
 			<p class="nimble-lasts-until__none">{word('coreDuration', { duration: coreDuration })}</p>
+		{:else if statusDefault && !untilRemoved}
+			<p class="nimble-lasts-until__none">{word('statusDefault', statusDefault)}</p>
 		{:else if moments.length === 0}
 			<p class="nimble-lasts-until__none">{word('none')}</p>
+		{/if}
+
+		{#if statusDefault && !coreDuration}
+			<label class="nimble-field">
+				<input
+					type="checkbox"
+					checked={untilRemoved}
+					onchange={({ currentTarget }) => setUntilRemoved(currentTarget.checked)}
+				/>
+				<span class="nimble-field__label">{word('untilRemoved')}</span>
+			</label>
 		{/if}
 
 		{#each moments as moment, index (index)}
@@ -105,12 +137,12 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 						<select
 							aria-label={word('fields.span')}
-							value={moment.span ?? 'nextTurn'}
+							value={spanChoiceOf(moment)}
 							onchange={({ currentTarget }) =>
-								change(index, withSpan(moment, currentTarget.value as (typeof TURN_SPANS)[number]))}
+								change(index, withSpanChoice(moment, currentTarget.value as SpanChoice))}
 						>
-							{#each TURN_SPANS as span (span)}
-								<option value={span}>{word(`span.${span}`)}</option>
+							{#each spanChoices(moment.clock) as choice (choice)}
+								<option value={choice}>{word(spanChoiceWord(choice))}</option>
 							{/each}
 						</select>
 					{:else if moment.kind === 'time'}
@@ -176,6 +208,50 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 									<option value={event}>{eventLabel(event)}</option>
 								{/each}
 							</select>
+							{#if namesAnEffect(moment.event)}
+								{@const choice = gainChoiceOf(index, moment.effectName)}
+								<select
+									aria-label={word('gainLabel')}
+									value={choice}
+									onchange={({ currentTarget }) => pickGain(index, currentTarget.value)}
+								>
+									<option value="">{word('gainPick')}</option>
+									{#each conditions as condition (condition.id)}
+										<option value={condition.id}>{condition.label}</option>
+									{/each}
+									<option value={GAIN_NAMED}>{word('gainNamed')}</option>
+								</select>
+								{#if choice === GAIN_NAMED}
+									<input
+										class="nimble-lasts-until__name"
+										type="text"
+										aria-label={word('fields.effectName')}
+										placeholder={word('effectNamePlaceholder')}
+										value={moment.effectName}
+										onchange={({ currentTarget }) =>
+											change(index, withEffectName(moment, currentTarget.value))}
+									/>
+								{/if}
+							{/if}
+							{#if moment.event === 'takeDamage'}
+								<span>{word('ofType')}</span>
+								<span
+									class="nimble-lasts-until__saves nimble-lasts-until__saves--wrap"
+									role="group"
+									aria-label={word('damageTypesLabel')}
+								>
+									{#each DAMAGE_TYPES as type (type)}
+										<button
+											class="nimble-lasts-until__save"
+											type="button"
+											aria-pressed={moment.damageTypes?.includes(type) ?? false}
+											onclick={() => change(index, withDamageType(moment, type))}
+										>
+											{getDamageTypeLabel(type)}
+										</button>
+									{/each}
+								</span>
+							{/if}
 						{/if}
 					{/if}
 				</span>
@@ -318,6 +394,10 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		&__saves {
 			display: inline-flex;
 			gap: 0.25rem;
+
+			&--wrap {
+				flex-wrap: wrap;
+			}
 		}
 
 		&__save {

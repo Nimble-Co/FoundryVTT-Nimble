@@ -17,6 +17,7 @@ import type {
 import { useCostParts } from '../../view/chat/components/incomingReactionCost.js';
 import { spendInterpose } from '../../view/chat/components/spendInterpose.ts';
 import DefendDialog from '../../view/dialogs/DefendDialog.svelte';
+import { applyEffectToActor } from '../actor/applyEffectToActor.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import {
 	getHeroicReactionUsageState,
@@ -41,7 +42,7 @@ import {
 	tickCost,
 } from './defendOptions.js';
 import { defendReactors } from './defendReactors.js';
-import { requestDefend } from './defendRequests.js';
+import { applyAttackerEffects, requestDefend } from './defendRequests.js';
 import { extraDefendUsed, wholeRoundDefendOf } from './defendRound.js';
 import { newestDefendCard } from './newestDefendCard.js';
 import { ticksOfRow } from './ticksOfRow.js';
@@ -503,7 +504,8 @@ async function useOptionReroll(
 
 /**
  * The ticks that go with an Interpose and no Defend: each pays its cost or uses
- * its reroll, and its reminder shows to the player. No Defend record holds them.
+ * its reroll, its reminder shows to the player, and its effect goes on the attacker.
+ * No Defend record holds them.
  */
 async function useInterposeTicks(
 	card: NimbleChatMessage,
@@ -519,8 +521,11 @@ async function useInterposeTicks(
 			used.push(pick);
 		}
 	}
-	for (const line of defendOptionEffect(used.map((pick) => pick.rule)).reminders) {
-		ui.notifications?.info(line);
+	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
+	for (const line of reminders) ui.notifications?.info(line);
+	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
+	if (attacker && attackerEffects.length) {
+		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
 	}
 }
 

@@ -13,6 +13,29 @@ const { undoEndedEffect } = vi.hoisted(() => ({
 
 vi.mock('#utils/lastsUntil/endEffects.js', () => ({ undoEndedEffect }));
 
+const { rollRequestedSave } = vi.hoisted(() => ({
+	rollRequestedSave: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+const { chooseTempHp } = vi.hoisted(() => ({
+	chooseTempHp: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/actor/tempHpChoice.js', () => ({
+	chooseTempHp,
+	canChooseTempHp: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
+vi.mock('#utils/saveRequest/saveRequests.js', () => ({
+	rollRequestedSave,
+	canRollRequest: (action: { holderUuid: string; saveMessageId?: string }) =>
+		!action.saveMessageId &&
+		(!!(globalThis as Globals).game.user?.isGM ||
+			!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner),
+}));
+
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
 
@@ -34,6 +57,24 @@ const ended = (id: string, holderUuid: string, holderName: string, at = 1): Card
 	cause: { key: 'NIMBLE.chat.events.cause.source', data: { source: 'Cultist' } },
 	action: { kind: 'undoEnd', row: row(holderUuid, holderName) },
 	at,
+});
+
+const saveLine = (state: 'waiting' | 'kept'): CardEvent => ({
+	id: 'save1',
+	kind: 'saveRequest',
+	img: 'icons/concentration.svg',
+	text: { key: 'NIMBLE.chat.saveRequest.ask', data: { name: 'Tessa', effect: 'Concentration' } },
+	action: {
+		kind: 'saveRequest',
+		holderUuid: 'Actor.tessa',
+		holderName: 'Tessa',
+		effectId: 'eConc',
+		effectName: 'Concentration',
+		save: 'strength',
+		dc: 10,
+		state,
+	},
+	at: 1,
 });
 
 const poolLine = (id: string, at: number): CardEvent => ({
@@ -120,6 +161,73 @@ describe('CardEvents', () => {
 		expect(lines[0]).toHaveTextContent('Cultist');
 		expect(lines[1]).toHaveTextContent('Tessa n1 rested');
 		expect(lines[1].querySelector('i.fa-dice-d6')).not.toBeNull();
+	});
+
+	it('a save line has a Roll button for the owner of the creature and the GM', async () => {
+		renderEvents(makeCard([saveLine('waiting')]));
+
+		const roll = screen.getByRole('button', { name: /Roll the STR save of Tessa/ });
+		await fireEvent.click(roll);
+
+		expect(rollRequestedSave).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'save1' }),
+		);
+	});
+
+	it('a line whose save card is rolled has no second Roll', () => {
+		const rolled = saveLine('waiting');
+		(rolled.action as { saveMessageId?: string }).saveMessageId = 's1';
+		renderEvents(makeCard([rolled]));
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByText('Waiting for Tessa')).toBeInTheDocument();
+	});
+
+	it('other players see who the save waits for, and then that it was kept', () => {
+		globals.game.user = { isGM: false };
+		holders['Actor.tessa'].isOwner = false;
+		const { unmount } = renderEvents(makeCard([saveLine('waiting')]));
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByText('Waiting for Tessa')).toBeInTheDocument();
+		expect(screen.queryByRole('status')).toBeNull();
+		unmount();
+
+		renderEvents(makeCard([saveLine('kept')]));
+		expect(screen.getByRole('status')).toHaveTextContent('Kept');
+	});
+
+	it('a temp HP choice has Keep and Take for the owner, and nothing to click once made', async () => {
+		const choice = (state: 'waiting' | 'kept'): CardEvent => ({
+			id: 'temp1',
+			kind: 'tempHpChoice',
+			icon: 'fa-solid fa-shield-halved',
+			text: { key: 'NIMBLE.chat.tempHpChoice.ask', data: { name: 'Tessa', had: 5, amount: 3 } },
+			action: {
+				kind: 'tempHpChoice',
+				holderUuid: 'Actor.tessa',
+				holderName: 'Tessa',
+				had: 5,
+				amount: 3,
+				effectUuid: null,
+				state,
+			},
+			at: 1,
+		});
+		const { unmount } = renderEvents(makeCard([choice('waiting')]));
+
+		expect(screen.getByRole('button', { name: /keeps the 5 temp HP/ })).toHaveTextContent('Keep 5');
+		await fireEvent.click(screen.getByRole('button', { name: /takes 3 temp HP/ }));
+		expect(chooseTempHp).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'temp1' }),
+			true,
+		);
+		unmount();
+
+		renderEvents(makeCard([choice('kept')]));
+		expect(screen.queryByRole('button')).toBeNull();
 	});
 
 	it('a strip with no heading names itself', () => {

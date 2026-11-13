@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { SYSTEM_ID } from '#system';
 import { applyEffectSource } from '#utils/chat/applyEffectFromCard.js';
 import localize from '#utils/localize.js';
 import { applyEffectRow } from '../applyEffectRow.js';
@@ -210,7 +211,7 @@ describe('ApplyEffectNode on the card', () => {
 		);
 		expect(createEffect).toHaveBeenCalledWith(
 			expect.objectContaining({ name: 'Snowblind', origin: item.uuid }),
-			{ parent: goblin },
+			{ parent: goblin, [SYSTEM_ID]: { effectCardId: 'message-1' } },
 		);
 	});
 

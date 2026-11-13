@@ -235,11 +235,59 @@ describe('a line that asks a player to act', () => {
 		});
 		vi.stubGlobal(
 			'fromUuidSync',
-			vi.fn((uuid: string) => (uuid === 'Scene.s.Token.tessa' ? { actor: hero } : null)),
+			vi.fn((uuid: string) => {
+				if (uuid === 'Scene.s.Token.tessa') return { actor: hero };
+				return uuid === 'Actor.tessa' ? hero : null;
+			}),
 		);
 	});
 
 	afterEach(() => vi.unstubAllGlobals());
+
+	const saveFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'saveRequest',
+		action: {
+			kind: 'saveRequest',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			effectId: 'conc',
+			effectName: 'Concentrating',
+			save: 'strength',
+			dc: 10,
+			state: 'waiting',
+		},
+	});
+	const tempHpFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'tempHpChoice',
+		action: {
+			kind: 'tempHpChoice',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			had: 5,
+			amount: 3,
+			effectUuid: null,
+			state: 'waiting',
+		},
+	});
+
+	it.each([
+		['save', saveFor],
+		['temp HP choice', tempHpFor],
+	])(
+		'a %s line goes on a card for its player and the GMs, not on a card for the GM only',
+		async (_name, make) => {
+			const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
+
+			expect(await addCardEvents(card, [make('ask')])).toBe(true);
+
+			expect(card.update).not.toHaveBeenCalled();
+			const [data] = create.mock.calls[0] as [Record<string, any>];
+			expect(data.whisper).toEqual(['player', 'gm']);
+			expect(idsOf(data.flags[SYSTEM_ID].events)).toEqual(['ask']);
+		},
+	);
 
 	it('goes on a card for its player and the GMs when the card is whispered to the GM only', async () => {
 		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });

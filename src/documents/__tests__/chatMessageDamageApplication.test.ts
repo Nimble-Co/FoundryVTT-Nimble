@@ -595,6 +595,84 @@ describe('a damage node with a multiplier', () => {
 	});
 });
 
+describe('an area attack on a target with a maximize change', () => {
+	function doomed() {
+		const actor = createTarget();
+		const effect = {
+			id: 'doomed',
+			name: 'Doomed',
+			origin: null,
+			disabled: false,
+			system: {
+				rules: [
+					{
+						id: 'doomed-rule',
+						type: 'heldRoll',
+						label: 'Doomed',
+						heldKind: 'maximize',
+						value: 1,
+						whichRoll: 'attacksOnHolder',
+						usedUp: true,
+					},
+				],
+			},
+			flags: {},
+		};
+		Object.assign(actor, { uuid: 'Actor.doomed', isOwner: true, effects: [effect] });
+		return actor;
+	}
+
+	function areaCard(total: number) {
+		const card = createCard([{ damageType: 'fire', total }]);
+		Object.assign((card.system as unknown as { activation: object }).activation, {
+			acquireTargetsFromTemplate: true,
+			template: { shape: 'circle' },
+		});
+		return card;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		globals().game.user.isGM = true;
+		globals().Hooks = { call: vi.fn(), callAll: vi.fn() };
+		vi.stubGlobal('Roll', {
+			...(globalThis as unknown as { Roll: object }).Roll,
+			fromData: () => ({ total: 9, dice: [{ faces: 20, results: [{ result: 9 }] }] }),
+		});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('previews and deals the highest total to that target, and spends the change', async () => {
+		const actor = doomed();
+		globals().fromUuidSync = vi.fn((uuid: string) => {
+			if (uuid.includes('ActiveEffect')) return null;
+			return uuid === 'Actor.doomed' ? actor : { actor };
+		});
+		const card = areaCard(9);
+
+		const previewed = card.getDamageBreakdownForTarget('Scene.scene.Token.token')?.total;
+		expect(previewed).toBe(20);
+		await card.applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(20);
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['doomed']);
+	});
+
+	it('leaves a single-target card to the roll, which already maximized it', async () => {
+		const actor = doomed();
+		globals().fromUuidSync = vi.fn((uuid: string) => (uuid === 'Actor.doomed' ? actor : { actor }));
+		const card = createCard([{ damageType: 'fire', total: 9 }]);
+
+		await card.applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(9);
+		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+});
+
 describe('a vulnerability to the next fire damage', () => {
 	function greased() {
 		const actor = createTarget();

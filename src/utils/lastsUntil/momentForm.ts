@@ -1,10 +1,13 @@
-import type {
-	Clock,
-	EventSubject,
-	LastsUntilEvent,
-	TimeUnit,
-	TurnBoundary,
-	TurnSpan,
+import type { SpanChoice } from '#types/lastsUntilForm.js';
+import {
+	type Clock,
+	type EventSubject,
+	type LastsUntilEvent,
+	NEXT_TURN_COUNTS,
+	type TimeUnit,
+	TURN_SPANS,
+	type TurnBoundary,
+	type TurnSpan,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
 import type { Moment } from './momentReached.js';
 
@@ -17,6 +20,8 @@ export const HOLDER_FORM_EVENTS = [
 	'healed',
 	'zeroHp',
 	'die',
+	'gain',
+	'applyEffect',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** What the user of the item does: "or until you drop to 0 HP". */
@@ -27,7 +32,14 @@ export const SOURCE_FORM_EVENTS = [
 	'die',
 	'loseConcentration',
 	'useAgain',
+	'gain',
+	'applyEffect',
 ] as const satisfies readonly LastsUntilEvent[];
+
+/** The events that name a condition or an effect: "until they gain Prone". */
+export function namesAnEffect(event: LastsUntilEvent | null): boolean {
+	return event === 'gain' || event === 'applyEffect';
+}
 
 /** The "add a moment..." choices. */
 export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds'] as const;
@@ -46,6 +58,7 @@ const BLANK: Moment = {
 	who: null,
 	event: null,
 	effectName: '',
+	damageTypes: [],
 };
 
 export function newMoment(kind: NewMomentKind): Moment {
@@ -78,14 +91,39 @@ export function withBoundary(moment: Moment, boundary: TurnBoundary): Moment {
 	return { ...moment, boundary };
 }
 
-/** A round has no Clock; a turn needs one. */
+/** A round has no Clock; a turn needs one. A new span drops the count of a "2nd next turn". */
 export function withSpan(moment: Moment, span: TurnSpan): Moment {
-	if (isRoundSpan(span)) return { ...moment, span, clock: null };
-	return { ...moment, span, clock: moment.clock ?? 'holder' };
+	if (isRoundSpan(span)) return { ...moment, span, clock: null, value: null };
+	return { ...moment, span, clock: moment.clock ?? 'holder', value: null };
 }
 
+export function spanChoices(clock: Clock | null): SpanChoice[] {
+	const counts = clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+	return TURN_SPANS.flatMap((span) => (span === 'nextTurn' ? [span, ...counts] : [span]));
+}
+
+export function spanChoiceOf(moment: Moment): SpanChoice {
+	const span = moment.span ?? 'nextTurn';
+	const count = moment.value ?? 1;
+	if (span !== 'nextTurn' || count < 2) return span;
+	return `nextTurn:${count}` as SpanChoice;
+}
+
+/** The word of a turn list entry, under the tab's words: "span.nextTurn" or "nextTurnCount.2". */
+export function spanChoiceWord(choice: SpanChoice): string {
+	const [span, count] = choice.split(':');
+	return count ? `nextTurnCount.${count}` : `span.${span}`;
+}
+
+export function withSpanChoice(moment: Moment, choice: SpanChoice): Moment {
+	const [span, count] = choice.split(':') as [TurnSpan, string | undefined];
+	const next = withSpan(moment, span);
+	return count ? { ...next, value: Number(count) } : next;
+}
+
+/** The next hero's turn has no count. */
 export function withClock(moment: Moment, clock: Clock): Moment {
-	return { ...moment, clock };
+	return clock === 'nextHero' ? { ...moment, clock, value: null } : { ...moment, clock };
 }
 
 export function withValue(moment: Moment, value: number): Moment {
@@ -108,7 +146,17 @@ export function withSubject(moment: Moment, subject: EventRowSubject): Moment {
 }
 
 export function withEvent(moment: Moment, event: LastsUntilEvent): Moment {
-	return { ...moment, event };
+	const damageTypes = event === 'takeDamage' ? (moment.damageTypes ?? []) : [];
+	const effectName = namesAnEffect(event) ? moment.effectName : '';
+	return { ...moment, event, damageTypes, effectName };
+}
+
+/** Turns one damage type of "take damage" on or off. None on is any type. */
+export function withDamageType(moment: Moment, type: string): Moment {
+	const on = new Set(moment.damageTypes ?? []);
+	if (on.has(type)) on.delete(type);
+	else on.add(type);
+	return { ...moment, damageTypes: [...on] };
 }
 
 export function withEffectName(moment: Moment, effectName: string): Moment {

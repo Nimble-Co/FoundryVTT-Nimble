@@ -504,4 +504,10 @@ describe("applyConditionToActor the status entry's Lasts Until", () => {
 	it('drops them when the caller gives a core duration', async () => {
 		expect(await applied({ duration: { rounds: 1 } })).toEqual([]);
 	});
+
+	it('drops them when the authored effect stays until someone removes it', async () => {
+		expect(
+			await applied({ effectData: { system: { lastsUntil: [], untilRemoved: true } } }),
+		).toEqual([]);
+	});
 });

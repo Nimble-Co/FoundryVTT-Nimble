@@ -53,6 +53,7 @@ interface HeldRollSource {
 	whichRoll?: HeldChangeData['appliesTo'];
 	usedUp?: boolean;
 	meleeOnly?: boolean;
+	rangedOnly?: boolean;
 	fromSourceOnly?: boolean;
 	damageType?: string;
 	formula?: string;
@@ -133,6 +134,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				appliesTo: rule.whichRoll ?? 'holderAttacks',
 				spentBy: rule.usedUp === false ? 'everyRoll' : 'oneRoll',
 				meleeOnly: rule.meleeOnly === true,
+				...(rule.rangedOnly && !rule.meleeOnly ? { rangedOnly: true } : {}),
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
 				...(rule.formula ? { formula: rule.formula } : {}),
@@ -152,6 +154,7 @@ function fitsAttack(
 	melee: boolean | undefined,
 ): boolean {
 	if (held.meleeOnly && melee === false) return false;
+	if (held.rangedOnly && melee !== false) return false;
 	// A lost source ('') fits no attacker.
 	return held.onlyFromUuid === null || held.onlyFromUuid === attacker?.uuid;
 }
@@ -206,6 +209,25 @@ export function heldExtraDamageForAttack(input: AttackInput): HeldChange[] {
 export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 	if (input.area) return null;
 	return changesForAttack(input, 'maximize')[0] ?? null;
+}
+
+/**
+ * The change on one target of an area attack that maximizes the roll against it. The area rolls
+ * once, so only this target takes the highest total; it is spent when the damage is applied.
+ */
+export function heldMaximizeOnAreaTarget(
+	target: Holder | null | undefined,
+	attacker: Holder | null | undefined,
+	melee: boolean | undefined,
+): HeldChange | null {
+	return (
+		heldChangesOn(target).find(
+			(held) =>
+				held.kind === 'maximize' &&
+				held.appliesTo === 'attacksOnHolder' &&
+				fitsAttack(held, attacker, melee),
+		) ?? null
+	);
 }
 
 /** The change that takes disadvantage out of the holder's next roll. */

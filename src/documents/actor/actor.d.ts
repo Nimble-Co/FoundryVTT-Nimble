@@ -7,7 +7,11 @@ declare interface NimbleBaseActorInterface extends Actor {
 	getDomain(): Set<string>;
 	getRollData(item?: unknown): Record<string, unknown>;
 	applyDamage(damage: number): Promise<void>;
-	applyHealing(healing: number, healingType?: string): Promise<void>;
+	applyHealing(
+		healing: number,
+		healingType?: string,
+		options?: { quiet?: boolean },
+	): Promise<{ temp: number; amount: number } | null>;
 	setCurrentHP(value: number): Promise<void>;
 	setMaxHP(value: number): Promise<void>;
 	setTempHP(value: number): Promise<void>;
