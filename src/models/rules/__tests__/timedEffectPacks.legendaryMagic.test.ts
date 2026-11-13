@@ -26,6 +26,7 @@ import {
 	stepById,
 	stepsApplying,
 } from '../../../../tests/fixtures/packContent.js';
+import { deliveryOfAttack } from '../../../utils/damage/attackDelivery.js';
 
 const L = 'packs/legendaryMonsters/core';
 const FILES = {
@@ -194,6 +195,14 @@ describe('Poppy, Giant Stinkbug :: Stink Cloud.', () => {
 		expect(save.saveType).toBeUndefined();
 		expect(save.saveDC).toBe('max(10, @damageTaken)');
 		expectAtRoot(item, save);
+	});
+
+	it('targets the creatures within 2 spaces with a 2-space emanation that is not an attack', () => {
+		const { activation } = item.system;
+		expect(activation.acquireTargetsFromTemplate).toBe(true);
+		expect(activation.template).toEqual({ length: 1, radius: 2, shape: 'emanation', width: 1 });
+		expect(activation.targets).toEqual({ count: 1, restrictions: '' });
+		expect(deliveryOfAttack(activation, { type: 'soloMonster' })).toBeNull();
 	});
 
 	it('Stink Cloud is a marker until the end of the round', () => {

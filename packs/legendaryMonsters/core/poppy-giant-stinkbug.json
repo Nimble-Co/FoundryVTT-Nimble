@@ -145,7 +145,7 @@
 				"identifier": "",
 				"rules": [],
 				"activation": {
-					"acquireTargetsFromTemplate": false,
+					"acquireTargetsFromTemplate": true,
 					"cost": {
 						"details": "",
 						"quantity": 1,
@@ -189,8 +189,8 @@
 					},
 					"template": {
 						"length": 1,
-						"radius": 1,
-						"shape": "",
+						"radius": 2,
+						"shape": "emanation",
 						"width": 1
 					}
 				},
