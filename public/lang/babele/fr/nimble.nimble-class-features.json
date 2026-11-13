@@ -43,6 +43,9 @@
 			"rules": {
 				"apexPredatorGain": {
 					"label": "Apex Predator"
+				},
+				"apexPredatorUses": {
+					"label": "Apex Predator"
 				}
 			}
 		},
@@ -77,7 +80,12 @@
 		},
 		"Assist Me, My Friend!": {
 			"description": "<p>Whenever you make your first melee attack each round, you may add your Lifebinding Spirit's damage to the attack.</p>",
-			"name": "Assist Me, My Friend!"
+			"name": "Assist Me, My Friend!",
+			"rules": {
+				"YxlrHitpIxVvLld3": {
+					"label": "Assist Me, My Friend!"
+				}
+			}
 		},
 		"At Any Cost": {
 			"description": "<p>Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p>",
@@ -173,7 +181,12 @@
 		},
 		"Blinding Aura": {
 			"description": "<p>(1/Safe Rest) Action: Enemies in your aura are Blinded until the end of their next turn.</p>",
-			"name": "Blinding Aura"
+			"name": "Blinding Aura",
+			"rules": {
+				"blinding-aura-use-pool": {
+					"label": "Blinding Aura use"
+				}
+			}
 		},
 		"Blood Frenzy": {
 			"description": "<p><em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p>",
@@ -234,6 +247,7 @@
 			"name": "Bonescythe"
 		},
 		"Borne Upon the Wind": {
+			"costDetails": "When you roll Initiative",
 			"description": "<p>(Replaces: Move it! Move it!)</p><p>When you roll Initiative, you may give yourself and an ally advantage on the roll, +3 speed, and the ability to fly for 1 round. Then, you both can also move for free.</p>",
 			"name": "Borne Upon the Wind"
 		},
@@ -442,7 +456,12 @@
 		"Crystalline Armor": {
 			"costDetails": "when an ally drops to 0 HP",
 			"description": "<p>(Replaces: Hold the Line!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
-			"name": "Crystalline Armor"
+			"name": "Crystalline Armor",
+			"rules": {
+				"crystalline-armor-use-pool": {
+					"label": "Crystalline Armor use"
+				}
+			}
 		},
 		"Cunning Strike": {
 			"costDetails": "1 Use",
@@ -511,6 +530,9 @@
 			"description": "<p>Dropping to 0 HP does not cause your Rage to end.</p>",
 			"name": "DEEP RAGE",
 			"rules": {
+				"abtG9uvzTxND08Vc": {
+					"label": "Deep Rage"
+				},
 				"deep-rage-suppress-0hp": {
 					"label": "Deep Rage"
 				}
@@ -639,6 +661,9 @@
 			"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p>",
 			"name": "Enduring Rage",
 			"rules": {
+				"cNlvqtelpoi6Fnms": {
+					"label": "Enduring Rage"
+				},
 				"EnduRageDyingAct": {
 					"label": "Enduring Rage"
 				},
@@ -749,7 +774,12 @@
 		},
 		"Face Me, Foul Creature!": {
 			"description": "<p>When you Interpose, the attacking enemy is also Taunted by you until the end of their next turn.</p>",
-			"name": "Face Me, Foul Creature!"
+			"name": "Face Me, Foul Creature!",
+			"rules": {
+				"zyBp9QvqbsCcPN9c": {
+					"label": "Face Me, Foul Creature!"
+				}
+			}
 		},
 		"Face Me!": {
 			"costDetails": "ally is crit within 12 spaces",
@@ -796,7 +826,12 @@
 		},
 		"Fight Picker": {
 			"description": "<p>(1/turn) When an enemy is damaged by your Vicious Mockery, you may have one of your allies Taunt them until the end of the enemy's turn instead.</p>",
-			"name": "Fight Picker"
+			"name": "Fight Picker",
+			"rules": {
+				"fight-picker-use-pool": {
+					"label": "Fight Picker use"
+				}
+			}
 		},
 		"Final Takedown": {
 			"description": "<p>Action: Spend 1 Thrill of the Hunt charge to make a melee attack against your Bloodied quarry. Turn it into a crit and double the damage of your Hunter's Mark. If they survive, they crit you back.</p>",
@@ -916,11 +951,19 @@
 			"name": "Gift from the Master"
 		},
 		"Glacial Resilience": {
+			"costDetails": "whenever you are attacked or would gain a condition",
 			"description": "<p><em>(1/Safe Rest)</em> <strong>Reaction</strong> (whenever you are attacked or would gain a condition), gain 10×LVL temp HP and end ALL negative conditions on yourself. At the end of your next turn, any remaining temp HP are lost.</p>",
-			"name": "Glacial Resilience"
+			"name": "Glacial Resilience",
+			"rules": {
+				"glacial-resilience-use-pool": {
+					"label": "Glacial Resilience use"
+				}
+			}
 		},
 		"Glimmering Decree": {
+			"costDetails": "ally is crit within 12 spaces",
 			"description": "<p>(Replaces: Face Me!)</p><p><strong>Reaction</strong> (after an ally within 12 spaces is crit): That enemy takes STR d8 radiant damage (ignoring armor), is pulled up to 4 spaces toward you, and is Taunted by you until you drop to 0 HP.</p>",
+			"durationDetails": "until you drop to 0 HP",
 			"name": "Glimmering Decree"
 		},
 		"Glorious Paragon": {
@@ -965,7 +1008,12 @@
 		},
 		"Guiding Spirit": {
 			"description": "<p>When your Lifebinding Spirit rolls a 6 or higher on its damage die, the target begins to glow with radiant light. The next attack against that target has advantage.</p>",
-			"name": "Guiding Spirit"
+			"name": "Guiding Spirit",
+			"rules": {
+				"yxgnbfXPq4Ei7Kqz": {
+					"label": "Guiding Spirit"
+				}
+			}
 		},
 		"Ha! I'm Over Here!": {
 			"description": "<p>(1/Safe Rest) If an attack would cause you to drop to 0 HP, you instead move up to your speed away and take no damage.</p>",
@@ -1071,7 +1119,12 @@
 		},
 		"Hunter's Resolve": {
 			"description": "<p>Whenever you have no Thrill of the Hunt charges, gain Hunter's Resolve until the end of your turn: treat all creatures as your quarry for the purposes of movement and melee attacks.</p>",
-			"name": "Hunter's Resolve"
+			"name": "Hunter's Resolve",
+			"rules": {
+				"vFgwlRG6YfcAplJ1": {
+					"label": "Hunter's Resolve"
+				}
+			}
 		},
 		"I Can Do This ALL DAY!": {
 			"costDetails": "when you would drop to 0 HP",
@@ -1111,7 +1164,12 @@
 		},
 		"Illuminate Soul": {
 			"description": "<p>Action: A creature within 6 spaces begins to glow with radiant light. For 1 Round, attacks against them are made with your choice of advantage or disadvantage. You may do this WIL times per Safe Rest.</p>",
-			"name": "Illuminate Soul"
+			"name": "Illuminate Soul",
+			"rules": {
+				"illuminate-soul-pool": {
+					"label": "Illuminate Soul"
+				}
+			}
 		},
 		"Impressive Form": {
 			"description": "<p>+5 max HP. Upgrade your Hit Dice to d10s</p>",
@@ -1747,11 +1805,21 @@
 		},
 		"Primal Predator": {
 			"description": "<p><em>(1/encounter)</em> Your weapon attacks ignore cover and armor this turn.</p>",
-			"name": "Primal Predator"
+			"name": "Primal Predator",
+			"rules": {
+				"primal-predator-use-pool": {
+					"label": "Primal Predator use"
+				}
+			}
 		},
 		"Primordial Force": {
 			"description": "<p>Spending 2+ mana on a spell grants an additional effect:</p><p>• <strong>Ice</strong>. Gain WIL temp HP.</p><p>• <strong>Lightning</strong>. Deal additional damage equal to your WIL.</p><p>• <strong>Radiant</strong>. You may heal a creature within 6 spaces WIL HP.</p><p>• <strong>Wind</strong>. Gain a flying speed this turn. Move up to 6 spaces for free.</p>",
-			"name": "Primordial Force"
+			"name": "Primordial Force",
+			"rules": {
+				"VpVfLXW6605I5Vc5": {
+					"label": "Primordial Force"
+				}
+			}
 		},
 		"Professional Skulker": {
 			"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
@@ -2027,7 +2095,12 @@
 		},
 		"Shining Mandate": {
 			"description": "<p>The first time each round you are attacked while you already have Judgment Dice, select an ally within your aura to roll one and apply it to their next attack. You have advantage on skill checks to see through illusions.</p>",
-			"name": "Shining Mandate"
+			"name": "Shining Mandate",
+			"rules": {
+				"RcxOKs9FeZPQQCwz": {
+					"label": "Shining Mandate"
+				}
+			}
 		},
 		"Skilled Navigator": {
 			"description": "<p>You cannot become lost by nonmagical means.</p>",
@@ -2113,7 +2186,12 @@
 		},
 		"Song of Domination": {
 			"description": "<p>(1/encounter) 2 actions: Play a bewitching tune, and all enemies within 6 spaces who hear it must make a WIL save. If they fail, you move them up to 6 spaces in any direction, and they cannot move on their next turn.</p>",
-			"name": "Song of Domination"
+			"name": "Song of Domination",
+			"rules": {
+				"song-of-domination-use-pool": {
+					"label": "Song of Domination use"
+				}
+			}
 		},
 		"Song of Rest": {
 			"costDetails": "An ally makes a roll",
@@ -2441,6 +2519,9 @@
 			"durationDetails": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
 			"name": "Titan's Fury",
 			"rules": {
+				"e5woFYLAOB7NNmx6": {
+					"label": "Titan's Fury"
+				},
 				"titans-fury-auto-rage": {
 					"label": "Titan's Fury: Rage for free when crit"
 				}

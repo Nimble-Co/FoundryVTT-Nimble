@@ -1,0 +1,65 @@
+{
+	"label": "Nimble Hazards",
+	"entries": {
+		"A Sleepy Trick.": {
+			"description": "<p>A fairie's tranquil song drifts through the air. INT save or fall asleep (disadvantage for each Wound you have). You wake to find your weapons replaced with flowers and 1 Wound healed.</p>",
+			"name": "A Sleepy Trick."
+		},
+		"Adventurer's Bane.": {
+			"description": "<p>Looks almost identical to Bloodshrooms. Does not heal. Instead has a hallucinogenic effect: sees allies as enemies for 1 round upon eating.</p>",
+			"name": "Adventurer's Bane."
+		},
+		"Cauldron.": {
+			"description": "<p>Each round a magical ladle targets 1 hero to push into the cauldron (DC 10 DEX save). 1d20 fire damage/turn.</p>",
+			"name": "Cauldron."
+		},
+		"Explosive Tunnels Gas.": {
+			"description": "<p>Each hero may make skill checks, saves, or otherwise be creative to navigate in the dark (DC 12). Roll twice:</p><p>0 Failures. How lucky! You gain inspiration (the ability to reroll any single die, once).</p><p>1 Failure. Gas makes you dizzy, -1 speed until you leave the sewers.</p><p>2 Failures. Fumesick. Suffer 1 wound, poisoned, and -1 speed until you leave the sewers.</p>",
+			"name": "Explosive Tunnels Gas."
+		},
+		"Fetid Gas.": {
+			"description": "<p>STR save or Poisoned for 2 encounters.</p>",
+			"name": "Fetid Gas."
+		},
+		"Fetid Stench.": {
+			"description": "<p>Heroes must make a STR save each time they traverse from one location to another or be Poisoned while in that area. The DC increases as they go deeper.</p><p>The Path Below: DC 6. Echoing Cistern: DC 8. Feeding Chamber: DC 10. Explosive Tunnels: DC 12. Guttermaw's Lair: DC 14. Shrine to the Rat God: DC 16.</p>",
+			"name": "Fetid Stench."
+		},
+		"Glacial River.": {
+			"description": "<p>EXTREMELY cold. Soaks through clothing if walked through or pushed in. -1 speed until dried out.</p>",
+			"name": "Glacial River."
+		},
+		"Pill Bugs.": {
+			"description": "<p>Stepping on the litter on the floor or speaking above a whisper causes pill bugs to drop from the ceiling onto their heads and try and suffocate them. DC 12 DEX save or Grappled, Blinded, and suffocating: Take 1 Wound/round until you escape. Fire, bright lights, or dealing 10 or more damage in a single turn could also cause a bug to flee.</p>",
+			"name": "Pill Bugs."
+		},
+		"Poison Vent.": {
+			"description": "<p>A crack forms in the earth, spewing toxic fumes all around (STR save or take 1/2 LVL Poison damage and become Poisoned for the next 2 traveling encounters). Bearer of Trueflame has advantage.</p>",
+			"name": "Poison Vent."
+		},
+		"Rat Bite.": {
+			"description": "<p>If touched, a rat emerges from the remains and bites the hero (1 damage, DC 10 STR save or poisoned until you heal any amount of HP).</p>",
+			"name": "Rat Bite."
+		},
+		"Rootbreaker Pit.": {
+			"description": "<p>The Rootbreakers will attempt to entangle the heroes and pull them down (DC 10 DEX save or Grappled and pulled down into the pit).</p>",
+			"name": "Rootbreaker Pit."
+		},
+		"Sand Madness.": {
+			"description": "<p>Heroes must make a WIL save or suffer sand madness as they are compelled to ceaselessly stare at the Golden Pyramid's beauty. They have disadvantage on attacks and are unable to take reactions for 3 hours (until the end of the next encounter).</p>",
+			"name": "Sand Madness."
+		},
+		"Sleepy Oasis.": {
+			"description": "<p>Drinking the water heals HP, but causes drowsiness (1 HP/gulp; more than 4 gulps: fall asleep for an hour afterward, suffering 1 Wound for sleeping in the heat).</p>",
+			"name": "Sleepy Oasis."
+		},
+		"Spear of Lightning.": {
+			"description": "<p>Touching the spear grants the Charged condition, and +1d6 lightning damage on attacks for 1 minute. 1/day.</p>",
+			"name": "Spear of Lightning."
+		},
+		"Thorn Briars.": {
+			"description": "<p>If pricked, suffer 1d4 damage and blood begins to be drained. Finesse check to remove thorn, repeat damage until success (or magically healed).</p>",
+			"name": "Thorn Briars."
+		}
+	}
+}

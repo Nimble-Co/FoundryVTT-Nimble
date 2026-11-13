@@ -1,0 +1,227 @@
+{
+	"label": "Nimble Monster Abilities",
+	"entries": {
+		"Acid Blood.": {
+			"description": "<p>Melee attackers take half the HP lost in return as acid damage.</p>",
+			"name": "Acid Blood."
+		},
+		"Aggressive.": {
+			"description": "<p>+X speed if moving toward enemies.</p>",
+			"name": "Aggressive."
+		},
+		"Blinding Spit.": {
+			"description": "<p>Spits a blinding substance at a target within range. The target must make a save or be blinded for 1 round.</p>",
+			"name": "Blinding Spit."
+		},
+		"Bloodthirsty.": {
+			"description": "<p>Has advantage on attacks against Bloodied targets.</p>",
+			"name": "Bloodthirsty."
+		},
+		"Brawler.": {
+			"description": "<p>Extra damage, can only attack in melee.</p>",
+			"name": "Brawler."
+		},
+		"Brute.": {
+			"description": "<p>Attacks also knockback a number of spaces equal to the primary die rolled.</p>",
+			"name": "Brute."
+		},
+		"Burning Aura.": {
+			"description": "<p>Creatures that start their turn adjacent to this monster take 1d6 fire damage.</p>",
+			"name": "Burning Aura.",
+			"rules": {
+				"LeVYTgCykgQRHiTF": {
+					"label": "Burning Aura"
+				}
+			}
+		},
+		"Climbing.": {
+			"description": "<p>Can traverse walls or ceilings normally.</p>",
+			"name": "Climbing."
+		},
+		"Controlling.": {
+			"description": "<p>Creates/immune to difficult terrain.</p>",
+			"name": "Controlling."
+		},
+		"Disgusting/Venomous/Heavy Blows.": {
+			"description": "<p>Attacks also Daze the target.</p>",
+			"name": "Disgusting/Venomous/Heavy Blows.",
+			"rules": {
+				"cQdvpqS7eWEON6aN": {
+					"label": "Dazed"
+				},
+				"hYWhE65NQR8wmVoT": {
+					"label": "Dazed"
+				}
+			}
+		},
+		"Disintegrating Armor.": {
+			"description": "<p>Starts with Heavy Armor, on crit degrades to Medium, then to none.</p>",
+			"name": "Disintegrating Armor."
+		},
+		"Doom.": {
+			"description": "<p>Attacks also Wound the target.</p>",
+			"name": "Doom.",
+			"rules": {
+				"AEe7pX8cmzI1SrZn": {
+					"label": "Doom."
+				},
+				"DTMf5cV0JaTkYHxE": {
+					"label": "Doom."
+				}
+			}
+		},
+		"Explosive Death.": {
+			"description": "<p>Explode on death, dealing 2d6 damage to creatures within reach.</p>",
+			"name": "Explosive Death."
+		},
+		"FAST.": {
+			"description": "<p>Reaction: 1/round. Force a reroll with disadvantage on an attack.</p>",
+			"name": "FAST."
+		},
+		"Fearsome.": {
+			"description": "<p>Frighten enemies within Range on a failed WIL save. 1/encounter.</p>",
+			"name": "Fearsome."
+		},
+		"Flying.": {
+			"description": "<p>Flying speed and immune to Opportunity Attacks. May FALL when crit (1d6 damage/10 ft. fallen, and lands Prone).</p>",
+			"name": "Flying."
+		},
+		"Formation.": {
+			"description": "<p>Armor increases 1 step for each adjacent ally (None, Med, Heavy).</p>",
+			"name": "Formation."
+		},
+		"Frenzied.": {
+			"description": "<p>Deals extra damage or has faster speed while damaged.</p>",
+			"name": "Frenzied."
+		},
+		"Grappler.": {
+			"description": "<p>On hit: Grapples.</p>",
+			"name": "Grappler.",
+			"rules": {
+				"aeMXe9UQuN4BssoA": {
+					"label": "Grappled"
+				},
+				"CL6txcWDM9b5W3OP": {
+					"label": "Grappled"
+				}
+			}
+		},
+		"Gravity Manipulator.": {
+			"description": "<p>Can pull or push enemies within reach.</p>",
+			"name": "Gravity Manipulator."
+		},
+		"Hates the Light.": {
+			"description": "<p>Attacks the hero holding light.</p>",
+			"name": "Hates the Light."
+		},
+		"Hypnotic Gaze.": {
+			"description": "<p>Forces enemies to make a WIL save or be confused for 1 round.</p>",
+			"name": "Hypnotic Gaze."
+		},
+		"Invulnerable.": {
+			"description": "<p>Immune to damage until crit.</p>",
+			"name": "Invulnerable."
+		},
+		"Mounted.": {
+			"description": "<p>Faster movement and deals extra damage after moving toward an enemy.</p>",
+			"name": "Mounted."
+		},
+		"Obstinate.": {
+			"description": "<p>When attacking a target with disadvantage, treat the roll as if it had advantage instead.</p>",
+			"name": "Obstinate."
+		},
+		"Pack Tactics.": {
+			"description": "<p>Advantage on attacks when an ally is adjacent to the target.</p>",
+			"name": "Pack Tactics."
+		},
+		"Parry.": {
+			"description": "<p>Attacks against them miss on a 1 and 2.</p>",
+			"name": "Parry."
+		},
+		"Ranged.": {
+			"description": "<p>Extra damage; can only attack at range.</p>",
+			"name": "Ranged."
+		},
+		"Retaliate.": {
+			"description": "<p>Attacks the first creature who attacks them in melee each round.</p>",
+			"name": "Retaliate."
+		},
+		"Savage.": {
+			"description": "<p>Always crits Grappled creatures.</p>",
+			"name": "Savage."
+		},
+		"Shifty.": {
+			"description": "<p>Can move after being attacked.</p>",
+			"name": "Shifty."
+		},
+		"Silencer.": {
+			"description": "<p>Attacks silence enemies (making them unable to cast spells or perform other actions that requires the voice).</p>",
+			"name": "Silencer.",
+			"rules": {
+				"FdwZDTUd7FRlMbWw": {
+					"label": "Silenced"
+				},
+				"gSrE3Zmg5sbhCKan": {
+					"label": "Silenced"
+				}
+			}
+		},
+		"Size Up/Spot Weakness/Pin Down.": {
+			"description": "<p>DEX save, the next attack you make is with advantage and cannot be Interposed.</p>",
+			"name": "Size Up/Spot Weakness/Pin Down."
+		},
+		"Sneak.": {
+			"description": "<p>Invisible until they attack.</p>",
+			"name": "Sneak."
+		},
+		"Spiked.": {
+			"description": "<p>When hit by a melee attack, the attacker takes 1d4 piercing damage in return.</p>",
+			"name": "Spiked.",
+			"rules": {
+				"iWQlqhanWBWfmHpO": {
+					"label": "Spiked"
+				}
+			}
+		},
+		"Standard Bearer.": {
+			"description": "<p>Buffs nearby allies, reducing the damage they take or increasing the damage they do (see Kobold Clanger or Doomsayer Cultist).</p>",
+			"name": "Standard Bearer."
+		},
+		"Sturdy/Undying.": {
+			"description": "<p>The first time the monster would die, they have 1 HP instead.</p>",
+			"name": "Sturdy/Undying."
+		},
+		"Summoner.": {
+			"description": "<p>Calls minions to their aid each round.</p>",
+			"name": "Summoner."
+		},
+		"Terrible Roar/Creepy Monologue/Taunt.": {
+			"description": "<p>Creatures (or a creature) who hear this make a WIL save or are Frightened for 1 turn.</p>",
+			"name": "Terrible Roar/Creepy Monologue/Taunt."
+		},
+		"Toss Around/Telekinetic Shove.": {
+			"description": "<p>STR save or moved, Prone, etc.</p>",
+			"name": "Toss Around/Telekinetic Shove."
+		},
+		"Tricky.": {
+			"description": "<p>Can swap places with allies or enemies.</p>",
+			"name": "Tricky."
+		},
+		"Vicious.": {
+			"description": "<p>Crits are Vicious (roll 1 additional die).</p>",
+			"name": "Vicious."
+		},
+		"Warping Touch.": {
+			"description": "<p>On hit: teleport target X spaces.</p>",
+			"name": "Warping Touch."
+		},
+		"Webslinger.": {
+			"description": "<p>Can immobilize a target with webs when hit or crit.</p>",
+			"name": "Webslinger."
+		},
+		"Wind Up/Breathe In.": {
+			"description": "<p>Regain the use of a single use ability.</p>",
+			"name": "Wind Up/Breathe In."
+		}
+	}
+}
