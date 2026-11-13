@@ -1,6 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
-import type { CardEvent, CardEventText } from '#types/cardEvent.d.ts';
-import { cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import type { CardEvent, CardEventText, EscapeRulingAction } from '#types/cardEvent.d.ts';
+import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
@@ -25,8 +25,11 @@ interface EscapeCard {
 }
 
 interface EscapeHolder {
+	isOwner?: boolean;
 	effects: { get(id: string): ActiveEffect | undefined };
 }
+
+const WORDS = 'NIMBLE.escape.chat';
 
 function linkOf(card: EscapeCard | null | undefined): EscapeRollLink | null {
 	const flags = (card?.flags?.[SYSTEM_ID] ?? {}) as Record<string, unknown>;
@@ -40,7 +43,14 @@ export function escapeRollNote(card: EscapeCard | null | undefined): string | nu
 }
 
 function rollTextOf(card: EscapeCard): CardEventText {
-	const system = (card.system ?? {}) as { saveKey?: string };
+	const system = (card.system ?? {}) as { saveKey?: string; skillKey?: string };
+	if (card.type === 'skillCheck') {
+		const skills = CONFIG.NIMBLE.skills as unknown as Record<string, string>;
+		return {
+			key: 'NIMBLE.escape.check',
+			data: { skill: { key: skills[system.skillKey ?? ''] ?? system.skillKey ?? '' } },
+		};
+	}
 	return {
 		key: 'NIMBLE.escape.save',
 		data: { save: { key: `NIMBLE.effectSheet.escape.saves.${system.saveKey ?? ''}` } },
@@ -52,15 +62,56 @@ function escapedReason(card: EscapeCard): CardEventText {
 	const total = Number(card.rolls?.[0]?.total ?? 0);
 	const dc = (card.system as { dc?: number | null } | undefined)?.dc;
 	return typeof dc === 'number'
-		? { key: 'NIMBLE.escape.chat.escaped', data: { roll, total, dc } }
-		: { key: 'NIMBLE.escape.chat.escapedNoDc', data: { roll, total } };
+		? { key: `${WORDS}.escaped`, data: { roll, total, dc } }
+		: { key: `${WORDS}.escapedNoDc`, data: { roll, total } };
 }
+
+/** The line of an Escape with no DC: it waits for the table, or the roll failed. */
+export function escapeRulingEvent(
+	link: EscapeRollLink,
+	state: EscapeRulingAction['state'],
+	at = Date.now(),
+): CardEvent {
+	const action: EscapeRulingAction = {
+		kind: 'escapeRuling',
+		holderUuid: link.holderUuid,
+		holderName: link.holderName,
+		effectId: link.effectId,
+		effectName: link.effectName,
+		state,
+	};
+	const data = { name: link.holderName, effect: link.effectName };
+	return {
+		id: `escape.${link.holderUuid}.${link.effectId}.${at}`,
+		kind: 'escape',
+		icon: 'fa-solid fa-person-running',
+		text: { key: state === 'waiting' ? `${WORDS}.tries` : `${WORDS}.failed`, data },
+		...(state === 'waiting' ? { cause: { key: `${WORDS}.noDc` } } : {}),
+		action,
+		at,
+	};
+}
+
+const holderOf = (link: { holderUuid: string }) =>
+	fromUuidSync(link.holderUuid as never, { strict: false }) as EscapeHolder | null;
+
+/** The owner of the holder, or a GM, judges an Escape with no DC. */
+export function canRuleEscape(action: EscapeRulingAction): boolean {
+	return !!game.user?.isGM || !!holderOf(action)?.isOwner;
+}
+
+const endMoment = (effectName: string, hostId: string, reason: CardEventText) => ({
+	heading: { key: 'NIMBLE.escape.note', data: { effect: effectName } },
+	hostId,
+	reason,
+});
 
 const queue = keyedQueue();
 
 /**
  * On the active GM, each time the result of an Escape's roll card changes: a pass ends the effect,
  * with its ended line on that card; a fail after a pass puts the effect back and removes the line.
+ * With no DC, a result that is not known waits for the table, and a fail says so.
  */
 export async function followEscape(payload: {
 	messageId?: string | null;
@@ -73,29 +124,71 @@ export async function followEscape(payload: {
 	return queue.run(card.id, () => follow(card, link, payload.outcome));
 }
 
+/**
+ * Escapes on a waiting line: the effect ends as on a pass, with its ended line on the same card,
+ * and the waiting line goes.
+ */
+export async function endEscape(card: EscapeCard, event: CardEvent): Promise<boolean> {
+	const action = event.action;
+	if (action?.kind !== 'escapeRuling' || action.state !== 'waiting' || !card.id) return false;
+	if (!canRuleEscape(action)) return false;
+	const cardId = card.id;
+	return queue.run(cardId, async () => {
+		const effect = holderOf(action)?.effects.get(action.effectId);
+		if (!effect) return false;
+		await endEffects([effect], endMoment(action.effectName, cardId, { key: `${WORDS}.ruled` }));
+		await replaceCardEvent(card as never, event.id, null);
+		return true;
+	});
+}
+
+const sameEffect = (link: EscapeRollLink, row: { effectId: string; holderUuid: string }) =>
+	row.effectId === link.effectId && row.holderUuid === link.holderUuid;
+
 async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): Promise<boolean> {
-	const ended = cardEventsOf(card as never).find(
-		(event: CardEvent) =>
-			event.action?.kind === 'undoEnd' &&
-			event.action.row.effectId === link.effectId &&
-			event.action.row.holderUuid === link.holderUuid,
+	const events = cardEventsOf(card as never);
+	const ended = events.find(
+		(event) => event.action?.kind === 'undoEnd' && sameEffect(link, event.action.row),
 	);
-	const holder = fromUuidSync(link.holderUuid as never, { strict: false }) as EscapeHolder | null;
-	const effect = holder?.effects.get(link.effectId);
+	const ruling = events.find(
+		(event) => event.action?.kind === 'escapeRuling' && sameEffect(link, event.action),
+	);
+	const effect = holderOf(link)?.effects.get(link.effectId);
+	const putBack = async () => {
+		if (ended?.action?.kind === 'undoEnd' && !effect) await undoEndedEffect(ended.action.row);
+	};
+	/** The line of an Escape with no DC takes the place of `line`, or is added. */
+	const showRuling = (line: CardEvent | undefined, state: EscapeRulingAction['state']) => {
+		const next = escapeRulingEvent(link, state);
+		return line
+			? replaceCardEvent(card as never, line.id, { ...next, id: line.id })
+			: addCardEvents(card as never, [next]);
+	};
 
 	if (outcome === 'pass') {
 		if (ended || !effect) return true;
-		await endEffects([effect], {
-			heading: { key: 'NIMBLE.escape.note', data: { effect: link.effectName } },
-			hostId: card.id ?? '',
-			reason: escapedReason(card),
-		});
+		await endEffects([effect], endMoment(link.effectName, card.id ?? '', escapedReason(card)));
+		if (ruling) await replaceCardEvent(card as never, ruling.id, null);
 		return true;
 	}
 
-	if (outcome === 'fail' && ended?.action?.kind === 'undoEnd') {
-		if (!effect) await undoEndedEffect(ended.action.row);
-		await replaceCardEvent(card as never, ended.id, null);
+	if (outcome === 'fail') {
+		if (ended) {
+			await putBack();
+			if (link.noDc) await showRuling(ended, 'failed');
+			else await replaceCardEvent(card as never, ended.id, null);
+		} else if (ruling && link.noDc) {
+			await showRuling(ruling, 'failed');
+		}
+		return true;
+	}
+
+	if (!link.noDc) return true;
+	if (ended) {
+		await putBack();
+		await showRuling(ended, 'waiting');
+	} else if (ruling?.action?.kind !== 'escapeRuling' || ruling.action.state !== 'waiting') {
+		await showRuling(ruling, 'waiting');
 	}
 	return true;
 }
@@ -105,11 +198,14 @@ let didRegister = false;
 export function registerEscapeHooks(): void {
 	if (didRegister) return;
 	didRegister = true;
-	// @ts-expect-error - nimble.saveResolved is a custom Nimble hook
-	Hooks.on(systemHookName('saveResolved'), (payload: { messageId?: string; outcome: string }) => {
+	const onResult = (payload: { messageId?: string; outcome: string }) => {
 		if (!game.user?.isActiveGM) return;
 		void followEscape(payload).catch((error) => {
 			console.error('Nimble | An Escape could not follow its roll card.', error);
 		});
-	});
+	};
+	// @ts-expect-error - nimble.saveResolved is a custom Nimble hook
+	Hooks.on(systemHookName('saveResolved'), onResult);
+	// @ts-expect-error - nimble.skillCheckResolved is a custom Nimble hook
+	Hooks.on(systemHookName('skillCheckResolved'), onResult);
 }

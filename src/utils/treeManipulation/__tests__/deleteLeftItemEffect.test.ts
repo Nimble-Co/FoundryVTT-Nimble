@@ -50,6 +50,8 @@ describe('deleteLeftItemEffect', () => {
 			{ ...asMade(), statuses: new Set(['slowed']) },
 			{ ...asMade(), system: { ...asMade().system, lastsUntil: [{ kind: 'turn' }] } },
 			{ ...asMade(), description: '<p>Cold.</p>' },
+			{ ...asMade(), system: { ...asMade().system, escape: { dc: '', noDc: true } } },
+			{ ...asMade(), system: { ...asMade().system, escape: { dc: '', skills: ['finesse'] } } },
 		];
 		for (const effect of changed) {
 			const item = itemWith(effect);

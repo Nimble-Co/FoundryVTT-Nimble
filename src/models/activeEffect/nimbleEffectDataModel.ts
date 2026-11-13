@@ -2,6 +2,7 @@ import { rules } from '../item/common.js';
 import {
 	CLOCKS,
 	ESCAPE_SAVES,
+	ESCAPE_SKILLS,
 	EVENT_SUBJECTS,
 	LASTS_UNTIL_EVENTS,
 	LASTS_UNTIL_KINDS,
@@ -101,6 +102,11 @@ const effectSchema = () => ({
 		saves: new fields.ArrayField(
 			new fields.StringField({ required: true, nullable: false, choices: [...ESCAPE_SAVES] }),
 			{ required: true, nullable: false, initial: () => ['strength', 'dexterity'] },
+		),
+		noDc: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		skills: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, choices: [...ESCAPE_SKILLS] }),
+			{ required: true, nullable: false, initial: () => [] },
 		),
 	}),
 	tempHp: new fields.NumberField({

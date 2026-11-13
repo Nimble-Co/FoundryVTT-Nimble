@@ -18,7 +18,7 @@ interface EffectLike {
 		changes?: unknown[];
 		rules?: unknown[];
 		lastsUntil?: unknown[];
-		escape?: { dc?: string };
+		escape?: { dc?: string; noDc?: boolean; skills?: string[] };
 		tempHp?: number | null;
 	};
 }
@@ -34,7 +34,9 @@ export function isUntouchedItemEffect(effect: EffectLike, item: ItemLike): boole
 		!system.changes?.length &&
 		!system.rules?.length &&
 		!system.lastsUntil?.length &&
-		!system.escape?.dc
+		!system.escape?.dc &&
+		!system.escape?.noDc &&
+		!system.escape?.skills?.length
 	);
 }
 

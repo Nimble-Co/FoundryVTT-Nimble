@@ -10,8 +10,19 @@
 
 	const headingId = $props.id();
 	const strip = createCardEventsState(() => messageDocument);
-	const { isBusy, isBack, canUndo, undo, canRollSave, rollSave, canChoose, choose, backStatus } =
-		strip;
+	const {
+		isBusy,
+		isBack,
+		canUndo,
+		undo,
+		canRollSave,
+		rollSave,
+		canRule,
+		rule,
+		canChoose,
+		choose,
+		backStatus,
+	} = strip;
 </script>
 
 {#if strip.events.length > 0}
@@ -104,6 +115,31 @@
 							<span class="nimble-card-events__back">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.waitingFor', { name: request.holderName })}
+							</span>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'escapeRuling' && event.action.state === 'waiting'}
+						{@const ruling = event.action}
+						{#if canRule(ruling)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize('NIMBLE.escape.chat.escapesLabel', {
+									name: ruling.holderName,
+									effect: ruling.effectName,
+								})}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => rule(event)}
+							>
+								<i class="fa-solid fa-person-running" aria-hidden="true"></i>
+								{localize('NIMBLE.escape.chat.escapes')}
+							</button>
+						{:else}
+							<span class="nimble-card-events__back">
+								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+								{localize('NIMBLE.escape.chat.waiting')}
 							</span>
 						{/if}
 					{/if}

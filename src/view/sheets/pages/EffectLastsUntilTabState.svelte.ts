@@ -18,7 +18,9 @@ import {
 import localize from '#utils/localize.js';
 import {
 	ESCAPE_SAVES,
+	ESCAPE_SKILLS,
 	type EscapeSave,
+	type EscapeSkill,
 	type LastsUntilEvent,
 } from '../../../models/activeEffect/nimbleEffectChoices.js';
 
@@ -26,9 +28,16 @@ export const LASTS_UNTIL_WORDS = 'NIMBLE.effectSheet.lastsUntil';
 export const ESCAPE_WORDS = 'NIMBLE.effectSheet.escape';
 export const DEFAULT_ESCAPE_SAVES: readonly EscapeSave[] = ['strength', 'dexterity'];
 
+interface EscapeFields {
+	dc: string;
+	noDc?: boolean;
+	saves: EscapeSave[];
+	skills?: EscapeSkill[];
+}
+
 interface EffectSystem {
 	lastsUntil?: Moment[];
-	escape?: { dc: string; saves: EscapeSave[] };
+	escape?: EscapeFields;
 }
 
 export function lastsUntilWord(path: string, data?: Record<string, string>): string {
@@ -63,7 +72,12 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 
 	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
-	const escapeData = $derived(system.escape ?? { dc: '', saves: [...DEFAULT_ESCAPE_SAVES] });
+	const escapeData = $derived<Required<EscapeFields>>({
+		dc: system.escape?.dc ?? '',
+		noDc: system.escape?.noDc ?? false,
+		saves: system.escape?.saves ?? [...DEFAULT_ESCAPE_SAVES],
+		skills: system.escape?.skills ?? [],
+	});
 
 	const untilRemoved = $derived(isUntilRemoved(system));
 
@@ -157,18 +171,41 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		return save([...moments, newMoment(kind)]);
 	}
 
+	/** A typed DC turns No DC off. */
 	function setEscapeDc(dc: string) {
-		return getEffect().update({ 'system.escape.dc': dc.trim() } as never);
+		const value = dc.trim();
+		return getEffect().update({
+			'system.escape.dc': value,
+			...(value ? { 'system.escape.noDc': false } : {}),
+		} as never);
 	}
 
-	/** Turns one save on or off. The last save that is on stays on. */
+	function toggleNoDc() {
+		return getEffect().update({
+			'system.escape.noDc': !escapeData.noDc,
+			'system.escape.dc': '',
+		} as never);
+	}
+
+	function toggled<T>(list: readonly T[], value: T, order: readonly T[]): T[] {
+		const on = new Set(list);
+		if (on.has(value)) on.delete(value);
+		else on.add(value);
+		return order.filter((each) => on.has(each));
+	}
+
+	/** Turns one save on or off. The last save or skill that is on stays on. */
 	function toggleEscapeSave(save: EscapeSave) {
-		const on = new Set(escapeData.saves);
-		if (on.has(save)) on.delete(save);
-		else on.add(save);
-		if (!on.size) return;
-		const saves = ESCAPE_SAVES.filter((each) => on.has(each));
+		const saves = toggled(escapeData.saves, save, ESCAPE_SAVES);
+		if (!saves.length && !escapeData.skills.length) return;
 		return getEffect().update({ 'system.escape.saves': saves } as never);
+	}
+
+	/** Turns one skill on or off. The last save or skill that is on stays on. */
+	function toggleEscapeSkill(skill: EscapeSkill) {
+		const skills = toggled(escapeData.skills, skill, ESCAPE_SKILLS);
+		if (!skills.length && !escapeData.saves.length) return;
+		return getEffect().update({ 'system.escape.skills': skills } as never);
 	}
 
 	return {
@@ -195,6 +232,8 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 		remove,
 		add,
 		setEscapeDc,
+		toggleNoDc,
 		toggleEscapeSave,
+		toggleEscapeSkill,
 	};
 }

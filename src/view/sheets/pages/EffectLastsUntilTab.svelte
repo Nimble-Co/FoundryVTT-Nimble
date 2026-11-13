@@ -1,7 +1,7 @@
 <!--
 @component
 The Lasts Until tab of the effect window. Each moment is one sentence: its words are the fields.
-The first moment that happens ends the effect. Escape lets the holder roll a save to end it.
+The first moment that happens ends the effect. Escape lets the holder roll a save or a check to end it.
 -->
 <script lang="ts">
 	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
@@ -30,6 +30,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 	import {
 		CLOCKS,
 		ESCAPE_SAVES,
+		ESCAPE_SKILLS,
 		type LastsUntilEvent,
 		TIME_UNITS,
 		TURN_BOUNDARIES,
@@ -47,13 +48,16 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
+	const SKILL_WORDS = (CONFIG.NIMBLE.skills ?? {}) as Record<string, string>;
 	const tab = createEffectLastsUntilTabState(() => effect);
 	const {
 		change,
 		add,
 		remove,
 		setEscapeDc,
+		toggleNoDc,
 		toggleEscapeSave,
+		toggleEscapeSkill,
 		setUntilRemoved,
 		conditions,
 		gainChoiceOf,
@@ -294,8 +298,18 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 					type="text"
 					aria-label={localize(`${ESCAPE_WORDS}.dcLabel`)}
 					value={escapeData.dc}
+					disabled={escapeData.noDc}
 					onchange={({ currentTarget }) => setEscapeDc(currentTarget.value)}
 				/>
+				<button
+					class="nimble-lasts-until__save"
+					type="button"
+					aria-pressed={escapeData.noDc}
+					aria-label={localize(`${ESCAPE_WORDS}.noDcLabel`)}
+					onclick={toggleNoDc}
+				>
+					{localize(`${ESCAPE_WORDS}.noDc`)}
+				</button>
 				<span>{localize(`${ESCAPE_WORDS}.withA`)}</span>
 				<span
 					class="nimble-lasts-until__saves"
@@ -315,6 +329,29 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 					{/each}
 				</span>
 				<span>{localize(`${ESCAPE_WORDS}.save`)}</span>
+			</span>
+		</div>
+
+		<div class="nimble-lasts-until__row nimble-lasts-until__row--escape">
+			<span class="nimble-lasts-until__lead">{localize(`${ESCAPE_WORDS}.orA`)}</span>
+			<span class="nimble-lasts-until__words">
+				<span
+					class="nimble-lasts-until__saves nimble-lasts-until__saves--wrap"
+					role="group"
+					aria-label={localize(`${ESCAPE_WORDS}.skillsLabel`)}
+				>
+					{#each ESCAPE_SKILLS as skill (skill)}
+						<button
+							class="nimble-lasts-until__save"
+							type="button"
+							aria-pressed={escapeData.skills.includes(skill)}
+							onclick={() => toggleEscapeSkill(skill)}
+						>
+							{localize(SKILL_WORDS[skill] ?? skill)}
+						</button>
+					{/each}
+				</span>
+				<span>{localize(`${ESCAPE_WORDS}.check`)}</span>
 			</span>
 		</div>
 
@@ -387,8 +424,11 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		}
 
 		&__dc {
-			flex: 1 1 8rem;
-			min-width: 6rem;
+			flex: 0 1 auto;
+			field-sizing: content;
+			width: auto;
+			min-width: 5rem;
+			max-width: 12rem;
 		}
 
 		&__saves {

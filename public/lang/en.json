@@ -4067,17 +4067,25 @@
 		"escape": {
 			"button": "Escape DC {dc}",
 			"buttonNoDc": "Escape",
-			"label": "Escape {name}: roll a save against DC {dc}",
-			"labelNoDc": "Escape {name}: roll a save",
+			"label": "Escape {name}: roll against DC {dc}",
+			"labelNoDc": "Escape {name}: roll with no DC",
 			"title": "Escape {name}",
-			"pick": "Which save do you roll?",
+			"pick": "Which roll do you make?",
 			"save": "{save} save",
 			"hint": "Escape {effect} (DC {dc})",
 			"hintNoDc": "Escape {effect}",
 			"note": "Escape {effect}",
+			"check": "{skill} check",
 			"chat": {
 				"escaped": "Escaped: {roll} {total} against DC {dc}",
-				"escapedNoDc": "Escaped: {roll} {total}"
+				"escapedNoDc": "Escaped: {roll} {total}",
+				"ruled": "The table judged an escape",
+				"tries": "{name} tries to escape {effect}",
+				"noDc": "No DC: the GM decides",
+				"escapes": "Escapes",
+				"escapesLabel": "{name} escapes {effect}",
+				"failed": "{name} fails to escape {effect}",
+				"waiting": "Waiting for the GM"
 			}
 		},
 		"lastsUntilText": {
@@ -4267,13 +4275,18 @@
 				"withA": "with a",
 				"save": "save",
 				"savesLabel": "Saves for the escape",
+				"noDc": "No DC",
+				"noDcLabel": "Escape with no DC",
+				"orA": "or a",
+				"check": "check",
+				"skillsLabel": "Skills for the escape",
 				"saves": {
 					"strength": "STR",
 					"dexterity": "DEX",
 					"intelligence": "INT",
 					"will": "WIL"
 				},
-				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success ends the effect, and a reroll that fails puts it back. With no DC, there is no escape."
+				"hint": "The holder spends 1 action and rolls one of the saves or checks that are on. A success ends the effect, and a reroll that fails puts it back. Leave the DC blank for no Escape. Turn on No DC when the table judges the roll."
 			},
 			"changes": {
 				"key": "Key",

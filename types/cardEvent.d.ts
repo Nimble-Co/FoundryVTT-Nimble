@@ -32,7 +32,8 @@ export type CardEventKind =
 	| 'healthState'
 	| 'damage'
 	| 'saveRequest'
-	| 'tempHpChoice';
+	| 'tempHpChoice'
+	| 'escape';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -74,6 +75,16 @@ export interface TempHpChoiceAction {
 	state: 'waiting' | 'kept' | 'took';
 }
 
+/** An Escape with no DC: the roll waits for the table to judge it, or it failed. */
+export interface EscapeRulingAction {
+	kind: 'escapeRuling';
+	holderUuid: string;
+	holderName: string;
+	effectId: string;
+	effectName: string;
+	state: 'waiting' | 'failed';
+}
+
 /**
  * What a line lets the reader do: Undo an end, roll a save, keep or take temp HP, or move as an
  * offer lets. A Movement Offer line holds its move and the offers it made; the card stores the same
@@ -82,6 +93,7 @@ export interface TempHpChoiceAction {
 export type CardEventAction =
 	| SaveRequestAction
 	| TempHpChoiceAction
+	| EscapeRulingAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

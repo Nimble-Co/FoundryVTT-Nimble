@@ -36,6 +36,17 @@ vi.mock('#utils/saveRequest/saveRequests.js', () => ({
 			!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner),
 }));
 
+const { endEscape } = vi.hoisted(() => ({
+	endEscape: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/lastsUntil/escapeFollow.js', () => ({
+	endEscape,
+	canRuleEscape: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
 
@@ -72,6 +83,25 @@ const saveLine = (state: 'waiting' | 'kept'): CardEvent => ({
 		effectName: 'Concentration',
 		save: 'strength',
 		dc: 10,
+		state,
+	},
+	at: 1,
+});
+
+const escapeLine = (state: 'waiting' | 'failed'): CardEvent => ({
+	id: 'escape1',
+	kind: 'escape',
+	icon: 'fa-solid fa-person-running',
+	text: {
+		key: state === 'waiting' ? 'NIMBLE.escape.chat.tries' : 'NIMBLE.escape.chat.failed',
+		data: { name: 'Tessa', effect: 'Grappled' },
+	},
+	action: {
+		kind: 'escapeRuling',
+		holderUuid: 'Actor.tessa',
+		holderName: 'Tessa',
+		effectId: 'grab',
+		effectName: 'Grappled',
 		state,
 	},
 	at: 1,
@@ -196,6 +226,35 @@ describe('CardEvents', () => {
 
 		renderEvents(makeCard([saveLine('kept')]));
 		expect(screen.getByRole('status')).toHaveTextContent('Kept');
+	});
+
+	it('an Escape with no DC has Escapes for the owner of the creature and the GM', async () => {
+		renderEvents(makeCard([escapeLine('waiting')]));
+
+		await fireEvent.click(screen.getByRole('button', { name: 'Tessa escapes Grappled' }));
+
+		expect(screen.getByRole('button', { name: 'Tessa escapes Grappled' })).toHaveTextContent(
+			'Escapes',
+		);
+		expect(endEscape).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'escape1' }),
+		);
+	});
+
+	it('other players see that the Escape waits for the GM, and a failed one has no button', () => {
+		globals.game.user = { isGM: false };
+		holders['Actor.tessa'].isOwner = false;
+		const { unmount } = renderEvents(makeCard([escapeLine('waiting')]));
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByText('Waiting for the GM')).toBeInTheDocument();
+		unmount();
+
+		globals.game.user = { isGM: true };
+		renderEvents(makeCard([escapeLine('failed')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByText('Tessa fails to escape Grappled')).toBeInTheDocument();
 	});
 
 	it('a temp HP choice has Keep and Take for the owner, and nothing to click once made', async () => {

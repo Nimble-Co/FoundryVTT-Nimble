@@ -121,7 +121,7 @@ function creatureAt(uuid: string | null | undefined): OwnedCreature | null {
 
 /**
  * The creatures whose owners act on a line: the tokens a move is offered to, or the creature that
- * rolls the save or chooses its temp HP.
+ * rolls the save, chooses its temp HP or escapes.
  */
 export function lineCreatures(event: CardEvent): OwnedCreature[] {
 	const action = event.action;
@@ -131,7 +131,8 @@ export function lineCreatures(event: CardEvent): OwnedCreature[] {
 				.map((offer) => creatureAt(offer.tokenUuid))
 				.filter((creature): creature is OwnedCreature => !!creature);
 		case 'saveRequest':
-		case 'tempHpChoice': {
+		case 'tempHpChoice':
+		case 'escapeRuling': {
 			const holder = creatureAt(action.holderUuid);
 			return holder ? [holder] : [];
 		}

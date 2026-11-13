@@ -45,6 +45,20 @@ export const LASTS_UNTIL_EVENTS = [
 /** The saves an Escape can allow. The author picks any set of them. */
 export const ESCAPE_SAVES = ['strength', 'dexterity', 'intelligence', 'will'] as const;
 
+/** The skills an Escape can allow, besides its saves, in the order of their names. */
+export const ESCAPE_SKILLS = [
+	'arcana',
+	'examination',
+	'finesse',
+	'influence',
+	'insight',
+	'lore',
+	'might',
+	'naturecraft',
+	'perception',
+	'stealth',
+] as const;
+
 export type LastsUntilKind = (typeof LASTS_UNTIL_KINDS)[number];
 export type TurnBoundary = (typeof TURN_BOUNDARIES)[number];
 export type Clock = (typeof CLOCKS)[number];
@@ -53,3 +67,4 @@ export type TimeUnit = (typeof TIME_UNITS)[number];
 export type EventSubject = (typeof EVENT_SUBJECTS)[number];
 export type LastsUntilEvent = (typeof LASTS_UNTIL_EVENTS)[number];
 export type EscapeSave = (typeof ESCAPE_SAVES)[number];
+export type EscapeSkill = (typeof ESCAPE_SKILLS)[number];

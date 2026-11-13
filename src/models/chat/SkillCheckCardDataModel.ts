@@ -18,6 +18,13 @@ const skillCheckCardSchema = () => ({
 		nullable: false,
 		integer: true,
 	}),
+	// The last result the skillCheckResolved hook told, so a reload or a later write does not tell it again.
+	reportedCheckResult: new fields.StringField({
+		required: false,
+		nullable: true,
+		initial: null,
+		choices: ['failed', 'succeeded'],
+	}),
 });
 
 declare namespace NimbleSkillCheckCardData {

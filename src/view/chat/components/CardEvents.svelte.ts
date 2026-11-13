@@ -4,12 +4,14 @@ import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type {
 	CardEvent,
 	EndedEffectRow,
+	EscapeRulingAction,
 	SaveRequestAction,
 	TempHpChoiceAction,
 } from '#types/cardEvent.d.ts';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { canRuleEscape, endEscape } from '#utils/lastsUntil/escapeFollow.js';
 import localize from '#utils/localize.js';
 import { canRollRequest, rollRequestedSave } from '#utils/saveRequest/saveRequests.js';
 
@@ -83,6 +85,20 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	function canRule(action: EscapeRulingAction): boolean {
+		return canRuleEscape(action);
+	}
+
+	async function rule(event: CardEvent) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			await endEscape(getMessage() as never, event);
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
 	function canChoose(action: TempHpChoiceAction): boolean {
 		return canChooseTempHp(action);
 	}
@@ -116,6 +132,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		undo,
 		canRollSave,
 		rollSave,
+		canRule,
+		rule,
 		canChoose,
 		choose,
 		backStatus,

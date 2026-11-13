@@ -12,6 +12,7 @@ import {
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
+import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
@@ -28,7 +29,7 @@ interface CardItem {
 interface CardEffect {
 	name: string;
 	img?: string | null;
-	system?: { lastsUntil?: Moment[]; escape?: { dc?: string } };
+	system?: { lastsUntil?: Moment[]; escape?: { dc?: string; noDc?: boolean } };
 	toObject(): Record<string, unknown>;
 }
 
@@ -87,7 +88,7 @@ export function applyEffectSource(
 			img: effect.img ?? 'icons/svg/aura.svg',
 			lastsUntil: effect.system?.lastsUntil ?? [],
 			usedUp: usedUpOf(effect.system),
-			escape: !!effect.system?.escape?.dc?.trim(),
+			escape: hasEscape(effect.system),
 		};
 	}
 	if (!node.condition) return null;

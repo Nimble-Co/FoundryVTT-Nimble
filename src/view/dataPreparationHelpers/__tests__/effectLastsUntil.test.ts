@@ -115,4 +115,17 @@ describe('escapeOf', () => {
 		).toBeNull();
 		expect(escapeOf(grab({ isOwner: false }))).toBeNull();
 	});
+
+	it('gives an Escape with no DC when No DC is on and the DC is blank', () => {
+		expect(escapeOf(grab({ system: { escape: { dc: '', noDc: true, saves: [] } } }))).toEqual({
+			dc: null,
+		});
+		expect(escapeOf(grab({ system: { escape: { dc: '', noDc: false, saves: [] } } }))).toBeNull();
+	});
+
+	it('reads an Escape with no DC as an Escape in the Lasts Until', () => {
+		expect(
+			effectLastsUntil({ system: { lastsUntil: [], escape: { dc: '', noDc: true } } }, null),
+		).toBe('Until you Escape');
+	});
 });

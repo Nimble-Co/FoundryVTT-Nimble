@@ -5,6 +5,7 @@ import activeEffectDataModels from '../activeEffectDataModels.js';
 import {
 	CLOCKS,
 	ESCAPE_SAVES,
+	ESCAPE_SKILLS,
 	EVENT_SUBJECTS,
 	LASTS_UNTIL_EVENTS,
 	LASTS_UNTIL_KINDS,
@@ -145,6 +146,23 @@ describe('Nimble effect data model', () => {
 		};
 		expect(saves.options.initial()).toEqual(['strength', 'dexterity']);
 		expect(saves.element.options.choices).toEqual([...ESCAPE_SAVES]);
+	});
+
+	it('has No DC off and no skills by default, so old effects keep their meaning', () => {
+		const escapeFields = schema().escape.fields ?? {};
+
+		expect(escapeFields.noDc.options).toMatchObject({ initial: false, nullable: false });
+		const skills = escapeFields.skills as unknown as {
+			options: { initial: () => string[] };
+			element: { options: { choices: string[] } };
+		};
+		expect(skills.options.initial()).toEqual([]);
+		expect(skills.element.options.choices).toEqual([...ESCAPE_SKILLS]);
+	});
+
+	it('offers the skill keys the system uses, in the order of their names', () => {
+		expect([...ESCAPE_SKILLS].sort()).toEqual(Object.keys(CONFIG.NIMBLE.skills).sort());
+		expect([...ESCAPE_SKILLS]).toEqual([...ESCAPE_SKILLS].sort());
 	});
 
 	it('offers the save keys the system uses', () => {
