@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { systemHookName } from '#system';
 import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
+import {
+	AFTER_RULES_PHASE,
+	MULTIPLY_DOWN_CHANGE,
+	registerMultiplyDownChange,
+} from '#documents/activeEffect/multiplyDownChange.js';
 import { NimbleTokenDocument } from '../tokenDocument.js';
 
 function tokenWithActorType(type: string | null | undefined): TokenDocument {
@@ -281,5 +286,35 @@ describe('NimbleTokenDocument.prepareData', () => {
 		token({ isLazyDelta: true }).prepareData();
 
 		expect(phases).toEqual([]);
+	});
+
+	it('a token. change of Multiply, round down halves the value, rounded down', () => {
+		const config = CONFIG.ActiveEffect as unknown as Record<string, unknown>;
+		const saved = { changeTypes: config.changeTypes, phases: config.phases };
+		registerMultiplyDownChange();
+		const changeTypes = config.changeTypes as Record<
+			string,
+			{ handler(target: object, change: object): unknown }
+		>;
+		// Core's token step: the actor's token changes of the phase, each by its change type.
+		base.applyActiveEffects = function (
+			this: { actor: { tokenActiveEffectChanges: Record<string, Array<{ type: string }>> } },
+			phase: string,
+		) {
+			for (const change of this.actor.tokenActiveEffectChanges[phase] ?? []) {
+				changeTypes[change.type]?.handler(this, change);
+			}
+		};
+		const halve = { key: 'light.dim', type: MULTIPLY_DOWN_CHANGE, value: '0.5', priority: 10 };
+		const document = token({
+			actor: { id: 'a1', tokenActiveEffectChanges: { [AFTER_RULES_PHASE]: [halve] } },
+		}) as unknown as { prepareData(): void; light: { dim: number } };
+		document.light = { dim: 25 };
+
+		document.prepareData();
+
+		config.changeTypes = saved.changeTypes;
+		config.phases = saved.phases;
+		expect(document.light.dim).toBe(12);
 	});
 });
