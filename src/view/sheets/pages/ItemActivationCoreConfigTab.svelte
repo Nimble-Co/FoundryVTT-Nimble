@@ -42,7 +42,7 @@
 				})}
 		/>
 
-		<span class="nimble-field__label"> Output item description on activation </span>
+		<span class="nimble-field__label"> {localize('NIMBLE.itemConfig.outputDescription')} </span>
 	</label>
 
 	<label class="nimble-field">
@@ -69,7 +69,9 @@
 	<section>
 		<label>
 			<header class="nimble-section-header">
-				<h4 class="nimble-heading" data-heading-variant="section">Activation Cost</h4>
+				<h4 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.itemConfig.activationCost')}
+				</h4>
 			</header>
 
 			<div style="display: flex; align-items: center; gap: 0.5rem">
@@ -107,16 +109,16 @@
 				}}
 			/>
 
-			<span class="nimble-field__label"> Is Reaction </span>
+			<span class="nimble-field__label"> {localize('NIMBLE.itemConfig.isReaction')} </span>
 		</label>
 
 		{#if isReaction || activationCostType === 'special'}
 			<label class="nimble-field" data-field-variant="stacked">
 				<span class="nimble-heading" data-heading-variant="field">
 					{#if isReaction}
-						Reaction Trigger
+						{localize('NIMBLE.itemConfig.reactionTrigger')}
 					{:else}
-						Activation Cost Details
+						{localize('NIMBLE.itemConfig.activationCostDetails')}
 					{/if}
 				</span>
 
@@ -136,7 +138,9 @@
 <section>
 	<label>
 		<header class="nimble-section-header">
-			<h4 class="nimble-heading" data-heading-variant="section">Duration</h4>
+			<h4 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.itemConfig.duration')}
+			</h4>
 		</header>
 
 		<div style="display: flex; align-items: center; gap: 0.5rem">
@@ -168,7 +172,9 @@
 
 	{#if durationType === 'special'}
 		<label class="nimble-field" data-field-variant="stacked">
-			<span class="nimble-heading" data-heading-variant="field"> Duration Details </span>
+			<span class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.itemConfig.durationDetails')}
+			</span>
 
 			<input
 				type="text"

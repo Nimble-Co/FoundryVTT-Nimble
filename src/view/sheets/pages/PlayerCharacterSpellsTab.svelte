@@ -62,7 +62,9 @@
 		}
 
 		const tooltip = carriesTrigger
-			? `Reaction Trigger: ${activationCostDetails}`
+			? game.i18n.format('NIMBLE.itemConfig.reactionTriggerLine', {
+					trigger: activationCostDetails,
+				})
 			: activationCostDetails;
 
 		return `${label} <i

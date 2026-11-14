@@ -5728,6 +5728,13 @@
 			"activationOptions": "Activation Options",
 			"skipRollDialog": "Skip the roll dialog (activate instantly)",
 			"skipRollDialogHint": "Always activate this item with default roll settings instead of opening the roll or upcast dialog. Holding Alt while activating inverts this setting for that activation.",
+			"outputDescription": "Output item description on activation",
+			"activationCost": "Activation Cost",
+			"isReaction": "Is Reaction",
+			"reactionTrigger": "Reaction Trigger",
+			"reactionTriggerLine": "Reaction Trigger: {trigger}",
+			"activationCostDetails": "Activation Cost Details",
+			"durationDetails": "Duration Details",
 			"attackTypes": {
 				"none": "None",
 				"melee": "Melee",
