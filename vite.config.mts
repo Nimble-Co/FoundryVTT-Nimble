@@ -128,6 +128,10 @@ const config = defineConfig({
 	plugins: [
 		svelte({
 			configFile: path.resolve(__dirname, 'svelte.config.js'),
+			// Styles do nothing in happy-dom, and Svelte strips the TypeScript itself.
+			...(process.env.VITEST
+				? { preprocess: [{ name: 'test-strip-styles', style: () => ({ code: '' }) }] }
+				: {}),
 			dynamicCompileOptions({ filename }) {
 				// The Storybook Svelte runtime is written in runes.
 				if (filename.includes('node_modules') && !filename.includes('@storybook')) {
