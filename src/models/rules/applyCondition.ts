@@ -3,7 +3,11 @@ import type { ApplyEffectNode, EffectNode, WoundNode } from '#types/effectTree.j
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
-import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import {
+	type AppliedEffect,
+	applyEffectToActor,
+	payloadFromEffect,
+} from '#utils/actor/applyEffectToActor.js';
 import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import {
 	giveWounds,
@@ -13,6 +17,7 @@ import {
 } from '#utils/actor/giveWounds.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
+import { recordAppliedEffects } from '#utils/chat/applyEffectFromCard.js';
 import { giveWoundsOnCard } from '#utils/chat/woundFromCard.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
@@ -202,7 +207,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		const nodes: EffectNode[] = [];
 		if (effect || this.condition) {
 			const node: ApplyEffectNode = {
-				id: `apply-condition-${this.id}`,
+				id: this.#effectNodeId(),
 				type: 'applyEffect',
 				effectId: effect ? this.effectId : null,
 				effectItemUuid: effect ? (this.item?.uuid ?? null) : null,
@@ -229,6 +234,10 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	#woundNodeId(): string {
 		return `wound-${this.id}`;
+	}
+
+	#effectNodeId(): string {
+		return `apply-condition-${this.id}`;
 	}
 
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
@@ -393,7 +402,8 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	}
 
 	/**
-	 * The condition or the effect, then the Wounds. With a card, the card records the Wounds.
+	 * The condition or the effect, then the Wounds. With a card, the card records the Wounds and
+	 * who took the effect, as its Apply Effect step for this rule does.
 	 * The lines of the effect go on `card`, else on the card named by `cardId`.
 	 */
 	async #applyConditionTo(
@@ -403,17 +413,30 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		cardId?: string | null,
 	): Promise<WoundRecord | null> {
 		const effect = this.#itemEffect();
+		let applied: AppliedEffect | null = null;
 		if (effect) {
-			await this.#applyEffectCopyTo(target, effect, systemFlags, card?.id ?? cardId ?? null);
+			applied = await this.#applyEffectCopyTo(
+				target,
+				effect,
+				systemFlags,
+				card?.id ?? cardId ?? null,
+			);
 		} else if (this.condition) {
-			await applyConditionToActor(target, this.condition, {
+			const created = await applyConditionToActor(target, this.condition, {
 				sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
 				sourceActor: this.actor as unknown as { uuid?: string } | null,
 				rule: this,
 				systemFlags: systemFlags ?? null,
 			});
+			const effectUuid = (created as { uuid?: string | null } | null)?.uuid;
+			if (effectUuid) {
+				const name = (target as { name?: string | null }).name ?? '';
+				applied = { effectUuid, actorName: name };
+			}
 		}
-		return this.#giveWoundsTo(target as unknown as WoundTarget, card ?? null);
+		const wounds = await this.#giveWoundsTo(target as unknown as WoundTarget, card ?? null);
+		if (card && applied) await recordAppliedEffects(card, this.#effectNodeId(), [applied]);
+		return wounds;
 	}
 
 	async #giveWoundsTo(target: WoundTarget, card: WoundCard | null): Promise<WoundRecord | null> {
@@ -428,7 +451,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		effect: ItemEffect,
 		systemFlags: Record<string, unknown> | undefined,
 		cardId: string | null,
-	): Promise<void> {
+	): Promise<AppliedEffect | null> {
 		const user = this.actor as unknown as EffectSourceUser | null;
 		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user, cardId });
 		if (systemFlags) {
@@ -438,7 +461,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				[SYSTEM_ID]: { ...(flags[SYSTEM_ID] ?? {}), ...systemFlags },
 			};
 		}
-		await applyEffectToActor(target as unknown as EffectTarget, payload);
+		return applyEffectToActor(target as unknown as EffectTarget, payload);
 	}
 }
 

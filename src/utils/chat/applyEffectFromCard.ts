@@ -10,6 +10,7 @@ import {
 } from '#utils/actor/applyEffectToActor.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
 import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -179,6 +180,35 @@ function warnTempHpKept(name: string, refused: { temp: number; amount: number })
 
 const appliedPath = (nodeId: string) => `flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FLAG}.${nodeId}`;
 
+/** What the record keeps of an application: not the "At N stacks" effect, the copies it replaced, or a temp HP refusal. */
+function recordEntry(applied: AppliedEffect): AppliedEffect {
+	const {
+		tempHpRefused: _refused,
+		stackReached: _reached,
+		replaced: _replaced,
+		...entry
+	} = applied;
+	return entry;
+}
+
+const records = keyedQueue();
+
+/**
+ * Adds creatures that took the node's effect another way (a rule of the attack) to its record,
+ * so the step shows them and its button does not apply the effect again. Adds run one at a time.
+ */
+export function recordAppliedEffects(
+	card: EffectCard,
+	nodeId: string,
+	applied: readonly AppliedEffect[],
+): Promise<void> {
+	if (applied.length < 1) return Promise.resolve();
+	return records.run(`${card.id ?? ''}.${nodeId}`, async () => {
+		const record = [...(appliedEffects(card, nodeId) ?? []), ...applied.map(recordEntry)];
+		await card.update({ [appliedPath(nodeId)]: record });
+	});
+}
+
 /**
  * Puts the node's effect on the card's targets, or on its user, and records who took it. Given
  * `recipients` (a save's saver), it puts it on them and adds them to the record. Gives what each
@@ -206,12 +236,8 @@ export async function applyEffectFromCard(
 	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);
 		else if (result.value) {
-			const {
-				tempHpRefused,
-				stackReached: _stackReached,
-				replaced: _replaced,
-				...entry
-			} = result.value;
+			const { tempHpRefused } = result.value;
+			const entry = recordEntry(result.value);
 			const holder = recipients[index] as { uuid?: string | null; name?: string | null };
 			if (tempHpRefused && holder?.uuid) {
 				lines.push(

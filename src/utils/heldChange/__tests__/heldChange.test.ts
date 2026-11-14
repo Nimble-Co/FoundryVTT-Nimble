@@ -678,9 +678,7 @@ describe('heldLines', () => {
 	it('gives each Held Roll rule of one effect its own line and key', () => {
 		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
 
-		const lines = heldLines(
-			heldChangesForAttack({ attacker: creature('A'), target, area: false }),
-		);
+		const lines = heldLines(heldChangesForAttack({ attacker: creature('A'), target, area: false }));
 
 		expect(lines.map((line) => line.text)).toEqual([
 			'Create an Opening: +1 to Primary Die',
@@ -693,9 +691,7 @@ describe('heldLines', () => {
 		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
 		for (const rule of target.effects[0].system.rules) (rule as { id?: string }).id = '';
 
-		const lines = heldLines(
-			heldChangesForAttack({ attacker: creature('A'), target, area: false }),
-		);
+		const lines = heldLines(heldChangesForAttack({ attacker: creature('A'), target, area: false }));
 
 		expect(lines.map((line) => line.key)).toEqual(['T.e0.0', 'T.e0.1']);
 	});

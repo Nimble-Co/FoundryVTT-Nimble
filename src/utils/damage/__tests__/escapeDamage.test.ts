@@ -5,7 +5,9 @@ import type { CardEvent, TurnDamageAction } from '#types/cardEvent.d.ts';
 const addCardEvents = vi.fn(async (..._args: unknown[]) => true);
 const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 const dealTurnDamageLine = vi.fn(
-	async (..._args: unknown[]): Promise<{
+	async (
+		..._args: unknown[]
+	): Promise<{
 		hpLost: number;
 		tempLost: number;
 		woundsGained: number;

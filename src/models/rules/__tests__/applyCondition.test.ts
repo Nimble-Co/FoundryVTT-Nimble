@@ -854,6 +854,126 @@ describe('ApplyConditionRule', () => {
 		});
 	});
 
+	describe('the Apply to Targets step of the same effect on the card', () => {
+		const globals = globalThis as { fromUuid?: unknown };
+		let previousFromUuid: unknown;
+		beforeEach(() => {
+			previousFromUuid = globals.fromUuid;
+			globals.fromUuid = async (uuid: string) => ({ uuid });
+			const created = createEffect.getMockImplementation();
+			createEffect.mockImplementation(async (effect: MockActiveEffect, operation) => {
+				const made = await created?.(effect, operation);
+				const parent = (operation as { parent: { uuid?: string } }).parent;
+				return Object.assign(made, { uuid: `${parent.uuid}.ActiveEffect.${made.id}` });
+			});
+		});
+		afterEach(() => {
+			globals.fromUuid = previousFromUuid;
+		});
+
+		const goblin = () => Object.assign(createMockActor(), { uuid: 'Actor.goblin', name: 'Goblin' });
+		const attackCard = () => {
+			const card = {
+				id: 'attack-card',
+				flags: {} as Record<string, unknown>,
+				// The write lands a tick later, as a database write does.
+				update: vi.fn(async (data: Record<string, unknown>) => {
+					await new Promise((resolve) => setTimeout(resolve, 1));
+					for (const [path, value] of Object.entries(data)) {
+						foundry.utils.setProperty(card, path, value);
+					}
+				}),
+			};
+			return card;
+		};
+		const recordOf = (card: ReturnType<typeof attackCard>) =>
+			foundry.utils.getProperty(
+				card,
+				`flags.${SYSTEM_ID}.appliedEffects.apply-condition-test-apply-condition-id`,
+			);
+
+		function ruleWithEffect(attacker: MockActor) {
+			const item = createMockItem(attacker);
+			item.effects.set('fx', {
+				transfer: false,
+				toObject: () => ({ _id: 'fx', name: 'Marked', statuses: ['dazed'], system: {} }),
+			});
+			return createApplyConditionRule(
+				{ condition: '', trigger: 'onHit', effectId: 'fx' },
+				attacker,
+				item,
+			);
+		}
+
+		it('records the target the effect went on, so the step shows it applied', async () => {
+			const attacker = createMockActor();
+			const target = goblin();
+			const card = attackCard();
+
+			await ruleWithEffect(attacker).onItemUsed({
+				...buildItemUsedContext(attacker, target),
+				card: card as never,
+			});
+
+			expect(recordOf(card)).toEqual([
+				{ effectUuid: 'Actor.goblin.ActiveEffect.effect-1', actorName: 'Goblin' },
+			]);
+		});
+
+		it('records the target of a bare condition', async () => {
+			const attacker = createMockActor();
+			const target = goblin();
+			const card = attackCard();
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onCrit' }, attacker);
+
+			await rule.onItemUsed({
+				...buildItemUsedContext(attacker, target, { isCritical: true }),
+				card: card as never,
+			});
+
+			expect(recordOf(card)).toEqual([
+				{ effectUuid: 'Actor.goblin.ActiveEffect.effect-1', actorName: 'Goblin' },
+			]);
+		});
+
+		it('adds each target to the record as its damage is applied', async () => {
+			const attacker = createMockActor();
+			const card = attackCard();
+			const rule = ruleWithEffect(attacker);
+			const kobold = Object.assign(createMockActor(), { uuid: 'Actor.kobold', name: 'Kobold' });
+
+			await Promise.all([
+				rule.onItemUsed({ ...buildItemUsedContext(attacker, goblin()), card: card as never }),
+				rule.onItemUsed({ ...buildItemUsedContext(attacker, kobold), card: card as never }),
+			]);
+
+			expect(
+				(recordOf(card) as Array<{ actorName: string }>).map((entry) => entry.actorName),
+			).toEqual(['Goblin', 'Kobold']);
+		});
+
+		it('records nothing when the condition did not go on, so the step keeps its button', async () => {
+			hooksCall.mockReturnValue(false);
+			const attacker = createMockActor();
+			const card = attackCard();
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onHit' }, attacker);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, goblin()), card: card as never });
+
+			expect(card.update).not.toHaveBeenCalled();
+		});
+
+		it('records nothing on a self trigger, which has no step on the card', async () => {
+			const owner = Object.assign(createMockActor(), { uuid: 'Actor.owner', name: 'Owner' });
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onTurnStart' }, owner);
+			type Ctx = Parameters<ApplyConditionRule['onTurnStart']>[0];
+
+			await rule.onTurnStart({ actor: owner } as unknown as Ctx);
+
+			expect(conditionsAppliedTo(owner)).toEqual(['prone']);
+		});
+	});
+
 	describe('on an Active Effect', () => {
 		const globals = globalThis as { fromUuidSync?: unknown };
 		let previous: unknown;
