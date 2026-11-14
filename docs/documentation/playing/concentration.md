@@ -4,37 +4,46 @@ title: "Concentration"
 
 # Concentration
 
-Concentration applies itself. Casting a spell whose **Concentration** property is ticked puts the Concentration condition on the caster as the chat card posts, and the card says **Concentration Applied** so the player can see it took. No GM click is involved, and it happens whether the spell targets an ally, several creatures, or nobody at all. The condition always lands on the caster, never on the targets. If the condition cannot be applied, the card says nothing and the caster gets a warning instead.
+When a caster casts a spell with the **Concentration** property ticked, the system puts the Concentration condition on the caster as the chat card posts. The card says **Concentration Applied**, so the player can see that it went on. No GM click is needed. The condition always goes on the caster, never on the targets, whether the spell targets an ally, several creatures or nobody. If the condition cannot go on, the card does not say **Concentration Applied** and the caster gets a warning instead.
 
 ## One concentration at a time
 
-A caster holds one concentration at a time. Casting a second concentration spell ends the first: the old condition is removed and a new one applied, credited to the new spell. If the new one is refused, the first is left where it was.
+A caster holds one concentration at a time. When they cast a second concentration spell, the system removes the old condition and applies a new one, with the new spell as its source. If the new condition cannot go on, the old one stays.
 
-The rulebook says a character can only concentrate on one activity at a time, but it does not say what happens when they start a second. Replacing the first is the system's reading of that, not printed text.
+The rulebook says a character can concentrate on only one activity at a time. It does not say what happens when they start a second. Replacing the first is the system's reading of that rule, not printed text.
 
 ## When concentration ends
 
-Concentration ends when the caster drops to 0 HP or gains Incapacitated (or a condition that counts as it, such as Stunned), and after the spell's Duration when that is in minutes or hours. When a crit hits the caster, the card of the attack gets a line that asks for a DC 10 STR save, with **Roll** for the owner of the caster. A failure ends Concentration, and a success leaves the line as "kept". With **Feature Effects** off, a failure puts a line with **End** on that card instead. The line comes when the GM clicks **Apply Damage**, also on a crit that deals 0 damage: then the button stays live to ask for the save. The roll makes a save card, so save rules, such as advantage on STR saves, and rerolls apply to it. Ending concentration deliberately is a free action, and a hero gets one free action per turn, which the system does not spend for you.
+The system ends Concentration when the caster drops to 0 HP or gains Incapacitated, or a condition that counts as Incapacitated, such as Stunned. It also ends it when the spell's Duration passes, if that Duration is in minutes or hours.
+
+When a crit hits the caster, the attack card gets a line that asks for a DC 10 STR save, with a **Roll** button for the owner of the caster. The line appears when the GM clicks **Apply Damage**. On a crit that deals 0 damage, **Apply Damage** stays active so the GM can still click it to get the line. A failure ends Concentration. With **Feature Effects** off, a failure puts a line with **End** on that card instead. On a success, the line says the caster keeps it, such as "Tessa keeps Concentration". The roll posts a save card, so save rules (advantage on STR saves, for example) and rerolls apply to it.
+
+To end concentration on purpose is a free action. A hero gets one free action per turn, and the system does not spend it for you.
 
 ## More than one concentration
 
-**Casters who concentrate on more than one thing.** A feature can give a spell school a concentration of its own. Stormshifter's **Master of Storm** does this for Lightning and Wind, so casting a Wind spell leaves a Lightning concentration alone and the other way round.
+A feature can give a spell school its own concentration. Stormshifter's Master of Storm does this for Lightning and Wind. Casting a Wind spell leaves a Lightning concentration alone, and the reverse.
 
-Tracks follow a spell's school, and a magic item carries no school. So a Wand of Fly or a Cloak of Lesser Windform concentrates on the default track, and using one ends a tracked concentration the caster is holding.
+Each of these concentrations is a track, and a track follows the school of a spell. A magic item has no school, so a Wand of Fly or a Cloak of Lesser Windform concentrates on the default track. Using one ends a tracked concentration that the caster holds.
 
-Ending one of two held concentrations is a choice rather than bookkeeping, so removing Concentration from the token panel or the Effects tab asks which one should end. A caster holding only one is ended without a prompt.
+Which of two concentrations to end is a choice, not bookkeeping. So when someone removes Concentration from the token panel or the Effects tab, the system asks which one to end. When the caster holds only one, it ends with no prompt.
 
 ::: details A school that the feature does not name
-Master of Storm names two schools and grants two concentrations. What it does not say is what happens when that caster concentrates on a third school, so the system reads the naming as splitting their single concentration rather than adding to it: casting in a school the feature does not name ends every concentration they hold, and casting in a named school ends that school's concentration along with anything held in an unnamed school. That reading keeps them at the two the feature grants. It is the system's reading of the printed line plus the one-at-a-time rule, not printed text. Homebrewers get the same through the [Concentration Track](../reference/rules-conditions.md#concentration-track) rule.
+Master of Storm names two schools and grants two concentrations. It does not say what happens when the caster concentrates on a spell of a third school. The system reads the feature as a split of the one concentration into two, not as more concentrations:
+
+- A spell of a school that the feature does not name ends every concentration the caster holds.
+- A spell of a named school ends that school's concentration, and any concentration from a school that the feature does not name.
+
+This keeps the caster at the two concentrations the feature grants. It is the system's reading of the feature and the one-at-a-time rule, not printed text. A homebrew feature gets the same with the [Concentration Track](../reference/rules-conditions.md#concentration-track) rule.
 :::
 
 ## Spells, objects and features
 
-This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
+Only the **Concentration** property matters, not anything else on the spell. A homebrew spell with **Concentration** ticked works like a spell that the system ships. A spell scroll has the Concentration property of its spell, so it works the same way.
 
-Only spells and objects carry the **Concentration** property, so a feature that holds concentration in its text, such as Shadowmancer's **Gaze of Two Minds**, is not covered. Apply and remove the condition by hand for those.
+Only spells and objects have the **Concentration** property. A feature whose text says it needs concentration, such as Shadowmancer's Gaze of Two Minds, gets nothing from the system. Apply and remove the condition by hand for it.
 
-Turning off **Feature Effects** in the Automation settings turns this off with it. Casting then applies nothing and ends nothing, and Concentration is yours to place by hand. Its ends wait for **End**, as described in [When an effect ends](how-long-effects-last.md#when-an-effect-ends).
+With **Feature Effects** off in the Automation settings, casting a spell applies and ends no Concentration. You place it by hand. Its ends wait for **End**, as described in [When an effect ends](how-long-effects-last.md#when-an-effect-ends).
 
 ## Related pages
 
