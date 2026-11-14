@@ -22,20 +22,18 @@ import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
-import { heldLinesForItem, keptAmountFor } from '#utils/heldChange/heldChange.js';
+import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
 import {
 	rollModeWithoutConditions,
 	tickedConditionRollModes,
 } from '#utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '#utils/rolls/attackConditionLines.js';
-import { MAX_ROLL_MODE, openRollModeTicks, tickChosen } from '#utils/rolls/rollModeTicks.js';
+import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
-import {
-	isResourceSpendingAutomationEnabled,
-	isRuleAutomationEnabled,
-} from '../../settings/automationSettings.js';
+import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
+import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
 import {
 	buildAutoBonusFormula,
 	buildAutoBonusSummaries,
@@ -123,26 +121,14 @@ export function createItemActivationConfigDialogState(
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
 	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
-	// With Feature Effects off the player ticks each Held Change; none starts ticked.
-	const choosesHeldChanges = !isRuleAutomationEnabled();
-	const heldLines = heldLinesForItem(actor, item, {
-		ignoresDisadvantage: options.ignoresDisadvantage,
-		choosing: choosesHeldChanges,
+	const held = heldChangeChoice(actor, item, options.ignoresDisadvantage, {
+		get: () => selectedRollMode,
+		set: (mode) => {
+			selectedRollMode = mode;
+		},
 	});
-	let chosenHeldChanges = $state<string[]>([]);
-	// A ticked change that gives advantage or disadvantage moves the slider; the roll adds it.
-	const heldRollModeTicks = heldLines.flatMap((line) =>
-		line.rollMode ? [{ key: line.key, value: line.rollMode }] : [],
-	);
-	let heldTicks = $state<AppliedTicks>({});
-	function chooseHeldChanges(keys: string[]) {
-		const moved = tickChosen(selectedRollMode, heldTicks, heldRollModeTicks, keys);
-		selectedRollMode = moved.mode;
-		heldTicks = moved.applied;
-		chosenHeldChanges = keys;
-	}
 	const keptAmount = keptAmountFor(actor, item);
-	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
+	let usesKeptAmount = $state(keptAmount !== null && !held.choosing);
 	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
@@ -313,14 +299,12 @@ export function createItemActivationConfigDialogState(
 	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
 	const ownRollMode = $derived(rollModeWithoutConditions(selectedRollMode, conditionRollModes));
 
-	const heldRollMode = $derived(Object.values(heldTicks).reduce((sum, step) => sum + step, 0));
-
 	// The roll mode the manager gets: the player's own, with the condition ticks
 	// and the ticked Held Changes apart (they go in as their own sources) and the
 	// advantage choices in.
 	const submittedRollMode = $derived(
 		Math.clamp(
-			ownRollMode - heldRollMode + conditionalAdvantageTotal,
+			ownRollMode - held.rollMode + conditionalAdvantageTotal,
 			-MAX_ROLL_MODE,
 			MAX_ROLL_MODE,
 		),
@@ -475,13 +459,13 @@ export function createItemActivationConfigDialogState(
 			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
-		heldLines,
-		choosesHeldChanges,
+		heldLines: held.lines,
+		choosesHeldChanges: held.choosing,
 		get chosenHeldChanges() {
-			return chosenHeldChanges;
+			return held.chosen;
 		},
 		set chosenHeldChanges(value: string[]) {
-			chooseHeldChanges(value);
+			held.chosen = value;
 		},
 		damageMultiplier,
 		get usesDamageMultiplier() {

@@ -4,10 +4,8 @@
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
-	import {
-		isResourceSpendingAutomationEnabled,
-		isRuleAutomationEnabled,
-	} from '../../settings/automationSettings.js';
+	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+	import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
@@ -18,7 +16,7 @@
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
 	import { damageMultiplierOf } from '../../utils/damage/damageMultiplier.js';
-	import { heldLinesForItem, keptAmountFor } from '../../utils/heldChange/heldChange.js';
+	import { keptAmountFor } from '../../utils/heldChange/heldChange.js';
 	import KeptAmountField from './components/KeptAmountField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
@@ -34,7 +32,7 @@
 		rollModeWithoutConditions,
 		tickedConditionRollModes,
 	} from '../../utils/rolls/appliedConditionRollModes.js';
-	import { openRollModeTicks, tickChosen } from '../../utils/rolls/rollModeTicks.js';
+	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
 	import { soleTarget } from '../../utils/tokens/soleTarget.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
@@ -70,32 +68,16 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
-	// With Feature Effects off the player ticks each Held Change; none starts ticked.
-	const choosesHeldChanges = !isRuleAutomationEnabled();
-	const heldLines = untrack(() =>
-		heldLinesForItem(
-			actor,
-			{ system: spell },
-			{
-				ignoresDisadvantage: data.ignoreDisadvantage,
-				choosing: choosesHeldChanges,
+	const held = untrack(() =>
+		heldChangeChoice(actor, { system: spell }, data.ignoreDisadvantage, {
+			get: () => selectedRollMode,
+			set: (mode) => {
+				selectedRollMode = mode;
 			},
-		),
+		}),
 	);
-	let chosenHeldChanges = $state<string[]>([]);
-	// A ticked change that gives advantage or disadvantage moves the slider; the roll adds it.
-	const heldRollModeTicks = heldLines.flatMap((line) =>
-		line.rollMode ? [{ key: line.key, value: line.rollMode }] : [],
-	);
-	let heldTicks = $state<Record<string, number>>({});
-	function chooseHeldChanges(keys: string[]) {
-		const moved = tickChosen(selectedRollMode, heldTicks, heldRollModeTicks, keys);
-		selectedRollMode = moved.mode;
-		heldTicks = moved.applied;
-		chosenHeldChanges = keys;
-	}
 	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
-	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
+	let usesKeptAmount = $state(keptAmount !== null && !held.choosing);
 	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
 	const damageMultiplier = untrack(() => damageMultiplierOf(spell?.parent ?? dialog?.item));
 	let usesDamageMultiplier = $state(false);
@@ -375,9 +357,7 @@
 		}
 
 		const activationData = {
-			rollMode:
-				rollModeWithoutConditions(selectedRollMode, conditionRollModes) -
-				Object.values(heldTicks).reduce((sum, step) => sum + step, 0),
+			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes) - held.rollMode,
 			conditionRollModes,
 			situationalModifiers,
 			primaryDieValue,
@@ -385,7 +365,7 @@
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
 			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
-			...(choosesHeldChanges ? { heldChosen: [...chosenHeldChanges] } : {}),
+			...held.rollOptions,
 			...(damageMultiplier ? { damageMultiplier: usesDamageMultiplier } : {}),
 			lessMana,
 			upcast: canUpcast
@@ -445,14 +425,10 @@
 	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	{#if choosesHeldChanges}
-		<HeldChangeLines
-			lines={heldLines}
-			choosing
-			bind:chosen={() => chosenHeldChanges, chooseHeldChanges}
-		/>
+	{#if held.choosing}
+		<HeldChangeLines lines={held.lines} choosing bind:chosen={held.chosen} />
 	{:else if !maxDamageChoice && !keptInUse}
-		<HeldChangeLines lines={heldLines} />
+		<HeldChangeLines lines={held.lines} />
 	{/if}
 
 	{#if !maxDamageChoice && !keptInUse}
