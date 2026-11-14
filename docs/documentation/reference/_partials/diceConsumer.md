@@ -8,22 +8,22 @@
 - **Effect type** → `damageReduction`
 - **Selection outcome** → `consume`
 
-A consumer is what makes a dice pool do something. The pool stores the dice; the consumer decides how they are used.
+A dice pool only holds dice. A consumer is what makes them do something.
 
-**Mode** picks between the two shapes:
+**Mode** has two values:
 
-- `manual` puts the player in charge. Activating the item opens the choice step under the item's row on their sheet. They pick which dice to use, and **Spend** applies the result. Use this for anything the rules text describes as a choice.
-- `autoBonus` is passive: every face in the pool is added to qualifying attacks automatically and nothing is spent. This is how a pool that snowballs damage works.
+- `manual` lets the player choose. When they activate the item, a choice step opens under the item's row on their sheet. They pick the dice to use, and **Spend** applies the result. Use it when the feature text gives the player a choice.
+- `autoBonus` needs no click. The system adds every face in the pool to each attack that qualifies, and spends no dice. Use it for a pool that adds more damage as it grows.
 
-Several consumers can share one pool. A Berserker's Fury Dice carry an `autoBonus` consumer for melee damage *and* separate `manual` consumers for the features that spend them, all pointing at the same `fury` identifier.
+Several consumers can use one pool. The Berserker's Fury Dice have an `autoBonus` consumer for melee damage and `manual` consumers for the features that spend them. All of them use the `fury` identifier.
 
-**Attack delivery** narrows a consumer to `melee` or `ranged` attacks and governs both shapes: an `autoBonus` pool only adds its faces to attacks of that kind, and a card offer only appears on them. Leave it empty (or pick `any`) for no restriction.
+**Attack delivery** limits a consumer to `melee` or `ranged` attacks, in both modes. An `autoBonus` pool adds its faces only to attacks of that kind, and a card offer shows only on them. Leave it empty, or pick `any`, for no limit.
 
-Two things to watch for. A hero activation with no attack type set counts as neither melee nor ranged, so most spells and utility features are excluded by any restriction here, with nothing on screen to explain the absence. A monster attack with no attack type counts as melee, but a monster area attack with none does not. And the unarmed strike, opportunity strike and heroic-action buttons build their attack outside the normal activation flow: a card offer reads them as melee, but an `autoBonus` pool does not reach them at all, filtered or otherwise.
+Watch for these cases. A hero activation with no attack type counts as neither melee nor ranged. So a limit here leaves out most spells and utility features, and nothing on screen tells why. A monster attack with no attack type counts as melee, but a monster area attack with none does not. The unarmed strike, opportunity strike and heroic-action buttons make their attack outside the normal activation flow. A card offer reads them as melee, but an `autoBonus` pool never reaches them, with or without a limit.
 
-**Effect formula** is evaluated when the player confirms, with two references filled in from their picks: `@n` is how many dice they chose and `@sum` is the total of those dice faces. Both combine with the usual sheet references, so a spend can scale with the character as well as the dice. See [Formulas & References](../rules-builder/formulas.md) for the full vocabulary. **Effect type** decides what the result does: `generic` posts the total to chat and leaves the rest to the table, while `damageReduction` also banks the total so it is subtracted from the next damage the character takes.
+The system reads the **Effect formula** when the player confirms. Two references come from their picks. `@n` is how many dice they chose, and `@sum` is the total of those faces. Both work with the usual sheet references, so a spend can scale with the character as well as the dice. See [Formulas & References](../rules-builder/formulas.md) for the full list. **Effect type** decides what the result does. `generic` posts the total to chat and leaves the rest to the table. `damageReduction` also banks the total, and the system subtracts it from the next damage the character takes.
 
-**Offer on attack card** moves the spend off the sheet and onto the attack card it modifies, for features the rules tie to how an attack landed. Set it to `criticalHit` for a feature that only works on a crit (the Berserker's Death Blow), or `hit` for one that works on any hit. Leave it empty and the spend stays on the sheet, which is the right choice for anything that is not about a specific attack, such as a reaction that soaks damage.
+**Offer on attack card** moves the spend from the sheet to the attack card it changes. Use it for a feature that depends on how an attack landed. Set it to `criticalHit` for a feature that works only on a crit, such as the Berserker's Death Blow, or to `hit` for one that works on any hit. Leave it empty to keep the spend on the sheet. That is the right choice for a feature that is not about one attack, such as a reaction that soaks damage.
 
 **Example: Death Blow.** Spends any number of Fury Dice after a crit and deals double their total.
 
@@ -34,17 +34,17 @@ Two things to watch for. A hero activation with no attack type set counts as nei
 - **Effect type** → `generic`
 - **Offer on attack card** → `criticalHit`
 
-With **Bonus damage type** left empty the result is added to that attack's own damage total, so the GM applies damage once and the target's armor, resistances and reductions are counted once. Posting it as a separate roll would count them twice.
+With **Bonus damage type** empty, the system adds the result to the attack's own damage total. The GM applies the damage one time, and the target's armor, resistances and reductions count one time. A separate roll would count them twice.
 
-A consumer that opts in gives up its sheet flow entirely: it no longer opens a choice step on the sheet when the item is activated. The sheet cannot see how the attack turned out, so leaving it there would offer a crit-only spend on any activation.
+A consumer with **Offer on attack card** set no longer opens a choice step on the sheet when the player activates the item. The sheet cannot see how the attack turned out, so it would offer a crit-only spend on every activation.
 
-Opting in needs the rest of the rule to line up. It has to be a `manual` spend with `consume` as its outcome, a `generic` effect type, and an effect formula, on a player character. A `damageReduction` spend is banked against incoming damage rather than added to an attack, so it is not eligible.
+**Offer on attack card** works only on a player character, and only when the rule has `manual` mode, the `consume` outcome, the `generic` effect type and an effect formula. A `damageReduction` spend is banked against incoming damage, not added to an attack, so it cannot use the offer.
 
-**Bonus damage type** covers the features whose extra damage is a specific type (radiant, fire) rather than more of what the weapon deals. A damage node carries exactly one type, so a typed bonus cannot fold into the attack's roll: it lands on the card as its own damage packet. Leave it empty and the bonus deals whatever the attack deals, which is the simpler path.
+**Bonus damage type** is for a feature whose extra damage has its own type, such as radiant or fire, and is not more of what the weapon deals. A damage node has exactly one type, so a typed bonus cannot join the attack's roll. It goes on the card as its own damage packet. Leave the field empty and the bonus deals the attack's type, which is simpler.
 
-The GM still applies the card with one click and the target's flat damage reduction still comes off once. Two things do change. Resistance is judged per packet, so a target resistant to the bonus type takes half of it and full damage from the attack itself — the reasonable reading of "take half as much damage" for an attack dealing two types, though the rulebooks never address one. And a monster in heavy armor halves each packet separately and rounds each up, so a typed bonus gets slightly better through heavy armor than the same amount folded in would.
+The GM still applies the card with one click, and the target's flat damage reduction still comes off one time. Two things change. Resistance applies to each packet, so a target resistant to the bonus type takes half of the bonus and full damage from the attack. The rulebooks do not cover an attack with two damage types, so this is the system's reading of "take half as much damage". And a monster in heavy armor halves each packet and rounds each one up, so a typed bonus does slightly more damage through heavy armor than the same amount in the attack's roll.
 
 **Selection outcome** decides what happens to the dice the player picked:
 
-- `consume` removes them from the pool. This is the normal case, and it needs an effect formula to be worth showing.
-- `maximize` leaves them in the pool and raises each one to the die's highest face. Use it for a feature that changes a die rather than spending it. No effect formula is needed, dice already showing their highest face are not offered, and the number of picks is limited by **Cost**, so a cost of `1` gives the player exactly one choice.
+- `consume` removes them from the pool. This is the usual value, and it needs an effect formula.
+- `maximize` leaves them in the pool and raises each one to the die's highest face. Use it for a feature that changes a die and does not spend it. It needs no effect formula. The choice step does not offer dice that already show their highest face. **Cost** limits the number of picks, so a cost of `1` gives the player exactly one pick.

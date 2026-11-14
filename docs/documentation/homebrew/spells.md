@@ -73,7 +73,7 @@ With **Upcast** selected, click **Add Delta** to add entries under **Per Upcast 
 | **Area Size** | template growth per step |
 | **DC** | save DC increase per step |
 | **Armor** | armor granted per step |
-| **Duration** | duration increase per step. A Concentration spell's Concentrating lasts the new Duration |
+| **Duration** | duration added per step. On a Concentration spell, Concentrating lasts the new Duration |
 | **Condition** | a condition id applied per step |
 | **Raise Effect Rule** | an Apply Effect node, a **Rule** of its effect, a **Number** of that rule, and the amount added per step (a **Formula** for a formula field) |
 | **Lengthen Lasts Until** | an Apply Effect node, a **Moment** of its effect's Lasts Until that has a number, and the amount added per step |
@@ -83,11 +83,11 @@ Damage, dice, and DC deltas also offer a **Target Effect** picker that sets whic
 For Emberlance, add one delta: Operation **Dice**, count 1, die **d8**.
 
 ::: details Raise Effect Rule and Lengthen Lasts Until
-**Raise Effect Rule** changes the effect that an Apply Effect node puts on its recipients, not the item's own effect. Pick the node, then a rule of its effect (listed by its label, or its rule type when it has none), then the number field to raise. When the effect is applied from the card, the upcast amount is added to that field on the copy. *Condemn* uses it: each upcast step adds 1 to the advantage of its Held Roll Change rule.
+**Raise Effect Rule** changes the effect that an Apply Effect node puts on its recipients, not the item's own effect. Pick the node, then a rule of its effect (listed by its label, or its rule type when it has none), then the number field to raise. When someone applies the effect from the card, the system adds the upcast amount to that field on the copy. In *Condemn*, each upcast step adds 1 to the advantage of its Held Roll Change rule.
 
-A rule field that holds a formula, such as the **Value** of a Damage Bonus, takes a **Formula** instead of a number. The formula is added once for each upcast step, before its `@` references are read, so `@key` reads the caster: an upcast of *Enchant Weapon* with **Formula** `@key` adds +KEY damage for each step. A die formula such as `1d4` adds a separate die for each step.
+A rule field that holds a formula, such as the **Value** of a Damage Bonus, takes a **Formula** instead of a number. The system adds the formula once for each upcast step, before it reads the `@` references, so `@key` reads the caster. An upcast of *Enchant Weapon* with **Formula** `@key` adds +KEY damage for each step. A die formula such as `1d4` adds a separate die for each step.
 
-**Lengthen Lasts Until** makes the effect of an Apply Effect node last longer. The **Moment** list shows the moments of that effect's Lasts Until that have a number: a count of turns ("the end of their 2nd next turn") or a time ("for 1 minute"). Each upcast step adds the **Value** to that number on the copy, and the card row shows the longer Lasts Until before anyone clicks. *Cryosleep* uses it: +1 turn asleep for each step.
+**Lengthen Lasts Until** makes the effect of an Apply Effect node last longer. The **Moment** list shows the moments of that effect's Lasts Until that have a number: a count of turns ("the end of their 2nd next turn") or a time ("for 1 minute"). Each upcast step adds the **Value** to that number on the copy. The card row shows the longer Lasts Until before anyone clicks. In *Cryosleep*, each step adds 1 turn asleep.
 :::
 
 With **Upcast Choice** selected, you instead click **Add Choice**, give each choice a label players will read (the compendium *Heal* uses "+1 target", "+4 reach", "+1d6 healing"), and fill in each choice's own deltas.
