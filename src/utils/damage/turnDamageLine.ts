@@ -140,19 +140,45 @@ export function turnDamageLineAfter(event: CardEvent, action: TurnDamageAction):
 	);
 }
 
+/**
+ * Deals a waiting line. The line is marked dealt first, so its Take is not live while the damage
+ * goes on, and a failed write deals nothing; then it gets what the damage took, for Undo. A
+ * dealing error puts the line back to waiting. Null when the line could not be marked.
+ */
+export async function dealTurnDamageLine(
+	card: LineCard,
+	line: CardEvent,
+	holder: TurnDamageHolder,
+	host: EventHost,
+): Promise<TurnDamageLosses | null> {
+	const action = line.action as TurnDamageAction;
+	const marked = turnDamageLineAfter(line, { ...action, state: 'dealt' });
+	if (!(await replaceCardEvent(card as never, line.id, marked))) return null;
+	let losses: TurnDamageLosses;
+	try {
+		losses = await dealTurnDamageTo(holder, action, host);
+	} catch (error) {
+		await replaceCardEvent(card as never, line.id, line);
+		throw error;
+	}
+	await replaceCardEvent(
+		card as never,
+		line.id,
+		turnDamageLineAfter(line, { ...action, ...losses, state: 'dealt' }),
+	);
+	return losses;
+}
+
 /** Feature Effects off: a click deals the damage and Wounds of the line. */
 export async function takeTurnDamage(card: LineCard, event: CardEvent): Promise<boolean> {
 	const action = event.action as TurnDamageAction | undefined;
 	if (action?.kind !== 'turnDamage' || action.state !== 'waiting' || !card.id) return false;
 	const holder = holderOf(action);
 	if (!holder) return false;
-	const losses = await dealTurnDamageTo(holder, action, { id: card.id });
+	const losses = await dealTurnDamageLine(card, event, holder, { id: card.id });
+	if (!losses) return false;
 	if (losses.hpLost + losses.tempLost > 0) await requestSaves(card, holder as never, 'takeDamage');
-	return replaceCardEvent(
-		card as never,
-		event.id,
-		turnDamageLineAfter(event, { ...action, ...losses, state: 'dealt' }),
-	);
+	return true;
 }
 
 /** Gives back what the line took: the HP and temp HP it took, and the Wounds it gave. */

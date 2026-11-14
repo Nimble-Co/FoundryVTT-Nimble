@@ -112,6 +112,33 @@ describe('takeTurnDamage', () => {
 		});
 	});
 
+	it('marks the line dealt before it deals, so a second click finds no Take', async () => {
+		await line.takeTurnDamage(card, damageLine('waiting'));
+
+		expect(replaceCardEvent.mock.calls[0][2]).toMatchObject({ action: { state: 'dealt' } });
+		expect(replaceCardEvent.mock.invocationCallOrder[0]).toBeLessThan(
+			tessa.applyDamage.mock.invocationCallOrder[0],
+		);
+	});
+
+	it('deals nothing when the line cannot be marked dealt', async () => {
+		replaceCardEvent.mockImplementationOnce(async () => false);
+
+		expect(await line.takeTurnDamage(card, damageLine('waiting'))).toBe(false);
+
+		expect(tessa.applyDamage).not.toHaveBeenCalled();
+		expect(requestSaves).not.toHaveBeenCalled();
+	});
+
+	it('a dealing error puts the line back to waiting', async () => {
+		tessa.applyDamage.mockRejectedValueOnce(new Error('no write'));
+		const waiting = damageLine('waiting');
+
+		await expect(line.takeTurnDamage(card, waiting)).rejects.toThrow('no write');
+
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, waiting.id, waiting);
+	});
+
 	it('does nothing for a line that is dealt already', async () => {
 		expect(await line.takeTurnDamage(card, damageLine('dealt'))).toBe(false);
 		expect(tessa.applyDamage).not.toHaveBeenCalled();

@@ -6,22 +6,16 @@ import type {
 	TurnMomentType,
 } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleLabel, rulesOfType } from '#utils/actor/actorRules.js';
-import {
-	addMomentEvents,
-	momentCard,
-	momentEventIds,
-	replaceCardEvent,
-} from '#utils/chat/cardEvents.js';
+import { addMomentEvents, momentCard, momentEventIds } from '#utils/chat/cardEvents.js';
 import { spacesBetween } from '#utils/movement/spacesBetween.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
-	dealTurnDamageTo,
+	dealTurnDamageLine,
 	hasWoundTrack,
 	type TurnDamageHolder,
 	turnDamageEvent,
-	turnDamageLineAfter,
 } from './turnDamageLine.js';
 
 const WORDS = 'NIMBLE.chat.turnDamage';
@@ -143,7 +137,7 @@ async function waitingLineFor(
 	});
 }
 
-/** Deals each written line and marks it dealt, with what it took, so Undo can give it back. */
+/** Deals each written line, with what it took on the line, so Undo can give it back. */
 async function dealLines(
 	target: TurnCreature,
 	written: CardEvent[],
@@ -153,14 +147,8 @@ async function dealLines(
 	if (!card) return;
 	const saves: CardEvent[] = [];
 	for (const line of written) {
-		const action = line.action as TurnDamageAction;
-		const losses = await dealTurnDamageTo(target, action, { moment });
-		await replaceCardEvent(
-			card as never,
-			line.id,
-			turnDamageLineAfter(line, { ...action, ...losses, state: 'dealt' }),
-		);
-		if (losses.hpLost + losses.tempLost > 0) {
+		const losses = await dealTurnDamageLine(card, line, target, { moment });
+		if (losses && losses.hpLost + losses.tempLost > 0) {
 			saves.push(...saveRequestEvents(target as never, 'takeDamage'));
 		}
 	}

@@ -216,6 +216,44 @@ describe('dealTurnDamage', () => {
 		);
 	});
 
+	it('marks the line dealt before it deals, so its Take is not live while the damage goes on', async () => {
+		tessa.rules = [rule(tessa)];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		const [written] = addMomentEvents.mock.calls[0][1] as CardEvent[];
+		expect(replaceCardEvent.mock.calls[0]).toEqual([
+			momentCardEl,
+			written.id,
+			expect.objectContaining({ action: expect.objectContaining({ state: 'dealt' }) }),
+		]);
+		expect(replaceCardEvent.mock.invocationCallOrder[0]).toBeLessThan(
+			tessa.applyDamage.mock.invocationCallOrder[0],
+		);
+	});
+
+	it('deals nothing when the line cannot be marked dealt', async () => {
+		replaceCardEvent.mockImplementationOnce(async () => false);
+		tessa.rules = [rule(tessa)];
+
+		await dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment);
+
+		expect(tessa.applyDamage).not.toHaveBeenCalled();
+		expect(replaceCardEvent).toHaveBeenCalledTimes(1);
+	});
+
+	it('a dealing error puts the line back to waiting', async () => {
+		tessa.rules = [rule(tessa)];
+		tessa.applyDamage.mockRejectedValueOnce(new Error('no write'));
+
+		await expect(
+			dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment),
+		).rejects.toThrow('no write');
+
+		const [written] = addMomentEvents.mock.calls[0][1] as CardEvent[];
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(momentCardEl, written.id, written);
+	});
+
 	it('deals nothing when the line cannot be written', async () => {
 		addMomentEvents.mockImplementation(async () => false);
 		tessa.rules = [rule(tessa)];
