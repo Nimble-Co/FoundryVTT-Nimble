@@ -8,6 +8,7 @@ import {
 	replaceCardEvent,
 } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
@@ -65,12 +66,7 @@ function itemNameOf(effect: ActiveEffect): string | undefined {
 
 /** The live rules of the effect for the event. A prepared rule also checks its predicate. */
 function rulesOf(effect: ActiveEffect, event: SaveOnEvent): SaveOnEventData[] {
-	const prepared = (effect as { rules?: { values?(): Iterable<SaveOnEventData> } }).rules;
-	const rules =
-		typeof prepared?.values === 'function'
-			? [...prepared.values()]
-			: ((effect.system as { rules?: SaveOnEventData[] } | undefined)?.rules ?? []);
-	return rules.filter(
+	return rulesOfEffect<SaveOnEventData>(effect).filter(
 		(rule) =>
 			rule?.type === 'saveOnEvent' &&
 			!rule.disabled &&

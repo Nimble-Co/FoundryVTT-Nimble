@@ -3,6 +3,7 @@ import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
 import { formulaWithStacks, stacksOf, UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -105,14 +106,7 @@ function originOf(effect: HolderEffect): { creatureUuid: string | null; name: st
 
 /** The Held Roll rules of an effect whose predicate passes. A prepared rule checks it; a source rule has none to check. */
 function heldRollsOf(effect: HolderEffect, all: boolean): HeldRollSource[] {
-	const prepared = effect.rules && typeof effect.rules.values === 'function';
-	const rules = (
-		prepared
-			? [...(effect.rules as { values(): Iterable<unknown> }).values()]
-			: ((effect.system as { rules?: unknown[] } | undefined)?.rules ?? [])
-	) as HeldRollSource[];
-	if (!Array.isArray(rules)) return [];
-	return rules.filter(
+	return rulesOfEffect<HeldRollSource>(effect).filter(
 		(rule) =>
 			rule?.type === 'heldRoll' &&
 			(all ||

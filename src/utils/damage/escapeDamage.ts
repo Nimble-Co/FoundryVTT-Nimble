@@ -12,6 +12,7 @@ import {
 	turnDamageEvent,
 	undoTurnDamage,
 } from '#utils/damage/turnDamageLine.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -51,13 +52,8 @@ export function escapeDamageRulesOf(effect: {
 	rules?: unknown;
 	system?: unknown;
 }): EscapeDamageRuleData[] {
-	const prepared = effect.rules as { values?(): Iterable<RuleSource> } | undefined;
-	const rules =
-		typeof prepared?.values === 'function'
-			? [...prepared.values()]
-			: ((effect.system as { rules?: RuleSource[] } | undefined)?.rules ?? []);
 	const stacks = stacksOf(effect.system)?.count ?? 1;
-	return rules
+	return rulesOfEffect<RuleSource>(effect)
 		.filter(
 			(rule) =>
 				rule?.type === 'escapeDamage' &&
