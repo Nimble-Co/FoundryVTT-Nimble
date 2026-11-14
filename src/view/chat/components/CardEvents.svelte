@@ -25,6 +25,12 @@
 		actOnDamage,
 		canActOnStack,
 		actOnStack,
+		canEnd,
+		end,
+		canEmpty,
+		empty,
+		canSettleCrit,
+		settleCrit,
 		backStatus,
 	} = strip;
 </script>
@@ -248,6 +254,62 @@
 									<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
 									{localize('NIMBLE.chat.events.undo')}
 								{/if}
+							</button>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'waitingEnd' && event.action.state === 'waiting'}
+						{@const waiting = event.action}
+						{#if canEnd(waiting)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize('NIMBLE.lastsUntil.chat.endLabel', {
+									effect: waiting.effectName,
+									name: waiting.holderName,
+								})}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => end(event)}
+							>
+								<i class="fa-solid fa-hourglass-end" aria-hidden="true"></i>
+								{localize('NIMBLE.lastsUntil.chat.end')}
+							</button>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'emptyPool' && event.action.state === 'waiting'}
+						{@const pool = event.action}
+						{#if canEmpty(pool)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={localize('NIMBLE.chat.emptyPool.emptyLabel', {
+									pool: pool.poolLabel,
+									name: pool.holderName,
+								})}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => empty(event)}
+							>
+								<i class="fa-solid fa-dice" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.emptyPool.empty')}
+							</button>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'critDiceSave' && event.action.state === 'waiting'}
+						{#if canSettleCrit(event.action)}
+							<button
+								class="nimble-card-events__action"
+								type="button"
+								aria-label={cardEventText(event.text)}
+								aria-busy={isBusy(event.id)}
+								aria-disabled={isBusy(event.id)}
+								onclick={() => settleCrit(event)}
+							>
+								<i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.critDiceSave.apply')}
 							</button>
 						{/if}
 					{/if}

@@ -9,10 +9,11 @@ import {
 } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { endEffects, undoEndedEffect, waitEndEffects } from '#utils/lastsUntil/endEffects.js';
 import localize from '#utils/localize.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import type { SaveOnEvent } from '../../models/rules/saveOnEvent.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 const WORDS = 'NIMBLE.chat.saveRequest';
 
@@ -233,13 +234,15 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 
 	const events = cardEventsOf(card as never);
 	const line = events.find((each) => each.id === link.event.id);
+	const isAsked = (effect: { effectId: string; holderUuid: string }) =>
+		effect.effectId === asked.effectId && effect.holderUuid === asked.holderUuid;
+	// Its ended line, or with Feature Effects off its waiting line.
 	const ended = line
 		? undefined
 		: events.find(
 				(each) =>
-					each.action?.kind === 'undoEnd' &&
-					each.action.row.effectId === asked.effectId &&
-					each.action.row.holderUuid === asked.holderUuid,
+					(each.action?.kind === 'undoEnd' && isAsked(each.action.row)) ||
+					(each.action?.kind === 'waitingEnd' && isAsked(each.action)),
 			);
 	if (!line && !ended) return false;
 
@@ -252,11 +255,13 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 		await replaceCardEvent(card as never, line.id, null);
 		const effect = holderOfRequest(asked)?.effects.get(asked.effectId);
 		if (effect) {
-			await endEffects([effect], {
+			const moment = {
 				heading: link.event.text,
 				hostId: card.id,
 				reason: { key: `${WORDS}.rolled`, data: rolled },
-			});
+			};
+			if (isRuleAutomationEnabled()) await endEffects([effect], moment);
+			else await waitEndEffects([effect], moment);
 		}
 		return true;
 	}
@@ -273,8 +278,8 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 					action: { ...action, state: 'kept', total },
 				}
 			: { ...link.event, action: { ...action, state: 'waiting' } };
-	if (ended?.action?.kind === 'undoEnd') {
-		await undoEndedEffect(ended.action.row);
+	if (ended) {
+		if (ended.action?.kind === 'undoEnd') await undoEndedEffect(ended.action.row);
 		return replaceCardEvent(card as never, ended.id, next);
 	}
 	return replaceCardEvent(card as never, link.event.id, next);

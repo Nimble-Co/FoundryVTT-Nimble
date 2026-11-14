@@ -130,8 +130,9 @@ function creatureAt(uuid: string | null | undefined): OwnedCreature | null {
 }
 
 /**
- * The creatures whose owners act on a line: the tokens a move is offered to, or the creature that
- * rolls the save, chooses its temp HP or escapes.
+ * The creatures whose owners act on a line: the tokens a move is offered to, the creature that
+ * rolls the save, chooses its temp HP or escapes, the holder of a waiting end or pool, or the
+ * creature whose crit dice save waits.
  */
 export function lineCreatures(event: CardEvent): OwnedCreature[] {
 	const action = event.action;
@@ -142,9 +143,15 @@ export function lineCreatures(event: CardEvent): OwnedCreature[] {
 				.filter((creature): creature is OwnedCreature => !!creature);
 		case 'saveRequest':
 		case 'tempHpChoice':
-		case 'escapeRuling': {
+		case 'escapeRuling':
+		case 'waitingEnd':
+		case 'emptyPool': {
 			const holder = creatureAt(action.holderUuid);
 			return holder ? [holder] : [];
+		}
+		case 'critDiceSave': {
+			const creature = creatureAt(action.actorUuid);
+			return creature ? [creature] : [];
 		}
 		default:
 			return [];

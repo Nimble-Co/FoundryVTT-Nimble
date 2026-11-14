@@ -35,7 +35,10 @@ export type CardEventKind =
 	| 'saveRequest'
 	| 'tempHpChoice'
 	| 'escape'
-	| 'stackGain';
+	| 'stackGain'
+	| 'waitingEnd'
+	| 'emptyPool'
+	| 'critDiceSave';
 
 /** One effect that a moment ended, with the data to make it again. */
 export interface EndedEffectRow {
@@ -122,6 +125,55 @@ export interface StackGainAction {
 	payload?: EffectPayload;
 }
 
+/** Where the ended line of a waiting end goes, as `endEffects` reads it. */
+export interface WaitingEndMoment {
+	key?: string;
+	heading: CardEventText;
+	reason?: CardEventText;
+	hostId?: string;
+	whisper?: string[];
+}
+
+/** Feature Effects off: an end that a moment reached waits for a click on End. */
+export interface WaitingEndAction {
+	kind: 'waitingEnd';
+	holderUuid: string;
+	holderName: string;
+	effectId: string;
+	effectName: string;
+	/** waiting: End ends it. ending: a click ends it now. gone: it was off when End was clicked. */
+	state: 'waiting' | 'ending' | 'gone';
+	end: WaitingEndMoment;
+	/** The Lasts Until moment that was reached, for the ended line. */
+	endedBy?: Moment;
+	/** The roll card of an Escape that passed: End escapes, with the damage of the escape. */
+	escapeRollId?: string;
+}
+
+/** Feature Effects off: a pool that an Empty Pools at End rule empties waits for a click. */
+export interface EmptyPoolAction {
+	kind: 'emptyPool';
+	holderUuid: string;
+	holderName: string;
+	poolId: string;
+	poolLabel: string;
+	state: 'waiting' | 'emptied';
+}
+
+/** Feature Effects off: what the result of a crit dice save changes waits for a click. */
+export interface CritDiceSaveAction {
+	kind: 'critDiceSave';
+	/** The creature whose rule asked for the save. */
+	actorUuid: string;
+	actorName: string;
+	saveMessageId: string;
+	outcome: 'pass' | 'fail' | 'unknown';
+	/** A click also takes back what an earlier click did: the dice go back, or the use is spent. */
+	restoresDice?: boolean;
+	spendsUse?: boolean;
+	state: 'waiting' | 'done';
+}
+
 /**
  * What a line lets the reader do: Undo an end, roll a save, keep or take temp HP, or move as an
  * offer lets. A Movement Offer line holds its move and the offers it made; the card stores the same
@@ -133,6 +185,9 @@ export type CardEventAction =
 	| EscapeRulingAction
 	| TurnDamageAction
 	| StackGainAction
+	| WaitingEndAction
+	| EmptyPoolAction
+	| CritDiceSaveAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

@@ -1,4 +1,4 @@
-The Crit Dice Save rule is a row on an attack that has dice of the sneak attack role. The row spends a use, and the one target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back. Before there is a result, nothing changes.
+The Crit Dice Save rule is a row on an attack that has dice of the sneak attack role. The row spends a use, and the one target makes a save on a normal save card. A failed save sets the dice to their max. A passed save gives the use back. Before there is a result, nothing changes. With **Feature Effects** off, the save card gets a line with an **Apply** button instead, "Set the dice to their max" or "Give the use back to Tessa". A reroll that changes the result changes the line.
 
 **Example: Cunning Strike.** Force a STR save. On a failed save, the dice go to their max.
 

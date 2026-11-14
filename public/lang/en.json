@@ -746,6 +746,28 @@
 				"undoLabel": "Undo: take {effect} off {name}",
 				"undone": "Undone"
 			},
+			"emptyPool": {
+				"text": "Empty {pool}",
+				"emptied": "{pool} now empty",
+				"empty": "Empty",
+				"emptyLabel": "Empty {pool} of {name}"
+			},
+			"critDiceSave": {
+				"max": "Set the dice to their max",
+				"maxAndSpend": "Spend the use of {name} again and set the dice to their max",
+				"useBack": "Give the use back to {name}",
+				"useBackAndDice": "Give the use back to {name} and put the dice back",
+				"takeBack": "Take back what the save changed",
+				"maxDone": "The dice are at their max",
+				"useBackDone": "{name} has the use back",
+				"takeBackDone": "The save changes nothing",
+				"cause": {
+					"fail": "The target failed the save",
+					"pass": "The target passed the save",
+					"unknown": "The save has no result"
+				},
+				"apply": "Apply"
+			},
 			"swallowedDamage": {
 				"text": "{name} takes {amount} damage",
 				"cause": "Swallowed"
@@ -1289,6 +1311,10 @@
 				"ended": "{effect} ended on {name}",
 				"alreadyOn": "{effect} is already on {name}.",
 				"undoFailed": "Could not put {effect} back on {name}.",
+				"endsOn": "{effect} ends on {name}",
+				"notOn": "{effect} is no longer on {name}",
+				"end": "End",
+				"endLabel": "End {effect} on {name}",
 				"heading": {
 					"turnStart": "Start of {name}'s turn",
 					"turnEnd": "End of {name}'s turn",

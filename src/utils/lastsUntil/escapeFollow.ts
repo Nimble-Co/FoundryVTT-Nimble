@@ -14,9 +14,15 @@ import {
 	takeBackEscapeDamage,
 } from '#utils/damage/escapeDamage.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import {
+	type EndMoment,
+	endEffects,
+	undoEndedEffect,
+	waitingEndLine,
+} from '#utils/lastsUntil/endEffects.js';
 import { endReasonOf } from '#utils/lastsUntil/endedEffectEvent.js';
 import localize from '#utils/localize.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 /** On the roll card of an Escape: the effect it tries to end. */
 export interface EscapeRollLink {
@@ -122,7 +128,7 @@ export function canRuleEscape(action: EscapeRulingAction): boolean {
 	return mayActHere(action.holderUuid);
 }
 
-const endMoment = (effectName: string, hostId: string, reason: CardEventText) => ({
+const endMoment = (effectName: string, hostId: string, reason: CardEventText): EndMoment => ({
 	heading: { key: 'NIMBLE.escape.note', data: { effect: effectName } },
 	hostId,
 	reason,
@@ -143,13 +149,15 @@ function sourceUuidOf(effect: ActiveEffect): string | null {
 type EscapeTarget = Pick<EscapeRollLink, 'holderUuid' | 'effectId' | 'effectName'>;
 
 /**
- * Ends the effect for an Escape, with its ended line on the card. When this end removed it, the
- * effect's Damage on Escape rules deal their damage on the same card.
+ * Ends the effect for an Escape, with its ended line on the card, in place of the waiting line
+ * `replaces`. When this end removed it, the effect's Damage on Escape rules deal their damage on
+ * the same card.
  */
 async function escapeNow(
 	card: EscapeCard,
 	target: EscapeTarget,
 	reason: CardEventText,
+	replaces?: EndMoment['replaces'],
 ): Promise<boolean> {
 	const holder = holderOf(target);
 	const effect = holder?.effects.get(target.effectId);
@@ -161,13 +169,31 @@ async function escapeNow(
 		img: (effect.img as string | null) ?? null,
 		sourceUuid: sourceUuidOf(effect),
 	};
-	await endEffects([effect], endMoment(target.effectName, card.id, reason));
+	await endEffects([effect], {
+		...endMoment(target.effectName, card.id, reason),
+		...(replaces ? { replaces } : {}),
+	});
 	if (holder.effects.get(target.effectId)) return false;
 	if (rules.length > 0) await dealEscapeDamage(card, holder as never, escaped, rules);
 	return true;
 }
 
 const queue = keyedQueue();
+
+/**
+ * On the active GM, End on the waiting line of an Escape that passed: the effect ends as a pass
+ * ends it with Feature Effects on, on the roll card, with its damage.
+ */
+export function escapeOnEnd(
+	rollMessageId: string,
+	target: EscapeTarget,
+	reason: CardEventText,
+	replaces?: EndMoment['replaces'],
+): Promise<boolean> {
+	const card = game.messages?.get(rollMessageId) as unknown as EscapeCard | undefined;
+	if (!card?.id) return Promise.resolve(false);
+	return queue.run(card.id, () => escapeNow(card, target, reason, replaces));
+}
 
 /**
  * On the active GM, each time the result of an Escape's roll card changes: a pass ends the effect,
@@ -252,6 +278,20 @@ function rulingLineOf(card: EscapeCard, link: EscapeRollLink): PlacedLine | unde
 	return undefined;
 }
 
+/** Feature Effects off: the waiting end of this roll card's pass, on the card or where it moved. */
+function waitingLineOf(card: EscapeCard, link: EscapeRollLink): PlacedLine | undefined {
+	const isWaiting = (event: CardEvent) =>
+		event.action?.kind === 'waitingEnd' &&
+		event.action.escapeRollId === card.id &&
+		sameEffect(link, event.action);
+	const cards = ((game.messages as unknown as { contents?: EscapeCard[] })?.contents ?? []).slice();
+	for (const host of [card, ...cards.reverse()]) {
+		const line = cardEventsOf(host as never).find(isWaiting);
+		if (line) return { host, line };
+	}
+	return undefined;
+}
+
 /** The ended line says the table ruled the escape (**Escapes**). */
 const wasRuled = (event: CardEvent) => endReasonOf(event)?.key === RULED;
 
@@ -261,6 +301,7 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 		(event) => event.action?.kind === 'undoEnd' && sameEffect(link, event.action.row),
 	);
 	const ruling = rulingLineOf(card, link);
+	const waiting = waitingLineOf(card, link);
 	const effect = holderOf(link)?.effects.get(link.effectId);
 	/** The escape no longer stands: the effect and the damage of the escape go back. */
 	const putBack = async () => {
@@ -286,7 +327,14 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 
 	if (outcome === 'pass') {
 		if (ended || !effect) return true;
-		await escapeNow(card, link, escapedReason(card));
+		if (isRuleAutomationEnabled()) {
+			await escapeNow(card, link, escapedReason(card));
+		} else if (!waiting && card.id) {
+			const moment = endMoment(link.effectName, card.id, escapedReason(card));
+			await addCardEvents(card as never, [
+				waitingEndLine(effect, moment, { escapeRollId: card.id }),
+			]);
+		}
 		if (ruling) await replaceCardEvent(ruling.host as never, ruling.line.id, null);
 		return true;
 	}
@@ -296,6 +344,9 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 			await putBack();
 			if (link.noDc) await showRuling(endedHere, 'failed');
 			else await replaceCardEvent(card as never, ended.id, null);
+		} else if (waiting) {
+			if (link.noDc) await showRuling(waiting, 'failed');
+			else await replaceCardEvent(waiting.host as never, waiting.line.id, null);
 		} else if (ruling && link.noDc) {
 			await showRuling(ruling, 'failed');
 		}
@@ -309,6 +360,8 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 	if (ended) {
 		await putBack();
 		await showRuling(endedHere, 'waiting');
+	} else if (waiting) {
+		await showRuling(waiting, 'waiting');
 	} else if (rulingAction?.kind !== 'escapeRuling' || rulingAction.state !== 'waiting') {
 		await showRuling(ruling, 'waiting');
 	}

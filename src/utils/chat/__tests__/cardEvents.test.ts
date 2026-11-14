@@ -291,6 +291,58 @@ describe('a line that asks a player to act', () => {
 		},
 	);
 
+	const waitingEndFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'waitingEnd',
+		action: {
+			kind: 'waitingEnd',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			effectId: 'blind',
+			effectName: 'Blinded',
+			state: 'waiting',
+			end: { heading: { key: 'heading' } },
+		},
+	});
+	const emptyPoolFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'emptyPool',
+		action: {
+			kind: 'emptyPool',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			poolId: 'fury',
+			poolLabel: 'Fury Dice',
+			state: 'waiting',
+		},
+	});
+	const critDiceFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'critDiceSave',
+		action: {
+			kind: 'critDiceSave',
+			actorUuid: 'Actor.tessa',
+			actorName: 'Tessa',
+			saveMessageId: 'save',
+			outcome: 'pass',
+			state: 'waiting',
+		},
+	});
+
+	it.each([
+		['waiting end', waitingEndFor],
+		['pool', emptyPoolFor],
+		['crit dice save', critDiceFor],
+	])('a %s line goes on a card its player reads', async (_name, make) => {
+		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
+
+		expect(await addCardEvents(card, [make('ask')])).toBe(true);
+
+		expect(card.update).not.toHaveBeenCalled();
+		const [data] = create.mock.calls[0] as [Record<string, any>];
+		expect(data.whisper).toEqual(['player', 'gm']);
+	});
+
 	it('goes on a card for its player and the GMs when the card is whispered to the GM only', async () => {
 		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
 

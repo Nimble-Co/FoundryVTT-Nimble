@@ -1,10 +1,16 @@
 import type { CardEventText, EventHost } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
-import { type EndMoment, effectsEndingAt, endEffects } from '#utils/lastsUntil/endEffects.js';
+import {
+	type EndMoment,
+	effectsEndingAt,
+	endEffects,
+	waitEndEffects,
+} from '#utils/lastsUntil/endEffects.js';
 import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 interface UsedItem {
 	uuid?: string | null;
@@ -63,7 +69,7 @@ function endMomentOn(heading: CardEventText, host: EventHost): EndMoment {
 /**
  * End what each event ends, one message for each event, or lines on `host`. An effect that more
  * than one of them ends goes with the first. Run where the event happens: the effects are found
- * now, before what happens next changes them.
+ * now, before what happens next changes them. With Feature Effects off, the ends wait for End.
  */
 export function fireEvents(
 	events: readonly { check: EventCheck; heading: CardEventText }[],
@@ -73,7 +79,9 @@ export function fireEvents(
 	for (const { check, heading } of events) {
 		const effects = effectsEndingAt(check).filter((effect) => !taken.has(effect));
 		for (const effect of effects) taken.add(effect);
-		void endEffects(effects, endMomentOn(heading, host), { check });
+		const moment = endMomentOn(heading, host);
+		if (isRuleAutomationEnabled()) void endEffects(effects, moment, { check });
+		else void waitEndEffects(effects, moment, { check });
 	}
 }
 

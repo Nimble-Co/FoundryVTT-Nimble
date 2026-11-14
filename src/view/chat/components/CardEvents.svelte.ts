@@ -3,12 +3,15 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import type {
 	CardEvent,
+	CritDiceSaveAction,
+	EmptyPoolAction,
 	EndedEffectRow,
 	EscapeRulingAction,
 	SaveRequestAction,
 	StackGainAction,
 	TempHpChoiceAction,
 	TurnDamageAction,
+	WaitingEndAction,
 } from '#types/cardEvent.d.ts';
 import { actOnStackGain, canActOnStackGain } from '#utils/actor/stackGainLine.js';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
@@ -18,9 +21,12 @@ import {
 	takeTurnDamage,
 	undoTurnDamage,
 } from '#utils/damage/turnDamageLine.js';
+import { canEmptyPool, emptyPoolFromLine } from '#utils/dicePool/emptyPoolLine.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { canEndWaiting, endWaiting } from '#utils/lastsUntil/endWaiting.js';
 import { canRuleEscape, endEscape } from '#utils/lastsUntil/escapeFollow.js';
 import localize from '#utils/localize.js';
+import { canSettleCritDiceLine, settleCritDiceLine } from '#utils/rolls/critDiceSaveLine.js';
 import { canRollRequest, rollRequestedSave } from '#utils/saveRequest/saveRequests.js';
 
 const EFFECT_HOOKS = ['createActiveEffect', 'deleteActiveEffect'] as const;
@@ -157,6 +163,50 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	/** One click on a line at a time; a failed click is logged. */
+	async function clickLine(
+		event: CardEvent,
+		run: (card: never, event: CardEvent) => Promise<boolean>,
+		failure: string,
+	) {
+		if (busy[event.id]) return;
+		busy[event.id] = true;
+		try {
+			await run(getMessage() as never, event).catch((error) => console.error(failure, error));
+		} finally {
+			busy[event.id] = false;
+		}
+	}
+
+	function canEnd(action: WaitingEndAction): boolean {
+		return canEndWaiting(action);
+	}
+
+	/** Ends a waiting effect through the end path of its moment. */
+	function end(event: CardEvent) {
+		return clickLine(event, endWaiting, 'Nimble | Could not end a waiting effect.');
+	}
+
+	function canEmpty(action: EmptyPoolAction): boolean {
+		return canEmptyPool(action);
+	}
+
+	function empty(event: CardEvent) {
+		return clickLine(event, emptyPoolFromLine, 'Nimble | Could not empty a pool.');
+	}
+
+	function canSettleCrit(action: CritDiceSaveAction): boolean {
+		return canSettleCritDiceLine(action);
+	}
+
+	function settleCrit(event: CardEvent) {
+		return clickLine(
+			event,
+			settleCritDiceLine,
+			'Nimble | Could not change the dice or the use of a crit dice save.',
+		);
+	}
+
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
 	function backStatus(eventId: string) {
 		return (element: HTMLElement) => {
@@ -184,6 +234,12 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		actOnDamage,
 		canActOnStack,
 		actOnStack,
+		canEnd,
+		end,
+		canEmpty,
+		empty,
+		canSettleCrit,
+		settleCrit,
 		backStatus,
 	};
 }

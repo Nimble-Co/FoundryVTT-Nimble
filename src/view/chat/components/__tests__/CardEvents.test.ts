@@ -71,6 +71,31 @@ vi.mock('#utils/lastsUntil/escapeFollow.js', () => ({
 		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
 }));
 
+const { endWaiting, emptyPoolFromLine, settleCritDiceLine } = vi.hoisted(() => ({
+	endWaiting: vi.fn(async (..._args: unknown[]) => true),
+	emptyPoolFromLine: vi.fn(async (..._args: unknown[]) => true),
+	settleCritDiceLine: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+const ownerOrGm = (uuid: string) =>
+	!!(globalThis as Globals).game.user?.isGM ||
+	!!(globalThis as Globals).fromUuidSync(uuid)?.isOwner;
+
+vi.mock('#utils/lastsUntil/endWaiting.js', () => ({
+	endWaiting,
+	canEndWaiting: (action: { holderUuid: string }) => ownerOrGm(action.holderUuid),
+}));
+
+vi.mock('#utils/dicePool/emptyPoolLine.js', () => ({
+	emptyPoolFromLine,
+	canEmptyPool: (action: { holderUuid: string }) => ownerOrGm(action.holderUuid),
+}));
+
+vi.mock('#utils/rolls/critDiceSaveLine.js', () => ({
+	settleCritDiceLine,
+	canSettleCritDiceLine: (action: { actorUuid: string }) => ownerOrGm(action.actorUuid),
+}));
+
 type Globals = Record<string, any>;
 const globals = globalThis as Globals;
 
@@ -363,6 +388,115 @@ describe('CardEvents', () => {
 		renderEvents(makeCard([damage('undone')]));
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.getByRole('status')).toHaveTextContent('Undone');
+	});
+
+	it('a waiting end has End for the owner of the holder, and no button once it is gone', async () => {
+		const waitingEnd = (
+			state: 'waiting' | 'ending' | 'gone',
+			holderUuid = 'Actor.tessa',
+		): CardEvent => ({
+			id: 'wait1',
+			kind: 'waitingEnd',
+			icon: 'fa-solid fa-hourglass-half',
+			text: {
+				key: state === 'gone' ? 'NIMBLE.lastsUntil.chat.notOn' : 'NIMBLE.lastsUntil.chat.endsOn',
+				data: { effect: 'Blinded', name: 'Tessa' },
+			},
+			action: {
+				kind: 'waitingEnd',
+				holderUuid,
+				holderName: 'Tessa',
+				effectId: 'blind',
+				effectName: 'Blinded',
+				state,
+				end: { heading: { key: 'x' } },
+			},
+			at: 1,
+		});
+		globals.game.user = { isGM: false };
+
+		const waiting = renderEvents(makeCard([waitingEnd('waiting')]));
+		expect(screen.getByText('Blinded ends on Tessa')).toBeInTheDocument();
+		const end = screen.getByRole('button', { name: 'End Blinded on Tessa' });
+		expect(end).toHaveTextContent('End');
+		await fireEvent.click(end);
+		expect(endWaiting).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'wait1' }),
+		);
+		waiting.unmount();
+
+		const other = renderEvents(makeCard([waitingEnd('waiting', 'Actor.goblin')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		other.unmount();
+
+		const ending = renderEvents(makeCard([waitingEnd('ending')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		ending.unmount();
+
+		renderEvents(makeCard([waitingEnd('gone')]));
+		expect(screen.getByText('Blinded is no longer on Tessa')).toBeInTheDocument();
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	it('a pool line has Empty while it waits, and no button once emptied', async () => {
+		const poolWaits = (state: 'waiting' | 'emptied'): CardEvent => ({
+			id: 'pool1',
+			kind: 'emptyPool',
+			icon: 'fa-solid fa-dice',
+			text: { key: 'NIMBLE.chat.emptyPool.text', data: { pool: 'Fury Dice' } },
+			action: {
+				kind: 'emptyPool',
+				holderUuid: 'Actor.tessa',
+				holderName: 'Tessa',
+				poolId: 'fury',
+				poolLabel: 'Fury Dice',
+				state,
+			},
+			at: 1,
+		});
+
+		const waiting = renderEvents(makeCard([poolWaits('waiting')]));
+		await fireEvent.click(screen.getByRole('button', { name: 'Empty Fury Dice of Tessa' }));
+		expect(emptyPoolFromLine).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'pool1' }),
+		);
+		waiting.unmount();
+
+		renderEvents(makeCard([poolWaits('emptied')]));
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	it('a crit dice save line has Apply while it waits, and no button once done', async () => {
+		const critLine = (state: 'waiting' | 'done'): CardEvent => ({
+			id: 'crit1',
+			kind: 'critDiceSave',
+			icon: 'fa-solid fa-dice-d20',
+			text: { key: 'NIMBLE.chat.critDiceSave.max', data: { name: 'Tessa' } },
+			action: {
+				kind: 'critDiceSave',
+				actorUuid: 'Actor.tessa',
+				actorName: 'Tessa',
+				saveMessageId: 'save',
+				outcome: 'fail',
+				state,
+			},
+			at: 1,
+		});
+
+		const waiting = renderEvents(makeCard([critLine('waiting')]));
+		const apply = screen.getByRole('button', { name: 'Set the dice to their max' });
+		expect(apply).toHaveTextContent('Apply');
+		await fireEvent.click(apply);
+		expect(settleCritDiceLine).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'crit1' }),
+		);
+		waiting.unmount();
+
+		renderEvents(makeCard([critLine('done')]));
+		expect(screen.queryByRole('button')).toBeNull();
 	});
 
 	it('a stack line has Apply while it waits, Undo once gained, and a badge once undone', async () => {

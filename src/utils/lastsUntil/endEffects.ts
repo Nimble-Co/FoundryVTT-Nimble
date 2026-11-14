@@ -1,15 +1,30 @@
 import { SYSTEM_ID } from '#system';
-import type { CardEventLastsUntil, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import type {
+	CardEvent,
+	CardEventLastsUntil,
+	CardEventText,
+	EndedEffectRow,
+	WaitingEndAction,
+} from '#types/cardEvent.d.ts';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
-import { addCardEvents, addMomentEvents, canHost } from '#utils/chat/cardEvents.js';
+import {
+	addCardEvents,
+	addMomentEvents,
+	canHost,
+	replaceCardEvent,
+} from '#utils/chat/cardEvents.js';
+import { END_LINES_OPTION, emptyPoolEvents } from '#utils/dicePool/emptyPoolLine.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { effectEndsAt, endingMoment, turnsSeenAfter } from '#utils/lastsUntil/effectEndsAt.js';
 import { sourceOf } from '#utils/lastsUntil/effectSubject.js';
-import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
+import { endedEffectEvent, waitingEndEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { LastsUntilCheck, Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.endTimedEffects`;
+/** On an effect whose one-time moment gave its waiting line. */
+const END_WAITS_FLAG = 'endWaits';
 
 /** The moment that ends the effects: its card and why they ended. */
 export interface EndMoment {
@@ -24,6 +39,8 @@ export interface EndMoment {
 	endedBy?: Record<string, Moment>;
 	/** Who sees the card of the moment. Empty or missing: everyone. */
 	whisper?: string[];
+	/** The waiting line on the host card that the ended line takes the place of, with its time. */
+	replaces?: { eventId: string; at: number };
 }
 
 /** Where the check happened: the moments it reached are read here, before the effects go. */
@@ -97,19 +114,18 @@ function endedByOf(effect: ActiveEffect, moment: EndMoment): CardEventLastsUntil
 	return { lastsUntil: found, ...(named ? { source: named } : {}) };
 }
 
-interface EndedLine {
-	row: EndedEffectRow;
-	endedBy?: CardEventLastsUntil;
-}
-
 /**
  * The lines go on the host card when there is one, else on the card of the moment. That card keeps
- * the readers of a whispered host card.
+ * the readers of a whispered host card. The first line can take the place of a waiting line.
  */
-async function postEnded(moment: EndMoment, lines: EndedLine[]): Promise<boolean> {
-	const at = Date.now();
-	const events = lines.map(({ row, endedBy }) => endedEffectEvent(row, at, moment.reason, endedBy));
+async function postEnded(moment: EndMoment, events: CardEvent[]): Promise<boolean> {
 	const host = moment.hostId ? game.messages?.get(moment.hostId) : null;
+	if (host && moment.replaces && canHost(host as never)) {
+		const [first, ...rest] = events;
+		if (await replaceCardEvent(host as never, moment.replaces.eventId, first)) {
+			return rest.length < 1 || addCardEvents(host as never, rest);
+		}
+	}
 	if (host && canHost(host as never) && (await addCardEvents(host as never, events))) return true;
 	const key = moment.key ?? `once:${foundry.utils.randomID()}`;
 	const hostReaders = ((host as { whisper?: string[] } | null)?.whisper ?? []).filter(Boolean);
@@ -129,19 +145,27 @@ async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void
 	if (live.length < 1) return;
 	for (const effect of live) ending.add(effect.uuid ?? '');
 	try {
-		const lines = live.map((effect) => ({
-			row: endedEffectRow(effect),
-			endedBy: endedByOf(effect, moment),
-		}));
+		const at = moment.replaces?.at ?? Date.now();
+		const lines = live.map((effect) =>
+			endedEffectEvent(endedEffectRow(effect), at, moment.reason, endedByOf(effect, moment)),
+		);
+		// With Feature Effects on, the delete empties the pools (emptyPoolsAtEnd).
+		const automated = isRuleAutomationEnabled();
+		const poolLines = automated ? [] : emptyPoolEvents(live, Date.now());
 		const byHolder = new Map<Actor, string[]>();
 		for (const effect of live) {
 			const holder = effect.parent as Actor;
 			byHolder.set(holder, [...(byHolder.get(holder) ?? []), effect.id as string]);
 		}
 		for (const [holder, ids] of byHolder) {
-			await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
+			if (automated) await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
+			else {
+				await holder.deleteEmbeddedDocuments('ActiveEffect', ids, {
+					[END_LINES_OPTION]: true,
+				} as never);
+			}
 		}
-		await postEnded(moment, lines);
+		await postEnded(moment, [...lines, ...poolLines]);
 	} finally {
 		for (const effect of live) ending.delete(effect.uuid ?? '');
 	}
@@ -198,8 +222,87 @@ export function endEffectsAt(
 	const ending = effectsEndingAt(check, combat);
 	return queue.run('at', async () => {
 		await countMoments(check, combat, new Set(ending));
-		await endEffects(ending, moment, { check, combat });
+		if (isRuleAutomationEnabled()) await endEffects(ending, moment, { check, combat });
+		else await waitEndEffects(ending, moment, { check, combat }, { once: true });
 	});
+}
+
+/** The waiting line of one effect: where and why its end would put its ended line. */
+export function waitingEndLine(
+	effect: ActiveEffect,
+	moment: EndMoment,
+	{ escapeRollId, at = Date.now() }: { escapeRollId?: string; at?: number } = {},
+): CardEvent {
+	const holder = effect.parent as Actor;
+	const { key, heading, reason, hostId, whisper } = moment;
+	const endedBy = endedByOf(effect, moment);
+	const action: WaitingEndAction = {
+		kind: 'waitingEnd',
+		holderUuid: holder.uuid ?? '',
+		holderName: holder.name ?? '',
+		effectId: effect.id ?? '',
+		effectName: effect.name ?? '',
+		state: 'waiting',
+		end: {
+			...(key ? { key } : {}),
+			heading,
+			...(reason ? { reason } : {}),
+			...(hostId ? { hostId } : {}),
+			...(whisper ? { whisper } : {}),
+		},
+		...(endedBy ? { endedBy: endedBy.lastsUntil } : {}),
+		...(escapeRollId ? { escapeRollId } : {}),
+	};
+	return waitingEndEvent({
+		action,
+		img: effect.img as string | null,
+		sourceName: sourceNameOf(effect),
+		endedBy,
+		at,
+	});
+}
+
+const waitsAlready = (effect: ActiveEffect) =>
+	!!(effect.flags as Record<string, Record<string, unknown> | undefined> | undefined)?.[
+		SYSTEM_ID
+	]?.[END_WAITS_FLAG];
+
+/**
+ * Feature Effects off: what a moment reached does not end. Each effect gets a waiting line with
+ * End where its ended line would go. `once`: a one-time moment (a turn, a round, a time), which
+ * gives an effect its line once; an event gives a line each time. Whether the lines were placed.
+ */
+export async function waitEndEffects(
+	effects: ActiveEffect[],
+	endMoment: EndMoment,
+	at?: EndCheck,
+	{ once = false }: { once?: boolean } = {},
+): Promise<boolean> {
+	const live = effects.filter((effect) => {
+		const holder = effect.parent as Actor | null;
+		return !!effect.id && !!holder?.effects.get(effect.id) && !(once && waitsAlready(effect));
+	});
+	if (live.length < 1) return true;
+	try {
+		// A line with no host keeps the key of its card, so End can put the ended line there.
+		const keyed =
+			endMoment.key || endMoment.hostId
+				? endMoment
+				: { ...endMoment, key: `once:${foundry.utils.randomID()}` };
+		const moment = withEndedBy(live, keyed, at);
+		const now = Date.now();
+		const lines = live.map((effect) => waitingEndLine(effect, moment, { at: now }));
+		if (!(await postEnded(moment, lines))) return false;
+		if (once) {
+			for (const effect of live) {
+				await effect.update({ [`flags.${SYSTEM_ID}.${END_WAITS_FLAG}`]: true } as never);
+			}
+		}
+		return true;
+	} catch (error) {
+		console.error('Nimble | Could not post the waiting ends of a moment.', error);
+		return false;
+	}
 }
 
 /**
