@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { CardEvent, EndedEffectRow } from '#types/cardEvent.d.ts';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { END_LINES_OPTION } from '#utils/dicePool/emptyPoolLine.js';
 import { effectsEndingAt, endEffects, everyActor, undoEndedEffect } from '../endEffects.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
-import { END_LINES_OPTION } from '../zeroHpAtEnd.js';
 
 const moment = (text: string, key?: string) => ({
 	...(key ? { key } : {}),

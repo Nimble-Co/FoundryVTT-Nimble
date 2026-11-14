@@ -233,7 +233,10 @@ function lastsUntilOf(conditionId: string, options: ApplyConditionOptions): Mome
  * The authored effect's rules, then each rule of the status entry whose id it does not have.
  * Null when the status entry has no rules.
  */
-function rulesOf(conditionId: string, effectData: Record<string, unknown>): RuleSource[] | null {
+function withStatusRules(
+	conditionId: string,
+	effectData: Record<string, unknown>,
+): RuleSource[] | null {
 	const entryRules = findStatusEffectEntry(conditionId)?.system?.rules ?? [];
 	if (entryRules.length < 1) return null;
 	const authored = (effectData.system as { rules?: RuleSource[] } | undefined)?.rules ?? [];
@@ -317,7 +320,7 @@ async function createConditionEffect(
 		effect.updateSource(options.effectData);
 		const authored = (options.effectData.statuses as string[] | undefined) ?? [];
 		effect.updateSource({ statuses: [...new Set([...linked, ...authored])] });
-		const rules = rulesOf(conditionId, options.effectData);
+		const rules = withStatusRules(conditionId, options.effectData);
 		if (rules) effect.updateSource({ 'system.rules': rules });
 	}
 

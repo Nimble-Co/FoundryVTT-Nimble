@@ -8,11 +8,9 @@ import { END_LINES_OPTION } from '#utils/dicePool/emptyPoolLine.js';
 import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
-export { END_LINES_OPTION };
-
 const WORDS = 'NIMBLE.chat.zeroHpAtEnd';
 
-interface RuleSource {
+interface ZeroHpRule {
 	type?: string;
 	disabled?: boolean;
 	appliesTo?(): boolean;
@@ -43,7 +41,7 @@ interface LineCard {
 
 /** Whether the effect has a 0 HP at End rule that is on: its prepared rules, else its rule data. */
 export function dropsToZeroAtEnd(effect: ZeroHpEffect): boolean {
-	return rulesOfEffect<RuleSource>(effect).some(
+	return rulesOfEffect<ZeroHpRule>(effect).some(
 		(rule) =>
 			rule?.type === 'zeroHpAtEnd' &&
 			!rule.disabled &&
