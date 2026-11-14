@@ -227,6 +227,7 @@ describe('dealTurnDamage', () => {
 			momentCardEl,
 			written.id,
 			expect.objectContaining({ action: expect.objectContaining({ state: 'dealt' }) }),
+			{ ifState: 'waiting' },
 		]);
 		expect(replaceCardEvent.mock.invocationCallOrder[0]).toBeLessThan(
 			tessa.applyDamage.mock.invocationCallOrder[0],

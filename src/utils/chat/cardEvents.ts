@@ -53,7 +53,13 @@ export interface MomentEventsOptions {
 
 type QueryData =
 	| { op: 'add'; messageId: string; events: CardEvent[] }
-	| { op: 'replace'; messageId: string; eventId: string; next: CardEvent | null }
+	| {
+			op: 'replace';
+			messageId: string;
+			eventId: string;
+			next: CardEvent | null;
+			ifState?: string;
+	  }
 	| {
 			op: 'moment';
 			moment: CardEventMoment;
@@ -62,6 +68,10 @@ type QueryData =
 	  };
 
 const queue = keyedQueue();
+
+function stateOf(event: CardEvent): unknown {
+	return (event.action as { state?: unknown } | undefined)?.state;
+}
 
 function storedEvents(card: Pick<EventCard, 'flags'>): CardEvent[] {
 	const events = (card.flags?.[SYSTEM_ID] as { events?: unknown } | undefined)?.events;
@@ -259,6 +269,19 @@ function findMomentCard(key: string, whisper: readonly string[]): EventCard | un
 	return undefined;
 }
 
+/** `first` when it holds the line, else the newest recent card that does: a line can move to a card its readers read. */
+export function cardHoldingEvent<Card extends EventCard>(
+	eventId: string,
+	first: Card,
+): Card | EventCard | undefined {
+	const holds = (card: EventCard) => storedEvents(card).some((event) => event.id === eventId);
+	if (holds(first)) return first;
+	const recent = ((game.messages as unknown as { contents?: EventCard[] })?.contents ?? []).slice(
+		-MOMENT_SEARCH_DEPTH,
+	);
+	return recent.reverse().find(holds);
+}
+
 /** The public card of a moment, among the recent cards. */
 export function momentCard(key: string): EventCard | undefined {
 	return findMomentCard(key, []);
@@ -302,10 +325,17 @@ function momentHere(
 	});
 }
 
-function replaceHere(card: EventCard, eventId: string, next: CardEvent | null): Promise<boolean> {
+function replaceHere(
+	card: EventCard,
+	eventId: string,
+	next: CardEvent | null,
+	ifState?: string,
+): Promise<boolean> {
 	return queue.run(`message:${card.id}`, async () => {
 		const events = storedEvents(card);
-		if (!events.some((event) => event.id === eventId)) return false;
+		const stored = events.find((event) => event.id === eventId);
+		if (!stored) return false;
+		if (ifState !== undefined && stateOf(stored) !== ifState) return false;
 		const kept = events.flatMap((event) => (event.id !== eventId ? [event] : next ? [next] : []));
 		await card.update?.({ [`flags.${SYSTEM_ID}.events`]: kept });
 		return true;
@@ -340,16 +370,26 @@ export async function addCardEvents(card: EventCard, events: CardEvent[]): Promi
 	}
 }
 
-/** Put another line in the place of one line of a card, or take it away with null. */
+/**
+ * Put another line in the place of one line of a card, or take it away with null. With `ifState`,
+ * only while the action of the stored line is in that state, so of two writes at once one wins.
+ */
 export async function replaceCardEvent(
 	card: EventCard,
 	eventId: string,
 	next: CardEvent | null,
+	{ ifState }: { ifState?: string } = {},
 ): Promise<boolean> {
 	if (!card.id) return false;
 	try {
-		if (game.user?.isActiveGM) return await replaceHere(card, eventId, next);
-		return await askGm({ op: 'replace', messageId: card.id, eventId, next });
+		if (game.user?.isActiveGM) return await replaceHere(card, eventId, next, ifState);
+		return await askGm({
+			op: 'replace',
+			messageId: card.id,
+			eventId,
+			next,
+			...(ifState !== undefined ? { ifState } : {}),
+		});
 	} catch (error) {
 		console.error('Nimble | Could not change a line of a card.', error);
 		return false;
@@ -387,7 +427,7 @@ export function registerCardEventsQuery(): void {
 			if (data.op === 'moment') return momentHere(data.moment, data.events, data.options ?? {});
 			const card = game.messages?.get(data.messageId) as unknown as EventCard | undefined;
 			if (!card) return false;
-			if (data.op === 'replace') return replaceHere(card, data.eventId, data.next);
+			if (data.op === 'replace') return replaceHere(card, data.eventId, data.next, data.ifState);
 			return appendHere(card, data.events);
 		};
 	});

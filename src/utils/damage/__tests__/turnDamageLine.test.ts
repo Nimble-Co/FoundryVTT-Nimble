@@ -116,6 +116,7 @@ describe('takeTurnDamage', () => {
 		await line.takeTurnDamage(card, damageLine('waiting'));
 
 		expect(replaceCardEvent.mock.calls[0][2]).toMatchObject({ action: { state: 'dealt' } });
+		expect(replaceCardEvent.mock.calls[0][3]).toEqual({ ifState: 'waiting' });
 		expect(replaceCardEvent.mock.invocationCallOrder[0]).toBeLessThan(
 			tessa.applyDamage.mock.invocationCallOrder[0],
 		);

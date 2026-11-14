@@ -142,7 +142,8 @@ export function turnDamageLineAfter(event: CardEvent, action: TurnDamageAction):
 
 /**
  * Deals a waiting line. The line is marked dealt first, so its Take is not live while the damage
- * goes on, and a failed write deals nothing; then it gets what the damage took, for Undo. A
+ * goes on, and a failed write deals nothing; the mark holds only while the stored line still
+ * waits, so of two at once only one deals. Then the line gets what the damage took, for Undo. A
  * dealing error puts the line back to waiting. Null when the line could not be marked.
  */
 export async function dealTurnDamageLine(
@@ -153,7 +154,9 @@ export async function dealTurnDamageLine(
 ): Promise<TurnDamageLosses | null> {
 	const action = line.action as TurnDamageAction;
 	const marked = turnDamageLineAfter(line, { ...action, state: 'dealt' });
-	if (!(await replaceCardEvent(card as never, line.id, marked))) return null;
+	if (!(await replaceCardEvent(card as never, line.id, marked, { ifState: 'waiting' }))) {
+		return null;
+	}
 	let losses: TurnDamageLosses;
 	try {
 		losses = await dealTurnDamageTo(holder, action, host);

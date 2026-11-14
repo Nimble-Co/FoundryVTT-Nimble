@@ -173,7 +173,7 @@ A blank DC means the effect has no escape. Turn on **No DC** for an escape that 
 Monsters have no skills. A monster rolls the save of the skill's stat instead, such as a DEX save for Finesse. When a save and a check use the same stat, the monster gets that save once.
 :::
 
-A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. The damage ignores armor and Defend, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
+A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. The damage ignores armor and Defend, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. As with Damage each turn, the line goes on the card before the damage is dealt. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
 
 ## Related pages
 

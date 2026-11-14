@@ -4,11 +4,14 @@ import type { CardEvent, TurnDamageAction } from '#types/cardEvent.d.ts';
 
 const addCardEvents = vi.fn(async (..._args: unknown[]) => true);
 const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
-const dealTurnDamageTo = vi.fn(async (..._args: unknown[]) => ({
-	hpLost: 7,
-	tempLost: 0,
-	woundsGained: 0,
-}));
+const dealTurnDamageLine = vi.fn(
+	async (..._args: unknown[]): Promise<{
+		hpLost: number;
+		tempLost: number;
+		woundsGained: number;
+	} | null> => ({ hpLost: 7, tempLost: 0, woundsGained: 0 }),
+);
+const cardHoldingEvent = vi.fn((_id: string, first: unknown) => first);
 const undoTurnDamage = vi.fn(async (..._args: unknown[]) => true);
 const saveRequestEvents = vi.fn((..._args: unknown[]): CardEvent[] => []);
 let automation = true;
@@ -28,17 +31,21 @@ const lines = () => addCardEvents.mock.calls.flatMap(([, events]) => events as C
 beforeEach(async () => {
 	vi.clearAllMocks();
 	saveRequestEvents.mockReturnValue([]);
+	addCardEvents.mockImplementation(async () => true);
+	cardHoldingEvent.mockImplementation((_id: string, first: unknown) => first);
+	dealTurnDamageLine.mockImplementation(async () => ({ hpLost: 7, tempLost: 0, woundsGained: 0 }));
 	automation = true;
 	card = { id: 's1', flags: { [SYSTEM_ID]: { events: [] } } };
 	vi.resetModules();
 	vi.doMock('#utils/chat/cardEvents.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		addCardEvents,
+		cardHoldingEvent,
 		replaceCardEvent,
 	}));
 	vi.doMock('#utils/damage/turnDamageLine.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
-		dealTurnDamageTo,
+		dealTurnDamageLine,
 		undoTurnDamage,
 	}));
 	vi.doMock('#utils/rolls/showDiceAnimation.js', () => ({ showDiceAnimation: async () => {} }));
@@ -122,16 +129,11 @@ describe('escapeDamageRulesOf with stacks', () => {
 });
 
 describe('dealEscapeDamage', () => {
-	it('rolls the damage on the holder, deals it, and puts the line on the roll card', async () => {
+	it('writes the line on the roll card, waiting, before it deals', async () => {
 		await module.dealEscapeDamage(card, holder as never, escaped, [
 			{ id: 'r1', formula: '4 + @key', damageType: '' },
 		]);
 
-		expect(dealTurnDamageTo).toHaveBeenCalledWith(
-			holder,
-			expect.objectContaining({ amount: 7, damageType: '', wounds: 0 }),
-			{ id: 's1' },
-		);
 		const [line] = lines();
 		expect(addCardEvents.mock.calls[0][0]).toBe(card);
 		expect(line.id).toMatch(/^escapeDamage\.Actor\.goblin\.trap\.r1\./);
@@ -140,10 +142,47 @@ describe('dealEscapeDamage', () => {
 			key: 'NIMBLE.chat.escapeDamage.cause',
 			data: { effect: 'Shadow Trap', formula: '4 + @key' },
 		});
-		expect(line.action).toMatchObject({ kind: 'turnDamage', state: 'dealt', hpLost: 7 });
+		expect(line.action).toMatchObject({ kind: 'turnDamage', state: 'waiting', amount: 7 });
+		expect(dealTurnDamageLine).toHaveBeenCalledWith(card, line, holder, { id: 's1' });
+		expect(addCardEvents.mock.invocationCallOrder[0]).toBeLessThan(
+			dealTurnDamageLine.mock.invocationCallOrder[0],
+		);
 	});
 
-	it('adds the save lines that taking damage asks for', async () => {
+	it('deals nothing when the lines cannot be written', async () => {
+		addCardEvents.mockImplementation(async () => false);
+
+		await module.dealEscapeDamage(card, holder as never, escaped, [
+			{ id: 'r1', formula: '7', damageType: '' },
+		]);
+
+		expect(dealTurnDamageLine).not.toHaveBeenCalled();
+	});
+
+	it('deals a line on the card it moved to', async () => {
+		const other = { id: 'whispered', flags: {} };
+		cardHoldingEvent.mockImplementation(() => other);
+
+		await module.dealEscapeDamage(card, holder as never, escaped, [
+			{ id: 'r1', formula: '7', damageType: '' },
+		]);
+
+		const [line] = lines();
+		expect(cardHoldingEvent).toHaveBeenCalledWith(line.id, card);
+		expect(dealTurnDamageLine).toHaveBeenCalledWith(other, line, holder, { id: 's1' });
+	});
+
+	it('deals nothing for a line no card holds', async () => {
+		cardHoldingEvent.mockImplementation(() => undefined);
+
+		await module.dealEscapeDamage(card, holder as never, escaped, [
+			{ id: 'r1', formula: '7', damageType: '' },
+		]);
+
+		expect(dealTurnDamageLine).not.toHaveBeenCalled();
+	});
+
+	it('adds the save lines that taking damage asks for, after the damage', async () => {
 		const ask = { id: 'save', kind: 'saveRequest' } as CardEvent;
 		saveRequestEvents.mockReturnValue([ask]);
 
@@ -152,7 +191,28 @@ describe('dealEscapeDamage', () => {
 		]);
 
 		expect(saveRequestEvents).toHaveBeenCalledWith(holder, 'takeDamage');
-		expect(lines()[1]).toBe(ask);
+		expect(addCardEvents).toHaveBeenLastCalledWith(card, [ask]);
+		expect(dealTurnDamageLine.mock.invocationCallOrder[0]).toBeLessThan(
+			addCardEvents.mock.invocationCallOrder[1],
+		);
+	});
+
+	it('asks for no save when the line was not marked, or the damage took nothing', async () => {
+		dealTurnDamageLine.mockImplementationOnce(async () => null);
+		dealTurnDamageLine.mockImplementationOnce(async () => ({
+			hpLost: 0,
+			tempLost: 0,
+			woundsGained: 0,
+		}));
+
+		await module.dealEscapeDamage(card, holder as never, escaped, [
+			{ id: 'r1', formula: '7', damageType: '' },
+			{ id: 'r2', formula: '3', damageType: '' },
+		]);
+
+		expect(dealTurnDamageLine).toHaveBeenCalledTimes(2);
+		expect(saveRequestEvents).not.toHaveBeenCalled();
+		expect(addCardEvents).toHaveBeenCalledTimes(1);
 	});
 
 	it('does nothing for a blank formula or a total of 0', async () => {
@@ -161,7 +221,7 @@ describe('dealEscapeDamage', () => {
 			{ id: 'r2', formula: '0', damageType: '' },
 		]);
 
-		expect(dealTurnDamageTo).not.toHaveBeenCalled();
+		expect(dealTurnDamageLine).not.toHaveBeenCalled();
 		expect(addCardEvents).not.toHaveBeenCalled();
 	});
 
@@ -172,7 +232,7 @@ describe('dealEscapeDamage', () => {
 			{ id: 'r1', formula: '7', damageType: 'fire' },
 		]);
 
-		expect(dealTurnDamageTo).not.toHaveBeenCalled();
+		expect(dealTurnDamageLine).not.toHaveBeenCalled();
 		expect((lines()[0].action as TurnDamageAction).state).toBe('waiting');
 	});
 });

@@ -1,8 +1,13 @@
 import type { CardEvent, TurnDamageAction } from '#types/cardEvent.d.ts';
 import { formulaWithStacks, stacksOf } from '#utils/actor/effectStacks.js';
-import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import {
-	dealTurnDamageTo,
+	addCardEvents,
+	cardEventsOf,
+	cardHoldingEvent,
+	replaceCardEvent,
+} from '#utils/chat/cardEvents.js';
+import {
+	dealTurnDamageLine,
 	type TurnDamageHolder,
 	turnDamageEvent,
 	undoTurnDamage,
@@ -71,7 +76,9 @@ const lineIdPrefix = (holderUuid: string, effectId: string) =>
 
 /**
  * On the active GM, after an Escape ended the effect: each rule's damage to the holder (not an
- * attack), with its line on the roll card. With Feature Effects off, the line waits for a click.
+ * attack). The lines go on the roll card, waiting, before any damage, so no damage is dealt
+ * without its line; each is then dealt as a Take click deals it. With Feature Effects off, the
+ * lines wait for a click.
  */
 export async function dealEscapeDamage(
 	card: HostCard,
@@ -98,13 +105,10 @@ export async function dealEscapeDamage(
 			sourceUuid: escaped.sourceUuid,
 			state: 'waiting',
 		};
-		const losses = isRuleAutomationEnabled()
-			? await dealTurnDamageTo(holder, action, { id: card.id })
-			: null;
 		const at = Date.now();
 		const line = turnDamageEvent({
 			id: `${lineIdPrefix(holder.uuid, escaped.effectId)}${rule.id ?? lines.length}.${at}`,
-			action: losses ? { ...action, ...losses, state: 'dealt' } : action,
+			action,
 			cause: {
 				key: 'NIMBLE.chat.escapeDamage.cause',
 				data: { effect: escaped.effectName, formula },
@@ -112,13 +116,21 @@ export async function dealEscapeDamage(
 			img: escaped.img ?? null,
 			at,
 		});
-		if (!line) continue;
-		lines.push(line);
+		if (line) lines.push(line);
+	}
+	if (lines.length < 1) return;
+	if (!(await addCardEvents(card as never, lines))) return;
+	if (!isRuleAutomationEnabled()) return;
+	const saves: CardEvent[] = [];
+	for (const line of lines) {
+		const host = cardHoldingEvent(line.id, card as never);
+		if (!host) continue;
+		const losses = await dealTurnDamageLine(host, line, holder, { id: card.id });
 		if (losses && losses.hpLost + losses.tempLost > 0) {
-			lines.push(...saveRequestEvents(holder as never, 'takeDamage'));
+			saves.push(...saveRequestEvents(holder as never, 'takeDamage'));
 		}
 	}
-	if (lines.length > 0) await addCardEvents(card as never, lines);
+	if (saves.length > 0) await addCardEvents(card as never, saves);
 }
 
 /** The escape no longer stands: give back what its damage took, and take its lines off. */
