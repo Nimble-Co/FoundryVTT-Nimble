@@ -502,7 +502,7 @@ describe('Resolute Fangs, Golden Bastion', () => {
 			useReroll: false,
 			alsoInterpose: false,
 			attackerEffectId: effect._id,
-			reminder: '',
+			reminder: 'The shield grapples 1 creature at most.',
 			useItem: false,
 			withInterpose: false,
 			wholeRound: false,

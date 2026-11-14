@@ -33,7 +33,7 @@
 				"useReroll": false,
 				"alsoInterpose": false,
 				"attackerEffectId": "d7uecrEc77Yinpyc",
-				"reminder": "",
+				"reminder": "The shield grapples 1 creature at most.",
 				"useItem": false,
 				"withInterpose": false,
 				"wholeRound": false,
