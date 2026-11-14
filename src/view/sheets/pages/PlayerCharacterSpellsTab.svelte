@@ -3,6 +3,7 @@
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import formatActivationCostLabel from '#utils/combat/formatActivationCostLabel.js';
+	import localize from '#utils/localize.js';
 	import shouldFlashDroppedItem from '#utils/documents/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/documents/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -62,14 +63,12 @@
 		}
 
 		const tooltip = carriesTrigger
-			? game.i18n.format('NIMBLE.itemConfig.reactionTriggerLine', {
-					trigger: activationCostDetails,
-				})
+			? localize('NIMBLE.itemConfig.reactionTriggerLine', { trigger: activationCostDetails })
 			: activationCostDetails;
 
 		return `${label} <i
                     class="nimble-document-card__meta-icon fa-solid fa-circle-info"
-                    data-tooltip="${tooltip}"
+                    data-tooltip="${foundry.utils.escapeHTML(tooltip)}"
                     data-tooltip-direction="UP"
                 ></i>`;
 	}
