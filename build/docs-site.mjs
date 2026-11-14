@@ -13,20 +13,21 @@ function setOutputs(outputs) {
 		fs.appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
 }
 
-function choose() {
+function chooseReleases() {
 	const args = ['release', 'list', '--limit', '1000', '--json', 'tagName,isPrerelease,isDraft'];
 	const releases = JSON.parse(execFileSync('gh', args, { encoding: 'utf-8' }));
 	const { stable, beta, ignored } = chooseDocsReleases(releases);
 
 	for (const { tag, reason } of ignored) console.log(`Ignored ${tag}: ${reason}`);
 	if (!stable) throw new Error('No Stable Release found; the site needs one.');
+	console.log(`Stable Docs: ${stable}`);
 	console.log(
 		beta ? `Beta Docs: ${beta}` : 'No Beta Release is newer than the newest Stable Release.',
 	);
 
 	const builds = [{ channel: 'stable', tag: stable }];
 	if (beta) builds.push({ channel: 'beta', tag: beta });
-	setOutputs({ stable, beta: beta ?? '', builds: JSON.stringify(builds) });
+	setOutputs({ beta: beta ?? '', builds: JSON.stringify(builds) });
 }
 
 // With no Beta Docs, /beta/ and every page under it go to the same page in the Stable Docs.
@@ -53,7 +54,7 @@ function writeBetaRedirect(siteDir) {
 }
 
 const [command, arg] = process.argv.slice(2);
-if (command === 'choose') choose();
+if (command === 'choose') chooseReleases();
 else if (command === 'beta-redirect' && arg) writeBetaRedirect(arg);
 else {
 	console.error('Usage: node build/docs-site.mjs choose | beta-redirect <site dir>');

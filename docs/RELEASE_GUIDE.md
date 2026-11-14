@@ -12,9 +12,9 @@ Instructions for creating GitHub Releases for the Nimble FoundryVTT system.
 | --- | --- |
 | A PR is opened or updated | Checks, tests and the formatter run. |
 | A PR merges into `main` | The rolling dev build (`latest-dev-1`, system id `nimble-dev`) is rebuilt. Nothing is published to Foundry, and the docs are not deployed. |
-| A beta release is published | `nimble.zip` and `system.json` are built and attached to the release. Nothing is published to Foundry. The docs are deployed, and the beta docs go up at `/beta/`. |
+| A pre-release is published | `nimble.zip` and `system.json` are built and attached to the release. Nothing is published to Foundry. The docs are deployed, and a beta release (`X.Y.Z-beta.N`) puts its beta docs up at `/beta/`. |
 | A release is published | The assets are built and attached, the version is published to the Foundry website, and the docs are deployed. |
-| A release is deleted | The docs are deployed again without it. |
+| A release is deleted and its tag is kept | The docs are deployed again without it. If you delete the tag too, run **Deploy Docs** by hand. |
 
 The tag is the only place the version is set. The release build writes the version and the
 download URL into `system.json` from the tag, so no commit bumps the version in
@@ -73,7 +73,7 @@ Each docs deploy builds the whole site from the published releases, whatever sta
 A pre-release with any other tag, such as `0.11.0-rc.1`, adds no beta docs. The workflow
 log says which releases it skipped and why.
 
-To build the site again, for example after you delete a release, run **Deploy Docs** from
+To build the site again, for example after you delete a release and its tag, run **Deploy Docs** from
 the Actions tab on `main`.
 
 ## Writing the Notes

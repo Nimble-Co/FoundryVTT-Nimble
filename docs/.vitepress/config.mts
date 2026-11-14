@@ -4,12 +4,13 @@ export interface NimbleThemeConfig extends DefaultTheme.Config {
 	betaBanner?: { version: string; stableUrl: string };
 }
 
-const SITE_URL = 'https://nimble-co.github.io/FoundryVTT-Nimble/';
+const SITE_PATH = '/FoundryVTT-Nimble/';
+const SITE_URL = `https://nimble-co.github.io${SITE_PATH}`;
 
 // The deploy workflow sets these; a local build is the Stable Docs with no beta.
 const isBeta = process.env.DOCS_CHANNEL === 'beta';
 const betaVersion = process.env.DOCS_BETA_VERSION || '';
-const base = isBeta ? '/FoundryVTT-Nimble/beta/' : '/FoundryVTT-Nimble/';
+const base = isBeta ? `${SITE_PATH}beta/` : SITE_PATH;
 
 const betaHead: HeadConfig[] = isBeta ? [['meta', { name: 'robots', content: 'noindex' }]] : [];
 
