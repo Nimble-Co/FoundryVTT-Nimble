@@ -8,9 +8,17 @@ These are the steps that you add on the **On use** sub-tab of an item's **Activa
 
 ## Damage
 
-A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. **Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only. Three switches refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
+A damage entry has a **Roll Formula** (dice plus references like `@strength` or `@key`), a **Damage Type** (fire, slashing, and so on), and a **Target Disposition** dropdown (Any / Friendly / Neutral / Hostile / Secret) that tells the chat card who the roll is meant for. Three switches refine it: **Ignore Armor**, **Only Damage Hostile Actors**, and **Roll Damage From Card**.
 
-**Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place; the message author and the GM can press it, and the result then behaves like any other damage packet. It appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
+::: details Target Disposition Any, and no choice
+**Any** means no preference: the Apply Damage button gets no hint about the targets. Picking Any is still a choice, so the entry keeps its own box on the chat card even when nothing else shows its roll. Leave the dropdown alone and a damage entry with no outcome child under On Hit shows on a miss only.
+:::
+
+**Roll Damage From Card** is for damage that lands on a later trigger than the activation itself, such as a trap that springs on the next creature to step adjacent. The card posts with the damage unrolled and shows a **Roll Damage** button in its place.
+
+::: details Who rolls it, and where it shows
+The message author and the GM can press **Roll Damage**, and the result then behaves like any other damage packet. The switch appears on top-level damage entries only, because damage nested under an outcome already waits on that outcome. Can Miss and Can Crit still apply to the deferred roll.
+:::
 
 The *first* damage entry in the list is special: it is the attack roll. It alone shows the **Can Miss** and **Can Crit** switches, and its result decides whether the whole card reads as a hit, a miss, or a critical hit.
 
@@ -20,10 +28,14 @@ Even with Can Crit on, some attacks never crit: template (AoE) attacks, attacks 
 
 Under a damage entry you get three outcome buckets: **On Critical Hit**, **On Hit**, and **On Miss**. Each bucket can hold child effects: more damage, a damage outcome, healing, an Apply Effect, an End Conditions, a Move, a Wound, a saving throw, or a note.
 
+- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit.
+- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
+
+::: details A crit card, and outcomes at every depth
 A critical hit is also a hit, so a crit card shows the children of both **On Critical Hit** and **On Hit**. The Damage Outcome is the one exception. If both buckets hold one, only the On Critical Hit outcome applies. Two outcomes would apply the same roll two times.
 
-- **Damage Outcome** declares what the parent roll deals in that bucket: **Full Damage** or **Half Damage**. The stock longsword, for example, has a Damage Outcome of Full Damage under On Hit. A damage entry nested in a bucket can hold its own Damage Outcome, and the rule is the same at every depth: the roll shows once, through that outcome.
-- **Note**: a text callout on the chat card with a style of **General**, **Flavor**, **Reminder**, or **Warning**.
+A damage entry nested in a bucket can hold its own Damage Outcome, and the rule is the same at every depth: the roll shows once, through that outcome.
+:::
 
 ## Healing
 
@@ -52,7 +64,23 @@ The link holds only while the temp HP are that effect's. It ends when the temp H
 
 ## Move
 
-A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag. Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it. **Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to"; turn it off for a move for free of a set distance. It changes only the words on the card. The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. It leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. Nothing enforces the direction, and the rules give a push no particular shape. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it. With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
+A move for free or Forced Movement for a creature. The card watches that creature's next drag: the drag counts as that movement, and the ruler shows how far it can go. There is nothing to click, and nothing stops a longer drag.
+
+Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance** as a formula against the data of the feature's user: `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The distance is worked out once, when the card is posted. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so; Forced Movement always ignores it.
+
+The card shows the **Direction**: away from or toward the feature's user, or in any direction for Forced Movement. Nothing enforces the direction. Placed under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome; a critical hit is also a hit. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
+
+::: details How the card words the move
+**Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to"; turn it off for a move for free of a set distance. It changes only the words on the card.
+
+The card leaves the direction out when only the user moves. A move for free that ignores difficult terrain says so. The rules give a push no particular shape.
+:::
+
+::: details Under a save, and with the automation off
+The card does not record the saving throw of each target, so under **On Failed Save** or **On Passed Save** the card shows the distance for each target, but the drag is not watched. Move the token by hand when the save calls for it.
+
+With the Pushes, Pulls and Moves for Free automation toggle off, the card shows the distance as text and the token is dragged as usual.
+:::
 
 ## Wound
 

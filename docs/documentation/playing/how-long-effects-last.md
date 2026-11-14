@@ -10,7 +10,11 @@ A condition, or any other effect, can have a **Lasts Until**: one or more moment
 
 - **A turn.** "Until the end of their next turn" follows the turns of the creature with the effect. "Until the start of your next turn" follows the turns of the creature that applied it. "Their next turn" is the first turn that starts after the effect goes on, so an effect applied in their own turn lasts through their next one.
 - **A time.** "For 1 minute" follows world time. "For 1 round" lasts until the same place in the turn order one round later; applied at Initiative, it lasts all of round 1.
-- **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. "Until the 2nd combat ends" lasts through two combats of the creature; the combat in progress counts as the 1st. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
+- **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. "Until the 2nd combat ends" lasts through two combats of the creature; the combat in progress counts as the 1st.
+
+::: details What counts as an attack or a move
+An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
+:::
 
 Some conditions have a Lasts Until of their own, which they keep when nothing else gives them one:
 
@@ -20,7 +24,11 @@ Some conditions have a Lasts Until of their own, which they keep when nothing el
 
 **Charged** goes on a creature that takes lightning damage, for 1 minute.
 
-When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. A combat that never started (deleted before round 1) ends only the effects that went on in it. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
+When an effect has more than one moment, the first one to happen ends it. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
+
+::: details Turn moments out of combat, and a combat that never started
+A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. A combat that never started (deleted before round 1) ends only the effects that went on in it.
+:::
 
 On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
 ## The same condition again

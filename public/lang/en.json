@@ -3625,7 +3625,7 @@
 				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
 			},
 			"zeroHpAtEnd": {
-				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it is not an end. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
+				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
