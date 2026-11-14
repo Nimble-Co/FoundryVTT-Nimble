@@ -56,6 +56,25 @@ export function effectEndsAt(
 	return coreDurationEndsAt(effect, check, combat);
 }
 
+/**
+ * Which end of `effect` `check` reaches: a Lasts Until moment (by its index), a Minor Status at the
+ * end of one combat, or the core duration.
+ */
+export function reachedEndKey(
+	effect: TimedEffect,
+	check: LastsUntilCheck,
+	combat?: Combat | null,
+): string {
+	if (!(effect.parent instanceof Actor)) return 'duration';
+	const subject = effectSubject(effect, check, combat ?? undefined);
+	const index = (effect.lastsUntil ?? []).findIndex((moment, at) =>
+		momentReached(moment, subject, check, at),
+	);
+	if (index >= 0) return `lastsUntil${index}`;
+	if (check.type === 'combatEnd' && effect.isMinor) return `minor-${check.combatId}`;
+	return 'duration';
+}
+
 /** The Lasts Until moment of `effect` that `check` reaches, as plain data. Null when none does. */
 export function endingMoment(
 	effect: TimedEffect,

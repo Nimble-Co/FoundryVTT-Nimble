@@ -52,7 +52,7 @@ function onTurn(type: TurnMomentType) {
 			const idle = effectsInactiveAt(combat, seat, round);
 			const reason = eventHeading('inactiveRound', { name: combatant.name });
 			if (isRuleAutomationEnabled()) void endEffects(idle, { ...moment, reason });
-			else void waitEndEffects(idle, { ...moment, reason }, undefined, { once: true });
+			else void waitEndEffects(idle, { ...moment, reason }, undefined, { once: 'inactiveRound' });
 		}
 	};
 }

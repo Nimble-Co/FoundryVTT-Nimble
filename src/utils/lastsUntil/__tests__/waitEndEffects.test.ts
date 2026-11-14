@@ -18,7 +18,9 @@ vi.doMock('#utils/dicePool/emptyPoolLine.js', () => ({
 	END_LINES_OPTION: 'nimbleEndLines',
 	emptyPoolEvents,
 }));
-const { endEffects, endEffectsAt, waitEndEffects } = await import('../endEffects.js');
+const { endEffects, endEffectsAt, undoEndedEffect, waitEndEffects } = await import(
+	'../endEffects.js'
+);
 
 const UNTIL_THEY_ATTACK: Moment = {
 	kind: 'event',
@@ -212,7 +214,20 @@ describe('waitEndEffects', () => {
 		});
 
 		expect(create).toHaveBeenCalledTimes(1);
-		expect(a.update).toHaveBeenCalledWith({ [`flags.${SYSTEM_ID}.endWaits`]: true });
+		expect(a.update).toHaveBeenCalledWith({ [`flags.${SYSTEM_ID}.endWaits.moment`]: true });
+	});
+
+	it('each one-time moment gives its own line once', async () => {
+		const a = addEffect(goblin, 'a');
+		const turn = { key: 'turn:1', heading: { key: 'Turn' } };
+
+		await waitEndEffects([a], turn, undefined, { once: 'inactiveRound' });
+		await waitEndEffects([a], turn, undefined, { once: 'inactiveRound' });
+		await waitEndEffects([a], { key: 'turn:2', heading: { key: 'Turn' } }, undefined, {
+			once: true,
+		});
+
+		expect(create).toHaveBeenCalledTimes(2);
 	});
 
 	it('skips an effect that is gone', async () => {
@@ -238,6 +253,20 @@ describe('endEffectsAt with Feature Effects off', () => {
 		expect(linesOf(createdCard())[0].kind).toBe('waitingEnd');
 	});
 
+	it('a Minor Status that gave the line of its moment still gives one at combat end', async () => {
+		const a = addEffect(goblin, 'a');
+		Object.assign(a, { isMinor: true, start: { combat: 'combat1', time: 0 } });
+		const combatEnd: LastsUntilCheck = { type: 'combatEnd', combatId: 'combat1', started: true };
+
+		await endEffectsAt(attackBy(goblin.holder), { key: 'k1', heading: { key: 'Time passed' } });
+		await endEffectsAt(combatEnd, { key: 'k2', heading: { key: 'Combat ends' } });
+		await endEffectsAt(combatEnd, { key: 'k3', heading: { key: 'Combat ends' } });
+
+		expect(create).toHaveBeenCalledTimes(2);
+		expect(linesOf(createdCard(1))[0].kind).toBe('waitingEnd');
+		expect(a.flags[SYSTEM_ID].endWaits).toEqual({ lastsUntil0: true, 'minor-combat1': true });
+	});
+
 	it('with Feature Effects on, ends as before', async () => {
 		automation = true;
 		addEffect(goblin, 'a');
@@ -245,6 +274,38 @@ describe('endEffectsAt with Feature Effects off', () => {
 		await endEffectsAt(attackBy(goblin.holder), { key: 'k', heading: { key: 'Time passed' } });
 
 		expect(goblin.holder.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['a']);
+	});
+});
+
+describe('undoEndedEffect', () => {
+	it('the copy that comes back gives its waiting lines again', async () => {
+		const created = vi.fn(async (..._args: unknown[]) => ({}));
+		const implementation = (ActiveEffect as unknown as { implementation?: unknown }).implementation;
+		Object.assign(ActiveEffect, { implementation: { create: created } });
+		const effect = {
+			_id: 'a',
+			flags: { [SYSTEM_ID]: { endWaits: { lastsUntil0: true }, turnsSeen: [1] } },
+		};
+
+		try {
+			await undoEndedEffect({
+				effectId: 'a',
+				holderUuid: 'Actor.goblin',
+				holderName: 'Goblin',
+				name: 'Effect a',
+				img: '',
+				sourceName: '',
+				effect,
+			});
+		} finally {
+			Object.assign(ActiveEffect, { implementation });
+		}
+
+		expect(created).toHaveBeenCalledWith(
+			{ _id: 'a', flags: { [SYSTEM_ID]: { turnsSeen: [1] } } },
+			expect.objectContaining({ parent: goblin.holder, keepId: true }),
+		);
+		expect(effect.flags[SYSTEM_ID].endWaits).toEqual({ lastsUntil0: true });
 	});
 });
 

@@ -75,7 +75,7 @@ describe('an inactive round with Feature Effects off', () => {
 				reason: 'inactiveRound:Goblin',
 			},
 			undefined,
-			{ once: true },
+			{ once: 'inactiveRound' },
 		);
 	});
 });
