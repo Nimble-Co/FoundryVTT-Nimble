@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const VICIOUS_ITEM_SOURCE_IDS = new Set([
 	'Compendium.nimble.weapons.Item.YjGUoWybYcwxI2Ky', // Sling
@@ -28,6 +28,10 @@ class Migration012ViciousExplosionDamage extends MigrationBase {
 	static override readonly version = 12;
 
 	override readonly version = Migration012ViciousExplosionDamage.version;
+
+	override readonly title = 'Vicious explosion damage';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'object' && source.type !== 'spell') return;

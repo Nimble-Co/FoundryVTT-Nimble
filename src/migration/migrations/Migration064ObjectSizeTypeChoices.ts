@@ -1,5 +1,5 @@
 import { OBJECT_SIZE_TYPES } from '../../models/item/ObjectDataModel.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const VALID_SIZE_TYPES = new Set<string>(OBJECT_SIZE_TYPES);
 
@@ -13,6 +13,10 @@ class Migration064ObjectSizeTypeChoices extends MigrationBase {
 	static override readonly version = 64;
 
 	override readonly version = Migration064ObjectSizeTypeChoices.version;
+
+	override readonly title = 'Object size type values';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'object') return;

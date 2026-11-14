@@ -1,5 +1,5 @@
 import { isCompendiumId, SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 
@@ -429,6 +429,10 @@ class Migration078DefendFollowups extends MigrationBase {
 	static override readonly version = 78;
 
 	override readonly version = Migration078DefendFollowups.version;
+
+	override readonly title = 'Defend and Aura Reach fixes';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		const system = source?.system;

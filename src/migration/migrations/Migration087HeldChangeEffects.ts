@@ -1,7 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { HeldChangeEnd } from '#types/heldChange.d.ts';
 import { heldChangeMoments } from '#utils/heldChange/heldChange.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /** The flag a Held Change had before it was a Held Roll rule. */
 interface OldHeldChange {
@@ -118,6 +118,10 @@ class Migration087HeldChangeEffects extends MigrationBase {
 	static override readonly version = 87;
 
 	override readonly version = Migration087HeldChangeEffects.version;
+
+	override readonly title = 'Held changes become Held Roll rules';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async migrate(): Promise<void> {
 		for (const actor of game.actors ?? []) await migrateHolder(actor as unknown as EffectHolder);

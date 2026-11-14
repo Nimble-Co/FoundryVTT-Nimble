@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Generate a Foundry-compatible 16-character random ID
@@ -32,6 +32,10 @@ class Migration001AttackSequenceItems extends MigrationBase {
 	static override readonly version = 1;
 
 	override readonly version = Migration001AttackSequenceItems.version;
+
+	override readonly title = 'Attack Sequence items';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		// Only process actors that have embedded items (monsters, characters, etc.)

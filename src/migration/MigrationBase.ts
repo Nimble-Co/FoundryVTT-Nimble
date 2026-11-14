@@ -1,7 +1,23 @@
+/**
+ * `structure` changes the shape of the data and always runs. `content` changes only what a
+ * document says or does, so the GM can keep a Compendium Copy out of it.
+ */
+type MigrationKind = 'structure' | 'content';
+
+/** The document a hook runs inside: the actor, item or message the runner migrates as a whole. */
+interface MigrationContext {
+	uuid: string | null;
+}
+
 abstract class MigrationBase {
 	static readonly version: number;
 
 	readonly version: number = MigrationBase.version;
+
+	/** Shown to the GM in the World Migration window. Not translated. */
+	abstract readonly title: string;
+
+	abstract readonly kind: MigrationKind;
 
 	requiresFlush = false;
 
@@ -31,3 +47,4 @@ abstract class MigrationBase {
 }
 
 export { MigrationBase };
+export type { MigrationContext, MigrationKind };

@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Migration to convert `meleeDamageBonus` rules to the generalized `damageBonus` type.
@@ -16,6 +16,10 @@ class Migration016DamageBonus extends MigrationBase {
 	static override readonly version = 16;
 
 	override readonly version = Migration016DamageBonus.version;
+
+	override readonly title = 'Melee bonus becomes Damage Bonus rule';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		const rules: any[] | undefined = source.system?.rules;

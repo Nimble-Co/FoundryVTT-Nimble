@@ -1,5 +1,5 @@
 import { isCompendiumId, toPackSourceId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 
@@ -1860,6 +1860,10 @@ class Migration076StoredResults extends MigrationBase {
 	static override readonly version = 76;
 
 	override readonly version = Migration076StoredResults.version;
+
+	override readonly title = 'Hunter, Rampage and monster attacks';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any, parent?: any): Promise<void> {
 		const system = source?.system;

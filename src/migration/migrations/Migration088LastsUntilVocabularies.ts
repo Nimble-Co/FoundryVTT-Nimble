@@ -8,7 +8,7 @@ import {
 	type LastsUntilEvent,
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown>;
 type NodeSource = Record<string, unknown>;
@@ -825,6 +825,10 @@ class Migration088LastsUntilVocabularies extends MigrationBase {
 	static override readonly version = 88;
 
 	override readonly version = Migration088LastsUntilVocabularies.version;
+
+	override readonly title = 'Lasts Until choices';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	#worldToggles: ToggleIndex | null = null;
 

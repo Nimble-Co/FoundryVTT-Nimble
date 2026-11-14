@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const DEATH_BLOW_SOURCE_IDS = new Set([
 	'Compendium.nimble.class-features.Item.Dh6d5Ck3AAiRwQLB',
@@ -45,6 +45,10 @@ class Migration034DeathBlowCardOffer extends MigrationBase {
 	static override readonly version = 34;
 
 	override readonly version = Migration034DeathBlowCardOffer.version;
+
+	override readonly title = 'Death Blow on crit cards';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

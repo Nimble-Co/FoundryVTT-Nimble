@@ -1,5 +1,5 @@
 import { toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -98,6 +98,10 @@ class Migration052ShadowmancerPilferedPower extends MigrationBase {
 	static override readonly version = 52;
 
 	override readonly version = Migration052ShadowmancerPilferedPower.version;
+
+	override readonly title = 'Shadowmancer Pilfered Power';
+
+	override readonly kind: MigrationKind = 'content';
 
 	/**
 	 * Clears the mana the Shadowmancer never had.

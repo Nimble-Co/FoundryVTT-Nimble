@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -228,6 +228,10 @@ class Migration053PackRuleCorrections extends MigrationBase {
 	static override readonly version = 53;
 
 	override readonly version = Migration053PackRuleCorrections.version;
+
+	override readonly title = 'Feature rules match the book';
+
+	override readonly kind: MigrationKind = 'content';
 
 	/**
 	 * A compendium id identifies the feature outright, so a same-named feature from

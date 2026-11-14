@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -185,6 +185,10 @@ class Migration039CommanderEncounterGate extends MigrationBase {
 	static override readonly version = 39;
 
 	override readonly version = Migration039CommanderEncounterGate.version;
+
+	override readonly title = 'Commander capstones once per encounter';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

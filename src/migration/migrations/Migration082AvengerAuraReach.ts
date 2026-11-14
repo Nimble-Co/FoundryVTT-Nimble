@@ -1,5 +1,5 @@
 import { isCompendiumId, SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 
@@ -29,6 +29,10 @@ class Migration082AvengerAuraReach extends MigrationBase {
 	static override readonly version = 82;
 
 	override readonly version = Migration082AvengerAuraReach.version;
+
+	override readonly title = 'Avenger reach follows the aura';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature' || !this.#isAvenger(source)) return;

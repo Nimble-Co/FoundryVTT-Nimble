@@ -2,7 +2,7 @@ import {
 	conditionsToItemEffects,
 	type ItemEffectSource,
 } from '#utils/treeManipulation/conditionsToItemEffects.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 interface TreeNode {
 	type?: string;
@@ -88,6 +88,10 @@ class Migration086ApplyEffectNodes extends MigrationBase {
 	static override readonly version = 86;
 
 	override readonly version = Migration086ApplyEffectNodes.version;
+
+	override readonly title = 'Condition steps become Apply Effect steps';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		const tree = source?.system?.activation?.effects;

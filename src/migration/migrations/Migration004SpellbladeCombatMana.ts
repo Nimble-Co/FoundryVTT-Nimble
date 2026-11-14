@@ -5,7 +5,7 @@ import {
 	getCombatManaGrantTotalForInitiative,
 	primeActorCombatManaSourceRules,
 } from '../../utils/actor/combatManaRules.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SPELLBLADE_RULE_ID = 'spellblade-combat-mana';
 const SPELLBLADE_SOURCE_SUFFIX = '.item.lbvh28xjvxihffst';
@@ -120,6 +120,10 @@ class Migration004SpellbladeCombatMana extends MigrationBase {
 	static override readonly version = 4;
 
 	override readonly version = Migration004SpellbladeCombatMana.version;
+
+	override readonly title = 'Spellblade Combat Mana';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (!isSpellbladeSubclass(source)) return;

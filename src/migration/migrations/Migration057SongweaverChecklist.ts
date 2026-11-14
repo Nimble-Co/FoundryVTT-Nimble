@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
 const CLASS_IDENTIFIER = 'songweaver';
@@ -530,6 +530,10 @@ class Migration057SongweaverChecklist extends MigrationBase {
 	static override readonly version = 57;
 
 	override readonly version = Migration057SongweaverChecklist.version;
+
+	override readonly title = 'Songweaver checklist features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature') return;

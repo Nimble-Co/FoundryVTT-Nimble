@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 type NodeSource = Record<string, unknown> & { id?: unknown };
@@ -467,6 +467,10 @@ class Migration037CommanderPackRepair extends MigrationBase {
 	static override readonly version = 37;
 
 	override readonly version = Migration037CommanderPackRepair.version;
+
+	override readonly title = 'Commander feature cards';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

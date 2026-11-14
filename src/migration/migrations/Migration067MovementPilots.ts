@@ -1,5 +1,5 @@
 import { isCompendiumId, toPackSourceId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 type EffectSource = Record<string, unknown> & { id?: unknown };
@@ -300,6 +300,10 @@ class Migration067MovementPilots extends MigrationBase {
 	static override readonly version = 67;
 
 	override readonly version = Migration067MovementPilots.version;
+
+	override readonly title = 'Class feature movement';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature' || !source.system) return;

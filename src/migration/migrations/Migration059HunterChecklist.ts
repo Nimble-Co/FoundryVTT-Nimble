@@ -74,6 +74,8 @@ class Migration059HunterChecklist extends ChecklistMigrationBase {
 
 	override readonly version = Migration059HunterChecklist.version;
 
+	override readonly title = 'Hunter checklist features';
+
 	protected override readonly classIdentifier = 'hunter';
 
 	protected override readonly passName = 'the Hunter pass';

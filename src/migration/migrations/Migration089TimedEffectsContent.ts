@@ -4,7 +4,7 @@ import {
 	toInstalledId,
 	toPackSourceId,
 } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type Json = Record<string, unknown>;
 
@@ -602,6 +602,10 @@ class Migration089TimedEffectsContent extends MigrationBase {
 	static override readonly version = 89;
 
 	override readonly version = Migration089TimedEffectsContent.version;
+
+	override readonly title = 'Timed effects content';
+
+	override readonly kind: MigrationKind = 'content';
 
 	#packSources = new Map<string, Promise<Json | null>>();
 

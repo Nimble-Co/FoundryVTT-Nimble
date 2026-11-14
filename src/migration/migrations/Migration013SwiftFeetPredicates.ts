@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SWIFT_FEET_SOURCE_ID = 'Compendium.nimble.class-features.Item.idKzxuxGapLyV4sP';
 
@@ -46,6 +46,10 @@ class Migration013SwiftFeetPredicates extends MigrationBase {
 	static override readonly version = 13;
 
 	override readonly version = Migration013SwiftFeetPredicates.version;
+
+	override readonly title = 'Swift Feet unarmored bonuses';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process feature items

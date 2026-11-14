@@ -149,6 +149,8 @@ class Migration058CheatChecklist extends ChecklistMigrationBase {
 
 	override readonly version = Migration058CheatChecklist.version;
 
+	override readonly title = 'The Cheat checklist features';
+
 	protected override readonly classIdentifier = 'the-cheat';
 
 	protected override readonly passName = 'the Cheat pass';

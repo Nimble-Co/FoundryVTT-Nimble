@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Gives a free reaction the one cost shape: `type: 'action'` with `quantity: 0`
@@ -10,6 +10,10 @@ class Migration083FreeReactionCost extends MigrationBase {
 	static override readonly version = 83;
 
 	override readonly version = Migration083FreeReactionCost.version;
+
+	override readonly title = 'Free reaction cost';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		const cost = source?.system?.activation?.cost;

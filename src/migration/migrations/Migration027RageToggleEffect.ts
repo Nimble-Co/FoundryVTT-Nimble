@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const RAGE_SOURCE_ID = 'Compendium.nimble.class-features.Item.GjPt8evcIoVuQ6zg';
 const DEEP_RAGE_SOURCE_ID = 'Compendium.nimble.class-features.Item.Mbiu4fS3NVbXGVFq';
@@ -62,6 +62,10 @@ class Migration027RageToggleEffect extends MigrationBase {
 	static override readonly version = 27;
 
 	override readonly version = Migration027RageToggleEffect.version;
+
+	override readonly title = 'Rage and Deep Rage toggle';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

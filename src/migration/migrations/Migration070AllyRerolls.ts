@@ -1,5 +1,5 @@
 import { isCompendiumId, toPackSourceId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 
@@ -262,6 +262,10 @@ class Migration070AllyRerolls extends MigrationBase {
 	static override readonly version = 70;
 
 	override readonly version = Migration070AllyRerolls.version;
+
+	override readonly title = 'Ally rerolls and hit results';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		const system = source?.system;

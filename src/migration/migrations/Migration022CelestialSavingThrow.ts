@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const CELESTIAL_SOURCE_ID = 'Compendium.nimble.nimble-ancestries.Item.puHj7KBjvyb5mVHA';
 
@@ -29,6 +29,10 @@ class Migration022CelestialSavingThrow extends MigrationBase {
 	static override readonly version = 22;
 
 	override readonly version = Migration022CelestialSavingThrow.version;
+
+	override readonly title = 'Celestial Highborn saves';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;

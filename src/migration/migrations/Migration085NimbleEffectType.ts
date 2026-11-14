@@ -3,7 +3,7 @@ import {
 	LEGACY_CONDITION_EFFECT_TYPE,
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 interface DeltaEffectSource {
 	_id: string;
@@ -66,6 +66,10 @@ class Migration085NimbleEffectType extends MigrationBase {
 	static override readonly version = 85;
 
 	override readonly version = Migration085NimbleEffectType.version;
+
+	override readonly title = 'Nimble effect type';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	// The runner does not call updateEffect for the effects of an actor's items.
 	override async updateItem(source: any): Promise<void> {

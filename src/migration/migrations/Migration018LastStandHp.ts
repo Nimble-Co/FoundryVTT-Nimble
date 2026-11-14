@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Canonical Last Stand HP buffer values for the legendary monsters shipped in
@@ -53,6 +53,10 @@ class Migration018LastStandHp extends MigrationBase {
 	static override readonly version = 18;
 
 	override readonly version = Migration018LastStandHp.version;
+
+	override readonly title = 'Last Stand HP on the feature';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		const items = Array.isArray(source.items) ? source.items : null;
