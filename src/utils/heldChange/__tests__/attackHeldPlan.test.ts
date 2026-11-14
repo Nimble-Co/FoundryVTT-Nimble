@@ -49,6 +49,7 @@ function keptChangeOf(holder: ReturnType<typeof creature>, effectId: string): He
 		meleeOnly: false,
 		onlyFromUuid: null,
 		effectId,
+		ruleId: 'r1',
 		holderUuid: holder.uuid,
 	};
 }

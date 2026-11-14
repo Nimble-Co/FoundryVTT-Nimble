@@ -51,6 +51,7 @@ export function heldChangeMoments(ends: HeldChangeEnd): Moment[] {
 }
 
 interface HeldRollSource {
+	id?: string;
 	type?: string;
 	disabled?: boolean;
 	heldKind?: HeldChangeData['kind'];
@@ -132,7 +133,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 		const origin = originOf(effect);
 		const stacks = stacksOf(effect.system)?.count ?? 1;
 		const messageId = effect.flags?.[SYSTEM_ID]?.[MESSAGE_FLAG];
-		for (const rule of rules) {
+		for (const [index, rule] of rules.entries()) {
 			held.push({
 				kind: rule.heldKind ?? 'advantage',
 				value: Number(rule.value ?? 1),
@@ -147,6 +148,7 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				...(rule.formula ? { formula: formulaWithStacks(rule.formula, stacks) } : {}),
 				...(typeof messageId === 'string' ? { sourceMessageId: messageId } : {}),
 				effectId: effect.id,
+				ruleId: rule.id || String(index),
 				holderUuid: holder?.uuid ?? '',
 			});
 		}
@@ -290,7 +292,7 @@ function lineText(change: HeldChange): string {
 /** The read-only lines of a roll window. */
 export function heldLines(held: HeldChange[]) {
 	return held.map((change) => ({
-		key: `${change.holderUuid}.${change.effectId}`,
+		key: `${change.holderUuid}.${change.effectId}.${change.ruleId}`,
 		text: lineText(change),
 		source: localize(
 			`NIMBLE.heldChange.line.${change.spentBy === 'oneRoll' ? 'spends' : 'stays'}`,
@@ -538,14 +540,19 @@ function usedUpLine(change: HeldChange, cause: string): CardEvent | null {
 /**
  * Removes what a roll spent. A change that stays for every roll is not spent. With `lines`, each
  * spent change is an ended line, with Undo, on the card of the use; `cause` says what used it.
+ * Two spent rules of one effect delete it once.
  */
 export async function spendHeldChanges(
 	held: HeldChange[],
 	lines: SpendLines | null = null,
 	cause = USED_BY_ROLL,
 ): Promise<void> {
+	const spent = new Set<string>();
 	for (const change of held) {
 		if (change.spentBy !== 'oneRoll') continue;
+		const effectKey = `${change.holderUuid}.${change.effectId}`;
+		if (spent.has(effectKey)) continue;
+		spent.add(effectKey);
 		const holder = fromUuidSync(change.holderUuid) as unknown as Holder | null;
 		if (!holder) continue;
 		const line = lines ? usedUpLine(change, cause) : null;

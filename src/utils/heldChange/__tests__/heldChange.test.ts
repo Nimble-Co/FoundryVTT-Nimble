@@ -432,6 +432,18 @@ describe('spendHeldChanges', () => {
 		);
 	});
 
+	it('deletes an effect once when the roll spends two of its rules', async () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+		target.effects[0].system.rules[1].heldKind = 'primaryDie';
+
+		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held).toHaveLength(2);
+		await spendHeldChanges(held);
+
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+	});
+
 	it('asks the GM when the player does not own the holder', async () => {
 		const target = creature('T', [{}], false);
 		const query = vi.fn(async () => true);
@@ -651,16 +663,41 @@ describe('heldLines', () => {
 
 		expect(heldLines(held)).toEqual([
 			{
-				key: 'T.e0',
+				key: 'T.e0.e0-rule',
 				text: 'Create an Opening: +1 to Primary Die',
 				source: 'From Mira. This roll spends it.',
 			},
 			{
-				key: 'T.e1',
+				key: 'T.e1.e1-rule',
 				text: 'Create an Opening: -1 to Primary Die',
 				source: 'From Mira. It stays until its time ends.',
 			},
 		]);
+	});
+
+	it('gives each Held Roll rule of one effect its own line and key', () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+
+		const lines = heldLines(
+			heldChangesForAttack({ attacker: creature('A'), target, area: false }),
+		);
+
+		expect(lines.map((line) => line.text)).toEqual([
+			'Create an Opening: +1 to Primary Die',
+			'Create an Opening: +2 to Primary Die',
+		]);
+		expect(new Set(lines.map((line) => line.key)).size).toBe(2);
+	});
+
+	it('keys a rule with no id by its place on the effect', () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+		for (const rule of target.effects[0].system.rules) (rule as { id?: string }).id = '';
+
+		const lines = heldLines(
+			heldChangesForAttack({ attacker: creature('A'), target, area: false }),
+		);
+
+		expect(lines.map((line) => line.key)).toEqual(['T.e0.0', 'T.e0.1']);
 	});
 
 	function lineOf(spec: HeldSpec): string {
