@@ -61,7 +61,7 @@ Some conditions come bundled together, and the system tracks the relationships f
 
 ## Negative conditions
 
-A negative condition harms its holder. An End Conditions step (a reaction that "ends all negative conditions", for example) ends each effect that gives one. All conditions are negative except the states the system sets (Bloodied, Dying, Dead, Wounded, Last Stand, Concentrating) and the ones that help or do nothing on their own (Invisible, Riding, Latched). Grappled and Swallowed are negative. A Hampered that Dazed, Grappled, Prone, Slowed or Restrained gives goes when that condition goes. A custom condition is negative unless its **Negative** box is off. The [Conditions Reference](../reference/conditions.md) marks each negative condition.
+A negative condition harms its holder. An End Conditions step (a reaction that "ends all negative conditions", for example) ends each effect that gives one. All conditions are negative except the states the system sets (Bloodied, Dying, Dead, Wounded, Last Stand, Concentrating) and the ones that help or do nothing on their own (Invisible, Riding, Latched). Grappled and Swallowed are negative. With **Linked Conditions** on, a Hampered beside Dazed, Grappled, Prone, Slowed or Restrained goes when that condition goes. With it off, the step ends that Hampered too. A custom condition is negative unless its **Negative** box is off. The [Conditions Reference](../reference/conditions.md) marks each negative condition.
 
 ## How long a condition lasts
 

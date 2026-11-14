@@ -1,4 +1,5 @@
 import type { EndConditionsNode } from '#types/effectTree.js';
+import { isDerivedConditionsAutomationEnabled } from '../../settings/automationSettings.js';
 
 /** States the system sets from HP, Wounds and spells: an End Conditions step never ends them. */
 export const NEVER_ENDED = new Set([
@@ -39,8 +40,9 @@ function matches(status: string, node: EndConditionsNode): boolean {
 	return countsAs(status).some((id) => node.conditions.includes(id));
 }
 
-/** A condition that another condition on the creature gives goes when that one goes. */
+/** With Linked Conditions on, a condition that another condition gives goes when that one goes. */
 function givenByAnother(status: string, held: ReadonlySet<string>): boolean {
+	if (!isDerivedConditionsAutomationEnabled()) return false;
 	const triggers = config().conditionTriggerRelationships?.[status]?.triggeredBy ?? [];
 	return triggers.some((trigger) => held.has(trigger));
 }

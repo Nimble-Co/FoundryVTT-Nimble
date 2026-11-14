@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EndConditionsNode } from '#types/effectTree.js';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import { effectsToEnd } from '../endConditions.js';
 
 interface TestEffect {
@@ -83,6 +84,22 @@ describe('effectsToEnd', () => {
 
 		const terrain = holder(effect('mud', 'hampered'));
 		expect(ids(effectsToEnd(terrain, step()))).toEqual(['mud']);
+	});
+
+	it('ends a Hampered beside Dazed when Linked Conditions is off, as nothing else removes it', () => {
+		const stub = game as unknown as { settings: unknown };
+		const settings = stub.settings;
+		stub.settings = {
+			get: vi.fn(
+				(_scope: string, key: string) => key !== AUTOMATION_SETTING_KEYS.derivedConditions,
+			),
+		};
+		try {
+			const actor = holder(effect('dazed', 'dazed'), effect('mud', 'hampered'));
+			expect(ids(effectsToEnd(actor, step()))).toEqual(['dazed', 'mud']);
+		} finally {
+			stub.settings = settings;
+		}
 	});
 
 	it('ends only the listed conditions, and a status that counts as one of them', () => {
