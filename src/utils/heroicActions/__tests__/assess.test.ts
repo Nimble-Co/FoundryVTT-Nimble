@@ -82,7 +82,7 @@ describe('runAssess', () => {
 		);
 	});
 
-	it('takes the disadvantage off a paid Assess while the character holds Nullify', async () => {
+	function nullifyHolder() {
 		const rollSkillCheck = vi.fn().mockResolvedValue({ roll: d20Roll(ASSESS_DC, 10) });
 		const nullify = {
 			id: 'nullify',
@@ -112,11 +112,28 @@ describe('runAssess', () => {
 		});
 		setHeroicCombat(createHeroicCombatant(actor));
 		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'Actor.hero' ? actor : null));
+		return { actor, rollSkillCheck, deleteEmbeddedDocuments };
+	}
+
+	it('takes the disadvantage off a paid Assess while the character holds Nullify', async () => {
+		const { actor, rollSkillCheck, deleteEmbeddedDocuments } = nullifyHolder();
 
 		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
 
 		expect(rollSkillCheck).toHaveBeenCalledWith('insight', { rollMode: 0 });
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['nullify']);
+	});
+
+	it('with Feature Effects off, a paid Assess keeps its disadvantage and Nullify stays', async () => {
+		const { actor, rollSkillCheck, deleteEmbeddedDocuments } = nullifyHolder();
+		heroicGlobals().game.settings = {
+			get: vi.fn((_scope: string, key: string) => key !== AUTOMATION_SETTING_KEYS.applyRuleEffects),
+		};
+
+		await runAssess(actor, { optionId: 'ask-question', skillKey: 'insight' });
+
+		expect(rollSkillCheck).toHaveBeenCalledWith('insight');
+		expect(deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('puts the ended line of the held change a paid Assess uses up on its card', async () => {

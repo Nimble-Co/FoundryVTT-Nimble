@@ -49,9 +49,10 @@ async function holdAssessChange(
 	return null;
 }
 
+/** With Feature Effects off, the table applies a held Ignore Disadvantage by hand. */
 function rollPaidAssess(actor: NimbleCharacter, skillKey: AssessRequest['skillKey']) {
 	const skillMode = actor.system?.skills?.[skillKey]?.defaultRollMode ?? 0;
-	return skillMode < 0 && ignoreDisadvantageChange(actor)
+	return skillMode < 0 && isRuleAutomationEnabled() && ignoreDisadvantageChange(actor)
 		? actor.rollSkillCheck(skillKey, { rollMode: 0 })
 		: actor.rollSkillCheck(skillKey);
 }
