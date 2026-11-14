@@ -1,9 +1,11 @@
 name: Deploy Docs
 
+# Each run builds the whole site from the published releases, not from the event:
+# the Stable Docs at the newest Stable Release, and the Beta Docs under /beta/ while the
+# newest Beta Release is newer. A manual run is the same rebuild.
 on:
-  # Stable releases only. A pre-release does not start a deploy.
   release:
-    types: [released]
+    types: [released, prereleased, deleted]
 
   workflow_dispatch:
 
@@ -17,11 +19,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  choose:
     runs-on: ubuntu-latest
+    outputs:
+      beta: ${{ steps.choose.outputs.beta }}
+      builds: ${{ steps.choose.outputs.builds }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Choose the releases to build
+        id: choose
+        run: node build/docs-site.mjs choose
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+
+  build:
+    needs: choose
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.choose.outputs.builds) }}
+    name: build (${{ matrix.channel }} ${{ matrix.tag }})
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: refs/tags/${{ matrix.tag }}
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -45,21 +72,55 @@ jobs:
       - name: Build docs
         run: pnpm build
         working-directory: docs
+        env:
+          DOCS_CHANNEL: ${{ matrix.channel }}
+          DOCS_BETA_VERSION: ${{ needs.choose.outputs.beta }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-${{ matrix.channel }}
+          path: docs/.vitepress/dist
+          include-hidden-files: true
+
+  assemble:
+    needs: [choose, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: docs-stable
+          path: site
+
+      - if: needs.choose.outputs.beta != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-beta
+          path: site/beta
+
+      - name: Redirect /beta/ to the Stable Docs
+        if: needs.choose.outputs.beta == ''
+        run: node build/docs-site.mjs beta-redirect site
 
       - name: Disable Jekyll
-        run: touch docs/.vitepress/dist/.nojekyll
+        run: touch site/.nojekyll
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: site
 
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
+    needs: assemble
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
