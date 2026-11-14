@@ -6,7 +6,6 @@ import { ConditionManager } from '../ConditionManager.js';
 function setConfiguredConditions(
 	conditions: Record<string, string>,
 	relationships: {
-		aliased?: Record<string, readonly string[]>;
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
 		lastsUntil?: Record<string, object[]>;
@@ -17,7 +16,6 @@ function setConfiguredConditions(
 		conditionDefaultImages: Object.fromEntries(
 			Object.keys(conditions).map((id) => [id, `icons/svg/${id}.svg`]),
 		),
-		conditionAliasedConditions: relationships.aliased ?? {},
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
 		conditionLastsUntil: relationships.lastsUntil ?? {},
@@ -70,7 +68,6 @@ describe('ConditionManager', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', petrified: 'Petrified', wounded: 'Wounded' },
 				{
-					aliased: { blinded: ['dazed'] },
 					linked: { petrified: ['incapacitated'] },
 					stackable: ['wounded'],
 				},
@@ -78,7 +75,6 @@ describe('ConditionManager', () => {
 
 			manager.initialize();
 
-			// "Counts as" reads conditionCountsAs; a status record keeps no copy of the alias table.
 			expect(manager.get('blinded')).not.toHaveProperty('aliases');
 			expect(manager.get('petrified')?.statuses).toEqual(['incapacitated']);
 			// getMetadata() matches effects on this padded id, so its exact shape matters.

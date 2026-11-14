@@ -52,6 +52,7 @@ const flameBarrier = {
 	},
 	amount: 'formula',
 	formula: '3',
+	rollData: () => ({}),
 	damageType: 'fire',
 	ignoreArmor: true,
 	notOnAllies: false,

@@ -29,13 +29,11 @@ export async function chargeOnLightning(
 	cardId: string | null = null,
 ): Promise<void> {
 	if (!target || !damageTypes?.includes('lightning') || !isRuleAutomationEnabled()) return;
-	const payload = {
-		...payloadFromCondition(STATUS_EFFECT_IDS.charged, [ONE_MINUTE], {
-			itemUuid: null,
-			actorUuid: sourceActorUuid,
-		}),
-		...(cardId ? { cardId } : {}),
-	};
+	const payload = payloadFromCondition(STATUS_EFFECT_IDS.charged, [ONE_MINUTE], {
+		itemUuid: null,
+		actorUuid: sourceActorUuid,
+		cardId,
+	});
 	await applyEffectToActor(target as never, payload).catch((error) =>
 		console.error('Nimble | Could not make the creature Charged.', error),
 	);

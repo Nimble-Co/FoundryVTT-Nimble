@@ -19,8 +19,8 @@ import applyConditionToActor, {
 } from './applyConditionToActor.js';
 import { type StackingEffect, stackingCopyOf, stacksOf, stackUp } from './effectStacks.js';
 import { giveTempHp, tempHpGrant } from './effectTempHp.js';
-import { postStackGain } from './stackGainEvent.js';
 import { itemEffectOf } from './itemEffectOf.js';
+import { postStackGain } from './stackGainEvent.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.applyEffect`;
 
@@ -136,13 +136,21 @@ function raiseRules(rules: unknown, raises: readonly RuleRaise[]): void {
 	}
 }
 
+/** The card whose use applies the effect, when there is one. */
+const cardIdOf = ({ cardId }: { cardId?: string | null }) => (cardId ? { cardId } : {});
+
 /**
  * A copy of an item's effect for an actor, with the upcast raises added. The Escape DC is worked
  * out now, and the rule formulas too unless the effect's rules read the creature that has it.
  */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
-	source: { itemUuid: string | null; user: SourceUser | null; raises?: EffectRaises },
+	source: {
+		itemUuid: string | null;
+		user: SourceUser | null;
+		raises?: EffectRaises;
+		cardId?: string | null;
+	},
 ): EffectPayload {
 	const data = foundry.utils.deepClone(effect.toObject());
 	for (const key of NOT_COPIED) delete data[key];
@@ -159,6 +167,7 @@ export function payloadFromEffect(
 		data,
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.user?.uuid ?? null,
+		...cardIdOf(source),
 	};
 }
 
@@ -166,12 +175,13 @@ export function payloadFromEffect(
 export function payloadFromCondition(
 	condition: string,
 	lastsUntil: Moment[],
-	source: { itemUuid: string | null; actorUuid: string | null },
+	source: { itemUuid: string | null; actorUuid: string | null; cardId?: string | null },
 ): EffectPayload {
 	return {
 		data: { statuses: [condition], system: { lastsUntil } },
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.actorUuid,
+		...cardIdOf(source),
 	};
 }
 
@@ -259,9 +269,12 @@ async function stackEffectPayload(
 		if (!effect) continue;
 		const user = sourceActor?.getRollData ? (sourceActor as SourceUser) : null;
 		return {
-			...payloadFromEffect(effect, { itemUuid: item?.uuid ?? null, user }),
+			...payloadFromEffect(effect, {
+				itemUuid: item?.uuid ?? null,
+				user,
+				cardId: payload.cardId,
+			}),
 			sourceActorUuid: payload.sourceActorUuid,
-			cardId: payload.cardId ?? null,
 		};
 	}
 	return null;

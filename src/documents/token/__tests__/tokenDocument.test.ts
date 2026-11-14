@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { systemHookName } from '#system';
-import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import {
 	AFTER_RULES_PHASE,
 	MULTIPLY_DOWN_CHANGE,
 	registerMultiplyDownChange,
 } from '#documents/activeEffect/multiplyDownChange.js';
+import { systemHookName } from '#system';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import { NimbleTokenDocument } from '../tokenDocument.js';
 
 function tokenWithActorType(type: string | null | undefined): TokenDocument {

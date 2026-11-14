@@ -190,15 +190,6 @@ export default function registerConditionsConfig() {
 		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
 	};
 
-	const conditionAliasedConditions = {
-		grappled: ['restrained'] as const,
-		incapacitated: ['paralyzed', 'stunned', 'unconscious'] as const,
-		paralyzed: ['incapacitated', 'stunned', 'unconscious'] as const,
-		restrained: ['grappled'] as const,
-		stunned: ['incapacitated', 'restrained', 'paralyzed', 'unconscious'] as const,
-		unconscious: ['incapacitated', 'paralyzed', 'stunned'] as const,
-	};
-
 	/** What a condition counts as, one way, as the book says it. Nothing else counts as another. */
 	const conditionCountsAs: Record<string, readonly string[]> = {
 		paralyzed: ['incapacitated'],
@@ -288,7 +279,6 @@ export default function registerConditionsConfig() {
 
 	return {
 		conditions,
-		conditionAliasedConditions,
 		conditionCountsAs,
 		conditionRules,
 		conditionDescriptions,

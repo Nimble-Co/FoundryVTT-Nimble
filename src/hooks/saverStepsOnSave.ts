@@ -3,13 +3,12 @@ import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
 import { takeBackStack, UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
-import { actOnStackGain } from '#utils/actor/stackGainLine.js';
+import { actOnStackGain, gainedLineOf } from '#utils/actor/stackGainLine.js';
 import {
 	applyEffectFromCard,
 	type EffectCard,
 	forgetAppliedEffect,
 } from '#utils/chat/applyEffectFromCard.js';
-import { cardEventsOf } from '#utils/chat/cardEvents.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { askedByOf } from '#utils/rolls/saveFromCard.js';
@@ -83,12 +82,7 @@ async function takeBack(host: EffectCard, record: SaverRecord): Promise<void> {
 
 /** The "At N stacks" effect goes as the Undo of its line does, so the line reads undone. */
 async function takeBackGained(host: EffectCard, gainedUuid: string): Promise<void> {
-	const line = cardEventsOf(host as never).find(
-		(event) =>
-			event.action?.kind === 'stackGain' &&
-			event.action.state === 'gained' &&
-			event.action.gainedUuid === gainedUuid,
-	);
+	const line = gainedLineOf(host, gainedUuid);
 	if (line && (await actOnStackGain(host, line))) return;
 	const gained = fromUuidSync(gainedUuid as never, { strict: false }) as {
 		delete(options?: object): Promise<unknown>;

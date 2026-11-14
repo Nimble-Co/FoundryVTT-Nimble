@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
 import type { StackReached } from '#types/effectPayload.d.ts';
 import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
@@ -141,5 +142,22 @@ describe('the clicks of the line', () => {
 			vi.fn(() => ({ ...tessa, isOwner: false })),
 		);
 		expect(line.canActOnStackGain(action)).toBe(false);
+	});
+});
+
+describe('gainedLineOf', () => {
+	it('finds the gained line of an "At N stacks" effect on a card, and no undone one', () => {
+		const stone = 'Actor.tessa.ActiveEffect.stone';
+		const gained = stackGainEvent(tessa, reached({ gainedUuid: stone }), 5);
+		const other = stackGainEvent(tessa, reached({ gainedUuid: 'Actor.tessa.ActiveEffect.x' }), 6);
+		const undone = {
+			...gained,
+			id: 'undone',
+			action: { ...(gained.action as StackGainAction), state: 'undone' as const },
+		};
+		const host = (events: CardEvent[]) => ({ flags: { [SYSTEM_ID]: { events } } });
+
+		expect(line.gainedLineOf(host([other, gained]), stone)).toBe(gained);
+		expect(line.gainedLineOf(host([undone, other]), stone)).toBeUndefined();
 	});
 });

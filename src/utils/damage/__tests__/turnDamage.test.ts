@@ -69,7 +69,8 @@ function rule(owner: Creature, fields: Record<string, unknown> = {}) {
 		formula: '7',
 		damageType: 'fire',
 		wounds: 0,
-		actor: { uuid: owner.uuid, getRollData: () => ({}) },
+		actor: { uuid: owner.uuid },
+		rollData: () => ({}),
 		parentDocument: { uuid: `${owner.uuid}.Item.cauldron`, name: 'In the Cauldron', img: 'c.svg' },
 		appliesTo: () => true,
 		...fields,
@@ -246,9 +247,9 @@ describe('dealTurnDamage', () => {
 		tessa.rules = [rule(tessa)];
 		tessa.applyDamage.mockRejectedValueOnce(new Error('no write'));
 
-		await expect(
-			dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment),
-		).rejects.toThrow('no write');
+		await expect(dealTurnDamage('turnStart', turnOf(tessa, tessaToken), moment)).rejects.toThrow(
+			'no write',
+		);
 
 		const [written] = addMomentEvents.mock.calls[0][1] as CardEvent[];
 		expect(replaceCardEvent).toHaveBeenLastCalledWith(momentCardEl, written.id, written);

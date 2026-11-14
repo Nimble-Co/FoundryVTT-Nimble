@@ -205,7 +205,7 @@ describe('followEscape', () => {
 
 describe('an Escape with no DC', () => {
 	const noDcLink = { ...link, noDc: true };
-	const waiting = escapeRulingEvent(noDcLink, 'waiting', 5, 's1');
+	const waiting = escapeRulingEvent(noDcLink, 'waiting', { at: 5, rollMessageId: 's1' });
 
 	beforeEach(() => {
 		card.system.dc = null;
@@ -224,7 +224,7 @@ describe('an Escape with no DC', () => {
 			state: 'waiting',
 			rollMessageId: 's1',
 		});
-		const failed = escapeRulingEvent(noDcLink, 'failed', 6);
+		const failed = escapeRulingEvent(noDcLink, 'failed', { at: 6 });
 		expect(cardEvents.cardEventText(failed.text)).toBe('Tessa fails to escape Grappled');
 	});
 
@@ -368,7 +368,7 @@ describe('an Escape with no DC', () => {
 		});
 
 		it('does not take the line of another roll of the same effect', async () => {
-			const older = escapeRulingEvent(noDcLink, 'waiting', 4, 's0');
+			const older = escapeRulingEvent(noDcLink, 'waiting', { at: 4, rollMessageId: 's0' });
 			const other = { id: 'm0', flags: { [SYSTEM_ID]: { events: [older] } } };
 			otherCards.push(other);
 
@@ -415,18 +415,21 @@ describe('an Escape with no DC', () => {
 		it.each([
 			['unknown', 'waiting'],
 			['fail', 'failed'],
-		])('a reroll to %s after an escape moves the %s line to a card the owner reads', async (outcome, state) => {
-			await followEscape({ messageId: 's1', outcome });
+		])(
+			'a reroll to %s after an escape moves the %s line to a card the owner reads',
+			async (outcome, state) => {
+				await followEscape({ messageId: 's1', outcome });
 
-			expect(undoEndedEffect).toHaveBeenCalledWith(endedLine().action.row);
-			expect(replaceCardEvent).toHaveBeenCalledWith(card, endedLine().id, null);
-			expect(replaceCardEvent).not.toHaveBeenCalledWith(card, endedLine().id, expect.anything());
-			expect(addCardEvents).toHaveBeenCalledWith(card, [
-				expect.objectContaining({
-					action: expect.objectContaining({ state, rollMessageId: 's1' }),
-				}),
-			]);
-		});
+				expect(undoEndedEffect).toHaveBeenCalledWith(endedLine().action.row);
+				expect(replaceCardEvent).toHaveBeenCalledWith(card, endedLine().id, null);
+				expect(replaceCardEvent).not.toHaveBeenCalledWith(card, endedLine().id, expect.anything());
+				expect(addCardEvents).toHaveBeenCalledWith(card, [
+					expect.objectContaining({
+						action: expect.objectContaining({ state, rollMessageId: 's1' }),
+					}),
+				]);
+			},
+		);
 	});
 
 	describe('Escapes', () => {
@@ -454,7 +457,7 @@ describe('an Escape with no DC', () => {
 		});
 
 		it('does nothing on a failed line, or when the effect is gone', async () => {
-			const failed = escapeRulingEvent(noDcLink, 'failed', 6);
+			const failed = escapeRulingEvent(noDcLink, 'failed', { at: 6 });
 			expect(await endEscape(card, failed)).toBe(false);
 			effects.clear();
 			expect(await endEscape(card, waiting)).toBe(false);
@@ -533,7 +536,7 @@ describe('the damage of an escape', () => {
 	});
 
 	it('Escapes deals the damage too', async () => {
-		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', 5);
+		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', { at: 5 });
 		card.flags[SYSTEM_ID].events = [waiting];
 
 		await endEscape(card, waiting);
@@ -542,7 +545,7 @@ describe('the damage of an escape', () => {
 	});
 
 	it('a player who clicks Escapes asks the active GM, who ends it', async () => {
-		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', 5);
+		const waiting = escapeRulingEvent({ ...link, noDc: true }, 'waiting', { at: 5 });
 		card.flags[SYSTEM_ID].events = [waiting];
 		setGM(false);
 		(tessa as { isOwner?: boolean }).isOwner = true;
@@ -553,6 +556,7 @@ describe('the damage of an escape', () => {
 		expect(askActiveGm).toHaveBeenCalledWith(`${SYSTEM_ID}.escapeRuling`, {
 			messageId: 's1',
 			eventId: waiting.id,
+			rollMessageId: undefined,
 		});
 		expect(endEffects).not.toHaveBeenCalled();
 	});

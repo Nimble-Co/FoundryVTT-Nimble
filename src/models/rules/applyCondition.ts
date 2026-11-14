@@ -430,10 +430,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		cardId: string | null,
 	): Promise<void> {
 		const user = this.actor as unknown as EffectSourceUser | null;
-		const payload = {
-			...payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user }),
-			...(cardId ? { cardId } : {}),
-		};
+		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user, cardId });
 		if (systemFlags) {
 			const flags = (payload.data.flags ?? {}) as Record<string, Record<string, unknown>>;
 			payload.data.flags = {

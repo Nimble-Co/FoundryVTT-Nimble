@@ -1,15 +1,9 @@
 import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
 import { applyEffectToActor } from '#utils/actor/applyEffectToActor.js';
 import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
-import { stackGainText } from '#utils/actor/stackGainEvent.js';
-import { replaceCardEvent } from '#utils/chat/cardEvents.js';
+import { type StackHolder, stackGainText } from '#utils/actor/stackGainEvent.js';
+import { cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
-
-interface StackHolder {
-	uuid: string;
-	name?: string | null;
-	isOwner?: boolean;
-}
 
 interface LineCard {
 	id?: string | null;
@@ -50,6 +44,16 @@ async function undo(card: LineCard, event: CardEvent, action: StackGainAction): 
 		...event,
 		action: { ...action, state: 'undone' },
 	});
+}
+
+/** The line on the card that says the holder gained this "At N stacks" effect, while it stands. */
+export function gainedLineOf(card: LineCard, gainedUuid: string): CardEvent | undefined {
+	return cardEventsOf(card as never).find(
+		(event) =>
+			event.action?.kind === 'stackGain' &&
+			event.action.state === 'gained' &&
+			event.action.gainedUuid === gainedUuid,
+	);
 }
 
 /** A click on the line: a waiting line puts the effect on, a gained one takes it off. */

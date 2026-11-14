@@ -197,8 +197,11 @@ describe('applyDieResultEffects', () => {
 		// The card of the attack takes the lines of the effect, such as "At N stacks".
 		expect(applyEffectToActorMock).toHaveBeenCalledWith(TARGET_A, {
 			data: { name: 'Glow' },
-			source: { itemUuid: GUIDE_UUID, user: expect.objectContaining({ uuid: 'Actor.a' }) },
-			cardId: attack.id,
+			source: {
+				itemUuid: GUIDE_UUID,
+				user: expect.objectContaining({ uuid: 'Actor.a' }),
+				cardId: attack.id,
+			},
 		});
 	});
 

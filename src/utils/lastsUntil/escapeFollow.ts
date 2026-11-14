@@ -15,6 +15,7 @@ import {
 } from '#utils/damage/escapeDamage.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { endReasonOf } from '#utils/lastsUntil/endedEffectEvent.js';
 import localize from '#utils/localize.js';
 
 /** On the roll card of an Escape: the effect it tries to end. */
@@ -90,8 +91,7 @@ function escapedReason(card: EscapeCard): CardEventText {
 export function escapeRulingEvent(
 	link: EscapeRollLink,
 	state: EscapeRulingAction['state'],
-	at = Date.now(),
-	rollMessageId?: string,
+	{ at = Date.now(), rollMessageId }: { at?: number; rollMessageId?: string | null } = {},
 ): CardEvent {
 	const action: EscapeRulingAction = {
 		kind: 'escapeRuling',
@@ -195,26 +195,28 @@ export async function endEscape(card: EscapeCard, event: CardEvent): Promise<boo
 	if (action?.kind !== 'escapeRuling' || action.state !== 'waiting' || !card.id) return false;
 	if (!canRuleEscape(action)) return false;
 	if (!game.user?.isActiveGM) {
-		return (await askActiveGm(QUERY_NAME, { messageId: card.id, eventId: event.id })) === true;
+		const data = { messageId: card.id, eventId: event.id, rollMessageId: action.rollMessageId };
+		return (await askActiveGm(QUERY_NAME, data)) === true;
 	}
-	return ruleHere(card, event.id);
+	return ruleHere(card, event.id, action.rollMessageId);
 }
 
 /**
  * Escapes ends the effect as a pass does: on the roll card, which keeps the ended line and the
  * damage when the waiting line moved to another card.
  */
-function ruleHere(card: EscapeCard, eventId: string): Promise<boolean> {
-	const line = cardEventsOf(card as never).find((each) => each.id === eventId);
-	const rollCardId =
-		line?.action?.kind === 'escapeRuling' ? (line.action.rollMessageId ?? card.id) : card.id;
+function ruleHere(
+	card: EscapeCard,
+	eventId: string,
+	rollMessageId: string | null | undefined,
+): Promise<boolean> {
 	const rollCard =
-		rollCardId === card.id
+		!rollMessageId || rollMessageId === card.id
 			? card
-			: (game.messages?.get(rollCardId ?? '') as unknown as EscapeCard | undefined);
+			: (game.messages?.get(rollMessageId) as unknown as EscapeCard | undefined);
 	return queue.run(rollCard?.id ?? card.id ?? '', async () => {
-		const found = cardEventsOf(card as never).find((each) => each.id === eventId);
-		const action = found?.action;
+		const line = cardEventsOf(card as never).find((each) => each.id === eventId);
+		const action = line?.action;
 		if (action?.kind !== 'escapeRuling' || action.state !== 'waiting') return false;
 		if (!(await escapeNow(rollCard ?? card, action, { key: RULED }))) return false;
 		await replaceCardEvent(card as never, eventId, null);
@@ -250,13 +252,8 @@ function rulingLineOf(card: EscapeCard, link: EscapeRollLink): PlacedLine | unde
 	return undefined;
 }
 
-/** The ended line says the table ruled the escape (**Escapes**), with or without a source. */
-function wasRuled(event: CardEvent): boolean {
-	const cause = event.cause;
-	if (cause?.key === RULED) return true;
-	const reason = cause?.data?.reason;
-	return typeof reason === 'object' && reason !== null && 'key' in reason && reason.key === RULED;
-}
+/** The ended line says the table ruled the escape (**Escapes**). */
+const wasRuled = (event: CardEvent) => endReasonOf(event)?.key === RULED;
 
 async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): Promise<boolean> {
 	const events = cardEventsOf(card as never);
@@ -275,9 +272,12 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 	 * the owner cannot read that card, `placed` goes and the line is added, so it moves for them.
 	 */
 	const showRuling = async (placed: PlacedLine | undefined, state: EscapeRulingAction['state']) => {
-		const next = escapeRulingEvent(link, state, Date.now(), card.id ?? undefined);
+		const next = escapeRulingEvent(link, state, { rollMessageId: card.id });
 		if (placed && splitByReaders(placed.host, [next]).elsewhere.length < 1) {
-			return replaceCardEvent(placed.host as never, placed.line.id, { ...next, id: placed.line.id });
+			return replaceCardEvent(placed.host as never, placed.line.id, {
+				...next,
+				id: placed.line.id,
+			});
 		}
 		if (placed) await replaceCardEvent(placed.host as never, placed.line.id, null);
 		return addCardEvents(card as never, [next]);
@@ -332,10 +332,14 @@ export function registerEscapeHooks(): void {
 	Hooks.on(systemHookName('skillCheckResolved'), onResult);
 	Hooks.once('init', () => {
 		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
-		queries[QUERY_NAME] = async (data: { messageId?: string; eventId?: string }) => {
+		queries[QUERY_NAME] = async (data: {
+			messageId?: string;
+			eventId?: string;
+			rollMessageId?: string;
+		}) => {
 			const card = game.messages?.get(data.messageId ?? '') as unknown as EscapeCard | undefined;
 			if (!card?.id || !data.eventId) return false;
-			return ruleHere(card, data.eventId);
+			return ruleHere(card, data.eventId, data.rollMessageId);
 		};
 	});
 }

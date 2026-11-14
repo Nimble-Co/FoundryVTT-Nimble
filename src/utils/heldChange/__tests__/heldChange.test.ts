@@ -492,7 +492,11 @@ describe('takeBackHeldChanges', () => {
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes a disabled effect that the card made', async () => {
@@ -501,7 +505,11 @@ describe('takeBackHeldChanges', () => {
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes an effect with a disabled rule that the card made', async () => {
@@ -509,7 +517,11 @@ describe('takeBackHeldChanges', () => {
 
 		await takeBackHeldChanges(target, 'm1');
 
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes an effect with two Held Roll rules once', async () => {

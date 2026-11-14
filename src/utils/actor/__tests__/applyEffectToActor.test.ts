@@ -8,7 +8,11 @@ const createEffect = vi.fn();
 const deleteDocuments = vi.fn();
 const query = vi.fn();
 
-import { applyEffectToActor, payloadFromEffect } from '../applyEffectToActor.js';
+import {
+	applyEffectToActor,
+	payloadFromCondition,
+	payloadFromEffect,
+} from '../applyEffectToActor.js';
 
 const turnMoment = {
 	kind: 'turn',
@@ -94,6 +98,21 @@ describe('payloadFromEffect', () => {
 			sourceItemUuid: 'Actor.worg.Item.bite',
 			sourceActorUuid: 'Actor.worg',
 		});
+	});
+
+	it('names the card of the use only when there is one', () => {
+		const effect = { toObject: () => ({ name: 'Glow' }) };
+		const source = { itemUuid: 'Item.x', user: null };
+
+		expect(payloadFromEffect(effect, { ...source, cardId: 'card1' }).cardId).toBe('card1');
+		expect(payloadFromEffect(effect, { ...source, cardId: null })).not.toHaveProperty('cardId');
+		expect(
+			payloadFromCondition('charged', [], { itemUuid: null, actorUuid: null, cardId: 'card1' })
+				.cardId,
+		).toBe('card1');
+		expect(
+			payloadFromCondition('charged', [], { itemUuid: null, actorUuid: null }),
+		).not.toHaveProperty('cardId');
 	});
 
 	it('replaces the @ references of every rule formula with the roll data of the source', () => {

@@ -257,7 +257,6 @@ describe('customConditionSettings', () => {
 			// The GM-facing contract: a saved condition becomes a real Foundry status effect.
 			// The merge and the manager are otherwise only tested in isolation.
 			Object.assign(CONFIG.NIMBLE, {
-				conditionAliasedConditions: {},
 				conditionLinkedConditions: {},
 				conditionStackableConditions: new Set<string>(),
 			});

@@ -4,7 +4,8 @@ import { addCardEvents, addMomentEvents } from '#utils/chat/cardEvents.js';
 
 const WORDS = 'NIMBLE.chat.stackGain';
 
-interface StackHolder {
+/** The creature that has the stacking effect. */
+export interface StackHolder {
 	uuid: string;
 	name?: string | null;
 }

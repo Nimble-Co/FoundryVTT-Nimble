@@ -1,11 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
-import {
-	formulaWithStacks,
-	stacksOf,
-	UNDO_APPLICATION_OPTION,
-} from '#utils/actor/effectStacks.js';
+import { formulaWithStacks, stacksOf, UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';

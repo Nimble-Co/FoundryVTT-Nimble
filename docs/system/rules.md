@@ -171,7 +171,7 @@ Two consequences for a rule in this position:
 | `self:concentrating` | `actor.statuses` | Concentration status active |
 | `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
 | `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
-| `self:<condition>` / `target:<condition>` | `actor.statuses` through `conditionTags()` (`src/documents/actor/base.svelte.ts`) | Each status that is a key of `CONFIG.NIMBLE.conditions`, plus the conditions `conditionAliasedConditions` lists for it. Bloodied and Concentration are left out: they keep the tags above |
+| `self:<condition>` / `target:<condition>` | `actor.statuses` through `conditionTags()` (`src/documents/actor/base.svelte.ts`) | Each status that is a key of `CONFIG.NIMBLE.conditions`, plus the conditions `conditionCountsAs` lists for it. Bloodied and Concentration are left out: they keep the tags above |
 | `self:pool:<id>` | Charge and dice pool flags | The pool has at least 1 charge or die |
 
 #### Character-only tags

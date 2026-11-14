@@ -32,6 +32,7 @@ function rule(fields: { [key: string]: unknown } = {}) {
 		item: spell,
 		amount: 'formula',
 		formula: '3',
+		rollData: () => ({ key: 3 }),
 		damageType: 'fire',
 		ignoreArmor: true,
 		notOnAllies: true,
