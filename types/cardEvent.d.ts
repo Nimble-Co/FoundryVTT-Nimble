@@ -40,11 +40,15 @@ export type CardEventKind =
 	| 'emptyPool'
 	| 'critDiceSave';
 
-/** One effect that a moment ended, with the data to make it again. */
-export interface EndedEffectRow {
-	effectId: string;
+/** The creature a line of the Events strip is about. Its owner or a GM acts on the line. */
+export interface HolderLine {
 	holderUuid: string;
 	holderName: string;
+}
+
+/** One effect that a moment ended, with the data to make it again. */
+export interface EndedEffectRow extends HolderLine {
+	effectId: string;
 	name: string;
 	img: string;
 	sourceName: string;
@@ -52,10 +56,8 @@ export interface EndedEffectRow {
 }
 
 /** A save that an event asks of a creature (Save on an Event), and how it stands. */
-export interface SaveRequestAction {
+export interface SaveRequestAction extends HolderLine {
 	kind: 'saveRequest';
-	holderUuid: string;
-	holderName: string;
 	effectId: string;
 	effectName: string;
 	/** The item the effect came from, when its name is not the effect's name. */
@@ -69,10 +71,8 @@ export interface SaveRequestAction {
 }
 
 /** Temp HP do not combine: the owner keeps the amount the creature has or takes the new one. */
-export interface TempHpChoiceAction {
+export interface TempHpChoiceAction extends HolderLine {
 	kind: 'tempHpChoice';
-	holderUuid: string;
-	holderName: string;
 	had: number;
 	amount: number;
 	/** The effect that gives the new amount, which owns it once taken. */
@@ -81,10 +81,8 @@ export interface TempHpChoiceAction {
 }
 
 /** An Escape with no DC: the roll waits for the table to judge it, or it failed. */
-export interface EscapeRulingAction {
+export interface EscapeRulingAction extends HolderLine {
 	kind: 'escapeRuling';
-	holderUuid: string;
-	holderName: string;
 	effectId: string;
 	effectName: string;
 	state: 'waiting' | 'failed';
@@ -93,10 +91,8 @@ export interface EscapeRulingAction {
 }
 
 /** Damage or Wounds a Damage Each Turn rule gave at a turn moment, and how it stands. */
-export interface TurnDamageAction {
+export interface TurnDamageAction extends HolderLine {
 	kind: 'turnDamage';
-	holderUuid: string;
-	holderName: string;
 	amount: number;
 	damageType: string;
 	wounds: number;
@@ -111,10 +107,8 @@ export interface TurnDamageAction {
 }
 
 /** The "At N stacks" effect of a stacking effect, and how it stands. */
-export interface StackGainAction {
+export interface StackGainAction extends HolderLine {
 	kind: 'stackGain';
-	holderUuid: string;
-	holderName: string;
 	count: number;
 	stackedName: string;
 	gainedName: string;
@@ -139,10 +133,8 @@ export interface WaitingEndMoment {
 }
 
 /** Feature Effects off: an end that a moment reached waits for a click on End. */
-export interface WaitingEndAction {
+export interface WaitingEndAction extends HolderLine {
 	kind: 'waitingEnd';
-	holderUuid: string;
-	holderName: string;
 	effectId: string;
 	effectName: string;
 	/** waiting: End ends it. ending: a click ends it now. gone: it was off when End was clicked. */
@@ -155,10 +147,8 @@ export interface WaitingEndAction {
 }
 
 /** Feature Effects off: a pool that an Empty Pools at End rule empties waits for a click. */
-export interface EmptyPoolAction {
+export interface EmptyPoolAction extends HolderLine {
 	kind: 'emptyPool';
-	holderUuid: string;
-	holderName: string;
 	poolId: string;
 	poolLabel: string;
 	state: 'waiting' | 'emptied';

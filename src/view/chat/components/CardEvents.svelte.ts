@@ -1,18 +1,7 @@
 import { tick } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type {
-	CardEvent,
-	CritDiceSaveAction,
-	EmptyPoolAction,
-	EndedEffectRow,
-	EscapeRulingAction,
-	SaveRequestAction,
-	StackGainAction,
-	TempHpChoiceAction,
-	TurnDamageAction,
-	WaitingEndAction,
-} from '#types/cardEvent.d.ts';
+import type { CardEvent, EndedEffectRow, TurnDamageAction } from '#types/cardEvent.d.ts';
 import { actOnStackGain, canActOnStackGain } from '#utils/actor/stackGainLine.js';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
@@ -85,32 +74,16 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
-	function canRollSave(action: SaveRequestAction): boolean {
-		return canRollRequest(action);
-	}
-
 	function rollSave(event: CardEvent) {
 		return clickLine(event, rollRequestedSave);
-	}
-
-	function canRule(action: EscapeRulingAction): boolean {
-		return canRuleEscape(action);
 	}
 
 	function rule(event: CardEvent) {
 		return clickLine(event, endEscape);
 	}
 
-	function canChoose(action: TempHpChoiceAction): boolean {
-		return canChooseTempHp(action);
-	}
-
 	function choose(event: CardEvent, take: boolean) {
 		return clickLine(event, (card, line) => chooseTempHp(card, line, take));
-	}
-
-	function canActOnDamage(action: TurnDamageAction): boolean {
-		return canActOnTurnDamage(action);
 	}
 
 	/** Deals a waiting line, or gives back what a dealt line took. */
@@ -118,10 +91,6 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		const action = event.action as TurnDamageAction;
 		const run = action.state === 'waiting' ? takeTurnDamage : undoTurnDamage;
 		return clickLine(event, run, 'Nimble | Could not change the damage of a turn.');
-	}
-
-	function canActOnStack(action: StackGainAction): boolean {
-		return canActOnStackGain(action);
 	}
 
 	/** Puts a waiting effect on, or takes a gained one off. */
@@ -149,25 +118,13 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
-	function canEnd(action: WaitingEndAction): boolean {
-		return canEndWaiting(action);
-	}
-
 	/** Ends a waiting effect through the end path of its moment. */
 	function end(event: CardEvent) {
 		return clickLine(event, endWaiting, 'Nimble | Could not end a waiting effect.');
 	}
 
-	function canEmpty(action: EmptyPoolAction): boolean {
-		return canEmptyPool(action);
-	}
-
 	function empty(event: CardEvent) {
 		return clickLine(event, emptyPoolFromLine, 'Nimble | Could not empty a pool.');
-	}
-
-	function canSettleCrit(action: CritDiceSaveAction): boolean {
-		return canSettleCritDiceLine(action);
 	}
 
 	function settleCrit(event: CardEvent) {
@@ -195,21 +152,21 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		isBack,
 		canUndo,
 		undo,
-		canRollSave,
+		canRollSave: canRollRequest,
 		rollSave,
-		canRule,
+		canRule: canRuleEscape,
 		rule,
-		canChoose,
+		canChoose: canChooseTempHp,
 		choose,
-		canActOnDamage,
+		canActOnDamage: canActOnTurnDamage,
 		actOnDamage,
-		canActOnStack,
+		canActOnStack: canActOnStackGain,
 		actOnStack,
-		canEnd,
+		canEnd: canEndWaiting,
 		end,
-		canEmpty,
+		canEmpty: canEmptyPool,
 		empty,
-		canSettleCrit,
+		canSettleCrit: canSettleCritDiceLine,
 		settleCrit,
 		backStatus,
 	};
