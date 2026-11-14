@@ -269,12 +269,16 @@ function findMomentCard(key: string, whisper: readonly string[]): EventCard | un
 	return undefined;
 }
 
-/** `first` when it holds the line, else the newest recent card that does: a line can move to a card its readers read. */
+/**
+ * `first` when it holds the line, else the newest recent card that does: a line can move to a card
+ * its readers read. `match` is the line id, or a test of it.
+ */
 export function cardHoldingEvent<Card extends EventCard>(
-	eventId: string,
+	match: string | ((eventId: string) => boolean),
 	first: Card,
 ): Card | EventCard | undefined {
-	const holds = (card: EventCard) => storedEvents(card).some((event) => event.id === eventId);
+	const fits = typeof match === 'string' ? (id: string) => id === match : match;
+	const holds = (card: EventCard) => storedEvents(card).some((event) => fits(event.id));
 	if (holds(first)) return first;
 	const recent = ((game.messages as unknown as { contents?: EventCard[] })?.contents ?? []).slice(
 		-MOMENT_SEARCH_DEPTH,

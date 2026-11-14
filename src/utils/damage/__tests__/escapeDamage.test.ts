@@ -13,7 +13,9 @@ const dealTurnDamageLine = vi.fn(
 		woundsGained: number;
 	} | null> => ({ hpLost: 7, tempLost: 0, woundsGained: 0 }),
 );
-const cardHoldingEvent = vi.fn((_id: string, first: unknown) => first);
+const cardHoldingEvent = vi.fn(
+	(_match: string | ((id: string) => boolean), first: unknown): unknown => first,
+);
 const undoTurnDamage = vi.fn(async (..._args: unknown[]) => true);
 const saveRequestEvents = vi.fn((..._args: unknown[]): CardEvent[] => []);
 let automation = true;
@@ -34,7 +36,7 @@ beforeEach(async () => {
 	vi.clearAllMocks();
 	saveRequestEvents.mockReturnValue([]);
 	addCardEvents.mockImplementation(async () => true);
-	cardHoldingEvent.mockImplementation((_id: string, first: unknown) => first);
+	cardHoldingEvent.mockImplementation((_match, first) => first);
 	dealTurnDamageLine.mockImplementation(async () => ({ hpLost: 7, tempLost: 0, woundsGained: 0 }));
 	automation = true;
 	card = { id: 's1', flags: { [SYSTEM_ID]: { events: [] } } };
@@ -138,7 +140,7 @@ describe('dealEscapeDamage', () => {
 
 		const [line] = lines();
 		expect(addCardEvents.mock.calls[0][0]).toBe(card);
-		expect(line.id).toMatch(/^escapeDamage\.Actor\.goblin\.trap\.r1\./);
+		expect(line.id).toMatch(/^escapeDamage\.Actor\.goblin\.trap\.s1\.r1\./);
 		expect(line.text).toMatchObject({ key: 'NIMBLE.chat.turnDamage.takes' });
 		expect(line.cause).toEqual({
 			key: 'NIMBLE.chat.escapeDamage.cause',
@@ -258,18 +260,48 @@ describe('takeBackEscapeDamage', () => {
 		at: 1,
 	});
 
-	it('gives back the damage this escape dealt, and takes its lines off', async () => {
-		const dealt = damageLine('escapeDamage.Actor.goblin.trap.r1.1', 'dealt');
-		const waiting = damageLine('escapeDamage.Actor.goblin.trap.r2.1', 'waiting');
-		const other = damageLine('escapeDamage.Actor.goblin.web.r1.1', 'dealt');
-		card.flags[SYSTEM_ID].events = [dealt, waiting, other];
+	const link = { holderUuid: 'Actor.goblin', effectId: 'trap' };
 
-		await module.takeBackEscapeDamage(card, { holderUuid: 'Actor.goblin', effectId: 'trap' });
+	it('gives back the damage this escape dealt, and takes its lines off', async () => {
+		const dealt = damageLine('escapeDamage.Actor.goblin.trap.s1.r1.1', 'dealt');
+		const waiting = damageLine('escapeDamage.Actor.goblin.trap.s1.r2.1', 'waiting');
+		const other = damageLine('escapeDamage.Actor.goblin.web.s1.r1.1', 'dealt');
+		const otherRoll = damageLine('escapeDamage.Actor.goblin.trap.s2.r1.1', 'dealt');
+		card.flags[SYSTEM_ID].events = [dealt, waiting, other, otherRoll];
+
+		await module.takeBackEscapeDamage(card, link);
 
 		expect(undoTurnDamage).toHaveBeenCalledTimes(1);
 		expect(undoTurnDamage).toHaveBeenCalledWith(card, dealt);
 		expect(replaceCardEvent).toHaveBeenCalledWith(card, dealt.id, null);
 		expect(replaceCardEvent).toHaveBeenCalledWith(card, waiting.id, null);
 		expect(replaceCardEvent).not.toHaveBeenCalledWith(card, other.id, null);
+		expect(replaceCardEvent).not.toHaveBeenCalledWith(card, otherRoll.id, null);
+	});
+
+	it('finds the lines of this roll card on the card they moved to', async () => {
+		const dealt = damageLine('escapeDamage.Actor.goblin.trap.s1.r1.1', 'dealt');
+		const elsewhere = { id: 'whispered', flags: { [SYSTEM_ID]: { events: [dealt] } } };
+		cardHoldingEvent.mockImplementation(() => elsewhere);
+
+		await module.takeBackEscapeDamage(card, link);
+
+		const [match, first] = cardHoldingEvent.mock.calls[0];
+		expect(first).toBe(card);
+		expect(typeof match === 'function' && match(dealt.id)).toBe(true);
+		expect(typeof match === 'function' && match('escapeDamage.Actor.goblin.trap.s2.r1.1')).toBe(
+			false,
+		);
+		expect(undoTurnDamage).toHaveBeenCalledWith(elsewhere, dealt);
+		expect(replaceCardEvent).toHaveBeenCalledWith(elsewhere, dealt.id, null);
+	});
+
+	it('does nothing when no card holds a line of this escape', async () => {
+		cardHoldingEvent.mockImplementation(() => undefined);
+
+		await module.takeBackEscapeDamage(card, link);
+
+		expect(undoTurnDamage).not.toHaveBeenCalled();
+		expect(replaceCardEvent).not.toHaveBeenCalled();
 	});
 });

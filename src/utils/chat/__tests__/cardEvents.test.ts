@@ -399,6 +399,13 @@ describe('cardHoldingEvent', () => {
 		expect(cardHoldingEvent('a', makeCard('c'))).toBe(newer);
 	});
 
+	it('takes a test of the line id in place of the id', () => {
+		const card = makeCard('moved', { flags: { [SYSTEM_ID]: { events: [line('a.1', 1)] } } });
+		messages.push(card);
+
+		expect(cardHoldingEvent((id) => id.startsWith('a.'), makeCard('c'))).toBe(card);
+	});
+
 	it('is undefined when no recent card holds the line', () => {
 		messages.push(makeCard('x'));
 

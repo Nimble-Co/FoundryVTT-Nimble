@@ -71,8 +71,9 @@ export function escapeDamageRulesOf(effect: {
 		}));
 }
 
-const lineIdPrefix = (holderUuid: string, effectId: string) =>
-	`escapeDamage.${holderUuid}.${effectId}.`;
+/** The lines of one escape: its holder, its effect and its roll card, wherever the lines are now. */
+const lineIdPrefix = (holderUuid: string, effectId: string, rollCardId: string) =>
+	`escapeDamage.${holderUuid}.${effectId}.${rollCardId}.`;
 
 /**
  * On the active GM, after an Escape ended the effect: each rule's damage to the holder (not an
@@ -107,7 +108,7 @@ export async function dealEscapeDamage(
 		};
 		const at = Date.now();
 		const line = turnDamageEvent({
-			id: `${lineIdPrefix(holder.uuid, escaped.effectId)}${rule.id ?? lines.length}.${at}`,
+			id: `${lineIdPrefix(holder.uuid, escaped.effectId, card.id)}${rule.id ?? lines.length}.${at}`,
 			action,
 			cause: {
 				key: 'NIMBLE.chat.escapeDamage.cause',
@@ -133,19 +134,25 @@ export async function dealEscapeDamage(
 	if (saves.length > 0) await addCardEvents(card as never, saves);
 }
 
-/** The escape no longer stands: give back what its damage took, and take its lines off. */
+/**
+ * The escape no longer stands: give back what its damage took, and take its lines off, on the roll
+ * card or on the card they moved to.
+ */
 export async function takeBackEscapeDamage(
 	card: HostCard,
 	escaped: { holderUuid: string; effectId: string },
 ): Promise<void> {
-	const prefix = lineIdPrefix(escaped.holderUuid, escaped.effectId);
-	const lines = cardEventsOf(card as never).filter(
+	if (!card.id) return;
+	const prefix = lineIdPrefix(escaped.holderUuid, escaped.effectId, card.id);
+	const host = cardHoldingEvent((id) => id.startsWith(prefix), card as never);
+	if (!host) return;
+	const lines = cardEventsOf(host as never).filter(
 		(event) => event.id.startsWith(prefix) && event.action?.kind === 'turnDamage',
 	);
 	for (const line of lines) {
 		if (line.action?.kind === 'turnDamage' && line.action.state === 'dealt') {
-			await undoTurnDamage(card, line);
+			await undoTurnDamage(host, line);
 		}
-		await replaceCardEvent(card as never, line.id, null);
+		await replaceCardEvent(host as never, line.id, null);
 	}
 }
