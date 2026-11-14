@@ -21,8 +21,7 @@ export function replacedWithoutEnd(
 	options: Record<string, unknown> | undefined,
 ): boolean {
 	return (
-		!!options?.[CONDITION_REPLACED_OPTION] &&
-		!effect.statuses?.has(STATUS_EFFECT_IDS.concentration)
+		!!options?.[CONDITION_REPLACED_OPTION] && !effect.statuses?.has(STATUS_EFFECT_IDS.concentration)
 	);
 }
 

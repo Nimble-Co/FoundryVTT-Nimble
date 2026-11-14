@@ -1236,6 +1236,22 @@ describe('ApplyConditionRule', () => {
 			);
 		});
 
+		it('a card whose item is not found counts as a weapon attack, as for Attack Outcome', () => {
+			const actor = createMockActor();
+			const crit = { isCritical: true, isMiss: false, sourceItem: null };
+			const weapon = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', attackSource: 'weapon' },
+				actor,
+			);
+			const spell = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit', attackSource: 'spell' },
+				actor,
+			);
+
+			expect(weapon.getActivationCardNodes(crit)).toHaveLength(1);
+			expect(spell.getActivationCardNodes(crit)).toEqual([]);
+		});
+
 		it('with Spell, only a spell crit counts', async () => {
 			const attacker = createMockActor();
 			const target = createMockActor();

@@ -107,8 +107,8 @@ export async function zeroHpAtEndEvents(
 }
 
 /**
- * An end with no line of its own (a removal by hand, a deleted origin item): on the active GM, the
- * drop and its line go on a card of their own. A copy that replaces the effect, or an undo of its
+ * Call on the active GM. An end with no line of its own (a removal by hand, a deleted origin item):
+ * the drop and its line go on a card of their own. A copy that replaces the effect, or an undo of its
  * application, is not an end; a replaced Concentration is.
  */
 export async function dropToZeroOnDelete(
@@ -116,7 +116,6 @@ export async function dropToZeroOnDelete(
 	options: Record<string, unknown> | undefined,
 	heading: CardEventText,
 ): Promise<void> {
-	if (!game.user?.isActiveGM) return;
 	if (options?.[END_LINES_OPTION] || options?.[UNDO_APPLICATION_OPTION]) return;
 	if (replacedWithoutEnd(effect, options)) return;
 	try {

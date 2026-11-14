@@ -141,7 +141,7 @@ describe('zeroHpAtEndEvents', () => {
 describe('dropToZeroOnDelete (an end with no line of its own, such as a removal by hand)', () => {
 	const heading = { key: 'NIMBLE.lastsUntil.chat.heading.effectEnds' };
 
-	it('on the active GM, drops the holder and puts the line on a card of its own', async () => {
+	it('drops the holder and puts the line on a card of its own', async () => {
 		await zero.dropToZeroOnDelete(endingEffect(tessa), {}, heading);
 
 		expect(tessa.system.attributes.hp.value).toBe(0);
@@ -181,15 +181,6 @@ describe('dropToZeroOnDelete (an end with no line of its own, such as a removal 
 			{ [UNDO_APPLICATION_OPTION]: true },
 			heading,
 		);
-
-		expect(tessa.update).not.toHaveBeenCalled();
-		expect(addMomentEvents).not.toHaveBeenCalled();
-	});
-
-	it('does nothing on a client that is not the active GM', async () => {
-		user.isActiveGM = false;
-
-		await zero.dropToZeroOnDelete(endingEffect(tessa), {}, heading);
 
 		expect(tessa.update).not.toHaveBeenCalled();
 		expect(addMomentEvents).not.toHaveBeenCalled();

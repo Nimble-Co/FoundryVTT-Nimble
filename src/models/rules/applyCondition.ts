@@ -96,7 +96,7 @@ interface SaveCard {
 }
 
 /** The triggers that come from an attack, whose source the rule can limit. */
-function picksAttack(trigger: string): boolean {
+function hasAttackSource(trigger: string): boolean {
 	return isAttackOutcomeTrigger(trigger) || trigger === 'onCritReceived';
 }
 
@@ -154,7 +154,8 @@ function schema() {
 				choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
 				label: 'NIMBLE.rules.applyCondition.attackSource.label',
 				hint: 'NIMBLE.rules.applyCondition.attackSource.hint',
-				showWhen: (data: Record<string, unknown>) => picksAttack(String(data.trigger ?? 'onCrit')),
+				showWhen: (data: Record<string, unknown>) =>
+					hasAttackSource(String(data.trigger ?? 'onCrit')),
 			}),
 		),
 		manaAtLeast: new fields.NumberField(
@@ -351,6 +352,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return this.#matchesAttackContext(context);
 	}
 
+	/** As for Attack Outcome, an attack with no item found counts as a weapon attack. */
 	#matchesSource(item: { type?: string } | null | undefined): boolean {
 		return matchesAttackSource(this.attackSource ?? 'any', item);
 	}

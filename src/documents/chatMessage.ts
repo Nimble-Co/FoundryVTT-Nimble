@@ -1072,20 +1072,17 @@ class NimbleChatMessage extends ChatMessage {
 		return nodes;
 	}
 
-	/** The item of the card; with none found, the card type stands for it. */
-	#cardSourceItem(): { type?: string } {
+	/** The item the card was made with, or null when it is not found. */
+	#cardSourceItem(): { type?: string } | null {
 		const uuid = (this.flags?.[SYSTEM_ID] as { itemUuid?: unknown } | undefined)?.itemUuid;
-		const item =
-			typeof uuid === 'string' && uuid
-				? (fromUuidSync(uuid as never, { strict: false }) as { type?: string } | null)
-				: null;
-		return item ?? { type: this.type };
+		if (typeof uuid !== 'string' || !uuid) return null;
+		return fromUuidSync(uuid as never, { strict: false }) as { type?: string } | null;
 	}
 
 	#collectRuleActivationCardNodes(context: {
 		isCritical: boolean;
 		isMiss: boolean;
-		sourceItem: { type?: string };
+		sourceItem: { type?: string } | null;
 	}): EffectNode[] {
 		const actorId = this.speaker?.actor;
 		const actor = actorId ? game.actors?.get(actorId) : null;

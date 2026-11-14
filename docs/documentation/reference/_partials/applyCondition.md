@@ -7,6 +7,8 @@
 
 When the GM applies the damage of a crit, the attack's target gains the condition. With a trigger about the owner, such as `onTurnStart` or `onRest`, the character that carries the item gains the condition instead. With no **Effect**, the condition stays until someone removes it.
 
+**Source** limits an attack trigger to weapon or spell attacks. An attack with no item counts as a weapon attack.
+
 **Example: Doom.** A monster whose attacks also Wound the target.
 
 - **Trigger** → `onHit`, and a second rule with `onCrit`. A crit does not count as a hit for `onHit`.

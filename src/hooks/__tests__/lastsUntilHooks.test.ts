@@ -664,6 +664,15 @@ describe('events', () => {
 		expect(dropToZeroOnDeleteMock).toHaveBeenCalledWith(effect, options, 'effectEnds:Tessa');
 	});
 
+	it('an effect that ends drops nothing on a client that is not the active GM', () => {
+		user.isActiveGM = false;
+		const holder = Object.assign(Object.create(Actor.prototype), { name: 'Tessa' });
+
+		hook('deleteActiveEffect')({ parent: holder, name: 'Dragonform', statuses: new Set() }, {});
+
+		expect(dropToZeroOnDeleteMock).not.toHaveBeenCalled();
+	});
+
 	it('the user who deletes an effect takes back the temp HP that it gave', () => {
 		const holder = Object.assign(Object.create(Actor.prototype), {
 			system: { attributes: { hp: { temp: 9 } } },
