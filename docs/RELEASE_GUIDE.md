@@ -12,8 +12,9 @@ Instructions for creating GitHub Releases for the Nimble FoundryVTT system.
 | --- | --- |
 | A PR is opened or updated | Checks, tests and the formatter run. |
 | A PR merges into `main` | The rolling dev build (`latest-dev-1`, system id `nimble-dev`) is rebuilt. Nothing is published to Foundry, and the docs are not deployed. |
-| A pre-release is published | `nimble.zip` and `system.json` are built and attached to the release. Nothing is published to Foundry, and the docs are not deployed. |
+| A beta release is published | `nimble.zip` and `system.json` are built and attached to the release. Nothing is published to Foundry. The docs are deployed, and the beta docs go up at `/beta/`. |
 | A release is published | The assets are built and attached, the version is published to the Foundry website, and the docs are deployed. |
+| A release is deleted | The docs are deployed again without it. |
 
 The tag is the only place the version is set. The release build writes the version and the
 download URL into `system.json` from the tag, so no commit bumps the version in
@@ -48,14 +49,32 @@ Pass `--notes <file>` to use a different notes file. You can also create the rel
 
 ## Beta Releases
 
-```bash
-pnpm release <major|minor|patch> --beta --prod
-```
+On <https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/new>, type the tag `X.Y.Z-beta.N`
+(for example `0.11.0-beta.1`), target `main`, paste the notes, and tick **Set as a
+pre-release**. From the command line, `pnpm release <major|minor|patch> --beta --prod` gives
+the next beta tag and does the same.
 
-The script gives the next `X.Y.Z-beta.N` tag and creates the release as a pre-release. On
-the GitHub page, tick **Set as a pre-release**. A pre-release is never published to the
-Foundry website. To ship the stable version, create a new release with the tag `X.Y.Z`. Do
-not change a pre-release into a release, because the build takes the version from the tag.
+A beta release is never published to the Foundry website. To ship the stable version, create
+a new release with the tag `X.Y.Z`. Do not change a pre-release into a release, because the
+build takes the version from the tag.
+
+## The Docs Site
+
+Each docs deploy builds the whole site from the published releases, whatever started it:
+
+- The stable docs, at <https://nimble-co.github.io/FoundryVTT-Nimble/>, come from the newest
+  release with a tag `X.Y.Z`.
+- The beta docs, at <https://nimble-co.github.io/FoundryVTT-Nimble/beta/>, come from the
+  newest pre-release with a tag `X.Y.Z-beta.N`, while it is newer than the stable release.
+  Each beta page has a banner, and the stable nav gets a link to the beta docs.
+- When no beta is newer, `/beta/` and every page under it go to the same page in the stable
+  docs.
+
+A pre-release with any other tag, such as `0.11.0-rc.1`, adds no beta docs. The workflow
+log says which releases it skipped and why.
+
+To build the site again, for example after you delete a release, run **Deploy Docs** from
+the Actions tab on `main`.
 
 ## Writing the Notes
 
