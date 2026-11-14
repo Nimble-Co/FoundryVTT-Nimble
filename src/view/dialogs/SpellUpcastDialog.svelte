@@ -34,7 +34,7 @@
 		rollModeWithoutConditions,
 		tickedConditionRollModes,
 	} from '../../utils/rolls/appliedConditionRollModes.js';
-	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
+	import { openRollModeTicks, tickChosen } from '../../utils/rolls/rollModeTicks.js';
 	import { soleTarget } from '../../utils/tokens/soleTarget.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
@@ -83,6 +83,17 @@
 		),
 	);
 	let chosenHeldChanges = $state<string[]>([]);
+	// A ticked change that gives advantage or disadvantage moves the slider; the roll adds it.
+	const heldRollModeTicks = heldLines.flatMap((line) =>
+		line.rollMode ? [{ key: line.key, value: line.rollMode }] : [],
+	);
+	let heldTicks = $state<Record<string, number>>({});
+	function chooseHeldChanges(keys: string[]) {
+		const moved = tickChosen(selectedRollMode, heldTicks, heldRollModeTicks, keys);
+		selectedRollMode = moved.mode;
+		heldTicks = moved.applied;
+		chosenHeldChanges = keys;
+	}
 	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
 	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
 	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
@@ -364,7 +375,9 @@
 		}
 
 		const activationData = {
-			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes),
+			rollMode:
+				rollModeWithoutConditions(selectedRollMode, conditionRollModes) -
+				Object.values(heldTicks).reduce((sum, step) => sum + step, 0),
 			conditionRollModes,
 			situationalModifiers,
 			primaryDieValue,
@@ -433,7 +446,11 @@
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
 	{#if choosesHeldChanges}
-		<HeldChangeLines lines={heldLines} choosing bind:chosen={chosenHeldChanges} />
+		<HeldChangeLines
+			lines={heldLines}
+			choosing
+			bind:chosen={() => chosenHeldChanges, chooseHeldChanges}
+		/>
 	{:else if !maxDamageChoice && !keptInUse}
 		<HeldChangeLines lines={heldLines} />
 	{/if}

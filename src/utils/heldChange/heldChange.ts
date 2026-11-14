@@ -302,10 +302,19 @@ function spendWord(change: HeldChange, choosing: boolean): string {
 	return choosing ? 'spendsIfTicked' : 'spends';
 }
 
+/** A line of a roll window. A line that changes the roll mode has its step. */
+export interface HeldLine {
+	key: string;
+	text: string;
+	source: string;
+	rollMode?: number;
+}
+
 /** The lines of a roll window. With `choosing`, the player ticks each line the roll uses. */
-export function heldLines(held: HeldChange[], choosing = false) {
+export function heldLines(held: HeldChange[], choosing = false): HeldLine[] {
 	return held.map((change) => ({
 		key: heldChangeKey(change),
+		...(change.kind === 'advantage' && change.value !== 0 ? { rollMode: change.value } : {}),
 		text: lineText(change),
 		source: localize(`NIMBLE.heldChange.line.${spendWord(change, choosing)}`, {
 			source: change.sourceName,
@@ -350,7 +359,7 @@ export function heldLinesForItem(
 	attacker: Holder | null | undefined,
 	item: ActivatedItem,
 	options: { ignoresDisadvantage?: boolean; choosing?: boolean } = {},
-) {
+): HeldLine[] {
 	const choosing = options.choosing === true;
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);

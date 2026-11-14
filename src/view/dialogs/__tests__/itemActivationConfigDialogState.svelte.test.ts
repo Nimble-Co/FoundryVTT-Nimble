@@ -357,6 +357,39 @@ describe('the activation dialog Held Changes', () => {
 
 		expect(state.chosenHeldChanges).toEqual(['Actor.hero.opening.opening-rule']);
 	});
+
+	it('with Feature Effects on, a held advantage leaves the slider where it is', () => {
+		const state = openAttack(true);
+
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('with Feature Effects off, a ticked advantage moves the slider, and its untick puts it back', () => {
+		const state = openAttack(false);
+
+		state.chosenHeldChanges = ['Actor.hero.opening.opening-rule'];
+
+		expect(state.selectedRollMode).toBe(1);
+		// The roll adds the ticked change itself.
+		expect(state.submittedRollMode).toBe(0);
+
+		state.chosenHeldChanges = [];
+
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('with Feature Effects off, the player can still move the slider past a ticked advantage', () => {
+		const state = openAttack(false);
+		state.chosenHeldChanges = ['Actor.hero.opening.opening-rule'];
+
+		state.selectedRollMode = 2;
+
+		expect(state.submittedRollMode).toBe(1);
+		state.chosenHeldChanges = [];
+		expect(state.selectedRollMode).toBe(1);
+	});
 });
 
 describe('the activation dialog damage multiplier tick', () => {

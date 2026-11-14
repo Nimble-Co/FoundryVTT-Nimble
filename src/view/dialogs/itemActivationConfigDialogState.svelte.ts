@@ -29,7 +29,7 @@ import {
 	tickedConditionRollModes,
 } from '#utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '#utils/rolls/attackConditionLines.js';
-import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
+import { MAX_ROLL_MODE, openRollModeTicks, tickChosen } from '#utils/rolls/rollModeTicks.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import {
 	isResourceSpendingAutomationEnabled,
@@ -130,6 +130,17 @@ export function createItemActivationConfigDialogState(
 		choosing: choosesHeldChanges,
 	});
 	let chosenHeldChanges = $state<string[]>([]);
+	// A ticked change that gives advantage or disadvantage moves the slider; the roll adds it.
+	const heldRollModeTicks = heldLines.flatMap((line) =>
+		line.rollMode ? [{ key: line.key, value: line.rollMode }] : [],
+	);
+	let heldTicks = $state<AppliedTicks>({});
+	function chooseHeldChanges(keys: string[]) {
+		const moved = tickChosen(selectedRollMode, heldTicks, heldRollModeTicks, keys);
+		selectedRollMode = moved.mode;
+		heldTicks = moved.applied;
+		chosenHeldChanges = keys;
+	}
 	const keptAmount = keptAmountFor(actor, item);
 	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
 	const damageMultiplier = damageMultiplierOf(item);
@@ -302,10 +313,17 @@ export function createItemActivationConfigDialogState(
 	const conditionRollModes = $derived(tickedConditionRollModes(conditionLines, appliedTicks));
 	const ownRollMode = $derived(rollModeWithoutConditions(selectedRollMode, conditionRollModes));
 
+	const heldRollMode = $derived(Object.values(heldTicks).reduce((sum, step) => sum + step, 0));
+
 	// The roll mode the manager gets: the player's own, with the condition ticks
-	// apart (they go in as their own sources) and the advantage choices in.
+	// and the ticked Held Changes apart (they go in as their own sources) and the
+	// advantage choices in.
 	const submittedRollMode = $derived(
-		Math.clamp(ownRollMode + conditionalAdvantageTotal, -MAX_ROLL_MODE, MAX_ROLL_MODE),
+		Math.clamp(
+			ownRollMode - heldRollMode + conditionalAdvantageTotal,
+			-MAX_ROLL_MODE,
+			MAX_ROLL_MODE,
+		),
 	);
 
 	const chosenDamageOptions = $derived(
@@ -463,7 +481,7 @@ export function createItemActivationConfigDialogState(
 			return chosenHeldChanges;
 		},
 		set chosenHeldChanges(value: string[]) {
-			chosenHeldChanges = value;
+			chooseHeldChanges(value);
 		},
 		damageMultiplier,
 		get usesDamageMultiplier() {
