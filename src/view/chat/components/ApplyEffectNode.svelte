@@ -1,49 +1,34 @@
 <script lang="ts">
-	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { ApplyEffectNodeProps } from '#types/components/ApplyEffectNode.d.ts';
-	import { getContext } from 'svelte';
 	import EffectStepRow from './EffectStepRow.svelte';
+	import { createCardStep } from './cardStep.svelte.ts';
 	import {
 		appliedEffects,
 		applyEffectFromCard,
 		applyEffectSource,
-		cardTargets,
-		cardUser,
 	} from '#utils/chat/applyEffectFromCard.ts';
 	import localize from '#utils/localize.ts';
 	import { isRuleAutomationEnabled } from '../../../settings/automationSettings.ts';
 	import { applyEffectRow } from './applyEffectRow.ts';
 
-	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
-
 	let { node }: ApplyEffectNodeProps = $props();
 
-	let busy = $state(false);
+	const step = createCardStep((card) => applyEffectFromCard(card, node));
 
 	const row = $derived.by(() => {
-		const card = messageDocument?.reactive;
-		if (!card) return null;
+		const context = step.rowContext(node.recipient);
+		if (!context) return null;
 		return applyEffectRow({
 			node,
-			source: applyEffectSource(card, node),
-			applied: appliedEffects(card, node.id),
-			canApply: !!game.user?.isGM || card.author?.id === game.user?.id,
+			source: applyEffectSource(context.card, node),
+			applied: appliedEffects(context.card, node.id),
 			saversApplyThemselves: isRuleAutomationEnabled(),
-			hasRecipient: node.recipient === 'self' ? !!cardUser(card) : cardTargets(card).length > 0,
+			canApply: context.canApply,
+			hasRecipient: context.hasRecipient,
 			localize,
 			format: localize,
 		});
 	});
-
-	async function apply() {
-		if (!messageDocument || busy) return;
-		busy = true;
-		try {
-			await applyEffectFromCard(messageDocument, node);
-		} finally {
-			busy = false;
-		}
-	}
 </script>
 
 {#if row}
@@ -54,7 +39,7 @@
 		appliedLines={row.appliedLines}
 		notes={row.note ? [row.note] : []}
 		button={row.button}
-		{busy}
-		onApply={apply}
+		busy={step.busy}
+		onApply={step.apply}
 	/>
 {/if}
