@@ -69,7 +69,7 @@ A rule can also pick an effect of its item: the **Effect** of an Apply Condition
 A state that a creature turns on, such as Rage, is an item effect. The effect is the state: the creature is Raging while it has the effect.
 
 1. On the item's **Effects** tab, click **New effect** under **Given when something uses them**. Set its name, its Lasts Until and what it does.
-2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty Pools at End** rule for each dice pool that the end empties.
+2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty pools at end** rule for each dice pool that the end empties.
 3. On **Activation → On use**, add an **Apply Effect** step. Set **Who takes it** to **The creature that uses this**, and pick the effect.
 
 ![The Effects tab of the Rage item: the Raging effect, its Lasts Until, and Used by: On use: Apply Effect](/images/documentation/item-effects-tab.png)

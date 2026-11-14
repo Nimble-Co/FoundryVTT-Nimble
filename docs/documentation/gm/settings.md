@@ -18,7 +18,7 @@ How much the system does on its own is controlled from one place: the **Configur
 ::: details More about Feature Effects off
 - An effect stays on until someone clicks **End** on its line or removes it.
 - Only a Held Change you tick goes on the roll, and only a ticked one is used up. A roll with no window (Alt-click) uses none. See [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
-- An Empty Pools at End rule does not empty its pools when its effect ends. The card of the end gets an **Empty** button for each pool that holds dice.
+- An Empty pools at end rule does not empty its pools when its effect ends. The card of the end gets an **Empty** button for each pool that holds dice.
 - After the save of a Save for Max Crit Dice rule, the save card gets an **Apply** button. It sets the dice to their max after a failed save, or gives the use back after a passed one.
 :::
 

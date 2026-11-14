@@ -113,7 +113,7 @@ With **Feature Effects** off, no effect ends by itself. Where the ended line wou
 - A turn, a round, a time or the end of combat gives an effect one line. An event such as "until they attack" gives a line on each card that causes it, while the effect is on.
 - This also holds for Minor Statuses at the end of combat, for a Grappled whose grappler drops, and for Concentration at 0 HP or Incapacitated.
 - If someone removed the effect before the click, the line says "Blinded is no longer on Tessa" and has no button.
-- An effect with an Empty Pools at End rule does not empty its pools when it ends. The card of the end gets a line "Empty Fury Dice" with an **Empty** button for each pool that holds dice. An effect removed by hand puts these lines on a message of their own.
+- An effect with an Empty pools at end rule does not empty its pools when it ends. The card of the end gets a line "Empty Fury Dice" with an **Empty** button for each pool that holds dice. An effect removed by hand puts these lines on a message of their own.
 :::
 
 The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).
