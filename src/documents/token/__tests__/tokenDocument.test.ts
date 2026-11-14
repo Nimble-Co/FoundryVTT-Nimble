@@ -1,4 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+	AFTER_RULES_PHASE,
+	MULTIPLY_DOWN_CHANGE,
+	registerMultiplyDownChange,
+} from '#documents/activeEffect/multiplyDownChange.js';
 import { systemHookName } from '#system';
 import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import { NimbleTokenDocument } from '../tokenDocument.js';
@@ -234,5 +239,82 @@ describe('NimbleTokenDocument movementFinished report', () => {
 		const completed = movement('m1', 'completed');
 		tokenMoving(completed).token._onUpdateMovement(completed, {}, {});
 		expect(reports()).toEqual([]);
+	});
+});
+
+describe('NimbleTokenDocument.prepareData', () => {
+	const base = Object.getPrototypeOf(NimbleTokenDocument.prototype) as {
+		prepareData?: () => void;
+		applyActiveEffects?: (phase: string) => void;
+	};
+	const original = { prepareData: base.prepareData, applyActiveEffects: base.applyActiveEffects };
+	const phases: string[] = [];
+
+	beforeEach(() => {
+		phases.length = 0;
+		base.applyActiveEffects = vi.fn((phase: string) => {
+			phases.push(phase);
+		});
+		// Core's prepareData skips a lazy delta, else ends with the final phase.
+		base.prepareData = vi.fn(function (this: { isLazyDelta?: boolean; actor?: unknown }) {
+			if (this.isLazyDelta && this.actor) return;
+			base.applyActiveEffects?.call(this, 'final');
+		});
+	});
+
+	afterEach(() => {
+		base.prepareData = original.prepareData;
+		base.applyActiveEffects = original.applyActiveEffects;
+	});
+
+	function token(fields: Record<string, unknown>) {
+		const document = new NimbleTokenDocument({ id: 't1' } as never) as unknown as {
+			prepareData(): void;
+		};
+		Object.defineProperty(document, 'isLazyDelta', { value: fields.isLazyDelta ?? false });
+		Object.defineProperty(document, 'actor', { value: fields.actor ?? { id: 'a1' } });
+		return document;
+	}
+
+	it('applies the token changes of the phase after the rules (Multiply, round down), after final', () => {
+		token({}).prepareData();
+
+		expect(phases).toEqual(['final', 'afterRules']);
+	});
+
+	it('applies nothing for a lazy delta that core skips', () => {
+		token({ isLazyDelta: true }).prepareData();
+
+		expect(phases).toEqual([]);
+	});
+
+	it('a token. change of Multiply, round down halves the value, rounded down', () => {
+		const config = CONFIG.ActiveEffect as unknown as Record<string, unknown>;
+		const saved = { changeTypes: config.changeTypes, phases: config.phases };
+		registerMultiplyDownChange();
+		const changeTypes = config.changeTypes as Record<
+			string,
+			{ handler(target: object, change: object): unknown }
+		>;
+		// Core's token step: the actor's token changes of the phase, each by its change type.
+		base.applyActiveEffects = function (
+			this: { actor: { tokenActiveEffectChanges: Record<string, Array<{ type: string }>> } },
+			phase: string,
+		) {
+			for (const change of this.actor.tokenActiveEffectChanges[phase] ?? []) {
+				changeTypes[change.type]?.handler(this, change);
+			}
+		};
+		const halve = { key: 'light.dim', type: MULTIPLY_DOWN_CHANGE, value: '0.5', priority: 10 };
+		const document = token({
+			actor: { id: 'a1', tokenActiveEffectChanges: { [AFTER_RULES_PHASE]: [halve] } },
+		}) as unknown as { prepareData(): void; light: { dim: number } };
+		document.light = { dim: 25 };
+
+		document.prepareData();
+
+		config.changeTypes = saved.changeTypes;
+		config.phases = saved.phases;
+		expect(document.light.dim).toBe(12);
 	});
 });

@@ -47,10 +47,11 @@ class UnarmedDamageRule extends NimbleBaseRule<UnarmedDamageRule.Schema> {
 		if (!this.test()) return;
 
 		const { actor } = this;
-		this.checkReferences(this.value);
+		const formula = this.withStacks(this.value);
+		this.checkReferences(formula);
 
 		// Set the unarmed damage formula on the actor
-		foundry.utils.setProperty(actor.system, 'unarmedDamage', this.value);
+		foundry.utils.setProperty(actor.system, 'unarmedDamage', formula);
 	}
 }
 

@@ -4,11 +4,13 @@ import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoice
 import { createApplyEffectNode } from './createApplyEffectNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
+import { createEndConditionsNode } from './createEndConditionsNode.js';
 import { createHealingNode } from './createHealingNode.js';
 import { createMoveNode } from './createMoveNode.js';
 import { createPoolNode } from './createPoolNode.js';
 import { createSavingThrowNode } from './createSavingThrowNode.js';
 import { createTextNode } from './createTextNode.js';
+import { createWoundNode } from './createWoundNode.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
 import { reconstructEffectsTree } from './reconstructEffectsTree.js';
 
@@ -44,11 +46,13 @@ export async function createEffectNode(
 		newNode = createApplyEffectNode(parentId, context, await createItemEffect(document));
 	} else if (nodeType === 'damage') newNode = createDamageNode(parentId, context);
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
+	else if (nodeType === 'endConditions') newNode = createEndConditionsNode(parentId, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
 	else if (nodeType === 'move') newNode = createMoveNode(parentId, context);
 	else if (nodeType === 'note') newNode = createTextNode(parentId, context);
 	else if (nodeType === 'pool') newNode = createPoolNode(parentId, context);
 	else if (nodeType === 'savingThrow') newNode = createSavingThrowNode(parentId, context);
+	else if (nodeType === 'wound') newNode = createWoundNode(parentId, context);
 	else throw new Error('Invalid node type');
 
 	newNode.parentNode = parentId ?? null;

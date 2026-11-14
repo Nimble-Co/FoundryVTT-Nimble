@@ -6,7 +6,9 @@ function createEffect({
 	duration,
 	sourceName,
 	origin = null,
+	system,
 }: {
+	system?: object;
 	statuses: string[];
 	duration?: { remaining?: number; seconds?: number; rounds?: number; turns?: number };
 	sourceName?: string;
@@ -17,6 +19,7 @@ function createEffect({
 		duration,
 		sourceName,
 		origin,
+		system,
 	} as unknown as ActiveEffect;
 }
 
@@ -98,6 +101,20 @@ describe('prepareActorConditions', () => {
 		} as unknown as Actor.Implementation;
 
 		expect(prepareActorConditions(actor)[0].originName).toBeNull();
+	});
+
+	it('gives the stacks of the effect that gives the condition', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+		const actor = {
+			conditionsMetadata: { active: new Set(['dazed']), overlay: new Set() },
+			effects: [createEffect({ statuses: ['dazed'], system: { stacks: { on: true, count: 3 } } })],
+		} as unknown as Actor.Implementation;
+
+		expect(prepareActorConditions(actor)[0].stacks).toBe(3);
 	});
 
 	it('handles missing metadata and empty actor gracefully', () => {

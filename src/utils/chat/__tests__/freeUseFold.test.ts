@@ -25,6 +25,8 @@ describe('useCardHasSomethingToClick', () => {
 			node({ type: 'applyEffect', recipient: 'self' }),
 			node({ type: 'pool', poolType: 'dice', action: 'rollDie' }),
 			node({ type: 'note', text: '  ' }),
+			node({ type: 'wound', amount: 1, recipient: 'self' }),
+			node({ type: 'endConditions', recipient: 'self', which: 'negative', conditions: [] }),
 		];
 		expect(useCardHasSomethingToClick({ targets: [], activation: { effects } })).toBe(false);
 	});
@@ -40,6 +42,12 @@ describe('useCardHasSomethingToClick', () => {
 		['healing', { type: 'healing' }],
 		['move', { type: 'move' }],
 		['effect for targets', { type: 'applyEffect', recipient: 'targets' }],
+		['Wound for targets', { type: 'wound', amount: 1, recipient: 'targets' }],
+		['End Conditions for targets', { type: 'endConditions', recipient: 'targets' }],
+		[
+			'self effect that waits for a click',
+			{ type: 'applyEffect', recipient: 'self', waitsForClick: true },
+		],
 	])('is true with a %s step', (_name, fields) => {
 		expect(useCardHasSomethingToClick({ activation: { effects: [node(fields)] } })).toBe(true);
 	});

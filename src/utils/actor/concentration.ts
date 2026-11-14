@@ -93,17 +93,23 @@ export interface ConcentrationSource {
 	flags?: Record<string, unknown>;
 	tags: Set<string>;
 	actor?: ConcentratingActor | null;
-	system?: { activation?: { duration?: { quantity?: unknown; type?: unknown } | null } | null };
+	system?: { activation?: { duration?: ActivationDuration | null } | null };
 }
+
+type ActivationDuration = { quantity?: unknown; type?: unknown };
 
 const DURATION_UNITS = { minute: 'minutes', hour: 'hours' } as const;
 
 /**
  * Concentrating's own moments, and "for <Duration>" when the spell's Duration is in minutes or
- * hours ("Concentration: Up to 1 minute").
+ * hours ("Concentration: Up to 1 minute"). A given Duration, such as a card's upcast one, wins
+ * over the item's.
  */
-export function concentrationLastsUntil(item: ConcentrationSource): Moment[] | undefined {
-	const duration = item.system?.activation?.duration;
+export function concentrationLastsUntil(
+	item: ConcentrationSource,
+	given?: ActivationDuration | null,
+): Moment[] | undefined {
+	const duration = given ?? item.system?.activation?.duration;
 	const units = DURATION_UNITS[String(duration?.type) as keyof typeof DURATION_UNITS];
 	const value = Math.floor(Number(duration?.quantity));
 	if (!units || !(value >= 1)) return undefined;
@@ -140,6 +146,7 @@ function activatedSpellSchool(item: ConcentrationSource): string | null {
  */
 export async function applyCasterConcentration(
 	item: ConcentrationSource,
+	activation?: { duration?: ActivationDuration | null } | null,
 ): Promise<ConcentrationOutcome> {
 	if (!item.tags.has(CONCENTRATION_PROPERTY_TAG)) return 'skipped';
 	if (!isRuleAutomationEnabled()) return 'skipped';
@@ -157,7 +164,7 @@ export async function applyCasterConcentration(
 		sourceActor: caster,
 		systemFlags: { [CONCENTRATION_TRACK_FLAG]: track },
 		replaces: concentrationsEndedBy(caster, track),
-		lastsUntil: concentrationLastsUntil(item),
+		lastsUntil: concentrationLastsUntil(item, activation?.duration),
 	});
 
 	return effect ? 'applied' : 'refused';

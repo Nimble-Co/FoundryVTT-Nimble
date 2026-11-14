@@ -7,7 +7,10 @@ const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.j
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, replaceCardEvent }));
+const fireEvent = vi.fn();
+vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireEvent }));
 const { chooseTempHp, tempHpChoiceEvent } = await import('../tempHpChoice.js');
+const { tempGrantOptions } = await import('../effectTempHp.js');
 
 function makeHolder() {
 	const frost = { id: 'eFrost', system: { tempHp: null as number | null }, update: vi.fn() };
@@ -16,6 +19,7 @@ function makeHolder() {
 		uuid: 'Actor.tessa',
 		name: 'Tessa',
 		isOwner: true,
+		system: { attributes: { hp: { temp: 5 } } },
 		effects: [frost, older],
 		update: vi.fn(),
 		frost,
@@ -65,13 +69,17 @@ describe('the temp HP choice', () => {
 		);
 	});
 
-	it('Take sets the new amount, which the effect that gave it now owns', async () => {
+	it('Take sets the new amount as the grant of the effect that gave it, which now owns it', async () => {
 		const event = line();
 		await chooseTempHp({ id: 'm1' }, event, true);
 
-		expect(tessa.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 3 });
+		expect(tessa.update).toHaveBeenCalledWith(
+			{ 'system.attributes.hp.temp': 3 },
+			tempGrantOptions('eFrost'),
+		);
 		expect(tessa.frost.update).toHaveBeenCalledWith({ 'system.tempHp': 3 });
-		expect(tessa.older.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		// The update names the grant: the active GM ends the other links.
+		expect(tessa.older.update).not.toHaveBeenCalled();
 		expect(replaceCardEvent).toHaveBeenCalledWith(
 			{ id: 'm1' },
 			event.id,
@@ -82,13 +90,32 @@ describe('the temp HP choice', () => {
 		);
 	});
 
-	it('Take with no effect that gave it sets the amount and clears the temp HP of every effect', async () => {
+	it('Take with no effect that gave it names a grant of no effect', async () => {
 		const event = tempHpChoiceEvent(tessa, { temp: 5, amount: 3 }, null, 7);
 		await chooseTempHp({ id: 'm1' }, event, true);
 
-		expect(tessa.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 3 });
-		expect(tessa.older.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		expect(tessa.update).toHaveBeenCalledWith(
+			{ 'system.attributes.hp.temp': 3 },
+			tempGrantOptions(null),
+		);
 		expect(tessa.frost.update).not.toHaveBeenCalled();
+	});
+
+	it('Take of the same amount ends the other links here, as no update reaches the GM', async () => {
+		const event = tempHpChoiceEvent(
+			tessa,
+			{ temp: 5, amount: 5 },
+			'Actor.tessa.ActiveEffect.eFrost',
+			7,
+		);
+		await chooseTempHp({ id: 'm1' }, event, true);
+
+		expect(tessa.older.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		expect(tessa.frost.update).toHaveBeenCalledWith({ 'system.tempHp': 5 });
+		expect(fireEvent).toHaveBeenCalledWith('tempHpGone', tessa, {
+			effectIds: ['eOld'],
+			effect: '',
+		});
 	});
 
 	it('a choice already made is not made again', async () => {

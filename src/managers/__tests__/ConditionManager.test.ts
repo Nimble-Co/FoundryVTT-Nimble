@@ -6,7 +6,6 @@ import { ConditionManager } from '../ConditionManager.js';
 function setConfiguredConditions(
 	conditions: Record<string, string>,
 	relationships: {
-		aliased?: Record<string, readonly string[]>;
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
 		lastsUntil?: Record<string, object[]>;
@@ -17,7 +16,6 @@ function setConfiguredConditions(
 		conditionDefaultImages: Object.fromEntries(
 			Object.keys(conditions).map((id) => [id, `icons/svg/${id}.svg`]),
 		),
-		conditionAliasedConditions: relationships.aliased ?? {},
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
 		conditionLastsUntil: relationships.lastsUntil ?? {},
@@ -66,11 +64,10 @@ describe('ConditionManager', () => {
 			expect(manager.get('hexed')?.name).toBe('Hexed');
 		});
 
-		it('records aliases, linked statuses, and a static id for linked conditions', () => {
+		it('records linked statuses and a static id for linked conditions', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', petrified: 'Petrified', wounded: 'Wounded' },
 				{
-					aliased: { blinded: ['dazed'] },
 					linked: { petrified: ['incapacitated'] },
 					stackable: ['wounded'],
 				},
@@ -78,18 +75,17 @@ describe('ConditionManager', () => {
 
 			manager.initialize();
 
-			expect(manager.get('blinded')?.aliases).toEqual(new Set(['dazed']));
+			expect(manager.get('blinded')).not.toHaveProperty('aliases');
 			expect(manager.get('petrified')?.statuses).toEqual(['incapacitated']);
 			// getMetadata() matches effects on this padded id, so its exact shape matters.
 			expect(manager.get('petrified')?._id).toBe('petrified0000000');
 			expect(manager.get('wounded')?.stackable).toBe(true);
 		});
 
-		it('leaves aliases, statuses, and the static id unset for plain conditions', () => {
+		it('leaves statuses and the static id unset for plain conditions', () => {
 			manager.initialize();
 
 			const condition = manager.get('blinded');
-			expect(condition?.aliases).toBeUndefined();
 			expect(condition?.statuses).toBeUndefined();
 			expect(condition?._id).toBeUndefined();
 		});

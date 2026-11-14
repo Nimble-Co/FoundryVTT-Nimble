@@ -1,5 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
-import type { RuleRaise, ScalingDelta, UpcastResult } from '#types/spellScaling.js';
+import type { MomentRaise, RuleRaise, ScalingDelta, UpcastResult } from '#types/spellScaling.js';
 import { addToSaveDC } from '../rolls/saveNodeDC.js';
 import { stepFormulaDieSize } from './stepFormulaDieSize.js';
 
@@ -347,14 +347,44 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 			if (!delta.targetEffectId || !delta.ruleId || !delta.ruleField) break;
 			const node = findEffectNode(activationData.effects, 'applyEffect', delta.targetEffectId);
 			if (!node) break;
-			const amount = (delta.value ?? 0) * upcastSteps;
 			const raises: RuleRaise[] = node.ruleRaises ?? [];
+			const formula = delta.formula?.trim() || null;
 			const entry = raises.find(
-				(raise) => raise.ruleId === delta.ruleId && raise.field === delta.ruleField,
+				(raise) =>
+					raise.ruleId === delta.ruleId &&
+					raise.field === delta.ruleField &&
+					(raise.formula ?? null) === formula,
 			);
-			if (entry) entry.amount += amount;
-			else raises.push({ ruleId: delta.ruleId, field: delta.ruleField, amount });
+			if (formula) {
+				if (entry) entry.steps = (entry.steps ?? 0) + upcastSteps;
+				else
+					raises.push({
+						ruleId: delta.ruleId,
+						field: delta.ruleField,
+						amount: 0,
+						formula,
+						steps: upcastSteps,
+					});
+			} else {
+				const amount = (delta.value ?? 0) * upcastSteps;
+				if (entry) entry.amount += amount;
+				else raises.push({ ruleId: delta.ruleId, field: delta.ruleField, amount });
+			}
 			node.ruleRaises = raises;
+			break;
+		}
+
+		case 'lengthenLastsUntil': {
+			const index = delta.momentIndex;
+			if (!delta.targetEffectId || typeof index !== 'number') break;
+			const node = findEffectNode(activationData.effects, 'applyEffect', delta.targetEffectId);
+			if (!node) break;
+			const amount = (delta.value ?? 0) * upcastSteps;
+			const raises: MomentRaise[] = node.momentRaises ?? [];
+			const entry = raises.find((raise) => raise.index === index);
+			if (entry) entry.amount += amount;
+			else raises.push({ index, amount });
+			node.momentRaises = raises;
 			break;
 		}
 

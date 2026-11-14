@@ -1190,6 +1190,85 @@ describe('applyUpcastDeltas', () => {
 		it('changes nothing when the picked node is not in the activation', () => {
 			expect(upcast([raise({ targetEffectId: 'missing' })], 2).ruleRaises).toBeUndefined();
 		});
+
+		it('writes a formula raise as the formula and the count of steps', () => {
+			expect(upcast([raise({ value: null, formula: '@key' })], 2).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 0, formula: '@key', steps: 2 },
+			]);
+		});
+
+		it('keeps two formula raises on the same field apart, and adds the steps of the same formula', () => {
+			const deltas = [
+				raise({ value: null, formula: '@key' }),
+				raise({ value: null, formula: '1d4' }),
+				raise({ value: null, formula: '@key' }),
+			];
+
+			expect(upcast(deltas, 2).ruleRaises).toEqual([
+				{ ruleId: 'held1', field: 'value', amount: 0, formula: '@key', steps: 4 },
+				{ ruleId: 'held1', field: 'value', amount: 0, formula: '1d4', steps: 2 },
+			]);
+		});
+	});
+
+	describe('lengthenLastsUntil', () => {
+		const lengthen = (fields: Partial<ScalingDelta> = {}) => ({
+			...createDelta({ operation: 'lengthenLastsUntil', value: 1, targetEffectId: 'apply1' }),
+			momentIndex: 0,
+			...fields,
+		});
+
+		function upcast(deltas: ScalingDelta[], steps: number) {
+			const context: UpcastContext = {
+				spell: { tier: 2, scaling: createScaling('upcast', deltas) },
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'save1',
+							type: 'savingThrow',
+							saveType: 'strength',
+							parentContext: null,
+							parentNode: null,
+							on: {
+								failedSave: [
+									{
+										id: 'apply1',
+										type: 'applyEffect',
+										effectId: 'fx1',
+										recipient: 'targets',
+										parentContext: 'failedSave',
+										parentNode: 'save1',
+									},
+								],
+							},
+						} as unknown as SavingThrowNode,
+					],
+				},
+				manaToSpend: 2 + steps,
+			};
+			const effects = applyUpcastDeltas(context).activationData.effects as any[];
+			return effects[0].on.failedSave[0];
+		}
+
+		it('adds the value times the steps to the moment of the Apply Effect node', () => {
+			expect(upcast([lengthen()], 3).momentRaises).toEqual([{ index: 0, amount: 3 }]);
+			expect(upcast([lengthen({ value: 2, momentIndex: 1 })], 2).momentRaises).toEqual([
+				{ index: 1, amount: 4 },
+			]);
+		});
+
+		it('adds up two deltas on the same moment', () => {
+			expect(upcast([lengthen(), lengthen({ value: 2 })], 2).momentRaises).toEqual([
+				{ index: 0, amount: 6 },
+			]);
+		});
+
+		it('changes nothing with no node or no moment picked', () => {
+			expect(upcast([lengthen({ targetEffectId: null })], 2).momentRaises).toBeUndefined();
+			expect(upcast([lengthen({ momentIndex: null })], 2).momentRaises).toBeUndefined();
+			expect(upcast([lengthen({ targetEffectId: 'missing' })], 2).momentRaises).toBeUndefined();
+		});
 	});
 
 	describe('Immutability Tests', () => {

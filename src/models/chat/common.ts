@@ -435,6 +435,22 @@ export const damageBack = () => ({
 			dealt: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			woundDoubles: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			doubled: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			effect: new fields.SchemaField(
+				{
+					itemUuid: new fields.StringField({ required: true, nullable: false }),
+					effectId: new fields.StringField({ required: true, nullable: false }),
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
+			ignoreArmor: new fields.BooleanField({ required: false, nullable: false, initial: true }),
+			damageType: new fields.StringField({
+				required: false,
+				nullable: false,
+				blank: true,
+				initial: '',
+			}),
+			key: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 		}),
 		{ required: false, nullable: false, initial: [] },
 	),

@@ -1,9 +1,11 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
+import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import { createBonusDamageNode } from '#utils/treeManipulation/createBonusDamageNode.js';
 import { removeDisadvantage } from '../../managers/itemActivation/keptAmountActivation.js';
 import {
 	heldAdvantageForAttack,
+	heldChangeKey,
 	heldChangesForAttack,
 	heldExtraDamageForAttack,
 	heldMaximizeForAttack,
@@ -19,8 +21,8 @@ interface AttackHeldInput {
 	target: Holder;
 	/** An area roll has no Primary Die, so it uses no Primary Die change. */
 	area: boolean;
-	/** A melee attack; unknown counts as melee. */
-	melee?: boolean;
+	/** How the attack is delivered (`deliveryOfAttack`); none fits no melee-only or ranged-only change. */
+	delivery?: AttackDelivery;
 	/** The roll is an attack roll. Only an attack roll uses Primary Die changes and ignores disadvantage. */
 	attack: boolean;
 	/** The amount the roll keeps in place of dice, or null when it rolls. */
@@ -31,6 +33,11 @@ interface AttackHeldInput {
 	noDisadvantageToIgnore?: boolean;
 	/** The card shows the extra damage parts, so the attack uses and spends them. */
 	extraDamage?: boolean;
+	/**
+	 * The keys (`heldChangeKey`) of the changes the player ticked. With a set, only those apply and
+	 * are spent; with none, every change that fits applies.
+	 */
+	chosen?: ReadonlySet<string> | null;
 }
 
 /** Each extra damage part as its own damage node with a hit outcome, so a miss deals none of it. */
@@ -134,27 +141,33 @@ function planOf(
  */
 function attackHeldPlanOf(input: AttackHeldInput): AttackHeldPlan {
 	const kept = input.kept ?? null;
+	const chosen = input.chosen ?? null;
+	const ticked = (change: HeldChange | null) =>
+		change && (!chosen || chosen.has(heldChangeKey(change))) ? change : null;
+	const allTicked = (changes: HeldChange[]) =>
+		chosen ? changes.filter((change) => chosen.has(heldChangeKey(change))) : changes;
 	const ignoreDisadvantage =
 		input.attack && !kept && !input.noDisadvantageToIgnore
-			? ignoreDisadvantageChange(input.attacker)
+			? ticked(ignoreDisadvantageChange(input.attacker))
 			: null;
 	const rolls = input.attack && !kept;
 	const attack = {
 		attacker: input.attacker,
 		target: input.target,
 		area: input.area,
-		melee: input.melee,
+		delivery: input.delivery,
 	};
 	return planOf(
 		{
 			primaryDie: rolls
-				? heldChangesForAttack({ ...attack, ignoresNegative: !!ignoreDisadvantage })
+				? allTicked(heldChangesForAttack({ ...attack, ignoresNegative: !!ignoreDisadvantage }))
 				: [],
-			advantage: rolls ? heldAdvantageForAttack(attack) : [],
-			maximize: rolls ? heldMaximizeForAttack(attack) : null,
+			advantage: rolls ? allTicked(heldAdvantageForAttack(attack)) : [],
+			maximize: rolls ? ticked(heldMaximizeForAttack(attack)) : null,
 			ignoreDisadvantage,
-			mustAttackOther: mustAttackOtherChange(input.attacker),
-			extraDamage: input.attack && input.extraDamage ? heldExtraDamageForAttack(attack) : [],
+			mustAttackOther: ticked(mustAttackOtherChange(input.attacker)),
+			extraDamage:
+				input.attack && input.extraDamage ? allTicked(heldExtraDamageForAttack(attack)) : [],
 		},
 		input.keptToEnd ?? null,
 	);

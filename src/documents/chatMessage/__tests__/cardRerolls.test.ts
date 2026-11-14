@@ -287,13 +287,14 @@ describe('Keep Amount row', () => {
 });
 
 describe('Crit Dice save row', () => {
-	function world() {
+	function world(extra: Record<string, unknown> = {}) {
 		const roller = makeRoller();
 		const target = { uuid: 'Actor.target', rollSavingThrowToChat: vi.fn() };
 		const rule = makeRule(roller, 'critDiceSave', {
 			rollEffect: 'critDiceSave',
 			saveType: 'strength',
 			saveDC: '',
+			...extra,
 		});
 		setupWorld(rule, roller, { [TARGET_TOKEN]: { actor: target } });
 		const entry = entryFor(rule);
@@ -318,6 +319,26 @@ describe('Crit Dice save row', () => {
 
 		expect(rollSaveWithOwner).toHaveBeenCalledWith(target, 'strength', expect.any(Object));
 		expect(entryOn(host, entry.id)?.used).toBe(true);
+	});
+
+	it('puts the stacks of the effect into the save DC', async () => {
+		const { entry, host } = world({
+			saveDC: '10 + @stacks',
+			withStacks: (formula: string) => formula.replace('@stacks', '3'),
+		});
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string) => formula,
+			safeEval: (formula: string) => Function(`return ${formula}`)(),
+		});
+		rollSaveWithOwner.mockResolvedValue(true);
+
+		await use(host, entry);
+
+		expect(rollSaveWithOwner).toHaveBeenCalledWith(
+			expect.anything(),
+			'strength',
+			expect.objectContaining({ dc: 13 }),
+		);
 	});
 
 	it('gives the cost back and rejects nothing when the save window is closed', async () => {

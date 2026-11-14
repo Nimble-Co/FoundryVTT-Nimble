@@ -1,5 +1,5 @@
 import type { WeaponAttack } from '#types/weaponAttack.d.ts';
-import { attackDeliveryFromAttackType } from './attackDelivery.js';
+import { deliveryOfAttack } from './attackDelivery.js';
 
 /** Which weapons an ability attacks with. Empty: the ability has its own damage. */
 export const WEAPON_ATTACKS = ['', 'any', 'melee', 'ranged'] as const;
@@ -46,7 +46,7 @@ export function weaponAttackOf(item: unknown): WeaponAttack {
 
 /** The equipped weapons this ability can attack with. */
 export function weaponOptionsFor(
-	actor: { items?: Iterable<WeaponItem> } | null | undefined,
+	actor: { type?: string | null; items?: Iterable<WeaponItem> } | null | undefined,
 	attack: WeaponAttack,
 ): WeaponOption[] {
 	if (!attack) return [];
@@ -56,7 +56,7 @@ export function weaponOptionsFor(
 		if (item.system.equipped !== true) continue;
 		const damage = firstDamage(item);
 		const targets = item.system.activation?.targets;
-		const delivery = attackDeliveryFromAttackType(targets?.attackType);
+		const delivery = deliveryOfAttack(item.system.activation, actor);
 		if (!damage?.formula || (attack !== 'any' && delivery !== attack)) continue;
 		options.push({
 			uuid: item.uuid ?? '',

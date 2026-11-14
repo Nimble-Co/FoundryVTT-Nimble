@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { defendWindowPlan } from '../openDefendWindow.js';
+import { defendWindowPlan, useRowItem } from '../openDefendWindow.js';
 
 const TOKEN = 'Scene.s.Token.pip';
 
@@ -296,5 +296,18 @@ describe('defendWindowPlan', () => {
 			expect(tickIds('interpose:interpose-1')).toEqual([]);
 			expect(tickIds('both:interpose-1')).toEqual(['Item.pocket:pocket']);
 		});
+	});
+});
+
+describe('a free Defend row that uses its item', () => {
+	it('uses the item as an answer to the attack card', async () => {
+		const activateItem = vi.fn(async () => ({ system: { upcast: { upcastSteps: 2 } } }));
+		const actor = { ...hero([]), activateItem };
+		const pick = { rule: { item: { id: 'flame', actor } } };
+
+		const steps = await useRowItem(actor as never, pick as never, { id: 'attack-card' });
+
+		expect(activateItem).toHaveBeenCalledWith('flame', { answersCardId: 'attack-card' });
+		expect(steps).toBe(2);
 	});
 });

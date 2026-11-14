@@ -106,6 +106,20 @@ describe('conditionalBonuses', () => {
 			expect(rule.matchesAttack).toHaveBeenCalledWith(null, 'weapon');
 		});
 
+		it('maps a monster attack with no attack type to melee, and a hero one to null', () => {
+			const item = {
+				type: 'monsterFeature',
+				system: { activation: { targets: { attackType: '' } } },
+			};
+			const deliveryFor = (type: string) => {
+				const rule = createRule();
+				getActiveConditionalBonuses({ ...createAttacker([rule]), type } as never, item, undefined);
+				return (rule.matchesAttack.mock.calls as unknown[][])[0]?.[0];
+			};
+			expect(deliveryFor('soloMonster')).toBe('melee');
+			expect(deliveryFor('character')).toBeNull();
+		});
+
 		it('infers a spell source for spell items', () => {
 			const rule = createRule();
 			const item = { type: 'spell', system: { activation: { targets: { attackType: 'reach' } } } };
@@ -176,6 +190,33 @@ describe('conditionalBonuses', () => {
 				damageValue: 7,
 				damageFormula: null,
 				damageType: 'radiant',
+				startsChosen: true,
+			});
+		});
+
+		it('carries the item whose damage it is, with its type, and a bonus that starts on None', () => {
+			const rule = createRule({
+				advantage: 0,
+				startsChosen: false,
+				offersAdvantage: vi.fn(() => false),
+				offersDamage: vi.fn(() => true),
+				resolveDamage: vi.fn(() => ({
+					value: null,
+					formula: '1d6+@will',
+					damageType: 'radiant',
+					fromItemIdentifier: 'lifebinding-spirit',
+				})),
+			});
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]) as never,
+				weaponItem,
+				undefined,
+			);
+			expect(option).toMatchObject({
+				damageFormula: '1d6+@will',
+				damageType: 'radiant',
+				fromItemIdentifier: 'lifebinding-spirit',
+				startsChosen: false,
 			});
 		});
 

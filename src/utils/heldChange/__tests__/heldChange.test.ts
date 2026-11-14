@@ -1,17 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
+import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	type HeldRollEffectSpec,
 	heldRollEffect,
 	heldRollSource,
 } from '../../../../tests/fixtures/heldRollEffect.js';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import {
 	cardDamageTotal,
 	createHeldChange,
 	heldAdvantageForAttack,
 	heldChangeEffect,
 	heldChangesForAttack,
+	heldExtraDamageForAttack,
 	heldLines,
 	heldLinesForItem,
 	heldMaximizeForAttack,
@@ -241,32 +245,37 @@ describe('heldAdvantageForAttack', () => {
 			attacker: creature('A'),
 			target,
 			area: false,
-			melee: false,
+			delivery: 'ranged',
 		});
 		expect(held).toEqual([]);
 	});
 
-	it('reads a melee-only change on an attack of unknown delivery', () => {
+	it('does not read a melee-only change on an attack with no delivery', () => {
 		const target = creature('T', [advantage({ meleeOnly: true })]);
-		const held = heldAdvantageForAttack({ attacker: creature('A'), target, area: false });
-		expect(held).toHaveLength(1);
+		const held = heldAdvantageForAttack({
+			attacker: creature('A'),
+			target,
+			area: false,
+			delivery: null,
+		});
+		expect(held).toEqual([]);
 	});
 
 	it('reads a ranged-only change only on an attack known to be ranged', () => {
 		const target = creature('T', [advantage({ rangedOnly: true })]);
-		const on = (melee: boolean | undefined) =>
-			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
-		expect(on(false)).toHaveLength(1);
-		expect(on(true)).toEqual([]);
-		expect(on(undefined)).toEqual([]);
+		const on = (delivery: AttackDelivery) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, delivery });
+		expect(on('ranged')).toHaveLength(1);
+		expect(on('melee')).toEqual([]);
+		expect(on(null)).toEqual([]);
 	});
 
 	it('reads a change that is both melee-only and ranged-only as melee-only', () => {
 		const target = creature('T', [advantage({ meleeOnly: true, rangedOnly: true })]);
-		const on = (melee: boolean | undefined) =>
-			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, melee });
-		expect(on(true)).toHaveLength(1);
-		expect(on(false)).toEqual([]);
+		const on = (delivery: AttackDelivery) =>
+			heldAdvantageForAttack({ attacker: creature('A'), target, area: false, delivery });
+		expect(on('melee')).toHaveLength(1);
+		expect(on('ranged')).toEqual([]);
 	});
 
 	it('reads a source-only change only on an attack by the origin creature', () => {
@@ -331,7 +340,12 @@ describe('heldMaximizeForAttack', () => {
 	it('does not read a melee-only change on an attack that is not melee', () => {
 		const target = creature('T', [maximize({ meleeOnly: true })]);
 		expect(
-			heldMaximizeForAttack({ attacker: creature('A'), target, area: false, melee: false }),
+			heldMaximizeForAttack({
+				attacker: creature('A'),
+				target,
+				area: false,
+				delivery: 'ranged',
+			}),
 		).toBeNull();
 	});
 
@@ -353,18 +367,24 @@ describe('heldMaximizeOnAreaTarget', () => {
 
 	it("reads a target's change on attacks against it", () => {
 		const target = creature('T', [maximize()]);
-		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)?.label).toBe('Doomed');
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)?.label).toBe('Doomed');
 	});
 
 	it("does not read a target's change on its own attacks", () => {
 		const target = creature('T', [maximize({ whichRoll: 'holderAttacks' })]);
-		expect(heldMaximizeOnAreaTarget(target, creature('A'), undefined)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
+	});
+
+	it('does not read a melee-only change on an area with no delivery', () => {
+		const target = creature('T', [maximize({ meleeOnly: true })]);
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), 'melee')?.label).toBe('Doomed');
 	});
 
 	it('reads a source-only change only on an area of the origin creature', () => {
 		const target = creature('T', [maximize({ fromSourceOnly: true })]);
-		expect(heldMaximizeOnAreaTarget(target, { uuid: MIRA }, undefined)).not.toBeNull();
-		expect(heldMaximizeOnAreaTarget(target, creature('B'), undefined)).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, { uuid: MIRA }, null)).not.toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('B'), null)).toBeNull();
 	});
 });
 
@@ -411,6 +431,18 @@ describe('spendHeldChanges', () => {
 		expect(add.mock.invocationCallOrder[0]).toBeLessThan(
 			target.deleteEmbeddedDocuments.mock.invocationCallOrder[0],
 		);
+	});
+
+	it('deletes an effect once when the roll spends two of its rules', async () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+		target.effects[0].system.rules[1].heldKind = 'primaryDie';
+
+		const held = heldChangesForAttack({ attacker: creature('A'), target, area: false });
+		expect(held).toHaveLength(2);
+		await spendHeldChanges(held);
+
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
 	});
 
 	it('asks the GM when the player does not own the holder', async () => {
@@ -465,13 +497,19 @@ describe('spendHeldIgnoreDisadvantage', () => {
 });
 
 describe('takeBackHeldChanges', () => {
+	const undoApplication = { [UNDO_APPLICATION_OPTION]: true };
+
 	it('deletes only the changes that the card made', async () => {
 		const target = creature('T', [{ messageId: 'm1' }, { messageId: 'm2' }]);
 
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes a disabled effect that the card made', async () => {
@@ -480,7 +518,11 @@ describe('takeBackHeldChanges', () => {
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes an effect with a disabled rule that the card made', async () => {
@@ -488,7 +530,11 @@ describe('takeBackHeldChanges', () => {
 
 		await takeBackHeldChanges(target, 'm1');
 
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+			'ActiveEffect',
+			['e0'],
+			undoApplication,
+		);
 	});
 
 	it('deletes an effect with two Held Roll rules once', async () => {
@@ -498,6 +544,23 @@ describe('takeBackHeldChanges', () => {
 
 		expect(count).toBe(1);
 		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
+
+	it('asks the GM to delete it as an undone application when the player does not own the holder', async () => {
+		const target = creature('T', [{ messageId: 'm1' }], false);
+		const query = vi.fn(async () => true);
+		const users = globals.game.users;
+		globals.game.users = { activeGM: { query } };
+
+		await takeBackHeldChanges(target, 'm1');
+
+		globals.game.users = users;
+		expect(query).toHaveBeenCalledWith('nimble.heldChange', {
+			action: 'delete',
+			actorUuid: 'T',
+			effectId: 'e0',
+			undo: true,
+		});
 	});
 });
 
@@ -601,16 +664,37 @@ describe('heldLines', () => {
 
 		expect(heldLines(held)).toEqual([
 			{
-				key: 'T.e0',
+				key: 'T.e0.e0-rule',
 				text: 'Create an Opening: +1 to Primary Die',
 				source: 'From Mira. This roll spends it.',
 			},
 			{
-				key: 'T.e1',
+				key: 'T.e1.e1-rule',
 				text: 'Create an Opening: -1 to Primary Die',
 				source: 'From Mira. It stays until its time ends.',
 			},
 		]);
+	});
+
+	it('gives each Held Roll rule of one effect its own line and key', () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+
+		const lines = heldLines(heldChangesForAttack({ attacker: creature('A'), target, area: false }));
+
+		expect(lines.map((line) => line.text)).toEqual([
+			'Create an Opening: +1 to Primary Die',
+			'Create an Opening: +2 to Primary Die',
+		]);
+		expect(new Set(lines.map((line) => line.key)).size).toBe(2);
+	});
+
+	it('keys a rule with no id by its place on the effect', () => {
+		const target = creature('T', [{ moreRules: [{ value: 2 }] }]);
+		for (const rule of target.effects[0].system.rules) (rule as { id?: string }).id = '';
+
+		const lines = heldLines(heldChangesForAttack({ attacker: creature('A'), target, area: false }));
+
+		expect(lines.map((line) => line.key)).toEqual(['T.e0.0', 'T.e0.1']);
 	});
 
 	function lineOf(spec: HeldSpec): string {
@@ -661,6 +745,59 @@ describe('heldLines', () => {
 		expect(heldLinesForItem(holder, attack).map((line) => line.text)).toEqual([
 			'Shining Mandate: 1d8 Radiant damage on a hit',
 		]);
+	});
+});
+
+describe('the delivery a Held Roll filter reads (decisions 127, 133)', () => {
+	const own = (spec: HeldSpec): HeldSpec => ({
+		kind: 'advantage',
+		whichRoll: 'holderAttacks',
+		...spec,
+	});
+	const withType = (type: string) =>
+		Object.assign(
+			creature('A', [
+				own({ label: 'Melee', meleeOnly: true }),
+				own({ label: 'Ranged', rangedOnly: true }),
+			]),
+			{ type },
+		);
+	const untyped = (activation: Record<string, unknown> = {}) => ({
+		system: {
+			activation: {
+				effects: [{ type: 'damage', canCrit: true, canMiss: true }],
+				targets: {},
+				...activation,
+			},
+		},
+	});
+	const lineTexts = (attacker: ReturnType<typeof withType>, item: ReturnType<typeof untyped>) =>
+		heldLinesForItem(attacker, item).map((line) => line.text);
+
+	it('reads a melee-only change on a monster attack with no attack type (Reach 1)', () => {
+		expect(lineTexts(withType('npc'), untyped())).toEqual(['Melee: +1 advantage']);
+	});
+
+	it('reads neither filter on a monster area attack with no attack type', () => {
+		const area = untyped({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+		expect(lineTexts(withType('npc'), area)).toEqual([]);
+	});
+
+	it('reads neither filter on a hero attack with no attack type', () => {
+		expect(lineTexts(withType('character'), untyped())).toEqual([]);
+	});
+});
+
+describe('the formula of an extra damage change', () => {
+	it('reads the stacks of the effect that holds it', () => {
+		const holder = creature('A', [
+			{ kind: 'extraDamage', label: 'Stacked', whichRoll: 'holderAttacks', formula: '(@stacks)d6' },
+		]);
+		Object.assign(holder.effects[0].system, { stacks: { on: true, count: 3 } });
+
+		const [held] = heldExtraDamageForAttack({ attacker: holder, target: null, area: false });
+
+		expect(held.formula).toBe('(3)d6');
 	});
 });
 
@@ -805,5 +942,74 @@ describe('a change that waits on the target of a feature', () => {
 		const holder = creature('A', [greased]);
 		expect(heldVulnerabilityTo(holder, 'fire')?.kind).toBe('vulnerableOnce');
 		expect(heldVulnerabilityTo(holder, 'cold')).toBeNull();
+	});
+});
+
+describe('with Feature Effects off', () => {
+	let savedSettings: unknown;
+	let savedTargets: unknown;
+
+	beforeEach(() => {
+		savedSettings = globals.game.settings;
+		savedTargets = globals.game.user?.targets;
+		globals.game.settings = {
+			get: vi.fn((_scope: string, key: string) => key !== AUTOMATION_SETTING_KEYS.applyRuleEffects),
+		};
+	});
+
+	afterEach(() => {
+		globals.game.settings = savedSettings;
+		if (globals.game.user) globals.game.user.targets = savedTargets;
+	});
+
+	const attack = (activation: Record<string, unknown> = {}) => ({
+		system: {
+			activation: {
+				effects: [{ type: 'damage', canCrit: true, canMiss: true }],
+				targets: { attackType: 'reach' },
+				...activation,
+			},
+		},
+	});
+
+	it('lists a minus Primary Die change next to ignoring disadvantage, so each one is a choice', () => {
+		const attacker = creature('A', [{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks' }]);
+		const target = creature('T', [{ label: 'Anticipate Danger', value: -1 }]);
+		globals.game.user.targets = [{ actor: target }];
+
+		const lines = heldLinesForItem(attacker, attack(), { choosing: true });
+
+		expect(lines.map((line) => line.key)).toEqual(['A.e0.e0-rule', 'T.e0.e0-rule']);
+		expect(lines[1].source).toBe('From Mira. If you tick it, this roll spends it.');
+	});
+
+	it('keys the line of a kept amount that an area attack ends as each other change', () => {
+		const attacker = creature('A', [
+			{ kind: 'wholeAmount', value: 13, whichRoll: 'holderAttacks' },
+		]);
+		const area = attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+
+		const [line] = heldLinesForItem(attacker, area, { choosing: true });
+
+		expect(line.key).toBe('A.e0.e0-rule');
+		expect(line.source).toBe('From Mira. If you tick it, this roll ends it.');
+	});
+
+	it('does not spend the change that ignores disadvantage on another action', async () => {
+		const hero = creature('H', [{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks' }]);
+
+		await spendHeldIgnoreDisadvantage(hero as never, 'Shove');
+
+		expect(hero.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('gives no one-use vulnerability and no area maximize to Apply Damage, as no window ticks them', () => {
+		const target = creature('T', [
+			{ kind: 'vulnerableOnce', whichRoll: 'attacksOnHolder', damageType: 'fire' },
+			{ kind: 'maximize', label: 'Doomed' },
+		]);
+
+		expect(heldVulnerabilityTo(target, 'fire')).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
 	});
 });

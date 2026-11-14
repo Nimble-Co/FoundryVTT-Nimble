@@ -1,36 +1,31 @@
 import { SYSTEM_ID } from '#system';
+import type { EffectPayload, StackReached } from '#types/effectPayload.d.ts';
+import type { MomentRaise, RuleRaise } from '#types/spellScaling.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { effectCardOption } from '#utils/damage/damageCard.js';
-import { newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
+import { applicationOf, newApplicationLastsLonger } from '#utils/lastsUntil/lastsLonger.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { raiseMoments } from '#utils/lastsUntil/raiseMoments.js';
 import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
 import { checkFormulaReferences } from '#utils/rolls/formulaReferences.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import applyConditionToActor, {
-	applicationOf,
 	CONDITION_REPLACED_OPTION,
 	EFFECT_RECREATED_OPTION,
 	type ExistingConditionEffect,
 } from './applyConditionToActor.js';
+import { type StackingEffect, stackingCopyOf, stacksOf, stackUp } from './effectStacks.js';
 import { giveTempHp, tempHpGrant } from './effectTempHp.js';
+import { itemEffectOf } from './itemEffectOf.js';
+import { postStackGain } from './stackGainEvent.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.applyEffect`;
 
 /** Fields of the item's effect that the copy on the holder does not keep. */
 const NOT_COPIED = ['_id', '_stats', 'origin', 'start', 'transfer', 'disabled', 'sort', 'folder'];
-
-/** What puts one effect on one actor. It goes to the GM as it is, so it holds only plain data. */
-export interface EffectPayload {
-	/** Active Effect source data: name, img, description, statuses, duration, system. */
-	data: Record<string, unknown>;
-	sourceItemUuid: string | null;
-	sourceActorUuid: string | null;
-	/** The temp HP that the effect gives, from a temp healing roll of the card. */
-	tempHp?: number | null;
-	/** The card whose use applies it: the events of the new effect go on it. */
-	cardId?: string | null;
-}
 
 export interface AppliedEffect {
 	effectUuid: string;
@@ -39,6 +34,12 @@ export interface AppliedEffect {
 	stays?: boolean;
 	/** the holder kept more temp HP than the effect gives */
 	tempHpRefused?: { temp: number; amount: number };
+	/** The stacks of a stacking effect after this application. */
+	stacks?: number;
+	/** This application reached the "At N stacks" count of the effect. */
+	stackReached?: StackReached;
+	/** The source data of the older copies this application replaced. */
+	replaced?: Record<string, unknown>[];
 }
 
 interface SourceUser {
@@ -59,6 +60,7 @@ interface EffectHolder {
 }
 
 interface CreatedEffect {
+	id?: string | null;
 	uuid?: string;
 	update?(data: Record<string, unknown>): Promise<unknown>;
 }
@@ -99,7 +101,8 @@ function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 		for (const [key, value] of Object.entries(rule)) {
 			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@')) continue;
 			if (ENRICHER.test(value)) continue;
-			rollData ??= user.getRollData();
+			// The count of stacks is the holder's, read when the rule runs. `@speed` is the mover's.
+			rollData ??= { ...user.getRollData(), stacks: '@stacks', speed: '@speed' };
 			checkFormulaReferences(value, user, {}, { rollData });
 			// A reference the source has no value for is 0 here, not the holder's value at the roll.
 			rule[key] = Roll.replaceFormulaData(value, rollData, { missing: '0' });
@@ -107,20 +110,64 @@ function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 	}
 }
 
-/** A copy of an item's effect for an actor. The Escape DC and the rule formulas are worked out now. */
+/** What an upcast adds to the copy: to fields of its rules, and to numbers of its Lasts Until. */
+export interface EffectRaises {
+	rules?: readonly RuleRaise[];
+	moments?: readonly MomentRaise[];
+}
+
+/**
+ * Adds each upcast raise to its rule's field: the amount to a number, and the formula once for
+ * each step to a formula.
+ */
+function raiseRules(rules: unknown, raises: readonly RuleRaise[]): void {
+	if (!Array.isArray(rules)) return;
+	for (const { ruleId, field, amount, formula, steps } of raises) {
+		const rule = (rules as Record<string, unknown>[]).find((entry) => entry?.id === ruleId);
+		if (!rule) continue;
+		const current = rule[field];
+		if (formula) {
+			if (!steps || (typeof current !== 'string' && current != null)) continue;
+			const terms = Array.from({ length: steps }, () => formula).join(' + ');
+			rule[field] = typeof current === 'string' && current.trim() ? `${current} + ${terms}` : terms;
+		} else if (typeof current === 'number' && Number.isFinite(current)) {
+			rule[field] = current + amount;
+		}
+	}
+}
+
+/** The card whose use applies the effect, when there is one. */
+const cardIdOf = ({ cardId }: { cardId?: string | null }) => (cardId ? { cardId } : {});
+
+/**
+ * A copy of an item's effect for an actor, with the upcast raises added. The Escape DC is worked
+ * out now, and the rule formulas too unless the effect's rules read the creature that has it.
+ */
 export function payloadFromEffect(
 	effect: { toObject(): Record<string, unknown> },
-	source: { itemUuid: string | null; user: SourceUser | null },
+	source: {
+		itemUuid: string | null;
+		user: SourceUser | null;
+		raises?: EffectRaises;
+		cardId?: string | null;
+	},
 ): EffectPayload {
 	const data = foundry.utils.deepClone(effect.toObject());
 	for (const key of NOT_COPIED) delete data[key];
-	const system = data.system as { escape?: { dc?: unknown }; rules?: unknown } | undefined;
+	const system = data.system as
+		| { escape?: { dc?: unknown }; rules?: unknown; lastsUntil?: Moment[]; readsHolder?: boolean }
+		| undefined;
 	if (system?.escape) system.escape.dc = escapeDc(system.escape.dc, source.user);
-	resolveRuleFormulas(system?.rules, source.user);
+	if (source.raises?.rules?.length) raiseRules(system?.rules, source.raises.rules);
+	if (source.raises?.moments?.length && Array.isArray(system?.lastsUntil)) {
+		system.lastsUntil = raiseMoments(system.lastsUntil, source.raises.moments);
+	}
+	if (!system?.readsHolder) resolveRuleFormulas(system?.rules, source.user);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.user?.uuid ?? null,
+		...cardIdOf(source),
 	};
 }
 
@@ -128,12 +175,13 @@ export function payloadFromEffect(
 export function payloadFromCondition(
 	condition: string,
 	lastsUntil: Moment[],
-	source: { itemUuid: string | null; actorUuid: string | null },
+	source: { itemUuid: string | null; actorUuid: string | null; cardId?: string | null },
 ): EffectPayload {
 	return {
 		data: { statuses: [condition], system: { lastsUntil } },
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.actorUuid,
+		...cardIdOf(source),
 	};
 }
 
@@ -152,7 +200,11 @@ async function createPlainEffect(
 	data: Record<string, unknown>,
 	origin: string | null,
 	createOptions: Record<string, unknown> = {},
-): Promise<{ created: CreatedEffect | null; stays?: string }> {
+): Promise<{
+	created: CreatedEffect | null;
+	stays?: string;
+	replaced?: Record<string, unknown>[];
+}> {
 	const ActiveEffectClass = CONFIG.ActiveEffect.documentClass as unknown as {
 		create(data: object, options: object): Promise<CreatedEffect | undefined>;
 		deleteDocuments(ids: string[], options: object): Promise<unknown>;
@@ -178,6 +230,10 @@ async function createPlainEffect(
 			{ parent: target, [CONDITION_REPLACED_OPTION]: true },
 		);
 	}
+	const replaced = current.flatMap((effect): Record<string, unknown>[] => {
+		const source = (effect as { toObject?(): Record<string, unknown> }).toObject?.();
+		return source ? [source] : [];
+	});
 	const created = await ActiveEffectClass.create(
 		{ ...data, origin, type: NIMBLE_EFFECT_TYPE },
 		{
@@ -186,11 +242,83 @@ async function createPlainEffect(
 			...(current.length ? { [EFFECT_RECREATED_OPTION]: true } : {}),
 		},
 	);
-	return { created: created ?? null };
+	return { created: created ?? null, ...(replaced.length ? { replaced } : {}) };
 }
 
-/** Puts the effect on the target on this client. The user must own the target. */
-export async function applyEffectHere(
+type SourceDocument = { uuid: string; getRollData?: () => Record<string, unknown> } | null;
+
+interface StackItem {
+	uuid?: string;
+	effects?: {
+		get(
+			id: string,
+		): ({ transfer?: boolean } & Parameters<typeof payloadFromEffect>[0]) | null | undefined;
+	} | null;
+}
+
+/** The "At N stacks" effect: from the item of this application, else the item of the stacked effect. */
+async function stackEffectPayload(
+	effectId: string,
+	items: { uuid?: string | null }[],
+	payload: EffectPayload,
+	sourceActor: SourceDocument,
+): Promise<EffectPayload | null> {
+	for (const each of items) {
+		const item = (each.uuid ? await fromUuid(each.uuid as never) : null) as StackItem | null;
+		const effect = itemEffectOf(item, effectId);
+		if (!effect) continue;
+		const user = sourceActor?.getRollData ? (sourceActor as SourceUser) : null;
+		return {
+			...payloadFromEffect(effect, {
+				itemUuid: item?.uuid ?? null,
+				user,
+				cardId: payload.cardId,
+			}),
+			sourceActorUuid: payload.sourceActorUuid,
+		};
+	}
+	return null;
+}
+
+/** The count went past the "At N stacks" of the effect: the holder gains the item's effect. */
+async function reachStack(
+	target: EffectHolder,
+	stacked: { name: string; count: number; origin: string | null; effectId: string },
+	payload: EffectPayload,
+	sourceActor: SourceDocument,
+): Promise<StackReached> {
+	const gained = await stackEffectPayload(
+		stacked.effectId,
+		[{ uuid: payload.sourceItemUuid }, { uuid: stacked.origin }],
+		payload,
+		sourceActor,
+	);
+	const reached: StackReached = {
+		count: stacked.count,
+		stackedName: stacked.name,
+		gainedName: typeof gained?.data.name === 'string' ? gained.data.name : '',
+	};
+	if (!gained) return reached;
+	if (typeof gained.data.img === 'string') reached.img = gained.data.img;
+	if (!isRuleAutomationEnabled()) return { ...reached, payload: gained };
+	const applied = await applyHere(target, gained);
+	return applied ? { ...reached, gainedUuid: applied.effectUuid } : reached;
+}
+
+const holders = keyedQueue();
+
+/**
+ * Puts the effect on the target on this client. The user must own the target. The applications
+ * on one target go one at a time, so no stack is lost.
+ */
+export function applyEffectHere(
+	target: EffectHolder,
+	payload: EffectPayload,
+): Promise<AppliedEffect | null> {
+	return holders.run(target.uuid, () => applyHere(target, payload));
+}
+
+async function applyHere(
 	target: EffectHolder,
 	payload: EffectPayload,
 ): Promise<AppliedEffect | null> {
@@ -203,14 +331,28 @@ export async function applyEffectHere(
 	const statuses = Array.isArray(data.statuses) ? (data.statuses as string[]) : [];
 	const lastsUntil = (data.system as { lastsUntil?: Moment[] } | undefined)?.lastsUntil ?? [];
 	const createOptions = effectCardOption(payload.cardId);
+	const stacking = stacksOf(data.system);
+	const copy = stackingCopyOf(target, data);
+	const before = copy ? (stacksOf(copy.system)?.count ?? 1) : 0;
 	let effect: CreatedEffect | null;
-	if (statuses.length) {
+	let replacedCopies: Record<string, unknown>[] = [];
+	if (copy && !statuses.length) {
+		await stackUp(
+			copy,
+			{ lastsUntil, duration: data.duration as StackingEffect['duration'] },
+			createOptions,
+		);
+		effect = copy as CreatedEffect;
+	} else if (statuses.length) {
 		effect = (await applyConditionToActor(target as never, statuses[0], {
 			sourceItem,
 			sourceActor,
 			lastsUntil,
 			effectData: data,
 			createOptions,
+			onReplaced: (sources) => {
+				replacedCopies = sources;
+			},
 		})) as CreatedEffect | null;
 	} else {
 		const plain = await createPlainEffect(
@@ -221,6 +363,7 @@ export async function applyEffectHere(
 		);
 		if (plain.stays) return { effectUuid: plain.stays, actorName: target.name ?? '', stays: true };
 		effect = plain.created;
+		replacedCopies = plain.replaced ?? [];
 	}
 	if (!effect?.uuid) return null;
 	const ids = new Set([...(target.effects ?? [])].map((entry) => entry.id));
@@ -228,13 +371,32 @@ export async function applyEffectHere(
 		.filter(([id]) => !ids.has(id))
 		.reduce((sum, [, amount]) => sum + amount, 0);
 	const grant = tempHpGrant(target, payload.tempHp, replaced);
-	await giveTempHp(target, grant.give);
+	await giveTempHp(target, grant.give, effect.id ?? null);
 	if (grant.owned) await effect.update?.({ 'system.tempHp': grant.owned });
-	return {
+	const applied: AppliedEffect = {
 		effectUuid: effect.uuid,
 		actorName: target.name ?? '',
 		...(grant.refused ? { tempHpRefused: grant.refused } : {}),
+		...(replacedCopies.length ? { replaced: replacedCopies } : {}),
 	};
+	if (!stacking) return applied;
+	const count = effect === copy ? before + 1 : stacking.count;
+	applied.stacks = count;
+	const { at, effectId } = stacking;
+	if (at === null || !effectId || before >= at || count < at) return applied;
+	applied.stackReached = await reachStack(
+		target,
+		{
+			name: typeof data.name === 'string' ? data.name : '',
+			count,
+			origin: copy?.origin ?? null,
+			effectId,
+		},
+		payload,
+		sourceActor,
+	);
+	await postStackGain(target, applied.stackReached, payload.cardId);
+	return applied;
 }
 
 /** The temp HP that each effect on the target gave, by effect id. */

@@ -2,10 +2,12 @@ import { coreEventOf } from '#utils/lastsUntil/coreEvents.js';
 import { effectSubject } from '#utils/lastsUntil/effectSubject.js';
 import {
 	anyMomentReached,
+	combatEndRelates,
+	countedAt,
 	type LastsUntilCheck,
 	type Moment,
+	momentCount,
 	momentReached,
-	turnCountedAt,
 } from '#utils/lastsUntil/momentReached.js';
 
 /** The parts of a Nimble Active Effect the end check reads. */
@@ -48,10 +50,29 @@ export function effectEndsAt(
 	if (check.type === 'event' && check.gained === effect) return false;
 	const subject = effectSubject(effect, check, combat ?? undefined);
 	if (anyMomentReached(effect.lastsUntil ?? [], subject, check)) return true;
-	if (check.type === 'combatEnd' && effect.isMinor && subject.relatesTo(check.combatId)) {
+	if (check.type === 'combatEnd' && effect.isMinor && combatEndRelates(subject, check)) {
 		return true;
 	}
 	return coreDurationEndsAt(effect, check, combat);
+}
+
+/**
+ * Which end of `effect` `check` reaches: a Lasts Until moment (by its index), a Minor Status at the
+ * end of one combat, or the core duration.
+ */
+export function reachedEndKey(
+	effect: TimedEffect,
+	check: LastsUntilCheck,
+	combat?: Combat | null,
+): string {
+	if (!(effect.parent instanceof Actor)) return 'duration';
+	const subject = effectSubject(effect, check, combat ?? undefined);
+	const index = (effect.lastsUntil ?? []).findIndex((moment, at) =>
+		momentReached(moment, subject, check, at),
+	);
+	if (index >= 0) return `lastsUntil${index}`;
+	if (check.type === 'combatEnd' && effect.isMinor) return `minor-${check.combatId}`;
+	return 'duration';
 }
 
 /** The Lasts Until moment of `effect` that `check` reaches, as plain data. Null when none does. */
@@ -80,8 +101,8 @@ export function endingMoment(
 }
 
 /**
- * The clock turns each moment of `effect` has counted once `check` counts too. Null when `check`
- * counts no "2nd next turn" moment of it.
+ * The clock turns or combat ends each moment of `effect` has counted once `check` counts too. Null
+ * when `check` counts no "2nd next turn" or "2nd combat ends" moment of it.
  */
 export function turnsSeenAfter(
 	effect: TimedEffect,
@@ -89,13 +110,13 @@ export function turnsSeenAfter(
 	combat?: Combat | null,
 ): number[] | null {
 	const moments = effect.lastsUntil ?? [];
-	if (!moments.some((moment) => moment.kind === 'turn' && (moment.value ?? 1) > 1)) return null;
+	if (!moments.some((moment) => momentCount(moment) > 1)) return null;
 	if (!(effect.parent instanceof Actor) || !effect.active) return null;
 	const subject = effectSubject(effect, check, combat ?? undefined);
 	let counted = false;
 	const seen = moments.map((moment, index) => {
 		const before = subject.turnsSeen?.[index] ?? 0;
-		if (!turnCountedAt(moment, subject, check, index)) return before;
+		if (!countedAt(moment, subject, check, index)) return before;
 		counted = true;
 		return before + 1;
 	});

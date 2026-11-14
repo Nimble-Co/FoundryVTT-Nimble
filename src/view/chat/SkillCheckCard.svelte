@@ -5,6 +5,8 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import CheckCardRolls from './components/CheckCardRolls.svelte';
 
+	import { escapeRollNote } from '#utils/lastsUntil/escapeFollow.js';
+
 	const { messageDocument } = $props();
 
 	const system = $derived(messageDocument.reactive.system);
@@ -15,6 +17,7 @@
 	const skillKey = $derived(system.skillKey);
 
 	const label = $derived(`${skills[skillKey]} Check`);
+	const note = $derived(escapeRollNote(messageDocument.reactive));
 </script>
 
 <CardHeader {messageDocument} />
@@ -24,7 +27,7 @@
 	style="--nimble-user-background-color: {headerBackgroundColor}; --nimble-user-text-color: {headerTextColor};"
 	data-card-type="check"
 >
-	<CheckCardRolls {messageDocument} {label} />
+	<CheckCardRolls {messageDocument} {label} {note} />
 
 	<CardEvents {messageDocument} />
 </article>

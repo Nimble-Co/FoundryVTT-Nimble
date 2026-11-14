@@ -1,14 +1,21 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
+import { formulaWithStacks, stacksOf, UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	type AttackDelivery,
+	deliveryOfAttack,
+	matchesAttackDelivery,
+} from '../damage/attackDelivery.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.heldChange`;
 const MESSAGE_FLAG = 'heldChangeMessage';
@@ -46,6 +53,7 @@ export function heldChangeMoments(ends: HeldChangeEnd): Moment[] {
 }
 
 interface HeldRollSource {
+	id?: string;
 	type?: string;
 	disabled?: boolean;
 	heldKind?: HeldChangeData['kind'];
@@ -75,10 +83,11 @@ interface HolderEffect {
 
 interface Holder {
 	uuid?: string | null;
+	type?: string | null;
 	isOwner?: boolean;
 	effects?: Iterable<HolderEffect>;
 	createEmbeddedDocuments?(type: string, data: object[]): Promise<unknown>;
-	deleteEmbeddedDocuments?(type: string, ids: string[]): Promise<unknown>;
+	deleteEmbeddedDocuments?(type: string, ids: string[], options?: object): Promise<unknown>;
 }
 
 /** The creature that applied the effect, and the name of what made it. */
@@ -97,14 +106,7 @@ function originOf(effect: HolderEffect): { creatureUuid: string | null; name: st
 
 /** The Held Roll rules of an effect whose predicate passes. A prepared rule checks it; a source rule has none to check. */
 function heldRollsOf(effect: HolderEffect, all: boolean): HeldRollSource[] {
-	const prepared = effect.rules && typeof effect.rules.values === 'function';
-	const rules = (
-		prepared
-			? [...(effect.rules as { values(): Iterable<unknown> }).values()]
-			: ((effect.system as { rules?: unknown[] } | undefined)?.rules ?? [])
-	) as HeldRollSource[];
-	if (!Array.isArray(rules)) return [];
-	return rules.filter(
+	return rulesOfEffect<HeldRollSource>(effect).filter(
 		(rule) =>
 			rule?.type === 'heldRoll' &&
 			(all ||
@@ -124,8 +126,9 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 		const rules = heldRollsOf(effect, all);
 		if (!rules.length) continue;
 		const origin = originOf(effect);
+		const stacks = stacksOf(effect.system)?.count ?? 1;
 		const messageId = effect.flags?.[SYSTEM_ID]?.[MESSAGE_FLAG];
-		for (const rule of rules) {
+		for (const [index, rule] of rules.entries()) {
 			held.push({
 				kind: rule.heldKind ?? 'advantage',
 				value: Number(rule.value ?? 1),
@@ -137,9 +140,10 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 				...(rule.rangedOnly && !rule.meleeOnly ? { rangedOnly: true } : {}),
 				onlyFromUuid: rule.fromSourceOnly ? (origin.creatureUuid ?? '') : null,
 				...(rule.damageType ? { damageType: rule.damageType } : {}),
-				...(rule.formula ? { formula: rule.formula } : {}),
+				...(rule.formula ? { formula: formulaWithStacks(rule.formula, stacks) } : {}),
 				...(typeof messageId === 'string' ? { sourceMessageId: messageId } : {}),
 				effectId: effect.id,
+				ruleId: rule.id || String(index),
 				holderUuid: holder?.uuid ?? '',
 			});
 		}
@@ -147,14 +151,14 @@ function heldChangesOn(holder: Holder | null | undefined, all = false): HeldChan
 	return held;
 }
 
-/** The change can go on an attack by `attacker`, melee or not. */
+/** The change can go on an attack by `attacker` with this delivery. Melee-only wins over ranged-only. */
 function fitsAttack(
 	held: HeldChange,
 	attacker: Holder | null | undefined,
-	melee: boolean | undefined,
+	delivery: AttackDelivery | undefined,
 ): boolean {
-	if (held.meleeOnly && melee === false) return false;
-	if (held.rangedOnly && melee !== false) return false;
+	const filter = held.meleeOnly ? 'melee' : held.rangedOnly ? 'ranged' : 'any';
+	if (!matchesAttackDelivery(filter, delivery ?? null)) return false;
 	// A lost source ('') fits no attacker.
 	return held.onlyFromUuid === null || held.onlyFromUuid === attacker?.uuid;
 }
@@ -164,8 +168,8 @@ interface AttackInput {
 	target: Holder | null | undefined;
 	/** An area attack: a change on a target does not go on it. */
 	area: boolean;
-	/** A melee attack; unknown counts as melee. */
-	melee?: boolean;
+	/** How the attack is delivered (`deliveryOfAttack`); none fits no melee-only or ranged-only change. */
+	delivery?: AttackDelivery;
 }
 
 /** The attacker's own changes of `kind`, and those on the single target, that fit this attack. */
@@ -175,7 +179,7 @@ function changesForAttack(input: AttackInput, kind: HeldChangeData['kind']): Hel
 		? []
 		: heldChangesOn(input.target).filter((held) => held.appliesTo === 'attacksOnHolder');
 	return [...own, ...onTarget].filter(
-		(held) => held.kind === kind && fitsAttack(held, input.attacker, input.melee),
+		(held) => held.kind === kind && fitsAttack(held, input.attacker, input.delivery),
 	);
 }
 
@@ -205,6 +209,11 @@ export function heldExtraDamageForAttack(input: AttackInput): HeldChange[] {
 	return changesForAttack(input, 'extraDamage').filter((held) => !!held.formula?.trim());
 }
 
+/** The key of a change: one Held Roll rule of one effect on one creature. */
+export function heldChangeKey(change: HeldChange): string {
+	return `${change.holderUuid}.${change.effectId}.${change.ruleId}`;
+}
+
 /** The change that makes every die of the attack roll its highest number, from the single target. */
 export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 	if (input.area) return null;
@@ -214,18 +223,20 @@ export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 /**
  * The change on one target of an area attack that maximizes the roll against it. The area rolls
  * once, so only this target takes the highest total; it is spent when the damage is applied.
+ * With Feature Effects off no roll window can tick it, so it does not apply.
  */
 export function heldMaximizeOnAreaTarget(
 	target: Holder | null | undefined,
 	attacker: Holder | null | undefined,
-	melee: boolean | undefined,
+	delivery: AttackDelivery,
 ): HeldChange | null {
+	if (!isRuleAutomationEnabled()) return null;
 	return (
 		heldChangesOn(target).find(
 			(held) =>
 				held.kind === 'maximize' &&
 				held.appliesTo === 'attacksOnHolder' &&
-				fitsAttack(held, attacker, melee),
+				fitsAttack(held, attacker, delivery),
 		) ?? null
 	);
 }
@@ -244,12 +255,12 @@ export function mustAttackOtherChange(attacker: Holder | null | undefined): Held
 	return heldChangesOn(attacker).find((held) => held.kind === 'mustAttackOther') ?? null;
 }
 
-/** The one-use vulnerability of a creature to this damage type. */
+/** The one-use vulnerability of a creature to this damage type. With Feature Effects off no roll window can tick it. */
 export function heldVulnerabilityTo(
 	holder: Holder | null | undefined,
 	damageType: string | undefined,
 ): HeldChange | null {
-	if (!damageType) return null;
+	if (!damageType || !isRuleAutomationEnabled()) return null;
 	return (
 		heldChangesOn(holder).find(
 			(held) => held.kind === 'vulnerableOnce' && held.damageType === damageType,
@@ -280,17 +291,28 @@ function lineText(change: HeldChange): string {
 	});
 }
 
-/** The read-only lines of a roll window. */
-export function heldLines(held: HeldChange[]) {
+function spendWord(change: HeldChange, choosing: boolean): string {
+	if (change.spentBy !== 'oneRoll') return 'stays';
+	return choosing ? 'spendsIfTicked' : 'spends';
+}
+
+/** A line of a roll window. A line that changes the roll mode has its step. */
+export interface HeldLine {
+	key: string;
+	text: string;
+	source: string;
+	rollMode?: number;
+}
+
+/** The lines of a roll window. With `choosing`, the player ticks each line the roll uses. */
+export function heldLines(held: HeldChange[], choosing = false): HeldLine[] {
 	return held.map((change) => ({
-		key: `${change.holderUuid}.${change.effectId}`,
+		key: heldChangeKey(change),
+		...(change.kind === 'advantage' && change.value !== 0 ? { rollMode: change.value } : {}),
 		text: lineText(change),
-		source: localize(
-			`NIMBLE.heldChange.line.${change.spentBy === 'oneRoll' ? 'spends' : 'stays'}`,
-			{
-				source: change.sourceName,
-			},
-		),
+		source: localize(`NIMBLE.heldChange.line.${spendWord(change, choosing)}`, {
+			source: change.sourceName,
+		}),
 	}));
 }
 
@@ -322,12 +344,17 @@ interface ActivatedItem {
 	};
 }
 
-/** The lines for the roll window of an item, with what is targeted now. */
+/**
+ * The lines for the roll window of an item, with what is targeted now. With `choosing` (Feature
+ * Effects off) the player ticks each change, so the minus Primary Die changes show even next to a
+ * change that ignores them.
+ */
 export function heldLinesForItem(
 	attacker: Holder | null | undefined,
 	item: ActivatedItem,
-	options: { ignoresDisadvantage?: boolean } = {},
-) {
+	options: { ignoresDisadvantage?: boolean; choosing?: boolean } = {},
+): HeldLine[] {
+	const choosing = options.choosing === true;
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
 	const ended = keptAmountEndedBy(attacker, item);
@@ -335,16 +362,18 @@ export function heldLinesForItem(
 	const endedLines = ended
 		? [
 				{
-					key: ended.effectId,
+					key: heldChangeKey(ended),
 					text: localize('NIMBLE.heldChange.line.wholeAmountEnds', {
 						label: ended.label,
 						value: String(ended.value),
 					}),
-					source: localize('NIMBLE.heldChange.line.endsSource', { source: ended.sourceName }),
+					source: localize(`NIMBLE.heldChange.line.${choosing ? 'endsIfTicked' : 'endsSource'}`, {
+						source: ended.sourceName,
+					}),
 				},
 			]
 		: [];
-	const mustAttackLines = heldLines(mustAttack ? [mustAttack] : []);
+	const mustAttackLines = heldLines(mustAttack ? [mustAttack] : [], choosing);
 	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) {
 		return [...mustAttackLines, ...endedLines];
 	}
@@ -353,25 +382,23 @@ export function heldLinesForItem(
 		attacker,
 		target: firstTargetActor(),
 		area: !!activation.acquireTargetsFromTemplate && !!activation.template?.shape,
-		melee: isMelee(attackDeliveryFromAttackType(activation.targets?.attackType)),
+		delivery: deliveryOfAttack(activation, attacker),
 	};
 	const maximize = heldMaximizeForAttack(attack);
 	return [
 		...mustAttackLines,
 		...endedLines,
-		...heldLines([
-			...(ignore ? [ignore] : []),
-			...heldAdvantageForAttack(attack),
-			...(maximize ? [maximize] : []),
-			...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore }),
-			...heldExtraDamageForAttack(attack),
-		]),
+		...heldLines(
+			[
+				...(ignore ? [ignore] : []),
+				...heldAdvantageForAttack(attack),
+				...(maximize ? [maximize] : []),
+				...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore && !choosing }),
+				...heldExtraDamageForAttack(attack),
+			],
+			choosing,
+		),
 	];
-}
-
-/** Melee, ranged, or unknown (an attack with no attack type). */
-export function isMelee(delivery: AttackDelivery): boolean | undefined {
-	return delivery === null ? undefined : delivery === 'melee';
 }
 
 /** The amount the holder keeps for its next attack. Any damage that can harm is an attack (C:452); an area does not use it. */
@@ -484,13 +511,26 @@ async function createHere(holder: Holder, change: HeldChangeData): Promise<void>
 	await holder.createEmbeddedDocuments?.('ActiveEffect', [heldChangeEffect(change)]);
 }
 
-async function deleteHere(holder: Holder, effectId: string): Promise<void> {
-	await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId]);
+/** `undo`: the delete takes back the card's application, so the change does not end. */
+async function deleteHere(holder: Holder, effectId: string, undo = false): Promise<void> {
+	if (!undo) await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId]);
+	else {
+		await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId], {
+			[UNDO_APPLICATION_OPTION]: true,
+		});
+	}
 }
 
-async function deleteHeld(holder: Holder, effectId: string): Promise<void> {
-	if (holder.isOwner) await deleteHere(holder, effectId);
-	else await askActiveGm(QUERY_NAME, { action: 'delete', actorUuid: holder.uuid, effectId });
+async function deleteHeld(holder: Holder, effectId: string, undo = false): Promise<void> {
+	if (holder.isOwner) await deleteHere(holder, effectId, undo);
+	else {
+		await askActiveGm(QUERY_NAME, {
+			action: 'delete',
+			actorUuid: holder.uuid,
+			effectId,
+			...(undo ? { undo } : {}),
+		});
+	}
 }
 
 /**
@@ -523,14 +563,19 @@ function usedUpLine(change: HeldChange, cause: string): CardEvent | null {
 /**
  * Removes what a roll spent. A change that stays for every roll is not spent. With `lines`, each
  * spent change is an ended line, with Undo, on the card of the use; `cause` says what used it.
+ * Two spent rules of one effect delete it once.
  */
 export async function spendHeldChanges(
 	held: HeldChange[],
 	lines: SpendLines | null = null,
 	cause = USED_BY_ROLL,
 ): Promise<void> {
+	const spent = new Set<string>();
 	for (const change of held) {
 		if (change.spentBy !== 'oneRoll') continue;
+		const effectKey = `${change.holderUuid}.${change.effectId}`;
+		if (spent.has(effectKey)) continue;
+		spent.add(effectKey);
 		const holder = fromUuidSync(change.holderUuid) as unknown as Holder | null;
 		if (!holder) continue;
 		const line = lines ? usedUpLine(change, cause) : null;
@@ -549,16 +594,20 @@ export async function takeBackHeldChanges(
 			.filter((held) => held.sourceMessageId === sourceMessageId)
 			.map((held) => held.effectId),
 	);
-	for (const id of ids) await deleteHeld(holder, id);
+	for (const id of ids) await deleteHeld(holder, id, true);
 	return ids.size;
 }
 
-/** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */
+/**
+ * It lasts for the next action. An attack spends it at its roll; any other action spends it here.
+ * With Feature Effects off only a tick in a roll window spends it.
+ */
 export async function spendHeldIgnoreDisadvantage(
 	holder: Holder,
 	usedItemName?: string | null,
 	lines: SpendLines | null = null,
 ): Promise<void> {
+	if (!isRuleAutomationEnabled()) return;
 	const held = ignoreDisadvantageChange(holder);
 	if (held && held.label !== usedItemName) await spendHeldChanges([held], lines, USED_BY_ACTION);
 }
@@ -571,11 +620,14 @@ export function registerHeldChangeQuery(): void {
 			actorUuid: string;
 			change?: HeldChangeData;
 			effectId?: string;
+			undo?: boolean;
 		}) => {
 			const holder = fromUuidSync(data.actorUuid) as unknown as Holder | null;
 			if (!holder) return false;
 			if (data.action === 'create' && data.change) await createHere(holder, data.change);
-			if (data.action === 'delete' && data.effectId) await deleteHere(holder, data.effectId);
+			if (data.action === 'delete' && data.effectId) {
+				await deleteHere(holder, data.effectId, data.undo === true);
+			}
 			return true;
 		};
 	});

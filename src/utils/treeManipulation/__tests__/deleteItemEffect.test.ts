@@ -54,6 +54,21 @@ describe('deleteItemEffect', () => {
 		expect(item.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
 	});
 
+	it('clears the stack effect of another effect that gives it', async () => {
+		const dazed = {
+			id: 'dazed',
+			system: { stacks: { on: true, count: 1, at: 3, effectId: 'fx' } },
+		};
+		const item = itemWith([], [], [dazed]);
+
+		await deleteItemEffect(item, 'fx');
+
+		expect(item.updateEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+			{ _id: 'dazed', 'system.stacks.effectId': '' },
+		]);
+		expect(item.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['fx']);
+	});
+
 	it('clears rule fields on other effects of the item in one update', async () => {
 		const holder = (id: string) => ({
 			id,

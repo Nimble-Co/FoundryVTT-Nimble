@@ -95,6 +95,7 @@ describe('customConditionSettings', () => {
 					description: 'Cursed by a hex.',
 					img: 'icons/svg/hex.svg',
 					minor: false,
+					negative: true,
 				},
 			]);
 		});
@@ -118,6 +119,7 @@ describe('customConditionSettings', () => {
 					description: '',
 					img: DEFAULT_CUSTOM_CONDITION_ICON,
 					minor: false,
+					negative: true,
 				},
 			]);
 		});
@@ -128,6 +130,15 @@ describe('customConditionSettings', () => {
 				{ id: 'hexed', minor: 'yes' },
 			]);
 			expect(getCustomConditions().map(({ minor }) => minor)).toEqual([true, false]);
+		});
+
+		it('reads a condition as negative unless its Negative box is off', () => {
+			setStoredConditions(settingsMock, [
+				{ id: 'shaken' },
+				{ id: 'blessed', negative: false },
+				{ id: 'hexed', negative: true },
+			]);
+			expect(getCustomConditions().map(({ negative }) => negative)).toEqual([true, false, true]);
 		});
 	});
 
@@ -221,11 +232,31 @@ describe('customConditionSettings', () => {
 			});
 		});
 
+		describe('Negative', () => {
+			let negative: Set<string>;
+
+			beforeEach(() => {
+				negative = new Set(['dazed']);
+				(
+					CONFIG.NIMBLE as unknown as { conditionNegativeConditions: Set<string> }
+				).conditionNegativeConditions = negative;
+			});
+
+			it('marks a custom condition as negative unless the box is off, and unmarks a gone one', () => {
+				setStoredConditions(settingsMock, [{ id: 'hexed' }, { id: 'blessed', negative: false }]);
+				mergeCustomConditionsIntoConfig();
+				expect([...negative].sort()).toEqual(['dazed', 'hexed']);
+
+				setStoredConditions(settingsMock, [{ id: 'blessed', negative: false }]);
+				mergeCustomConditionsIntoConfig();
+				expect([...negative]).toEqual(['dazed']);
+			});
+		});
+
 		it('reaches CONFIG.statusEffects once the condition manager reinitializes', () => {
 			// The GM-facing contract: a saved condition becomes a real Foundry status effect.
 			// The merge and the manager are otherwise only tested in isolation.
 			Object.assign(CONFIG.NIMBLE, {
-				conditionAliasedConditions: {},
 				conditionLinkedConditions: {},
 				conditionStackableConditions: new Set<string>(),
 			});

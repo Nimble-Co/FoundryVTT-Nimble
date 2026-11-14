@@ -13,10 +13,12 @@ import {
 	EFFECT_RECREATED_OPTION,
 } from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
-import { takeBackTempHp } from '#utils/actor/effectTempHp.js';
+import { STACKED_OPTION } from '#utils/actor/effectStacks.js';
+import { followTempHpChange, takeBackTempHp } from '#utils/actor/effectTempHp.js';
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
+import { dealTurnDamage } from '#utils/damage/turnDamage.js';
 import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
-import { endEffects, endEffectsAt } from '#utils/lastsUntil/endEffects.js';
+import { endEffectsAt, endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
@@ -37,16 +39,18 @@ function onTurn(type: TurnMomentType) {
 		if (!found) return;
 		const { moment, round } = found;
 		const seat = seatOf(combatant);
+		// An effect that ends at this moment deals no damage at it.
 		void endEffectsAt(
 			{ type, combatId: combat.id, seat, round, turn: place?.turn ?? null },
 			moment,
 			combat,
-		);
+		)
+			.then(() => dealTurnDamage(type, combatant as never, moment))
+			.catch((error) => console.error('Nimble | Could not deal the damage of a turn.', error));
 		if (type === 'turnEnd') {
-			void endEffects(effectsInactiveAt(combat, seat, round), {
-				...moment,
-				reason: eventHeading('inactiveRound', { name: combatant.name }),
-			});
+			const idle = effectsInactiveAt(combat, seat, round);
+			const reason = eventHeading('inactiveRound', { name: combatant.name });
+			void endOrWaitEffects(idle, { ...moment, reason }, undefined, { once: 'inactiveRound' });
 		}
 	};
 }
@@ -73,7 +77,11 @@ function endCombat(combat: Combat): void {
 		key: `combatEnd:${combat.id}:${foundry.utils.randomID()}`,
 		heading: { key: 'NIMBLE.lastsUntil.chat.heading.combatEnd' },
 	};
-	void endEffectsAt({ type: 'combatEnd', combatId: combat.id }, moment, combat);
+	void endEffectsAt(
+		{ type: 'combatEnd', combatId: combat.id, started: Number(combat.round) > 0 },
+		moment,
+		combat,
+	);
 }
 
 /** A core duration can end as combat starts. */
@@ -106,9 +114,22 @@ function onWorldTime(worldTime: number, delta: number): void {
 	void endEffectsAt({ type: 'worldTime', worldTime }, moment);
 }
 
+/** "Until its temp HP are gone": one event for each effect whose temp HP link ended. */
+function fireTempHpGone(actor: Actor, effectIds: readonly string[]): void {
+	for (const id of effectIds) {
+		const effect = [...((actor.effects ?? []) as Iterable<ActiveEffect>)].find(
+			(each) => each.id === id,
+		);
+		fireEvent('tempHpGone', actor, { effectIds: [id], effect: effect?.name ?? '' });
+	}
+}
+
 /** The HP events, read as the rule events read them (`ruleEventDispatch`). */
 function onUpdateActor(actor: Actor, changes: Record<string, unknown>, options: unknown): void {
 	if (!isActiveGm()) return;
+	void followTempHpChange(actor as never, changes, options).then((ended) =>
+		fireTempHpGone(actor, ended),
+	);
 	const hpChanged = hasAnyActorChangeAt(changes, [ACTOR_HP_PATHS.value]);
 	const woundsChanged = hasAnyActorChangeAt(changes, [ACTOR_WOUNDS_PATHS.value]);
 	if (!hpChanged && !woundsChanged) return;
@@ -147,18 +168,14 @@ function takeBackEffectTempHp(
 
 /** The statuses of a new effect, with each status they count as (Stunned counts as Incapacitated). */
 function gainedStatuses(effect: ActiveEffect): string[] {
-	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
-		string,
-		readonly string[]
-	>;
+	const aliases = (CONFIG.NIMBLE?.conditionCountsAs ?? {}) as Record<string, readonly string[]>;
 	const statuses = [...(effect.statuses ?? [])];
 	return [...new Set(statuses.flatMap((status) => [status, ...(aliases[status] ?? [])]))];
 }
 
 /** The holder gains the effect, and the creature it came from applies it, on the card of the use. */
-function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+function fireGained(effect: ActiveEffect, options?: Record<string, unknown>): void {
 	if (!isActiveGm() || !(effect.parent instanceof Actor) || !effect.active) return;
-	if (options?.[EFFECT_RECREATED_OPTION]) return;
 	const cardId = effectCardIdOf(options);
 	const card = cardId ? (game.messages?.get(cardId) ?? null) : null;
 	const named = {
@@ -169,6 +186,19 @@ function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>)
 	};
 	fireEvent('gain', effect.parent, named, card);
 	fireEvent('applyEffect', sourceOf(effect), named, card);
+}
+
+function onCreateEffect(effect: ActiveEffect, options?: Record<string, unknown>): void {
+	if (!options?.[EFFECT_RECREATED_OPTION]) fireGained(effect, options);
+}
+
+/** A stack is one more application: the holder gains the effect again. */
+function onUpdateEffect(
+	effect: ActiveEffect,
+	_changes: unknown,
+	options?: Record<string, unknown>,
+): void {
+	if (options?.[STACKED_OPTION]) fireGained(effect, options);
 }
 
 function onDeleteEffect(
@@ -217,7 +247,12 @@ function onDamageApplied(payload: {
 	const target = (payload?.targetActor ?? null) as Parameters<typeof requestSaves>[1];
 	if (payload?.isCritical) void requestSaves(card, target, 'critReceived');
 	void requestSaves(card, target, 'takeDamage');
-	void chargeOnLightning(target as never, payload?.damageTypes, payload?.sourceActor?.uuid ?? null);
+	void chargeOnLightning(
+		target as never,
+		payload?.damageTypes,
+		payload?.sourceActor?.uuid ?? null,
+		card?.id ?? null,
+	);
 	fireEvent(
 		'takeDamage',
 		payload?.targetActor ?? null,
@@ -284,6 +319,7 @@ export default function registerLastsUntilHooks(): void {
 	on('updateActor', onUpdateActor);
 	on('updateToken', onUpdateToken);
 	on('createActiveEffect', onCreateEffect);
+	on('updateActiveEffect', onUpdateEffect);
 	on('deleteActiveEffect', onDeleteEffect);
 	on(systemHookName('useItem'), onUseItem);
 	on(systemHookName('damageApplied'), onDamageApplied);

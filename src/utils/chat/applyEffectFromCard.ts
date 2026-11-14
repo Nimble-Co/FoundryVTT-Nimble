@@ -1,18 +1,20 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
-import type { RuleRaise } from '#types/spellScaling.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
-	type EffectPayload,
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
+import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
+import { raiseMoments } from '#utils/lastsUntil/raiseMoments.js';
 import localize from '#utils/localize.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -21,6 +23,7 @@ export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
 
 interface CardItem {
 	uuid: string;
+	name?: string | null;
 	actor?: CardActor | null;
 	effects?: { get(id: string): CardEffect | undefined };
 }
@@ -28,7 +31,7 @@ interface CardItem {
 interface CardEffect {
 	name: string;
 	img?: string | null;
-	system?: { lastsUntil?: Moment[]; escape?: { dc?: string } };
+	system?: { lastsUntil?: Moment[]; escape?: { dc?: string; noDc?: boolean } };
 	toObject(): Record<string, unknown>;
 }
 
@@ -52,7 +55,8 @@ function cardFlags(card: EffectCard): {
 	return (card.flags?.[SYSTEM_ID] ?? {}) as never;
 }
 
-function cardItem(card: EffectCard): CardItem | null {
+/** The item that was used for the card. */
+export function cardItem(card: EffectCard): CardItem | null {
 	const uuid = cardFlags(card).itemUuid;
 	return uuid ? (fromUuidSync(uuid as never, { strict: false }) as CardItem | null) : null;
 }
@@ -85,15 +89,15 @@ export function applyEffectSource(
 		return {
 			name: effect.name,
 			img: effect.img ?? 'icons/svg/aura.svg',
-			lastsUntil: effect.system?.lastsUntil ?? [],
+			lastsUntil: raiseMoments(effect.system?.lastsUntil ?? [], node.momentRaises ?? []),
 			usedUp: usedUpOf(effect.system),
-			escape: !!effect.system?.escape?.dc?.trim(),
+			escape: hasEscape(effect.system),
 		};
 	}
 	if (!node.condition) return null;
 	return {
 		...statusOf(node.condition),
-		lastsUntil: node.lastsUntil ?? [],
+		lastsUntil: raiseMoments(node.lastsUntil ?? [], node.momentRaises ?? []),
 		escape: false,
 	};
 }
@@ -113,17 +117,11 @@ export function cardTargets(card: EffectCard): CardActor[] {
 		.filter((actor): actor is CardActor => !!actor);
 }
 
-/** Adds each upcast raise to its rule's field, when that field holds a number. */
-function raiseRules(payload: EffectPayload, raises: readonly RuleRaise[]): void {
-	const rules = (payload.data.system as { rules?: Record<string, unknown>[] } | undefined)?.rules;
-	if (!rules) return;
-	for (const { ruleId, field, amount } of raises) {
-		const rule = rules.find((entry) => entry.id === ruleId);
-		const current = rule?.[field];
-		if (rule && typeof current === 'number' && Number.isFinite(current)) {
-			rule[field] = current + amount;
-		}
-	}
+/** The creatures a step of the card goes to: its user, or the card's targets. */
+export function stepRecipients(card: EffectCard, node: { recipient: string }): CardActor[] {
+	if (node.recipient !== 'self') return cardTargets(card);
+	const user = cardUser(card);
+	return user ? [user] : [];
 }
 
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
@@ -131,12 +129,15 @@ function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | nul
 	const effect = nodeEffect(card, node);
 	if (effect) {
 		const itemUuid = effectItem(card, node)?.uuid ?? null;
-		const payload = payloadFromEffect(effect, { itemUuid, user });
-		if (node.ruleRaises?.length) raiseRules(payload, node.ruleRaises);
-		return payload;
+		return payloadFromEffect(effect, {
+			itemUuid,
+			user,
+			raises: { rules: node.ruleRaises, moments: node.momentRaises },
+		});
 	}
 	if (!node.condition) return null;
-	return payloadFromCondition(node.condition, node.lastsUntil ?? [], {
+	const lastsUntil = raiseMoments(node.lastsUntil ?? [], node.momentRaises ?? []);
+	return payloadFromCondition(node.condition, lastsUntil, {
 		itemUuid: cardItem(card)?.uuid ?? null,
 		actorUuid: user?.uuid ?? null,
 	});
@@ -177,29 +178,69 @@ function warnTempHpKept(name: string, refused: { temp: number; amount: number })
 	);
 }
 
-/** Puts the node's effect on the card's targets, or on its user, and records who took it. */
-export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNode): Promise<void> {
+const appliedPath = (nodeId: string) => `flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FLAG}.${nodeId}`;
+
+/** What the record keeps of an application: not the "At N stacks" effect, the copies it replaced, or a temp HP refusal. */
+function recordEntry(applied: AppliedEffect): AppliedEffect {
+	const {
+		tempHpRefused: _refused,
+		stackReached: _reached,
+		replaced: _replaced,
+		...entry
+	} = applied;
+	return entry;
+}
+
+const records = keyedQueue();
+
+/**
+ * Adds creatures that took the node's effect another way (a rule of the attack) to its record,
+ * so the step shows them and its button does not apply the effect again. Adds run one at a time.
+ */
+export function recordAppliedEffects(
+	card: EffectCard,
+	nodeId: string,
+	applied: readonly AppliedEffect[],
+): Promise<void> {
+	if (applied.length < 1) return Promise.resolve();
+	return records.run(`${card.id ?? ''}.${nodeId}`, async () => {
+		const record = [...(appliedEffects(card, nodeId) ?? []), ...applied.map(recordEntry)];
+		await card.update({ [appliedPath(nodeId)]: record });
+	});
+}
+
+/**
+ * Puts the node's effect on the card's targets, or on its user, and records who took it. Given
+ * `recipients` (a save's saver), it puts it on them and adds them to the record. Gives what each
+ * creature that took it got, with what the record does not keep (the "At N stacks" effect, the copies it replaced).
+ */
+export async function applyEffectFromCard(
+	card: EffectCard,
+	node: ApplyEffectNode,
+	options: { recipients?: CardActor[] } = {},
+): Promise<AppliedEffect[]> {
 	const base = payloadOf(card, node);
-	if (!base) return;
+	if (!base) return [];
 	const payload = {
 		...base,
 		tempHp: linkedTempHealing(card, node)?.total ?? null,
 		cardId: (card as { id?: string | null }).id ?? null,
 	};
-	const user = cardUser(card);
-	const recipients = node.recipient === 'self' ? (user ? [user] : []) : cardTargets(card);
+	const recipients = options.recipients ?? stepRecipients(card, node);
 	const results = await Promise.allSettled(
 		recipients.map((actor) => applyEffectToActor(actor, payload)),
 	);
 	const applied: AppliedEffect[] = [];
-	const choices: CardEvent[] = [];
+	const taken: AppliedEffect[] = [];
+	const lines: CardEvent[] = [];
 	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);
 		else if (result.value) {
-			const { tempHpRefused, ...entry } = result.value;
+			const { tempHpRefused } = result.value;
+			const entry = recordEntry(result.value);
 			const holder = recipients[index] as { uuid?: string | null; name?: string | null };
 			if (tempHpRefused && holder?.uuid) {
-				choices.push(
+				lines.push(
 					tempHpChoiceEvent(
 						{ uuid: holder.uuid, name: holder.name },
 						tempHpRefused,
@@ -208,18 +249,37 @@ export async function applyEffectFromCard(card: EffectCard, node: ApplyEffectNod
 				);
 			}
 			applied.push(entry);
+			taken.push(result.value);
 		}
 	});
-	if (choices.length && !(await addCardEvents(card as never, choices))) {
-		for (const choice of choices) {
-			const action = choice.action as { holderName: string; had: number; amount: number };
-			warnTempHpKept(action.holderName, { temp: action.had, amount: action.amount });
+	if (lines.length && !(await addCardEvents(card as never, lines))) {
+		for (const line of lines) {
+			if (line.action?.kind !== 'tempHpChoice') continue;
+			warnTempHpKept(line.action.holderName, { temp: line.action.had, amount: line.action.amount });
 		}
 	}
 	if (!applied.length) {
+		if (options.recipients) return [];
 		const name = applyEffectSource(card, node)?.name ?? '';
 		ui.notifications?.info(localize('NIMBLE.chat.applyEffect.noneTook', { name }));
-		return;
+		return [];
 	}
-	await card.update({ [`flags.${SYSTEM_ID}.${APPLIED_EFFECTS_FLAG}.${node.id}`]: applied });
+	const record = options.recipients
+		? [...(appliedEffects(card, node.id) ?? []), ...applied]
+		: applied;
+	await card.update({ [appliedPath(node.id)]: record });
+	return taken;
+}
+
+/** Takes one creature's entry out of the record of the node, as a taken-back application. */
+export async function forgetAppliedEffect(
+	card: EffectCard,
+	nodeId: string,
+	effectUuid: string,
+): Promise<void> {
+	const record = [...(appliedEffects(card, nodeId) ?? [])];
+	const index = record.findIndex((entry) => entry.effectUuid === effectUuid);
+	if (index < 0) return;
+	record.splice(index, 1);
+	await card.update({ [appliedPath(nodeId)]: record });
 }

@@ -367,6 +367,7 @@
 					"noEffects": "No effects and no conditions.",
 					"fromItem": "From {name}",
 					"untilItEnds": "Until it ends",
+					"stacks": "{count} stacks",
 					"remove": "Remove",
 					"removeName": "Remove {name}",
 					"removeQuestion": "Remove {name}?",
@@ -553,11 +554,26 @@
 				"applyToTargets": "Apply to Targets",
 				"applyToYou": "Apply to You",
 				"on": "On {names}",
+				"withStacks": "{name} ({count} stacks)",
+				"goesOnFailers": "Goes on each creature that fails the save",
+				"goesOnSavers": "Goes on each creature that makes the save",
 				"stays": "{name} stays on {holder}",
 				"noTargets": "This card has no targets.",
 				"noneTook": "{name} did not go on any creature.",
 				"missingName": "Effect not found",
 				"missing": "The item no longer has this effect."
+			},
+			"endConditions": {
+				"negative": "End negative conditions",
+				"listed": "End {names}",
+				"endedOn": "Ended on {names}",
+				"nothingOn": "Nothing to end on {name}",
+				"endedBy": "Ended by {item}"
+			},
+			"wound": {
+				"one": "1 Wound",
+				"many": "{count} Wounds",
+				"noTrack": "{name} has no Wounds"
 			},
 			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
@@ -695,11 +711,63 @@
 			},
 			"damageBack": {
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
-				"waiting": "{label}: {name} takes {amount} damage, ignoring armor (not dealt)",
+				"dealtArmor": "{label}: {name} takes {amount} damage",
+				"dealtEffect": "{label}: {name} takes {amount} damage, ignoring armor, and gains {effect}",
+				"dealtArmorEffect": "{label}: {name} takes {amount} damage and gains {effect}",
+				"gains": "{label}: {name} gains {effect}",
 				"deal": "Deal {amount} damage",
+				"apply": "Apply {effect}",
+				"dealAndApply": "Deal {amount} damage and apply {effect}",
 				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"escapeDamage": {
+				"cause": "Escaped {effect} - {formula}"
+			},
+			"turnDamage": {
+				"takes": "{name} takes {damage}",
+				"gains": "{name} gains {wounds}",
+				"takesAndGains": "{name} takes {damage} and gains {wounds}",
+				"typed": "{amount} {type} damage",
+				"plain": "{amount} damage",
+				"cause": "{source} - {formula}",
+				"causeNoFormula": "{source}",
+				"nearSource": "{source} of {creature}",
+				"take": "Take Damage",
+				"takeLabel": "{name} takes the damage of this line",
+				"undoLabel": "Undo: give back to {name} what this line took",
+				"undone": "Undone"
+			},
+			"stackGain": {
+				"gains": "{name} gains {effect}: {count} stacks of {stacked}",
+				"has": "{name} has {count} stacks of {stacked}",
+				"apply": "Apply {effect}",
+				"applyLabel": "Apply {effect} to {name}",
+				"undoLabel": "Undo: take {effect} off {name}",
+				"undone": "Undone"
+			},
+			"emptyPool": {
+				"text": "Empty {pool}",
+				"emptied": "{pool} now empty",
+				"empty": "Empty",
+				"emptyLabel": "Empty {pool} of {name}"
+			},
+			"critDiceSave": {
+				"max": "Set the dice to their max",
+				"maxAndSpend": "Spend the use of {name} again and set the dice to their max",
+				"useBack": "Give the use back to {name}",
+				"useBackAndDice": "Give the use back to {name} and put the dice back",
+				"takeBack": "Take back what the save changed",
+				"maxDone": "The dice are at their max",
+				"useBackDone": "{name} has the use back",
+				"takeBackDone": "The save changes nothing",
+				"cause": {
+					"fail": "The target failed the save",
+					"pass": "The target passed the save",
+					"unknown": "The save has no result"
+				},
+				"apply": "Apply"
+			},
 			"swallowedDamage": {
 				"text": "{name} takes {amount} damage",
 				"cause": "Swallowed"
@@ -1243,6 +1311,10 @@
 				"ended": "{effect} ended on {name}",
 				"alreadyOn": "{effect} is already on {name}.",
 				"undoFailed": "Could not put {effect} back on {name}.",
+				"endsOn": "{effect} ends on {name}",
+				"notOn": "{effect} is no longer on {name}",
+				"end": "End",
+				"endLabel": "End {effect} on {name}",
 				"heading": {
 					"turnStart": "Start of {name}'s turn",
 					"turnEnd": "End of {name}'s turn",
@@ -1269,7 +1341,8 @@
 					"nextSpell": "{name} cast a tiered spell",
 					"inactiveRound": "{name} went a round with no attack and no new use",
 					"gain": "{name} gained {effect}",
-					"applyEffect": "{name} applied {effect}"
+					"applyEffect": "{name} applied {effect}",
+					"tempHpGone": "The temp HP that {effect} gave {name} are gone"
 				}
 			},
 			"expiryEvents": {
@@ -1938,7 +2011,7 @@
 			"tableRollOptions": "Table Roll Options",
 			"initiativeMana": "Initiative Mana",
 			"initiativeManaRerollOnes": "Initiative Mana: Reroll Ones",
-			"damageBack": "Damage Back",
+			"damageBack": "Attacker Takes",
 			"defendOption": "Defend Option",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
@@ -1964,6 +2037,8 @@
 			"skillRollMode": "Skill Roll Mode",
 			"speedBonus": "Speed Bonus",
 			"tags": "Tags",
+			"turnDamage": "Damage each turn",
+			"escapeDamage": "Damage on escape",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
@@ -2027,7 +2102,7 @@
 				}
 			},
 			"applyCondition": {
-				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
+				"description": "Apply a status condition, an effect or Wounds to a target (or self) when a trigger fires: on a hit, crit, miss, save fail, turn start, and more.",
 				"condition": {
 					"label": "Condition",
 					"hint": "The condition to apply."
@@ -2039,6 +2114,10 @@
 				"effectId": {
 					"label": "Effect",
 					"hint": "An effect of this item to apply in place of the condition, with its Lasts Until. Pick none to apply the condition alone, until someone removes it."
+				},
+				"wounds": {
+					"label": "Wounds",
+					"hint": "The Wounds the trigger also gives, up to the max of the track. A creature with no Wound track takes none. 0: no Wounds."
 				}
 			},
 			"armorClass": {
@@ -2208,6 +2287,14 @@
 				"damageType": {
 					"label": "Damage type",
 					"hint": "Damage type applied when the damage option is chosen. Leave blank to match the attack."
+				},
+				"damageOfItem": {
+					"label": "Damage of an item",
+					"hint": "The identifier of an item of the attacker. The damage option is the first damage of that item, with its damage type, and it rolls as its own damage. Leave blank to use Damage bonus."
+				},
+				"startsChosen": {
+					"label": "Starts chosen",
+					"hint": "The roll window starts on this bonus. Turn off for a bonus the player picks on some attacks only, such as the first melee attack each round."
 				},
 				"delivery": {
 					"label": "Delivery",
@@ -2709,7 +2796,8 @@
 						"rest": "You rest",
 						"combatEnd": "Combat ends",
 						"gain": "You gain a condition or a named effect",
-						"applyEffect": "You apply a condition or a named effect"
+						"applyEffect": "You apply a condition or a named effect",
+						"tempHpGone": "Its temp HP are gone"
 					}
 				}
 			},
@@ -2870,8 +2958,13 @@
 						"onRest": "You rest",
 						"onInitiative": "You roll Initiative",
 						"onCritReceived": "An enemy crits you",
-						"onDying": "You start Dying"
+						"onDying": "You start Dying",
+						"onSpellCast": "You cast a spell"
 					}
+				},
+				"manaAtLeast": {
+					"label": "Mana at least",
+					"hint": "For You cast a spell: the cast must cost this much mana or more, after any mana it is free of. A cast paid from a charge pool, and a cantrip, cost 0. 0 is any cast."
 				},
 				"freeOf": {
 					"label": "Free of",
@@ -2894,7 +2987,9 @@
 					"onRest": "you rested",
 					"onInitiative": "you rolled Initiative",
 					"onCritReceived": "an enemy hit you with a crit",
-					"onDying": "you started Dying"
+					"onDying": "you started Dying",
+					"onSpellCast": "you cast a spell",
+					"onSpellCastMana": "you spent {mana} or more mana on a spell"
 				}
 			},
 			"markTarget": {
@@ -2924,6 +3019,10 @@
 				"value": {
 					"label": "Roll mode value",
 					"hint": "Positive values grant levels of advantage; negative values grant levels of disadvantage."
+				},
+				"perStack": {
+					"label": "For each stack",
+					"hint": "On an effect with Stacks on, the value counts once for each stack. A value of 1 with 3 stacks gives 3 levels."
 				},
 				"checkType": {
 					"label": "Offer on",
@@ -3117,15 +3216,60 @@
 				}
 			},
 			"damageBack": {
-				"description": "When the owner takes damage from an attack (a crit, unless you turn off Only against crits), the one who attacked takes the same amount, ignoring armor. It goes on the card when the damage is applied. With Feature Effects off, the card shows a button.",
+				"description": "The one who attacks the owner takes damage, gains an effect, or both. It goes on the attack card. With Feature Effects off, the card shows a button.",
+				"whenGroup": { "label": "When" },
+				"damageGroup": { "label": "Damage" },
+				"effectGroup": { "label": "Effect" },
+				"trigger": {
+					"label": "When",
+					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Temp HP: when the damage of the attack takes temp HP that this effect gave; on an item it never acts.",
+					"choices": {
+						"damaged": "The owner takes damage from an attack",
+						"attacked": "The owner is attacked",
+						"tempHpReduced": "The attack takes the temp HP of this effect"
+					}
+				},
+				"attackDelivery": {
+					"label": "Attacks",
+					"hint": "Which attacks this works against. A monster attack with no attack type is melee."
+				},
+				"notOnAllies": {
+					"label": "Not on allies",
+					"hint": "An attacker on the owner's side takes nothing."
+				},
+				"answeredAttack": {
+					"label": "Also the attack it answers",
+					"hint": "On an effect from a reaction cast in the Defend window: the attack that the reaction answers counts too."
+				},
 				"onlyCrits": {
 					"label": "Only against crits",
 					"hint": "Give damage back only when the attack is a crit."
 				},
 				"amount": {
 					"label": "Amount",
-					"hint": "The damage the owner took, or what the attack's crit dice came to.",
-					"choices": { "taken": "The damage taken", "critDice": "The crit dice" }
+					"hint": "The damage the owner took, what the attack's crit dice came to, a formula, or no damage. When the owner is attacked, no damage was taken yet: use a formula.",
+					"choices": {
+						"taken": "The damage taken",
+						"critDice": "The crit dice",
+						"formula": "A formula",
+						"none": "No damage"
+					}
+				},
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice are rolled for each attacker. @ values on an effect are those of the one who applied it."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "The type of the damage, for the attacker's resistances and immunities."
+				},
+				"ignoreArmor": {
+					"label": "Ignore armor",
+					"hint": "Off: the attacker's armor, resistances, immunities and reductions apply to the damage."
+				},
+				"attackerEffectId": {
+					"label": "Effect on the attacker",
+					"hint": "An effect of this item (Apply to the actor off). A copy goes on the attacker. Set its Lasts Until in the effect window."
 				},
 				"woundDoubles": {
 					"label": "A Wound doubles it",
@@ -3394,7 +3538,7 @@
 				}
 			},
 			"dieResultEffect": {
-				"description": "When a use of an item does not miss and its Primary Die rolls a high number, each target of the use gets the effect of this item: its first effect with Apply to the actor off. The number is the face of the die before any bonus. A healing roll does not count. The Lasts Until of the effect ends it.",
+				"description": "When a use of an item does not miss and its Primary Die rolls a high number, each target of the use gets the effect of this item: its first effect with Apply to the actor off. The number is the face of the die before any bonus. An attack that adds the damage of the named item (a Conditional Bonus with Damage of an item) counts too: the rule reads the first die of that damage. A healing roll does not count. The Lasts Until of the effect ends it.",
 				"itemIdentifier": {
 					"label": "Item identifier",
 					"hint": "The item whose roll to read. Leave blank to read this item."
@@ -3436,6 +3580,40 @@
 			"maxActionBonus": {
 				"description": "Adds to the creature's max actions while it is on, for example \"+1 max action\". A turn starts with the new max.",
 				"value": { "label": "Actions", "hint": "How many max actions it adds, as a formula." }
+			},
+			"turnDamage": {
+				"description": "Damage, Wounds or both at the start or end of each turn of a creature: the one that has this rule, or each creature near it. On an effect, it stops when the effect ends. The damage ignores armor and Defend, as damage from outside an attack does.",
+				"at": {
+					"label": "When",
+					"hint": "The moment of each turn of the creature that takes it.",
+					"choices": { "turnStart": "Its turn starts", "turnEnd": "Its turn ends" }
+				},
+				"who": {
+					"label": "Who takes it",
+					"hint": "The creature that has this rule, or every other creature within Reach of it at the start or end of that creature's turn, allies too.",
+					"choices": {
+						"holder": "The creature that has this",
+						"nearby": "Each creature within Reach"
+					}
+				},
+				"reach": { "label": "Reach", "hint": "How many spaces from the creature that has this." },
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice or a number, rolled each time. Empty: no damage."
+				},
+				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." },
+				"wounds": {
+					"label": "Wounds",
+					"hint": "The Wounds it gives each time, up to the max of the track. A creature with no Wound track takes none."
+				}
+			},
+			"escapeDamage": {
+				"description": "Damage to the creature that has this effect when it escapes the effect: its Escape roll succeeds, or the table judges that it escapes. The damage ignores armor and Defend, as damage from outside an attack does.",
+				"formula": {
+					"label": "Damage",
+					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
+				},
+				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
@@ -3990,6 +4168,7 @@
 				"increaseDieSize": "Die size +{steps}",
 				"increaseDieSizeCapped": "Die size +{steps} (max d{maxFaces})",
 				"raiseEffectRule": "{rule}: +{amount} {field}",
+				"lengthenLastsUntil": "{effect}: +{amount}",
 				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier",
 				"warnings": {
@@ -4015,10 +4194,26 @@
 		"escape": {
 			"button": "Escape DC {dc}",
 			"buttonNoDc": "Escape",
-			"label": "Escape {name}: roll a save against DC {dc}",
-			"labelNoDc": "Escape {name}: roll a save",
+			"label": "Escape {name}: roll against DC {dc}",
+			"labelNoDc": "Escape {name}: roll with no DC",
 			"title": "Escape {name}",
-			"pick": "Which save do you roll?"
+			"pick": "Which roll do you make?",
+			"save": "{save} save",
+			"hint": "Escape {effect} (DC {dc})",
+			"hintNoDc": "Escape {effect}",
+			"note": "Escape {effect}",
+			"check": "{skill} check",
+			"chat": {
+				"escaped": "Escaped: {roll} {total} against DC {dc}",
+				"escapedNoDc": "Escaped: {roll} {total}",
+				"ruled": "The table judged an escape",
+				"tries": "{name} tries to escape {effect}",
+				"noDc": "No DC: the GM decides",
+				"escapes": "Escapes",
+				"escapesLabel": "{name} escapes {effect}",
+				"failed": "{name} fails to escape {effect}",
+				"waiting": "Waiting for the GM"
+			}
 		},
 		"lastsUntilText": {
 			"until": "until {moment}",
@@ -4039,6 +4234,7 @@
 				"4": "4th next turn",
 				"5": "5th next turn"
 			},
+			"nextTurnCountMany": "{count}th next turn",
 			"typedDamage": { "base": "take {types} damage", "third": "takes {types} damage" },
 			"orWord": " or ",
 			"nextHero": "the next hero's turn",
@@ -4052,6 +4248,13 @@
 			"effectEnds": "{name} ends",
 			"anotherEffectEnds": "another effect ends",
 			"combatEnds": "combat ends",
+			"combatEndsCount": {
+				"2": "the 2nd combat ends",
+				"3": "the 3rd combat ends",
+				"4": "the 4th combat ends",
+				"5": "the 5th combat ends"
+			},
+			"tempHpGone": "its temp HP are gone",
 			"them": "them",
 			"attack": "attack",
 			"meleeAttack": "melee attack",
@@ -4090,7 +4293,8 @@
 				"rest": { "base": "rest", "third": "rests" },
 				"combatEnd": { "base": "end", "third": "ends" },
 				"gain": { "base": "gain {name}", "third": "gains {name}" },
-				"applyEffect": { "base": "apply {name}", "third": "applies {name}" }
+				"applyEffect": { "base": "apply {name}", "third": "applies {name}" },
+				"tempHpGone": { "base": "lose its temp HP", "third": "loses its temp HP" }
 			}
 		},
 		"effectSheet": {
@@ -4110,8 +4314,19 @@
 				"offHint": "Its changes and rules do not apply.",
 				"transfer": "Apply to the actor",
 				"transferHint": "The actor that has this item gets the effect.",
+				"readsHolder": "Rule formulas read the creature that has it",
+				"readsHolderHint": "Off: they read the creature that applied it, when it was applied.",
 				"conditions": "Conditions",
-				"conditionsHint": "The creature that has this effect has these conditions."
+				"conditionsHint": "The creature that has this effect has these conditions.",
+				"stacks": "Stacks",
+				"stacksOn": "A new application adds a stack",
+				"stacksOnHint": "Each new application of the same effect adds 1 to its count. The effect starts again when the new one lasts longer.",
+				"stacksAt": "At",
+				"stacksAtLabel": "Stacks that give the effect",
+				"stacksGain": "stacks, they gain",
+				"stacksEffectLabel": "The effect they gain",
+				"stacksNow": "Stacks now:",
+				"stacksNowLabel": "Stacks now"
 			},
 			"lastsUntil": {
 				"heading": "Lasts Until",
@@ -4147,6 +4362,14 @@
 					"4": "4th next turn",
 					"5": "5th next turn"
 				},
+				"nextTurnCountMany": "{count}th next turn",
+				"combatCount": {
+					"1": "combat ends",
+					"2": "the 2nd combat ends",
+					"3": "the 3rd combat ends",
+					"4": "the 4th combat ends",
+					"5": "the 5th combat ends"
+				},
 				"units": {
 					"rounds": "rounds",
 					"minutes": "minutes",
@@ -4169,14 +4392,16 @@
 					"loseConcentration": "lose Concentration",
 					"useAgain": "use this again",
 					"gain": "gain",
-					"applyEffect": "apply"
+					"applyEffect": "apply",
+					"tempHpGone": "lose its temp HP"
 				},
 				"add": "add a moment...",
 				"addKind": {
 					"turn": "a turn or a round",
 					"time": "rounds or time pass",
 					"event": "they or you do something",
-					"effectEnds": "another effect ends"
+					"effectEnds": "another effect ends",
+					"combatEnd": "combat ends"
 				},
 				"fields": {
 					"boundary": "Start or end",
@@ -4187,6 +4412,7 @@
 					"subject": "Who",
 					"event": "What happens",
 					"effectName": "The name of the other effect",
+					"combatCount": "Which combat end",
 					"add": "Add a moment"
 				},
 				"effectNamePlaceholder": "Rage",
@@ -4204,13 +4430,18 @@
 				"withA": "with a",
 				"save": "save",
 				"savesLabel": "Saves for the escape",
+				"noDc": "No DC",
+				"noDcLabel": "Escape with no DC",
+				"orA": "or a",
+				"check": "check",
+				"skillsLabel": "Skills for the escape",
 				"saves": {
 					"strength": "STR",
 					"dexterity": "DEX",
 					"intelligence": "INT",
 					"will": "WIL"
 				},
-				"hint": "The holder spends 1 action and rolls one of the saves that are on. A success removes the effect. With no DC, there is no escape."
+				"hint": "The holder spends 1 action and rolls one of the saves or checks that are on. A success ends the effect, and a reroll that fails puts it back. Leave the DC blank for no Escape. Turn on No DC when the table judges the roll."
 			},
 			"changes": {
 				"key": "Key",
@@ -4223,7 +4454,14 @@
 				"none": "No changes."
 			},
 			"changeTypes": {
-				"multiplyDown": "Multiply, round down"
+				"multiplyDown": "Multiply, round down",
+				"multiplyDownHint": "Applies after every rule, so it also multiplies what rules add, such as a Speed Bonus."
+			},
+			"phases": {
+				"afterRules": {
+					"label": "After rules",
+					"hint": "After every rule of the actor. Every Multiply, round down change applies here."
+				}
 			}
 		},
 		"sheets": {
@@ -5039,7 +5277,8 @@
 				"line": "Used by: {users}",
 				"nothing": "Nothing uses this effect.",
 				"onUse": "On use: Apply Effect",
-				"rule": "Rule: {name}"
+				"rule": "Rule: {name}",
+				"stacks": "Stacks of {name}"
 			},
 			"confirm": {
 				"title": "Delete {name}",
@@ -5059,7 +5298,17 @@
 				"edit": "Edit the effect",
 				"condition": "Condition: {name}",
 				"recipient": "Who takes it",
-				"recipients": { "targets": "The targets", "self": "The creature that uses this" },
+				"recipients": {
+					"targets": "The targets",
+					"self": "The creature that uses this",
+					"saversFail": "Each creature that fails",
+					"saversPass": "Each creature that saves"
+				},
+				"applies": "Applies",
+				"appliesWhen": {
+					"used": "When used",
+					"click": "On a click"
+				},
 				"tempHealing": "Temp HP that it gives",
 				"noTempHealing": "None",
 				"tempHealingFormula": "Temp healing {formula}"
@@ -5068,6 +5317,19 @@
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
 			"move": "Move",
+			"endConditions": "End Conditions",
+			"endConditionsNode": {
+				"recipient": "Who it helps",
+				"which": "Ends",
+				"whichOptions": { "negative": "Every negative condition", "listed": "These conditions" },
+				"delete": "Delete End Conditions"
+			},
+			"wound": "Wound",
+			"woundNode": {
+				"amount": "Wounds",
+				"recipient": "Who takes them",
+				"delete": "Delete Wound"
+			},
 			"moveNode": {
 				"kind": "Kind",
 				"kinds": { "free": "Move for free", "forced": "Forced Movement" },
@@ -5213,7 +5475,9 @@
 				"maximize": "{label}: every die rolls its highest number",
 				"extraDamage": "{label}: {formula} {damageType} damage on a hit",
 				"endsSource": "From {source}. This roll ends it.",
+				"endsIfTicked": "From {source}. If you tick it, this roll ends it.",
 				"spends": "From {source}. This roll spends it.",
+				"spendsIfTicked": "From {source}. If you tick it, this roll spends it.",
 				"stays": "From {source}. It stays until its time ends."
 			}
 		},
@@ -5514,6 +5778,9 @@
 				"ruleField": "Number",
 				"chooseOne": "Choose one",
 				"noEffectRules": "Add an Apply Effect node with an effect in the Activation tab to pick its rule here.",
+				"formula": "Formula",
+				"moment": "Moment",
+				"noEffectMoments": "Add an Apply Effect node in the Activation tab whose effect lasts a count of turns or a time, to pick that moment here.",
 				"operations": {
 					"addFlatDamage": "Flat Damage",
 					"addDice": "Dice",
@@ -5526,7 +5793,8 @@
 					"addDuration": "Duration",
 					"addCondition": "Condition",
 					"increaseDieSize": "Increase Die Size",
-					"raiseEffectRule": "Raise Effect Rule"
+					"raiseEffectRule": "Raise Effect Rule",
+					"lengthenLastsUntil": "Lengthen Lasts Until"
 				}
 			}
 		},
@@ -5703,6 +5971,8 @@
 				"descriptionPlaceholder": "What this condition does. Shown in condition tooltips.",
 				"minor": "Minor Status",
 				"minorHint": "Ends when combat ends.",
+				"negative": "Negative",
+				"negativeHint": "It harms its holder: an End Conditions step ends it.",
 				"chooseIcon": "Choose icon",
 				"addCondition": "Add Condition",
 				"remove": "Remove condition",

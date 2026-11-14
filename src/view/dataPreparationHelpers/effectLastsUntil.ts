@@ -4,7 +4,7 @@ import {
 	holderReader,
 	usedUpOf,
 } from '#utils/lastsUntil/describeLastsUntil.js';
-import { escapeDcOfEffect } from '#utils/lastsUntil/escapeEffect.js';
+import { escapeDcOfEffect, hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 
@@ -47,19 +47,19 @@ function coreDurationOf(
 	return { [units]: value };
 }
 
-/** The user owns the effect, it is on the actor itself, and it has an Escape DC. */
+/** The user owns the effect, it is on the actor itself, and it has an Escape. */
 export function escapeOf(effect: {
 	isOwner?: boolean;
 	origin?: string | null;
 	system?: unknown;
 	parent?: unknown;
 }): { dc: number | null } | null {
-	const dc = (effect.system as { escape?: { dc?: string } } | undefined)?.escape?.dc;
 	const holder = effect.parent as
 		| { documentName?: string; type: string; getRollData(): Record<string, unknown> }
 		| null
 		| undefined;
-	if (!effect.isOwner || !dc?.trim() || holder?.documentName !== 'Actor') return null;
+	if (!effect.isOwner || !hasEscape(effect.system as never) || holder?.documentName !== 'Actor')
+		return null;
 	return { dc: escapeDcOfEffect(effect, holder) };
 }
 
@@ -67,7 +67,7 @@ export function escapeOf(effect: {
 export function effectLastsUntil(effect: LastsUntilEffect, holder: Creature | null): string {
 	const system = (effect.system ?? {}) as {
 		lastsUntil?: Moment[];
-		escape?: { dc?: string };
+		escape?: { dc?: string; noDc?: boolean };
 	};
 	const source = sourceCreature(effect);
 	const sourceName = source && source.uuid !== holder?.uuid ? (source.name ?? null) : null;
@@ -75,7 +75,7 @@ export function effectLastsUntil(effect: LastsUntilEffect, holder: Creature | nu
 		moments: system.lastsUntil ?? [],
 		usedUp: usedUpOf(system),
 		coreDuration: coreDurationOf(effect),
-		escape: !!system.escape?.dc?.trim(),
+		escape: hasEscape(system),
 		reader: holderReader(sourceName),
 		localize,
 		format: localize,

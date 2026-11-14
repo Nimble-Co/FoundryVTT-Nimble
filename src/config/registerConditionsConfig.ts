@@ -190,13 +190,13 @@ export default function registerConditionsConfig() {
 		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
 	};
 
-	const conditionAliasedConditions = {
-		grappled: ['restrained'] as const,
-		incapacitated: ['paralyzed', 'stunned', 'unconscious'] as const,
-		paralyzed: ['incapacitated', 'stunned', 'unconscious'] as const,
-		restrained: ['grappled'] as const,
-		stunned: ['incapacitated', 'restrained', 'paralyzed', 'unconscious'] as const,
-		unconscious: ['incapacitated', 'paralyzed', 'stunned'] as const,
+	/** What a condition counts as, one way, as the book says it. Nothing else counts as another. */
+	const conditionCountsAs: Record<string, readonly string[]> = {
+		paralyzed: ['incapacitated'],
+		stunned: ['incapacitated'],
+		unconscious: ['incapacitated'],
+		grappled: ['restrained'],
+		restrained: ['grappled'],
 	};
 
 	const conditionLinkedConditions = {
@@ -209,6 +209,34 @@ export default function registerConditionsConfig() {
 
 	/** Minor Statuses end when combat ends. A custom condition can join with its Minor box. */
 	const conditionMinorConditions = new Set<string>(['charged', 'distracted', 'smoldering']);
+
+	/** The conditions that harm their holder: an End Conditions step ends them. A custom condition can join with its Negative box. */
+	const conditionNegativeConditions = new Set<string>([
+		'blinded',
+		'charged',
+		'charmed',
+		'confused',
+		'dazed',
+		'despair',
+		'distracted',
+		'frightened',
+		'grappled',
+		'hampered',
+		'incapacitated',
+		'marked',
+		'paralyzed',
+		'petrified',
+		'poisoned',
+		'prone',
+		'restrained',
+		'silenced',
+		'slowed',
+		'smoldering',
+		'stunned',
+		'swallowed',
+		'taunted',
+		'unconscious',
+	]);
 
 	/** The Lasts Until a condition has when nothing else gives it one, copied into its status effect. */
 	const conditionLastsUntil: Record<string, Moment[]> = {
@@ -251,7 +279,7 @@ export default function registerConditionsConfig() {
 
 	return {
 		conditions,
-		conditionAliasedConditions,
+		conditionCountsAs,
 		conditionRules,
 		conditionDescriptions,
 		conditionDefaultImages,
@@ -259,6 +287,7 @@ export default function registerConditionsConfig() {
 		conditionStackableConditions,
 		conditionOverlayConditions,
 		conditionMinorConditions,
+		conditionNegativeConditions,
 		conditionLastsUntil,
 		conditionTriggerRelationships,
 	};

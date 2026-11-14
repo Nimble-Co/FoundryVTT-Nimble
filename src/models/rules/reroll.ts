@@ -264,7 +264,7 @@ class RerollRule extends RollUseRule<RerollRule.Schema> {
 		const formula = attackChanges ? (this.extraDamage ?? '').trim() : '';
 		if (formula) this.checkReferences(formula);
 		const extraDamage = formula
-			? Roll.replaceFormulaData(formula, this.actor?.getRollData() ?? {}, { missing: '0' })
+			? Roll.replaceFormulaData(formula, this.rollData(), { missing: '0' })
 			: '';
 		return {
 			rollModeChange: Number(this.rollModeChange) || 0,

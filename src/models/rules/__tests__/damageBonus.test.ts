@@ -631,6 +631,19 @@ describe('getDamageBonusTotal', () => {
 });
 
 describe('DamageBonusRule — dice-based values', () => {
+	it('puts the stacks of its effect into a dice formula, which the attack rolls later', () => {
+		const actor = createMockActor({});
+		const rule = createDamageBonusRule(
+			{ value: '(@stacks)d6', delivery: 'any', source: 'any' },
+			actor,
+		);
+		Object.defineProperty(rule, 'stacks', { get: () => 3, configurable: true });
+
+		rule.afterPrepareData();
+
+		expect(actor.system.damageBonuses).toEqual([expect.objectContaining({ formula: '(3)d6' })]);
+	});
+
 	it('should store dice formula as raw string instead of resolving', () => {
 		const actor = createMockActor({});
 		const rule = createDamageBonusRule({ value: '1d6', delivery: 'any', source: 'any' }, actor);

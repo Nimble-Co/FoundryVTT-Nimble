@@ -13,6 +13,7 @@ export interface UserRule {
 /** A document with `system.rules`: the item, or one of its effects. */
 export interface UserRuleHolder {
 	id?: string | null;
+	name?: string | null;
 	documentName?: string;
 	system?: unknown;
 	update?(data: Record<string, unknown>): Promise<unknown>;
@@ -23,8 +24,10 @@ export interface UserItem extends UserRuleHolder {
 }
 
 export type ItemEffectUser =
-	| { kind: 'node'; nodeId: string; recipient: 'self' | 'targets' }
-	| { kind: 'rule'; holder: UserRuleHolder; rule: UserRule; fields: string[] };
+	| { kind: 'node'; nodeId: string; recipient: 'self' | 'targets' | 'savers' }
+	| { kind: 'rule'; holder: UserRuleHolder; rule: UserRule; fields: string[] }
+	/** an effect of the item that gives this one at a stack count */
+	| { kind: 'stacks'; holder: UserRuleHolder };
 
 type WidgetOption = string | ((data: Record<string, unknown>) => string) | undefined;
 
@@ -81,8 +84,9 @@ export function rulesOf(holder: { system?: unknown } | null | undefined): UserRu
 }
 
 /**
- * What points at an item effect: Apply Effect nodes of the item's activation at any depth, and
- * rules (on the item or on its effects) whose `itemEffectPicker` fields hold the effect's id.
+ * What points at an item effect: Apply Effect nodes of the item's activation at any depth, rules
+ * (on the item or on its effects) whose `itemEffectPicker` fields hold the effect's id, and effects
+ * of the item that give it at a stack count.
  */
 export function itemEffectUsers(
 	item: UserItem,
@@ -101,6 +105,12 @@ export function itemEffectUsers(
 		for (const rule of rulesOf(holder)) {
 			const fields = itemEffectRuleFields(rule).filter((name) => rule[name] === effectId);
 			if (fields.length) users.push({ kind: 'rule', holder, rule, fields });
+		}
+	}
+	for (const holder of itemEffectList<UserRuleHolder>(item)) {
+		const stacks = (holder.system as { stacks?: { effectId?: string } } | undefined)?.stacks;
+		if (holder.id !== effectId && stacks?.effectId === effectId) {
+			users.push({ kind: 'stacks', holder });
 		}
 	}
 	return users;

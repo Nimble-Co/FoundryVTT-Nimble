@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 
 const globals = globalThis as unknown as Record<string, any>;
 
@@ -168,7 +169,9 @@ describe('holdOnTarget on an item use', () => {
 			update(card, { system: { isMiss: true } });
 			await flush();
 
-			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e1']);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e1'], {
+				[UNDO_APPLICATION_OPTION]: true,
+			});
 			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
 			expect(card.setFlag).toHaveBeenCalledWith('nimble', 'heldOnTargets', false);
 		});

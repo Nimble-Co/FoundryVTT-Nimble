@@ -320,6 +320,7 @@ function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
 
 interface UseItemContext {
 	targets?: Array<{ actor?: ActorWithRules | null; document?: TokenDocument } | null>;
+	manaSpent?: number;
 }
 
 function handleUseItem(
@@ -346,6 +347,7 @@ function handleUseItem(
 		targetActors: targetActors as unknown as ItemActivatedContext['targetActors'],
 		targetTokens,
 		card,
+		...(typeof context?.manaSpent === 'number' ? { manaSpent: context.manaSpent } : {}),
 	};
 	void dispatch(sourceActor, 'onItemActivated', activatedContext);
 }

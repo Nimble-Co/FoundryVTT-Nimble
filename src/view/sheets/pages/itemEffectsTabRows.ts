@@ -21,6 +21,9 @@ interface TabEffect {
 
 function userLabel(user: ItemEffectUser): string {
 	if (user.kind === 'node') return localize(`${WORDS}.usedBy.onUse`);
+	if (user.kind === 'stacks') {
+		return localize(`${WORDS}.usedBy.stacks`, { name: user.holder.name ?? '' });
+	}
 	const ruleTypes = CONFIG.NIMBLE.ruleTypes as Record<string, string | undefined>;
 	const type = user.rule.type ?? '';
 	const name = user.rule.label || localize(ruleTypes[type] ?? type);

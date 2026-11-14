@@ -30,6 +30,17 @@ function createActor(rules: unknown[]) {
 const willSave = { type: 'savingThrow', saveKey: 'will' } as const;
 
 describe('getSituationalRollModeOptions', () => {
+	it('gives the value for each stack when the rule says so', () => {
+		const each = createRule({ value: 1, perStack: true, stacks: 3 });
+		const once = createRule({ id: 'once', value: 1, perStack: false, stacks: 3 });
+
+		const values = getSituationalRollModeOptions(createActor([each, once]), willSave).map(
+			(option) => option.value,
+		);
+
+		expect(values).toEqual([3, 1]);
+	});
+
 	describe('target key mapping', () => {
 		it('passes the save key for saving throws', () => {
 			const rule = createRule();
@@ -158,6 +169,23 @@ describe('the tags of the roll', () => {
 		});
 
 		expect(option).toMatchObject({ value: 1, on: true });
+	});
+
+	it('a save from a card offers the per-stack rule of that save ticked, once for each stack', () => {
+		const fromTag = 'save:from:confounding-pheromones';
+		const counter = createRule({
+			perStack: true,
+			stacks: 2,
+			appliesTo: vi.fn((domain?: Iterable<string>) => [...(domain ?? [])].includes(fromTag)),
+		});
+
+		const [option] = getSituationalRollModeOptions(actor([counter]), {
+			type: 'savingThrow',
+			saveKey: 'will',
+			rollTags: ['save:from', fromTag],
+		});
+
+		expect(option).toMatchObject({ value: 2, on: true });
 	});
 
 	it('without the tag the rule is not offered, and a rule that applies anyway starts off', () => {

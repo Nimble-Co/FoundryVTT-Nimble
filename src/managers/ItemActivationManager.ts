@@ -38,10 +38,7 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
-import {
-	type AttackDelivery,
-	attackDeliveryFromAttackType,
-} from '../utils/damage/attackDelivery.js';
+import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -72,11 +69,9 @@ import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
 	isAttackRoll,
-	isMelee,
-	keptAmountEndedBy,
-	keptAmountFor,
 	spendHeldChanges,
 } from '../utils/heldChange/heldChange.js';
+import { heldChosenOf, keptAmountOfRoll } from '../utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -92,6 +87,7 @@ import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
+import { fixSaveDCs } from '../utils/rolls/saveNodeDC.js';
 import {
 	applyUpcastDeltas,
 	UpcastError,
@@ -314,6 +310,9 @@ class ItemActivationManager {
 
 	/** The kept amount of this actor that ends with this roll, used or not. */
 	#keptAmountToEnd: HeldChange | null = null;
+
+	/** With Feature Effects off, the keys of the Held Changes the player ticked; null when all apply. */
+	#heldChosen: ReadonlySet<string> | null = null;
 
 	/** What the tick of a damage multiplier gave this use. */
 	#damageMultiplier = 1;
@@ -545,9 +544,13 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
-		const usableAmount = keptAmountFor(this.actor, this.#item);
-		this.#keptAmountToEnd = usableAmount ?? keptAmountEndedBy(this.actor, this.#item);
-		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
+		this.#heldChosen = heldChosenOf(dialogData.heldChosen);
+		const keptAmount = keptAmountOfRoll(this.actor, this.#item, {
+			tick: dialogData.keptAmount,
+			chosen: this.#heldChosen,
+		});
+		this.#keptAmount = keptAmount.kept;
+		this.#keptAmountToEnd = keptAmount.toEnd;
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
@@ -566,6 +569,7 @@ class ItemActivationManager {
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
+		fixSaveDCs(this.activationData?.effects, this.actor as never);
 
 		return {
 			rolls,
@@ -590,7 +594,7 @@ class ItemActivationManager {
 	}
 
 	#getAttackDelivery(): AttackDelivery {
-		return attackDeliveryFromAttackType(this.activationData?.targets?.attackType);
+		return deliveryOfAttack(this.activationData, this.actor);
 	}
 
 	/**
@@ -657,9 +661,8 @@ class ItemActivationManager {
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
 		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering.
-		// When attackType is empty (item has no attack), delivery is null and damage bonuses
-		// are skipped entirely — non-attack items (consumables, utilities) should not receive
-		// attack damage bonuses.
+		// A hero item with no attack type has no delivery, and damage bonuses are skipped
+		// entirely: non-attack items (consumables, utilities) receive no attack damage bonuses.
 		const delivery = this.#getAttackDelivery();
 		// Source classification: spells are 'spell', everything else (weapons, monster features,
 		// class features) is 'weapon'. Monster features are physical attacks, not spells.
@@ -765,11 +768,12 @@ class ItemActivationManager {
 						target: this.free ? null : firstTargetActor(),
 						area: isAoE,
 						attack: isAttack,
-						melee: isMelee(delivery),
+						delivery,
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
 						extraDamage: true,
+						chosen: this.#heldChosen,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
 					const offerSource = this.#offerSource();
@@ -982,6 +986,7 @@ class ItemActivationManager {
 					damageType: conditional.damageType,
 					formula,
 					roll: roll.toJSON() as Record<string, unknown>,
+					fromItemIdentifier: conditional.fromItemIdentifier,
 				}),
 			);
 			rolls.push(roll);
@@ -1745,7 +1750,7 @@ class ItemActivationManager {
 			kind: 'attack',
 			roller: this.actor,
 			target: area ? null : (this.#getSoleTargetToken()?.actor ?? null),
-			delivery: conditionDelivery(this.activationData?.targets?.attackType, properties?.selected),
+			delivery: conditionDelivery(this.activationData, properties?.selected ?? [], this.actor),
 		}).filter((line) => line.on);
 	}
 
@@ -1815,9 +1820,16 @@ namespace ItemActivationManager {
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
-		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		conditionalDamages?: Array<{
+			formula: string;
+			damageType: string;
+			label: string;
+			fromItemIdentifier?: string;
+		}>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
+		/** The attack card this use answers, as a reaction from the Defend window does. */
+		answersCardId?: string;
 	}
 
 	/** What a free use does not spend or check. `action` is always part of it. */
@@ -1876,8 +1888,10 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** The Max Damage tick the player picked. */
 		maxDamage?: MaxDamageChoice | null;
-		/** False when the player unticked a kept amount. */
+		/** False when the player unticked a kept amount; with Feature Effects off, true when ticked. */
 		keptAmount?: boolean;
+		/** With Feature Effects off, the keys of the Held Changes the player ticked. */
+		heldChosen?: string[];
 		/** The weapon an ability attacks with. */
 		weaponUuid?: string;
 		/**
@@ -1906,7 +1920,12 @@ namespace ItemActivationManager {
 		 * chosen type applies, rather than being folded into the primary roll's type.
 		 * Untyped conditional damage is already baked into `rollFormula`.
 		 */
-		conditionalDamages?: Array<{ formula: string; damageType: string; label: string }>;
+		conditionalDamages?: Array<{
+			formula: string;
+			damageType: string;
+			label: string;
+			fromItemIdentifier?: string;
+		}>;
 	}
 }
 

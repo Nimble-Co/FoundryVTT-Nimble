@@ -54,3 +54,64 @@ describe('EffectDetailsTab conditions', () => {
 		expect(effect.update).toHaveBeenLastCalledWith({ statuses: [] });
 	});
 });
+
+describe('EffectDetailsTab stacks', () => {
+	const stacked = (stacks: object, parent: object = { documentName: 'Item' }) =>
+		Object.assign(makeEffect([]), { parent, system: { stacks } });
+	const on = { on: true, count: 2, at: 3, effectId: '' };
+
+	it('turns Stacks on, and shows the count that gives an effect only then', async () => {
+		const effect = stacked({ ...on, on: false });
+		render(EffectDetailsTab, { effect: effect as never });
+
+		expect(screen.queryByRole('spinbutton', { name: 'Stacks that give the effect' })).toBeNull();
+		await fireEvent.click(screen.getByRole('checkbox', { name: /A new application adds a stack/ }));
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.stacks.on': true });
+	});
+
+	it('saves "At [N] stacks" on an item effect, and has no "Stacks now"', async () => {
+		const effect = stacked(on);
+		render(EffectDetailsTab, { effect: effect as never });
+
+		const at = screen.getByRole('spinbutton', { name: 'Stacks that give the effect' });
+		expect(at).toHaveValue(3);
+		await fireEvent.change(at, { target: { value: '4' } });
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.stacks.at': 4 });
+		expect(screen.queryByRole('spinbutton', { name: 'Stacks now' })).toBeNull();
+	});
+
+	it('on a creature, saves "Stacks now", and the item sets what the count gives', async () => {
+		const effect = stacked(on, { documentName: 'Actor' });
+		render(EffectDetailsTab, { effect: effect as never });
+
+		expect(screen.getByRole('spinbutton', { name: 'Stacks that give the effect' })).toBeDisabled();
+		const now = screen.getByRole('spinbutton', { name: 'Stacks now' });
+		expect(now).toHaveValue(2);
+		await fireEvent.change(now, { target: { value: '5' } });
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.stacks.count': 5 });
+	});
+});
+
+describe('EffectDetailsTab rule formulas', () => {
+	const NAME = /Rule formulas read the creature that has it/;
+	const withTransfer = (transfer: boolean, parent: object = { documentName: 'Item' }) =>
+		Object.assign(makeEffect([]), { transfer, parent, system: { readsHolder: false } });
+
+	it('turns on the box on an item effect that is applied by a step', async () => {
+		const effect = withTransfer(false);
+		render(EffectDetailsTab, { effect: effect as never });
+
+		await fireEvent.click(screen.getByRole('checkbox', { name: NAME }));
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.readsHolder': true });
+	});
+
+	it('has no box on an effect that applies to the actor, or on a creature', () => {
+		render(EffectDetailsTab, { effect: withTransfer(true) as never });
+		expect(screen.queryByRole('checkbox', { name: NAME })).toBeNull();
+	});
+
+	it('has no box on the copy that a creature has', () => {
+		render(EffectDetailsTab, { effect: withTransfer(false, { documentName: 'Actor' }) as never });
+		expect(screen.queryByRole('checkbox', { name: NAME })).toBeNull();
+	});
+});

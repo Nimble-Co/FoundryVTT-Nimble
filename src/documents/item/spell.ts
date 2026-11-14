@@ -36,8 +36,11 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		super._populateDerivedTags();
 	}
 
+	/** `manaSpent`: the mana the cast costs, after Free of mana and less mana. A pool cost is 0. */
 	protected override _useContext(manager: ItemActivationManager): Record<string, unknown> {
-		return { upcast: manager.upcastResult };
+		const cost = manager.spellCost;
+		const manaSpent = this.system.tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
+		return { upcast: manager.upcastResult, manaSpent };
 	}
 
 	/**

@@ -7,11 +7,14 @@ import {
 	type Format,
 	type Localize,
 } from '#utils/lastsUntil/describeLastsUntil.js';
+import { type StepButton, stepButton } from './stepButton.js';
 
 const WORDS = 'NIMBLE.chat.applyEffect';
 
 export interface ApplyEffectRowInput {
-	node: Pick<ApplyEffectNode, 'recipient'>;
+	node: Pick<ApplyEffectNode, 'recipient'> & { parentContext?: string | null };
+	/** Feature Effects on: a step for each creature that fails or saves goes on by itself */
+	saversApplyThemselves?: boolean;
 	/** null: the item no longer has the effect */
 	source: ApplyEffectSource | null;
 	applied: readonly AppliedEffect[] | undefined;
@@ -29,7 +32,7 @@ export interface ApplyEffectRowView {
 	lasts: string;
 	/** after the click: "On Goblin, Kobold", and "Raging stays on Hero" for a holder that kept it */
 	appliedLines: string[];
-	button: { label: string; disabled: boolean; tooltip: string | null } | null;
+	button: StepButton | null;
 	/** a line in place of the button */
 	note: string | null;
 }
@@ -56,10 +59,14 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		format,
 	});
 	const applied = input.applied ?? [];
+	const nameOf = (entry: AppliedEffect) =>
+		entry.actorName && (entry.stacks ?? 1) > 1
+			? format(`${WORDS}.withStacks`, { name: entry.actorName, count: String(entry.stacks) })
+			: entry.actorName;
 	const namesOf = (stays: boolean) =>
 		applied
 			.filter((entry) => !!entry.stays === stays)
-			.map((entry) => entry.actorName)
+			.map(nameOf)
 			.filter(Boolean)
 			.join(', ');
 	const on = namesOf(false);
@@ -77,18 +84,25 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 			note: null,
 		};
 	}
+	const branch = input.node.parentContext;
+	const underASave = branch === 'failedSave' || branch === 'passedSave';
+	if (input.node.recipient === 'savers' && input.saversApplyThemselves && underASave) {
+		const passed = branch === 'passedSave';
+		return {
+			name: source.name,
+			img: source.img,
+			lasts,
+			appliedLines: [],
+			button: null,
+			note: localize(`${WORDS}.${passed ? 'goesOnSavers' : 'goesOnFailers'}`),
+		};
+	}
 	return {
 		name: source.name,
 		img: source.img,
 		lasts,
 		appliedLines: [],
-		button: input.canApply
-			? {
-					label: localize(self ? `${WORDS}.applyToYou` : `${WORDS}.applyToTargets`),
-					disabled: !input.hasRecipient,
-					tooltip: input.hasRecipient ? null : localize(`${WORDS}.noTargets`),
-				}
-			: null,
+		button: stepButton({ ...input, recipient: input.node.recipient }),
 		note: null,
 	};
 }

@@ -1,8 +1,11 @@
 import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
-import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
+import {
+	type LastsUntilEvent,
+	NEXT_TURN_COUNTS,
+} from '../../models/activeEffect/nimbleEffectChoices.js';
 import getDamageTypeLabel from '../damage/getDamageTypeLabel.js';
 import { isRoundSpan } from './momentForm.js';
-import { type Moment, turnCount } from './momentReached.js';
+import { type Moment, momentCount } from './momentReached.js';
 
 const WORDS = 'NIMBLE.lastsUntilText';
 
@@ -142,11 +145,11 @@ function turnPhrase(moment: Moment, input: DescribeInput): string {
 			}),
 		});
 	}
-	const count = turnCount(moment);
-	const spanWord =
-		count > 1
-			? input.localize(`${WORDS}.nextTurnCount.${count}`)
-			: input.localize(`${WORDS}.span.${span}`);
+	const count = momentCount(moment);
+	let spanWord = input.localize(`${WORDS}.span.${span}`);
+	if (count > Math.max(...NEXT_TURN_COUNTS)) {
+		spanWord = input.format(`${WORDS}.nextTurnCountMany`, { count: String(count) });
+	} else if (count > 1) spanWord = input.localize(`${WORDS}.nextTurnCount.${count}`);
 	let whose: string;
 	if (moment.clock === 'nextHero') whose = input.localize(`${WORDS}.nextHero`);
 	else if (moment.clock === 'any') whose = `${input.localize(`${WORDS}.anyTurn`)} ${spanWord}`;
@@ -204,7 +207,12 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 		});
 	}
 	if (event === 'combatEnd') {
-		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.combatEnds`) });
+		const count = momentCount(moment);
+		const words = count > 1 ? `${WORDS}.combatEndsCount.${count}` : `${WORDS}.combatEnds`;
+		return input.format(`${WORDS}.until`, { moment: input.localize(words) });
+	}
+	if (event === 'tempHpGone') {
+		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.tempHpGone`) });
 	}
 	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
 	const action = eventAction(moment, event, person, input);

@@ -129,10 +129,17 @@ describe('effectEndsAt', () => {
 	it('a Minor Status ends at the end of its combat', () => {
 		const minor = makeEffect({ isMinor: true });
 		const other = makeEffect({ isMinor: false });
-		const end: LastsUntilCheck = { type: 'combatEnd', combatId: COMBAT };
+		const end: LastsUntilCheck = { type: 'combatEnd', combatId: COMBAT, started: true };
 
 		expect(effectEndsAt(minor, end, combat)).toBe(true);
 		expect(effectEndsAt(other, end, combat)).toBe(false);
+	});
+
+	it('a Minor Status from outside a combat that never started stays', () => {
+		const minor = makeEffect({ isMinor: true, start: { combat: null, time: 0 } });
+		const end: LastsUntilCheck = { type: 'combatEnd', combatId: COMBAT, started: false };
+
+		expect(effectEndsAt(minor, end, combat)).toBe(false);
 	});
 
 	describe('a core duration', () => {
@@ -195,7 +202,9 @@ describe('effectEndsAt', () => {
 		});
 
 		it('ends when the combat ends', () => {
-			expect(effectEndsAt(despair(), { type: 'combatEnd', combatId: COMBAT }, combat)).toBe(true);
+			expect(
+				effectEndsAt(despair(), { type: 'combatEnd', combatId: COMBAT, started: true }, combat),
+			).toBe(true);
 		});
 
 		it('does not end at a turn end', () => {
@@ -219,6 +228,20 @@ describe('turnsSeenAfter', () => {
 
 		expect(effectEndsAt(effect as never, turnEnd(goblinCombatant, 2), combat)).toBe(true);
 		expect(turnsSeenAfter(effect as never, turnEnd(goblinCombatant, 2), combat)).toBeNull();
+	});
+
+	it('counts a combat end of the holder that does not yet end "the 2nd combat ends"', () => {
+		const secondCombat = moment({ kind: 'event', event: 'combatEnd', value: 2 });
+		const effect = makeEffect({ lastsUntil: [secondCombat], start: { combat: null, time: 0 } });
+		const end = (started: boolean): LastsUntilCheck => ({
+			type: 'combatEnd',
+			combatId: COMBAT,
+			started,
+		});
+
+		expect(effectEndsAt(effect, end(true), combat)).toBe(false);
+		expect(turnsSeenAfter(effect as never, end(true), combat)).toEqual([1]);
+		expect(turnsSeenAfter(effect as never, end(false), combat)).toBeNull();
 	});
 
 	it('an effect with no counted moment counts nothing', () => {

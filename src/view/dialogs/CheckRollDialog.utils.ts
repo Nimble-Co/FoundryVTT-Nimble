@@ -80,7 +80,7 @@ export function getSituationalRollModeOptions(
 			label:
 				rule.label || rule.parentDocument?.name || localize('NIMBLE.ruleTypes.situationalRollMode'),
 			icon: rule.iconPath(),
-			value: rule.value,
+			value: rule.perStack ? rule.value * rule.stacks : rule.value,
 			on: !!domain && !rule.appliesTo(),
 		});
 	}

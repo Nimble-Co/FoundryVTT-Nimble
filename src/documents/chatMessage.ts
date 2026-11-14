@@ -9,18 +9,21 @@ import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
+import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
+	type AttackActivation,
 	type AttackDelivery,
-	attackDeliveryFromAttackType,
+	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
 } from '#utils/damage/buildDeferredDamagePatch.js';
+import { cardAttackers } from '#utils/damage/cardAttackers.js';
 import {
 	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
@@ -36,7 +39,6 @@ import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
 import {
 	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
-	isMelee,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
@@ -754,8 +756,8 @@ function areaMaximizeOf(
 		  }
 		| undefined;
 	if (!activation?.acquireTargetsFromTemplate || !activation.template?.shape) return undefined;
-	const melee = isMelee(attackDeliveryFromAttackType(activation.targets?.attackType as never));
-	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, melee);
+	const delivery = deliveryOfAttack(activation, attacker);
+	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, delivery);
 }
 
 function buildDamageApplicationPlan(params: {
@@ -892,6 +894,19 @@ class NimbleChatMessage extends ChatMessage {
 			) as unknown as ReturnType<DamageBackCard['attacker']>,
 		records: () => (this.system as { damageBack?: DamageBackRecord[] }).damageBack ?? [],
 		update: (changes) => this.update(changes),
+		attackers: () =>
+			cardAttackers(
+				this as never,
+				(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker),
+				this.#attackDelivery(),
+			) as ReturnType<NonNullable<DamageBackCard['attackers']>>,
+		delivery: () => this.#attackDelivery(),
+		damageAfterDefenses: (actor, amount, { damageType, roll }) =>
+			resolveDamageForActor(
+				actor as unknown as Actor.Implementation,
+				[{ value: amount, options: { damageType, ...(roll ? { roll: roll as never } : {}) } }],
+				0,
+			).total,
 	});
 
 	/** Rerolls, roll changes and kept results on this card. */
@@ -1441,6 +1456,11 @@ class NimbleChatMessage extends ChatMessage {
 			hurt.push({
 				actor: target.actor as unknown as (typeof hurt)[number]['actor'],
 				taken: target.adjustedDamage,
+				// Read before the damage: the hit can take the temp HP, and with them the link.
+				tempHp: this.cardDamageBack.beforeDamage(
+					target.actor as unknown as (typeof hurt)[number]['actor'],
+					{ isCritical: systemData.isCritical === true },
+				),
 			});
 			const hpBefore = Number(
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
@@ -1898,6 +1918,7 @@ class NimbleChatMessage extends ChatMessage {
 			for (const node of group) {
 				const healing = node as HealingNode;
 				if (healing.type !== 'healing' || healing.recipient !== 'self') continue;
+				if (givenByAnEffect(this, healing.id)) continue;
 				const total = Number(healing.roll?.total);
 				if (total > 0) await this.applyHealing(total, healing.healingType, healing.id, 'self');
 			}
@@ -1985,8 +2006,9 @@ class NimbleChatMessage extends ChatMessage {
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
-		return attackDeliveryFromAttackType(
-			(systemData.activation?.targets as { attackType?: string } | undefined)?.attackType,
+		return deliveryOfAttack(
+			systemData.activation as AttackActivation | undefined,
+			(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker),
 		);
 	}
 
@@ -2264,6 +2286,8 @@ class NimbleChatMessage extends ChatMessage {
 		const protector = (tokenDoc?.actor ??
 			fromUuidSync(entry.actorUuid)) as Actor.Implementation | null;
 		if (!protector) return;
+		// The protector is the new target of the attack (Core 516). Queued behind this write.
+		void this.cardDamageBack.afterAttack([{ actor: protector as never, token: tokenDoc as never }]);
 
 		const protectedName =
 			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)

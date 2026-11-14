@@ -5,7 +5,7 @@ import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
-import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
+import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
@@ -20,7 +20,8 @@ import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDic
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import { attackHeldPlanOf } from '#utils/heldChange/attackHeldPlan.js';
-import { firstTargetActor, keptAmountFor } from '#utils/heldChange/heldChange.js';
+import { firstTargetActor } from '#utils/heldChange/heldChange.js';
+import { heldChosenOf, keptAmountOfRoll } from '#utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -117,7 +118,7 @@ export async function rollUnarmedStrike(
 	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
 	const multiTarget = targets.length > 1;
 	const target = soleTarget(targets);
-	const delivery = attackDeliveryFromAttackType(UNARMED_STRIKE_ATTACK_TYPE);
+	const delivery = deliveryOfAttack({ targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE } }, actor);
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
 		stats: statsInFormula(rollFormula),
@@ -132,17 +133,21 @@ export async function rollUnarmedStrike(
 		damageTypes: ['bludgeoning'],
 	});
 
-	const keptAmount = keptAmountFor(actor, unarmedItem);
-	const kept = result.keptAmount === false ? null : keptAmount;
+	const chosen = heldChosenOf(result.heldChosen);
+	const { kept, toEnd } = keptAmountOfRoll(actor, unarmedItem, {
+		tick: result.keptAmount,
+		chosen,
+	});
 	const held = attackHeldPlanOf({
 		attacker: actor,
 		target: firstTargetActor(),
 		area: false,
 		attack: true,
-		melee: true,
+		delivery,
 		kept,
-		keptToEnd: keptAmount,
+		keptToEnd: toEnd,
 		extraDamage: true,
+		chosen,
 	});
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {

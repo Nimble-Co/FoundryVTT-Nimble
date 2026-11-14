@@ -729,6 +729,13 @@ describe('FreeMoveRule', () => {
 		});
 	});
 
+	it('puts the stacks of its effect into the distance, which the mover reads later', async () => {
+		const harness = makeRule({ distance: '@stacks * 2' });
+		Object.defineProperty(harness.rule, 'stacks', { get: () => 3, configurable: true });
+		await activate(harness);
+		expect(lastOffer().node.distance).toBe('3 * 2');
+	});
+
 	it('several rules on one item each post their own offer', async () => {
 		const harness = makeRule();
 		const second = makeRule({ distance: '2' });

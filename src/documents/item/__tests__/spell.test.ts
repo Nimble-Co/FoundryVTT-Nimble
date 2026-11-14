@@ -283,3 +283,24 @@ describe('NimbleSpellItem.activate mana spending', () => {
 		});
 	});
 });
+
+describe('NimbleSpellItem use context', () => {
+	const contextOf = (tier: number, spellCost: unknown) =>
+		(
+			NimbleSpellItem.prototype as unknown as {
+				_useContext(this: unknown, manager: unknown): Record<string, unknown>;
+			}
+		)._useContext.call({ system: { tier } }, { spellCost, upcastResult: null });
+
+	it('gives the mana the cast costs, after Free of mana and less mana', () => {
+		expect(contextOf(2, { type: 'mana', amount: 3 }).manaSpent).toBe(3);
+		expect(contextOf(2, { type: 'mana', amount: 1 }).manaSpent).toBe(1);
+		expect(contextOf(2, { type: 'none' }).manaSpent).toBe(0);
+	});
+
+	it('gives 0 mana for a cast paid from a pool, a cantrip, and a cast with no cost', () => {
+		expect(contextOf(2, { type: 'pool', amount: 2, poolIdentifier: 'x' }).manaSpent).toBe(0);
+		expect(contextOf(0, { type: 'mana', amount: 0 }).manaSpent).toBe(0);
+		expect(contextOf(2, null).manaSpent).toBe(0);
+	});
+});

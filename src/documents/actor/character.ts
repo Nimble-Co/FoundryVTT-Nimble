@@ -1350,6 +1350,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			options.dc,
 		);
 		const chatData = await this.prepareSkillCheckChatCardData(skillKey, rerolls, options.dc);
+		if (options.cardFlags) {
+			foundry.utils.mergeObject(chatData as object, { flags: { [SYSTEM_ID]: options.cardFlags } });
+		}
 
 		ChatMessage.applyMode(
 			chatData as unknown as ChatMessage.CreateData,

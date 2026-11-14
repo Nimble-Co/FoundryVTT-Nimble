@@ -82,6 +82,11 @@ describe('describeLastsUntil', () => {
 		expect(read([second], CARD_TARGETS_READER)).toBe('Until the end of their 2nd next turn');
 	});
 
+	it('reads a count above 5 that an upcast gives as "8th next turn"', () => {
+		const eighth = turn({ boundary: 'end', clock: 'holder', span: 'nextTurn', value: 8 });
+		expect(read([eighth], CARD_TARGETS_READER)).toBe('Until the end of their 8th next turn');
+	});
+
 	it('reads a turn moment from the card and from the holder', () => {
 		expect(read([endOfTheirNextTurn], CARD_TARGETS_READER)).toBe(
 			'Until the end of their next turn',
@@ -135,6 +140,15 @@ describe('describeLastsUntil', () => {
 		expect(read([event(null, 'effectEnds', 'Rage')], CARD_SELF_READER)).toBe('Until Rage ends');
 		expect(read([event(null, 'effectEnds')], CARD_SELF_READER)).toBe('Until another effect ends');
 		expect(read([event(null, 'combatEnd')], CARD_SELF_READER)).toBe('Until combat ends');
+		expect(read([{ ...event(null, 'combatEnd'), value: 1 }], CARD_SELF_READER)).toBe(
+			'Until combat ends',
+		);
+		expect(read([{ ...event(null, 'combatEnd'), value: 2 }], CARD_SELF_READER)).toBe(
+			'Until the 2nd combat ends',
+		);
+		expect(read([event('holder', 'tempHpGone')], CARD_SELF_READER)).toBe(
+			'Until its temp HP are gone',
+		);
 	});
 
 	it('joins the moments with "or"', () => {

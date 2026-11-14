@@ -8,7 +8,9 @@ import {
 	canHost,
 	cardEventsOf,
 	cardEventText,
+	cardHoldingEvent,
 	registerCardEventsQuery,
+	replaceCardEvent,
 } from '../cardEvents.js';
 
 type Globals = Record<string, any>;
@@ -289,6 +291,58 @@ describe('a line that asks a player to act', () => {
 		},
 	);
 
+	const waitingEndFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'waitingEnd',
+		action: {
+			kind: 'waitingEnd',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			effectId: 'blind',
+			effectName: 'Blinded',
+			state: 'waiting',
+			end: { heading: { key: 'heading' } },
+		},
+	});
+	const emptyPoolFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'emptyPool',
+		action: {
+			kind: 'emptyPool',
+			holderUuid: 'Actor.tessa',
+			holderName: 'Tessa',
+			poolId: 'fury',
+			poolLabel: 'Fury Dice',
+			state: 'waiting',
+		},
+	});
+	const critDiceFor = (id: string): CardEvent => ({
+		...line(id, 1),
+		kind: 'critDiceSave',
+		action: {
+			kind: 'critDiceSave',
+			actorUuid: 'Actor.tessa',
+			actorName: 'Tessa',
+			saveMessageId: 'save',
+			outcome: 'pass',
+			state: 'waiting',
+		},
+	});
+
+	it.each([
+		['waiting end', waitingEndFor],
+		['pool', emptyPoolFor],
+		['crit dice save', critDiceFor],
+	])('a %s line goes on a card its player reads', async (_name, make) => {
+		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
+
+		expect(await addCardEvents(card, [make('ask')])).toBe(true);
+
+		expect(card.update).not.toHaveBeenCalled();
+		const [data] = create.mock.calls[0] as [Record<string, any>];
+		expect(data.whisper).toEqual(['player', 'gm']);
+	});
+
 	it('goes on a card for its player and the GMs when the card is whispered to the GM only', async () => {
 		const card = makeCard('attack', { whisper: ['gm'], author: { isGM: true } });
 
@@ -337,6 +391,80 @@ describe('a line that asks a player to act', () => {
 	});
 });
 
+describe('replaceCardEvent with a state to match', () => {
+	const waiting = (id: string, state = 'waiting'): CardEvent => ({
+		...line(id, 1),
+		action: { kind: 'turnDamage', state } as never,
+	});
+
+	it('replaces the line while it is still in that state', async () => {
+		const card = makeCard('c', { flags: { [SYSTEM_ID]: { events: [waiting('a')] } } });
+
+		expect(await replaceCardEvent(card, 'a', waiting('a', 'dealt'), { ifState: 'waiting' })).toBe(
+			true,
+		);
+		expect((card.flags[SYSTEM_ID].events?.[0].action as { state: string }).state).toBe('dealt');
+	});
+
+	it('of two marks at once, only the first finds the line in that state', async () => {
+		const card = makeCard('c', { flags: { [SYSTEM_ID]: { events: [waiting('a')] } } });
+
+		const results = await Promise.all([
+			replaceCardEvent(card, 'a', waiting('a', 'dealt'), { ifState: 'waiting' }),
+			replaceCardEvent(card, 'a', waiting('a', 'dealt'), { ifState: 'waiting' }),
+		]);
+
+		expect(results).toEqual([true, false]);
+		expect(card.update).toHaveBeenCalledTimes(1);
+	});
+
+	it('another client sends the state to the active GM', async () => {
+		globals.game.user = { id: 'player', isGM: false, isActiveGM: false };
+		const card = makeCard('c');
+		const next = waiting('a', 'dealt');
+
+		await replaceCardEvent(card, 'a', next, { ifState: 'waiting' });
+
+		expect(query).toHaveBeenCalledWith(`${SYSTEM_ID}.cardEvents`, {
+			op: 'replace',
+			messageId: 'c',
+			eventId: 'a',
+			next,
+			ifState: 'waiting',
+		});
+	});
+});
+
+describe('cardHoldingEvent', () => {
+	it('is the first card when it holds the line', () => {
+		const card = makeCard('c', { flags: { [SYSTEM_ID]: { events: [line('a', 1)] } } });
+		messages.push(makeCard('other', { flags: { [SYSTEM_ID]: { events: [line('a', 1)] } } }));
+
+		expect(cardHoldingEvent('a', card)).toBe(card);
+	});
+
+	it('is the newest recent card that holds the line when the first does not', () => {
+		const older = makeCard('older', { flags: { [SYSTEM_ID]: { events: [line('a', 1)] } } });
+		const newer = makeCard('newer', { flags: { [SYSTEM_ID]: { events: [line('a', 1)] } } });
+		messages.push(older, newer, makeCard('last'));
+
+		expect(cardHoldingEvent('a', makeCard('c'))).toBe(newer);
+	});
+
+	it('takes a test of the line id in place of the id', () => {
+		const card = makeCard('moved', { flags: { [SYSTEM_ID]: { events: [line('a.1', 1)] } } });
+		messages.push(card);
+
+		expect(cardHoldingEvent((id) => id.startsWith('a.'), makeCard('c'))).toBe(card);
+	});
+
+	it('is undefined when no recent card holds the line', () => {
+		messages.push(makeCard('x'));
+
+		expect(cardHoldingEvent('a', makeCard('c'))).toBeUndefined();
+	});
+});
+
 describe('the GM query', () => {
 	function handler() {
 		const once = vi.fn();
@@ -355,6 +483,23 @@ describe('the GM query', () => {
 		expect(await handler()({ op: 'add', messageId: 'c', events: [line('a', 1)] })).toBe(true);
 
 		expect(idsOf(card.flags[SYSTEM_ID].events)).toEqual(['a']);
+	});
+
+	it('the GM replaces a line only in the state a player asked for', async () => {
+		const dealt = { ...line('a', 1), action: { kind: 'turnDamage', state: 'dealt' } as never };
+		const card = makeCard('c', { flags: { [SYSTEM_ID]: { events: [dealt] } } });
+		messages.push(card);
+
+		const result = await handler()({
+			op: 'replace',
+			messageId: 'c',
+			eventId: 'a',
+			next: line('a', 1),
+			ifState: 'waiting',
+		});
+
+		expect(result).toBe(false);
+		expect(card.update).not.toHaveBeenCalled();
 	});
 
 	it('the GM writes the lines of a moment a player asked for', async () => {

@@ -30,6 +30,20 @@ function tickRollMode(
 	return { mode: back, applied: next };
 }
 
+/** Each tick is on when `chosen` has its key: the ticks that changed move the slider. */
+function tickChosen(
+	mode: number,
+	applied: AppliedTicks,
+	ticks: readonly RollModeTick[],
+	chosen: readonly string[],
+): { mode: number; applied: AppliedTicks } {
+	let state = { mode, applied };
+	for (const tick of ticks) {
+		state = tickRollMode(state.mode, state.applied, tick, chosen.includes(tick.key));
+	}
+	return state;
+}
+
 /** The slider and the ticks as the window opens: every tick that starts on is applied. */
 function openRollModeTicks(
 	mode: number,
@@ -42,4 +56,4 @@ function openRollModeTicks(
 	return state;
 }
 
-export { MAX_ROLL_MODE, openRollModeTicks, tickRollMode };
+export { MAX_ROLL_MODE, openRollModeTicks, tickChosen, tickRollMode };

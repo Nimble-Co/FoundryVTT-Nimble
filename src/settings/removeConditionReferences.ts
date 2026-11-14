@@ -62,13 +62,19 @@ async function stripFromItem(usage: ConditionItemUsage, conditionId: string): Pr
 		update['system.rules'] = rewriteRules(rules, usage, conditionId);
 	}
 
-	if (usage.nodeIds.length) {
+	if (usage.nodeIds.length || usage.endConditionsNodeIds.length) {
 		const nodeIds = new Set(usage.nodeIds);
+		const listing = new Set(usage.endConditionsNodeIds);
 		const flattened = flattenEffectsTree(item.system?.activation?.effects ?? []);
-		// Condition and Apply Effect nodes are leaves, so dropping them cannot orphan a child.
-		update['system.activation.effects'] = reconstructEffectsTree(
-			flattened.filter((node) => !nodeIds.has(node.id)),
-		);
+		// Condition, Apply Effect and End Conditions nodes are leaves, so dropping them cannot orphan a child.
+		const kept = flattened.flatMap((node) => {
+			if (nodeIds.has(node.id)) return [];
+			if (node.type !== 'endConditions' || !listing.has(node.id)) return [node];
+			const conditions = node.conditions.filter((entry) => entry !== conditionId);
+			// A step with nothing left to end has no behaviour worth keeping.
+			return conditions.length > 0 ? [{ ...node, conditions }] : [];
+		});
+		update['system.activation.effects'] = reconstructEffectsTree(kept);
 	}
 
 	if (Object.keys(update).length) await item.update?.(update);

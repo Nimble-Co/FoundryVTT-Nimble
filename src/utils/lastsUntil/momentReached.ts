@@ -48,7 +48,9 @@ export type LastsUntilCheck =
 			turn?: number | null;
 	  }
 	| { type: 'roundStart' | 'roundEnd'; combatId: string; round: number }
-	| { type: 'combatStart' | 'combatEnd'; combatId: string }
+	| { type: 'combatStart'; combatId: string }
+	/** `started`: the combat had a round 1. */
+	| { type: 'combatEnd'; combatId: string; started: boolean }
 	| { type: 'worldTime'; worldTime: number }
 	| {
 			type: 'event';
@@ -62,6 +64,8 @@ export type LastsUntilCheck =
 			statuses?: readonly string[] | null;
 			/** For "gain": the new effect, which its own moments never end. */
 			gained?: object | null;
+			/** For "its temp HP are gone": the effects whose temp HP are gone. */
+			effectIds?: readonly string[] | null;
 	  };
 
 /** What a moment reads of its effect, resolved when the check runs. */
@@ -72,12 +76,14 @@ export interface MomentSubject {
 	holder: object | null;
 	source: object | null;
 	origin: string | null;
+	/** The id of the effect itself. */
+	effectId?: string | null;
 	holderInCombat: boolean;
 	isClockTurn(clock: Clock, seat: TurnSeat): boolean;
 	/** The effect belongs to this combat: applied in it, or its holder or source fights in it. */
 	relatesTo(combatId: string): boolean;
 	secondsOf(units: TimeUnit, value: number): number;
-	/** For each moment, by index: the clock turns it has counted. */
+	/** For each moment, by index: the clock turns or combat ends it has counted. */
 	turnsSeen?: readonly number[];
 }
 
@@ -109,10 +115,24 @@ function turnInProgressAtStart(
 	return sameSeat(startSeat, check.seat);
 }
 
-/** How many clock turns a "2nd next turn" moment waits for. 1 for any other moment. */
-export function turnCount(moment: Moment): number {
-	if (moment.kind !== 'turn' || moment.span !== 'nextTurn') return 1;
-	return Math.max(1, moment.value ?? 1);
+/**
+ * How many clock turns a "2nd next turn" moment waits for, or combat ends a "2nd combat ends"
+ * moment waits for. 1 for any other moment.
+ */
+export function momentCount(moment: Moment): number {
+	const counts =
+		(moment.kind === 'turn' && moment.span === 'nextTurn') ||
+		(moment.kind === 'event' && moment.event === 'combatEnd');
+	return counts ? Math.max(1, moment.value ?? 1) : 1;
+}
+
+/** Its combat ends. A combat that never started ends only the effects applied in it. */
+export function combatEndRelates(
+	subject: MomentSubject,
+	check: { combatId: string; started: boolean },
+): boolean {
+	if (!check.started && subject.start.combat !== check.combatId) return false;
+	return subject.relatesTo(check.combatId);
 }
 
 /** A turn of the moment's clock that counts toward it: not the turn in progress at the start. */
@@ -125,16 +145,25 @@ function clockTurnCounts(moment: Moment, subject: MomentSubject, check: LastsUnt
 	return !turnInProgressAtStart(subject, check);
 }
 
-/** The check is a clock turn that a counted moment counts, and its count is not yet reached. */
-export function turnCountedAt(
+function countsAt(moment: Moment, subject: MomentSubject, check: LastsUntilCheck): boolean {
+	if (moment.kind !== 'event') return clockTurnCounts(moment, subject, check);
+	return check.type === 'combatEnd' && combatEndRelates(subject, check);
+}
+
+/** The check is one that a counted moment counts, and its count is not yet reached. */
+export function countedAt(
 	moment: Moment,
 	subject: MomentSubject,
 	check: LastsUntilCheck,
 	index: number,
 ): boolean {
-	const count = turnCount(moment);
-	if (count < 2 || !clockTurnCounts(moment, subject, check)) return false;
+	const count = momentCount(moment);
+	if (count < 2 || !countsAt(moment, subject, check)) return false;
 	return (subject.turnsSeen?.[index] ?? 0) + 1 < count;
+}
+
+function countReached(moment: Moment, subject: MomentSubject, index: number): boolean {
+	return (subject.turnsSeen?.[index] ?? 0) + 1 >= momentCount(moment);
 }
 
 function turnMomentReached(
@@ -143,7 +172,7 @@ function turnMomentReached(
 	check: LastsUntilCheck,
 	index: number,
 ): boolean {
-	if (check.type === 'combatEnd') return subject.relatesTo(check.combatId);
+	if (check.type === 'combatEnd') return combatEndRelates(subject, check);
 	if (check.type === 'worldTime') return !subject.holderInCombat;
 	if (check.type === 'event' || check.type === 'combatStart') return false;
 
@@ -156,12 +185,12 @@ function turnMomentReached(
 	}
 
 	if (!clockTurnCounts(moment, subject, check)) return false;
-	return (subject.turnsSeen?.[index] ?? 0) + 1 >= turnCount(moment);
+	return countReached(moment, subject, index);
 }
 
 /** "For N rounds": up to the same place in the turn order N rounds later. */
 function roundsReached(rounds: number, subject: MomentSubject, check: LastsUntilCheck): boolean {
-	if (check.type === 'combatEnd') return subject.relatesTo(check.combatId);
+	if (check.type === 'combatEnd') return combatEndRelates(subject, check);
 	if (check.type === 'worldTime') return !subject.holderInCombat;
 	if (check.type !== 'turnStart' && check.type !== 'roundStart') return false;
 
@@ -201,14 +230,19 @@ function eventMomentReached(
 	moment: Moment,
 	subject: MomentSubject,
 	check: LastsUntilCheck,
+	index: number,
 ): boolean {
 	if (moment.event === 'combatEnd') {
-		return check.type === 'combatEnd' && subject.relatesTo(check.combatId);
+		if (check.type !== 'combatEnd' || !combatEndRelates(subject, check)) return false;
+		return countReached(moment, subject, index);
 	}
 	if (check.type !== 'event' || check.event !== moment.event) return false;
 
 	if (moment.event === 'effectEnds') {
 		return check.actor === subject.holder && sameName(check.effectName, moment.effectName);
+	}
+	if (moment.event === 'tempHpGone') {
+		if (!subject.effectId || !(check.effectIds ?? []).includes(subject.effectId)) return false;
 	}
 	if (moment.event === 'useAgain') {
 		return !!subject.origin && check.itemUuid === subject.origin;
@@ -238,7 +272,7 @@ export function momentReached(
 		case 'time':
 			return timeMomentReached(moment, subject, check);
 		case 'event':
-			return eventMomentReached(moment, subject, check);
+			return eventMomentReached(moment, subject, check, index);
 		default:
 			return false;
 	}

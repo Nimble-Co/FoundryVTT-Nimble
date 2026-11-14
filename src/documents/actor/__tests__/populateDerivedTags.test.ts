@@ -345,6 +345,26 @@ describe('_populateDerivedTags — self / target state tags', () => {
 			expect(tags.has('self:incapacitated')).toBe(true);
 		});
 
+		it('reads "counts as" one way: Incapacitated alone gives no Stunned, Paralyzed or Unconscious tag', () => {
+			const tags = runPopulate(makeStub({ statuses: ['incapacitated'] }));
+			expect(tags.has('target:incapacitated')).toBe(true);
+			expect(tags.has('target:stunned')).toBe(false);
+			expect(tags.has('target:paralyzed')).toBe(false);
+			expect(tags.has('self:unconscious')).toBe(false);
+		});
+
+		it('gives Stunned the Incapacitated tag and no Restrained tag', () => {
+			const tags = runPopulate(makeStub({ statuses: ['stunned'] }));
+			expect(tags.has('target:incapacitated')).toBe(true);
+			expect(tags.has('target:restrained')).toBe(false);
+			expect(tags.has('self:restrained')).toBe(false);
+		});
+
+		it('keeps Grappled and Restrained counting as each other', () => {
+			expect(runPopulate(makeStub({ statuses: ['grappled'] })).has('target:restrained')).toBe(true);
+			expect(runPopulate(makeStub({ statuses: ['restrained'] })).has('target:grappled')).toBe(true);
+		});
+
 		it('adds tags for a condition the GM added', () => {
 			const conditions = CONFIG.NIMBLE.conditions as Record<string, string>;
 			conditions.soaked = 'Soaked';

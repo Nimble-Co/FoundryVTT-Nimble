@@ -48,6 +48,45 @@ describe('applyEffectRow', () => {
 		expect(view.appliedLines).toEqual(['On Goblin']);
 	});
 
+	it('names the stacks of a holder that has more than one', () => {
+		const view = row({
+			applied: [
+				{ effectUuid: 'x', actorName: 'Goblin', stacks: 3 },
+				{ effectUuid: 'y', actorName: 'Kobold', stacks: 1 },
+			],
+		});
+
+		expect(view.appliedLines).toEqual(['On Goblin (3 stacks), Kobold']);
+	});
+
+	it('a step for each creature that fails goes on by itself: no button, a line that says so', () => {
+		const fails = { recipient: 'savers' as const, parentContext: 'failedSave' };
+		const view = row({ node: fails, saversApplyThemselves: true });
+
+		expect(view.button).toBeNull();
+		expect(view.note).toBe('Goes on each creature that fails the save');
+		expect(
+			row({ node: { ...fails, parentContext: 'passedSave' }, saversApplyThemselves: true }).note,
+		).toBe('Goes on each creature that makes the save');
+		expect(
+			row({
+				node: fails,
+				saversApplyThemselves: true,
+				applied: [{ effectUuid: 'x', actorName: 'Tessa' }],
+			}).appliedLines,
+		).toEqual(['On Tessa']);
+	});
+
+	it('with Feature Effects off, or out of a save, a step for each creature that fails has the targets button', () => {
+		const view = row({ node: { recipient: 'savers', parentContext: 'failedSave' } });
+
+		expect(view.button?.label).toBe('Apply to Targets');
+		const moved = { recipient: 'savers' as const, parentContext: null };
+		expect(row({ node: moved, saversApplyThemselves: true }).button?.label).toBe(
+			'Apply to Targets',
+		);
+	});
+
 	it('says that the effect stays on a holder that kept the one it had', () => {
 		const view = row({
 			applied: [

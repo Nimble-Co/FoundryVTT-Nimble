@@ -10,9 +10,51 @@
 
 	const headingId = $props.id();
 	const strip = createCardEventsState(() => messageDocument);
-	const { isBusy, isBack, canUndo, undo, canRollSave, rollSave, canChoose, choose, backStatus } =
-		strip;
+	const {
+		isBusy,
+		isBack,
+		canUndo,
+		undo,
+		canRollSave,
+		rollSave,
+		canRule,
+		rule,
+		canChoose,
+		choose,
+		canActOnDamage,
+		actOnDamage,
+		canActOnStack,
+		actOnStack,
+		canEnd,
+		end,
+		canEmpty,
+		empty,
+		canSettleCrit,
+		settleCrit,
+		backStatus,
+	} = strip;
+
+	interface LineButton {
+		label: string;
+		icon?: string;
+		text: string;
+		onclick: () => unknown;
+	}
 </script>
+
+{#snippet lineAction(eventId: string, button: LineButton)}
+	<button
+		class="nimble-card-events__action"
+		type="button"
+		aria-label={button.label}
+		aria-busy={isBusy(eventId)}
+		aria-disabled={isBusy(eventId)}
+		onclick={button.onclick}
+	>
+		{#if button.icon}<i class="fa-solid {button.icon}" aria-hidden="true"></i>{/if}
+		{button.text}
+	</button>
+{/snippet}
 
 {#if strip.events.length > 0}
 	<section
@@ -60,20 +102,15 @@
 								{localize('NIMBLE.chat.events.backOn', { name: row.holderName })}
 							</span>
 						{:else if canUndo(row)}
-							<button
-								class="nimble-card-events__action"
-								type="button"
-								aria-label={localize('NIMBLE.chat.events.undoLabel', {
+							{@render lineAction(event.id, {
+								label: localize('NIMBLE.chat.events.undoLabel', {
 									effect: row.name,
 									name: row.holderName,
-								})}
-								aria-busy={isBusy(event.id)}
-								aria-disabled={isBusy(event.id)}
-								onclick={() => undo(event, row)}
-							>
-								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-								{localize('NIMBLE.chat.events.undo')}
-							</button>
+								}),
+								icon: 'fa-rotate-left',
+								text: localize('NIMBLE.chat.events.undo'),
+								onclick: () => undo(event, row),
+							})}
 						{/if}
 					{/if}
 
@@ -86,20 +123,15 @@
 								{localize('NIMBLE.chat.saveRequest.keptBadge')}
 							</span>
 						{:else if canRollSave(request)}
-							<button
-								class="nimble-card-events__action"
-								type="button"
-								aria-label={localize('NIMBLE.chat.saveRequest.rollLabel', {
+							{@render lineAction(event.id, {
+								label: localize('NIMBLE.chat.saveRequest.rollLabel', {
 									save,
 									name: request.holderName,
-								})}
-								aria-busy={isBusy(event.id)}
-								aria-disabled={isBusy(event.id)}
-								onclick={() => rollSave(event)}
-							>
-								<i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
-								{localize('NIMBLE.chat.saveRequest.roll')}
-							</button>
+								}),
+								icon: 'fa-dice-d20',
+								text: localize('NIMBLE.chat.saveRequest.roll'),
+								onclick: () => rollSave(event),
+							})}
 						{:else}
 							<span class="nimble-card-events__back">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
@@ -108,42 +140,147 @@
 						{/if}
 					{/if}
 
+					{#if event.action?.kind === 'escapeRuling' && event.action.state === 'waiting'}
+						{@const ruling = event.action}
+						{#if canRule(ruling)}
+							{@render lineAction(event.id, {
+								label: localize('NIMBLE.escape.chat.escapesLabel', {
+									name: ruling.holderName,
+									effect: ruling.effectName,
+								}),
+								icon: 'fa-person-running',
+								text: localize('NIMBLE.escape.chat.escapes'),
+								onclick: () => rule(event),
+							})}
+						{:else}
+							<span class="nimble-card-events__back">
+								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+								{localize('NIMBLE.escape.chat.waiting')}
+							</span>
+						{/if}
+					{/if}
+
 					{#if event.action?.kind === 'tempHpChoice' && event.action.state === 'waiting'}
 						{@const choice = event.action}
 						{#if canChoose(choice)}
 							<span class="nimble-card-events__choice">
-								<button
-									class="nimble-card-events__action"
-									type="button"
-									aria-label={localize('NIMBLE.chat.tempHpChoice.keepLabel', {
+								{@render lineAction(event.id, {
+									label: localize('NIMBLE.chat.tempHpChoice.keepLabel', {
 										name: choice.holderName,
 										amount: String(choice.had),
-									})}
-									aria-busy={isBusy(event.id)}
-									aria-disabled={isBusy(event.id)}
-									onclick={() => choose(event, false)}
-								>
-									{localize('NIMBLE.chat.tempHpChoice.keep', { amount: String(choice.had) })}
-								</button>
-								<button
-									class="nimble-card-events__action"
-									type="button"
-									aria-label={localize('NIMBLE.chat.tempHpChoice.takeLabel', {
+									}),
+									text: localize('NIMBLE.chat.tempHpChoice.keep', { amount: String(choice.had) }),
+									onclick: () => choose(event, false),
+								})}
+								{@render lineAction(event.id, {
+									label: localize('NIMBLE.chat.tempHpChoice.takeLabel', {
 										name: choice.holderName,
 										amount: String(choice.amount),
-									})}
-									aria-busy={isBusy(event.id)}
-									aria-disabled={isBusy(event.id)}
-									onclick={() => choose(event, true)}
-								>
-									{localize('NIMBLE.chat.tempHpChoice.take', { amount: String(choice.amount) })}
-								</button>
+									}),
+									text: localize('NIMBLE.chat.tempHpChoice.take', {
+										amount: String(choice.amount),
+									}),
+									onclick: () => choose(event, true),
+								})}
 							</span>
 						{:else}
 							<span class="nimble-card-events__back">
 								<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
 								{localize('NIMBLE.chat.events.waitingFor', { name: choice.holderName })}
 							</span>
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'turnDamage'}
+						{@const damage = event.action}
+						{#if damage.state === 'undone'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.turnDamage.undone')}
+							</span>
+						{:else if canActOnDamage(damage)}
+							{@render lineAction(event.id, {
+								label: localize(
+									damage.state === 'waiting'
+										? 'NIMBLE.chat.turnDamage.takeLabel'
+										: 'NIMBLE.chat.turnDamage.undoLabel',
+									{ name: damage.holderName },
+								),
+								icon: damage.state === 'waiting' ? 'fa-heart-crack' : 'fa-rotate-left',
+								text: localize(
+									damage.state === 'waiting'
+										? 'NIMBLE.chat.turnDamage.take'
+										: 'NIMBLE.chat.events.undo',
+								),
+								onclick: () => actOnDamage(event),
+							})}
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'stackGain'}
+						{@const stack = event.action}
+						{@const names = { effect: stack.gainedName, name: stack.holderName }}
+						{#if stack.state === 'undone'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.stackGain.undone')}
+							</span>
+						{:else if canActOnStack(stack)}
+							{@render lineAction(event.id, {
+								label: localize(
+									stack.state === 'waiting'
+										? 'NIMBLE.chat.stackGain.applyLabel'
+										: 'NIMBLE.chat.stackGain.undoLabel',
+									names,
+								),
+								icon: stack.state === 'waiting' ? 'fa-wand-magic-sparkles' : 'fa-rotate-left',
+								text:
+									stack.state === 'waiting'
+										? localize('NIMBLE.chat.stackGain.apply', { effect: stack.gainedName })
+										: localize('NIMBLE.chat.events.undo'),
+								onclick: () => actOnStack(event),
+							})}
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'waitingEnd' && event.action.state === 'waiting'}
+						{@const waiting = event.action}
+						{#if canEnd(waiting)}
+							{@render lineAction(event.id, {
+								label: localize('NIMBLE.lastsUntil.chat.endLabel', {
+									effect: waiting.effectName,
+									name: waiting.holderName,
+								}),
+								icon: 'fa-hourglass-end',
+								text: localize('NIMBLE.lastsUntil.chat.end'),
+								onclick: () => end(event),
+							})}
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'emptyPool' && event.action.state === 'waiting'}
+						{@const pool = event.action}
+						{#if canEmpty(pool)}
+							{@render lineAction(event.id, {
+								label: localize('NIMBLE.chat.emptyPool.emptyLabel', {
+									pool: pool.poolLabel,
+									name: pool.holderName,
+								}),
+								icon: 'fa-dice',
+								text: localize('NIMBLE.chat.emptyPool.empty'),
+								onclick: () => empty(event),
+							})}
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'critDiceSave' && event.action.state === 'waiting'}
+						{#if canSettleCrit(event.action)}
+							{@render lineAction(event.id, {
+								label: cardEventText(event.text),
+								icon: 'fa-dice-d20',
+								text: localize('NIMBLE.chat.critDiceSave.apply'),
+								onclick: () => settleCrit(event),
+							})}
 						{/if}
 					{/if}
 

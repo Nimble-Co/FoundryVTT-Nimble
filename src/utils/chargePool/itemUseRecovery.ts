@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import { askActiveGm } from '#utils/askActiveGm.js';
-import { attackDeliveryFromAttackType } from '#utils/damage/attackDelivery.js';
+import { type AttackActivation, deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import {
 	countedMarkTags,
 	getToggledTargetTags,
@@ -16,7 +16,7 @@ const QUERY_NAME = `${SYSTEM_ID}.markedDeath`;
 interface UsedItem {
 	actor?: unknown;
 	rules?: unknown;
-	system?: { activation?: { targets?: { attackType?: string } } };
+	system?: { activation?: AttackActivation };
 }
 
 interface TargetToken {
@@ -26,12 +26,12 @@ interface TargetToken {
 /** What a recovery predicate reads of an attack: the first target and how it attacked. */
 export function recoveryDomainOf(
 	attacker: unknown,
-	attackType: string | undefined,
+	activation: AttackActivation | undefined,
 	targets: readonly TargetToken[] | undefined,
 ): string[] {
 	const target = targets?.[0]?.actor;
 	const tags = [...getToggledTargetTags(attacker as never, target)];
-	const delivery = attackDeliveryFromAttackType(attackType);
+	const delivery = deliveryOfAttack(activation, attacker as { type?: string } | null);
 	if (target) tags.push(...countedMarkTags(attacker as never, delivery));
 	const unique = [...new Set(tags)];
 	return delivery ? [...unique, `attack:${delivery}`] : unique;
@@ -41,7 +41,7 @@ export function itemUseRecoveryDomain(
 	item: UsedItem,
 	targets: readonly TargetToken[] | undefined,
 ): string[] {
-	return recoveryDomainOf(item.actor, item.system?.activation?.targets?.attackType, targets);
+	return recoveryDomainOf(item.actor, item.system?.activation, targets);
 }
 
 /** The pools a use of this item spends from. */
@@ -64,7 +64,7 @@ export async function giveUnarmedHitRecovery(
 	roll: { isMiss?: boolean; isCritical?: boolean },
 	targets: readonly TargetToken[],
 ): Promise<Record<string, unknown>> {
-	const domain = recoveryDomainOf(actor, 'reach', targets);
+	const domain = recoveryDomainOf(actor, { targets: { attackType: 'reach' } }, targets);
 	const given: ChargeRecoveryGiven = [];
 	if (!roll.isMiss) {
 		const use = { domain };

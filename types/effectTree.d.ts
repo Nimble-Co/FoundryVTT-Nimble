@@ -1,16 +1,41 @@
 import type { HeldUsedUp } from './heldChange.d.ts';
-import type { RuleRaise } from './spellScaling.d.ts';
+import type { MomentRaise, RuleRaise } from './spellScaling.d.ts';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 export type EffectNode =
 	| ApplyEffectNode
 	| DamageNode
 	| DamageOutcomeNode
+	| EndConditionsNode
 	| HealingNode
 	| MoveNode
 	| PoolNode
 	| SavingThrowNode
-	| TextNode;
+	| TextNode
+	| WoundNode;
+
+/** Ends the effects that give a negative condition, or a listed one, on the targets or the user. */
+export type EndConditionsNode = {
+	id: string;
+	type: 'endConditions';
+	recipient: 'self' | 'targets';
+	/** negative: every negative condition. listed: only `conditions`. */
+	which: 'negative' | 'listed';
+	conditions: string[];
+	parentContext: string | null;
+	parentNode: string | null;
+};
+
+/** Gives Wounds to the card's targets or to the one who used the item. */
+export type WoundNode = {
+	id: string;
+	type: 'wound';
+	/** A whole number, 1 or more. */
+	amount: number;
+	recipient: 'self' | 'targets';
+	parentContext: string | null;
+	parentNode: string | null;
+};
 
 /**
  * A Movement Offer: a Free Move or Forced Movement the card offers to the
@@ -93,11 +118,16 @@ export type ApplyEffectNode = {
 	effectItemUuid?: string | null;
 	condition?: string | null;
 	lastsUntil?: Moment[];
-	recipient: 'self' | 'targets';
+	/** `savers`: each creature whose save from the card has the result of the step's branch. */
+	recipient: 'self' | 'targets' | 'savers';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
-	/** What the upcast adds to number fields of the effect's rules. */
+	/** A self step that waits for its button and does not apply on use. Absent is false. */
+	waitsForClick?: boolean;
+	/** What the upcast adds to fields of the effect's rules. */
 	ruleRaises?: RuleRaise[];
+	/** What the upcast adds to the numbers of the effect's Lasts Until, by moment index. */
+	momentRaises?: MomentRaise[];
 	parentContext: string | null;
 	parentNode: string | null;
 };
@@ -133,6 +163,8 @@ export type DamageNode = {
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
 	targetDisposition?: EffectNodeDisposition;
+	/** A bonus step that is the damage of another item of the attacker: that item's identifier. */
+	fromItemIdentifier?: string | null;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;

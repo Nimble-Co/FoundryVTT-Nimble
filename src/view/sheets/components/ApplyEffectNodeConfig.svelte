@@ -10,14 +10,26 @@
 
 	let { node, document, effects }: ApplyEffectNodeConfigProps = $props();
 
-	const recipients = [
+	const SAVE_BRANCH_WORDS: Record<string, string> = {
+		failedSave: 'saversFail',
+		passedSave: 'saversPass',
+	};
+	const saversWord = $derived(SAVE_BRANCH_WORDS[node.parentContext ?? '']);
+	const recipients = $derived([
 		{ value: 'targets', label: localize(`${WORDS}.recipients.targets`) },
 		{ value: 'self', label: localize(`${WORDS}.recipients.self`) },
-	];
+		...(saversWord
+			? [{ value: 'savers', label: localize(`${WORDS}.recipients.${saversWord}`) }]
+			: []),
+	]);
 	const conditionName = $derived(
 		node.condition ? (CONFIG.NIMBLE.conditions[node.condition] ?? node.condition) : null,
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
+	const appliesOptions = [
+		{ value: 'used', label: localize(`${WORDS}.appliesWhen.used`) },
+		{ value: 'click', label: localize(`${WORDS}.appliesWhen.click`) },
+	];
 
 	function storeEffect(effectId: string | null) {
 		return updateEffectNode(document, effects, node, 'effectId', effectId);
@@ -41,7 +53,7 @@
 			item={document as never}
 			value={node.effectId}
 			onchange={storeEffect}
-			recipient={node.recipient}
+			recipient={node.recipient === 'self' ? 'self' : 'targets'}
 			labelledby={`${node.id}-effect-label`}
 		/>
 	</div>
@@ -57,6 +69,20 @@
 		toggleOption={(value) => updateEffectNode(document, effects, node, 'recipient', value)}
 	/>
 </div>
+
+{#if node.recipient === 'self'}
+	<div style="width: 100%;">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize(`${WORDS}.applies`)}
+		</h5>
+		<TagGroup
+			options={appliesOptions}
+			selectedOptions={[node.waitsForClick ? 'click' : 'used']}
+			toggleOption={(value) =>
+				updateEffectNode(document, effects, node, 'waitsForClick', value === 'click')}
+		/>
+	</div>
+{/if}
 
 {#if tempHealing.length}
 	<label class="nimble-field" data-field-variant="stacked">

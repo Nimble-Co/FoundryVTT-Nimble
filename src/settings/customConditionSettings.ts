@@ -15,6 +15,8 @@ export interface CustomCondition {
 	img: string;
 	/** A Minor Status ends when combat ends. */
 	minor: boolean;
+	/** An End Conditions step ends a negative condition. A stored condition with no value is negative. */
+	negative: boolean;
 }
 
 export const DEFAULT_CUSTOM_CONDITION_ICON = 'icons/svg/aura.svg';
@@ -24,6 +26,7 @@ interface ConditionConfig {
 	conditionDescriptions: Record<string, string>;
 	conditionDefaultImages: Record<string, string>;
 	conditionMinorConditions?: Set<string>;
+	conditionNegativeConditions?: Set<string>;
 }
 
 /** The condition dictionaries, or null when any of them is not populated yet. */
@@ -120,7 +123,14 @@ export function getCustomConditions(): CustomCondition[] {
 				: DEFAULT_CUSTOM_CONDITION_ICON;
 
 		seen.add(id);
-		conditions.push({ id, name, description, img, minor: candidate.minor === true });
+		conditions.push({
+			id,
+			name,
+			description,
+			img,
+			minor: candidate.minor === true,
+			negative: candidate.negative !== false,
+		});
 	}
 
 	return conditions;
@@ -152,6 +162,7 @@ export function mergeCustomConditionsIntoConfig(): void {
 		delete config.conditionDescriptions[retiredId];
 		delete config.conditionDefaultImages[retiredId];
 		config.conditionMinorConditions?.delete(retiredId);
+		config.conditionNegativeConditions?.delete(retiredId);
 	}
 
 	// Mutated in place, not reassigned: anything holding a reference to one of these dictionaries
@@ -162,6 +173,8 @@ export function mergeCustomConditionsIntoConfig(): void {
 		config.conditionDefaultImages[custom.id] = custom.img;
 		if (custom.minor) config.conditionMinorConditions?.add(custom.id);
 		else config.conditionMinorConditions?.delete(custom.id);
+		if (custom.negative) config.conditionNegativeConditions?.add(custom.id);
+		else config.conditionNegativeConditions?.delete(custom.id);
 	}
 
 	mergedCustomIds = [...currentIds];

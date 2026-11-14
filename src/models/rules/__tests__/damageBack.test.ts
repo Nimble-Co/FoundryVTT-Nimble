@@ -43,4 +43,38 @@ describe('DamageBackRule', () => {
 		const rule = makeRule({ predicate: new Predicate({ self: 'other' } as never) });
 		expect(rule.answersAttack({ isCritical: true })).toBe(false);
 	});
+
+	it('keeps an old rule the same: damage taken, any delivery, armor ignored, no effect', () => {
+		const schema = DamageBackRule.defineSchema() as unknown as Record<
+			string,
+			{ initial?: unknown }
+		>;
+		expect(schema.trigger?.initial).toBe('damaged');
+		expect(schema.attackDelivery?.initial).toBe('any');
+		expect(schema.notOnAllies?.initial).toBe(false);
+		expect(schema.amount?.initial).toBe('taken');
+		expect(schema.ignoreArmor?.initial).toBe(true);
+		expect(schema.attackerEffectId?.initial).toBe('');
+		expect(schema.answeredAttack?.initial).toBe(false);
+	});
+
+	it('answers only the event of its trigger', () => {
+		const attacked = makeRule({ trigger: 'attacked', attackDelivery: 'any' });
+		expect(attacked.answersAttack({ isCritical: false, trigger: 'attacked' })).toBe(true);
+		expect(attacked.answersAttack({ isCritical: true })).toBe(false);
+		const damaged = makeRule({ trigger: 'damaged', attackDelivery: 'any' });
+		expect(damaged.answersAttack({ isCritical: true, trigger: 'attacked' })).toBe(false);
+	});
+
+	it('does not read "only crits" for an attack', () => {
+		const rule = makeRule({ trigger: 'attacked', onlyCrits: true, attackDelivery: 'any' });
+		expect(rule.answersAttack({ isCritical: false, trigger: 'attacked' })).toBe(true);
+	});
+
+	it('answers only the delivery of its filter', () => {
+		const rule = makeRule({ trigger: 'attacked', attackDelivery: 'melee' });
+		const on = (delivery: 'melee' | 'ranged' | null) =>
+			rule.answersAttack({ isCritical: false, trigger: 'attacked', delivery });
+		expect([on('melee'), on('ranged'), on(null)]).toEqual([true, false, false]);
+	});
 });

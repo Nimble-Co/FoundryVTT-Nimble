@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConditionalBonusRule } from '../conditionalBonus.js';
 
 interface MockActor {
@@ -144,9 +144,107 @@ describe('ConditionalBonusRule', () => {
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: '1d6' });
 		});
 
+		it('puts the stacks of its effect into a dice formula', () => {
+			const rule = createRule({ damageBonus: '(@stacks)d6' }, createMockActor());
+			Object.defineProperty(rule, 'stacks', { get: () => 2, configurable: true });
+			expect(rule.resolveDamage()).toEqual({ value: null, formula: '(2)d6' });
+		});
+
 		it('returns nulls when no damage is offered', () => {
 			const rule = createRule({ damageBonus: '' }, createMockActor());
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: null });
+		});
+	});
+
+	describe('damage of an item', () => {
+		const spirit = (formula = '1d6+@will', damageType = 'radiant') => ({
+			name: 'Lifebinding Spirit',
+			system: {
+				identifier: 'lifebinding-spirit',
+				activation: {
+					effects: [
+						{ id: 'save', type: 'savingThrow', parentContext: null, parentNode: null },
+						{
+							id: 'dmg',
+							type: 'damage',
+							formula,
+							damageType,
+							parentContext: null,
+							parentNode: null,
+						},
+						{
+							id: 'dmg2',
+							type: 'damage',
+							formula: '1',
+							damageType: 'fire',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+			},
+		});
+		const roll = Roll as unknown as { replaceFormulaData?: unknown };
+		let ownReplace: unknown;
+		beforeEach(() => {
+			ownReplace = roll.replaceFormulaData;
+			roll.replaceFormulaData = (formula: string, data: Record<string, unknown>) =>
+				formula.replace(/@(\w+)/g, (_: string, key: string) => String(data[key] ?? 0));
+		});
+		afterEach(() => {
+			roll.replaceFormulaData = ownReplace;
+		});
+
+		function assist(items: object[]) {
+			const actor = Object.assign(createMockActor({ will: 3 }), { items });
+			const rule = createRule({ advantage: 0, damageBonus: '' }, actor);
+			Object.assign(rule, { damageOfItem: 'lifebinding-spirit' });
+			return rule;
+		}
+
+		it('offers the first damage step of the named item, with its type and the numbers of the attacker', () => {
+			const rule = assist([{ name: 'Mace', system: { identifier: 'mace' } }, spirit()]);
+
+			expect(rule.offersDamage()).toBe(true);
+			expect(rule.resolveDamage()).toEqual({
+				value: null,
+				formula: '1d6+3',
+				damageType: 'radiant',
+				fromItemIdentifier: 'lifebinding-spirit',
+			});
+		});
+
+		it('resolves an item damage with no dice to a number', () => {
+			const rule = assist([spirit('2 + @will')]);
+
+			expect(rule.resolveDamage()).toMatchObject({
+				value: 5,
+				formula: null,
+				damageType: 'radiant',
+			});
+		});
+
+		it('offers nothing when the creature has no such item, or the item deals no damage', () => {
+			const none = assist([{ name: 'Mace', system: { identifier: 'mace' } }]);
+			const noDamage = assist([
+				{
+					name: 'Spirit',
+					system: { identifier: 'lifebinding-spirit', activation: { effects: [] } },
+				},
+			]);
+
+			for (const rule of [none, noDamage]) {
+				expect(rule.offersDamage()).toBe(false);
+				expect(rule.resolveDamage()).toEqual({ value: null, formula: null });
+			}
+		});
+
+		it('starts chosen unless the rule says otherwise', () => {
+			const rule = createRule({}, createMockActor());
+			expect(rule.startsChosen).not.toBe(false);
+			const schema = ConditionalBonusRule.defineSchema();
+			expect(schema.startsChosen.options).toMatchObject({ initial: true, nullable: false });
+			expect(schema.damageOfItem.options).toMatchObject({ initial: '', blank: true });
 		});
 	});
 

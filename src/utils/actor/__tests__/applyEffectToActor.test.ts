@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
 import { CONDITION_REPLACED_OPTION, EFFECT_RECREATED_OPTION } from '../applyConditionToActor.js';
 
@@ -9,7 +10,7 @@ const query = vi.fn();
 
 import {
 	applyEffectToActor,
-	type EffectPayload,
+	payloadFromCondition,
 	payloadFromEffect,
 } from '../applyEffectToActor.js';
 
@@ -99,6 +100,21 @@ describe('payloadFromEffect', () => {
 		});
 	});
 
+	it('names the card of the use only when there is one', () => {
+		const effect = { toObject: () => ({ name: 'Glow' }) };
+		const source = { itemUuid: 'Item.x', user: null };
+
+		expect(payloadFromEffect(effect, { ...source, cardId: 'card1' }).cardId).toBe('card1');
+		expect(payloadFromEffect(effect, { ...source, cardId: null })).not.toHaveProperty('cardId');
+		expect(
+			payloadFromCondition('charged', [], { itemUuid: null, actorUuid: null, cardId: 'card1' })
+				.cardId,
+		).toBe('card1');
+		expect(
+			payloadFromCondition('charged', [], { itemUuid: null, actorUuid: null }),
+		).not.toHaveProperty('cardId');
+	});
+
 	it('replaces the @ references of every rule formula with the roll data of the source', () => {
 		vi.stubGlobal('Roll', {
 			replaceFormulaData: (formula: string, data: { pools: Record<string, { faces: number }> }) =>
@@ -155,6 +171,162 @@ describe('payloadFromEffect', () => {
 			title: 'See @UUID[Item.x]',
 			description: 'Roll @Check[strength]',
 			formula: '4',
+		});
+	});
+
+	describe('with upcast raises', () => {
+		const user = { type: 'character', uuid: 'Actor.hero', getRollData: () => ({ key: 3 }) };
+		const effectWith = (rules: Record<string, unknown>[], lastsUntil: object[] = []) => ({
+			toObject: () => ({ name: 'Enchanted', system: { lastsUntil, rules } }),
+		});
+		const copied = (payload: EffectPayload) =>
+			payload.data.system as { rules: Record<string, unknown>[]; lastsUntil: object[] };
+
+		beforeEach(() => {
+			vi.stubGlobal('Roll', {
+				replaceFormulaData: (formula: string, data: Record<string, number>) =>
+					formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+			});
+		});
+
+		it('adds a formula once for each step before the @ references are read from the user', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '@key' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 2 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('3 + 3 + 3');
+		});
+
+		it('gives a blank formula field only the added terms, as separate dice', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '1d4', steps: 2 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('1d4 + 1d4');
+		});
+
+		it('adds the amount to a number field, and leaves a field of the wrong kind alone', () => {
+			const effect = effectWith([
+				{ id: 'held', type: 'heldRoll', value: 1, heldKind: 'advantage' },
+			]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [
+						{ ruleId: 'held', field: 'value', amount: 2 },
+						{ ruleId: 'held', field: 'heldKind', amount: 2 },
+						{ ruleId: 'held', field: 'value', amount: 0, formula: '@key', steps: 1 },
+					],
+				},
+			});
+
+			expect(copied(payload).rules[0]).toMatchObject({ value: 3, heldKind: 'advantage' });
+		});
+
+		it('adds a step count of 0 as nothing', () => {
+			const effect = effectWith([{ id: 'bonus', type: 'damageBonus', value: '@key' }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: {
+					rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 0 }],
+				},
+			});
+
+			expect(copied(payload).rules[0].value).toBe('3');
+		});
+
+		it('raises the number of a moment of the Lasts Until', () => {
+			const effect = effectWith([], [{ ...turnMoment, value: 2 }]);
+
+			const payload = payloadFromEffect(effect, {
+				itemUuid: null,
+				user,
+				raises: { moments: [{ index: 0, amount: 1 }] },
+			});
+
+			expect(copied(payload).lastsUntil).toEqual([{ ...turnMoment, value: 3 }]);
+		});
+	});
+
+	describe('the creature a rule formula reads', () => {
+		const user = {
+			type: 'character',
+			uuid: 'Actor.hero',
+			getRollData: () => ({ key: 3, intelligence: 2 }),
+		};
+		const effectWith = (system: Record<string, unknown>) => ({
+			toObject: () => ({ name: 'Winds', system }),
+		});
+		const rulesOf = (payload: EffectPayload) =>
+			(payload.data.system as { rules: Record<string, unknown>[] }).rules;
+		const escapeOf = (payload: EffectPayload) =>
+			(payload.data.system as { escape: { dc: string } }).escape.dc;
+
+		beforeEach(() => {
+			vi.stubGlobal('Roll', {
+				replaceFormulaData: (formula: string, data: Record<string, unknown>) =>
+					formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+				safeEval: (formula: string) => Function(`return ${formula}`)(),
+			});
+		});
+
+		it('keeps @speed for the creature that moves, and reads @key from the user', () => {
+			const payload = payloadFromEffect(
+				effectWith({ rules: [{ id: 'move', type: 'freeMove', distance: '@speed + @key' }] }),
+				{ itemUuid: null, user },
+			);
+
+			expect(rulesOf(payload)[0].distance).toBe('@speed + 3');
+		});
+
+		it('keeps every rule formula for the holder when the effect reads the creature that has it', () => {
+			const payload = payloadFromEffect(
+				effectWith({
+					readsHolder: true,
+					escape: { dc: '10 + @intelligence' },
+					rules: [{ id: 'bonus', type: 'damageBonus', value: '@key' }],
+				}),
+				{
+					itemUuid: null,
+					user,
+					raises: {
+						rules: [{ ruleId: 'bonus', field: 'value', amount: 0, formula: '@key', steps: 1 }],
+					},
+				},
+			);
+
+			expect(rulesOf(payload)[0].value).toBe('@key + @key');
+			expect(escapeOf(payload)).toBe('12');
+		});
+
+		it('reads the user at apply time when the box is off, and the Escape DC too', () => {
+			const payload = payloadFromEffect(
+				effectWith({
+					readsHolder: false,
+					escape: { dc: '10 + @intelligence' },
+					rules: [{ id: 'bonus', type: 'damageBonus', value: '@key' }],
+				}),
+				{ itemUuid: null, user },
+			);
+
+			expect(rulesOf(payload)[0].value).toBe('3');
+			expect(escapeOf(payload)).toBe('12');
 		});
 	});
 
@@ -251,14 +423,37 @@ describe('applyEffectToActor', () => {
 		});
 	});
 
+	it('says what it replaced, so a take-back can put the old copy back', async () => {
+		const current = {
+			id: 'old',
+			name: 'Snowblind',
+			origin: 'Actor.hero.Item.spell',
+			statuses: new Set(),
+			system: { lastsUntil: [{ ...turnMoment, span: 'currentTurn' }] },
+			toObject: () => ({ _id: 'old', name: 'Snowblind' }),
+		};
+
+		const result = await applyEffectToActor(holder({ effects: [current] }), plainPayload());
+
+		expect(result?.replaced).toEqual([{ _id: 'old', name: 'Snowblind' }]);
+	});
+
 	it('gives the temp HP of the card and records them on the effect', async () => {
 		const target = holder({ temp: 2 });
 		const update = vi.fn(async () => undefined);
-		createEffect.mockResolvedValueOnce({ uuid: 'Actor.goblin.ActiveEffect.new', update });
+		createEffect.mockResolvedValueOnce({
+			id: 'new',
+			uuid: 'Actor.goblin.ActiveEffect.new',
+			update,
+		});
 
 		const applied = await applyEffectToActor(target, { ...plainPayload(), tempHp: 6 });
 
-		expect(target.update).toHaveBeenCalledWith({ 'system.attributes.hp.temp': 6 });
+		// The update names the new effect's grant, so the other links end.
+		expect(target.update).toHaveBeenCalledWith(
+			{ 'system.attributes.hp.temp': 6 },
+			{ [SYSTEM_ID]: { tempGrantEffectId: 'new' } },
+		);
 		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
 		expect(applied).not.toHaveProperty('tempHpRefused');
 	});
@@ -295,5 +490,159 @@ describe('applyEffectToActor', () => {
 		expect(deleteDocuments).toHaveBeenCalled();
 		expect(target.update).not.toHaveBeenCalled();
 		expect(update).toHaveBeenCalledWith({ 'system.tempHp': 6 });
+	});
+});
+
+describe('stacks', () => {
+	const stacks = (count: number, at: number | null = null) => ({
+		on: true,
+		count,
+		at,
+		effectId: at ? 'stone' : '',
+	});
+	const stackingPayload = (at: number | null = null): EffectPayload => ({
+		data: {
+			name: 'Snowblind',
+			statuses: [],
+			system: { lastsUntil: [turnMoment], stacks: stacks(1, at) },
+		},
+		sourceItemUuid: 'Actor.basilisk.Item.gaze',
+		sourceActorUuid: 'Actor.basilisk',
+		cardId: 'card1',
+	});
+	function copyWith(count: number) {
+		const copy = {
+			id: 'snow',
+			uuid: 'Actor.goblin.ActiveEffect.snow',
+			name: 'Snowblind',
+			origin: 'Actor.basilisk.Item.gaze',
+			statuses: new Set<string>(),
+			system: { lastsUntil: [turnMoment], stacks: stacks(count) },
+			update: vi.fn(async (changes: Record<string, number>) => {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				copy.system.stacks.count = changes['system.stacks.count'];
+			}),
+		};
+		return copy;
+	}
+	const stone = {
+		transfer: false,
+		toObject: () => ({ _id: 'stone', name: 'Stone', img: 'stone.webp', statuses: [], system: {} }),
+	};
+	const gaze = {
+		uuid: 'Actor.basilisk.Item.gaze',
+		effects: { get: (id: string) => (id === 'stone' ? stone : null) },
+	};
+	const settings = game as unknown as { settings?: unknown };
+	let hadSettings: unknown;
+
+	beforeEach(() => {
+		hadSettings = settings.settings;
+		(CONFIG as unknown as { ActiveEffect: object }).ActiveEffect = {
+			documentClass: { create: createEffect, deleteDocuments, getEffectStart: () => ({ time: 0 }) },
+		};
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => (uuid === gaze.uuid ? gaze : { uuid })),
+		);
+	});
+	afterEach(() => {
+		settings.settings = hadSettings;
+	});
+
+	it('a stacking effect the holder has gets a stack, and the record has the count', async () => {
+		const copy = copyWith(1);
+
+		const result = await applyEffectToActor(holder({ effects: [copy] }), stackingPayload());
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(copy.update).toHaveBeenCalledWith(
+			{ 'system.stacks.count': 2 },
+			expect.objectContaining({
+				nimbleEffectStacked: true,
+				[SYSTEM_ID]: { effectCardId: 'card1' },
+			}),
+		);
+		expect(result).toEqual({ effectUuid: copy.uuid, actorName: 'Goblin', stacks: 2 });
+	});
+
+	it('a new stacking effect starts at 1 stack', async () => {
+		const result = await applyEffectToActor(holder(), stackingPayload());
+
+		expect(createEffect).toHaveBeenCalledTimes(1);
+		expect(result?.stacks).toBe(1);
+	});
+
+	it('two applications at the same time give two stacks', async () => {
+		const copy = copyWith(1);
+		const target = holder({ effects: [copy] });
+
+		await Promise.all([
+			applyEffectToActor(target, stackingPayload()),
+			applyEffectToActor(target, stackingPayload()),
+		]);
+
+		expect(copy.system.stacks.count).toBe(3);
+	});
+
+	it('at the count the holder gains the effect of the item, once', async () => {
+		const copy = copyWith(2);
+		const target = holder({ effects: [copy] });
+
+		const third = await applyEffectToActor(target, stackingPayload(3));
+
+		expect(createEffect).toHaveBeenCalledWith(
+			expect.objectContaining({ name: 'Stone', origin: 'Actor.basilisk.Item.gaze' }),
+			{ parent: target, [SYSTEM_ID]: { effectCardId: 'card1' } },
+		);
+		expect(third?.stackReached).toEqual({
+			count: 3,
+			stackedName: 'Snowblind',
+			gainedName: 'Stone',
+			img: 'stone.webp',
+			gainedUuid: 'Actor.goblin.ActiveEffect.new',
+		});
+
+		createEffect.mockClear();
+		const fourth = await applyEffectToActor(target, stackingPayload(3));
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(fourth).not.toHaveProperty('stackReached');
+	});
+
+	it('with Feature Effects off, the effect waits for a click', async () => {
+		settings.settings = { get: () => false };
+
+		const result = await applyEffectToActor(holder({ effects: [copyWith(2)] }), stackingPayload(3));
+
+		expect(createEffect).not.toHaveBeenCalled();
+		expect(result?.stackReached).toMatchObject({ count: 3, gainedName: 'Stone' });
+		expect(result?.stackReached?.payload?.data).toMatchObject({ name: 'Stone' });
+		expect(result?.stackReached).not.toHaveProperty('gainedUuid');
+	});
+
+	it('looks for the effect on the item of the stacked effect, and with none, only counts', async () => {
+		const fromOrigin = copyWith(2);
+		const other = { ...stackingPayload(3), sourceItemUuid: 'Actor.basilisk2.Item.gaze' };
+
+		const found = await applyEffectToActor(holder({ effects: [fromOrigin] }), other);
+		expect(found?.stackReached?.gainedName).toBe('Stone');
+
+		const lost = Object.assign(copyWith(2), { origin: 'Actor.gone.Item.gaze' });
+		const none = await applyEffectToActor(holder({ effects: [lost] }), other);
+		expect(none?.stackReached).toEqual({ count: 3, stackedName: 'Snowblind', gainedName: '' });
+	});
+
+	it('keeps @stacks in a rule formula, for the count of the holder', () => {
+		vi.stubGlobal('Roll', {
+			replaceFormulaData: (formula: string, data: Record<string, unknown>) =>
+				formula.replace(/@(\w+)/g, (_, key: string) => String(data[key] ?? 0)),
+		});
+		const rules = [{ id: 'r1', type: 'speedBonus', value: '-@stacks * @level' }];
+		const effect = { toObject: () => ({ name: 'Slowing', system: { rules } }) };
+		const user = { type: 'npc', uuid: 'Actor.slug', getRollData: () => ({ level: 2 }) };
+
+		const { data } = payloadFromEffect(effect, { itemUuid: null, user });
+
+		expect((data.system as { rules: { value: string }[] }).rules[0].value).toBe('-@stacks * 2');
 	});
 });

@@ -4,6 +4,7 @@ import {
 	describeLastsUntil,
 	usedUpOf,
 } from '#utils/lastsUntil/describeLastsUntil.js';
+import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import { appliedLastsUntil } from '#utils/lastsUntil/statusLastsUntil.js';
 import localize from '#utils/localize.js';
 
@@ -16,11 +17,11 @@ export function itemEffectLastsUntil(
 	recipient: 'self' | 'targets',
 ): string {
 	if (!effect) return '';
-	const system = (effect.system ?? {}) as { escape?: { dc?: string } };
+	const system = (effect.system ?? {}) as { escape?: { dc?: string; noDc?: boolean } };
 	return describeLastsUntil({
 		moments: appliedLastsUntil(effect),
 		usedUp: usedUpOf(system),
-		escape: !!system.escape?.dc?.trim(),
+		escape: hasEscape(system),
 		reader: recipient === 'self' ? CARD_SELF_READER : CARD_TARGETS_READER,
 		localize,
 		format: localize,

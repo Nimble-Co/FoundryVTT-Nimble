@@ -27,7 +27,7 @@ Each condition is one step, and the steps stack and cancel as other advantage an
 **The target of an attack.** These count only when the attack has one target. A Multi-target or area attack ignores them (Core Rules).
 
 - Blinded, Grappled or Restrained, Incapacitated (also Paralyzed, Stunned, Unconscious, Petrified): advantage. Grappled and Restrained together are one step.
-- Prone: advantage on a melee attack, disadvantage on a ranged attack. A Reach attack is melee. A spell with no attack type is ranged with Range and melee with Reach. A weapon ability attacks as the weapon you pick. When the attack is neither (most monster attacks have no attack type), the window shows both lines with their ticks off, and you pick one.
+- Prone: advantage on a melee attack, disadvantage on a ranged attack. A Reach attack is melee. A spell with no attack type is ranged with Range and melee with Reach. A weapon ability attacks as the weapon you pick. A monster attack with no attack type is melee, unless it is an area attack. When the attack is neither, the window shows both lines with their ticks off, and you pick one.
 - Invisible: disadvantage.
 
 **The one who attacks.** These count also on Multi-target and area attacks.
@@ -54,10 +54,14 @@ With Feature Effects off, the GM applies them by hand and there is no damage at 
 
 Some conditions come bundled together, and the system tracks the relationships for you:
 
-- **Counts as.** Some conditions imply others: Grappled also counts as Restrained (and the reverse), and Stunned counts as Incapacitated, Restrained, Paralyzed, and Unconscious for anything that checks those. You'll only see the icon you applied, but rules that look for the implied condition will find it.
+- **Counts as.** Some conditions imply others, as the book says: Paralyzed, Stunned and Unconscious each count as Incapacitated, and Grappled and Restrained count as each other. It works one way: Incapacitated alone does not count as Stunned, Paralyzed or Unconscious, and Stunned counts only as Incapacitated. You'll only see the icon you applied, but rules that look for the implied condition will find it.
 - **Applied together.** Petrified automatically carries Incapacitated with it.
 - **Automatic Hampered.** Applying Dazed, Grappled, Prone, Slowed, or Restrained automatically applies Hampered as well. When the last of those trigger conditions is removed, Hampered goes away on its own.
 - **Wounded stacks.** Unlike other conditions, Wounded can be applied multiple times, one stack per wound.
+
+## Negative conditions
+
+A negative condition harms its holder. An End Conditions step (a reaction that "ends all negative conditions", for example) ends each effect that gives one. All conditions are negative except the states the system sets (Bloodied, Dying, Dead, Wounded, Last Stand, Concentrating) and the ones that help or do nothing on their own (Invisible, Riding, Latched). Grappled and Swallowed are negative. With **Linked Conditions** on, a Hampered beside Dazed, Grappled, Prone, Slowed or Restrained goes when that condition goes. With it off, the step ends that Hampered too. A custom condition is negative unless its **Negative** box is off. The [Conditions Reference](../reference/conditions.md) marks each negative condition.
 
 ## How long a condition lasts
 
@@ -65,7 +69,7 @@ A condition, or any other effect, can have a **Lasts Until**: one or more moment
 
 - **A turn.** "Until the end of their next turn" follows the turns of the creature with the effect. "Until the start of your next turn" follows the turns of the creature that applied it. "Their next turn" is the first turn that starts after the effect goes on, so an effect applied in their own turn lasts through their next one.
 - **A time.** "For 1 minute" follows world time. "For 1 round" lasts until the same place in the turn order one round later; applied at Initiative, it lasts all of round 1.
-- **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
+- **An event.** "Until they attack", "until they drop to 0 HP", "until Rage ends" and others end it when that happens. "Until the 2nd combat ends" lasts through two combats of the creature; the combat in progress counts as the 1st. An attack is a use with a damage roll, or one that asks another creature for a save. A move is any change of the token's place.
 
 Some conditions have a Lasts Until of their own, which they keep when nothing else gives them one:
 
@@ -75,23 +79,44 @@ Some conditions have a Lasts Until of their own, which they keep when nothing el
 
 **Charged** goes on a creature that takes lightning damage, for 1 minute.
 
-When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
+When an effect has more than one moment, the first one to happen ends it. A turn or round moment also ends when combat ends, and out of combat it ends when world time moves on. A combat that never started (deleted before round 1) ends only the effects that went on in it. **Minor Statuses** (Charged, Distracted, Smoldering, and the custom conditions you mark) end when combat ends. A GM must be connected for an effect to end.
 
 On the Effects tab, the row reads the Lasts Until and the source: "Until the end of your next turn - Snowblind".
 
-**Escape.** An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save (you pick when more than one is allowed), spends 1 action in combat, and ends the effect on a success.
+**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts. An effect with Stacks on adds a stack instead, and the row shows the count: see [Stacks](../homebrew/effects.md#stacks).
+
+::: details How the system compares two Lasts Until
+It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.
+:::
+
+### Escape
+
+An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
+
+An Escape with no DC has the button **Escape** with no number. A natural 20 escapes and a natural 1 fails. On any other roll, the roll card gets the line "Tessa tries to escape Grappled" with an **Escapes** button. When the table judges that the roll escapes, the owner of the creature or the GM clicks **Escapes**. The effect ends, with its ended line and **Undo** on the roll card. If nobody clicks, the effect stays.
+
+::: details More about Escape
+A later reroll to a result the table must judge keeps the ruling of **Escapes**. When the owner cannot read the roll card (a GM's private roll), the line goes on a card for the owner and the GMs. A later reroll changes the line there or removes it.
+
+With **Feature Effects** off, a success ends nothing. The roll card gets a line with **End** in place of the ended line, and a reroll to a failure takes that line off.
+:::
+
+### When an effect ends
 
 When effects end, each one gets a line in the **Events** strip of the card that ended it, such as the card of the attack that ended "until they attack". With no such card, the chat gets one message for that moment, such as "Start of Tessa's turn", with a line for each effect that ended. **Undo** on a line puts that effect back. The owner of the creature and the GM can use it. The effect keeps its old start, so it ends again at the next matching moment. Going back a turn in the combat tracker does not bring effects back.
 
 ![The message for the end of Grug's turn: True Strike ended on Grug, with Undo](/images/documentation/effect-life-4-moment.png)
 
-The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).
+With **Feature Effects** off, no effect ends by itself. Where the ended line would go, a line says "Blinded ends on Tessa" and why, with an **End** button. When the owner of the creature or the GM clicks **End**, the effect ends and the line becomes its ended line, with **Undo**. If nobody clicks, the effect stays.
 
-**The same condition again.** When a creature that has a condition gets it again, the one that lasts longer stays. A second Taunted always takes the place of the first, so the most recent taunter counts.
-
-::: details How the system compares two Lasts Until
-It estimates each in rounds and keeps the first moment: the end of the current turn is half a round, the start of the next turn or the current round one, the end of the next turn one and a half, the next round two, "for N rounds" N, and a time what is left of it. An event, or no moment at all, has no end. When the two are equal, the one already on the creature stays.
+::: details More about End
+- A turn, a round, a time or the end of combat gives an effect one line. An event such as "until they attack" gives a line on each card that causes it, while the effect is on.
+- This also holds for Minor Statuses at the end of combat, for a Grappled whose grappler drops, and for Concentration at 0 HP or Incapacitated.
+- If someone removed the effect before the click, the line says "Blinded is no longer on Tessa" and has no button.
+- An effect with an Empty pools at end rule does not empty its pools when it ends. The card of the end gets a line "Empty Fury Dice" with an **Empty** button for each pool that holds dice. An effect removed by hand puts these lines on a message of their own.
 :::
+
+The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).
 
 ## Concentration
 
@@ -111,15 +136,15 @@ Ending one of two held concentrations is a choice rather than bookkeeping, so re
 
 This is driven by the property, not by anything authored on the spell, so a homebrew spell that ticks **Concentration** behaves exactly like one the system ships. The same goes for a spell scroll, which carries the inscribed spell's Concentration property.
 
-Concentration ends when the caster drops to 0 HP or gains Incapacitated (or a condition that counts as it, such as Stunned), and after the spell's Duration when that is in minutes or hours. When a crit hits the caster, the card of the attack gets a line that asks for a DC 10 STR save, with **Roll** for the owner of the caster. A failure ends Concentration, and a success leaves the line as "kept". The line comes when the GM clicks **Apply Damage**, also on a crit that deals 0 damage: then the button stays live to ask for the save. The roll makes a save card, so save rules, such as advantage on STR saves, and rerolls apply to it. Ending concentration deliberately is a free action, and a hero gets one free action per turn, which the system does not spend for you.
+Concentration ends when the caster drops to 0 HP or gains Incapacitated (or a condition that counts as it, such as Stunned), and after the spell's Duration when that is in minutes or hours. When a crit hits the caster, the card of the attack gets a line that asks for a DC 10 STR save, with **Roll** for the owner of the caster. A failure ends Concentration, and a success leaves the line as "kept". With **Feature Effects** off, a failure puts a line with **End** on that card instead. The line comes when the GM clicks **Apply Damage**, also on a crit that deals 0 damage: then the button stays live to ask for the save. The roll makes a save card, so save rules, such as advantage on STR saves, and rerolls apply to it. Ending concentration deliberately is a free action, and a hero gets one free action per turn, which the system does not spend for you.
 
 Only spells and objects carry the **Concentration** property, so a feature that holds concentration in its text, such as Shadowmancer's **Gaze of Two Minds**, is not covered. Apply and remove the condition by hand for those.
 
-Turning off **Feature Effects** in the Automation settings turns this off with it: casting then applies nothing and ends nothing, and Concentration is yours to place by hand.
+Turning off **Feature Effects** in the Automation settings turns this off with it. Casting then applies nothing and ends nothing, and Concentration is yours to place by hand. Its ends wait for **End**, as described in [When an effect ends](#when-an-effect-ends).
 
 ## Custom conditions
 
-A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, and a **Minor Status** box (a Minor Status ends when combat ends), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
+A GM can add conditions of their own from **Game Settings → Configure Settings → Nimble → Manage Conditions**. This is handy for statuses from content the system doesn't ship with. Each one takes a name, an id, a plain-text description, an icon, a **Minor Status** box (a Minor Status ends when combat ends) and a **Negative** box (an End Conditions step ends a [negative condition](#negative-conditions); it starts on), and from then on it behaves like any other condition in the token panel, the Effects tab, and the Rules Builder's condition lists.
 
 Custom conditions are markers only: none of the linked-condition behavior above applies to them, they never stack, and they aren't listed in the generated [Conditions Reference](../reference/conditions.md), which is built from the conditions that ship with the system.
 

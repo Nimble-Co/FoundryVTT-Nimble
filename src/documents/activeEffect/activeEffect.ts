@@ -9,6 +9,13 @@ import {
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
 import type { Moment } from '../../utils/lastsUntil/momentReached.js';
+import { AFTER_RULES_PHASE, MULTIPLY_DOWN_CHANGE } from './multiplyDownChange.js';
+
+/** A change as v14 core's `shouldApplyChange` reads it. */
+interface ChangeInPhase {
+	type?: string;
+	phase?: string;
+}
 
 interface NimbleEffectSystem {
 	lastsUntil?: Moment[];
@@ -54,6 +61,16 @@ class NimbleActiveEffect extends ActiveEffect {
 			} as unknown as Options,
 			renderOptions,
 		);
+	}
+
+	/** A Multiply, round down change applies after every rule, whatever phase it holds. */
+	shouldApplyChange(change: ChangeInPhase, options?: { phase?: string }): boolean {
+		if (change.type === MULTIPLY_DOWN_CHANGE) return options?.phase === AFTER_RULES_PHASE;
+		// fvtt-types has no v14 `shouldApplyChange`.
+		const core = ActiveEffect.prototype as unknown as {
+			shouldApplyChange(change: ChangeInPhase, options?: { phase?: string }): boolean;
+		};
+		return core.shouldApplyChange.call(this, change, options);
 	}
 
 	/**

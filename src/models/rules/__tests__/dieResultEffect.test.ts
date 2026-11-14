@@ -71,4 +71,19 @@ describe('DieResultEffectRule', () => {
 		expect(rule.readsUseOf({ uuid: OWN_UUID, system: { identifier: '' } })).toBe(true);
 		expect(rule.readsUseOf({ uuid: 'Actor.a.Item.other', system: { identifier: '' } })).toBe(false);
 	});
+
+	it('reads a bonus step of the damage of the named item', () => {
+		const step = (fromItemIdentifier?: string) => ({
+			id: 's',
+			type: 'damage' as const,
+			damageType: 'radiant',
+			formula: '1d6',
+			fromItemIdentifier,
+			parentContext: null,
+			parentNode: null,
+		});
+		expect(createRule().readsBonusOf([step('spirit')])).toBe(true);
+		expect(createRule().readsBonusOf([step('other'), step()])).toBe(false);
+		expect(createRule({ itemIdentifier: '' }).readsBonusOf([step('')])).toBe(false);
+	});
 });

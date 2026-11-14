@@ -156,6 +156,11 @@ interface RerollRuleLike {
 	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
 	saveType?: string;
 	saveDC?: string;
+	/**
+	 * The formula with `@stacks` of the rule's effect put in. Optional: the Incapacitated target's
+	 * Make It a Crit rule (`incapacitatedTargetRule`) is a plain object, not a rule.
+	 */
+	withStacks?(formula: string): string;
 	/** With the effect `critDice`: the dice the row adds. */
 	critDiceSpec?: CritDiceSpec;
 	/** A rule that changes dice of the crit bonus role. */

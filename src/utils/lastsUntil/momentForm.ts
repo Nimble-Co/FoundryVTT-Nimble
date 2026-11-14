@@ -22,6 +22,7 @@ export const HOLDER_FORM_EVENTS = [
 	'die',
 	'gain',
 	'applyEffect',
+	'tempHpGone',
 ] as const satisfies readonly LastsUntilEvent[];
 
 /** What the user of the item does: "or until you drop to 0 HP". */
@@ -42,7 +43,7 @@ export function namesAnEffect(event: LastsUntilEvent | null): boolean {
 }
 
 /** The "add a moment..." choices. */
-export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds'] as const;
+export const NEW_MOMENT_KINDS = ['turn', 'time', 'event', 'effectEnds', 'combatEnd'] as const;
 export type NewMomentKind = (typeof NEW_MOMENT_KINDS)[number];
 
 /** The subject select of an event row: they, you, or another effect. */
@@ -71,7 +72,16 @@ export function newMoment(kind: NewMomentKind): Moment {
 			return { ...BLANK, kind: 'event', who: 'holder', event: 'attack' };
 		case 'effectEnds':
 			return { ...BLANK, kind: 'event', event: 'effectEnds' };
+		case 'combatEnd':
+			return { ...BLANK, kind: 'event', event: 'combatEnd' };
 	}
+}
+
+/** The count list of a "combat ends" moment: "combat ends" to "the 5th combat ends". */
+export const COMBAT_COUNTS = [1, ...NEXT_TURN_COUNTS] as const;
+
+export function withCombatCount(moment: Moment, count: number): Moment {
+	return { ...moment, value: count > 1 ? count : null };
 }
 
 export function isRoundSpan(span: TurnSpan | null): boolean {
@@ -97,8 +107,14 @@ export function withSpan(moment: Moment, span: TurnSpan): Moment {
 	return { ...moment, span, clock: moment.clock ?? 'holder', value: null };
 }
 
-export function spanChoices(clock: Clock | null): SpanChoice[] {
-	const counts = clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+/** A count that an upcast raised above the list's counts is in the list too. */
+export function spanChoices(clock: Clock | null, moment?: Moment): SpanChoice[] {
+	const raised = moment?.span === 'nextTurn' ? (moment.value ?? 1) : 1;
+	const counts: SpanChoice[] =
+		clock === 'nextHero' ? [] : NEXT_TURN_COUNTS.map((n) => `nextTurn:${n}` as const);
+	if (clock !== 'nextHero' && raised > NEXT_TURN_COUNTS[NEXT_TURN_COUNTS.length - 1]) {
+		counts.push(`nextTurn:${raised}`);
+	}
 	return TURN_SPANS.flatMap((span) => (span === 'nextTurn' ? [span, ...counts] : [span]));
 }
 
@@ -106,13 +122,17 @@ export function spanChoiceOf(moment: Moment): SpanChoice {
 	const span = moment.span ?? 'nextTurn';
 	const count = moment.value ?? 1;
 	if (span !== 'nextTurn' || count < 2) return span;
-	return `nextTurn:${count}` as SpanChoice;
+	return `nextTurn:${count}`;
 }
 
-/** The word of a turn list entry, under the tab's words: "span.nextTurn" or "nextTurnCount.2". */
-export function spanChoiceWord(choice: SpanChoice): string {
+/** The word of a turn list entry, under the tab's words, and its data: "nextTurnCount.2". */
+export function spanChoiceWord(choice: SpanChoice): [string, Record<string, string>] {
 	const [span, count] = choice.split(':');
-	return count ? `nextTurnCount.${count}` : `span.${span}`;
+	if (!count) return [`span.${span}`, {}];
+	if ((NEXT_TURN_COUNTS as readonly number[]).includes(Number(count))) {
+		return [`nextTurnCount.${count}`, {}];
+	}
+	return ['nextTurnCountMany', { count }];
 }
 
 export function withSpanChoice(moment: Moment, choice: SpanChoice): Moment {

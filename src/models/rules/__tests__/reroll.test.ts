@@ -635,7 +635,7 @@ describe('RerollRule', () => {
 				});
 				expect(replaceFormulaData).toHaveBeenCalledWith(
 					'1d@combatDie',
-					{ combatDie: 8, level: 3 },
+					{ combatDie: 8, level: 3, stacks: 1 },
 					{ missing: '0' },
 				);
 			} finally {

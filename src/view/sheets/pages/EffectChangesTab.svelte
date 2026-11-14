@@ -15,7 +15,7 @@ The Changes tab of the effect window: core's changes to the data of the holder, 
 	let { effect }: EffectTabProps = $props();
 
 	const state = createEffectChangesTabState(() => effect);
-	const { change, add, remove, priorityHint } = state;
+	const { change, add, remove, priorityHint, typeHint } = state;
 	const changes = $derived(state.changes);
 	const changeTypes = $derived(state.changeTypes);
 
@@ -50,6 +50,7 @@ The Changes tab of the effect window: core's changes to the data of the holder, 
 				/>
 				<select
 					aria-label={word('type')}
+					data-tooltip={typeHint(each.type)}
 					value={each.type}
 					onchange={({ currentTarget }) => change(index, { type: currentTarget.value })}
 				>

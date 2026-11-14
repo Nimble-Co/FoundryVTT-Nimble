@@ -171,7 +171,7 @@ Two consequences for a rule in this position:
 | `self:concentrating` | `actor.statuses` | Concentration status active |
 | `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
 | `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
-| `self:<condition>` / `target:<condition>` | `actor.statuses` through `conditionTags()` (`src/documents/actor/base.svelte.ts`) | Each status that is a key of `CONFIG.NIMBLE.conditions`, plus the conditions `conditionAliasedConditions` lists for it. Bloodied and Concentration are left out: they keep the tags above |
+| `self:<condition>` / `target:<condition>` | `actor.statuses` through `conditionTags()` (`src/documents/actor/base.svelte.ts`) | Each status that is a key of `CONFIG.NIMBLE.conditions`, plus the conditions `conditionCountsAs` lists for it. Bloodied and Concentration are left out: they keep the tags above |
 | `self:pool:<id>` | Charge and dice pool flags | The pool has at least 1 charge or die |
 
 #### Character-only tags
@@ -429,7 +429,7 @@ Every field a user edits **must** carry:
 - **`label:`** — display label. Without it, `RuleCard` auto-generates an English-only label from the camelCase property name and warns once per `(rule.type, field)` in dev. Localized labels are required for shipping.
 - **`hint:`** — short help text shown below the input. Optional but strongly recommended for any non-obvious field.
 
-Every `NumberField` of a rule (except `priority`) is also a number that a spell's upcast step `raiseEffectRule` can raise on the effect of an Apply Effect node. `effectRuleNumbers` (`src/utils/spell/`) reads the rule class schema for the scaling editor, and shows the field's `label`. At cast, `applyUpcastDeltas` writes `ruleRaises: [{ ruleId, field, amount }]` on the node; `applyEffectFromCard` adds each amount to the copy's rule when the field holds a finite number.
+Every `NumberField` of a rule (except `priority`) is also a number that a spell's upcast step `raiseEffectRule` can raise on the effect of an Apply Effect node. So is every `StringField` with the `formula` or `diceFormula` widget that the rule's `showWhen` shows. `effectRuleNumbers` (`src/utils/spell/`) reads the rule class schema for the scaling editor, and shows the field's `label` and its `kind` (`number` or `formula`). At cast, `applyUpcastDeltas` writes `ruleRaises` on the node: `{ ruleId, field, amount }` for a number field, `{ ruleId, field, amount: 0, formula, steps }` for a formula field. `payloadFromEffect` adds each amount to the copy's rule when the field holds a finite number, and adds the formula once for each step to a formula field (`@key` with 2 steps on `@key` is `@key + @key + @key`). This happens before the rule formulas are resolved, so an `@` reference in the added formula reads the user of the item, as the base value does.
 
 ### Widget hints (when type alone isn't enough)
 

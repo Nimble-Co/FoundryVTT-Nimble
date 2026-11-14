@@ -150,6 +150,7 @@ function stateRow(
 		description: string;
 		/** a condition keeps its short text in the open row */
 		textInSummary: boolean;
+		stacks?: number;
 	},
 	input: EffectsTabInput,
 	extra: Partial<EffectRowView> = {},
@@ -172,6 +173,9 @@ function stateRow(
 		],
 		use: base.use,
 		edit: null,
+		...((base.stacks ?? 1) > 1
+			? { tag: input.format(`${FX}.stacks`, { count: String(base.stacks) }) }
+			: {}),
 		...extra,
 	};
 }
@@ -184,6 +188,7 @@ function effectRow(effect: EffectLike, input: EffectsTabInput, passive: boolean)
 		name: effect.name,
 		img: effect.img,
 		description: effect.description,
+		stacks: effect.stacks,
 	};
 	const from = item ? format(`${FX}.fromItem`, { name: item.name }) : '';
 	const sourceName = effect.sourceName || item?.name || '';
@@ -226,6 +231,7 @@ function conditionRow(condition: ConditionLike, input: EffectsTabInput): EffectR
 			name: condition.name,
 			img: condition.img,
 			description: condition.description,
+			stacks: condition.stacks,
 			lasts: condition.lastsUntil || condition.duration,
 			from:
 				condition.source && condition.source !== condition.name

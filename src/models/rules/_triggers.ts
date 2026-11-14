@@ -12,6 +12,7 @@ const SELF_TRIGGERS = [
 	'onInitiative',
 	'onCritReceived',
 	'onDying',
+	'onSpellCast',
 ] as const;
 
 /** The events a trigger rule can act on. */
@@ -35,4 +36,27 @@ function attackOutcomeMatches(
 	return false;
 }
 
-export { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS, type RuleTrigger };
+/** The rule shows its Mana at least field: one of its triggers is a spell cast. */
+function picksSpellCast(data: Record<string, unknown>): boolean {
+	const triggers = Array.isArray(data.triggers) ? data.triggers : [data.trigger];
+	return triggers.includes('onSpellCast');
+}
+
+/** A cast of a spell that costs at least `manaAtLeast` mana. */
+function spellCastMatches(
+	item: unknown,
+	manaSpent: number | undefined,
+	manaAtLeast: number | undefined,
+): boolean {
+	if ((item as { type?: string } | null)?.type !== 'spell') return false;
+	return (manaSpent ?? 0) >= (manaAtLeast ?? 0);
+}
+
+export {
+	attackOutcomeMatches,
+	isAttackOutcomeTrigger,
+	picksSpellCast,
+	RULE_TRIGGERS,
+	type RuleTrigger,
+	spellCastMatches,
+};

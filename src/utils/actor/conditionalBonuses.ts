@@ -1,5 +1,9 @@
 import type { ConditionalBonusRule } from '../../models/rules/conditionalBonus.js';
-import { type AttackDelivery, attackDeliveryFromAttackType } from '../damage/attackDelivery.js';
+import {
+	type AttackActivation,
+	type AttackDelivery,
+	deliveryOfAttack,
+} from '../damage/attackDelivery.js';
 import localize from '../localize.js';
 import { countedMarkTags, getToggledTargetTags } from './toggledEffects.js';
 
@@ -26,9 +30,14 @@ interface ConditionalBonusOption {
 	damageType: string;
 	/** The item of the attack doubles this bonus. */
 	doubled?: boolean;
+	/** The identifier of the item whose damage this is: it rolls as its own damage step. */
+	fromItemIdentifier?: string;
+	/** The roll window starts on this bonus. */
+	startsChosen: boolean;
 }
 
 interface AttackingActor {
+	type?: string | null;
 	rules?: unknown[];
 	getFlag(scope: string, key: string): unknown;
 }
@@ -41,12 +50,7 @@ interface TargetActor {
 interface ActivationItem {
 	type?: string;
 	identifier?: string;
-	system?: { activation?: { targets?: { attackType?: string } } };
-}
-
-/** Maps an item's attack type to a delivery channel. */
-function getDelivery(item: ActivationItem): AttackDelivery {
-	return attackDeliveryFromAttackType(item.system?.activation?.targets?.attackType);
+	system?: { activation?: AttackActivation };
 }
 
 /**
@@ -93,7 +97,7 @@ function getActiveConditionalBonuses(
 	if (!attacker || !item) return [];
 
 	const rules = (attacker.rules ?? []) as ConditionalBonusRule[];
-	const delivery = getDelivery(item);
+	const delivery = deliveryOfAttack(item.system?.activation, attacker);
 	// Anything that isn't a spell is treated as a weapon source, so feature and
 	// monster-attack activations also satisfy a `source: "weapon"` restriction. Fine
 	// for the current rules; a future author wanting to distinguish them will need a
@@ -118,8 +122,10 @@ function getActiveConditionalBonuses(
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value === null ? null : damage.value * (doubled ? 2 : 1),
 			damageFormula: damage.formula && doubled ? `(${damage.formula})*2` : damage.formula,
-			damageType: rule.damageType ?? '',
+			damageType: damage.damageType ?? rule.damageType ?? '',
 			...(doubled ? { doubled } : {}),
+			...(damage.fromItemIdentifier ? { fromItemIdentifier: damage.fromItemIdentifier } : {}),
+			startsChosen: rule.startsChosen !== false,
 		});
 	}
 

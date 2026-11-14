@@ -1,16 +1,21 @@
 import { tick } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type {
-	CardEvent,
-	EndedEffectRow,
-	SaveRequestAction,
-	TempHpChoiceAction,
-} from '#types/cardEvent.d.ts';
+import type { CardEvent, EndedEffectRow, TurnDamageAction } from '#types/cardEvent.d.ts';
+import { actOnStackGain, canActOnStackGain } from '#utils/actor/stackGainLine.js';
 import { canChooseTempHp, chooseTempHp } from '#utils/actor/tempHpChoice.js';
 import { cardEventsOf } from '#utils/chat/cardEvents.js';
+import {
+	canActOnTurnDamage,
+	takeTurnDamage,
+	undoTurnDamage,
+} from '#utils/damage/turnDamageLine.js';
+import { canEmptyPool, emptyPoolFromLine } from '#utils/dicePool/emptyPoolLine.js';
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { canEndWaiting, endWaiting } from '#utils/lastsUntil/endWaiting.js';
+import { canRuleEscape, endEscape } from '#utils/lastsUntil/escapeFollow.js';
 import localize from '#utils/localize.js';
+import { canSettleCritDiceLine, settleCritDiceLine } from '#utils/rolls/critDiceSaveLine.js';
 import { canRollRequest, rollRequestedSave } from '#utils/saveRequest/saveRequests.js';
 
 const EFFECT_HOOKS = ['createActiveEffect', 'deleteActiveEffect'] as const;
@@ -69,32 +74,65 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
-	function canRollSave(action: SaveRequestAction): boolean {
-		return canRollRequest(action);
+	function rollSave(event: CardEvent) {
+		return clickLine(event, rollRequestedSave);
 	}
 
-	async function rollSave(event: CardEvent) {
+	function rule(event: CardEvent) {
+		return clickLine(event, endEscape);
+	}
+
+	function choose(event: CardEvent, take: boolean) {
+		return clickLine(event, (card, line) => chooseTempHp(card, line, take));
+	}
+
+	/** Deals a waiting line, or gives back what a dealt line took. */
+	function actOnDamage(event: CardEvent) {
+		const action = event.action as TurnDamageAction;
+		const run = action.state === 'waiting' ? takeTurnDamage : undoTurnDamage;
+		return clickLine(event, run, 'Nimble | Could not change the damage of a turn.');
+	}
+
+	/** Puts a waiting effect on, or takes a gained one off. */
+	function actOnStack(event: CardEvent) {
+		return clickLine(
+			event,
+			actOnStackGain,
+			'Nimble | Could not change the effect of a stack count.',
+		);
+	}
+
+	/** One click on a line at a time. With `failure`, a failed click is logged. */
+	async function clickLine(
+		event: CardEvent,
+		run: (card: never, event: CardEvent) => Promise<unknown>,
+		failure?: string,
+	) {
 		if (busy[event.id]) return;
 		busy[event.id] = true;
 		try {
-			await rollRequestedSave(getMessage() as never, event);
+			const done = run(getMessage() as never, event);
+			await (failure ? done.catch((error) => console.error(failure, error)) : done);
 		} finally {
 			busy[event.id] = false;
 		}
 	}
 
-	function canChoose(action: TempHpChoiceAction): boolean {
-		return canChooseTempHp(action);
+	/** Ends a waiting effect through the end path of its moment. */
+	function end(event: CardEvent) {
+		return clickLine(event, endWaiting, 'Nimble | Could not end a waiting effect.');
 	}
 
-	async function choose(event: CardEvent, take: boolean) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			await chooseTempHp(getMessage() as never, event, take);
-		} finally {
-			busy[event.id] = false;
-		}
+	function empty(event: CardEvent) {
+		return clickLine(event, emptyPoolFromLine, 'Nimble | Could not empty a pool.');
+	}
+
+	function settleCrit(event: CardEvent) {
+		return clickLine(
+			event,
+			settleCritDiceLine,
+			'Nimble | Could not change the dice or the use of a crit dice save.',
+		);
 	}
 
 	/** The "On <name>" line takes the focus from the Undo button it replaces. */
@@ -114,10 +152,22 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		isBack,
 		canUndo,
 		undo,
-		canRollSave,
+		canRollSave: canRollRequest,
 		rollSave,
-		canChoose,
+		canRule: canRuleEscape,
+		rule,
+		canChoose: canChooseTempHp,
 		choose,
+		canActOnDamage: canActOnTurnDamage,
+		actOnDamage,
+		canActOnStack: canActOnStackGain,
+		actOnStack,
+		canEnd: canEndWaiting,
+		end,
+		canEmpty: canEmptyPool,
+		empty,
+		canSettleCrit: canSettleCritDiceLine,
+		settleCrit,
 		backStatus,
 	};
 }

@@ -530,18 +530,20 @@ async function useInterposeTicks(
 }
 
 /**
- * Use the row's item (a spell: its own mana and action). Returns how many steps
- * it was upcast, or null when the player stops.
+ * Use the row's item (a spell: its own mana and action), as an answer to the attack card.
+ * Returns how many steps it was upcast, or null when the player stops.
  */
-async function useRowItem(
+export async function useRowItem(
 	actor: Actor.Implementation,
 	pick: DefendOptionPick,
+	card: { id?: string | null },
 ): Promise<number | null> {
 	const item = pick.rule.item;
 	if (!item?.id || item.actor !== actor) return null;
 	const itemId = item.id;
-	const activate = (actor as { activateItem?: (id: string) => Promise<unknown> }).activateItem;
-	const result = (await activate?.call(actor, itemId)) as
+	const activate = (actor as { activateItem?: (id: string, options?: object) => Promise<unknown> })
+		.activateItem;
+	const result = (await activate?.call(actor, itemId, card.id ? { answersCardId: card.id } : {})) as
 		| { system?: { upcast?: { upcastSteps?: number } | null } }
 		| null
 		| undefined;
@@ -630,7 +632,7 @@ export async function openDefendWindow(
 		reactionKeys = ['defend'];
 	} else if (row.way === 'free' && row.pick) {
 		if (row.pick.rule.useItem) {
-			const steps = await useRowItem(actor, row.pick);
+			const steps = await useRowItem(actor, row.pick, card);
 			if (steps === null) return Boolean(entry);
 			upcastArmor = steps * Math.max(0, Number(row.pick.rule.upcastArmor) || 0);
 			uses.push(defendOptionUse(actor, row.pick));

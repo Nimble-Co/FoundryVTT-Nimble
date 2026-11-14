@@ -7,8 +7,11 @@ import {
 	cardEventText,
 	replaceCardEvent,
 } from '#utils/chat/cardEvents.js';
+import { mayActHere } from '#utils/chat/cardOperations.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import localize from '#utils/localize.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import type { SaveOnEvent } from '../../models/rules/saveOnEvent.js';
@@ -63,12 +66,7 @@ function itemNameOf(effect: ActiveEffect): string | undefined {
 
 /** The live rules of the effect for the event. A prepared rule also checks its predicate. */
 function rulesOf(effect: ActiveEffect, event: SaveOnEvent): SaveOnEventData[] {
-	const prepared = (effect as { rules?: { values?(): Iterable<SaveOnEventData> } }).rules;
-	const rules =
-		typeof prepared?.values === 'function'
-			? [...prepared.values()]
-			: ((effect.system as { rules?: SaveOnEventData[] } | undefined)?.rules ?? []);
-	return rules.filter(
+	return rulesOfEffect<SaveOnEventData>(effect).filter(
 		(rule) =>
 			rule?.type === 'saveOnEvent' &&
 			!rule.disabled &&
@@ -148,7 +146,7 @@ export function holderOfRequest(action: SaveRequestAction): SaverActor | null {
 /** The owner of the holder, or a GM, rolls the save, once. */
 export function canRollRequest(action: SaveRequestAction): boolean {
 	if (action.saveMessageId) return false;
-	return !!game.user?.isGM || !!holderOfRequest(action)?.isOwner;
+	return mayActHere(action.holderUuid);
 }
 
 /** On the save card: the line it answers, as it was when rolled. */
@@ -232,13 +230,15 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 
 	const events = cardEventsOf(card as never);
 	const line = events.find((each) => each.id === link.event.id);
+	const isAsked = (effect: { effectId: string; holderUuid: string }) =>
+		effect.effectId === asked.effectId && effect.holderUuid === asked.holderUuid;
+	// Its ended line, or with Feature Effects off its waiting line.
 	const ended = line
 		? undefined
 		: events.find(
 				(each) =>
-					each.action?.kind === 'undoEnd' &&
-					each.action.row.effectId === asked.effectId &&
-					each.action.row.holderUuid === asked.holderUuid,
+					(each.action?.kind === 'undoEnd' && isAsked(each.action.row)) ||
+					(each.action?.kind === 'waitingEnd' && isAsked(each.action)),
 			);
 	if (!line && !ended) return false;
 
@@ -251,7 +251,7 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 		await replaceCardEvent(card as never, line.id, null);
 		const effect = holderOfRequest(asked)?.effects.get(asked.effectId);
 		if (effect) {
-			await endEffects([effect], {
+			await endOrWaitEffects([effect], {
 				heading: link.event.text,
 				hostId: card.id,
 				reason: { key: `${WORDS}.rolled`, data: rolled },
@@ -272,8 +272,8 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 					action: { ...action, state: 'kept', total },
 				}
 			: { ...link.event, action: { ...action, state: 'waiting' } };
-	if (ended?.action?.kind === 'undoEnd') {
-		await undoEndedEffect(ended.action.row);
+	if (ended) {
+		if (ended.action?.kind === 'undoEnd') await undoEndedEffect(ended.action.row);
 		return replaceCardEvent(card as never, ended.id, next);
 	}
 	return replaceCardEvent(card as never, link.event.id, next);

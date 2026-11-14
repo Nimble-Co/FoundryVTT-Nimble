@@ -1,5 +1,7 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
+import { NimbleActiveEffect } from '../activeEffect.js';
 import {
+	AFTER_RULES_PHASE,
 	applyMultiplyDown,
 	MULTIPLY_DOWN_CHANGE,
 	registerMultiplyDownChange,
@@ -51,5 +53,48 @@ describe('registerMultiplyDownChange', () => {
 		const types = (CONFIG.ActiveEffect as { changeTypes?: Record<string, { handler?: unknown }> })
 			.changeTypes;
 		expect(types?.[MULTIPLY_DOWN_CHANGE]?.handler).toBe(applyMultiplyDown);
+	});
+});
+
+describe('the phase after the rules', () => {
+	it('is registered with a label and a hint', () => {
+		const config = CONFIG.ActiveEffect as {
+			phases?: Record<string, { label: string; hint?: string }>;
+		};
+		const before = config.phases;
+		onTestFinished(() => {
+			config.phases = before;
+		});
+		config.phases = {};
+		registerMultiplyDownChange();
+
+		expect(config.phases[AFTER_RULES_PHASE]).toEqual({
+			label: 'NIMBLE.effectSheet.phases.afterRules.label',
+			hint: 'NIMBLE.effectSheet.phases.afterRules.hint',
+		});
+	});
+
+	it('takes every Multiply, round down change, whatever phase it holds', () => {
+		const core = Object.getPrototypeOf(NimbleActiveEffect.prototype) as {
+			shouldApplyChange?: (change: { phase: string }, options: { phase: string }) => boolean;
+		};
+		const before = core.shouldApplyChange;
+		onTestFinished(() => {
+			core.shouldApplyChange = before;
+		});
+		core.shouldApplyChange = (change, options) => change.phase === options.phase;
+		const effect = new (NimbleActiveEffect as unknown as new (data: object) => NimbleActiveEffect)(
+			{},
+		);
+		const applies = (type: string, phase: string, during: string) =>
+			effect.shouldApplyChange({ type, phase } as never, { phase: during } as never);
+
+		for (const stored of ['initial', 'final']) {
+			expect(applies(MULTIPLY_DOWN_CHANGE, stored, stored)).toBe(false);
+			expect(applies(MULTIPLY_DOWN_CHANGE, stored, AFTER_RULES_PHASE)).toBe(true);
+			expect(applies('add', stored, stored)).toBe(true);
+			expect(applies('add', stored, AFTER_RULES_PHASE)).toBe(false);
+		}
+		expect(applies('multiply', 'initial', 'initial')).toBe(true);
 	});
 });

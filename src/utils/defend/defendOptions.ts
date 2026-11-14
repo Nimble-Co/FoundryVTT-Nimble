@@ -12,7 +12,11 @@ import { actorRules, ruleKey, ruleLabel, runningRuleParent } from '../actor/acto
 import { itemEffectOf } from '../actor/itemEffectOf.js';
 import { payCost } from '../cost/costLedger.js';
 import { canPayUseCost } from '../cost/useCost.js';
-import { attackDeliveryFromAttackType, matchesAttackDelivery } from '../damage/attackDelivery.js';
+import {
+	type AttackActivation,
+	deliveryOfAttack,
+	matchesAttackDelivery,
+} from '../damage/attackDelivery.js';
 import type { IncomingReactionEntry } from '../incomingReactions/incomingReactionEntry.js';
 import localize from '../localize.js';
 import { speakerActorOf } from './defendReactors.js';
@@ -28,10 +32,9 @@ interface DefendOptionEffect {
 	wholeRound: boolean;
 }
 
-function cardDelivery(card: DefendCardLike) {
-	const attackType = (card.system as { activation?: { targets?: { attackType?: string } } } | null)
-		?.activation?.targets?.attackType;
-	return attackDeliveryFromAttackType(attackType);
+function cardDelivery(card: DefendCardLike, attacker: Actor.Implementation | null) {
+	const activation = (card.system as { activation?: AttackActivation } | null)?.activation;
+	return deliveryOfAttack(activation, attacker);
 }
 
 /** The enabled Defend options of a way that fit this attack. Costs the hero cannot pay are left out. */
@@ -40,8 +43,8 @@ export function defendOptionsOf(
 	card: DefendCardLike,
 	way: DefendOptionWay,
 ): DefendOptionPick[] {
-	const delivery = cardDelivery(card);
 	const attacker = speakerActorOf(card);
+	const delivery = cardDelivery(card, attacker);
 	return actorRules<DefendOptionRule>(actor as { rules?: unknown } | null)
 		.filter(
 			(rule) =>

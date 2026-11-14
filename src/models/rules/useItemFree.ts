@@ -11,9 +11,12 @@ import { choiceLabels } from './_rollUseRule.js';
 import {
 	attackOutcomeMatches,
 	isAttackOutcomeTrigger,
+	picksSpellCast,
 	RULE_TRIGGERS,
 	type RuleTrigger,
+	spellCastMatches,
 } from './_triggers.js';
+import { withWidget } from './_widgetOption.js';
 import {
 	type ActorDyingContext,
 	type ActorHealthContext,
@@ -79,6 +82,18 @@ function schema() {
 				hint: `${WORDS}.triggers.hint`,
 			} as unknown as never,
 		),
+		manaAtLeast: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+				label: `${WORDS}.manaAtLeast.label`,
+				hint: `${WORDS}.manaAtLeast.hint`,
+				showWhen: picksSpellCast,
+			}),
+		),
 		freeOf: new fields.ArrayField(
 			new fields.StringField({
 				required: true,
@@ -121,6 +136,8 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 
 	declare itemIdentifier: string;
 	declare triggers: RuleTrigger[];
+
+	declare manaAtLeast: number;
 	declare freeOf: ItemActivationManager.FreeOf[];
 
 	static override defineSchema(): UseItemFreeRule.Schema {
@@ -139,14 +156,19 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 			new Map([
 				['itemIdentifier', 'string'],
 				['triggers', join(RULE_TRIGGERS)],
+				['manaAtLeast', 'number'],
 				['freeOf', join(FREE_OF_CHOICES)],
 			]),
 		);
 	}
 
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
-		if (context.sourceActor !== this.actor || !context.card) return;
+		if (context.sourceActor !== this.actor) return;
 		if (this.#usesItself(context.sourceItem)) return;
+		if (spellCastMatches(context.sourceItem, context.manaSpent, this.manaAtLeast)) {
+			await this.#useOnce('onSpellCast', context.card);
+		}
+		if (!context.card) return;
 		const outcome = cardAttackOutcome(context.card);
 		if (!outcome) return;
 		for (const trigger of this.triggers) {
@@ -227,6 +249,13 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 		return this.isOnActor && this.test();
 	}
 
+	#reason(trigger: RuleTrigger): { key: string; data?: { mana: string } } {
+		if (trigger === 'onSpellCast' && this.manaAtLeast > 0) {
+			return { key: `${WORDS}.reasons.onSpellCastMana`, data: { mana: String(this.manaAtLeast) } };
+		}
+		return { key: `${WORDS}.reasons.${trigger}` };
+	}
+
 	async #use(trigger: RuleTrigger, cardId?: string, host?: FreeUseHost): Promise<void> {
 		if (!this.#fires(trigger)) return;
 		const key = [ruleKey(this), trigger, ...(cardId ? [cardId] : [])].join(':');
@@ -237,7 +266,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 				of: [...this.freeOf],
 				reason: {
 					key: `${WORDS}.cardLine`,
-					data: { trigger: { key: `${WORDS}.reasons.${trigger}` }, feature: ruleLabel(this) },
+					data: { trigger: this.#reason(trigger), feature: ruleLabel(this) },
 				},
 				...(host ? { host } : {}),
 			});

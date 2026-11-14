@@ -206,6 +206,7 @@ describe('save requests', () => {
 			expect(endEffects).toHaveBeenCalledWith(
 				[concentrating],
 				expect.objectContaining({ hostId: 'm1' }),
+				undefined,
 			);
 		});
 

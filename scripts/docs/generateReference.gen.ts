@@ -411,6 +411,7 @@ function generateConditionsPage(): void {
 		NIMBLE.conditionTriggerRelationships ?? {};
 	const stackable: Set<string> = NIMBLE.conditionStackableConditions ?? new Set();
 	const overlay: Set<string> = NIMBLE.conditionOverlayConditions ?? new Set();
+	const negative: Set<string> = NIMBLE.conditionNegativeConditions ?? new Set();
 
 	const name = (id: string): string => localize(conditions[id] ?? id);
 
@@ -437,6 +438,7 @@ function generateConditionsPage(): void {
 			}
 			if (stackable.has(id)) notes.push('Can be applied multiple times; the copies stack.');
 			if (overlay.has(id)) notes.push('Shown as a full-token overlay.');
+			if (negative.has(id)) notes.push('Negative: an End Conditions step ends it.');
 
 			return `| **${cell(name(id))}** | ${cell(description)} ${cell(notes.join(' '))} |`;
 		});
@@ -808,6 +810,12 @@ function generateFormulaReferencePage(): void {
 			"The Reach of the hero's aura: the sum of their **Aura Reach** rules, 0 with no aura.",
 			'Yes',
 			'',
+		],
+		[
+			'`@damageTaken`',
+			'The damage of the newest hit the creature took, after armor and before temp HP. 0 before any damage.',
+			'Yes',
+			'Yes',
 		],
 	].map((row) => `| ${row.map(cell).join(' | ')} |`);
 

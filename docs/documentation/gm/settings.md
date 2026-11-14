@@ -12,8 +12,15 @@ How much the system does on its own is controlled from one place: the **Configur
 
 **Features and Effects**
 
-- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, rerolls happen, and timed effects end on their own. Casting a Concentration spell starts Concentration. An effect that an item gives to its user goes on when the item is used, and features that use an item for free do so. When off, the chat card shows a button for each one instead, such as **Apply to You**, and nothing is used for free. Using an item and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md).
+- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and rerolls happen. Casting a Concentration spell starts Concentration. An effect that an item gives to its user goes on when the item is used, and features that use an item for free do so. Held Changes go on the next roll by themselves. Effects end by themselves at their Lasts Until, when an Escape succeeds, and when a save to keep them fails. When off, the chat card shows a button for each one instead, such as **Apply to You** or **End**, the roll window shows each Held Change as a tick box, and nothing is used for free. Using an item and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md#when-an-effect-ends).
 - **Linked Conditions.** A condition adds and removes the conditions that come with it, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
+
+::: details More about Feature Effects off
+- An effect stays on until someone clicks **End** on its line or removes it.
+- Only a Held Change you tick goes on the roll, and only a ticked one is used up. A roll with no window (Alt-click) uses none. See [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
+- An Empty pools at end rule does not empty its pools when its effect ends. The card of the end gets an **Empty** button for each pool that holds dice.
+- After the save of a Save for Max Crit Dice rule, the save card gets an **Apply** button. It sets the dice to their max after a failed save, or gives the use back after a passed one.
+:::
 
 **Resources**
 
@@ -45,9 +52,9 @@ Worlds upgrading from an earlier version keep their old choice: the stored value
 
 ## Custom conditions
 
-The **Manage Conditions** button in the system settings tab (GM only) opens an editor for adding conditions the system doesn't ship with — useful when your table is running content that introduces its own statuses. Give each one a name, a description, and an icon from your Foundry files. The id fills in from the name, but you can type your own before the first save; after that it's locked, because every effect and rule using the condition stores that id. Descriptions are plain text: type them as you'd read them, and blank lines become paragraphs.
+The **Manage Conditions** button in the system settings tab (GM only) opens an editor where you add conditions that the system does not have. Use it for content that brings its own statuses. Give each condition a name, a description, and an icon from your Foundry files. The **Negative** box is on at first, and while it is on, an End Conditions step can end the condition. The id fills in from the name, and you can type your own before the first save. After that the id is locked, because every effect and rule that uses the condition stores it. Descriptions are plain text, and a blank line starts a new paragraph.
 
-Saved conditions appear alongside the built-in ones in the token status panel, the Effects tab of both sheets, and every rule that picks a condition. The token panel and any open conditions list pick up changes right away; sheets and rule dropdowns that are already open show them after you reopen them. Removing one that is still in use opens a confirmation listing the creatures carrying it and the items naming it, so you can strip it from them in the same step. Custom conditions carry no built-in mechanics — see [Conditions](../playing/conditions.md#custom-conditions) for what that means.
+Saved conditions appear with the built-in ones in the token status panel, the Effects tab of both sheets, and every rule that picks a condition. The token panel and any open conditions list show changes at once. Sheets and rule dropdowns that are already open show them after you reopen them. When you remove a condition that is still in use, a confirmation lists the creatures that have it and the items that name it, so you can remove it from them in the same step. Custom conditions have no built-in mechanics. See [Conditions](../playing/conditions.md#custom-conditions) for what that means.
 
 ## Settings to decide before your first session
 

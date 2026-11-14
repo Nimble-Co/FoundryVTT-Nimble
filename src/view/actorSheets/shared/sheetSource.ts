@@ -53,6 +53,8 @@ export interface EffectLike {
 	description: string;
 	/** the labels of the pools that are emptied when the effect ends */
 	poolsLost: string[];
+	/** the stacks of an effect with Stacks on; missing or 1 shows no count */
+	stacks?: number;
 }
 
 /** A condition of the system, on the actor or not. */
@@ -73,6 +75,8 @@ export interface ConditionLike {
 	effectId: string | null;
 	/** as on an effect: the user can try to Escape it */
 	escape: { dc: number | null } | null;
+	/** as on an effect: the stacks of the effect that gives it */
+	stacks?: number;
 }
 
 export interface DicePoolLike {

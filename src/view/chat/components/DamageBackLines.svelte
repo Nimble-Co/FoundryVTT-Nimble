@@ -1,39 +1,15 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type {
-		DamageBackAction,
-		DamageBackRecord,
-	} from '#documents/chatMessage/cardDamageBack.ts';
 
 	import { getContext } from 'svelte';
-	import { mayActHere } from '#utils/chat/cardOperations.js';
-	import { requestDamageBack } from '#utils/incomingReactions/incomingAttackReactions.js';
-	import localize from '../../../utils/localize.js';
+	import { createDamageBackLinesState } from './DamageBackLines.svelte.ts';
 
 	const messageDocument = getContext<NimbleChatMessage>('messageDocument');
-	const records = $derived(
-		(messageDocument.reactive?.system as { damageBack?: DamageBackRecord[] } | undefined)
-			?.damageBack ?? [],
-	);
-
-	function canUse(record: DamageBackRecord): boolean {
-		return mayActHere(record.actorUuid);
-	}
-
-	function textOf(record: DamageBackRecord): string {
-		const amount = String(record.doubled ? record.amount * 2 : record.amount);
-		const data = { label: record.label, name: record.attackerName, amount };
-		return localize(
-			record.dealt ? 'NIMBLE.chat.damageBack.dealt' : 'NIMBLE.chat.damageBack.waiting',
-			data,
-		);
-	}
-
-	const use = (record: DamageBackRecord, action: DamageBackAction) =>
-		requestDamageBack({ messageId: messageDocument.id ?? '', recordId: record.id, action });
+	const lines = createDamageBackLinesState(() => messageDocument);
+	const { canUse, textOf, buttonOf, doubleText, use } = lines;
 </script>
 
-{#each records as record (record.id)}
+{#each lines.records as record (record.id)}
 	<div class="nimble-damage-back">
 		<p class="nimble-damage-back__line">
 			<i class="fa-solid fa-reply" aria-hidden="true"></i>
@@ -41,11 +17,11 @@
 		</p>
 		{#if canUse(record) && !record.dealt}
 			<button class="nimble-button" type="button" onclick={() => use(record, 'deal')}>
-				{localize('NIMBLE.chat.damageBack.deal', { amount: String(record.amount) })}
+				{buttonOf(record)}
 			</button>
 		{:else if canUse(record) && record.woundDoubles && !record.doubled}
 			<button class="nimble-button" type="button" onclick={() => use(record, 'double')}>
-				{localize('NIMBLE.chat.damageBack.double', { amount: String(record.amount) })}
+				{doubleText(record)}
 			</button>
 		{/if}
 	</div>

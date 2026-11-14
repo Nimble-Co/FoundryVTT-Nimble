@@ -1,10 +1,24 @@
+import { SYSTEM_ID } from '#system';
+
 interface TempHpHolder {
+	name?: string | null;
+	system?: unknown;
+	update(data: Record<string, unknown>, options?: Record<string, unknown>): Promise<unknown>;
+}
+
+interface LinkedEffect {
+	id?: string | null;
 	name?: string | null;
 	system?: unknown;
 	update(data: Record<string, unknown>): Promise<unknown>;
 }
 
+interface LinkHolder extends TempHpHolder {
+	effects?: Iterable<LinkedEffect> | null;
+}
+
 const TEMP_PATH = 'system.attributes.hp.temp';
+const GRANT_OPTION = 'tempGrantEffectId';
 
 function currentTemp(holder: TempHpHolder): number {
 	const temp = Number(foundry.utils.getProperty(holder, TEMP_PATH) ?? 0);
@@ -38,8 +52,63 @@ export function tempHpGrant(
 	return { give: 0, owned: inherited, refused: { temp, amount: value } };
 }
 
-export async function giveTempHp(holder: TempHpHolder, amount: number): Promise<void> {
-	if (amount > 0) await holder.update({ [TEMP_PATH]: amount });
+/** The update options that name the grant whose temp HP the update writes (null: no effect's). */
+export function tempGrantOptions(effectId: string | null): Record<string, unknown> {
+	return { [SYSTEM_ID]: { [GRANT_OPTION]: effectId } };
+}
+
+/** Give temp HP that are now the grant of `effectId`; the temp HP of other grants are gone. */
+export async function giveTempHp(
+	holder: TempHpHolder,
+	amount: number,
+	effectId: string | null,
+): Promise<void> {
+	if (amount > 0) await holder.update({ [TEMP_PATH]: amount }, tempGrantOptions(effectId));
+}
+
+/** Every effect on the holder but `keepEffectId` owns no temp HP now. Gives the ended links. */
+export async function clearTempHpLinks(
+	holder: LinkHolder,
+	keepEffectId: string | null,
+): Promise<LinkedEffect[]> {
+	const ended: LinkedEffect[] = [];
+	for (const effect of holder.effects ?? []) {
+		if (keepEffectId && effect.id === keepEffectId) continue;
+		const given = Number((effect.system as { tempHp?: number | null } | undefined)?.tempHp);
+		if (!(given > 0)) continue;
+		ended.push(effect);
+		await effect.update({ 'system.tempHp': null });
+	}
+	return ended;
+}
+
+/**
+ * A link holds only while the temp HP are that grant's: an update that names a grant keeps that
+ * link alone; temp HP that reach 0, or go up with no grant named, end every link. An Undo of damage
+ * gives back temp HP that are still the grant's, so it keeps every link. Gives the ids of the
+ * effects whose link it ended.
+ */
+export async function followTempHpChange(
+	holder: LinkHolder,
+	changes: Record<string, unknown>,
+	options: unknown,
+): Promise<string[]> {
+	if (foundry.utils.getProperty(changes, TEMP_PATH) === undefined) return [];
+	const recorded = (options as Record<string, Record<string, unknown> | undefined> | null)?.[
+		SYSTEM_ID
+	];
+	if (recorded?.undoesDamage === true) return [];
+	let ended: LinkedEffect[] = [];
+	if (recorded && GRANT_OPTION in recorded) {
+		ended = await clearTempHpLinks(holder, (recorded[GRANT_OPTION] as string | null) ?? null);
+	} else {
+		const temp = currentTemp(holder);
+		const before = (recorded?.previousHp as { temp?: number } | undefined)?.temp;
+		if (temp <= 0 || (typeof before === 'number' && temp > before)) {
+			ended = await clearTempHpLinks(holder, null);
+		}
+	}
+	return ended.flatMap((effect) => (effect.id ? [effect.id] : []));
 }
 
 /** When the effect goes, the holder loses what is left of the temp HP that it gave. */

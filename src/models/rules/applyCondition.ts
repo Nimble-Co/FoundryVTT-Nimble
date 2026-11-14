@@ -1,22 +1,42 @@
 import { SYSTEM_ID } from '#system';
-import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode, WoundNode } from '#types/effectTree.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
-import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import {
+	type AppliedEffect,
+	applyEffectToActor,
+	payloadFromEffect,
+} from '#utils/actor/applyEffectToActor.js';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
+import {
+	giveWounds,
+	takeBackWounds,
+	type WoundRecord,
+	woundsGiven,
+} from '#utils/actor/giveWounds.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
+import { recordAppliedEffects } from '#utils/chat/applyEffectFromCard.js';
+import { giveWoundsOnCard } from '#utils/chat/woundFromCard.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { choiceLabels } from './_rollUseRule.js';
-import { attackOutcomeMatches, isAttackOutcomeTrigger, RULE_TRIGGERS } from './_triggers.js';
+import {
+	attackOutcomeMatches,
+	isAttackOutcomeTrigger,
+	picksSpellCast,
+	RULE_TRIGGERS,
+	spellCastMatches,
+} from './_triggers.js';
 import { withWidget } from './_widgetOption.js';
 import {
 	type ActivationCardContext,
 	type ActorDyingContext,
 	type ActorHealthContext,
 	type InitiativeRolledContext,
+	type ItemActivatedContext,
 	type ItemUsedContext,
 	NimbleBaseRule,
 	type RestContext,
@@ -30,6 +50,9 @@ type ApplyConditionTrigger = (typeof TRIGGER_CHOICES)[number];
 
 /** Effect flag: the save card, and the item and condition of the rule that added this effect. */
 const SAVE_FAIL_SOURCE_FLAG = 'saveFailSource';
+
+/** Save card flag: the Wounds that each rule's fail gave, so a success takes back no more. */
+const SAVE_FAIL_WOUNDS_FLAG = 'saveFailWounds';
 
 // No rule id: a rule source without one gets a new random id each time it is built.
 interface SaveFailSource {
@@ -54,10 +77,17 @@ interface EffectItem {
 
 type EffectSourceUser = Parameters<typeof payloadFromEffect>[1]['user'];
 type EffectTarget = Parameters<typeof applyEffectToActor>[0];
+type WoundTarget = Parameters<typeof giveWounds>[0];
+type WoundCard = Parameters<typeof giveWoundsOnCard>[0];
 
 interface ConditionOwner {
 	effects?: Iterable<OwnedConditionEffect>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[], options?: object): Promise<unknown>;
+}
+
+interface SaveCard {
+	flags?: Record<string, unknown>;
+	update(data: Record<string, unknown>): Promise<unknown>;
 }
 
 function schema() {
@@ -97,6 +127,27 @@ function schema() {
 					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')) ? 'targets' : 'self',
 			}),
 		),
+		wounds: new fields.NumberField({
+			required: true,
+			nullable: false,
+			integer: true,
+			min: 0,
+			initial: 0,
+			label: 'NIMBLE.rules.applyCondition.wounds.label',
+			hint: 'NIMBLE.rules.applyCondition.wounds.hint',
+		}),
+		manaAtLeast: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+				label: 'NIMBLE.rules.useItemFree.manaAtLeast.label',
+				hint: 'NIMBLE.rules.useItemFree.manaAtLeast.hint',
+				showWhen: picksSpellCast,
+			}),
+		),
 	};
 }
 
@@ -114,6 +165,9 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	declare condition: string;
 	declare trigger: ApplyConditionTrigger;
 	declare effectId: string;
+	declare wounds: number;
+
+	declare manaAtLeast: number;
 
 	static override defineSchema(): ApplyConditionRule.Schema {
 		return {
@@ -133,6 +187,8 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 					),
 				],
 				['effectId', 'string'],
+				['wounds', 'number'],
+				['manaAtLeast', 'number'],
 			]),
 		);
 	}
@@ -141,25 +197,54 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
 		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
 		if (!targetActor) return;
-		await this.#applyConditionTo(targetActor);
+		await this.#applyConditionTo(targetActor, undefined, context.card as unknown as WoundCard);
 	}
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
 		if (!this.#isAttackTrigger()) return [];
 		if (!this.#matchesAttackContext(context)) return [];
 		const effect = this.#itemEffect();
-		if (!effect && !this.condition) return [];
-		const node: ApplyEffectNode = {
-			id: `apply-condition-${this.id}`,
-			type: 'applyEffect',
-			effectId: effect ? this.effectId : null,
-			effectItemUuid: effect ? (this.item?.uuid ?? null) : null,
-			condition: this.condition || null,
-			recipient: 'targets',
-			parentContext: null,
-			parentNode: null,
-		};
-		return [node];
+		const nodes: EffectNode[] = [];
+		if (effect || this.condition) {
+			const node: ApplyEffectNode = {
+				id: this.#effectNodeId(),
+				type: 'applyEffect',
+				effectId: effect ? this.effectId : null,
+				effectItemUuid: effect ? (this.item?.uuid ?? null) : null,
+				condition: this.condition || null,
+				recipient: 'targets',
+				parentContext: null,
+				parentNode: null,
+			};
+			nodes.push(node);
+		}
+		if (this.wounds > 0) {
+			const node: WoundNode = {
+				id: this.#woundNodeId(),
+				type: 'wound',
+				amount: this.wounds,
+				recipient: 'targets',
+				parentContext: null,
+				parentNode: null,
+			};
+			nodes.push(node);
+		}
+		return nodes;
+	}
+
+	#woundNodeId(): string {
+		return `wound-${this.id}`;
+	}
+
+	#effectNodeId(): string {
+		return `apply-condition-${this.id}`;
+	}
+
+	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
+		if (this.trigger !== 'onSpellCast') return;
+		if (context.sourceActor !== this.actor) return;
+		if (!spellCastMatches(context.sourceItem, context.manaSpent, this.manaAtLeast)) return;
+		await this.#applyConditionToSelf();
 	}
 
 	override async onAttackReceived(context: ItemUsedContext): Promise<void> {
@@ -211,10 +296,15 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				itemUuid: this.parentDocument.uuid ?? '',
 				condition: this.condition,
 			};
-			await this.#applyConditionToSelf({ [SAVE_FAIL_SOURCE_FLAG]: source });
+			const wounds = await this.#applyConditionToSelf(
+				{ [SAVE_FAIL_SOURCE_FLAG]: source },
+				context.messageId,
+			);
+			await this.#recordSaveFailWounds(context.messageId, woundsGiven(wounds));
 			return;
 		}
 		await this.#removeConditionFromSaveCard(context.messageId);
+		await this.#takeBackSaveFailWounds(context.messageId);
 	}
 
 	override async onRest(context: RestContext): Promise<void> {
@@ -243,11 +333,44 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		return isAttackOutcomeTrigger(this.trigger);
 	}
 
-	async #applyConditionToSelf(systemFlags?: Record<string, unknown>): Promise<void> {
-		if (!this.test()) return;
+	async #applyConditionToSelf(
+		systemFlags?: Record<string, unknown>,
+		cardId?: string | null,
+	): Promise<WoundRecord | null> {
+		if (!this.test()) return null;
 		const selfActor = this.actor as unknown as ConditionTargetActor | null;
-		if (!selfActor) return;
-		await this.#applyConditionTo(selfActor, systemFlags);
+		if (!selfActor) return null;
+		return this.#applyConditionTo(selfActor, systemFlags, null, cardId);
+	}
+
+	/** The save card's key for this rule: its item and condition, as the rule id is not stable. */
+	#saveFailWoundsPath(): string {
+		const key = `${this.parentDocument.uuid ?? ''}_${this.condition || 'none'}`.replaceAll(
+			'.',
+			'_',
+		);
+		return `flags.${SYSTEM_ID}.${SAVE_FAIL_WOUNDS_FLAG}.${key}`;
+	}
+
+	#saveCard(messageId: string): SaveCard | null {
+		return (game.messages?.get(messageId) as unknown as SaveCard | undefined) ?? null;
+	}
+
+	async #recordSaveFailWounds(messageId: string, given: number): Promise<void> {
+		const card = given > 0 ? this.#saveCard(messageId) : null;
+		if (!card) return;
+		const path = this.#saveFailWoundsPath();
+		const before = Number(foundry.utils.getProperty(card, path)) || 0;
+		await card.update({ [path]: before + given });
+	}
+
+	async #takeBackSaveFailWounds(messageId: string): Promise<void> {
+		const card = this.#saveCard(messageId);
+		const path = this.#saveFailWoundsPath();
+		const given = Number(card ? foundry.utils.getProperty(card, path) : 0) || 0;
+		if (!card || !(given > 0)) return;
+		await card.update({ [path]: 0 });
+		await takeBackWounds(this.actor as unknown as WoundTarget, given);
 	}
 
 	// No predicate test: this takes back an effect of a result that no longer stands.
@@ -269,39 +392,68 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				ids.push(effect.id);
 			}
 		}
-		if (ids.length > 0) await owner.deleteEmbeddedDocuments('ActiveEffect', ids);
+		if (ids.length > 0) {
+			await owner.deleteEmbeddedDocuments('ActiveEffect', ids, { [UNDO_APPLICATION_OPTION]: true });
+		}
 	}
 
 	#itemEffect(): ItemEffect | null {
 		return itemEffectOf(this.item as unknown as EffectItem | null, this.effectId);
 	}
 
+	/**
+	 * The condition or the effect, then the Wounds. With a card, the card records the Wounds and
+	 * who took the effect, as its Apply Effect step for this rule does.
+	 * The lines of the effect go on `card`, else on the card named by `cardId`.
+	 */
 	async #applyConditionTo(
 		target: ConditionTargetActor,
 		systemFlags?: Record<string, unknown>,
-	): Promise<void> {
+		card?: WoundCard | null,
+		cardId?: string | null,
+	): Promise<WoundRecord | null> {
 		const effect = this.#itemEffect();
+		let applied: AppliedEffect | null = null;
 		if (effect) {
-			await this.#applyEffectCopyTo(target, effect, systemFlags);
-			return;
+			applied = await this.#applyEffectCopyTo(
+				target,
+				effect,
+				systemFlags,
+				card?.id ?? cardId ?? null,
+			);
+		} else if (this.condition) {
+			const created = await applyConditionToActor(target, this.condition, {
+				sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
+				sourceActor: this.actor as unknown as { uuid?: string } | null,
+				rule: this,
+				systemFlags: systemFlags ?? null,
+			});
+			const effectUuid = (created as { uuid?: string | null } | null)?.uuid;
+			if (effectUuid) {
+				const name = (target as { name?: string | null }).name ?? '';
+				applied = { effectUuid, actorName: name };
+			}
 		}
-		if (!this.condition) return;
+		const wounds = await this.#giveWoundsTo(target as unknown as WoundTarget, card ?? null);
+		if (card && applied) await recordAppliedEffects(card, this.#effectNodeId(), [applied]);
+		return wounds;
+	}
 
-		await applyConditionToActor(target, this.condition, {
-			sourceItem: (this.item ?? this.parentDocument) as unknown as { uuid?: string },
-			sourceActor: this.actor as unknown as { uuid?: string } | null,
-			rule: this,
-			systemFlags: systemFlags ?? null,
-		});
+	async #giveWoundsTo(target: WoundTarget, card: WoundCard | null): Promise<WoundRecord | null> {
+		if (!(this.wounds > 0)) return null;
+		if (!card) return giveWounds(target, this.wounds);
+		await giveWoundsOnCard(card, this.#woundNodeId(), [target], this.wounds);
+		return null;
 	}
 
 	async #applyEffectCopyTo(
 		target: ConditionTargetActor,
 		effect: ItemEffect,
-		systemFlags?: Record<string, unknown>,
-	): Promise<void> {
+		systemFlags: Record<string, unknown> | undefined,
+		cardId: string | null,
+	): Promise<AppliedEffect | null> {
 		const user = this.actor as unknown as EffectSourceUser | null;
-		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user });
+		const payload = payloadFromEffect(effect, { itemUuid: this.item?.uuid ?? null, user, cardId });
 		if (systemFlags) {
 			const flags = (payload.data.flags ?? {}) as Record<string, Record<string, unknown>>;
 			payload.data.flags = {
@@ -309,7 +461,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				[SYSTEM_ID]: { ...(flags[SYSTEM_ID] ?? {}), ...systemFlags },
 			};
 		}
-		await applyEffectToActor(target as unknown as EffectTarget, payload);
+		return applyEffectToActor(target as unknown as EffectTarget, payload);
 	}
 }
 

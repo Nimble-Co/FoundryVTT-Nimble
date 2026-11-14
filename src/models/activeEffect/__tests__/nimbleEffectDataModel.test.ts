@@ -5,6 +5,7 @@ import activeEffectDataModels from '../activeEffectDataModels.js';
 import {
 	CLOCKS,
 	ESCAPE_SAVES,
+	ESCAPE_SKILLS,
 	EVENT_SUBJECTS,
 	LASTS_UNTIL_EVENTS,
 	LASTS_UNTIL_KINDS,
@@ -131,6 +132,7 @@ describe('Nimble effect data model', () => {
 			'combatEnd',
 			'gain',
 			'applyEffect',
+			'tempHpGone',
 		]);
 	});
 
@@ -144,6 +146,23 @@ describe('Nimble effect data model', () => {
 		};
 		expect(saves.options.initial()).toEqual(['strength', 'dexterity']);
 		expect(saves.element.options.choices).toEqual([...ESCAPE_SAVES]);
+	});
+
+	it('has No DC off and no skills by default, so old effects keep their meaning', () => {
+		const escapeFields = schema().escape.fields ?? {};
+
+		expect(escapeFields.noDc.options).toMatchObject({ initial: false, nullable: false });
+		const skills = escapeFields.skills as unknown as {
+			options: { initial: () => string[] };
+			element: { options: { choices: string[] } };
+		};
+		expect(skills.options.initial()).toEqual([]);
+		expect(skills.element.options.choices).toEqual([...ESCAPE_SKILLS]);
+	});
+
+	it('offers the skill keys the system uses, in the order of their names', () => {
+		expect([...ESCAPE_SKILLS].sort()).toEqual(Object.keys(CONFIG.NIMBLE.skills).sort());
+		expect([...ESCAPE_SKILLS]).toEqual([...ESCAPE_SKILLS].sort());
 	});
 
 	it('offers the save keys the system uses', () => {
@@ -169,6 +188,23 @@ describe('Nimble effect data model', () => {
 
 		expect(tempHp.options).toMatchObject({ nullable: true, initial: null, integer: true, min: 0 });
 		expect(minor.options).toMatchObject({ nullable: false, initial: false });
+	});
+
+	it("reads the user's numbers at apply time by default, so old effects keep their meaning", () => {
+		expect(schema().readsHolder.options).toMatchObject({
+			required: true,
+			nullable: false,
+			initial: false,
+		});
+	});
+
+	it('does not stack by default, so old effects keep their meaning', () => {
+		const stackFields = schema().stacks.fields ?? {};
+
+		expect(stackFields.on.options).toMatchObject({ nullable: false, initial: false });
+		expect(stackFields.count.options).toMatchObject({ initial: 1, integer: true, min: 1 });
+		expect(stackFields.at.options).toMatchObject({ nullable: true, initial: null, min: 2 });
+		expect(stackFields.effectId.options).toMatchObject({ blank: true, initial: '' });
 	});
 });
 

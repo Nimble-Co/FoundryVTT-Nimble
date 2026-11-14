@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { EffectTabProps } from '#types/components/EffectSheet.d.ts';
 	import localize from '#utils/localize.js';
+	import ItemEffectSelect from '../../components/ItemEffectSelect.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 	import Editor from '../components/Editor.svelte';
 	import { effectConditionOptions, toggledStatus } from './effectConditions.ts';
+	import { stackFieldsOf } from '#utils/actor/effectStacks.js';
+	import { stackAtUpdate, stackCountUpdate, stackEffectItem } from './effectStackFields.ts';
 
 	let { effect }: EffectTabProps = $props();
 
@@ -23,6 +26,13 @@
 
 	const conditions = effectConditionOptions();
 	const statuses = $derived([...((reactive.statuses ?? []) as Iterable<string>)]);
+
+	const stacks = $derived(stackFieldsOf(reactive.system));
+	const stackItem = $derived(stackEffectItem(reactive as never));
+	const onCreature = $derived(effect.parent?.documentName === 'Actor');
+	const readsHolder = $derived(
+		(reactive.system as { readsHolder?: boolean } | undefined)?.readsHolder === true,
+	);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
@@ -64,6 +74,20 @@
 					<small>{localize(`${DETAILS}.transferHint`)}</small>
 				</span>
 			</label>
+			{#if !reactive.transfer}
+				<label class="nimble-field">
+					<input
+						type="checkbox"
+						checked={readsHolder}
+						onchange={({ currentTarget }) =>
+							update({ 'system.readsHolder': currentTarget.checked })}
+					/>
+					<span class="nimble-effect-details__text">
+						<span class="nimble-field__label">{localize(`${DETAILS}.readsHolder`)}</span>
+						<small>{localize(`${DETAILS}.readsHolderHint`)}</small>
+					</span>
+				</label>
+			{/if}
 		{/if}
 	</div>
 
@@ -81,6 +105,68 @@
 				await update({ statuses: toggledStatus(statuses, String(id)) });
 			}}
 		/>
+	</div>
+
+	<div>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize(`${DETAILS}.stacks`)}
+			</h3>
+		</header>
+
+		<label class="nimble-field">
+			<input
+				type="checkbox"
+				checked={stacks.on}
+				onchange={({ currentTarget }) => update({ 'system.stacks.on': currentTarget.checked })}
+			/>
+			<span class="nimble-effect-details__text">
+				<span class="nimble-field__label">{localize(`${DETAILS}.stacksOn`)}</span>
+				<small>{localize(`${DETAILS}.stacksOnHint`)}</small>
+			</span>
+		</label>
+
+		{#if stacks.on}
+			<div class="nimble-effect-details__stack-row">
+				<span>{localize(`${DETAILS}.stacksAt`)}</span>
+				<input
+					class="nimble-effect-details__number"
+					type="number"
+					min="2"
+					step="1"
+					aria-label={localize(`${DETAILS}.stacksAtLabel`)}
+					value={stacks.at ?? ''}
+					disabled={!onItem}
+					onchange={({ currentTarget }) => update(stackAtUpdate(currentTarget.value))}
+				/>
+				<span>{localize(`${DETAILS}.stacksGain`)}</span>
+				<span class="nimble-effect-details__stack-effect">
+					<ItemEffectSelect
+						item={stackItem}
+						value={stacks.effectId || null}
+						onchange={(effectId) => update({ 'system.stacks.effectId': effectId ?? '' })}
+						recipient="targets"
+						label={localize(`${DETAILS}.stacksEffectLabel`)}
+						disabled={!onItem}
+					/>
+				</span>
+			</div>
+
+			{#if onCreature}
+				<label class="nimble-effect-details__stack-row">
+					<span>{localize(`${DETAILS}.stacksNow`)}</span>
+					<input
+						class="nimble-effect-details__number"
+						type="number"
+						min="1"
+						step="1"
+						aria-label={localize(`${DETAILS}.stacksNowLabel`)}
+						value={stacks.count}
+						onchange={({ currentTarget }) => update(stackCountUpdate(currentTarget.value))}
+					/>
+				</label>
+			{/if}
+		{/if}
 	</div>
 
 	{#key reactive.description}
@@ -107,6 +193,25 @@
 		margin: 0 0 0.375rem;
 		font-size: var(--nimble-xs-text);
 		color: var(--nimble-ui-ink-muted);
+	}
+
+	.nimble-effect-details__stack-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.375rem;
+		align-items: center;
+		margin-block-start: 0.375rem;
+		color: var(--nimble-ui-ink);
+	}
+
+	.nimble-effect-details__number {
+		flex: 0 0 3.5rem;
+		width: 3.5rem;
+	}
+
+	.nimble-effect-details__stack-effect {
+		flex: 1 1 10rem;
+		min-width: 0;
 	}
 
 	.nimble-effect-details__text {

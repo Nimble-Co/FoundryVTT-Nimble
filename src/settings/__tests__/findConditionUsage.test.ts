@@ -157,6 +157,36 @@ describe('findConditionUsage', () => {
 		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.applyEffect']);
 	});
 
+	it('finds End Conditions steps that list the condition, and not one that ends every negative one', () => {
+		const step = (id: string, which: string, conditions: string[]) => ({
+			id,
+			type: 'endConditions',
+			recipient: 'self',
+			which,
+			conditions,
+		});
+		setWorld(
+			[],
+			[
+				item('Cleanse', {
+					activation: {
+						effects: [
+							step('e1', 'listed', ['hexed', 'prone']),
+							step('e2', 'negative', []),
+							step('e3', 'listed', ['prone']),
+						],
+					},
+				}),
+			],
+		);
+
+		const usage = findConditionUsage('hexed');
+
+		expect(usage.items[0].endConditionsNodeIds).toEqual(['e1']);
+		expect(usage.items[0].nodeIds).toEqual([]);
+		expect(usage.items[0].referenceLabels).toEqual(['NIMBLE.activationEffects.endConditions']);
+	});
+
 	it('names the owning actor for an embedded item, and lists it only once', () => {
 		const owner = actor('Wizard', []);
 		const owned = item('Hex Bolt', {

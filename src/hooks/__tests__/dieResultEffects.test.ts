@@ -152,6 +152,7 @@ function card(
 		pendingKeep?: unknown;
 		author?: { id?: string | null; active?: boolean } | null;
 		read?: boolean;
+		effects?: unknown[];
 	} = {},
 ) {
 	cardCount += 1;
@@ -177,6 +178,7 @@ function card(
 			isMiss: fields.isMiss ?? false,
 			targets: fields.targets ?? ['Scene.s.Token.a'],
 			...(fields.pendingKeep ? { pendingKeep: fields.pendingKeep } : {}),
+			...(fields.effects ? { activation: { effects: fields.effects as never[] } } : {}),
 		},
 		rolls: fields.rolls ?? [new FakeDamageRoll(6)],
 	};
@@ -188,12 +190,18 @@ describe('applyDieResultEffects', () => {
 	it.each([6, 7])('applies the effect to the target at a face of %i', async (face) => {
 		setup();
 
-		await applyDieResultEffects(card({ rolls: [new FakeDamageRoll(face)] }));
+		const attack = card({ rolls: [new FakeDamageRoll(face)] });
+		await applyDieResultEffects(attack);
 
 		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+		// The card of the attack takes the lines of the effect, such as "At N stacks".
 		expect(applyEffectToActorMock).toHaveBeenCalledWith(TARGET_A, {
 			data: { name: 'Glow' },
-			source: { itemUuid: GUIDE_UUID, user: expect.objectContaining({ uuid: 'Actor.a' }) },
+			source: {
+				itemUuid: GUIDE_UUID,
+				user: expect.objectContaining({ uuid: 'Actor.a' }),
+				cardId: attack.id,
+			},
 		});
 	});
 
@@ -494,5 +502,99 @@ describe('registerDieResultEffectHooks', () => {
 		await flush();
 
 		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('applyDieResultEffects on the damage of the item in another attack', () => {
+	const MACE_UUID = 'Actor.a.Item.other';
+
+	/** A bonus step of the spirit's damage, whose first die shows `face`. */
+	function spiritStep(face: number, identifier = 'spirit') {
+		return {
+			id: 'bonus',
+			type: 'damage',
+			damageType: 'radiant',
+			formula: '1d6+3',
+			fromItemIdentifier: identifier,
+			parentContext: null,
+			parentNode: null,
+			roll: {
+				class: 'Roll',
+				terms: [
+					{ class: 'Die', faces: 6, number: 1, results: [{ result: face, active: true }] },
+					{ class: 'OperatorTerm', operator: '+' },
+					{ class: 'NumericTerm', number: 3 },
+				],
+				total: face + 3,
+			},
+		};
+	}
+
+	function maceCard(fields: {
+		face: number;
+		primary?: number;
+		isMiss?: boolean;
+		identifier?: string;
+	}) {
+		return card({
+			type: 'object',
+			itemUuid: MACE_UUID,
+			isMiss: fields.isMiss,
+			rolls: [new FakeDamageRoll(fields.primary ?? 2)],
+			effects: [
+				{
+					id: 'mace',
+					type: 'damage',
+					damageType: 'bludgeoning',
+					formula: '1d8',
+					parentContext: null,
+					parentNode: null,
+				},
+				spiritStep(fields.face, fields.identifier),
+			],
+		});
+	}
+
+	it('applies the effect when the first die of the spirit step is 6 or more', async () => {
+		setup();
+
+		await applyDieResultEffects(maceCard({ face: 6 }));
+
+		expect(applyEffectToActorMock).toHaveBeenCalledTimes(1);
+		expect(applyEffectToActorMock).toHaveBeenCalledWith(TARGET_A, expect.anything());
+	});
+
+	it("reads the spirit's die, not the Primary Die of the attack", async () => {
+		setup();
+
+		await applyDieResultEffects(maceCard({ face: 5, primary: 8 }));
+
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+	});
+
+	it('applies nothing on a miss, or with a step of another item', async () => {
+		setup();
+
+		await applyDieResultEffects(maceCard({ face: 6, isMiss: true }));
+		await applyDieResultEffects(maceCard({ face: 6, identifier: 'torch' }));
+
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+	});
+
+	it('gives no effect to an ally when the rule is not on allies', async () => {
+		setup({ notOnAllies: true });
+		placeToken('Scene.s.Token.a', TARGET_A, FRIENDLY);
+
+		await applyDieResultEffects(maceCard({ face: 6 }));
+
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
+	});
+
+	it('reads no bonus step when the rule reads its own item', async () => {
+		setup({ itemIdentifier: '' });
+
+		await applyDieResultEffects(maceCard({ face: 6, identifier: '' }));
+
+		expect(applyEffectToActorMock).not.toHaveBeenCalled();
 	});
 });

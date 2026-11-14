@@ -1,4 +1,5 @@
 import type { MoveNode } from '#types/effectTree.js';
+import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { MovementOffer } from '#types/movement.js';
 import type { ActivationEvents } from '#utils/chat/activationEvents.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -32,13 +33,22 @@ export type CardEventKind =
 	| 'healthState'
 	| 'damage'
 	| 'saveRequest'
-	| 'tempHpChoice';
+	| 'tempHpChoice'
+	| 'escape'
+	| 'stackGain'
+	| 'waitingEnd'
+	| 'emptyPool'
+	| 'critDiceSave';
 
-/** One effect that a moment ended, with the data to make it again. */
-export interface EndedEffectRow {
-	effectId: string;
+/** The creature a line of the Events strip is about. Its owner or a GM acts on the line. */
+export interface HolderLine {
 	holderUuid: string;
 	holderName: string;
+}
+
+/** One effect that a moment ended, with the data to make it again. */
+export interface EndedEffectRow extends HolderLine {
+	effectId: string;
 	name: string;
 	img: string;
 	sourceName: string;
@@ -46,10 +56,8 @@ export interface EndedEffectRow {
 }
 
 /** A save that an event asks of a creature (Save on an Event), and how it stands. */
-export interface SaveRequestAction {
+export interface SaveRequestAction extends HolderLine {
 	kind: 'saveRequest';
-	holderUuid: string;
-	holderName: string;
 	effectId: string;
 	effectName: string;
 	/** The item the effect came from, when its name is not the effect's name. */
@@ -63,15 +71,101 @@ export interface SaveRequestAction {
 }
 
 /** Temp HP do not combine: the owner keeps the amount the creature has or takes the new one. */
-export interface TempHpChoiceAction {
+export interface TempHpChoiceAction extends HolderLine {
 	kind: 'tempHpChoice';
-	holderUuid: string;
-	holderName: string;
 	had: number;
 	amount: number;
 	/** The effect that gives the new amount, which owns it once taken. */
 	effectUuid: string | null;
 	state: 'waiting' | 'kept' | 'took';
+}
+
+/** An Escape with no DC: the roll waits for the table to judge it, or it failed. */
+export interface EscapeRulingAction extends HolderLine {
+	kind: 'escapeRuling';
+	effectId: string;
+	effectName: string;
+	state: 'waiting' | 'failed';
+	/** The roll card of the Escape. The line can move to another card that its readers read. */
+	rollMessageId?: string;
+}
+
+/** Damage or Wounds a Damage Each Turn rule gave at a turn moment, and how it stands. */
+export interface TurnDamageAction extends HolderLine {
+	kind: 'turnDamage';
+	amount: number;
+	damageType: string;
+	wounds: number;
+	/** The creature whose rule it is, for the damage types' follow-ups. */
+	sourceUuid: string | null;
+	/** waiting: Feature Effects off, a click deals it. dealt: on the creature. undone: taken back. */
+	state: 'waiting' | 'dealt' | 'undone';
+	/** What the damage took, so Undo gives back the same. */
+	hpLost?: number;
+	tempLost?: number;
+	woundsGained?: number;
+}
+
+/** The "At N stacks" effect of a stacking effect, and how it stands. */
+export interface StackGainAction extends HolderLine {
+	kind: 'stackGain';
+	count: number;
+	stackedName: string;
+	gainedName: string;
+	/** waiting: Feature Effects off, a click puts it on. gained: on the creature. undone: taken off. */
+	state: 'waiting' | 'gained' | 'undone';
+	gainedUuid?: string;
+	/** What a click on a waiting line puts on. */
+	payload?: EffectPayload;
+}
+
+/** The moment that ends effects: where their ended lines go and why. `EndMoment` adds to it. */
+export interface WaitingEndMoment {
+	/** Finds the card of the moment (`momentKeys`). Without a key, the ends get their own card. */
+	key?: string;
+	heading: CardEventText;
+	/** Why they ended, on each line, when the heading does not say it. */
+	reason?: CardEventText;
+	/** The card of the action that ended them. Its Events strip takes the lines, not a moment card. */
+	hostId?: string;
+	/** Who sees the card of the moment. Empty or missing: everyone. */
+	whisper?: string[];
+}
+
+/** Feature Effects off: an end that a moment reached waits for a click on End. */
+export interface WaitingEndAction extends HolderLine {
+	kind: 'waitingEnd';
+	effectId: string;
+	effectName: string;
+	/** waiting: End ends it. ending: a click ends it now. gone: it was off when End was clicked. */
+	state: 'waiting' | 'ending' | 'gone';
+	end: WaitingEndMoment;
+	/** The Lasts Until moment that was reached, for the ended line. */
+	endedBy?: Moment;
+	/** The roll card of an Escape that passed: End escapes, with the damage of the escape. */
+	escapeRollId?: string;
+}
+
+/** Feature Effects off: a pool that an Empty Pools at End rule empties waits for a click. */
+export interface EmptyPoolAction extends HolderLine {
+	kind: 'emptyPool';
+	poolId: string;
+	poolLabel: string;
+	state: 'waiting' | 'emptied';
+}
+
+/** Feature Effects off: what the result of a crit dice save changes waits for a click. */
+export interface CritDiceSaveAction {
+	kind: 'critDiceSave';
+	/** The creature whose rule asked for the save. */
+	actorUuid: string;
+	actorName: string;
+	saveMessageId: string;
+	outcome: 'pass' | 'fail' | 'unknown';
+	/** A click also takes back what an earlier click did: the dice go back, or the use is spent. */
+	restoresDice?: boolean;
+	spendsUse?: boolean;
+	state: 'waiting' | 'done';
 }
 
 /**
@@ -82,6 +176,12 @@ export interface TempHpChoiceAction {
 export type CardEventAction =
 	| SaveRequestAction
 	| TempHpChoiceAction
+	| EscapeRulingAction
+	| TurnDamageAction
+	| StackGainAction
+	| WaitingEndAction
+	| EmptyPoolAction
+	| CritDiceSaveAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

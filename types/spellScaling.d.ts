@@ -12,7 +12,8 @@ export type ScalingOperation =
 	| 'addDuration'
 	| 'addCondition'
 	| 'increaseDieSize'
-	| 'raiseEffectRule';
+	| 'raiseEffectRule'
+	| 'lengthenLastsUntil';
 
 export interface DiceValue {
 	count: number;
@@ -30,14 +31,28 @@ export interface ScalingDelta {
 	maxDieFaces: number | null;
 	/** `raiseEffectRule`: the rule of the Apply Effect node's effect (`system.rules[].id`). */
 	ruleId?: string | null;
-	/** `raiseEffectRule`: the number field of that rule that goes up. */
+	/** `raiseEffectRule`: the number field or formula field of that rule that goes up. */
 	ruleField?: string | null;
+	/** `raiseEffectRule` on a formula field: the formula added for each step. */
+	formula?: string | null;
+	/** `lengthenLastsUntil`: the index of the moment in the effect's Lasts Until. */
+	momentIndex?: number | null;
 }
 
-/** What an upcast adds to a number field of one rule of an Apply Effect node's effect. */
+/** What an upcast adds to a field of one rule of an Apply Effect node's effect. */
 export interface RuleRaise {
 	ruleId: string;
 	field: string;
+	/** A number field: what is added. */
+	amount: number;
+	/** A formula field: the term that is added once for each step. */
+	formula?: string | null;
+	steps?: number;
+}
+
+/** What an upcast adds to the number of one moment of an Apply Effect node's effect. */
+export interface MomentRaise {
+	index: number;
 	amount: number;
 }
 

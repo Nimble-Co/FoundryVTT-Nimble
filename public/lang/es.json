@@ -949,8 +949,7 @@
 			"damageBack": {
 				"deal": "Deal {amount} damage",
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
-				"double": "Suffer 1 Wound: {amount} more damage",
-				"waiting": "{label}: {name} takes {amount} damage, ignoring armor (not dealt)"
+				"double": "Suffer 1 Wound: {amount} more damage"
 			},
 			"damageRoll": {
 				"advantage": "Advantage x {count}",

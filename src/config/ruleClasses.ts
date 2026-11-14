@@ -29,6 +29,7 @@ import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { EmptyPoolsAtEndRule } from '../models/rules/emptyPoolsAtEnd.js';
+import { EscapeDamageRule } from '../models/rules/escapeDamage.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
@@ -83,6 +84,7 @@ import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 import { TableRollRule } from '../models/rules/tableRoll.js';
 import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
 import { TagsRule } from '../models/rules/tags.js';
+import { TurnDamageRule } from '../models/rules/turnDamage.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 import { UseItemFreeRule } from '../models/rules/useItemFree.js';
 
@@ -140,6 +142,7 @@ export const RULE_CLASSES = {
 	critDice: CritDiceRule,
 	critDiceSave: CritDiceSaveRule,
 	saveOnEvent: SaveOnEventRule,
+	escapeDamage: EscapeDamageRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,
@@ -173,6 +176,7 @@ export const RULE_CLASSES = {
 	skillRollMode: SkillRollModeRule,
 	speedBonus: SpeedBonusRule,
 	tags: TagsRule,
+	turnDamage: TurnDamageRule,
 	useItemFree: UseItemFreeRule,
 	unarmedDamage: UnarmedDamageRule,
 } as const;

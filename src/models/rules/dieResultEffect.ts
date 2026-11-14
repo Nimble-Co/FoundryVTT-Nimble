@@ -1,3 +1,5 @@
+import type { EffectNode } from '#types/effectTree.js';
+import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NimbleBaseRule } from './base.js';
 
 const WORDS = 'NIMBLE.rules.dieResultEffect';
@@ -39,7 +41,8 @@ declare namespace DieResultEffectRule {
 
 /**
  * When a use of the item that does not miss rolls at least `atLeast` on its Primary Die, each
- * target gets this item's effect. The effect's Lasts Until ends it.
+ * target gets this item's effect. So does another attack whose bonus step is the damage of that
+ * item, on the first die of that step. The effect's Lasts Until ends it.
  */
 class DieResultEffectRule extends NimbleBaseRule<DieResultEffectRule.Schema> {
 	declare itemIdentifier: string;
@@ -73,6 +76,23 @@ class DieResultEffectRule extends NimbleBaseRule<DieResultEffectRule.Schema> {
 		if (!identifier) return !!item.uuid && item.uuid === this.item?.uuid;
 		return item.system?.identifier === identifier;
 	}
+
+	/** The card has a bonus step that is the damage of the named item. */
+	readsBonusOf(effects: readonly EffectNode[]): boolean {
+		return bonusStepOf(effects, this.itemIdentifier.trim()) !== null;
+	}
+}
+
+/** The bonus damage step that is the damage of the item with this identifier. */
+export function bonusStepOf(
+	effects: readonly EffectNode[],
+	identifier: string,
+): (EffectNode & { type: 'damage' }) | null {
+	if (!identifier) return null;
+	const step = flattenEffectsTree([...effects]).find(
+		(node) => node.type === 'damage' && node.fromItemIdentifier === identifier,
+	);
+	return (step as (EffectNode & { type: 'damage' }) | undefined) ?? null;
 }
 
 export { DieResultEffectRule };

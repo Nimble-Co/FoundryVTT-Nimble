@@ -283,6 +283,90 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('the save DC of a use', () => {
+		const RollGlobal = Roll as unknown as {
+			replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+			safeEval?: (expression: string) => number;
+		};
+		const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+		beforeEach(() => {
+			RollGlobal.replaceFormulaData = (formula, data) =>
+				formula.replace(/@(\w+)/g, (match, term: string) => String(data[term] ?? match));
+			RollGlobal.safeEval = (expression) =>
+				Function('max', `"use strict"; return (${expression});`)(Math.max) as number;
+			mockActor.type = 'character';
+			mockActor.getRollData = vi.fn(() => ({ key: 3, damageTaken: 14 }));
+		});
+
+		afterEach(() => {
+			RollGlobal.replaceFormulaData = original.replace;
+			RollGlobal.safeEval = original.safeEval;
+		});
+
+		const saveNode = (saveDC: string) =>
+			({
+				id: 'save-1',
+				type: 'savingThrow',
+				savingThrowType: 'strength',
+				saveDC,
+				parentContext: null,
+				parentNode: null,
+			}) as unknown as EffectNode;
+		const cardDC = (activation: unknown) =>
+			(activation as { effects: Array<{ saveDC?: unknown }> }).effects[0]?.saveDC;
+
+		it('puts the number on the card, worked out from the user now', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const node = saveNode('max(10, @damageTaken)');
+			manager.activationData = { effects: [node] };
+			mockReconstructEffectsTree.mockReturnValue([node]);
+
+			const result = await manager.getData();
+
+			expect(cardDC(result.activation)).toBe(14);
+		});
+
+		it('adds an upcast DC raise before it fixes the number', async () => {
+			mockActor.items = { contents: [], get: () => undefined };
+			mockActor.system.resources = {
+				mana: { current: 10, max: 10 },
+				highestUnlockedSpellTier: 5,
+			};
+			mockItem.type = 'spell';
+			mockItem.system.tier = 1;
+			mockItem.system.scaling = {
+				mode: 'upcast',
+				deltas: [
+					{
+						operation: 'addDC',
+						value: 1,
+						dice: null,
+						condition: null,
+						targetEffectId: 'save-1',
+						durationType: null,
+						maxDieFaces: null,
+					},
+				],
+			};
+			dialogState.result = { rollMode: 0, upcast: { manaToSpend: 3 } };
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			manager.activationData = { effects: [saveNode('')] };
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+
+			const result = await manager.getData();
+
+			expect(manager.upcastResult?.upcastSteps).toBe(2);
+			expect(cardDC(result.activation)).toBe(15);
+		});
+	});
+
 	describe('Typed conditional-bonus damage', () => {
 		it('rolls typed conditional damage as its own damage effect with the chosen type', async () => {
 			manager = new ItemActivationManager(
@@ -332,6 +416,62 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(added).toBeDefined();
 			expect(added?.formula).toBe('2');
 			expect(added?.roll).toBeDefined();
+		});
+
+		it('marks the damage of an item on its own step, which cannot crit and ignores no armor', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{
+					fastForward: true,
+					conditionalDamages: [
+						{
+							formula: '1d6+3',
+							damageType: 'radiant',
+							label: 'Assist Me',
+							fromItemIdentifier: 'lifebinding-spirit',
+						},
+					],
+				},
+			);
+			manager.activationData = {
+				effects: [
+					{
+						id: 'damage-1',
+						type: 'damage',
+						damageType: 'bludgeoning',
+						formula: '1d8',
+						canCrit: true,
+						canMiss: true,
+						parentContext: null,
+						parentNode: null,
+					} as EffectNode,
+				],
+			};
+			mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
+			vi.mocked(DamageRoll).mockImplementation(
+				createMockConstructorImplementation({
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				}),
+			);
+			MockRoll.mockImplementation(function spiritRoll(this: unknown) {
+				return {
+					evaluate: vi.fn().mockResolvedValue(undefined),
+					toJSON: vi.fn(() => ({ total: 7 })),
+				};
+			});
+
+			const result = await manager.getData();
+
+			const spirit = (result.activation?.effects as EffectNode[]).find(
+				(node) => node.type === 'damage' && node.damageType === 'radiant',
+			) as Record<string, unknown> | undefined;
+			expect(spirit).toMatchObject({
+				fromItemIdentifier: 'lifebinding-spirit',
+				formula: '1d6+3',
+				canCrit: false,
+			});
+			expect(spirit?.ignoreArmor).toBeUndefined();
 		});
 
 		it('surfaces the typed conditional damage on a hit card', async () => {
@@ -1476,6 +1616,140 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					});
 				});
 
+				describe('with Feature Effects off', () => {
+					const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+					let realSettings: unknown;
+
+					beforeEach(() => {
+						realSettings = gameGlobal.game.settings;
+						gameGlobal.game.settings = {
+							get: (_namespace: string, key: string) => key !== 'automation.applyRuleEffects',
+						};
+					});
+
+					afterEach(() => {
+						gameGlobal.game.settings = realSettings;
+						dialogState.result = undefined;
+					});
+
+					async function rollThroughWindow(
+						result: Record<string, unknown>,
+						activation: Record<string, unknown> = { targets: { attackType: 'reach' } },
+					) {
+						dialogState.result = { rollMode: 0, ...result };
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							...activation,
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+						await manager.applyDeferredPoolNodes();
+						return vi.mocked(DamageRoll).mock.calls.at(-1) as unknown[];
+					}
+
+					it('uses and spends a change the player ticked', async () => {
+						const target = targetWithOpening();
+
+						const [, , options] = await rollThroughWindow({
+							heldChosen: ['Actor.ogre.opening.opening-rule'],
+						});
+
+						expect(options).toEqual(expect.objectContaining({ primaryDieModifier: 1 }));
+						expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+							'opening',
+						]);
+					});
+
+					it('neither uses nor spends a change the player left unticked', async () => {
+						const target = targetWithOpening();
+
+						const [, , options] = await rollThroughWindow({ heldChosen: [] });
+
+						expect(options).toEqual(expect.objectContaining({ primaryDieModifier: 0 }));
+						expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+					});
+
+					it('uses no change with no window', async () => {
+						const target = targetWithOpening();
+
+						await rollAttack('reach');
+						await manager.applyDeferredPoolNodes();
+
+						expect(DamageRoll).toHaveBeenCalledWith(
+							'1d8',
+							expect.anything(),
+							expect.objectContaining({ primaryDieModifier: 0 }),
+						);
+						expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+					});
+
+					function holdKept() {
+						const deleteEmbeddedDocuments = vi.fn(async () => []);
+						Object.assign(mockActor, {
+							effects: [
+								heldRollEffect('kept', 'Rampage', {
+									heldKind: 'wholeAmount',
+									value: 13,
+									whichRoll: 'holderAttacks',
+								}),
+							],
+							isOwner: true,
+							deleteEmbeddedDocuments,
+						});
+						(globalThis as unknown as Record<string, any>).fromUuidSync = vi.fn(() => mockActor);
+						(mockItem.system.activation as { effects: unknown[] }).effects = [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						];
+						return deleteEmbeddedDocuments;
+					}
+
+					it('rolls and keeps a kept amount that is not ticked', async () => {
+						const deleted = holdKept();
+
+						const [formula] = await rollThroughWindow({});
+
+						expect(formula).toBe('1d8');
+						expect(deleted).not.toHaveBeenCalled();
+					});
+
+					it('uses and ends a kept amount that is ticked', async () => {
+						const deleted = holdKept();
+
+						const [formula] = await rollThroughWindow({ keptAmount: true });
+
+						expect(formula).toBe('13');
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('ends a kept amount on an area attack only when its line is ticked', async () => {
+						const deleted = holdKept();
+						const activation = (mockItem.system as { activation: Record<string, unknown> })
+							.activation;
+						activation.acquireTargetsFromTemplate = true;
+						activation.template = { shape: 'circle' };
+						const area = { targets: { attackType: 'range' } };
+
+						await rollThroughWindow({ heldChosen: [] }, area);
+						expect(deleted).not.toHaveBeenCalled();
+
+						await rollThroughWindow({ heldChosen: ['actor-uuid-123.kept.kept-rule'] }, area);
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+				});
+
 				it('spends nothing when the roll has no Primary Die', async () => {
 					const target = targetWithOpening();
 					await rollAttack('reach', null);
@@ -1603,6 +1877,42 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				);
 				expect(result.primaryDieBonuses).toEqual([]);
 			});
+		});
+
+		it.each([
+			['npc', '1d6 + 5'],
+			['character', '1d6'],
+		])('a melee bonus on a %s attack with no attack type gives %s', async (type, formula) => {
+			mockActor.type = type;
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 5, damageType: 'piercing', delivery: 'melee', source: 'weapon' },
+			];
+			mockItem.type = 'monsterFeature';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode], targets: { attackType: '' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(formula, expect.anything(), expect.anything());
 		});
 
 		it('should not apply melee weapon bonus to ranged weapon attacks', async () => {

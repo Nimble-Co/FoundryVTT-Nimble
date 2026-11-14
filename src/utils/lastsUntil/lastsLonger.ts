@@ -1,4 +1,4 @@
-import { type Moment, turnCount } from '#utils/lastsUntil/momentReached.js';
+import { type Moment, momentCount } from '#utils/lastsUntil/momentReached.js';
 import type { TimeUnit } from '../../models/activeEffect/nimbleEffectChoices.js';
 
 /** What an estimate reads of one application of a condition. */
@@ -19,8 +19,8 @@ function turnRounds(moment: Moment): number {
 	const { boundary, span } = moment;
 	if (span === 'currentRound') return 1;
 	if (span === 'nextRound') return boundary === 'start' ? 1 : 2;
-	if (boundary === 'start') return turnCount(moment);
-	return span === 'currentTurn' ? 0.5 : turnCount(moment) + 0.5;
+	if (boundary === 'start') return momentCount(moment);
+	return span === 'currentTurn' ? 0.5 : momentCount(moment) + 0.5;
 }
 
 function momentRounds(moment: Moment, elapsed: number, context: EstimateContext): number {
@@ -50,6 +50,22 @@ export function estimateRounds(application: Application, context: EstimateContex
 	const rounds = application.lastsUntil.map((moment) => momentRounds(moment, elapsed, context));
 	rounds.push(coreRounds(application.duration, elapsed, context));
 	return Math.min(...rounds);
+}
+
+/** What an estimate reads of an effect on a creature. */
+export interface AppliedEffectTiming {
+	system?: { lastsUntil?: Moment[] };
+	duration?: { value?: number | null; units?: string | null } | null;
+	start?: { time?: number } | null;
+}
+
+export function applicationOf(effect: AppliedEffectTiming): Application {
+	const now = game.time?.worldTime ?? 0;
+	return {
+		lastsUntil: effect.system?.lastsUntil ?? [],
+		duration: effect.duration,
+		elapsedSeconds: Math.max(0, now - (effect.start?.time ?? now)),
+	};
 }
 
 /** A new application replaces the ones on the creature only when it lasts longer. */

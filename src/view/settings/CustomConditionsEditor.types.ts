@@ -12,6 +12,7 @@ export interface ConditionEditorRow {
 	description: string;
 	img: string;
 	minor: boolean;
+	negative: boolean;
 	/** Once the GM types an id by hand, it stops being derived from the name. */
 	idEdited: boolean;
 	/** True for rows loaded from the setting, whose id is locked because effects store it. */

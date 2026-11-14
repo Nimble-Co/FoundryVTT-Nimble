@@ -669,6 +669,17 @@ describe('ruleEventDispatch', () => {
 			expect(ctx).toMatchObject({ sourceItem, sourceActor });
 		});
 
+		it('passes on the mana that the use cost', async () => {
+			const rule = createMockRule();
+			const sourceActor = { rules: [rule] };
+
+			handlers.get('nimble.useItem')?.({ actor: sourceActor }, null, { targets: [], manaSpent: 2 });
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(rule.onItemActivated.mock.calls[0]?.[0]).toMatchObject({ manaSpent: 2 });
+		});
+
 		it('no-ops gracefully when the item has no parent actor', async () => {
 			const handler = handlers.get('nimble.useItem');
 			expect(() =>

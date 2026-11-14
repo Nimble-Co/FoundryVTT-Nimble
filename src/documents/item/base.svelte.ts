@@ -5,7 +5,7 @@ import type { CostReceipt } from '#types/costReceipt.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
-import { applyEffectFromCard, type EffectCard } from '#utils/chat/applyEffectFromCard.js';
+import type { EffectCard } from '#utils/chat/applyEffectFromCard.js';
 import {
 	addCardEvents,
 	addMomentEvents,
@@ -24,7 +24,8 @@ import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { reconcileMovementOffers } from '#utils/movement/movementOffers.js';
 import { placeAoEForMessage } from '../../canvas/placeAoEForMessage.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
-import { selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
+import { ANSWERS_CARD_FLAG } from '../../hooks/damageBackOnAttack.js';
+import { applySelfStep, selfStepsOf } from '../../hooks/selfEffectsOnUse.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -113,7 +114,7 @@ async function applySelfStepsWithoutCard(chatData: OfferCard): Promise<void> {
 		update: async () => undefined,
 	};
 	for (const node of selfStepsOf(card)) {
-		await applyEffectFromCard(card, node).catch((error) =>
+		await applySelfStep(card, node).catch((error) =>
 			console.error('Nimble | Could not apply the effects of the item to its user.', error),
 		);
 	}
@@ -306,7 +307,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 
 		let concentrating = false;
 		try {
-			const outcome = await applyCasterConcentration(this as object as ConcentrationSource);
+			const outcome = await applyCasterConcentration(
+				this as object as ConcentrationSource,
+				activation as Parameters<typeof applyCasterConcentration>[1],
+			);
 			concentrating = outcome === 'applied';
 
 			if (outcome === 'refused') {
@@ -485,6 +489,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 								? { chargeConsumption: manager.chargeConsumption }
 								: {}),
 							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
+							...(options.answersCardId ? { [ANSWERS_CARD_FLAG]: options.answersCardId } : {}),
 						},
 					},
 					system: {

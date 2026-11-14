@@ -1181,7 +1181,10 @@ export class CardRerolls {
 			'Nimble | A save for crit dice failed; its cost is given back.',
 			async () => {
 				const made = await rollSaveWithOwner(target, saveKey, {
-					dc: resolveSaveNodeDC(rule.saveDC, actor as never),
+					dc: resolveSaveNodeDC(
+						rule.withStacks?.(rule.saveDC ?? '') ?? rule.saveDC,
+						actor as never,
+					),
 					cardFlags: {
 						critDiceSave: {
 							attackMessageId: this.#host.id(),

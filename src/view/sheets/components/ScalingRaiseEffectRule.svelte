@@ -10,6 +10,9 @@
 		targets.find((option) => option.nodeId === delta.targetEffectId) ?? null,
 	);
 	const raiseRule = $derived(raiseTarget?.rules.find((rule) => rule.id === delta.ruleId) ?? null);
+	const raiseField = $derived(
+		raiseRule?.fields.find((field) => field.name === delta.ruleField) ?? null,
+	);
 </script>
 
 {#if targets.length === 0}
@@ -55,14 +58,26 @@
 			{/each}
 		</select>
 	</label>
-	<label class="nimble-field" data-field-variant="stacked">
-		<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
-		<input
-			type="number"
-			value={delta.value ?? 0}
-			onchange={(event) => onUpdate('value', Number(event.currentTarget.value))}
-		/>
-	</label>
+	{#if raiseField?.kind === 'formula'}
+		<label class="nimble-field" data-field-variant="stacked">
+			<span class="nimble-heading" data-heading-variant="field">{t('formula')}</span>
+			<input
+				type="text"
+				value={delta.formula ?? ''}
+				placeholder="@key"
+				onchange={(event) => onUpdate('formula', event.currentTarget.value.trim() || null)}
+			/>
+		</label>
+	{:else}
+		<label class="nimble-field" data-field-variant="stacked">
+			<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
+			<input
+				type="number"
+				value={delta.value ?? 0}
+				onchange={(event) => onUpdate('value', Number(event.currentTarget.value))}
+			/>
+		</label>
+	{/if}
 {/if}
 
 <style lang="scss">

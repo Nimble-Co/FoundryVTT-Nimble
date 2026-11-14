@@ -2,7 +2,6 @@
 	import { untrack } from 'svelte';
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
-	import { heldLinesForItem } from '#utils/heldChange/heldChange.js';
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
@@ -30,15 +29,13 @@
 		ignoreDisadvantage,
 	}: ItemActivationConfigDialogProps = $props();
 	const spendLine = $derived(rollSpendLine(spendsActions));
-	const heldLines = untrack(() =>
-		heldLinesForItem(actor, item, { ignoresDisadvantage: ignoreDisadvantage }),
-	);
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
 		item: () => item,
 		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
+		ignoresDisadvantage: untrack(() => ignoreDisadvantage),
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
@@ -80,6 +77,7 @@
 			maxDamage: state.maxDamageChoice,
 			...(state.weaponUuid ? { weaponUuid: state.weaponUuid } : {}),
 			...(state.keptAmount ? { keptAmount: state.usesKeptAmount } : {}),
+			...(state.choosesHeldChanges ? { heldChosen: [...state.chosenHeldChanges] } : {}),
 			...(state.damageMultiplier ? { damageMultiplier: state.usesDamageMultiplier } : {}),
 			lessMana: state.lessMana,
 			freeUse: state.freeUse,
@@ -234,7 +232,11 @@
 		</div>
 	{/if}
 
-	{#if !rollsNoDice}<HeldChangeLines lines={heldLines} />{/if}
+	{#if state.choosesHeldChanges}
+		<HeldChangeLines lines={state.heldLines} choosing bind:chosen={state.chosenHeldChanges} />
+	{:else if !rollsNoDice}
+		<HeldChangeLines lines={state.heldLines} />
+	{/if}
 
 	{#if !keptInUse}
 		<RollModifierFields

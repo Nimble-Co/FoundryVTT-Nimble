@@ -89,6 +89,14 @@
 						</span>
 					</label>
 
+					<label class="condition-card__toggle">
+						<input type="checkbox" bind:checked={row.negative} />
+						<span>
+							<span class="condition-card__field-label">{t('negative')}</span>
+							<span class="condition-card__toggle-hint">{t('negativeHint')}</span>
+						</span>
+					</label>
+
 					{#if rowErrors[index]}
 						<p class="condition-card__error" role="alert">
 							<i class="fa-solid fa-circle-exclamation"></i>

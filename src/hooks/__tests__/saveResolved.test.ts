@@ -297,14 +297,38 @@ describe('saveResolved hook', () => {
 		expect(card.update).not.toHaveBeenCalled();
 	});
 
-	it('ignores other check cards', async () => {
+	it('ignores an ability check card', async () => {
 		const { rule } = createSaver();
-		const card = createCard({ type: 'skillCheck' }, { skillKey: 'arcana' });
+		const card = createCard({ type: 'abilityCheck' }, { abilityKey: 'strength' });
 
 		emit('createChatMessage', card);
 		await flushAsync();
 
 		expect(rule.onSaveResolved).not.toHaveBeenCalled();
+		expect(card.update).not.toHaveBeenCalled();
+	});
+
+	it('tells the result of a skill check card on its own hook, once for each change', async () => {
+		const { actor, rule } = createSaver();
+		const checks = vi.fn();
+		handlers.set('nimble.skillCheckResolved', [checks]);
+		const card = createCard({ type: 'skillCheck' }, { saveKey: undefined, skillKey: 'finesse' });
+
+		emit('createChatMessage', card);
+		await flushAsync();
+		emit('updateChatMessage', card);
+		await flushAsync();
+		card.rolls = [roll(15, 18)];
+		emit('updateChatMessage', card);
+		await flushAsync();
+
+		expect(rule.onSaveResolved).not.toHaveBeenCalled();
+		expect(checks.mock.calls).toEqual([
+			[{ actor, skillKey: 'finesse', outcome: 'fail', messageId: 'card' }],
+			[{ actor, skillKey: 'finesse', outcome: 'pass', messageId: 'card' }],
+		]);
+		expect(card.system.reportedCheckResult).toBe('succeeded');
+		expect(card.system.reportedSaveResult).toBeUndefined();
 	});
 
 	it('finds the actor through the token when the card has no actor uuid', async () => {

@@ -3,7 +3,9 @@
 	import TagGroup from '../../components/TagGroup.svelte';
 	import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
 	import localize from '../../../utils/localize.js';
+	import ScalingLengthenLastsUntil from './ScalingLengthenLastsUntil.svelte';
 	import ScalingRaiseEffectRule from './ScalingRaiseEffectRule.svelte';
+	import { createLengthenTargets, reshapeLengthen } from './ScalingLengthenLastsUntil.svelte.ts';
 	import { createRaiseTargets, reshapeRaise } from './ScalingRaiseEffectRule.svelte.ts';
 	import { applyOperationDefaults, createEmptyDelta } from './scalingDeltaDefaults.ts';
 
@@ -34,6 +36,7 @@
 		{ label: t('operations.addCondition'), value: 'addCondition' },
 		{ label: t('operations.increaseDieSize'), value: 'increaseDieSize' },
 		{ label: t('operations.raiseEffectRule'), value: 'raiseEffectRule' },
+		{ label: t('operations.lengthenLastsUntil'), value: 'lengthenLastsUntil' },
 	];
 
 	const diceFaceOptions = [4, 6, 8, 10, 12, 20];
@@ -56,7 +59,9 @@
 	);
 
 	const raise = createRaiseTargets(() => item);
+	const lengthen = createLengthenTargets(() => item);
 	let raiseTargets = $derived(raise.targets);
+	let momentTargets = $derived(lengthen.targets);
 
 	function formatEffectLabel(node) {
 		const type = node.type === 'savingThrow' ? 'Save' : node.type;
@@ -88,11 +93,13 @@
 	async function updateDelta(index, field, value) {
 		const deltas = foundry.utils.deepClone(scalingDeltas);
 		if (field === 'operation') {
-			applyOperationDefaults(deltas[index], value, raiseTargets, effectNodes);
+			applyOperationDefaults(deltas[index], value, raiseTargets, effectNodes, momentTargets);
 		} else if (field === 'dice') {
 			deltas[index].dice = value;
 		} else if (deltas[index].operation === 'raiseEffectRule') {
 			reshapeRaise(deltas[index], field, value);
+		} else if (deltas[index].operation === 'lengthenLastsUntil') {
+			reshapeLengthen(deltas[index], field, value);
 		} else {
 			deltas[index][field] = value;
 		}
@@ -133,11 +140,13 @@
 		const choices = foundry.utils.deepClone(scalingChoices ?? []);
 		const delta = choices[choiceIndex].deltas[deltaIndex];
 		if (field === 'operation') {
-			applyOperationDefaults(delta, value, raiseTargets, effectNodes);
+			applyOperationDefaults(delta, value, raiseTargets, effectNodes, momentTargets);
 		} else if (field === 'dice') {
 			delta.dice = value;
 		} else if (delta.operation === 'raiseEffectRule') {
 			reshapeRaise(delta, field, value);
+		} else if (delta.operation === 'lengthenLastsUntil') {
+			reshapeLengthen(delta, field, value);
 		} else {
 			delta[field] = value;
 		}
@@ -227,6 +236,12 @@
 				<ScalingRaiseEffectRule
 					{delta}
 					targets={raiseTargets}
+					onUpdate={(field, value) => onUpdate(index, field, value)}
+				/>
+			{:else if delta.operation === 'lengthenLastsUntil'}
+				<ScalingLengthenLastsUntil
+					{delta}
+					targets={momentTargets}
 					onUpdate={(field, value) => onUpdate(index, field, value)}
 				/>
 			{:else}

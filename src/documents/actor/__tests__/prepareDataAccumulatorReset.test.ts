@@ -8,6 +8,7 @@ interface ActorStub {
 	system: Record<string, unknown>;
 	rules: { afterPrepareData(): void }[];
 	reset(): void;
+	applyActiveEffects(phase: string): void;
 	_onBeforePrepareData(): void;
 	_onAfterPrepareData(): void;
 }
@@ -18,6 +19,7 @@ function makeStub(overrides: Partial<ActorStub> = {}): ActorStub {
 		system: {},
 		rules: [],
 		reset: vi.fn(),
+		applyActiveEffects: vi.fn(),
 		_onBeforePrepareData: vi.fn(),
 		_onAfterPrepareData: vi.fn(),
 		...overrides,

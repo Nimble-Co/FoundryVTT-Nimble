@@ -92,6 +92,7 @@ export function effectSubject(
 		holder,
 		source,
 		origin: effect.origin ?? null,
+		effectId: effect.id ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,
 		isClockTurn(clock, seat) {
 			if (clock === 'any') return true;
@@ -108,7 +109,7 @@ export function effectSubject(
 	};
 }
 
-/** The clock turns each moment counted so far, by moment index. */
+/** The clock turns or combat ends each moment counted so far, by moment index. */
 export function turnsSeenOf(effect: ActiveEffect): number[] {
 	const seen = (effect.flags as Record<string, { turnsSeen?: unknown } | undefined> | undefined)?.[
 		SYSTEM_ID

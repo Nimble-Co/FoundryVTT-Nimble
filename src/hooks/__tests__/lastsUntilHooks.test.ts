@@ -1,19 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { SYSTEM_ID, systemHookName } from '#system';
 
-const { endEffectsAtMock, endEffectsMock, fireEventMock, fireItemUseEventsMock, requestSavesMock } =
-	vi.hoisted(() => ({
-		requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
-		endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
-		endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
-		fireEventMock: vi.fn((..._args: unknown[]) => undefined),
-		fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
-	}));
+const {
+	dealTurnDamageMock,
+	endEffectsAtMock,
+	endEffectsMock,
+	fireEventMock,
+	fireItemUseEventsMock,
+	requestSavesMock,
+} = vi.hoisted(() => ({
+	dealTurnDamageMock: vi.fn(async (..._args: unknown[]) => undefined),
+	requestSavesMock: vi.fn(async (..._args: unknown[]) => undefined),
+	endEffectsAtMock: vi.fn(async (..._args: unknown[]) => undefined),
+	endEffectsMock: vi.fn(async (..._args: unknown[]) => undefined),
+	fireEventMock: vi.fn((..._args: unknown[]) => undefined),
+	fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
+}));
 
-vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
-	endEffects: endEffectsMock,
+vi.mock('../../utils/lastsUntil/endEffects.js', () => ({ endEffects: endEffectsMock }));
+vi.mock('../../utils/lastsUntil/endEffectsAt.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../../utils/lastsUntil/endEffectsAt.js')>()),
 	endEffectsAt: endEffectsAtMock,
 }));
+vi.mock('../../utils/damage/turnDamage.js', () => ({ dealTurnDamage: dealTurnDamageMock }));
 vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: requestSavesMock }));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({
 	eventHeading: (event: string, names: { name?: string | null }) => `${event}:${names.name}`,
@@ -60,6 +69,27 @@ beforeEach(async () => {
 });
 
 describe('turn and round moments', () => {
+	it('deals the damage of the turn after the Lasts Until ends of the same moment', async () => {
+		const { add } = makeCombat();
+		const goblin = add('cGoblin', 'Goblin');
+		let endsDone: () => void = () => undefined;
+		endEffectsAtMock.mockImplementationOnce(
+			() => new Promise<undefined>((resolve) => (endsDone = () => resolve(undefined))),
+		);
+
+		hook('nimbleCombatTurnStart')(goblin, { round: 2 });
+		await Promise.resolve();
+		expect(dealTurnDamageMock).not.toHaveBeenCalled();
+
+		endsDone();
+		await vi.waitFor(() =>
+			expect(dealTurnDamageMock).toHaveBeenCalledWith('turnStart', goblin, {
+				key: 'combat1:2:cGoblin:turnStart',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnStart', data: { name: 'Goblin' } },
+			}),
+		);
+	});
+
 	it('a turn end checks the turn of that combatant, with the round of the turn', () => {
 		const { combat, add } = makeCombat();
 		const goblin = add('cGoblin', 'Goblin');
@@ -107,11 +137,15 @@ describe('turn and round moments', () => {
 		hook('nimbleCombatTurnEnd')(goblin, { round: 2 });
 
 		// The same card as the other ends of that turn, with the reason on the line.
-		expect(endEffectsMock).toHaveBeenCalledWith([idle], {
-			key: 'combat1:2:cGoblin:turnEnd',
-			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
-			reason: 'inactiveRound:Goblin',
-		});
+		expect(endEffectsMock).toHaveBeenCalledWith(
+			[idle],
+			{
+				key: 'combat1:2:cGoblin:turnEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+				reason: 'inactiveRound:Goblin',
+			},
+			undefined,
+		);
 		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combat1:2:cGoblin:turnEnd' });
 		expect(endEffectsAtMock.mock.calls[0][2]).toBe(combat);
 	});
@@ -200,7 +234,11 @@ describe('combat end', () => {
 		hook('deleteCombat')(combat);
 
 		expect(endEffectsAtMock).toHaveBeenCalledTimes(1);
-		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({ type: 'combatEnd', combatId: 'combat1' });
+		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({
+			type: 'combatEnd',
+			combatId: 'combat1',
+			started: true,
+		});
 		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({
 			key: expect.stringMatching(/^combatEnd:combat1:/),
 		});
@@ -238,6 +276,19 @@ describe('combat end', () => {
 		expect(ends).toHaveLength(2);
 		expect(starts[0]).not.toBe(starts[1]);
 		expect(ends[0]).not.toBe(ends[1]);
+	});
+
+	it('tells the moments when a deleted combat never started', () => {
+		const { combat } = makeCombat('combat5');
+		combat.round = 0;
+
+		hook('deleteCombat')(combat);
+
+		expect(endEffectsAtMock.mock.calls[0][0]).toEqual({
+			type: 'combatEnd',
+			combatId: 'combat5',
+			started: false,
+		});
 	});
 
 	it('ends when a running combat is deleted', () => {
@@ -314,6 +365,84 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('healed', actor);
 	});
 
+	it('HP that an Undo of damage gives back is no heal, so "until healed" stays', () => {
+		const actor = actorAt(9);
+		const options = {
+			nimble: { previousHp: { value: 4, max: 10, temp: 0 }, undoesDamage: true },
+		};
+
+		hook('updateActor')(actor, { system: { attributes: { hp: { value: 9 } } } }, options);
+
+		expect(fireEventMock).not.toHaveBeenCalledWith('healed', actor);
+	});
+
+	describe('the temp HP link', () => {
+		const linked = (temp: number) => {
+			const frost = {
+				id: 'frost',
+				name: 'Frost Shield',
+				system: { tempHp: 10 },
+				update: vi.fn(async () => undefined),
+			};
+			const actor = {
+				name: 'Tessa',
+				system: { attributes: { hp: { value: 10, max: 10, temp } } },
+				effects: [frost],
+			};
+			return { actor, frost };
+		};
+		const tempTo = (temp: number) => ({ system: { attributes: { hp: { temp } } } });
+
+		it('ends on the active GM when the temp HP reach 0', async () => {
+			const { actor, frost } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+			await vi.waitFor(() => expect(frost.update).toHaveBeenCalled());
+
+			expect(frost.update).toHaveBeenCalledWith({ 'system.tempHp': null });
+		});
+
+		it('is the moment "until its temp HP are gone" of that effect', async () => {
+			const { actor } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+
+			await vi.waitFor(() =>
+				expect(fireEventMock).toHaveBeenCalledWith('tempHpGone', actor, {
+					effectIds: ['frost'],
+					effect: 'Frost Shield',
+				}),
+			);
+		});
+
+		it('stays, with its effect, when an Undo of damage gives back temp HP', async () => {
+			const { actor, frost } = linked(10);
+			const options = {
+				nimble: { previousHp: { value: 10, max: 10, temp: 4 }, undoesDamage: true },
+			};
+
+			hook('updateActor')(actor, tempTo(10), options);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			expect(frost.update).not.toHaveBeenCalled();
+			expect(fireEventMock).not.toHaveBeenCalledWith(
+				'tempHpGone',
+				expect.anything(),
+				expect.anything(),
+			);
+		});
+
+		it('is left to the active GM on other clients', async () => {
+			user.isActiveGM = false;
+			const { actor, frost } = linked(0);
+
+			hook('updateActor')(actor, tempTo(0), {});
+			await Promise.resolve();
+
+			expect(frost.update).not.toHaveBeenCalled();
+		});
+	});
+
 	it('a rest is a rest of that creature', () => {
 		const actor = { name: 'Tessa' };
 
@@ -352,13 +481,66 @@ describe('events', () => {
 		expect(fireEventMock).toHaveBeenCalledWith('loseConcentration', holder);
 	});
 
-	it('a new effect is a gain of its name and its statuses, with their aliases', () => {
-		const nimble = CONFIG.NIMBLE as { conditionAliasedConditions?: unknown };
-		const aliases = nimble.conditionAliasedConditions;
+	it('a gain of Incapacitated is not a gain of Stunned, Paralyzed or Unconscious', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Frozen',
+			active: true,
+			statuses: new Set(['incapacitated']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			expect.objectContaining({ statuses: ['incapacitated'] }),
+			null,
+		);
+	});
+
+	it('a gain of Stunned is a gain of Incapacitated, so it ends a Concentrating that waits for one', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		const named = fireEventMock.mock.calls.find(([event]) => event === 'gain')?.[2] as {
+			statuses: string[];
+		};
+		expect(named.statuses).toContain('incapacitated');
+	});
+
+	it('a gain of Stunned is a gain of Incapacitated alone, with no gain of Unconscious', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = {
+			parent: holder,
+			name: 'Stunned',
+			active: true,
+			statuses: new Set(['stunned']),
+		};
+
+		hook('createActiveEffect')(effect);
+
+		const named = fireEventMock.mock.calls.find(([event]) => event === 'gain')?.[2] as {
+			statuses: string[];
+		};
+		expect(named.statuses).toEqual(['stunned', 'incapacitated']);
+	});
+
+	it('a new effect is a gain of its name and its statuses, with what they count as', () => {
+		const nimble = CONFIG.NIMBLE as { conditionCountsAs?: unknown };
+		const countsAs = nimble.conditionCountsAs;
 		onTestFinished(() => {
-			nimble.conditionAliasedConditions = aliases;
+			nimble.conditionCountsAs = countsAs;
 		});
-		nimble.conditionAliasedConditions = { stunned: ['incapacitated'] };
+		nimble.conditionCountsAs = { stunned: ['incapacitated'] };
 		const holder = Object.create(Actor.prototype);
 		const effect = {
 			parent: holder,
@@ -407,6 +589,32 @@ describe('events', () => {
 		const named = { effectName: 'Dimmed', statuses: [], gained: effect, effect: 'Dimmed' };
 		expect(fireEventMock).toHaveBeenCalledWith('applyEffect', caster, named, card);
 		expect(fireEventMock).toHaveBeenCalledWith('gain', holder, named, card);
+	});
+
+	it('a stack is a new gain of the effect, on the card of the use; another update is none', () => {
+		const holder = Object.create(Actor.prototype);
+		const effect = { parent: holder, name: 'Dazed', active: true, statuses: new Set(['dazed']) };
+		const card = { id: 'card1' };
+		const messages = (game as { messages?: unknown }).messages;
+		(game as { messages?: unknown }).messages = {
+			get: (id: string) => (id === 'card1' ? card : null),
+		};
+
+		hook('updateActiveEffect')(
+			effect,
+			{},
+			{ nimbleEffectStacked: true, [SYSTEM_ID]: { effectCardId: 'card1' } },
+		);
+		hook('updateActiveEffect')(effect, {}, {});
+		(game as { messages?: unknown }).messages = messages;
+
+		expect(fireEventMock).toHaveBeenCalledTimes(2);
+		expect(fireEventMock).toHaveBeenCalledWith(
+			'gain',
+			holder,
+			expect.objectContaining({ effectName: 'Dazed', gained: effect }),
+			card,
+		);
 	});
 
 	it('a copy that is put back or replaced is no new gain', () => {

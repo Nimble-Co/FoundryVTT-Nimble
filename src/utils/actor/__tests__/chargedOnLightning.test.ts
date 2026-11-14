@@ -29,6 +29,15 @@ describe('chargeOnLightning', () => {
 		});
 	});
 
+	it('names the card of the damage, so the lines of the effect go on it', async () => {
+		await chargeOnLightning(target, ['lightning'], 'Actor.mage', 'card1');
+
+		expect(applyEffectToActor).toHaveBeenCalledWith(
+			target,
+			expect.objectContaining({ cardId: 'card1' }),
+		);
+	});
+
 	it('other damage does nothing', async () => {
 		await chargeOnLightning(target, ['fire']);
 		await chargeOnLightning(target, []);

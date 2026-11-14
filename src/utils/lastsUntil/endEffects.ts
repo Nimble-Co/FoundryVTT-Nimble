@@ -1,36 +1,24 @@
 import { SYSTEM_ID } from '#system';
-import type { CardEventLastsUntil, CardEventText, EndedEffectRow } from '#types/cardEvent.d.ts';
+import type { EndedEffectRow } from '#types/cardEvent.d.ts';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
-import { addCardEvents, addMomentEvents, canHost } from '#utils/chat/cardEvents.js';
+import { END_LINES_OPTION, emptyPoolEvents } from '#utils/dicePool/emptyPoolLine.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { effectEndsAt, endingMoment, turnsSeenAfter } from '#utils/lastsUntil/effectEndsAt.js';
-import { sourceOf } from '#utils/lastsUntil/effectSubject.js';
+import { effectEndsAt } from '#utils/lastsUntil/effectEndsAt.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
-import type { LastsUntilCheck, Moment } from '#utils/lastsUntil/momentReached.js';
+import {
+	type EndCheck,
+	type EndMoment,
+	endedByOf,
+	postEnded,
+	sourceNameOf,
+	withEndedBy,
+} from '#utils/lastsUntil/endLines.js';
+import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
+import { withoutEndWaits } from '#utils/lastsUntil/waitEndEffects.js';
 import localize from '#utils/localize.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.endTimedEffects`;
-
-/** The moment that ends the effects: its card and why they ended. */
-export interface EndMoment {
-	/** Finds the card of the moment (`momentKeys`). Without a key, the ends get their own card. */
-	key?: string;
-	heading: CardEventText;
-	/** Why they ended, on each line, when the heading does not say it. */
-	reason?: CardEventText;
-	/** The card of the action that ended them. Its Events strip takes the lines, not a moment card. */
-	hostId?: string;
-	/** The Lasts Until moment that ended each effect, by effect UUID. */
-	endedBy?: Record<string, Moment>;
-	/** Who sees the card of the moment. Empty or missing: everyone. */
-	whisper?: string[];
-}
-
-/** Where the check happened: the moments it reached are read here, before the effects go. */
-export interface EndCheck {
-	check: LastsUntilCheck;
-	combat?: Combat | null;
-}
 
 const queue = keyedQueue();
 const ending = new Set<string>();
@@ -64,15 +52,6 @@ export function effectsEndingAt(check: LastsUntilCheck, combat?: Combat | null):
 	return found;
 }
 
-function sourceNameOf(effect: ActiveEffect): string {
-	if (effect.parent instanceof Item) return effect.parent.name ?? '';
-	if (!effect.origin) return '';
-	const origin = fromUuidSync(effect.origin as Parameters<typeof fromUuidSync>[0], {
-		strict: false,
-	}) as { name?: string } | null;
-	return origin?.name ?? sourceOf(effect)?.name ?? '';
-}
-
 /** What an ended line keeps of the effect, so Undo can put it back. */
 export function endedEffectRow(effect: ActiveEffect): EndedEffectRow {
 	const holder = effect.parent as Actor;
@@ -87,38 +66,6 @@ export function endedEffectRow(effect: ActiveEffect): EndedEffectRow {
 	};
 }
 
-/** The moment that ended the effect, read by its holder, with the creature that put it on. */
-function endedByOf(effect: ActiveEffect, moment: EndMoment): CardEventLastsUntil | undefined {
-	const found = moment.endedBy?.[effect.uuid ?? ''];
-	if (!found) return undefined;
-	const source = sourceOf(effect);
-	const holder = effect.parent as Actor;
-	const named = source && source !== holder && source.uuid !== holder.uuid ? source.name : null;
-	return { lastsUntil: found, ...(named ? { source: named } : {}) };
-}
-
-interface EndedLine {
-	row: EndedEffectRow;
-	endedBy?: CardEventLastsUntil;
-}
-
-/**
- * The lines go on the host card when there is one, else on the card of the moment. That card keeps
- * the readers of a whispered host card.
- */
-async function postEnded(moment: EndMoment, lines: EndedLine[]): Promise<boolean> {
-	const at = Date.now();
-	const events = lines.map(({ row, endedBy }) => endedEffectEvent(row, at, moment.reason, endedBy));
-	const host = moment.hostId ? game.messages?.get(moment.hostId) : null;
-	if (host && canHost(host as never) && (await addCardEvents(host as never, events))) return true;
-	const key = moment.key ?? `once:${foundry.utils.randomID()}`;
-	const hostReaders = ((host as { whisper?: string[] } | null)?.whisper ?? []).filter(Boolean);
-	const whisper = moment.whisper ?? (hostReaders.length > 0 ? hostReaders : undefined);
-	return addMomentEvents({ key, heading: moment.heading }, events, {
-		...(whisper ? { whisper } : {}),
-	});
-}
-
 /** On the active GM: delete the effects, then add a line each to the card of the moment. */
 async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void> {
 	const live = effects.filter((effect) => {
@@ -129,89 +76,57 @@ async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void
 	if (live.length < 1) return;
 	for (const effect of live) ending.add(effect.uuid ?? '');
 	try {
-		const lines = live.map((effect) => ({
-			row: endedEffectRow(effect),
-			endedBy: endedByOf(effect, moment),
-		}));
+		const at = moment.replaces?.at ?? Date.now();
+		const lines = live.map((effect) =>
+			endedEffectEvent(endedEffectRow(effect), at, moment.reason, endedByOf(effect, moment)),
+		);
+		// With Feature Effects on, the delete empties the pools (emptyPoolsAtEnd).
+		const automated = isRuleAutomationEnabled();
+		const poolLines = automated ? [] : emptyPoolEvents(live, Date.now());
 		const byHolder = new Map<Actor, string[]>();
 		for (const effect of live) {
 			const holder = effect.parent as Actor;
 			byHolder.set(holder, [...(byHolder.get(holder) ?? []), effect.id as string]);
 		}
 		for (const [holder, ids] of byHolder) {
-			await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
+			if (automated) await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
+			else {
+				await holder.deleteEmbeddedDocuments('ActiveEffect', ids, {
+					[END_LINES_OPTION]: true,
+				} as never);
+			}
 		}
-		await postEnded(moment, lines);
+		await postEnded(moment, [...lines, ...poolLines]);
 	} finally {
 		for (const effect of live) ending.delete(effect.uuid ?? '');
 	}
-}
-
-function withEndedBy(effects: ActiveEffect[], moment: EndMoment, at?: EndCheck): EndMoment {
-	if (!at) return moment;
-	const endedBy: Record<string, Moment> = { ...moment.endedBy };
-	for (const effect of effects) {
-		const found = endingMoment(effect, at.check, at.combat);
-		if (found && effect.uuid) endedBy[effect.uuid] = found;
-	}
-	return Object.keys(endedBy).length > 0 ? { ...moment, endedBy } : moment;
 }
 
 /**
  * End `effects` for one moment. The active GM deletes them and writes the
  * lines; another client asks the active GM. With no GM online, nothing ends.
  * With `at`, each line says which Lasts Until moment ended its effect.
+ * Whether the active GM took the ends: false with no GM, or when they failed.
  */
 export async function endEffects(
 	effects: ActiveEffect[],
 	endMoment: EndMoment,
 	at?: EndCheck,
-): Promise<void> {
-	if (effects.length < 1) return;
+): Promise<boolean> {
+	if (effects.length < 1) return true;
 	try {
 		const moment = withEndedBy(effects, endMoment, at);
 		if (game.user?.isActiveGM) {
 			await queue.run('end', () => endHere(effects, moment));
-			return;
+			return true;
 		}
 		const gm = (game.users as unknown as { activeGM?: { query(n: string, d: object): unknown } })
 			.activeGM;
-		await gm?.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), moment });
+		if (!gm) return false;
+		return !!(await gm.query(QUERY_NAME, { uuids: effects.map((effect) => effect.uuid), moment }));
 	} catch (error) {
 		console.error('Nimble | Could not end the Timed Effects of a moment.', error);
-	}
-}
-
-/**
- * End what `check` ends, on the card of that moment, and count its turn for the effects that stay.
- * What ends is read when the check happens, from the combat as it is then. The counts and ends go
- * one check at a time, so the next check counts from the counts of this one.
- */
-export function endEffectsAt(
-	check: LastsUntilCheck,
-	moment: EndMoment,
-	combat?: Combat | null,
-): Promise<void> {
-	const ending = effectsEndingAt(check, combat);
-	return queue.run('at', async () => {
-		await countTurns(check, combat, new Set(ending));
-		await endEffects(ending, moment, { check, combat });
-	});
-}
-
-/** A clock turn that a "2nd next turn" moment counts, and that does not end it, goes on its count. */
-async function countTurns(
-	check: LastsUntilCheck,
-	combat: Combat | null | undefined,
-	ending: ReadonlySet<ActiveEffect>,
-): Promise<void> {
-	if (check.type !== 'turnStart' && check.type !== 'turnEnd') return;
-	for (const actor of everyActor()) {
-		for (const effect of actor.effects as Iterable<ActiveEffect>) {
-			if (ending.has(effect)) continue;
-			const seen = turnsSeenAfter(effect, check, combat);
-			if (seen) await effect.update({ [`flags.${SYSTEM_ID}.turnsSeen`]: seen } as never);
-		}
+		return false;
 	}
 }
 
@@ -246,7 +161,7 @@ export async function undoEndedEffect(row: EndedEffectRow): Promise<boolean> {
 				create(data: object, operation: object): Promise<unknown>;
 			};
 		}
-	).implementation.create(row.effect, {
+	).implementation.create(withoutEndWaits(row.effect), {
 		parent: holder,
 		keepId: true,
 		[EFFECT_RECREATED_OPTION]: true,

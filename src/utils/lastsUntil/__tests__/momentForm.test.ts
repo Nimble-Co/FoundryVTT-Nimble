@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+	COMBAT_COUNTS,
 	eventRowSubject,
+	NEW_MOMENT_KINDS,
 	newMoment,
 	removeAt,
 	replaceAt,
 	spanChoiceOf,
 	spanChoices,
+	spanChoiceWord,
 	withClock,
+	withCombatCount,
 	withEffectName,
 	withSpan,
 	withSpanChoice,
@@ -39,6 +43,29 @@ describe('newMoment', () => {
 			event: 'effectEnds',
 			effectName: '',
 		});
+	});
+});
+
+describe('"combat ends" with a count', () => {
+	it('is a choice of the add list, with no subject', () => {
+		expect(NEW_MOMENT_KINDS).toContain('combatEnd');
+		expect(newMoment('combatEnd')).toMatchObject({
+			kind: 'event',
+			who: null,
+			event: 'combatEnd',
+			value: null,
+		});
+	});
+
+	it('counts from "combat ends" to "the 5th combat ends"', () => {
+		expect(COMBAT_COUNTS).toEqual([1, 2, 3, 4, 5]);
+	});
+
+	it('a count of 1 is "combat ends", with no value', () => {
+		const combatEnds = newMoment('combatEnd');
+
+		expect(withCombatCount(combatEnds, 3).value).toBe(3);
+		expect(withCombatCount(withCombatCount(combatEnds, 3), 1).value).toBeNull();
 	});
 });
 
@@ -88,6 +115,21 @@ describe('the turn list with counts', () => {
 			value: null,
 		});
 		expect(withClock(second, 'nextHero').value).toBeNull();
+	});
+});
+
+describe('the turn list for a count that an upcast raised', () => {
+	it('adds the count of the moment after "5th next turn", and reads it as "8th next turn"', () => {
+		const eighth = withSpanChoice(newMoment('turn'), 'nextTurn:5');
+		eighth.value = 8;
+
+		expect(spanChoices('holder', eighth)).toContain('nextTurn:8');
+		expect(spanChoices('holder', eighth).indexOf('nextTurn:8')).toBe(5);
+		expect(spanChoices('holder', { ...eighth, value: 3 })).not.toContain('nextTurn:8');
+		expect(spanChoiceOf(eighth)).toBe('nextTurn:8');
+		expect(spanChoiceWord('nextTurn:8')).toEqual(['nextTurnCountMany', { count: '8' }]);
+		expect(spanChoiceWord('nextTurn:2')).toEqual(['nextTurnCount.2', {}]);
+		expect(spanChoiceWord('currentTurn')).toEqual(['span.currentTurn', {}]);
 	});
 });
 

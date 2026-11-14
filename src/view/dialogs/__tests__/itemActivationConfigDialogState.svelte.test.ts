@@ -54,6 +54,70 @@ describe('the activation dialog conditional bonuses', () => {
 	});
 });
 
+describe('the activation dialog bonus of an item damage', () => {
+	const assist = {
+		key: 'Item.assist:rule',
+		label: 'Assist Me',
+		advantage: 0,
+		damageValue: null,
+		damageFormula: '1d6+@will',
+		damageType: '',
+		fromItemIdentifier: 'lifebinding-spirit',
+		startsChosen: false,
+	};
+
+	function open(options: object[]) {
+		user.targets = new Set();
+		conditionalBonuses.mockReturnValueOnce(options as never);
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: {
+						activation: {
+							effects: [{ id: 'd', type: 'damage', formula: '1d8', damageType: 'bludgeoning' }],
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('starts on None when the bonus does not start chosen', () => {
+		const state = open([assist, { ...assist, key: 'Item.other:rule', startsChosen: true }]);
+
+		expect(state.conditionalChoices).toEqual({
+			'Item.assist:rule': 'none',
+			'Item.other:rule': 'damage',
+		});
+		expect(state.conditionalTypedDamages).toEqual([
+			{
+				formula: '1d6+@will',
+				damageType: '',
+				label: 'Assist Me',
+				fromItemIdentifier: 'lifebinding-spirit',
+			},
+		]);
+	});
+
+	it('rolls the chosen damage of an item as its own step, never in the first damage', () => {
+		const state = open([assist]);
+
+		state.setConditionalChoice(assist.key, 'damage');
+
+		expect(state.conditionalTypedDamages).toEqual([
+			{
+				formula: '1d6+@will',
+				damageType: '',
+				label: 'Assist Me',
+				fromItemIdentifier: 'lifebinding-spirit',
+			},
+		]);
+		expect(state.damagePreviews[0].formula).toBe('1d8');
+	});
+});
+
 describe('the activation dialog Max Damage tick', () => {
 	function openWithRule(rule: object, effects: object[]) {
 		user.targets = new Set();
@@ -204,6 +268,127 @@ describe('the activation dialog kept amount', () => {
 
 		expect(state.keptAmount).toBeNull();
 		expect(state.usesKeptAmount).toBe(false);
+	});
+});
+
+describe('the activation dialog Held Changes', () => {
+	const opening = {
+		id: 'opening',
+		name: 'Create an Opening',
+		origin: null,
+		system: {
+			rules: [
+				{
+					id: 'opening-rule',
+					type: 'heldRoll',
+					heldKind: 'advantage',
+					value: 1,
+					whichRoll: 'holderAttacks',
+					usedUp: true,
+				},
+			],
+		},
+		flags: {},
+	};
+	const kept = {
+		...opening,
+		id: 'kept',
+		name: 'Rampage',
+		system: {
+			rules: [{ ...opening.system.rules[0], id: 'kept-rule', heldKind: 'wholeAmount', value: 13 }],
+		},
+	};
+
+	const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+	let realSettings: unknown;
+
+	afterEach(() => {
+		gameGlobal.game.settings = realSettings;
+	});
+
+	function openAttack(featureEffects: boolean) {
+		realSettings = gameGlobal.game.settings;
+		gameGlobal.game.settings = {
+			get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects' || featureEffects,
+		};
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					uuid: 'Actor.hero',
+					rules: [],
+					system: {},
+					items: [],
+					getFlag: () => undefined,
+					effects: [opening, kept],
+				}) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: {
+						activation: {
+							effects: [
+								{ id: 'd', type: 'damage', formula: '1d8', damageType: 'slashing', canCrit: true },
+							],
+							targets: { attackType: 'reach' },
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('are read-only lines with Feature Effects on', () => {
+		const state = openAttack(true);
+
+		expect(state.heldLines.map((line) => line.key)).toEqual(['Actor.hero.opening.opening-rule']);
+		expect(state.choosesHeldChanges).toBe(false);
+		expect(state.usesKeptAmount).toBe(true);
+	});
+
+	it('are tick boxes that start unticked with Feature Effects off, and so is the kept amount', () => {
+		const state = openAttack(false);
+
+		expect(state.choosesHeldChanges).toBe(true);
+		expect(state.chosenHeldChanges).toEqual([]);
+		expect(state.usesKeptAmount).toBe(false);
+
+		state.chosenHeldChanges = ['Actor.hero.opening.opening-rule'];
+
+		expect(state.chosenHeldChanges).toEqual(['Actor.hero.opening.opening-rule']);
+	});
+
+	it('with Feature Effects on, a held advantage leaves the slider where it is', () => {
+		const state = openAttack(true);
+
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('with Feature Effects off, a ticked advantage moves the slider, and its untick puts it back', () => {
+		const state = openAttack(false);
+
+		state.chosenHeldChanges = ['Actor.hero.opening.opening-rule'];
+
+		expect(state.selectedRollMode).toBe(1);
+		// The roll adds the ticked change itself.
+		expect(state.submittedRollMode).toBe(0);
+
+		state.chosenHeldChanges = [];
+
+		expect(state.selectedRollMode).toBe(0);
+		expect(state.submittedRollMode).toBe(0);
+	});
+
+	it('with Feature Effects off, the player can still move the slider past a ticked advantage', () => {
+		const state = openAttack(false);
+		state.chosenHeldChanges = ['Actor.hero.opening.opening-rule'];
+
+		state.selectedRollMode = 2;
+
+		expect(state.submittedRollMode).toBe(1);
+		state.chosenHeldChanges = [];
+		expect(state.selectedRollMode).toBe(1);
 	});
 });
 

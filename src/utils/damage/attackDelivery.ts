@@ -1,8 +1,10 @@
+import { isMonsterActorType } from '#documents/actor/monsterActorTypes.js';
+
 /**
  * How an attack reaches its target, derived from the activation's attack type.
- * `null` covers activations that declare no attack type at all (most spells,
- * consumables, utility features): those are neither melee nor ranged, so a
- * filtered rule never matches them.
+ * `null` covers hero activations that declare no attack type at all (most
+ * spells, consumables, utility features): those are neither melee nor ranged,
+ * so a filtered rule never matches them.
  */
 type AttackDelivery = 'melee' | 'ranged' | null;
 
@@ -25,16 +27,28 @@ function matchesAttackSource(
 	return (item?.type === 'spell' ? 'spell' : 'weapon') === filter;
 }
 
+/** The parts of an activation that say how its attack is delivered. */
+interface AttackActivation {
+	targets?: { attackType?: string | null } | null;
+	acquireTargetsFromTemplate?: boolean | null;
+	template?: { shape?: string | null } | null;
+}
+
 /**
- * Maps an activation's attack type to the channel it is delivered through.
- * The parameter is loose because every caller reads it off weakly-typed
- * document data; anything that is not one of the two known types is no
- * delivery at all.
+ * How an attack by `user` with this activation is delivered. A monster attack
+ * with no attack type has Reach 1 (GM 979), so it is melee; a monster area
+ * attack with none follows its own rules (Core 1403) and has no delivery.
  */
-function attackDeliveryFromAttackType(attackType: string | null | undefined): AttackDelivery {
+function deliveryOfAttack(
+	activation: AttackActivation | null | undefined,
+	user: { type?: string | null } | null | undefined,
+): AttackDelivery {
+	const attackType = activation?.targets?.attackType;
 	if (attackType === 'reach') return 'melee';
 	if (attackType === 'range') return 'ranged';
-	return null;
+	if (attackType || !isMonsterActorType(user?.type)) return null;
+	const area = !!activation?.acquireTargetsFromTemplate && !!activation.template?.shape;
+	return area ? null : 'melee';
 }
 
 /**
@@ -54,7 +68,7 @@ export {
 	type AttackSourceFilter,
 	matchesAttackSource,
 	ATTACK_DELIVERY_FILTERS,
-	attackDeliveryFromAttackType,
+	deliveryOfAttack,
 	matchesAttackDelivery,
 };
-export type { AttackDelivery, AttackDeliveryFilter };
+export type { AttackActivation, AttackDelivery, AttackDeliveryFilter };

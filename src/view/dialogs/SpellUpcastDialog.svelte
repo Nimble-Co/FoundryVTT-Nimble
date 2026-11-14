@@ -5,16 +5,18 @@
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+	import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
 	import { stepFormulaDieSize } from '../../utils/spell/stepFormulaDieSize.js';
+	import { effectMomentNumbers } from '../../utils/spell/effectMomentNumbers.js';
 	import { effectRuleNumbers } from '../../utils/spell/effectRuleNumbers.js';
 	import localize from '../../utils/localize.js';
 	import { maxDamageOffers } from '../../utils/damage/maxDamageOffers.js';
 	import { offersLessManaFor } from '../../utils/chaos/lessMana.js';
 	import { damageMultiplierOf } from '../../utils/damage/damageMultiplier.js';
-	import { heldLinesForItem, keptAmountFor } from '../../utils/heldChange/heldChange.js';
+	import { keptAmountFor } from '../../utils/heldChange/heldChange.js';
 	import KeptAmountField from './components/KeptAmountField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
@@ -66,17 +68,16 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
-	const heldLines = untrack(() =>
-		heldLinesForItem(
-			actor,
-			{ system: spell },
-			{
-				ignoresDisadvantage: data.ignoreDisadvantage,
+	const held = untrack(() =>
+		heldChangeChoice(actor, { system: spell }, data.ignoreDisadvantage, {
+			get: () => selectedRollMode,
+			set: (mode) => {
+				selectedRollMode = mode;
 			},
-		),
+		}),
 	);
 	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
-	let usesKeptAmount = $state(keptAmount !== null);
+	let usesKeptAmount = $state(keptAmount !== null && !held.choosing);
 	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
 	const damageMultiplier = untrack(() => damageMultiplierOf(spell?.parent ?? dialog?.item));
 	let usesDamageMultiplier = $state(false);
@@ -171,6 +172,8 @@
 		const preview = deltas.map((delta: ScalingDelta) => {
 			if (delta.operation === 'increaseDieSize') return formatDieSizePreview(delta, upcastSteps);
 			if (delta.operation === 'raiseEffectRule') return formatRaisePreview(delta, upcastSteps);
+			if (delta.operation === 'lengthenLastsUntil')
+				return formatLengthenPreview(delta, upcastSteps);
 
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
@@ -242,11 +245,39 @@
 		);
 		const rule = target?.rules.find((entry) => entry.id === delta.ruleId);
 		const field = rule?.fields.find((entry) => entry.name === delta.ruleField);
+		const amount = delta.formula
+			? formulaRaiseAmount(delta.formula, steps)
+			: String((delta.value ?? 0) * steps);
 		return format(spellUpcastDialog.raiseEffectRule, {
 			rule: rule?.label ?? target?.label ?? '',
-			amount: String((delta.value ?? 0) * steps),
+			amount,
 			field: field?.label ?? delta.ruleField ?? '',
 		});
+	}
+
+	// The terms the cast adds, worked out from the caster when they have no dice.
+	function formulaRaiseAmount(formula: string, steps: number) {
+		const terms = Array.from({ length: steps }, () => formula).join(' + ');
+		try {
+			const roll = new Roll(terms, actor.getRollData());
+			return roll.isDeterministic ? String(roll.evaluateSync().total) : roll.formula;
+		} catch {
+			return terms;
+		}
+	}
+
+	function formatLengthenPreview(delta: ScalingDelta, steps: number) {
+		const target = effectMomentNumbers(spell?.parent ?? {}).find(
+			(node) => node.nodeId === delta.targetEffectId,
+		);
+		const moment = target?.moments.find((entry) => entry.index === delta.momentIndex);
+		const value = (delta.value ?? 0) * steps;
+		const units = moment?.units ?? 'turns';
+		const amount =
+			value === 1
+				? localize(`NIMBLE.lastsUntilText.units.${units}.one`)
+				: format(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
+		return format(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null) {
@@ -326,7 +357,7 @@
 		}
 
 		const activationData = {
-			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes),
+			rollMode: rollModeWithoutConditions(selectedRollMode, conditionRollModes) - held.rollMode,
 			conditionRollModes,
 			situationalModifiers,
 			primaryDieValue,
@@ -334,6 +365,7 @@
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
 			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
+			...held.rollOptions,
 			...(damageMultiplier ? { damageMultiplier: usesDamageMultiplier } : {}),
 			lessMana,
 			upcast: canUpcast
@@ -393,9 +425,13 @@
 	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	{#if !maxDamageChoice && !keptInUse}
-		<HeldChangeLines lines={heldLines} />
+	{#if held.choosing}
+		<HeldChangeLines lines={held.lines} choosing bind:chosen={held.chosen} />
+	{:else if !maxDamageChoice && !keptInUse}
+		<HeldChangeLines lines={held.lines} />
+	{/if}
 
+	{#if !maxDamageChoice && !keptInUse}
 		<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 	{/if}
 

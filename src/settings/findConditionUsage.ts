@@ -30,6 +30,8 @@ export interface ConditionItemUsage {
 	immunityRuleIds: string[];
 	markTargetRuleIds: string[];
 	nodeIds: string[];
+	/** End Conditions steps that list the condition: only the condition goes from the list. */
+	endConditionsNodeIds: string[];
 	/** The item's own effects (for Apply Effect nodes) that hold only this condition. */
 	itemEffectIds: string[];
 	/** The item's own effects that hold this condition and others: only the condition goes. */
@@ -115,6 +117,7 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		immunityRuleIds: [],
 		markTargetRuleIds: [],
 		nodeIds: [],
+		endConditionsNodeIds: [],
 		itemEffectIds: [],
 		itemEffectStatusIds: [],
 	};
@@ -150,6 +153,12 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 	const effects = item.system?.activation?.effects;
 	if (Array.isArray(effects) && effects.length > 0) {
 		for (const node of flattenEffectsTree(effects)) {
+			if (node.type === 'endConditions') {
+				if (node.which !== 'listed' || !node.conditions?.includes(conditionId)) continue;
+				usage.endConditionsNodeIds.push(node.id);
+				usage.referenceLabels.push('NIMBLE.activationEffects.endConditions');
+				continue;
+			}
 			if (node.type !== 'applyEffect') continue;
 			const names =
 				node.condition === conditionId || (!!node.effectId && itemEffects.has(node.effectId));
@@ -165,6 +174,7 @@ function findItemReferences(item: ItemLike, conditionId: string): ConditionItemU
 		usage.immunityRuleIds.length +
 		usage.markTargetRuleIds.length +
 		usage.nodeIds.length +
+		usage.endConditionsNodeIds.length +
 		usage.itemEffectIds.length +
 		usage.itemEffectStatusIds.length;
 

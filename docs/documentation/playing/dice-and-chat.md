@@ -38,7 +38,7 @@ An item that rolls damage or healing opens the same window. The ticks also list 
 
 In combat, a line tells what the roll spends. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
 
-Some features add a tick to the window, for example **Max damage** or **Dual wield**. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it; see [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
+Some features add a tick to the window, for example **Max damage** or **Dual wield**. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
 
 ::: details More about the Primary Die fields
 - With advantage, the dice drop first. The set or added number then goes on the die that stays.
@@ -122,7 +122,7 @@ The button opens the Defend window. Its heading tells the attack, the hero and t
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-Pick a row and click the button. When the reaction is spent, you have no actions or it is your turn, a window asks first. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do. An effect that a feature puts on the attacker goes on it when you Defend, with a line on the card; **Undo** does not take it off. A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
+Pick a row and click the button. A window asks first when your reaction is spent, when you have no actions, or when it is your turn. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do. An effect that a feature puts on the attacker goes on it when you Defend, with a line on the card. **Undo** does not take it off. A Defend that covers every attack this round is an effect on the hero until the start of their next turn. A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, an effect of the spell that hurts attackers also counts the attack you answer. Cast from the sheet, the effect counts only the attacks after it.
 
 After a Defend, the target row shows a green shield and the damage after Armor. Until the damage is applied, the GM can click the shield when the damage cannot be avoided (no Armor comes off), or click **Undo** to give back the reaction and its actions.
 

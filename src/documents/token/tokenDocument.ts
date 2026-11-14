@@ -1,3 +1,4 @@
+import { AFTER_RULES_PHASE } from '#documents/activeEffect/multiplyDownChange.js';
 import { systemHookName } from '#system';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { buildMovementRecord } from '../../utils/movement/buildMovementRecord.js';
@@ -12,6 +13,19 @@ interface CombatantCreateData {
 }
 
 export class NimbleTokenDocument extends TokenDocument {
+	/**
+	 * Core applies only its own phases to a token. The actor keeps the `token.` changes of the
+	 * phase after the rules (Multiply, round down) apart, so they apply here, after final.
+	 */
+	override prepareData(): void {
+		const skipped = this.isLazyDelta && !!this.actor;
+		super.prepareData();
+		if (skipped) return;
+		(this as unknown as { applyActiveEffects(phase: string): void }).applyActiveEffects(
+			AFTER_RULES_PHASE,
+		);
+	}
+
 	static getCombatantType(token: TokenDocument): string {
 		const actorType = token.actor?.type as string | undefined;
 		switch (actorType) {

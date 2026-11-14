@@ -43,4 +43,43 @@ function addToSaveDC(saveDC: number | string | null | undefined, amount: number)
 	return Number.isNaN(number) ? `${written}+${amount}` : number + amount;
 }
 
-export { addToSaveDC, resolveSaveNodeDC };
+interface EffectTreeNode {
+	type?: string;
+	saveDC?: number | string | null;
+	on?: Record<string, unknown> | null;
+	sharedRolls?: unknown;
+}
+
+function childNodes(node: EffectTreeNode): unknown[] {
+	const children: unknown[] = [];
+	for (const value of Object.values(node.on ?? {})) {
+		if (Array.isArray(value)) children.push(...value);
+		else if (value && typeof value === 'object') {
+			for (const nested of Object.values(value))
+				if (Array.isArray(nested)) children.push(...nested);
+		}
+	}
+	if (Array.isArray(node.sharedRolls)) children.push(...node.sharedRolls);
+	return children;
+}
+
+/**
+ * Write the number into each save node of an activation tree whose DC the user
+ * can work out, so the card keeps the DC of the use. Other DCs stay as written.
+ */
+function fixSaveDCs(
+	effects: readonly unknown[] | null | undefined,
+	itemUser: ItemUser | null,
+): void {
+	for (const entry of effects ?? []) {
+		if (!entry || typeof entry !== 'object') continue;
+		const node = entry as EffectTreeNode;
+		if (node.type === 'savingThrow') {
+			const dc = resolveSaveNodeDC(node.saveDC, itemUser);
+			if (dc !== null) node.saveDC = dc;
+		}
+		fixSaveDCs(childNodes(node), itemUser);
+	}
+}
+
+export { addToSaveDC, fixSaveDCs, resolveSaveNodeDC };

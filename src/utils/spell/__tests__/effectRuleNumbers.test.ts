@@ -1,5 +1,5 @@
-import { effectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 import localize from '#utils/localize.js';
+import { effectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 
 describe('effectRuleNumbers', () => {
 	const effect = {
@@ -61,14 +61,51 @@ describe('effectRuleNumbers', () => {
 			'Edge',
 		]);
 		expect(target.rules[0].fields).toEqual([
-			{ name: 'value', label: localize('NIMBLE.rules.heldRoll.value.label') },
+			{ name: 'value', label: localize('NIMBLE.rules.heldRoll.value.label'), kind: 'number' },
 		]);
 	});
 
 	it('names the field by what a raise adds, when the rule class says it', () => {
 		const [target] = effectRuleNumbers(item as never);
 
-		expect(target.rules[1].fields).toEqual([{ name: 'value', label: 'advantage' }]);
-		expect(target.rules[2].fields).toEqual([{ name: 'value', label: 'to the Primary Die' }]);
+		expect(target.rules[1].fields).toEqual([{ name: 'value', label: 'advantage', kind: 'number' }]);
+		expect(target.rules[2].fields).toEqual([
+			{ name: 'value', label: 'to the Primary Die', kind: 'number' },
+		]);
+	});
+
+	it('lists a formula field of a rule with the kind formula, when the rule shows it', () => {
+		const bonusEffect = {
+			name: 'Enchanted',
+			system: {
+				rules: [
+					{ id: 'bonus', type: 'damageBonus', label: 'Bonus', value: '@key' },
+					{ id: 'extra', type: 'heldRoll', label: 'Extra', heldKind: 'extraDamage', value: 1 },
+				],
+			},
+		};
+		const [target] = effectRuleNumbers({
+			...item,
+			effects: { get: (id: string) => (id === 'fx' ? bonusEffect : undefined) },
+		} as never);
+
+		expect(target.rules[0].fields).toEqual([
+			{
+				name: 'value',
+				label: localize('NIMBLE.rules.damageBonus.value.label'),
+				kind: 'formula',
+			},
+		]);
+		expect(target.rules[1].fields).toContainEqual({
+			name: 'formula',
+			label: localize('NIMBLE.rules.heldRoll.formula.label'),
+			kind: 'formula',
+		});
+	});
+
+	it('leaves out a formula field that the rule hides', () => {
+		const [target] = effectRuleNumbers(item as never);
+
+		expect(target.rules[1].fields.map((field) => field.name)).toEqual(['value']);
 	});
 });

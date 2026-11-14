@@ -1,6 +1,7 @@
 import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
+import { AFTER_RULES_PHASE } from '#documents/activeEffect/multiplyDownChange.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { RollDialogType } from '#types/components/CheckRollDialog.d.ts';
@@ -38,6 +39,7 @@ import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './
 import { conditionRollOptions } from './conditionRollOptions.js';
 import { promptForConcentrationToEnd } from './endOneConcentration.js';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
+import { MONSTER_ACTOR_TYPES, type MonsterActorType } from './monsterActorTypes.js';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 
@@ -108,10 +110,6 @@ interface InitiativeRollData {
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
 
-/** Actor subtypes that share the monster sheet and can be converted between each other. */
-const MONSTER_ACTOR_TYPES = ['npc', 'minion', 'soloMonster'] as const;
-type MonsterActorType = (typeof MONSTER_ACTOR_TYPES)[number];
-
 function toFiniteInteger(value: unknown): number {
 	const numericValue = Number(value);
 	if (!Number.isFinite(numericValue)) return 0;
@@ -129,12 +127,12 @@ const OWN_TAGS = new Set<string>([STATUS_EFFECT_IDS.bloodied, STATUS_EFFECT_IDS.
 
 /**
  * The conditions a creature with these statuses has, for its `self:` and
- * `target:` tags: each condition among the statuses, and the conditions an
- * alias stands for.
+ * `target:` tags: each condition among the statuses, and the conditions it
+ * counts as (Stunned counts as Incapacitated, not the reverse).
  */
 function conditionTags(statuses: ReadonlySet<string>): Set<string> {
 	const conditions = (CONFIG.NIMBLE?.conditions ?? {}) as Record<string, string>;
-	const aliases = (CONFIG.NIMBLE?.conditionAliasedConditions ?? {}) as Record<
+	const aliases = (CONFIG.NIMBLE?.conditionCountsAs ?? {}) as Record<
 		string,
 		readonly string[] | undefined
 	>;
@@ -399,13 +397,15 @@ class NimbleBaseActor<
 			rule.afterPrepareData?.();
 		});
 
+		this.applyActiveEffects(AFTER_RULES_PHASE as never);
+
 		this._onAfterPrepareData();
 	}
 
 	/** Subclass hook, before core data preparation. Reset memoized state here. */
 	protected _onBeforePrepareData(): void {}
 
-	/** Subclass hook, after the `afterPrepareData` rule sweep has run. */
+	/** Subclass hook, after the `afterPrepareData` rule sweep and the changes after the rules. */
 	protected _onAfterPrepareData(): void {}
 
 	override prepareBaseData(): void {
@@ -734,6 +734,7 @@ class NimbleBaseActor<
 		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
 
 		if (Object.keys(updates).length < 1) return;
+		updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
 		if (cardId) await this.update(updates as Actor.UpdateData, damageCardOption(cardId) as never);
 		else await this.update(updates as Actor.UpdateData);
 	}
@@ -827,6 +828,12 @@ class NimbleBaseActor<
 
 		const monsterLevel = parseMonsterLevel(systemData.details?.level);
 		if (monsterLevel !== undefined) data.level = monsterLevel;
+
+		const damageTaken = Number(
+			(this.flags as Record<string, { damageTaken?: unknown } | undefined>)?.[SYSTEM_ID]
+				?.damageTaken,
+		);
+		data.damageTaken = Number.isFinite(damageTaken) ? damageTaken : 0;
 
 		return data;
 	}

@@ -9,6 +9,7 @@ const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
 import { SYSTEM_ID } from '#system';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import {
 	ApplyConditionRule,
 	type ApplyConditionTrigger,
@@ -62,6 +63,7 @@ interface ApplyConditionSource {
 	condition: string;
 	trigger: ApplyConditionTrigger;
 	effectId?: string;
+	wounds?: number;
 	disabled?: boolean;
 	label?: string;
 	id?: string;
@@ -75,6 +77,7 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
 	trigger: ApplyConditionTrigger;
 	effectId: string;
+	wounds: number;
 	disabled: boolean;
 	label: string;
 }
@@ -139,6 +142,7 @@ function createApplyConditionRule(
 		condition: config.condition,
 		trigger: config.trigger,
 		effectId: config.effectId ?? '',
+		wounds: config.wounds ?? 0,
 		disabled: config.disabled ?? false,
 		label: config.label ?? 'Test Apply Condition',
 		id: config.id ?? 'test-apply-condition-id',
@@ -158,6 +162,8 @@ function createApplyConditionRule(
 	rule.condition = config.condition;
 	rule.trigger = config.trigger;
 	rule.effectId = sourceData.effectId;
+	rule.wounds = sourceData.wounds;
+	rule.id = sourceData.id;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Apply Condition';
 
@@ -225,6 +231,7 @@ describe('ApplyConditionRule', () => {
 			expect(schema).toHaveProperty('condition');
 			expect(schema).toHaveProperty('trigger');
 			expect(schema).toHaveProperty('effectId');
+			expect(schema).toHaveProperty('wounds');
 			expect(schema).not.toHaveProperty('duration');
 		});
 
@@ -357,6 +364,44 @@ describe('ApplyConditionRule', () => {
 				actor: ownerActor as unknown as Parameters<ApplyConditionRule['onTurnStart']>[0]['actor'],
 			});
 			expect(conditionsAppliedTo(ownerActor)).toEqual(['focused']);
+		});
+
+		it('fires onSpellCast on the caster for a spell of the mana it asks or more', async () => {
+			const caster = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onSpellCast' },
+				caster,
+			);
+			(rule as unknown as { manaAtLeast: number }).manaAtLeast = 2;
+			type Ctx = Parameters<ApplyConditionRule['onItemActivated']>[0];
+			const cast = (manaSpent: number, type = 'spell', actor: MockActor = caster) =>
+				({ sourceItem: { type }, sourceActor: actor, card: null, manaSpent }) as unknown as Ctx;
+
+			await rule.onItemActivated(cast(1));
+			await rule.onItemActivated(cast(2, 'feature'));
+			await rule.onItemActivated(cast(3, 'spell', createMockActor()));
+			expect(conditionsAppliedTo(caster)).toEqual([]);
+
+			await rule.onItemActivated(cast(2));
+			expect(conditionsAppliedTo(caster)).toEqual(['focused']);
+		});
+
+		it('does not fire on a cast for a rule with another trigger', async () => {
+			const caster = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'focused', trigger: 'onTurnStart' },
+				caster,
+			);
+			type Ctx = Parameters<ApplyConditionRule['onItemActivated']>[0];
+
+			await rule.onItemActivated({
+				sourceItem: { type: 'spell' },
+				sourceActor: caster,
+				card: null,
+				manaSpent: 5,
+			} as unknown as Ctx);
+
+			expect(conditionsAppliedTo(caster)).toEqual([]);
 		});
 
 		it('does not fire onTurnStart for a rule with a different trigger', async () => {
@@ -511,6 +556,11 @@ describe('ApplyConditionRule', () => {
 
 			await saveResolved(rule, actor, 'pass');
 			expect(actor.effects).toHaveLength(0);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+				'ActiveEffect',
+				expect.any(Array),
+				{ [UNDO_APPLICATION_OPTION]: true },
+			);
 		});
 
 		describe('with Feature Effects off', () => {
@@ -749,6 +799,22 @@ describe('ApplyConditionRule', () => {
 			});
 		});
 
+		it('names the card of the attack or of the failed save, so the lines of the effect go on it', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const createOptions = () => createEffect.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+
+			await ruleWithEffect(attacker, 'onCrit').onItemUsed({
+				...buildItemUsedContext(attacker, target, { isCritical: true }),
+				card: { id: 'attack-card' } as never,
+			});
+			expect(createOptions()).toMatchObject({ [SYSTEM_ID]: { effectCardId: 'attack-card' } });
+
+			const owner = createMockActor();
+			await saveResolved(ruleWithEffect(owner, 'onSaveFail'), owner, 'fail');
+			expect(createOptions()).toMatchObject({ [SYSTEM_ID]: { effectCardId: 'card-1' } });
+		});
+
 		it('gives the bare condition when the rule names no effect', async () => {
 			const owner = createMockActor();
 			const rule = createApplyConditionRule({ condition: 'slowed', trigger: 'onWound' }, owner);
@@ -785,6 +851,126 @@ describe('ApplyConditionRule', () => {
 			copy.getFlag = (scope, key) => flags[scope]?.[key];
 			await saveResolved(rule, owner, 'pass');
 			expect(owner.effects).toHaveLength(0);
+		});
+	});
+
+	describe('the Apply to Targets step of the same effect on the card', () => {
+		const globals = globalThis as { fromUuid?: unknown };
+		let previousFromUuid: unknown;
+		beforeEach(() => {
+			previousFromUuid = globals.fromUuid;
+			globals.fromUuid = async (uuid: string) => ({ uuid });
+			const created = createEffect.getMockImplementation();
+			createEffect.mockImplementation(async (effect: MockActiveEffect, operation) => {
+				const made = await created?.(effect, operation);
+				const parent = (operation as { parent: { uuid?: string } }).parent;
+				return Object.assign(made, { uuid: `${parent.uuid}.ActiveEffect.${made.id}` });
+			});
+		});
+		afterEach(() => {
+			globals.fromUuid = previousFromUuid;
+		});
+
+		const goblin = () => Object.assign(createMockActor(), { uuid: 'Actor.goblin', name: 'Goblin' });
+		const attackCard = () => {
+			const card = {
+				id: 'attack-card',
+				flags: {} as Record<string, unknown>,
+				// The write lands a tick later, as a database write does.
+				update: vi.fn(async (data: Record<string, unknown>) => {
+					await new Promise((resolve) => setTimeout(resolve, 1));
+					for (const [path, value] of Object.entries(data)) {
+						foundry.utils.setProperty(card, path, value);
+					}
+				}),
+			};
+			return card;
+		};
+		const recordOf = (card: ReturnType<typeof attackCard>) =>
+			foundry.utils.getProperty(
+				card,
+				`flags.${SYSTEM_ID}.appliedEffects.apply-condition-test-apply-condition-id`,
+			);
+
+		function ruleWithEffect(attacker: MockActor) {
+			const item = createMockItem(attacker);
+			item.effects.set('fx', {
+				transfer: false,
+				toObject: () => ({ _id: 'fx', name: 'Marked', statuses: ['dazed'], system: {} }),
+			});
+			return createApplyConditionRule(
+				{ condition: '', trigger: 'onHit', effectId: 'fx' },
+				attacker,
+				item,
+			);
+		}
+
+		it('records the target the effect went on, so the step shows it applied', async () => {
+			const attacker = createMockActor();
+			const target = goblin();
+			const card = attackCard();
+
+			await ruleWithEffect(attacker).onItemUsed({
+				...buildItemUsedContext(attacker, target),
+				card: card as never,
+			});
+
+			expect(recordOf(card)).toEqual([
+				{ effectUuid: 'Actor.goblin.ActiveEffect.effect-1', actorName: 'Goblin' },
+			]);
+		});
+
+		it('records the target of a bare condition', async () => {
+			const attacker = createMockActor();
+			const target = goblin();
+			const card = attackCard();
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onCrit' }, attacker);
+
+			await rule.onItemUsed({
+				...buildItemUsedContext(attacker, target, { isCritical: true }),
+				card: card as never,
+			});
+
+			expect(recordOf(card)).toEqual([
+				{ effectUuid: 'Actor.goblin.ActiveEffect.effect-1', actorName: 'Goblin' },
+			]);
+		});
+
+		it('adds each target to the record as its damage is applied', async () => {
+			const attacker = createMockActor();
+			const card = attackCard();
+			const rule = ruleWithEffect(attacker);
+			const kobold = Object.assign(createMockActor(), { uuid: 'Actor.kobold', name: 'Kobold' });
+
+			await Promise.all([
+				rule.onItemUsed({ ...buildItemUsedContext(attacker, goblin()), card: card as never }),
+				rule.onItemUsed({ ...buildItemUsedContext(attacker, kobold), card: card as never }),
+			]);
+
+			expect(
+				(recordOf(card) as Array<{ actorName: string }>).map((entry) => entry.actorName),
+			).toEqual(['Goblin', 'Kobold']);
+		});
+
+		it('records nothing when the condition did not go on, so the step keeps its button', async () => {
+			hooksCall.mockReturnValue(false);
+			const attacker = createMockActor();
+			const card = attackCard();
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onHit' }, attacker);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, goblin()), card: card as never });
+
+			expect(card.update).not.toHaveBeenCalled();
+		});
+
+		it('records nothing on a self trigger, which has no step on the card', async () => {
+			const owner = Object.assign(createMockActor(), { uuid: 'Actor.owner', name: 'Owner' });
+			const rule = createApplyConditionRule({ condition: 'prone', trigger: 'onTurnStart' }, owner);
+			type Ctx = Parameters<ApplyConditionRule['onTurnStart']>[0];
+
+			await rule.onTurnStart({ actor: owner } as unknown as Ctx);
+
+			expect(conditionsAppliedTo(owner)).toEqual(['prone']);
 		});
 	});
 
@@ -931,6 +1117,43 @@ describe('ApplyConditionRule', () => {
 			expect(rule.getActivationCardNodes({ isCritical: false, isMiss: true })).toEqual([]);
 		});
 
+		it('adds a Wound row for the targets, also with no condition and no effect', () => {
+			const actor = createMockActor();
+			const rule = createApplyConditionRule({ condition: '', trigger: 'onHit', wounds: 1 }, actor);
+
+			expect(rule.getActivationCardNodes({ isCritical: false, isMiss: false })).toEqual([
+				{
+					id: 'wound-test-apply-condition-id',
+					type: 'wound',
+					amount: 1,
+					recipient: 'targets',
+					parentContext: null,
+					parentNode: null,
+				},
+			]);
+		});
+
+		it('adds the Wound row after the condition row, and none with 0 Wounds', () => {
+			const actor = createMockActor();
+			const both = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit', wounds: 2 },
+				actor,
+			);
+			const conditionOnly = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit' },
+				actor,
+			);
+			const context = { isCritical: false, isMiss: false };
+
+			expect(both.getActivationCardNodes(context).map((node) => node.type)).toEqual([
+				'applyEffect',
+				'wound',
+			]);
+			expect(conditionOnly.getActivationCardNodes(context).map((node) => node.type)).toEqual([
+				'applyEffect',
+			]);
+		});
+
 		it('returns nothing for non-attack triggers', () => {
 			const actor = createMockActor();
 			const rule = createApplyConditionRule(
@@ -939,6 +1162,166 @@ describe('ApplyConditionRule', () => {
 			);
 
 			expect(rule.getActivationCardNodes({ isCritical: true, isMiss: false })).toEqual([]);
+		});
+	});
+
+	describe('Wounds', () => {
+		function hero(value: number) {
+			const actor = Object.assign(createMockActor(), {
+				uuid: 'Actor.tessa',
+				name: 'Tessa',
+				system: { attributes: { wounds: { value, max: 6 } } },
+				update: vi.fn(async (_data: Record<string, unknown>) => undefined as unknown),
+			});
+			return actor;
+		}
+
+		it('gives the target its Wounds when the attack lands, and records them on the card', async () => {
+			const attacker = createMockActor();
+			const target = hero(1);
+			const card = { id: 'card-1', update: vi.fn(async () => undefined) };
+			const rule = createApplyConditionRule(
+				{ condition: '', trigger: 'onHit', wounds: 1 },
+				attacker,
+			);
+
+			await rule.onItemUsed({
+				...buildItemUsedContext(attacker, target),
+				card: card as never,
+			});
+
+			expect(target.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 2 });
+			expect(card.update).toHaveBeenCalledWith({
+				[`flags.${SYSTEM_ID}.appliedWounds.wound-test-apply-condition-id.Actor_tessa`]: {
+					actorName: 'Tessa',
+					before: 1,
+					after: 2,
+				},
+			});
+		});
+
+		it('gives the condition and the Wounds together', async () => {
+			const attacker = createMockActor();
+			const target = hero(0);
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onHit', wounds: 2 },
+				attacker,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attacker, target));
+
+			expect(conditionsAppliedTo(target)).toEqual(['dazed']);
+			expect(target.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 2 });
+		});
+
+		it('gives its own holder the Wounds on a trigger of its own', async () => {
+			const holder = hero(3);
+			const rule = createApplyConditionRule(
+				{ condition: '', trigger: 'onTurnStart', wounds: 1 },
+				holder,
+			);
+			type Ctx = Parameters<ApplyConditionRule['onTurnStart']>[0];
+
+			await rule.onTurnStart({ actor: holder } as unknown as Ctx);
+
+			expect(holder.update).toHaveBeenCalledWith({ 'system.attributes.wounds.value': 4 });
+		});
+
+		describe('on a failed save that a reroll turns into a success', () => {
+			const globals = globalThis as unknown as { game: { messages?: unknown } };
+			let savedMessages: unknown;
+			let saveCards: Map<
+				string,
+				{ flags: Record<string, unknown>; update: ReturnType<typeof vi.fn> }
+			>;
+
+			function saveCard(id: string) {
+				const card = {
+					flags: {} as Record<string, unknown>,
+					update: vi.fn(async (changes: Record<string, unknown>) => {
+						for (const [path, value] of Object.entries(changes)) {
+							foundry.utils.setProperty(card, path, value);
+						}
+					}),
+				};
+				saveCards.set(id, card);
+				return card;
+			}
+
+			function woundsOf(actor: ReturnType<typeof hero>) {
+				return actor.system.attributes.wounds.value;
+			}
+
+			function trackingHero(value: number) {
+				const actor = hero(value);
+				actor.update.mockImplementation(async (data: Record<string, unknown>) => {
+					actor.system.attributes.wounds.value = data['system.attributes.wounds.value'] as number;
+				});
+				return actor;
+			}
+
+			beforeEach(() => {
+				savedMessages = globals.game.messages;
+				saveCards = new Map();
+				globals.game.messages = { get: (id: string) => saveCards.get(id) };
+				saveCard('card-1');
+				saveCard('card-2');
+			});
+
+			afterEach(() => {
+				globals.game.messages = savedMessages;
+			});
+
+			it('takes back the Wounds that the fail gave, with its condition', async () => {
+				const actor = trackingHero(1);
+				const rule = createApplyConditionRule(
+					{ condition: 'prone', trigger: 'onSaveFail', wounds: 2 },
+					actor,
+				);
+
+				await saveResolved(rule, actor as never, 'fail');
+				expect(woundsOf(actor)).toBe(3);
+
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(1);
+				expect(actor.effects).toHaveLength(0);
+
+				await saveResolved(rule, actor as never, 'unknown');
+				expect(woundsOf(actor)).toBe(1);
+			});
+
+			it('takes back no more than it gave, never below 0, and only from its own card', async () => {
+				const actor = trackingHero(5);
+				const rule = createApplyConditionRule(
+					{ condition: '', trigger: 'onSaveFail', wounds: 3 },
+					actor,
+				);
+
+				await saveResolved(rule, actor as never, 'fail');
+				expect(woundsOf(actor)).toBe(6);
+
+				await saveResolved(rule, actor as never, 'pass', 'card-2');
+				expect(woundsOf(actor)).toBe(6);
+
+				actor.system.attributes.wounds.value = 0;
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(0);
+
+				actor.system.attributes.wounds.value = 4;
+				await saveResolved(rule, actor as never, 'fail');
+				await saveResolved(rule, actor as never, 'pass');
+				expect(woundsOf(actor)).toBe(4);
+			});
+		});
+
+		it('gives no Wounds with 0, as before', async () => {
+			const attacker = createMockActor();
+			const target = hero(1);
+			const rule = createApplyConditionRule({ condition: 'dazed', trigger: 'onHit' }, attacker);
+
+			await rule.onItemUsed(buildItemUsedContext(attacker, target));
+
+			expect(target.update).not.toHaveBeenCalled();
 		});
 	});
 

@@ -81,7 +81,11 @@ type ActivationCardHost = {
 
 async function createActivationCard(
 	item: ReturnType<typeof createItemStub>,
-	{ rolls = [] as unknown[], cardType = 'spell' } = {},
+	{
+		rolls = [] as unknown[],
+		cardType = 'spell',
+		activation = { effects: [] } as Record<string, unknown>,
+	} = {},
 ) {
 	const chatData = { type: cardType, system: {} } as {
 		type: string;
@@ -90,7 +94,7 @@ async function createActivationCard(
 	const chatCard = await (item as ActivationCardHost)._createActivationCard(
 		chatData,
 		rolls,
-		{ effects: [] },
+		activation,
 		{},
 	);
 
@@ -125,6 +129,20 @@ describe('NimbleBaseItem#_createActivationCard concentration', () => {
 			parent: item.actor,
 			keepId: true,
 		});
+	});
+
+	it("lasts the card's Duration, which an upcast raised, not the item's", async () => {
+		const item = createItemStub(['concentration']);
+		item.system = { activation: { duration: { quantity: 1, type: 'minute' } } };
+
+		await createActivationCard(item, {
+			activation: { effects: [], duration: { quantity: 2, type: 'minute' } },
+		});
+
+		const [created] = createEffect.mock.calls[0] as [Record<string, unknown>];
+		expect(created['system.lastsUntil']).toContainEqual(
+			expect.objectContaining({ kind: 'time', value: 2, units: 'minutes' }),
+		);
 	});
 
 	it('puts nothing on the caster when the item does not carry the property', async () => {

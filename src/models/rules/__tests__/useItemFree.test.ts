@@ -33,6 +33,7 @@ function freeRule(
 		freeOf?: string[];
 		disabled?: boolean;
 		predicate?: Record<string, unknown>;
+		manaAtLeast?: number;
 	},
 ): UseItemFreeRuleClass {
 	ruleCount += 1;
@@ -51,6 +52,7 @@ function freeRule(
 		itemIdentifier: source.itemIdentifier ?? 'rage',
 		triggers: source.triggers,
 		freeOf: source.freeOf ?? ['uses', 'mana'],
+		manaAtLeast: source.manaAtLeast ?? 0,
 		disabled: source.disabled ?? false,
 		predicate: new Predicate((source.predicate ?? {}) as never),
 	});
@@ -398,6 +400,74 @@ describe('UseItemFreeRule', () => {
 				false,
 				false,
 			]);
+		});
+	});
+
+	describe('when the actor casts a spell', () => {
+		const spell = { type: 'spell', identifier: 'fireball', system: { identifier: 'fireball' } };
+		function cast(actor: object, manaSpent: number, card: object | null = { id: 'spell-card' }) {
+			return {
+				sourceItem: spell,
+				sourceActor: actor,
+				card,
+				manaSpent,
+			} as unknown as ActivatedContext;
+		}
+		const primordial = (actor: object) =>
+			freeRule(actor, {
+				triggers: ['onSpellCast'],
+				itemIdentifier: 'primordial-force',
+				manaAtLeast: 2,
+			});
+
+		it('uses the item for a cast of the mana it asks or more, with the spell card as host', async () => {
+			const actor = makeActor();
+
+			await primordial(actor).onItemActivated(cast(actor, 2));
+			await primordial(actor).onItemActivated(cast(actor, 3, { id: 'spell-card-2' }));
+
+			expect(useItemForFree).toHaveBeenCalledTimes(2);
+			const [, identifier, free] = useItemForFree.mock.calls[0] as [
+				unknown,
+				string,
+				{ reason: unknown; host?: unknown },
+			];
+			expect(identifier).toBe('primordial-force');
+			expect(free.host).toEqual({ cardId: 'spell-card' });
+			expect(free.reason).toEqual({
+				key: 'NIMBLE.rules.useItemFree.cardLine',
+				data: {
+					trigger: { key: 'NIMBLE.rules.useItemFree.reasons.onSpellCastMana', data: { mana: '2' } },
+					feature: 'Furious Feature',
+				},
+			});
+		});
+
+		it('does not use it for less mana, a cast paid from a pool, or a use that is no spell', async () => {
+			const actor = makeActor();
+			const rule = primordial(actor);
+
+			await rule.onItemActivated(cast(actor, 1));
+			await rule.onItemActivated(cast(actor, 0, { id: 'pool-card' }));
+			await rule.onItemActivated({
+				...cast(actor, 2, { id: 'feature-card' }),
+				sourceItem: { type: 'feature', identifier: 'rage' },
+			} as unknown as ActivatedContext);
+			await rule.onItemActivated(cast(makeActor(), 3, { id: 'other-card' }));
+
+			expect(useItemForFree).not.toHaveBeenCalled();
+		});
+
+		it('uses it once for each card, for any cast with Mana at least 0, and with no card', async () => {
+			const actor = makeActor();
+			const any = freeRule(actor, { triggers: ['onSpellCast'], itemIdentifier: 'echo' });
+
+			await any.onItemActivated(cast(actor, 0));
+			await any.onItemActivated(cast(actor, 0));
+			await any.onItemActivated(cast(actor, 0, null));
+
+			expect(useItemForFree).toHaveBeenCalledTimes(2);
+			expect((useItemForFree.mock.calls[1]?.[2] as { host?: unknown }).host).toBeUndefined();
 		});
 	});
 });

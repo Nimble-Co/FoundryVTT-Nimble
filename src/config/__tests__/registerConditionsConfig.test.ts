@@ -83,3 +83,43 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 });
+
+describe('conditionNegativeConditions', () => {
+	const negative = registerConditionsConfig().conditionNegativeConditions;
+
+	it('holds the conditions that harm their holder, Grappled and Swallowed too', () => {
+		for (const id of ['blinded', 'dazed', 'poisoned', 'grappled', 'swallowed', 'charged']) {
+			expect(negative.has(id)).toBe(true);
+		}
+	});
+
+	it('leaves out the states the system sets and the conditions that help or do nothing', () => {
+		for (const id of [
+			'wounded',
+			'dying',
+			'dead',
+			'bloodied',
+			'lastStand',
+			'concentration',
+			'invisible',
+			'riding',
+			'latched',
+		]) {
+			expect(negative.has(id)).toBe(false);
+		}
+	});
+});
+
+describe('conditionCountsAs', () => {
+	const { conditionCountsAs } = registerConditionsConfig();
+
+	it('is the book table: three conditions count as Incapacitated, Grappled and Restrained as each other', () => {
+		expect(conditionCountsAs).toEqual({
+			paralyzed: ['incapacitated'],
+			stunned: ['incapacitated'],
+			unconscious: ['incapacitated'],
+			grappled: ['restrained'],
+			restrained: ['grappled'],
+		});
+	});
+});

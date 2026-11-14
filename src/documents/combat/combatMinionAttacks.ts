@@ -2,6 +2,7 @@ import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import { pendingCardLines } from '#utils/chat/cardEvents.js';
+import { heldChosenOf } from '#utils/heldChange/heldChoice.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
@@ -11,13 +12,9 @@ import {
 import { getCombatantImage } from '../../utils/combat/combatantImage.js';
 import { isCombatantDead } from '../../utils/combat/isCombatantDead.js';
 import resolveMinionAttackActionCost from '../../utils/combat/resolveMinionAttackActionCost.js';
-import { attackDeliveryFromAttackType } from '../../utils/damage/attackDelivery.js';
+import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
 import { attackHeldPlanOf } from '../../utils/heldChange/attackHeldPlan.js';
-import {
-	firstTargetActor,
-	type heldChangesForAttack,
-	isMelee,
-} from '../../utils/heldChange/heldChange.js';
+import { firstTargetActor, type heldChangesForAttack } from '../../utils/heldChange/heldChange.js';
 import { isMinionCombatant } from '../../utils/minions/minionGrouping.js';
 import { withConditionSources } from '../../utils/rolls/appliedConditionRollModes.js';
 import { attackConditionLines } from '../../utils/rolls/attackConditionLines.js';
@@ -280,17 +277,14 @@ async function rollSingleMinionAttack(params: {
 			target: params.targetActor,
 			area: false,
 			attack: true,
-			melee: isMelee(
-				attackDeliveryFromAttackType(
-					(
-						resolvedActionContext.selectedAction.system?.activation as
-							| { targets?: { attackType?: string } }
-							| undefined
-					)?.targets?.attackType,
-				),
+			delivery: deliveryOfAttack(
+				resolvedActionContext.selectedAction.system?.activation as AttackActivation | undefined,
+				resolvedActionContext.actor,
 			),
 			// Only the conditions give a minion group attack disadvantage.
 			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),
+			// No window opens, so with Feature Effects off no change is ticked.
+			chosen: heldChosenOf(),
 		});
 		checkFormulaReferences(
 			formula,

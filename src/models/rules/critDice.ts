@@ -120,9 +120,7 @@ class CritDiceRule extends NimbleBaseRule<CritDiceRule.Schema> {
 			key: ruleKey(this),
 			label: ruleLabel(this),
 			role: this.dieRole,
-			formula: Roll.replaceFormulaData(this.formula, this.actor?.getRollData() ?? {}, {
-				missing: '0',
-			}),
+			formula: Roll.replaceFormulaData(this.formula, this.rollData(), { missing: '0' }),
 			...(this.oncePerTurn ? { oncePerTurn: true } : {}),
 		};
 	}

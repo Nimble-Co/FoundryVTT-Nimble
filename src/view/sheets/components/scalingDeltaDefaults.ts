@@ -1,5 +1,6 @@
 import type { EffectNode } from '#types/effectTree.js';
 import type { ScalingDelta, ScalingOperation } from '#types/spellScaling.js';
+import type { ApplyEffectMomentNumbers } from '#utils/spell/effectMomentNumbers.js';
 import type { ApplyEffectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 
 export function createEmptyDelta(): ScalingDelta {
@@ -13,24 +14,33 @@ export function createEmptyDelta(): ScalingDelta {
 		maxDieFaces: null,
 		ruleId: null,
 		ruleField: null,
+		formula: null,
+		momentIndex: null,
 	};
 }
 
 /**
  * Reshapes a delta's payload fields so only the ones the new operation uses stay populated. A raise
- * starts on the first Apply Effect node; other operations do not keep an Apply Effect node target.
+ * starts on the first Apply Effect node, a lengthen on the first moment with a number; other
+ * operations do not keep an Apply Effect node target.
  */
 export function applyOperationDefaults(
 	delta: ScalingDelta,
 	operation: ScalingOperation,
 	raiseTargets: ApplyEffectRuleNumbers[],
 	effectNodes: EffectNode[],
+	momentTargets: ApplyEffectMomentNumbers[] = [],
 ) {
 	delta.operation = operation;
 	delta.ruleId = null;
 	delta.ruleField = null;
+	delta.formula = null;
+	delta.momentIndex = null;
 	if (operation === 'raiseEffectRule') {
 		delta.targetEffectId = raiseTargets[0]?.nodeId ?? null;
+	} else if (operation === 'lengthenLastsUntil') {
+		delta.targetEffectId = momentTargets[0]?.nodeId ?? null;
+		delta.momentIndex = momentTargets[0]?.moments[0]?.index ?? null;
 	} else if (
 		effectNodes.some((node) => node.id === delta.targetEffectId && node.type === 'applyEffect')
 	) {

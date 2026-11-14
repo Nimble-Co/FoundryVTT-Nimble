@@ -65,6 +65,8 @@ export interface HeldChange
 	/** Only attacks by this creature use it; empty when that creature is lost. Null: any attacker. */
 	onlyFromUuid: string | null;
 	effectId: string;
+	/** The id of the Held Roll rule, or its place on the effect when it has none. */
+	ruleId: string;
 	holderUuid: string;
 }
 

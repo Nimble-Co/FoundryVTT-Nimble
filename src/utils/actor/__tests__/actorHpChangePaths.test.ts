@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { hpGained, woundsGained } from '../actorHpChangePaths.js';
+import { hpGained, undoDamageOption, woundsGained } from '../actorHpChangePaths.js';
 
 function actor(hp: number, wounds: number, max = 20) {
 	return {
@@ -52,6 +52,11 @@ describe('hpGained', () => {
 
 	it('counts the HP above the max HP rise', () => {
 		expect(hpGained(actor(18, 0, 25), options({ hp: 10 }))).toBe(3);
+	});
+
+	it('is 0 for HP that an Undo of damage gives back', () => {
+		const undo = { nimble: { ...options({ hp: 9 }).nimble, ...undoDamageOption().nimble } };
+		expect(hpGained(actor(15, 0), undo)).toBe(0);
 	});
 
 	describe('when the update says how much HP follows the higher max HP', () => {

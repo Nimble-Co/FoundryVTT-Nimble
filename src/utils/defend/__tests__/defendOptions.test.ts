@@ -133,6 +133,49 @@ describe('defendOptionsOf', () => {
 		expect(ids('range')).toEqual(['ranged']);
 	});
 
+	it('treats a monster attack with no attack type as melee', () => {
+		const actor = {
+			rules: [
+				rule({ id: 'melee', attackDelivery: 'melee' }),
+				rule({ id: 'ranged', attackDelivery: 'ranged' }),
+			],
+		};
+		game.actors = new Map([
+			['goblin', { type: 'npc' }],
+			['hero', { type: 'character' }],
+		]) as never;
+		const ids = (actorId: string) =>
+			defendOptionsOf(
+				actor as never,
+				{ speaker: { actor: actorId }, system: { activation: { targets: { attackType: '' } } } },
+				'withDefend',
+			).map((pick) => pick.rule.id);
+		expect(ids('goblin')).toEqual(['melee']);
+		expect(ids('hero')).toEqual([]);
+	});
+
+	it('offers no melee or ranged option against a monster area attack with no attack type', () => {
+		const actor = {
+			rules: [
+				rule({ id: 'melee', attackDelivery: 'melee' }),
+				rule({ id: 'any', attackDelivery: 'any' }),
+			],
+		};
+		game.actors = new Map([['dragon', { type: 'soloMonster' }]]) as never;
+		const breath = {
+			speaker: { actor: 'dragon' },
+			system: {
+				activation: {
+					targets: { attackType: '' },
+					acquireTargetsFromTemplate: true,
+					template: { shape: 'cone' },
+				},
+			},
+		};
+		const ids = defendOptionsOf(actor as never, breath, 'withDefend').map((pick) => pick.rule.id);
+		expect(ids).toEqual(['any']);
+	});
+
 	it('leaves out an option the hero cannot pay for, unless it uses its item', () => {
 		canPay.mockReturnValue(false);
 		const actor = { rules: [rule({ id: 'paid' }), rule({ id: 'spell', useItem: true })] };

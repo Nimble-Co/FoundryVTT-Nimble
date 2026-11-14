@@ -167,6 +167,27 @@ describe('EffectLastsUntilTab', () => {
 		expect(saved(effect)).toEqual([{ ...newMoment('turn'), value: 2 }]);
 	});
 
+	it('"combat ends" counts up to the 5th combat end, with no subject or event', async () => {
+		const effect = makeEffect([newMoment('combatEnd')]);
+		const { container } = renderTab(effect);
+		const counts = [...(field(container, 'combatCount') as HTMLSelectElement).options];
+
+		expect(counts.map((option) => option.textContent?.trim())).toEqual([
+			word(`${LU}.combatCount.1`),
+			word(`${LU}.combatCount.2`),
+			word(`${LU}.combatCount.3`),
+			word(`${LU}.combatCount.4`),
+			word(`${LU}.combatCount.5`),
+		]);
+		expect(field(container, 'subject')).toBeNull();
+		expect(field(container, 'event')).toBeNull();
+		expect(container.textContent).not.toContain('combatEnd');
+
+		await fireEvent.change(field(container, 'combatCount'), { target: { value: '2' } });
+
+		expect(saved(effect)).toEqual([{ ...newMoment('combatEnd'), value: 2 }]);
+	});
+
 	it('"take damage" turns a damage type on', async () => {
 		const nimble = CONFIG.NIMBLE as { damageTypes?: unknown };
 		const before = nimble.damageTypes;
@@ -273,6 +294,15 @@ describe('EffectLastsUntilTab', () => {
 			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
 		});
 
+		it('a count of combat ends stays when the count changes', async () => {
+			const effect = counted([{ ...newMoment('combatEnd'), value: 3 }], [1]);
+			const { container } = renderTab(effect);
+
+			await fireEvent.change(field(container, 'combatCount'), { target: { value: '2' } });
+
+			expect(lastUpdate(effect)).not.toHaveProperty(COUNTS);
+		});
+
 		it('a count goes back to 0 when the moment counts other turns', async () => {
 			const effect = counted([{ ...newMoment('turn'), value: 3 }], [2]);
 			const { container } = renderTab(effect);
@@ -292,7 +322,108 @@ describe('EffectLastsUntilTab', () => {
 		) as HTMLInputElement;
 		await fireEvent.change(dc, { target: { value: ' 10 + @intelligence ' } });
 
-		expect(effect.update).toHaveBeenCalledWith({ 'system.escape.dc': '10 + @intelligence' });
+		expect(effect.update).toHaveBeenCalledWith({
+			'system.escape.dc': '10 + @intelligence',
+			'system.escape.noDc': false,
+		});
+	});
+
+	const noDcButton = (container: HTMLElement) =>
+		[...container.querySelectorAll('button')].find(
+			(button) => button.textContent?.trim() === word('NIMBLE.effectSheet.escape.noDc'),
+		) as HTMLButtonElement;
+	const dcField = (container: HTMLElement) =>
+		container.querySelector(
+			`[aria-label="${word('NIMBLE.effectSheet.escape.dcLabel')}"]`,
+		) as HTMLInputElement;
+
+	it('No DC clears the DC and turns on an Escape with no DC', async () => {
+		const effect = makeEffect([]);
+		effect.system = { ...effect.system, escape: { dc: '13', saves: ['strength'] } };
+		const { container } = renderTab(effect);
+
+		const toggle = noDcButton(container);
+		expect(toggle.getAttribute('aria-pressed')).toBe('false');
+		expect(toggle.getAttribute('aria-label')).toBe(word('NIMBLE.effectSheet.escape.noDcLabel'));
+		await fireEvent.click(toggle);
+
+		expect(effect.update).toHaveBeenCalledWith({
+			'system.escape.noDc': true,
+			'system.escape.dc': '',
+		});
+	});
+
+	it('with No DC on, the DC field is blank and cannot be typed in', () => {
+		const effect = makeEffect([]);
+		effect.system = {
+			...effect.system,
+			escape: { dc: '', noDc: true, saves: ['strength'] } as never,
+		};
+		const { container } = renderTab(effect);
+
+		expect(noDcButton(container).getAttribute('aria-pressed')).toBe('true');
+		expect(dcField(container).disabled).toBe(true);
+		expect(dcField(container).value).toBe('');
+	});
+
+	it('a DC left blank keeps No DC as it is', async () => {
+		const effect = makeEffect([]);
+		const { container } = renderTab(effect);
+
+		await fireEvent.change(dcField(container), { target: { value: ' ' } });
+
+		expect(effect.update).toHaveBeenCalledWith({ 'system.escape.dc': '' });
+	});
+
+	function skillButton(container: HTMLElement, skill: string) {
+		const group = container.querySelector(
+			`[aria-label="${word('NIMBLE.effectSheet.escape.skillsLabel')}"]`,
+		) as HTMLElement;
+		const label = word(`NIMBLE.skills.${skill}`);
+		return [...group.querySelectorAll('button')].find(
+			(button) => button.textContent?.trim() === label,
+		) as HTMLButtonElement;
+	}
+
+	it('shows the ten skills, and turns one on in the order of the skills', async () => {
+		const effect = makeEffect([]);
+		effect.system = {
+			...effect.system,
+			escape: { dc: '12', saves: ['strength'], skills: ['stealth'] } as never,
+		};
+		const { container } = renderTab(effect);
+
+		const group = container.querySelector(
+			`[aria-label="${word('NIMBLE.effectSheet.escape.skillsLabel')}"]`,
+		) as HTMLElement;
+		expect(group.querySelectorAll('button')).toHaveLength(10);
+		expect(skillButton(container, 'stealth').getAttribute('aria-pressed')).toBe('true');
+		await fireEvent.click(skillButton(container, 'finesse'));
+
+		expect(effect.update).toHaveBeenLastCalledWith({
+			'system.escape.skills': ['finesse', 'stealth'],
+		});
+	});
+
+	it('a skill that is on lets the last save go off, and the last skill stays on', async () => {
+		const effect = makeEffect([]);
+		effect.system = {
+			...effect.system,
+			escape: { dc: '12', saves: ['will'], skills: ['finesse'] } as never,
+		};
+		const { container } = renderTab(effect);
+
+		await fireEvent.click(saveButton(container, 'will'));
+		expect(effect.update).toHaveBeenLastCalledWith({ 'system.escape.saves': [] });
+
+		effect.update.mockClear();
+		effect.system = {
+			...effect.system,
+			escape: { dc: '12', saves: [], skills: ['finesse'] } as never,
+		};
+		const again = renderTab(effect);
+		await fireEvent.click(skillButton(again.container, 'finesse'));
+		expect(effect.update).not.toHaveBeenCalled();
 	});
 
 	function saveButton(container: HTMLElement, save: string) {

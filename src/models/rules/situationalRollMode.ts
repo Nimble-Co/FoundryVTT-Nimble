@@ -16,6 +16,13 @@ function schema() {
 			label: 'NIMBLE.rules.situationalRollMode.value.label',
 			hint: 'NIMBLE.rules.situationalRollMode.value.hint',
 		}),
+		perStack: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.situationalRollMode.perStack.label',
+			hint: 'NIMBLE.rules.situationalRollMode.perStack.hint',
+		}),
 		checkType: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -104,6 +111,7 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 	static override description = 'NIMBLE.rules.situationalRollMode.description';
 
 	declare value: number;
+	declare perStack: boolean;
 	declare saves: string[];
 	declare abilities: string[];
 	declare skills: string[];
@@ -121,6 +129,7 @@ class SituationalRollModeRule extends NimbleBaseRule<SituationalRollModeRule.Sch
 		return super.tooltipInfo(
 			new Map([
 				['value', 'number'],
+				['perStack', 'boolean'],
 				['checkType', 'string'],
 				['saves', 'string[]'],
 				['abilities', 'string[]'],

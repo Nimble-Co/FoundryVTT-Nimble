@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
 	anyMomentReached,
+	countedAt,
 	type EffectStart,
 	type LastsUntilCheck,
 	type Moment,
 	type MomentSubject,
 	momentReached,
 	type TurnSeat,
-	turnCountedAt,
 } from '../momentReached.js';
 
 const COMBAT = 'combat1';
@@ -91,6 +91,11 @@ const roundEnd = (round: number): LastsUntilCheck => ({
 	combatId: COMBAT,
 	round,
 });
+const combatEnd = (combatId = COMBAT, started = true): LastsUntilCheck => ({
+	type: 'combatEnd',
+	combatId,
+	started,
+});
 
 describe('turn moments', () => {
 	const endOfTheirNextTurn = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
@@ -172,13 +177,13 @@ describe('turn moments', () => {
 		const applied = subject({ combatant: 'goblin', round: 1 });
 
 		expect(momentReached(second, applied, turnEnd(GOBLIN, 1))).toBe(false);
-		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 1), 0)).toBe(false);
+		expect(countedAt(second, applied, turnEnd(GOBLIN, 1), 0)).toBe(false);
 		expect(momentReached(second, applied, turnEnd(GOBLIN, 2))).toBe(false);
-		expect(turnCountedAt(second, applied, turnEnd(GOBLIN, 2), 0)).toBe(true);
+		expect(countedAt(second, applied, turnEnd(GOBLIN, 2), 0)).toBe(true);
 
 		const once = subject({ combatant: 'goblin', round: 1 }, { turnsSeen: [1] });
 		expect(momentReached(second, once, turnEnd(GOBLIN, 3))).toBe(true);
-		expect(turnCountedAt(second, once, turnEnd(GOBLIN, 3), 0)).toBe(false);
+		expect(countedAt(second, once, turnEnd(GOBLIN, 3), 0)).toBe(false);
 	});
 
 	it('a solo monster turn later in the same round is its next turn', () => {
@@ -208,12 +213,8 @@ describe('turn moments', () => {
 	});
 
 	it('ends at combat end, and out of combat at a world time change', () => {
-		expect(
-			momentReached(endOfTheirNextTurn, subject(), { type: 'combatEnd', combatId: COMBAT }),
-		).toBe(true);
-		expect(
-			momentReached(endOfTheirNextTurn, subject(), { type: 'combatEnd', combatId: 'other' }),
-		).toBe(false);
+		expect(momentReached(endOfTheirNextTurn, subject(), combatEnd())).toBe(true);
+		expect(momentReached(endOfTheirNextTurn, subject(), combatEnd('other'))).toBe(false);
 		const time: LastsUntilCheck = { type: 'worldTime', worldTime: 10 };
 		expect(momentReached(endOfTheirNextTurn, subject(), time)).toBe(false);
 		expect(momentReached(endOfTheirNextTurn, subject({}, { holderInCombat: false }), time)).toBe(
@@ -465,12 +466,85 @@ describe('event moments', () => {
 		expect(momentReached(rageEnds, subject(), ended(caster))).toBe(false);
 	});
 
+	it('"until its temp HP are gone" ends only the effects whose temp HP are gone', () => {
+		const tempHpGone = moment({ kind: 'event', who: 'holder', event: 'tempHpGone' });
+		const gone = (actor: object, effectIds: string[]) =>
+			event({ event: 'tempHpGone', actor, effectIds });
+		const shield = subject({}, { effectId: 'eShield' });
+
+		expect(momentReached(tempHpGone, shield, gone(holder, ['eShield']))).toBe(true);
+		expect(momentReached(tempHpGone, shield, gone(holder, ['eOther']))).toBe(false);
+		expect(momentReached(tempHpGone, shield, gone(caster, ['eShield']))).toBe(false);
+		expect(momentReached(tempHpGone, subject(), gone(holder, ['eShield']))).toBe(false);
+	});
+
 	it('"until combat ends" ends at the end of its combat', () => {
 		const combatEnds = moment({ kind: 'event', event: 'combatEnd' });
 
-		expect(momentReached(combatEnds, subject(), { type: 'combatEnd', combatId: COMBAT })).toBe(
-			true,
-		);
+		expect(momentReached(combatEnds, subject(), combatEnd())).toBe(true);
+	});
+});
+
+describe('"until the 2nd combat ends"', () => {
+	const second = moment({ kind: 'event', event: 'combatEnd', value: 2 });
+	const outside = { combat: null, combatant: null, round: null, turn: null };
+	const relatesToAny = { relatesTo: () => true };
+
+	it('ends at the 2nd combat end of its combats, and counts the 1st', () => {
+		const applied = subject(outside, relatesToAny);
+
+		expect(momentReached(second, applied, combatEnd('first'))).toBe(false);
+		expect(countedAt(second, applied, combatEnd('first'), 0)).toBe(true);
+
+		const once = subject(outside, { ...relatesToAny, turnsSeen: [1] });
+		expect(momentReached(second, once, combatEnd('second'))).toBe(true);
+		expect(countedAt(second, once, combatEnd('second'), 0)).toBe(false);
+	});
+
+	it('counts the combat in progress as the 1st', () => {
+		const inProgress = subject({ round: 3 });
+
+		expect(momentReached(second, inProgress, combatEnd())).toBe(false);
+		expect(countedAt(second, inProgress, combatEnd(), 0)).toBe(true);
+	});
+
+	it('does not count a combat that is not its own', () => {
+		expect(momentReached(second, subject(), combatEnd('other'))).toBe(false);
+		expect(countedAt(second, subject(), combatEnd('other'), 0)).toBe(false);
+	});
+
+	it('does not count another moment kind, or a count of 1', () => {
+		const combatEnds = moment({ kind: 'event', event: 'combatEnd' });
+		const endOfTheirNextTurn = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
+
+		expect(countedAt(combatEnds, subject(), combatEnd(), 0)).toBe(false);
+		expect(countedAt(endOfTheirNextTurn, subject(), combatEnd(), 0)).toBe(false);
+	});
+});
+
+describe('a combat that never started', () => {
+	const outside = subject(
+		{ combat: null, combatant: null, round: null, turn: null },
+		{ relatesTo: () => true },
+	);
+	const combatEnds = moment({ kind: 'event', event: 'combatEnd' });
+	const second = moment({ kind: 'event', event: 'combatEnd', value: 2 });
+	const endOfTheirNextTurn = moment({ boundary: 'end', clock: 'holder', span: 'nextTurn' });
+	const forTwoRounds = moment({ kind: 'time', value: 2, units: 'rounds' });
+	const unstarted = combatEnd('setUp', false);
+
+	it('ends no moment of an effect from outside it, and counts nothing', () => {
+		expect(momentReached(combatEnds, outside, unstarted)).toBe(false);
+		expect(momentReached(endOfTheirNextTurn, outside, unstarted)).toBe(false);
+		expect(momentReached(forTwoRounds, outside, unstarted)).toBe(false);
+		expect(countedAt(second, outside, unstarted, 0)).toBe(false);
+	});
+
+	it('ends an effect applied in it, as a started combat does', () => {
+		const applied = subject({ combat: 'setUp', round: 0 }, { relatesTo: () => true });
+
+		expect(momentReached(combatEnds, applied, unstarted)).toBe(true);
+		expect(momentReached(combatEnds, outside, combatEnd('setUp'))).toBe(true);
 	});
 });
 
