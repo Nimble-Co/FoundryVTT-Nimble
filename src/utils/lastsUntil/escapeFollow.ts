@@ -1,7 +1,12 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, CardEventText, EscapeRulingAction } from '#types/cardEvent.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
-import { addCardEvents, cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
+import {
+	addCardEvents,
+	cardEventsOf,
+	replaceCardEvent,
+	splitByReaders,
+} from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import {
 	dealEscapeDamage,
@@ -29,6 +34,8 @@ interface EscapeCard {
 	system?: unknown;
 	flags?: Record<string, unknown>;
 	rolls?: Array<{ total?: number | null }>;
+	whisper?: readonly (string | null)[];
+	author?: { id?: string | null } | null;
 }
 
 interface EscapeHolder {
@@ -263,12 +270,17 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 		if (ended?.action?.kind === 'undoEnd' && !effect) await undoEndedEffect(ended.action.row);
 		await takeBackEscapeDamage(card, link);
 	};
-	/** The line of an Escape with no DC takes the place of `line` on its card, or is added. */
-	const showRuling = (placed: PlacedLine | undefined, state: EscapeRulingAction['state']) => {
+	/**
+	 * The line of an Escape with no DC takes the place of `placed` on its card, or is added. When
+	 * the owner cannot read that card, `placed` goes and the line is added, so it moves for them.
+	 */
+	const showRuling = async (placed: PlacedLine | undefined, state: EscapeRulingAction['state']) => {
 		const next = escapeRulingEvent(link, state, Date.now(), card.id ?? undefined);
-		return placed
-			? replaceCardEvent(placed.host as never, placed.line.id, { ...next, id: placed.line.id })
-			: addCardEvents(card as never, [next]);
+		if (placed && splitByReaders(placed.host, [next]).elsewhere.length < 1) {
+			return replaceCardEvent(placed.host as never, placed.line.id, { ...next, id: placed.line.id });
+		}
+		if (placed) await replaceCardEvent(placed.host as never, placed.line.id, null);
+		return addCardEvents(card as never, [next]);
 	};
 	const endedHere = ended ? { host: card, line: ended } : undefined;
 

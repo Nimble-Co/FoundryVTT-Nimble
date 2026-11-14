@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 
 // Setup loads these modules before a hoisted mock could apply.
@@ -391,6 +391,41 @@ describe('an Escape with no DC', () => {
 				expect.objectContaining({ id: 'r1' }),
 			]);
 			expect(replaceCardEvent).toHaveBeenCalledWith(moved, waiting.id, null);
+		});
+	});
+
+	describe('when the owner cannot read the roll card (a GM private roll)', () => {
+		const owner = { id: 'player', isGM: false };
+		const gm = { id: 'gm', isGM: true };
+
+		beforeEach(() => {
+			Object.assign(card, { whisper: ['gm'], author: gm });
+			(tessa as { testUserPermission?: unknown }).testUserPermission = (user: { id: string }) =>
+				user.id === 'player';
+			(game as { users?: unknown }).users = [gm, owner];
+			card.flags[SYSTEM_ID].events = [endedLine()];
+			effects.clear();
+		});
+
+		afterEach(() => {
+			delete (tessa as { testUserPermission?: unknown }).testUserPermission;
+			delete (game as { users?: unknown }).users;
+		});
+
+		it.each([
+			['unknown', 'waiting'],
+			['fail', 'failed'],
+		])('a reroll to %s after an escape moves the %s line to a card the owner reads', async (outcome, state) => {
+			await followEscape({ messageId: 's1', outcome });
+
+			expect(undoEndedEffect).toHaveBeenCalledWith(endedLine().action.row);
+			expect(replaceCardEvent).toHaveBeenCalledWith(card, endedLine().id, null);
+			expect(replaceCardEvent).not.toHaveBeenCalledWith(card, endedLine().id, expect.anything());
+			expect(addCardEvents).toHaveBeenCalledWith(card, [
+				expect.objectContaining({
+					action: expect.objectContaining({ state, rollMessageId: 's1' }),
+				}),
+			]);
 		});
 	});
 
