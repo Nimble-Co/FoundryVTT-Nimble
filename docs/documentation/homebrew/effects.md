@@ -118,12 +118,16 @@ The first moment that happens ends the effect. An effect with no moment stays un
 
 Some effects build up: "Dazed 3 times = Petrified". On the effect's **Details** tab, under **Stacks**, turn on **A new application adds a stack**. When a creature that has the effect gets it again, it keeps one effect with a count, the stacks. "The same effect" is an effect with Stacks on, the same name and the same conditions, from any source. The timing follows the one that lasts longer, as for [the same condition again](../playing/conditions.md#how-long-a-condition-lasts). The effect ends as one: all its stacks go together.
 
-- **At [N] stacks, they gain [effect]**: when the count gets to N, the creature also gains another effect of the same item, once. The stacking effect stays on. The card that caused the stack gets the line "Tessa gains Petrified: 3 stacks of Dazed", with **Undo**. A stack with no card (a dice pool spend, a turn) puts the line on a card of its own. With Feature Effects off, the line is "Tessa has 3 stacks of Dazed", with an **Apply Petrified** button.
+- **At [N] stacks, they gain [effect]**: when the count gets to N, the creature also gains another effect of the same item, once. The stacking effect stays on. The card that caused the stack gets the line "Tessa gains Petrified: 3 stacks of Dazed", with **Undo**. With Feature Effects off, the line is "Tessa has 3 stacks of Dazed", with an **Apply Petrified** button.
 - On a creature's effect, **Stacks now** shows the count, and you can change it there. Set **At [N] stacks** on the effect of the item. The sheet row has a tag such as **3 stacks**, and the card says "On Goblin (3 stacks)".
 - Any rule formula on the effect, a dice formula too, can read the count as `@stacks`: `(@stacks)d6` rolls one d6 per stack. A **Situational Roll Mode** with **For each stack** on gives its value once for each stack.
 - To count failed saves ("advantage on the save for each failure"), put a stacking effect under **On Failed Save** with **Each creature that fails**. Give it a Situational Roll Mode with **For each stack** on and the condition `save:from:<item>`, and a Lasts Until of **combat ends**.
 
 An effect with Stacks off never stacks: a second Dazed keeps the one that lasts longer.
+
+::: details A stack with no card
+A stack with no card that caused it (a dice pool spend, a turn) puts its line on a card of its own.
+:::
 
 ## Hold a change for the next attack
 
@@ -154,7 +158,7 @@ The damage ignores armor and Defend, as damage from outside an attack does: temp
 - A creature with no Wound track (a monster) takes the damage and no Wounds.
 - The damage counts as "they take damage" for Lasts Until and Save on an Event, with its type: lightning damage makes the creature Charged.
 - A turn played again after the GM goes back in the combat tracker deals nothing a second time.
-- The line goes on the card before the damage is dealt. When the line cannot be written, nothing is dealt.
+- The line goes on the card, and shows as dealt, before the damage is dealt. When the line cannot be written, nothing is dealt. When the damage cannot be dealt, the line waits again.
 - A creature with more than one turn in a round takes it on each turn.
 - **Undo** is not healing: an effect that lasts until its holder is healed stays.
 :::
